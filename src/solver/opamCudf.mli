@@ -59,7 +59,8 @@ module Diff: sig
 end
 
 (** Cudf action graph *)
-module ActionGraph: ACTION_GRAPH with type package = Cudf.package
+module ActionGraph: OpamParallel.GRAPH with type V.t = Cudf.package action
+type solution = (Cudf.package, ActionGraph.t) gen_solution
 
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
@@ -87,7 +88,7 @@ val solution_of_actions:
   complete_universe:Cudf.universe ->
   requested:OpamPackage.Name.Set.t ->
   Cudf.package action list ->
-  ActionGraph.solution
+  solution
 
 (** Resolve a CUDF request. The result is either a conflict explaining
     the error, or a list of action to proceed. Note however than the

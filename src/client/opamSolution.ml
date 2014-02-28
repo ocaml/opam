@@ -17,7 +17,11 @@
 let log fmt = OpamGlobals.log "SOLUTION" fmt
 
 open OpamTypes
+open OpamTypesBase
 open OpamState.Types
+
+module PackageAction = OpamSolver.Action
+module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
   let pkg = action_contents action in
@@ -232,7 +236,7 @@ type state = {
 }
 
 let output_json_solution solution =
-  let to_remove = List.map OpamPackage.to_json solution.PackageActionGraph.to_remove in
+  let to_remove = List.map OpamPackage.to_json solution.to_remove in
   let to_proceed =  ref [] in
   PackageActionGraph.Topological.iter (function
       | To_change(o,p)  ->
@@ -250,7 +254,7 @@ let output_json_solution solution =
         let json = `O ["recompile", OpamPackage.to_json p] in
         to_proceed := json :: !to_proceed
       | To_delete _    -> ()
-    ) solution.PackageActionGraph.to_process;
+    ) solution.to_process;
   let json = `O [
       "to-remove" , `A to_remove;
       "to-proceed", `A (List.rev !to_proceed);
@@ -286,7 +290,6 @@ let output_json_actions action_errors =
    OPAM. Children processes are spawned to deal with parallele builds
    and installations. *)
 let parallel_apply t action solution =
-  let open PackageActionGraph in
   let state = {
     s_installed       = t.installed;
     s_installed_roots = t.installed_roots;
@@ -332,6 +335,8 @@ let parallel_apply t action solution =
     state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;
     state.s_installed_roots <- OpamPackage.Set.diff state.s_installed_roots deleted;
     state.s_reinstall       <- OpamPackage.Set.diff state.s_reinstall deleted in
+
+  let actions_list a = PackageActionGraph.fold_vertex (fun a b -> a::b) a [] in
 
   (* Installation and recompilation are done by child the processes *)
   let child n =
@@ -481,21 +486,21 @@ let parallel_apply t action solution =
           "These actions have been completed %s\n%s\n"
           (OpamGlobals.colorise `bold "successfully")
           (String.concat "\n"
-             (List.map PackageAction.string_of_action successful))
+             (List.map PackageAction.to_string successful))
       );
       if failed <> [] then (
         OpamGlobals.msg
           "The following %s\n%s\n"
           (OpamGlobals.colorise `bold "failed")
           (String.concat "\n"
-             (List.map PackageAction.string_of_action failed))
+             (List.map PackageAction.to_string failed))
       );
       if remaining <> [] then (
         OpamGlobals.msg
           "Due to the errors, the following have been %s\n%s\n"
           (OpamGlobals.colorise `bold "cancelled")
           (String.concat "\n"
-             (List.map PackageAction.string_of_action remaining))
+             (List.map PackageAction.to_string remaining))
       );
       err
     | _ -> assert false
@@ -503,9 +508,9 @@ let parallel_apply t action solution =
 let simulate_new_state state t =
   let installed = List.fold_left
       (fun installed p -> OpamPackage.Set.remove p installed)
-      state.installed t.PackageActionGraph.to_remove in
+      state.installed t.to_remove in
   let installed =
-    PackageActionGraph.Topological.fold
+    OpamSolver.ActionGraph.Topological.fold
       (fun action installed ->
         match action with
         | To_change(_,p) | To_recompile p ->
@@ -513,7 +518,7 @@ let simulate_new_state state t =
         | To_delete p ->
           OpamPackage.Set.remove p installed
       )
-      t.PackageActionGraph.to_process installed in
+      t.to_process installed in
   { state with installed }
 
 let print_external_tags t solution =
@@ -557,7 +562,8 @@ let confirmation requested solution =
 (* Apply a solution *)
 let apply ?(force = false) t action ~requested solution =
   log "apply";
-  if !OpamGlobals.debug then PackageActionGraph.dump_solution solution;
+  if !OpamGlobals.debug then
+    PackageActionGraph.Dot.output_graph stdout solution.to_process;
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
     Nothing_to_do

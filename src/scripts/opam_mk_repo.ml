@@ -110,10 +110,10 @@ let resolve_deps index names =
   let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [] } in
   match OpamSolver.resolve ~verbose:true universe ~requested request with
   | Success solution ->
-    PackageActionGraph.fold_vertex (fun act acc -> match act with
+    OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
         | To_change (_, p) -> OpamPackage.Set.add p acc
         | _ -> acc)
-      solution.PackageActionGraph.to_process OpamPackage.Set.empty
+      solution.to_process OpamPackage.Set.empty
   | Conflicts cs ->
     OpamGlobals.error_and_exit "%s\n" (cs())
 
