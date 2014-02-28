@@ -1392,7 +1392,8 @@ let run default commands =
   with
   | OpamGlobals.Exit 0 -> ()
   | e                  ->
-    Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
+    if !OpamGlobals.verbose then
+      Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
     begin match e with
       | OpamGlobals.Exit i ->

@@ -254,7 +254,7 @@ let prepare_package_build t nv =
 let download_package t nv =
   log "download_package: %s" (OpamPackage.to_string nv);
 
-  if !OpamGlobals.dryrun then ()
+  if !OpamGlobals.dryrun || !OpamGlobals.fake then ()
   else if OpamState.is_locally_pinned t (OpamPackage.name nv) then
     let dir = OpamPath.Switch.dev_package t.root t.switch nv in
     let _ = OpamState.download_upstream t nv dir in

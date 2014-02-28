@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2013 OCamlPro                                        *)
+(*    Copyright 2012-2014 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
@@ -17,10 +17,6 @@
 open OpamTypes
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
-
-(* see [Debcudf.add_inst] for more details about the format *)
-let s_status = "status"
-let s_installed   = "  installed"
 
 let empty_universe =
   {
@@ -76,8 +72,56 @@ let is_available universe wish_remove (name, _ as c) =
   &&
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
-(* Convert an OPAM package to a debian package *)
-let opam2debian universe depopts package =
+let cudf_versions_map universe =
+  let pmap = OpamPackage.to_map universe.u_packages in
+  OpamPackage.Name.Map.fold (fun name versions acc ->
+      let versions = OpamPackage.Version.Set.elements versions in
+      let versions = List.filter ((<>) OpamPackage.Version.pinned) versions in
+      let versions = List.sort OpamPackage.Version.compare versions in
+      let _, map =
+        List.fold_left
+          (fun (i,acc) version ->
+             let nv = OpamPackage.create name version in
+             i + 1, OpamPackage.Map.add nv i acc)
+          (1,acc) versions in
+      map)
+    pmap OpamPackage.Map.empty
+
+let name_to_cudf name =
+  Common.CudfAdd.encode (OpamPackage.Name.to_string name)
+
+let atom2cudf version_map (name,cstr) =
+  name_to_cudf name, match cstr with
+  | None -> None
+  | Some (op,v) ->
+    try
+      let cv = OpamPackage.Map.find (OpamPackage.create name v) version_map in
+      Some (op, cv)
+    with Not_found ->
+      (* The version for comparison doesn't exist: match to the closest
+         existing version according to the direction of the comparison *)
+      match op with
+      | `Neq -> None (* Always true *)
+      | `Eq -> Some (`Lt, 1) (* Always false *)
+      | (`Geq | `Gt | `Leq | `Lt) as op ->
+        let sign, result_op =  match op with
+          | `Geq | `Gt -> (fun x -> x), `Geq
+          | `Leq | `Lt -> (fun x -> -x), `Leq in
+        let all_versions =
+          OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
+            version_map in
+        let rev_version_map =
+          OpamPackage.Map.fold (fun nv cv acc ->
+              OpamMisc.IntMap.add (sign cv) (OpamPackage.version nv) acc)
+            all_versions OpamMisc.IntMap.empty in
+        let map =
+          OpamMisc.IntMap.filter
+            (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
+            rev_version_map in
+        if OpamMisc.IntMap.is_empty map then Some (`Lt, 1)
+        else Some (result_op, sign (fst (OpamMisc.IntMap.min_binding map)))
+
+let opam2cudf universe depopts version_map package =
   let package = real_version universe package in
   let depends =
     try OpamPackage.Map.find package universe.u_depends
@@ -89,14 +133,15 @@ let opam2debian universe depopts package =
       And (depends, Or(depends, OpamFormula.ors opts))
     else if universe.u_action = Remove then depends
     else
-      let mem_installed conj = List.exists (is_installed universe) conj in
-      let opts = List.filter mem_installed opts in
-      let opts = List.rev_map OpamFormula.of_conjunction opts in
-      And (depends, OpamFormula.ands opts) in
-
+    let mem_installed conj = List.exists (is_installed universe) conj in
+    let opts = List.filter mem_installed opts in
+    let opts = List.rev_map OpamFormula.of_conjunction opts in
+    And (depends, OpamFormula.ands opts) in
   let conflicts =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in
+  let conflicts = (* prevents install of multiple versions of the same pkg *)
+    (OpamPackage.name package, None)::OpamFormula.to_conjunction conflicts in
   let installed =
     OpamPackage.Set.exists (fun pkg -> real_version universe pkg = package)
       universe.u_installed in
@@ -106,34 +151,39 @@ let opam2debian universe depopts package =
         reinstall
     | _                 -> false in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
-  let open Debian.Packages in
-  { Debian.Packages.default_package with
-    name      = OpamPackage.Name.to_string (OpamPackage.name package) ;
-    version   = OpamPackage.Version.to_string (OpamPackage.version package);
-    depends   = List.rev_map (List.rev_map atom2debian) (OpamFormula.to_cnf depends);
-    conflicts = List.rev_map atom2debian (OpamFormula.to_conjunction conflicts);
-    extras    =
-      (if installed && reinstall
-       then [OpamCudf.s_reinstall, "true"]
-       else []) @
-      (if installed
-       then [s_status, s_installed]
-       else []) @
-      (if installed_root
-       then [OpamCudf.s_installed_root, "true"]
-       else []) @
-      Debian.Packages.default_package.extras }
+  let extras =
+    let e = [
+      OpamCudf.s_source,
+      `String (OpamPackage.Name.to_string (OpamPackage.name package));
+      OpamCudf.s_source_number,
+      `String (OpamPackage.Version.to_string (OpamPackage.version package));
+    ] in
+    let e = if installed && reinstall
+      then (OpamCudf.s_reinstall, `Bool true)::e else e in
+    let e = if installed_root
+      then (OpamCudf.s_installed_root, `Bool true)::e else e in
+    e
+  in
+  { Cudf.default_package with
+    Cudf.
+    package = name_to_cudf (OpamPackage.name package);
+    version = OpamPackage.Map.find package version_map;
+    (* keep = `Keep_none; -- XXX use `Keep_version to handle pinned packages ? *)
+    depends = List.rev_map (List.rev_map (atom2cudf version_map))
+        (OpamFormula.to_cnf depends);
+    conflicts = List.rev_map (atom2cudf version_map) conflicts;
+    installed;
+    (* was_installed: ? ;
+       provides: unused *)
+    pkg_extra = extras;
+  }
 
-(* Convert an debian package to a CUDF package *)
-let debian2cudf tables package =
-  let options = {
-    Debian.Debcudf.default_options with
-    Debian.Debcudf.extras_opt = [
-      OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool (Some false));
-      OpamCudf.s_installed_root, (OpamCudf.s_installed_root, `Bool (Some false));
-    ]
-  } in
-  Debian.Debcudf.tocudf ~options tables package
+let cudf2opam cpkg =
+  let sname = Cudf.lookup_package_property cpkg OpamCudf.s_source in
+  let name = OpamPackage.Name.of_string sname in
+  let sver = Cudf.lookup_package_property cpkg OpamCudf.s_source_number in
+  let version = OpamPackage.Version.of_string sver in
+  OpamPackage.create name version
 
 let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
   Common.CudfAdd.encode (OpamPackage.Name.to_string n),
@@ -155,51 +205,22 @@ let load_cudf_universe ?(depopts=false) universe =
      dumb package which depends on all the optional dependencies. This
      package should never appear to the user, so we make it
      non-installable by adding conflicting constraints. *)
-  let universe =
-    let dummy_pkg = OpamPackage.create
-        (OpamPackage.Name.of_string "--depopts--")
-        (OpamPackage.Version.of_string "--none--") in
-    let dummy_atom =
-      Atom (OpamPackage.Name.of_string "--depopts--",
-            Atom (`Eq, OpamPackage.Version.of_string "--")) in
-    if not depopts then (
-      let depopts =
-        let all = OpamPackage.Set.fold (fun pkg acc ->
-            depopts_of_package universe pkg @ acc
-          ) universe.u_packages [] in
-        let all = List.rev_map OpamFormula.of_conjunction all in
-        And(dummy_atom, OpamFormula.ands all) in
-      { universe with
-        u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
-        u_depends  = OpamPackage.Map.add dummy_pkg depopts universe.u_depends; }
-    ) else
-      { universe with
-        u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
-        u_depends  = OpamPackage.Map.add dummy_pkg dummy_atom universe.u_depends; } in
-
   let opam2cudf =
-    let opam2debian =
-      OpamPackage.Set.fold
-        (fun pkg map ->
-           OpamPackage.Map.add (real_version universe pkg)
-             (opam2debian universe depopts pkg) map)
-        universe.u_packages
-        OpamPackage.Map.empty in
-    let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
-    OpamPackage.Map.map (debian2cudf tables) opam2debian in
-  let cudf2opam =
-    let h = Hashtbl.create 1024 in
-    OpamPackage.Map.iter (fun opam cudf ->
-        let opam =
-          try
-            if Lazy.force (OpamPackage.Name.Map.find (OpamPackage.name opam) universe.u_pinned)
-               = OpamPackage.version opam
-            then OpamPackage.pinned (OpamPackage.name opam)
-            else opam
-          with Not_found -> opam
-        in Hashtbl.add h (cudf.Cudf.package,cudf.Cudf.version) opam
-    ) opam2cudf;
-    h in
+    let version_map = cudf_versions_map universe in
+    OpamPackage.Set.fold (fun pkg map ->
+        OpamPackage.Map.add (real_version universe pkg)
+          (opam2cudf universe depopts version_map pkg)
+          map)
+      universe.u_packages
+      OpamPackage.Map.empty in
+  let cudf2opam cpkg =
+    let pkg = cudf2opam cpkg in
+    if try Lazy.force (OpamPackage.Name.Map.find
+                         (OpamPackage.name pkg) universe.u_pinned)
+           = OpamPackage.version pkg
+      with Not_found -> false
+    then OpamPackage.pinned (OpamPackage.name pkg)
+    else pkg in
   let opam_universe = universe in
   let universe =
     let universe =
@@ -227,18 +248,7 @@ let load_cudf_universe ?(depopts=false) universe =
     with Not_found ->
       OpamGlobals.error_and_exit
         "opam2cudf: Cannot find %s" (OpamPackage.to_string opam)),
-  (fun cudf ->
-    try Hashtbl.find cudf2opam (cudf.Cudf.package,cudf.Cudf.version)
-    with Not_found ->
-      (* This can happen if a dependency is not available *)
-      try
-        let lookup n = Cudf.lookup_package_property cudf n in
-        let name = OpamPackage.Name.of_string (lookup "source") in
-        let version = OpamPackage.Version.of_string (lookup "sourcenumber") in
-        OpamPackage.unknown name (Some version)
-      with Not_found ->
-        OpamSystem.internal_error "cud2opam(%s,%d)"
-          cudf.Cudf.package cudf.Cudf.version),
+  cudf2opam,
   universe
 
 let string_of_request r =

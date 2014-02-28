@@ -21,19 +21,19 @@ let log fmt = OpamGlobals.log "CUDF" fmt
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
   match a with
-  | To_change (None, p)   -> Printf.sprintf " - install %s" (aux p)
+  | To_change (None, p)   -> Printf.sprintf "install %s" (aux p)
   | To_change (Some o, p) ->
     let f action =
-      Printf.sprintf " - %s %s to %d" action (aux o) p.Cudf.version in
+      Printf.sprintf "%s %s to %d" action (aux o) p.Cudf.version in
     if compare o.Cudf.version p.Cudf.version < 0 then
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile p        -> Printf.sprintf " - recompile %s" (aux p)
-  | To_delete p           -> Printf.sprintf " - delete %s" (aux p)
+  | To_recompile p        -> Printf.sprintf "recompile %s" (aux p)
+  | To_delete p           -> Printf.sprintf "delete %s" (aux p)
 
 let string_of_actions l =
-  OpamMisc.string_of_list string_of_action l
+  OpamMisc.string_of_list (fun a -> " - " ^ string_of_action a) l
 
 let string_of_package p =
   let installed = if p.Cudf.installed then "installed" else "not-installed" in
@@ -292,11 +292,14 @@ let string_of_reasons cudf2opam opam_universe reasons =
   end;
   Buffer.contents b
 
+(* custom cudf field labels *)
+let s_source = "opam-name"
+let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 
 let check flag p =
-  try Cudf.lookup_package_property p flag = "true"
+  try Cudf.lookup_typed_package_property p flag = `Bool true
   with Not_found -> false
 
 let need_reinstall = check s_reinstall
@@ -310,14 +313,9 @@ let aspcud_command =
 
 let default_preamble =
   let l = [
-    ("recommends",(`Vpkgformula (Some [])));
-    ("number",(`String None));
-    ("source",(`String (Some ""))) ;
-    ("sourcenumber",(`String (Some "")));
-    ("sourceversion",(`Int (Some 1))) ;
-    ("essential",(`Bool (Some false))) ;
-    ("buildessential",(`Bool (Some false))) ;
-    (s_reinstall,`Bool (Some false));
+    (s_source,         `String None) ;
+    (s_source_number,  `String None);
+    (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
@@ -418,7 +416,7 @@ let get_final_universe univ req =
     failwith "opamSolver" in
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Sat (_,u) -> Success u (* (remove u "dose-dummy-request" None) *)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> fail str
   | Unsat r   ->
@@ -529,16 +527,15 @@ let compute_root_causes universe actions requested =
   (* g is the graph of actions:
      prerequisite -> action -> postrequisite (eg. recompile) *)
   let g =
-    let packages =
+    let cudf_univ =
       let filter p = StringSet.mem p.Cudf.package act_packages in
-      Algo.Defaultgraphs.PackageGraph.dependency_graph
-        (Cudf.load_universe (Cudf.get_packages ~filter universe)) in
+      Cudf.load_universe (Cudf.get_packages ~filter universe) in
+    let packages =
+      Algo.Defaultgraphs.PackageGraph.dependency_graph cudf_univ in
     let g =
       ActionGraph.mirror (action_graph_of_packages actions packages) in
     let conflicts_graph =
-      let filter p = StringSet.mem p.Cudf.package act_packages in
-      Algo.Defaultgraphs.PackageGraph.conflict_graph
-        (Cudf.load_universe (Cudf.get_packages ~filter universe)) in
+      Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ in
     (* add conflicts to the graph to get all causality relations:
        cause (removed required pkg or conflicting pkg) -> removed pkg *)
     Map.iter (fun _ -> function
@@ -551,9 +548,11 @@ let compute_root_causes universe actions requested =
             conflicts_graph pkg
       ) actions;
     g in
-  (* let () =
-     let fd = open_out ("test.dot") in ActionGraph.output_dot fd g; close_out fd
-     in *)
+  let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
+    let filename = Printf.sprintf "%s-actions.dot" f in
+    let oc = open_out filename in
+    ActionGraph.output_dot oc g;
+    close_out oc in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
         StringSet.add (Common.CudfAdd.encode (OpamPackage.Name.to_string n)) s)
