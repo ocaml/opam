@@ -40,10 +40,19 @@ val invalid_fields : file_item list -> string list -> string list
 
 (** All the following parsing function raise [Bad_format] in case the
     input does not have the right format. *)
-exception Bad_format of string
+exception Bad_format of pos option * string
 
 (** Raise [Bad_format]. *)
-val bad_format: ('a, unit, string, 'b) format4 -> 'a
+val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
+
+(** Adds a position to a Bad_format exception if it doesn't have one yet *)
+val add_pos: pos -> exn -> exn
+
+(** Get the position out of a value *)
+val value_pos: value -> pos
+
+(** Get the position of the first element out of a value list *)
+val values_pos: value list -> pos option
 
 (** Parse a boolean *)
 val parse_bool : value -> bool
@@ -129,6 +138,12 @@ val make_pair: ('a -> value) -> ('b -> value) -> ('a * 'b) -> value
 
 (** Create a pair of strings *)
 val make_string_pair: string * string -> value
+
+(** Create a file section *)
+val make_section: file_section -> file_item
+
+(** Create a variable *)
+val make_variable: (string * value) -> file_item
 
 (** {2 Printing functions} *)
 

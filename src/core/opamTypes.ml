@@ -351,16 +351,19 @@ type command = arg list * filter option
 
 (** {2 Untyped generic file format} *)
 
+(** Source file positions: filename, line, column *)
+type pos = filename * int * int
+
 (** Base values *)
 type value =
-  | Bool of bool
-  | Int of int
-  | String of string
-  | Symbol of string
-  | Ident of string
-  | List of value list
-  | Group of value list
-  | Option of value * value list
+  | Bool of pos * bool
+  | Int of pos * int
+  | String of pos * string
+  | Symbol of pos * string
+  | Ident of pos * string
+  | List of pos * value list
+  | Group of pos * value list
+  | Option of pos * value * value list
 
 (** A file section *)
 type file_section = {
@@ -371,8 +374,8 @@ type file_section = {
 
 (** A file is composed of sections and variable definitions *)
 and file_item =
-  | Section of file_section
-  | Variable of string * value
+  | Section of pos * file_section
+  | Variable of pos * string * value
 
 (** A file is a list of items and the filename *)
 type file = {

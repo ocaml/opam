@@ -73,6 +73,16 @@ let string_of_shell = function
   | `sh   -> "sh"
   | `bash -> "bash"
 
+let pos_null = OpamFilename.of_string "",-1,-1
+
+let string_of_pos (file,line,col) =
+  OpamFilename.prettify file ^
+  if line >= 0 then
+    ":" ^ string_of_int line ^
+    if col >= 0 then ":" ^ string_of_int col
+    else ""
+  else ""
+
 (* Command line arguments *)
 
 let string_of_upload u =

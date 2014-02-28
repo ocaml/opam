@@ -18,6 +18,12 @@
 
 open OpamTypes
 
+let get_pos () =
+  let pos = Parsing.symbol_start_pos () in
+  Lexing.(OpamFilename.of_string pos.pos_fname,
+          pos.pos_lnum,
+          pos.pos_cnum - pos.pos_bol)
+
 %}
 
 %token <string> STRING IDENT SYMBOL
@@ -51,19 +57,22 @@ items:
 ;
 
 item:
-| IDENT COLON value                { Variable ($1, $3) }
-| IDENT STRING LBRACE items RBRACE { Section {section_kind=$1; section_name=$2; section_items= $4} }
+| IDENT COLON value                { Variable (get_pos(), $1, $3) }
+| IDENT STRING LBRACE items RBRACE {
+  Section (get_pos(),
+           {section_kind=$1; section_name=$2; section_items= $4})
+}
 ;
 
 value:
-| BOOL                       { Bool $1 }
-| INT                        { Int $1 }
-| STRING                     { String $1 }
-| SYMBOL                     { Symbol $1 }
-| IDENT                      { Ident $1 }
-| LPAR values RPAR           { Group $2 }
-| LBRACKET values RBRACKET   { List $2 }
-| value LBRACE values RBRACE { Option ($1, $3) }
+| BOOL                       { Bool (get_pos(),$1) }
+| INT                        { Int (get_pos(),$1) }
+| STRING                     { String (get_pos(),$1) }
+| SYMBOL                     { Symbol (get_pos(),$1) }
+| IDENT                      { Ident (get_pos(),$1) }
+| LPAR values RPAR           { Group (get_pos(),$2) }
+| LBRACKET values RBRACKET   { List (get_pos(),$2) }
+| value LBRACE values RBRACE { Option (get_pos(),$1, $3) }
 ;
 
 values:
