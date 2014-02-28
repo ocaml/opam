@@ -134,7 +134,7 @@ REPO_LIB   = opam-repositories
 SOLVER_LIB = opam-solver
 CLIENT_LIB = opam-client
 
-CORE_NOMLI = opamGlobals.ml opamParser.ml opamLexer.ml opamLineLexer.ml
+CORE_NOMLI = opamGlobals.ml opamParser.ml opamLexer.ml opamLineLexer.ml opamTypes.ml
 CORE_MLI   = $(foreach i, $(shell find src/core -name "*.mli"), $(notdir $i))
 REPO_MLI   = $(foreach i, $(shell find src/repositories -name "*.mli"), $(notdir $i))
 SOLVER_MLI = $(foreach i, $(shell find src/solver -name "*.mli"), $(notdir $i))

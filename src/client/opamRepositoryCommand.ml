@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 open OpamState.Types
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt

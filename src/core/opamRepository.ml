@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 open OpamMisc.OP
 open OpamFilename.OP
 
@@ -29,7 +30,7 @@ let to_string r =
   Printf.sprintf "%s(%d %s %s)"
     (OpamRepositoryName.to_string r.repo_name)
     r.repo_priority
-    (OpamTypes.string_of_repository_kind r.repo_kind)
+    (string_of_repository_kind r.repo_kind)
     (string_of_address r.repo_address)
 
 let default_address =
