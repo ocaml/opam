@@ -373,7 +373,7 @@ let dump_cudf_request (_, univ,_ as cudf) = function
     let oc = open_out filename in
     if Lazy.force aspcud_exists && !OpamGlobals.use_external_solver
     then
-      Printf.fprintf oc "#%s %s\n" aspcud_command OpamGlobals.solver_preferences
+      Printf.fprintf oc "#%s %s\n" aspcud_command !OpamGlobals.solver_preferences
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -388,7 +388,7 @@ let call_external_solver ~explain univ req =
   then
     if Cudf.universe_size univ > 0 then begin
       let cmd = aspcud_command in
-      let criteria = OpamGlobals.solver_preferences in
+      let criteria = !OpamGlobals.solver_preferences in
       try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
       with e ->
         OpamMisc.fatal e;

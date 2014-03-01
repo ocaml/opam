@@ -32,14 +32,15 @@ type global_options = {
   compat_mode_1_0 : bool;
   no_aspcud : bool;
   cudf_file : string option;
+  solver_preferences : string option;
 }
 
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 no_aspcud cudf_file =
+    no_base_packages compat_mode_1_0 no_aspcud cudf_file solver_preferences =
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file }
+    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file; solver_preferences}
 
 let apply_global_options o =
   if o.git_version then (
@@ -64,7 +65,8 @@ let apply_global_options o =
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.no_aspcud;
-  OpamGlobals.cudf_file := o.cudf_file
+  OpamGlobals.cudf_file := o.cudf_file;
+  OpamGlobals.solver_preferences := match o.solver_preferences with None -> !OpamGlobals.solver_preferences | Some v -> v
 
 
 (* Build options *)
@@ -398,6 +400,11 @@ let global_options =
   let no_aspcud =
     mk_flag ~section ["no-aspcud"]
       "Do not use the external aspcud solver, even if available." in
+  let solver_preferences =
+    mk_opt ["criteria"] "CRITERIA"
+      "Specify preferences for the external solver. \
+       This is equivalent to setting $(b,\\$OPAMCRITERIA)."
+      Arg.(some string) None in
   let cudf_file =
     mk_opt ["cudf"] "FILENAME"
       "Debug option: Save the CUDF requests sent to the solver to \
@@ -405,7 +412,7 @@ let global_options =
       Arg.(some string) None in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file)
+    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file $solver_preferences)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"

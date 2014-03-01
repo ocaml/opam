@@ -80,9 +80,9 @@ let solver_timeout =
 let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
   "-removed,-notuptodate,-changed"
 
-let solver_preferences =
+let solver_preferences = ref(
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with Not_found -> default_preferences
+  with Not_found -> default_preferences)
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
