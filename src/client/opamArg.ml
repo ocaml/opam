@@ -399,10 +399,10 @@ let global_options =
       "Do not use the external aspcud solver, even if available." in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
-      ("Specify user $(i,preferences) for dependency solving.\
-        The full language of the MISC212 competition is \
-        supported, see $(i,http://www.mancoosi.org/misc-2012/criteria/) for details. \
+      ("Specify user $(i,preferences) for dependency solving. \
         This is equivalent to setting $(b,\\$OPAMCRITERIA). \
+        For details on the supported language, see \
+        $(i,http://www.mancoosi.org/misc-2012/criteria/). \
         The default value is "^OpamGlobals.default_preferences)
       Arg.(some string) None in
   let cudf_file =
