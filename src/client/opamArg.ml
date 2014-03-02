@@ -400,7 +400,8 @@ let global_options =
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving. \
-        This is equivalent to setting $(b,\\$OPAMCRITERIA). \
+        This is equivalent to setting $(b,\\$OPAMCRITERIA), \
+        and takes precedence over it if both are specified. \
         For details on the supported language, see \
         $(i,http://www.mancoosi.org/misc-2012/criteria/). \
         The default value is "^OpamGlobals.default_preferences)
