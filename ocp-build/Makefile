@@ -1,15 +1,42 @@
-PREFIX=/usr/local/
+OCAMLC = ocamlc.opt
+OCAMLOPT = ocamlopt.opt
+OCAMLLEX = ocamllex.opt
+OCAMLYACC = ocamlyacc
+OCAMLDEP = ocamldep.opt
+PP = -pp camlp4o
 
-ocp-build: primitives ocp-build.boot win32_c.c
-	awk '{ print "external "$$1": unit -> unit = \"" $$1 "\"" }' primitives > primitives.ml
-	ocamlc -o ocp-build.run -custom -make-runtime win32_c.c primitives.ml unix.cma  -cclib -lunix
-	cat ocp-build.run ocp-build.boot > ocp-build
-	chmod +x ocp-build
-	./ocp-build -help >/dev/null 2>&1
+LIBS = debug lang subcmd min-unix system ocp-build
+INCLUDE = $(patsubst %,-I %,$(LIBS))
+LINK = $(patsubst %,%.cma,$(LIBS))
+NATLINK = $(patsubst %,%.cmxa,$(LIBS))
+STUBS = min-unix/minUnix_c.c
 
-install: ocp-build
-	cp ocp-build $(PREFIX)/bin/ocp-build
+all: ocp-build.byte
+
+blob: $(STUBS) */*.mli */*.ml $(*/*.mll:mll=ml) $(*/*.mly:mly=ml)
+	$(OCAMLC) -custom $(PP) $(INCLUDE) -I ocp-build min-unix.cma $(STUBS) \
+	  `$(OCAMLDEP) $(PP) $(INCLUDE) -I ocp-build -sort $^` -o $@
+
+%.ml: %.mll
+	$(OCAMLLEX) $^
+
+%.ml: %.mly
+	$(OCAMLYACC) $^
+
+%.cma: %/*.ml %/*.mli
+	$(OCAMLC) $(PP) $(INCLUDE) -a `$(OCAMLDEP) $(PP) -sort $^` -o $@
+
+%.cmxa: %/*.ml %/*.mli
+	$(OCAMLOPT) $(PP) $(INCLUDE) -a `$(OCAMLDEP) $(PP) -sort $^` -o $@
+
+lang.cma lang.cmxa: lang/ocamllexer.ml
+ocp-build.cma ocp-build.cmxa: ocp-build/buildOCPParser.ml ocp-build/metaLexer.ml
+
+ocp-build.byte: $(LINK) ocp-build/*.ml ocp-build/*.mli
+	$(OCAMLC) -custom $(PP) $(INCLUDE) unix.cma $(STUBS) $(LINK) buildMain.ml -o $@
+
+ocp-build.native: $(NATLINK) ocp-build/*.ml ocp-build/*.mli
+	$(OCAMLOPT) $(PP) $(INCLUDE) unix.cmxa $(STUBS) $(NATLINK) buildMain.ml -o $@
 
 clean:
-	rm -f *~ ocp-build ocp-build.run primitives.cm? win32_c.o win32_c.obj primitives.ml
-
+	rm -f *.a *.cma *.cmxa ocp-build.byte ocp-build.asm */*.cm*

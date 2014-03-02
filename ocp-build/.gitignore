@@ -1,6 +1,7 @@
-ocp-build
-ocp-build.run
-primitives.cm*
-primitives.cmo
-primitives.ml
-win32_c.o
+*.byte
+*.native
+*.cm*
+*.o
+lang/ocamllexer.ml
+ocp-build/metaLexer.ml
+ocp-build/buildOCPParser.ml

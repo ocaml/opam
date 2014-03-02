@@ -1,9 +1,11 @@
 -include Makefile.config
 
-LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
+LOCAL_OCPBUILD=./ocp-build/ocp-build.byte -no-use-ocamlfind
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-admin opam-installer
+
+OPAM_INSTALLER = _obuild/opam-installer/opam-installer.byte
 
 .PHONY: all
 
@@ -43,7 +45,7 @@ with-ocamlbuild: autogen
 	ln -sf _build/src/client/opamMain.native opam &&\
 	ln -sf _build/src/scripts/opam_admin.native opam-admin
 
-$(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
+$(LOCAL_OCPBUILD):
 	$(MAKE) -C ocp-build
 
 OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
@@ -53,7 +55,8 @@ prepare: depends.ocp.in
 autogen: src/core/opamGitVersion.ml src/core/opamScript.ml src/core/opamVersion.ml
 
 compile: $(LOCAL_OCPBUILD) autogen
-	$(OCPBUILD) -init -scan $(TARGET)
+	$(OCPBUILD) -init -scan
+	$(OCPBUILD) $(TARGET)
 
 clone: src/core/opamVersion.ml
 	$(MAKE) -C $(SRC_EXT)
@@ -116,18 +119,33 @@ src/core/opamScript.ml: shell/ src/core/opamVersion.ml
 	ocaml shell/crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
 	ocaml shell/crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
 
+.PHONY: opam.install
+opam.install:
+	@echo "bin: [" >$@
+	@for t in $(TARGETS); do \
+	  if [ -e _obuild/$$t/$$t.asm ]; \
+	  then echo "  \"_obuild/$$t/$$t.asm\" {\"$$t\"}"; \
+	  else echo "  \"_obuild/$$t/$$t.byte\" {\"$$t\"}"; \
+	  fi; \
+	done >>$@
+	@echo "]" >>$@
+	@echo "man: [" >>$@
+	@for m in doc/man/*; do \
+	  echo "  \"$$m\" {\"man1/$$(basename $$m)\"}"; \
+	done >>$@
+	@echo "]" >>$@
+
 .PHONY: uninstall install install-with-ocamlbuild
-install:
-	mkdir -p $(DESTDIR)$(prefix)/bin
-	$(MAKE) $(TARGETS:%=%-install)
-	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
+install: $(OPAM_INSTALLER) opam.install
+	$(OPAM-INSTALLER) --prefix="$(DESTDIR)$(prefix)" opam.install
+
 install-with-ocamlbuild:
 	mkdir -p $(DESTDIR)$(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install-with-ocamlbuild)
 	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
-uninstall:
-	rm -f $(prefix)/bin/opam*
-	rm -f $(mandir)/man1/opam*
+
+uninstall: $(OPAM-INSTALLER)
+	$(OPAM-INSTALLER) --prefix="$(DESTDIR)$(prefix)" -u opam.install
 
 CORE_LIB   = opam-core
 REPO_LIB   = opam-repositories
@@ -160,45 +178,23 @@ OCAMLBUILD_FILES =\
 	$(SOLVER_FILES:%=_build/src/solver/%)\
 	$(CLIENT_FILES:%=_build/src/client/%)
 
+.PHONY: opam-lib.install
+opam-lib.install:
+	@echo "lib: [\n  \"META\"\n $(FILES:%= \"%\"\n)]" >$@
+
 .PHONY: libuninstall libinstall libinstall-with-ocamlbuild
-libinstall: META
-	$(MAKE) libuninstall
-	ocamlfind install opam META $(FILES)
+libinstall: $(OPAM_INSTALLER) META opam-lib.install
+	$(OPAM_INSTALLER) --prefix="$(DESTDIR)$(prefix)" opam-lib.install
+
 libinstall-with-ocamlbuild: META
 	$(MAKE) libuninstall
 	ocamlfind install opam META $(OCAMLBUILD_FILES)
+
 libuninstall:
-	ocamlfind remove opam
+	$(OPAM_INSTALLER) --prefix="$(DESTDIR)$(prefix)" -u opam-lib.install
 
 doc: compile
 	$(MAKE) -C doc
-
-OPAM_FULL       = opam-full-$(version)
-OPAM_FULL_TARGZ = $(OPAM_FULL).tar.gz
-
-OPAM_FILES = $(wildcard src_ext/*.tar.gz)\
-	     $(wildcard src_ext/*.tbz)\
-	     $(shell git ls-tree --name-only -r HEAD)
-
-prepare-archive:
-	$(MAKE) -C src_ext distclean
-	$(MAKE) clone
-	rm -f $(OPAM_FULL) $(OPAM_FULL).tar.gz
-	ln -s . $(OPAM_FULL)
-
-# we want OPAM_FILES to be up-to-date here
-complete-archive:
-	tar cz $(addprefix $(OPAM_FULL)/,$(OPAM_FILES)) > $(OPAM_FULL).tar.gz
-	rm -f $(OPAM_FULL)
-
-$(OPAM_FULL_TARGZ):
-	$(MAKE) prepare-archive
-	$(MAKE) complete-archive
-
-archive: $(OPAM_FULL_TARGZ)
-	@
-upload: $(OPAM_FULL_TARGZ)
-	scp $(OPAM_FULL_TARGZ) webmaster@ocamlpro.com:pub/
 
 configure: configure.ac m4/*.m4
 	aclocal -I m4
