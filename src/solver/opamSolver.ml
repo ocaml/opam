@@ -128,6 +128,7 @@ let atom2cudf version_map (name,cstr) =
 
 let opam2cudf universe depopts version_map package =
   let package = real_version universe package in
+  let name = OpamPackage.name package in
   let depends =
     try OpamPackage.Map.find package universe.u_depends
     with Not_found -> Empty in
@@ -146,7 +147,7 @@ let opam2cudf universe depopts version_map package =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in
   let conflicts = (* prevents install of multiple versions of the same pkg *)
-    (OpamPackage.name package, None)::OpamFormula.to_conjunction conflicts in
+    (name, None)::OpamFormula.to_conjunction conflicts in
   let installed =
     OpamPackage.Set.exists (fun pkg -> real_version universe pkg = package)
       universe.u_installed in
@@ -156,6 +157,13 @@ let opam2cudf universe depopts version_map package =
         reinstall
     | _                 -> false in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
+  let keep =
+    let pinned_to_current_version =
+      try Lazy.force (OpamPackage.Name.Map.find name universe.u_pinned)
+          = OpamPackage.version package
+      with Not_found -> false in
+    if pinned_to_current_version then `Keep_version
+    else`Keep_none in
   let extras =
     let e = [
       OpamCudf.s_source,
@@ -173,7 +181,7 @@ let opam2cudf universe depopts version_map package =
     Cudf.
     package = name_to_cudf (OpamPackage.name package);
     version = OpamPackage.Map.find package version_map;
-    (* keep = `Keep_none; -- XXX use `Keep_version to handle pinned packages ? *)
+    keep;
     depends = List.rev_map (List.rev_map (atom2cudf version_map))
         (OpamFormula.to_cnf depends);
     conflicts = List.rev_map (atom2cudf version_map) conflicts;
