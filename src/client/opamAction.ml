@@ -382,6 +382,8 @@ let removal_needs_download t nv =
       (OpamPackage.to_string nv);
     false
   | Some opam ->
+    if List.mem LightUninstall (OpamFile.OPAM.flags opam) then true
+    else
     let commands =
       OpamState.filter_commands t ~opam
         OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in

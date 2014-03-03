@@ -267,6 +267,7 @@ type universe = {
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : OpamPackage.Version.t Lazy.t name_map;
+  u_builddeps: package_set;
 }
 
 (** {2 Command line arguments} *)
