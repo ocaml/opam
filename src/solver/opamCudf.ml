@@ -398,6 +398,7 @@ let call_external_solver ~explain univ req =
       with e ->
         OpamMisc.fatal e;
         OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
+        OpamGlobals.warning "Falling back to internal solver";
         Algo.Depsolver.check_request ~explain cudf_request
     end else
       Algo.Depsolver.Sat(None,Cudf.load_universe [])
