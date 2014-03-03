@@ -129,6 +129,12 @@ type ppflag =
   | Camlp4 of string list
   | Cmd of string list
 
+(** Opam package flags *)
+type package_flag =
+  | LightUninstall (** The package doesn't require downloading to uninstall *)
+  | BuildDep (** The package is only a build-dependency, it won't require
+                 recompilation of packages depending on it when changed *)
+
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)
 module type GenericPackage = sig

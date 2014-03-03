@@ -234,6 +234,12 @@ val make_commands: command list -> value
 (** Parse a list of commands *)
 val parse_messages: value -> (string * filter option) list
 
+(** Create a package flag *)
+val make_flag: package_flag -> value
+
+(** Parse a package flag *)
+val parse_flag: value -> package_flag
+
 (** {2 Tags} *)
 
 (** Parse tags *)

@@ -175,6 +175,9 @@ module OPAM: sig
   (** Where to post bug reports. *)
   val bug_reports: t -> string list
 
+  (** The package flags that are present for this package. *)
+  val flags: t -> package_flag list
+
   (** construct as [name] *)
   val with_name: t -> name -> t
 
