@@ -63,11 +63,13 @@ module type SIG = sig
   exception Cyclic of G.V.t list list
 end
 
-module Make (G : G) = struct
+module Make (G : G) : SIG with module G = G
+                           and type G.V.t = G.V.t
+= struct
 
   module G = G
 
-  module V = struct include G.V let compare = compare end
+  module V = G.V (* struct include G.V let compare = compare end *)
   module M = Map.Make (V)
   module S = Set.Make (V)
 
@@ -387,4 +389,48 @@ module Make (G : G) = struct
         let g = create list in
         iter jobs g ~pre ~post ~child
 
+end
+
+module type VERTEX = sig
+  include Graph.Sig.COMPARABLE
+  val to_string: t -> string
+end
+
+module type GRAPH = sig
+  include Graph.Sig.I
+  include Graph.Oper.S with type g = t
+  module Topological : sig
+    val fold : (V.t -> 'a -> 'a) -> t -> 'a -> 'a
+    val iter : (V.t -> unit) -> t -> unit
+  end
+  module Parallel : SIG with type G.t = t
+                         and type G.V.t = vertex
+  module Dot : sig val output_graph : out_channel -> t -> unit end
+end
+
+module MakeGraph (V: VERTEX) : GRAPH with type V.t = V.t
+= struct
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (V)
+  module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
+  module Parallel = Make (struct
+      let string_of_vertex = V.to_string
+      include PG
+      include Topological
+      include Traverse
+      include Components
+    end)
+  module Dot = Graph.Graphviz.Dot (struct
+      let edge_attributes _ = []
+      let default_edge_attributes _ = []
+      let get_subgraph _ = None
+      let vertex_attributes _ = []
+      let vertex_name v = Printf.sprintf "%S" (V.to_string v)
+      let default_vertex_attributes _ = []
+      let graph_attributes _ = []
+      include PG
+    end)
+  include PG
+  include Graph.Oper.I (PG)
 end

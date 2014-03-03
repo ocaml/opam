@@ -154,7 +154,7 @@ module B = struct
     with e ->
       OpamMisc.fatal e;
       OpamGlobals.error_and_exit "%s is unavailable."
-        (string_of_address repo.repo_address)
+        (OpamTypesBase.string_of_address repo.repo_address)
 
   let curl ~remote_file ~local_file =
     log "curl";
@@ -193,7 +193,7 @@ module B = struct
 
   let pull_url package dirname checksum remote_url =
     log "pull-file";
-    let remote_url = string_of_address remote_url in
+    let remote_url = OpamTypesBase.string_of_address remote_url in
     let filename = OpamFilename.of_string remote_url in
     let base = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname base in

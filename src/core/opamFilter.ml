@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 
 type env = full_variable -> variable_contents option
 

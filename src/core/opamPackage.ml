@@ -95,6 +95,9 @@ type t = {
 
 let create name version = { name; version }
 
+let name_to_string t = Name.to_string t.name
+let version_to_string t = Version.to_string t.version
+
 let pinned name = { name; version = Version.pinned }
 
 let name t = t.name

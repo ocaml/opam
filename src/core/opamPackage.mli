@@ -54,6 +54,10 @@ val version: t -> Version.t
 (** Create a new pair (name x version) *)
 val create: Name.t -> Version.t -> t
 
+(** To fit in the GenericPackage type, for generic display functions *)
+val name_to_string: t -> string
+val version_to_string: t -> string
+
 (** Guess the package name from a filename. This function extracts
     [name] and [version] from {i /path/to/$name.$version/opam} *)
 val of_filename: OpamFilename.t -> t option

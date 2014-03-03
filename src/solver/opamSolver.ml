@@ -15,8 +15,13 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
+
+module Action = OpamActionGraph.MakeAction(OpamPackage)
+module ActionGraph = OpamActionGraph.Make(Action)
+type solution = (OpamPackage.t, ActionGraph.t) gen_solution
 
 let empty_universe =
   {
@@ -274,13 +279,13 @@ let map_cause f = function
 
 let graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in
-  let opam_graph = PackageActionGraph.create ~size () in
+  let opam_graph = ActionGraph.create ~size () in
   OpamCudf.ActionGraph.iter_vertex (fun package ->
-    PackageActionGraph.add_vertex opam_graph (map_action cudf2opam package)
+    ActionGraph.add_vertex opam_graph (map_action cudf2opam package)
 
   ) cudf_graph;
   OpamCudf.ActionGraph.iter_edges (fun p1 p2 ->
-    PackageActionGraph.add_edge opam_graph
+    ActionGraph.add_edge opam_graph
       (map_action cudf2opam p1)
       (map_action cudf2opam p2)
   ) cudf_graph;
@@ -288,13 +293,13 @@ let graph cudf2opam cudf_graph =
 
 let solution cudf2opam cudf_solution =
   let to_remove =
-    List.rev (List.rev_map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove) in
-  let to_process = graph cudf2opam cudf_solution.OpamCudf.ActionGraph.to_process in
+    List.rev (List.rev_map cudf2opam cudf_solution.to_remove) in
+  let to_process = graph cudf2opam cudf_solution.to_process in
   let root_causes =
     List.rev_map
       (fun (p, c) -> cudf2opam p, map_cause cudf2opam c)
-      cudf_solution.OpamCudf.ActionGraph.root_causes in
-  { PackageActionGraph.to_remove ; to_process; root_causes }
+      cudf_solution.root_causes in
+  { to_remove ; to_process; root_causes }
 
 let map_request f r =
   let f = List.rev_map f in
@@ -372,21 +377,21 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
 let delete_or_update t =
-  t.PackageActionGraph.to_remove <> [] ||
-  PackageActionGraph.fold_vertex
+  t.to_remove <> [] ||
+  ActionGraph.fold_vertex
     (fun v acc ->
       acc || match v with To_change (Some _, _) -> true | _ -> false)
-    t.PackageActionGraph.to_process
+    t.to_process
     false
 
 let new_packages sol =
-  PackageActionGraph.fold_vertex (fun action packages ->
+  ActionGraph.fold_vertex (fun action packages ->
     OpamPackage.Set.add (action_contents action) packages
-  ) sol.PackageActionGraph.to_process OpamPackage.Set.empty
+  ) sol.to_process OpamPackage.Set.empty
 
 let stats sol =
   let s_install, s_reinstall, s_upgrade, s_downgrade =
-    PackageActionGraph.fold_vertex (fun action (i,r,u,d) ->
+    ActionGraph.fold_vertex (fun action (i,r,u,d) ->
       match action with
       | To_change (None, _)             -> i+1, r, u, d
       | To_change (Some x, y) when x<>y ->
@@ -398,9 +403,9 @@ let stats sol =
       | To_change (Some _, _)
       | To_recompile _                  -> i, r+1, u, d
       | To_delete _ -> assert false)
-      sol.PackageActionGraph.to_process
+      sol.to_process
       (0, 0, 0, 0) in
-  let s_remove = List.length sol.PackageActionGraph.to_remove in
+  let s_remove = List.length sol.to_remove in
   { s_install; s_reinstall; s_upgrade; s_downgrade; s_remove }
 
 let string_of_stats stats =
@@ -413,37 +418,38 @@ let string_of_stats stats =
     stats.s_remove
 
 let solution_is_empty t =
-  t.PackageActionGraph.to_remove = []
-  && PackageActionGraph.is_empty t.PackageActionGraph.to_process
+  t.to_remove = []
+  && ActionGraph.is_empty t.to_process
 
 let print_solution ~messages ~rewrite t =
   if not (solution_is_empty t) then
-    let causes pkg =
-      try List.assoc pkg t.PackageActionGraph.root_causes
-      with Not_found -> Unknown in
-    List.iter (fun p -> OpamGlobals.msg "%s\n"
-        (PackageAction.string_of_action ~causes (To_delete (rewrite p)))
-    ) t.PackageActionGraph.to_remove;
-    PackageActionGraph.Topological.iter (function action ->
+    let print_action a =
+      let cause = try List.assoc (action_contents a) t.root_causes
+        with Not_found -> Unknown in
+      match string_of_cause OpamPackage.name_to_string cause with
+      | "" -> OpamGlobals.msg " - %s\n" (Action.to_string a)
+      | c  -> OpamGlobals.msg " - %-47s [%s]\n" (Action.to_string a) c in
+    List.iter (fun p -> print_action (To_delete (rewrite p))) t.to_remove;
+    ActionGraph.Topological.iter (function action ->
         let action = map_action rewrite action in
-        OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes action);
+        print_action action;
         match action with
         | To_change(_,p)
         | To_recompile p -> List.iter (OpamGlobals.msg "     %s.\n")  (messages p)
         | To_delete _    -> ()
-      ) t.PackageActionGraph.to_process
+      ) t.to_process
 
 let sequential_solution l =
-  let g = PackageActionGraph.create () in
-  List.iter (PackageActionGraph.add_vertex g) l;
+  let g = ActionGraph.create () in
+  List.iter (ActionGraph.add_vertex g) l;
   let rec aux = function
     | [] | [_]       -> ()
     | x::(y::_ as t) ->
-      PackageActionGraph.add_edge g x y;
+      ActionGraph.add_edge g x y;
       aux t in
   aux l;
   {
-    PackageActionGraph.to_remove = [];
+    to_remove = [];
     to_process = g;
     root_causes = []
   }

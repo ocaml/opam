@@ -17,6 +17,7 @@
 let log fmt = OpamGlobals.log "VCS" fmt
 
 open OpamTypes
+open OpamTypesBase
 
 module type VCS = sig
   val exists: repository -> bool

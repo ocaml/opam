@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2013 OCamlPro                                        *)
+(*    Copyright 2012-2014 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
@@ -19,6 +19,8 @@ let log fmt = OpamGlobals.log "ACTION" fmt
 open OpamTypes
 open OpamFilename.OP
 open OpamState.Types
+
+module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
 (* IMPORTANT: this function is executed by the children processes,
@@ -535,7 +537,7 @@ let sources_needed t solution =
   let pkgs =
     OpamPackage.Set.of_list
       (List.filter (removal_needs_download t)
-         solution.PackageActionGraph.to_remove) in
+         solution.to_remove) in
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
       | To_delete nv ->
@@ -547,7 +549,7 @@ let sources_needed t solution =
         let acc = OpamPackage.Set.add nv2 acc in
         if removal_needs_download t nv1
         then OpamPackage.Set.add nv1 acc else acc)
-    solution.PackageActionGraph.to_process pkgs
+    solution.to_process pkgs
 
 let remove_package t ~metadata ?silent nv =
   if !OpamGlobals.fake || !OpamGlobals.show then
@@ -584,7 +586,7 @@ let remove_all_packages t ~metadata sol =
     | To_change (Some nv, _) | To_delete nv | To_recompile nv -> delete nv
     | To_change (None, _) -> () in
   try
-    List.iter delete PackageActionGraph.(sol.to_remove);
+    List.iter delete sol.to_remove;
     PackageActionGraph.(Topological.iter action (mirror sol.to_process));
     update_metadata (), `Successful ()
   with e ->
