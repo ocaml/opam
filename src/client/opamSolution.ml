@@ -485,26 +485,26 @@ let parallel_apply t action solution =
       OpamGlobals.msg "\n";
       finalize ();
       OpamGlobals.header_msg "Error report";
+      let print_actions oc actions =
+        let pr a = Printf.fprintf oc " - %s\n" (PackageAction.to_string a) in
+        List.iter pr actions in
       if successful <> [] then (
         OpamGlobals.msg
-          "These actions have been completed %s\n%s\n"
+          "These actions have been completed %s\n%a"
           (OpamGlobals.colorise `bold "successfully")
-          (String.concat "\n"
-             (List.map PackageAction.to_string successful))
+          print_actions successful
       );
       if failed <> [] then (
         OpamGlobals.msg
-          "The following %s\n%s\n"
+          "The following %s\n%a"
           (OpamGlobals.colorise `bold "failed")
-          (String.concat "\n"
-             (List.map PackageAction.to_string failed))
+          print_actions failed
       );
       if remaining <> [] then (
         OpamGlobals.msg
-          "Due to the errors, the following have been %s\n%s\n"
+          "Due to the errors, the following have been %s\n%a"
           (OpamGlobals.colorise `bold "cancelled")
-          (String.concat "\n"
-             (List.map PackageAction.to_string remaining))
+          print_actions remaining
       );
       err
     | _ -> assert false

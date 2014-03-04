@@ -218,14 +218,15 @@ let error_and_exit fmt =
 
 let display_messages = ref true
 
-let msg fmt =
-  Printf.ksprintf (fun str ->
-    flush stderr;
-    if !display_messages then (
-      print_string str;
-      flush stdout;
-    )
-  ) fmt
+let msg =
+  if !display_messages then (
+    fun fmt ->
+      flush stderr;
+      Printf.kfprintf flush stdout fmt
+  ) else (
+    fun fmt ->
+      Printf.ifprintf stdout fmt
+  )
 
 let header_msg fmt =
   let markl, markr = match !utf8_msgs with
