@@ -1,0 +1,32 @@
+diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
+index 9b71147..7197fa3 100644
+--- a/common/cudfSolver.ml
++++ b/common/cudfSolver.ml
+@@ -38,13 +38,6 @@ let rmtmpdir path =
+     ignore (Unix.system (Printf.sprintf "rm -rf %s" path))
+ ;;
+ 
+-let check_exit_status cmd = function
+-  |Unix.WEXITED 0   -> ()
+-  |Unix.WEXITED i   -> fatal "command '%s' failed with code %d" cmd i
+-  |Unix.WSIGNALED i -> fatal "command '%s' killed by signal %d" cmd i
+-  |Unix.WSTOPPED i  -> fatal "command '%s' stopped by signal %d" cmd i
+-;;
+-
+ let rec input_all_lines acc chan =
+   try input_all_lines ((input_line chan)::acc) chan
+   with End_of_file -> acc
+@@ -69,6 +62,13 @@ let fatal fmt =
+   ) fmt
+ ;;
+ 
++let check_exit_status cmd = function
++  |Unix.WEXITED 0   -> ()
++  |Unix.WEXITED i   -> fatal "command '%s' failed with code %d" cmd i
++  |Unix.WSIGNALED i -> fatal "command '%s' killed by signal %d" cmd i
++  |Unix.WSTOPPED i  -> fatal "command '%s' stopped by signal %d" cmd i
++;;
++
+ (** [execsolver] execute an external cudf solver.
+     exec_pat : execution string
+     cudf : a cudf document (preamble, universe, request)
