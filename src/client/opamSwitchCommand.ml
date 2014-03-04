@@ -303,9 +303,9 @@ let import_t filename t =
 
   let solution = OpamSolution.resolve_and_apply t (Import roots)
       ~requested:(OpamPackage.names_of_packages imported)
-      { wish_install = to_keep;
+      { wish_install = to_import @ to_keep;
         wish_remove  = [];
-        wish_upgrade = to_import } in
+        wish_upgrade = []; } in
   OpamSolution.check_solution t solution
 
 let export filename =
