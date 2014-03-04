@@ -42,6 +42,10 @@ val repository_kind_of_string: string -> [`http|`local|`git|`darcs|`hg]
 (** Extract a package from a package action. *)
 val action_contents: 'a action -> 'a
 
+(** Extract a packages from a package action. This returns all concerned
+    packages, including the old version for an up/down-grade. *)
+val full_action_contents: 'a action -> 'a list
+
 (** Pretty-prints the cause of an action *)
 val string_of_cause: ('pkg -> string) -> 'pkg cause -> string
 

@@ -763,7 +763,9 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
   let to_process = action_graph_of_packages actions interesting_packages in
 
   let all_actions =
-    List.fold_left (fun acc a -> Map.add (action_contents a) a acc)
+    List.fold_left (fun acc a ->
+        List.fold_left (fun acc pkg -> Map.add pkg a acc)
+          acc (full_action_contents a))
       actions root_actions in
 
   let root_causes =
