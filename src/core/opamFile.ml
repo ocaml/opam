@@ -1889,14 +1889,22 @@ module Make (F : F) = struct
         close_in ic;
         log "Read %s in %.3fs" filename (chrono ());
         r
-      with OpamFormat.Bad_format msg ->
-        OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
+      with e ->
+        let pos,msg = match e with
+          | OpamFormat.Bad_format (Some pos, msg) -> pos, ":\n  "^msg
+          | OpamFormat.Bad_format (None, msg) -> (f,-1,-1), ":\n  "^msg
+          | _ -> (f,-1,-1),"" in
+        let e = OpamFormat.add_pos pos e in
+        OpamGlobals.error "At %s%s" (string_of_pos pos) msg;
+        raise e
     else
       OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
 
   let safe_read f =
     if OpamFilename.exists f then
-      read f
+      try read f with OpamFormat.Bad_format _ ->
+        OpamGlobals.msg "[skipped]\n";
+        F.empty
     else (
       log "Cannot find %s" (OpamFilename.to_string f);
       F.empty
