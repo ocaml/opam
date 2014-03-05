@@ -572,6 +572,16 @@ let parse_message =
 let parse_messages =
   parse_list parse_message
 
+let make_flag = function
+  | LightUninstall -> make_symbol "light-uninstall"
+  | BuildDep -> make_symbol "build-dep"
+
+let parse_flag = function
+  | Ident "light-uninstall" -> LightUninstall
+  | Ident "build-dep" -> BuildDep
+  | x ->
+    bad_format "Expecting a package flag, got %s" (kind x)
+
 (* TAGS *)
 
 let parse_string_set =

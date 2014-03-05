@@ -302,6 +302,7 @@ let s_source = "opam-name"
 let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
+let s_builddep = "build-dep"
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
@@ -310,6 +311,8 @@ let check flag p =
 let need_reinstall = check s_reinstall
 
 let is_installed_root = check s_installed_root
+
+let is_builddep = check s_builddep
 
 let aspcud_exists = lazy (OpamSystem.command_exists "aspcud")
 
@@ -322,6 +325,7 @@ let default_preamble =
     (s_source_number,  `String None);
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
+    (s_builddep,       `Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
@@ -736,9 +740,10 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
     (* add the packages to recompile due to the REMOVAL of packages
        (ie. when an optional dependency has been removed). *)
     List.fold_left (fun to_recompile pkg ->
-      let succ = Graph.succ all_packages pkg in
-      Set.union to_recompile (Set.of_list succ)
-    ) recompile_roots to_remove in
+        if is_builddep pkg then to_recompile else
+        let succ = Graph.succ all_packages pkg in
+        Set.union to_recompile (Set.of_list succ)
+      ) recompile_roots to_remove in
 
   (* Compute the transitive closure of packages to recompile *)
   let _, actions =
@@ -749,7 +754,9 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
           let to_recompile = Set.union to_recompile (Set.of_list succ) in
           let actions = Map.add pkg action (Map.remove pkg actions) in
           to_recompile, actions in
-        if Map.mem pkg actions then
+        if is_builddep pkg then
+          to_recompile, actions
+        else if Map.mem pkg actions then
           add_succ pkg (Map.find pkg actions)
         else if Set.mem pkg to_recompile then
           add_succ pkg (To_recompile pkg)

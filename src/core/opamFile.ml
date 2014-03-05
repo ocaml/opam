@@ -779,6 +779,7 @@ module X = struct
       messages   : (string * filter option) list;
       bug_reports : string list;
       post_messages: (string * filter option) list;
+      flags      : package_flag list;
     }
 
     let empty = {
@@ -810,6 +811,7 @@ module X = struct
       messages   = [];
       post_messages = [];
       bug_reports = [];
+      flags      = [];
     }
 
     let create nv =
@@ -847,6 +849,7 @@ module X = struct
     let s_messages    = "messages"
     let s_post_messages = "post-messages"
     let s_bug_reports = "bug-reports"
+    let s_flags       = "flags"
 
     let opam_1_0_fields = [
       s_opam_version;
@@ -882,6 +885,7 @@ module X = struct
       s_messages;
       s_post_messages;
       s_bug_reports;
+      s_flags;
     ]
 
     let to_1_0_fields k v =
@@ -933,6 +937,7 @@ module X = struct
     let post_messages t = t.post_messages
     let opam_version t = t.opam_version
     let bug_reports t = t.bug_reports
+    let flags t = t.flags
 
     let with_name t name = { t with name = Some name }
     let with_version t version = { t with version = Some version }
@@ -1012,7 +1017,9 @@ module X = struct
           @ list    t.messages      s_messages
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.post_messages s_post_messages
-              OpamFormat.(make_list (make_option make_string make_filter));
+              OpamFormat.(make_list (make_option make_string make_filter))
+          @ list    t.flags         s_flags
+              OpamFormat.(make_list make_flag)
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string [s_os; s_ocaml_version; s_available] s
@@ -1100,12 +1107,14 @@ module X = struct
         OpamFormat.assoc_list s s_bug_reports OpamFormat.parse_string_list in
       let post_messages =
         OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
+      let flags = OpamFormat.assoc_list s s_flags
+          OpamFormat.(parse_list parse_flag) in
       { opam_version; name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
-        bug_reports;
+        bug_reports; flags
       }
   end
 

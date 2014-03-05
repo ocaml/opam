@@ -947,6 +947,13 @@ let universe t action =
            let v = lazy (OpamPackage.version (pinning_version t (OpamPackage.pinned k))) in
           OpamPackage.Name.Map.add k v set)
         t.pinned OpamPackage.Name.Map.empty;
+    u_builddeps =
+      OpamPackage.Map.fold
+        (fun nv opam set ->
+           if List.mem BuildDep (OpamFile.OPAM.flags opam) then
+             OpamPackage.Set.add nv set
+           else set)
+        opams OpamPackage.Set.empty;
   }
 
 let check_base_packages t =
