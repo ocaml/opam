@@ -62,6 +62,9 @@ end
 module ActionGraph: OpamParallel.GRAPH with type V.t = Cudf.package action
 type solution = (Cudf.package, ActionGraph.t) gen_solution
 
+(** Special package used by Dose internally, should generally be filtered out *)
+val is_dose_request: Cudf.package -> bool
+
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
 val dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list

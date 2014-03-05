@@ -111,6 +111,9 @@ module Graph = struct
   include PG
 end
 
+let dose_dummy_request = "dose-dummy-request"
+let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
+
 let filter_dependencies f_direction universe packages =
   let graph = f_direction (Graph.of_universe universe) in
   let packages = Set.of_list packages in
@@ -176,23 +179,22 @@ let string_of_reason cudf2opam opam_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
-    let nvi = cudf2opam i in
-    let nvj = cudf2opam j in
-    if OpamPackage.name nvi = OpamPackage.name nvj then
-      None
+    if is_dose_request i || is_dose_request j || i.Cudf.package = j.Cudf.package
+    then None
     else
-      let nva = min nvi nvj in
-      let nvb = max nvi nvj in
-      let str = Printf.sprintf "%s is in conflict with %s."
-          (OpamPackage.to_string nva)
-          (OpamPackage.to_string nvb) in
-      Some str
+    let nva, nvb =
+      let nvi = cudf2opam i in
+      let nvj = cudf2opam j in
+      min nvi nvj, max nvi nvj in
+    let str = Printf.sprintf "%s is in conflict with %s."
+        (OpamPackage.to_string nva)
+        (OpamPackage.to_string nvb) in
+    Some str
   | Missing (p,m) ->
     let of_package =
-      if p.Cudf.package = "dose-dummy-request" then ""
-      else
-        let nv = cudf2opam p in
-        Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
+      if is_dose_request p then "" else
+      let nv = cudf2opam p in
+      Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
     let pinned_deps, deps =
       List.partition
         (fun (p,_) ->
@@ -242,7 +244,7 @@ let make_chains depends =
     | _ -> () in
   List.iter init depends;
   Graph.iter_vertex (fun v ->
-    if v.Cudf.package = "dose-dummy-request" then
+    if is_dose_request v then
       Graph.remove_vertex g v
   ) g;
   let roots =
@@ -426,7 +428,7 @@ let get_final_universe univ req =
     failwith "opamSolver" in
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success u (* (remove u "dose-dummy-request" None) *)
+  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> fail str
   | Unsat r   ->
