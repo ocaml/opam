@@ -20,3 +20,10 @@ begin program "opam-installer"
   ]
   requires = [ "opam-client" ]
 end
+
+begin program "opamlfind"
+  files = [
+    "opamlfind.ml"
+  ]
+  requires = [ "unix" ]
+end
