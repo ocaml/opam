@@ -76,6 +76,12 @@ val kind_of_pin_option: pin_option -> pin_kind option
 (** Pretty-print *)
 val string_of_shell: shell -> string
 
+(** The empty file position *)
+val pos_null: pos
+
+(** Prints a file position *)
+val string_of_pos: pos -> string
+
 (** Pretty print *)
 val string_of_symbol: symbol -> string
 

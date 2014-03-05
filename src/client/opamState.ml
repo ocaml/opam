@@ -1259,8 +1259,10 @@ let load_state ?(save_cache=true) call_site =
                   let repo, prefix = OpamPackage.Map.find nv package_index in
                   let repo = OpamRepositoryName.Map.find repo repositories in
                   OpamPath.Repository.opam repo prefix nv in
-              let opam = OpamFile.OPAM.read file in
-              OpamPackage.Map.add nv opam map
+              try
+                let opam = OpamFile.OPAM.read file in
+                OpamPackage.Map.add nv opam map
+              with OpamFormat.Bad_format _ -> map (* Error printed, continue *)
           with
           | Not_found ->
             OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."

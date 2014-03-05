@@ -121,8 +121,9 @@ module Syntax = struct
 
   let to_1_0 file =
     let file_contents = List.map (function
-        | Variable (v, _) as c ->
-          if v = s_opam_version then Variable(s_opam_version, String "1")
+        | Variable (pos, v, _) as c ->
+          if v = s_opam_version then
+            Variable (pos,s_opam_version, OpamFormat.make_string "1")
           else c
         | c -> c
       ) file.file_contents in
@@ -301,16 +302,18 @@ module X = struct
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (url_name , OpamFormat.make_string (string_of_address t.url));
+          OpamFormat.make_variable (
+                    url_name ,
+                    OpamFormat.make_string (string_of_address t.url));
         ] @ (
             if t.mirrors = [] then [] else
-              [Variable (s_mirrors ,
+              [OpamFormat.make_variable (s_mirrors ,
                          OpamFormat.make_list
                            (string_of_address ++ OpamFormat.make_string)
                            t.mirrors)]
         ) @ match t.checksum with
             | None   -> []
-            | Some c -> [Variable (s_checksum, OpamFormat.make_string c)]
+            | Some c -> [OpamFormat.make_variable (s_checksum, OpamFormat.make_string c)]
       } in
       Syntax.to_string [] s
 
@@ -383,17 +386,22 @@ module X = struct
 
     let of_channel name ic =
       let lines = Lines.of_channel ic in
-      let map = ref empty in
-      let add n v = map := OpamPackage.Set.add (OpamPackage.create n v) !map in
-      List.iter (function
-        | []              -> ()
-        | [name; version] -> add (OpamPackage.Name.of_string name)
-                               (OpamPackage.Version.of_string version)
-        | s               ->
-          OpamGlobals.error_and_exit "Bad line in %s: %S"
-            (OpamFilename.to_string name) (String.concat " " s)
-      ) lines;
-      !map
+      let map,_ =
+        List.fold_left (fun (map,i) -> function
+            | [] -> map, i+1
+            | [name; version] ->
+              OpamPackage.Set.add
+                (OpamPackage.create
+                   (OpamPackage.Name.of_string name)
+                   (OpamPackage.Version.of_string version))
+                map,
+              i+1
+            | s ->
+              OpamGlobals.error "At %s:%d: skipped invalid line %S"
+                (OpamFilename.prettify name) i (String.concat " " s);
+              map, i+1
+          ) (empty,1) lines in
+      map
 
     let to_string _ t =
       check t;
@@ -551,15 +559,15 @@ module X = struct
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_name    ,
+          OpamFormat.make_variable (s_name    ,
                     OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
-          Variable (s_address ,
+          OpamFormat.make_variable (s_address ,
                     OpamFormat.make_string (string_of_address t.repo_address));
-          Variable (s_kind    ,
+          OpamFormat.make_variable (s_kind    ,
                     OpamFormat.make_string (string_of_repository_kind t.repo_kind));
-          Variable (s_priority,
+          OpamFormat.make_variable (s_priority,
                     OpamFormat.make_int t.repo_priority);
-          Variable (s_root,
+          OpamFormat.make_variable (s_root,
                     OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_root));
         ] } in
       Syntax.to_string [] s
@@ -732,15 +740,15 @@ module X = struct
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_opam_version,
+          OpamFormat.make_variable (s_opam_version,
                     OpamFormat.make_string (OpamVersion.to_string t.opam_version));
-          Variable (s_repositories,
+          OpamFormat.make_variable (s_repositories,
                     OpamFormat.make_list
                       (OpamRepositoryName.to_string ++ OpamFormat.make_string)
                       t.repositories);
-          Variable (s_jobs , OpamFormat.make_int t.jobs);
-          Variable (s_dl_jobs , OpamFormat.make_int t.dl_jobs);
-          Variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
+          OpamFormat.make_variable (s_jobs , OpamFormat.make_int t.jobs);
+          OpamFormat.make_variable (s_dl_jobs , OpamFormat.make_int t.dl_jobs);
+          OpamFormat.make_variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
         ]
       } in
       Syntax.to_string [] s
@@ -894,7 +902,7 @@ module X = struct
         else None
       else if k = s_maintainer || k = s_homepage || k = s_license then
         match v with
-        | List (v::_) -> Some (k, v)
+        | List (_,v::_) -> Some (k, v)
         | v           -> Some (k, v)
       else Some (k, v)
 
@@ -962,28 +970,28 @@ module X = struct
         | _ ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
-          [ Variable (s_name, name (check "name" t.name));
-            Variable (s_version, version (check "version" t.version)) ] in
+          [ OpamFormat.make_variable (s_name, name (check "name" t.name));
+            OpamFormat.make_variable (s_version, version (check "version" t.version)) ] in
       let option c s f = match c with
         | None   -> []
-        | Some v -> [ Variable (s, f v) ] in
+        | Some v -> [ OpamFormat.make_variable (s, f v) ] in
       let list c s f = match c with
         | [] -> []
-        | l  -> [ Variable (s, f l) ] in
+        | l  -> [ OpamFormat.make_variable (s, f l) ] in
       let listm c s f = match c with
         | [] -> []
-        | l  -> [ Variable (s, OpamFormat.make_list f l) ] in
+        | l  -> [ OpamFormat.make_variable (s, OpamFormat.make_list f l) ] in
       let formula c s f = match c with
         | Empty -> []
-        | x     -> [ Variable (s, f x) ] in
+        | x     -> [ OpamFormat.make_variable (s, f x) ] in
       let filter c s f = match c with
         | FBool true -> []
-        | x     -> [ Variable (s, f x) ] in
+        | x     -> [ OpamFormat.make_variable (s, f x) ] in
       let s = {
         file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_opam_version,
+          OpamFormat.make_variable (s_opam_version,
                     (OpamVersion.to_string ++ OpamFormat.make_string) t.opam_version);
         ] @ list    t.maintainer    s_maintainer    OpamFormat.make_string_list
           @ list    t.author        s_author        OpamFormat.make_string_list
@@ -1013,7 +1021,7 @@ module X = struct
           @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
           @ formula t.os            s_os            OpamFormat.make_os_constraint
           @ filter  t.available     s_available
-              (fun f -> List (OpamFormat.make_filter f))
+              (OpamFormat.make_filter ++ OpamFormat.make_list (fun x -> x))
           @ list    t.messages      s_messages
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.post_messages s_post_messages
@@ -1084,8 +1092,7 @@ module X = struct
       let os = OpamFormat.assoc_default OpamFormula.Empty s s_os
           OpamFormat.parse_os_constraint in
       let available = OpamFormat.assoc_default (FBool true) s s_available
-          (function List l -> OpamFormat.parse_filter l
-                  | _ -> raise (OpamFormat.Bad_format "available: expecting a list")) in
+          (OpamFormat.parse_list (fun x -> x) ++ OpamFormat.parse_filter) in
       let parse_file = OpamFormat.parse_option
           (OpamFormat.parse_string ++ OpamFilename.Base.of_string)
           OpamFormat.parse_filter in
@@ -1211,34 +1218,36 @@ module X = struct
       Printf.sprintf "%s%s" o (OpamFilename.Base.to_string t.c)
 
     let to_string filename t =
+      let open OpamFormat in
       let mk =
-        let aux (src, opt) =
-          let src = String (string_of_optional src) in
-          match opt with
-          | None     -> src
-          | Some dst -> Option (src, [String (OpamFilename.Base.to_string dst)]) in
-        OpamFormat.make_list aux in
+        make_list
+          (make_option
+             (fun src -> make_string (string_of_optional src))
+             (fun dst ->
+                [make_string (OpamFilename.Base.to_string dst)])) in
       let mk_misc =
-        let aux (src, dst) =
-          let src = String (string_of_optional src) in
-          let dst = String (OpamFilename.to_string dst) in
-          Option (src, [dst]) in
-        OpamFormat.make_list aux in
+        make_list
+          (fun (src,dst) ->
+             make_option
+               (fun src -> make_string (string_of_optional src))
+               (fun dst ->
+                  [make_string (OpamFilename.to_string dst)])
+               (src, Some dst)) in
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_bin     , mk      t.bin);
-          Variable (s_sbin    , mk      t.sbin);
-          Variable (s_lib     , mk      t.lib);
-          Variable (s_toplevel, mk      t.toplevel);
-          Variable (s_stublibs, mk      t.stublibs);
-          Variable (s_share   , mk      t.share);
-          Variable (s_share_root, mk    t.share_root);
-          Variable (s_etc     , mk      t.etc);
-          Variable (s_doc     , mk      t.doc);
-          Variable (s_man     , mk      t.man);
-          Variable (s_misc    , mk_misc t.misc);
+          make_variable (s_bin     , mk      t.bin);
+          make_variable (s_sbin    , mk      t.sbin);
+          make_variable (s_lib     , mk      t.lib);
+          make_variable (s_toplevel, mk      t.toplevel);
+          make_variable (s_stublibs, mk      t.stublibs);
+          make_variable (s_share   , mk      t.share);
+          make_variable (s_share_root, mk    t.share_root);
+          make_variable (s_etc     , mk      t.etc);
+          make_variable (s_doc     , mk      t.doc);
+          make_variable (s_man     , mk      t.man);
+          make_variable (s_misc    , mk_misc t.misc);
         ]
       } in
       Syntax.to_string [] s
@@ -1351,22 +1360,23 @@ module X = struct
       { sections; variables }
 
     let to_string filename t =
+      let open OpamFormat in
       let of_value = function
-        | B b -> Bool b
-        | S s -> String s in
+        | B b -> make_bool b
+        | S s -> make_string s in
       let of_variables l =
-        List.rev_map (fun (k,v) -> Variable (OpamVariable.to_string k, of_value v)) l in
-      let make_require = OpamVariable.Section.to_string ++ OpamFormat.make_string in
+        List.rev_map (fun (k,v) -> make_variable (OpamVariable.to_string k, of_value v)) l in
+      let make_require = OpamVariable.Section.to_string ++ make_string in
       let of_section s =
-        Section
+        make_section
           { section_name  = OpamVariable.Section.to_string s.name;
             section_kind  = s.kind;
             section_items = [
-              Variable (s_bytecomp, OpamFormat.make_string_list s.bytecomp);
-              Variable (s_asmcomp , OpamFormat.make_string_list s.asmcomp);
-              Variable (s_bytelink, OpamFormat.make_string_list s.bytelink);
-              Variable (s_asmlink , OpamFormat.make_string_list s.asmlink);
-              Variable (s_requires, OpamFormat.make_list make_require s.requires);
+              make_variable (s_bytecomp, make_string_list s.bytecomp);
+              make_variable (s_asmcomp , make_string_list s.asmcomp);
+              make_variable (s_bytelink, make_string_list s.bytelink);
+              make_variable (s_asmlink , make_string_list s.asmlink);
+              make_variable (s_requires, make_list make_require s.requires);
             ] @ of_variables s.lvariables
           } in
       Syntax.to_string [] {
@@ -1576,10 +1586,14 @@ module X = struct
       let s = file.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string ++ OpamVersion.of_string) in
-      let parse_camlp4 = function
-        | List ( Ident "CAMLP4" :: l ) ->
-          Some (Camlp4 (OpamFormat.parse_string_list (List l)))
-        | _ -> raise (OpamFormat.Bad_format "camlp4") in
+      let parse_camlp4 x =
+        match OpamFormat.parse_list (fun x -> x) x with
+        | x::l when OpamFormat.parse_ident x = "CAMLP4" ->
+          let pos = OpamFormat.value_pos x in
+          Some (Camlp4 (OpamFormat.parse_string_list (List (pos,l))))
+        | l ->
+          OpamFormat.bad_format ?pos:(OpamFormat.values_pos l)
+            "Expected ident \"CAMLP4\"" in
       let parse_ppflags = OpamFormat.parse_or [
           ("camlp4"     , parse_camlp4);
           ("string-list", OpamFormat.parse_string_list ++ fun x -> Some (Cmd x));
@@ -1658,10 +1672,12 @@ module X = struct
       }
 
     let to_string filename s =
+      let open OpamFormat in
       let make_ppflag = function
-        | Cmd l    -> OpamFormat.make_string_list l
+        | Cmd l    -> make_string_list l
         | Camlp4 l ->
-          List (Symbol "CAMLP4" :: List.rev (List.rev_map OpamFormat.make_string l)) in
+          make_list (fun x -> x)
+            (make_symbol "CAMLP4" :: List.rev (List.rev_map make_string l)) in
       let src = match s.kind, s.src with
         | _          , None   -> None
         | Some kind  , Some x -> Some (string_of_repository_kind kind, x)
@@ -1670,47 +1686,47 @@ module X = struct
         file_format   = s.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_opam_version,
-                    OpamFormat.make_string (OpamVersion.to_string s.opam_version))
+          make_variable (s_opam_version,
+                    make_string (OpamVersion.to_string s.opam_version))
         ] @ (
             match OpamCompiler.of_filename filename with
-            | None   -> [Variable (s_name,
-                                   OpamFormat.make_string
+            | None   -> [make_variable (s_name,
+                                   make_string
                                      (OpamCompiler.to_string s.name))]
             | Some _ -> []
           ) @ [
-            Variable (s_version,
-                      OpamFormat.make_string
+            make_variable (s_version,
+                      make_string
                         (OpamCompiler.Version.to_string s.version))
           ] @ (
             match src with
             | None       -> []
-            | Some (s,c) -> [Variable (s, OpamFormat.make_string (string_of_address c))]
+            | Some (s,c) -> [make_variable (s, make_string (string_of_address c))]
           ) @ [
-            Variable (s_patches,
-                      OpamFormat.make_list
-                        (OpamFilename.to_string ++ OpamFormat.make_string)
+            make_variable (s_patches,
+                      make_list
+                        (OpamFilename.to_string ++ make_string)
                         s.patches);
-            Variable (s_configure, OpamFormat.make_string_list s.configure);
-            Variable (s_make, OpamFormat.make_string_list s.make);
-            Variable (s_build, OpamFormat.make_commands s.build);
-            Variable (s_bytecomp, OpamFormat.make_string_list s.bytecomp);
-            Variable (s_asmcomp, OpamFormat.make_string_list s.asmcomp);
-            Variable (s_bytelink, OpamFormat.make_string_list s.bytelink);
-            Variable (s_asmlink, OpamFormat.make_string_list s.asmlink);
-            Variable (s_packages, OpamFormat.make_formula s.packages);
-            Variable (s_requires,
-                      OpamFormat.make_list
-                        (OpamVariable.Section.to_string ++ OpamFormat.make_string)
+            make_variable (s_configure, make_string_list s.configure);
+            make_variable (s_make, make_string_list s.make);
+            make_variable (s_build, make_commands s.build);
+            make_variable (s_bytecomp, make_string_list s.bytecomp);
+            make_variable (s_asmcomp, make_string_list s.asmcomp);
+            make_variable (s_bytelink, make_string_list s.bytelink);
+            make_variable (s_asmlink, make_string_list s.asmlink);
+            make_variable (s_packages, make_formula s.packages);
+            make_variable (s_requires,
+                      make_list
+                        (OpamVariable.Section.to_string ++ make_string)
                         s.requires);
-            Variable (s_env, OpamFormat.make_list OpamFormat.make_env_variable s.env);
-            Variable (s_tags, OpamFormat.make_string_list s.tags);
+            make_variable (s_env, make_list make_env_variable s.env);
+            make_variable (s_tags, make_string_list s.tags);
           ] @ (match s.pp with
                | None    -> []
-               | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
+               | Some pp -> [ make_variable (s_pp, make_ppflag pp) ]
           ) @ (
             if not s.preinstalled then []
-            else [ Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled) ])
+            else [ make_variable (s_preinstalled, make_bool s.preinstalled) ])
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string [] s
@@ -1800,15 +1816,15 @@ module X = struct
         file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents =
-          (Variable (s_opam_version, OpamFormat.make_string opam_version))
+          (OpamFormat.make_variable (s_opam_version, OpamFormat.make_string opam_version))
           :: (
             match t.upstream with
             | None -> []
-            | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
+            | Some url -> [OpamFormat.make_variable (s_upstream , OpamFormat.make_string url)]
           ) @ (
             match t.browse with
             | None -> []
-            | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
+            | Some url -> [OpamFormat.make_variable (s_browse   , OpamFormat.make_string url)]
           ) @ (
             match t.redirect with
             | [] -> []
@@ -1817,7 +1833,7 @@ module X = struct
                 OpamFormat.make_list
                   (OpamFormat.make_option OpamFormat.make_string OpamFormat.make_filter)
                   l in
-              [Variable(s_redirect, value)]
+              [OpamFormat.make_variable(s_redirect, value)]
           );
       } in
       Syntax.to_string [] s
@@ -1873,14 +1889,22 @@ module Make (F : F) = struct
         close_in ic;
         log "Read %s in %.3fs" filename (chrono ());
         r
-      with OpamFormat.Bad_format msg ->
-        OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
+      with e ->
+        let pos,msg = match e with
+          | OpamFormat.Bad_format (Some pos, msg) -> pos, ":\n  "^msg
+          | OpamFormat.Bad_format (None, msg) -> (f,-1,-1), ":\n  "^msg
+          | _ -> (f,-1,-1),"" in
+        let e = OpamFormat.add_pos pos e in
+        OpamGlobals.error "At %s%s" (string_of_pos pos) msg;
+        raise e
     else
       OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
 
   let safe_read f =
     if OpamFilename.exists f then
-      read f
+      try read f with OpamFormat.Bad_format _ ->
+        OpamGlobals.msg "[skipped]\n";
+        F.empty
     else (
       log "Cannot find %s" (OpamFilename.to_string f);
       F.empty
@@ -1889,9 +1913,13 @@ module Make (F : F) = struct
   let dummy_file = OpamFilename.raw "<dummy>"
 
   let read_from_channel ic =
-    try F.of_channel dummy_file ic
-    with OpamFormat.Bad_format msg ->
-      OpamSystem.internal_error "%s" msg
+    try F.of_channel dummy_file ic with
+    | OpamFormat.Bad_format (Some pos, msg) as e ->
+      OpamGlobals.error "At %s: %s" (string_of_pos pos) msg;
+      raise e
+    | OpamFormat.Bad_format (None, msg) as e ->
+      OpamGlobals.error "Input error: %s" msg;
+      raise e
 
   let write_to_channel oc str =
     output_string oc (F.to_string dummy_file str)
