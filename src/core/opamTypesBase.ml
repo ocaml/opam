@@ -171,6 +171,10 @@ let action_contents = function
   | To_recompile p
   | To_delete p -> p
 
+let full_action_contents = function
+  | To_change (Some p1, p2) -> [p1; p2]
+  | To_change (None, p) | To_recompile p | To_delete p -> [p]
+
 let string_of_cause to_string =
   let list_to_string l = String.concat ", " (List.map to_string l) in
   function
