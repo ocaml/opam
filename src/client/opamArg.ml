@@ -444,7 +444,7 @@ let build_options =
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
   let show =
-    mk_flag ["show"]
+    mk_flag ["show-actions"]
       "Call the solver and display the actions. Don't perform any changes." in
   let dryrun =
     mk_flag ["dry-run"]
