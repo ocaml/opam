@@ -286,16 +286,17 @@ let string_of_reasons cudf2opam opam_universe reasons =
       Printf.bprintf b
         "Your request cannot be satisfied. The reasons are:\n\
         \       %s"
-        reasons;
-      match chains with
-      | [] -> ()
-      | _  ->
-        let chains = List.map string_of_chain chains in
-        let chains = String.concat "\n  (or) " chains in
-        Printf.bprintf b
-          "\nThis is due to the following unmet dependencies(s):\n\
-          \       %s"
-          chains
+        reasons
+  end;
+  begin match chains with
+    | [] -> ()
+    | _  ->
+      let chains = List.map string_of_chain chains in
+      let chains = String.concat "\n  (or) " chains in
+      Printf.bprintf b
+        "\nThe following dependencies couldn't be met:\n\
+        \       %s"
+        chains
   end;
   Buffer.contents b
 
