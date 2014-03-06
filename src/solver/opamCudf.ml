@@ -111,6 +111,9 @@ module Graph = struct
   include PG
 end
 
+let dose_dummy_request = "dose-dummy-request"
+let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
+
 let filter_dependencies f_direction universe packages =
   let graph = f_direction (Graph.of_universe universe) in
   let packages = Set.of_list packages in
@@ -139,81 +142,68 @@ let string_of_request r =
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
 
-let vpkg2opamstr cudf2opam (name, constr) =
-  match constr with
-  | None         -> Common.CudfAdd.decode name
-  | Some (r,v) ->
-    let c = Cudf.({
-        package       = name;
-        version       = v;
-        depends       = [];
-        conflicts     = [];
-        provides      = [];
-        installed     = false;
-        was_installed = false;
-        keep          = `Keep_none;
-        pkg_extra     = [];
-      }) in
-    try
-      let nv = cudf2opam c in
-      let str r =
-        let name = OpamPackage.name nv in
-        let version = OpamPackage.version nv in
-        Printf.sprintf "%s%s%s"
-          (OpamPackage.Name.to_string name) r
-          (OpamPackage.Version.to_string version) in
-      match r with
-      | `Eq  -> OpamPackage.to_string nv
-      | `Neq -> str "!="
-      | `Geq -> str ">="
-      | `Gt  -> str ">"
-      | `Leq -> str "<="
-      | `Lt  -> str "<"
-    with Not_found ->
-      Common.CudfAdd.decode name
+let vpkg2opam cudf2opam cudf_universe (name,constr) =
+  let name2opam name =
+    OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
+  let cstr2opam name = function
+    | None -> Empty
+    | Some (relop,v) ->
+      try
+        let cpkg = Cudf.lookup_package cudf_universe (name,v) in
+        Atom (relop, OpamPackage.version (cudf2opam cpkg))
+      with Not_found -> Atom (relop, OpamPackage.Version.of_string "??") in
+  name2opam name, cstr2opam name constr
 
-let string_of_reason cudf2opam opam_universe r =
+let vpkg2opamstr cudf2opam cudf_universe vpkg =
+  OpamFormula.to_string (Atom (vpkg2opam cudf2opam cudf_universe vpkg))
+
+let strings_of_reason cudf2opam cudf_universe opam_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
-    let nvi = cudf2opam i in
-    let nvj = cudf2opam j in
-    if OpamPackage.name nvi = OpamPackage.name nvj then
-      None
+    if is_dose_request i || is_dose_request j then []
     else
-      let nva = min nvi nvj in
-      let nvb = max nvi nvj in
-      let str = Printf.sprintf "%s is in conflict with %s."
-          (OpamPackage.to_string nva)
-          (OpamPackage.to_string nvb) in
-      Some str
+    let nva, nvb =
+      let nvi = cudf2opam i in
+      let nvj = cudf2opam j in
+      min nvi nvj, max nvi nvj in
+    if i.Cudf.package = j.Cudf.package then
+      let str = Printf.sprintf "Conflicting version constraints for %s"
+          (OpamPackage.name_to_string nva) in
+      [str]
+    else
+    let str = Printf.sprintf "%s is in conflict with %s"
+        (OpamPackage.to_string nva)
+        (OpamPackage.to_string nvb) in
+    [str]
   | Missing (p,m) ->
     let of_package =
-      if p.Cudf.package = "dose-dummy-request" then ""
-      else
-        let nv = cudf2opam p in
-        Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
+      if is_dose_request p then "" else
+      let nv = cudf2opam p in
+      Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
     let pinned_deps, deps =
       List.partition
         (fun (p,_) ->
            let name = OpamPackage.Name.of_string (Common.CudfAdd.decode p) in
            OpamPackage.Name.Map.mem name opam_universe.u_pinned)
         m in
-    let pinned_deps = List.rev_map (vpkg2opamstr cudf2opam) pinned_deps in
-    let deps = List.rev_map (vpkg2opamstr cudf2opam) deps in
-    let str = "" in
+    let pinned_deps =
+      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in
+    let deps =
+      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) deps in
+    let str = [] in
     let str =
       if pinned_deps <> [] then
         let dependencies, are, s, have =
           if List.length pinned_deps > 1 then "dependencies", "are", "s", "have"
           else "dependency", "is", "", "has" in
         Printf.sprintf
-          "%s\nThe %s %s%s %s not available because the package%s %s been pinned."
-          str
+          "The %s %s%s %s not available because the package%s %s been pinned"
           dependencies
           (String.concat ", " pinned_deps)
           of_package
           are s have
+        :: str
       else str in
     let str =
       if deps <> [] then
@@ -221,80 +211,104 @@ let string_of_reason cudf2opam opam_universe r =
           if List.length deps > 1 then "dependencies", "are"
           else "dependency", "is" in
         Printf.sprintf
-          "%s\nThe %s %s%s %s not available for your compiler or your OS."
-          str
+          "The %s %s%s %s not available for your compiler or OS"
           dependencies
           (String.concat ", " deps)
           of_package
           are
+        :: str
       else str in
-    Some str
-  | Dependency _  -> None
+    List.rev str
+  | Dependency _  -> []
 
-let make_chains depends =
+let make_chains cudf_universe cudf2opam depends =
   let open Algo.Diagnostic in
-  let g = Graph.create () in
-  let init = function
-    | Dependency (i,_,jl) ->
-      Graph.add_vertex g i;
-      List.iter (Graph.add_vertex g) jl;
-      List.iter (Graph.add_edge g i) jl
-    | _ -> () in
-  List.iter init depends;
-  Graph.iter_vertex (fun v ->
-    if v.Cudf.package = "dose-dummy-request" then
-      Graph.remove_vertex g v
-  ) g;
-  let roots =
-    Graph.fold_vertex (fun v accu ->
-      if Graph.in_degree g v = 0
-      then v :: accu
-      else accu
-    ) g [] in
-  let rec unroll root =
-    match Graph.succ g root with
-    | []       -> [[root]]
-    | children ->
-      let chains = List.flatten (List.map unroll children) in
-      List.map (fun cs -> root :: cs) chains in
-  let chains = List.flatten (List.map unroll roots) in
-  List.filter (function [_] -> false | _ -> true) chains
+  let map_addlist k v map =
+    try Map.add k (v @ Map.find k map) map
+    with Not_found -> Map.add k v map in
+  let roots,notroots,deps,vpkgs =
+    List.fold_left (fun (roots,notroots,deps,vpkgs) -> function
+        | Dependency (i, vpkgl, jl) when not (is_dose_request i) ->
+          Set.add i roots,
+          List.fold_left (fun notroots j -> Set.add j notroots) notroots jl,
+          map_addlist i jl deps,
+          map_addlist i vpkgl vpkgs
+        | _ -> roots, notroots, deps, vpkgs)
+      (Set.empty,Set.empty,Map.empty,Map.empty)
+      depends
+  in
+  let roots = Set.diff roots notroots in
+  if Set.is_empty roots then [] else
+  let children cpkgs =
+    List.fold_left (fun acc c ->
+        List.fold_left (fun m a -> a :: m) acc
+          (try Map.find c deps with Not_found -> []))
+      [] cpkgs
+  in
+  let rec aux constrs direct_deps =
+    if direct_deps = [] then [[]] else
+    let depnames =
+      List.fold_left (fun set p -> OpamMisc.StringSet.add p.Cudf.package set)
+        OpamMisc.StringSet.empty direct_deps in
+    OpamMisc.StringSet.fold (fun name acc ->
+        let name_deps = (* Gather all deps with the given name *)
+          List.filter (fun p -> p.Cudf.package = name) direct_deps in
+        let name_constrs =
+          List.map (List.filter (fun (n,_) -> n = name)) constrs in
+        let name_constrs = List.filter ((<>) []) name_constrs in
+        let name_constrs =
+          OpamMisc.remove_duplicates (List.sort compare name_constrs) in
+        let to_opam_and_formula constrs =
+          let atoms =
+            (List.map (fun p -> Atom (vpkg2opam cudf2opam cudf_universe p))
+               (OpamMisc.remove_duplicates (List.sort compare constrs))) in
+          match atoms with _::_::_ -> Block (OpamFormula.ands atoms)
+                         | _ -> OpamFormula.ands atoms in
+        let formula =
+          match name_constrs with
+          | [f] -> to_opam_and_formula f
+          | fs -> OpamFormula.ors (List.map to_opam_and_formula fs) in
+        let children_constrs =
+          List.map (fun p -> try Map.find p vpkgs with Not_found -> []) name_deps in
+        let chains = aux children_constrs (children name_deps) in
+        List.fold_left
+          (fun acc chain -> (formula :: chain) :: acc)
+          acc chains
+      )
+      depnames []
+  in
+  let roots_list = Set.elements roots in
+  let start_constrs =
+    List.map (fun cpkg -> [cpkg.Cudf.package,None]) roots_list in
+  aux start_constrs roots_list
 
-let string_of_reasons cudf2opam opam_universe reasons =
+let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
   let open Algo.Diagnostic in
   let depends, reasons =
     List.partition (function Dependency _ -> true | _ -> false) reasons in
-  let chains = make_chains depends in
-  let rec string_of_chain = function
-    | []   -> ""
-    | [p]  -> Printf.sprintf "%s." (OpamPackage.to_string (cudf2opam p))
-    | p::t -> Printf.sprintf
-                "%s needed by %s"
-                (OpamPackage.to_string (cudf2opam p))
-                (string_of_chain t) in
-  let string_of_chain c = string_of_chain (List.rev c) in
   let b = Buffer.create 1024 in
-  let reasons = OpamMisc.filter_map (string_of_reason cudf2opam opam_universe) reasons in
+  let reasons =
+    List.flatten
+      (List.map
+         (strings_of_reason cudf2opam cudf_universe opam_universe)
+         reasons) in
   let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
-  begin match reasons with
-    | []  -> ()
-    | [r] -> Buffer.add_string b r
-    | _   ->
-      let reasons = String.concat "\n (and) " reasons in
-      Printf.bprintf b
-        "Your request cannot be satisfied. The reasons are:\n\
-        \       %s"
-        reasons;
-      match chains with
-      | [] -> ()
-      | _  ->
-        let chains = List.map string_of_chain chains in
-        let chains = String.concat "\n  (or) " chains in
-        Printf.bprintf b
-          "\nThis is due to the following unmet dependencies(s):\n\
-          \       %s"
-          chains
-  end;
+  if reasons <> [] then
+    Printf.bprintf b
+      "Sorry, your request cannot be satisfied:\n%a\n"
+      (fun b -> List.iter (Printf.bprintf b " - %s\n"))
+      reasons;
+  let chains = make_chains cudf_universe cudf2opam depends in
+  let string_of_chain c =
+    String.concat (OpamGlobals.colorise `yellow " -> ")
+      (List.map OpamFormula.to_string c) in
+  if chains <> [] then
+    Printf.bprintf b
+      "The following dependencies couldn't be met:\n%a\n"
+      (fun b ->
+         List.iter
+           (fun c -> Printf.bprintf b " - %s\n" (string_of_chain c)))
+      chains;
   Buffer.contents b
 
 (* custom cudf field labels *)
@@ -426,7 +440,7 @@ let get_final_universe univ req =
     failwith "opamSolver" in
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success u (* (remove u "dose-dummy-request" None) *)
+  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> fail str
   | Unsat r   ->

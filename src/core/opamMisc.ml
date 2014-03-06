@@ -76,6 +76,11 @@ let rec pretty_list = function
   | [a;b] -> Printf.sprintf "%s and %s" a b
   | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
+let rec remove_duplicates = function
+  | a::(b::_ as r) when a = b -> remove_duplicates r
+  | a::r -> a::remove_duplicates r
+  | [] -> []
+
 let max_print = 100
 
 module Set = struct

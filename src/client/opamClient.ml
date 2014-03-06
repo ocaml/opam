@@ -554,7 +554,7 @@ module API = struct
     match compute_upgrade_t names t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
-      OpamGlobals.msg "%s\n" (cs ())
+      OpamGlobals.msg "%s" (cs ())
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
@@ -970,7 +970,7 @@ module API = struct
       let solution = OpamSolution.resolve t action ~requested:names request in
       let solution = match solution with
         | Conflicts cs ->
-          log "conflict!"; OpamGlobals.msg "%s\n" (cs()); No_solution
+          log "conflict!"; OpamGlobals.msg "%s" (cs()); No_solution
         | Success solution ->
           if deps_only then (
             let to_install =

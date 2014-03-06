@@ -55,7 +55,9 @@ let post_message ?(failed=false) state action =
     messages
 
 let check_solution state = function
-  | No_solution -> OpamGlobals.exit 3
+  | No_solution ->
+    OpamGlobals.msg "No solution found, exiting\n";
+    OpamGlobals.exit 3
   | Error (success, failed, _remaining) ->
     List.iter (post_message state) success;
     List.iter (post_message ~failed:true state) failed;
@@ -616,6 +618,6 @@ let resolve_and_apply ?(force=false) t action ~requested request =
   match resolve t action ~requested request with
   | Conflicts cs ->
     log "conflict!";
-    OpamGlobals.msg "%s\n" (cs ());
+    OpamGlobals.msg "%s" (cs ());
     No_solution
   | Success solution -> apply ~force t action ~requested solution

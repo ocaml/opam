@@ -341,8 +341,8 @@ let resolve ?(verbose=true) universe ~requested request =
         OpamHeuristic.resolve ~verbose u req
     else OpamHeuristic.resolve ~verbose u req in
   match resolve simple_universe cudf_request with
-  | Conflicts c     ->
-    Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam universe (c ()))
+  | Conflicts c     -> Conflicts (fun () ->
+      OpamCudf.string_of_reasons cudf2opam simple_universe universe (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
     let cudf_solution =

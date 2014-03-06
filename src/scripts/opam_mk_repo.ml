@@ -115,7 +115,7 @@ let resolve_deps index names =
         | _ -> acc)
       solution.to_process OpamPackage.Set.empty
   | Conflicts cs ->
-    OpamGlobals.error_and_exit "%s\n" (cs())
+    OpamGlobals.error_and_exit "%s" (cs())
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let () =

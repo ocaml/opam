@@ -327,7 +327,7 @@ let state_of_request ?(verbose=true) current_universe request =
        guaranteed to be optimal. So we extend the result with all the
        existing packages. *)
     let result_universe =
-      let filter p = p.Cudf.package <> "dose-dummy-request" in
+      let filter p = not (OpamCudf.is_dose_request p) in
       let installed = Cudf.get_packages ~filter result_universe in
       let current_universe = OpamCudf.uninstall_all current_universe in
       List.fold_left OpamCudf.install current_universe installed in

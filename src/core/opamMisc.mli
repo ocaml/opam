@@ -133,6 +133,9 @@ val string_map: (char -> char) -> string -> string
 (** Display a pretty list: ["x";"y";"z"] -> "x, y and z" *)
 val pretty_list: string list -> string
 
+(** Removes consecutive duplicates in a list *)
+val remove_duplicates: 'a list -> 'a list
+
 (** {2 String manipulation} *)
 
 (** Map of strings *)
