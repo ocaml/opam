@@ -412,18 +412,16 @@ let call_external_solver ~explain univ req =
     if Cudf.universe_size univ > 0 then begin
       let cmd = aspcud_command in
       let criteria = !OpamGlobals.solver_preferences in
-      try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+      try Algo.Depsolver.check_request ~cmd ~criteria ~explain cudf_request
       with e ->
         OpamMisc.fatal e;
         OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
-        OpamGlobals.warning "Falling back to internal solver";
-        Algo.Depsolver.check_request ~explain cudf_request
+	raise(Failure "opamSolver")
     end else
       Algo.Depsolver.Sat(None,Cudf.load_universe [])
   else
-    (* No external solver is available, use the default one *)
-    Algo.Depsolver.check_request ~explain cudf_request
-
+    raise(Failure "opamSolver")
+ 
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   let fail msg =
