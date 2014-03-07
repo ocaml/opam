@@ -208,11 +208,6 @@ let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?(depopts=false) universe =
-  (* The package numbering can be different in the universe if we
-     consider optional dependencies or not. To avoid that, we create a
-     dumb package which depends on all the optional dependencies. This
-     package should never appear to the user, so we make it
-     non-installable by adding conflicting constraints. *)
   let opam2cudf =
     let version_map = cudf_versions_map universe in
     OpamPackage.Set.fold (fun pkg map ->
