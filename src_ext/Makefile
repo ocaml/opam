@@ -63,7 +63,10 @@ $(DOSE).tar.gz:
 
 dose.stamp: $(DOSE).tar.gz
 	tar xfz $(DOSE).tar.gz
-	cd $(DOSE) && patch -p1 < ../dose-mktemp.diff && patch -p1 < ../dose-quotecriteria.diff && patch -p1  < ../dose-pcre2re.diff && patch -p1  < ../dose-exceptions.diff && cd ..
+	cd $(DOSE) && \
+	  for p in ../patches/dose/*.patch; do \
+	    patch -p1 < $$p; \
+	  done
 	rm -rf dose
 	mv $(DOSE) dose
 	@touch $@
