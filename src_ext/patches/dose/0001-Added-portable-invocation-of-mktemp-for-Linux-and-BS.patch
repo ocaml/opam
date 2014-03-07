@@ -1,5 +1,14 @@
+From 90d0247ed0850ecd6623c79c0cc795879e777c71 Mon Sep 17 00:00:00 2001
+From: Roberto Di Cosmo <github@dicosmo.org>
+Date: Sun, 12 Jan 2014 22:54:38 +0100
+Subject: [PATCH 1/6] Added portable invocation of mktemp for Linux and *BSD
+
+---
+ common/cudfSolver.ml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index bb4c5c5..da7bdb6 100644
+index 9b71147..8638f12 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
 @@ -27,7 +27,7 @@ let check_fail file =
@@ -11,3 +20,6 @@ index bb4c5c5..da7bdb6 100644
    let path = input_line ic in
    ignore (Unix.close_process_in ic);
    path
+-- 
+1.8.5.3
+
