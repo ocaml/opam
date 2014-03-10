@@ -1,7 +1,7 @@
-From 2a2b26f900e904fa085f493446b7838123c5c8cd Mon Sep 17 00:00:00 2001
+From 5a3daaaddbdc8ca2816bb00164a24a2b74a81b26 Mon Sep 17 00:00:00 2001
 From: Pietro Abate <pietro.abate@pps.jussieu.fr>
 Date: Thu, 19 Sep 2013 12:14:54 +0200
-Subject: [PATCH 6/6] Fix upgrade bug in the check_request function
+Subject: [PATCH 5/7] Fix upgrade bug in the check_request function
 
 the upgrade request is not correctly encoded and passed to
 the edos solver.

@@ -1,7 +1,7 @@
-From ea77e095987535f8cf3befae0c5056a73fea7915 Mon Sep 17 00:00:00 2001
+From 0a9dda72d9bbb7f1b7888ec5c506336181ae19b5 Mon Sep 17 00:00:00 2001
 From: Roberto Di Cosmo <github@dicosmo.org>
 Date: Thu, 16 Jan 2014 11:34:53 +0100
-Subject: [PATCH 2/6] Sanitize the string containing the criteria before
+Subject: [PATCH 2/7] Sanitize the string containing the criteria before
  passing it to the shell.
 
 ---

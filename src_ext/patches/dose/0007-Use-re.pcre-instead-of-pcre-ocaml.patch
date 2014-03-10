@@ -1,7 +1,7 @@
-From 48088af45b5379d7d690d2233019f406ca14148f Mon Sep 17 00:00:00 2001
+From 4fa17051073d73319bd01394984e159fb41bbb8d Mon Sep 17 00:00:00 2001
 From: Louis Gesbert <louis.gesbert@ocamlpro.com>
 Date: Fri, 7 Mar 2014 10:22:39 +0100
-Subject: [PATCH 4/6] Use re.pcre instead of pcre-ocaml
+Subject: [PATCH 7/7] Use re.pcre instead of pcre-ocaml
 
 (original patch on OPAM by samoht)
 ---
@@ -46,10 +46,10 @@ index dbd38dd..a3f8049 100644
  
  (* formatting *)
 diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index 43e1680..97d889c 100644
+index 41509e1..0f6b43f 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -56,14 +56,14 @@ let rec input_all_lines acc chan =
+@@ -49,14 +49,14 @@ let rec input_all_lines acc chan =
  
  (* quote string for the shell, after removing all characters disallowed in criteria *)
  let quote s = Printf.sprintf "\"%s\"" s;;
