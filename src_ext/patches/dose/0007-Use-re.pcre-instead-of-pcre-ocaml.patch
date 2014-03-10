@@ -1,5 +1,25 @@
+From 4fa17051073d73319bd01394984e159fb41bbb8d Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 7 Mar 2014 10:22:39 +0100
+Subject: [PATCH 7/7] Use re.pcre instead of pcre-ocaml
+
+(original patch on OPAM by samoht)
+---
+ common/cudfAdd.ml      |  8 ++++----
+ common/cudfSolver.ml   | 10 +++++-----
+ common/extBenchmark.ml |  6 +++---
+ common/tests.ml        |  2 +-
+ deb/apt.ml             | 42 +++++++++++++++++++++---------------------
+ deb/edsp.ml            |  2 +-
+ deb/version.ml         |  4 ++--
+ eclipse/version.ml     |  4 ++--
+ opencsw/packages.ml    |  2 +-
+ opencsw/version.ml     |  4 ++--
+ rpm/packages.ml        |  2 +-
+ 11 files changed, 43 insertions(+), 43 deletions(-)
+
 diff --git a/common/cudfAdd.ml b/common/cudfAdd.ml
-index dbd38dd..21fdfe9 100644
+index dbd38dd..a3f8049 100644
 --- a/common/cudfAdd.ml
 +++ b/common/cudfAdd.ml
 @@ -109,18 +109,18 @@ init_hashtables enc_ht dec_ht;;
@@ -25,8 +45,32 @@ index dbd38dd..21fdfe9 100644
  ;;
  
  (* formatting *)
+diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
+index 41509e1..0f6b43f 100644
+--- a/common/cudfSolver.ml
++++ b/common/cudfSolver.ml
+@@ -49,14 +49,14 @@ let rec input_all_lines acc chan =
+ 
+ (* quote string for the shell, after removing all characters disallowed in criteria *)
+ let quote s = Printf.sprintf "\"%s\"" s;;
+-let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
++let sanitize s = quote (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
+ 
+ let interpolate_solver_pat exec cudf_in cudf_out pref =
+   let (|>) f g = fun x -> g(f x) in
+-  let dequote s = Pcre.regexp ("\"*"^(Pcre.quote s)^"\"*") in
+-  (Pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
+-   Pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
+-   Pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
++  let dequote s = Re_pcre.regexp ("\"*"^(Re_pcre.quote s)^"\"*") in
++  (Re_pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
++   Re_pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
++   Re_pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
+ ;;
+ 
+ exception Error of string
 diff --git a/common/extBenchmark.ml b/common/extBenchmark.ml
-index 839b12e..ebbc6c2 100644
+index 839b12e..333755f 100644
 --- a/common/extBenchmark.ml
 +++ b/common/extBenchmark.ml
 @@ -108,10 +108,10 @@ let parse_sample s =
@@ -44,7 +88,7 @@ index 839b12e..ebbc6c2 100644
  
  let parse_benchmark filename =
 diff --git a/common/tests.ml b/common/tests.ml
-index 21869e9..9e62a1c 100644
+index 21869e9..e29f9d4 100644
 --- a/common/tests.ml
 +++ b/common/tests.ml
 @@ -140,7 +140,7 @@ let test_lookup_packages =
@@ -57,7 +101,7 @@ index 21869e9..9e62a1c 100644
    let a_lot_of_a           = String.make a_lot_of 'a'
    (* This test takes too much time... 
 diff --git a/deb/apt.ml b/deb/apt.ml
-index 6b8a2f2..c7b8c56 100644
+index 6b8a2f2..599daa8 100644
 --- a/deb/apt.ml
 +++ b/deb/apt.ml
 @@ -17,7 +17,7 @@ open Common
@@ -158,8 +202,21 @@ index 6b8a2f2..c7b8c56 100644
      |s -> fatal "Unknown pin type %s" s
    with Not_found -> fatal "Unknown pin format %s" s
  
+diff --git a/deb/edsp.ml b/deb/edsp.ml
+index bc656a6..cbc4e7e 100644
+--- a/deb/edsp.ml
++++ b/deb/edsp.ml
+@@ -62,7 +62,7 @@ let parse_string (_,s) = s
+ let parse_int_s (_,s) = string_of_int(int_of_string s)
+ let parse_req (loc,s) = 
+   let aux = Packages.lexbuf_wrapper Packages_parser.vpkg_top in
+-  let l = Pcre.split ~rex:Apt.blank_regexp s in 
++  let l = Re_pcre.split ~rex:Apt.blank_regexp s in
+   List.map (fun s -> aux (loc,s)) l
+ 
+ let parse_request_stanza par =
 diff --git a/deb/version.ml b/deb/version.ml
-index d85207b..71be7e0 100644
+index d85207b..07aa45b 100644
 --- a/deb/version.ml
 +++ b/deb/version.ml
 @@ -180,10 +180,10 @@ type version_analysis =
@@ -192,7 +249,7 @@ index 984f386..779fe8d 100644
    s
  ;;
 diff --git a/opencsw/packages.ml b/opencsw/packages.ml
-index b626e5f..a31c6c8 100644
+index b626e5f..99b05de 100644
 --- a/opencsw/packages.ml
 +++ b/opencsw/packages.ml
 @@ -86,7 +86,7 @@ let parse_paragraph pkg ch =
@@ -204,32 +261,6 @@ index b626e5f..a31c6c8 100644
          depends = catcherr a 6;
          conflicts = catcherr a 8
        }
-diff --git a/rpm/packages.ml b/rpm/packages.ml
-index 7b89c0c..fb8b523 100644
---- a/rpm/packages.ml
-+++ b/rpm/packages.ml
-@@ -156,7 +156,7 @@ module Synthesis = struct
-       with IO.No_more_input -> raise Eof | End_of_file -> assert false
-     in
-     try
--      match List.tl (Pcre.split ~rex:(Pcre.regexp "@") line) with
-+      match List.tl (Re_pcre.split ~rex:(Re_pcre.regexp "@") line) with
-       |"provides"::l -> parse_paragraph {pkg with provides = parse_deps l} ch
-       |"requires"::l -> parse_paragraph {pkg with depends = parse_deps l} ch
-       |"obsoletes"::l -> parse_paragraph {pkg with obsoletes = parse_deps l} ch
-diff --git a/deb/edsp.ml b/deb/edsp.ml
-index bc656a6..c6cf472 100644
---- a/deb/edsp.ml
-+++ b/deb/edsp.ml
-@@ -62,7 +62,7 @@ let parse_string (_,s) = s
- let parse_int_s (_,s) = string_of_int(int_of_string s)
- let parse_req (loc,s) = 
-   let aux = Packages.lexbuf_wrapper Packages_parser.vpkg_top in
--  let l = Pcre.split ~rex:Apt.blank_regexp s in 
-+  let l = Re_pcre.split ~rex:Apt.blank_regexp s in
-   List.map (fun s -> aux (loc,s)) l
- 
- let parse_request_stanza par =
 diff --git a/opencsw/version.ml b/opencsw/version.ml
 index 984f386..779fe8d 100644
 --- a/opencsw/version.ml
@@ -246,27 +277,19 @@ index 984f386..779fe8d 100644
      warning "bad version '%s'" s;
    s
  ;;
-diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index de561bd..97d889c 100644
---- a/common/cudfSolver.ml
-+++ b/common/cudfSolver.ml
-@@ -56,14 +56,14 @@ let rec input_all_lines acc chan =
- 
- (* quote string for the shell, after removing all characters disallowed in criteria *)
- let quote s = Printf.sprintf "\"%s\"" s;;
--let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
-+let sanitize s = quote (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
- 
- let interpolate_solver_pat exec cudf_in cudf_out pref =
-   let (|>) f g = fun x -> g(f x) in
--  let dequote s = Pcre.regexp ("\"*"^(Pcre.quote s)^"\"*") in
--  (Pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
--   Pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
--   Pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
-+  let dequote s = Re_pcre.regexp ("\"*"^(Re_pcre.quote s)^"\"*") in
-+  (Re_pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
-+   Re_pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
-+   Re_pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
- ;;
- 
- exception Error of string
+diff --git a/rpm/packages.ml b/rpm/packages.ml
+index 7b89c0c..6e0a9cb 100644
+--- a/rpm/packages.ml
++++ b/rpm/packages.ml
+@@ -156,7 +156,7 @@ module Synthesis = struct
+       with IO.No_more_input -> raise Eof | End_of_file -> assert false
+     in
+     try
+-      match List.tl (Pcre.split ~rex:(Pcre.regexp "@") line) with
++      match List.tl (Re_pcre.split ~rex:(Re_pcre.regexp "@") line) with
+       |"provides"::l -> parse_paragraph {pkg with provides = parse_deps l} ch
+       |"requires"::l -> parse_paragraph {pkg with depends = parse_deps l} ch
+       |"obsoletes"::l -> parse_paragraph {pkg with obsoletes = parse_deps l} ch
+-- 
+1.8.5.3
+
