@@ -335,7 +335,7 @@ let resolve ?(verbose=true) universe ~requested request =
   let resolve u req =
     if OpamCudf.external_solver_available ()
     then
-      try OpamCudf.resolve u req
+      try OpamCudf.resolve ~extern:true u req
       with Failure "opamSolver" ->
         OpamGlobals.msg "Falling back to the internal heuristic.\n";
         OpamHeuristic.resolve ~verbose u req

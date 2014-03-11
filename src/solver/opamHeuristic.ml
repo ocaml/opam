@@ -214,7 +214,7 @@ let actions_of_state universe request state =
     wish_install = [];
     wish_upgrade = state @ installed
   } in
-  match OpamCudf.get_final_universe small_universe request with
+  match OpamCudf.check_request small_universe request with
   | Conflicts c ->
     log "not reachable! universe=%s request=%s"
       (OpamCudf.string_of_universe small_universe)
@@ -315,7 +315,7 @@ let state_space ?(filters = fun _ -> None) universe wish_remove interesting_name
    the request until reaching a fix-point. *)
 let state_of_request ?(verbose=true) current_universe request =
   log "state_of_request";
-  match OpamCudf.get_final_universe current_universe request with
+  match OpamCudf.check_request ~explain:false current_universe request with
   | Conflicts _             ->
     log "state-of-request: %s CONFLICT!" (OpamCudf.string_of_request request);
     None
@@ -327,8 +327,7 @@ let state_of_request ?(verbose=true) current_universe request =
        guaranteed to be optimal. So we extend the result with all the
        existing packages. *)
     let result_universe =
-      let filter p = not (OpamCudf.is_dose_request p) in
-      let installed = Cudf.get_packages ~filter result_universe in
+      let installed = Cudf.get_packages result_universe in
       let current_universe = OpamCudf.uninstall_all current_universe in
       List.fold_left OpamCudf.install current_universe installed in
 
@@ -446,7 +445,7 @@ let optimize ?(verbose=true) universe request =
 
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose universe request with
-  | None       -> OpamCudf.resolve universe request
+  | None       -> OpamCudf.resolve ~extern:false universe request
   | Some state ->
     log "STATE(0) %s" (OpamCudf.string_of_packages state);
 
@@ -512,6 +511,6 @@ let optimize ?(verbose=true) universe request =
 let resolve ?(verbose=true) universe request =
   try
     if request.wish_upgrade <> [] then optimize ~verbose universe request
-    else OpamCudf.resolve universe request
+    else OpamCudf.resolve ~extern:false universe request
   with Not_reachable c ->
     Conflicts c
