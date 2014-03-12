@@ -79,7 +79,7 @@ let is_available universe wish_remove (name, _ as c) =
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
 let cudf_versions_map universe =
-  let pmap = OpamPackage.to_map universe.u_packages in
+  let pmap = OpamPackage.to_map universe.u_available in
   OpamPackage.Name.Map.fold (fun name versions acc ->
       let versions = OpamPackage.Version.Set.elements versions in
       let versions = List.filter ((<>) OpamPackage.Version.pinned) versions in
@@ -214,7 +214,7 @@ let load_cudf_universe ?(depopts=false) universe =
         OpamPackage.Map.add (real_version universe pkg)
           (opam2cudf universe depopts version_map pkg)
           map)
-      universe.u_packages
+      universe.u_available
       OpamPackage.Map.empty in
   let cudf2opam cpkg =
     let pkg = cudf2opam cpkg in
