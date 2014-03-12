@@ -71,7 +71,7 @@ file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 echo Downloading OPAM...
 getopam "https://github.com/ocaml/opam/releases/download/$VERSION" $file
 
-if [ ! -w "$BINDIR" ] && ! mkdir -p "$BINDIR" 2>/dev/null; then
+if [ ! -w "$BINDIR" ] || ! mkdir -p "$BINDIR" 2>/dev/null; then
     echo "You don't have write access to $BINDIR: sudo may ask for your password"
     if [ ! -d "$BINDIR" ]; then sudo mkdir -p "$BINDIR"; fi
     sudo install -g root -o root -m 755 $TMP/$file $BINDIR/opam
@@ -88,8 +88,13 @@ if [ "$OPAM" != "$BINDIR/opam" ]; then
     OPAM="$BINDIR/opam"
 fi
 
-echo "Initializing with compiler $COMP"
-"$OPAM" init --comp "$COMP"
+if [ "$(id -u)" = "0" ]; then
+    echo "Running as super-user: not running OPAM initialization."
+    echo "You'll want to run \"$OPAM init --comp $COMP\" as user"
+else
+    echo "Initializing with compiler $COMP"
+    "$OPAM" init --comp "$COMP"
+fi
 
 echo "Installation done. If you need to uninstall, simply remove $BINDIR/opam"
-echo "and $("$OPAM" config var root)"
+echo "and ~/.opam"
