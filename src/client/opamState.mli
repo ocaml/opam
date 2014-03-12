@@ -272,6 +272,9 @@ val all_installed: state -> package_set
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
 
+(** Returns an explanation why a package is not currently available *)
+val unavailable_reason: state -> name -> version option -> string
+
 (** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
 val download_archive: state -> package -> filename option
 

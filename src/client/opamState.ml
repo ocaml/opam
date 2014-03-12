@@ -741,46 +741,49 @@ let copy_files t nv dst =
   | None     -> ()
   | Some src -> OpamFilename.copy_files ~src ~dst
 
-(* List the packages which do fulfil the compiler and OS constraints *)
-let available_packages t system =
+let consistent_ocaml_version t opam =
+  let atom (r,v) =
+    match OpamCompiler.Version.to_string v with
+    | "system" ->
+      begin match r with
+        | `Eq  -> t.compiler = OpamCompiler.system
+        | `Neq -> t.compiler <> OpamCompiler.system
+        | _    -> OpamSystem.internal_error
+                    "%s is not a valid constraint for the system compiler \
+                     (only '=' and '!=' are valid)."
+                    (OpamFormula.string_of_relop r)
+      end
+    | _ -> OpamCompiler.Version.eval_relop r
+             (Lazy.force t.compiler_version) v
+  in
+  match OpamFile.OPAM.ocaml_version opam with
+  | None   -> true
+  | Some c -> OpamFormula.eval atom c
+
+let consistent_os opam =
+  match OpamFile.OPAM.os opam with
+  | Empty -> true
+  | f ->
+    let atom (b, os) =
+      let ($) = if b then (=) else (<>) in
+      os $ OpamGlobals.os_string () in
+    OpamFormula.eval atom f
+
+let consistent_available_field t opam =
   let env opam = resolve_variable t ~opam OpamVariable.Map.empty in
+  OpamFilter.eval (env opam) (OpamFile.OPAM.available opam)
+
+(* List the packages which do fulfil the compiler and OS constraints *)
+let available_packages t =
   let filter nv =
     match opam_opt t nv with
     | None -> false
     | Some opam ->
-      let consistent_ocaml_version () =
-        let atom (r,v) =
-          match OpamCompiler.Version.to_string v with
-          | "system" ->
-            begin match r with
-              | `Eq  -> system
-              | `Neq -> not system
-              | _    -> OpamSystem.internal_error
-                          "%s is not a valid constraint for the system compiler \
-                           (only '=' and '!=' are valid)."
-                          (OpamFormula.string_of_relop r)
-            end
-          | _ -> OpamCompiler.Version.eval_relop r
-            (Lazy.force t.compiler_version) v
-        in
-        match OpamFile.OPAM.ocaml_version opam with
-        | None   -> true
-        | Some c -> OpamFormula.eval atom c in
-      let consistent_os () =
-        match OpamFile.OPAM.os opam with
-        | Empty -> true
-        | f ->
-          let atom (b, os) =
-            let ($) = if b then (=) else (<>) in
-            os $ OpamGlobals.os_string () in
-          OpamFormula.eval atom f in
       let has_repository () =
         OpamPackage.Map.mem nv t.package_index in
-      let available () =
-        OpamFilter.eval (env opam) (OpamFile.OPAM.available opam) in
-      consistent_ocaml_version ()
-      && consistent_os ()
-      && available ()
+      consistent_ocaml_version t opam
+      && consistent_os opam
+      && consistent_available_field t opam
       && has_repository ()
   in
   let _pinned, set =
@@ -798,6 +801,71 @@ let available_packages t system =
           else pinned, set
       ) t.opams (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
   set
+
+(* Display a meaningful error for an unavailable package *)
+let unavailable_reason t name version =
+  let reasons () =
+    let version = match version with
+      | Some v -> v
+      | None -> (* display message for last version if none are available *)
+        let versions = OpamPackage.versions_of_name t.packages name in
+        OpamPackage.Version.Set.max_elt versions
+    in
+    let r =
+      match opam_opt t (OpamPackage.create name version) with
+      | None -> []
+      | Some opam ->
+        (if consistent_ocaml_version t opam then [] else [
+            Printf.sprintf "it requires OCaml %s"
+              (OpamFormula.string_of_formula
+                 (fun (op,v) ->
+                    OpamFormula.string_of_relop op ^ " " ^
+                    OpamCompiler.Version.to_string v)
+                 (match OpamFile.OPAM.ocaml_version opam with
+                  | Some v -> v
+                  | None -> assert false))
+          ]) @
+        (if consistent_os opam then [] else [
+            Printf.sprintf "your OS doesn't match %s"
+              (OpamFormula.string_of_formula
+                 (fun (b,s) -> (if b then "= " else "!= ") ^ s)
+                 (OpamFile.OPAM.os opam))
+          ]) @
+        (if consistent_available_field t opam then [] else [
+            Printf.sprintf "your system doesn't comply with %s"
+              (string_of_filter (OpamFile.OPAM.available opam))
+          ]) in
+    match r with
+    | [] -> "."
+    | [r] -> " because " ^ r ^ "."
+    | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) " - ") rs) in
+  try
+    let pin = OpamPackage.Name.Map.find name t.pinned in
+    match version with
+    | None   ->
+      Printf.sprintf
+        "%s is not available because the package is pinned to %s."
+        (OpamPackage.Name.to_string name)
+        (string_of_pin_option pin)
+    | Some v ->
+      Printf.sprintf
+        "Version %s of %S is not available because the package is pinned to %s."
+        (OpamPackage.Version.to_string v)
+        (OpamPackage.Name.to_string name)
+        (string_of_pin_option pin)
+  with Not_found ->
+    match version with
+    | None   ->
+      Printf.sprintf
+        "%s is not available%s"
+        (OpamPackage.Name.to_string name)
+        (reasons ())
+    | Some v ->
+      Printf.sprintf
+        "Version %s of %s is not available%s"
+        (OpamPackage.Version.to_string v)
+        (OpamPackage.Name.to_string name)
+        (reasons ())
 
 let base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
@@ -1287,8 +1355,6 @@ let load_state ?(save_cache=true) call_site =
       (OpamPackage.Set.of_list (OpamPackage.Map.keys opams)) in
   let reinstall =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
-  let system =
-    (compiler = OpamCompiler.system) in
   let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
     partial; root; switch; compiler; compiler_version; repositories; opams;
@@ -1297,7 +1363,7 @@ let load_state ?(save_cache=true) call_site =
     package_index; compiler_index;
     available_packages = available_packages_stub
   } in
-  let t = { t with available_packages = lazy (available_packages t system) } in
+  let t = { t with available_packages = lazy (available_packages t) } in
   print_state t;
   if save_cache && not cached then
     save_state ~update:false t;

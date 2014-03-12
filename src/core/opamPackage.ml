@@ -265,29 +265,6 @@ let unknown name version =
       (Name.to_string name)
       (Version.to_string v)
 
-let unavailable name version =
-  match version with
-  | None   ->
-    OpamGlobals.error_and_exit
-      "%S is not available for your compiler or your OS."
-      (Name.to_string name)
-  | Some v ->
-    OpamGlobals.error_and_exit
-      "Version %s of %S is not available for your compiler or your OS."
-      (Version.to_string v)
-      (Name.to_string name)
-
-let unavailable_because_pinned name = function
-  | None   ->
-    OpamGlobals.error_and_exit
-      "%S is not available because the package is pinned."
-      (Name.to_string name)
-  | Some v ->
-    OpamGlobals.error_and_exit
-      "Version %s of %S is not available because the package is pinned."
-      (Version.to_string v)
-      (Name.to_string name)
-
 module Graph = struct
   module Vertex = struct
     include O
