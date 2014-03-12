@@ -111,13 +111,6 @@ val prefixes: OpamFilename.Dir.t -> string option Map.t
     not exist. *)
 val unknown: Name.t -> Version.t option -> 'a
 
-(** Unavailable package: the package exists in the database, but it is
-    not available due to compiler/OS constraints. *)
-val unavailable: Name.t -> Version.t option -> 'a
-
-(** Unavailable because the package is pinned. *)
-val unavailable_because_pinned: Name.t -> Version.t option -> 'a
-
 (** Create a (path)-pinned package. *)
 val pinned: Name.t -> t
 

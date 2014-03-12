@@ -96,10 +96,7 @@ let check_availability t atoms =
       | _ -> ()
     with Not_found ->
       let version = match version with Some (_, v) -> Some v | None -> None in
-      if OpamPackage.Name.Map.mem name t.pinned then
-        OpamPackage.unavailable_because_pinned name version
-      else
-        OpamPackage.unavailable name version in
+      OpamGlobals.error_and_exit "%s" (OpamState.unavailable_reason t name version) in
   List.iter check_atom atoms
 
 (* transform a name into:

@@ -200,7 +200,7 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
         Printf.sprintf
           "The %s %s%s %s not available because the package%s %s been pinned"
           dependencies
-          (String.concat ", " pinned_deps)
+          (OpamMisc.pretty_list pinned_deps)
           of_package
           are s have
         :: str
@@ -213,7 +213,7 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
         Printf.sprintf
           "The %s %s%s %s not available for your compiler or OS"
           dependencies
-          (String.concat ", " deps)
+          (OpamMisc.pretty_list deps)
           of_package
           are
         :: str
@@ -439,8 +439,7 @@ let check_request ?(explain=true) univ req =
     OpamGlobals.error "Internal solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver"
-  | Algo.Depsolver.Unsat _ ->
-    OpamGlobals.warning "Internal solver failed without explanations";
+  | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
     Conflicts (fun () -> [])
 
 (* Return the universe in which the system has to go *)
