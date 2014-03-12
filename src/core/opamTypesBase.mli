@@ -87,3 +87,6 @@ val string_of_symbol: symbol -> string
 
 (** Pretty print *)
 val string_of_filter: filter -> string
+
+(** Map on a solver result *)
+val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result

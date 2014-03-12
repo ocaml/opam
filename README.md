@@ -33,6 +33,32 @@ It is expected than upgrade work transparently between minor releases:
 an OPAM binary with version `x.y.z` should be able to use the OCaml
 packages and compilers created with OPAM version `x.(y-1).0`
 
+## Compiling this repo
+
+Run `./configure`
+
+Then, there are currently two main ways to compile this repo:
+* With automatic downloading of the prerequisites, and all-in-one compilation.
+  Just run
+  - `make`
+  - `make install`
+* Using the dependencies already installed. This is necessary if you want to
+  install opam-lib to build other projects (opamfu, opam-rt...).
+  - make sure you have ocamlgraph, cmdliner, dose 3.1.2, cudf, re >= 1.2.0 and
+    ocamlfind installed. Or run `opam install opam-lib --deps-only` if you
+    already have a working instance.
+  - run `make prepare`. This is needed just once.
+  - run `make compile`.
+  - run `make install`, and `make libinstall` if you need the libraries.
+* The latter is also possible without resorting to ocp-build, although it will
+  take longer.
+  - `make with-ocamlbuild`
+  - `make install-with-ocamlbuild`
+  - `make libinstall-with-ocamlbuild`
+
+Note that this is in a transitory state right now, expect it to change for
+something simpler.
+
 ## Bug tracker
 
 Have a bug or a feature request ?
@@ -84,7 +110,7 @@ The API documentation is available
 
 ## Copyright and license
 
-Copyright 2012-2013 OCamlPro  
+Copyright 2012-2014 OCamlPro  
 Copyright 2012 INRIA
 
 All rights reserved. OPAM is distributed under the terms of

@@ -73,7 +73,15 @@ val dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
     sorted in topological order *)
 val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
 
-(** Compute the final universe state. *)
+(** Check if a request is satisfiable and return the reasons why not unless
+    [explain] is set to [false] *)
+val check_request:
+  ?explain:bool ->
+  Cudf.universe ->
+  Cudf_types.vpkg request ->
+  (Cudf.universe, Algo.Diagnostic.reason list) result
+
+(** Compute the final universe state using the external solver. *)
 val get_final_universe:
   Cudf.universe ->
   Cudf_types.vpkg request ->
@@ -98,8 +106,11 @@ val solution_of_actions:
     action list is not yet complete: the transitive closure of
     reinstallations is not yet completed, as it requires to fold over
     the dependency graph in considering the optional dependencies --
-    which is something that dose/cudf obviously does not handle.  *)
+    which is something that dose/cudf obviously does not handle.
+
+    [~extern] specifies wether the external solver should be used *)
 val resolve:
+  extern:bool ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.package action list, Algo.Diagnostic.reason list) result

@@ -388,14 +388,13 @@ let external_solver_available () =
 
 let solver_calls = ref 0
 
-let dump_cudf_request (_, univ,_ as cudf) = function
+let dump_cudf_request ~extern (_, univ,_ as cudf) = function
   | None   -> None
   | Some f ->
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    if Lazy.force aspcud_exists && !OpamGlobals.use_external_solver
-    then
+    if extern then
       Printf.fprintf oc "#%s %s\n" aspcud_command !OpamGlobals.solver_preferences
     else
       Printf.fprintf oc "#internal OPAM solver\n";
@@ -404,55 +403,67 @@ let dump_cudf_request (_, univ,_ as cudf) = function
     Graph.output (Graph.of_universe univ) f;
     Some filename
 
-let call_external_solver ~explain univ req =
+let dump_cudf_error ~extern univ req =
+  let cudf_file = match !OpamGlobals.cudf_file with
+    | Some f -> f
+    | None ->
+      let (/) = Filename.concat in
+      !OpamGlobals.root_dir / "log" /
+      ("solver-error-"^string_of_int (Unix.getpid())) in
+  match dump_cudf_request ~extern (to_cudf univ req) (Some cudf_file) with
+  | Some f -> f
+  | None -> assert false
+
+let call_external_solver univ req =
   let cudf_request = to_cudf univ req in
-  ignore (dump_cudf_request cudf_request !OpamGlobals.cudf_file);
-  if Lazy.force aspcud_exists && !OpamGlobals.use_external_solver
-  then
-    if Cudf.universe_size univ > 0 then begin
-      let cmd = aspcud_command in
-      let criteria = !OpamGlobals.solver_preferences in
-      try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
-      with e ->
-        OpamMisc.fatal e;
-        OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
-        OpamGlobals.warning "Falling back to internal solver";
-        Algo.Depsolver.check_request ~explain cudf_request
-    end else
-      Algo.Depsolver.Sat(None,Cudf.load_universe [])
-  else
-    (* No external solver is available, use the default one *)
-    Algo.Depsolver.check_request ~explain cudf_request
+  ignore (dump_cudf_request ~extern:true cudf_request !OpamGlobals.cudf_file);
+  if Cudf.universe_size univ > 0 then begin
+    let cmd = aspcud_command in
+    let criteria = !OpamGlobals.solver_preferences in
+    try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+    with e ->
+      OpamMisc.fatal e;
+      OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
+      failwith "opamSolver"
+  end else
+    Algo.Depsolver.Sat(None,Cudf.load_universe [])
+
+let check_request ?(explain=true) univ req =
+  match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
+  | Algo.Depsolver.Unsat
+      (Some {Algo.Diagnostic.result = Algo.Diagnostic.Failure f}) ->
+    Conflicts f
+  | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Algo.Depsolver.Error msg ->
+    let f = dump_cudf_error ~extern:false univ req in
+    OpamGlobals.error "Internal solver failed with %s Request saved to %S"
+      msg f;
+    failwith "opamSolver"
+  | Algo.Depsolver.Unsat _ ->
+    OpamGlobals.warning "Internal solver failed without explanations";
+    Conflicts (fun () -> [])
 
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   let fail msg =
-    OpamGlobals.use_external_solver := false;
-    let cudf_file = match !OpamGlobals.cudf_file with
-      | Some f -> f
-      | None ->
-        let (/) = Filename.concat in
-        !OpamGlobals.root_dir / "log" /
-        ("solver-error-"^string_of_int (Unix.getpid())) in
-    let f = dump_cudf_request (to_cudf univ req) (Some cudf_file) in
+    let f = dump_cudf_error ~extern:true univ req in
     OpamGlobals.warning "External solver failed with %s Request saved to %S"
-      msg (match f with Some x -> x | None -> "");
+      msg f;
     failwith "opamSolver" in
-  let open Algo.Depsolver in
-  match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
-  | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
-  | Error str -> fail str
-  | Unsat r   ->
+  match call_external_solver univ req with
+  | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
+    (* XXX Is this still needed with latest dose ? *)
+    Success (Cudf.load_universe [])
+  | Algo.Depsolver.Error str -> fail str
+  | Algo.Depsolver.Unsat r   ->
     let open Algo.Diagnostic in
     match r with
     | Some {result=Failure f} -> Conflicts f
     | Some {result=Success _} -> fail "inconsistent return value."
-    | None -> (* External solver does not provide explanations, use the default one *)
-      (match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
-       | Unsat(Some{result=Failure f}) -> Conflicts f
-       | _ -> fail "no solution found, while at least one exist. Please report this error."
-      )
+    | None ->
+      (* External solver did not provide explanations, hopefully this will *)
+      check_request univ req
 
 (* A modified version of CudfDiff to handle reinstallations *)
 module Diff = struct
@@ -508,16 +519,17 @@ let actions_of_diff diff =
     | None      , None       , None   -> acc
   ) diff []
 
-let resolve universe request =
+let resolve ~extern universe request =
   log "resolve request=%s" (string_of_request request);
-  match get_final_universe universe request with
-  | Conflicts e -> Conflicts e
-  | Success u   ->
-    try
-      let diff = Diff.diff universe u in
-      Success (actions_of_diff diff)
-    with Cudf.Constraint_violation s ->
-      OpamGlobals.error_and_exit "constraint violations: %s" s
+  let r =
+    if extern then get_final_universe universe request
+    else check_request universe request
+  in
+  let to_actions u1 u2 =
+    let diff = Diff.diff u1 u2 in
+    actions_of_diff diff
+  in
+  map_success (to_actions universe) r
 
 let create_graph filter universe =
   let pkgs = Cudf.get_packages ~filter universe in

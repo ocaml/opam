@@ -196,3 +196,7 @@ let string_of_cause to_string =
     Printf.sprintf "conflicts with %s" (list_to_string pkgs)
   | Requested        -> ""
   | Unknown          -> ""
+
+let map_success f = function
+  | Success x -> Success (f x)
+  | Conflicts c -> Conflicts c
