@@ -439,8 +439,7 @@ let check_request ?(explain=true) univ req =
     OpamGlobals.error "Internal solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver"
-  | Algo.Depsolver.Unsat _ ->
-    OpamGlobals.warning "Internal solver failed without explanations";
+  | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
     Conflicts (fun () -> [])
 
 (* Return the universe in which the system has to go *)
