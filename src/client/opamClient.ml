@@ -958,10 +958,11 @@ module API = struct
             wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = [] }
         else
-          { wish_install = OpamSolution.atoms_of_packages
-                (OpamPackage.Set.inter t.installed_roots (Lazy.force t.available_packages));
+	  let eqnames, neqnames = List.partition (function (_,Some(`Eq,_)) -> true | _ -> false) atoms in
+          { wish_install = eqnames @ (OpamSolution.atoms_of_packages
+                (OpamPackage.Set.inter t.installed_roots (Lazy.force t.available_packages)));
             wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
-            wish_upgrade = atoms }
+            wish_upgrade = neqnames }
       in
       let action =
         if add_to_roots = Some false || deps_only then
