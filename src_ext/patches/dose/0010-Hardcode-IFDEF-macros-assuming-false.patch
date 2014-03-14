@@ -1,0 +1,396 @@
+From 4f0510eaa4818b202ab8067a3ec8405cb0126055 Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 14 Mar 2014 18:32:59 +0100
+Subject: [PATCH 10/10] Hardcode IFDEF macros (assuming false)
+
+the quick-and-dirty way:
+```
+sed -i -nre '
+/\bIFDEF\b/{
+  :LOOP
+  s/.*\bELSE\b(.*)/\1/p; t ELSE
+  s/.*\bEND\b(.*)/\1/p; t END
+  n; b LOOP
+  :ELSE
+  s/.*\bEND\b(.*)/\1/p; t END
+  p; n; b ELSE
+  :END
+}; p'
+```
+on all ml/mli files.
+Same remarks as for __FILE__
+---
+ applications/ceve.ml       | 52 ++++++++++++---------------------
+ applications/challenged.ml | 27 ++++++-----------
+ common/input.ml            | 51 +++++++++-----------------------
+ common/input.mli           | 14 +++------
+ db/backend.ml              |  8 ++++--
+ doseparse/boilerplate.ml   | 72 ++++++++++++++++------------------------------
+ 6 files changed, 73 insertions(+), 151 deletions(-)
+
+diff --git a/applications/ceve.ml b/applications/ceve.ml
+index 5cd4ee7..551d4ca 100644
+--- a/applications/ceve.ml
++++ b/applications/ceve.ml
+@@ -17,9 +17,8 @@ open Algo
+ 
+ include Util.Logging(struct let label = "applications/ceve.ml" end) ;;
+ 
+-IFDEF HASOCAMLGRAPH THEN
+-  module DGraph = Defaultgraphs.SyntacticDependencyGraph
+-END
++
++
+ 
+ module Options = struct
+   open OptParse
+@@ -62,23 +61,11 @@ end;;
+ (* -------------------------------- *)
+ 
+ let output_to_sqlite args =
+-IFDEF HASDB THEN
+-  begin
+-    let pl = List.unique (List.flatten (List.map (function u ->
+-      match Input.parse_uri u with
+-      | ("deb", (_, _, _, _, f), _) -> Debian.Packages.input_raw [f]
+-      | _ -> failwith "Other file formats than Debian are not yet supported for SQLite insertion"
+-     ) args)) in
+-    let db = Backend.open_database "sqlite" (None, None, Some "localhost", None, "cudf") in
+-    Backend.create_tables db; 
+-    List.iter (fun p ->
+-      Backend.insert_package db p
+-    ) pl;
+-    (* !Sql.database.close_db db.Backend.connection; *)
+-  end 
+-ELSE
++
++
+   failwith "DB not available"
+-END
++
++
+ ;;
+ 
+ let nr_conflicts univ =
+@@ -193,30 +180,27 @@ let main () =
+       in
+       begin match OptParse.Opt.get Options.out_type with
+       |"dot" -> 
+-IFDEF HASOCAMLGRAPH THEN
+-          DGraph.DotPrinter.output_graph oc (DGraph.dependency_graph u)
+-ELSE
++
++
+         failwith ("dot not supported: needs ocamlgraph")
+-END
++
++
+       |"gml" -> 
+-IFDEF HASOCAMLGRAPH THEN
+-          let fmt = Format.formatter_of_out_channel oc in
+-          DGraph.GmlPrinter.print fmt (DGraph.dependency_graph u)
+-ELSE
++
++
+         failwith ("dot not supported: needs ocamlgraph")
+-END
++
++
+ 
+       |"cnf" -> Printf.fprintf oc "%s" (Depsolver.output_clauses ~global_constraints ~enc:Depsolver.Cnf u)
+       |"dimacs" -> Printf.fprintf oc "%s" (Depsolver.output_clauses ~global_constraints ~enc:Depsolver.Dimacs u)
+       |"cudf" -> output_cudf oc preamble u
+       |"table" ->
+-IFDEF HASOCAMLGRAPH THEN
+-        Printf.fprintf oc "%d\t%d\t%d\n"
+-        (Cudf.universe_size u) (DGraph.G.nb_edges (DGraph.dependency_graph u))
+-        (nr_conflicts u)
+-ELSE
++
++
+         failwith ("table not supported: needs ocamlgraph")
+-END
++
++
+       |_ -> assert false
+       end ;
+       close_out oc;
+diff --git a/applications/challenged.ml b/applications/challenged.ml
+index 41236d1..9407146 100644
+--- a/applications/challenged.ml
++++ b/applications/challenged.ml
+@@ -30,18 +30,12 @@ module Options = struct
+   let brokenlist = StdOpt.store_true ()
+   let downgrades = StdOpt.store_true ()
+   let cluster = StdOpt.store_true ()
+-IFDEF HASPARMAP THEN
+-  let ncores = StdOpt.int_option ~default:1 ()
+-  let chunksize = StdOpt.int_option ()
+-END
++
++
+   open OptParser ;;
+ 
+-IFDEF HASPARMAP THEN
+-  add options ~long_name:"ncores"
+-    ~help:"Number of cores to use on a multicore" ncores;
+-  add options ~long_name:"chunksize"
+-    ~help:"Size of each task executed by the workers (controls granularity)" chunksize;
+-END
++
++
+ 
+   add options ~long_name:"checkonly"
+     ~help:"Check only these package ex. (sn1,sv1),(sn2,sv2)" checkonly;
+@@ -224,16 +218,11 @@ let challenged
+   (* computing *)
+   let results = 
+     let map f l =
+-IFDEF HASPARMAP THEN
+-    let ncores = OptParse.Opt.get Options.ncores in
+-    match OptParse.Opt.opt Options.chunksize with
+-      None ->     
+-	Parmap.parmap ~ncores f (Parmap.L l)
+-    | Some chunksize ->       
+-	Parmap.parmap ~ncores ~chunksize f (Parmap.L l)
+-ELSE
++
++
+     List.map f l
+-END
++
++
+     in
+     map (fun ((sn,sv,version),(cluster,vl,constr)) ->
+       let startd=Unix.gettimeofday() in
+diff --git a/common/input.ml b/common/input.ml
+index c6af980..2ae132d 100644
+--- a/common/input.ml
++++ b/common/input.ml
+@@ -14,36 +14,11 @@ open ExtLib
+ 
+ include Util.Logging(struct let label = "common/input.ml" end) ;;
+ 
+-IFDEF HASZIP THEN
+-let gzip_open_file file =
+-  let ch = Gzip.open_in file in
+-  let input_char ch = try Gzip.input_char ch with End_of_file -> raise IO.No_more_input in
+-  let read ch = try Gzip.input ch with End_of_file -> raise IO.No_more_input in
+-  IO.create_in
+-  ~read:(fun () -> input_char ch)
+-  ~input:(read ch)
+-  ~close:(fun () -> Gzip.close_in ch)
+-;;
+-END
+-
+-IFDEF HASBZ2 THEN
+-let bzip_open_file file =
+-  let s = " " in
+-  let ch = Bz2.open_in (open_in file) in
+-  let input_char ch = 
+-    try ignore (Bz2.read ch s 0 1) ; s.[0]
+-    with End_of_file -> raise IO.No_more_input
+-  in
+-  let read ch s pos len =
+-    try Bz2.read ch s pos len 
+-    with End_of_file -> raise IO.No_more_input
+-  in
+-  IO.create_in
+-  ~read:(fun () -> input_char ch)
+-  ~input:(read ch)
+-  ~close:(fun () -> Bz2.close_in ch)
+-;;
+-END
++
++
++
++
++
+ 
+ let std_open_file file = IO.input_channel (open_in file)
+ let open_ch ch = IO.input_channel ch
+@@ -52,18 +27,18 @@ let close_ch ch = IO.close_in ch
+ let open_file file =
+   if (Unix.stat file).Unix.st_size = 0 then fatal "Input file %s is empty" file;
+   if Filename.check_suffix file ".gz" || Filename.check_suffix file ".cz" then
+-IFDEF HASZIP THEN
+-    gzip_open_file file
+-ELSE
++
++
+     fatal "gzip not supported. re-configure with --with-zip"
+-END
++
++
+   else 
+   if Filename.check_suffix file ".bz2" then
+-IFDEF HASBZ2 THEN
+-    bzip_open_file file
+-ELSE
++
++
+     fatal "bzip not supported. re-configure with --with-bz2"
+-END
++
++
+   else 
+     std_open_file file
+ ;;
+diff --git a/common/input.mli b/common/input.mli
+index 4fcca69..5ddb0e4 100644
+--- a/common/input.mli
++++ b/common/input.mli
+@@ -14,17 +14,11 @@
+ 
+ open ExtLib
+ 
+-IFDEF HASZIP THEN
+-(** load a file in gzip format
+-    @return ExtLib.IO.input channel *)
+-val gzip_open_file : string -> IO.input
+-END
+ 
+-IFDEF HASBZ2 THEN
+-(** load a file in bzip format - Not implemented yet
+-    @return ExtLib.IO.input channel *)
+-val bzip_open_file : string -> IO.input
+-END
++
++
++
++
+ 
+ (** load a non compressed file  
+     @return ExtLib.IO.input channel *)
+diff --git a/db/backend.ml b/db/backend.ml
+index 8dbf1f5..052982d 100644
+--- a/db/backend.ml
++++ b/db/backend.ml
+@@ -233,9 +233,13 @@ let create_view_universe db =
+ 
+ let late_binding = function
+   |"pgsql" ->
+-      IFDEF PGSQL THEN Pgsql.load () ELSE failwith "pgsql not supported" END
++ failwith "pgsql not supported" END
++
++
+   |"sqlite" ->
+-      IFDEF SQLITE THEN Sqlite.load () ELSE failwith "sqlite not supported" END
++ failwith "sqlite not supported" END
++
++
+   |_ -> failwith "DB late binding failed"
+ ;;
+ 
+diff --git a/doseparse/boilerplate.ml b/doseparse/boilerplate.ml
+index a7a0b23..f17cb88 100644
+--- a/doseparse/boilerplate.ml
++++ b/doseparse/boilerplate.ml
+@@ -309,21 +309,11 @@ let deb_load_universe options l =
+  * refactor or not refactor ? *)
+ (** transform a list of rpm control stanza into a cudf packages list *)
+ let rpm_load_list dll =
+-IFDEF HASRPM THEN
+-  let tables =  Rpm.Rpmcudf.init_tables (List.flatten dll) in
+-  let cll = 
+-    List.map (fun l -> 
+-      List.map (Rpm.Rpmcudf.tocudf tables) l 
+-    ) dll
+-  in
+-  (* Rpm.Rpmcudf.clear tables; *)
+-  let from_cudf (p,i) = (p,string_of_int i) in
+-  let to_cudf (p,v) = (p,Rpm.Rpmcudf.get_cudf_version tables (p,v)) in
+-  let preamble = Rpm.Rpmcudf.preamble in
+-  (preamble,cll,from_cudf,to_cudf)
+-ELSE
++
++
+   failwith "librpm not available. re-configure with --with-rpm"
+-END
++
++
+ 
+ (** transform a list of rpm control stanza into a cudf universe *)
+ let rpm_load_universe l =
+@@ -453,39 +443,25 @@ let parse_input ?(options=None) urilist =
+   |`Csw, None -> csw_parse_input filelist
+ 
+   |`Hdlist, None -> 
+-IFDEF HASRPM THEN
+-      let dll = 
+-        List.map (fun l ->
+-          let filelist = List.map unpack l in
+-          Rpm.Packages.Hdlists.input_raw filelist
+-        ) filelist 
+-      in
+-      rpm_load_list dll
+-ELSE
++
++
+     fatal "hdlist Not supported. re-configure with --with-rpm"
+-END
++
++
+ 
+   |`Synthesis, None -> 
+-IFDEF HASRPM THEN
+-      let dll = 
+-        List.map (fun l ->
+-          let filelist = List.map unpack l in
+-          Rpm.Packages.Synthesis.input_raw filelist
+-        ) filelist
+-      in
+-      rpm_load_list dll
+-ELSE
++
++
+     fatal "synthesis input format not supported. re-configure with --with-rpm"
+-END
++
++
+ (*
+   |Some (Url.Pgsql|Url.Sqlite), [((Url.Pgsql|Url.Sqlite) as dbtype,info,(Some query))] ->
+-IFDEF HASDB THEN
+-      let db = Db.Backend.init_database dbtype info (Idbr.parse_query query) in
+-      let l = Db.Backend.load_selection db (`All) in
+-      deb_load_list ~extras [l]
+-ELSE
++
++
+     fatal "%s Not supported. re-configure with --with-??" (Url.scheme_to_string dbtype)
+-END
++
++
+ *)
+     |s,_ -> fatal "%s Not supported" (Url.scheme_to_string s)
+ ;;
+@@ -493,18 +469,18 @@ END
+ let supported_formats () =
+   let standard = ["cudf://";"deb://";"deb://-";"eclipse://"] in
+   let rpm = 
+-IFDEF HASRPM THEN
+-     ["hdlist://";"synthesis://"]
+-ELSE
++
++
+      []
+-END
++
++
+    in
+    let db =
+-IFDEF HASDB THEN
+-     ["pgsql://";"sqlite://"]
+-ELSE
++
++
+      []
+-END
++
++
+    in
+    standard@rpm@db
+ ;;
+-- 
+1.8.5.3
+

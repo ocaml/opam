@@ -1,7 +1,7 @@
 From d26a67f13bc445463ba474d578c2ea8ee4a9dd0c Mon Sep 17 00:00:00 2001
 From: Roberto Di Cosmo <github@dicosmo.org>
 Date: Fri, 17 Jan 2014 13:55:30 +0100
-Subject: [PATCH 3/8] Modified pattern interpolation to ensure only one " is
+Subject: [PATCH 03/10] Modified pattern interpolation to ensure only one " is
  used around arguments.
 
 ---

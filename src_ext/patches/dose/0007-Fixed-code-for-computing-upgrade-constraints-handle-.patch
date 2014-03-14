@@ -1,8 +1,8 @@
 From 5241aed77b87d34555ef96f0307aa323b7b60f6c Mon Sep 17 00:00:00 2001
 From: Roberto Di Cosmo <github@dicosmo.org>
 Date: Wed, 12 Mar 2014 17:25:06 +0100
-Subject: [PATCH] Fixed code for computing upgrade constraints: handle user
- constraints properly.
+Subject: [PATCH 07/10] Fixed code for computing upgrade constraints: handle
+ user constraints properly.
 
 ---
  algo/depsolver.ml | 26 +++++++++++++++-----------

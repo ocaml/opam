@@ -1,7 +1,7 @@
-From 22fc8a590d893bc8e457f8952b56649622caf46f Mon Sep 17 00:00:00 2001
+From b96834bd3b7d4a0c33473a91961a01401cc524e4 Mon Sep 17 00:00:00 2001
 From: Louis Gesbert <louis.gesbert@ocamlpro.com>
 Date: Fri, 7 Mar 2014 10:22:39 +0100
-Subject: [PATCH 8/8] Use re.pcre instead of pcre-ocaml
+Subject: [PATCH 08/10] Use re.pcre instead of pcre-ocaml
 
 (original patch on OPAM by samoht)
 ---

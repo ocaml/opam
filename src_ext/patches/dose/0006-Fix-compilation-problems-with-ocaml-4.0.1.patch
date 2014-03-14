@@ -1,7 +1,7 @@
 From 4a789f7a785a9b5134e10263dd0f9cd0a85d431d Mon Sep 17 00:00:00 2001
 From: Pietro Abate <pietro.abate@pps.jussieu.fr>
 Date: Fri, 6 Dec 2013 13:46:52 +0100
-Subject: [PATCH 6/8] Fix compilation problems with ocaml 4.0.1
+Subject: [PATCH 06/10] Fix compilation problems with ocaml 4.0.1
 
 Conflicts:
 	doc/manpages/ceve.pod
