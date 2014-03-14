@@ -45,13 +45,6 @@ let real_version universe pkg =
     OpamPackage.create n v
   else pkg
 
-(* Convert an OPAM formula into a debian formula *)
-let atom2debian (n, v) =
-  (OpamPackage.Name.to_string n, None),
-  match v with
-  | None       -> None
-  | Some (r,v) -> Some (OpamFormula.string_of_relop r, OpamPackage.Version.to_string v)
-
 (* Get the optional depencies of a package *)
 let depopts_of_package universe package =
   let opts =
@@ -85,26 +78,27 @@ let cudf_versions_map universe packages =
         OpamPackage.Version.Set.map (fun v ->
             OpamPackage.version (real_version universe (OpamPackage.create name v)))
           versions in
-      let versions = OpamPackage.Version.Set.elements versions in
-      let versions = List.sort OpamPackage.Version.compare versions in
       let _, map =
-        List.fold_left
-          (fun (i,acc) version ->
+        OpamPackage.Version.Set.fold
+          (fun version (i,acc) ->
              let nv = OpamPackage.create name version in
              i + 1, OpamPackage.Map.add nv i acc)
-          (1,acc) versions in
+          versions (1,acc) in
       map)
     pmap OpamPackage.Map.empty
 
 let name_to_cudf name =
   Common.CudfAdd.encode (OpamPackage.Name.to_string name)
 
-let atom2cudf version_map (name,cstr) =
+let atom2cudf universe version_map (name,cstr) =
   name_to_cudf name, match cstr with
   | None -> None
   | Some (op,v) ->
+    let nv = OpamPackage.create name v in
+    let nv = real_version universe nv in
+    let v = OpamPackage.version nv in
     try
-      let cv = OpamPackage.Map.find (OpamPackage.create name v) version_map in
+      let cv = OpamPackage.Map.find nv version_map in
       Some (op, cv)
     with Not_found ->
       (* The version for comparison doesn't exist: match to the closest
@@ -186,9 +180,9 @@ let opam2cudf universe ?(depopts=false) version_map package =
     Cudf.
     package = name_to_cudf (OpamPackage.name package);
     version = OpamPackage.Map.find package version_map;
-    depends = List.rev_map (List.rev_map (atom2cudf version_map))
+    depends = List.rev_map (List.rev_map (atom2cudf universe version_map))
         (OpamFormula.to_cnf depends);
-    conflicts = List.rev_map (atom2cudf version_map) conflicts;
+    conflicts = List.rev_map (atom2cudf universe version_map) conflicts;
     installed;
     (* was_installed: ? ;
        provides: unused *)
@@ -279,8 +273,8 @@ let map_request f r =
 (* Add upgrade constraints *)
 let cleanup_request universe (req:atom request) =
   let wish_install =
-    let upgrade_packages = List.rev_map (fun (n,_) -> n) req.wish_upgrade in
-    List.filter (fun (n,_) -> not (List.mem n upgrade_packages)) req.wish_install in
+    List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
+      req.wish_install in
   let wish_upgrade =
     List.rev_map (fun (n,c as pkg) ->
         if c = None
@@ -297,7 +291,7 @@ let resolve ?(verbose=true) universe ~requested request =
   let simple_universe, version_map =
     load_cudf_universe universe universe.u_available in
   let request = cleanup_request universe request in
-  let cudf_request = map_request (atom2cudf version_map) request in
+  let cudf_request = map_request (atom2cudf universe version_map) request in
   let resolve u req =
     if OpamCudf.external_solver_available ()
     then
