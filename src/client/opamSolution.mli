@@ -63,6 +63,11 @@ val atoms_of_packages: package_set -> atom list
 (** Return a list of constrained atoms from a set of packages *)
 val eq_atoms_of_packages: package_set -> atom list
 
+(** Takes a "raw" list of atoms (from the user), and match it to existing
+    packages. Match packages with the wrong capitalisation, and raises errors on
+    non-existing packages, and unavailable ones unless [permissive] is set. *)
+val sanitize_atom_list: ?permissive: bool -> OpamState.state -> atom list -> atom list
+
 (** Return a list of atoms from a list of names (wich can eventually
     be of the form name.version). Unless [permissive] is set, will abort in
     case the package is not available *)

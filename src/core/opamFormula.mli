@@ -34,6 +34,13 @@ type atom = OpamPackage.Name.t * version_constraint option
 (** Pretty-printing of atoms *)
 val string_of_atom: atom -> string
 
+(** The compact atom format used in requests, "pkgOPvers", with '.' allowed instead
+    of '=' *)
+val short_string_of_atom: atom -> string
+
+(** Checks if a package verifies an atom *)
+val check: atom -> OpamPackage.t -> bool
+
 (** AND formulas *)
 type 'a conjunction = 'a list
 

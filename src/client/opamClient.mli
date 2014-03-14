@@ -41,12 +41,13 @@ module API: sig
   (** Display a general summary of a collection of packages. *)
   val info: fields:string list -> string list -> unit
 
-  (** Install the given set of packages. Second argument, if not None, specifies
-      that given packages should be added or removed from the roots *)
-  val install: name_set -> bool option -> bool -> unit
+  (** Install the given list of packages. Second argument, if not None, specifies
+      that given packages should be added or removed from the roots.
+      Third argument installs all dependencies but not the packages themselves *)
+  val install: atom list -> bool option -> bool -> unit
 
   (** Reinstall the given set of packages. *)
-  val reinstall: name_set -> unit
+  val reinstall: atom list -> unit
 
   (** Refresh the available packages. *)
   val update: repos_only:bool -> repository_name list -> unit
@@ -56,8 +57,8 @@ module API: sig
       packages. *)
   val upgrade: name_set option -> unit
 
-  (** Remove the given set of packages. *)
-  val remove: autoremove:bool -> force:bool -> name_set -> unit
+  (** Remove the given list of packages. *)
+  val remove: autoremove:bool -> force:bool -> atom list -> unit
 
   (** Config API. *)
   module CONFIG: sig

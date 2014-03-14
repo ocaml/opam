@@ -99,11 +99,9 @@ let check_availability t atoms =
       OpamGlobals.error_and_exit "%s" (OpamState.unavailable_reason t name version) in
   List.iter check_atom atoms
 
-(* transform a name into:
-   - <name, installed version> package
-   - <$n,$v> package when name = $n.$v *)
-let atoms_of_names ?(permissive=false) t names =
-  let packages = OpamPackage.to_map (OpamPackage.Set.union t.packages t.installed) in
+let sanitize_atom_list ?(permissive=false) t atoms =
+  let packages =
+    OpamPackage.to_map (OpamPackage.Set.union t.packages t.installed) in
   (* gets back the original capitalization of the package name *)
   let realname name =
     let lc_name name = String.lowercase (OpamPackage.Name.to_string name) in
@@ -122,30 +120,23 @@ let atoms_of_names ?(permissive=false) t names =
       OpamPackage.Version.Set.mem v versions in
   let atoms =
     List.rev_map
-      (fun name ->
+      (fun (name,cstr) ->
          let name = realname name in
-         if exists name None then atom_of_name name
-         else (
-           (* consider 'name' to be 'name.version' *)
-           let nv =
-             try OpamPackage.of_string (OpamPackage.Name.to_string name)
-             with Not_found -> OpamPackage.unknown name None in
-           let sname = realname (OpamPackage.name nv) in
-           let sversion = OpamPackage.version nv in
-           log "The raw name %S not found, looking for package %s version %s"
-             (OpamPackage.Name.to_string name)
-             (OpamPackage.Name.to_string sname)
-             (OpamPackage.Version.to_string sversion);
-           if exists sname (Some sversion) then
-             eq_atom sname sversion
-           else if exists sname None then
-             OpamPackage.unknown sname (Some sversion)
-           else
-             OpamPackage.unknown sname None
-         ))
-      (OpamPackage.Name.Set.elements names) in
+         match cstr with
+         | Some (`Eq, v) ->
+           if exists name (Some v) then name, cstr
+           else OpamPackage.unknown name (Some v)
+         | _ ->
+           if exists name None then name, cstr
+           else OpamPackage.unknown name None)
+      atoms in
   if not permissive then check_availability t atoms;
   atoms
+
+(* deprecated, use sanitize directly on atoms *)
+let atoms_of_names ?permissive t names =
+  let atoms = List.map (fun n -> n,None) (OpamPackage.Name.Set.elements names) in
+  sanitize_atom_list ?permissive t atoms
 
 (* Pretty-print errors *)
 let display_error (n, error) =

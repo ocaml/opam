@@ -117,10 +117,7 @@ let is_name_installed t name =
   is_name_installed_aux t.installed name
 
 let find_installed_package_by_name_aux installed name =
-  try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
-  with Not_found ->
-    OpamGlobals.error_and_exit
-      "Package %s is not installed" (OpamPackage.Name.to_string name)
+  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
 
 let find_installed_package_by_name t name =
   find_installed_package_by_name_aux t.installed name
@@ -419,11 +416,7 @@ let remove_metadata t packages =
     ) packages
 
 let overlay_of_name t name =
-  let versions = OpamPackage.versions_of_name t.packages name in
-  let versions =
-    OpamPackage.Version.Set.filter ((<>) OpamPackage.Version.pinned) versions in
-  let version = OpamPackage.Version.Set.max_elt versions in
-  OpamPackage.create name version
+  OpamPackage.max_version t.packages name
 
 let add_opam_overlay t nv opam =
   let dst = OpamPath.Switch.Overlay.opam t.root t.switch nv in
@@ -805,14 +798,12 @@ let available_packages t =
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason t name version =
   let reasons () =
-    let version = match version with
-      | Some v -> v
-      | None -> (* display message for last version if none are available *)
-        let versions = OpamPackage.versions_of_name t.packages name in
-        OpamPackage.Version.Set.max_elt versions
+    let nv = match version with
+      | Some v -> OpamPackage.create name v
+      | None -> OpamPackage.max_version t.packages name
     in
     let r =
-      match opam_opt t (OpamPackage.create name version) with
+      match opam_opt t nv with
       | None -> []
       | Some opam ->
         (if consistent_ocaml_version t opam then [] else [

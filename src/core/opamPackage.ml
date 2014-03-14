@@ -253,6 +253,13 @@ let versions_of_name packages n =
        (fun nv -> name nv = n)
        packages)
 
+let max_version set name =
+  let versions = versions_of_name set name in
+  let versions =
+    Version.Set.filter ((<>) Version.pinned) versions in
+  let version = Version.Set.max_elt versions in
+  create name version
+
 let unknown name version =
   match version with
   | None   ->
