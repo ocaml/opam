@@ -264,11 +264,11 @@ let unknown name version =
   match version with
   | None   ->
     OpamGlobals.error_and_exit
-      "%S is not a valid package."
+      "%s is not a valid package."
       (Name.to_string name)
   | Some v ->
     OpamGlobals.error_and_exit
-      "The package %S has no version %s."
+      "The package %s has no version %s."
       (Name.to_string name)
       (Version.to_string v)
 

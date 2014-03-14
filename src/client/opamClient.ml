@@ -923,7 +923,7 @@ module API = struct
       OpamFile.Installed_roots.write file t.installed_roots;
     );
 
-    OpamSolution.check_availability t atoms;
+    OpamSolution.check_availability t (Lazy.force t.available_packages) atoms;
 
     if pkg_new <> [] then (
 

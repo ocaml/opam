@@ -191,6 +191,9 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
       List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in
     let deps =
       List.rev_map (vpkg2opamstr cudf2opam cudf_universe) deps in
+    (* XXX This duplicates some work which is better done in
+       OpamState.unavailable_reason. Factor it and pass the function as argument
+       to this function ? *)
     let str = [] in
     let str =
       if pinned_deps <> [] then

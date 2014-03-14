@@ -85,19 +85,22 @@ let atoms_of_packages set =
 let atom_of_name name =
   name, None
 
-let check_availability t atoms =
-  let available = OpamPackage.to_map (Lazy.force t.available_packages) in
-  let check_atom (name, version) =
-    try
-      let versions = OpamPackage.Name.Map.find name available in
-      match version with
-      | Some (`Eq, v) when not (OpamPackage.Version.Set.mem v versions) ->
-        raise Not_found
-      | _ -> ()
-    with Not_found ->
-      let version = match version with Some (_, v) -> Some v | None -> None in
-      OpamGlobals.error_and_exit "%s" (OpamState.unavailable_reason t name version) in
-  List.iter check_atom atoms
+let check_availability t set atoms =
+  let available = OpamPackage.to_map set in
+  let check_atom (name, _ as atom) =
+    let exists =
+      try
+        OpamPackage.Version.Set.exists
+          (fun v -> OpamFormula.check atom (OpamPackage.create name v))
+          (OpamPackage.Name.Map.find name available)
+      with Not_found -> false
+    in
+    if exists then None
+    else Some (OpamState.unavailable_reason t atom) in
+  let errors = OpamMisc.filter_map check_atom atoms in
+  if errors <> [] then
+    (List.iter (OpamGlobals.error "%s") errors;
+     OpamGlobals.exit 66)
 
 let sanitize_atom_list ?(permissive=false) t atoms =
   let packages =
@@ -110,33 +113,10 @@ let sanitize_atom_list ?(permissive=false) t atoms =
         packages in
     match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
   in
-  let exists name version =
-    OpamPackage.Name.Map.mem name packages
-    &&
-    match version with
-    | None   -> true
-    | Some v ->
-      let versions = OpamPackage.Name.Map.find name packages in
-      OpamPackage.Version.Set.mem v versions in
-  let atoms =
-    List.rev_map
-      (fun (name,cstr) ->
-         let name = realname name in
-         match cstr with
-         | Some (`Eq, v) ->
-           if exists name (Some v) then name, cstr
-           else OpamPackage.unknown name (Some v)
-         | _ ->
-           if exists name None then name, cstr
-           else OpamPackage.unknown name None)
-      atoms in
-  if not permissive then check_availability t atoms;
+  let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
+  if permissive then check_availability t t.packages atoms
+  else check_availability t (Lazy.force t.available_packages) atoms;
   atoms
-
-(* deprecated, use sanitize directly on atoms *)
-let atoms_of_names ?permissive t names =
-  let atoms = List.map (fun n -> n,None) (OpamPackage.Name.Set.elements names) in
-  sanitize_atom_list ?permissive t atoms
 
 (* Pretty-print errors *)
 let display_error (n, error) =
