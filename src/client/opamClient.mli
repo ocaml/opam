@@ -53,9 +53,9 @@ module API: sig
   val update: repos_only:bool -> repository_name list -> unit
 
   (** Find a consistent state where most of the installed packages are
-      upgraded to their latest version. [None] means all the installed
-      packages. *)
-  val upgrade: name_set option -> unit
+      upgraded to their latest version, within the given constraints.
+      An empty list means upgrade all installed packages. *)
+  val upgrade: atom list -> unit
 
   (** Remove the given list of packages. *)
   val remove: autoremove:bool -> force:bool -> atom list -> unit

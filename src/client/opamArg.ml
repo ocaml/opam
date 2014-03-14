@@ -976,10 +976,8 @@ let update =
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
     Client.update ~repos_only repositories;
-    if upgrade then (
-      OpamGlobals.yes := true;
-      Client.upgrade None
-    ) in
+    if upgrade then Client.upgrade []
+  in
   Term.(pure update $global_options $jobs_flag $json_flag $repository_list
         $repos_only $sync $upgrade),
   term_info "update" ~doc ~man
@@ -995,14 +993,11 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
-  let upgrade global_options build_options names =
+  let upgrade global_options build_options atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages = match names with
-      | [] -> None
-      | _  -> Some (OpamPackage.Name.Set.of_list names) in
-    Client.upgrade packages in
-  Term.(pure upgrade $global_options $build_options $name_list),
+    Client.upgrade atoms in
+  Term.(pure upgrade $global_options $build_options $atom_list),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

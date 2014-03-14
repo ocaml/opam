@@ -494,73 +494,82 @@ module API = struct
       ) in
     loop repo max_loop
 
-  let compute_upgrade_t names t =
-    let to_reinstall =
-      match names with
-      | None -> OpamPackage.Set.inter t.reinstall t.installed
-      | Some n ->
-        OpamPackage.Set.filter
-          (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) n)
-          t.reinstall
-    in
+  let compute_upgrade_t atoms t =
+    let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
     let (--) = OpamPackage.Set.diff in
-    match names with
-      | None ->
-        let t, _, bad_versions = removed_from_upstream t in
-        let to_remove, unavailable = must_be_removed t t.installed bad_versions in
-        let to_upgrade = t.installed -- to_remove in
-        let requested = OpamPackage.names_of_packages
-            (OpamPackage.Set.union to_remove unavailable) in
-        let action = Upgrade to_reinstall in
-        requested,
-        action,
-        OpamSolution.resolve t action ~requested
-          { wish_install = [];
-            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
-            wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
-      | Some names ->
-        let atoms = OpamSolution.atoms_of_names t names in
-        let to_upgrade =
-          let packages =
-            OpamMisc.filter_map (fun (n,_) ->
-                try Some (OpamState.find_installed_package_by_name t n)
-                with Not_found ->
-                  OpamGlobals.msg
-                    "%s is not installed.\n" (OpamPackage.Name.to_string n);
-                  None
-              ) atoms in
-          (OpamPackage.Set.of_list packages) in
-        let t, removed, bad_versions = removed_from_upstream t in
-        let conflicts = OpamPackage.Set.inter to_upgrade removed in
-        if not (OpamPackage.Set.is_empty conflicts) then
-          OpamGlobals.error_and_exit
-            "These packages would need to be recompiled, but they are no longer available \
-             upstream:\n\
-            \  %s\n\
-             Please run \"opam upgrade\" without argument to get to a clean state."
-            (OpamPackage.Set.to_string conflicts);
-        let to_remove, unavailable = must_be_removed t to_upgrade bad_versions in
-        let to_upgrade = to_upgrade -- to_remove in
-        let installed_roots = t.installed -- to_upgrade -- to_remove in
-        let requested =
-          OpamPackage.Name.Set.union
-            (OpamPackage.names_of_packages
-               (OpamPackage.Set.union to_remove unavailable))
-            (OpamPackage.Name.Set.of_list (List.rev_map fst atoms)) in
-        let action = Upgrade to_reinstall in
-        requested,
-        action,
-        OpamSolution.resolve t action ~requested
-          { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
-            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
-            wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
+    if atoms = [] then
+      let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+      let t, _, bad_versions = removed_from_upstream t in
+      let to_remove, unavailable = must_be_removed t t.installed bad_versions in
+      let to_upgrade = t.installed -- to_remove in
+      let requested = OpamPackage.names_of_packages
+          (OpamPackage.Set.union to_remove unavailable) in
+      let action = Upgrade to_reinstall in
+      requested,
+      action,
+      OpamSolution.resolve t action ~requested
+        { wish_install = [];
+          wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
+          wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
+    else
+    let to_reinstall =
+      OpamPackage.Set.filter
+        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
+        t.reinstall in
+    let to_upgrade, not_installed =
+      List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
+          try
+            let nv =
+              OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
+                t.installed in
+            OpamPackage.Set.add nv packages, not_installed
+          with Not_found ->
+            packages, atom :: not_installed)
+        (OpamPackage.Set.empty,[]) atoms in
+    if not_installed <> [] then
+      OpamGlobals.note "%s %s not installed, ignored.\n"
+        (OpamMisc.pretty_list
+           (List.rev_map OpamFormula.short_string_of_atom not_installed))
+        (match not_installed with [_] -> "is" | _ -> "are");
+    let t, removed, bad_versions = removed_from_upstream t in
+    let conflicts = OpamPackage.Set.inter to_upgrade removed in
+    if not (OpamPackage.Set.is_empty conflicts) then
+      OpamGlobals.error_and_exit
+        "These packages would need to be recompiled, but they are no longer available \
+         upstream:\n\
+        \  %s\n\
+         Please run \"opam upgrade\" without argument to get to a clean state."
+        (OpamPackage.Set.to_string conflicts);
+    let to_remove, unavailable = must_be_removed t to_upgrade bad_versions in
+    let to_upgrade = to_upgrade -- to_remove in
+    let installed_roots = t.installed -- to_upgrade -- to_remove in
+    let requested =
+      OpamPackage.Name.Set.union
+        (OpamPackage.names_of_packages
+           (OpamPackage.Set.union to_remove unavailable))
+        (OpamPackage.Name.Set.of_list (List.rev_map fst atoms)) in
+    let action = Upgrade to_reinstall in
+    let upgrade_atoms =
+      (* packages corresponds to the currently installed versions.
+         Not what we are interested in, recover the original atom constraints *)
+      List.map (fun nv ->
+          let name = OpamPackage.name nv in
+          try name, List.assoc name atoms
+          with Not_found -> name, None)
+        (OpamPackage.Set.elements to_upgrade) in
+    requested,
+    action,
+    OpamSolution.resolve t action ~requested
+      { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
+        wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
+        wish_upgrade = upgrade_atoms }
 
-  let upgrade_t names t =
+  let upgrade_t atoms t =
+    let atoms = OpamSolution.sanitize_atom_list t atoms in
     log "UPGRADE %s"
-      (match names with
-       | None -> "<all>"
-       | Some n -> OpamPackage.Name.Set.to_string n);
-    match compute_upgrade_t names t with
+      (if atoms = [] then "<all>" else
+         String.concat " & " (List.map OpamFormula.short_string_of_atom atoms));
+    match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
       OpamGlobals.msg "%s" (cs ())
@@ -719,7 +728,7 @@ module API = struct
 
     log "dry-upgrade";
     let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
-    match compute_upgrade_t None t with
+    match compute_upgrade_t [] t with
     | _, _, Success upgrade ->
       let stats = OpamSolver.stats upgrade in
       if OpamSolution.sum stats > 0 then
