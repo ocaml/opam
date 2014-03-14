@@ -114,8 +114,12 @@ let sanitize_atom_list ?(permissive=false) t atoms =
     match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
   in
   let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
-  if permissive then check_availability t t.packages atoms
-  else check_availability t (Lazy.force t.available_packages) atoms;
+  if permissive then
+    check_availability t (OpamPackage.Set.union t.packages t.installed) atoms
+  else
+    check_availability t
+      (OpamPackage.Set.union (Lazy.force t.available_packages) t.installed)
+      atoms;
   atoms
 
 (* Pretty-print errors *)
