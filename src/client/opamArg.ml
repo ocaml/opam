@@ -604,7 +604,7 @@ let search =
         $(b,opam list) command. It displays one package per line, and each line \
         contains the name of the package, the installed version or -- if the package \
         is not installed, and a short description.";
-    `P "The full description can be obtained by doing $(b,opam info <package>).";
+    `P "The full description can be obtained by doing $(b,opam show <package>).";
   ] in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
@@ -836,10 +836,42 @@ let config =
       try
         let state = OpamState.load_state "config-report" in
         let open OpamState.Types in
+        let nprint label n =
+          if n <> 0 then [Printf.sprintf "%d (%s)" n label]
+          else [] in
         print "jobs" "%d" (OpamState.jobs state);
-        print "repositories" "%d"
-          (OpamRepositoryName.Map.cardinal state.repositories);
-        print "pinned" "%d" (OpamPackage.Name.Map.cardinal state.pinned);
+        print "repositories" "%s"
+          OpamRepositoryName.Map.(
+            let nhttp, nlocal, nvcs =
+              fold (fun _ {repo_kind=k} (nhttp, nlocal, nvcs) -> match k with
+                  | `http -> nhttp+1, nlocal, nvcs
+                  | `local -> nhttp, nlocal+1, nvcs
+                  | _ -> nhttp, nlocal, nvcs+1)
+                state.repositories (0,0,0) in
+            let has_default =
+              exists (fun _ {repo_address} ->
+                  repo_address = OpamRepository.default_address)
+                state.repositories in
+            String.concat ", "
+              (Printf.sprintf "%d%s (http)" nhttp
+                 (if has_default then "*" else "") ::
+               nprint "local" nlocal @
+               nprint "version-controlled" nvcs)
+          );
+        print "pinned" "%s"
+          OpamPackage.Name.Map.(
+            if is_empty state.pinned then "0" else
+            let nver, nlocal, nvc =
+              fold (fun _ p (nver, nlocal, nvc) -> match p with
+                  | Version _ -> nver+1, nlocal, nvc
+                  | Local _ -> nver, nlocal+1, nvc
+                  | _ -> nver, nlocal, nvc+1)
+                state.pinned (0,0,0) in
+            String.concat ", "
+              (nprint "version" nver @
+               nprint "local" nlocal @
+               nprint "version control" nvc)
+          );
         print "current-switch" "%s"
           (OpamSwitch.to_string state.switch);
         print "preinstalled" "%b"
