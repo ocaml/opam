@@ -253,15 +253,22 @@ let versions_of_name packages n =
        (fun nv -> name nv = n)
        packages)
 
+let max_version set name =
+  let versions = versions_of_name set name in
+  let versions =
+    Version.Set.filter ((<>) Version.pinned) versions in
+  let version = Version.Set.max_elt versions in
+  create name version
+
 let unknown name version =
   match version with
   | None   ->
     OpamGlobals.error_and_exit
-      "%S is not a valid package."
+      "%s is not a valid package."
       (Name.to_string name)
   | Some v ->
     OpamGlobals.error_and_exit
-      "The package %S has no version %s."
+      "The package %s has no version %s."
       (Name.to_string name)
       (Version.to_string v)
 

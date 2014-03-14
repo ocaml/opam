@@ -63,12 +63,15 @@ val atoms_of_packages: package_set -> atom list
 (** Return a list of constrained atoms from a set of packages *)
 val eq_atoms_of_packages: package_set -> atom list
 
-(** Return a list of atoms from a list of names (wich can eventually
-    be of the form name.version). Unless [permissive] is set, will abort in
-    case the package is not available *)
-val atoms_of_names: ?permissive: bool -> OpamState.state -> name_set -> atom list
+(** Checks that the atoms can possibly be verified (individually) in a package
+    set. Displays an error and exits otherwise *)
+val check_availability: OpamState.state -> OpamPackage.Set.t -> atom list -> unit
 
-val check_availability: OpamState.state -> atom list -> unit
+(** Takes a "raw" list of atoms (from the user), and match it to existing
+    packages. Match packages with the wrong capitalisation, and raises errors on
+    non-existing packages, and unavailable ones unless [permissive] is set.
+    Exits with a message on error. *)
+val sanitize_atom_list: ?permissive: bool -> OpamState.state -> atom list -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int

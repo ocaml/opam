@@ -140,6 +140,7 @@ val s_reinstall: string      (** a package to be reinstalled (a bool) *)
 val s_installed_root: string (** true if this package belongs to the roots
                                  ("installed manually") packages *)
 val s_builddep: string       (** true if the package's build-dep flag is set *)
+val s_pinned: string         (** true if the package is pinned to this version *)
 
 (** {2 Pretty-printing} *)
 

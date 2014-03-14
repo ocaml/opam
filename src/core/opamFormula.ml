@@ -45,6 +45,18 @@ let string_of_atom = function
       (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
+let short_string_of_atom = function
+  | n, None       -> OpamPackage.Name.to_string n
+  | n, Some (`Eq,c) ->
+    Printf.sprintf "%s.%s"
+      (OpamPackage.Name.to_string n)
+      (OpamPackage.Version.to_string c)
+  | n, Some (r,c) ->
+    Printf.sprintf "%s%s%s"
+      (OpamPackage.Name.to_string n)
+      (string_of_relop r)
+      (OpamPackage.Version.to_string c)
+
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =
@@ -127,6 +139,12 @@ let check_relop relop c = match relop with
 
 let eval_relop relop v1 v2 =
   check_relop relop (OpamPackage.Version.compare v1 v2)
+
+let check (name,cstr) package =
+  name = OpamPackage.name package &&
+  match cstr with
+  | None -> true
+  | Some (relop, v) -> eval_relop relop (OpamPackage.version package) v
 
 let to_string t =
   let string_of_constraint (relop, version) =

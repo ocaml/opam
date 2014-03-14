@@ -117,10 +117,7 @@ let is_name_installed t name =
   is_name_installed_aux t.installed name
 
 let find_installed_package_by_name_aux installed name =
-  try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
-  with Not_found ->
-    OpamGlobals.error_and_exit
-      "Package %s is not installed" (OpamPackage.Name.to_string name)
+  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
 
 let find_installed_package_by_name t name =
   find_installed_package_by_name_aux t.installed name
@@ -419,11 +416,7 @@ let remove_metadata t packages =
     ) packages
 
 let overlay_of_name t name =
-  let versions = OpamPackage.versions_of_name t.packages name in
-  let versions =
-    OpamPackage.Version.Set.filter ((<>) OpamPackage.Version.pinned) versions in
-  let version = OpamPackage.Version.Set.max_elt versions in
-  OpamPackage.create name version
+  OpamPackage.max_version t.packages name
 
 let add_opam_overlay t nv opam =
   let dst = OpamPath.Switch.Overlay.opam t.root t.switch nv in
@@ -802,70 +795,61 @@ let available_packages t =
       ) t.opams (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
   set
 
+(* Display a meaningful error for a package that doesn't exist *)
+let unknown_package t (name, _ as atom) =
+  if OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) t.packages
+  then
+    Printf.sprintf "No package matches %s."
+      (OpamFormula.short_string_of_atom atom)
+  else
+    Printf.sprintf "No package named %s found."
+      (OpamPackage.Name.to_string name)
+
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason t name version =
+let unavailable_reason t (name, _ as atom) =
   let reasons () =
-    let version = match version with
-      | Some v -> v
-      | None -> (* display message for last version if none are available *)
-        let versions = OpamPackage.versions_of_name t.packages name in
-        OpamPackage.Version.Set.max_elt versions
-    in
+    let candidates =
+      OpamPackage.Set.filter (OpamFormula.check atom) t.packages in
+    let nv = OpamPackage.max_version candidates name in
     let r =
-      match opam_opt t (OpamPackage.create name version) with
-      | None -> []
-      | Some opam ->
-        (if consistent_ocaml_version t opam then [] else [
-            Printf.sprintf "it requires OCaml %s"
-              (OpamFormula.string_of_formula
-                 (fun (op,v) ->
-                    OpamFormula.string_of_relop op ^ " " ^
-                    OpamCompiler.Version.to_string v)
-                 (match OpamFile.OPAM.ocaml_version opam with
-                  | Some v -> v
-                  | None -> assert false))
-          ]) @
-        (if consistent_os opam then [] else [
-            Printf.sprintf "your OS doesn't match %s"
-              (OpamFormula.string_of_formula
-                 (fun (b,s) -> (if b then "= " else "!= ") ^ s)
-                 (OpamFile.OPAM.os opam))
-          ]) @
-        (if consistent_available_field t opam then [] else [
-            Printf.sprintf "your system doesn't comply with %s"
-              (string_of_filter (OpamFile.OPAM.available opam))
-          ]) in
+      let opam = opam t nv in
+      (if consistent_ocaml_version t opam then [] else [
+          Printf.sprintf "it requires OCaml %s"
+            (OpamFormula.string_of_formula
+               (fun (op,v) ->
+                  OpamFormula.string_of_relop op ^ " " ^
+                  OpamCompiler.Version.to_string v)
+               (match OpamFile.OPAM.ocaml_version opam with
+                | Some v -> v
+                | None -> assert false))
+        ]) @
+      (if consistent_os opam then [] else [
+          Printf.sprintf "your OS doesn't match %s"
+            (OpamFormula.string_of_formula
+               (fun (b,s) -> (if b then "= " else "!= ") ^ s)
+               (OpamFile.OPAM.os opam))
+        ]) @
+      (if consistent_available_field t opam then [] else [
+          Printf.sprintf "your system doesn't comply with %s"
+            (string_of_filter (OpamFile.OPAM.available opam))
+        ]) in
     match r with
     | [] -> "."
     | [r] -> " because " ^ r ^ "."
     | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) " - ") rs) in
   try
     let pin = OpamPackage.Name.Map.find name t.pinned in
-    match version with
-    | None   ->
-      Printf.sprintf
-        "%s is not available because the package is pinned to %s."
-        (OpamPackage.Name.to_string name)
-        (string_of_pin_option pin)
-    | Some v ->
-      Printf.sprintf
-        "Version %s of %S is not available because the package is pinned to %s."
-        (OpamPackage.Version.to_string v)
-        (OpamPackage.Name.to_string name)
-        (string_of_pin_option pin)
-  with Not_found ->
-    match version with
-    | None   ->
+    Printf.sprintf
+      "%s is not available because the package is pinned to %s."
+      (OpamFormula.short_string_of_atom atom)
+      (string_of_pin_option pin)
+  with Not_found -> try
       Printf.sprintf
         "%s is not available%s"
-        (OpamPackage.Name.to_string name)
+        (OpamFormula.short_string_of_atom atom)
         (reasons ())
-    | Some v ->
-      Printf.sprintf
-        "Version %s of %s is not available%s"
-        (OpamPackage.Version.to_string v)
-        (OpamPackage.Name.to_string name)
-        (reasons ())
+  with Not_found ->
+    unknown_package t atom
 
 let base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]

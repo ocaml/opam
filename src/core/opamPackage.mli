@@ -89,6 +89,10 @@ val packages_of_name: Set.t -> Name.t -> Set.t
 (** Return all the packages with one of the given names *)
 val packages_of_names: Set.t -> Name.Set.t -> Set.t
 
+(** Return the maximal available version of a package name from a set.
+    Raises [Not_found] if no such package available. *)
+val max_version: Set.t -> Name.t -> t
+
 (** Compare two packages *)
 val compare: t -> t -> int
 

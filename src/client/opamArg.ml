@@ -201,6 +201,25 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+let atom =
+  let parse str =
+    let re = Re_str.regexp "\\([^>=<.!]+\\)\\(>=?\\|<=?\\|=\\|\\.\\|!=\\)\\(.*\\)" in
+    try
+      if not (Re_str.string_match re str 0) then failwith "no_version";
+      let sname = Re_str.matched_group 1 str in
+      let sop = Re_str.matched_group 2 str in
+      let sversion = Re_str.matched_group 3 str in
+      let name = OpamPackage.Name.of_string sname in
+      let sop = if sop = "." then "=" else sop in
+      let op = OpamFormula.relop_of_string sop in (* may raise Failure *)
+      let version = OpamPackage.Version.of_string sversion in
+      `Ok (name, Some (op, version))
+    with Failure _ -> `Ok (OpamPackage.Name.of_string str, None)
+  in
+  let print ppf atom =
+    pr_str ppf (OpamFormula.short_string_of_atom atom) in
+  parse, print
+
 let enum_with_default sl: 'a Arg.converter =
   let parse, print = Arg.enum sl in
   let parse s =
@@ -339,6 +358,12 @@ let nonempty_pattern_list =
 
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
+
+let atom_list =
+  arg_list "PACKAGES"
+    "List of package names, with an optional version or constraint, \
+     e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
+    atom
 
 let repository_list =
   arg_list "REPOSITORIES" "List of repository names." repository_name
@@ -868,14 +893,13 @@ let install =
     Arg.(value & flag & info ["deps-only"]
            ~doc:"Install all its dependencies, but don't actually install the \
                  package.") in
-  let install global_options build_options add_to_roots deps_only packages =
+  let install global_options build_options add_to_roots deps_only atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages = OpamPackage.Name.Set.of_list packages in
-    Client.install packages add_to_roots deps_only
+    Client.install atoms add_to_roots deps_only
   in
   Term.(pure install $global_options $build_options
-        $add_to_roots $deps_only $name_list),
+        $add_to_roots $deps_only $atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -900,12 +924,11 @@ let remove =
     mk_flag ["force"]
       "Execute the remove commands of given packages directly, even if they are \
        not considered installed by OPAM." in
-  let remove global_options build_options autoremove force packages =
+  let remove global_options build_options autoremove force atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages = OpamPackage.Name.Set.of_list packages in
-    Client.remove ~autoremove ~force packages in
-  Term.(pure remove $global_options $build_options $autoremove $force $name_list),
+    Client.remove ~autoremove ~force atoms in
+  Term.(pure remove $global_options $build_options $autoremove $force $atom_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -916,12 +939,11 @@ let reinstall =
     `P "This command removes the given packages, reinstalls them and \
         recompiles the right package dependencies."
   ] in
-  let reinstall global_options build_options packages =
+  let reinstall global_options build_options atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages = OpamPackage.Name.Set.of_list packages in
-    Client.reinstall packages in
-  Term.(pure reinstall $global_options $build_options $name_list),
+    Client.reinstall atoms in
+  Term.(pure reinstall $global_options $build_options $atom_list),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
@@ -954,10 +976,8 @@ let update =
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
     Client.update ~repos_only repositories;
-    if upgrade then (
-      OpamGlobals.yes := true;
-      Client.upgrade None
-    ) in
+    if upgrade then Client.upgrade []
+  in
   Term.(pure update $global_options $jobs_flag $json_flag $repository_list
         $repos_only $sync $upgrade),
   term_info "update" ~doc ~man
@@ -973,14 +993,11 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
-  let upgrade global_options build_options names =
+  let upgrade global_options build_options atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages = match names with
-      | [] -> None
-      | _  -> Some (OpamPackage.Name.Set.of_list names) in
-    Client.upgrade packages in
-  Term.(pure upgrade $global_options $build_options $name_list),
+    Client.upgrade atoms in
+  Term.(pure upgrade $global_options $build_options $atom_list),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

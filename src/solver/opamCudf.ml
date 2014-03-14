@@ -191,6 +191,9 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
       List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in
     let deps =
       List.rev_map (vpkg2opamstr cudf2opam cudf_universe) deps in
+    (* XXX This duplicates some work which is better done in
+       OpamState.unavailable_reason. Factor it and pass the function as argument
+       to this function ? *)
     let str = [] in
     let str =
       if pinned_deps <> [] then
@@ -317,6 +320,7 @@ let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 let s_builddep = "build-dep"
+let s_pinned = "pinned"
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
@@ -327,6 +331,8 @@ let need_reinstall = check s_reinstall
 let is_installed_root = check s_installed_root
 
 let is_builddep = check s_builddep
+
+let is_pinned = check s_pinned
 
 let aspcud_exists = lazy (OpamSystem.command_exists "aspcud")
 
@@ -340,6 +346,7 @@ let default_preamble =
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
     (s_builddep,       `Bool (Some false));
+    (s_pinned,         `Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
