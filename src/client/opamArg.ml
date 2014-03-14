@@ -201,6 +201,29 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+(* name * version option *)
+let package =
+  let parse str =
+    let re = Re_str.regexp "\\([^>=<.!]+\\)\\(\\.\\(.+\\)\\)?" in
+    try
+      if not (Re_str.string_match re str 0) then failwith "bad_format";
+      let name =
+        OpamPackage.Name.of_string (Re_str.matched_group 1 str) in
+      let version_opt =
+        try Some (OpamPackage.Version.of_string (Re_str.matched_group 3 str))
+        with Not_found -> None in
+      `Ok (name, version_opt)
+    with Failure _ -> `Error "bad package format"
+  in
+  let print ppf (name, version_opt) =
+    match version_opt with
+    | None -> pr_str ppf (OpamPackage.Name.to_string name)
+    | Some v -> pr_str ppf (OpamPackage.Name.to_string name ^"."^
+                            OpamPackage.Version.to_string v)
+  in
+  parse, print
+
+(* name * version constraint *)
 let atom =
   let parse str =
     let re = Re_str.regexp "\\([^>=<.!]+\\)\\(>=?\\|<=?\\|=\\|\\.\\|!=\\)\\(.*\\)" in
@@ -577,19 +600,28 @@ let list =
     mk_flag ["a";"all"]
       "List all the packages which can be installed on the system." in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
-  let list global_options print_short all installed installed_roots sort packages =
+  let depends_on =
+    let doc = "List only packages that depend on $(docv)." in
+    Arg.(value & opt_all package [] & info ~doc ~docv:"PACKAGE" ["depends-on"])
+  in
+  let list global_options print_short all installed
+      installed_roots sort depends_on packages =
     apply_global_options global_options;
-    let filter = match all, installed, installed_roots, packages with
-      | true, _, _, _ -> `installable
-      | _, _, true, _ -> `roots
-      | _, true, _, _ -> `installed
-      | _, _, _, [] -> `installed
+    let filter =
+      match all, installed, installed_roots, depends_on, packages with
+      | true, _, _, _, _ -> `installable
+      | _, _, true, _, _ -> `roots
+      | _, true, _, _, _ -> `installed
+      | _, _, _, [], [] -> `installed
       | _ -> `installable in
     let order = if sort then `depends else `normal in
-    Client.list ~print_short ~filter ~order ~exact_name:true ~case_sensitive:false
+    Client.list
+      ~print_short ~filter ~order ~depends_on
+      ~exact_name:true ~case_sensitive:false
       packages in
   Term.(pure list $global_options
-    $print_short_flag $all $installed_flag $installed_roots_flag $sort
+    $print_short_flag $all $installed_flag $installed_roots_flag
+    $sort $depends_on
     $pattern_list),
   term_info "list" ~doc ~man
 
@@ -604,7 +636,7 @@ let search =
         $(b,opam list) command. It displays one package per line, and each line \
         contains the name of the package, the installed version or -- if the package \
         is not installed, and a short description.";
-    `P "The full description can be obtained by doing $(b,opam info <package>).";
+    `P "The full description can be obtained by doing $(b,opam show <package>).";
   ] in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
@@ -615,7 +647,8 @@ let search =
       | true, _ -> `installed
       | _       -> `all in
     let order = `normal in
-    Client.list ~print_short ~filter ~order ~exact_name:false ~case_sensitive pkgs in
+    Client.list ~print_short ~filter ~depends_on:[] ~order
+      ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
     $pattern_list),
@@ -836,10 +869,42 @@ let config =
       try
         let state = OpamState.load_state "config-report" in
         let open OpamState.Types in
+        let nprint label n =
+          if n <> 0 then [Printf.sprintf "%d (%s)" n label]
+          else [] in
         print "jobs" "%d" (OpamState.jobs state);
-        print "repositories" "%d"
-          (OpamRepositoryName.Map.cardinal state.repositories);
-        print "pinned" "%d" (OpamPackage.Name.Map.cardinal state.pinned);
+        print "repositories" "%s"
+          OpamRepositoryName.Map.(
+            let nhttp, nlocal, nvcs =
+              fold (fun _ {repo_kind=k} (nhttp, nlocal, nvcs) -> match k with
+                  | `http -> nhttp+1, nlocal, nvcs
+                  | `local -> nhttp, nlocal+1, nvcs
+                  | _ -> nhttp, nlocal, nvcs+1)
+                state.repositories (0,0,0) in
+            let has_default =
+              exists (fun _ {repo_address} ->
+                  repo_address = OpamRepository.default_address)
+                state.repositories in
+            String.concat ", "
+              (Printf.sprintf "%d%s (http)" nhttp
+                 (if has_default then "*" else "") ::
+               nprint "local" nlocal @
+               nprint "version-controlled" nvcs)
+          );
+        print "pinned" "%s"
+          OpamPackage.Name.Map.(
+            if is_empty state.pinned then "0" else
+            let nver, nlocal, nvc =
+              fold (fun _ p (nver, nlocal, nvc) -> match p with
+                  | Version _ -> nver+1, nlocal, nvc
+                  | Local _ -> nver, nlocal+1, nvc
+                  | _ -> nver, nlocal, nvc+1)
+                state.pinned (0,0,0) in
+            String.concat ", "
+              (nprint "version" nver @
+               nprint "local" nlocal @
+               nprint "version control" nvc)
+          );
         print "current-switch" "%s"
           (OpamSwitch.to_string state.switch);
         print "preinstalled" "%b"
