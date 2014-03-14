@@ -201,6 +201,29 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+(* name * version option *)
+let package =
+  let parse str =
+    let re = Re_str.regexp "\\([^>=<.!]+\\)\\(\\.\\(.+\\)\\)?" in
+    try
+      if not (Re_str.string_match re str 0) then failwith "bad_format";
+      let name =
+        OpamPackage.Name.of_string (Re_str.matched_group 1 str) in
+      let version_opt =
+        try Some (OpamPackage.Version.of_string (Re_str.matched_group 3 str))
+        with Not_found -> None in
+      `Ok (name, version_opt)
+    with Failure _ -> `Error "bad package format"
+  in
+  let print ppf (name, version_opt) =
+    match version_opt with
+    | None -> pr_str ppf (OpamPackage.Name.to_string name)
+    | Some v -> pr_str ppf (OpamPackage.Name.to_string name ^"."^
+                            OpamPackage.Version.to_string v)
+  in
+  parse, print
+
+(* name * version constraint *)
 let atom =
   let parse str =
     let re = Re_str.regexp "\\([^>=<.!]+\\)\\(>=?\\|<=?\\|=\\|\\.\\|!=\\)\\(.*\\)" in
@@ -577,19 +600,28 @@ let list =
     mk_flag ["a";"all"]
       "List all the packages which can be installed on the system." in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
-  let list global_options print_short all installed installed_roots sort packages =
+  let depends_on =
+    let doc = "List only packages that depend on $(docv)." in
+    Arg.(value & opt_all package [] & info ~doc ~docv:"PACKAGE" ["depends-on"])
+  in
+  let list global_options print_short all installed
+      installed_roots sort depends_on packages =
     apply_global_options global_options;
-    let filter = match all, installed, installed_roots, packages with
-      | true, _, _, _ -> `installable
-      | _, _, true, _ -> `roots
-      | _, true, _, _ -> `installed
-      | _, _, _, [] -> `installed
+    let filter =
+      match all, installed, installed_roots, depends_on, packages with
+      | true, _, _, _, _ -> `installable
+      | _, _, true, _, _ -> `roots
+      | _, true, _, _, _ -> `installed
+      | _, _, _, [], [] -> `installed
       | _ -> `installable in
     let order = if sort then `depends else `normal in
-    Client.list ~print_short ~filter ~order ~exact_name:true ~case_sensitive:false
+    Client.list
+      ~print_short ~filter ~order ~depends_on
+      ~exact_name:true ~case_sensitive:false
       packages in
   Term.(pure list $global_options
-    $print_short_flag $all $installed_flag $installed_roots_flag $sort
+    $print_short_flag $all $installed_flag $installed_roots_flag
+    $sort $depends_on
     $pattern_list),
   term_info "list" ~doc ~man
 
@@ -615,7 +647,8 @@ let search =
       | true, _ -> `installed
       | _       -> `all in
     let order = `normal in
-    Client.list ~print_short ~filter ~order ~exact_name:false ~case_sensitive pkgs in
+    Client.list ~print_short ~filter ~depends_on:[] ~order
+      ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
     $pattern_list),

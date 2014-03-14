@@ -33,6 +33,7 @@ module API: sig
     print_short:bool ->
     filter:[`all|`installed|`roots|`installable] ->
     order:[`normal|`depends] ->
+    depends_on:(OpamPackage.Name.t * OpamPackage.Version.t option) list ->
     exact_name:bool ->
     case_sensitive:bool ->
     string list ->
