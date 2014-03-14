@@ -1,7 +1,7 @@
 From 5d5d1d4a39830a9f852714ad6b14fec27a9ba0a5 Mon Sep 17 00:00:00 2001
 From: Roberto Di Cosmo <github@dicosmo.org>
 Date: Sun, 12 Jan 2014 22:54:38 +0100
-Subject: [PATCH 1/8] Added portable invocation of mktemp for Linux and *BSD
+Subject: [PATCH 01/10] Added portable invocation of mktemp for Linux and *BSD
 
 ---
  common/cudfSolver.ml | 2 +-
