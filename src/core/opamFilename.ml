@@ -363,7 +363,7 @@ let copy_files ~src ~dst =
         if exists dst_file then
           OpamGlobals.note
             "%s is replaced by the packager's overlay files. \
-             Set OPAMDONOTCOPYFILES to a non-empty value to no \
+             Set OPAMDONOTCOPYFILES to a non-empty value not to \
              copy the overlay files."
             (to_string dst_file);
         OpamGlobals.msg "Copying %s to %s/\n" (prettify file) (prettify_dir dst);
