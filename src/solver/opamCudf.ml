@@ -161,7 +161,13 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
-    if is_dose_request i || is_dose_request j then []
+    if is_dose_request i || is_dose_request j then
+      let a = if is_dose_request i then j else i in
+      if is_dose_request a then [] else
+        let str =
+          Printf.sprintf "Conflicting query for package %s"
+            (OpamPackage.to_string (cudf2opam a)) in
+        [str]
     else
     let nva, nvb =
       let nvi = cudf2opam i in
@@ -312,6 +318,10 @@ let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
          List.iter
            (fun c -> Printf.bprintf b " - %s\n" (string_of_chain c)))
       chains;
+  if reasons = [] && chains = [] then (* No explanation found :( *)
+    Printf.bprintf b
+      "Sorry, no solution found: \
+       there seems to be a problem with your request.\n";
   Buffer.contents b
 
 (* custom cudf field labels *)
