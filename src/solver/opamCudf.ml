@@ -537,15 +537,15 @@ let actions_of_diff diff =
 
 let resolve ~extern universe request =
   log "resolve request=%s" (string_of_request request);
-  let r =
-    if extern then get_final_universe universe request
-    else check_request universe request
-  in
-  let to_actions u1 u2 =
-    let diff = Diff.diff u1 u2 in
+  if extern then get_final_universe universe request
+  else check_request universe request
+
+let to_actions f universe result =
+  let aux u1 u2 =
+    let diff = Diff.diff (f u1) u2 in
     actions_of_diff diff
   in
-  map_success (to_actions universe) r
+  map_success (aux universe) result
 
 let create_graph filter universe =
   let pkgs = Cudf.get_packages ~filter universe in
@@ -708,9 +708,9 @@ let compute_root_causes universe actions requested =
       get_causes causes roots in
     let causes =
       (* Compute causes for remaining changes (assume upstream changes) *)
-      let roots = make_roots causes Upstream_changes (function
-          | (To_change _ | To_recompile _) as a -> ActionGraph.in_degree g a = 0
-          | _ -> false) in
+      let roots =
+        make_roots causes Upstream_changes
+          (fun a -> ActionGraph.in_degree g a = 0) in
       get_causes causes roots in
   Map.fold (fun p (cause,_depth) acc -> (p,cause)::acc) causes []
 

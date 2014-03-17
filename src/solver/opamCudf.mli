@@ -102,17 +102,24 @@ val solution_of_actions:
   solution
 
 (** Resolve a CUDF request. The result is either a conflict explaining
-    the error, or a list of action to proceed. Note however than the
-    action list is not yet complete: the transitive closure of
-    reinstallations is not yet completed, as it requires to fold over
-    the dependency graph in considering the optional dependencies --
-    which is something that dose/cudf obviously does not handle.
-
+    the error, or a resulting universe. 
     [~extern] specifies wether the external solver should be used *)
 val resolve:
   extern:bool ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
+  (Cudf.universe, Algo.Diagnostic.reason list) result
+
+(** Computes a list of actions to proceed from the result of [resolve].
+    Note however than the action list is not yet complete: the transitive closure
+    of reinstallations is not yet completed, as it requires to fold over the
+    dependency graph in considering the optional dependencies.
+    The first argument specifies a function that will be applied to the starting
+    universe before computation: useful to re-add orphan packages. *)
+val to_actions:
+  (Cudf.universe -> Cudf.universe) ->
+  Cudf.universe ->
+  (Cudf.universe, Algo.Diagnostic.reason list) result ->
   (Cudf.package action list, Algo.Diagnostic.reason list) result
 
 (** [remove universe name constr] Remove all the packages called
