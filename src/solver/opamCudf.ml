@@ -591,13 +591,14 @@ let compute_root_causes universe actions requested =
     (* add conflicts to the graph to get all causality relations:
        cause (removed required pkg or conflicting pkg) -> removed pkg *)
     Map.iter (fun _ -> function
-        | To_change _ | To_recompile _ -> ()
-        | To_delete pkg as act ->
+        | To_delete pkg as act when
+            Algo.Defaultgraphs.PackageGraph.UG.mem_vertex conflicts_graph pkg ->
           Algo.Defaultgraphs.PackageGraph.UG.iter_succ (fun v1 ->
               if v1.Cudf.package <> pkg.Cudf.package then
-              try ActionGraph.add_edge g (Map.find v1 actions) act
-              with Not_found -> ())
+                try ActionGraph.add_edge g (Map.find v1 actions) act
+                with Not_found -> ())
             conflicts_graph pkg
+        | _ -> ()
       ) actions;
     g in
   let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
