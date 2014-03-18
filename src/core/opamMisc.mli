@@ -41,6 +41,11 @@ module type SET = sig
   (** Find an element in the list *)
   val find: (elt -> bool) -> t -> elt
 
+  module Op : sig
+    val (++): t -> t -> t (** Infix set union *)
+    val (--): t -> t -> t (** Infix set difference *)
+    val (%%): t -> t -> t (** Infix set intersection *)
+  end
 end
 
 (** Dictionaries of abstract values *)
