@@ -616,9 +616,6 @@ let compute_root_causes universe actions requested =
         | Unknown, a | a, Unknown
         | Upstream_changes , a | a, Upstream_changes -> a, depth1
         | _, c -> c, depth1 in
-  let add_cause pkg cause causes =
-    try Map.add pkg (merge_causes cause (Map.find pkg causes)) causes
-    with Not_found -> Map.add pkg cause causes in
   let direct_cause cause consequence dep =
     match (cause, consequence, dep) with
     | To_change(_,p), To_change(_,_),      `Provides -> Required_by [p]
@@ -641,27 +638,22 @@ let compute_root_causes universe actions requested =
            "Internal error computing action causes: sorry, please report.";
          causes)
       else
-        let action = Map.find pkgname actions in
-        let seen = Set.add pkgname seen in
-        let causes =
-          List.fold_left (fun causes act ->
-              let p = action_contents act in
-              if Set.mem p seen then causes else
-                let cause = direct_cause action act `Provides in
-                if cause = Unknown then causes else
-                  let causes = add_cause p (cause,depth) causes in
-                  aux seen (depth + 1) p causes
-            ) causes (ActionGraph.pred g action) in
-        let causes =
-          List.fold_left (fun causes act ->
-              let p = action_contents act in
-              if Set.mem p seen then causes else
-                let cause = direct_cause action act `Depends in
-                if cause = Unknown then causes else
-                  let causes = add_cause p (cause,depth) causes in
-                  aux seen (depth + 1) p causes
-            ) causes (ActionGraph.succ g action) in
-        causes
+      let action = Map.find pkgname actions in
+      let seen = Set.add pkgname seen in
+      let propagate causes actions direction =
+        List.fold_left (fun causes act ->
+            let p = action_contents act in
+            if Set.mem p seen then causes else
+            let cause = direct_cause action act direction in
+            if cause = Unknown then causes else
+            try
+              Map.add p (merge_causes (cause,depth) (Map.find p causes)) causes
+            with Not_found ->
+              aux seen (depth + 1) p (Map.add p (cause,depth) causes)
+          ) causes actions in
+      let causes = propagate causes (ActionGraph.pred g action) `Provides in
+      let causes = propagate causes (ActionGraph.succ g action) `Depends in
+      causes
     in
     let start = Map.fold (fun k _ acc -> Set.add k acc) roots Set.empty in
     let acc = Map.union (fun a _ -> a) acc roots in
