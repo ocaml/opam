@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamState.Types
 open OpamMisc.OP
+open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
@@ -37,8 +38,7 @@ let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
   (* the regexp can also simply be a package. *)
   let fix_versions =
     let packages = OpamMisc.filter_map OpamPackage.of_string_opt regexps in
-    OpamPackage.to_map (OpamPackage.Set.inter t.packages
-                          (OpamPackage.Set.of_list packages)) in
+    OpamPackage.to_map (t.packages %% (OpamPackage.Set.of_list packages)) in
   let regexps =
     OpamMisc.filter_map (fun str ->
       let re =
@@ -82,7 +82,7 @@ let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
     | `roots       -> t.installed_roots
     | `installable ->
       let installable = OpamSolver.installable (OpamState.universe t Depends) in
-      OpamPackage.Set.union t.installed installable in
+      t.installed ++ installable in
   let packages_map = OpamPackage.to_map packages in
   let packages_map =
     OpamPackage.Name.Map.fold (fun name versions map ->
@@ -415,7 +415,6 @@ module API = struct
      the request (needs version change VS needs uninstall).
      See also preprocess_request and check_conflicts *)
   let orphans ?changes t =
-    let open OpamPackage.Set.Op in
     let all = t.packages ++ t.installed in
     let universe =
       match changes with
@@ -472,8 +471,7 @@ module API = struct
     let add_wish_install =
       List.rev_append eqnames
         (OpamSolution.atoms_of_packages
-           (OpamPackage.Set.inter t.installed_roots
-              (Lazy.force t.available_packages))) in
+           (t.installed_roots %% (Lazy.force t.available_packages))) in
     let wish_install = List.rev_append add_wish_install wish_install in
     let wish_upgrade = List.rev_append neqnames wish_upgrade in
     (* Remove orphans *)
@@ -540,9 +538,8 @@ module API = struct
 
   let compute_upgrade_t atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    let open OpamPackage.Set.Op in
     if atoms = [] then
-      let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+      let to_reinstall = t.reinstall %% t.installed in
       let t, full_orphans, orphan_versions = orphans t in
       let to_upgrade = t.installed -- full_orphans in
       let requested = OpamPackage.Name.Set.empty in
@@ -575,7 +572,7 @@ module API = struct
            (List.rev_map OpamFormula.short_string_of_atom not_installed))
         (match not_installed with [_] -> "is" | _ -> "are");
     let t, full_orphans, orphan_versions = orphans ~changes:to_upgrade t in
-    let conflicts = OpamPackage.Set.inter to_upgrade full_orphans in
+    let conflicts = to_upgrade %% full_orphans in
     if not (OpamPackage.Set.is_empty conflicts) then
       OpamGlobals.error_and_exit
         "These packages would need to be recompiled, but they are no longer available \
@@ -633,7 +630,7 @@ module API = struct
     let dev_packages =
       if repos_only then OpamPackage.Set.empty
       else
-        let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
+        let all = t.installed %% OpamState.dev_packages t in
         if repos = [] then
           all
         else
@@ -671,7 +668,7 @@ module API = struct
         let valid_names =
           OpamMisc.StringSet.of_list
             (List.rev_map
-               (OpamPackage.name ++ OpamPackage.Name.to_string)
+               (OpamPackage.name @> OpamPackage.Name.to_string)
                (OpamPackage.Set.elements t.packages)) in
         let (--) = OpamMisc.StringSet.diff in
         let unknown_names = all -- valid_repositories -- valid_names in
@@ -876,7 +873,6 @@ module API = struct
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
   let check_conflicts t atoms =
-    let open OpamPackage.Set.Op in
     let check_atoms nv =
       let name = OpamPackage.name nv in
       let atoms = List.filter (fun (n,_) -> n = name) atoms in
@@ -949,7 +945,7 @@ module API = struct
           else t
         )  t pkg_skip in
     if t.installed_roots <> current_roots then (
-      let diff = OpamPackage.Set.diff t.installed_roots current_roots in
+      let diff = t.installed_roots -- current_roots in
       if not (OpamPackage.Set.is_empty diff) then
         let diff = OpamPackage.Set.elements diff in
         let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
@@ -957,7 +953,7 @@ module API = struct
           "Adding %s to the list of installed roots.\n"
           (OpamMisc.pretty_list diff)
       else (
-        let diff = OpamPackage.Set.diff current_roots t.installed_roots in
+        let diff = current_roots -- t.installed_roots in
         let diff = OpamPackage.Set.elements diff in
         let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
         OpamGlobals.msg
@@ -1000,10 +996,8 @@ module API = struct
                   let deps_nv =
                     OpamSolver.dependencies ~depopts:false ~installed:false
                       universe nvs in
-                  let deps_only =
-                    OpamPackage.Set.diff
-                      (OpamPackage.Set.of_list deps_nv) nvs in
-                  OpamPackage.Set.union deps deps_only)
+                  let deps_only = OpamPackage.Set.of_list deps_nv -- nvs in
+                  deps ++ deps_only)
                 names OpamPackage.Set.empty in
             OpamSolver.ActionGraph.iter_vertex (function
                 | To_change (_, p) as v ->
@@ -1067,10 +1061,8 @@ module API = struct
           (OpamSolver.reverse_dependencies
              ~depopts:false ~installed:true universe packages) in
       let to_keep =
-        if autoremove then
-          OpamPackage.Set.diff t.installed_roots to_remove
-        else
-          OpamPackage.Set.diff t.installed to_remove in
+        if autoremove then t.installed_roots -- to_remove
+        else t.installed -- to_remove in
       let to_keep =
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
@@ -1078,17 +1070,17 @@ module API = struct
       (* to_keep includes the depopts, because we don't want to autoremove
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
-      let to_keep = OpamPackage.Set.diff to_keep to_remove in
+      let to_keep = to_keep -- to_remove in
       let requested = OpamPackage.names_of_packages packages in
       let to_remove =
         if autoremove then
-          let to_remove = OpamPackage.Set.diff t.installed to_keep in
+          let to_remove = t.installed -- to_keep in
           if atoms = [] then to_remove
           else (* restrict to the dependency cone of removed pkgs *)
-            OpamPackage.Set.inter to_remove
-              (OpamPackage.Set.of_list
-                 (OpamSolver.dependencies
-                    ~depopts:true ~installed:true universe to_remove))
+            to_remove %%
+            (OpamPackage.Set.of_list
+               (OpamSolver.dependencies
+                  ~depopts:true ~installed:true universe to_remove))
         else to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;

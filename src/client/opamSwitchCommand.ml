@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamState.Types
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SWITCH" fmt
 

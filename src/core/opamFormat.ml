@@ -619,8 +619,8 @@ let make_commands =
 
 let parse_simple_arg =
   parse_or [
-    "ident" , (parse_ident  ++ fun x -> CIdent x);
-    "string", (parse_string ++ fun x -> CString x);
+    "ident" , (parse_ident  @> fun x -> CIdent x);
+    "string", (parse_string @> fun x -> CString x);
   ]
 
 let parse_arg =
@@ -655,10 +655,10 @@ let parse_flag = function
 (* TAGS *)
 
 let parse_string_set =
-  parse_string_list ++ OpamMisc.StringSet.of_list
+  parse_string_list @> OpamMisc.StringSet.of_list
 
 let make_string_set =
-  OpamMisc.StringSet.elements ++ make_string_list
+  OpamMisc.StringSet.elements @> make_string_list
 
 let parse_tag_line =
   let fn = parse_string_set in

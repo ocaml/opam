@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamMisc.OP
 open OpamFilename.OP
+open OpamPackage.Set.Op
 
 let log fmt =
   OpamGlobals.log "STATE" fmt
@@ -202,7 +203,7 @@ let all_installed t =
   OpamSwitch.Map.fold (fun switch _ accu ->
     let installed_f = OpamPath.Switch.installed t.root switch in
     let installed = OpamFile.Installed.safe_read installed_f in
-    OpamPackage.Set.union installed accu
+    installed ++ accu
   ) t.aliases OpamPackage.Set.empty
 
 let package_state t =
@@ -407,7 +408,7 @@ let install_metadata t nv =
 
 let remove_metadata t packages =
   let all_installed = all_installed t in
-  let packages = OpamPackage.Set.diff packages all_installed in
+  let packages = packages -- all_installed in
   OpamPackage.Set.iter (fun nv ->
       let dir = OpamPath.packages t.root nv in
       OpamFilename.rmdir dir;
@@ -963,7 +964,7 @@ let get_compiler_packages t comp =
         List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
     if pkg_not <> [] then (
       List.iter
-        (OpamPackage.Name.to_string ++ OpamGlobals.error "Package %s not found")
+        (OpamPackage.Name.to_string @> OpamGlobals.error "Package %s not found")
         pkg_not;
       OpamGlobals.exit 1
     );
@@ -985,7 +986,7 @@ let universe t action =
         else opam)
       t.opams in
   {
-    u_packages  = OpamPackage.Set.union t.installed t.packages;
+    u_packages  = t.installed ++ t.packages;
     u_action    = action;
     u_installed = t.installed;
     u_available = Lazy.force t.available_packages;
@@ -1015,7 +1016,7 @@ let check_base_packages t =
       (fun (name,_) -> not (is_name_installed t name))
       base_packages in
   if missing_packages <> [] then (
-    let names = List.map (fst ++ OpamPackage.Name.to_string) missing_packages in
+    let names = List.map (fst @> OpamPackage.Name.to_string) missing_packages in
     OpamGlobals.warning "Some of the compiler base packages are not installed. \
                          You should run:\n\n    $ opam install %s\n"
       (String.concat " " names)
@@ -1109,7 +1110,7 @@ let is_dev_package t nv =
 let dev_packages t =
   let global = global_dev_packages t in
   let switch = switch_dev_packages t in
-  let all = OpamPackage.Set.union (keys global) (keys switch) in
+  let all = keys global ++ keys switch in
   OpamPackage.Set.filter (is_dev_package t) all
 
 let global_consistency_checks t =
@@ -1299,9 +1300,8 @@ let load_state ?(save_cache=true) call_site =
   let opams = match opams with
     | None   ->
       let packages =
-        OpamPackage.Set.union
-          (OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch))
-          (OpamPackage.Set.of_list (OpamPackage.Map.keys package_index)) in
+        OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) ++
+        OpamPackage.Set.of_list (OpamPackage.Map.keys package_index) in
       OpamPackage.Set.fold (fun nv map ->
           try
             if OpamPackage.is_pinned nv then map else
@@ -2051,9 +2051,8 @@ let add_to_reinstall t ~all packages =
     let installed =
       OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
     let reinstall =
-      OpamPackage.Set.union
-        (OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch))
-        packages in
+      OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) ++
+      packages in
     let reinstall =
       OpamPackage.Set.filter (fun nv ->
         OpamPackage.Set.mem nv installed
@@ -2221,7 +2220,7 @@ let update_dev_packages t =
   log "update-dev-packages";
   let updates packages =
     let packages = OpamPackage.Set.filter (is_dev_package t) packages in
-    let packages = OpamPackage.Set.inter packages t.installed in
+    let packages = packages %% t.installed in
     let packages = OpamPackage.Set.elements packages in
     OpamPackage.Parallel.map_reduce_l (2 * jobs t) packages
       ~map:(update_dev_package t)
@@ -2231,7 +2230,7 @@ let update_dev_packages t =
   let switch_dev_packages = keys (switch_dev_packages t) in
   let global_dev_packages =
     let all = keys (global_dev_packages t) in
-    OpamPackage.Set.diff all switch_dev_packages in
+    all -- switch_dev_packages in
 
   let global_updates = updates global_dev_packages in
   add_to_reinstall t ~all:true global_updates;
@@ -2239,7 +2238,7 @@ let update_dev_packages t =
   let switch_updates = updates switch_dev_packages in
   add_to_reinstall t ~all:false switch_updates;
 
-  OpamPackage.Set.union global_updates switch_updates
+  global_updates ++ switch_updates
 
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive t nv =
