@@ -19,6 +19,7 @@ open OpamTypesBase
 open OpamState.Types
 
 let log fmt = OpamGlobals.log "COMMAND" fmt
+let slog = OpamGlobals.slog
 
 let string_of_pin_kind_o o =
   match kind_of_pin_option o with
@@ -26,7 +27,7 @@ let string_of_pin_kind_o o =
   | None   -> "none"
 
 let pin ~force action =
-  log "pin %s" (string_of_pin action);
+  log "pin %a" (slog string_of_pin) action;
   let t = OpamState.load_state "pin" in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
@@ -126,10 +127,10 @@ let pin ~force action =
         "%s is not a valid package name."
         (OpamPackage.Name.to_string name)
     | Some _ ->
-      log "Adding %s(%s) => %s"
-        (string_of_pin_option action.pin_option)
-        (string_of_pin_kind_o action.pin_option)
-        (OpamPackage.Name.to_string name);
+      log "Adding %a(%a) => %a"
+        (slog string_of_pin_option) action.pin_option
+        (slog string_of_pin_kind_o) action.pin_option
+        (slog OpamPackage.Name.to_string) name;
       let pinned = OpamPackage.Name.Map.add name action.pin_option pins in
       update_config pinned;
       let t = { t with pinned } in

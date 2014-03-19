@@ -57,6 +57,9 @@ let short_string_of_atom = function
       (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
+let string_of_atoms atoms =
+  String.concat " & " (List.map short_string_of_atom atoms)
+
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =

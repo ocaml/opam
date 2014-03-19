@@ -20,6 +20,7 @@ open OpamMisc.OP
 open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
+let slog = OpamGlobals.slog
 
 let compare r1 r2 =
   match compare r2.repo_priority r1.repo_priority with
@@ -99,7 +100,7 @@ let register_backend name backend =
 
 (* initialize the current directory *)
 let init repo =
-  log "init %s" (to_string repo);
+  log "init %a" (OpamGlobals.slog to_string) repo;
   let module B = (val find_backend repo: BACKEND) in
   OpamFilename.rmdir repo.repo_root;
   OpamFilename.mkdir repo.repo_root;
@@ -294,7 +295,7 @@ let compiler_index repositories =
     ) OpamCompiler.Map.empty repositories
 
 let update repo =
-  log "update %s" (to_string repo);
+  log "update %a" (slog to_string) repo;
   let module B = (val find_backend repo: BACKEND) in
   B.pull_repo repo;
   check_version repo
@@ -315,8 +316,9 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let remote_url = OpamFile.URL.url url in
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
       let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
-      log "downloading %s:%s"
-        (string_of_address remote_url) (string_of_repository_kind kind);
+      log "downloading %a:%a"
+        (slog string_of_address) remote_url
+        (slog string_of_repository_kind) kind;
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;
       OpamFilename.in_dir download_dir (fun () ->

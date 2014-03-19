@@ -185,11 +185,16 @@ let timestamp () =
     (int_of_float (1000.0 *. msec))
 
 let log section fmt =
-  Printf.ksprintf (fun str ->
-    if !debug then
-      Printf.eprintf "%s  %06d  %a  %s\n%!"
-        (timestamp ()) (Unix.getpid ()) (acolor_w 30 `yellow) section str
-  ) fmt
+  if !debug then
+    Printf.fprintf stderr ("%s  %06d  %a  " ^^ fmt ^^ "\n%!")
+      (timestamp ()) (Unix.getpid ()) (acolor_w 30 `yellow) section
+  else
+    Printf.ifprintf stderr fmt
+
+(* Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
+   rather than [log "%s" (to_string x)] to avoid costly unneeded
+   stringifications *)
+let slog to_string channel x = output_string channel (to_string x)
 
 let error fmt =
   Printf.ksprintf (fun str ->

@@ -21,6 +21,7 @@ open OpamMisc.OP
 open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
+let slog = OpamGlobals.slog
 
 let s_not_installed = "--"
 
@@ -34,7 +35,8 @@ type item = {
 }
 
 let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
-  log "names_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
+  log "names_of_regexp regexps=%a"
+    (slog @@ OpamMisc.string_of_list (fun x -> x)) regexps;
   (* the regexp can also simply be a package. *)
   let fix_versions =
     let packages = OpamMisc.filter_map OpamPackage.of_string_opt regexps in
@@ -455,8 +457,8 @@ module API = struct
               (t.installed -- full_orphans)) in
       { t with available_packages } in
     log "Orphans: full %a, versions %a"
-      (fun () -> OpamPackage.Name.Set.to_string) orphan_names
-      (fun () -> OpamPackage.Set.to_string) orphan_versions;
+      (slog OpamPackage.Name.Set.to_string) orphan_names
+      (slog OpamPackage.Set.to_string) orphan_versions;
     t, full_orphans, orphan_versions
 
   (* The internal "solver" needs some rewrites of the requests, to make them
@@ -490,8 +492,8 @@ module API = struct
     let wish_upgrade = List.filter still_available wish_upgrade in
     let nrequest = { wish_install; wish_remove; wish_upgrade; } in
     log "Preprocess request: %a => %a"
-      (fun () -> OpamSolver.string_of_request) request
-      (fun () -> OpamSolver.string_of_request) nrequest;
+      (slog OpamSolver.string_of_request) request
+      (slog OpamSolver.string_of_request) nrequest;
     nrequest
 
   (* Splits a list of atoms into the installed and uninstalled ones*)
@@ -601,9 +603,9 @@ module API = struct
 
   let upgrade_t atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
-    log "UPGRADE %s"
-      (if atoms = [] then "<all>" else
-         String.concat " & " (List.map OpamFormula.short_string_of_atom atoms));
+    log "UPGRADE %a"
+      (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
+      atoms;
     match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
@@ -617,7 +619,8 @@ module API = struct
 
   let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
-    log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
+    log "UPDATE %a"
+      (slog @@ OpamMisc.string_of_list OpamRepositoryName.to_string) repos;
     let repositories =
       if repos = [] then
         t.repositories
@@ -774,7 +777,7 @@ module API = struct
       OpamGlobals.msg "No stats"
 
   let init repo compiler ~jobs shell dot_profile update_config =
-    log "INIT %s" (OpamRepository.to_string repo);
+    log "INIT %a" (slog OpamRepository.to_string) repo;
     let root = OpamPath.root () in
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
@@ -904,8 +907,7 @@ module API = struct
 
   let install_t atoms add_to_roots deps_only t =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t atoms in
-    log "INSTALL %s"
-      (String.concat " & " (List.map OpamFormula.short_string_of_atom atoms));
+    log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
@@ -1016,8 +1018,8 @@ module API = struct
 
   let remove_t ~autoremove ~force atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
-    log "REMOVE autoremove:%b %s" autoremove
-      (String.concat " & " (List.map OpamFormula.short_string_of_atom atoms));
+    log "REMOVE autoremove:%b %a" autoremove
+      (slog OpamFormula.string_of_atoms) atoms;
 
     let nothing_to_do = ref true in
     let atoms =
@@ -1095,8 +1097,7 @@ module API = struct
 
   let reinstall_t atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
-    log "reinstall %s"
-      (String.concat " & " (List.map OpamFormula.short_string_of_atom atoms));
+    log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
     let t, _, _ = check_conflicts t atoms in
 

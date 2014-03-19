@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 let log fmt = OpamGlobals.log "ACTION" fmt
+let slog = OpamGlobals.slog
 
 open OpamTypes
 open OpamFilename.OP
@@ -121,8 +122,8 @@ let install_package t nv =
       let check ~src ~dst base =
         let src_file = OpamFilename.create src base.c in
         if base.optional && not (OpamFilename.exists src_file) then
-          log "Not installing %s is not present and optional."
-            (OpamFilename.to_string src_file);
+          log "Not installing %a is not present and optional."
+            (slog OpamFilename.to_string) src_file;
         if not base.optional && not (OpamFilename.exists src_file) then (
           warnings := (dst, base.c) :: !warnings
         );
@@ -133,7 +134,7 @@ let install_package t nv =
         let dst_dir = dst_fn t.root t.switch name in
         let files = files_fn install in
         if not (OpamFilename.exists_dir dst_dir) then (
-          log "creating %s" (OpamFilename.Dir.to_string dst_dir);
+          log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
           OpamFilename.mkdir dst_dir;
         );
         List.iter (fun (base, dst) ->
@@ -254,7 +255,7 @@ let prepare_package_build t nv =
   )
 
 let download_package t nv =
-  log "download_package: %s" (OpamPackage.to_string nv);
+  log "download_package: %a" (slog OpamPackage.to_string) nv;
 
   if !OpamGlobals.dryrun || !OpamGlobals.fake then ()
   else if OpamState.is_locally_pinned t (OpamPackage.name nv) then
@@ -271,7 +272,7 @@ let download_package t nv =
     ()
 
 let extract_package t nv =
-  log "extract_package: %s" (OpamPackage.to_string nv);
+  log "extract_package: %a" (slog OpamPackage.to_string) nv;
 
   if !OpamGlobals.dryrun then () else
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
@@ -281,11 +282,11 @@ let extract_package t nv =
     let () = match OpamFilename.files dir with
       | [] -> ()
       | [f] ->
-        log "archive %S => extracting" (OpamFilename.to_string f);
+        log "archive %a => extracting" (slog OpamFilename.to_string) f;
         OpamFilename.extract_generic_file (F f) build_dir
       | _::_::_ ->
-        log "multiple files in %S: assuming dev directory & copying"
-          (OpamFilename.Dir.to_string dir);
+        log "multiple files in %a: assuming dev directory & copying"
+          (slog OpamFilename.Dir.to_string) dir;
         OpamFilename.extract_generic_file (D dir) build_dir in
     OpamState.copy_files t nv build_dir in
 
@@ -401,7 +402,7 @@ let removal_needs_download t nv =
    allowed to modify the global state of OPAM here. However, for
    consistency reasons, this is done in the main function only. *)
 let remove_package_aux t ~metadata ?(silent=false) nv =
-  log "Removing %s (%b)" (OpamPackage.to_string nv) metadata;
+  log "Removing %a (%b)" (slog OpamPackage.to_string) nv metadata;
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -512,7 +513,7 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
 
 (* Removes build dir and source cache of package if unneeded *)
 let cleanup_package_artefacts t nv =
-  log "Cleaning up artefacts of %s" (OpamPackage.to_string nv);
+  log "Cleaning up artefacts of %a" (slog OpamPackage.to_string) nv;
 
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if not !OpamGlobals.keep_build_dir && OpamFilename.exists_dir build_dir then
@@ -531,7 +532,7 @@ let cleanup_package_artefacts t nv =
   let dev = OpamPath.dev_package t.root nv in
   if OpamFilename.exists_dir dev &&
      not (OpamPackage.Set.mem nv (OpamState.all_installed t)) then (
-    log "Removing %S" (OpamFilename.Dir.to_string dev);
+    log "Removing %a" (slog OpamFilename.Dir.to_string) dev;
     OpamFilename.rmdir dev;
   )
 

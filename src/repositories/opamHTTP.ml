@@ -15,9 +15,11 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamMisc.OP
 open OpamFilename.OP
 
 let log msg = OpamGlobals.log "CURL" msg
+let slog = OpamGlobals.slog
 
 type state = {
   remote_dir          : dirname;
@@ -158,7 +160,7 @@ module B = struct
 
   let curl ~remote_file ~local_file =
     log "curl";
-    log "dowloading %s" (OpamFilename.to_string remote_file);
+    log "dowloading %a" (slog OpamFilename.to_string) remote_file;
     OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file);
     OpamFilename.download_as ~overwrite:true remote_file local_file
 
@@ -176,10 +178,14 @@ module B = struct
         (OpamFilename.Set.filter
            (fun f -> not (OpamFilename.starts_with archives_dir f)) state.local_files)
         -- to_keep in
-      log "current: %d files" (OpamFilename.Set.cardinal current);
-      log "to_keep: %d files" (OpamFilename.Set.cardinal to_keep);
-      log "to_delete: %s" (OpamFilename.Set.to_string to_delete);
-      log "new_files: %s" (OpamFilename.Set.to_string new_files);
+      log "current: %a files"
+        (slog @@ OpamFilename.Set.cardinal @> string_of_int) current;
+      log "to_keep: %a files"
+        (slog @@ OpamFilename.Set.cardinal @> string_of_int) to_keep;
+      log "to_delete: %a"
+        (slog OpamFilename.Set.to_string) to_delete;
+      log "new_files: %a"
+        (slog OpamFilename.Set.to_string) new_files;
       OpamFilename.Set.iter OpamFilename.remove to_delete;
 
       if OpamFilename.Set.cardinal new_files > 4 then
@@ -243,7 +249,7 @@ end
 let make_urls_txt ~write repo_root =
   let repo = OpamRepository.local repo_root in
   let local_index_file = OpamFilename.of_string "urls.txt" in
-  log "Scanning %s" (OpamFilename.Dir.to_string repo_root);
+  log "Scanning %a" (slog OpamFilename.Dir.to_string) repo_root;
   let index =
     List.fold_left (fun set f ->
       if not (OpamFilename.exists f) then set

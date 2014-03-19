@@ -1870,6 +1870,7 @@ let print_stats () =
 module Make (F : F) = struct
 
   let log fmt = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal) fmt
+  let slog = OpamGlobals.slog
 
   let write f v =
     let filename = OpamFilename.prettify f in
@@ -1906,7 +1907,7 @@ module Make (F : F) = struct
         OpamGlobals.msg "[skipped]\n";
         F.empty
     else (
-      log "Cannot find %s" (OpamFilename.to_string f);
+      log "Cannot find %a" (slog OpamFilename.to_string) f;
       F.empty
     )
 

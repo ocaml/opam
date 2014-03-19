@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 
 let log fmt = OpamGlobals.log "CUDF" fmt
+let slog = OpamGlobals.slog
 
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
@@ -536,7 +537,7 @@ let actions_of_diff diff =
   ) diff []
 
 let resolve ~extern universe request =
-  log "resolve request=%s" (string_of_request request);
+  log "resolve request=%a" (slog string_of_request) request;
   if extern then get_final_universe universe request
   else check_request universe request
 
@@ -726,7 +727,8 @@ let compute_root_causes universe actions requested =
   - [requested] the set of the package names that were part of the original request
 *)
 let solution_of_actions ~simple_universe ~complete_universe ~requested root_actions =
-  log "graph_of_actions root_actions=%s" (string_of_actions root_actions);
+  log "graph_of_actions root_actions=%a"
+    (slog string_of_actions) root_actions;
 
   (* The packages to remove or upgrade *)
   let to_remove_or_upgrade =

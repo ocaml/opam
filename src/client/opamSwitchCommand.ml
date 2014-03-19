@@ -19,6 +19,7 @@ open OpamState.Types
 open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SWITCH" fmt
+let slog = OpamGlobals.slog
 
 (* name + state + compiler + description *)
 (* TODO: add repo *)
@@ -133,7 +134,7 @@ let list ~print_short ~installed ~all =
   List.iter print_compiler all
 
 let remove_t switch t =
-  log "remove switch=%s" (OpamSwitch.to_string switch);
+  log "remove switch=%a" (slog OpamSwitch.to_string) switch;
   let comp_dir = OpamPath.Switch.root t.root switch in
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n"
@@ -157,9 +158,9 @@ let update_global_config t ~warning switch =
 
 
 let install_compiler ~quiet switch compiler =
-  log "install %b %s %s" quiet
-    (OpamSwitch.to_string switch)
-    (OpamCompiler.to_string compiler);
+  log "install %b %a %a" quiet
+    (slog OpamSwitch.to_string) switch
+    (slog OpamCompiler.to_string) compiler;
 
   (* Remember the current switch to be able to roll-back *)
   let t = OpamState.load_state "switch-install-with-packages-1" in
@@ -254,7 +255,7 @@ let install ~quiet ~warning ~update_config switch compiler =
     update_global_config ~warning t switch
 
 let switch ~quiet ~warning switch =
-  log "switch switch=%s" (OpamSwitch.to_string switch);
+  log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let t = OpamState.load_state "switch-1" in
   if not (OpamState.is_switch_installed t switch) then (
     let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
@@ -273,8 +274,10 @@ let filter_names ~filter set =
   ) set
 
 let import_t filename t =
-  log "import switch=%s" (match filename with None -> "<none>"
-                                            | Some f -> OpamFilename.to_string f);
+  log "import switch=%a"
+    (slog @@ function None -> "<none>"
+                    | Some f -> OpamFilename.to_string f)
+    filename;
 
   let imported, import_roots =
     match filename with
@@ -321,7 +324,7 @@ let show () =
   OpamGlobals.msg "%s\n" (OpamSwitch.to_string t.switch)
 
 let reinstall_t switch t =
-  log "reinstall switch=%s" (OpamSwitch.to_string switch);
+  log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
   if not (OpamState.is_switch_installed t switch) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
