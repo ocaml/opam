@@ -1303,7 +1303,7 @@ let pin ?(unpin_only=false) () =
 
   let package =
     let doc = Arg.info ~docv:"PACKAGE" ~doc:"Package name." [] in
-    Arg.(value & pos 0 (some string) None & doc) in
+    Arg.(value & pos 0 (some package_name) None & doc) in
   let pin_option =
     let doc =
       Arg.info ~docv:"PIN" ~doc:
@@ -1327,30 +1327,20 @@ let pin ?(unpin_only=false) () =
       "hg"     , `hg
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
-  let force = mk_flag ["f";"force"] "Disable consistency checks." in
 
-  let pin global_options force kind edit remove list package pin =
+  let pin global_options kind edit remove list package pin =
     apply_global_options global_options;
-    let edit_opam n =
-      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Edit } in
-      Client.PIN.pin ~force pin in
-    let unpin n =
-      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Unpin } in
-      Client.PIN.pin ~force pin in
     match package, pin, edit, remove, list with
-    | Some n, None,   true,  false, false -> edit_opam n
-    | Some n, None,   false, true,  false -> unpin n
+    | Some n, None,   true,  false, false -> Client.PIN.edit n
+    | Some n, None,   false, true,  false -> Client.PIN.unpin n
     | None,   None,   false, false, _     -> Client.PIN.list ()
+    | Some n, Some "none",   _, _,  false -> Client.PIN.unpin n
     | Some n, Some p, _    , false, false ->
-      let pin = {
-        pin_package = OpamPackage.Name.of_string n;
-        pin_option  = pin_option_of_string ?kind:kind p
-      } in
-      Client.PIN.pin ~force pin;
-      if edit then edit_opam n
-    | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
+      let pin_option = pin_option_of_string ?kind:kind p in
+      Client.PIN.pin n ~edit pin_option
+    | _ -> OpamGlobals.error_and_exit "Inconsistent pinning arguments" in
 
-  Term.(pure pin $global_options $force $kind $edit $remove $list $package $pin_option),
+  Term.(pure pin $global_options $kind $edit $remove $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)

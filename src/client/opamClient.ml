@@ -1123,7 +1123,25 @@ module API = struct
 
   let reinstall names = with_switch_backup "reinstall" (reinstall_t names)
 
-  module PIN        = OpamPinCommand
+  module PIN = struct
+    open OpamPinCommand
+
+    let reinstall name =
+      if OpamState.confirm "%s needs to be reinstalled, do it now ?"
+          (OpamPackage.Name.to_string name)
+      then reinstall [name,None]
+    (* Otherwise OpamState.add_to_reinstall ? better to leave the user choose *)
+
+    let pin name ?edit pin_option =
+      if pin name ?edit pin_option then reinstall name
+
+    let edit name = if edit name then reinstall name
+
+    let unpin name = if unpin name then reinstall name
+
+    let list = list
+  end
+
   module REPOSITORY = OpamRepositoryCommand
   module CONFIG     = OpamConfigCommand
   module SWITCH     = OpamSwitchCommand
@@ -1249,8 +1267,14 @@ module SafeAPI = struct
 
   module PIN = struct
 
-    let pin ~force action =
-      global_lock (fun () -> API.PIN.pin ~force action)
+    let pin name ?edit pin_option =
+      switch_lock (fun () -> API.PIN.pin name ?edit pin_option)
+
+    let edit name =
+      switch_lock (fun () -> API.PIN.edit name)
+
+    let unpin name =
+      switch_lock (fun () -> API.PIN.unpin name)
 
     let list () =
       read_lock API.PIN.list

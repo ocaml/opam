@@ -18,8 +18,15 @@
 
 open OpamTypes
 
-(** Manage pinned packages. *)
-val pin: force:bool -> pin -> unit
+(** Pin a package. Returns true if the package should be rebuilt *)
+val pin: name -> ?edit:bool -> pin_option -> bool
+
+(** Let the user edit a pinned package's opam file.
+    Returns true if the package should be rebuilt *)
+val edit: name -> bool
+
+(** Unpin a package. Returns true if the package should be rebuilt *)
+val unpin: name -> bool
 
 (** List the pinned packages. *)
 val list: unit -> unit

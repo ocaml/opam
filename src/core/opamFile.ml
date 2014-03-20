@@ -500,15 +500,13 @@ module X = struct
 
     let to_string _ map =
       let lines = OpamPackage.Name.Map.fold (fun name pin lines ->
-          match kind_of_pin_option pin with
-          | None      -> lines
-          | Some kind ->
-            let l = [
-              OpamPackage.Name.to_string name;
-              string_of_pin_kind kind;
-              string_of_pin_option pin
-            ] in
-            l :: lines
+          let kind = kind_of_pin_option pin in
+          let l = [
+            OpamPackage.Name.to_string name;
+            string_of_pin_kind kind;
+            string_of_pin_option pin
+          ] in
+          l :: lines
         ) map [] in
       Lines.to_string (List.rev lines)
 

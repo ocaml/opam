@@ -271,6 +271,13 @@ let header_error fmt =
         ) fmt
     ) fmt
 
+let editor = lazy (
+  try OpamMisc.getenv "OPAM_EDITOR" with Not_found ->
+  try OpamMisc.getenv "VISUAL" with Not_found ->
+  try OpamMisc.getenv "EDITOR" with Not_found ->
+    "nano"
+)
+
 type os =
   | Darwin
   | Linux

@@ -286,14 +286,6 @@ type pin_option =
   | Git of address
   | Darcs of address
   | Hg of address
-  | Unpin
-  | Edit
-
-(** Pinned packages *)
-type pin = {
-  pin_package: name;
-  pin_option : pin_option;
-}
 
 (** Pin kind *)
 type pin_kind = [`version|`git|`darcs|`hg|`local]
