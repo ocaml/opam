@@ -297,7 +297,7 @@ let is_pinned t n =
 let is_locally_pinned t name =
   if OpamPackage.Name.Map.mem name t.pinned then
     match OpamPackage.Name.Map.find name t.pinned with
-    | Edit | Unpin | Version _ -> false
+    | Version _ -> false
     | _ -> true
   else
     false
@@ -305,13 +305,10 @@ let is_locally_pinned t name =
 let locally_pinned_package t n =
   let option = OpamPackage.Name.Map.find n t.pinned in
   let path = string_of_pin_option option in
-  match kind_of_pin_option option with
-  | None      -> OpamGlobals.error_and_exit
-                   "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
-  | Some kind ->
-    match repository_kind_of_pin_kind kind with
-    | None    -> OpamSystem.internal_error "locally pinned"
-    | Some kind -> (address_of_string path, kind)
+  let kind = kind_of_pin_option option in
+  match repository_kind_of_pin_kind kind with
+  | None    -> OpamSystem.internal_error "locally pinned"
+  | Some kind -> (address_of_string path, kind)
 
 let url_of_locally_pinned_package t n =
   let path, kind = locally_pinned_package t n in

@@ -102,11 +102,8 @@ let pin_option_of_string ?kind s =
   | Some `hg      -> Hg (address_of_string s)
   | Some `darcs   -> Darcs (address_of_string s)
   | Some `local   -> Local (OpamFilename.Dir.of_string s)
-  | Some `unpin   -> Unpin
   | None          ->
-    if s = "none" then
-      Unpin
-    else if Sys.file_exists s then
+    if Sys.file_exists s then
       Local (OpamFilename.Dir.of_string s)
     else if OpamMisc.contains s ('/') then
       Git (address_of_string s)
@@ -119,7 +116,6 @@ let string_of_pin_kind = function
   | `darcs   -> "darcs"
   | `hg      -> "hg"
   | `local   -> "local"
-  | `unpin   -> "unpin"
 
 let pin_kind_of_string = function
   | "version" -> `version
@@ -136,26 +132,17 @@ let string_of_pin_option = function
   | Darcs p
   | Hg p      -> string_of_address p
   | Local p   -> OpamFilename.Dir.to_string p
-  | Unpin     -> "unpin"
-  | Edit      -> "edit"
 
 let kind_of_pin_option = function
-  | Version _ -> Some `version
-  | Git _     -> Some `git
-  | Darcs _   -> Some `darcs
-  | Hg _      -> Some `hg
-  | Local _   -> Some `local
-  | _         -> None
+  | Version _ -> `version
+  | Git _     -> `git
+  | Darcs _   -> `darcs
+  | Hg _      -> `hg
+  | Local _   -> `local
 
 let option fn = function
   | None   -> ""
   | Some k -> fn k
-
-let string_of_pin p =
-  Printf.sprintf "{package=%s; path=%s; kind=%s}"
-    (OpamPackage.Name.to_string p.pin_package)
-    (string_of_pin_option p.pin_option)
-    (option string_of_pin_kind (kind_of_pin_option p.pin_option))
 
 let string_of_symbol = function
   | Eq  -> "="

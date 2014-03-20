@@ -144,8 +144,11 @@ module API: sig
   (** Pin API *)
   module PIN: sig
 
-    (** Pin a package to a specific version. *)
-    val pin: force:bool -> pin -> unit
+    val pin: OpamPackage.Name.t -> ?edit:bool -> pin_option -> unit
+
+    val edit: OpamPackage.Name.t -> unit
+
+    val unpin: OpamPackage.Name.t -> unit
 
     (** List the current pinned packages. *)
     val list: unit -> unit

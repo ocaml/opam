@@ -73,7 +73,7 @@ val repository: command
 val switch: command
 
 (** opam pin *)
-val pin: command
+val pin: ?unpin_only:bool -> unit -> command
 
 (** opam help *)
 val help: command
@@ -173,6 +173,7 @@ val package_name: name Arg.converter
 val enum_with_default:
   (string * ([> `default of string] as 'a)) list -> 'a Arg.converter
 
-(** Create an alias for an existing command *)
+(** Create an alias for an existing command. [options] can be used to
+    add extra options after the original command in the doc. *)
 val make_command_alias:
-  unit Term.t * Term.info -> string -> unit Term.t * Term.info
+  unit Term.t * Term.info -> ?options:string -> string -> unit Term.t * Term.info

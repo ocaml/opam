@@ -52,16 +52,13 @@ val string_of_cause: ('pkg -> string) -> 'pkg cause -> string
 (** Pretty-print *)
 val string_of_upload: upload -> string
 
-(** Pretty-printing of pinned packages *)
-val string_of_pin: pin -> string
-
 (** Convert a pin kind to a repository kind *)
 val repository_kind_of_pin_kind: pin_kind -> repository_kind option
 
 (** Pretty-printing of pin kinds. *)
 val pin_kind_of_string: string -> pin_kind
 
-(** Parsing of pin kinds. Raise an error if it is not a valid value. *)
+(** Parsing of pin kinds *)
 val string_of_pin_kind: pin_kind -> string
 
 (** Read pin options args *)
@@ -71,7 +68,7 @@ val pin_option_of_string: ?kind:pin_kind -> string -> pin_option
 val string_of_pin_option: pin_option -> string
 
 (** Get the pin kind from a pin option *)
-val kind_of_pin_option: pin_option -> pin_kind option
+val kind_of_pin_option: pin_option -> pin_kind
 
 (** Pretty-print *)
 val string_of_shell: shell -> string

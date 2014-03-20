@@ -1284,7 +1284,7 @@ let switch =
 
 (* PIN *)
 let pin_doc = "Pin a given package to a specific version."
-let pin =
+let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let man = [
     `S "DESCRIPTION";
@@ -1303,7 +1303,7 @@ let pin =
 
   let package =
     let doc = Arg.info ~docv:"PACKAGE" ~doc:"Package name." [] in
-    Arg.(value & pos 0 (some string) None & doc) in
+    Arg.(value & pos 0 (some package_name) None & doc) in
   let pin_option =
     let doc =
       Arg.info ~docv:"PIN" ~doc:
@@ -1313,7 +1313,9 @@ let pin =
   let edit =
     mk_flag ["e";"edit"] "Edit the OPAM file associated to the given package." in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
-  let remove = mk_flag ["u";"unpin"] "Unpin the given package." in
+  let remove =
+    if unpin_only then Term.pure true
+    else mk_flag ["u";"unpin"] "Unpin the given package." in
   let kind =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
     let kinds = [
@@ -1325,30 +1327,20 @@ let pin =
       "hg"     , `hg
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
-  let force = mk_flag ["f";"force"] "Disable consistency checks." in
 
-  let pin global_options force kind edit remove list package pin =
+  let pin global_options kind edit remove list package pin =
     apply_global_options global_options;
-    let edit_opam n =
-      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Edit } in
-      Client.PIN.pin ~force pin in
-    let unpin n =
-      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Unpin } in
-      Client.PIN.pin ~force pin in
     match package, pin, edit, remove, list with
-    | Some n, None,   true,  false, false -> edit_opam n
-    | Some n, None,   false, true,  false -> unpin n
+    | Some n, None,   true,  false, false -> Client.PIN.edit n
+    | Some n, None,   false, true,  false -> Client.PIN.unpin n
     | None,   None,   false, false, _     -> Client.PIN.list ()
+    | Some n, Some "none",   _, _,  false -> Client.PIN.unpin n
     | Some n, Some p, _    , false, false ->
-      let pin = {
-        pin_package = OpamPackage.Name.of_string n;
-        pin_option  = pin_option_of_string ?kind:kind p
-      } in
-      Client.PIN.pin ~force pin;
-      if edit then edit_opam n
-    | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
+      let pin_option = pin_option_of_string ?kind:kind p in
+      Client.PIN.pin n ~edit pin_option
+    | _ -> OpamGlobals.error_and_exit "Inconsistent pinning arguments" in
 
-  Term.(pure pin $global_options $force $kind $edit $remove $list $package $pin_option),
+  Term.(pure pin $global_options $kind $edit $remove $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)
@@ -1421,14 +1413,14 @@ let default =
     ~doc
     ~man
 
-let make_command_alias cmd name =
+let make_command_alias cmd ?(options="") name =
   let term, info = cmd in
   let orig = Term.name info in
-  let doc = Printf.sprintf "An alias for $(b,%s)." orig in
+  let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
     `S "DESCRIPTION";
-    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s)."
-          name orig);
+    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
+          name orig options);
     `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
           orig);
   ] in
@@ -1448,7 +1440,7 @@ let commands = [
   config;
   repository; make_command_alias repository "remote";
   switch;
-  pin;
+  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" -u" "unpin";
   help;
 ]
 
