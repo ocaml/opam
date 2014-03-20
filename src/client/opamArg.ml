@@ -1452,23 +1452,22 @@ let commands = [
   help;
 ]
 
-let is_external_command () =
-  Array.length Sys.argv > 1 &&
-  let opam = Sys.argv.(0) in
-  let name = Sys.argv.(1) in
-  String.length name > 1
-  && name.[0] <> '-'
-  && List.for_all (fun (_,info) -> Term.name info <> name) commands
-  && OpamSystem.command_exists (opam ^ "-" ^ name)
-
-let run_external_command () =
-  let n = Array.length Sys.argv in
-  if n > 1 then (
-    let opam = Sys.argv.(0) in
+(* Handle git-like plugins *)
+let check_and_run_external_commands () =
+  let len = Array.length Sys.argv in
+  if len > 1 then (
+    let opam = Filename.basename Sys.argv.(0) in
     let name = Sys.argv.(1) in
-    let args = Array.sub Sys.argv 2 (n-2) in
-    let r = OpamProcess.run (opam ^ "-" ^ name) (Array.to_list args) in
-    exit r.OpamProcess.r_code
+    let command = opam ^ "-" ^ name in
+    if
+      String.length name > 1
+      && name.[0] <> '-'
+      && List.for_all (fun (_,info) -> Term.name info <> name) commands
+      && OpamSystem.command_exists command
+    then
+      let args = Array.sub Sys.argv 1 (len - 1) in
+      args.(0) <- command;
+      Unix.execvp command args
   ) else
     ()
 
@@ -1476,7 +1475,7 @@ let run default commands =
   Sys.catch_break true;
   let _ = Sys.signal Sys.sigpipe Sys.Signal_ignore in
   try
-    if is_external_command () then run_external_command ();
+    check_and_run_external_commands ();
     match Term.eval_choice ~catch:false default commands with
     | `Error _ -> exit 1
     | _        -> exit 0
