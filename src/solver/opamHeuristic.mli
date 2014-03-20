@@ -51,6 +51,7 @@ open OpamTypes
 (** Optimized resolution *)
 val resolve:
   ?verbose:bool ->
+  (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.package action list, Algo.Diagnostic.reason list) result
@@ -144,5 +145,5 @@ val state_of_request: ?verbose:bool
     of reinstallations). Raise [Not_reachable] is the state is not
     reachable. This function is called once we get a consistent state
     to build a solution than we can propose to the user. *)
-val actions_of_state: Cudf.universe ->
+val actions_of_state: Cudf.universe -> (Cudf.universe -> Cudf.universe) ->
   Cudf_types.vpkg request -> Cudf.package state -> Cudf.package action list

@@ -201,8 +201,12 @@ let cudf2opam cpkg =
   OpamPackage.create name version
 
 (* load a cudf universe from an opam one *)
-let load_cudf_universe ?depopts opam_universe opam_packages =
-  let version_map = cudf_versions_map opam_universe opam_packages in
+let load_cudf_universe ?depopts opam_universe ?version_map opam_packages =
+  let version_map = match version_map with
+    | Some vm -> vm
+    | None -> cudf_versions_map opam_universe opam_packages in
+  let opam_packages =
+    OpamPackage.Set.map (real_version opam_universe) opam_packages in
   let cudf_universe =
     let cudf_packages =
       OpamPackage.Set.fold
@@ -216,7 +220,7 @@ let load_cudf_universe ?depopts opam_universe opam_packages =
   (* We can trim the universe here to get faster results, but we
      choose to keep it bigger to get more precise conflict messages. *)
   (* let universe = Algo.Depsolver.trim universe in *)
-  cudf_universe, version_map
+  cudf_universe
 
 let string_of_request r =
   let to_string = OpamFormula.string_of_conjunction OpamFormula.string_of_atom in
@@ -288,24 +292,38 @@ let cleanup_request universe (req:atom request) =
 
 let resolve ?(verbose=true) universe ~requested request =
   log "resolve request=%s" (string_of_request request);
-  let simple_universe, version_map =
-    load_cudf_universe universe universe.u_available in
+  let version_map = cudf_versions_map universe universe.u_packages in
+  let simple_universe =
+    load_cudf_universe universe ~version_map universe.u_available in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
+  let orphan_packages =
+    OpamPackage.Set.diff universe.u_installed universe.u_available in
+  let add_orphan_packages u =
+    load_cudf_universe universe ~version_map
+      (OpamPackage.Set.union orphan_packages
+         (OpamPackage.Set.of_list
+            (List.map cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
     if OpamCudf.external_solver_available ()
     then
-      try OpamCudf.resolve ~extern:true u req
+      try
+        let resp = OpamCudf.resolve ~extern:true u req in
+        OpamCudf.to_actions add_orphan_packages u resp
       with Failure "opamSolver" ->
         OpamGlobals.msg "Falling back to the internal heuristic.\n";
-        OpamHeuristic.resolve ~verbose u req
-    else OpamHeuristic.resolve ~verbose u req in
+        OpamHeuristic.resolve ~verbose add_orphan_packages u req
+    else OpamHeuristic.resolve ~verbose add_orphan_packages u req in
   match resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () ->
       OpamCudf.string_of_reasons cudf2opam simple_universe universe (c ()))
   | Success actions ->
-    let complete_universe, _ =
-      load_cudf_universe ~depopts:true universe universe.u_available in
+    let all_packages =
+      OpamPackage.Set.union universe.u_available orphan_packages in
+    let simple_universe =
+      load_cudf_universe universe ~version_map all_packages in
+    let complete_universe =
+      load_cudf_universe ~depopts:true universe ~version_map all_packages in
     let cudf_solution =
       OpamCudf.solution_of_actions
         ~simple_universe ~complete_universe ~requested actions in
@@ -313,7 +331,8 @@ let resolve ?(verbose=true) universe ~requested request =
 
 let installable universe =
   log "trim";
-  let simple_universe, _ = load_cudf_universe universe universe.u_available in
+  let simple_universe =
+    load_cudf_universe universe universe.u_available in
   let trimed_universe = Algo.Depsolver.trim simple_universe in
   Cudf.fold_packages
     (fun universe pkg -> OpamPackage.Set.add (cudf2opam pkg) universe)
@@ -321,9 +340,11 @@ let installable universe =
     trimed_universe
 
 let filter_dependencies f_direction ~depopts ~installed universe packages =
-  let cudf_universe, version_map =
-    load_cudf_universe ~depopts universe
-      (if installed then universe.u_installed else universe.u_available) in
+  let u_packages =
+    if installed then universe.u_installed else universe.u_available in
+  let version_map = cudf_versions_map universe u_packages in
+  let cudf_universe =
+    load_cudf_universe ~depopts universe ~version_map u_packages in
   let cudf_packages =
     List.rev_map (opam2cudf universe ~depopts version_map)
       (OpamPackage.Set.elements packages) in

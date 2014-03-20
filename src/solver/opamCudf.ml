@@ -161,7 +161,13 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
-    if is_dose_request i || is_dose_request j then []
+    if is_dose_request i || is_dose_request j then
+      let a = if is_dose_request i then j else i in
+      if is_dose_request a then [] else
+        let str =
+          Printf.sprintf "Conflicting query for package %s"
+            (OpamPackage.to_string (cudf2opam a)) in
+        [str]
     else
     let nva, nvb =
       let nvi = cudf2opam i in
@@ -312,6 +318,10 @@ let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
          List.iter
            (fun c -> Printf.bprintf b " - %s\n" (string_of_chain c)))
       chains;
+  if reasons = [] && chains = [] then (* No explanation found :( *)
+    Printf.bprintf b
+      "Sorry, no solution found: \
+       there seems to be a problem with your request.\n";
   Buffer.contents b
 
 (* custom cudf field labels *)
@@ -527,15 +537,15 @@ let actions_of_diff diff =
 
 let resolve ~extern universe request =
   log "resolve request=%s" (string_of_request request);
-  let r =
-    if extern then get_final_universe universe request
-    else check_request universe request
-  in
-  let to_actions u1 u2 =
-    let diff = Diff.diff u1 u2 in
+  if extern then get_final_universe universe request
+  else check_request universe request
+
+let to_actions f universe result =
+  let aux u1 u2 =
+    let diff = Diff.diff (f u1) u2 in
     actions_of_diff diff
   in
-  map_success (to_actions universe) r
+  map_success (aux universe) result
 
 let create_graph filter universe =
   let pkgs = Cudf.get_packages ~filter universe in
@@ -581,13 +591,14 @@ let compute_root_causes universe actions requested =
     (* add conflicts to the graph to get all causality relations:
        cause (removed required pkg or conflicting pkg) -> removed pkg *)
     Map.iter (fun _ -> function
-        | To_change _ | To_recompile _ -> ()
-        | To_delete pkg as act ->
+        | To_delete pkg as act when
+            Algo.Defaultgraphs.PackageGraph.UG.mem_vertex conflicts_graph pkg ->
           Algo.Defaultgraphs.PackageGraph.UG.iter_succ (fun v1 ->
               if v1.Cudf.package <> pkg.Cudf.package then
-              try ActionGraph.add_edge g (Map.find v1 actions) act
-              with Not_found -> ())
+                try ActionGraph.add_edge g (Map.find v1 actions) act
+                with Not_found -> ())
             conflicts_graph pkg
+        | _ -> ()
       ) actions;
     g in
   let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
@@ -689,9 +700,9 @@ let compute_root_causes universe actions requested =
       get_causes causes roots in
     let causes =
       (* Compute causes for remaining changes (assume upstream changes) *)
-      let roots = make_roots causes Upstream_changes (function
-          | (To_change _ | To_recompile _) as a -> ActionGraph.in_degree g a = 0
-          | _ -> false) in
+      let roots =
+        make_roots causes Upstream_changes
+          (fun a -> ActionGraph.in_degree g a = 0) in
       get_causes causes roots in
   Map.fold (fun p (cause,_depth) acc -> (p,cause)::acc) causes []
 

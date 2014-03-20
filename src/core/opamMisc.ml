@@ -22,6 +22,11 @@ module type SET = sig
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  module Op : sig
+    val (++): t -> t -> t
+    val (--): t -> t -> t
+    val (%%): t -> t -> t
+  end
 end
 module type MAP = sig
   include Map.S
@@ -124,6 +129,12 @@ module Set = struct
       let elements = S.elements t in
       let jsons = List.map O.to_json elements in
       `A jsons
+
+    module Op = struct
+      let (++) = union
+      let (--) = diff
+      let (%%) = inter
+    end
 
   end
 

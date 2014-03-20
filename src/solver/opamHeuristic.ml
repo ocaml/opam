@@ -193,7 +193,7 @@ let satisfy pkg constrs =
       n = pkg.Cudf.package && Cudf.version_matches pkg.Cudf.version v
     ) constrs
 
-let actions_of_state universe request state =
+let actions_of_state universe map_init_u request state =
   log "actions_of_state %s" (OpamCudf.string_of_packages state);
   let installed =
     let filter p =
@@ -222,7 +222,7 @@ let actions_of_state universe request state =
     raise (Not_reachable c)
   | Success u   ->
     try
-      let diff = OpamCudf.Diff.diff universe u in
+      let diff = OpamCudf.Diff.diff (map_init_u universe) u in
       let actions = OpamCudf.actions_of_diff diff in
       let actions = minimize_actions (List.map fst state) actions in
       actions
@@ -377,7 +377,7 @@ let same_state s1 s2 =
 
 (* Various heuristic to transform a solution checker into an optimized
    solver. *)
-let optimize ?(verbose=true) universe request =
+let optimize ?(verbose=true) map_init_u universe request =
 
   let refine state request =
     log "refine request:%s state:%s"
@@ -445,7 +445,9 @@ let optimize ?(verbose=true) universe request =
 
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose universe request with
-  | None       -> OpamCudf.resolve ~extern:false universe request
+  | None       ->
+    OpamCudf.to_actions map_init_u universe
+      (OpamCudf.resolve ~extern:false universe request)
   | Some state ->
     log "STATE(0) %s" (OpamCudf.string_of_packages state);
 
@@ -506,11 +508,14 @@ let optimize ?(verbose=true) universe request =
       List.fold_left installed_first state packages in
 
     log "STATE(2) %s" (OpamCudf.string_of_packages state);
-    Success (actions_of_state universe request state)
+    Success (actions_of_state universe map_init_u request state)
 
-let resolve ?(verbose=true) universe request =
+let resolve ?(verbose=true) map_init_u universe request =
   try
-    if request.wish_upgrade <> [] then optimize ~verbose universe request
-    else OpamCudf.resolve ~extern:false universe request
+    if request.wish_upgrade <> [] then
+      optimize ~verbose map_init_u universe request
+    else
+      let res = OpamCudf.resolve ~extern:false universe request in
+      OpamCudf.to_actions map_init_u universe res
   with Not_reachable c ->
     Conflicts c
