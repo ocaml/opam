@@ -28,15 +28,22 @@ let rsync src dst =
     if src <> dst then (
       OpamSystem.mkdir src;
       OpamSystem.mkdir dst;
-      let lines = OpamSystem.read_command_output (
-          [ "rsync" ; rsync_arg;
-            "--exclude"; ".git";
-            "--exclude"; "_darcs";
-            "--exclude"; ".hg";
-            "--exclude"; ".#*";
-            "--delete";
-            src; dst; ]
-        ) in
+      let lines =
+        try
+          OpamSystem.read_command_output (
+            [ "rsync" ; rsync_arg;
+              "--exclude"; ".git";
+              "--exclude"; "_darcs";
+              "--exclude"; ".hg";
+              "--exclude"; ".#*";
+              "--delete";
+              src; dst; ]
+          )
+        with OpamSystem.Process_error r when r.OpamProcess.r_code = 23 ->
+          OpamGlobals.warning "Rsync partially failed:\n  %s" (String.concat "\n  " r.OpamProcess.r_stderr);
+          if not !OpamGlobals.debug then OpamProcess.clean_files r;
+          r.OpamProcess.r_stdout
+      in
       match OpamMisc.rsync_trim lines with
       | []    -> Up_to_date []
       | lines -> Result lines
