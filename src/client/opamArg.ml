@@ -1284,7 +1284,7 @@ let switch =
 
 (* PIN *)
 let pin_doc = "Pin a given package to a specific version."
-let pin =
+let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let man = [
     `S "DESCRIPTION";
@@ -1313,7 +1313,9 @@ let pin =
   let edit =
     mk_flag ["e";"edit"] "Edit the OPAM file associated to the given package." in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
-  let remove = mk_flag ["u";"unpin"] "Unpin the given package." in
+  let remove =
+    if unpin_only then Term.pure true
+    else mk_flag ["u";"unpin"] "Unpin the given package." in
   let kind =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
     let kinds = [
@@ -1421,14 +1423,14 @@ let default =
     ~doc
     ~man
 
-let make_command_alias cmd name =
+let make_command_alias cmd ?(options="") name =
   let term, info = cmd in
   let orig = Term.name info in
-  let doc = Printf.sprintf "An alias for $(b,%s)." orig in
+  let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
     `S "DESCRIPTION";
-    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s)."
-          name orig);
+    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
+          name orig options);
     `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
           orig);
   ] in
@@ -1448,7 +1450,7 @@ let commands = [
   config;
   repository; make_command_alias repository "remote";
   switch;
-  pin;
+  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" -u" "unpin";
   help;
 ]
 
