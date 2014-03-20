@@ -17,6 +17,7 @@
 open OpamTypes
 
 let log fmt = OpamGlobals.log "HEURISTIC" fmt
+let slog = OpamGlobals.slog
 
 type 'a state = 'a list
 type 'a state_space = 'a array list
@@ -194,7 +195,7 @@ let satisfy pkg constrs =
     ) constrs
 
 let actions_of_state universe map_init_u request state =
-  log "actions_of_state %s" (OpamCudf.string_of_packages state);
+  log "actions_of_state %a" (slog OpamCudf.string_of_packages) state;
   let installed =
     let filter p =
       p.Cudf.installed
@@ -216,9 +217,9 @@ let actions_of_state universe map_init_u request state =
   } in
   match OpamCudf.check_request small_universe request with
   | Conflicts c ->
-    log "not reachable! universe=%s request=%s"
-      (OpamCudf.string_of_universe small_universe)
-      (OpamCudf.string_of_request request);
+    log "not reachable! universe=%a request=%a"
+      (slog OpamCudf.string_of_universe) small_universe
+      (slog OpamCudf.string_of_request) request;
     raise (Not_reachable c)
   | Success u   ->
     try
@@ -317,7 +318,8 @@ let state_of_request ?(verbose=true) current_universe request =
   log "state_of_request";
   match OpamCudf.check_request ~explain:false current_universe request with
   | Conflicts _             ->
-    log "state-of-request: %s CONFLICT!" (OpamCudf.string_of_request request);
+    log "state-of-request: %a CONFLICT!"
+      (slog OpamCudf.string_of_request) request;
     None
   | Success result_universe ->
 
@@ -380,9 +382,9 @@ let same_state s1 s2 =
 let optimize ?(verbose=true) map_init_u universe request =
 
   let refine state request =
-    log "refine request:%s state:%s"
-      (OpamCudf.string_of_request request)
-      (OpamCudf.string_of_packages state);
+    log "refine request:%a state:%a"
+      (slog OpamCudf.string_of_request) request
+      (slog OpamCudf.string_of_packages) state;
     let wish_upgrade =
       List.rev_map (fun p -> (p.Cudf.package, Some (`Eq, p.Cudf.version))) state in
     let wish_install =
@@ -440,8 +442,10 @@ let optimize ?(verbose=true) map_init_u universe request =
 
     installed, not_installed in
 
-  log "implicit-installed: %s" (OpamCudf.string_of_packages implicit_installed);
-  log "implicit-not-installed: %s" (OpamMisc.pretty_list implicit_not_installed);
+  log "implicit-installed: %a"
+    (slog OpamCudf.string_of_packages) implicit_installed;
+  log "implicit-not-installed: %a"
+    (slog OpamMisc.pretty_list) implicit_not_installed;
 
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose universe request with
@@ -449,7 +453,7 @@ let optimize ?(verbose=true) map_init_u universe request =
     OpamCudf.to_actions map_init_u universe
       (OpamCudf.resolve ~extern:false universe request)
   | Some state ->
-    log "STATE(0) %s" (OpamCudf.string_of_packages state);
+    log "STATE(0) %a" (slog OpamCudf.string_of_packages) state;
 
     let request = refine state request in
 
@@ -469,14 +473,14 @@ let optimize ?(verbose=true) map_init_u universe request =
         | Some state ->
           let p = List.find (fun i -> i.Cudf.package = p.Cudf.package) state in
           log "pick an other version of %s (%d)" p.Cudf.package p.Cudf.version;
-          log "request: %s" (OpamCudf.string_of_request request);
-          log "state: %s" (OpamCudf.string_of_packages state);
+          log "request: %a" (slog OpamCudf.string_of_request) request;
+          log "state: %a" (slog OpamCudf.string_of_packages) state;
           state
       ) in
 
     (* Try to keep the installed packages in the dependency cone *)
     let state = List.fold_left installed_first state implicit_installed in
-    log "STATE(1) %s" (OpamCudf.string_of_packages state);
+    log "STATE(1) %a" (slog OpamCudf.string_of_packages) state;
 
     (* Minimize the number of new packages to install *)
     (* XXX: if we want to add an interactive mode, we need to do something here *)
@@ -486,7 +490,8 @@ let optimize ?(verbose=true) map_init_u universe request =
     let universe, state = List.fold_left (fun (universe, state) name ->
         let remove_universe = OpamCudf.remove universe name None in
         if consistent_packages remove_universe state then (
-          log "%s is not necessary (%s)" name (OpamCudf.string_of_packages state);
+          log "%s is not necessary (%a)" name
+            (slog OpamCudf.string_of_packages) state;
           (remove_universe, state)
         ) else (
           log "adding %s to the request" name;
@@ -507,7 +512,7 @@ let optimize ?(verbose=true) map_init_u universe request =
       let packages = Cudf.get_packages ~filter universe in
       List.fold_left installed_first state packages in
 
-    log "STATE(2) %s" (OpamCudf.string_of_packages state);
+    log "STATE(2) %a" (slog OpamCudf.string_of_packages) state;
     Success (actions_of_state universe map_init_u request state)
 
 let resolve ?(verbose=true) map_init_u universe request =

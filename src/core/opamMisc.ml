@@ -251,9 +251,13 @@ module StringSetMap = Map.Make(StringSet)
 
 module OP = struct
 
-  let (|>) f g = g f
+  let (@@) f x = f x
 
-  let (++) f g x = g (f x)
+  let (|>) x f = f x
+
+  let (@*) g f x = g (f x)
+
+  let (@>) f g x = g (f x)
 
 end
 

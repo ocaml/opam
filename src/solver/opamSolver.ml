@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
+let slog = OpamGlobals.slog
 
 module Action = OpamActionGraph.MakeAction(OpamPackage)
 module ActionGraph = OpamActionGraph.Make(Action)
@@ -291,7 +292,7 @@ let cleanup_request universe (req:atom request) =
   { req with wish_install; wish_upgrade }
 
 let resolve ?(verbose=true) universe ~requested request =
-  log "resolve request=%s" (string_of_request request);
+  log "resolve request=%a" (slog string_of_request) request;
   let version_map = cudf_versions_map universe universe.u_packages in
   let simple_universe =
     load_cudf_universe universe ~version_map universe.u_available in
@@ -350,9 +351,9 @@ let filter_dependencies f_direction ~depopts ~installed universe packages =
       (OpamPackage.Set.elements packages) in
   let topo_packages = f_direction cudf_universe cudf_packages in
   let result = List.rev_map cudf2opam topo_packages in
-  log "filter_dependencies packages=%s result=%s"
-    (OpamPackage.Set.to_string packages)
-    (OpamMisc.string_of_list OpamPackage.to_string result);
+  log "filter_dependencies packages=%a result=%a"
+    (slog OpamPackage.Set.to_string) packages
+    (slog (OpamMisc.string_of_list OpamPackage.to_string)) result;
   result
 
 let dependencies = filter_dependencies OpamCudf.dependencies

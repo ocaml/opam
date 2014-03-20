@@ -17,6 +17,7 @@
 module Base = OpamMisc.Base
 
 let log fmt = OpamGlobals.log "FILENAME" fmt
+let slog = OpamGlobals.slog
 
 module Dir = struct
 
@@ -47,7 +48,7 @@ let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
 
 let rmdir dirname =
-  log "rmdir %s" (Dir.to_string dirname);
+  log "rmdir %a" (slog Dir.to_string) dirname;
   OpamSystem.remove (Dir.to_string dirname)
 
 let cwd () =
@@ -57,7 +58,7 @@ let mkdir dirname =
   OpamSystem.mkdir (Dir.to_string dirname)
 
 let cleandir dirname =
-  log "cleandir %s" (Dir.to_string dirname);
+  log "cleandir %a" (slog Dir.to_string) dirname;
   OpamSystem.remove (Dir.to_string dirname);
   mkdir dirname
 
@@ -266,15 +267,15 @@ type generic_file =
 let extract_generic_file filename dirname =
   match filename with
   | F f ->
-    log "extracting %s to %s"
-      (to_string f)
-      (Dir.to_string dirname);
+    log "extracting %a to %a"
+      (slog to_string) f
+      (slog Dir.to_string) dirname;
     extract f dirname
   | D d ->
     if d <> dirname then (
-      log "copying %s to %s"
-        (Dir.to_string d)
-        (Dir.to_string dirname);
+      log "copying %a to %a"
+        (slog Dir.to_string) d
+        (slog Dir.to_string) dirname;
       copy_dir ~src:d ~dst:dirname
     )
 

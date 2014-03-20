@@ -251,16 +251,14 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         not (OpamFilename.exists archive)
       ) new_index in
   let to_add =
+    let open OpamPackage.Set.Op in
     let added_changed = packages_of_attrs to_add in
-    let files_removed = OpamPackage.Set.inter new_index (packages_of_attrs to_remove) in
-    let (++) = OpamPackage.Set.union in
+    let files_removed = new_index %% packages_of_attrs to_remove in
     missing_archive ++ added_changed  ++ files_removed in
   let to_remove = nv_set_of_remotes to_remove in
   let to_add =
-    if OpamPackage.Set.is_empty packages then
-      to_add
-    else
-      OpamPackage.Set.inter packages to_add in
+    if OpamPackage.Set.is_empty packages then to_add
+    else OpamPackage.Set.inter packages to_add in
   let to_remove = OpamPackage.Set.diff to_remove to_add in
 
   let errors = ref [] in

@@ -14,7 +14,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamMisc.OP
+
 let log fmt = OpamGlobals.log "PARALLEL" fmt
+let slog = OpamGlobals.slog
 
 module type G = sig
   include Graph.Sig.I
@@ -143,12 +146,12 @@ module Make (G : G) : SIG with module G = G
     let rec aux () =
       let pid, status = Unix.wait () in
       if OpamMisc.IntMap.mem pid pids then (
-        log "%d is dead (%s)" pid (string_of_status status);
+        log "%d is dead (%a)" pid (slog string_of_status) status;
         pid, status
       ) else (
-        log "%d: unknown child (pids=%s)!"
+        log "%d: unknown child (pids=%a)!"
           pid
-          (string_of_pids pids);
+          (slog string_of_pids) pids;
         aux ()
       ) in
     aux ()
@@ -196,7 +199,8 @@ module Make (G : G) : SIG with module G = G
     (* All the node not successfully proceeded. This include error
        worker and error nodes. *)
 
-    log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
+    log "Iterate over %a task(s) with %d process(es)"
+      (slog @@ G.nb_vertex @> string_of_int) g n;
 
     if G.has_cycle !t.graph then (
       let sccs = G.scc_list !t.graph in
@@ -246,7 +250,7 @@ module Make (G : G) : SIG with module G = G
                    M.add n (Internal_error "User interruption") errors)
                 !pids !errors;
             (try OpamMisc.IntMap.iter (fun _ _ -> ignore (wait !pids)) !pids
-             with e -> log "%s in sub-process cleanup" (Printexc.to_string e));
+             with e -> log "%a in sub-process cleanup" (slog Printexc.to_string) e);
             raise (get_errors ())
         in
         let n, from_child = OpamMisc.IntMap.find pid !pids in
@@ -320,12 +324,12 @@ module Make (G : G) : SIG with module G = G
 
     let pre repo =
       let tmpfile = OpamSystem.temp_file "map-reduce" in
-      log "pre %S (%s)"(G.string_of_vertex repo) tmpfile;
+      log "pre %a (%s)" (slog G.string_of_vertex) repo tmpfile;
       files := (repo, tmpfile) :: !files
     in
 
     let child repo =
-      log "child %S" (G.string_of_vertex repo);
+      log "child %a" (slog G.string_of_vertex) repo;
       let file = file repo in
       let result = map repo in
       let oc = open_out file in
@@ -334,7 +338,7 @@ module Make (G : G) : SIG with module G = G
 
     let acc = ref init in
     let post repo =
-      log "post %S" (G.string_of_vertex repo);
+      log "post %a" (slog G.string_of_vertex) repo;
       let file = file repo in
       let ic = open_in_bin file in
       let result =

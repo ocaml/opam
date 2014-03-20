@@ -17,8 +17,10 @@
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
+let slog = OpamGlobals.slog
 
 let print_updated_compilers updates =
 
@@ -58,8 +60,8 @@ let fix_compiler_descriptions t ~verbose =
   let global_index = OpamState.compiler_state t in
   let repo_index = OpamState.compiler_repository_state t in
   let niet = String.concat ":" in
-  log "global-index: %s" (OpamCompiler.Map.to_string niet global_index);
-  log "repo-index  : %s" (OpamCompiler.Map.to_string niet repo_index);
+  log "global-index: %a" (slog @@ OpamCompiler.Map.to_string niet) global_index;
+  log "repo-index  : %a" (slog @@ OpamCompiler.Map.to_string niet) repo_index;
 
   let updated_compilers, new_compilers =
     let updated_compilers =
@@ -71,8 +73,8 @@ let fix_compiler_descriptions t ~verbose =
             set
         ) repo_index OpamCompiler.Set.empty in
     OpamCompiler.Set.partition (OpamState.is_compiler_installed t) updated_compilers in
-  log "updated-compilers: %s" (OpamCompiler.Set.to_string updated_compilers);
-  log "new-compilers    : %s" (OpamCompiler.Set.to_string new_compilers);
+  log "updated-compilers: %a" (slog OpamCompiler.Set.to_string) updated_compilers;
+  log "new-compilers    : %a" (slog OpamCompiler.Set.to_string) new_compilers;
 
   let deleted_compilers =
     OpamCompiler.Set.fold (fun comp map ->
@@ -83,7 +85,7 @@ let fix_compiler_descriptions t ~verbose =
         else
           OpamCompiler.Set.add comp map
       ) t.compilers OpamCompiler.Set.empty in
-  log "deleted-compilers: %s" (OpamCompiler.Set.to_string deleted_compilers);
+  log "deleted-compilers: %a" (slog OpamCompiler.Set.to_string) deleted_compilers;
 
   (* Delete compiler descritions (unless they are still installed) *)
   OpamCompiler.Set.iter (fun comp ->
@@ -189,7 +191,7 @@ let print_updated_dev_packages pinned_packages =
 
 (* Check for updates in pinned packages *)
 let update_dev_packages t ~verbose packages =
-  log "update-dev-packages updates %s" (OpamPackage.Set.to_string packages);
+  log "update-dev-packages updates %a" (slog OpamPackage.Set.to_string) packages;
   let updates = OpamState.update_dev_packages t in
   if verbose then print_updated_dev_packages updates;
   updates
@@ -238,17 +240,17 @@ let fix_package_descriptions t ~verbose =
           true
       ) all_installed in
 
-  log "new-packages     : %s" (OpamPackage.Set.to_string new_packages);
-  log "updated-packages : %s" (OpamPackage.Set.to_string updated_packages);
-  log "changed-packages : %s" (OpamPackage.Set.to_string changed_packages);
-  log "missing-installed: %s" (OpamPackage.Set.to_string missing_installed_packages);
+  log "new-packages     : %a" (slog OpamPackage.Set.to_string) new_packages;
+  log "updated-packages : %a" (slog OpamPackage.Set.to_string) updated_packages;
+  log "changed-packages : %a" (slog OpamPackage.Set.to_string) changed_packages;
+  log "missing-installed: %a" (slog OpamPackage.Set.to_string) missing_installed_packages;
 
   let deleted_packages =
     OpamPackage.Set.filter (fun nv ->
         not (OpamPackage.is_pinned nv                         (* pinned*)
              || OpamPackage.Map.mem nv repo_index)     (* OR available *)
       ) t.packages in
-  log "deleted-packages: %s" (OpamPackage.Set.to_string deleted_packages);
+  log "deleted-packages: %a" (slog OpamPackage.Set.to_string) deleted_packages;
 
   (* Notify only about deleted packages that are installed or were just removed
      (ie ignore the one that were removed from upstream but still have data
@@ -271,7 +273,8 @@ let fix_package_descriptions t ~verbose =
            are not in a testing environment *)
   OpamPackage.Map.iter (fun nv _ ->
       if !OpamGlobals.sync_archives then (
-        log "download %s" (OpamFilename.to_string (OpamPath.archive t.root nv));
+        log "download %a"
+          (slog @@ OpamFilename.to_string @* OpamPath.archive t.root) nv;
         match OpamState.download_archive t nv with
         | None | Some _ -> ()
       )
@@ -302,7 +305,7 @@ let fix_package_descriptions t ~verbose =
           OpamState.package_repository_partial_state t nv ~archive:false in
         checksums_g <> checksums_r
     ) changed_packages in
-  log "packages-to-reinstall: %s" (OpamPackage.Set.to_string changed_packages);
+  log "packages-to-reinstall: %a" (slog OpamPackage.Set.to_string) changed_packages;
 
   (* Update the package descriptions *)
   OpamPackage.Set.iter (fun nv ->
@@ -377,8 +380,9 @@ let update_compiler_index t =
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
 let update_config t repos =
-  log "update-config %s"
-    (OpamMisc.pretty_list (List.map OpamRepositoryName.to_string repos));
+  log "update-config %a"
+    (slog @@ OpamMisc.pretty_list @* List.map OpamRepositoryName.to_string)
+    repos;
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
@@ -394,7 +398,7 @@ let () =
 
 (* Remove any remaining of [repo] from OPAM state *)
 let cleanup t repo =
-   log "cleanup %s" (OpamRepositoryName.to_string repo.repo_name);
+   log "cleanup %a" (slog OpamRepositoryName.to_string) repo.repo_name;
   let repos = OpamRepositoryName.Map.keys t.repositories in
   update_config t (List.filter ((<>) repo.repo_name) repos);
   OpamFilename.rmdir repo.repo_root;
@@ -448,7 +452,7 @@ let add name kind address ~priority:prio =
                            (\"opam remote remove %s\" to revert)"
         (OpamFilename.Dir.to_string repo_dir) (OpamRepositoryName.to_string name)
   );
-  log "Adding %s" (OpamRepository.to_string repo);
+  log "Adding %a" (slog OpamRepository.to_string) repo;
   update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
     let prio = match prio with

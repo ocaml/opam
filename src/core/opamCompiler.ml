@@ -17,6 +17,7 @@
 open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "COMPILER" fmt
+let slog = OpamGlobals.slog
 
 module Version = struct
 
@@ -84,7 +85,7 @@ let of_filename f =
     None
 
 let list dir =
-  log "list %s" (OpamFilename.Dir.to_string dir);
+  log "list %a" (slog OpamFilename.Dir.to_string) dir;
   if OpamFilename.exists_dir dir then (
     let files = OpamFilename.rec_files dir in
     List.fold_left (fun set f ->
@@ -96,7 +97,7 @@ let list dir =
     Set.empty
 
 let prefixes dir =
-  log "prefixes %s" (OpamFilename.Dir.to_string dir);
+  log "prefixes %a" (slog OpamFilename.Dir.to_string) dir;
   if OpamFilename.exists_dir dir then (
     let files = OpamFilename.rec_files dir in
     List.fold_left (fun map f ->

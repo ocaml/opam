@@ -38,6 +38,9 @@ val string_of_atom: atom -> string
     of '=' *)
 val short_string_of_atom: atom -> string
 
+(** Prints atoms as a conjunction ("&") using the short format *)
+val string_of_atoms: atom list -> string
+
 (** Checks if a package verifies an atom *)
 val check: atom -> OpamPackage.t -> bool
 

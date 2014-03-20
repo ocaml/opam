@@ -15,9 +15,11 @@
 (**************************************************************************)
 
 let log fmt = OpamGlobals.log "CONFIG" fmt
+let slog = OpamGlobals.slog
 
 open OpamTypes
 open OpamState.Types
+open OpamMisc.OP
 
 let full_sections l =
   String.concat " " (List.map OpamVariable.Section.Full.to_string l)
@@ -101,7 +103,9 @@ let includes ~is_rec names =
       List.map OpamPackage.name (get_transitive_dependencies t ~depopts:true ~installed:true names)
     else
       names in
-  log "deps: %s" (String.concat ", " (List.map OpamPackage.Name.to_string deps));
+  log "deps: %a"
+    (slog @@ String.concat ", " @* List.map OpamPackage.Name.to_string)
+    deps;
   let includes =
     List.fold_left (fun accu n ->
       "-I" :: OpamFilename.Dir.to_string (OpamPath.Switch.lib t.root t.switch n) :: accu

@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 
 let log fmt = OpamGlobals.log "RSYNC" fmt
+let slog = OpamGlobals.slog
 
 let rsync_arg = "-rLptgoDrvc"
 
@@ -53,8 +54,9 @@ let rsync_dirs src dst =
   | Up_to_date _    -> Up_to_date dst
 
 let rsync_file src dst =
-  log "rsync_file src=%s dst=%s"
-    (OpamFilename.to_string src) (OpamFilename.to_string dst);
+  log "rsync_file src=%a dst=%a"
+    (slog OpamFilename.to_string) src
+    (slog OpamFilename.to_string) dst;
   if OpamFilename.exists src then (
     let lines = OpamSystem.read_command_output [
         "rsync"; rsync_arg; OpamFilename.to_string src; OpamFilename.to_string dst;
@@ -92,7 +94,8 @@ module B = struct
         (OpamPath.Repository.compilers_dir, OpamPath.Repository.remote_compilers_dir);
       ];
     let archives = OpamFilename.files (OpamPath.Repository.archives_dir repo) in
-    log "archives: %s" (OpamMisc.string_of_list OpamFilename.to_string archives);
+    log "archives: %a"
+      (slog (OpamMisc.string_of_list OpamFilename.to_string)) archives;
     List.iter (fun archive ->
         match OpamPackage.of_archive archive with
         | None    ->

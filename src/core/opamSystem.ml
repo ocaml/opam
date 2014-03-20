@@ -302,7 +302,9 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata command =
 
       let r = OpamProcess.run ~env ~name ~verbose ?metadata cmd args in
       let str = String.concat " " (cmd :: args) in
-      log "[%s] (in %.3fs) %s" (Filename.basename name) (chrono ()) str;
+      log "[%a] (in %.3fs) %s"
+        (OpamGlobals.slog Filename.basename) name
+        (chrono ()) str;
       r
     ) else
       (* Display a user-friendly message if the command does not exist *)
