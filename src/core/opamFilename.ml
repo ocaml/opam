@@ -230,6 +230,11 @@ let is_symlink src =
   with Unix.Unix_error _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
+let is_exec file =
+  try OpamSystem.is_exec (to_string file)
+  with Unix.Unix_error _ ->
+    OpamSystem.internal_error "%s does not exist." (to_string file)
+
 let starts_with dirname filename =
   OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 

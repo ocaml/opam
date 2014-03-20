@@ -34,14 +34,35 @@ type global_options = {
   no_aspcud : bool;
   cudf_file : string option;
   solver_preferences : string option;
+  no_self_upgrade : bool;
 }
 
+let self_upgrade_exe opamroot =
+  OpamFilename.OP.(opamroot // "opam")
+
+let switch_to_updated_self debug opamroot =
+  let updated_self = self_upgrade_exe opamroot in
+  let updated_self_str = OpamFilename.to_string updated_self in
+  if updated_self_str <> Sys.executable_name &&
+     OpamFilename.exists updated_self &&
+     OpamFilename.is_exec updated_self then
+    (if debug || !OpamGlobals.debug then
+       Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
+     let env =
+       Array.append
+         [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
+         (Unix.environment ()) in
+     Unix.execve updated_self_str Sys.argv env)
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 no_aspcud cudf_file solver_preferences =
+    no_base_packages compat_mode_1_0 no_aspcud cudf_file solver_preferences
+    no_self_upgrade =
+  if not (no_self_upgrade) then
+    switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file; solver_preferences}
+    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file; solver_preferences;
+    no_self_upgrade; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -67,6 +88,7 @@ let apply_global_options o =
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.no_aspcud;
   OpamGlobals.cudf_file := o.cudf_file;
+  OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
   OpamGlobals.solver_preferences := match o.solver_preferences with None -> !OpamGlobals.solver_preferences | Some v -> v
 
 
@@ -138,6 +160,7 @@ let help_sections = [
   `P "$(i,OPAMDEBUG) see option `--debug'.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
+  `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam config env --root=DIR' when DIR is non-default.";
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
@@ -460,9 +483,14 @@ let global_options =
       "Debug option: Save the CUDF requests sent to the solver to \
        $(docv)-<n>.cudf."
       Arg.(some string) None in
+  let no_self_upgrade =
+    mk_flag ~section ["no-self-upgrade"]
+      "Opam with normally replace itself with a newer version found \
+       at $(b,OPAMROOT/opam). This disables this behaviour." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file $solver_preferences)
+    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file $solver_preferences
+    $no_self_upgrade)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
@@ -864,6 +892,10 @@ let config =
         | Some v -> Printf.sprintf "%s (%s)" version (OpamVersion.to_string v)
       in
       print "opam-version" "%s" version;
+      print "self-upgrade" "%s"
+        (if OpamGlobals.is_self_upgrade
+         then OpamFilename.prettify (self_upgrade_exe (OpamPath.root()))
+         else "no");
       print "os" "%s" (OpamGlobals.os_string ());
       print "external-solver" "%b" (OpamCudf.external_solver_available ());
       try
@@ -905,11 +937,12 @@ let config =
                nprint "local" nlocal @
                nprint "version control" nvc)
           );
-        print "current-switch" "%s"
-          (OpamSwitch.to_string state.switch);
-        print "preinstalled" "%b"
-          (OpamFile.Comp.preinstalled
-             (OpamFile.Comp.read (OpamPath.compiler_comp state.root state.compiler)));
+        print "current-switch" "%s%s"
+          (OpamSwitch.to_string state.switch)
+          (if (OpamFile.Comp.preinstalled
+                 (OpamFile.Comp.read
+                    (OpamPath.compiler_comp state.root state.compiler)))
+           then "*" else "");
         let index_file = OpamFilename.to_string (OpamPath.package_index state.root) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"

@@ -355,6 +355,11 @@ let copy src dst =
   mkdir (Filename.dirname dst);
   command ["cp"; src; dst ]
 
+let is_exec file =
+  let stat = Unix.stat file in
+  stat.Unix.st_kind = Unix.S_REG &&
+  stat.Unix.st_perm land 0o111 <> 0
+
 let install ?exec src dst =
   if Sys.is_directory src then
     internal_error "Cannot install %s: it is a directory." src;
@@ -363,7 +368,7 @@ let install ?exec src dst =
   mkdir (Filename.dirname dst);
   let exec = match exec with
     | Some e -> e
-    | None -> (Unix.stat src).Unix.st_perm land 0o100 <> 0 in
+    | None -> is_exec src in
   command
     ("install" :: "-m" :: (if exec then "0755" else "0644") ::
      [ src; dst ])
