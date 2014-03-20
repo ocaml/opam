@@ -42,6 +42,10 @@ val copy: string -> string -> unit
     permissions of the original file to decide). *)
 val install: ?exec:bool -> string -> string -> unit
 
+(** Checks if a file is an executable (regular file with execution
+    permission) *)
+val is_exec: string -> bool
+
 (** [link src dst] links [src] to [dst]. Remove [dst] if it is a file,
     not a directory. *)
 val link: string -> string -> unit

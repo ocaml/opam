@@ -51,6 +51,13 @@ let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
 let use_external_solver = ref (not !(check "NOASPCUD"))
+let no_self_upgrade  = check "NOSELFUPGRADE"
+
+(* Value set when opam calls itself *)
+let self_upgrade_bootstrapping_value = "bootstrapping"
+let is_self_upgrade =
+  try OpamMisc.getenv "OPAMNOSELFUPGRADE" = self_upgrade_bootstrapping_value
+  with Not_found -> false
 
 let curl_command = try Some (OpamMisc.getenv "OPAMCURL") with Not_found -> None
 

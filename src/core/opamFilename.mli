@@ -156,6 +156,9 @@ val readlink: t -> t
 (** Is a symlink ? *)
 val is_symlink: t -> bool
 
+(** Is an executable ? *)
+val is_exec: t -> bool
+
 (** Copy a file *)
 val copy: src:t -> dst:t -> unit
 
