@@ -35,7 +35,7 @@ with-ocamlbuild: autogen
 	  find src/$$i -type f \( -not -name opamMain.ml \) \
 	                       \( -name \*.ml -or -name \*.mly -or -name \*.mll \)\
 	    | xargs -n 1 basename\
-	    | awk -F. "{ print (toupper(substr(\$$1,0,1)) substr(\$$1,2)) }"\
+	    | ocaml ./shell/modulename_of_mlfilename.ml\
 	    > src/$$i/opam-$$i.mllib &&\
 	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa;\
 	done;\
