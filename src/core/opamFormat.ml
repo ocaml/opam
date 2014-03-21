@@ -147,23 +147,23 @@ let protect_values f values =
 (* Base parsing functions *)
 let parse_bool = function
   | Bool (_,b) -> b
-  | x      -> bad_format ~pos:(value_pos x) "Expecting a bool, got %s" (kind x)
+  | x      -> bad_format ~pos:(value_pos x) "Expected a bool"
 
 let parse_int = function
   | Int (_,i) -> i
-  | x     -> bad_format ~pos:(value_pos x) "Expecting an int, got %s" (kind x)
+  | x     -> bad_format ~pos:(value_pos x) "Expected an int"
 
 let parse_ident = function
   | Ident (_,i) -> i
-  | x       -> bad_format ~pos:(value_pos x) "Expecting an ident, got %s" (kind x)
+  | x       -> bad_format ~pos:(value_pos x) "Expected an ident"
 
 let parse_symbol = function
   | Symbol (_,s) -> s
-  | x        -> bad_format ~pos:(value_pos x) "Expecting a symbol, got %s" (kind x)
+  | x        -> bad_format ~pos:(value_pos x) "Expected a symbol"
 
 let parse_string = function
   | String (_,s) -> s
-  | x        -> bad_format ~pos:(value_pos x) "Expecting a string, got %s" (kind x)
+  | x        -> bad_format ~pos:(value_pos x) "Expected a string"
 
 let parse_list fn =
   let fn = protect_value fn in
@@ -183,7 +183,7 @@ let parse_group fn =
   let fn = protect_value fn in
   function
   | Group (_,g) -> List.rev (List.rev_map fn g)
-  | x       -> bad_format ~pos:(value_pos x) "Expecting a group, got %s" (kind x)
+  | x       -> bad_format ~pos:(value_pos x) "Expected a group"
 
 let parse_option f g =
   let f = protect_value f in
@@ -211,17 +211,17 @@ let parse_string_list =
 let parse_string_pair_of_list = function
   | [String (_,x); String (_,y)] -> (x,y)
   | x                    ->
-    bad_format ?pos:(values_pos x) "Expecting a pair of strings, got %s" (kinds x)
+    bad_format ?pos:(values_pos x) "Expected a pair of strings"
 
 let parse_string_pair = function
   | List (_,[String (_,x); String (_,y)]) -> (x,y)
   | x                         ->
-    bad_format ~pos:(value_pos x) "Expecting a pair of strings, got %s"(kind x)
+    bad_format ~pos:(value_pos x) "Expected a pair of strings"
 
 let parse_single_string = function
   | [String (_,x)] -> x
   | x          ->
-    bad_format ?pos:(values_pos x) "Expecting a single string, got %s" (kinds x)
+    bad_format ?pos:(values_pos x) "Expected a single string"
 
 let parse_pair fa fb =
   let fa = protect_value fa in
@@ -229,14 +229,14 @@ let parse_pair fa fb =
   function
   | List (_,[a; b]) -> (fa a, fb b)
   | x           ->
-    bad_format ~pos:(value_pos x) "Expecting a pair, got %s" (kind x)
+    bad_format ~pos:(value_pos x) "Expected a pair"
 
 let parse_or fns v =
   let dbg = List.map fst fns in
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expecting %s, got %s" (String.concat " or " dbg) (kind v)
+        "Expected %s" (String.concat " or " dbg)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
@@ -249,10 +249,9 @@ let parse_sequence fns v =
     | []          , []     -> []
     | lfns        , l      ->
       bad_format ?pos:(values_pos l)
-        "Expecting %s (%s) got %s"
+        "Expected %s (%s)"
         (String.concat ", " (List.map fst lfns))
-        (String.concat ", " (List.map fst fns))
-        (string_of_values l) in
+        (String.concat ", " (List.map fst fns)) in
   match v with
   | List (_,l) -> aux (fns, l)
   | x      -> aux (fns, [x])
@@ -401,7 +400,7 @@ let rec parse_constraints t =
     Or (Block (parse_constraints g), parse_constraints t)
   | [Group (_,g)]                                     -> Block (parse_constraints g)
   | x -> bad_format ?pos:(values_pos x)
-           "Expecting a list of constraints, got %s" (kinds x)
+           "Expected a list of constraints"
 
 let rec make_constraints t =
   match t with
@@ -423,8 +422,7 @@ let parse_formulas opt t =
     | [x]                    ->
       bad_format ~pos:(value_pos x)
         "Expected a formula list of the \
-         form [ \"item\" {condition}... ], \
-         got %s" (kind x)
+         form [ \"item\" {condition}... ]"
     | e1 :: Symbol (_,"|") :: e2 -> let left = aux [e1] in Or (left, aux e2)
     | e1 :: Symbol (_,"&") :: e2 -> let left = aux [e1] in And (left, aux e2)
     | e1 :: e2 when opt      -> let left = aux [e1] in Or (left, aux e2)
@@ -485,12 +483,12 @@ let parse_compiler_constraint t =
       Atom (parse_relop r, version)
     | [Symbol (pos,r); String (_,v)]       ->
       (try Atom (parse_relop r, OpamCompiler.Version.of_string v)
-       with Invalid_argument _ -> bad_format ~pos "Expecting a relop, got %s" r)
+       with Invalid_argument _ -> bad_format ~pos "Expected a relop")
     | [Group (_,g)]                  -> Block (aux g)
     | e1::e2 :: Symbol (_,"|") :: e3 -> Or (aux [e1;e2], aux e3)
     | e1::e2 :: Symbol (_,"&") :: e3 -> And (aux [e1;e2], aux e3)
     | x -> bad_format ?pos:(values_pos x)
-             "Expecting a compiler constraint, got %s" (kinds x) in
+             "Expected a compiler constraint" in
   match t with
   | List (_,l) -> aux l
   | x      -> aux [x]
@@ -523,7 +521,7 @@ let parse_os_constraint l =
     | String (_,os) :: Symbol (_,"|") :: l               -> Or (pos os, aux l)
     | Symbol (_,"!") :: String (_,os) :: Symbol (_,"|") :: l -> Or (neg os, aux l)
     | l -> bad_format ?pos:(values_pos l)
-             "Expecting an OS constraint, got %s" (kinds l) in
+             "Expected an OS constraint" in
   match l with
   | List (_,l) -> aux l
   | x      -> aux [x]
@@ -574,10 +572,10 @@ let rec parse_filter = function
       | "|"  -> FOr(e,f)
       | "&&"
       | "&"  -> FAnd(e,f)
-      | _    -> bad_format ~pos "Got %s, expecting a valid symbol" s
+      | _    -> bad_format ~pos "Expected a valid symbol" s
     end;
   | x -> bad_format ?pos:(values_pos x)
-           "Got %s, expecting a filter expression" (kinds x)
+           "Expected a filter expression"
 
 let lift = function
   | [x] -> x
@@ -650,7 +648,7 @@ let parse_flag = function
   | Ident (_,"build-dep") -> BuildDep
   | x ->
     bad_format ~pos:(value_pos x)
-      "Expecting a package flag, got %s" (kind x)
+      "Expected a package flag"
 
 (* TAGS *)
 

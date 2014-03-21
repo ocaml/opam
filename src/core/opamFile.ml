@@ -1888,7 +1888,10 @@ module Make (F : F) = struct
         close_in ic;
         log "Read %s in %.3fs" filename (chrono ());
         r
-      with e ->
+      with
+      | Lexer_error _ | Parsing.Parse_error as e ->
+        raise e (* Message already printed *)
+      | e ->
         let pos,msg = match e with
           | OpamFormat.Bad_format (Some pos, msg) -> pos, ":\n  "^msg
           | OpamFormat.Bad_format (None, msg) -> (f,-1,-1), ":\n  "^msg
