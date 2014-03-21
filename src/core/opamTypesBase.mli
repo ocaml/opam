@@ -79,8 +79,12 @@ val pos_null: pos
 (** Prints a file position *)
 val string_of_pos: pos -> string
 
-(** Pretty print *)
-val string_of_symbol: symbol -> string
+val string_of_relop: relop -> string
+val relop_of_string: string -> relop (** Raises Invalid_argument*)
+val string_of_logop: logop -> string
+val logop_of_string: string -> logop (** Raises Invalid_argument*)
+val string_of_pfxop: pfxop -> string
+val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 
 (** Pretty print *)
 val string_of_filter: filter -> string

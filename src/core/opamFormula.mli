@@ -16,7 +16,7 @@
 
 (** Management of formulas *)
 
-(** binary operations *)
+(** binary operations (compatible with the Dose type for Cudf operators !) *)
 type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
 
 (** Pretty-printing of relops *)
@@ -85,17 +85,31 @@ val check_relop: relop -> int -> bool
 (** Evaluate a relational operator between versions *)
 val eval_relop: relop -> OpamPackage.Version.t -> OpamPackage.Version.t -> bool
 
+val neg_relop: relop -> relop
+
 (** Pretty print a formula *)
 val string_of_formula: ('a -> string) -> 'a formula -> string
 
 (** Convert a list of formulas to an AND-formula *)
 val ands: 'a formula list -> 'a formula
 
+(** Converts back an AND-formula to a list (flattens top-level ands) *)
+val ands_to_list: 'a formula -> 'a formula list
+
 (** Convert a list of formulas to an OR-formula *)
 val ors: 'a formula list -> 'a formula
 
-(** Map function *)
+(** Converts back an OR-formula to a list (flattens top-level ors) *)
+val ors_to_list: 'a formula -> 'a formula list
+
+(** Map on atoms *)
 val map: ('a -> 'b formula) -> 'a formula -> 'b formula
+
+(** Maps top-down on a formula *)
+val map_formula: ('a formula -> 'a formula) -> 'a formula -> 'a formula
+
+(** Negates a formula (given the function to negate atoms) *)
+val neg: ('a -> 'a) -> 'a formula -> 'a formula
 
 (** Iter function *)
 val iter: ('a -> unit) -> 'a formula -> unit

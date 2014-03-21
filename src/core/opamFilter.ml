@@ -25,7 +25,7 @@ let rec to_string = function
   | FIdent i   -> i
   | FOp(e,s,f) ->
     Printf.sprintf "%s %s %s"
-      (to_string e) (string_of_symbol s) (to_string f)
+      (to_string e) (string_of_relop s) (to_string f)
   | FAnd (e,f) -> Printf.sprintf "%s & %s" (to_string e) (to_string f)
   | FOr (e,f)  -> Printf.sprintf "%s | %s" (to_string e) (to_string f)
   | FNot e     -> Printf.sprintf "!%s" (to_string e)
@@ -120,14 +120,8 @@ let rec eval env = function
   | FIdent s   -> bool_of_variable_contents s (substitute_ident env s)
   | FOp(e,s,f) ->
     (* We are supposed to compare version strings *)
-    let s = match s with
-      | Eq  -> (fun a b -> Debian.Version.compare a b =  0)
-      | Neq -> (fun a b -> Debian.Version.compare a b <> 0)
-      | Ge  -> (fun a b -> Debian.Version.compare a b >= 0)
-      | Le  -> (fun a b -> Debian.Version.compare a b <= 0)
-      | Gt  -> (fun a b -> Debian.Version.compare a b >  0)
-      | Lt  -> (fun a b -> Debian.Version.compare a b <  0) in
-    s (eval_to_string env e) (eval_to_string env f)
+    OpamFormula.check_relop s
+      (Debian.Version.compare (eval_to_string env e) (eval_to_string env f))
   | FOr(e,f)  -> eval env e || eval env f
   | FAnd(e,f) -> eval env e && eval env f
   | FNot e    -> not (eval env e)
