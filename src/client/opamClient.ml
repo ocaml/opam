@@ -676,7 +676,9 @@ module API = struct
         let (--) = OpamMisc.StringSet.diff in
         let unknown_names = all -- valid_repositories -- valid_names in
         let not_pinned =
-          (OpamMisc.StringSet.inter all valid_names) -- valid_pinned_packages in
+          (OpamMisc.StringSet.inter all valid_names)
+          -- valid_pinned_packages
+          -- valid_repositories in
         OpamMisc.StringSet.elements unknown_names,
         OpamMisc.StringSet.elements not_pinned in
 
@@ -704,16 +706,16 @@ module API = struct
       let valid_pinned_packages =
         match OpamMisc.StringSet.elements valid_pinned_packages with
         | []  -> ""
-        | [s] -> Printf.sprintf " Only %s is currently pinned." s
+        | [s] -> Printf.sprintf "Only %s is currently pinned.\n" s
         | l   ->
           Printf.sprintf
-            " The currently pinned packages are %s."
+            "The currently pinned packages are %s.\n"
             (OpamMisc.pretty_list l) in
       match not_pinned with
       | []  -> ()
       | [s] ->
         OpamGlobals.msg
-          "Cannot update the package %s because it is not pinned.%s\n"
+          "Cannot update the package %s because it is not pinned.\n%s"
           s valid_pinned_packages
       | _   ->
         OpamGlobals.msg
