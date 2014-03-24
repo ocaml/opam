@@ -1314,7 +1314,8 @@ let load_state ?(save_cache=true) call_site =
               try
                 let opam = OpamFile.OPAM.read file in
                 OpamPackage.Map.add nv opam map
-              with OpamFormat.Bad_format _ -> map (* Error printed, continue *)
+              with OpamFormat.Bad_format _
+                 | Lexer_error _ -> map (* Error printed, continue *)
           with
           | Not_found ->
             OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."

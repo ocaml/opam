@@ -18,8 +18,8 @@
 
 open OpamTypes
 
-let get_pos () =
-  let pos = Parsing.symbol_start_pos () in
+let get_pos n =
+  let pos = Parsing.rhs_start_pos n in
   Lexing.(OpamFilename.of_string pos.pos_fname,
           pos.pos_lnum,
           pos.pos_cnum - pos.pos_bol)
@@ -34,11 +34,18 @@ let get_pos () =
 %token LBRACE RBRACE
 %token COLON
 %token <int> INT
-%left LPAR RPAR
-%left LBRACE RBRACE
-%left LBRACKET RBRACKET
-%left STRING IDENT BOOL SYMBOL
+%token <OpamTypes.relop> RELOP
+%token <OpamTypes.logop> LOGOP
+%token <OpamTypes.pfxop> PFXOP
+%token <string> ENVOP
+
 %left COLON
+%left LOGOP
+%nonassoc ENVOP
+%nonassoc PFXOP
+%left LBRACE
+%left RELOP
+%nonassoc URELOP
 
 %start main value
 %type <string -> OpamTypes.file> main
@@ -57,28 +64,33 @@ items:
 ;
 
 item:
-| IDENT COLON value                { Variable (get_pos(), $1, $3) }
+| IDENT COLON value                { Variable (get_pos 1, $1, $3) }
 | IDENT STRING LBRACE items RBRACE {
-  Section (get_pos(),
+  Section (get_pos 1,
            {section_kind=$1; section_name=$2; section_items= $4})
 }
 ;
 
 value:
-| BOOL                       { Bool (get_pos(),$1) }
-| INT                        { Int (get_pos(),$1) }
-| STRING                     { String (get_pos(),$1) }
-| SYMBOL                     { Symbol (get_pos(),$1) }
-| IDENT                      { Ident (get_pos(),$1) }
-| LPAR values RPAR           { Group (get_pos(),$2) }
-| LBRACKET values RBRACKET   { List (get_pos(),$2) }
-| value LBRACE values RBRACE { Option (get_pos(),$1, $3) }
+| BOOL                       { Bool (get_pos 1,$1) }
+| INT                        { Int (get_pos 1,$1) }
+| STRING                     { String (get_pos 1,$1) }
+| value RELOP value          { Relop (get_pos 2,$2,$1,$3) }
+| value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
+| PFXOP value                { Pfxop (get_pos 1,$1,$2) }
+| IDENT                      { Ident (get_pos 1,$1) }
+| RELOP value %prec URELOP   { Prefix_relop (get_pos 1,$1,$2) }
+| value ENVOP value          { Env_binding (get_pos 1,$2,$1,$3) }
+| LPAR values RPAR           { Group (get_pos 1,$2) }
+| LBRACKET values RBRACKET   { List (get_pos 1,$2) }
+| value LBRACE values RBRACE { Option (get_pos 2,$1, $3) }
 ;
 
 values:
 |              { [] }
 | value values { $1 :: $2 }
 ;
+
 
 %%
 

@@ -316,16 +316,16 @@ type user_config = {
 
 (** {2 Filtered commands} *)
 
-(** Symbols *)
-type symbol =
-  | Eq | Neq | Le | Ge | Lt | Gt
+type relop = OpamFormula.relop
+type logop = [ `And | `Or ]
+type pfxop = [ `Not ]
 
 (** Filter *)
 type filter =
   | FBool of bool
   | FString of string
   | FIdent of string
-  | FOp of filter * symbol * filter
+  | FOp of filter * relop * filter
   | FAnd of filter * filter
   | FOr of filter * filter
   | FNot of filter
@@ -351,11 +351,15 @@ type value =
   | Bool of pos * bool
   | Int of pos * int
   | String of pos * string
-  | Symbol of pos * string
+  | Relop of pos * relop * value * value
+  | Prefix_relop of pos * relop * value
+  | Logop of pos * logop * value * value
+  | Pfxop of pos * pfxop * value
   | Ident of pos * string
   | List of pos * value list
   | Group of pos * value list
   | Option of pos * value * value list
+  | Env_binding of pos * string * value * value
 
 (** A file section *)
 type file_section = {

@@ -1675,7 +1675,7 @@ module X = struct
         | Cmd l    -> make_string_list l
         | Camlp4 l ->
           make_list (fun x -> x)
-            (make_symbol "CAMLP4" :: List.rev (List.rev_map make_string l)) in
+            (make_ident "CAMLP4" :: List.rev (List.rev_map make_string l)) in
       let src = match s.kind, s.src with
         | _          , None   -> None
         | Some kind  , Some x -> Some (string_of_repository_kind kind, x)
@@ -1888,7 +1888,10 @@ module Make (F : F) = struct
         close_in ic;
         log "Read %s in %.3fs" filename (chrono ());
         r
-      with e ->
+      with
+      | Lexer_error _ | Parsing.Parse_error as e ->
+        raise e (* Message already printed *)
+      | e ->
         let pos,msg = match e with
           | OpamFormat.Bad_format (Some pos, msg) -> pos, ":\n  "^msg
           | OpamFormat.Bad_format (None, msg) -> (f,-1,-1), ":\n  "^msg

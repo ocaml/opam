@@ -63,9 +63,6 @@ val parse_int: value -> int
 (** Parse an ident *)
 val parse_ident : value -> string
 
-(** Parse a symbol *)
-val parse_symbol : value -> string
-
 (** Parse a string *)
 val parse_string : value -> string
 
@@ -101,9 +98,6 @@ val parse_pair: (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b
     is a debug message. *)
 val parse_or: (string * (value -> 'a)) list -> value -> 'a
 
-(** Parse a sequence of values *)
-val parse_sequence: (string * (value -> 'a)) list -> value -> 'a list
-
 (** {2 Creation functions} *)
 
 (** Create a boolean *)
@@ -114,9 +108,6 @@ val make_int: int -> value
 
 (** Create an ident *)
 val make_ident : string -> value
-
-(** Create a symbol *)
-val make_symbol : string -> value
 
 (** Create a string *)
 val make_string : string -> value

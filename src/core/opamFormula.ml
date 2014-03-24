@@ -31,7 +31,15 @@ let relop_of_string = function
   | ">"  -> `Gt
   | "<=" -> `Leq
   | "<"  -> `Lt
-  | x    -> failwith (x ^ " is not a valid relop")
+  | x    -> raise (Invalid_argument (x ^ " is not a valid relop"))
+
+let neg_relop = function
+  | `Eq -> `Neq
+  | `Neq -> `Eq
+  | `Geq -> `Lt
+  | `Gt -> `Leq
+  | `Leq -> `Gt
+  | `Lt -> `Geq
 
 type version_constraint = relop * OpamPackage.Version.t
 
@@ -106,6 +114,22 @@ let rec map f = function
   | Block x  -> Block (map f x)
   | And(x,y) -> And (map f x, map f y)
   | Or(x,y)  -> Or (map f x, map f y)
+
+let rec map_formula f t =
+  let t = f t in
+  match t with
+  | Block x  -> Block (map_formula f x)
+  | And(x,y) -> And (map_formula f x, map_formula f y)
+  | Or(x,y)  -> Or (map_formula f x, map_formula f y)
+  | x -> x
+
+let neg neg_atom =
+  map_formula
+    (function
+      | And(x,y) -> Or(x,y)
+      | Or(x,y) -> And(x,y)
+      | Atom x -> Atom (neg_atom x)
+      | x -> x)
 
 let rec iter f = function
   | Empty    -> ()
@@ -259,6 +283,11 @@ let ands = function
   | []   -> Empty
   | h::t -> List.fold_left (fun acc elt -> And(acc, elt)) h t
 
+let rec ands_to_list = function
+  | Empty -> []
+  | And (e,f) -> ands_to_list e @ ands_to_list f
+  | x -> [x]
+
 let of_conjunction c =
   of_atom_formula (ands (List.rev_map (fun x -> Atom x) c))
 
@@ -271,6 +300,11 @@ let to_disjunction t =
 let ors = function
   | []   -> Empty
   | h::t -> List.fold_left (fun acc elt -> Or(acc, elt)) h t
+
+let rec ors_to_list = function
+  | Empty -> []
+  | Or (e,f) -> ors_to_list e @ ors_to_list f
+  | x -> [x]
 
 let of_disjunction d =
   of_atom_formula (ors (List.rev_map (fun x -> Atom x) d))

@@ -17,6 +17,7 @@
 {
 
 open OpamParser
+open OpamTypesBase
 
 let newline lexbuf = Lexing.new_line lexbuf
 let error fmt =
@@ -58,10 +59,14 @@ let space  = [' ' '\t' '\r']
 let alpha  = ['a'-'z' 'A'-'Z' '_']
 let digit  = ['0'-'9']
 let char   = ['-' '_' '+']
-let achar  = alpha | digit | char
-let ident  = alpha achar* (':' achar+)?
-let symbol = ['=' '<' '>' '!' '+' '|' '&']+
-let int    = '-'? ['0'-'9']+
+let achar  = (alpha | digit | char)
+let ident  = (alpha achar* (':' achar+)?)
+let relop  = ('!'? '=' | [ '<' '>' ] '='?)
+let logop  = ['|' '&']
+let pfxop  = '!'
+let envop_char = [ '+' ':' ]
+let envop = (envop_char '=' | '=' envop_char '='?)
+let int    = ('-'? ['0'-'9']+)
 
 rule token = parse
 | space  { token lexbuf }
@@ -80,7 +85,10 @@ rule token = parse
 | "false"{ BOOL false }
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
-| symbol { SYMBOL (Lexing.lexeme lexbuf) }
+| relop  { RELOP (relop_of_string (Lexing.lexeme lexbuf)) }
+| logop  { LOGOP (logop_of_string (Lexing.lexeme lexbuf)) }
+| pfxop  { PFXOP (pfxop_of_string (Lexing.lexeme lexbuf)) }
+| envop  { ENVOP (Lexing.lexeme lexbuf) }
 | eof    { EOF }
 | _      { let token = Lexing.lexeme lexbuf in
            error "'%s' is not a valid token" token }

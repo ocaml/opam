@@ -300,6 +300,9 @@ let resolve ?(verbose=true) universe ~requested request =
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let orphan_packages =
     OpamPackage.Set.diff universe.u_installed universe.u_available in
+  let orphan_packages =
+    OpamPackage.Set.filter (fun n -> not (OpamPackage.is_pinned n))
+      orphan_packages in
   let add_orphan_packages u =
     load_cudf_universe universe ~version_map
       (OpamPackage.Set.union orphan_packages

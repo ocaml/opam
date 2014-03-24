@@ -95,21 +95,18 @@ let invalid_fields items fields =
 let is_valid items fields =
   invalid_fields items fields = []
 
-let rec kind = function
-  | Bool (_,b)   -> Printf.sprintf "bool(%b)" b
-  | Int (_,i)    -> Printf.sprintf "int(%d)" i
-  | Ident (_,i)  -> Printf.sprintf "ident(%s)" i
-  | Symbol (_,s) -> Printf.sprintf "symbol(%s)" s
-  | String (_,s) -> Printf.sprintf "string(%S)" s
-  | List (_,l)   -> Printf.sprintf "list(%s)" (kinds l)
-  | Group (_,g)  -> Printf.sprintf "group(%s)" (kinds g)
-  | Option(_,o,l)-> Printf.sprintf "option(%s,%s)" (kind o) (kinds l)
-
-and kinds l =
-  Printf.sprintf "{%s}" (String.concat " " (List.map kind l))
-
 let rec string_of_value = function
-  | Symbol (_,s)
+  | Relop (_,op,l,r) ->
+    Printf.sprintf "%s %s %s"
+      (string_of_value l) (string_of_relop op) (string_of_value r)
+  | Logop (_,op,l,r) ->
+    Printf.sprintf "%s %s %s"
+      (string_of_value l) (string_of_logop op) (string_of_value r)
+  | Pfxop (_,op,r) ->
+    Printf.sprintf "%s %s" (string_of_pfxop op) (string_of_value r)
+  | Prefix_relop (_,op,r) ->
+    Printf.sprintf "%s %s"
+      (string_of_relop op) (string_of_value r)
   | Ident (_,s)     -> Printf.sprintf "%s" s
   | Int (_,i)       -> Printf.sprintf "%d" i
   | Bool (_,b)      -> Printf.sprintf "%b" b
@@ -117,6 +114,8 @@ let rec string_of_value = function
   | List (_,l)      -> Printf.sprintf "[%s]" (string_of_values l)
   | Group (_,g)     -> Printf.sprintf "(%s)" (string_of_values g)
   | Option(_,v,l)   -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
+  | Env_binding (_,op,id,v) ->
+    Printf.sprintf "[ %s %s %s ]" (string_of_value id) op (string_of_value v)
 
 and string_of_values l =
   String.concat " " (List.rev (List.rev_map string_of_value l))
@@ -126,8 +125,11 @@ let is_list = function
   | _      -> false
 
 let value_pos = function
-  | Bool (pos, _) | Int (pos, _) | String (pos, _) | Symbol (pos, _)
+  | Bool (pos, _) | Int (pos, _) | String (pos, _)
+  | Logop (pos, _, _, _) | Pfxop (pos, _, _)
+  | Relop (pos, _, _, _) | Prefix_relop (pos, _, _)
   | Ident (pos, _) | List (pos, _) | Group (pos, _) | Option (pos, _, _)
+  | Env_binding (pos, _, _, _)
     -> pos
 
 let protect_value f value =
@@ -147,23 +149,19 @@ let protect_values f values =
 (* Base parsing functions *)
 let parse_bool = function
   | Bool (_,b) -> b
-  | x      -> bad_format ~pos:(value_pos x) "Expecting a bool, got %s" (kind x)
+  | x      -> bad_format ~pos:(value_pos x) "Expected a bool"
 
 let parse_int = function
   | Int (_,i) -> i
-  | x     -> bad_format ~pos:(value_pos x) "Expecting an int, got %s" (kind x)
+  | x     -> bad_format ~pos:(value_pos x) "Expected an int"
 
 let parse_ident = function
   | Ident (_,i) -> i
-  | x       -> bad_format ~pos:(value_pos x) "Expecting an ident, got %s" (kind x)
-
-let parse_symbol = function
-  | Symbol (_,s) -> s
-  | x        -> bad_format ~pos:(value_pos x) "Expecting a symbol, got %s" (kind x)
+  | x       -> bad_format ~pos:(value_pos x) "Expected an ident"
 
 let parse_string = function
   | String (_,s) -> s
-  | x        -> bad_format ~pos:(value_pos x) "Expecting a string, got %s" (kind x)
+  | x        -> bad_format ~pos:(value_pos x) "Expected a string"
 
 let parse_list fn =
   let fn = protect_value fn in
@@ -183,7 +181,7 @@ let parse_group fn =
   let fn = protect_value fn in
   function
   | Group (_,g) -> List.rev (List.rev_map fn g)
-  | x       -> bad_format ~pos:(value_pos x) "Expecting a group, got %s" (kind x)
+  | x       -> bad_format ~pos:(value_pos x) "Expected a group"
 
 let parse_option f g =
   let f = protect_value f in
@@ -211,17 +209,17 @@ let parse_string_list =
 let parse_string_pair_of_list = function
   | [String (_,x); String (_,y)] -> (x,y)
   | x                    ->
-    bad_format ?pos:(values_pos x) "Expecting a pair of strings, got %s" (kinds x)
+    bad_format ?pos:(values_pos x) "Expected a pair of strings"
 
 let parse_string_pair = function
   | List (_,[String (_,x); String (_,y)]) -> (x,y)
   | x                         ->
-    bad_format ~pos:(value_pos x) "Expecting a pair of strings, got %s"(kind x)
+    bad_format ~pos:(value_pos x) "Expected a pair of strings"
 
 let parse_single_string = function
   | [String (_,x)] -> x
   | x          ->
-    bad_format ?pos:(values_pos x) "Expecting a single string, got %s" (kinds x)
+    bad_format ?pos:(values_pos x) "Expected a single string"
 
 let parse_pair fa fb =
   let fa = protect_value fa in
@@ -229,39 +227,22 @@ let parse_pair fa fb =
   function
   | List (_,[a; b]) -> (fa a, fb b)
   | x           ->
-    bad_format ~pos:(value_pos x) "Expecting a pair, got %s" (kind x)
+    bad_format ~pos:(value_pos x) "Expected a pair"
 
 let parse_or fns v =
   let dbg = List.map fst fns in
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expecting %s, got %s" (String.concat " or " dbg) (kind v)
+        "Expected %s" (String.concat " or " dbg)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
   aux fns
 
-let parse_sequence fns v =
-  let fns = List.map (fun (a,f) -> a, protect_value f) fns in
-  let rec aux = function
-    | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
-    | []          , []     -> []
-    | lfns        , l      ->
-      bad_format ?pos:(values_pos l)
-        "Expecting %s (%s) got %s"
-        (String.concat ", " (List.map fst lfns))
-        (String.concat ", " (List.map fst fns))
-        (string_of_values l) in
-  match v with
-  | List (_,l) -> aux (fns, l)
-  | x      -> aux (fns, [x])
-
 let make_string str = String (pos_null,str)
 
 let make_ident str = Ident (pos_null,str)
-
-let make_symbol str = Symbol (pos_null,str)
 
 let make_bool b = Bool (pos_null,b)
 
@@ -283,8 +264,18 @@ let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 
-let rec pretty_string_of_value depth ~simplify ~indent = function
-  | Symbol (_,s)    -> s
+let rec pretty_string_of_value depth ~simplify ~indent value =
+  let psov =
+    pretty_string_of_value (depth + 1) ~simplify ~indent in
+  match value with
+  | Logop (_,op,l,r) ->
+    Printf.sprintf "%s %s %s" (psov l) (string_of_logop op) (psov r)
+  | Pfxop (_,op,r) ->
+    Printf.sprintf "%s %s" (string_of_pfxop op) (psov r)
+  | Relop (_,op,l,r) ->
+    Printf.sprintf "%s %s %s" (psov l) (string_of_relop op) (psov r)
+  | Prefix_relop (_,op,r) ->
+    Printf.sprintf "%s %s" (string_of_relop op) (psov r)
   | Ident (_,s)     ->
     if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
     then Printf.sprintf "\"%%{%s}%%\"" s
@@ -305,6 +296,8 @@ let rec pretty_string_of_value depth ~simplify ~indent = function
     Printf.sprintf "%s {%s}"
       (pretty_string_of_value depth ~simplify ~indent v)
       (pretty_string_of_values depth ~simplify ~indent l)
+  | Env_binding (_,op,l,r) ->
+    Printf.sprintf "[ %s %s %s ]" (psov l) op (psov r)
 
 and pretty_string_of_list depth ~simplify ~indent = function
   | []                             -> "[]"
@@ -386,65 +379,66 @@ let make_variable (k, v) = Variable (pos_null, k, v)
 
 (* Parse any constraint list *)
 let rec parse_constraints t =
-  let version = OpamPackage.Version.of_string in
-  let relop = OpamFormula.relop_of_string in
-  match t with
-  | []                                            -> Empty
-  | (Symbol (_,r)) :: (String (_,v)) :: []                -> Atom (relop r, version v)
-  | (Symbol (_,r)) :: (String (_,v)) :: (Symbol (_,"&")) :: t ->
-    And (Atom (relop r, version v), parse_constraints t)
-  | (Symbol (_,r)) :: (String (_,v)) :: (Symbol (_,"|")) :: t ->
-    Or (Atom (relop r, version v),  parse_constraints t)
-  | (Group (_,g)) :: (Symbol (_,"&")) :: t                ->
-    And (Block (parse_constraints g), parse_constraints t)
-  | (Group (_,g)) :: (Symbol (_,"|")) :: t                ->
-    Or (Block (parse_constraints g), parse_constraints t)
-  | [Group (_,g)]                                     -> Block (parse_constraints g)
-  | x -> bad_format ?pos:(values_pos x)
-           "Expecting a list of constraints, got %s" (kinds x)
+  let rec aux = function
+    | Prefix_relop (_, op, (String (_,v))) ->
+      Atom (op, OpamPackage.Version.of_string v)
+    | Logop (_, `And, l, r) ->
+      And (aux l, aux r)
+    | Logop (_, `Or, l, r) ->
+      Or (aux l, aux r)
+    | Pfxop (_,`Not,v) ->
+      OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
+    | Group (_, g) ->
+      Block (parse_constraints g)
+    | x -> bad_format ~pos:(value_pos x) "Expected a list of constraints"
+  in
+  OpamFormula.ands (List.map aux t)
+
+let lift_list = function
+  | List (_, l) -> l
+  | x -> [x]
 
 let rec make_constraints t =
+  let rec aux = function
+    | Empty       -> assert false
+    | Atom (r, v) -> Prefix_relop (pos_null, r,
+                                   make_string (OpamPackage.Version.to_string v))
+    | And (x, y)  -> Logop (pos_null, `And, aux x, aux y)
+    | Or (x, y)   -> Logop (pos_null, `Or, aux x, aux y)
+    | Block g     -> Group (pos_null, make_constraints g)
+  in
   match t with
-  | Empty       -> []
-  | Atom (r, v) -> [Symbol (pos_null,OpamFormula.string_of_relop r);
-                    String (pos_null,OpamPackage.Version.to_string v)]
-  | And (x, y)  -> make_constraints x @ [make_symbol "&"] @ make_constraints y
-  | Or (x, y)   -> make_constraints x @ [make_symbol "|"] @ make_constraints y
-  | Block g     -> [Group (pos_null,make_constraints g)]
+  | Empty -> []
+  | t -> [aux t]
 
 (* parse a list of formulas *)
-let parse_formulas opt t =
+let rec parse_formulas opt t =
   let name = OpamPackage.Name.of_string in
   let rec aux = function
-    | []                     -> Empty
-    | [String (_,n)]             -> Atom (name n, Empty)
-    | [Option(_, String (_,n), g)]  -> Atom (name n, parse_constraints g)
-    | [Group (_,g)]              -> Block (aux g)
-    | [x]                    ->
+    | String (_,n) -> Atom (name n, Empty)
+    | Option (_, String (_,n), g) -> Atom (name n, parse_constraints g)
+    | Group (_,g) -> Block (parse_formulas opt (List (pos_null, g)))
+    | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
+    | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
+    | x ->
       bad_format ~pos:(value_pos x)
-        "Expected a formula list of the \
-         form [ \"item\" {condition}... ], \
-         got %s" (kind x)
-    | e1 :: Symbol (_,"|") :: e2 -> let left = aux [e1] in Or (left, aux e2)
-    | e1 :: Symbol (_,"&") :: e2 -> let left = aux [e1] in And (left, aux e2)
-    | e1 :: e2 when opt      -> let left = aux [e1] in Or (left, aux e2)
-    | e1 :: e2               -> let left = aux [e1] in And (left, aux e2) in
-  match t with
-  | List (_,l) -> aux l
-  | x      -> aux [x]
+        "Expected a formula list of the form [ \"item\" {condition}... ]"
+  in
+  OpamFormula.(if opt then ors else ands)
+    (List.map aux (lift_list t))
 
-let make_formulas opt t =
+let rec make_formulas opt t =
   let name = OpamPackage.Name.to_string in
   let rec aux = function
-    | Empty             -> []
-    | Atom (n, Empty)   -> [make_string (name n)]
-    | Atom (n, cs)      -> [Option (pos_null, make_string (name n), make_constraints cs)]
-    | Block f           -> [Group (pos_null,aux f)]
-    | And(e,f) when opt -> aux e @ [make_symbol "&"] @ aux f
-    | And(e,f)          -> aux e @ aux f
-    | Or(e,f) when opt  -> aux e @ aux f
-    | Or(e,f)           -> aux e @ [make_symbol "|"] @ aux f in
-  List (pos_null, aux t)
+    | Empty             -> assert false
+    | Atom (n, Empty)   -> make_string (name n)
+    | Atom (n, cs)      -> Option (pos_null, make_string (name n), make_constraints cs)
+    | Block f           -> Group (pos_null, lift_list (make_formulas opt f))
+    | And(e,f)          -> Logop (pos_null, `And, aux e, aux f)
+    | Or(e,f)           -> Logop (pos_null, `Or, aux e, aux f)
+  in
+  let to_list = OpamFormula.(if opt then ors_to_list else ands_to_list) in
+  List (pos_null, List.map aux (to_list t))
 
 let make_formula =
   make_formulas false
@@ -458,126 +452,91 @@ let parse_opt_formula =
 let make_opt_formula =
   make_formulas true
 
-let parse_relop = function
-  | "="  -> `Eq
-  | ">=" -> `Geq
-  | ">"  -> `Gt
-  | "<=" -> `Leq
-  | "<"  -> `Lt
-  | "!"  -> `Neq
-  | _    -> invalid_arg "parse_relop"
-
-let string_of_relop = function
-  | `Eq  -> "="
-  | `Geq -> ">="
-  | `Gt  -> ">"
-  | `Leq -> "<="
-  | `Lt  -> "<"
-  | `Neq -> "!"
-  | _    -> invalid_arg "parse_relop"
-
-let parse_compiler_constraint t =
+let rec parse_compiler_constraint t =
   let rec aux = function
-    | []                         -> Empty
-    | [Symbol (_,r); Ident (_,v)] when
-        v = OpamCompiler.to_string OpamCompiler.system ->
-      let version = OpamCompiler.Version.of_string v in
-      Atom (parse_relop r, version)
-    | [Symbol (pos,r); String (_,v)]       ->
-      (try Atom (parse_relop r, OpamCompiler.Version.of_string v)
-       with Invalid_argument _ -> bad_format ~pos "Expecting a relop, got %s" r)
-    | [Group (_,g)]                  -> Block (aux g)
-    | e1::e2 :: Symbol (_,"|") :: e3 -> Or (aux [e1;e2], aux e3)
-    | e1::e2 :: Symbol (_,"&") :: e3 -> And (aux [e1;e2], aux e3)
-    | x -> bad_format ?pos:(values_pos x)
-             "Expecting a compiler constraint, got %s" (kinds x) in
-  match t with
-  | List (_,l) -> aux l
-  | x      -> aux [x]
+    | Prefix_relop (_, op, Ident (_,v))
+      when v = OpamCompiler.to_string OpamCompiler.system ->
+      Atom (op, OpamCompiler.Version.of_string v)
+    | Prefix_relop (_, op, String (_,v)) ->
+      Atom (op, OpamCompiler.Version.of_string v)
+    | Group (_, g) -> Block (parse_compiler_constraint (List (pos_null,g)))
+    | Logop (_, `Or, e1, e2) -> Or (aux e1, aux e2)
+    | Logop (_, `And, e1, e2) -> And (aux e1, aux e2)
+    | Pfxop (_,`Not,v) ->
+      OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
+    | x -> bad_format ~pos:(value_pos x)
+             "Expected a compiler constraint" in
+  OpamFormula.ors (List.map aux (lift_list t))
 
-let make_compiler_constraint t =
+let rec make_compiler_constraint t =
   let rec aux = function
-    | Empty       -> []
-    | Atom (r, v) ->
-      let mk version = [ make_symbol (string_of_relop r); version ] in
+    | Empty -> assert false
+    | Atom (op, v) ->
       let system = OpamCompiler.to_string OpamCompiler.system in
-      if OpamCompiler.Version.to_string v = system then
-        mk (make_ident system)
-      else
-        mk (make_string (OpamCompiler.Version.to_string v))
-    | Block f     -> [Group (pos_null,aux f)]
-    | And(e,f)    -> aux e @ [make_symbol "&"] @ aux f
-    | Or(e,f)     -> aux e @ [make_symbol "|"] @ aux f in
-  List (pos_null, aux t)
+      let v =
+        if OpamCompiler.Version.to_string v = system then make_ident system
+        else make_string (OpamCompiler.Version.to_string v) in
+      Prefix_relop (pos_null,op,v)
+    | Block f     -> Group (pos_null, lift_list (make_compiler_constraint f))
+    | And(e,f)    -> Logop (pos_null, `And, aux e,  aux f)
+    | Or(e,f)     -> Logop (pos_null, `Or, aux e,  aux f) in
+  match t with
+  | Empty -> List (pos_null, [])
+  | t -> List (pos_null, List.map aux (OpamFormula.ors_to_list t))
 
-let parse_os_constraint l =
-  let pos s = Atom (true, s) in
-  let neg s = Atom (false, s) in
+let rec parse_os_constraint l =
   let rec aux = function
-    | []                                         -> Empty
-    | [Group (_,g)]                                  -> Block (aux g)
-    | [String (_,os)]                                -> pos os
-    | [Symbol (_,"!"); String (_,os)]                    -> neg os
-    | String (_,os) :: Symbol (_,"&") :: l               -> And (pos os, aux l)
-    | Symbol (_,"!") :: String (_,os) :: Symbol (_,"&") :: l -> And (neg os, aux l)
-    | String (_,os) :: Symbol (_,"|") :: l               -> Or (pos os, aux l)
-    | Symbol (_,"!") :: String (_,os) :: Symbol (_,"|") :: l -> Or (neg os, aux l)
-    | l -> bad_format ?pos:(values_pos l)
-             "Expecting an OS constraint, got %s" (kinds l) in
-  match l with
-  | List (_,l) -> aux l
-  | x      -> aux [x]
+    | Group (_,g) -> Block (parse_os_constraint (List (pos_null,g)))
+    | String (_,os) -> Atom (true, os)
+    | Logop (_,`And,l,r) -> And (aux l, aux r)
+    | Logop (_,`Or,l,r) -> Or (aux l, aux r)
+    | Pfxop (_,`Not,v) ->
+      OpamFormula.neg (fun (b, s) -> (not b, s)) (aux v)
+    | x -> bad_format ~pos:(value_pos x) "Expected an OS constraint" in
+  OpamFormula.ors (List.map aux (lift_list l))
 
-let make_os_constraint l =
+let rec make_os_constraint l =
   let rec aux = function
-    | Empty            -> []
-    | Atom (true , os) -> [make_string os]
-    | Atom (false, os) -> [make_symbol "!"; make_string os]
-    | Block g          -> [Group (pos_null,aux g)]
-    | And(e,f)         -> aux e @ [make_symbol "&"] @ aux f
-    | Or(e,f)          -> aux e @ [make_symbol "|"] @ aux f in
-  List (pos_null, aux l)
-
-let parse_env_variable v =
-  let l = parse_sequence [
-      ("ident" , parse_ident);
-      ("symbol", parse_symbol);
-      ("string", parse_string);
-    ] v in
+    | Empty            -> assert false
+    | Atom (true , os) -> make_string os
+    | Atom (false, os) -> Pfxop (pos_null, `Not, make_string os)
+    | Block g          -> Group (pos_null, lift_list (make_os_constraint g))
+    | And(e,f)         -> Logop (pos_null, `And, aux e, aux f)
+    | Or(e,f)          -> Logop (pos_null, `Or, aux e, aux f) in
   match l with
-  | [ident; symbol; string] -> (ident, symbol, string)
-  | _ -> assert false
+  | Empty -> List (pos_null, [])
+  | l -> List (pos_null, List.map aux (OpamFormula.ors_to_list l))
 
-let make_env_variable (ident, symbol, string) =
-  List (pos_null,[make_ident ident; make_symbol symbol; make_string string])
+let parse_env_variable l =
+  let aux = function
+    | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, "=", s
+    | Env_binding (_, op, Ident (_,i), String (_,s)) -> i, op, s
+    | x -> bad_format ~pos:(value_pos x) "Expected an \"ident = string\" binding"
+  in
+  match l with List (_,[x]) | x -> aux x
+
+let make_env_variable (ident, op, string) =
+  Env_binding (pos_null, op, make_ident ident, make_string string)
 
 (* Filters *)
 
-let rec parse_filter = function
-  | []                   -> FBool true
-  | [Bool (_,b)]         -> FBool b
-  | [String (_,s)]       -> FString s
-  | [Ident (_,s)]        -> FIdent s
-  | [Group (_,g)]        -> parse_filter g
-  | [Symbol (_,"!"); f]  -> FNot (parse_filter [f])
-  | [e; Symbol (pos,s); f] ->
-    let e = parse_filter [e] in
-    let f = parse_filter [f] in
-    begin match s with
-      | "="  -> FOp(e,Eq,f)
-      | "!=" -> FOp(e,Neq,f)
-      | ">=" -> FOp(e,Ge,f)
-      | "<=" -> FOp(e,Le,f)
-      | ">"  -> FOp(e,Gt,f)
-      | "<"  -> FOp(e,Lt,f)
-      | "||"
-      | "|"  -> FOr(e,f)
-      | "&&"
-      | "&"  -> FAnd(e,f)
-      | _    -> bad_format ~pos "Got %s, expecting a valid symbol" s
-    end;
-  | x -> bad_format ?pos:(values_pos x)
-           "Got %s, expecting a filter expression" (kinds x)
+let rec parse_filter l =
+  let rec aux = function
+    | Bool (_,b)         -> FBool b
+    | String (_,s)       -> FString s
+    | Ident (_,s)        -> FIdent s
+    | Group (_,g)        -> parse_filter g
+    | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
+    | Pfxop (_,`Not,e) -> FNot (aux e)
+    | Logop(_,`And,e,f)-> FAnd (aux e, aux f)
+    | Logop(_,`Or, e,f)-> FOr (aux e, aux f)
+    | x -> bad_format ~pos:(value_pos x) "Expected a filter expression"
+  in
+  match l with
+  | [] -> FBool true
+  | [f] -> aux f
+  | x::_ ->
+    bad_format ~pos:(value_pos x) "Expected a single filter expression"
 
 let lift = function
   | [x] -> x
@@ -585,24 +544,17 @@ let lift = function
     let pos = match values_pos l with Some p -> p | None -> pos_null in
     Group (pos, l)
 
-let rec make_filter = function
-  | FString s  -> [make_string s]
-  | FIdent s   -> [make_ident s]
-  | FBool b    -> [make_bool b]
-  | FOp(e,s,f) ->
-    let s = make_symbol (string_of_symbol s) in
-    let e = lift (make_filter e) in
-    let f = lift (make_filter f) in
-    [ e; s; f]
-  | FOr(e,f) ->
-    let e = lift (make_filter e) in
-    let f = lift (make_filter f) in
-    [ e; make_symbol "|"; f]
-  | FAnd(e,f) ->
-    let e = lift (make_filter e) in
-    let f = lift (make_filter f) in
-    [ e; make_symbol "&"; f ]
-  | FNot f -> [make_symbol "!"; lift (make_filter f)]
+let make_filter f =
+  let rec aux = function
+    | FString s  -> make_string s
+    | FIdent s   -> make_ident s
+    | FBool b    -> make_bool b
+    | FOp(e,s,f) -> Relop (pos_null, s, aux e, aux f)
+    | FOr(e,f) -> Logop (pos_null, `Or, aux e, aux f)
+    | FAnd(e,f) -> Logop (pos_null, `And, aux e, aux f)
+    | FNot f -> Pfxop (pos_null, `Not, aux f)
+  in
+  [aux f]
 
 let make_simple_arg = function
   | CString s -> make_string s
@@ -642,15 +594,15 @@ let parse_messages =
   parse_list parse_message
 
 let make_flag = function
-  | LightUninstall -> make_symbol "light-uninstall"
-  | BuildDep -> make_symbol "build-dep"
+  | LightUninstall -> make_ident "light-uninstall"
+  | BuildDep -> make_ident "build-dep"
 
 let parse_flag = function
   | Ident (_,"light-uninstall") -> LightUninstall
   | Ident (_,"build-dep") -> BuildDep
   | x ->
     bad_format ~pos:(value_pos x)
-      "Expecting a package flag, got %s" (kind x)
+      "Expected a package flag"
 
 (* TAGS *)
 

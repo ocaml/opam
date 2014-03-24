@@ -257,10 +257,11 @@ let atom =
       let sversion = Re_str.matched_group 3 str in
       let name = OpamPackage.Name.of_string sname in
       let sop = if sop = "." then "=" else sop in
-      let op = OpamFormula.relop_of_string sop in (* may raise Failure *)
+      let op = OpamFormula.relop_of_string sop in (* may raise Invalid_argument *)
       let version = OpamPackage.Version.of_string sversion in
       `Ok (name, Some (op, version))
-    with Failure _ -> `Ok (OpamPackage.Name.of_string str, None)
+    with Failure _ | Invalid_argument _ ->
+      `Ok (OpamPackage.Name.of_string str, None)
   in
   let print ppf atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
