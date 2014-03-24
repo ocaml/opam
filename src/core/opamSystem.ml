@@ -483,7 +483,10 @@ let flock file =
   let rec loop () =
     if Sys.file_exists file && !l < max_l then begin
       let ic = open_in file in
-      let pid = input_line ic in
+      let pid =
+        try input_line ic
+        with End_of_file -> internal_error "flock: %s corrupt" file
+      in
       close_in ic;
       OpamGlobals.msg
         "Another process (%s) has already locked %S. Retrying in 1s (%d/%d)\n"
@@ -507,7 +510,10 @@ let funlock file =
   if Sys.file_exists file then (
     let ic = open_in file in
     try
-      let s = input_line ic in
+      let s =
+        try input_line ic
+        with End_of_file -> internal_error "funlock: %s corrupt" file
+      in
       close_in ic;
       if s = id then (
         log "unlocking %s (%s)" file id;
