@@ -26,7 +26,7 @@ let get_pos n =
 
 %}
 
-%token <string> STRING IDENT SYMBOL
+%token <string> STRING IDENT
 %token <bool> BOOL
 %token EOF
 %token LBRACKET RBRACKET
@@ -40,11 +40,12 @@ let get_pos n =
 %token <string> ENVOP
 
 %left COLON
+%left ATOM
 %left LOGOP
 %nonassoc ENVOP
 %nonassoc PFXOP
-%left LBRACE
-%left RELOP
+%left LBRACE RBRACE
+%nonassoc RELOP
 %nonassoc URELOP
 
 %start main value
@@ -72,25 +73,28 @@ item:
 ;
 
 value:
-| BOOL                       { Bool (get_pos 1,$1) }
-| INT                        { Int (get_pos 1,$1) }
-| STRING                     { String (get_pos 1,$1) }
-| value RELOP value          { Relop (get_pos 2,$2,$1,$3) }
-| value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
-| PFXOP value                { Pfxop (get_pos 1,$1,$2) }
-| IDENT                      { Ident (get_pos 1,$1) }
-| RELOP value %prec URELOP   { Prefix_relop (get_pos 1,$1,$2) }
-| value ENVOP value          { Env_binding (get_pos 1,$2,$1,$3) }
+| atom            %prec ATOM { $1 }
 | LPAR values RPAR           { Group (get_pos 1,$2) }
 | LBRACKET values RBRACKET   { List (get_pos 1,$2) }
 | value LBRACE values RBRACE { Option (get_pos 2,$1, $3) }
+| value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
+| atom RELOP atom            { Relop (get_pos 2,$2,$1,$3) }
+| atom ENVOP atom            { Env_binding (get_pos 1,$2,$1,$3) }
+| PFXOP value                { Pfxop (get_pos 1,$1,$2) }
+| RELOP atom                 { Prefix_relop (get_pos 1,$1,$2) }
 ;
 
 values:
-|              { [] }
-| value values { $1 :: $2 }
+|                            { [] }
+| value values               { $1 :: $2 }
 ;
 
+atom:
+| IDENT                      { Ident (get_pos 1,$1) }
+| BOOL                       { Bool (get_pos 1,$1) }
+| INT                        { Int (get_pos 1,$1) }
+| STRING                     { String (get_pos 1,$1) }
+;
 
 %%
 
