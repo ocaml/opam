@@ -1068,7 +1068,7 @@ let update =
        packages." in
   let upgrade =
     mk_flag ["u";"upgrade"]
-      "Automatically run $(b,opam upgrade --yes) after the update." in
+      "Automatically run $(b,opam upgrade) after the update." in
   let update global_options jobs json repositories repos_only sync upgrade =
     apply_global_options global_options;
     json_update json;
