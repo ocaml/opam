@@ -295,12 +295,10 @@ let is_pinned t n =
 
 (* is the current package locally pinned *)
 let is_locally_pinned t name =
-  if OpamPackage.Name.Map.mem name t.pinned then
-    match OpamPackage.Name.Map.find name t.pinned with
+  try match OpamPackage.Name.Map.find name t.pinned with
     | Version _ -> false
     | _ -> true
-  else
-    false
+  with Not_found -> false
 
 let locally_pinned_package t n =
   let option = OpamPackage.Name.Map.find n t.pinned in
@@ -833,20 +831,20 @@ let unavailable_reason t (name, _ as atom) =
             (string_of_filter (OpamFile.OPAM.available opam))
         ]) in
     match r with
-    | [] -> "."
+    | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
     | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) " - ") rs) in
   try
+    Printf.sprintf
+      "%s is not available%s"
+      (OpamFormula.short_string_of_atom atom)
+      (reasons ())
+  with Not_found -> try
     let pin = OpamPackage.Name.Map.find name t.pinned in
     Printf.sprintf
       "%s is not available because the package is pinned to %s."
       (OpamFormula.short_string_of_atom atom)
       (string_of_pin_option pin)
-  with Not_found -> try
-      Printf.sprintf
-        "%s is not available%s"
-        (OpamFormula.short_string_of_atom atom)
-        (reasons ())
   with Not_found ->
     unknown_package t atom
 

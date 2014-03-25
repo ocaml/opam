@@ -20,6 +20,7 @@ let slog = OpamGlobals.slog
 open OpamTypes
 open OpamFilename.OP
 open OpamState.Types
+open OpamMisc.OP
 
 module PackageActionGraph = OpamSolver.ActionGraph
 
@@ -257,19 +258,20 @@ let prepare_package_build t nv =
 let download_package t nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
 
-  if !OpamGlobals.dryrun || !OpamGlobals.fake then ()
-  else if OpamState.is_locally_pinned t (OpamPackage.name nv) then
-    let dir = OpamPath.Switch.dev_package t.root t.switch nv in
-    let _ = OpamState.download_upstream t nv dir in
-    ()
-  else
-  let nv = OpamState.pinning_version t nv in
-  match OpamState.download_archive t nv with
-  | Some f -> assert (f = OpamPath.archive t.root nv)
-  | None   ->
-    let dir = OpamPath.dev_package t.root nv in
-    let _ = OpamState.download_upstream t nv dir in
-    ()
+  if !OpamGlobals.dryrun || !OpamGlobals.fake then () else
+  try match OpamPackage.Name.Map.find (OpamPackage.name nv) t.pinned with
+    | Version _ ->
+      let dir = OpamPath.dev_package t.root nv in
+      ignore @@ OpamState.download_upstream t nv dir
+    | _ ->
+      let dir = OpamPath.Switch.dev_package t.root t.switch nv in
+      ignore @@ OpamState.download_upstream t nv dir
+  with Not_found ->
+    match OpamState.download_archive t nv with
+    | Some f -> assert (f = OpamPath.archive t.root nv)
+    | None ->
+      let dir = OpamPath.dev_package t.root nv in
+      ignore (OpamState.download_upstream t nv dir)
 
 let extract_package t nv =
   log "extract_package: %a" (slog OpamPackage.to_string) nv;
@@ -280,7 +282,7 @@ let extract_package t nv =
 
   let extract_and_copy_files dir =
     let () = match OpamFilename.files dir with
-      | [] -> ()
+      | [] -> log "No files found"
       | [f] ->
         log "archive %a => extracting" (slog OpamFilename.to_string) f;
         OpamFilename.extract_generic_file (F f) build_dir
@@ -292,7 +294,8 @@ let extract_package t nv =
 
   if OpamState.is_locally_pinned t (OpamPackage.name nv) then
     extract_and_copy_files (OpamPath.Switch.dev_package t.root t.switch nv)
-  else if OpamFilename.exists (OpamPath.archive t.root nv) then
+  else if OpamFilename.exists (OpamPath.archive t.root nv) &&
+          not (OpamPackage.is_pinned nv) then
     OpamFilename.extract (OpamPath.archive t.root nv) build_dir
   else
     extract_and_copy_files (OpamPath.dev_package t.root nv);
@@ -601,7 +604,7 @@ let remove_all_packages t ~metadata sol =
    Assumes the package has already been downloaded to [p_build].
  *)
 let build_and_install_package_aux t ~metadata nv =
-  OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv);
+  (* OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv); *)
 
   let exec =
     extract_package t nv;

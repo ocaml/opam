@@ -33,9 +33,11 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
     | To_change (None, p)   ->
       Printf.sprintf "install   %s" (P.to_string p)
     | To_change (Some o, p) ->
+      let vo = P.version_to_string o and vp = P.version_to_string p in
       Printf.sprintf "%s %s from %s to %s"
-        (if P.compare o p < 0 then "upgrade  " else "downgrade")
-        (P.name_to_string o) (P.version_to_string o) (P.version_to_string p)
+        (if vo = "pinned" || vp = "pinned" then "switch   "
+         else if P.compare o p < 0 then "upgrade  " else "downgrade")
+        (P.name_to_string o) vo vp
     | To_recompile p -> Printf.sprintf "recompile %s" (P.to_string p)
     | To_delete p    -> Printf.sprintf "remove    %s" (P.to_string p)
 end

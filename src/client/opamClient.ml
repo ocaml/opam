@@ -140,9 +140,8 @@ let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
 
   if not (OpamPackage.Set.is_empty t.packages)
   && OpamPackage.Name.Map.is_empty packages_map then
-    OpamGlobals.error_and_exit "No packages found."
-  else
-    packages_map
+    OpamGlobals.msg "No packages found.\n";
+  packages_map
 
 let with_switch_backup command f =
   let t = OpamState.load_state command in
@@ -892,7 +891,8 @@ module API = struct
       Lazy.force t.available_packages ++ t.installed -- orphans in
     let conflict_atoms =
       List.filter
-        (fun a ->
+        (fun (name,_ as a) ->
+           not (OpamState.is_pinned t name) &&
            not (OpamPackage.Set.exists (OpamFormula.check a) available))
         atoms in
     if conflict_atoms <> [] then
@@ -1125,18 +1125,33 @@ module API = struct
   module PIN = struct
     open OpamPinCommand
 
-    let reinstall name =
-      if OpamState.confirm "%s needs to be reinstalled, do it now ?"
-          (OpamPackage.Name.to_string name)
-      then reinstall [name,None]
-    (* Otherwise OpamState.add_to_reinstall ? better to leave the user choose *)
+    let confirm_reinstall name =
+      OpamState.confirm "%s needs to be reinstalled, do it now ?"
+        (OpamPackage.Name.to_string name)
 
     let pin name ?edit pin_option =
-      if pin name ?edit pin_option then reinstall name
+      match pin name ?edit pin_option with
+      | None -> ()
+      | Some is_same_version ->
+        with_switch_backup "pin-reinstall" (fun t ->
+            let nv = OpamPackage.pinned name in
+            OpamGlobals.msg "\n";
+            ignore (OpamState.update_dev_package t nv);
+            OpamGlobals.msg "\n";
+            if confirm_reinstall name then
+              if is_same_version then
+                reinstall_t [name,None] t
+              else
+                install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
+                  None false t
+          )
 
-    let edit name = if edit name then reinstall name
+    let edit name =
+      if edit name && confirm_reinstall name then
+        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
 
-    let unpin name = if unpin name then reinstall name
+    let unpin name = if unpin name && confirm_reinstall name then
+        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
 
     let list = list
   end
