@@ -31,7 +31,7 @@ type global_options = {
   no_base_packages: bool;
   git_version     : bool;
   compat_mode_1_0 : bool;
-  no_aspcud : bool;
+  use_internal_solver : bool;
   cudf_file : string option;
   solver_preferences : string option;
   no_self_upgrade : bool;
@@ -56,12 +56,12 @@ let switch_to_updated_self debug opamroot =
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 no_aspcud cudf_file solver_preferences
+    no_base_packages compat_mode_1_0 use_internal_solver cudf_file solver_preferences
     no_self_upgrade =
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file; solver_preferences;
+    no_base_packages; compat_mode_1_0; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; }
 
 let apply_global_options o =
@@ -86,7 +86,7 @@ let apply_global_options o =
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
   OpamGlobals.use_external_solver :=
-    !OpamGlobals.use_external_solver && not o.no_aspcud;
+    !OpamGlobals.use_external_solver && not o.use_internal_solver;
   OpamGlobals.cudf_file := o.cudf_file;
   OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
   OpamGlobals.solver_preferences := match o.solver_preferences with None -> !OpamGlobals.solver_preferences | Some v -> v
@@ -466,7 +466,7 @@ let global_options =
   let compat_mode_1_0 =
     mk_flag ~section ["compat-mode-1.0"]
       "Compatibility mode with OPAM 1.0" in
-  let no_aspcud =
+  let use_internal_solver =
     mk_flag ~section ["no-aspcud"]
       "Do not use the external aspcud solver, even if available." in
   let solver_preferences =
@@ -489,7 +489,7 @@ let global_options =
        at $(b,OPAMROOT/opam). This disables this behaviour." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file $solver_preferences
+    $no_base_packages $compat_mode_1_0 $use_internal_solver $cudf_file $solver_preferences
     $no_self_upgrade)
 
 let json_flag =
