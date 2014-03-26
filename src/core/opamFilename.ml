@@ -94,10 +94,7 @@ let copy_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error
       "Cannot create %s as the directory already exists." (Dir.to_string dst);
-  (* preserving timestamps doesn't work on NFS: don't use -p
-     which is an alias for --preserve=mode,ownership,timestamps *)
-  OpamSystem.command [ "cp"; "-PR"; "--preserve=mode,ownership";
-                       Dir.to_string src; Dir.to_string dst ]
+  OpamSystem.command [ "cp"; "-pPR"; Dir.to_string src; Dir.to_string dst ]
 
 let link_dir ~src ~dst =
   if exists_dir dst then
