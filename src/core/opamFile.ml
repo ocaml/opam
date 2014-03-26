@@ -1879,8 +1879,7 @@ module Make (F : F) = struct
 
   let string_of_backtrace_list = function
     | [] | _ when not (Printexc.backtrace_status ()) -> ""
-    | btl -> List.fold_left (fun s bt ->
-      let bts = Printexc.raw_backtrace_to_string bt in
+    | btl -> List.fold_left (fun s bts ->
       let bt_lines = OpamMisc.split bts '\n' in
       "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
     ) "" btl

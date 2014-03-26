@@ -24,7 +24,7 @@ let empty = {
   file_format   = OpamVersion.current;
 }
 
-exception Bad_format of pos option * Printexc.raw_backtrace list * string
+exception Bad_format of pos option * string list * string
 
 let bad_format ?pos fmt =
   Printf.ksprintf
@@ -34,7 +34,7 @@ let bad_format ?pos fmt =
 
 let add_pos pos = function
   | Bad_format (None,btl,msg) ->
-    let backtrace = Printexc.get_raw_backtrace () in
+    let backtrace = Printexc.get_backtrace () in
     Bad_format (Some pos, backtrace::btl, msg)
   | e -> e
 
