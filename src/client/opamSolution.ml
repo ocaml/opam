@@ -450,9 +450,9 @@ let parallel_apply t action solution =
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     finalize ();
     raise e
-  | `Error (err, msg) ->
-    OpamGlobals.msg "\n";
-    OpamGlobals.error "%s" msg;
+  | `Error (err, _msg) ->
+    (* OpamGlobals.msg "\n"; *)
+    (* OpamGlobals.error "%s" msg; *)
     match err with
     | Aborted -> finalize (); err
     | Error (successful, failed, remaining) ->
