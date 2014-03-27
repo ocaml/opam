@@ -115,7 +115,7 @@ val prefixes: OpamFilename.Dir.t -> string option Map.t
     not exist. *)
 val unknown: Name.t -> Version.t option -> 'a
 
-(** Create a (path)-pinned package. *)
+(** Create a pinned package. *)
 val pinned: Name.t -> t
 
 (** Check if a package is pinned. *)

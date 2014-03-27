@@ -458,7 +458,7 @@ let terminal_columns =
   fun () ->
     if Unix.isatty Unix.stdout
     then Lazy.force v
-    else max_int
+    else 80
 
 let uname_s () =
   try

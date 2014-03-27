@@ -34,10 +34,10 @@ let post_message ?(failed=false) state action =
   let print_message message =
     if failed then
       (OpamGlobals.header_msg "%s troobleshooting" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s.\n" message)
+       OpamGlobals.msg "%s\n" message)
     else
       (OpamGlobals.header_msg "%s information" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s.\n" message)
+       OpamGlobals.msg "%s\n" message)
   in
   let local_variables = OpamVariable.Map.empty in
   let local_variables =
@@ -85,7 +85,7 @@ let atoms_of_packages set =
 let atom_of_name name =
   name, None
 
-let check_availability t set atoms =
+let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
   let check_atom (name, _ as atom) =
     let exists =
@@ -96,6 +96,8 @@ let check_availability t set atoms =
       with Not_found -> false
     in
     if exists then None
+    else if permissive = Some true
+    then Some (OpamState.unknown_package t atom)
     else Some (OpamState.unavailable_reason t atom) in
   let errors = OpamMisc.filter_map check_atom atoms in
   if errors <> [] then
@@ -113,9 +115,25 @@ let sanitize_atom_list ?(permissive=false) t atoms =
         packages in
     match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
   in
-  let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
+  let realversion name v =
+    if v = OpamPackage.Version.pinned then
+      try
+        OpamPackage.version
+          (OpamState.pinning_version t (OpamPackage.pinned name))
+      with Not_found ->
+        OpamGlobals.error_and_exit "Package %s is not pinned."
+          (OpamPackage.Name.to_string name)
+    else v
+  in
+  let atoms =
+    List.rev_map (fun (name,cstr) ->
+        let name = realname name in
+        name, match cstr with Some (op,v) -> Some (op, realversion name v)
+                            | None -> None)
+      atoms in
   if permissive then
-    check_availability t (OpamPackage.Set.union t.packages t.installed) atoms
+    check_availability ~permissive t
+      (OpamPackage.Set.union t.packages t.installed) atoms
   else
     check_availability t
       (OpamPackage.Set.union (Lazy.force t.available_packages) t.installed)
@@ -137,7 +155,11 @@ let display_error (n, error) =
       disp "%s" s in
   match n with
   | To_change (Some o, nv) ->
-    if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version nv) < 0
+    if OpamPackage.is_pinned o || OpamPackage.is_pinned nv then
+      f "switching to" nv
+    else if
+      OpamPackage.Version.compare
+        (OpamPackage.version o) (OpamPackage.version nv) < 0
     then
       f "upgrading to" nv
     else
@@ -196,9 +218,8 @@ let print_variable_warnings t =
     vars := OpamMisc.StringSet.diff !vars (new_variables t.compiler);
     OpamMisc.StringSet.iter warn !vars;
     if !variables <> [] then (
-      OpamGlobals.msg "The following variables are set in your environment, \
-                       you should better unset it if you want OPAM to work \
-                       correctly.\n";
+      OpamGlobals.msg "The following variables are set in your environment, it \
+                       is advised to unset them for OPAM to work correctly.\n";
       List.iter (OpamGlobals.msg " - %s\n") !variables;
       if not (OpamState.confirm "Do you want to continue ?") then
         OpamGlobals.exit 1;
@@ -381,7 +402,10 @@ let parallel_apply t action solution =
       | `Successful () ->
         `Successful (),
         fun () ->
-          OpamPackage.Set.iter (OpamAction.cleanup_package_artefacts !t_ref)
+          OpamPackage.Set.iter
+            (fun nv ->
+               if not (OpamState.is_pinned t (OpamPackage.name nv)) then
+                 OpamAction.cleanup_package_artefacts !t_ref nv)
             deleted
       | `Exception (e) ->
         let err = Printexc.to_string e in
@@ -405,6 +429,8 @@ let parallel_apply t action solution =
     match status with
     | #error -> status, finalize
     | `Successful () ->
+      if not (PackageActionGraph.is_empty solution.to_process) then
+        OpamGlobals.header_msg "Installing packages";
       try
         PackageActionGraph.Parallel.iter
           (OpamState.jobs t) solution.to_process ~pre ~child ~post;
@@ -450,15 +476,18 @@ let parallel_apply t action solution =
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     finalize ();
     raise e
-  | `Error (err, msg) ->
-    OpamGlobals.msg "\n";
-    OpamGlobals.error "%s" msg;
+  | `Error (err, _msg) ->
+    (* OpamGlobals.msg "\n"; *)
+    (* OpamGlobals.error "%s" msg; *)
     match err with
     | Aborted -> finalize (); err
     | Error (successful, failed, remaining) ->
       OpamGlobals.msg "\n";
       finalize ();
-      OpamGlobals.header_msg "Error report";
+      if
+        List.length successful + List.length failed + List.length remaining <= 1
+      then err else
+      let () = OpamGlobals.header_msg "Error report" in
       let print_actions oc actions =
         let pr a = Printf.fprintf oc " - %s\n" (PackageAction.to_string a) in
         List.iter pr actions in
@@ -564,8 +593,10 @@ let apply ?(force = false) t action ~requested solution =
         )  messages in
       let rewrite nv =
         let name = OpamPackage.name nv in
-        if not (OpamState.is_locally_pinned t name) then nv
-        else OpamPackage.pinned name in
+        let pin_nv = OpamState.pinning_version t nv in
+        if OpamState.is_locally_pinned t name &&  pin_nv = nv
+        then OpamPackage.pinned name
+        else pin_nv in
       OpamSolver.print_solution ~messages ~rewrite solution;
       OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;

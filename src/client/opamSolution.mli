@@ -64,8 +64,10 @@ val atoms_of_packages: package_set -> atom list
 val eq_atoms_of_packages: package_set -> atom list
 
 (** Checks that the atoms can possibly be verified (individually) in a package
-    set. Displays an error and exits otherwise *)
-val check_availability: OpamState.state -> OpamPackage.Set.t -> atom list -> unit
+    set. Displays an error and exits otherwise. [permissive] just changes the
+    error message. *)
+val check_availability: ?permissive: bool ->
+  OpamState.state -> OpamPackage.Set.t -> atom list -> unit
 
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on

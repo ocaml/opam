@@ -140,9 +140,8 @@ let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
 
   if not (OpamPackage.Set.is_empty t.packages)
   && OpamPackage.Name.Map.is_empty packages_map then
-    OpamGlobals.error_and_exit "No packages found."
-  else
-    packages_map
+    OpamGlobals.msg "No packages found.\n";
+  packages_map
 
 let with_switch_backup command f =
   let t = OpamState.load_state command in
@@ -279,21 +278,19 @@ module API = struct
 
       (* where does it come from (eg. which repository) *)
       let repository =
-        if is_pinned then ["pinned", "true"]
-        else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
-          []
-        else match OpamState.repository_of_package t nv with
-          | None   -> []
-          | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
-
-      let revision =
-        if is_pinned && OpamState.is_name_installed t name then
-          let repo = OpamState.repository_of_locally_pinned_package t name in
-          match OpamRepository.revision repo with
-          | None   -> []
-          | Some v -> [ "revision", OpamPackage.Version.to_string v ]
-        else
-          [] in
+        let repo =
+          match OpamState.repository_of_package t nv with
+          | None -> []
+          | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ]
+        in
+        try
+          let pin = OpamPackage.Name.Map.find name t.pinned in
+          let kind = kind_of_pin_option pin in
+          (if kind = `version then repo else []) @
+          ["pinned", (string_of_pin_kind kind)]
+        with Not_found ->
+          repo
+      in
 
       let url = match OpamState.url t nv with
         | None   -> []
@@ -376,7 +373,6 @@ module API = struct
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string version ]
-        @ revision
         @ repository
         @ url
         @ homepage
@@ -895,7 +891,8 @@ module API = struct
       Lazy.force t.available_packages ++ t.installed -- orphans in
     let conflict_atoms =
       List.filter
-        (fun a ->
+        (fun (name,_ as a) ->
+           not (OpamState.is_pinned t name) &&
            not (OpamPackage.Set.exists (OpamFormula.check a) available))
         atoms in
     if conflict_atoms <> [] then
@@ -1128,18 +1125,33 @@ module API = struct
   module PIN = struct
     open OpamPinCommand
 
-    let reinstall name =
-      if OpamState.confirm "%s needs to be reinstalled, do it now ?"
-          (OpamPackage.Name.to_string name)
-      then reinstall [name,None]
-    (* Otherwise OpamState.add_to_reinstall ? better to leave the user choose *)
+    let confirm_reinstall name =
+      OpamState.confirm "%s needs to be reinstalled, do it now ?"
+        (OpamPackage.Name.to_string name)
 
     let pin name ?edit pin_option =
-      if pin name ?edit pin_option then reinstall name
+      match pin name ?edit pin_option with
+      | None -> ()
+      | Some is_same_version ->
+        with_switch_backup "pin-reinstall" (fun t ->
+            let nv = OpamPackage.pinned name in
+            OpamGlobals.msg "\n";
+            ignore (OpamState.update_dev_package t nv);
+            OpamGlobals.msg "\n";
+            if confirm_reinstall name then
+              if is_same_version then
+                reinstall_t [name,None] t
+              else
+                install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
+                  None false t
+          )
 
-    let edit name = if edit name then reinstall name
+    let edit name =
+      if edit name && confirm_reinstall name then
+        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
 
-    let unpin name = if unpin name then reinstall name
+    let unpin name = if unpin name && confirm_reinstall name then
+        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
 
     let list = list
   end

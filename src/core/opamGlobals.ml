@@ -240,37 +240,53 @@ let msg =
       Printf.ifprintf stdout fmt
   )
 
+let header_width () = 80
+
 let header_msg fmt =
-  let markl, markr = match !utf8_msgs with
-    | true -> colorise `yellow "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
-    | false -> let mark = colorise `cyan "=-=-=" in mark, mark
-  in
+  let utf8camel = "\xF0\x9F\x90\xAB " in (* UTF-8 <U+1F42B, U+0020> *)
+  let padding = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
   Printf.ksprintf (fun str ->
     flush stderr;
     if !display_messages then (
       print_char '\n';
-      print_string markl;
+      let wpad = header_width () - String.length str - 2 in
+      let wpadl = max (wpad / 2) 3 in
+      if !utf8_msgs then
+        (print_string (colorise `yellow utf8camel);
+         for _i = 1 to wpadl - 3 do print_char ' ' done)
+      else
+        print_string (colorise `cyan (String.sub padding 0 wpadl));
       print_char ' ';
       print_string (colorise `bold str);
       print_char ' ';
-      print_string markr;
+      let wpadr = wpad - wpadl in
+      if not !utf8_msgs && wpadr > 0 then
+        print_string
+          (colorise `cyan
+             (String.sub padding (String.length padding - wpadr) wpadr));
       print_char '\n';
       flush stdout;
     )
   ) fmt
 
 let header_error fmt =
-  let mark = colorise `red "=====" in
+  let padding = "#=========================================================#" in
   Printf.ksprintf (fun head fmt ->
       Printf.ksprintf (fun contents ->
           output_char stderr '\n';
-          output_string stderr mark;
+          let wpad = header_width () - String.length head - 8 in
+          let wpadl = max (wpad / 2) 3 in
+          output_string stderr (colorise `red (String.sub padding 0 wpadl));
           output_char stderr ' ';
           output_string stderr (colorise `bold "ERROR");
           output_char stderr ' ';
           output_string stderr (colorise `bold head);
           output_char stderr ' ';
-          output_string stderr mark;
+          let wpadr = wpad - wpadl in
+          if wpadr > 0 then
+            output_string stderr
+              (colorise `red
+                 (String.sub padding (String.length padding - wpadr) wpadr));
           output_char stderr '\n';
           output_string stderr contents;
           output_char stderr '\n';
