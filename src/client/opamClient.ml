@@ -279,21 +279,19 @@ module API = struct
 
       (* where does it come from (eg. which repository) *)
       let repository =
-        if is_pinned then ["pinned", "true"]
-        else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
-          []
-        else match OpamState.repository_of_package t nv with
-          | None   -> []
-          | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
-
-      let revision =
-        if is_pinned && OpamState.is_name_installed t name then
-          let repo = OpamState.repository_of_locally_pinned_package t name in
-          match OpamRepository.revision repo with
-          | None   -> []
-          | Some v -> [ "revision", OpamPackage.Version.to_string v ]
-        else
-          [] in
+        let repo =
+          match OpamState.repository_of_package t nv with
+          | None -> []
+          | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ]
+        in
+        try
+          let pin = OpamPackage.Name.Map.find name t.pinned in
+          let kind = kind_of_pin_option pin in
+          (if kind = `version then repo else []) @
+          ["pinned", (string_of_pin_kind kind)]
+        with Not_found ->
+          repo
+      in
 
       let url = match OpamState.url t nv with
         | None   -> []
@@ -376,7 +374,6 @@ module API = struct
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string version ]
-        @ revision
         @ repository
         @ url
         @ homepage
