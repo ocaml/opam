@@ -469,7 +469,7 @@ let global_options =
       "Compatibility mode with OPAM 1.0" in
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"]
-      "Do not use the external aspcud solver, even if available." in
+      "Force use of internal heuristics, even if an external solver is available." in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving. \
