@@ -468,7 +468,7 @@ let global_options =
     mk_flag ~section ["compat-mode-1.0"]
       "Compatibility mode with OPAM 1.0" in
   let use_internal_solver =
-    mk_flag ~section ["no-aspcud"]
+    mk_flag ~section ["no-aspcud"; "use-internal-solver"]
       "Force use of internal heuristics, even if an external solver is available." in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
