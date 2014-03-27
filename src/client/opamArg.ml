@@ -173,6 +173,7 @@ let help_sections = [
   `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
       $(i,package:var) when substituting `%{package:var}%` strings in \
       `opam` files.";
+  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";
@@ -468,8 +469,8 @@ let global_options =
     mk_flag ~section ["compat-mode-1.0"]
       "Compatibility mode with OPAM 1.0" in
   let use_internal_solver =
-    mk_flag ~section ["no-aspcud"]
-      "Do not use the external aspcud solver, even if available." in
+    mk_flag ~section ["no-aspcud"; "use-internal-solver"]
+      "Force use of internal heuristics, even if an external solver is available." in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving. \
