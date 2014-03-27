@@ -1366,16 +1366,26 @@ let pin ?(unpin_only=false) () =
   let pin global_options kind edit remove list package pin =
     apply_global_options global_options;
     match package, pin, edit, remove, list with
-    | Some n, None,   true,  false, false -> Client.PIN.edit n
-    | Some n, None,   false, true,  false -> Client.PIN.unpin n
-    | None,   None,   false, false, _     -> Client.PIN.list ()
-    | Some n, Some "none",   _, _,  false -> Client.PIN.unpin n
+    | Some n, None,   true,  false, false -> `Ok (Client.PIN.edit n)
+    | Some n, None,   false, true,  false -> `Ok (Client.PIN.unpin n)
+    | None,   None,   false, false, _     -> `Ok (Client.PIN.list ())
+    | Some n, Some "none",   _, _,  false -> `Ok (Client.PIN.unpin n)
     | Some n, Some p, _    , false, false ->
       let pin_option = pin_option_of_string ?kind:kind p in
-      Client.PIN.pin n ~edit pin_option
-    | _ -> OpamGlobals.error_and_exit "Inconsistent pinning arguments" in
-
-  Term.(pure pin $global_options $kind $edit $remove $list $package $pin_option),
+      `Ok (Client.PIN.pin n ~edit pin_option)
+    | Some n, None, _, _, _ ->
+      `Error (true,
+              Printf.sprintf "Please specify the target to pin package %s to."
+                (OpamPackage.Name.to_string n))
+    | Some _, Some p, _, _, _ ->
+      `Error (true,
+              Printf.sprintf "Extra argument %S" p)
+    | None, _, _, _, _ ->
+      `Error (true, "You need to specify a package name" )
+  in
+  Term.ret
+    Term.(pure pin
+          $global_options $kind $edit $remove $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)
