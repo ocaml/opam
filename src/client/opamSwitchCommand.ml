@@ -314,7 +314,8 @@ let import_t filename t =
 
 let export filename =
   let t = OpamState.load_state "switch-export" in
-  let export = (t.installed, t.installed_roots) in
+  let rm_pins = OpamPackage.Set.map (OpamState.pinning_version t) in
+  let export = (rm_pins t.installed, rm_pins t.installed_roots) in
   match filename with
   | None   -> OpamFile.Export.write_to_channel stdout export
   | Some f -> OpamFile.Export.write f export
