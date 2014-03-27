@@ -34,10 +34,10 @@ let post_message ?(failed=false) state action =
   let print_message message =
     if failed then
       (OpamGlobals.header_msg "%s troobleshooting" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s.\n" message)
+       OpamGlobals.msg "%s\n" message)
     else
       (OpamGlobals.header_msg "%s information" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s.\n" message)
+       OpamGlobals.msg "%s\n" message)
   in
   let local_variables = OpamVariable.Map.empty in
   let local_variables =
@@ -462,7 +462,10 @@ let parallel_apply t action solution =
     | Error (successful, failed, remaining) ->
       OpamGlobals.msg "\n";
       finalize ();
-      OpamGlobals.header_msg "Error report";
+      if
+        List.length successful + List.length failed + List.length remaining <= 1
+      then err else
+      let () = OpamGlobals.header_msg "Error report" in
       let print_actions oc actions =
         let pr a = Printf.fprintf oc " - %s\n" (PackageAction.to_string a) in
         List.iter pr actions in

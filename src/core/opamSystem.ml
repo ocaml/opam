@@ -627,7 +627,9 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
   with
   | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
-  | _ -> internal_error "Cannot download %s, please check your connection settings." src
+  | e ->
+    OpamMisc.fatal e;
+    internal_error "Cannot download %s, please check your connection settings." src
 
 let download ~overwrite ?compress ~filename:src ~dst:dst =
   if dst = src then
