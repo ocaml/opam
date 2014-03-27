@@ -85,7 +85,7 @@ let atoms_of_packages set =
 let atom_of_name name =
   name, None
 
-let check_availability t set atoms =
+let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
   let check_atom (name, _ as atom) =
     let exists =
@@ -96,6 +96,9 @@ let check_availability t set atoms =
       with Not_found -> false
     in
     if exists then None
+    else if permissive = Some true
+    then Some (Printf.sprintf "No package matching %s found"
+                 (OpamFormula.short_string_of_atom atom))
     else Some (OpamState.unavailable_reason t atom) in
   let errors = OpamMisc.filter_map check_atom atoms in
   if errors <> [] then
@@ -115,7 +118,8 @@ let sanitize_atom_list ?(permissive=false) t atoms =
   in
   let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
   if permissive then
-    check_availability t (OpamPackage.Set.union t.packages t.installed) atoms
+    check_availability ~permissive t
+      (OpamPackage.Set.union t.packages t.installed) atoms
   else
     check_availability t
       (OpamPackage.Set.union (Lazy.force t.available_packages) t.installed)

@@ -1378,10 +1378,9 @@ let pin ?(unpin_only=false) () =
               Printf.sprintf "Please specify the target to pin package %s to."
                 (OpamPackage.Name.to_string n))
     | Some _, Some p, _, _, _ ->
-      `Error (true,
-              Printf.sprintf "Extra argument %S" p)
+      `Error (true, Printf.sprintf "Extra argument %S" p)
     | None, _, _, _, _ ->
-      `Error (true, "You need to specify a package name" )
+      `Error (true, "You need to specify a package name")
   in
   Term.ret
     Term.(pure pin
