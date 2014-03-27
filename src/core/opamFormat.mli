@@ -40,7 +40,7 @@ val invalid_fields : file_item list -> string list -> string list
 
 (** All the following parsing function raise [Bad_format] in case the
     input does not have the right format. *)
-exception Bad_format of pos option * string
+exception Bad_format of pos option * string list * string
 
 (** Raise [Bad_format]. *)
 val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a

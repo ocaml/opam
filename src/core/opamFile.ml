@@ -1877,6 +1877,13 @@ module Make (F : F) = struct
     write_files := filename :: !write_files;
     log "Wrote %s in %.3fs" filename (chrono ())
 
+  let string_of_backtrace_list = function
+    | [] | _ when not (Printexc.backtrace_status ()) -> ""
+    | btl -> List.fold_left (fun s bts ->
+      let bt_lines = OpamMisc.split bts '\n' in
+      "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
+    ) "" btl
+
   let read f =
     let filename = OpamFilename.prettify f in
     read_files := filename :: !read_files;
@@ -1892,12 +1899,13 @@ module Make (F : F) = struct
       | Lexer_error _ | Parsing.Parse_error as e ->
         raise e (* Message already printed *)
       | e ->
-        let pos,msg = match e with
-          | OpamFormat.Bad_format (Some pos, msg) -> pos, ":\n  "^msg
-          | OpamFormat.Bad_format (None, msg) -> (f,-1,-1), ":\n  "^msg
-          | _ -> (f,-1,-1),"" in
+        let pos,msg,btl = match e with
+          | OpamFormat.Bad_format (Some pos, btl, msg) -> pos, ":\n  "^msg, btl
+          | OpamFormat.Bad_format (None, btl, msg) -> (f,-1,-1), ":\n  "^msg, btl
+          | _ -> (f,-1,-1),"",[] in
         let e = OpamFormat.add_pos pos e in
-        OpamGlobals.error "At %s%s" (string_of_pos pos) msg;
+        OpamGlobals.error "At %s%s%s"
+          (string_of_pos pos) msg (string_of_backtrace_list btl);
         raise e
     else
       OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
@@ -1916,11 +1924,12 @@ module Make (F : F) = struct
 
   let read_from_channel ic =
     try F.of_channel dummy_file ic with
-    | OpamFormat.Bad_format (Some pos, msg) as e ->
-      OpamGlobals.error "At %s: %s" (string_of_pos pos) msg;
+    | OpamFormat.Bad_format (Some pos, btl, msg) as e ->
+      OpamGlobals.error "At %s: %s%s"
+        (string_of_pos pos) msg (string_of_backtrace_list btl);
       raise e
-    | OpamFormat.Bad_format (None, msg) as e ->
-      OpamGlobals.error "Input error: %s" msg;
+    | OpamFormat.Bad_format (None, btl, msg) as e ->
+      OpamGlobals.error "Input error: %s%s" msg (string_of_backtrace_list btl);
       raise e
 
   let write_to_channel oc str =
