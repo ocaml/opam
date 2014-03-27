@@ -173,6 +173,7 @@ let help_sections = [
   `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
       $(i,package:var) when substituting `%{package:var}%` strings in \
       `opam` files.";
+  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";

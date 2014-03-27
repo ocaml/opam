@@ -50,7 +50,7 @@ let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
-let use_external_solver = ref (not !(check "NOASPCUD"))
+let use_external_solver = ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER")))
 let no_self_upgrade  = check "NOSELFUPGRADE"
 
 (* Value set when opam calls itself *)
