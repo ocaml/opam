@@ -315,8 +315,8 @@ let resolve ?(verbose=true) universe ~requested request =
         let resp = OpamCudf.resolve ~extern:true u req in
         OpamCudf.to_actions add_orphan_packages u resp
       with Failure "opamSolver" ->
-        OpamGlobals.msg "Falling back to the internal heuristic.\n";
-        OpamHeuristic.resolve ~verbose add_orphan_packages u req
+        OpamGlobals.error_and_exit
+          "Please retry with option --use-internal-solver"
     else OpamHeuristic.resolve ~verbose add_orphan_packages u req in
   match resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () ->
