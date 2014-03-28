@@ -34,11 +34,12 @@ let () =
   | None   -> version_none ()
   | Some s ->
     let reference =
-      try
+      try (* look for "ref: refs/heads/..." *)
         let c = String.rindex s ' ' in
-        String.sub s (c+1) (String.length s -c-1)
-      with Not_found ->
-        s in
-    match read (git reference) with
+	let namedref = String.sub s (c+1) (String.length s -c-1) in
+	read (git namedref)
+      with Not_found -> (* detached state, .git/HEAD contains sha1 *)
+        Some s in
+    match reference with
     | None      -> version_none ()
     | Some sha1 -> write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
