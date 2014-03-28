@@ -31,6 +31,7 @@ type global_options = {
   no_base_packages: bool;
   git_version     : bool;
   compat_mode_1_0 : bool;
+  external_solver : string option;
   use_internal_solver : bool;
   cudf_file : string option;
   solver_preferences : string option;
@@ -56,12 +57,12 @@ let switch_to_updated_self debug opamroot =
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 use_internal_solver cudf_file solver_preferences
+    no_base_packages compat_mode_1_0 external_solver use_internal_solver cudf_file solver_preferences
     no_self_upgrade =
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; use_internal_solver; cudf_file; solver_preferences;
+    no_base_packages; compat_mode_1_0; external_solver; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; }
 
 let apply_global_options o =
@@ -85,6 +86,7 @@ let apply_global_options o =
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
+  OpamGlobals.external_solver := begin match o.external_solver with None -> !OpamGlobals.external_solver | Some v -> v end;
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.use_internal_solver;
   OpamGlobals.cudf_file := o.cudf_file;
@@ -158,6 +160,7 @@ let help_sections = [
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see option `--debug'.";
+  `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
@@ -471,6 +474,11 @@ let global_options =
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
       "Force use of internal heuristics, even if an external solver is available." in
+  let external_solver =
+    mk_opt ["solver"] "CMD"
+      ("Specify the name of the external dependency $(i,solver). \
+        The default value is "^OpamGlobals.default_external_solver)
+      Arg.(some string) None in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving. \
@@ -491,7 +499,7 @@ let global_options =
        at $(b,OPAMROOT/opam). This disables this behaviour." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $use_internal_solver $cudf_file $solver_preferences
+    $no_base_packages $compat_mode_1_0 $external_solver $use_internal_solver $cudf_file $solver_preferences
     $no_self_upgrade)
 
 let json_flag =

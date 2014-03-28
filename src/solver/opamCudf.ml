@@ -345,11 +345,6 @@ let is_builddep = check s_builddep
 
 let is_pinned = check s_pinned
 
-let aspcud_exists = lazy (OpamSystem.command_exists "aspcud")
-
-let aspcud_command =
-  Printf.sprintf "aspcud $in $out $pref"
-
 let default_preamble =
   let l = [
     (s_source,         `String None) ;
@@ -401,8 +396,11 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-let external_solver_available () =
-  !OpamGlobals.use_external_solver && Lazy.force aspcud_exists
+let external_solver_exists () = OpamSystem.command_exists !OpamGlobals.external_solver
+
+let external_solver_available () = !OpamGlobals.use_external_solver && (external_solver_exists())
+
+let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
 
 let solver_calls = ref 0
 
@@ -413,7 +411,7 @@ let dump_cudf_request ~extern (_, univ,_ as cudf) = function
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     if extern then
-      Printf.fprintf oc "#%s %s\n" aspcud_command !OpamGlobals.solver_preferences
+      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) !OpamGlobals.solver_preferences
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -436,7 +434,7 @@ let call_external_solver univ req =
   let cudf_request = to_cudf univ req in
   ignore (dump_cudf_request ~extern:true cudf_request !OpamGlobals.cudf_file);
   if Cudf.universe_size univ > 0 then begin
-    let cmd = aspcud_command in
+    let cmd = external_solver_command() in
     let criteria = !OpamGlobals.solver_preferences in
     try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
     with e ->

@@ -91,6 +91,12 @@ let solver_preferences = ref(
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
   with Not_found -> default_preferences)
 
+let default_external_solver = "aspcud"
+
+let external_solver = ref(
+  try OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER")
+  with Not_found -> default_external_solver)
+
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
 
