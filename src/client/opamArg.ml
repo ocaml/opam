@@ -158,6 +158,7 @@ let help_sections = [
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see option `--debug'.";
+  `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
