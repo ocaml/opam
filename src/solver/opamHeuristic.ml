@@ -194,7 +194,7 @@ let satisfy pkg constrs =
       n = pkg.Cudf.package && Cudf.version_matches pkg.Cudf.version v
     ) constrs
 
-let actions_of_state universe map_init_u request state =
+let actions_of_state ~version_map universe map_init_u request state =
   log "actions_of_state %a" (slog OpamCudf.string_of_packages) state;
   let installed =
     let filter p =
@@ -215,7 +215,7 @@ let actions_of_state universe map_init_u request state =
     wish_install = [];
     wish_upgrade = state @ installed
   } in
-  match OpamCudf.check_request small_universe request with
+  match OpamCudf.check_request ~version_map small_universe request with
   | Conflicts c ->
     log "not reachable! universe=%a request=%a"
       (slog OpamCudf.string_of_universe) small_universe
@@ -314,9 +314,9 @@ let state_space ?(filters = fun _ -> None) universe wish_remove interesting_name
 (* Find a possible good state which satisfies a request. The idea is
    call iteratively this function while refining the constraints of
    the request until reaching a fix-point. *)
-let state_of_request ?(verbose=true) current_universe request =
+let state_of_request ?(verbose=true) ~version_map current_universe request =
   log "state_of_request";
-  match OpamCudf.check_request ~explain:false current_universe request with
+  match OpamCudf.check_request ~explain:false  ~version_map current_universe request with
   | Conflicts _             ->
     log "state-of-request: %a CONFLICT!"
       (slog OpamCudf.string_of_request) request;
@@ -379,7 +379,7 @@ let same_state s1 s2 =
 
 (* Various heuristic to transform a solution checker into an optimized
    solver. *)
-let optimize ?(verbose=true) map_init_u universe request =
+let optimize ?(verbose=true) ~version_map map_init_u universe request =
 
   let refine state request =
     log "refine request:%a state:%a"
@@ -448,10 +448,10 @@ let optimize ?(verbose=true) map_init_u universe request =
     (slog OpamMisc.pretty_list) implicit_not_installed;
 
   (* Upgrade the explicit packages first *)
-  match state_of_request ~verbose universe request with
+  match state_of_request ~verbose ~version_map universe request with
   | None       ->
     OpamCudf.to_actions map_init_u universe
-      (OpamCudf.resolve ~extern:false universe request)
+      (OpamCudf.resolve ~extern:false ~version_map universe request)
   | Some state ->
     log "STATE(0) %a" (slog OpamCudf.string_of_packages) state;
 
@@ -466,7 +466,7 @@ let optimize ?(verbose=true) map_init_u universe request =
         (p :: state)
       ) else (
         let request = add_to_request state request p.Cudf.package in
-        match state_of_request ~verbose universe request with
+        match state_of_request ~verbose ~version_map universe request with
         | None       ->
           log "discard %s" p.Cudf.package;
           state
@@ -496,7 +496,7 @@ let optimize ?(verbose=true) map_init_u universe request =
         ) else (
           log "adding %s to the request" name;
           let request = add_to_request state request name in
-          match state_of_request ~verbose universe request with
+          match state_of_request ~verbose ~version_map universe request with
           | None       -> (universe, state)
           | Some state -> (universe, state)
         )
@@ -513,14 +513,14 @@ let optimize ?(verbose=true) map_init_u universe request =
       List.fold_left installed_first state packages in
 
     log "STATE(2) %a" (slog OpamCudf.string_of_packages) state;
-    Success (actions_of_state universe map_init_u request state)
+    Success (actions_of_state ~version_map universe map_init_u request state)
 
-let resolve ?(verbose=true) map_init_u universe request =
+let resolve ?(verbose=true) ~version_map map_init_u universe request =
   try
     if request.wish_upgrade <> [] then
-      optimize ~verbose map_init_u universe request
+      optimize ~verbose ~version_map map_init_u universe request
     else
-      let res = OpamCudf.resolve ~extern:false universe request in
+      let res = OpamCudf.resolve ~extern:false ~version_map universe request in
       OpamCudf.to_actions map_init_u universe res
   with Not_reachable c ->
     Conflicts c

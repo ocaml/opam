@@ -51,6 +51,7 @@ open OpamTypes
 (** Optimized resolution *)
 val resolve:
   ?verbose:bool ->
+  version_map:int OpamPackage.Map.t ->
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
@@ -138,12 +139,16 @@ val explore: ?verbose:bool ->
     to explore is. Once the state-space is computed using
     [state_space], it calls [explore] (which will use [brute_force])
     to get an approximate solution to the request. *)
-val state_of_request: ?verbose:bool
-  -> Cudf.universe -> Cudf_types.vpkg request -> Cudf.package state option
+val state_of_request: ?verbose:bool  ->
+  version_map:int OpamPackage.Map.t ->
+  Cudf.universe ->
+  Cudf_types.vpkg request -> Cudf.package state option
 
 (** Convert a state into a series of action (withour the full closure
     of reinstallations). Raise [Not_reachable] is the state is not
     reachable. This function is called once we get a consistent state
     to build a solution than we can propose to the user. *)
-val actions_of_state: Cudf.universe -> (Cudf.universe -> Cudf.universe) ->
+val actions_of_state:
+  version_map:int OpamPackage.Map.t ->
+  Cudf.universe -> (Cudf.universe -> Cudf.universe) ->
   Cudf_types.vpkg request -> Cudf.package state -> Cudf.package action list

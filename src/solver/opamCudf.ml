@@ -406,9 +406,10 @@ let external_solver_available () =
 
 let solver_calls = ref 0
 
-let dump_cudf_request ~extern (_, univ,_ as cudf) = function
+let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) = function
   | None   -> None
   | Some f ->
+    ignore ( version_map: int OpamPackage.Map.t );
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
@@ -417,24 +418,29 @@ let dump_cudf_request ~extern (_, univ,_ as cudf) = function
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
+    OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
+      let name = OpamPackage.name_to_string pkg in
+      let version = OpamPackage.version_to_string pkg in
+      Printf.fprintf oc "#v2v:%s:%d=%s\n" name vnum version;
+    ) version_map;
     close_out oc;
     Graph.output (Graph.of_universe univ) f;
     Some filename
 
-let dump_cudf_error ~extern univ req =
+let dump_cudf_error ~extern ~version_map univ req =
   let cudf_file = match !OpamGlobals.cudf_file with
     | Some f -> f
     | None ->
       let (/) = Filename.concat in
       !OpamGlobals.root_dir / "log" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
-  match dump_cudf_request ~extern (to_cudf univ req) (Some cudf_file) with
+  match dump_cudf_request ~extern (to_cudf univ req) ~version_map (Some cudf_file) with
   | Some f -> f
   | None -> assert false
 
-let call_external_solver univ req =
+let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
-  ignore (dump_cudf_request ~extern:true cudf_request !OpamGlobals.cudf_file);
+  ignore (dump_cudf_request ~extern:true ~version_map cudf_request !OpamGlobals.cudf_file);
   if Cudf.universe_size univ > 0 then begin
     let cmd = aspcud_command in
     let criteria = !OpamGlobals.solver_preferences in
@@ -446,14 +452,14 @@ let call_external_solver univ req =
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
-let check_request ?(explain=true) univ req =
+let check_request ?(explain=true) ~version_map univ req =
   match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
   | Algo.Depsolver.Unsat
       (Some {Algo.Diagnostic.result = Algo.Diagnostic.Failure f}) ->
     Conflicts f
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
-    let f = dump_cudf_error ~extern:false univ req in
+    let f = dump_cudf_error ~extern:false ~version_map univ req in
     OpamGlobals.error "Internal solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver"
@@ -461,13 +467,13 @@ let check_request ?(explain=true) univ req =
     Conflicts (fun () -> [])
 
 (* Return the universe in which the system has to go *)
-let get_final_universe univ req =
+let get_final_universe ~version_map univ req =
   let fail msg =
-    let f = dump_cudf_error ~extern:true univ req in
+    let f = dump_cudf_error ~extern:true ~version_map univ req in
     OpamGlobals.warning "External solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver" in
-  match call_external_solver univ req with
+  match call_external_solver ~version_map univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
     (* XXX Is this still needed with latest dose ? *)
@@ -480,7 +486,7 @@ let get_final_universe univ req =
     | Some {result=Success _} -> fail "inconsistent return value."
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
-      check_request univ req
+      check_request ~version_map univ req
 
 (* A modified version of CudfDiff to handle reinstallations *)
 module Diff = struct
@@ -536,10 +542,10 @@ let actions_of_diff diff =
     | None      , None       , None   -> acc
   ) diff []
 
-let resolve ~extern universe request =
+let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  if extern then get_final_universe universe request
-  else check_request universe request
+  if extern then get_final_universe ~version_map universe request
+  else check_request ~version_map universe request
 
 let to_actions f universe result =
   let aux u1 u2 =
