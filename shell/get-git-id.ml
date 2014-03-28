@@ -36,9 +36,10 @@ let () =
     let reference =
       try
         let c = String.rindex s ' ' in
-        String.sub s (c+1) (String.length s -c-1)
+	let namedref = String.sub s (c+1) (String.length s -c-1) in
+	read (git namedref)
       with Not_found ->
-        s in
-    match read (git reference) with
+        Some s in
+    match reference with
     | None      -> version_none ()
     | Some sha1 -> write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
