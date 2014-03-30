@@ -263,10 +263,27 @@ let reset_env = lazy (
 )
 
 let command_exists ?(env=default_env) name =
-  let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "type %s" name] in
-  let r = OpamProcess.run ~env ~name:(temp_file "type") ~verbose:false cmd args in
+  let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
+  let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
   OpamProcess.clean_files r;
-  OpamProcess.is_success r
+  if OpamProcess.is_success r then
+    let is_builtin s = try ignore(Re_str.search_forward (Re_str.regexp "/") s 0); false with Not_found -> true in
+    match r.OpamProcess.r_stdout with 
+      cmdname::_ -> (* check that we have permission to execute the command *)
+	if is_builtin cmdname then true 
+	else
+	  (try 
+	    let open Unix in 
+	    let uid = getuid() and groups = Array.to_list(getgroups()) in
+	    let s = stat cmdname in
+	    let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
+            let mask = 0o001
+		lor (if uid = cmd_uid then 0o100 else 0)
+		lor (if List.mem cmd_gid groups then 0o010 else 0) in
+	    (cmd_perms land mask) <> 0
+          with _ -> false)
+    | _ -> false
+  else false
 
 let runs = ref []
 let print_stats () =
