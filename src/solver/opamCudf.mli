@@ -77,12 +77,14 @@ val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package lis
     [explain] is set to [false] *)
 val check_request:
   ?explain:bool ->
+  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, Algo.Diagnostic.reason list) result
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
+  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, Algo.Diagnostic.reason list) result
@@ -102,10 +104,11 @@ val solution_of_actions:
   solution
 
 (** Resolve a CUDF request. The result is either a conflict explaining
-    the error, or a resulting universe. 
+    the error, or a resulting universe.
     [~extern] specifies wether the external solver should be used *)
 val resolve:
   extern:bool ->
+  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, Algo.Diagnostic.reason list) result

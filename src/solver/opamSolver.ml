@@ -91,7 +91,7 @@ let cudf_versions_map universe packages =
 let name_to_cudf name =
   Common.CudfAdd.encode (OpamPackage.Name.to_string name)
 
-let atom2cudf universe version_map (name,cstr) =
+let atom2cudf universe (version_map : int OpamPackage.Map.t) (name,cstr) =
   name_to_cudf name, match cstr with
   | None -> None
   | Some (op,v) ->
@@ -312,12 +312,12 @@ let resolve ?(verbose=true) universe ~requested request =
     if OpamCudf.external_solver_available ()
     then
       try
-        let resp = OpamCudf.resolve ~extern:true u req in
+        let resp = OpamCudf.resolve ~extern:true ~version_map u req in
         OpamCudf.to_actions add_orphan_packages u resp
       with Failure "opamSolver" ->
         OpamGlobals.error_and_exit
           "Please retry with option --use-internal-solver"
-    else OpamHeuristic.resolve ~verbose add_orphan_packages u req in
+    else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () ->
       OpamCudf.string_of_reasons cudf2opam simple_universe universe (c ()))
