@@ -412,38 +412,46 @@ module API = struct
      anymore) from orphan versions, because they have a different impact on
      the request (needs version change VS needs uninstall).
      See also preprocess_request and check_conflicts *)
-  let orphans ?changes t =
+  let orphans ?changes ?(transitive=false) t =
     let all = t.packages ++ t.installed in
-    let universe =
-      match changes with
-      | None -> OpamState.universe t Reinstall
+    let complete_universe =
+      OpamState.universe {t with available_packages = lazy all} Reinstall in
+    (* Basic definition of orphan packages *)
+    let orphans = t.installed -- Lazy.force t.available_packages in
+    (* Restriction to the request-related packages *)
+    let orphans = match changes with
+      | None -> orphans
       | Some ch ->
-        let complete_universe =
-          OpamState.universe {t with available_packages = lazy all} Reinstall in
         let recompile_cone =
-          OpamPackage.Set.of_list
-            (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
-               complete_universe ch) in
-        let available_packages =
-          lazy (all -- (recompile_cone %%
-                        (t.installed -- Lazy.force t.available_packages))) in
-        OpamState.universe { t with available_packages } Reinstall
+          OpamPackage.Set.of_list @@
+          OpamSolver.reverse_dependencies ~depopts:true ~installed:false
+            complete_universe ch
+        in
+        orphans %% recompile_cone
     in
-    let installable = OpamSolver.installable universe in
-    let installable = OpamPackage.Set.fold
-        (fun nv installable ->
-           if OpamPackage.is_pinned nv then
-             OpamPackage.Set.add (OpamState.pinning_version t nv) installable
-           else installable) installable installable in
-    let orphan_versions = all -- installable in
+    (* Pinned versions of packages remain always available *)
+    let orphans =
+      OpamPackage.Set.filter (fun nv ->
+          not (OpamPackage.is_pinned nv ||
+               OpamState.is_pinned t (OpamPackage.name nv) &&
+               OpamState.pinning_version t nv = nv))
+        orphans
+    in
+    (* Closure *)
+    let orphans =
+      if not transitive then orphans else
+        OpamPackage.Set.of_list @@
+        OpamSolver.reverse_dependencies ~depopts:false ~installed:false
+        complete_universe orphans
+    in
     let orphan_names = (* names for which there is no version left *)
       OpamPackage.Name.Set.diff
         (OpamPackage.names_of_packages all)
-        (OpamPackage.names_of_packages (all -- orphan_versions)) in
+        (OpamPackage.names_of_packages (all -- orphans)) in
     let full_orphans, orphan_versions =
       OpamPackage.Set.partition
         (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) orphan_names)
-        orphan_versions in
+        orphans in
     (* Installed packages outside the set of changes are otherwise safe:
        re-add them to the universe *)
     let t =
@@ -538,7 +546,7 @@ module API = struct
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
     if atoms = [] then
       let to_reinstall = t.reinstall %% t.installed in
-      let t, full_orphans, orphan_versions = orphans t in
+      let t, full_orphans, orphan_versions = orphans ~transitive:true t in
       let to_upgrade = t.installed -- full_orphans in
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade to_reinstall in
@@ -887,13 +895,14 @@ module API = struct
     let orphans =
       OpamPackage.Set.filter has_no_local_data
         (full_orphans ++ orphan_versions) in
-    let available =
-      Lazy.force t.available_packages ++ t.installed -- orphans in
+    let available = lazy (t.packages -- orphans) in
     let conflict_atoms =
       List.filter
         (fun (name,_ as a) ->
            not (OpamState.is_pinned t name) &&
-           not (OpamPackage.Set.exists (OpamFormula.check a) available))
+           OpamPackage.Set.exists (OpamFormula.check a) orphans && (*optim*)
+           not (OpamPackage.Set.exists (OpamFormula.check a) (* real check *)
+                  (Lazy.force available)))
         atoms in
     if conflict_atoms <> [] then
       OpamGlobals.error_and_exit
