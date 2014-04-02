@@ -416,9 +416,6 @@ let atom_list =
      e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
     atom
 
-let repository_list =
-  arg_list "REPOSITORIES" "List of repository names." repository_name
-
 let param_list =
   arg_list "PARAMS" "List of parameters." Arg.string
 
@@ -944,7 +941,7 @@ let config =
                 state.pinned (0,0,0) in
             String.concat ", "
               (nprint "version" nver @
-               nprint "local" nlocal @
+               nprint "path" nlocal @
                nprint "version control" nvc)
           );
         print "current-switch" "%s%s"
@@ -1078,15 +1075,18 @@ let update =
   let upgrade =
     mk_flag ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
-  let update global_options jobs json repositories repos_only sync upgrade =
+  let name_list =
+    arg_list "NAMES" "List of repository or development package names."
+      Arg.string in
+  let update global_options jobs json names repos_only sync upgrade =
     apply_global_options global_options;
     json_update json;
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
-    Client.update ~repos_only repositories;
+    Client.update ~repos_only names;
     if upgrade then Client.upgrade []
   in
-  Term.(pure update $global_options $jobs_flag $json_flag $repository_list
+  Term.(pure update $global_options $jobs_flag $json_flag $name_list
         $repos_only $sync $upgrade),
   term_info "update" ~doc ~man
 
@@ -1337,7 +1337,7 @@ let pin ?(unpin_only=false) () =
         <package>.";
     `P "It is possible to pin a package to a specific git commit/tag/branch \
         with $(b,opam pin <package> </path/to/git>#<commit>).";
-    `P "By default, local directories will be pinned as `local` backends. \
+    `P "By default, local directories will be pinned as `path` backends. \
         You can change that default choice by forcing a given backend kind \
         using the $(b,--kind) option.";
     `P "To list all the currently pinned packages, call the $(b,opam pin) \
@@ -1365,6 +1365,7 @@ let pin ?(unpin_only=false) () =
       "git"    , `git;
       "darcs"  , `darcs;
       "version", `version;
+      "path"   , `local;
       "local"  , `local;
       "rsync"  , `local;
       "hg"     , `hg

@@ -613,15 +613,15 @@ module API = struct
 
   let upgrade names = with_switch_backup "upgrade" (upgrade_t names)
 
-  let update ~repos_only repos =
+  let update ~repos_only names =
     let t = OpamState.load_state ~save_cache:true "update" in
-    log "UPDATE %a"
-      (slog @@ OpamMisc.string_of_list OpamRepositoryName.to_string) repos;
+    log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
-      if repos = [] then
+      if names = [] then
         t.repositories
       else
-        let aux r _ = List.mem r repos in
+        let aux r _ =
+          List.mem (OpamRepositoryName.to_string r) names in
         OpamRepositoryName.Map.filter aux t.repositories in
     let repositories_need_update =
       not (OpamRepositoryName.Map.is_empty repositories) in
@@ -630,21 +630,13 @@ module API = struct
       if repos_only then OpamPackage.Set.empty
       else
         let all = t.installed %% OpamState.dev_packages t in
-        if repos = [] then
+        if names = [] then
           all
         else
           OpamPackage.Set.filter (fun nv ->
-              let name repo_name =
-                (repo_name
-                 |> OpamRepositoryName.to_string
-                 |> OpamPackage.Name.of_string)
-                =  OpamPackage.name nv in
-              let package repo_name =
-                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
-                = Some nv in
-              List.exists (fun repo_name ->
-                  name repo_name || package repo_name
-                ) repos
+              let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+              let pkg = OpamPackage.to_string nv in
+              List.exists (fun s -> s = name || s = pkg) names
             ) all in
     let dev_packages_need_update =
       not (OpamPackage.Set.is_empty dev_packages) in
@@ -658,12 +650,10 @@ module API = struct
         (List.rev_map OpamPackage.Name.to_string
            (OpamPackage.Name.Map.keys t.pinned)) in
     let unknown_names, not_pinned =
-      if repos = [] then
+      if names = [] then
         [], []
       else
-        let all =
-          OpamMisc.StringSet.of_list
-            (List.rev_map OpamRepositoryName.to_string repos) in
+        let all = OpamMisc.StringSet.of_list names in
         let valid_names =
           OpamMisc.StringSet.of_list
             (List.rev_map

@@ -115,7 +115,7 @@ let string_of_pin_kind = function
   | `git     -> "git"
   | `darcs   -> "darcs"
   | `hg      -> "hg"
-  | `local   -> "local"
+  | `local   -> "path"
 
 let pin_kind_of_string = function
   | "version" -> `version
@@ -123,7 +123,8 @@ let pin_kind_of_string = function
   | "darcs"   -> `darcs
   | "hg"      -> `hg
   | "rsync"
-  | "local"   -> `local
+  | "local"
+  | "path"    -> `local
   | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
 
 let string_of_pin_option = function
