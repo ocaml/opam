@@ -776,7 +776,7 @@ module API = struct
     | _, _, Success upgrade ->
       let stats = OpamSolver.stats upgrade in
       if OpamSolution.sum stats > 0 then
-        (OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
+        (OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
          OpamGlobals.msg
            "You can now run 'opam upgrade' to upgrade your system.\n")
     | _ ->

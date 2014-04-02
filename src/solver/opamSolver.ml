@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamTypesBase
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
 let slog = OpamGlobals.slog
@@ -396,13 +397,30 @@ let stats sol =
   { s_install; s_reinstall; s_upgrade; s_downgrade; s_remove }
 
 let string_of_stats stats =
-  Printf.sprintf
-    "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove"
-    stats.s_install
-    stats.s_reinstall
-    stats.s_upgrade
-    stats.s_downgrade
-    stats.s_remove
+  let col n =
+    OpamGlobals.colorise `yellow (string_of_int n)
+  in
+  let utf = !(OpamGlobals.utf8_msgs) in
+  let stats = [
+    stats.s_install;
+    stats.s_reinstall;
+    stats.s_upgrade;
+    stats.s_downgrade;
+    stats.s_remove;
+  ] in
+  let titles =
+    if utf then
+      ["+";"\xe2\x86\xbb";"\xe2\x86\x91";"\xe2\x86\x93";"\xe2\x8a\x98"]
+    else
+      ["install";"reinstall";"upgrade";"downgrade";"remove"]
+  in
+  let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
+  if utf then
+    String.concat "   " @@
+    List.map (fun (n,t) -> Printf.sprintf "%s %s" t (col n)) msgs
+  else
+    String.concat " | " @@
+    List.map (fun (n,t) -> Printf.sprintf "%s to %s" (col n) t) msgs
 
 let solution_is_empty t =
   t.to_remove = []
