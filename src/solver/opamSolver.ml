@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open OpamMisc.OP
+open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
 let slog = OpamGlobals.slog
@@ -294,19 +295,20 @@ let cleanup_request universe (req:atom request) =
 
 let resolve ?(verbose=true) universe ~requested request =
   log "resolve request=%a" (slog string_of_request) request;
-  let version_map = cudf_versions_map universe universe.u_packages in
+  let version_map =
+    cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
   let simple_universe =
     load_cudf_universe universe ~version_map universe.u_available in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let orphan_packages =
-    OpamPackage.Set.diff universe.u_installed universe.u_available in
+    universe.u_installed -- universe.u_available in
   let orphan_packages =
     OpamPackage.Set.filter (fun n -> not (OpamPackage.is_pinned n))
       orphan_packages in
   let add_orphan_packages u =
     load_cudf_universe universe ~version_map
-      (OpamPackage.Set.union orphan_packages
+      (orphan_packages ++
          (OpamPackage.Set.of_list
             (List.map cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
@@ -324,7 +326,7 @@ let resolve ?(verbose=true) universe ~requested request =
       OpamCudf.string_of_reasons cudf2opam simple_universe universe (c ()))
   | Success actions ->
     let all_packages =
-      OpamPackage.Set.union universe.u_available orphan_packages in
+      universe.u_available ++ orphan_packages in
     let simple_universe =
       load_cudf_universe universe ~version_map all_packages in
     let complete_universe =
