@@ -259,14 +259,16 @@ let header_msg fmt =
       let wpadl = max (wpad / 2) 3 in
       if !utf8_msgs then
         (print_string (colorise `yellow utf8camel);
-         for _i = 1 to wpadl - 3 do print_char ' ' done)
+         for _i = 1 to wpadl - 6 do print_char ' ' done;
+         for _i = wpadl - 5 to wpadl - 3 do print_char '-' done)
       else
         print_string (colorise `cyan (String.sub padding 0 wpadl));
       print_char ' ';
       print_string (colorise `bold str);
       print_char ' ';
       let wpadr = wpad - wpadl in
-      if not !utf8_msgs && wpadr > 0 then
+      if wpadr > 0 then
+        if !utf8_msgs then print_string "---" else
         print_string
           (colorise `cyan
              (String.sub padding (String.length padding - wpadr) wpadr));

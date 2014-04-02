@@ -580,7 +580,8 @@ let apply ?(force = false) t action ~requested solution =
     let show_solution = (!OpamGlobals.external_tags = []) in
     if show_solution then (
       OpamGlobals.msg
-        "The following actions will be %s:\n"
+        "The following actions %s be %s:\n"
+        (if !OpamGlobals.show then "would" else "will")
         (if !OpamGlobals.fake then "simulated" else "performed");
       let new_state = simulate_new_state t solution in
       let messages p =
@@ -598,7 +599,7 @@ let apply ?(force = false) t action ~requested solution =
         then OpamPackage.pinned name
         else pin_nv in
       OpamSolver.print_solution ~messages ~rewrite solution;
-      OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
+      OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;
     );
 
