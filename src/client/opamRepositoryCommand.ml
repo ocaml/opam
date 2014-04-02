@@ -192,8 +192,8 @@ let print_updated_dev_packages pinned_packages =
 (* Check for updates in pinned packages *)
 let update_dev_packages t ~verbose packages =
   log "update-dev-packages updates %a" (slog OpamPackage.Set.to_string) packages;
-  let updates = OpamState.update_dev_packages t in
-  if verbose then print_updated_dev_packages updates;
+  let updates = OpamState.update_dev_packages t packages in
+  if verbose then print_updated_dev_packages updates ;
   updates
 
 let filter_package_checksums cs =

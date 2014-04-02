@@ -99,6 +99,7 @@ module OPAM: sig
 
   (** Package version *)
   val version: t -> version
+  val version_opt: t -> version option
 
   (** Compiler constraint *)
   val ocaml_version: t -> compiler_constraint option

@@ -261,6 +261,16 @@ module OP = struct
 
 end
 
+module Option = struct
+  let map f = function
+    | None -> None
+    | Some x -> Some (f x)
+
+  let default dft = function
+    | None -> dft
+    | Some x -> x
+end
+
 let strip str =
   let p = ref 0 in
   let l = String.length str in

@@ -192,6 +192,15 @@ val indent_right: string -> ?visual:string -> int -> string
 (** Cut a string *)
 val sub_at: int -> string -> string
 
+
+(** {2 Option} *)
+
+module Option: sig
+  val map: ('a -> 'b) -> 'a option -> 'b option
+
+  val default: 'a -> 'a option -> 'a
+end
+
 (** {2 Misc} *)
 
 (** Remove from a c-separated list of string the one with the given prefix *)

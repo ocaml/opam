@@ -119,9 +119,6 @@ val pattern_list: string list Term.t
 (** package names *)
 val name_list: name list Term.t
 
-(** repositories *)
-val repository_list: repository_name list Term.t
-
 (** parameters *)
 val param_list: string list Term.t
 

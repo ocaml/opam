@@ -355,23 +355,8 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
   );
   {t with installed; installed_roots; reinstall}
 
-let dev_opam_opt t nv build_dir =
-  let opam () = OpamState.opam_opt t nv in
-  if OpamState.is_dev_package t nv then
-    let dir =
-      if OpamFilename.exists_dir (build_dir / "opam") then
-        build_dir / "opam"
-      else
-        build_dir in
-    let overlay = dir // "opam" in
-    if OpamFilename.exists overlay then
-      try Some (OpamFile.OPAM.read overlay)
-      with e -> OpamMisc.fatal e; opam ()
-    else opam ()
-  else opam ()
-
-let dev_opam t nv build_dir =
-  match dev_opam_opt t nv build_dir with
+let dev_opam t nv =
+  match OpamState.opam_opt t nv with
   | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
   | Some nv' ->
     OpamFile.OPAM.with_name
@@ -422,7 +407,7 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
          extracted If it does not exist, we try to download and
          extract the archive again, if that fails, we don't really
          care. *)
-      let opam = dev_opam t nv p_build in
+      let opam = dev_opam t nv in
       let remove = OpamState.filter_commands t ~opam
           OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
       let name = OpamPackage.Name.to_string name in
@@ -611,9 +596,7 @@ let build_and_install_package_aux t ~metadata nv =
 
     let p_build = OpamPath.Switch.build t.root t.switch nv in
 
-    (* For dev packages, we look for any opam file at the root of the build
-       directory *)
-    let opam = dev_opam t nv p_build in
+    let opam = dev_opam t nv in
 
     (* Get the env variables set up in the compiler description file *)
     let env = compilation_env t opam in

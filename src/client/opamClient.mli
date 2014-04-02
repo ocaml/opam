@@ -51,7 +51,7 @@ module API: sig
   val reinstall: atom list -> unit
 
   (** Refresh the available packages. *)
-  val update: repos_only:bool -> repository_name list -> unit
+  val update: repos_only:bool -> string list -> unit
 
   (** Find a consistent state where most of the installed packages are
       upgraded to their latest version, within the given constraints.

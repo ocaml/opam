@@ -917,6 +917,7 @@ module X = struct
 
     let name t = check "name" t.name
     let version t = check "version" t.version
+    let version_opt t = t.version
     let maintainer t = t.maintainer
     let substs t = t.substs
     let build t = t.build

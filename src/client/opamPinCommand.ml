@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "COMMAND" fmt
 let slog = OpamGlobals.slog
@@ -30,25 +31,44 @@ let cleanup_dev_dirs t name =
   let nv = OpamPackage.pinned name in
   OpamFilename.rmdir (OpamPath.dev_package t.root nv)
 
-let edit_t t name =
+let edit t name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
   if not (OpamState.is_pinned t name) then
     OpamGlobals.error_and_exit "%s is not pinned."
       (OpamPackage.Name.to_string name);
   let nv = OpamPackage.pinned name in
+  let installed_nv =
+    try Some (OpamState.pinning_version t @@
+              OpamState.find_installed_package_by_name t name)
+    with Not_found -> None
+  in
   let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
   if not (OpamFilename.exists file) then OpamState.add_pinned_overlay t name;
-  ignore
-    (Sys.command
-       (Printf.sprintf "%s %s"
-          (Lazy.force OpamGlobals.editor) (OpamFilename.to_string file)));
-  OpamState.is_name_installed t name
-
-let edit name =
-  let t = OpamState.load_state "pin" in
-  let reinst = edit_t t name in
-  cleanup_dev_dirs t name;
-  reinst
+  let backup =
+    OpamFilename.OP.(OpamPath.backup_dir t.root //
+                     (OpamPackage.Name.to_string name ^ "-opam.bak")) in
+  OpamFilename.copy ~src:file ~dst:backup;
+  let rec edit () =
+    try
+      ignore @@ Sys.command
+        (Printf.sprintf "%s %s"
+           (Lazy.force OpamGlobals.editor) (OpamFilename.to_string file));
+      OpamFile.OPAM.read file
+    with e->
+      (try OpamMisc.fatal e with e ->
+        OpamFilename.move ~src:backup ~dst:file;
+        raise e);
+      if OpamState.confirm "Errors in %s, retry editing ?"
+          (OpamFilename.to_string file)
+      then edit ()
+      else (OpamFilename.move ~src:backup ~dst:file;
+            OpamFile.OPAM.read file)
+  in
+  let opam = edit () in
+  OpamFilename.remove backup;
+  match installed_nv with
+  | None -> None
+  | Some nv -> Some (OpamPackage.version nv = OpamFile.OPAM.version opam)
 
 let update_set set old cur save =
   if OpamPackage.Set.mem old set then
@@ -59,7 +79,7 @@ let update_config t name pins =
   cleanup_dev_dirs t name;
   OpamFile.Pinned.write pin_f pins
 
-let pin name ?(edit=false) pin_option =
+let pin name pin_option =
   log "pin %a to %a"
     (slog OpamPackage.Name.to_string) name
     (slog string_of_pin_option) pin_option;
@@ -93,10 +113,11 @@ let pin name ?(edit=false) pin_option =
           (string_of_pin_option current)
       else
         OpamGlobals.note
-          "%s was pinned to %s."
+          "%s is already pinned to %s."
           (OpamPackage.Name.to_string name)
           (string_of_pin_option current);
-      no_changes
+      if OpamState.confirm "Proceed ?" then no_changes
+      else OpamGlobals.exit 0
     with Not_found -> false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
@@ -140,13 +161,9 @@ let pin name ?(edit=false) pin_option =
 
   let pin_version = OpamPackage.version nv_v in
 
-  let needs_reinstall = not no_changes && installed_version <> None in
-  let needs_reinstall =
-    if edit then edit_t t name || needs_reinstall
-    else needs_reinstall in
-  if needs_reinstall then
+  if not no_changes && installed_version <> None then
     if installed_version = Some pin_version then
-      if pin_kind = `version && not edit then None
+      if pin_kind = `version then None
       else Some true
     else Some false
   else None
@@ -177,8 +194,9 @@ let unpin name =
   update_config t name (OpamPackage.Name.Map.remove name pins);
   OpamState.remove_overlay t nv_pin;
 
-  OpamGlobals.msg "%s is now unpinned\n"
-    (OpamPackage.Name.to_string name);
+  OpamGlobals.msg "%s is now %a\n"
+    (OpamPackage.Name.to_string name)
+    (OpamGlobals.acolor `bold) "unpinned";
 
   needs_reinstall
 
