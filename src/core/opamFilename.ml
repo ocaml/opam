@@ -319,14 +319,14 @@ let download_iter ~overwrite filenames dirname =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
-let with_flock file f x =
-  OpamSystem.flock (to_string file);
+let with_flock ?read file f x =
+  let lock = OpamSystem.flock ?read (to_string file) in
   try
     let r = f x in
-    OpamSystem.funlock (to_string file);
+    OpamSystem.funlock lock;
     r
   with e ->
-    OpamSystem.funlock (to_string file);
+    OpamSystem.funlock lock;
     raise e
 
 let checksum f =

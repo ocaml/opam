@@ -163,14 +163,14 @@ val mkdir: string -> unit
 
 (** {2 File locking function} *)
 
-(** [flock ()] takes the global file lock. If the lock is already
-    taken, sleep for 1s and then retry. Abort after 5 tentatives. *)
-val flock: string -> unit
+type lock
 
-(** [funlock ()] unlocks the global file lock. Work only if the
-    current processus is the same as the one who took the lock at the
-    first place. *)
-val funlock: string -> unit
+(** Acquires a lock on the given file. Retries 5 times max.
+    By default, this is a write lock. *)
+val flock: ?read:bool -> string -> lock
+
+(** Releases an acquired locl *)
+val funlock: lock -> unit
 
 (** {2 Misc} *)
 
