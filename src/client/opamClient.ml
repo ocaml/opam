@@ -1119,29 +1119,48 @@ module API = struct
       OpamState.confirm "%s needs to be reinstalled, do it now ?"
         (OpamPackage.Name.to_string name)
 
-    let pin name ?edit pin_option =
-      match pin name ?edit pin_option with
-      | None -> ()
-      | Some is_same_version ->
-        with_switch_backup "pin-reinstall" (fun t ->
-            let nv = OpamPackage.pinned name in
-            OpamGlobals.msg "\n";
-            ignore (OpamState.update_dev_package t nv);
-            OpamGlobals.msg "\n";
-            if confirm_reinstall name then
-              if is_same_version then
-                reinstall_t [name,None] t
-              else
-                install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
-                  None false t
-          )
+    let pin name ?(edit=false) pin_option =
+      let needs_reinstall = pin name pin_option in
+      with_switch_backup "pin-reinstall" @@ fun t ->
+      let nv = OpamPackage.pinned name in
+      OpamGlobals.msg "\n";
+      ignore (OpamState.update_dev_package t nv);
+      OpamGlobals.msg "\n";
+      let needs_reinstall2 =
+        if edit then OpamPinCommand.edit t name else None in
+      match needs_reinstall, needs_reinstall2 with
+      | None, None -> ()
+      | Some false, _ | _, Some false ->
+        if confirm_reinstall name then
+          install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
+            None false t
+      | _ ->
+        if confirm_reinstall name then
+          reinstall_t [name,None] t
 
     let edit name =
-      if edit name && confirm_reinstall name then
-        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
+      with_switch_backup "pin-edit" @@ fun t ->
+      match edit t name with
+      | None -> ()
+      | Some is_same_version ->
+        if confirm_reinstall name then
+          if is_same_version then
+            reinstall_t [name,None] t
+          else
+            install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
+              None false t
 
-    let unpin name = if unpin name && confirm_reinstall name then
-        with_switch_backup "pin-reinstall" (reinstall_t [name,None])
+    let unpin name =
+      if unpin name && confirm_reinstall name then
+        with_switch_backup "pin-reinstall" @@ fun t ->
+        if
+          try
+            let nv = OpamState.find_installed_package_by_name t name in
+            OpamPackage.Set.mem
+              (OpamState.pinning_version t nv) (Lazy.force t.available_packages)
+          with Not_found -> false
+        then reinstall_t [name,None] t
+        else install_t [name, None] None false t
 
     let list = list
   end
