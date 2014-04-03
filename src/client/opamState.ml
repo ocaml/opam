@@ -2296,7 +2296,11 @@ let check f =
         ) ()
 
     | Read_lock f ->
+      (* XXX not locking anything atm: doing so breaks [make tests]
+         and probably mirari
       OpamFilename.with_flock ~read:true (OpamPath.lock root) f ()
+      *)
+      f ()
 
     | Switch_lock f ->
       (* Take a switch lock (and a global read lock). *)
