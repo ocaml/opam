@@ -19,6 +19,7 @@ echo OCaml version
 ocaml -version
 
 export OPAMYES=1
+export OCAMLRUNPARAM=b
 
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
