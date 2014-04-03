@@ -174,31 +174,34 @@ let unpin name =
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
 
-  if not (OpamPackage.Name.Map.mem name pins) then
-    (OpamGlobals.note "%s is not pinned." (OpamPackage.Name.to_string name);
-     false)
-  else
-  let needs_reinstall =
-    match OpamPackage.Name.Map.find name pins with
-    | Version _ -> false
-    | _ -> OpamState.is_name_installed t name
-  in
-  let nv_pin = OpamPackage.pinned name in
-  let nv_v = OpamState.pinning_version t nv_pin in
-  update_set t.installed nv_pin nv_v
-    (OpamFile.Installed.write
-       (OpamPath.Switch.installed t.root t.switch));
-  update_set t.installed_roots nv_pin nv_v
-    (OpamFile.Installed_roots.write
-       (OpamPath.Switch.installed_roots t.root t.switch));
-  update_config t name (OpamPackage.Name.Map.remove name pins);
-  OpamState.remove_overlay t nv_pin;
+  try
+    let current = OpamPackage.Name.Map.find name pins in
+    let needs_reinstall = match current with
+      | Version _ -> false
+      | _ -> OpamState.is_name_installed t name
+    in
+    let nv_pin = OpamPackage.pinned name in
+    let nv_v = OpamState.pinning_version t nv_pin in
+    update_set t.installed nv_pin nv_v
+      (OpamFile.Installed.write
+         (OpamPath.Switch.installed t.root t.switch));
+    update_set t.installed_roots nv_pin nv_v
+      (OpamFile.Installed_roots.write
+         (OpamPath.Switch.installed_roots t.root t.switch));
+    update_config t name (OpamPackage.Name.Map.remove name pins);
+    OpamState.remove_overlay t nv_pin;
 
-  OpamGlobals.msg "%s is now %a\n"
-    (OpamPackage.Name.to_string name)
-    (OpamGlobals.acolor `bold) "unpinned";
+    OpamGlobals.msg "%s is now %a from %s\n"
+      (OpamPackage.Name.to_string name)
+      (OpamGlobals.acolor `bold) "unpinned"
+      (string_of_pin_option current);
 
-  needs_reinstall
+    needs_reinstall
+
+  with Not_found ->
+    OpamGlobals.note "%s is not pinned." (OpamPackage.Name.to_string name);
+    false
+
 
 let list () =
   log "pin_list";
