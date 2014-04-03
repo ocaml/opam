@@ -476,59 +476,36 @@ let link src dst =
   ) else
     internal_error "link: %s does not exist." src
 
-let flock file =
-  let l = ref 0 in
-  let id = string_of_int (Unix.getpid ()) in
-  let max_l = 5 in
-  let rec loop () =
-    if Sys.file_exists file && !l < max_l then begin
-      let ic = open_in file in
-      let pid =
-        try input_line ic
-        with End_of_file -> internal_error "flock: %s corrupt" file
-      in
-      close_in ic;
-      OpamGlobals.msg
-        "Another process (%s) has already locked %S. Retrying in 1s (%d/%d)\n"
-        pid file !l max_l;
-      Unix.sleep 1;
-      incr l;
-      loop ()
-    end else if Sys.file_exists file then
-      internal_error "Too many attempts. Cancelling."
-    else begin
-      let oc = open_out file in
-      output_string oc id;
-      flush oc;
-      close_out oc;
-      OpamGlobals.log id "locking %s" file;
-    end in
-  loop ()
+type lock = Unix.file_descr * string
 
-let funlock file =
-  let id = string_of_int (Unix.getpid ()) in
-  if Sys.file_exists file then (
-    let ic = open_in file in
-    try
-      let s =
-        try input_line ic
-        with End_of_file -> internal_error "funlock: %s corrupt" file
-      in
-      close_in ic;
-      if s = id then (
-        log "unlocking %s (%s)" file id;
-        log "rm %s" file;
-        Unix.unlink file;
-      ) else
-        internal_error "Cannot unlock %s (%s)." file s
-    with e ->
-      OpamMisc.fatal e;
-      OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
-      close_in ic;
-      log "rm %s" file;
-      try Unix.unlink file with Unix.Unix_error _ -> ()
-  ) else
-    log "Cannot find %s, but continuing anyway..." file
+let flock ?(read=false) file =
+  let max_tries = 5 in
+  let fd = Unix.openfile file [Unix.O_CREAT; Unix.O_RDWR] 0o600 in
+  let lock_op = if read then Unix.F_TRLOCK else Unix.F_TLOCK in
+  let rec loop attempt =
+    try Unix.lockf fd lock_op 0
+    with Unix.Unix_error (Unix.EAGAIN,_,_) ->
+      if attempt > max_tries then
+        OpamGlobals.error_and_exit
+          "Could not acquire %s lock to %S, aborting."
+          (if read then "read" else "write") file;
+      OpamGlobals.msg
+        "Another process has a write lock on %S. (attempt %d/%d)\n"
+        file attempt max_tries;
+      Unix.sleep 1;
+      loop (attempt + 1)
+  in
+  log "locking %s" file;
+  loop 1;
+  fd, file
+
+let funlock (fd,file) =
+  (try (* Unlink file if write lock can be acquired *)
+     Unix.lockf fd Unix.F_TLOCK 0;
+     Unix.unlink file;
+   with Unix.Unix_error _ -> ());
+  Unix.close fd; (* implies Unix.lockf fd Unix.F_ULOCK 0 *)
+  log "Lock released on %s" file
 
 let ocaml_version = lazy (
   match read_command_output_opt ~verbose:false [ "ocamlc" ; "-version" ] with

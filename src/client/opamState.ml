@@ -2381,56 +2381,43 @@ let download_upstream t nv dirname =
 
 let check f =
   let root = OpamPath.root () in
-  let with_switch_lock a f =
-    OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
-  let error () =
-    OpamGlobals.error_and_exit
-      "Please run 'opam init' first to initialize the state of OPAM."
-      (OpamFilename.Dir.to_string root) in
 
   if not (OpamFilename.exists_dir root)
   || not (OpamFilename.exists (OpamPath.config root)) then
-    error ()
+    OpamGlobals.error_and_exit
+      "Please run 'opam init' first to initialize the state of OPAM."
+      (OpamFilename.Dir.to_string root);
 
-  else match f with
+  match f with
 
     | Global_lock f ->
       (* Take the global lock *)
       OpamFilename.with_flock (OpamPath.lock root) (fun () ->
           (* clean the log directory *)
           OpamFilename.cleandir (OpamPath.log root);
-          (* Take all the switch locks *)
-          let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-          let f =
-            OpamSwitch.Map.fold (fun a _ f ->
-                if OpamFilename.exists_dir (OpamPath.Switch.root root a)
-                then with_switch_lock a (fun () -> f ())
-                else f
-              ) aliases f in
+          (* XXX pass t to f so that it doesn't have to reload it ? *)
           let t = load_state "global-lock" in
           global_consistency_checks t;
           f ()
         ) ()
 
     | Read_lock f ->
-      (* Simply check that OPAM is correctly initialized *)
-      if OpamFilename.exists_dir root then
-        f ()
-      else
-        error ()
+      (* XXX not locking anything atm: doing so breaks [make tests]
+         and probably mirari
+      OpamFilename.with_flock ~read:true (OpamPath.lock root) f ()
+      *)
+      f ()
 
     | Switch_lock f ->
-      (* Take a switch lock (and check that the global lock is free). *)
-      let switch =
-        OpamFilename.with_flock
-          (OpamPath.lock root)
-          (fun () -> match !OpamGlobals.switch with
-            | `Command_line s
-            | `Env s   -> OpamSwitch.of_string s
+      (* Take a switch lock (and a global read lock). *)
+      OpamFilename.with_flock ~read:true (OpamPath.lock root) (fun () ->
+          let switch = match !OpamGlobals.switch with
+            | `Command_line s | `Env s -> OpamSwitch.of_string s
             | `Not_set ->
-              OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root)))
-          () in
-      (* XXX: We can have a small race just here ... *)
-      let t = load_state "switch-lock" in
-      switch_consistency_checks t;
-      with_switch_lock switch f ()
+              OpamFile.Config.switch
+                (OpamFile.Config.read (OpamPath.config root))
+          in
+          let t = load_state "switch-lock" in
+          switch_consistency_checks t;
+          OpamFilename.with_flock (OpamPath.Switch.lock root switch) f ()
+        ) ()

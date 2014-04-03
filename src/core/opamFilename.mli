@@ -224,7 +224,7 @@ val touch: t -> unit
 val chmod: t -> int -> unit
 
 (** File locks *)
-val with_flock: t -> ('a -> 'b) -> 'a -> 'b
+val with_flock: ?read:bool -> t -> ('a -> 'b) -> 'a -> 'b
 
 (** [copy_if_check t src dst] copies all the files from one directory
     to another. Do nothing if OPAMDONOTCOPYFILE is set to a non-empty
