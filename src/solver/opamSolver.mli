@@ -78,4 +78,5 @@ val reverse_dependencies :
   package list
 
 (** Create a sequential solution from a list of actions *)
-val sequential_solution: package action list -> solution
+val sequential_solution: universe -> requested:name_set ->
+  package action list -> solution

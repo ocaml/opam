@@ -284,12 +284,7 @@ let rec pretty_string_of_value depth ~simplify ~indent value =
     else s
   | Int (_,i)       -> Printf.sprintf "%d" i
   | Bool (_,b)      -> Printf.sprintf "%b" b
-  | String (_,s)    ->
-    if not !OpamGlobals.compat_mode_1_0
-    && OpamMisc.starts_with ~prefix:"%{" s && OpamMisc.ends_with ~suffix:"}%" s then
-      String.sub s 2 (String.length s - 4)
-    else
-      Printf.sprintf "%S" s
+  | String (_,s)    -> Printf.sprintf "%S" s
   | List (_,[List(_,[])]) -> Printf.sprintf "[]"
   | List (_,l)      -> pretty_string_of_list depth ~simplify ~indent l
   | Group (_,g)     -> Printf.sprintf "(%s)"
