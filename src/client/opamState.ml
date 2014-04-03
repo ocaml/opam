@@ -2325,6 +2325,7 @@ let update_dev_package t nv =
       then (
         let bak =
           OpamPath.backup_dir t.root / (OpamPackage.to_string nv ^ ".bak") in
+        OpamFilename.mkdir (OpamPath.backup_dir t.root);
         OpamFilename.rmdir bak;
         OpamFilename.move_dir ~src:overlay ~dst:bak;
         OpamGlobals.msg "User metadata backed up in %s\n"
