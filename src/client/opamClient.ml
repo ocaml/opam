@@ -1113,9 +1113,10 @@ module API = struct
         ~depopts:true ~installed:true universe reinstall in
     let to_process =
       List.map (fun pkg -> To_recompile pkg) depends in
-    let solution = OpamSolver.sequential_solution to_process in
     let requested =
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+    let solution =
+      OpamSolver.sequential_solution universe ~requested to_process in
     let solution = OpamSolution.apply t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 

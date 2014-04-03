@@ -446,17 +446,19 @@ let print_solution ~messages ~rewrite t =
         | To_delete _    -> ()
       ) t.to_process
 
-let sequential_solution l =
-  let g = ActionGraph.create () in
-  List.iter (ActionGraph.add_vertex g) l;
-  let rec aux = function
-    | [] | [_]       -> ()
-    | x::(y::_ as t) ->
-      ActionGraph.add_edge g x y;
-      aux t in
-  aux l;
-  {
-    to_remove = [];
-    to_process = g;
-    root_causes = []
-  }
+let sequential_solution universe ~requested actions =
+  let version_map =
+    cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
+  let simple_universe =
+    load_cudf_universe universe ~version_map universe.u_available in
+  let complete_universe =
+    load_cudf_universe universe ~version_map ~depopts:true universe.u_available in
+  let actions =
+    List.map
+      (map_action (opam2cudf universe ~depopts:true version_map))
+      actions in
+  let cudf_solution =
+    OpamCudf.solution_of_actions
+      ~simple_universe ~complete_universe ~requested
+      actions in
+  solution cudf2opam cudf_solution
