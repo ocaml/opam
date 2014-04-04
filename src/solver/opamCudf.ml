@@ -396,9 +396,9 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-let external_solver_exists () = OpamSystem.command_exists !OpamGlobals.external_solver
+let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver)
 
-let external_solver_available () = !OpamGlobals.use_external_solver && (external_solver_exists())
+let external_solver_available () = !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
 
 let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
 
