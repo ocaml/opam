@@ -267,11 +267,10 @@ let command_exists ?(env=default_env) name =
   let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
   OpamProcess.clean_files r;
   if OpamProcess.is_success r then
-    let is_builtin s = try ignore(Re_str.search_forward (Re_str.regexp "/") s 0); false with Not_found -> true in
+    let is_external_cmd s = String.contains s '/' in
     match r.OpamProcess.r_stdout with 
       cmdname::_ -> (* check that we have permission to execute the command *)
-	if is_builtin cmdname then true 
-	else
+	if is_external_cmd cmdname then 
 	  (try 
 	    let open Unix in 
 	    let uid = getuid() and groups = Array.to_list(getgroups()) in
@@ -282,6 +281,7 @@ let command_exists ?(env=default_env) name =
 		lor (if List.mem cmd_gid groups then 0o010 else 0) in
 	    (cmd_perms land mask) <> 0
           with _ -> false)
+	else true
     | _ -> false
   else false
 
