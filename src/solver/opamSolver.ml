@@ -133,22 +133,60 @@ let opam2cudf universe ?(depopts=false) version_map package =
   let depends =
     try OpamPackage.Map.find package universe.u_depends
     with Not_found -> Empty in
-  let depends =
-    let opts = depopts_of_package universe package in
-    if depopts then
-      let opts = List.rev_map OpamFormula.of_conjunction opts in
-      And (depends, Or(depends, OpamFormula.ors opts))
-    else if universe.u_action = Remove then depends
-    else
-    let mem_installed conj = List.exists (is_installed universe) conj in
-    let opts = List.filter mem_installed opts in
-    let opts = List.rev_map OpamFormula.of_conjunction opts in
-    And (depends, OpamFormula.ands opts) in
+  let depopts_packages =
+    try OpamPackage.Map.find package universe.u_depopts
+    with Not_found -> Empty in
   let conflicts =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in
-  let conflicts = (* prevents install of multiple versions of the same pkg *)
-    (name, None)::OpamFormula.to_conjunction conflicts in
+  let depends =
+    if depopts then
+      let opts = OpamFormula.to_dnf depopts_packages in
+      let opts = List.rev_map OpamFormula.of_conjunction opts in
+      OpamFormula.ands [depends; OpamFormula.ors (depends :: opts)]
+    else depends
+  in
+  let conflicts = (* add complement of the depopts as conflicts *)
+    let module NM = OpamPackage.Name.Map in
+    let depopts = (* get back a map (name => version_constraint) *)
+      (* XXX this takes _all_ the atoms not considering con/disjunctions *)
+      OpamFormula.fold_left (fun acc (name,f) ->
+          try NM.add name (Or (f, NM.find name acc)) acc
+          with Not_found -> NM.add name f acc)
+        OpamPackage.Name.Map.empty
+        depopts_packages in
+    let neg_depopts =
+      NM.fold (fun name f acc ->
+          if f = OpamFormula.Empty then acc else
+          let f = OpamFormula.(neg (fun (op,v) -> neg_relop op, v) f) in
+          match OpamFormula.to_dnf (Atom (name,f)) with
+          | [] -> acc
+          | [conj] -> conj @ acc
+          | dnf ->
+            (* Formula is not a conjunction, we are left with no choice
+               but to enumerate *)
+            log "enum-depopts of %a / depopt %a"
+              (slog OpamPackage.to_string) package
+              (slog OpamPackage.Name.to_string) name;
+            let f =
+              OpamFormula.to_atom_formula @@ OpamFormula.ors @@
+              List.map OpamFormula.of_conjunction dnf in
+            let conflict_packages =
+              OpamPackage.Set.filter
+                (fun pkg ->
+                   OpamFormula.eval (fun atom -> OpamFormula.check atom pkg) f)
+                (OpamPackage.packages_of_name universe.u_available name)
+            in
+            OpamPackage.Set.fold (fun nv acc ->
+                (OpamPackage.name nv, Some (`Eq, OpamPackage.version nv))
+                :: acc)
+              conflict_packages acc)
+        depopts [] in
+    let self = name, None in (* prevent multiples of the same pkg *)
+    self ::
+    OpamFormula.to_conjunction conflicts
+    @ neg_depopts
+  in
   let installed =
     OpamPackage.Set.exists (fun pkg -> real_version universe pkg = package)
       universe.u_installed in
