@@ -194,7 +194,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
       let depopts = OpamFile.OPAM.depopts opam in
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
-        ) OpamPackage.Set.empty (OpamFormula.And (deps, depopts))
+        ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
     ) else
       OpamPackage.Set.empty in
   let get_transitive_dependencies packages =
