@@ -1,0 +1,177 @@
+Opam metadata evolution proposal for 1.2.x
+==========================================
+
+This document contains the current summary proposal for evolving Opam's
+metadata, together with the rationale underpinning the proposed choices.
+
+In a nutshell
+-------------
+
+The new metadata will restrict the allowed values of the depopts: field
+and add a new field features: as follows
+
+ - the depopts: field will be restricted to a simple list of packages,
+   with no version constraints, no boolean connectors
+
+ - a new field features: will be introduced to express the different
+   possible configurations of the source packages according to the
+   availability of arbitrarily complex combinations of other packages
+   (also known as "variability points" in the software product lines
+    research community)
+
+It is important to roll-out these changes to get them accepted by
+package maintainers as soon as possible.
+
+
+Rationale
+---------
+
+The old implementation of depopts: tried to address three different needs
+
+  1) list the packages which are not mandatory for installation, but
+     that trigger a recompilation in case their status is modified
+     (added, removed, downgraded, upgraded). This is needed to 
+     determine if a recompilation (and reconfiguration) is necessary
+
+  2) capture multiple package/versions patterns that lead, in the
+     configuration phase, to enable or disable various different features
+
+  3) express incompatibilities with certain versions of these packages
+
+This has led to several difficulties in practice; optional configuration
+features could not be easily and faithfully translated into package
+dependencies, which led to an incomplete ad-hoc implementation; 
+potential ambiguities emerged in the metadata, like in the line
+
+    depopts: async >= 109.15.00 | lwt >= 2.4.3 | (lwt >= 2.4.3 & ssl)
+
+where lwt >= 2.4.3 | (lwt >= 2.4.3 & ssl) looks like a typo, as A \/ (A /\ B) is
+logically equivalent to A, while the intention of the maintainer was to identify
+two possible configurations, one with lwt only, and one with both lwt and ssl.
+
+As a consequence, it has been decided to fully separate the three issues,
+capturing them in different fields, with a clear semantics.
+
+Core Proposal
+-------------
+
+Notice that items below are numbered according to the needs they addressed,
+but presented in order of increased implementation complexity
+
+  1) the depopts: field now contains only a list of package names (no version
+     constraints, no boolean combinations, just a list);
+     
+     Semantics: in case the status of any package appearing in this field is
+     modified (added, removed, downgraded, upgraded), a recompilation of the
+     package is scheduled. The depopts: field is not used at all by the
+     package dependencies resolution phase, and must not be transalted into
+     CUDF.
+
+  3) incompatibilities implicitly expressed in the depopts: lines by using
+     version constraints must now be made explicit in the form of conflicts
+     added to the list contained in the conflicts: field
+
+     There is no change in the semantics of conflicts: and rewriting the few
+     old versioned depopts can be performed manually or automatically.
+
+     For example,
+
+       depopts: async >= 109.15.00 | lwt >= 2.4.3 | (lwt >= 2.4.3 & ssl)
+       conflicts: tyxml
+
+     will become
+
+       depopts: async, lwt, ssl
+       conflicts: tyxml, async < 109.15.00, lwt < 2.4.3
+
+   2) a new field features: is added, that contains a list of "feature specifications",
+      each feature specification being composed by:
+
+       - a state-variable (or configuration variable)
+       - a string describing the feature
+       - an arbitrary boolean formula built out of atoms that are package names, possibly with version constraints
+      
+       features: [
+                  ssl-support "Support for SSL" { lwt >= 2.4.3 & ssl } ;
+                  multi-backend "Enable both Async and Lwt" {lwt >= 2.4.3 & async > 109.15.00 } ;
+                  minimal "Only minimalistich HTTP support" {lwt & -async & -ssl}
+                 ]
+
+       Semantics: a feature, and the corresponding state variable, is enabled iff 
+                  the associated boolean formula is satisfied by the current
+                  package state; this is easy to compute, as it is a simple
+                  boolean evaluation of the formula in the assignment given by
+                  the package state.
+
+       Benefits: it is now easy to read the intended meaning of the maintainer in the metadata,
+                 and it is possible to output meaningful information to the user during the
+                 package installation/recompilation phase
+
+Impact:
+-------
+
+These above changes require several modifications to the current code base:
+
+    1) requires implementing a simple new parser and checking the logic
+       for computing recompilation; 
+
+    2) requires implementing another parser, a simple propositional logic evaluator,
+       some user output, and an interconnection with the state-variables
+ 
+    3) is a noop in the code, but requires some manual rewriting of the metadata
+       in the archive (this might be automated, but might not be worth the effort)
+
+Hence we propose to limit the changes in the next release to what is described up to here.
+
+=======END OF PROPOSED CHANGES FOR 1.2.x ====================================================
+
+In the longer term, one may consider the following
+
+Proposal extensions:
+--------------------
+
+Having isolated features clearly, we can imagine to use them for extra
+functionality, for example:
+
+ user hints
+
+        besides telling the user that a feature is enabled or not, one could add
+        logic to compute a suggestion for enabling a feature, if requested. This
+        will necessarily be based on some heuristics, as there might be
+        exponentially many ways to satisfy an arbitrary boolean condition.
+
+ reduced recompilation needs
+
+         now that state-variables are clearly identified in the features, it is
+         easy to check that when there is no change in the values of these
+         state-variables, and in the versions of the packages involved in the
+         *enabled* feature set, then no recompilation is needed: the
+         configuration logic will only use the state-variables, which did not
+         change, and only change to packages actually used for an enabled
+         state-variables may be involved in a recompilation
+
+An extra suggested extension is the possibility of mixing in the formulae
+in the features: field state-variables and packages, like in the following
+example
+
+     features: [
+                 ssl-support "Support for SSL" { os != "windows" & ssl >= 1.1 & (lwt < 4 | async) }
+               ]
+
+This requires a significant amount of extra effort to:
+ 
+ - distinguish syntactically a package named os from a state variable named os
+
+ - implement comparison with possibly non-boolean values of a state variable 
+   (the os != "windows" above)
+
+ - detect and reject cyclic dependencies among state variables, like in 
+
+                 ssl-support "Support for SSL" { ssl-support & ssl >= 1.1 & (lwt < 4 | async) }
+
+   or in 
+
+                 ssl-support "Support for SSL" { - foo & ssl >= 1.1 & (lwt < 4 | async) }
+                 foo "Just for the example"    { - ssl-support }
+
+Complexity versus usefulness need to be carefully assessed beforehand.
