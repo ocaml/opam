@@ -61,11 +61,18 @@ but presented in order of increased implementation complexity
   1) the depopts: field now contains only a list of package names (no version
      constraints, no boolean combinations, just a list);
      
-     Semantics: in case the status of any package appearing in this field is
-     modified (added, removed, downgraded, upgraded), a recompilation of the
-     package is scheduled. The depopts: field is not used at all by the
-     package dependencies resolution phase, and must not be transalted into
-     CUDF.
+     Semantics: 
+        In case the status of any package appearing in this field is modified
+        (added, removed, downgraded, upgraded), a recompilation of the
+        package is scheduled.
+
+        The depopts: field is not used at all by the package dependencies
+        resolution phase, and must not be transalted into CUDF.
+
+        After the solver returns a solution, packages in this list that are
+        present in the system are added with all their dependencies to the
+        dependency cone, which is then visited to determine a compatible
+        compilation order.
 
   3) incompatibilities implicitly expressed in the depopts: lines by using
      version constraints must now be made explicit in the form of conflicts
