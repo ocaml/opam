@@ -111,7 +111,14 @@ let error lexbuf exn msg =
   raise exn
 
 let main t l f =
-  try main t l f
+  try
+    let r = main t l f in
+    Parsing.clear_parser ();
+    r
   with
-  | Lexer_error msg     as e -> error l e msg
-  | Parsing.Parse_error as e -> error l e "parse error"
+  | Lexer_error msg     as e ->
+    Parsing.clear_parser ();
+    error l e msg
+  | Parsing.Parse_error as e ->
+    Parsing.clear_parser ();
+    error l e "parse error"
