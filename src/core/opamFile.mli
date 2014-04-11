@@ -191,6 +191,8 @@ module OPAM: sig
   (** Construct as [depopts] *)
   val with_depopts : t -> formula -> t
 
+  val with_conflicts : t -> formula -> t
+
   (** Construct as [build] *)
   val with_build: t -> command list -> t
 

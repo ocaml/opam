@@ -950,6 +950,7 @@ module X = struct
     let with_version t version = { t with version = Some version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
+    let with_conflicts t conflicts = { t with conflicts }
     let with_build t build = { t with build }
     let with_remove t remove = { t with remove }
     let with_libraries t libraries = { t with libraries }
