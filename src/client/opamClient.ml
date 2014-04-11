@@ -345,7 +345,8 @@ module API = struct
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     OpamFile.OPAM.tags in
       let depends  = formula "depends"  OpamFile.OPAM.depends in
-      let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
+      let depopts  = strings "depopts"
+          (List.map OpamPackage.Name.to_string @* OpamFile.OPAM.depopts) in
 
       let libraries = strings "libraries" (fun t -> List.map fst (OpamFile.OPAM.libraries t)) in
       let syntax    = strings "syntax"    (fun t -> List.map fst (OpamFile.OPAM.syntax t)) in

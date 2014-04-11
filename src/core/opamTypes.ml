@@ -252,7 +252,7 @@ type universe = {
   u_installed: package_set;
   u_available: package_set;
   u_depends  : formula package_map;
-  u_depopts  : formula package_map;
+  u_depopts  : name_set package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;

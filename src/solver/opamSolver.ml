@@ -44,8 +44,8 @@ let empty_universe =
 let depopts_of_package universe package =
   let opts =
     try OpamPackage.Map.find package universe.u_depopts
-    with Not_found -> Empty in
-  OpamFormula.to_dnf opts
+    with Not_found -> OpamPackage.Name.Set.empty in
+  opts
 
 let is_installed universe (name,_) =
   OpamPackage.Set.exists (fun pkg ->
@@ -119,16 +119,13 @@ let opam2cudf universe ?(depopts=false) version_map package =
     try OpamPackage.Map.find package universe.u_depends
     with Not_found -> Empty in
   let depends =
-    let opts = depopts_of_package universe package in
     if depopts then
-      let opts = List.rev_map OpamFormula.of_conjunction opts in
-      And (depends, Or(depends, OpamFormula.ors opts))
-    else if universe.u_action = Remove then depends
-    else
-    let mem_installed conj = List.exists (is_installed universe) conj in
-    let opts = List.filter mem_installed opts in
-    let opts = List.rev_map OpamFormula.of_conjunction opts in
-    And (depends, OpamFormula.ands opts) in
+      let opts = depopts_of_package universe package in
+      let optf =
+        OpamPackage.Name.Set.fold (fun n acc -> Atom (n,Empty)::acc) opts [] in
+      OpamFormula.ands [ depends; OpamFormula.ors (depends :: optf) ]
+    else depends
+  in
   let conflicts =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in

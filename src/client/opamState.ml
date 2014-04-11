@@ -571,7 +571,7 @@ let get_env_var v =
   with Not_found -> None
 
 (* filter handling *)
-let resolve_variable t ?opam local_variables v =
+let rec resolve_variable t ?opam local_variables v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let read_var v =
     let var = OpamVariable.Full.variable v in
@@ -582,6 +582,18 @@ let resolve_variable t ?opam local_variables v =
     if not (is_global_conf v) then None else
     let var = OpamVariable.Full.variable v in
     try Some (OpamVariable.Map.find var local_variables)
+    with Not_found -> None
+  in
+  let get_features_var opam v =
+    let features = OpamFile.OPAM.features opam in
+    try
+      let v, _descr, filt = List.find (fun (id,_,_) -> id = v) features in
+      let value =
+        let local_variables = (* Avoid recursion *)
+          OpamVariable.Map.add v (B false) local_variables in
+        OpamFilter.eval (resolve_variable t ~opam local_variables) filt
+      in
+      bool value
     with Not_found -> None
   in
   let get_global_var v =
@@ -609,10 +621,14 @@ let resolve_variable t ?opam local_variables v =
     let opam = (* ensure opam, if not None, corresponds to name *)
       match opam with
       | Some o when OpamFile.OPAM.name o = name -> opam
-      | _ when is_name_installed t name ->
-        opam_opt t (find_installed_package_by_name t name)
-      | _ -> None
+      | _ ->
+        try opam_opt t (find_installed_package_by_name t name)
+        with Not_found -> None
     in
+    let feat = match opam with
+      | Some o -> get_features_var o (OpamVariable.Full.variable v)
+      | None -> None in
+    if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
     match var_str, opam with
     | "enable",    Some _    -> string "enable"
@@ -637,7 +653,7 @@ let resolve_variable t ?opam local_variables v =
     | "depends",   Some opam ->
       let deps =
         OpamFormula.atoms (OpamFile.OPAM.depends opam) @
-        OpamFormula.atoms (OpamFile.OPAM.depopts opam)
+        List.map (fun n -> n, None) (OpamFile.OPAM.depopts opam)
       in
       let installed_deps =
         OpamMisc.filter_map
@@ -998,7 +1014,8 @@ let universe t action =
     u_installed = t.installed;
     u_available = Lazy.force t.available_packages;
     u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
+    u_depopts   = OpamPackage.Map.map
+        (OpamPackage.Name.Set.of_list @* OpamFile.OPAM.depopts) opams;
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;

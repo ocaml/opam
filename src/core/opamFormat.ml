@@ -517,13 +517,30 @@ let make_env_variable (ident, op, string) =
 
 (* Filters *)
 
+let replace t f =
+  let subst str =
+    let str = String.sub str 2 (String.length str - 4) in
+    let v = OpamVariable.Full.of_string str in
+    OpamVariable.string_of_variable_contents (f v) in
+  let rex = Re_perl.compile_pat "%\\{[^%]+\\}%" in
+  Re_pcre.substitute ~rex ~subst t
+
 let rec parse_filter l =
   let rec aux = function
     | Bool (_,b)         -> FBool b
     | String (_,s)       -> FString s
     | Ident (_,s)        -> FIdent s
     | Group (_,g)        -> parse_filter g
-    | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
+    | Relop (pos,op,e,f) ->
+      let isconst s = replace s (fun _ -> S "") = s in
+      let l, r = aux e, aux f in
+      (match l, r with
+       | FString s1, FString s2 when isconst s1 && isconst s2 ->
+         OpamGlobals.warning
+           "At %s: comparing constant strings. Did you mean `%s:version' ?"
+           (string_of_pos pos) s1
+       | _ -> ());
+      FOp (l, op, r)
     | Pfxop (_,`Not,e) -> FNot (aux e)
     | Logop(_,`And,e,f)-> FAnd (aux e, aux f)
     | Logop(_,`Or, e,f)-> FOr (aux e, aux f)
@@ -633,3 +650,33 @@ let parse_tags v =
 let make_tags t =
   let l = OpamMisc.StringSetMap.bindings t in
   make_list make_tag_line l
+
+(* FEATURES *)
+
+let parse_features t =
+  let rec aux = function
+    | [] -> []
+    | id :: opt :: r ->
+      let id = OpamVariable.of_string (parse_ident id) in
+      (match parse_option parse_string parse_filter opt with
+       | doc, Some fil -> (id, doc, fil) :: aux r
+       | _, None ->
+         bad_format ~pos:(value_pos opt) "Expecting a filter definition, e.g. \
+                                          `var \"Enable var\" { <condition> }'")
+    | t ->
+      bad_format ?pos:(values_pos t) "Bad feature definition, expected \
+                                      `var \"Enable var\" { <condition> }'"
+  in
+  match t with
+  | List (_, l) -> aux l
+  | _ -> bad_format ~pos:(value_pos t) "Expected a list of feature definitions"
+
+let make_features feat =
+  let rec aux = function
+    | [] -> []
+    | (var,doc,fil) :: r ->
+      make_ident (OpamVariable.to_string var) ::
+      make_option make_string make_filter (doc, Some fil) ::
+      aux r
+  in
+  List (pos_null, aux feat)

@@ -129,13 +129,16 @@ module OPAM: sig
   val depends: t -> formula
 
   (** Optional dependencies *)
-  val depopts: t -> formula
+  val depopts: t -> name list
 
   (** External dependencies *)
   val depexts: t -> tags option
 
   (** Package conflicts *)
   val conflicts: t -> formula
+
+  (** Custom features definitions *)
+  val features: t -> (OpamVariable.t * string * filter) list
 
   (** List of exported libraries *)
   val libraries: t -> (string * filter option) list
@@ -189,7 +192,7 @@ module OPAM: sig
   val with_depends : t -> formula -> t
 
   (** Construct as [depopts] *)
-  val with_depopts : t -> formula -> t
+  val with_depopts : t -> name list -> t
 
   (** Construct as [build] *)
   val with_build: t -> command list -> t
