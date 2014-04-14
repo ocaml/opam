@@ -1152,8 +1152,24 @@ module X = struct
       let remove = OpamFormat.assoc_list s s_remove OpamFormat.parse_commands in
       let depends = OpamFormat.assoc_default OpamFormula.Empty s s_depends
           OpamFormat.parse_formula in
-      let depopts = OpamFormat.assoc_default [] s s_depopts
-          (OpamFormat.parse_string_list @> List.map OpamPackage.Name.of_string) in
+      let depopts =
+        OpamFormat.assoc_default [] s s_depopts @@
+        if OpamVersion.compare opam_version (OpamVersion.of_string "1.2") < 0
+        then
+          fun s ->
+            let f = OpamFormat.parse_opt_formula s in
+            try List.map (function (name,None) -> name
+                                 | (_, Some _) -> failwith "version constraint")
+                (OpamFormula.to_disjunction f)
+            with Failure _ | Invalid_argument _ ->
+              OpamGlobals.warning
+                "Ignored deprecated use of formula or version constraint in \
+                 optional dependency at\n  %s."
+                (string_of_pos (OpamFormat.value_pos s));
+              List.map fst (OpamFormula.atoms f)
+        else
+          OpamFormat.parse_string_list
+          @> List.map OpamPackage.Name.of_string in
       let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
       let features = OpamFormat.assoc_default [] s s_features
