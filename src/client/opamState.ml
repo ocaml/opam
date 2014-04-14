@@ -539,7 +539,8 @@ let files t nv =
 (* For documentation *)
 let global_variable_names =
   [ "ocaml-version"; "opam-version"; "compiler";
-    "preinstalled"; "switch"; "jobs"; "ocaml-native"; "ocaml-tools-opt" ]
+    "preinstalled"; "switch"; "jobs"; "ocaml-native"; "ocaml-tools-opt";
+    "ocaml-native-dynlink"]
 let package_variable_names =
   [ "enable"; "installed"; "pinned";
     "bin"; "sbin"; "lib"; "man"; "doc"; "share"; "etc";
@@ -597,6 +598,9 @@ let resolve_variable t ?opam local_variables v =
     | "jobs"          -> int (jobs t)
     | "ocaml-native"  -> bool (Lazy.force OpamSystem.ocaml_native_available)
     | "ocaml-tools-opt" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
+    | "ocaml-native-dynlink" ->
+      bool (OpamSystem.ocaml_natdynlink_available
+              (OpamFilename.Dir.to_string (OpamPath.Switch.lib_dir t.root t.switch)))
     | _               -> None
   in
   let get_package_var opam v =

@@ -550,6 +550,8 @@ let exists_alongside_ocamlc name =
 
 let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
 let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
+let ocaml_natdynlink_available libdir =
+  Sys.file_exists (libdir / "ocaml" / "dynlink.cmxa")
 
 (* Reset the path to get the system compiler *)
 let system command = lazy (
