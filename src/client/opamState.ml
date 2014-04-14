@@ -2297,11 +2297,11 @@ let update_dev_package t nv =
       | `Added f -> Printf.sprintf "%S was added" f
       | `Changed f -> Printf.sprintf "The contents of %s changed" f
     in
-    let install_meta dir hash =
+    let install_meta dir rm_hash hash =
       let root =
         let d = dir / "opam" in
         if OpamFilename.exists_dir d then d else dir in
-      OpamFilename.rmdir overlay;
+      List.iter (fun (f, _) -> OpamFilename.remove (overlay // f)) rm_hash;
       List.iter (fun (f,kind) -> match kind with
           | `Opam o -> OpamFile.OPAM.write (overlay // f) o
           | `Digest _ -> OpamFilename.copy_in ~root (root // f) overlay)
@@ -2316,7 +2316,7 @@ let update_dev_package t nv =
         (OpamGlobals.msg "Installing new package description for %s from %s\n"
            (OpamPackage.to_string nv)
            (Filename.concat (string_of_address remote_url) "opam");
-         install_meta srcdir new_meta)
+         install_meta srcdir user_meta new_meta)
       else if
         OpamGlobals.msg
           "Conflicting update of the metadata of %s from %s:\n  - %s\n"
@@ -2331,10 +2331,10 @@ let update_dev_package t nv =
           OpamPath.backup_dir t.root / (OpamPackage.to_string nv ^ ".bak") in
         OpamFilename.mkdir (OpamPath.backup_dir t.root);
         OpamFilename.rmdir bak;
-        OpamFilename.move_dir ~src:overlay ~dst:bak;
+        OpamFilename.copy_dir ~src:overlay ~dst:bak;
         OpamGlobals.msg "User metadata backed up in %s\n"
           (OpamFilename.Dir.to_string bak);
-        install_meta srcdir new_meta;
+        install_meta srcdir user_meta new_meta;
       );
     result
 
