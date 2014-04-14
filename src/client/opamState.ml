@@ -2229,16 +2229,16 @@ let update_dev_package t nv =
       | Up_to_date _    -> skip
       | Result _        -> OpamPackage.Set.singleton nv
     in
-    if not pinned && kind = `http then skip else
+    if not pinned then
+      if kind = `http then skip else fetch ()
+    else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
     let overlay = OpamPath.Switch.Overlay.package t.root t.switch nv in
     let nv = pinning_version t nv in
     let name = OpamPackage.name nv in
     let version = OpamPackage.version nv in
     let pinning_kind =
-      try Some (kind_of_pin_option (OpamPackage.Name.Map.find name t.pinned))
-      with Not_found -> None
-    in
+      kind_of_pin_option (OpamPackage.Name.Map.find name t.pinned) in
     (* Four versions of the metadata: from the old and new versions
        of the package, from the current overlay, and also the original one
        from the repo *)
@@ -2254,7 +2254,7 @@ let update_dev_package t nv =
           (OpamFilename.rec_files files_dir))
     in
     let old_meta = (* Version previously present in the source *)
-      if pinning_kind = Some `version then [] else
+      if pinning_kind = `version then [] else
       hash_meta @@ local_opam ~version_override:false nv srcdir
     in
     let user_meta, user_version = (* Installed version (overlay) *)
