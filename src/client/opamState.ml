@@ -2229,16 +2229,16 @@ let update_dev_package t nv =
       | Up_to_date _    -> skip
       | Result _        -> OpamPackage.Set.singleton nv
     in
-    if not pinned && kind = `http then skip else
+    if not pinned then
+      if kind = `http then skip else fetch ()
+    else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
     let overlay = OpamPath.Switch.Overlay.package t.root t.switch nv in
     let nv = pinning_version t nv in
     let name = OpamPackage.name nv in
     let version = OpamPackage.version nv in
     let pinning_kind =
-      try Some (kind_of_pin_option (OpamPackage.Name.Map.find name t.pinned))
-      with Not_found -> None
-    in
+      kind_of_pin_option (OpamPackage.Name.Map.find name t.pinned) in
     (* Four versions of the metadata: from the old and new versions
        of the package, from the current overlay, and also the original one
        from the repo *)
@@ -2254,7 +2254,7 @@ let update_dev_package t nv =
           (OpamFilename.rec_files files_dir))
     in
     let old_meta = (* Version previously present in the source *)
-      if pinning_kind = Some `version then [] else
+      if pinning_kind = `version then [] else
       hash_meta @@ local_opam ~version_override:false nv srcdir
     in
     let user_meta, user_version = (* Installed version (overlay) *)
@@ -2297,11 +2297,11 @@ let update_dev_package t nv =
       | `Added f -> Printf.sprintf "%S was added" f
       | `Changed f -> Printf.sprintf "The contents of %s changed" f
     in
-    let install_meta dir hash =
+    let install_meta dir rm_hash hash =
       let root =
         let d = dir / "opam" in
         if OpamFilename.exists_dir d then d else dir in
-      OpamFilename.rmdir overlay;
+      List.iter (fun (f, _) -> OpamFilename.remove (overlay // f)) rm_hash;
       List.iter (fun (f,kind) -> match kind with
           | `Opam o -> OpamFile.OPAM.write (overlay // f) o
           | `Digest _ -> OpamFilename.copy_in ~root (root // f) overlay)
@@ -2316,7 +2316,7 @@ let update_dev_package t nv =
         (OpamGlobals.msg "Installing new package description for %s from %s\n"
            (OpamPackage.to_string nv)
            (Filename.concat (string_of_address remote_url) "opam");
-         install_meta srcdir new_meta)
+         install_meta srcdir user_meta new_meta)
       else if
         OpamGlobals.msg
           "Conflicting update of the metadata of %s from %s:\n  - %s\n"
@@ -2331,10 +2331,10 @@ let update_dev_package t nv =
           OpamPath.backup_dir t.root / (OpamPackage.to_string nv ^ ".bak") in
         OpamFilename.mkdir (OpamPath.backup_dir t.root);
         OpamFilename.rmdir bak;
-        OpamFilename.move_dir ~src:overlay ~dst:bak;
+        OpamFilename.copy_dir ~src:overlay ~dst:bak;
         OpamGlobals.msg "User metadata backed up in %s\n"
           (OpamFilename.Dir.to_string bak);
-        install_meta srcdir new_meta;
+        install_meta srcdir user_meta new_meta;
       );
     result
 
