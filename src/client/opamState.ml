@@ -2280,11 +2280,16 @@ let update_dev_package t nv =
       OpamMisc.Option.map OpamFile.OPAM.version opam
     in
     let repo_meta = (* Version from the repo *)
-      let nv = OpamPackage.create name (Option.default version user_version) in
+      let v = Option.default version user_version in
+      let nv = OpamPackage.create name v in
       try
         let dir = package_repo_dir t.root t.repositories t.package_index nv in
         hash_meta @@ local_opam ~root:true nv dir
-      with Not_found -> []
+      with Not_found ->
+        hash_meta @@
+        (Some (OpamFile.OPAM.with_name
+                 OpamFile.OPAM.(with_version empty v) name),
+         None, None)
     in
     (* Do the update *)
     let result = fetch () in
