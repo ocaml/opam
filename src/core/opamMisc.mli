@@ -198,6 +198,8 @@ val sub_at: int -> string -> string
 module Option: sig
   val map: ('a -> 'b) -> 'a option -> 'b option
 
+  val iter: ('a -> unit) -> 'a option -> unit
+
   val default: 'a -> 'a option -> 'a
 end
 

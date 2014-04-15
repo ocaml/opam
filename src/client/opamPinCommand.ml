@@ -121,10 +121,14 @@ let pin name pin_option =
     with Not_found -> false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
-  if OpamState.find_packages_by_name t name = None then
-    OpamGlobals.error_and_exit
-      "%s is not a valid package name."
-      (OpamPackage.Name.to_string name);
+  if OpamState.find_packages_by_name t name = None &&
+     not (OpamState.confirm
+            "Package %s does not exist, create as a %s package ?"
+            (OpamPackage.Name.to_string name)
+            (OpamGlobals.colorise `bold "NEW"))
+  then
+    (OpamGlobals.msg "Aborting.\n";
+     OpamGlobals.exit 0);
 
   log "Adding %a => %a"
     (slog string_of_pin_option) pin_option
@@ -136,7 +140,6 @@ let pin name pin_option =
   OpamState.add_pinned_overlay t name;
 
   let nv_pin = OpamPackage.pinned name in
-  let nv_v = OpamState.pinning_version t nv_pin in
 
   (* Mark the previously pinned installed version, if any, as not pinned,
      so that we can normally switch versions *)
@@ -159,9 +162,9 @@ let pin name pin_option =
       (string_of_pin_kind pin_kind)
       (string_of_pin_option pin_option);
 
-  let pin_version = OpamPackage.version nv_v in
-
   if not no_changes && installed_version <> None then
+    let nv_v = OpamState.pinning_version t nv_pin in
+    let pin_version = OpamPackage.version nv_v in
     if installed_version = Some pin_version then
       if pin_kind = `version then None
       else Some true

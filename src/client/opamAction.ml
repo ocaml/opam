@@ -282,7 +282,7 @@ let extract_package t nv =
 
   let extract_and_copy_files dir =
     let () = match OpamFilename.files dir with
-      | [] -> log "No files found"
+      | [] -> log "No files found in %s" (OpamFilename.Dir.to_string dir)
       | [f] ->
         log "archive %a => extracting" (slog OpamFilename.to_string) f;
         OpamFilename.extract_generic_file (F f) build_dir
