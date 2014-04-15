@@ -11,14 +11,14 @@ MD5_re = 5cbfc137683ef2b0e91f931577f2e673
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.3.tbz
 MD5_cmdliner = d63dd3b03966d65fc242246859c831c7
 
-URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.3.tar.gz
-MD5_graph = ad2dc42f74c77dae9302c40cf2b5ff86
+GRAPH    = ocamlgraph-1.8.5
+GRAPHMD5 = 75dde65bfc3f9b07e795343d369aa84d
 
 URL_cudf = https://gforge.inria.fr/frs/download.php/31910/cudf-0.6.3.tar.gz
 MD5_cudf = 40c4e2c50ea96d0c9e565db16d20639a
 
-URL_dose = https://gforge.inria.fr/frs/download.php/31595/dose3-3.1.2.tar.gz
-MD5_dose = e98ff720fcc3873def46c85c6a980a1b
+URL_dose = https://gforge.inria.fr/frs/download.php/33574/dose3-3.2-rc1.tar.gz
+MD5_dose = 5d20d05cadc0dc98e3edd375c6eb6a45
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
