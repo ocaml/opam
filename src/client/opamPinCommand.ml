@@ -212,8 +212,8 @@ let list () =
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
     let kind = string_of_pin_kind (kind_of_pin_option a) in
-    OpamGlobals.msg "%-20s %-8s %s\n"
-      (OpamPackage.Name.to_string n)
-      kind
+    OpamGlobals.msg "%-25s %s %s\n"
+      (OpamPackage.to_string (OpamState.pinning_version t (OpamPackage.pinned n)))
+      (OpamGlobals.colorise `blue (Printf.sprintf "%-8s" kind))
       (string_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
