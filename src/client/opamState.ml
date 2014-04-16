@@ -290,13 +290,6 @@ let repository_and_prefix_of_compiler t comp =
 let is_pinned t n =
   OpamPackage.Name.Map.mem n t.pinned
 
-(* is the current package locally pinned *)
-let is_locally_pinned t name =
-  try match OpamPackage.Name.Map.find name t.pinned with
-    | Version _ -> false
-    | _ -> true
-  with Not_found -> false
-
 let locally_pinned_package t n =
   let option = OpamPackage.Name.Map.find n t.pinned in
   let path = string_of_pin_option option in
@@ -309,24 +302,103 @@ let url_of_locally_pinned_package t n =
   let path, kind = locally_pinned_package t n in
   OpamFile.URL.create kind path
 
-let repository_of_locally_pinned_package t n =
-  let url = url_of_locally_pinned_package t n in
-  let repo_address = OpamFile.URL.url url in
-  let repo_kind = OpamFile.URL.kind url in
-  let repo_root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
-  { repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
-    repo_priority = 0;
-    repo_root; repo_address; repo_kind }
-
-let real_package t nv =
-  let name = OpamPackage.name nv in
-  if is_pinned t name then OpamPackage.pinned name
-  else nv
-
-let opam_opt_no_pin t nv =
-  let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
-  if OpamFilename.exists overlay then Some (OpamFile.OPAM.read overlay)
+(* Returns the directory holding the original metadata of the package.
+   This is a low-level function, you generally want to handle different
+   locations, like overlays for pinned packages *)
+let package_repo_dir root repositories package_index nv =
+  if OpamFilename.exists (OpamPath.opam root nv) then
+    OpamPath.packages root nv
   else
+  let repo_name, prefix = OpamPackage.Map.find nv package_index in
+  let repo = OpamRepositoryName.Map.find repo_name repositories in
+  OpamPath.Repository.packages repo prefix nv
+
+(* Copies package definition from the repository to the overlay *)
+let add_pinned_overlay t name =
+  let open OpamFile in
+  let module Ov = OpamPath.Switch.Overlay in
+  let pkg_overlay f = f t.root t.switch name in
+  let get_orig_meta rv =
+    let orig = package_repo_dir t.root t.repositories t.package_index rv in
+    let files = OpamFilename.rec_files orig in
+    let opam_f = orig // "opam" in
+    let url_f = orig // "url" in
+    let files = List.filter (fun f -> f <> opam_f && f <> url_f) files in
+    let opam = OPAM.read opam_f in
+    let url =
+      try Some (URL.read url_f) with e -> OpamMisc.fatal e; None in
+    opam, url, orig, files
+  in
+  try match OpamPackage.Name.Map.find name t.pinned with
+    | Version v ->
+      let opam, url, root, files = get_orig_meta (OpamPackage.create name v) in
+      List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
+        files;
+      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
+      OpamMisc.Option.iter (URL.write (pkg_overlay Ov.url)) url
+    | _ ->
+      let rv = OpamPackage.max_version t.packages name in
+      let v = OpamPackage.version rv in
+      let opam, _url, root, files = get_orig_meta rv in
+      let url = url_of_locally_pinned_package t name in
+      List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
+        files;
+      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
+      URL.write (pkg_overlay Ov.url) url
+  with Not_found -> (* No original meta, just write the URL file *)
+    let url = url_of_locally_pinned_package t name in
+    let nv = OpamPackage.create name (OpamPackage.Version.of_string "0") in
+    let opam = OPAM.create nv in
+    OPAM.write (pkg_overlay Ov.opam) opam;
+    URL.write (pkg_overlay Ov.url) url
+
+let overlay_of_name t name =
+  let f = OpamPath.Switch.Overlay.opam t.root t.switch name in
+  if not (OpamFilename.exists f) then
+    (log "overlay missing for %s !" (OpamPackage.Name.to_string name);
+     add_pinned_overlay t name);
+  f
+
+let version_of_pin t name = function
+  | Version v -> v
+  | _ ->
+    let overlay = overlay_of_name t name in
+    let opam = OpamFile.OPAM.read overlay in
+    if OpamFile.OPAM.version_opt opam = None then
+      let nv =
+        try OpamPackage.max_version t.packages name
+        with Not_found ->
+          OpamPackage.create name (OpamPackage.Version.of_string "0") in
+      OpamGlobals.warning "Setting missing version in %s to %s"
+        (OpamFilename.to_string overlay)
+        (OpamPackage.Version.to_string @@ OpamPackage.version nv);
+      OpamFile.OPAM.(write overlay (with_version opam (OpamPackage.version nv)));
+      OpamPackage.version nv
+    else
+      OpamFile.OPAM.version opam
+
+let pinned t name =
+  let v = version_of_pin t name (OpamPackage.Name.Map.find name t.pinned) in
+  OpamPackage.create name v
+
+let is_locally_pinned t name =
+  try match OpamPackage.Name.Map.find name t.pinned with
+    | Version _ -> false
+    | _ -> true
+  with Not_found -> false
+
+let opam_opt t nv =
+  let name = OpamPackage.name nv in
+  try
+    if not (OpamPackage.Name.Map.mem name t.pinned) then raise Not_found else
+    let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+    let o = OpamFile.OPAM.read overlay in
+    if OpamFile.OPAM.version o = OpamPackage.version nv then Some o
+    else
+      (log "Looking for %s which is pinned to %s (not using overlay)"
+         (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
+       raise Not_found)
+  with Not_found -> (* not pinned *)
     try Some (OpamPackage.Map.find nv t.opams)
     with Not_found ->
       if OpamPackage.Set.mem nv t.installed then
@@ -335,20 +407,15 @@ let opam_opt_no_pin t nv =
       else
         None
 
-let opam_no_pin t nv =
-  match opam_opt_no_pin t nv with
+let opam t nv =
+  match opam_opt t nv with
   | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
   | Some nv -> nv
 
-(* let pkgdir_from_repo t nv = *)
-(*   try *)
-(*     let r, prefix = OpamPackage.Map.find nv t.package_index in *)
-(*     let r = find_repository_exn t r in *)
-(*     Some (OpamPath.Repository.packages repo r prefix nv in *)
-
 let locate_meta overlay global repo exists t nv =
-  let meta = overlay t.root t.switch nv in
-  if exists meta then Some meta else
+  let name = OpamPackage.name nv in
+  let meta = overlay t.root t.switch name in
+  if exists meta && nv = pinned t name then Some meta else
   let meta = global t.root nv in
   if exists meta then Some meta else
   try
@@ -369,7 +436,7 @@ let url_file =
     OpamPath.Switch.Overlay.url OpamPath.url OpamPath.Repository.url
     OpamFilename.exists
 
-let files_no_pin =
+let files =
   locate_meta
     OpamPath.Switch.Overlay.files OpamPath.files OpamPath.Repository.files
     OpamFilename.exists_dir
@@ -377,7 +444,7 @@ let files_no_pin =
 let install_metadata t nv =
   if OpamFilename.exists (OpamPath.opam t.root nv) then ()
   else
-    let opam = opam_no_pin t nv in
+    let opam = opam t nv in
     OpamFile.OPAM.write (OpamPath.opam t.root nv) opam;
     let onsome f = function None -> () | Some x -> f x in
     onsome (fun f ->
@@ -388,7 +455,7 @@ let install_metadata t nv =
       (url_file t nv);
     onsome (fun d ->
         OpamFilename.copy_dir ~src:d ~dst:(OpamPath.files t.root nv))
-      (files_no_pin t nv)
+      (files t nv)
 
 let remove_metadata t packages =
   let all_installed = all_installed t in
@@ -399,20 +466,6 @@ let remove_metadata t packages =
       let archive = OpamPath.archive t.root nv in
       OpamFilename.remove archive;
     ) packages
-
-(* Returns the directory holding the original metadata of the package.
-   This is a low-level function, you generally want to handle different
-   locations, like overlays for pinned packages *)
-let package_repo_dir root repositories package_index nv =
-  let pkgdir = OpamPath.packages root nv in
-  if OpamFilename.exists (pkgdir // "opam") then pkgdir else
-  let repo_name, prefix = OpamPackage.Map.find nv package_index in
-  let repo = OpamRepositoryName.Map.find repo_name repositories in
-  OpamPath.Repository.packages repo prefix nv
-
-
-let overlay_of_name t name =
-  OpamPackage.max_version t.packages name
 
 (* Returns [opam, descr_file, files_dir]. We don't consider [url] since
    this is for pinned packages. if [root], don't look for a subdir [opam]
@@ -434,8 +487,7 @@ let local_opam ?(root=false) ?(version_override=true) nv dir =
         let opam = OpamFile.OPAM.read local_opam in
         let opam = OpamFile.OPAM.with_name opam (OpamPackage.name nv) in
         let version_override =
-          version_override || match OpamFile.OPAM.version_opt opam with
-          | None -> true | Some v -> v = OpamPackage.Version.pinned
+          version_override || OpamFile.OPAM.version_opt opam = None
         in
         if version_override then
           Some (OpamFile.OPAM.with_version opam (OpamPackage.version nv))
@@ -448,101 +500,35 @@ let local_opam ?(root=false) ?(version_override=true) nv dir =
   in
   opam, descr, files_dir
 
-(* Copies package definition from the repository to the overlay *)
-let add_pinned_overlay t name =
-  let open OpamFile in
-  let module Ov = OpamPath.Switch.Overlay in
-  let nv = OpamPackage.pinned name in
-  let pkg_overlay f = f t.root t.switch nv in
-  let get_orig_meta rv =
-    let orig = package_repo_dir t.root t.repositories t.package_index rv in
-    let files = OpamFilename.rec_files orig in
-    let opam_f = orig // "opam" in
-    let url_f = orig // "url" in
-    let files = List.filter (fun f -> f <> opam_f && f <> url_f) files in
-    let opam = OPAM.read opam_f in
-    let url =
-      try Some (URL.read url_f) with e -> OpamMisc.fatal e; None in
-    opam, url, orig, files
-  in
-  try match OpamPackage.Name.Map.find name t.pinned with
-    | Version v ->
-      let opam, url, root, files = get_orig_meta (OpamPackage.create name v) in
-      List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
-        files;
-      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
-      OpamMisc.Option.iter (URL.write (pkg_overlay Ov.url)) url
-    | _ ->
-      let rv = overlay_of_name t name in
-      let v = OpamPackage.version rv in
-      let opam, _url, root, files = get_orig_meta rv in
-      let url = url_of_locally_pinned_package t name in
-      List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
-        files;
-      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
-      URL.write (pkg_overlay Ov.url) url
-  with Not_found -> (* No original meta, just write the URL file *)
-    let url = url_of_locally_pinned_package t name in
-    let opam = OPAM.with_name OPAM.empty name in
-    let opam = OPAM.with_version opam (OpamPackage.Version.of_string "0") in
-    OPAM.write (pkg_overlay Ov.opam) opam;
-    URL.write (pkg_overlay Ov.url) url
+let remove_overlay t name =
+  OpamFilename.rmdir (OpamPath.Switch.Overlay.package t.root t.switch name)
 
-let remove_overlay t nv =
-  OpamFilename.rmdir (OpamPath.Switch.Overlay.package t.root t.switch nv)
-
-let has_url_overlay t nv =
-  OpamFilename.exists (OpamPath.Switch.Overlay.url t.root t.switch nv)
+let has_url_overlay t name =
+  OpamFilename.exists (OpamPath.Switch.Overlay.url t.root t.switch name)
 
 let dev_package t nv =
-  if has_url_overlay t nv then OpamPath.Switch.dev_package t.root t.switch nv
+  if has_url_overlay t (OpamPackage.name nv) &&
+     pinned t (OpamPackage.name nv) = nv
+  then OpamPath.Switch.dev_package t.root t.switch (OpamPackage.name nv)
   else OpamPath.dev_package t.root nv
 
-let pinning_version t nv =
-  let name = OpamPackage.name nv in
-  try
-    match OpamPackage.Name.Map.find name t.pinned with
-    | Version v -> OpamPackage.create name v
-    | _ ->
-      let nv1 = OpamPackage.pinned name in
-      let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
-      if not (OpamFilename.exists overlay) then
-        (log "overlay missing for %s !" (OpamPackage.to_string nv1);
-         add_pinned_overlay t name);
-      let opam = OpamFile.OPAM.read overlay in
-      if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
-        (let nv = overlay_of_name t name in
-         OpamGlobals.warning "Setting missing version in %s to %s"
-           (OpamFilename.to_string overlay)
-           (OpamPackage.Version.to_string @@ OpamPackage.version nv);
-         OpamFile.OPAM.(write overlay (with_version opam (OpamPackage.version nv)));
-         nv)
-      else
-        OpamPackage.create name (OpamFile.OPAM.version opam)
-  with Not_found ->
-    nv
-
-let opam_opt t nv =
-  opam_opt_no_pin t (real_package t nv)
-
-let opam t nv =
-  opam_no_pin t (real_package t nv)
+let pinned_packages t =
+  OpamPackage.Name.Map.fold
+    (fun name _ -> OpamPackage.Set.add (pinned t name))
+    t.pinned OpamPackage.Set.empty
 
 let descr_opt t nv =
   OpamMisc.Option.map OpamFile.Descr.read
-    (descr_file t (real_package t nv))
+    (descr_file t nv)
 
 let descr t nv =
-  match descr_file t (real_package t nv) with
+  match descr_file t nv with
   | None -> OpamFile.Descr.empty
   | Some f -> OpamFile.Descr.read f
 
 let url t nv =
   OpamMisc.Option.map OpamFile.URL.read
-    (url_file t (real_package t nv))
-
-let files t nv =
-  files_no_pin t (real_package t nv)
+    (url_file t nv)
 
 (* For documentation *)
 let global_variable_names =
@@ -640,9 +626,6 @@ let resolve_variable t ?opam local_variables v =
       dirname (OpamPath.Switch.build t.root t.switch (get_nv opam))
     | "version",   Some opam ->
       let ver = OpamFile.OPAM.version opam in
-      let ver =
-        if ver <> OpamPackage.Version.pinned then ver else
-          OpamPackage.version (pinning_version t (get_nv opam)) in
       string (OpamPackage.Version.to_string ver)
     | "depends",   Some opam ->
       let deps =
@@ -797,21 +780,17 @@ let available_packages t =
       && consistent_available_field t opam
       && has_repository ()
   in
-  let _pinned, set =
-    OpamPackage.Set.fold (fun nv (pinned, set) ->
-        if OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned then
-          (* Package has already been added to the set *)
-          (pinned, set)
-        else
-          let nv1 = pinning_version t nv in
-          let pinned =
-            if nv1 != nv
-            then OpamPackage.Name.Set.add (OpamPackage.name nv1) pinned
-            else pinned in
-          if filter nv1 then pinned, OpamPackage.Set.add nv1 set
-          else pinned, set
-      ) t.packages (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
-  set
+  let pinned = pinned_packages t in
+  let pinned_names =
+    OpamPackage.Name.Map.fold
+      (fun n _ s -> OpamPackage.Name.Set.add n s)
+      t.pinned OpamPackage.Name.Set.empty in
+  let packages =
+    pinned ++
+    OpamPackage.Set.filter
+      (fun nv -> not (OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned_names))
+      t.packages in
+  OpamPackage.Set.filter filter packages
 
 (* Display a meaningful error for a package that doesn't exist *)
 let unknown_package t (name, _ as atom) =
@@ -996,12 +975,16 @@ let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
 
 let universe t action =
-  let opams =
-    OpamPackage.Map.mapi (fun nv opam ->
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
-        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
-        else opam)
-      t.opams in
+  let opams = (* Read overlays of pinned packages *)
+    OpamPackage.Name.Map.fold (fun name pin map ->
+        let v = version_of_pin t name pin in
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+        if OpamFilename.exists overlay then
+          OpamPackage.Map.add
+            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
+        else map)
+      t.pinned t.opams
+  in
   {
     u_packages  = t.installed ++ t.packages;
     u_action    = action;
@@ -1011,12 +994,7 @@ let universe t action =
     u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
-    u_pinned    =
-      OpamPackage.Name.Map.fold
-        (fun k _ set ->
-           let v = lazy (OpamPackage.version (pinning_version t (OpamPackage.pinned k))) in
-          OpamPackage.Name.Map.add k v set)
-        t.pinned OpamPackage.Name.Map.empty;
+    u_pinned    = pinned_packages t;
     u_builddeps =
       OpamPackage.Map.fold
         (fun nv opam set ->
@@ -1099,18 +1077,13 @@ let keys map =
     ) map OpamPackage.Set.empty
 
 (* Check that the dev packages are installed -- if not, just remove
-   the tempory files. *)
-let consistency_checks dir pinned installed all_installed =
+   the temporary files. *)
+let consistency_checks dir pinned installed =
   let dev_packages = dev_packages_of_dir dir in
   OpamPackage.Map.iter (fun nv dir ->
-      let name = OpamPackage.name nv in
-      if OpamPackage.is_pinned nv then (
-        if not (OpamPackage.Name.Map.mem name pinned)
-        || OpamPackage.Set.for_all (fun nv -> OpamPackage.name nv <> name) installed
-        then
-          clean_dir dir nv
-      ) else if not (OpamPackage.Set.mem nv all_installed) then
-        clean_dir dir nv
+      if not (OpamPackage.Set.mem nv installed) &&
+         not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned)
+      then clean_dir dir nv
     ) dev_packages;
   let files = OpamFilename.files dir in
   List.iter (fun f ->
@@ -1133,8 +1106,27 @@ let dev_packages t =
   OpamPackage.Set.filter (is_dev_package t) all
 
 let global_consistency_checks t =
-  consistency_checks (OpamPath.dev_packages_dir t.root)
-    t.pinned t.installed (all_installed t);
+  let pkgdir = OpamPath.dev_packages_dir t.root in
+  let pkgdirs = OpamFilename.dirs pkgdir in
+  let stale_pkgdirs =
+    List.filter (fun dir ->
+        match OpamPackage.of_dirname dir with
+        | None -> true
+        | Some nv ->
+          not (OpamPackage.Set.mem nv t.installed) &&
+          try OpamPackage.Name.Map.find (OpamPackage.name nv) t.pinned <>
+              Version (OpamPackage.version nv)
+          with Not_found -> true)
+      pkgdirs
+  in
+  List.iter (fun d ->
+      log "Stale dev directory %s, removing" (OpamFilename.Dir.to_string d);
+      OpamFilename.rmdir d)
+    stale_pkgdirs;
+  List.iter (fun f ->
+      log "Stale file %s found, Removing\n" (OpamFilename.to_string f);
+      OpamFilename.remove f)
+    (OpamFilename.files pkgdir);
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases t.root) in
   if OpamSwitch.Map.exists (fun _ c -> c =  OpamCompiler.system) aliases then
     let comp_f = OpamPath.compiler_comp t.root OpamCompiler.system in
@@ -1144,8 +1136,27 @@ let global_consistency_checks t =
     )
 
 let switch_consistency_checks t =
-  consistency_checks (OpamPath.Switch.dev_packages_dir t.root t.switch)
-    t.pinned t.installed t.installed
+  let dir = OpamPath.Switch.dev_packages_dir t.root t.switch in
+  let dirs = OpamFilename.dirs dir in
+  let stale_dirs =
+    List.filter (fun d ->
+        try
+          let name =
+            OpamPackage.Name.of_string
+              (OpamFilename.Base.to_string (OpamFilename.basename_dir d)) in
+          not (OpamPackage.has_name t.installed name) &&
+          not (OpamPackage.Name.Map.mem name t.pinned)
+        with Failure _ -> true)
+      dirs
+  in
+  List.iter (fun d ->
+      log "Stale dev directory %s, removing" (OpamFilename.Dir.to_string d);
+      OpamFilename.rmdir d)
+    stale_dirs;
+  List.iter (fun f ->
+      OpamGlobals.error "Removing %s.\n" (OpamFilename.to_string f);
+      OpamFilename.remove f)
+    (OpamFilename.files dir)
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
@@ -1323,14 +1334,13 @@ let load_state ?(save_cache=true) call_site =
         OpamPackage.Set.of_list (OpamPackage.Map.keys package_index) in
       OpamPackage.Set.fold (fun nv map ->
           try
-            if OpamPackage.is_pinned nv then map else
-              let file =
-                package_repo_dir root repositories package_index nv // "opam" in
-              try
-                let opam = OpamFile.OPAM.read file in
-                OpamPackage.Map.add nv opam map
-              with OpamFormat.Bad_format _
-                 | Lexer_error _ -> map (* Error printed, continue *)
+            let file =
+              package_repo_dir root repositories package_index nv // "opam" in
+            try
+              let opam = OpamFile.OPAM.read file in
+              OpamPackage.Map.add nv opam map
+            with OpamFormat.Bad_format _
+               | Lexer_error _ -> map (* Error printed, continue *)
           with
           | Not_found ->
             OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
@@ -1359,15 +1369,7 @@ let load_state ?(save_cache=true) call_site =
     package_index; compiler_index;
     available_packages = available_packages_stub
   } in
-  let packages =
-    OpamPackage.Name.Map.fold
-      (fun name _ ->
-         let nv = OpamPackage.pinned name in
-         let rv = pinning_version t nv in
-         OpamPackage.Set.add nv @* OpamPackage.Set.add rv)
-      pinned
-      packages
-  in
+  let packages = pinned_packages t ++ packages in
   let t = { t with packages } in
   let available_packages = lazy (available_packages t) in
   let t = { t with available_packages } in
@@ -1519,8 +1521,7 @@ let upgrade_to_1_1 () =
         OpamPackage.Name.Map.iter (fun name _ ->
             let t = { t with switch } in
             if is_pinned t name then (
-              let nv = OpamPackage.pinned name in
-              OpamFilename.rmdir (OpamPath.Switch.Overlay.package root switch nv);
+              OpamFilename.rmdir (OpamPath.Switch.Overlay.package root switch name);
               add_pinned_overlay t name;
             )
           ) pinned
@@ -2062,15 +2063,6 @@ let update_setup_interactive t shell dot_profile =
 let add_to_reinstall t ~all packages =
   log "add-to-reinstall all:%b packages:%a" all
     (slog OpamPackage.Set.to_string) packages;
-  let packages = OpamPackage.Set.fold (fun nv set ->
-      try
-        let nv =
-          if not (OpamPackage.is_pinned nv) then nv
-          else OpamPackage.pinned (OpamPackage.name nv) in
-        OpamPackage.Set.add nv set
-      with Not_found ->
-        set
-    ) packages OpamPackage.Set.empty in
   let aux switch =
     let installed =
       OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
@@ -2218,10 +2210,13 @@ let update_switch_config t switch =
 
 (* Dev packages *)
 
+(* XXX split update_dev taking nv and update_pin taking name ? *)
 let update_dev_package t nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
-  let pinned = OpamPackage.is_pinned nv in
-  let nv = real_package t nv in
+  let name = OpamPackage.name nv in
+  let nv, pinned =
+    try pinned t name, true
+    with Not_found -> nv, false in
   let skip = OpamPackage.Set.empty in
   match url t nv with
   | None     -> skip
@@ -2245,9 +2240,7 @@ let update_dev_package t nv =
       if kind = `http then skip else fetch ()
     else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
-    let overlay = OpamPath.Switch.Overlay.package t.root t.switch nv in
-    let nv = pinning_version t nv in
-    let name = OpamPackage.name nv in
+    let overlay = OpamPath.Switch.Overlay.package t.root t.switch name in
     let version = OpamPackage.version nv in
     let pinning_kind =
       kind_of_pin_option (OpamPackage.Name.Map.find name t.pinned) in
@@ -2362,7 +2355,7 @@ let update_dev_packages t packages =
   let packages = OpamPackage.Set.elements packages in
   let updates =
     OpamPackage.Parallel.map_reduce_l 1 packages
-      ~map:(update_dev_package t)
+      ~map:(fun nv -> update_dev_package t nv)
       ~merge:OpamPackage.Set.union
       ~init:OpamPackage.Set.empty in
 
@@ -2390,7 +2383,6 @@ let download_archive t nv =
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
 let download_upstream t nv dirname =
-  let nv = real_package t nv in
   match url t nv with
   | None   -> None
   | Some u ->

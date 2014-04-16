@@ -190,14 +190,14 @@ let prepare_package_build t nv =
 
 let download_package t nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-
+  let name = OpamPackage.name nv in
   if !OpamGlobals.dryrun || !OpamGlobals.fake then () else
-  try match OpamPackage.Name.Map.find (OpamPackage.name nv) t.pinned with
+  try match OpamPackage.Name.Map.find name t.pinned with
     | Version _ ->
       let dir = OpamPath.dev_package t.root nv in
       ignore @@ OpamState.download_upstream t nv dir
     | _ ->
-      let dir = OpamPath.Switch.dev_package t.root t.switch nv in
+      let dir = OpamPath.Switch.dev_package t.root t.switch name in
       ignore @@ OpamState.download_upstream t nv dir
   with Not_found ->
     match OpamState.download_archive t nv with
@@ -225,13 +225,18 @@ let extract_package t nv =
         OpamFilename.extract_generic_file (D dir) build_dir in
     OpamState.copy_files t nv build_dir in
 
-  if OpamState.is_locally_pinned t (OpamPackage.name nv) then
-    extract_and_copy_files (OpamPath.Switch.dev_package t.root t.switch nv)
-  else if OpamFilename.exists (OpamPath.archive t.root nv) &&
-          not (OpamPackage.is_pinned nv) then
-    OpamFilename.extract (OpamPath.archive t.root nv) build_dir
-  else
-    extract_and_copy_files (OpamPath.dev_package t.root nv);
+  let name = OpamPackage.name nv in
+  (try match OpamPackage.Name.Map.find name t.pinned with
+     | Version _ ->
+       extract_and_copy_files (OpamPath.dev_package t.root nv)
+     | _ ->
+       extract_and_copy_files (OpamPath.Switch.dev_package t.root t.switch name)
+   with Not_found ->
+     let archive = OpamPath.archive t.root nv in
+     if OpamFilename.exists archive then
+       OpamFilename.extract archive build_dir
+     else
+       extract_and_copy_files (OpamPath.dev_package t.root nv));
 
   prepare_package_build t nv
 
@@ -265,16 +270,8 @@ let get_metadata t =
   ]
 
 let update_metadata t ~installed ~installed_roots ~reinstall =
-  let mark_pinned_versions =
-    OpamPackage.Set.map (fun p ->
-        let name = OpamPackage.name p in
-        if OpamPackage.Name.Map.mem name t.pinned then OpamPackage.pinned name
-        else p) in
-  let installed       = mark_pinned_versions installed in
-  let installed_roots = mark_pinned_versions installed_roots in
-  let reinstall       = mark_pinned_versions reinstall in
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
-  let reinstall = OpamPackage.Set.inter installed_roots reinstall in
+  let reinstall = OpamPackage.Set.inter installed_roots reinstall in (* XXX why _roots ? *)
   if not !OpamGlobals.dryrun then (
   OpamFile.Installed.write
     (OpamPath.Switch.installed t.root t.switch)
@@ -439,8 +436,8 @@ let cleanup_package_artefacts t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if not !OpamGlobals.keep_build_dir && OpamFilename.exists_dir build_dir then
     OpamFilename.rmdir build_dir;
-
-  let dev_dir = OpamPath.Switch.dev_package t.root t.switch nv in
+  let name = OpamPackage.name nv in
+  let dev_dir = OpamPath.Switch.dev_package t.root t.switch name in
   if not (OpamState.is_package_installed t nv) then (
     if OpamFilename.exists_dir dev_dir then (
       log "Cleaning-up the switch repository";

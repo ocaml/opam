@@ -193,7 +193,7 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
       List.partition
         (fun (p,_) ->
            let name = OpamPackage.Name.of_string (Common.CudfAdd.decode p) in
-           OpamPackage.Name.Map.mem name opam_universe.u_pinned)
+           OpamPackage.has_name opam_universe.u_pinned name)
         m in
     let pinned_deps =
       List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in

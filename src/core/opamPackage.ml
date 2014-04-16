@@ -21,27 +21,15 @@ let slog = OpamGlobals.slog
 
 module Version = struct
 
-  type version =
-    | Version of string
-    | Pinned
+  type version = string
 
   type t = version
 
-  let to_string = function
-    | Version x -> x
-    | Pinned    -> "pinned"
+  let to_string x = x
 
-  let of_string = function
-    | "pinned"  -> Pinned
-    | v         -> Version v
+  let of_string x = x
 
-  let pinned = Pinned
-
-  let compare x y = match (x,y) with
-    | Version v1, Version v2 -> Debian.Version.compare v1 v2
-    | Pinned    , Pinned     -> 0
-    | Pinned    , _          -> 1
-    | _         , Pinned     -> -1
+  let compare = Debian.Version.compare
 
   let to_json x =
     `String (to_string x)
@@ -65,7 +53,14 @@ module Name = struct
 
   let to_string x = x
 
-  let of_string x = x
+  let of_string x =
+    String.iter (function
+        | '"'..'~' as c when not (String.contains "!./<=>\\" c) -> ()
+        | c ->
+          failwith
+            (Printf.sprintf "Invalid character %c in package name %S" c x))
+      x;
+    x
 
   let global_config = OpamGlobals.global_config
 
@@ -99,13 +94,9 @@ let create name version = { name; version }
 let name_to_string t = Name.to_string t.name
 let version_to_string t = Version.to_string t.version
 
-let pinned name = { name; version = Version.pinned }
-
 let name t = t.name
 
 let version t = t.version
-
-let is_pinned t = t.version = Version.pinned
 
 let sep = '.'
 
@@ -152,15 +143,15 @@ module Map = OpamMisc.Map.Make (O)
 
 let to_map nv =
   Set.fold (fun nv map ->
-    let name = name nv in
-    let version = version nv in
-    let versions =
-      if Name.Map.mem name map then
-        Name.Map.find name map
-      else
-        Version.Set.empty in
-    Name.Map.add name (Version.Set.add version versions) (Name.Map.remove name map)
-  ) nv Name.Map.empty
+      let name = name nv in
+      let version = version nv in
+      try Name.Map.add name
+            (Version.Set.add version (Name.Map.find name map)) map
+      with Not_found -> Name.Map.add name (Version.Set.singleton version) map
+    ) nv Name.Map.empty
+
+let keys map =
+  Map.fold (fun nv _ set -> Set.add nv set) map Set.empty
 
 (* $DIR/$NAME.$VERSION/ *)
 let of_dirname f =
@@ -230,6 +221,9 @@ let versions_of_packages nvset =
     nvset
     Version.Set.empty
 
+let has_name nvset n =
+  Set.exists (fun nv -> name nv = n) nvset
+
 let names_of_packages nvset =
   Set.fold
     (fun nv vset -> Name.Set.add (name nv) vset)
@@ -256,8 +250,6 @@ let versions_of_name packages n =
 
 let max_version set name =
   let versions = versions_of_name set name in
-  let versions =
-    Version.Set.filter ((<>) Version.pinned) versions in
   let version = Version.Set.max_elt versions in
   create name version
 

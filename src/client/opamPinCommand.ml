@@ -26,23 +26,19 @@ let cleanup_dev_dirs t name =
   let packages = OpamPackage.packages_of_name t.packages name in
   OpamPackage.Set.iter (fun nv ->
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
-    ) packages;
-  let nv = OpamPackage.pinned name in
-  OpamFilename.rmdir (OpamPath.dev_package t.root nv)
+      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch name);
+    ) packages
 
 let edit t name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
   if not (OpamState.is_pinned t name) then
     OpamGlobals.error_and_exit "%s is not pinned."
       (OpamPackage.Name.to_string name);
-  let nv = OpamPackage.pinned name in
   let installed_nv =
-    try Some (OpamState.pinning_version t @@
-              OpamState.find_installed_package_by_name t name)
+    try Some (OpamState.find_installed_package_by_name t name)
     with Not_found -> None
   in
-  let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+  let file = OpamPath.Switch.Overlay.opam t.root t.switch name in
   if not (OpamFilename.exists file) then OpamState.add_pinned_overlay t name;
   let backup =
     OpamFilename.OP.(OpamPath.backup_dir t.root //
@@ -90,8 +86,7 @@ let pin name pin_option =
   let installed_version =
     try
       Some (OpamPackage.version
-              (OpamState.pinning_version t
-                 (OpamState.find_installed_package_by_name t name)))
+              (OpamState.find_installed_package_by_name t name))
     with Not_found -> None in
 
   let _check = match pin_option with
@@ -139,22 +134,6 @@ let pin name pin_option =
   let t = { t with pinned } in
   OpamState.add_pinned_overlay t name;
 
-  let nv_pin = OpamPackage.pinned name in
-
-  (* Mark the previously pinned installed version, if any, as not pinned,
-     so that we can normally switch versions *)
-  let _update_installed = match installed_version with
-    | None -> ()
-    | Some inst_v ->
-      let inst = OpamPackage.create name inst_v in
-      update_set t.installed nv_pin inst
-        (OpamFile.Installed.write
-           (OpamPath.Switch.installed t.root t.switch));
-      update_set t.installed_roots nv_pin inst
-        (OpamFile.Installed_roots.write
-           (OpamPath.Switch.installed_roots t.root t.switch));
-  in
-
   if not no_changes then
     OpamGlobals.msg "%s is now %a-pinned to %s\n"
       (OpamPackage.Name.to_string name)
@@ -163,7 +142,7 @@ let pin name pin_option =
       (string_of_pin_option pin_option);
 
   if not no_changes && installed_version <> None then
-    let nv_v = OpamState.pinning_version t nv_pin in
+    let nv_v = OpamState.pinned t name in
     let pin_version = OpamPackage.version nv_v in
     if installed_version = Some pin_version then
       if pin_kind = `version then None
@@ -183,16 +162,9 @@ let unpin name =
       | Version _ -> false
       | _ -> OpamState.is_name_installed t name
     in
-    let nv_pin = OpamPackage.pinned name in
-    let nv_v = OpamState.pinning_version t nv_pin in
-    update_set t.installed nv_pin nv_v
-      (OpamFile.Installed.write
-         (OpamPath.Switch.installed t.root t.switch));
-    update_set t.installed_roots nv_pin nv_v
-      (OpamFile.Installed_roots.write
-         (OpamPath.Switch.installed_roots t.root t.switch));
-    update_config t name (OpamPackage.Name.Map.remove name pins);
-    OpamState.remove_overlay t nv_pin;
+    OpamState.remove_overlay t name;
+    let pins = OpamPackage.Name.Map.remove name pins in
+    update_config t name pins;
 
     OpamGlobals.msg "%s is now %a from %s\n"
       (OpamPackage.Name.to_string name)
@@ -213,7 +185,7 @@ let list () =
   let print n a =
     let kind = string_of_pin_kind (kind_of_pin_option a) in
     OpamGlobals.msg "%-25s %s %s\n"
-      (OpamPackage.to_string (OpamState.pinning_version t (OpamPackage.pinned n)))
+      (OpamPackage.to_string (OpamState.pinned t n))
       (OpamGlobals.colorise `blue (Printf.sprintf "%-8s" kind))
       (string_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
