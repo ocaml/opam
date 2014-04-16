@@ -99,28 +99,43 @@ type 'a formula =
   | And of 'a formula * 'a formula
   | Or of 'a formula * 'a formula
 
+let make_and a b = match a, b with
+  | Empty, r | r, Empty -> r
+  | a, b -> And (a, b)
+
+let make_or a b = match a, b with
+  | Empty, r | r, Empty -> r (* we're not assuming Empty is true *)
+  | a, b -> Or (a, b)
+
 let string_of_formula string_of_a f =
-  let rec aux = function
+  let rec aux ?paren f =
+    match f with
     | Empty    -> "0"
     | Atom a   -> string_of_a a
     | Block x  -> Printf.sprintf "(%s)" (aux x)
-    | And(x,y) -> Printf.sprintf "%s & %s" (aux x) (aux y)
-    | Or(x,y)  -> Printf.sprintf "%s | %s" (aux x) (aux y) in
+    | And(x,y) -> (* And, Or have the same priority, left-associative *)
+      let lpar, rpar = if paren = Some `Or then "(",")" else "","" in
+      Printf.sprintf "%s%s & %s%s" lpar (aux x) (aux ~paren:`And y) rpar
+    | Or(x,y)  ->
+      let lpar, rpar = if paren = Some `And then "(",")" else "","" in
+      Printf.sprintf "%s%s | %s%s" lpar (aux x) (aux ~paren:`Or y) rpar
+  in
   aux f
 
 let rec map f = function
   | Empty    -> Empty
   | Atom x   -> f x
   | Block x  -> Block (map f x)
-  | And(x,y) -> And (map f x, map f y)
-  | Or(x,y)  -> Or (map f x, map f y)
+  | And(x,y) -> make_and (map f x) (map f y)
+  | Or(x,y)  -> make_or (map f x) (map f y)
 
+(* Maps top-down *)
 let rec map_formula f t =
   let t = f t in
   match t with
   | Block x  -> Block (map_formula f x)
-  | And(x,y) -> And (map_formula f x, map_formula f y)
-  | Or(x,y)  -> Or (map_formula f x, map_formula f y)
+  | And(x,y) -> make_and (map_formula f x) (map_formula f y)
+  | Or(x,y)  -> make_or (map_formula f x) (map_formula f y)
   | x -> x
 
 let neg neg_atom =
@@ -179,7 +194,7 @@ let to_string t =
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
     | n, c     ->
-      Printf.sprintf "%s %s"
+      Printf.sprintf "(%s %s)"
         (OpamPackage.Name.to_string n)
         (string_of_formula string_of_constraint c) in
   string_of_formula string_of_pkg t
@@ -279,9 +294,7 @@ let to_conjunction t =
   | [x] -> x
   | _   -> OpamGlobals.error_and_exit "%s is not a valid conjunction" (to_string t)
 
-let ands = function
-  | []   -> Empty
-  | h::t -> List.fold_left (fun acc elt -> And(acc, elt)) h t
+let ands l = List.fold_left make_and Empty l
 
 let rec ands_to_list = function
   | Empty -> []
@@ -297,9 +310,7 @@ let to_disjunction t =
   | [x] -> x
   | _   -> OpamGlobals.error_and_exit "%s is not a valid disjunction" (to_string t)
 
-let ors = function
-  | []   -> Empty
-  | h::t -> List.fold_left (fun acc elt -> Or(acc, elt)) h t
+let ors l = List.fold_left make_or Empty l
 
 let rec ors_to_list = function
   | Empty -> []
