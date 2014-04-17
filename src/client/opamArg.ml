@@ -482,7 +482,7 @@ let global_options =
         This is equivalent to setting $(b,\\$OPAMCRITERIA), \
         and takes precedence over it if both are specified. \
         For details on the supported language, see \
-        $(i,http://www.mancoosi.org/misc-2012/criteria/). \
+        $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         The default value is "^OpamGlobals.default_preferences)
       Arg.(some string) None in
   let cudf_file =
