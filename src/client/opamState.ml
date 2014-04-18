@@ -1053,43 +1053,38 @@ let clean_file file nv =
     OpamFilename.remove file
   )
 
-let dev_packages_of_dir dir =
+let global_dev_packages t =
+  let dir = OpamPath.dev_packages_dir t.root in
   let dirs = OpamFilename.dirs dir in
   List.fold_left (fun map dir ->
       match OpamPackage.of_dirname dir with
       | None     ->
-        OpamGlobals.note "Removing %s.\n" (OpamFilename.Dir.to_string dir);
+        OpamGlobals.note "Removing %s" (OpamFilename.Dir.to_string dir);
         OpamFilename.rmdir dir;
         map
       | Some nv  ->
         OpamPackage.Map.add nv dir map
     ) OpamPackage.Map.empty dirs
 
-let global_dev_packages t =
-  dev_packages_of_dir (OpamPath.dev_packages_dir t.root)
-
 let switch_dev_packages t =
-  dev_packages_of_dir (OpamPath.Switch.dev_packages_dir t.root t.switch)
+  List.fold_left (fun map dir ->
+      try
+        let name =
+          OpamPackage.Name.of_string @@ OpamFilename.Base.to_string @@
+          OpamFilename.basename_dir dir in
+        OpamPackage.Map.add (pinned t name) dir map
+      with Failure _ | Not_found ->
+        OpamGlobals.note "Removing %s" (OpamFilename.Dir.to_string dir);
+        OpamFilename.rmdir dir;
+        map
+    )
+    OpamPackage.Map.empty
+    (OpamFilename.dirs (OpamPath.Switch.dev_packages_dir t.root t.switch))
 
 let keys map =
   OpamPackage.Map.fold (fun nv _ set ->
       OpamPackage.Set.add nv set
     ) map OpamPackage.Set.empty
-
-(* Check that the dev packages are installed -- if not, just remove
-   the temporary files. *)
-let consistency_checks dir pinned installed =
-  let dev_packages = dev_packages_of_dir dir in
-  OpamPackage.Map.iter (fun nv dir ->
-      if not (OpamPackage.Set.mem nv installed) &&
-         not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned)
-      then clean_dir dir nv
-    ) dev_packages;
-  let files = OpamFilename.files dir in
-  List.iter (fun f ->
-      OpamGlobals.error "Removing %s.\n" (OpamFilename.to_string f);
-      OpamFilename.remove f;
-    ) files
 
 let is_dev_package t nv =
   match url t nv with
@@ -1105,6 +1100,8 @@ let dev_packages t =
   let all = keys global ++ keys switch in
   OpamPackage.Set.filter (is_dev_package t) all
 
+(* Check that the dev packages are installed -- if not, just remove
+   the temporary files. *)
 let global_consistency_checks t =
   let pkgdir = OpamPath.dev_packages_dir t.root in
   let pkgdirs = OpamFilename.dirs pkgdir in
@@ -2232,7 +2229,9 @@ let update_dev_package t nv =
       let checksum = OpamFile.URL.checksum url in
       let r = OpamRepository.pull_url kind nv srcdir checksum mirrors in
       match r with
-      | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
+      | Not_available u ->
+        OpamGlobals.error "Upstream %s of %s is unavailable" u (OpamPackage.to_string nv);
+        skip
       | Up_to_date _    -> skip
       | Result _        -> OpamPackage.Set.singleton nv
     in
