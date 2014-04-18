@@ -33,20 +33,28 @@ let address_of_string str =
   | None       -> OpamSystem.real_path str, None
   | Some (a,c) -> OpamSystem.real_path a, Some c
 
-let guess_repository_kind kind (address, ext) =
-  match kind with
-  | Some k -> k
-  | None   ->
-    if ext = None && Sys.file_exists address then
-      `local
-    else
-      if OpamMisc.starts_with ~prefix:"git" address
-      || OpamMisc.ends_with ~suffix:"git" address then
-        `git
-      else if OpamMisc.starts_with ~prefix:"hg" address then
-        `hg
-      else
-        `http
+let parse_url (s,c) =
+  let url_kind_of_string = function
+    | "http" | "https" -> `http
+    | "file" -> `local
+    | "git" -> `git
+    | "darcs" -> `darcs
+    | "hg" -> `hg
+    | p -> raise (Invalid_argument (Printf.sprintf "Unsupported protocol %s" p))
+  in
+  let suffix =
+    try let n = String.rindex s '.' in String.sub s (n+1) (String.length s-n-1)
+    with Not_found -> ""
+  in
+  match suffix with
+  | "git" -> (s,c), `git
+  | "hg" ->(s,c), `hg
+  | _ ->
+    match Re_str.bounded_split (Re_str.regexp_string "://") s 2 with
+    | ["file"; address] -> (address,c), `local
+    | [proto; _] -> (s,c), url_kind_of_string proto
+    | [address] -> (address,c), `local
+    | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %s" s))
 
 let string_of_repository_kind = function
   | `http  -> "http"
@@ -98,17 +106,19 @@ let repository_kind_of_pin_kind = function
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
-  | Some `git     -> Git (address_of_string s)
-  | Some `hg      -> Hg (address_of_string s)
-  | Some `darcs   -> Darcs (address_of_string s)
-  | Some `local   -> Local (OpamFilename.Dir.of_string s)
-  | None          ->
-    if Sys.file_exists s then
-      Local (OpamFilename.Dir.of_string s)
-    else if OpamMisc.contains s ('/') then
-      Git (address_of_string s)
-    else
+  | None | Some (`git|`hg|`darcs|`local) ->
+    if not (String.contains s (Filename.dir_sep.[0])) &&
+       String.length s > 0 && '0' <= s.[0] && s.[0] <= '9' then
       Version (OpamPackage.Version.of_string s)
+    else
+    let s, k = parse_url (address_of_string s) in
+    match kind, k with
+    | Some `version, _ | None, `version -> assert false
+    | Some `git, _ | None, (`git|`http) -> Git s
+    | Some `hg, _ | None, `hg   -> Hg s
+    | Some `darcs, _ | None, `darcs -> Darcs s
+    | Some `local, _ | None, `local ->
+      Local (OpamFilename.Dir.of_string (fst s))
 
 let string_of_pin_kind = function
   | `version -> "version"

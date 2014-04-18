@@ -30,8 +30,10 @@ val string_of_address: address -> string
 (** Parse an address *)
 val address_of_string: string -> address
 
-(** Guess the repository kind *)
-val guess_repository_kind: repository_kind option -> address -> repository_kind
+(** Guess an address kind using url suffixes ([.git], etc.) and prefixes
+    ([http://], etc.). Defaults to `local. The returned address is a correct
+    path in case of [file://] *)
+val parse_url: address -> address * [`http|`local|`git|`darcs|`hg]
 
 (** Pretty-print repository kinds. *)
 val string_of_repository_kind: [`http|`local|`git|`darcs|`hg] -> string

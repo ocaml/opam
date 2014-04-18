@@ -592,8 +592,9 @@ let init =
     OpamFilename.mkdir global_options.root;
     apply_global_options global_options;
     apply_build_options build_options;
-    let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
+    let repo_address, repo_kind2 = parse_url repo_address in
+    let repo_kind = OpamMisc.Option.default repo_kind2 repo_kind in
     let repository = {
       repo_root = OpamPath.Repository.create (OpamPath.root ()) repo_name;
       repo_name; repo_kind; repo_address; repo_priority } in
@@ -1162,7 +1163,8 @@ let repository =
       | [name;address] ->
         let name = OpamRepositoryName.of_string name in
         let address = address_of_string address in
-        let kind = guess_repository_kind kind address in
+        let address, kind2 = parse_url address in
+        let kind = OpamMisc.Option.default kind2 kind in
         Client.REPOSITORY.add name kind address ~priority
       | _ -> error `toomany usage_add in
     let list = function

@@ -315,7 +315,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
-      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+      let kind = OpamFile.URL.kind url in
       log "downloading %a:%a"
         (slog string_of_address) remote_url
         (slog string_of_repository_kind) kind;

@@ -221,7 +221,7 @@ module X = struct
     type t = {
       url     : address;
       mirrors : address list;
-      kind    : repository_kind option;
+      kind    : repository_kind;
       checksum: string option;
     }
 
@@ -233,7 +233,7 @@ module X = struct
     let empty = {
       url     = "<none>", None;
       mirrors = [];
-      kind    = None;
+      kind    = `local;
       checksum= None;
     }
 
@@ -260,16 +260,25 @@ module X = struct
     ]
 
     let url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local =
-      match src, archive, http, git, darcs, hg, local with
-      | None  , None  , None  , None  , None  , None  , None   -> None  , None
-      | Some x, None  , None  , None  , None  , None  , None
-      | None  , Some x, None  , None  , None  , None  , None   -> Some x, None
-      | None  , None  , Some x, None  , None  , None  , None   -> Some x, Some `http
-      | None  , None  , None  , Some x, None  , None  , None   -> Some x, Some `git
-      | None  , None  , None  , None  , Some x, None  , None   -> Some x, Some `darcs
-      | None  , None  , None  , None  , None  , Some x, None   -> Some x, Some `hg
-      | None  , None  , None  , None  , None  , None  , Some x -> Some x, Some `local
-      | _ -> OpamGlobals.error_and_exit "Too many URLS"
+      let extract =
+        match src, archive, http, git, darcs, hg, local with
+        | None  , None  , None  , None  , None  , None  , None   -> None
+        | Some x, None  , None  , None  , None  , None  , None
+        | None  , Some x, None  , None  , None  , None  , None   -> Some (x, None)
+        | None  , None  , Some x, None  , None  , None  , None   -> Some (x, Some `http)
+        | None  , None  , None  , Some x, None  , None  , None   -> Some (x, Some `git)
+        | None  , None  , None  , None  , Some x, None  , None   -> Some (x, Some `darcs)
+        | None  , None  , None  , None  , None  , Some x, None   -> Some (x, Some `hg)
+        | None  , None  , None  , None  , None  , None  , Some x -> Some (x, Some `local)
+        | _ -> OpamFormat.bad_format "Too many URLS"
+      in
+      match extract with
+      | None -> None
+      | Some (url, kind_opt) ->
+        try
+          let url, kind = parse_url url in
+          Some (url, OpamMisc.Option.default kind kind_opt)
+        with Invalid_argument s -> OpamFormat.bad_format "%s" s
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
@@ -288,16 +297,13 @@ module X = struct
           (OpamFormat.parse_list (OpamFormat.parse_string @> address_of_string)) in
       let checksum =
         OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
-      let url, kind = url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local in
-      let url = match url with
-        | None   -> OpamGlobals.error_and_exit "Missing URL"
-        | Some u -> u in
+      let url, kind =
+        match url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
+        with Some x -> x | None -> OpamFormat.bad_format "URL is missing" in
       { url; mirrors; kind; checksum }
 
     let to_string filename t =
-      let url_name = match t.kind with
-        | None   -> "archive"
-        | Some k -> string_of_repository_kind k in
+      let url_name = string_of_repository_kind t.kind in
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
@@ -1440,7 +1446,7 @@ module X = struct
       version      : compiler_version ;
       preinstalled : bool;
       src          : address option ;
-      kind         : repository_kind option ;
+      kind         : repository_kind ;
       patches      : filename list ;
       configure    : string list ;
       make         : string list ;
@@ -1461,7 +1467,7 @@ module X = struct
       name         = OpamCompiler.of_string "<none>";
       version      = OpamCompiler.Version.of_string "<none>";
       src          = None;
-      kind         = None;
+      kind         = `local;
       preinstalled = false;
       patches   = [];
       configure = [];
@@ -1630,7 +1636,9 @@ module X = struct
       let darcs = address s_darcs in
       let hg = address s_hg in
       let local = address s_local in
-      let src, kind = URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local in
+      let src, kind =
+        match URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
+        with Some (u,k) -> Some u, k | None -> None, `http in
       let patches =
         OpamFormat.assoc_list s s_patches
           (OpamFormat.parse_list (OpamFormat.parse_string @> OpamFilename.raw)) in
@@ -1678,10 +1686,9 @@ module X = struct
         | Camlp4 l ->
           make_list (fun x -> x)
             (make_ident "CAMLP4" :: List.rev (List.rev_map make_string l)) in
-      let src = match s.kind, s.src with
-        | _          , None   -> None
-        | Some kind  , Some x -> Some (string_of_repository_kind kind, x)
-        | None       , Some x -> Some ("archive", x) in
+      let src = match s.src with
+        | Some x -> Some (string_of_repository_kind s.kind, x)
+        | None -> None in
       let s = {
         file_format   = s.opam_version;
         file_name     = OpamFilename.to_string filename;
