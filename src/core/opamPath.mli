@@ -123,6 +123,9 @@ module Switch: sig
   (** Library path: {i $opam/$switch/lib} *)
   val lib_dir: t -> switch -> dirname
 
+  (** OCaml library path {i $opam/$switch/lib/ocaml} *)
+  val ocaml_dir: t -> switch -> dirname
+
   (** DLL paths *)
   val stublibs: t -> switch -> dirname
 
