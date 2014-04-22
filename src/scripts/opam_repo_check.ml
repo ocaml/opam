@@ -40,13 +40,61 @@ let process args =
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
+  let t = OpamState.load_state "mkrepo" in
+
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
     OpamGlobals.msg "Processing package %s\n" (OpamPackage.to_string package);
 
     (** OPAM *)
-    let opam = OpamPath.Repository.opam repo prefix package in
-    write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
+    let opamf = OpamPath.Repository.opam repo prefix package in
+    let opam = OpamFile.OPAM.read opamf in
+    let depopts =
+      let names =
+        OpamMisc.remove_duplicates
+          (List.map fst (OpamFormula.atoms (OpamFile.OPAM.depopts opam))) in
+      OpamFormula.ors (List.rev_map (fun n -> OpamFormula.Atom (n, OpamFormula.Empty)) names)
+    in
+    let conflicts = (* add complement of the depopts as conflicts *)
+      let module NM = OpamPackage.Name.Map in
+      let depopts = (* get back a map (name => version_constraint) *)
+        (* XXX this takes _all_ the atoms not considering con/disjunctions *)
+        OpamFormula.fold_left (fun acc (name,f) ->
+            try NM.add name (OpamFormula.ors [f; NM.find name acc]) acc
+            with Not_found -> NM.add name f acc)
+          OpamPackage.Name.Map.empty
+          (OpamFile.OPAM.depopts opam) in
+      let neg_depopts =
+        NM.fold (fun name f acc ->
+            if f = OpamFormula.Empty then acc else
+            let f = OpamFormula.(neg (fun (op,v) -> neg_relop op, v) f) in
+            match OpamFormula.to_cnf (OpamFormula.Atom (name,f)) with
+            | [] -> acc
+            | [conj] -> conj @ acc
+            | [x;y] when x = y -> x @ acc
+            | cnf ->
+              (* Formula is not a conjunction, we are left with no choice
+                 but to enumerate *)
+              let f =
+                OpamFormula.to_atom_formula @@ OpamFormula.ands @@
+                List.map OpamFormula.of_disjunction cnf in
+              let conflict_packages =
+                OpamPackage.Set.filter
+                  (fun pkg ->
+                     OpamFormula.eval (fun atom -> OpamFormula.check atom pkg) f)
+                  (OpamPackage.packages_of_name t.OpamState.Types.packages name)
+              in
+              OpamPackage.Set.fold (fun nv acc ->
+                  (OpamPackage.name nv, Some (`Eq, OpamPackage.version nv))
+                  :: acc)
+                conflict_packages acc)
+          depopts [] in
+      OpamFormula.ands (OpamFile.OPAM.conflicts opam :: [OpamFormula.of_conjunction neg_depopts])
+    in
+    let opam1 = OpamFile.OPAM.with_depopts opam depopts in
+    let opam1 = OpamFile.OPAM.with_conflicts opam1 conflicts in
+    if opam <> opam1 then
+      OpamFile.OPAM.write opamf opam1;
 
     (** Descr *)
     let descr = OpamPath.Repository.descr repo prefix package in

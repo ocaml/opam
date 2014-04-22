@@ -950,6 +950,7 @@ module X = struct
     let with_version t version = { t with version = Some version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
+    let with_conflicts t conflicts = { t with conflicts }
     let with_build t build = { t with build }
     let with_remove t remove = { t with remove }
     let with_libraries t libraries = { t with libraries }
@@ -1480,10 +1481,7 @@ module X = struct
 
     let create_preinstalled name version packages env =
       let mk n = Atom (n, Empty) in
-      let aux accu t = match accu, t with
-        | Empty, x  -> mk x
-        | _    , x  -> And(accu, mk x) in
-      let packages = List.fold_left aux OpamFormula.Empty packages in
+      let packages = OpamFormula.ands (List.map mk packages) in
       { empty with name; version; preinstalled = true; packages; env }
 
     let s_opam_version = "opam-version"

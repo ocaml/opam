@@ -90,13 +90,15 @@ val neg_relop: relop -> relop
 (** Pretty print a formula *)
 val string_of_formula: ('a -> string) -> 'a formula -> string
 
-(** Convert a list of formulas to an AND-formula *)
+(** Convert a list of formulas to an AND-formula ([Empty] formulas are
+    ignored) *)
 val ands: 'a formula list -> 'a formula
 
 (** Converts back an AND-formula to a list (flattens top-level ands) *)
 val ands_to_list: 'a formula -> 'a formula list
 
-(** Convert a list of formulas to an OR-formula *)
+(** Convert a list of formulas to an OR-formula ([Empty] formulas are
+    ignored) *)
 val ors: 'a formula list -> 'a formula
 
 (** Converts back an OR-formula to a list (flattens top-level ors) *)
