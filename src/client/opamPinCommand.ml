@@ -121,10 +121,14 @@ let pin name pin_option =
     with Not_found -> false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
-  if OpamState.find_packages_by_name t name = None then
-    OpamGlobals.error_and_exit
-      "%s is not a valid package name."
-      (OpamPackage.Name.to_string name);
+  if OpamState.find_packages_by_name t name = None &&
+     not (OpamState.confirm
+            "Package %s does not exist, create as a %s package ?"
+            (OpamPackage.Name.to_string name)
+            (OpamGlobals.colorise `bold "NEW"))
+  then
+    (OpamGlobals.msg "Aborting.\n";
+     OpamGlobals.exit 0);
 
   log "Adding %a => %a"
     (slog string_of_pin_option) pin_option
@@ -136,7 +140,6 @@ let pin name pin_option =
   OpamState.add_pinned_overlay t name;
 
   let nv_pin = OpamPackage.pinned name in
-  let nv_v = OpamState.pinning_version t nv_pin in
 
   (* Mark the previously pinned installed version, if any, as not pinned,
      so that we can normally switch versions *)
@@ -159,9 +162,9 @@ let pin name pin_option =
       (string_of_pin_kind pin_kind)
       (string_of_pin_option pin_option);
 
-  let pin_version = OpamPackage.version nv_v in
-
   if not no_changes && installed_version <> None then
+    let nv_v = OpamState.pinning_version t nv_pin in
+    let pin_version = OpamPackage.version nv_v in
     if installed_version = Some pin_version then
       if pin_kind = `version then None
       else Some true
@@ -174,31 +177,34 @@ let unpin name =
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
 
-  if not (OpamPackage.Name.Map.mem name pins) then
-    (OpamGlobals.note "%s is not pinned." (OpamPackage.Name.to_string name);
-     false)
-  else
-  let needs_reinstall =
-    match OpamPackage.Name.Map.find name pins with
-    | Version _ -> false
-    | _ -> OpamState.is_name_installed t name
-  in
-  let nv_pin = OpamPackage.pinned name in
-  let nv_v = OpamState.pinning_version t nv_pin in
-  update_set t.installed nv_pin nv_v
-    (OpamFile.Installed.write
-       (OpamPath.Switch.installed t.root t.switch));
-  update_set t.installed_roots nv_pin nv_v
-    (OpamFile.Installed_roots.write
-       (OpamPath.Switch.installed_roots t.root t.switch));
-  update_config t name (OpamPackage.Name.Map.remove name pins);
-  OpamState.remove_overlay t nv_pin;
+  try
+    let current = OpamPackage.Name.Map.find name pins in
+    let needs_reinstall = match current with
+      | Version _ -> false
+      | _ -> OpamState.is_name_installed t name
+    in
+    let nv_pin = OpamPackage.pinned name in
+    let nv_v = OpamState.pinning_version t nv_pin in
+    update_set t.installed nv_pin nv_v
+      (OpamFile.Installed.write
+         (OpamPath.Switch.installed t.root t.switch));
+    update_set t.installed_roots nv_pin nv_v
+      (OpamFile.Installed_roots.write
+         (OpamPath.Switch.installed_roots t.root t.switch));
+    update_config t name (OpamPackage.Name.Map.remove name pins);
+    OpamState.remove_overlay t nv_pin;
 
-  OpamGlobals.msg "%s is now %a\n"
-    (OpamPackage.Name.to_string name)
-    (OpamGlobals.acolor `bold) "unpinned";
+    OpamGlobals.msg "%s is now %a from %s\n"
+      (OpamPackage.Name.to_string name)
+      (OpamGlobals.acolor `bold) "unpinned"
+      (string_of_pin_option current);
 
-  needs_reinstall
+    needs_reinstall
+
+  with Not_found ->
+    OpamGlobals.note "%s is not pinned." (OpamPackage.Name.to_string name);
+    false
+
 
 let list () =
   log "pin_list";

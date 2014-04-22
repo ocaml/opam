@@ -114,7 +114,8 @@ let install_package t nv =
       ) libraries_in_config;
 
       (* .install *)
-      OpamFile.Dot_install.write (OpamPath.Switch.install t.root t.switch name) install;
+      let install_f = OpamPath.Switch.install t.root t.switch name in
+      OpamFile.Dot_install.write install_f install;
 
       (* .config *)
       OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
@@ -197,9 +198,11 @@ let install_package t nv =
           Printf.sprintf " - %s in %s"
             (OpamFilename.Base.to_string base)
             (OpamFilename.Dir.to_string dir) in
-        OpamSystem.internal_error
+        OpamGlobals.error
           "While installing the following files:\n%s"
           (String.concat "\n" (List.map print !warnings));
+        failwith (Printf.sprintf "Error processing %s.install"
+                    (OpamFilename.to_string install_f));
       )
     );
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
@@ -282,7 +285,7 @@ let extract_package t nv =
 
   let extract_and_copy_files dir =
     let () = match OpamFilename.files dir with
-      | [] -> log "No files found"
+      | [] -> log "No files found in %s" (OpamFilename.Dir.to_string dir)
       | [f] ->
         log "archive %a => extracting" (slog OpamFilename.to_string) f;
         OpamFilename.extract_generic_file (F f) build_dir

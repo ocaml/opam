@@ -1102,10 +1102,14 @@ module API = struct
     let reinstall, not_installed =
       get_installed_atoms t atoms in
     if not_installed <> [] then
-      OpamGlobals.error_and_exit "%s %s not installed.\n"
-        (OpamMisc.pretty_list
-           (List.map OpamFormula.short_string_of_atom not_installed))
-        (match not_installed with [_] -> "is" | _ -> "are");
+      (OpamGlobals.warning "%s %s not installed."
+         (OpamMisc.pretty_list
+            (List.map OpamFormula.short_string_of_atom not_installed))
+         (match not_installed with [_] -> "is" | _ -> "are");
+       if OpamState.confirm "Install ?" then
+         install_t atoms None false t)
+    else
+
     let reinstall = OpamPackage.Set.of_list reinstall in
     let universe = OpamState.universe t Depends in
     let depends = (* Do not cast to a set, we need to keep the order *)

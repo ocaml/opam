@@ -266,6 +266,10 @@ module Option = struct
     | None -> None
     | Some x -> Some (f x)
 
+  let iter f = function
+    | None -> ()
+    | Some x -> f x
+
   let default dft = function
     | None -> dft
     | Some x -> x

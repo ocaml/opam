@@ -1047,8 +1047,9 @@ module X = struct
         | Some n, Some nv ->
           if OpamPackage.name nv <> n then
             OpamGlobals.error_and_exit
-              "Inconsistent naming scheme in %s"
-              (OpamFilename.to_string filename)
+              "Package %s, has inconsistent 'name: %S' field."
+              (OpamPackage.to_string nv)
+              (OpamPackage.Name.to_string n)
           else Some n in
       let version_f = OpamFormat.assoc_option s s_version
           (OpamFormat.parse_string @> OpamPackage.Version.of_string) in

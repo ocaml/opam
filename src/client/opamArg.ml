@@ -1326,15 +1326,13 @@ let switch =
   term_info "switch" ~doc ~man
 
 (* PIN *)
-let pin_doc = "Pin a given package to a specific version."
+let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let man = [
     `S "DESCRIPTION";
     `P "This command will 'pin' a package to a specific version, or use a \
-        specific source path for installing and upgrading the package. Using \
-        $(b,opam pin <package> none) will undo the 'pinned' status of \
-        <package>.";
+        specific source path for installing and upgrading the package.";
     `P "It is possible to pin a package to a specific git commit/tag/branch \
         with $(b,opam pin <package> </path/to/git>#<commit>).";
     `P "By default, local directories will be pinned as `path` backends. \

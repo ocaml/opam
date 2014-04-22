@@ -241,7 +241,7 @@ module Make (G : G) : SIG with module G = G
         let pid, status =
           try wait !pids
           with e ->
-            OpamGlobals.error "%s while waiting for sub-processes"
+            OpamGlobals.error "%s"
               (Printexc.to_string e);
             (* Cleanup *)
             errors := OpamMisc.IntMap.fold
