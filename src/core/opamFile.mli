@@ -284,7 +284,7 @@ module Comp: sig
   val src: t -> address option
 
   (** Return the url kind *)
-  val kind: t -> repository_kind option
+  val kind: t -> repository_kind
 
   (** Return the list of patches to apply *)
   val patches: t -> filename list
@@ -489,7 +489,7 @@ module URL: sig
 
   include IO_FILE
 
-  val create: repository_kind option -> ?mirrors:address list -> address -> t
+  val create: repository_kind -> ?mirrors:address list -> address -> t
 
   (** URL address *)
   val url: t -> address
@@ -497,7 +497,7 @@ module URL: sig
   val mirrors: t -> address list
 
   (** Backend kind (could be curl/rsync/git/darcs/hg at the moment) *)
-  val kind: t -> repository_kind option
+  val kind: t -> repository_kind
 
   (** Archive checksum *)
   val checksum: t -> string option

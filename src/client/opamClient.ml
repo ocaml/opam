@@ -295,10 +295,7 @@ module API = struct
       let url = match OpamState.url t nv with
         | None   -> []
         | Some u ->
-          let kind =
-            match OpamFile.URL.kind u with
-            | None   -> "http"
-            | Some k -> string_of_repository_kind k in
+          let kind = string_of_repository_kind (OpamFile.URL.kind u) in
           let url = string_of_address (OpamFile.URL.url u) in
           let mirrors =
             OpamMisc.string_of_list string_of_address (OpamFile.URL.mirrors u) in
