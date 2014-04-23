@@ -121,12 +121,11 @@ let home =
   with Not_found -> Sys.getcwd ()
 
 let default_opam_dir =
-  Filename.concat home ".opam"
+  try OpamMisc.getenv "OPAMROOT"
+  with Not_found -> Filename.concat home ".opam"
 
-let root_dir = ref (
-    try OpamMisc.getenv "OPAMROOT"
-    with Not_found -> default_opam_dir
-  )
+let root_dir =
+  ref (Filename.concat Filename.temp_dir_name "opam")
 
 let timer () =
   if !debug then

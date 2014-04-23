@@ -459,7 +459,7 @@ let global_options =
     mk_opt ~section ["r";"root"]
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
-      dirname (OpamPath.root ()) in
+      dirname (OpamFilename.Dir.of_string OpamGlobals.default_opam_dir) in
   let no_base_packages =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
