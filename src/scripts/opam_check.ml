@@ -28,6 +28,7 @@ let spec = Arg.align [
 let packages = ref []
 let ano x = packages := x :: !packages
 
+let () = OpamGlobals.root_dir := OpamGlobals.default_opam_dir
 let () = Arg.parse spec ano usage
 
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
