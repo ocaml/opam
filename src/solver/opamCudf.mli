@@ -177,5 +177,14 @@ val string_of_universe: Cudf.universe -> string
 (** Pretty-print of packages *)
 val string_of_packages: Cudf.package list -> string
 
+(** Pretty-print a package using its OPAM version. *)
+val opam_string_of_package: Cudf.package -> string
+
+(** Pretty-print a list of packages using OPAM versions. *)
+val opam_string_of_packages: Cudf.package list -> string
+
+(** Pretty-print the universe using OPAM versions.*)
+val opam_string_of_universe: Cudf.universe -> string
+
 (** {2 External solver} *)
 val external_solver_available: unit -> bool
