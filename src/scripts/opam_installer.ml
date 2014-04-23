@@ -50,10 +50,10 @@ let do_commands project_root =
   in
   let cp ?exec ~opt ~src ~dst () =
     if OpamFilename.exists src then
-      (OpamGlobals.msg "%-32s => %s\n"
+      (mkdir (OpamFilename.dirname dst);
+       OpamGlobals.msg "%-32s => %s\n"
          (OpamFilename.remove_prefix project_root src)
          (OpamFilename.to_string dst);
-       mkdir (OpamFilename.dirname dst);
        OpamFilename.install ?exec ~src ~dst ())
     else if not opt then
       OpamGlobals.error "Could not find %S" (OpamFilename.to_string src)
