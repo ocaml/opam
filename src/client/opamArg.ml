@@ -759,10 +759,6 @@ let config =
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
     ["includes"], `includes, "returns include options.";
-    ["bytecomp"], `bytecomp, "returns bytecode compile options.";
-    ["asmcomp"] , `asmcomp , "returns assembly compile options.";
-    ["bytelink"], `bytelink, "returns bytecode linking options.";
-    ["asmlink"] , `asmlink , "returns assembly compile options.";
     ["report"]  , `report,   "Prints a summary of your setup, useful for bug-reports.";
   ] in
   let man = [
@@ -806,12 +802,6 @@ let config =
       profile ocamlinit no_complete no_switch_eval
       params =
     apply_global_options global_options;
-    let mk ~is_byte ~is_link = {
-      conf_is_rec  = is_rec;
-      conf_is_link = is_link;
-      conf_is_byte = is_byte;
-      conf_options = List.map OpamVariable.Section.Full.of_string params;
-    } in
     let csh, fish =
       match sh, csh, sexp, fish with
       | false, false, false, false ->
@@ -887,10 +877,6 @@ let config =
         Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
     | Some `includes -> Client.CONFIG.includes ~is_rec (List.map OpamPackage.Name.of_string params)
-    | Some `bytecomp -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:false)
-    | Some `bytelink -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:true)
-    | Some `asmcomp  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:false)
-    | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true)
     | Some `report   ->
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";

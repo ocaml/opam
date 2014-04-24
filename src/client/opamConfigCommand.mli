@@ -30,9 +30,6 @@ val variable:  full_variable -> unit
 (** Display includes directives *)
 val includes: is_rec:bool -> name list -> unit
 
-(** Display configuration options *)
-val config: config -> unit
-
 (** Substitute files *)
 val subst: basename list -> unit
 

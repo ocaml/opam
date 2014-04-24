@@ -64,9 +64,6 @@ module API: sig
   (** Config API. *)
   module CONFIG: sig
 
-    (** Display configuration options. *)
-    val config: config -> unit
-
     (** Display environment. *)
     val env: csh:bool -> sexp:bool -> fish:bool -> unit
 

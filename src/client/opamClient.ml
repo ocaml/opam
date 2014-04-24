@@ -1225,9 +1225,6 @@ module SafeAPI = struct
 
   module CONFIG = struct
 
-    let config option =
-      read_lock (fun () -> API.CONFIG.config option)
-
     let env ~csh ~sexp ~fish =
       read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish)
 
