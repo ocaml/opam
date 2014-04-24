@@ -866,10 +866,6 @@ The syntax of {\tt comp} files follows the one described in
     ?build:     [[STRING+]]
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
-    ?bytecomp:  [ STRING+ ]
-    ?asmcomp:   [ STRING+ ]
-    ?bytelink:  [ STRING+ ]
-    ?asmlink:   [ STRING+ ]
     ?packages:  <cnf-formula>
     ?requires:  [ STRING+ ]
     ?pp:        [ <ppflag>+ ]
@@ -921,11 +917,6 @@ The syntax of {\tt comp} files follows the one described in
   It must at least contain some target like {\tt world} or {\tt
     world.opt}. If {\tt make} is not present, \OPAM\ will execute all
   the commands listed in {\tt build}.
-
-\item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
-  are the compilation and linking flags to pass to the OCaml
-  compiler. They will be taken into account by the \verb+opam config+
-  command (see \S\ref{opam-config}).
 
 \item {\tt packages} is the list of packages to install just after the
   compiler installation finished. These libraries will not consider
@@ -1305,36 +1296,6 @@ syntax of templates is the following:
 
 \end{itemize}
 
-\subsubsection{Package configuration files: {\tt *.config}}
-\label{file:dotconfig}
-
-\verb+$opam/SWITCH/config/NAME.config+ follows the syntax defined in
-\S\ref{file:general}, with the following restrictions:
-
-{\small
-\begin{Verbatim}[frame=single]
-<file>    := <item>*
-<item>    := <def> | <section>
-<section> :=
-    <kind> STRING {
-      ?asmcomp:  [ STRING+ ]
-      ?bytecomp: [ STRING+ ]
-      ?asmlink : [ STRING+ ]
-      ?bytelink: [ STRING+ ]
-      ?requires: [ STRING+ ]
-      <def>*
-    }
-<kind>    := library | syntax
-<def>     := IDENT: BOOL
-           | IDENT: STRING
-           | IDENT: [ STRING+ ]
-\end{Verbatim}
-}
-
-\verb+$NAME.config+ contains platform-dependent information which can
-be useful for other libraries or syntax extensions that want to use
-libraries defined in the package \verb+$NAME+.
-
 \paragraph{Local and global variables}
 
 The definitions ``{\tt IDENT: BOOL}'', ``{\tt IDENT: STRING}'' and ``{\tt IDENT:
@@ -1347,44 +1308,9 @@ package, and are used to substitute variables in template files (see
 \item \verb+%{$NAME:$VAR}%+ will refer to the variable \verb+$VAR+
   defined at the root of the configuration file \verb+$opam/$SWITCH/config/NAME.config+.
 
-\item \verb+%{$NAME.$LIB:$VAR}%+ will refer to the variable \verb+$VAR+
-  defined in the {\tt library} or {\tt syntax} section named
-  \verb+$LIB+ in the configuration file \verb+$opam/$SWITCH/config/$NAME.config+.
+\item Run {\tt opam config var} for the full list of available
+  variables.
 
-\end{itemize}
-
-\paragraph{Library and syntax sections}
-
-Each {\tt library} and {\tt syntax} section defines an OCaml library
-and the specific compilation flags to enable when using and linking
-with this library.
-
-The distinction between libraries and syntax extensions is only useful
-at compile time to know whether the options should be used as
-compilation or pre-processing arguments (ie. should they go on the
-compiler command line or should they be passed to the {\tt -pp}
-option). This is the responsibility of the build tool to do the right
-thing and the {\tt <kind>} of sections is only used for documentation
-purposes in \OPAM. \\
-
-The available options are:
-
-\begin{itemize}
-\item {\tt asmcomp} are compilation options to give to the native
-  compiler (when using the {\tt -c} option)
-\item {\tt bytecomp} are compilation options to give to the bytecode
-  compiler (when using the {\tt -c} option)
-\item {\tt asmlink} are linking options to give to the native compiler
-\item {\tt bytlink} are linking options to give to the bytecode
-  compiler
-\item {\tt requires} is the list of libraries and syntax extensions
-  the current block is depending on. The full list of compilation
-  and linking options is built by looking at the transitive closure of
-  dependencies. The contents of {\tt dep}s is the list of libraries or
-  syntax extension the current section depends on. Note that we do not
-  refer here to any package name, as multiple packages can expose libraries
-  with the same name and interface and thus we want the user to be able
-  to switch between them easily.
 \end{itemize}
 
 \subsection{Commands}
@@ -1401,30 +1327,14 @@ run:
     $ opam config var $NAME:$VAR
     $ opam config var $NAME.$LIB:$VAR
     $ opam config subst $FILENAME+
-    $ opam config [-R] include  $NAME+
-    $ opam config [-R] bytecomp $NAME.$LIB+
-    $ opam config [-R] asmcomp  $NAME.$LIB+
-    $ opam config [-R] bytelink $NAME.$LIB+
-    $ opam config [-R] asmlink  $NAME.$LIB+
 \end{verbatim}
 
 \begin{itemize}
-\item \verb+list+ will return the list of all variables defined
-  in installed packages (see \S\ref{file:dotconfig})
 \item \verb+var $var+ will return the value associated to the
   variable \verb+$var+
 \item \label{subst}\verb+subst $FILENAME+ replace any occurrence of
   \verb+%{$NAME:$VAR}%+ and \verb+%{$NAME.$LIB:$VAR}%+ as specified in
   \S\ref{file:subst} in \verb+$FILENAME.in+ to create \verb+$FILENAME+.
-\item \verb+includes $NAME+ will return the list of paths to include when
-  compiling a project using the package \verb+$NAME+ (\verb+-R+ gives
-  a result taking into account the transitive closure of
-  dependencies).
-\item \verb+bytecomp+, \verb+asmcomp+, \verb+bytelink+ and
-  \verb+asmlink+ return the associated value for the section
-  \verb+$LIB+ in the file \verb+$opam/$SWITCH/config/$NAME.config+ (\verb+-R+ gives
-  a result taking into account the transitive closure of all
-  dependencies).
 \end{itemize}
 
 
