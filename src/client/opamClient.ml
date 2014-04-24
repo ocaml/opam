@@ -354,6 +354,9 @@ module API = struct
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
+      let libraries = strings "libraries" (fun t -> List.map fst (OpamFile.OPAM.libraries t)) in
+      let syntax    = strings "syntax"    (fun t -> List.map fst (OpamFile.OPAM.syntax t)) in
+
       let os = mk (
         Empty,
         (fun f -> f),
@@ -377,6 +380,8 @@ module API = struct
         @ license
         @ doc
         @ tags
+        @ libraries
+        @ syntax
         @ depends
         @ depopts
         @ os

@@ -240,6 +240,12 @@ val make_commands: command list -> value
 (** Parse a list of commands *)
 val parse_messages: value -> (string * filter option) list
 
+(** Create a list of libraries/syntax *)
+val make_libraries: (string * filter option) list -> value
+
+(** Parse a list of libraries/syntax *)
+val parse_libraries: value -> (string * filter option) list
+
 (** Create a package flag *)
 val make_flag: package_flag -> value
 

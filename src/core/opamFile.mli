@@ -138,10 +138,10 @@ module OPAM: sig
   val conflicts: t -> formula
 
   (** List of exported libraries *)
-  val libraries: t -> section list
+  val libraries: t -> (string * filter option) list
 
   (** List of exported syntax extensions *)
-  val syntax: t -> section list
+  val syntax: t -> (string * filter option) list
 
   (** Patches *)
   val patches: t -> (basename * filter option) list
@@ -198,7 +198,10 @@ module OPAM: sig
   val with_remove : t -> command list -> t
 
   (** Construct as [libraries] *)
-  val with_libraries : t -> section list -> t
+  val with_libraries : t -> (string * filter option) list -> t
+
+  (** Replace the [syntax] field of the given OPAM file. *)
+  val with_syntax: t -> (string * filter option) list -> t
 
   (** Construct as [substs] *)
   val with_substs : t -> basename list -> t

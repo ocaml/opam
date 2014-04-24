@@ -774,8 +774,8 @@ module X = struct
       depends    : formula;
       depopts    : formula;
       conflicts  : formula;
-      libraries  : section list;
-      syntax     : section list;
+      libraries  : (string * filter option) list;
+      syntax     : (string * filter option) list;
       patches    : (basename * filter option) list;
       ocaml_version: compiler_constraint option;
       os         : (bool * string) generic_formula;
@@ -959,6 +959,7 @@ module X = struct
     let with_build t build = { t with build }
     let with_remove t remove = { t with remove }
     let with_libraries t libraries = { t with libraries }
+    let with_syntax t syntax = { t with syntax }
     let with_substs t substs = { t with substs }
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
     let with_maintainer t maintainer = { t with maintainer }
@@ -1018,10 +1019,8 @@ module X = struct
           @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
-          @ listm   t.libraries     s_libraries
-              (OpamVariable.Section.to_string @> OpamFormat.make_string)
-          @ listm   t.syntax        s_syntax
-              (OpamVariable.Section.to_string @> OpamFormat.make_string)
+          @ list    t.libraries     s_libraries     OpamFormat.make_libraries
+          @ list    t.syntax        s_syntax        OpamFormat.make_libraries
           @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
           @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
           @ formula t.os            s_os            OpamFormat.make_os_constraint
@@ -1087,12 +1086,8 @@ module X = struct
           OpamFormat.parse_opt_formula in
       let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
-      let libraries = OpamFormat.assoc_list s s_libraries
-          (OpamFormat.parse_list
-             (OpamFormat.parse_string @> OpamVariable.Section.of_string)) in
-      let syntax = OpamFormat.assoc_list s s_syntax
-          (OpamFormat.parse_list
-             (OpamFormat.parse_string @> OpamVariable.Section.of_string)) in
+      let libraries = OpamFormat.assoc_list s s_libraries OpamFormat.parse_libraries in
+      let syntax = OpamFormat.assoc_list s s_syntax OpamFormat.parse_libraries in
       let ocaml_version = OpamFormat.assoc_option s s_ocaml_version
           OpamFormat.parse_compiler_constraint in
       let os = OpamFormat.assoc_default OpamFormula.Empty s s_os
