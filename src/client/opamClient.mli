@@ -76,9 +76,6 @@ module API: sig
     (** Execute a command in a subshell with the right environment variables. *)
     val exec: string -> unit
 
-    (** Display includes files. *)
-    val includes: is_rec:bool -> name list -> unit
-
     (** Display variables and their contents. *)
     val list: name list -> unit
 

@@ -19,7 +19,6 @@ let slog = OpamGlobals.slog
 
 open OpamTypes
 open OpamState.Types
-open OpamMisc.OP
 
 let full_sections l =
   String.concat " " (List.map OpamVariable.Section.Full.to_string l)
@@ -87,30 +86,6 @@ let list ns =
       (OpamVariable.Full.to_string variable)
       (OpamVariable.string_of_variable_contents contents)
   ) (List.rev contents)
-
-(* Return the transitive closure of dependencies sorted in topological order *)
-let get_transitive_dependencies t ?(depopts = false) names =
-  let universe = OpamState.universe t Depends in
-  (* Compute the transitive closure of dependencies *)
-  let packages = OpamPackage.Set.of_list (List.map (OpamState.find_installed_package_by_name t) names) in
-  OpamSolver.dependencies ~depopts universe packages
-
-let includes ~is_rec names =
-  log "config-includes";
-  let t = OpamState.load_state "config-includes" in
-  let deps =
-    if is_rec then
-      List.map OpamPackage.name (get_transitive_dependencies t ~depopts:true ~installed:true names)
-    else
-      names in
-  log "deps: %a"
-    (slog @@ String.concat ", " @* List.map OpamPackage.Name.to_string)
-    deps;
-  let includes =
-    List.fold_left (fun accu n ->
-      "-I" :: OpamFilename.Dir.to_string (OpamPath.Switch.lib t.root t.switch n) :: accu
-    ) [] (List.rev deps) in
-  OpamGlobals.msg "%s\n" (String.concat " " includes)
 
 let print_env env =
   List.iter (fun (k,v) ->

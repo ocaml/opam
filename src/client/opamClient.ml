@@ -1246,9 +1246,6 @@ module SafeAPI = struct
     let subst files =
       read_lock (fun () -> API.CONFIG.subst files)
 
-    let includes ~is_rec names =
-      read_lock (fun () -> API.CONFIG.includes ~is_rec names)
-
   end
 
   module REPOSITORY = struct

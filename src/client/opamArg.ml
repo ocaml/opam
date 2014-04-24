@@ -758,7 +758,6 @@ let config =
     ["subst"]   , `subst   , "Substitute variables in the given files. The strings $(i,%{var}%) are \
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
-    ["includes"], `includes, "returns include options.";
     ["report"]  , `report,   "Prints a summary of your setup, useful for bug-reports.";
   ] in
   let man = [
@@ -772,7 +771,6 @@ let config =
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
-  let is_rec      = mk_flag ["R";"rec"]     "Recursive query." in
   let all_doc         = "Enable all the global and user configuration options." in
   let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
@@ -797,7 +795,7 @@ let config =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
   let config global_options
-      command env is_rec sh csh zsh fish sexp
+      command env sh csh zsh fish sexp
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -876,7 +874,6 @@ let config =
       else
         Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
-    | Some `includes -> Client.CONFIG.includes ~is_rec (List.map OpamPackage.Name.of_string params)
     | Some `report   ->
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";
@@ -947,7 +944,7 @@ let config =
   in
 
   Term.(pure config
-    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
+    $global_options $command $env $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
     $dot_profile_flag $list $all $global $user
     $profile $ocamlinit $no_complete $no_switch_eval
     $params),
