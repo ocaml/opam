@@ -35,7 +35,7 @@ let address_of_string str =
 
 let parse_url (s,c) =
   let url_kind_of_string = function
-    | "http" | "https" -> `http
+    | "http" | "https" | "ftp" -> `http
     | "file" -> `local
     | "git" -> `git
     | "darcs" -> `darcs
