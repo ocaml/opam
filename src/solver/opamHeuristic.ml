@@ -113,7 +113,7 @@ let fallback_msg =
    where all packages have the maximum version, then on all the states
    where all packages have their maximum version but one which has its
    second maximal version, etc... *)
-let brute_force ?(verbose=true) is_consistent state_space =
+let brute_force ?(verbose=true) ~dump is_consistent state_space =
   log "brute-force";
 
   let bounds = List.map (fun v -> Array.length v - 1) state_space in
@@ -138,6 +138,7 @@ let brute_force ?(verbose=true) is_consistent state_space =
       None
     | Some t ->
       let state = mk_state t in
+      dump state;
       incr count;
       let t1 = Unix.time () in
       if verbose && !count mod interval = interval - 1 then
@@ -163,6 +164,15 @@ let consistent_packages universe packages =
   | { result = Success _ } -> true
   | { result = Failure _ } -> false
 
+let dump_state =
+  try
+    if OpamMisc.getenv "OPAMDEBUG" = "42" then
+      (fun l -> log "dump-state: %s" (OpamCudf.opam_string_of_packages l))
+    else
+      (fun _ -> ())
+  with Not_found ->
+    (fun _ -> ())
+
 (* Explore a given [state_space] to find the optimal solution. Ideally
    the state space should be as small as possible, eg. we rely on
    previous heuristics to reduce its size. *)
@@ -179,7 +189,7 @@ let explore ?(verbose=true) universe state_space =
   let is_consistent state =
     let packages = packages_of_state state in
     consistent_packages universe packages in
-  brute_force ~verbose is_consistent state_space
+  brute_force ~verbose ~dump:dump_state is_consistent state_space
 
 (* Build a solution from a given space-state. If a package appears
    in the state, the solution has the package installed with the
@@ -246,20 +256,6 @@ let find_interesting_names universe request =
   List.iter add revdepends;
   OpamMisc.StringSet.elements !set
 
-(* Find:
-   - all package dependencies; and
-   - package reverse dependencies which are installed. *)
-let dependencies universe constrs =
-  let filter pkg =
-    List.exists (fun (n,v) ->
-      n = pkg.Cudf.package
-      && Cudf.version_matches pkg.Cudf.version v
-    ) constrs in
-  let packages = Cudf.get_packages ~filter universe in
-  let packages = OpamCudf.dependencies universe packages in
-  let universe = Cudf.load_universe packages in
-  Algo.Depsolver.trim universe
-
 (* [state_space] returns the packages which will be tested by the
    brute-force state explorer. As we try to minimize the state to
    explore for each package, this means:
@@ -316,6 +312,7 @@ let state_space ?(filters = fun _ -> None) universe wish_remove interesting_name
    the request until reaching a fix-point. *)
 let state_of_request ?(verbose=true) ~version_map current_universe request =
   log "state_of_request";
+
   match OpamCudf.check_request ~explain:false  ~version_map current_universe request with
   | Conflicts _             ->
     log "state-of-request: %a CONFLICT!"
@@ -335,26 +332,6 @@ let state_of_request ?(verbose=true) ~version_map current_universe request =
 
     let all_wishes = request.wish_install @ request.wish_upgrade in
 
-    (* We remove from the universe all the package versions which are
-       not specified on the command-line. For instance:
-
-       $ opam install core.109.13.00
-
-       will cause all versions of core != 109.13.00 to disapear from
-       the universe. This is causing [Universe.trim] to remove *a lot*
-       of uninstallable packages and will improve the brute-force
-       state exploration results.
-
-       Note: We don't want to trim the universe too early because we
-       want to keep good error messages in case the solver does not
-       find a solution. *)
-    let trimed_universe =
-      let universe = List.fold_left (fun universe (name, constr) ->
-          OpamCudf.remove_all_uninstalled_versions_but universe name constr
-        ) result_universe all_wishes in
-      let universe = Algo.Depsolver.trim universe in
-      dependencies universe all_wishes in
-
     let filters name =
       try List.assoc name all_wishes
       with Not_found ->
@@ -363,7 +340,7 @@ let state_of_request ?(verbose=true) ~version_map current_universe request =
 
     let state_space =
       let names = List.map (fun (n,_) -> n) request.wish_upgrade in
-      state_space ~filters trimed_universe request.wish_remove names in
+      state_space ~filters result_universe request.wish_remove names in
     explore ~verbose current_universe state_space
 
 let same_state s1 s2 =
@@ -377,43 +354,41 @@ let same_state s1 s2 =
     List.length s1 = List.length s2
     && sort s1 = sort s2
 
-(* Various heuristic to transform a solution checker into an optimized
-   solver. *)
-let optimize ?(verbose=true) ~version_map map_init_u universe request =
+(* Refine a request with state constraints. *)
+let refine state request =
+  log "refine request:%a state:%a"
+    (slog OpamCudf.string_of_request) request
+    (slog OpamCudf.string_of_packages) state;
+  let wish_upgrade =
+    List.rev_map (fun p -> (p.Cudf.package, Some (`Eq, p.Cudf.version))) state in
+  let wish_install =
+    let names =
+      OpamMisc.StringSet.(
+        union
+          (of_list (List.rev_map fst request.wish_install))
+          (of_list (List.rev_map fst request.wish_upgrade))
+      ) in
+    let set =
+      OpamMisc.StringSet.filter
+        (fun n -> not (List.mem_assoc n wish_upgrade))
+        names in
+    List.map (fun n -> (n, None)) (OpamMisc.StringSet.elements set) in
+  { request with wish_install; wish_upgrade }
 
-  let refine state request =
-    log "refine request:%a state:%a"
-      (slog OpamCudf.string_of_request) request
-      (slog OpamCudf.string_of_packages) state;
-    let wish_upgrade =
-      List.rev_map (fun p -> (p.Cudf.package, Some (`Eq, p.Cudf.version))) state in
-    let wish_install =
-      let names =
-        OpamMisc.StringSet.(
-          union
-            (of_list (List.rev_map fst request.wish_install))
-            (of_list (List.rev_map fst request.wish_upgrade))
-        ) in
-      let set =
-        OpamMisc.StringSet.filter
-          (fun n -> not (List.mem_assoc n wish_upgrade))
-          names in
-      List.map (fun n -> (n, None)) (OpamMisc.StringSet.elements set) in
+(* Add a package name to the upgrade list. *)
+let add_to_upgrade request name =
+  { request with wish_upgrade = (name, None) :: request.wish_upgrade }
 
-    { request with wish_install; wish_upgrade } in
-
-  let add_to_request state request name =
-    let request = refine state request in
-    { request with wish_upgrade = (name, None) :: request.wish_upgrade } in
+(* Compute the 'implicit' packages, ie. the ones which do not appear
+   in the request but which are in the transitive closure of
+   dependencies, and split them in two categories: already installed
+   (which will be kept as much as possible with the same version)
+   and not installed (which will be installed to the most recent
+   valid version) if they are needed. *)
+let implicits universe request =
 
   let interesting_names = find_interesting_names universe request in
 
-  (* Compute the 'implicit' packages, ie. the ones which do not appear
-     in the request but which are in the transitive closure of
-     dependencies, and split them in two categories: already installed
-     (which will be kept as much as possible with the same version)
-     and not installed (which will be installed to the most recent
-     valid version) *)
   let implicit_installed, implicit_not_installed =
     let implicit =
       let request_names =
@@ -447,6 +422,76 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
   log "implicit-not-installed: %a"
     (slog OpamMisc.pretty_list) implicit_not_installed;
 
+  implicit_installed, implicit_not_installed
+
+(* Remove from the universe all the package versions which are not
+   specified on the command-line. For instance:
+
+   $ opam install core.109.13.00
+
+   will cause all versions of core != 109.13.00 to disapear from the
+   universe. This is causing [Universe.trim] to remove *a lot* of
+   uninstallable packages and will improve the brute-force state
+   exploration results.
+
+   We also remove all version stricly less than the one installed as we
+   don't downgrade anyway. *)
+let trim_universe universe request =
+  (* First trim: not very useful, but why not. *)
+  let universe = Algo.Depsolver.trim universe in
+
+  (* we compute the cone of interesting packages. *)
+  let is_upgrade (n, _) =
+    List.exists (fun (p, _) -> p = n) request.wish_upgrade in
+  let wish_install =
+    List.filter (fun p -> not (is_upgrade p)) request.wish_install in
+  let all_wishes = wish_install @ request.wish_upgrade in
+  let universe = List.fold_left (fun universe (name, constr) ->
+      OpamCudf.remove_all_uninstalled_versions_but universe name constr
+    ) universe all_wishes in
+  let filter pkg =
+    List.exists (fun (n,v) ->
+      n = pkg.Cudf.package
+      && Cudf.version_matches pkg.Cudf.version v
+    ) all_wishes in
+  let packages = Cudf.get_packages ~filter universe in
+  let packages = OpamCudf.dependencies universe packages in
+
+  (* We manually remove package with invalid constraints (seems that
+     trim does not do it properly). *)
+  let packages = List.filter (fun pkg ->
+      List.for_all (List.for_all (fun (name, constr) ->
+          let filter p =
+            p.Cudf.package <> name
+            && Cudf.version_matches p.Cudf.version constr in
+          Cudf.get_packages ~filter universe <> []
+        )) pkg.Cudf.depends
+    ) packages in
+  let universe = Cudf.load_universe packages in
+
+  (* and we trim again. *)
+  Algo.Depsolver.trim universe
+
+(* Various heuristic to transform a solution checker into an optimized
+   solver. *)
+let optimize ?(verbose=true) ~version_map map_init_u universe request =
+
+  (* We start be specializing the request. *)
+  let request =
+    let wish_upgrade = List.map (fun (name, constr) ->
+        name,
+        match constr with
+        | Some _ -> constr
+        | None   ->
+          match Cudf.get_installed universe name with
+          | [p] -> Some (`Geq, p.Cudf.version)
+          | _   -> None
+      ) request.wish_upgrade in
+    { request with wish_upgrade } in
+  (* We use that request to trim the universe, and keep only the interesting packages. *)
+  let universe = trim_universe universe request in
+  log "universe: %s" (OpamCudf.opam_string_of_universe universe);
+
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose ~version_map universe request with
   | None       ->
@@ -465,7 +510,8 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
         log "keep %s with the same version" p.Cudf.package;
         (p :: state)
       ) else (
-        let request = add_to_request state request p.Cudf.package in
+        let request = refine state request in
+        let request = add_to_upgrade request p.Cudf.package in
         match state_of_request ~verbose ~version_map universe request with
         | None       ->
           log "discard %s" p.Cudf.package;
@@ -479,6 +525,7 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
       ) in
 
     (* Try to keep the installed packages in the dependency cone *)
+    let implicit_installed, implicit_not_installed = implicits universe request in
     let state = List.fold_left installed_first state implicit_installed in
     log "STATE(1) %a" (slog OpamCudf.string_of_packages) state;
 
@@ -495,7 +542,8 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
           (remove_universe, state)
         ) else (
           log "adding %s to the request" name;
-          let request = add_to_request state request name in
+          let request = refine state request in
+          let request = add_to_upgrade request name in
           match state_of_request ~verbose ~version_map universe request with
           | None       -> (universe, state)
           | Some state -> (universe, state)

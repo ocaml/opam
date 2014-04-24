@@ -820,3 +820,16 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
     compute_root_causes complete_universe all_actions requested in
 
   { to_remove; to_process; root_causes }
+
+let opam_string_of_package p =
+  let n = Cudf.lookup_package_property p s_source in
+  let v = Cudf.lookup_package_property p s_source_number in
+  Printf.sprintf "%s.%s" n v
+
+let opam_string_of_packages l =
+  let l = List.map opam_string_of_package l in
+  let l = List.sort String.compare l in
+  String.concat " " l
+
+let opam_string_of_universe u =
+  opam_string_of_packages (List.sort compare (Cudf.get_packages u))
