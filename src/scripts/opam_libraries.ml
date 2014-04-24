@@ -17,12 +17,12 @@
 (* Script to add library/syntax info *)
 open OpamTypes
 
-module StringSet = OpamMisc.StringSet
+module StringMap = OpamMisc.StringMap
 
 type args = {
   pkg: name;
-  lib: StringSet.t;
-  syntax: StringSet.t;
+  lib: filter option StringMap.t;
+  syntax: filter option StringMap.t;
   infer: bool;
 }
 
@@ -45,8 +45,9 @@ let args =
     Arg.(required & pos 0 (some OpamArg.package_name) None & info [] ~doc)
   in
   Term.(pure (fun infer lib syntax pkg ->
-      let lib = StringSet.of_list lib in
-      let syntax = StringSet.of_list syntax in
+      let mk x = StringMap.of_list (List.map (fun l -> l, None) x) in
+      let lib =  mk lib in
+      let syntax = mk syntax in
       { infer; lib; syntax; pkg }
     ) $ infer $ lib $ syntax $ pkg)
 
@@ -62,10 +63,15 @@ let process args =
       let pkgname = OpamFile.OPAM.name opam in
       if pkgname = args.pkg then begin
         OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
-        let libs   = StringSet.of_list (List.map fst (OpamFile.OPAM.syntax opam)) in
-        let libs   = StringSet.union libs args.lib in
-        let syntax = StringSet.of_list (List.map fst (OpamFile.OPAM.syntax opam)) in
-        let syntax = StringSet.union syntax args.syntax in
+        let merge x y = match x,y with
+          | None  , None   -> None
+          | Some x, None
+          | None  , Some x -> Some x
+          | Some x, Some _ -> Some x in
+        let libs   = StringMap.of_list (OpamFile.OPAM.libraries opam) in
+        let libs   = StringMap.union merge args.lib libs in
+        let syntax = StringMap.of_list (OpamFile.OPAM.syntax opam) in
+        let syntax = StringMap.union merge args.syntax syntax in
 
         let libs = ref libs in
         let syntax = ref syntax in
@@ -78,15 +84,15 @@ let process args =
                     | CString s, _ -> Some s
                     | _ -> None
                   ) (List.tl l) in
-                let ls, ss = List.partition (OpamMisc.ends_with ~suffix:".syntax") l in
-                List.iter (fun l -> libs := OpamMisc.StringSet.add l !libs) ls;
-                List.iter (fun s -> syntax := OpamMisc.StringSet.add s !syntax) ss;
+                let ss, ls = List.partition (OpamMisc.ends_with ~suffix:".syntax") l in
+                List.iter (fun l -> libs := StringMap.add l None !libs) ls;
+                List.iter (fun s -> syntax := StringMap.add s None !syntax) ss;
               | _ -> ()
             ) cmds;
         );
 
-        let libs = List.map (fun l -> l, None) (StringSet.elements !libs) in
-        let syntax = List.map (fun s -> s, None) (StringSet.elements !syntax) in
+        let libs = StringMap.bindings !libs in
+        let syntax = StringMap.bindings !syntax in
         let opam = OpamFile.OPAM.with_libraries opam libs in
         let opam = OpamFile.OPAM.with_syntax opam syntax in
         OpamFile.OPAM.write opam_f opam;
