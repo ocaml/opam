@@ -1,4 +1,4 @@
 bin: [
- "_build/p4.native" { "p4" }
- "_build/p4.native"
+ "p4.foo" { "p4" }
+ "p4.foo"
 ]

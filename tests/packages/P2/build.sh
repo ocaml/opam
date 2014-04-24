@@ -1,9 +1,10 @@
 #! /bin/sh -eu
 
-FLAGS="`${OPAM} config includes P1`"
+OFLAGS="`${OPAM} config var P1:asmcomp`"
+CFLAGS="`${OPAM} config var P1:bytecomp`"
 
 echo "Bytecode Compilation"
-ocamlopt ${FLAGS} -a p2.ml -o p2.cmxa
+ocamlopt ${OFLAGS} -a p2.ml -o p2.cmxa
 
 echo "Native Compilation"
-ocamlc ${FLAGS} -a p2.ml -o p2.cma
+ocamlc ${CFLAGS} -a p2.ml -o p2.cma

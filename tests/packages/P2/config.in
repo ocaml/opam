@@ -1,5 +1,3 @@
 Foo is %{P1:FOO}%
 
-Foo also contains a section with %{P1.p1:l}%. Funny, isn't it? 
-
-  
+Foo also contains a variable with %{P1:l}%. Funny, isn't it?
