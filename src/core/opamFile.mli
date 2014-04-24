@@ -305,27 +305,6 @@ module Comp: sig
   (** Packages to install immediately after the creation of OCaml *)
   val packages: t -> formula
 
-  (** Linking options to give to the native code compiler *)
-  val asmlink: t -> string list
-
-  (** Compilation options to give to the native code compiler *)
-  val asmcomp: t -> string list
-
-  (** Linking options to give to the bytecode compiler *)
-  val bytelink: t -> string list
-
-  (** Compilation options to give to the bytecode compiler *)
-  val bytecomp: t -> string list
-
-  (** Linking options to give to the native code compiler *)
-  val asmcomp: t -> string list
-
-  (** Libraries to link with *)
-  val requires: t -> section list
-
-  (** Preprocessing options *)
-  val pp: t -> ppflag option
-
   (** Environment variable to set-up before running commands in the
       subtree *)
   val env: t -> (string * string * string) list
@@ -384,46 +363,6 @@ module Dot_config: sig
 
   (** Create a new .config file (containing only variables) *)
   val create: (variable * variable_contents) list -> t
-
-  module type SECTION = sig
-
-    (** List the available sections *)
-    val available: t -> section list
-
-    (** Return the section kind *)
-    val kind: t -> section -> string
-
-    (** Return the list of native-compiler options *)
-    val asmcomp: t -> section -> string list
-
-    (** Return the list of bytecode-compiler options *)
-    val bytecomp: t -> section -> string list
-
-    (** Return the list of native-code linking options *)
-    val asmlink: t -> section -> string list
-
-    (** Return the list of bytecode linking options *)
-    val bytelink: t -> section -> string list
-
-    (** Return the build requirements *)
-    val requires: t -> section -> section list
-
-    (** Return the value of variables *)
-    val variable: t -> section -> variable  -> variable_contents option
-
-    (** The list of local variables *)
-    val variables: t -> section -> variable list
-
-  end
-
-  (** All library and syntax sections *)
-  module Section: SECTION
-
-  (** Sections starting by [library] *)
-  module Library: SECTION
-
-  (** Sections starting by [syntax] *)
-  module Syntax: SECTION
 
   (** Top-level variables *)
   val variable: t -> variable  -> variable_contents option

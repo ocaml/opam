@@ -20,13 +20,6 @@ let slog = OpamGlobals.slog
 open OpamTypes
 open OpamState.Types
 
-let full_sections l =
-  String.concat " " (List.map OpamVariable.Section.Full.to_string l)
-
-let string_of_config t =
-  Printf.sprintf "rec=%b bytecode=%b link=%b options=%s"
-    t.conf_is_rec t.conf_is_byte t.conf_is_link (full_sections t.conf_options)
-
 let need_globals ns =
   ns = []
   || List.mem OpamPackage.Name.global_config ns
@@ -36,7 +29,7 @@ let need_globals ns =
 let implicits ns =
   if need_globals ns then
     List.map (fun variable ->
-      OpamVariable.Full.create_global
+      OpamVariable.Full.create
         OpamPackage.Name.global_config
         (OpamVariable.of_string variable)
     ) OpamState.global_variable_names
@@ -63,20 +56,11 @@ let list ns =
   let variables =
     implicits ns @
     List.fold_left (fun accu (name, config) ->
-      (* add all the global variables *)
-      let globals =
+        (* add all the global variables *)
         List.fold_left (fun accu variable ->
-          OpamVariable.Full.create_global name variable :: accu
-        ) accu (OpamFile.Dot_config.variables config) in
-      (* then add the local section variables *)
-      List.fold_left
-        (fun accu section ->
-          let variables = OpamFile.Dot_config.Section.variables config section in
-          List.fold_left (fun accu variable ->
-            OpamVariable.Full.create_local name section variable :: accu
-          ) accu variables
-        ) globals (OpamFile.Dot_config.Section.available config)
-    ) [] configs in
+          OpamVariable.Full.create name variable :: accu
+        ) accu (OpamFile.Dot_config.variables config)
+      ) [] configs in
   let contents =
     List.map
       (fun v -> v, OpamState.contents_of_variable_exn t OpamVariable.Map.empty v)
@@ -145,9 +129,8 @@ let quick_lookup v =
     | None ->
       if OpamVariable.to_string var = "switch" then
         Some (S (OpamSwitch.to_string switch))
-      else match OpamVariable.Full.section v with
-        | None   -> OpamFile.Dot_config.variable config var
-        | Some s -> OpamFile.Dot_config.Section.variable config s var
+      else
+        OpamFile.Dot_config.variable config var
   ) else
     None
 

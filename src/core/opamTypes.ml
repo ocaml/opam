@@ -110,12 +110,6 @@ type variable = OpamVariable.t
     sections/sub-sections they appear in) *)
 type full_variable = OpamVariable.Full.t
 
-(** Section names *)
-type section = OpamVariable.Section.t
-
-(** Fully qualified section names *)
-type full_section = OpamVariable.Section.Full.t
-
 (** Content of user-defined variables *)
 type variable_contents = OpamVariable.variable_contents =
   | B of bool
@@ -123,11 +117,6 @@ type variable_contents = OpamVariable.variable_contents =
 
 (** A map from variables to their contents (i.e an environment) *)
 type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
-
-(** Content of [pp] variables *)
-type ppflag =
-  | Camlp4 of string list
-  | Cmd of string list
 
 (** Opam package flags *)
 type package_flag =
@@ -289,14 +278,6 @@ type pin_option =
 
 (** Pin kind *)
 type pin_kind = [`version|`git|`darcs|`hg|`local]
-
-(** Configuration requests *)
-type config = {
-  conf_is_rec : bool;
-  conf_is_byte: bool;
-  conf_is_link: bool;
-  conf_options: OpamVariable.Section.Full.t list;
-}
 
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]

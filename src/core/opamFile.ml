@@ -1291,43 +1291,11 @@ module X = struct
     let s str = S str
     let b bool = B bool
 
-    type s = {
-      name      : section;
-      kind      : string ;
-      bytecomp  : string list ;
-      asmcomp   : string list ;
-      bytelink  : string list ;
-      asmlink   : string list ;
-      requires  : section list;
-      lvariables: (variable * variable_contents) list;
-    }
+    type t = (variable * variable_contents) list
 
-    type t = {
-      sections : s list;
-      variables: (variable * variable_contents) list;
-    }
+    let create variables = variables
 
-    let create variables =
-      { variables; sections = [] }
-
-    let empty = {
-      sections  = [];
-      variables = [];
-    }
-
-    let s_bytecomp = "bytecomp"
-    let s_asmcomp  = "asmcomp"
-    let s_bytelink = "bytelink"
-    let s_asmlink  = "asmlink"
-    let s_requires = "requires"
-
-    let valid_fields = [
-      s_bytecomp;
-      s_asmcomp;
-      s_bytelink;
-      s_asmlink;
-      s_requires;
-    ]
+    let empty = []
 
     let of_channel filename ic =
       let file = Syntax.of_channel filename ic in
@@ -1336,29 +1304,10 @@ module X = struct
           "bool"  , (OpamFormat.parse_bool   @> b);
         ] in
       let parse_variables items =
-        let l = List.filter (fun (x,_) ->
-          not (List.mem x valid_fields)
-        ) (OpamFormat.variables items) in
+        let l = OpamFormat.variables items in
         List.rev_map (fun (k,v) -> OpamVariable.of_string k, parse_value v) l in
-      let parse_requires = OpamFormat.parse_list
-          (OpamFormat.parse_string @> OpamVariable.Section.of_string) in
-      let parse_section kind s =
-        let name =  OpamVariable.Section.of_string s.section_name in
-        let bytecomp = OpamFormat.assoc_string_list s.section_items s_bytecomp in
-        let asmcomp  = OpamFormat.assoc_string_list s.section_items s_asmcomp  in
-        let bytelink = OpamFormat.assoc_string_list s.section_items s_bytecomp in
-        let asmlink  = OpamFormat.assoc_string_list s.section_items s_asmlink  in
-        let requires =
-          OpamFormat.assoc_list s.section_items s_requires parse_requires in
-        let lvariables = parse_variables s.section_items in
-        { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables; requires } in
-      let libraries = OpamFormat.assoc_sections file.file_contents "library"
-          (parse_section "library") in
-      let syntax    = OpamFormat.assoc_sections file.file_contents "syntax"
-          (parse_section "syntax") in
-      let sections  = libraries @ syntax in
       let variables = parse_variables file.file_contents in
-      { sections; variables }
+      variables
 
     let to_string filename t =
       let open OpamFormat in
@@ -1367,68 +1316,18 @@ module X = struct
         | S s -> make_string s in
       let of_variables l =
         List.rev_map (fun (k,v) -> make_variable (OpamVariable.to_string k, of_value v)) l in
-      let make_require = OpamVariable.Section.to_string @> make_string in
-      let of_section s =
-        make_section
-          { section_name  = OpamVariable.Section.to_string s.name;
-            section_kind  = s.kind;
-            section_items = [
-              make_variable (s_bytecomp, make_string_list s.bytecomp);
-              make_variable (s_asmcomp , make_string_list s.asmcomp);
-              make_variable (s_bytelink, make_string_list s.bytelink);
-              make_variable (s_asmlink , make_string_list s.asmlink);
-              make_variable (s_requires, make_list make_require s.requires);
-            ] @ of_variables s.lvariables
-          } in
       Syntax.to_string [] {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
-        file_contents =
-          of_variables t.variables
-          @ List.rev (List.rev_map of_section t.sections)
+        file_contents = of_variables t
       }
 
-    let variables t = List.rev_map fst t.variables
+    let variables t = List.rev_map fst t
 
     let variable t s =
-      try Some (List.assoc s t.variables)
+      try Some (List.assoc s t)
       with Not_found -> None
 
-    module type SECTION = sig
-      val available: t -> section list
-      val kind     : t -> section -> string
-      val asmcomp  : t -> section -> string list
-      val bytecomp : t -> section -> string list
-      val asmlink  : t -> section -> string list
-      val bytelink : t -> section -> string list
-      val requires : t -> section -> section list
-      val variable : t -> section -> variable -> variable_contents option
-      val variables: t -> section -> variable list
-    end
-
-    module MK (M : sig val get : t -> s list end) : SECTION = struct
-
-      let find t name =
-        List.find (fun s -> s.name = name) (M.get t)
-
-      let available t = List.rev_map (fun s -> s.name) (M.get t)
-      let kind t s = (find t s).kind
-      let bytecomp t s = (find t s).bytecomp
-      let asmcomp  t s = (find t s).asmcomp
-      let bytelink t s = (find t s).bytelink
-      let asmlink  t s = (find t s).asmlink
-      let requires t s = (find t s).requires
-      let variable t n s =
-        try Some (List.assoc s (find t n).lvariables)
-        with Not_found -> None
-      let variables t n =
-        List.rev_map fst (find t n).lvariables
-    end
-
-    let filter t n = List.filter (fun s -> s.kind = n) t.sections
-    module Library  = MK (struct let get t = filter t "library" end)
-    module Syntax   = MK (struct let get t = filter t "syntax"  end)
-    module Section  = MK (struct let get t = t.sections end)
   end
 
   module Comp = struct
@@ -1446,13 +1345,7 @@ module X = struct
       configure    : string list ;
       make         : string list ;
       build        : command list ;
-      bytecomp     : string list ;
-      asmcomp      : string list ;
-      bytelink     : string list ;
-      asmlink      : string list ;
       packages     : formula ;
-      requires     : section list;
-      pp           : ppflag option;
       env          : (string * string * string) list;
       tags         : string list;
     }
@@ -1468,13 +1361,7 @@ module X = struct
       configure = [];
       make      = [];
       build     = [];
-      bytecomp  = [];
-      asmcomp   = [];
-      bytelink  = [];
-      asmlink   = [];
       packages  = OpamFormula.Empty;
-      requires  = [];
-      pp        = None;
       env       = [];
       tags      = [];
     }
@@ -1494,13 +1381,7 @@ module X = struct
     let s_configure = "configure"
     let s_make      = "make"
     let s_build     = "build"
-    let s_bytecomp  = "bytecomp"
-    let s_asmcomp   = "asmcomp"
-    let s_bytelink  = "bytelink"
-    let s_asmlink   = "asmlink"
     let s_packages  = "packages"
-    let s_requires  = "requires"
-    let s_pp        = "pp"
     let s_env       = "env"
     let s_preinstalled = "preinstalled"
     let s_tags      = "tags"
@@ -1521,13 +1402,7 @@ module X = struct
       s_configure;
       s_make;
       s_build;
-      s_bytecomp;
-      s_asmcomp;
-      s_bytelink;
-      s_asmlink;
       s_packages;
-      s_requires;
-      s_pp;
       s_env;
       s_preinstalled;
       s_tags;
@@ -1571,12 +1446,6 @@ module X = struct
     let opam_version t = t.opam_version
 
     let packages t = t.packages
-    let asmlink t = t.asmlink
-    let asmcomp t = t.asmcomp
-    let bytelink t = t.bytelink
-    let bytecomp t = t.bytecomp
-    let requires t = t.requires
-    let pp t = t.pp
     let preinstalled t = t.preinstalled
     let env t = t.env
     let tags t = t.tags
@@ -1587,18 +1456,6 @@ module X = struct
       let s = file.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
-      let parse_camlp4 x =
-        match OpamFormat.parse_list (fun x -> x) x with
-        | x::l when OpamFormat.parse_ident x = "CAMLP4" ->
-          let pos = OpamFormat.value_pos x in
-          Some (Camlp4 (OpamFormat.parse_string_list (List (pos,l))))
-        | l ->
-          OpamFormat.bad_format ?pos:(OpamFormat.values_pos l)
-            "Expected ident \"CAMLP4\"" in
-      let parse_ppflags = OpamFormat.parse_or [
-          ("camlp4"     , parse_camlp4);
-          ("string-list", OpamFormat.parse_string_list @> fun x -> Some (Cmd x));
-        ] in
       let name_d, version_d = match OpamCompiler.of_filename filename with
         | None   -> OpamSystem.internal_error
                       "%s is not a valid compiler description file."
@@ -1642,17 +1499,8 @@ module X = struct
       let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
       let env = OpamFormat.assoc_list s s_env
           (OpamFormat.parse_list_list OpamFormat.parse_env_variable) in
-      let bytecomp = OpamFormat.assoc_string_list s s_bytecomp  in
-      let asmcomp = OpamFormat.assoc_string_list s s_asmcomp   in
-      let bytelink = OpamFormat.assoc_string_list s s_bytecomp  in
-      let asmlink = OpamFormat.assoc_string_list s s_asmlink   in
       let packages = OpamFormat.assoc_default
           OpamFormula.Empty s s_packages OpamFormat.parse_formula in
-      let requires =
-        OpamFormat.assoc_list s s_requires
-          (OpamFormat.parse_list
-             (OpamFormat.parse_string @> OpamVariable.Section.of_string)) in
-      let pp = OpamFormat.assoc_default None s s_pp parse_ppflags in
       let preinstalled =
         OpamFormat.assoc_default false s s_preinstalled OpamFormat.parse_bool in
       let tags = OpamFormat.assoc_string_list s s_tags in
@@ -1668,19 +1516,12 @@ module X = struct
           (OpamFilename.to_string filename);
       { opam_version; name; version; src; kind;
         patches; configure; make; build;
-        bytecomp; asmcomp; bytelink; asmlink; packages;
-        requires; pp;
-        preinstalled; env;
+        packages; preinstalled; env;
         tags;
       }
 
     let to_string filename s =
       let open OpamFormat in
-      let make_ppflag = function
-        | Cmd l    -> make_string_list l
-        | Camlp4 l ->
-          make_list (fun x -> x)
-            (make_ident "CAMLP4" :: List.rev (List.rev_map make_string l)) in
       let src = match s.src with
         | Some x -> Some (string_of_repository_kind s.kind, x)
         | None -> None in
@@ -1712,21 +1553,10 @@ module X = struct
             make_variable (s_configure, make_string_list s.configure);
             make_variable (s_make, make_string_list s.make);
             make_variable (s_build, make_commands s.build);
-            make_variable (s_bytecomp, make_string_list s.bytecomp);
-            make_variable (s_asmcomp, make_string_list s.asmcomp);
-            make_variable (s_bytelink, make_string_list s.bytelink);
-            make_variable (s_asmlink, make_string_list s.asmlink);
             make_variable (s_packages, make_formula s.packages);
-            make_variable (s_requires,
-                      make_list
-                        (OpamVariable.Section.to_string @> make_string)
-                        s.requires);
             make_variable (s_env, make_list make_env_variable s.env);
             make_variable (s_tags, make_string_list s.tags);
-          ] @ (match s.pp with
-               | None    -> []
-               | Some pp -> [ make_variable (s_pp, make_ppflag pp) ]
-          ) @ (
+          ] @ (
             if not s.preinstalled then []
             else [ make_variable (s_preinstalled, make_bool s.preinstalled) ])
       } in
