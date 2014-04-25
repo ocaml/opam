@@ -72,7 +72,7 @@ if [[ " ${ACTIONS[@]} " =~ " full-archive " ]]; then
     sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,'"$TAG"')/' configure.ac
     ${MAKE} configure
     ./configure
-    ${MAKE} clone
+    ${MAKE} download-ext
     cd ..
 
     FILES=($NAME/src_ext/*.{tar.gz,tbz})
@@ -110,9 +110,10 @@ if [[ " ${ACTIONS[@]} " =~ " binary " ]]; then
     tar -xzf "$TARBALL"
     cd opam-full-$TAG
     ./configure
-    ${MAKE}
+    ${MAKE} lib-ext
+    ${MAKE} opam
     cd ..
-    ln -s opam-full-$TAG/_obuild/opam/opam.asm $BINARY
+    ln -s opam-full-$TAG/src/opam $BINARY
     UPLOAD_FILES+=("$BINARY")
 fi
 

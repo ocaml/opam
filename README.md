@@ -35,29 +35,17 @@ packages and compilers created with OPAM version `x.(y-1).0`
 
 ## Compiling this repo
 
-Run `./configure`
-
-Then, there are currently two main ways to compile this repo:
-* With automatic downloading of the prerequisites, and all-in-one compilation.
-  Just run
-  - `make`
-  - `make install`
-* Using the dependencies already installed. This is necessary if you want to
-  install opam-lib to build other projects (opamfu, opam-rt...).
-  - make sure you have ocamlgraph, cmdliner, dose 3.1.2, cudf, re >= 1.2.0 and
-    ocamlfind installed. Or run `opam install opam-lib --deps-only` if you
-    already have a working instance.
-  - run `make prepare`. This is needed just once.
-  - run `make compile`.
-  - run `make install`, and `make libinstall` if you need the libraries.
-* The latter is also possible without resorting to ocp-build, although it will
-  take longer.
-  - `make with-ocamlbuild`
-  - `make install-with-ocamlbuild`
-  - `make libinstall-with-ocamlbuild`
-
-Note that this is in a transitory state right now, expect it to change for
-something simpler.
+* Make sure you have OCaml and GNU make installed.
+* Run `./configure`
+* Run `make lib-ext` if you don't have the dependencies installed and only need
+  the opam binary (not the libs). This will locally take care of all
+  dependencies for you.
+* Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, cudf, dose 3.1.2
+  and re >= 1.2.0 installed. Or run `opam install opam-lib --deps-only` if you
+  already have a working instance.
+* Run `make`
+* Run `make install`
+* Run `make libinstall` if needed (this is incompatible with `make lib-ext`)
 
 ## Bug tracker
 
