@@ -1,4 +1,6 @@
 OCAMLVERSION = @OCAMLVERSION@
+OCAML_4 = @ocaml_4@
+OCAML_4_01 = @ocaml_4_01@
 datarootdir = @datarootdir@
 prefix = @prefix@
 mandir = @mandir@
