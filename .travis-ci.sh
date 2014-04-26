@@ -42,7 +42,7 @@ else
     # Compile OPAM from sources and run the basic tests
     ./configure
     make lib-ext
-    make opam
+    make
     make tests > tests.log 2>&1 || (tail -1000 tests.log && exit 1)
     # Let's see basic tasks works
     sudo make install
