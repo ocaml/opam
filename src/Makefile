@@ -8,12 +8,17 @@ all: opam-lib opam opam-check opam-admin opam-installer opamlfind
 
 # --
 
-OCAMLFLAGS = -bin-annot -g -w +a-4-9-32-41-44-45 -warn-error +1..45 \
-	$(if $(patsubst 4.%,,$(OCAMLVERSION)),,-short-paths)
-export OCAMLFLAGS
+OCAMLFLAGS = -g -w +a-4-9-32-41-44-45 -warn-error +1..45
+OCAMLLDFLAGS = -g -w +a-4-9-32-41-44-45 -warn-error +1..45
+ifeq ($OCAML_4,true)
+  OCAMLFLAGS += -bin-annot
+  OCAMLLDFLAGS += -bin-annot
+endif
+ifeq ($OCAML_4_01,true)
+  OCAMLFLAGS += -short-paths
+endif
 
-OCAMLLDFLAGS = -bin-annot -g -w +a-4-9-32-41-44-45 -warn-error +1..45
-export OCAMLLDFLAGS
+export OCAMLFLAGS OCAMLLDFLAGS
 
 USE_BYTE ?=
 LIBEXT = $(if $(USE_BYTE),.cma,.cmxa)
@@ -32,8 +37,8 @@ else
   ifeq ($(HAS_PACKAGES),)
     $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
   endif
-  EXT_INCDIRS = $(shell ocamlfind query $(PACKAGES))
-  LIBS = $(basename $(shell ocamlfind query -predicates byte -a-format $(PACKAGES)))
+  EXT_INCDIRS = $(shell $(OCAMLFIND) query $(PACKAGES))
+  LIBS = $(basename $(shell $(OCAMLFIND) query -predicates byte -a-format $(PACKAGES)))
 endif
 
 

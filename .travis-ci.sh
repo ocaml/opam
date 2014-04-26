@@ -25,7 +25,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo apt-get install opam aspcud
     opam init
     eval `opam config env`
-    opam install lwt cohttp ssl cmdliner ocamlgraph dose cudf re
+    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
