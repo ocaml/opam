@@ -25,17 +25,17 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
-libinstall: opam-installer opam-lib
+libinstall:
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
 	src/opam-installer --prefix $(prefix) opam-lib.install
 
-install: opam-installer opam
+install:
 	src/opam-installer --prefix $(prefix) opam.install
 
-libuninstall: opam-installer
+libuninstall:
 	src/opam-installer -u --prefix $(prefix) opam-lib.install
 
-uninstall: opam-installer
+uninstall:
 	src/opam-installer -u --prefix $(prefix) opam.install
 
 tests:
