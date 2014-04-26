@@ -25,15 +25,16 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
+LIBINSTALL_PREFIX = $(dir $(shell $(OCAMLFIND) printconf destdir))
 libinstall:
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
-	src/opam-installer --prefix $(prefix) opam-lib.install
+	src/opam-installer --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
 
 install:
 	src/opam-installer --prefix $(prefix) opam.install
 
 libuninstall:
-	src/opam-installer -u --prefix $(prefix) opam-lib.install
+	src/opam-installer -u --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
 
 uninstall:
 	src/opam-installer -u --prefix $(prefix) opam.install
