@@ -240,6 +240,7 @@ type ('a, 'b) result =
 
 (** Solver request *)
 type 'a request = {
+  criteria: string;
   wish_install: 'a conjunction;
   wish_remove : 'a conjunction;
   wish_upgrade: 'a conjunction;

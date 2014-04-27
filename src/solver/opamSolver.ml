@@ -273,8 +273,9 @@ let solution cudf2opam cudf_solution =
 let map_request f r =
   let f = List.rev_map f in
   { wish_install = f r.wish_install;
-    wish_remove  = f r.wish_remove ;
-    wish_upgrade = f r.wish_upgrade }
+    wish_remove  = f r.wish_remove;
+    wish_upgrade = f r.wish_upgrade;
+    criteria = r.criteria }
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)

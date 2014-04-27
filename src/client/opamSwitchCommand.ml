@@ -219,7 +219,8 @@ let install_packages ~packages switch compiler =
 	~requested:roots
         { wish_install = [];
           wish_remove  = [];
-          wish_upgrade = to_install } in
+          wish_upgrade = to_install;
+          criteria = !OpamGlobals.solver_preferences; } in
     begin try
         OpamSolution.check_solution t solution;
       with e ->
@@ -309,7 +310,8 @@ let import_t filename t =
       ~requested:(OpamPackage.names_of_packages imported)
       { wish_install = to_import @ to_keep;
         wish_remove  = [];
-        wish_upgrade = []; } in
+        wish_upgrade = [];
+        criteria = !OpamGlobals.solver_preferences; } in
   OpamSolution.check_solution t solution
 
 let export filename =
