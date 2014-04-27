@@ -19,6 +19,9 @@ Developer Manual (version 1.1)\\ ~\ \\
 \author{Thomas GAZAGNAIRE\\
 \url{thomas.gazagnaire@ocamlpro.com}\\
 }
+\author{Louis GESBERT\\
+\url{louis.gesbert@ocamlpro.com}\\
+}
 
 \begin{document}
 
@@ -115,7 +118,7 @@ switches.
   described in \S\ref{file:url}.
 
 \item \verb+$opam/packages/$NAME/$NAME.$VERSION/files/+ contains the
-  eventual overlay files on top of the upstream sources, for version
+  optional overlay files on top of the upstream sources, for version
   \verb+$VERSION+ of package \verb+$NAME+ (which might not be
   installed). This files are copied in the build directory before
   building and installing a package.
@@ -206,7 +209,7 @@ the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     repositories: [ STRING+ ]
     switch: STRING
     cores: INT
@@ -231,7 +234,7 @@ The field {\tt cores} is the number of parallel process that
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     ?name:          STRING
     ?version:       STRING
     maintainer:     STRING
@@ -239,6 +242,7 @@ The field {\tt cores} is the number of parallel process that
     ?authors:       [ STRING+ ]
     ?doc:           STRING
     ?license:       STRING
+    ?bug-reports:   STRING
     ?tags:          [ STRING+ ]
     ?subst:         [ STRING+ ]
     ?patches:       [ (STRING ?{ <filter> } )+ ]
@@ -246,10 +250,11 @@ The field {\tt cores} is the number of parallel process that
     ?build-doc:     commands
     ?build-test:    commands
     ?remove:        commands
-    ?depends:       [ <and-formula(package)>+ ]
-    ?depopts:       [ <or-formula(package)>+ ]
-    ?depexts:       [ [[STRING+] [STRING+]]+ ]
+    ?depends:       [ <and-formula(package)> ]
+    ?depopts:       [ STRING+ ]
     ?conflicts:     [ <package>+ ]
+    ?depexts:       [ [[STRING+] [STRING+]]+ ]
+    ?features:      [ (IDENT STRING { <filter> })+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
     ?available:     [ <filter> ]
@@ -304,9 +309,10 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt maintainer} is the contact address of the
   package maintainer.
 
-\item The {\tt license}, {\tt homepage} {\tt doc} and {\tt authors}
-  fields are optional. {\tt doc} should be the address of the online
-  documentation for the package.
+\item The {\tt license}, {\tt homepage}, {\tt doc}, {\tt bug-reports} and {\tt
+    authors} fields are optional. {\tt doc} should be the address of the online
+  documentation for the package, and {\tt bug-reports} the address where bugs
+  should be reported.
 
 \item The {\tt tags} field is optional contains a list of tags to
   classify the package.
@@ -354,7 +360,7 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt remove} is the command to run before deleting
   the installed files.
 
-\item The {\tt depends}, {\tt depopts} and {\tt conflicts} fields
+\item The {\tt depends} and {\tt conflicts} fields
   contain formulas over package names, optionally parametrized by
   version constraints. Some examples or package formula:
 
@@ -371,13 +377,37 @@ The field {\tt cores} is the number of parallel process that
   {\tt "foo"} lesser or equal to $1.2$ and either any version of package
   {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}''  \\
 
-The {\tt depopts} field contains a {\em OR} formula over
-  package names, which means that top-level \verb+|+ are not
-  mandatory. This field express optional dependencies that
-  \OPAM\ will not try to install. However, when installing a new
-  package it will check if it is an optional dependency of already
-  installed packages. If it is the case, it will re-install the
-  packages (and their transitive forward-dependency closure).
+\item The {\tt depopts} field contains a list of package names that are optional
+  dependencies: these packages are not required nor automatically installed
+  to build the current package, but they have an effect on it. When an optional
+  dependency is changed, the package is rebuilt.
+
+\item The {\tt conflicts} field contains package names and constraints
+  indicating that the current package can't coexist with some packages or some
+  specific versions. This can be useful to complete {\tt depopts} if the package
+  requires that another package, if present, respects some version constraint.
+  Note that this changed in \OPAM\ 1.2: previously these constraints could be
+  put in {\tt depopts}. You should now write \verb+depopts: "foo"+,
+  \verb+conflicts: "foo" {< "2"}+ rather than \verb+depopts: "foo" {>= "2"}+
+  which meaning was not perfectly obvious.
+
+\item The optional {\tt features} field is used to advertise optional package
+  features that may depend on the environment. Each feature has an identifier, a
+  user-readable description and a filter. The filter is evaluated and the
+  resulting boolean value is bound to the identifier, that can typically be used
+  in the {\tt build} field to trigger \verb+./configure+ options. For example,
+  package {\tt foo} may have an {\tt overdrive} feature that requires that both
+  {\tt bar} and {\tt baz.2} are installed. You would write it like this:
+
+  \begin{Verbatim}
+build: [ ["./configure" "-prefix=%{prefix}%" "-%{overdrive:enable}%-overdrive"]
+         ... ]
+depopts: [ "bar" "baz" ]
+features: [ overdrive "Cool feature" { bar:installed & baz:version = "2" } ]
+\end{Verbatim}
+
+Here \verb+baz:version = "2"+ is expanded to
+\verb+baz:installed & baz:version = "2"+.
 
 \item The {\tt depexts} field is optional and contains tags describing the
   external dependencies. It contains pairs of lists of the form
@@ -387,6 +417,7 @@ The {\tt depopts} field contains a {\em OR} formula over
   architecture names (e.g. \verb+"debian"+, \verb+"x86"+, in which case the
   \verb+ext-package+ list will correspond to {\tt apt-get} package names).
 
+%XXX deprecate ? Use with features ?
 \item The {\tt messages} field (since version $1.0.1$) is used to
   display an alternative message when prompting a solution implying
   the given package. The typical use-case is to tell the user that
@@ -406,6 +437,7 @@ The {\tt depopts} field contains a {\em OR} formula over
   the package is disabled. The {\tt os} and {\tt ocaml-version} fields are
   deprecated, please use {\tt available} instead in newly created packages.
 
+%XXX todo: update
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package. See
   Section~\ref{section:config} for more details.
@@ -612,7 +644,7 @@ This command will:
   \verb+$opam/repo/$REPO/archives/+. It it is, copy it in the global
   state (in \verb+$opam/archives+). If it is not, download it upstream
   by looking at \verb|$opam/packages/$NAME/$NAME.$VERSION/url| and add
-  the eventual overlay files located in
+  the optional overlay files located in
   \verb|$opam/packages/$NAME/$NAME.$VERSION/files|. Note: this files
   can be overwritten by anything present in
   \verb|$opam/$SWITCH/overlay/$NAME.$VERSION/|.
@@ -853,7 +885,7 @@ The syntax of {\tt comp} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     name:       STRING
     ?src:       STRING
     ?archive:   STRING
@@ -959,7 +991,7 @@ For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
 version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
-opam-version: "1"
+opam-version: "1.2"
 name:         "3.12.1"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 make:         [ "world" "world.opt" ]
@@ -972,7 +1004,7 @@ trunk, with no {\em tk} support and only in bytecode, and all the
 libraries built with {\tt -g}:
 
 \begin{verbatim}
-opam-version: "1"
+opam-version: "1.2"
 name:         "trunk-g-notk-byte"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 configure:    [ "-no-tk" ]
@@ -1271,6 +1303,8 @@ and in substition files (see below). There are three kinds:
 \item User-defined variables, as defined in {\tt *.config} files (see
   \S\ref{file:dotconfig}). This can also be used to override values of the above
   variables.
+\item User-defined variables using the {\tt features} field of OPAM files. See
+  \ref{file:opam}. These behave like boolean package-local variables.
 \end{enumerate}
 
 \subsection{Files}
