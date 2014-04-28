@@ -107,7 +107,8 @@ let resolve_deps index names =
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_action = Install requested;
   } in
-  let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [] } in
+  let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [];
+                  criteria = !OpamGlobals.solver_preferences; } in
   match OpamSolver.resolve ~verbose:true universe ~requested request with
   | Success solution ->
     OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with

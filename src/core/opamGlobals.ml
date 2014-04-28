@@ -85,11 +85,19 @@ let solver_timeout =
   with Not_found | Failure _ -> 5.
 
 let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
+  "-removed,-changed,-notuptodate"
+let default_upgrade_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
   "-removed,-notuptodate,-changed"
 
-let solver_preferences = ref(
-  try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with Not_found -> default_preferences)
+let solver_preferences, solver_upgrade_preferences  =
+  let get s = OpamMisc.strip (OpamMisc.getenv s) in
+  try
+    let prefs = get "OPAMCRITERIA" in
+    ref prefs, try ref (get "OPAMUPGRADECRITERIA") with Not_found -> ref prefs
+  with Not_found ->
+    ref default_preferences,
+    try ref (get "OPAMUPGRADECRITERIA")
+    with Not_found -> ref default_upgrade_preferences
 
 let default_external_solver = "aspcud"
 

@@ -91,8 +91,11 @@ let apply_global_options o =
     !OpamGlobals.use_external_solver && not o.use_internal_solver;
   OpamGlobals.cudf_file := o.cudf_file;
   OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
-  OpamGlobals.solver_preferences := match o.solver_preferences with None -> !OpamGlobals.solver_preferences | Some v -> v
-
+  match o.solver_preferences with
+  | None -> ()
+  | Some prefs ->
+    OpamGlobals.solver_preferences := prefs;
+    OpamGlobals.solver_upgrade_preferences := prefs
 
 (* Build options *)
 type build_options = {
@@ -483,7 +486,8 @@ let global_options =
         and takes precedence over it if both are specified. \
         For details on the supported language, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
-        The default value is "^OpamGlobals.default_preferences)
+        The default value is "^OpamGlobals.default_upgrade_preferences^
+       " for upgrades, and "^OpamGlobals.default_preferences^" otherwise.")
       Arg.(some string) None in
   let cudf_file =
     mk_opt ["cudf"] "FILENAME"

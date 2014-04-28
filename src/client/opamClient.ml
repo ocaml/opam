@@ -466,7 +466,7 @@ module API = struct
      more explicit. This has no effect when using the external solver. *)
   let preprocess_request t full_orphans orphan_versions request =
     if OpamCudf.external_solver_available () then request else
-    let { wish_install; wish_remove; wish_upgrade } = request in
+    let { wish_install; wish_remove; wish_upgrade; criteria } = request in
     (* Convert install to upgrade when necessary, request roots installed *)
     let eqnames, neqnames =
       List.partition (function (_,Some(`Eq,_)) -> true | _ -> false)
@@ -491,7 +491,7 @@ module API = struct
         available in
     let wish_install = List.filter still_available wish_install in
     let wish_upgrade = List.filter still_available wish_upgrade in
-    let nrequest = { wish_install; wish_remove; wish_upgrade; } in
+    let nrequest = { wish_install; wish_remove; wish_upgrade; criteria } in
     log "Preprocess request: %a => %a"
       (slog OpamSolver.string_of_request) request
       (slog OpamSolver.string_of_request) nrequest;
@@ -553,7 +553,8 @@ module API = struct
         (preprocess_request t full_orphans orphan_versions
            { wish_install = [];
              wish_remove  = [];
-             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade })
+             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
+             criteria = !OpamGlobals.solver_upgrade_preferences; })
     else
     let to_reinstall =
       OpamPackage.Set.filter
@@ -600,7 +601,8 @@ module API = struct
       (preprocess_request t full_orphans orphan_versions
          { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
            wish_remove  = [];
-           wish_upgrade = upgrade_atoms })
+           wish_upgrade = upgrade_atoms;
+           criteria = !OpamGlobals.solver_upgrade_preferences; })
 
   let upgrade_t atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
@@ -858,7 +860,8 @@ module API = struct
           OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
             { wish_install = [];
               wish_remove  = [];
-              wish_upgrade = compiler_packages } in
+              wish_upgrade = compiler_packages;
+              criteria = !OpamGlobals.solver_preferences; } in
         OpamGlobals.display_messages := display_messages;
         update_setup t
 
@@ -969,7 +972,8 @@ module API = struct
         preprocess_request t full_orphans orphan_versions
           { wish_install = atoms;
             wish_remove  = [];
-            wish_upgrade = [] }
+            wish_upgrade = [];
+            criteria = !OpamGlobals.solver_preferences; }
       in
       let action =
         if add_to_roots = Some false || deps_only then
@@ -1082,7 +1086,8 @@ module API = struct
       let solution = OpamSolution.resolve_and_apply t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
-            wish_upgrade = [] } in
+            wish_upgrade = [];
+            criteria = !OpamGlobals.solver_preferences; } in
       OpamSolution.check_solution t solution
     ) else if !nothing_to_do then
       OpamGlobals.msg "Nothing to do.\n"
