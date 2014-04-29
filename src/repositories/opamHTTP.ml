@@ -28,9 +28,7 @@ type state = {
   local_index_archive : filename;
   local_files         : filename_set;
   remote_local        : filename filename_map;
-  local_remote        : filename filename_map;
-  file_permissions    : (filename * int) list;
-  file_digests        : (filename * string) list;
+  local_remote        : (filename * int * string) filename_map; (* file, perms, md5 *)
 }
 
 let state_cache = ref []
@@ -76,10 +74,10 @@ let make_state ~download_index repo =
           raise e
       ) else
         local_index_file in
-    let remote_local, local_remote, local_files, file_permissions, file_digests =
+    let remote_local, local_remote, local_files =
       let urls = OpamFile.File_attributes.read index in
-      let remote_local, local_remote, locals, perms, digests =
-        OpamFilename.Attribute.Set.fold (fun r (rl, lr, locals, perms, digests) ->
+      let remote_local, local_remote, locals =
+        OpamFilename.Attribute.Set.fold (fun r (rl, lr, locals) ->
           let base = OpamFilename.Attribute.base r in
           let perm = match OpamFilename.Attribute.perm r with
             | None  ->  0o640
@@ -88,42 +86,44 @@ let make_state ~download_index repo =
           let remote = repo_address // OpamFilename.Base.to_string base in
           let local = OpamFilename.create repo.repo_root base in
           OpamFilename.Map.add remote local rl,
-          OpamFilename.Map.add local remote lr,
-          OpamFilename.Set.add local locals,
-          (local, perm) :: perms,
-          (local, digest) :: digests
+          OpamFilename.Map.add local (remote,perm,digest) lr,
+          OpamFilename.Set.add local locals
         ) urls
           (OpamFilename.Map.empty,
            OpamFilename.Map.empty,
-           OpamFilename.Set.empty,
-           [], []) in
-      remote_local, local_remote, locals, perms, digests in
+           OpamFilename.Set.empty) in
+      remote_local, local_remote, locals in
     let state = {
       remote_dir = repo_address;
       local_dir  = repo.repo_root;
       remote_index_archive; local_index_archive;
-      local_files; remote_local; local_remote;
-      file_permissions; file_digests;
+      local_files; remote_local; local_remote
     } in
     state_cache := (repo.repo_address, state) :: !state_cache;
     state
   )
 
+let preload_state repo =
+  ignore (make_state ~download_index:false repo)
+
 let is_up_to_date state local_file =
-  List.mem_assoc local_file state.file_digests
-  && OpamFilename.exists local_file
-  && not (Sys.is_directory (OpamFilename.to_string local_file))
-  && List.assoc local_file state.file_digests = OpamFilename.digest local_file
+  try
+    let _,_,md5 = OpamFilename.Map.find local_file state.local_remote in
+    OpamFilename.exists local_file &&
+    not (Sys.is_directory (OpamFilename.to_string local_file))
+    && md5 = OpamFilename.digest local_file
+  with Not_found -> false
 
 let get_checksum state local_file =
-  if List.mem_assoc local_file state.file_digests
-  && OpamFilename.exists local_file
-  && not (Sys.is_directory (OpamFilename.to_string local_file))
-  then
-    let expected = List.assoc local_file state.file_digests in
-    let actual = OpamFilename.digest local_file in
-    Some (actual, expected)
-  else None
+  try
+    let _,_,expected = OpamFilename.Map.find local_file state.local_remote in
+    if OpamFilename.exists local_file &&
+       not (Sys.is_directory (OpamFilename.to_string local_file))
+    then
+      let actual = OpamFilename.digest local_file in
+      Some (actual, expected)
+    else None
+  with Not_found -> None
 
 module B = struct
 
@@ -192,7 +192,8 @@ module B = struct
         init repo
       else
         OpamFilename.Set.iter (fun local_file ->
-          let remote_file = OpamFilename.Map.find local_file state.local_remote in
+          let remote_file,_,_ =
+            OpamFilename.Map.find local_file state.local_remote in
           curl ~remote_file ~local_file
         ) new_files;
     )
@@ -227,7 +228,7 @@ module B = struct
   let pull_archive repo filename =
     log "pull-archive";
     let state = make_state ~download_index:false repo in
-    if OpamFilename.Map.mem filename state.remote_local then (
+    try
       let local_file = OpamFilename.Map.find filename state.remote_local in
       if is_up_to_date state local_file then
         Up_to_date local_file
@@ -238,7 +239,7 @@ module B = struct
 	curl ~remote_file:filename ~local_file;
         Result local_file
       )
-    ) else
+    with Not_found ->
       Not_available (OpamFilename.to_string filename)
 
   let revision _ =

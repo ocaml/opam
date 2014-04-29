@@ -366,8 +366,21 @@ let parallel_apply t action solution =
         early in case there is a failure *)
   let status, finalize = try
       let sources_needed = OpamAction.sources_needed t solution in
-      if not (OpamPackage.Set.is_empty sources_needed) then
-        OpamGlobals.header_msg "Synchronizing package archives";
+      if OpamPackage.Set.is_empty sources_needed then
+        `Successful (), finalize
+      else
+      let _cache =
+        OpamPackage.Set.iter (fun nv ->
+            if not (OpamState.is_locally_pinned t (OpamPackage.name nv)) then
+              try
+                let repo =
+                  OpamState.find_repository t
+                    (fst (OpamPackage.Map.find nv t.package_index)) in
+                if repo.repo_kind = `http then OpamHTTP.preload_state repo
+              with Not_found -> ())
+          sources_needed
+      in
+      OpamGlobals.header_msg "Synchronizing package archives";
       let dl_graph =
         let g = PackageGraph.create () in
         OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
