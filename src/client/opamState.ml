@@ -583,9 +583,7 @@ let resolve_variable t ?opam local_variables v =
   let read_var v =
     let var = OpamVariable.Full.variable v in
     let c = dot_config t (OpamVariable.Full.package v) in
-    try match OpamVariable.Full.section v with
-      | None   -> OpamFile.Dot_config.variable c var
-      | Some s -> OpamFile.Dot_config.Section.variable c s var
+    try OpamFile.Dot_config.variable c var
     with Not_found -> None in
   let get_local_var v =
     if not (is_global_conf v) then None else
@@ -623,7 +621,6 @@ let resolve_variable t ?opam local_variables v =
       | _ -> None
     in
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
-    if OpamVariable.Full.section v <> None then None else
     match var_str, opam with
     | "enable",    Some _    -> string "enable"
     | "enable",    None      -> string "disable"
@@ -680,8 +677,7 @@ let resolve_variable t ?opam local_variables v =
     (* [var] within the opam file of [pkg] is tried as [pkg:var] *)
     match is_global_conf v, opam with
     | true, Some opam ->
-      OpamVariable.Full.create_global
-        (OpamFile.OPAM.name opam) (OpamVariable.Full.variable v)
+      OpamVariable.Full.create (OpamFile.OPAM.name opam) (OpamVariable.Full.variable v)
     | _ -> v
   in
   let skip _ = None in

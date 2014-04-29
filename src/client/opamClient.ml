@@ -354,6 +354,9 @@ module API = struct
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
+      let libraries = strings "libraries" (fun t -> List.map fst (OpamFile.OPAM.libraries t)) in
+      let syntax    = strings "syntax"    (fun t -> List.map fst (OpamFile.OPAM.syntax t)) in
+
       let os = mk (
         Empty,
         (fun f -> f),
@@ -377,6 +380,8 @@ module API = struct
         @ license
         @ doc
         @ tags
+        @ libraries
+        @ syntax
         @ depends
         @ depopts
         @ os
@@ -1230,9 +1235,6 @@ module SafeAPI = struct
 
   module CONFIG = struct
 
-    let config option =
-      read_lock (fun () -> API.CONFIG.config option)
-
     let env ~csh ~sexp ~fish =
       read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish)
 
@@ -1253,9 +1255,6 @@ module SafeAPI = struct
 
     let subst files =
       read_lock (fun () -> API.CONFIG.subst files)
-
-    let includes ~is_rec names =
-      read_lock (fun () -> API.CONFIG.includes ~is_rec names)
 
   end
 

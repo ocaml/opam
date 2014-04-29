@@ -566,6 +566,12 @@ let make_command =
 let make_commands =
   make_list make_command
 
+let make_libraries =
+  make_list (make_option make_string make_filter)
+
+let parse_libraries =
+  parse_list (parse_option parse_string parse_filter)
+
 let parse_simple_arg =
   parse_or [
     "ident" , (parse_ident  @> fun x -> CIdent x);

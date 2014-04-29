@@ -1,12 +1,10 @@
 #! /bin/sh -e
 
 echo "Building P4 with ${OPAM}"
-COMP0="`${OPAM} config -R asmcomp P2 P3`"
-LINK0="`${OPAM} config -R asmlink P2 P3`"
+LIBDIR="`${OPAM} config var lib`"
+COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
+LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 
-COMP=$(echo ${COMP0} | sed -e 's| |,|g')
-LINK=$(echo ${LINK0} | sed -e 's| |,|g')
-
-ocamlbuild -cflags ${COMP} -lflags ${LINK} p4.native
+ocamlopt ${COMP} ${LINK} p4.ml -o p4.foo
 
 echo "TEST=${TEST}"

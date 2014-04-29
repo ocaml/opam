@@ -44,7 +44,7 @@ let contents_of_variable env v =
     let names = List.rev_map OpamPackage.Name.of_string names in
     let results =
       List.rev_map (fun name ->
-          let v = OpamVariable.Full.create_global name var in
+          let v = OpamVariable.Full.create name var in
           match env v with
           | None   ->
             OpamGlobals.error_and_exit

@@ -64,9 +64,6 @@ module API: sig
   (** Config API. *)
   module CONFIG: sig
 
-    (** Display configuration options. *)
-    val config: config -> unit
-
     (** Display environment. *)
     val env: csh:bool -> sexp:bool -> fish:bool -> unit
 
@@ -78,9 +75,6 @@ module API: sig
 
     (** Execute a command in a subshell with the right environment variables. *)
     val exec: string -> unit
-
-    (** Display includes files. *)
-    val includes: is_rec:bool -> name list -> unit
 
     (** Display variables and their contents. *)
     val list: name list -> unit
