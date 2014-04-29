@@ -33,9 +33,9 @@ begin library "opam-core"
     "cudf"
     "dose"
     "unix"
-    "graph"
-    "re_glob"
-    "re_str"
+    "ocamlgraph"
+    "re.glob"
+    "re.str"
   ]
 
 end

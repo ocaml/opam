@@ -27,9 +27,8 @@ let (/) = Filename.concat
 let git file = ".git" / file
 
 let () =
-  let opamGitVersion = "src" / "core" / "opamGitVersion.ml" in
   let version_none () =
-    write opamGitVersion "let version = None" in
+    write file "let version = None" in
   match read (git "HEAD") with
   | None   -> version_none ()
   | Some s ->
@@ -42,4 +41,4 @@ let () =
         Some s in
     match reference with
     | None      -> version_none ()
-    | Some sha1 -> write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
+    | Some sha1 -> write file (Printf.sprintf "let version = Some %S" sha1)

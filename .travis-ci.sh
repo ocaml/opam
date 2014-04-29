@@ -26,10 +26,9 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo apt-get install opam aspcud
     opam init
     eval `opam config env`
-    opam install lwt cohttp ssl cmdliner ocamlgraph dose cudf re
+    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re
     ./configure
-    make prepare
-    make compile
+    make
     # overwrite the previous install of OPAM with the new binary
     # and libraries
     sudo make install
@@ -43,6 +42,7 @@ if [ "$OPAM_TEST" = "1" ]; then
 else
     # Compile OPAM from sources and run the basic tests
     ./configure
+    make lib-ext
     make
     make tests > tests.log 2>&1 || (tail -1000 tests.log && exit 1)
     # Let's see basic tasks works

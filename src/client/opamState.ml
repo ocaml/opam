@@ -2276,7 +2276,7 @@ let update_dev_package t nv =
       OpamMisc.Option.map OpamFile.OPAM.version opam
     in
     let repo_meta = (* Version from the repo *)
-      let v = Option.default version user_version in
+      let v = OpamMisc.Option.default version user_version in
       let nv = OpamPackage.create name v in
       try
         let dir = package_repo_dir t.root t.repositories t.package_index nv in

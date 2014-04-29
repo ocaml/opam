@@ -1,6 +1,5 @@
 bin: [
-  "_obuild/opam/opam.asm" { "opam" }
-  "_obuild/opam-admin/opam-admin.asm" { "opam-admin" }
-  "_obuild/opam-installer/opam-installer.asm" { "opam-installer" }
-  "_obuild/opamlfind/opamlfind.asm" { "opamlfind" }
+  "src/opam"
+  "src/opam-admin"
+  "src/opam-installer"
 ]
