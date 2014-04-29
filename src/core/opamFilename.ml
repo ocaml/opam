@@ -37,8 +37,7 @@ module Dir = struct
     else
       dirname
 
-  let to_string dirname =
-    OpamSystem.real_path dirname
+  let to_string dirname = dirname
 
 end
 
@@ -352,7 +351,7 @@ let to_json x = `String (to_string x)
 module O = struct
   type tmp = t
   type t = tmp
-  let compare x y = compare (to_string x) (to_string y)
+  let compare = compare
   let to_string = to_string
   let to_json = to_json
 end
