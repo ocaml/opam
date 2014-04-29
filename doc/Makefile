@@ -1,8 +1,18 @@
-OPAM    = ../_obuild/opam/opam.byte
+ifndef OPAM
+  OPAM = ../src/opam
+endif
+BINDIR = $(dir $(OPAM))
+SRCDIR = $(wildcard ../src/*)
+
 TOPICS  = $(shell $(OPAM) help topics)
-OPAM_ADMIN = ../_obuild/opam-admin/opam-admin.byte
+ifndef OPAM_ADMIN
+  OPAM_ADMIN = $(BINDIR)/opam-admin
+endif
 TOPICS_ADMIN = check make
 HELPFMT = --help=groff
+
+SRCEXTDIR = ../src_ext/lib
+INCLUDE = $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
 
 .PHONY: man html dev-manual tutorials
 all: man tutorials dev html
@@ -29,10 +39,4 @@ dev:
 
 html:
 	mkdir -p html/
-	ocamldoc \
-	  -I ../_obuild/opam-core -I ../_obuild/opam-solver \
-	  -I ../_obuild/opam-repositories -I ../_obuild/opam-client \
-	  -I ../_obuild/opam-lib -I ../_obuild/cudf -I ../_obuild/dose \
-	  -I ../_obuild/re -I ../_obuild/unix -I ../_obuild/extlib \
-	  -I ../_obuild/arg -I ../_obuild/graph -I ../_obuild/cmdliner \
-	  ../src/**/*.mli -html -d html/
+	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/

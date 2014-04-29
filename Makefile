@@ -39,6 +39,7 @@ libuninstall:
 uninstall:
 	src/opam-installer -u --prefix $(prefix) opam.install
 
+.PHONY: tests tests-local tests-git
 tests:
 	$(MAKE) -C tests all
 
@@ -48,6 +49,7 @@ tests-local:
 tests-git:
 	$(MAKE) -C tests git
 
+.PHONY: doc
 doc: opam-lib
 	$(MAKE) -C doc
 

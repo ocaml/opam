@@ -11,10 +11,14 @@ OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-_OPAM = $(realpath ../_obuild/opam/opam.asm)
-ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(_OPAM)
-OPAM  = $(ENV) $(_OPAM)
-CHECK = $(ENV) $(realpath ../_obuild/opam-check/opam-check.asm)
+ifndef OPAM
+  OPAM = $(realpath ../src/opam)
+endif
+ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(OPAM)
+OPAMBIN  = $(ENV) $(OPAM)
+ifndef CHECK
+  CHECK = $(ENV) $(dir $(OPAM))/opam-check
+endif
 
 ifeq ($(OPAMTESTQUIET), 1)
   DEBUG =
@@ -73,7 +77,7 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAM) init --no-setup --no-base-packages $(REPO) $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAMBIN) init --no-setup --no-base-packages $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
 upload: $(ARCHIVES)
 	mkdir -p $(OPAM_REPO)/packages/P1.1
@@ -124,61 +128,61 @@ else
 	cp packages/P4.tar.gz $(OPAM_REPO)/archives/P4.1+opam.tar.gz
 	cp packages/P5.tar.gz $(OPAM_REPO)/archives/P5.1+opam.tar.gz
 endif
-	$(OPAM) update
+	$(OPAMBIN) update
 
 list:
-	$(OPAM) list -a
+	$(OPAMBIN) list -a
 
 install-remove:
 	$(CHECK) -l install-remove-1
-	$(OPAM) install P1
+	$(OPAMBIN) install P1
 	$(CHECK) -l install-remove-2 P1.1
-	$(OPAM) remove P1
+	$(OPAMBIN) remove P1
 	$(CHECK) -l install-remove-3
 
 install-opt:
 	$(CHECK) -l install-opt-1
-	$(OPAM) install P5
+	$(OPAMBIN) install P5
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
 	$(CHECK) -l install-opt-2 P1.1 P5.1
-	$(OPAM) remove P5
+	$(OPAMBIN) remove P5
 	$(CHECK) -l install-opt-3 P1.1
-	$(OPAM) install P5
+	$(OPAMBIN) install P5
 	$(CHECK) -l install-opt-4 P1.1 P5.1
-	$(OPAM) remove P5 -a
+	$(OPAMBIN) remove P5 -a
 	$(CHECK) -l install-opt-5
-	$(OPAM) install P5
+	$(OPAMBIN) install P5
 	$(CHECK) -l install-opt-6 P1.1 P5.1
-	$(OPAM) install P2
+	$(OPAMBIN) install P2
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
 	$(CHECK) -l install-opt-7 P1.1 P2.1 P5.1
-	$(OPAM) remove P5 -a
+	$(OPAMBIN) remove P5 -a
 	$(CHECK) -l install-opt-8 P1.1 P2.1
-	$(OPAM) remove P2 -a
+	$(OPAMBIN) remove P2 -a
 	$(CHECK) -l install-opt-9
-	$(OPAM) install P1 P2 P5
+	$(OPAMBIN) install P1 P2 P5
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
 	$(CHECK) -l install-opt-10 P1.1 P2.1 P5.1
-	$(OPAM) remove P2 -a
+	$(OPAMBIN) remove P2 -a
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
 	$(CHECK) -l install-opt-11 P1.1 P5.1
-	$(OPAM) remove P1
+	$(OPAMBIN) remove P1
 	$(CHECK) -l install-opt-12
 
 install:
 	$(CHECK) -l install-1
-	$(OPAM) install P1
+	$(OPAMBIN) install P1
 	$(CHECK) -l install-2 P1.1
-	$(OPAM) install P2
+	$(OPAMBIN) install P2
 	$(CHECK) -l install-3 P1.1 P2.1
-	$(OPAM) install P3
+	$(OPAMBIN) install P3
 	$(CHECK) -l install-4 P1.1 P2.1 P3.1~weird-version.test
-	$(OPAM) install P4
+	$(OPAMBIN) install P4
 	$(CHECK) -l install-5 P1.1 P2.1 P3.1~weird-version.test P4.1
 
 reinstall:
 	$(CHECK) -l reinstall-1 P1.1 P2.1 P3.1~weird-version.test P4.1
-	$(OPAM) reinstall P1
+	$(OPAMBIN) reinstall P1
 	$(CHECK) -l reinstall-2 P1.1 P2.1 P3.1~weird-version.test P4.1
 
 upload-new:
@@ -202,11 +206,11 @@ else
 	cp packages/P4.tar.gz $(OPAM_REPO)/archives/P4.2+opam.tar.gz
 	cp packages/P4.tar.gz $(OPAM_REPO)/archives/P4.3+opam.tar.gz
 endif
-	$(OPAM) update
+	$(OPAMBIN) update
 
 upgrade:
 	$(CHECK) -l upgrade-1 P1.1 P2.1 P3.1~weird-version.test P4.1
-	$(OPAM) upgrade
+	$(OPAMBIN) upgrade
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l upgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.3
 else
@@ -219,29 +223,29 @@ ifeq ($(REPOKIND), git)
 else
 	$(CHECK) -l downgrade-1 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
-	$(OPAM) install P4.2
+	$(OPAMBIN) install P4.2
 	$(CHECK) -l downgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.2
 
 switch-alias:
 	$(CHECK) -l switch-alias-1 P1.1 P2.1 P3.1~weird-version.test P4.2
-	$(OPAM) remove P3.1~weird-version.test P4.2
+	$(OPAMBIN) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias-2 P1.1 P2.1
-	$(OPAM) switch export -f $(TMP_DIR)/export
-	$(OPAM) switch install test --alias-of system --no-base-packages
+	$(OPAMBIN) switch export -f $(TMP_DIR)/export
+	$(OPAMBIN) switch install test --alias-of system --no-base-packages
 	$(CHECK) -l switch-alias-3
-	$(OPAM)	switch import -f $(TMP_DIR)/export
+	$(OPAMBIN)	switch import -f $(TMP_DIR)/export
 	$(CHECK) -l switch-alias-4 P1.1 P2.1
-	$(OPAM) switch install test2 --alias-of 20
+	$(OPAMBIN) switch install test2 --alias-of 20
 	$(CHECK) -l switch-alias-5
-	$(OPAM) install P1
+	$(OPAMBIN) install P1
 	$(CHECK) -l switch-alias-6 P1.1
-	$(OPAM) switch system
+	$(OPAMBIN) switch system
 	$(CHECK) -l switch-alias-7 P1.1 P2.1
-	$(OPAM) switch remove test test2
+	$(OPAMBIN) switch remove test test2
 
 switch-env-packages:
 	$(CHECK) -l switch-env-packages-1 P1.1 P2.1
-	$(OPAM) switch 10+a+b
+	$(OPAMBIN) switch 10+a+b
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages-2 P1.1 P2.1 P3.1~weird-version.test P4.3
 else
@@ -250,9 +254,9 @@ endif
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
 repo:
-	$(OPAM) repo add $(REPO)2 $(OPAM_REPO) -k $(REPOKIND)
-	$(OPAM) repo remove $(REPO)2
-	$(OPAM) repo remove $(REPO)
+	$(OPAMBIN) repo add $(REPO)2 $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAMBIN) repo remove $(REPO)2
+	$(OPAMBIN) repo remove $(REPO)
 
 packages/%.tar.gz: packages/% 
 	cd packages && tar czf $*.tar.gz $* 
