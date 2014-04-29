@@ -246,6 +246,10 @@ module Attribute: sig
 
   include OpamMisc.ABSTRACT
 
+  val to_string_list: t -> string list
+
+  val of_string_list: string list -> t
+
   (** Get remote filename *)
   val base: t -> Base.t
 

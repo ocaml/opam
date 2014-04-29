@@ -23,27 +23,50 @@ module Lines = struct
   (* Lines of space separated words *)
   type t = string list list
 
-  let of_channel ic =
-    OpamLineLexer.main (Lexing.from_channel ic)
+  let find_escapes s len =
+    let rec aux acc i =
+      if i < 0 then acc else
+      let acc =
+        match s.[i] with
+        | '\\' | ' ' | '\t' | '\n' ->
+          let esc,count = acc in
+          i::esc, count + 1
+        | _ -> acc in
+      aux acc (i-1) in
+    aux ([],0) (len - 1)
 
   let escape_spaces str =
-    let rec aux i str =
-      if i < 0 then str else
-      match str.[i] with
-      | ' ' | '\t' | '\n' | '\\' ->
-        let s = String.create (String.length str + 1) in
-        String.blit str 0 s 0 i;
-        s.[i] <- '\\';
-        String.blit str i s (i+1) (String.length str - i);
-        aux (i-1) s
-      | _ -> aux (i-1) str
-    in
-    aux (String.length str - 1) str
+    let len = String.length str in
+    match find_escapes str len with
+    | [], _ -> str
+    | escapes, n ->
+      let buf = String.create (len + n) in
+      let rec aux i = function
+        | ofs1::(ofs2::_ as r) ->
+          String.blit str ofs1 buf (ofs1+i) (ofs2-ofs1);
+          buf.[ofs2+i] <- '\\';
+          aux (i+1) r
+        | [ofs] ->
+          String.blit str ofs buf (ofs+i) (len-ofs);
+          buf
+        | [] -> assert false
+      in
+      aux 0 (0::escapes)
+
+  let of_channel ic =
+    OpamLineLexer.main (Lexing.from_channel ic)
 
   let to_string (lines: t) =
     let buf = Buffer.create 1024 in
     List.iter (fun l ->
-      Buffer.add_string buf (String.concat " " (List.map escape_spaces l));
+      (match l with
+      | [] -> ()
+      | w::r ->
+        Buffer.add_string buf (escape_spaces w);
+        List.iter (fun w ->
+            Buffer.add_char buf ' ';
+            Buffer.add_string buf (escape_spaces w))
+          r);
       Buffer.add_string buf "\n"
     ) lines;
     Buffer.contents buf
@@ -201,14 +224,17 @@ module X = struct
       let lines = Lines.of_channel ic in
       let rs = OpamMisc.filter_map (function
           | [] -> None
-          | l  -> Some (OpamFilename.Attribute.of_string (String.concat " " l))
+          | [s] -> (* backwards-compat *)
+            Some (OpamFilename.Attribute.of_string_list (OpamMisc.split s ' '))
+          | l  ->
+            Some (OpamFilename.Attribute.of_string_list l)
         ) lines in
       OpamFilename.Attribute.Set.of_list rs
 
     let to_string _ t =
       let lines =
         List.rev_map
-          (fun r -> [OpamFilename.Attribute.to_string r])
+          (fun r -> OpamFilename.Attribute.to_string_list r)
           (OpamFilename.Attribute.Set.elements t) in
       Lines.to_string lines
 

@@ -16,27 +16,46 @@
 
 {
 
-let get_words words = function
-  | [] -> words
-  | wchars -> String.concat "" (List.rev wchars) :: words
+type token =
+  | WORD of string
+  | NEWLINE
+  | EOF
+
+let word = Buffer.create 57
 
 }
 
-
 let normalchar = [^' ' '\t' '\n' '\\']
 
-rule main wchars words lines = parse
-| '\n'
-    { main [] [] (List.rev (get_words words wchars) :: lines) lexbuf }
-| [' ' '\t']+
-    { main [] (get_words words wchars) lines lexbuf }
-| '\\' (_ normalchar* as w) | (normalchar+ as w)
-    { main (w::wchars) words lines lexbuf }
-| _
-    { assert false }
-| eof
-    { List.rev (List.rev words :: lines) }
+rule main = parse
+| '\n'         { Lexing.new_line lexbuf; NEWLINE }
+| [' ' '\t']+  { main lexbuf }
+| (normalchar* as w) '\\'
+               { Buffer.reset word ; Buffer.add_string word w; escaped lexbuf }
+| (normalchar* as w)
+               { WORD w }
+| eof          { EOF }
+
+and escaped = parse
+| (_ normalchar*) as w '\\'
+               { Buffer.add_string word w; escaped lexbuf }
+| (_ normalchar*) as w
+               { Buffer.add_string word w; WORD (Buffer.contents word) }
 
 {
-  let main = main [] [] []
+
+let main lexbuf =
+  let rec aux lines words =
+    match main lexbuf with
+    | WORD "" -> aux lines words
+    | WORD s -> aux lines (s::words)
+    | NEWLINE ->
+      let lines = if words = [] then lines else List.rev words::lines in
+      aux lines []
+    | EOF ->
+      let lines = if words = [] then lines else List.rev words::lines in
+      List.rev lines
+  in
+  aux [] []
+
 }

@@ -407,20 +407,22 @@ module Attribute = struct
   let create base md5 perm =
     { base; md5; perm=Some perm }
 
-  let to_string t =
+  let to_string_list t =
     let perm = match t.perm with
-      | None   -> ""
-      | Some p -> Printf.sprintf " 0o%o" p in
-    Printf.sprintf "%s %s%s" (Base.to_string t.base) t.md5 perm
+      | None   -> []
+      | Some p -> [Printf.sprintf "0o%o" p] in
+    Base.to_string t.base :: t.md5 :: perm
 
-  let of_string s =
-    match OpamMisc.split s ' ' with
+  let of_string_list = function
     | [base; md5]      -> { base=Base.of_string base; md5; perm=None }
     | [base;md5; perm] -> { base=Base.of_string base; md5;
                             perm=Some (int_of_string perm) }
     | k                -> OpamSystem.internal_error
                             "remote_file: '%s' is not a valid line."
                             (String.concat " " k)
+
+  let to_string t = String.concat " " (to_string_list t)
+  let of_string s = of_string_list (OpamMisc.split s ' ')
 
   let to_json x =
     `O ([ ("base" , Base.to_json x.base);
