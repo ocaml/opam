@@ -14,8 +14,8 @@ MD5_cmdliner = d63dd3b03966d65fc242246859c831c7
 GRAPH    = ocamlgraph-1.8.5
 GRAPHMD5 = 75dde65bfc3f9b07e795343d369aa84d
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/31910/cudf-0.6.3.tar.gz
-MD5_cudf = 40c4e2c50ea96d0c9e565db16d20639a
+URL_cudf = https://gforge.inria.fr/frs/download.php/31910/cudf-0.7.tar.gz
+MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
 URL_dose = https://gforge.inria.fr/frs/download.php/33574/dose3-3.2-rc1.tar.gz
 MD5_dose = 5d20d05cadc0dc98e3edd375c6eb6a45
