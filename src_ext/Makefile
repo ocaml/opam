@@ -170,8 +170,8 @@ export PROJ_dose_common
 
 SRC_dose_debian = architecture.ml format822.ml format822_parser.mly		\
 packages_parser.mly version.ml packages_lexer.mll format822_lexer.mll		\
-packages.ml release.ml sources.ml evolution.ml debutil.ml debcudf.ml apt.ml	\
-edsp.ml
+packages.ml printer.ml release.ml sources.ml evolution.ml debutil.ml debcudf.ml \
+apt.ml edsp.ml
 
 define PROJ_dose_debian
   SOURCES = $(call addmli,dose/deb,$(SRC_dose_debian))
