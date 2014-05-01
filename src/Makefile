@@ -8,8 +8,8 @@ all: opam-lib opam opam-check opam-admin opam-installer opamlfind
 
 # --
 
-OCAMLFLAGS = -g -w +a-4-9-32-41-44-45 -warn-error +1..45
-OCAMLLDFLAGS = -g -w +a-4-9-32-41-44-45 -warn-error +1..45
+OCAMLFLAGS = -g -w +a-4-9-32-41-44-45
+OCAMLLDFLAGS = -g -w +a-4-9-32-41-44-45
 ifeq ($OCAML_4,true)
   OCAMLFLAGS += -bin-annot
   OCAMLLDFLAGS += -bin-annot
