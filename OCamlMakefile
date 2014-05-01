@@ -1052,7 +1052,7 @@ else
   endif
 endif
 
-%.cmi:	%.mli $(EXTRADEPS)
+%.cmi:	%.mli
 			$(QUIET)pp=`sed -n -e '/^#/d' -e 's/(\*pp \([^*]*\) \*)/\1/p;q' $<`; \
 			if [ -z "$$pp" ]; then \
 			  $(ECHO) $(REAL_OCAMLFIND) $(INTF_OCAMLC) $(OCAML_FIND_PACKAGES) \
@@ -1072,7 +1072,7 @@ endif
 
 %.cmi: %$(IMPL_SUF);
 
-%$(IMPL_SUF) %.$(EXT_OBJ):	%.ml $(EXTRADEPS)
+%$(IMPL_SUF) %.$(EXT_OBJ):	%.ml
 			$(QUIET)pp=`sed -n -e '/^#/d' -e 's/(\*pp \([^*]*\) \*)/\1/p;q' $<`; \
 			if [ -z "$$pp" ]; then \
 			  $(ECHO) $(REAL_OCAMLFIND) $(REAL_OCAMLC) $(OCAML_FIND_PACKAGES) \
@@ -1148,9 +1148,9 @@ $(MLDEPDIR)/%.d:	%.ml
 			$(QUIET)pp=`sed -n -e '/^#/d' -e 's/(\*pp \([^*]*\) \*)/\1/p;q' $<`; \
 			if [ -z "$$pp" ]; then \
 			  $(ECHO) $(REAL_OCAMLFIND) $(OCAMLDEP) $(OCAML_DEP_PACKAGES) \
-				$< \> $@; \
+				$(INCFLAGS) $< \> $@; \
 			  $(REAL_OCAMLFIND) $(OCAMLDEP) $(OCAML_DEP_PACKAGES) \
-				$< > $@; \
+				$(INCFLAGS) $< > $@; \
 			else \
 			  $(ECHO) $(REAL_OCAMLFIND) $(OCAMLDEP) $(OCAML_DEP_PACKAGES) \
 				-pp \"$$pp $(PPFLAGS)\" $(INCFLAGS) $< \> $@; \

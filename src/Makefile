@@ -4,7 +4,13 @@ ifndef version
   $(error Please run ./configure)
 endif
 
-all: opam-lib opam opam-check opam-admin opam-installer opamlfind
+all:
+	${MAKE} opam-lib
+	${MAKE} opam
+	${MAKE} opam-check
+	${MAKE} opam-admin
+	${MAKE} opam-installer
+	${MAKE} opamlfind
 
 # --
 
@@ -37,8 +43,16 @@ else
   ifeq ($(HAS_PACKAGES),)
     $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
   endif
-  EXT_INCDIRS = $(shell $(OCAMLFIND) query $(PACKAGES))
-  LIBS = $(basename $(shell $(OCAMLFIND) query -predicates byte -a-format $(PACKAGES)))
+  export PACKS
+  # Reset command name for ocamlfind
+  OCAMLC = ocamlc
+  OCAMLOPT = ocamlopt
+  OCAMLDEP = ocamldep
+  OCAMLLEX = ocamllex
+  OCAMLYACC = ocamlyacc
+  OCAMLMKLIB = ocamlmklib
+  OCAMLDOC = ocamldoc
+  export OCAMLC OCAMLOPT OCAMLDEP OCAMLLEX OCAMLYACC OCAMLMKLIB OCAMLDOC
 endif
 
 
@@ -72,9 +86,12 @@ ALWAYS:
 # -- opam-core -- #
 opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamGitVersion.ml ALWAYS
 
-.INTERMEDIATE: core/opamGitVersion.ml
-core/opamGitVersion.ml: ../shell/get-git-id.ml
+GITREF := $(addsuffix ../.git/, $(shell cat ../.git/HEAD | cut -d ' ' -f 2))
+GITDEP := ../.git/HEAD $(wildcard ${GITREF})
+
+core/opamGitVersion.ml: ../shell/get-git-id.ml ${GITDEP}
 	cd .. && ocaml shell/get-git-id.ml src/$@
+	touch $@
 
 core/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
