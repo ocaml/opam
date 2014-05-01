@@ -181,7 +181,7 @@ define PROJ_dose_debian
 endef
 export PROJ_dose_debian
 
-SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml dominator.ml	\
+SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml		\
 dominators.ml flatten.ml statistics.ml depsolver_int.ml depsolver.ml		\
 strongconflicts_int.ml strongconflicts.ml strongdeps_int.ml strongdeps.ml
 
