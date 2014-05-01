@@ -11,8 +11,8 @@ MD5_re = 5cbfc137683ef2b0e91f931577f2e673
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.3.tbz
 MD5_cmdliner = d63dd3b03966d65fc242246859c831c7
 
-GRAPH    = ocamlgraph-1.8.5
-GRAPHMD5 = 75dde65bfc3f9b07e795343d369aa84d
+URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
+MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 
 URL_cudf = https://gforge.inria.fr/frs/download.php/31910/cudf-0.7.tar.gz
 MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
