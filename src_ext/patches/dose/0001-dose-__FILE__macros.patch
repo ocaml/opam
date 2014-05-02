@@ -575,3 +575,15 @@ diff -Nurp dose3-3.1.5-rc1/rpm/rpmcudf.ml dose-file/rpm/rpmcudf.ml
  
  type tables = {
    units : (Packages.name, (int * (Packages.rel * string)) list) Hashtbl.t;
+diff -Nurp dose3-3.2-rc2/deb/architecture.ml dose/deb/architecture.ml
+--- dose3-3.2-rc2/deb/architecture.ml   2014-05-02 17:21:51.000000000 +0200
++++ dose/deb/architecture.ml    2014-05-02 18:19:14.820540842 +0200
+@@ -19,7 +19,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/architecture.ml" end) ;;
+ 
+ (* first column of /usr/share/dpkg/cputable *)
+ let cpulist = ref [ "i386"; "ia64"; "alpha"; "amd64"; "armeb"; "arm"; "arm64"; "avr32";

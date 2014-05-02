@@ -17,8 +17,8 @@ MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 URL_cudf = https://gforge.inria.fr/frs/download.php/33593/cudf-0.7.tar.gz
 MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
-URL_dose = https://gforge.inria.fr/frs/download.php/33574/dose3-3.2-rc1.tar.gz
-MD5_dose = 5d20d05cadc0dc98e3edd375c6eb6a45
+URL_dose = https://gforge.inria.fr/frs/download.php/33607/dose3-3.2-rc2.tar.gz
+MD5_dose = f2d229129f03ad0971fc9d68f4a90898
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
