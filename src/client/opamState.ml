@@ -381,6 +381,8 @@ let pinned t name =
   let v = version_of_pin t name (OpamPackage.Name.Map.find name t.pinned) in
   OpamPackage.create name v
 
+let pinned_opt t name = try Some (pinned t name) with Not_found -> None
+
 let is_locally_pinned t name =
   try match OpamPackage.Name.Map.find name t.pinned with
     | Version _ -> false
@@ -414,8 +416,13 @@ let opam t nv =
 
 let locate_meta overlay global repo exists t nv =
   let name = OpamPackage.name nv in
-  let meta = overlay t.root t.switch name in
-  if exists meta && nv = pinned t name then Some meta else
+  if Some nv = pinned_opt t name &&
+     OpamFilename.exists_dir
+       (OpamPath.Switch.Overlay.package t.root t.switch name)
+  then
+    let meta = overlay t.root t.switch name in
+    if exists meta then Some meta else None
+  else
   let meta = global t.root nv in
   if exists meta then Some meta else
   try
@@ -508,7 +515,7 @@ let has_url_overlay t name =
 
 let dev_package t nv =
   if has_url_overlay t (OpamPackage.name nv) &&
-     pinned t (OpamPackage.name nv) = nv
+     pinned_opt t (OpamPackage.name nv) = Some nv
   then OpamPath.Switch.dev_package t.root t.switch (OpamPackage.name nv)
   else OpamPath.dev_package t.root nv
 
