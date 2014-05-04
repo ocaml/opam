@@ -159,7 +159,9 @@ let help_sections = [
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
-  `P "$(i,OPAMCRITERIA) see option --criteria";
+  `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
+      The default value is "^OpamGlobals.default_preferences^". \
+      See also option --criteria");
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see option `--debug'.";
@@ -172,6 +174,10 @@ let help_sections = [
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam config env --switch=SWITCH'.";
+  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
+      when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
+      The default value is "^OpamGlobals.default_upgrade_preferences^". \
+      See also option --criteria");
   `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
@@ -481,9 +487,8 @@ let global_options =
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
-      ("Specify user $(i,preferences) for dependency solving. \
-        This is equivalent to setting $(b,\\$OPAMCRITERIA), \
-        and takes precedence over it if both are specified. \
+      ("Specify user $(i,preferences) for dependency solving for this run. \
+        Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         The default value is "^OpamGlobals.default_upgrade_preferences^
