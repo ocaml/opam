@@ -1759,6 +1759,7 @@ module Make (F : F) = struct
       | Lexer_error _ | Parsing.Parse_error as e ->
         raise e (* Message already printed *)
       | e ->
+        OpamMisc.fatal e;
         let pos,msg,btl = match e with
           | OpamFormat.Bad_format (Some pos, btl, msg) -> pos, ":\n  "^msg, btl
           | OpamFormat.Bad_format (None, btl, msg) -> (f,-1,-1), ":\n  "^msg, btl
