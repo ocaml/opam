@@ -64,8 +64,8 @@ let check_solution state = function
     OpamGlobals.exit 4
   | OK actions ->
     List.iter (post_message state) actions
-  | Nothing_to_do
-  | Aborted     -> ()
+  | Nothing_to_do -> ()
+  | Aborted     -> OpamGlobals.exit 1
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -457,6 +457,7 @@ let parallel_apply t action solution =
           Printf.sprintf
             "Aborting, as the following packages have a cyclic dependency:\n%s"
             (String.concat "\n" (List.map mk strings)) in
+        OpamGlobals.error "%s" msg;
         `Error (Aborted, msg), finalize
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->
         let msg =
@@ -475,7 +476,6 @@ let parallel_apply t action solution =
         fun () ->
           finalize ();
           List.iter display_error errors;
-          (* XXX: we might want to output the sucessful actions as well. *)
           output_json_actions errors
       | e -> `Exception e, finalize
   in

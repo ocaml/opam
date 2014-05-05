@@ -294,6 +294,13 @@ let cleanup_request universe (req:atom request) =
       ) req.wish_upgrade in
   { req with wish_install; wish_upgrade }
 
+let print_cycles =
+  Printf.sprintf
+    "Error: the actions to process have cyclic dependencies:\n  - %s\n" @*
+  String.concat "\n  - " @*
+  List.map (String.concat " -> " @*
+            List.map (Action.to_string @* map_action cudf2opam))
+
 let resolve ?(verbose=true) universe ~requested request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map =
@@ -332,10 +339,14 @@ let resolve ?(verbose=true) universe ~requested request =
       load_cudf_universe universe ~version_map all_packages in
     let complete_universe =
       load_cudf_universe ~depopts:true universe ~version_map all_packages in
-    let cudf_solution =
-      OpamCudf.solution_of_actions
-        ~simple_universe ~complete_universe ~requested actions in
-    Success (solution cudf2opam cudf_solution)
+    try
+      let cudf_solution =
+        OpamCudf.solution_of_actions
+          ~simple_universe ~complete_universe ~requested actions in
+      Success (solution cudf2opam cudf_solution)
+    with OpamCudf.Cyclic_actions cycles ->
+      Conflicts (fun () -> print_cycles cycles)
+
 
 let installable universe =
   log "trim";
@@ -459,8 +470,12 @@ let sequential_solution universe ~requested actions =
     List.map
       (map_action (opam2cudf universe ~depopts:true version_map))
       actions in
-  let cudf_solution =
-    OpamCudf.solution_of_actions
-      ~simple_universe ~complete_universe ~requested
-      actions in
-  solution cudf2opam cudf_solution
+  try
+    let cudf_solution =
+      OpamCudf.solution_of_actions
+        ~simple_universe ~complete_universe ~requested
+        actions in
+    Success (solution cudf2opam cudf_solution)
+
+  with OpamCudf.Cyclic_actions cycles ->
+    Conflicts (fun () -> print_cycles cycles)
