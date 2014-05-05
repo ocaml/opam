@@ -1128,7 +1128,11 @@ module API = struct
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
     let solution =
       OpamSolver.sequential_solution universe ~requested to_process in
-    let solution = OpamSolution.apply t Reinstall ~requested solution in
+    let solution = match solution with
+      | Conflicts cs ->
+        log "conflict!"; OpamGlobals.msg "%s" (cs()); No_solution
+      | Success solution ->
+        OpamSolution.apply t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 
   let reinstall names = with_switch_backup "reinstall" (reinstall_t names)

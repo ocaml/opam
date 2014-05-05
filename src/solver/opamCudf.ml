@@ -66,6 +66,8 @@ module Action = OpamActionGraph.MakeAction(Pkg)
 module ActionGraph = OpamActionGraph.Make(Action)
 type solution = (Cudf.package, ActionGraph.t) gen_solution
 
+exception Cyclic_actions of Action.t list list
+
 module Map = OpamMisc.Map.Make(Pkg)
 module Set = OpamMisc.Set.Make(Pkg)
 module Graph = struct
@@ -565,6 +567,33 @@ let create_graph filter universe =
   let u = Cudf.load_universe pkgs in
   Graph.of_universe u
 
+let find_cycles g =
+  let open ActionGraph in
+  let roots =
+    fold_vertex (fun v acc -> if in_degree g v = 0 then v::acc else acc) g [] in
+  let roots =
+    if roots = [] then fold_vertex (fun v acc -> v::acc) g []
+    else roots in
+  let rec prefix_find acc v = function
+    | x::_ when x = v -> Some (x::acc)
+    | x::r -> prefix_find (x::acc) v r
+    | [] -> None in
+  let seen = Hashtbl.create 17 in
+  let rec follow v path =
+    match prefix_find [] v path with
+    | Some cycle ->
+      Hashtbl.add seen v ();
+      [cycle@[v]]
+    | None ->
+      if Hashtbl.mem seen v then [] else
+        let path = v::path in
+        Hashtbl.add seen v ();
+        List.fold_left (fun acc s -> follow s path @ acc) []
+          (succ g v) in
+  List.fold_left (fun cycles root ->
+    follow root [] @ cycles
+  ) [] roots
+
 let action_graph_of_packages actions packages =
   let g = ActionGraph.create () in
   Map.iter (fun _ act -> ActionGraph.add_vertex g act) actions;
@@ -575,6 +604,10 @@ let action_graph_of_packages actions packages =
         ActionGraph.add_edge g v1 v2
       with Not_found -> ())
     packages;
+  (match find_cycles g with
+  | [] -> ()
+  | cycles -> raise (Cyclic_actions cycles)
+  );
   g
 
 (* Compute the original causes of the actions, from the original set of

@@ -95,7 +95,10 @@ val get_final_universe:
     topological order induced by dependencies. *)
 val actions_of_diff: Diff.universe -> Cudf.package action list
 
-(** Compution the actions to process from a solution *)
+exception Cyclic_actions of Cudf.package action list list
+
+(** Compution the actions to process from a solution.
+    May raise [Cyclic_actions]. *)
 val solution_of_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->
