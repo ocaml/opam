@@ -263,3 +263,6 @@ let () =
   | Invalid_argument s ->
     prerr_string "ERROR: "; prerr_endline s; exit 2
   | OpamGlobals.Exit i -> exit i
+  | e ->
+    OpamGlobals.error "Failure during install";
+    prerr_string (Printexc.to_string e); exit 1
