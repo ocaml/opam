@@ -84,9 +84,7 @@ module Graph = struct
   module Topo = Graph.Topological.Make (PG)
 
   let of_universe u =
-    let g = Algo.Defaultgraphs.PackageGraph.dependency_graph u in
-    PO.transitive_reduction g;
-    g
+    Algo.Defaultgraphs.PackageGraph.dependency_graph u
 
   let output g filename =
     let fd = open_out (filename ^ ".dot") in
