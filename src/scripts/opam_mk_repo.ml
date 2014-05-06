@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamFilename.OP
+open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
 
@@ -259,8 +260,8 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let to_remove = nv_set_of_remotes to_remove in
   let to_add =
     if OpamPackage.Set.is_empty packages then to_add
-    else OpamPackage.Set.inter packages to_add in
-  let to_remove = OpamPackage.Set.diff to_remove to_add in
+    else packages %% to_add in
+  let to_remove = to_remove -- to_add in
 
   let errors = ref [] in
   if not index then (
@@ -281,11 +282,15 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
     OpamPackage.Set.iter (fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
         let local_archive = OpamPath.Repository.archive repo nv in
+        let url_file = OpamPath.Repository.url repo prefix nv in
         try
-          OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
-          if not dryrun then (
-            OpamFilename.remove local_archive;
-            OpamRepository.make_archive ~gener_digest repo prefix nv;
+          if not dryrun then OpamFilename.remove local_archive;
+          if OpamFilename.exists url_file &&
+             OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
+          then (
+            OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
+            if not dryrun then
+              OpamRepository.make_archive ~gener_digest repo prefix nv;
           )
         with e ->
           OpamFilename.remove local_archive;
