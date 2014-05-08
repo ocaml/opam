@@ -110,8 +110,8 @@ val succ: bounds:int list -> int state -> int state option
 
 (** [explore is_constent state_space] explore a state space by
     implicitely enumerating all the state in a sensitive order. *)
-val brute_force: ?verbose:bool
-  -> ('a state -> bool) -> 'a state_space -> 'a state option
+val brute_force: ?verbose:bool -> dump:('a state -> unit) ->
+  ('a state -> bool) -> 'a state_space -> 'a state option
 
 (** {4 Package space} *)
 
