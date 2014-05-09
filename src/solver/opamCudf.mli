@@ -80,14 +80,14 @@ val check_request:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, Algo.Diagnostic.reason list) result
+  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, Algo.Diagnostic.reason list) result
+  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
 
 (** Compute the list of actions to match the difference between two
     universe. Remark: the result order is unspecified, ie. need to use
@@ -114,7 +114,7 @@ val resolve:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, Algo.Diagnostic.reason list) result
+  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
 
 (** Computes a list of actions to proceed from the result of [resolve].
     Note however than the action list is not yet complete: the transitive closure
@@ -125,8 +125,8 @@ val resolve:
 val to_actions:
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
-  (Cudf.universe, Algo.Diagnostic.reason list) result ->
-  (Cudf.package action list, Algo.Diagnostic.reason list) result
+  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result ->
+  (Cudf.package action list, (unit -> Algo.Diagnostic.reason list)) result
 
 (** [remove universe name constr] Remove all the packages called
     [name] satisfying the constraints [constr] in the universe
@@ -161,11 +161,13 @@ val s_pinned: string         (** true if the package is pinned to this version *
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 (** Convert a reason to something readable by the user *)
-val strings_of_reason: (Cudf.package -> package) -> Cudf.universe -> universe ->
+val strings_of_reason: (Cudf.package -> package) -> (atom -> string) -> Cudf.universe ->
   Algo.Diagnostic.reason -> string list
 
-(** Convert a list of reasons to something readable by the user *)
-val string_of_reasons: (Cudf.package -> package) -> Cudf.universe -> universe ->
+(** Convert a list of reasons to something readable by the user. The second argument
+    should return a string like "lwt<3.2.1 is not available because..." when called
+    on an unavailable package (the reason can't be known this deep in the solver) *)
+val string_of_reasons: (Cudf.package -> package) -> (atom -> string) -> Cudf.universe ->
   Algo.Diagnostic.reason list -> string
 
 (** Pretty-print atoms *)

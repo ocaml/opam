@@ -117,7 +117,10 @@ let resolve_deps index names =
         | _ -> acc)
       solution.to_process OpamPackage.Set.empty
   | Conflicts cs ->
-    OpamGlobals.error_and_exit "%s" (cs())
+    OpamGlobals.error_and_exit "%s"
+      (cs (fun atom ->
+           Printf.sprintf "%s is unavailable"
+             (OpamFormula.string_of_atom atom)))
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let () =

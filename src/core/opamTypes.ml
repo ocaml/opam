@@ -225,7 +225,7 @@ type solver_result =
 (** Solver result *)
 type ('a, 'b) result =
   | Success of 'a
-  | Conflicts of (unit -> 'b)
+  | Conflicts of 'b
 
 (** Solver request *)
 type 'a request = {

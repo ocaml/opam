@@ -55,7 +55,8 @@ val print_solution:
     consistency of the initial description. *)
 val resolve :
   ?verbose:bool ->
-  universe -> requested:OpamPackage.Name.Set.t -> atom request -> (solution, string) result
+  universe -> requested:OpamPackage.Name.Set.t -> atom request
+  -> (solution, ((atom -> string) -> string)) result
 
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
@@ -79,4 +80,4 @@ val reverse_dependencies :
 
 (** Create a sequential solution from a list of actions *)
 val sequential_solution: universe -> requested:name_set ->
-  package action list -> (solution, string) result
+  package action list -> (solution, (atom -> string) -> string) result
