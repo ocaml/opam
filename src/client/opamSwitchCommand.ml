@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamState.Types
 open OpamMisc.OP
+open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "SWITCH" fmt
 let slog = OpamGlobals.slog
@@ -280,43 +281,71 @@ let import_t filename t =
                     | Some f -> OpamFilename.to_string f)
     filename;
 
-  let imported, import_roots =
+  let imported, import_roots, import_pins =
     match filename with
     | None   -> OpamFile.Export.read_from_channel stdin
     | Some f -> OpamFile.Export.read f in
 
-  (* Import only the packages not currently installed at the right version. *)
-  let imported = OpamPackage.Set.diff imported t.installed in
+  let pinned =
+    OpamPackage.Name.Map.merge (fun _ current import ->
+        match current, import with
+        | _, (Some _ as p) -> p
+        | p, None -> p)
+      t.pinned import_pins
+  in
+  let old_pinned = t.pinned in
+  let t = {t with pinned} in
+  let pin_f = OpamPath.Switch.pinned t.root t.switch in
+  try
+    let _ =
+      let dev_pkgs =
+        OpamPackage.Name.Map.fold (fun n pin acc ->
+            let nv = match pin with
+              | Version v -> OpamPackage.create n v
+              | _ -> OpamPackage.create n (OpamPackage.Version.of_string "pin")
+            in
+            OpamPackage.Set.add nv acc)
+          pinned OpamPackage.Set.empty in
+      Printf.eprintf "dev Pkgs: %s\n" (OpamPackage.Set.to_string dev_pkgs);
+      OpamPackage.Name.Map.iter (fun n _ ->
+          let overlay_dir = OpamPath.Switch.Overlay.package t.root t.switch n
+          in
+          if not (OpamFilename.exists_dir overlay_dir) then
+            OpamState.add_pinned_overlay t n)
+        pinned;
+      OpamState.update_dev_packages t dev_pkgs
+    in
 
-  let to_import =
-    List.map
-      (fun nv ->
-         if OpamPackage.Set.mem nv (Lazy.force t.available_packages) then
-           OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
-         else
-           OpamSolution.atom_of_package nv)
-      (OpamPackage.Set.elements imported) in
+    let t =
+      if !OpamGlobals.dryrun || !OpamGlobals.show then t
+      else
+        (OpamFile.Pinned.write pin_f pinned;
+         OpamState.load_state "pin-import") in
 
-  let to_keep =
-    let keep_installed = filter_names ~filter:imported t.installed in
-    List.map OpamSolution.atom_of_package (OpamPackage.Set.elements keep_installed) in
+    let available =
+      imported %% (Lazy.force t.available_packages ++ t.installed) in
 
-  let roots =
-    let import_roots = OpamPackage.Set.diff import_roots t.installed_roots in
-    let to_keep = filter_names ~filter:import_roots t.installed_roots in
-    OpamPackage.names_of_packages (OpamPackage.Set.union import_roots to_keep) in
+    let to_import =
+      OpamSolution.eq_atoms_of_packages available @
+      OpamSolution.atoms_of_packages (imported -- available) in
 
-  let solution = OpamSolution.resolve_and_apply t (Import roots)
-      ~requested:(OpamPackage.names_of_packages imported)
-      { wish_install = to_import @ to_keep;
-        wish_remove  = [];
-        wish_upgrade = [];
-        criteria = !OpamGlobals.solver_preferences; } in
-  OpamSolution.check_solution t solution
+    let roots = OpamPackage.names_of_packages import_roots in
+
+    let solution = OpamSolution.resolve_and_apply t (Import roots)
+        ~requested:(OpamPackage.names_of_packages imported)
+        { wish_install = to_import;
+          wish_remove  = [];
+          wish_upgrade = [];
+          criteria = !OpamGlobals.solver_preferences; } in
+    OpamSolution.check_solution t solution
+  with e ->
+    if not (!OpamGlobals.dryrun || !OpamGlobals.show) then
+      OpamFile.Pinned.write pin_f old_pinned;
+    raise e
 
 let export filename =
   let t = OpamState.load_state "switch-export" in
-  let export = (t.installed, t.installed_roots) in
+  let export = (t.installed, t.installed_roots, t.pinned) in
   match filename with
   | None   -> OpamFile.Export.write_to_channel stdout export
   | Some f -> OpamFile.Export.write f export
@@ -368,7 +397,7 @@ let with_backup command f =
   let t = OpamState.load_state command in
   let file = OpamPath.backup t.root in
   OpamFilename.mkdir (OpamPath.backup_dir t.root);
-  OpamFile.Export.write file (t.installed, t.installed_roots);
+  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
