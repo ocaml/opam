@@ -1353,19 +1353,11 @@ let pin ?(unpin_only=false) () =
   let command, params =
     if unpin_only then
       Term.pure (Some `remove),
-      Arg.(value & pos_right 0 string [] & Arg.info [])
+      Arg.(value & pos_all string [] & Arg.info [])
     else
       mk_subcommands_with_default commands
         "Without further arguments, acts like `opam pin list'. With a package \
          name argument, `opam pin add' is assumed." in
-  (* let package = *)
-  (*   let doc = Arg.info ~docv:"NAME" ~doc:"Package name." [] in *)
-  (*   Arg.(value & pos 0 (some string) None & doc) in *)
-  (* let pin_option = *)
-  (*   let doc = *)
-  (*     Arg.info ~docv:"TARGET" ~doc: *)
-  (*       "Version, local path, git or darcs url to pin the package to." [] in *)
-  (*   Arg.(value & pos 1 (some string) None & doc) in *)
   let edit =
     mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
                           `opam pin edit' after pinning." in
@@ -1513,7 +1505,7 @@ let commands = [
   config;
   repository; make_command_alias repository "remote";
   switch;
-  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" -u" "unpin";
+  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   help;
 ]
 
