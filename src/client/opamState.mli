@@ -338,6 +338,10 @@ val update_dev_package: state -> package -> package_set
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool
 
+(** May be used to check if a given package metadata has just been
+    initialised. Also returns [true] if there is no opam overlay. *)
+val has_empty_opam: state -> package -> bool
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)

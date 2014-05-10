@@ -2268,6 +2268,11 @@ let update_switch_config t switch =
 
 (* Dev packages *)
 
+let has_empty_opam t nv =
+  let opam, _, _ =
+    local_opam ~version_override:false nv (dev_package t nv) in
+  opam = None || opam = Some (OpamFile.OPAM.create nv)
+
 (* XXX split update_dev taking nv and update_pin taking name ? *)
 let update_dev_package t nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
@@ -2336,8 +2341,7 @@ let update_dev_package t nv =
         hash_meta @@ local_opam ~root:true nv dir
       with Not_found ->
         hash_meta @@
-        (Some (OpamFile.OPAM.with_name
-                 OpamFile.OPAM.(with_version empty v) name),
+        (Some (OpamFile.OPAM.create nv),
          None, None)
     in
     (* Do the update *)
