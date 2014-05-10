@@ -36,29 +36,44 @@ all: local git
 quiet:
 	$(MAKE) OPAMTESTQUIET=1 all
 
+printf = /usr/bin/printf
+
+define RUN
+@$(printf) "\e[1m- %-20s\e[m ..................................... " $(1); \
+if $(MAKE) $(1) >test.log 2>&1; then \
+  $(printf) "\e[32m[ OK ]\e[m\n"; \
+else \
+  $(printf) "\e[31m[FAIL]\e[m\n\n"; \
+  cat test.log; \
+  $(printf) "\n\e[31m>> %s FAILED <<\e[m\n" $(1); \
+  exit 1; \
+fi; \
+cat test.log >> fulltest.log
+endef
+
 run:
-	$(MAKE) init && \
-	$(MAKE) list && \
-	$(MAKE) upload && \
-	$(MAKE) install-remove && \
-	$(MAKE) list && \
-	$(MAKE) install-opt && \
-	$(MAKE) list && \
-	$(MAKE) install && \
-	$(MAKE) list && \
-	$(MAKE) reinstall && \
-	$(MAKE) list && \
-	$(MAKE) upload-new && \
-	$(MAKE) list && \
-	$(MAKE) upgrade && \
-	$(MAKE) list && \
-	$(MAKE) downgrade && \
-	$(MAKE) list && \
-	$(MAKE) switch-alias && \
-	$(MAKE) list && \
-	$(MAKE) switch-env-packages && \
-	$(MAKE) repo && \
-	$(MAKE) list
+	$(call RUN,init)
+	$(call RUN,list)
+	$(call RUN,upload)
+	$(call RUN,install-remove)
+	$(call RUN,list)
+	$(call RUN,install-opt)
+	$(call RUN,list)
+	$(call RUN,install)
+	$(call RUN,list)
+	$(call RUN,reinstall)
+	$(call RUN,list)
+	$(call RUN,upload-new)
+	$(call RUN,list)
+	$(call RUN,upgrade)
+	$(call RUN,list)
+	$(call RUN,downgrade)
+	$(call RUN,list)
+	$(call RUN,switch-alias)
+	$(call RUN,list)
+	$(call RUN,switch-env-packages)
+	$(call RUN,repo)
+	$(call RUN,list)
 	@echo "SUCCESS!"
 
 local:
@@ -262,5 +277,6 @@ packages/%.tar.gz: packages/%
 	cd packages && tar czf $*.tar.gz $* 
 
 clean:
+	rm -f test.log fulltest.log
 	rm -f $(ARCHIVES)
 	rm -rf $(TMP_DIR)

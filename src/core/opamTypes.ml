@@ -256,7 +256,7 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
-  u_pinned   : OpamPackage.Version.t Lazy.t name_map;
+  u_pinned   : package_set;
   u_builddeps: package_set;
 }
 

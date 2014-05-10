@@ -998,8 +998,8 @@ module X = struct
         OpamFormat.make_option (OpamFilename.Base.to_string @> OpamFormat.make_string)
           OpamFormat.make_filter in
       let name_and_version = match OpamPackage.of_filename filename with
-        | Some nv when not (OpamPackage.is_pinned nv) -> []
-        | _ ->
+        | Some _ -> []
+        | None ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
           [ OpamFormat.make_variable (s_name, name (check "name" t.name));
@@ -1077,10 +1077,11 @@ module X = struct
         | None  , Some nv -> Some (OpamPackage.name nv)
         | Some n, Some nv ->
           if OpamPackage.name nv <> n then
-            OpamGlobals.error_and_exit
-              "Package %s, has inconsistent 'name: %S' field."
-              (OpamPackage.to_string nv)
-              (OpamPackage.Name.to_string n)
+            (OpamGlobals.error
+               "Package %s has inconsistent 'name: %S' field."
+               (OpamPackage.to_string nv)
+               (OpamPackage.Name.to_string n);
+             OpamSystem.internal_error "inconsistent name")
           else Some n in
       let version_f = OpamFormat.assoc_option s s_version
           (OpamFormat.parse_string @> OpamPackage.Version.of_string) in
@@ -1089,11 +1090,12 @@ module X = struct
         | Some v, None    -> Some v
         | None  , Some nv -> Some (OpamPackage.version nv)
         | Some v, Some nv ->
-          if OpamPackage.is_pinned nv then Some v
-          else if OpamPackage.version nv <> v then
-            OpamGlobals.error_and_exit
-              "Inconsistent versioning scheme in %s"
-              (OpamFilename.to_string filename)
+          if OpamPackage.version nv <> v then
+            (OpamGlobals.error
+               "Package %s has inconsistent 'version: %S' field."
+               (OpamPackage.to_string nv)
+               (OpamPackage.Version.to_string v);
+             OpamSystem.internal_error "inconsistent version")
           else Some v in
       let maintainer =
         OpamFormat.assoc_list s s_maintainer OpamFormat.parse_string_list in
@@ -1394,10 +1396,7 @@ module X = struct
 
     let create_preinstalled name version packages env =
       let mk n = Atom (n, Empty) in
-      let aux accu t = match accu, t with
-        | Empty, x  -> mk x
-        | _    , x  -> And(accu, mk x) in
-      let packages = List.fold_left aux OpamFormula.Empty packages in
+      let packages = OpamFormula.ands (List.map mk packages) in
       { empty with name; version; preinstalled = true; packages; env }
 
     let s_opam_version = "opam-version"

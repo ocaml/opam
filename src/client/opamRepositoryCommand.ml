@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamState.Types
 open OpamMisc.OP
+open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 let slog = OpamGlobals.slog
@@ -246,10 +247,8 @@ let fix_package_descriptions t ~verbose =
   log "missing-installed: %a" (slog OpamPackage.Set.to_string) missing_installed_packages;
 
   let deleted_packages =
-    OpamPackage.Set.filter (fun nv ->
-        not (OpamPackage.is_pinned nv                         (* pinned*)
-             || OpamPackage.Map.mem nv repo_index)     (* OR available *)
-      ) t.packages in
+    t.packages -- OpamPackage.keys repo_index -- OpamState.pinned_packages t
+  in
   log "deleted-packages: %a" (slog OpamPackage.Set.to_string) deleted_packages;
 
   (* Notify only about deleted packages that are installed or were just removed
@@ -328,7 +327,8 @@ let fix_package_descriptions t ~verbose =
 
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
-      let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+      let file =
+        OpamPath.Switch.Overlay.opam t.root t.switch (OpamPackage.name nv) in
       let file =
         if OpamFilename.exists file then file else OpamPath.opam t.root nv in
       if not (OpamFilename.exists file) then
