@@ -588,7 +588,14 @@ let apply ?(force = false) t action ~requested solution =
           then Some s
           else None
         )  messages in
-      let rewrite nv = nv in
+      let rewrite nv =
+        let n = OpamPackage.name nv in
+        if OpamState.is_pinned t n then
+          OpamPackage.create n
+            (OpamPackage.Version.of_string
+               (OpamPackage.Version.to_string (OpamPackage.version nv) ^ "*"))
+        else nv
+      in
       OpamSolver.print_solution ~messages ~rewrite solution;
       OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;

@@ -416,12 +416,12 @@ let print_solution ~messages ~rewrite t =
     let print_action a =
       let cause = try List.assoc (action_contents a) t.root_causes
         with Not_found -> Unknown in
+      let to_string a = Action.to_string (map_action rewrite a) in
       match string_of_cause OpamPackage.name_to_string cause with
-      | "" -> OpamGlobals.msg " - %s\n" (Action.to_string a)
-      | c  -> OpamGlobals.msg " - %-47s [%s]\n" (Action.to_string a) c in
-    List.iter (fun p -> print_action (To_delete (rewrite p))) t.to_remove;
+      | "" -> OpamGlobals.msg " - %s\n" (to_string a)
+      | c  -> OpamGlobals.msg " - %-47s [%s]\n" (to_string a) c in
+    List.iter (fun p -> print_action (To_delete p)) t.to_remove;
     ActionGraph.Topological.iter (function action ->
-        let action = map_action rewrite action in
         print_action action;
         match action with
         | To_change(_,p)
