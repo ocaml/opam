@@ -1244,18 +1244,25 @@ let reinstall_system_compiler t =
 let upgrade_to_1_1_hook =
   ref (fun () -> assert false)
 
+let upgrade_to_1_2_hook =
+  ref (fun () -> assert false)
+
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let chrono = OpamGlobals.timer () in
   !upgrade_to_1_1_hook ();
+
   let root = OpamPath.root () in
 
   let config_p = OpamPath.config root in
   let config =
     let config = OpamFile.Config.read config_p in
-    if OpamFile.Config.opam_version config <> OpamVersion.current then (
+    let config_version = OpamFile.Config.opam_version config in
+    if config_version <> OpamVersion.current then (
       (* opam has been updated, so refresh the configuration file and
          clean-up the cache. *)
+      if OpamVersion.compare config_version (OpamVersion.of_string "1.2") < 0 then
+        !upgrade_to_1_2_hook ();
       let config = OpamFile.Config.with_current_opam_version config in
       OpamFile.Config.write config_p config;
       remove_state_cache ();
@@ -1547,8 +1554,55 @@ let upgrade_to_1_1 () =
     OpamGlobals.msg "\n";
   )
 
+let upgrade_to_1_2 () =
+  log "Upgrade pinned packages format to 1.2";
+  let root  = OpamPath.root () in
+  let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+  let remove_pinned_suffix d =
+    let s = OpamFilename.Dir.to_string d in
+    if Filename.check_suffix s ".pinned" then
+      OpamFilename.move_dir ~src:d
+        ~dst:(OpamFilename.Dir.of_string (Filename.chop_suffix s ".pinned"))
+  in
+  let packages = lazy (
+    OpamPackage.Set.of_list
+      (OpamPackage.Map.keys
+         (OpamFile.Package_index.safe_read (OpamPath.package_index root)))
+  ) in
+  OpamSwitch.Map.iter (fun switch _ ->
+    let pinned_version name =
+      try
+        let f = OpamPath.Switch.Overlay.opam root switch name in
+        match OpamFile.OPAM.version_opt (OpamFile.OPAM.read f) with
+        | None -> raise Not_found
+        | Some v -> v
+      with e ->
+        OpamMisc.fatal e;
+        try OpamPackage.version (OpamPackage.max_version (Lazy.force packages) name)
+        with Not_found -> OpamPackage.Version.of_string "0" in
+    let fix_version nv =
+      let obsolete_pinned_v = OpamPackage.Version.of_string "pinned" in
+      if OpamPackage.version nv = obsolete_pinned_v then
+        let name = OpamPackage.name nv in
+        OpamPackage.create name (pinned_version name)
+      else nv in
+    List.iter remove_pinned_suffix
+      (OpamFilename.dirs (OpamPath.Switch.dev_packages_dir root switch));
+    List.iter remove_pinned_suffix
+      (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root switch));
+    let installed_f = OpamPath.Switch.installed root switch in
+    let installed = OpamFile.Installed.safe_read installed_f in
+    OpamFile.Installed.write installed_f
+      (OpamPackage.Set.map fix_version installed);
+    let installed_roots_f = OpamPath.Switch.installed_roots root switch in
+    let installed_roots = OpamFile.Installed_roots.safe_read installed_roots_f in
+    OpamFile.Installed_roots.write installed_roots_f
+      (OpamPackage.Set.map fix_version installed_roots);
+  ) aliases
+
 let () =
-  upgrade_to_1_1_hook := upgrade_to_1_1
+  upgrade_to_1_1_hook := upgrade_to_1_1;
+  upgrade_to_1_2_hook := upgrade_to_1_2
 
 let rebuild_state_cache () =
   remove_state_cache ();
