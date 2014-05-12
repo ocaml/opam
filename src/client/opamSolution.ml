@@ -551,7 +551,7 @@ let print_external_tags t solution =
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation requested solution =
-  !OpamGlobals.fake || !OpamGlobals.yes ||
+  !OpamGlobals.yes ||
   PackageActionGraph.(
     let solution_packages =
       fold_vertex (fun v acc ->
