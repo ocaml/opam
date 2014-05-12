@@ -333,7 +333,6 @@ let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 let s_builddep = "build-dep"
 let s_pinned = "pinned"
-let s_criteria = "criteria"
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
@@ -355,7 +354,6 @@ let default_preamble =
     (s_installed_root, `Bool (Some false));
     (s_builddep,       `Bool (Some false));
     (s_pinned,         `Bool (Some false));
-    (s_criteria,       `String None);
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
@@ -396,13 +394,8 @@ let to_cudf univ req = (
     install         = req.wish_install;
     remove          = req.wish_remove;
     upgrade         = req.wish_upgrade;
-    req_extra       = [s_criteria, `String req.criteria] }
+    req_extra       = [] }
 )
-
-let get_criteria (_,_,cudf_req) =
-  match Cudf.lookup_typed_request_property cudf_req s_criteria with
-  | `String c -> c
-  | _ -> assert false
 
 let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver)
 
@@ -412,7 +405,8 @@ let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
 
 let solver_calls = ref 0
 
-let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) = function
+let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
+  function
   | None   -> None
   | Some f ->
     ignore ( version_map: int OpamPackage.Map.t );
@@ -420,7 +414,7 @@ let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) = function
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     if extern then
-      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) (get_criteria cudf)
+      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) criteria
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -440,16 +434,20 @@ let dump_cudf_error ~extern ~version_map univ req =
       let (/) = Filename.concat in
       !OpamGlobals.root_dir / "log" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
-  match dump_cudf_request ~extern (to_cudf univ req) ~version_map (Some cudf_file) with
+  match
+    dump_cudf_request ~extern (to_cudf univ req) ~version_map req.criteria
+      (Some cudf_file)
+  with
   | Some f -> f
   | None -> assert false
 
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
-  ignore (dump_cudf_request ~extern:true ~version_map cudf_request !OpamGlobals.cudf_file);
   if Cudf.universe_size univ > 0 then begin
-    let cmd = external_solver_command() in
     let criteria = req.criteria in
+    ignore (dump_cudf_request ~extern:true ~version_map cudf_request
+              criteria !OpamGlobals.cudf_file);
+    let cmd = external_solver_command() in
     try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
     with e ->
       OpamMisc.fatal e;
