@@ -85,7 +85,7 @@ let solver_timeout =
   with Not_found | Failure _ -> 5.
 
 let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
-  "-removed,-changed,-notuptodate"
+  "-removed,-count(up),-count(down),-notuptodate,-new"
 let default_upgrade_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
   "-removed,-notuptodate,-changed"
 
