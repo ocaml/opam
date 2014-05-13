@@ -604,7 +604,7 @@ module API = struct
     match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
-      OpamGlobals.msg "%s" (cs ())
+      OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t))
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
@@ -973,7 +973,9 @@ module API = struct
       let solution = OpamSolution.resolve t action ~requested:names request in
       let solution = match solution with
         | Conflicts cs ->
-          log "conflict!"; OpamGlobals.msg "%s" (cs()); No_solution
+          log "conflict!";
+          OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+          No_solution
         | Success solution ->
           if deps_only then (
             let to_install =
@@ -1125,7 +1127,9 @@ module API = struct
       OpamSolver.sequential_solution universe ~requested to_process in
     let solution = match solution with
       | Conflicts cs ->
-        log "conflict!"; OpamGlobals.msg "%s" (cs()); No_solution
+        log "conflict!";
+        OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+        No_solution
       | Success solution ->
         OpamSolution.apply t Reinstall ~requested solution in
     OpamSolution.check_solution t solution

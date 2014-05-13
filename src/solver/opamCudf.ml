@@ -144,22 +144,26 @@ let string_of_request r =
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
 
-let vpkg2opam cudf2opam cudf_universe (name,constr) =
-  let name2opam name =
-    OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
-  let cstr2opam name = function
-    | None -> Empty
-    | Some (relop,v) ->
-      try
-        let cpkg = Cudf.lookup_package cudf_universe (name,v) in
-        Atom (relop, OpamPackage.version (cudf2opam cpkg))
-      with Not_found -> Atom (relop, OpamPackage.Version.of_string "??") in
-  name2opam name, cstr2opam name constr
+let vpkg2atom cudf2opam cudf_universe (name,cstr) =
+  match cstr with
+  | None ->
+    OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
+  | Some (relop,v) ->
+    try
+      let nv = cudf2opam (Cudf.lookup_package cudf_universe (name,v)) in
+      OpamPackage.name nv, Some (relop, OpamPackage.version nv)
+    with Not_found ->
+      log "Could not find corresponding version in cudf universe: %a"
+        (slog string_of_atom) (name,cstr);
+      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
+      Some (relop, OpamPackage.Version.of_string ("cudf"^string_of_int v))
 
-let vpkg2opamstr cudf2opam cudf_universe vpkg =
-  OpamFormula.to_string (Atom (vpkg2opam cudf2opam cudf_universe vpkg))
+let vpkg2opam cudf2opam cudf_universe vpkg =
+  match vpkg2atom cudf2opam cudf_universe vpkg with
+  | p, None -> p, Empty
+  | p, Some (relop,v) -> p, Atom (relop, v)
 
-let strings_of_reason cudf2opam cudf_universe opam_universe r =
+let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
@@ -184,52 +188,24 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
         (OpamPackage.to_string nva)
         (OpamPackage.to_string nvb) in
     [str]
-  | Missing (p,m) ->
-    let of_package =
-      if is_dose_request p then "" else
-      let nv = cudf2opam p in
-      Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
-    let pinned_deps, deps =
-      List.partition
-        (fun (p,_) ->
-           let name = OpamPackage.Name.of_string (Common.CudfAdd.decode p) in
-           OpamPackage.has_name opam_universe.u_pinned name)
-        m in
-    let pinned_deps =
-      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in
+  | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
+    List.map (fun p ->
+        unav_reasons (vpkg2atom cudf2opam cudf_universe p)
+      ) missing
+  | Missing (p,[missing]) -> (* Dependency missing *)
+    [Printf.sprintf "Unavailable dependency of %s: %s"
+       (OpamPackage.to_string (cudf2opam p))
+       (unav_reasons (vpkg2atom cudf2opam cudf_universe missing))]
+  | Missing (p,missing) -> (* Dependencies missing *)
+    let head =
+      Printf.sprintf
+        "The following dependencies of package %s are not available:"
+        (OpamPackage.to_string (cudf2opam p)) in
     let deps =
-      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) deps in
-    (* XXX This duplicates some work which is better done in
-       OpamState.unavailable_reason. Factor it and pass the function as argument
-       to this function ? *)
-    let str = [] in
-    let str =
-      if pinned_deps <> [] then
-        let dependencies, are, s, have =
-          if List.length pinned_deps > 1 then "dependencies", "are", "s", "have"
-          else "dependency", "is", "", "has" in
-        Printf.sprintf
-          "The %s %s%s %s not available because the package%s %s been pinned"
-          dependencies
-          (OpamMisc.pretty_list pinned_deps)
-          of_package
-          are s have
-        :: str
-      else str in
-    let str =
-      if deps <> [] then
-        let dependencies, are =
-          if List.length deps > 1 then "dependencies", "are"
-          else "dependency", "is" in
-        Printf.sprintf
-          "The %s %s%s %s not available for your compiler or OS"
-          dependencies
-          (OpamMisc.pretty_list deps)
-          of_package
-          are
-        :: str
-      else str in
-    List.rev str
+      List.map (fun p ->
+          "    - " ^ unav_reasons (vpkg2atom cudf2opam cudf_universe p)
+        ) missing in
+    [String.concat "\n" (head::deps)]
   | Dependency _  -> []
 
 let make_chains cudf_universe cudf2opam depends =
@@ -293,7 +269,7 @@ let make_chains cudf_universe cudf2opam depends =
     List.map (fun cpkg -> [cpkg.Cudf.package,None]) roots_list in
   aux start_constrs roots_list
 
-let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
+let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
   let open Algo.Diagnostic in
   let depends, reasons =
     List.partition (function Dependency _ -> true | _ -> false) reasons in
@@ -301,7 +277,7 @@ let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
   let reasons =
     List.flatten
       (List.map
-         (strings_of_reason cudf2opam cudf_universe opam_universe)
+         (strings_of_reason cudf2opam unav_reasons cudf_universe)
          reasons) in
   let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
   if reasons <> [] then

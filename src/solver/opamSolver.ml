@@ -300,8 +300,11 @@ let resolve ?(verbose=true) universe ~requested request =
           "Please retry with option --use-internal-solver"
     else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
-  | Conflicts c     -> Conflicts (fun () ->
-      OpamCudf.string_of_reasons cudf2opam simple_universe universe (c ()))
+  | Conflicts c     ->
+    Conflicts (fun get_unav_reasons ->
+        OpamCudf.string_of_reasons
+          cudf2opam get_unav_reasons simple_universe
+          (c ()))
   | Success actions ->
     let all_packages =
       universe.u_available ++ orphan_packages in
@@ -315,7 +318,7 @@ let resolve ?(verbose=true) universe ~requested request =
           ~simple_universe ~complete_universe ~requested actions in
       Success (solution cudf2opam cudf_solution)
     with OpamCudf.Cyclic_actions cycles ->
-      Conflicts (fun () -> print_cycles cycles)
+      Conflicts (fun _ -> print_cycles cycles)
 
 
 let installable universe =
@@ -448,4 +451,4 @@ let sequential_solution universe ~requested actions =
     Success (solution cudf2opam cudf_solution)
 
   with OpamCudf.Cyclic_actions cycles ->
-    Conflicts (fun () -> print_cycles cycles)
+    Conflicts (fun _ -> print_cycles cycles)
