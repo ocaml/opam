@@ -32,14 +32,16 @@ let () =
 
 let confirm fmt =
   Printf.ksprintf (fun msg ->
-    let rec loop () =
-      OpamGlobals.msg "%s [Y/n] %!" msg;
-      if !OpamGlobals.yes then true
-      else match String.lowercase (read_line ()) with
-      | "y" | "yes" | "" -> true
-      | "n" | "no" -> false
-      | _  -> loop ()
-    in loop ()
+    try
+      let rec loop () =
+        OpamGlobals.msg "%s [Y/n] %!" msg;
+        if !OpamGlobals.yes then true
+        else match String.lowercase (read_line ()) with
+          | "y" | "yes" | "" -> true
+          | "n" | "no" -> false
+          | _  -> loop ()
+      in loop ()
+    with End_of_file -> false
   ) fmt
 
 let read fmt =
