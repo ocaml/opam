@@ -64,8 +64,8 @@ let check_solution state = function
     OpamGlobals.exit 4
   | OK actions ->
     List.iter (post_message state) actions
-  | Nothing_to_do
-  | Aborted     -> ()
+  | Nothing_to_do -> ()
+  | Aborted     -> OpamGlobals.exit 1
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -115,22 +115,7 @@ let sanitize_atom_list ?(permissive=false) t atoms =
         packages in
     match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
   in
-  let realversion name v =
-    if v = OpamPackage.Version.pinned then
-      try
-        OpamPackage.version
-          (OpamState.pinning_version t (OpamPackage.pinned name))
-      with Not_found ->
-        OpamGlobals.error_and_exit "Package %s is not pinned."
-          (OpamPackage.Name.to_string name)
-    else v
-  in
-  let atoms =
-    List.rev_map (fun (name,cstr) ->
-        let name = realname name in
-        name, match cstr with Some (op,v) -> Some (op, realversion name v)
-                            | None -> None)
-      atoms in
+  let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
   if permissive then
     check_availability ~permissive t
       (OpamPackage.Set.union t.packages t.installed) atoms
@@ -155,9 +140,7 @@ let display_error (n, error) =
       disp "%s" s in
   match n with
   | To_change (Some o, nv) ->
-    if OpamPackage.is_pinned o || OpamPackage.is_pinned nv then
-      f "switching to" nv
-    else if
+    if
       OpamPackage.Version.compare
         (OpamPackage.version o) (OpamPackage.version nv) < 0
     then
@@ -457,6 +440,7 @@ let parallel_apply t action solution =
           Printf.sprintf
             "Aborting, as the following packages have a cyclic dependency:\n%s"
             (String.concat "\n" (List.map mk strings)) in
+        OpamGlobals.error "%s" msg;
         `Error (Aborted, msg), finalize
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->
         let msg =
@@ -475,7 +459,6 @@ let parallel_apply t action solution =
         fun () ->
           finalize ();
           List.iter display_error errors;
-          (* XXX: we might want to output the sucessful actions as well. *)
           output_json_actions errors
       | e -> `Exception e, finalize
   in
@@ -568,7 +551,7 @@ let print_external_tags t solution =
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation requested solution =
-  !OpamGlobals.fake || !OpamGlobals.yes ||
+  !OpamGlobals.yes ||
   PackageActionGraph.(
     let solution_packages =
       fold_vertex (fun v acc ->
@@ -606,11 +589,13 @@ let apply ?(force = false) t action ~requested solution =
           else None
         )  messages in
       let rewrite nv =
-        let name = OpamPackage.name nv in
-        let pin_nv = OpamState.pinning_version t nv in
-        if OpamState.is_locally_pinned t name &&  pin_nv = nv
-        then OpamPackage.pinned name
-        else pin_nv in
+        let n = OpamPackage.name nv in
+        if OpamState.is_pinned t n then
+          OpamPackage.create n
+            (OpamPackage.Version.of_string
+               (OpamPackage.Version.to_string (OpamPackage.version nv) ^ "*"))
+        else nv
+      in
       OpamSolver.print_solution ~messages ~rewrite solution;
       OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;
@@ -635,6 +620,6 @@ let resolve_and_apply ?(force=false) t action ~requested request =
   match resolve t action ~requested request with
   | Conflicts cs ->
     log "conflict!";
-    OpamGlobals.msg "%s" (cs ());
+    OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
     No_solution
   | Success solution -> apply ~force t action ~requested solution

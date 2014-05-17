@@ -156,21 +156,21 @@ module Switch = struct
 
   let dev_packages_dir t a = root t a / "packages.dev"
 
-  let dev_package t a nv = dev_packages_dir t a / OpamPackage.to_string nv
+  let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
   module Overlay = struct
 
     let dir t a = root t a / "overlay"
 
-    let package t a nv = dir t a / OpamPackage.to_string nv
+    let package t a n = dir t a / OpamPackage.Name.to_string n
 
-    let opam t a nv = package t a nv // "opam"
+    let opam t a n = package t a n // "opam"
 
-    let url t a nv = package t a nv // "url"
+    let url t a n = package t a n // "url"
 
-    let descr t a nv = package t a nv // "descr"
+    let descr t a n = package t a n // "descr"
 
-    let files t a nv = package t a nv / "files"
+    let files t a n = package t a n / "files"
 
   end
 end

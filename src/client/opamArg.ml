@@ -159,7 +159,9 @@ let help_sections = [
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
-  `P "$(i,OPAMCRITERIA) see option --criteria";
+  `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
+      The default value is "^OpamGlobals.default_preferences^". \
+      See also option --criteria");
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see option `--debug'.";
@@ -172,6 +174,10 @@ let help_sections = [
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam config env --switch=SWITCH'.";
+  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
+      when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
+      The default value is "^OpamGlobals.default_upgrade_preferences^". \
+      See also option --criteria");
   `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
@@ -481,9 +487,8 @@ let global_options =
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ["criteria"] "CRITERIA"
-      ("Specify user $(i,preferences) for dependency solving. \
-        This is equivalent to setting $(b,\\$OPAMCRITERIA), \
-        and takes precedence over it if both are specified. \
+      ("Specify user $(i,preferences) for dependency solving for this run. \
+        Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         The default value is "^OpamGlobals.default_upgrade_preferences^
@@ -1318,36 +1323,50 @@ let switch =
 let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) () =
   let doc = pin_doc in
+  let commands = [
+    ["list"]     , `list, "Lists pinned packages.";
+    ["add"]      , `add  ,
+    "`opam pin add NAME TARGET' pins package $(b,NAME) to $(b,TARGET), \
+     which may be a version, a path, or a url. \
+     Use url syntax or $(b,--kind) to explicitely set the kind of pinning. Git \
+     pins may target a specific branch or commit using $(b,#branch) e.g. \
+     $(b,git:///home/me/pkg#testing). If $(b,NAME) is not a known package \
+     name, OPAM will ask if it should be created. This command can also be \
+     used to change the target of an existing pin.";
+    ["remove"]   , `remove,
+    "`opam pin remove NAME' unpins package $(b,NAME), restoring its \
+     definition from the repository, if any.";
+    ["edit"]     , `edit,
+    "`opam pin edit NAME' pops an editor giving you the opportunity to \
+     change the opam file that OPAM will locally use for pinned package \
+     $(b,NAME).";
+  ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command will 'pin' a package to a specific version, or use a \
-        specific source path for installing and upgrading the package.";
-    `P "It is possible to pin a package to a specific git commit/tag/branch \
-        with $(b,opam pin <package> </path/to/git>#<commit>).";
-    `P "By default, local directories will be pinned as `path` backends. \
-        You can change that default choice by forcing a given backend kind \
-        using the $(b,--kind) option.";
-    `P "To list all the currently pinned packages, call the $(b,opam pin) \
-        without arguments or use $(b,--list)."
-  ] in
-
-  let package =
-    let doc = Arg.info ~docv:"PACKAGE" ~doc:"Package name." [] in
-    Arg.(value & pos 0 (some package_name) None & doc) in
-  let pin_option =
-    let doc =
-      Arg.info ~docv:"PIN" ~doc:
-        "Specific version, local path, git or darcs url to pin the package to, \
-         or 'none' to unpin the package." [] in
-    Arg.(value & pos 1 (some string) None & doc) in
+    `P "This command allows local customisation of the packages in a given \
+        switch. A package can be pinned to a specific upstream version, to \
+        a path containing its source, to a version-controlled location or to \
+        an URL. An `opam' file found at the root of the pinned source will \
+        override the package's opam file from the repository, an `opam' \
+        directory will override all its metadata."
+  ] @ mk_subdoc commands in
+  let command, params =
+    if unpin_only then
+      Term.pure (Some `remove),
+      Arg.(value & pos_all string [] & Arg.info [])
+    else
+      mk_subcommands_with_default commands
+        "Without further arguments, acts like `opam pin list'. With a package \
+         name argument, `opam pin add' is assumed." in
   let edit =
-    mk_flag ["e";"edit"] "Edit the OPAM file associated to the given package." in
-  let list = mk_flag ["l";"list"] "List the currently pinned packages." in
-  let remove =
-    if unpin_only then Term.pure true
-    else mk_flag ["u";"unpin"] "Unpin the given package." in
+    mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
+                          `opam pin edit' after pinning." in
+  let remove = (* deprecated unpin flag *)
+    mk_flag ["u";"unpin"] "" in
   let kind =
-    let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
+    let help = "Set the kind of pinning. Must be one of version, \
+                path, git, hg or darcs." in
+    let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
     let kinds = [
       "git"    , `git;
       "darcs"  , `darcs;
@@ -1359,28 +1378,34 @@ let pin ?(unpin_only=false) () =
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
 
-  let pin global_options kind edit remove list package pin =
+  let pin global_options kind edit remove command params =
     apply_global_options global_options;
-    match package, pin, edit, remove, list with
-    | Some n, None,   true,  false, false -> `Ok (Client.PIN.edit n)
-    | Some n, None,   false, true,  false -> `Ok (Client.PIN.unpin n)
-    | None,   None,   false, false, _     -> `Ok (Client.PIN.list ())
-    | Some n, Some "none",   _, _,  false -> `Ok (Client.PIN.unpin n)
-    | Some n, Some p, _    , false, false ->
-      let pin_option = pin_option_of_string ?kind:kind p in
-      `Ok (Client.PIN.pin n ~edit pin_option)
-    | Some n, None, _, _, _ ->
-      `Error (true,
-              Printf.sprintf "Please specify the target to pin package %s to."
-                (OpamPackage.Name.to_string n))
-    | Some _, Some p, _, _, _ ->
-      `Error (true, Printf.sprintf "Extra argument %S" p)
-    | None, _, _, _, _ ->
-      `Error (true, "You need to specify a package name")
+    match command, params with
+    | Some `list, [] | None, [] -> `Ok (Client.PIN.list ())
+    | Some `remove, [n] | Some `default n, ["none"] ->
+      `Ok (Client.PIN.unpin (OpamPackage.Name.of_string n))
+    | Some `default n, [] when remove ->
+      `Ok (Client.PIN.unpin (OpamPackage.Name.of_string n))
+    | Some `edit, [n]  -> `Ok (Client.PIN.edit (OpamPackage.Name.of_string n))
+    | Some `add, name::p | Some `default name, p ->
+      let n = OpamPackage.Name.of_string name in
+      (match p with
+       | [] ->
+         if edit then `Ok (Client.PIN.edit n) else
+           `Error (true,
+                   Printf.sprintf
+                     "Please specify the target to pin package %s to." name)
+       | [p] ->
+         let pin_option = pin_option_of_string ?kind:kind p in
+         `Ok (Client.PIN.pin n ~edit pin_option)
+       | _::p::_ ->
+         `Error (true, Printf.sprintf "Extra argument %S" p))
+    | _, [] -> `Error (true, "Missing argument")
+    | _, _ -> `Error (true, "Too many arguments")
   in
   Term.ret
     Term.(pure pin
-          $global_options $kind $edit $remove $list $package $pin_option),
+          $global_options $kind $edit $remove $command $params),
   term_info "pin" ~doc ~man
 
 (* HELP *)
@@ -1480,7 +1505,7 @@ let commands = [
   config;
   repository; make_command_alias repository "remote";
   switch;
-  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" -u" "unpin";
+  pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   help;
 ]
 

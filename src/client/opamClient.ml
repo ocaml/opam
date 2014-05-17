@@ -147,7 +147,7 @@ let with_switch_backup command f =
   let t = OpamState.load_state command in
   let file = OpamPath.Switch.backup t.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
-  OpamFile.Export.write file (t.installed, t.installed_roots);
+  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -177,13 +177,6 @@ module API = struct
         | _          -> "Available" in
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
     );
-    let names = OpamPackage.Name.Map.mapi (fun name stats ->
-        if OpamState.is_name_installed t name
-        && OpamState.is_pinned t name then
-          { stats with installed_version = Some (OpamPackage.Version.pinned) }
-        else
-          stats
-      ) names in
     let get_version info =
       if depends_on = [] then info.installed_version
       else Some (info.current_version) in
@@ -234,16 +227,20 @@ module API = struct
             if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
               OpamGlobals.colorise `underline name_str
             else name_str in
-          let sversion = match version with
-            | None   -> s_not_installed
-            | Some v -> OpamPackage.Version.to_string v in
-          let colored_version =
-            if version = Some OpamPackage.Version.pinned
-            then OpamGlobals.colorise `blue sversion
-            else OpamGlobals.colorise `magenta sversion in
-          Printf.printf "%s  %s  %s\n"
+          let sversion, colored_version, pinned = match version with
+            | None   -> s_not_installed, s_not_installed, ""
+            | Some v ->
+              let vs = OpamPackage.Version.to_string v in
+              if OpamState.is_pinned t name then
+                vs, OpamGlobals.colorise `blue vs,
+                OpamGlobals.colorise `blue " (pinned)"
+              else
+                vs, OpamGlobals.colorise `magenta vs, ""
+          in
+          Printf.printf "%s  %s%s  %s\n"
             (OpamMisc.indent_left colored_name ~visual:name_str max_n)
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
+            pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
     ) names
 
@@ -268,12 +265,8 @@ module API = struct
             (OpamPackage.to_string nv)
             (String.concat " " (List.map OpamSwitch.to_string aliases)) in
         String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
-      let is_pinned = current_version = OpamPackage.Version.pinned in
 
       let nv = OpamPackage.create name current_version in
-      let nv =
-        if is_pinned then OpamState.pinning_version t nv
-        else nv in
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
@@ -432,13 +425,7 @@ module API = struct
         orphans %% recompile_cone
     in
     (* Pinned versions of packages remain always available *)
-    let orphans =
-      OpamPackage.Set.filter (fun nv ->
-          not (OpamPackage.is_pinned nv ||
-               OpamState.is_pinned t (OpamPackage.name nv) &&
-               OpamState.pinning_version t nv = nv))
-        orphans
-    in
+    let orphans = orphans -- OpamState.pinned_packages t in
     (* Closure *)
     let orphans =
       if not transitive then orphans else
@@ -492,7 +479,7 @@ module API = struct
         Lazy.force t.available_packages -- orphan_versions -- full_orphans) in
     let still_available atom =
       OpamPackage.Set.exists
-        (fun p -> OpamFormula.check atom (OpamState.pinning_version t p))
+        (fun p -> OpamFormula.check atom p)
         available in
     let wish_install = List.filter still_available wish_install in
     let wish_upgrade = List.filter still_available wish_upgrade in
@@ -617,7 +604,7 @@ module API = struct
     match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
-      OpamGlobals.msg "%s" (cs ())
+      OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t))
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
@@ -858,16 +845,15 @@ module API = struct
         let compiler_packages = OpamState.get_compiler_packages t compiler in
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
-        (* Ugly hack to quiet OPAM on base packages *)
-        let display_messages = !OpamGlobals.display_messages in
-        OpamGlobals.display_messages := false;
-        let _solution =
+        let solution =
           OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
+            ~requested:compiler_names
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages;
-              criteria = !OpamGlobals.solver_preferences; } in
-        OpamGlobals.display_messages := display_messages;
+              criteria = !OpamGlobals.solver_preferences; }
+        in
+        OpamSolution.check_solution t solution;
         update_setup t
 
       with e ->
@@ -987,7 +973,9 @@ module API = struct
       let solution = OpamSolution.resolve t action ~requested:names request in
       let solution = match solution with
         | Conflicts cs ->
-          log "conflict!"; OpamGlobals.msg "%s" (cs()); No_solution
+          log "conflict!";
+          OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+          No_solution
         | Success solution ->
           if deps_only then (
             let to_install =
@@ -1100,7 +1088,7 @@ module API = struct
   let remove ~autoremove ~force names =
     with_switch_backup "remove" (remove_t ~autoremove ~force names)
 
-  let reinstall_t atoms t =
+  let reinstall_t ?(force=false) atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1108,14 +1096,23 @@ module API = struct
 
     let reinstall, not_installed =
       get_installed_atoms t atoms in
-    if not_installed <> [] then
-      (OpamGlobals.warning "%s %s not installed."
-         (OpamMisc.pretty_list
-            (List.map OpamFormula.short_string_of_atom not_installed))
-         (match not_installed with [_] -> "is" | _ -> "are");
-       if OpamState.confirm "Install ?" then
-         install_t atoms None false t)
-    else
+    let t =
+      if not_installed <> [] then
+        if
+          force ||
+          (OpamGlobals.warning "%s %s not installed."
+             (OpamMisc.pretty_list
+                (List.map OpamFormula.short_string_of_atom not_installed))
+             (match not_installed with [_] -> "is" | _ -> "are");
+           OpamState.confirm "Install ?")
+        then
+          (install_t atoms None false t;
+           if reinstall = [] then OpamGlobals.exit 0
+           else OpamState.load_state "reinstall-installed")
+        else
+          OpamGlobals.exit 1
+      else t
+    in
 
     let reinstall = OpamPackage.Set.of_list reinstall in
     let universe = OpamState.universe t Depends in
@@ -1128,7 +1125,13 @@ module API = struct
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
     let solution =
       OpamSolver.sequential_solution universe ~requested to_process in
-    let solution = OpamSolution.apply t Reinstall ~requested solution in
+    let solution = match solution with
+      | Conflicts cs ->
+        log "conflict!";
+        OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+        No_solution
+      | Success solution ->
+        OpamSolution.apply t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 
   let reinstall names = with_switch_backup "reinstall" (reinstall_t names)
@@ -1136,52 +1139,53 @@ module API = struct
   module PIN = struct
     open OpamPinCommand
 
-    let confirm_reinstall name =
-      OpamState.confirm "%s needs to be reinstalled, do it now ?"
-        (OpamPackage.Name.to_string name)
+    let confirm_reinstall t name =
+      let nv = try Some (OpamState.pinned t name) with Not_found -> None in
+      match nv with
+      | Some nv ->
+        let v = OpamPackage.version nv in
+        if OpamState.confirm "%s needs to be reinstalled, do it now ?"
+            (OpamPackage.Name.to_string name) then
+          if OpamPackage.Set.mem nv t.installed
+          then reinstall_t [name, Some (`Eq,v)] t
+          else install_t [name, Some (`Eq,v)] None false t
+      | None ->
+        if OpamPackage.has_name t.installed name &&
+           not (OpamPackage.has_name (Lazy.force t.available_packages) name) &&
+           OpamState.confirm "%s needs to be removed, do it now ?"
+             (OpamPackage.Name.to_string name)
+        then remove_t ~autoremove:false ~force:false [name, None] t
 
     let pin name ?(edit=false) pin_option =
       let needs_reinstall = pin name pin_option in
       with_switch_backup "pin-reinstall" @@ fun t ->
-      let nv = OpamPackage.pinned name in
       OpamGlobals.msg "\n";
+      let nv = OpamState.pinned t name in
       ignore (OpamState.update_dev_package t nv);
       OpamGlobals.msg "\n";
       let needs_reinstall2 =
-        if edit then OpamPinCommand.edit t name else None in
+        if edit || OpamState.has_empty_opam t nv
+        then OpamPinCommand.edit t name else None in
       match needs_reinstall, needs_reinstall2 with
       | None, None -> ()
-      | Some false, _ | _, Some false ->
-        if confirm_reinstall name then
-          install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
-            None false t
       | _ ->
-        if confirm_reinstall name then
-          reinstall_t [name,None] t
+        let t = OpamState.load_state "pin-reinstall-2" in
+        confirm_reinstall t name
 
     let edit name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
       | None -> ()
-      | Some is_same_version ->
-        if confirm_reinstall name then
-          if is_same_version then
-            reinstall_t [name,None] t
-          else
-            install_t [name, Some (`Eq, OpamPackage.Version.pinned)]
-              None false t
+      | Some true -> confirm_reinstall t name
+      | Some false ->
+        (* Version changed: reload the state to ensure consistency *)
+        let t = OpamState.load_state "pin-edit-2" in
+        confirm_reinstall t name
 
     let unpin name =
-      if unpin name && confirm_reinstall name then
+      if unpin name then
         with_switch_backup "pin-reinstall" @@ fun t ->
-        if
-          try
-            let nv = OpamState.find_installed_package_by_name t name in
-            OpamPackage.Set.mem
-              (OpamState.pinning_version t nv) (Lazy.force t.available_packages)
-          with Not_found -> false
-        then reinstall_t [name,None] t
-        else install_t [name, None] None false t
+        confirm_reinstall t name
 
     let list = list
   end

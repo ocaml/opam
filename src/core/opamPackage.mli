@@ -21,9 +21,6 @@ module Version: sig
 
   include OpamMisc.ABSTRACT
 
-  (** A pinned package version *)
-  val pinned: t
-
   (** Compare two versions using the Debian version scheme *)
   val compare: t -> t -> int
 end
@@ -74,6 +71,9 @@ val of_archive: OpamFilename.t -> t option
 (** Convert a set of pairs to a map [name -> versions] *)
 val to_map: Set.t -> Version.Set.t Name.Map.t
 
+(** Returns the keys in a package map as a package set *)
+val keys: 'a Map.t -> Set.t
+
 (** Extract the versions from a collection of packages *)
 val versions_of_packages: Set.t -> Version.Set.t
 
@@ -82,6 +82,9 @@ val versions_of_name: Set.t -> Name.t -> Version.Set.t
 
 (** Extract the naes from a collection of packages *)
 val names_of_packages: Set.t -> Name.Set.t
+
+(** Returns true if the set contains a package with the given name *)
+val has_name: Set.t -> Name.t -> bool
 
 (** Return all the packages with the given name *)
 val packages_of_name: Set.t -> Name.t -> Set.t
@@ -114,12 +117,6 @@ val prefixes: OpamFilename.Dir.t -> string option Map.t
 (** Unknown package: either the name is unknown, or the version does
     not exist. *)
 val unknown: Name.t -> Version.t option -> 'a
-
-(** Create a pinned package. *)
-val pinned: Name.t -> t
-
-(** Check if a package is pinned. *)
-val is_pinned: t -> bool
 
 (** Parallel executions. *)
 module Parallel: OpamParallel.SIG with type G.V.t = t

@@ -66,6 +66,8 @@ module Action = OpamActionGraph.MakeAction(Pkg)
 module ActionGraph = OpamActionGraph.Make(Action)
 type solution = (Cudf.package, ActionGraph.t) gen_solution
 
+exception Cyclic_actions of Action.t list list
+
 module Map = OpamMisc.Map.Make(Pkg)
 module Set = OpamMisc.Set.Make(Pkg)
 module Graph = struct
@@ -82,9 +84,7 @@ module Graph = struct
   module Topo = Graph.Topological.Make (PG)
 
   let of_universe u =
-    let g = Algo.Defaultgraphs.PackageGraph.dependency_graph u in
-    PO.transitive_reduction g;
-    g
+    Algo.Defaultgraphs.PackageGraph.dependency_graph u
 
   let output g filename =
     let fd = open_out (filename ^ ".dot") in
@@ -144,22 +144,26 @@ let string_of_request r =
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
 
-let vpkg2opam cudf2opam cudf_universe (name,constr) =
-  let name2opam name =
-    OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
-  let cstr2opam name = function
-    | None -> Empty
-    | Some (relop,v) ->
-      try
-        let cpkg = Cudf.lookup_package cudf_universe (name,v) in
-        Atom (relop, OpamPackage.version (cudf2opam cpkg))
-      with Not_found -> Atom (relop, OpamPackage.Version.of_string "??") in
-  name2opam name, cstr2opam name constr
+let vpkg2atom cudf2opam cudf_universe (name,cstr) =
+  match cstr with
+  | None ->
+    OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
+  | Some (relop,v) ->
+    try
+      let nv = cudf2opam (Cudf.lookup_package cudf_universe (name,v)) in
+      OpamPackage.name nv, Some (relop, OpamPackage.version nv)
+    with Not_found ->
+      log "Could not find corresponding version in cudf universe: %a"
+        (slog string_of_atom) (name,cstr);
+      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
+      Some (relop, OpamPackage.Version.of_string ("cudf"^string_of_int v))
 
-let vpkg2opamstr cudf2opam cudf_universe vpkg =
-  OpamFormula.to_string (Atom (vpkg2opam cudf2opam cudf_universe vpkg))
+let vpkg2opam cudf2opam cudf_universe vpkg =
+  match vpkg2atom cudf2opam cudf_universe vpkg with
+  | p, None -> p, Empty
+  | p, Some (relop,v) -> p, Atom (relop, v)
 
-let strings_of_reason cudf2opam cudf_universe opam_universe r =
+let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
@@ -184,52 +188,24 @@ let strings_of_reason cudf2opam cudf_universe opam_universe r =
         (OpamPackage.to_string nva)
         (OpamPackage.to_string nvb) in
     [str]
-  | Missing (p,m) ->
-    let of_package =
-      if is_dose_request p then "" else
-      let nv = cudf2opam p in
-      Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
-    let pinned_deps, deps =
-      List.partition
-        (fun (p,_) ->
-           let name = OpamPackage.Name.of_string (Common.CudfAdd.decode p) in
-           OpamPackage.Name.Map.mem name opam_universe.u_pinned)
-        m in
-    let pinned_deps =
-      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) pinned_deps in
+  | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
+    List.map (fun p ->
+        unav_reasons (vpkg2atom cudf2opam cudf_universe p)
+      ) missing
+  | Missing (p,[missing]) -> (* Dependency missing *)
+    [Printf.sprintf "Unavailable dependency of %s: %s"
+       (OpamPackage.to_string (cudf2opam p))
+       (unav_reasons (vpkg2atom cudf2opam cudf_universe missing))]
+  | Missing (p,missing) -> (* Dependencies missing *)
+    let head =
+      Printf.sprintf
+        "The following dependencies of package %s are not available:"
+        (OpamPackage.to_string (cudf2opam p)) in
     let deps =
-      List.rev_map (vpkg2opamstr cudf2opam cudf_universe) deps in
-    (* XXX This duplicates some work which is better done in
-       OpamState.unavailable_reason. Factor it and pass the function as argument
-       to this function ? *)
-    let str = [] in
-    let str =
-      if pinned_deps <> [] then
-        let dependencies, are, s, have =
-          if List.length pinned_deps > 1 then "dependencies", "are", "s", "have"
-          else "dependency", "is", "", "has" in
-        Printf.sprintf
-          "The %s %s%s %s not available because the package%s %s been pinned"
-          dependencies
-          (OpamMisc.pretty_list pinned_deps)
-          of_package
-          are s have
-        :: str
-      else str in
-    let str =
-      if deps <> [] then
-        let dependencies, are =
-          if List.length deps > 1 then "dependencies", "are"
-          else "dependency", "is" in
-        Printf.sprintf
-          "The %s %s%s %s not available for your compiler or OS"
-          dependencies
-          (OpamMisc.pretty_list deps)
-          of_package
-          are
-        :: str
-      else str in
-    List.rev str
+      List.map (fun p ->
+          "    - " ^ unav_reasons (vpkg2atom cudf2opam cudf_universe p)
+        ) missing in
+    [String.concat "\n" (head::deps)]
   | Dependency _  -> []
 
 let make_chains cudf_universe cudf2opam depends =
@@ -293,7 +269,7 @@ let make_chains cudf_universe cudf2opam depends =
     List.map (fun cpkg -> [cpkg.Cudf.package,None]) roots_list in
   aux start_constrs roots_list
 
-let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
+let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
   let open Algo.Diagnostic in
   let depends, reasons =
     List.partition (function Dependency _ -> true | _ -> false) reasons in
@@ -301,7 +277,7 @@ let string_of_reasons cudf2opam cudf_universe opam_universe reasons =
   let reasons =
     List.flatten
       (List.map
-         (strings_of_reason cudf2opam cudf_universe opam_universe)
+         (strings_of_reason cudf2opam unav_reasons cudf_universe)
          reasons) in
   let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
   if reasons <> [] then
@@ -333,7 +309,6 @@ let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 let s_builddep = "build-dep"
 let s_pinned = "pinned"
-let s_criteria = "criteria"
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
@@ -355,7 +330,6 @@ let default_preamble =
     (s_installed_root, `Bool (Some false));
     (s_builddep,       `Bool (Some false));
     (s_pinned,         `Bool (Some false));
-    (s_criteria,       `String None);
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
@@ -396,13 +370,8 @@ let to_cudf univ req = (
     install         = req.wish_install;
     remove          = req.wish_remove;
     upgrade         = req.wish_upgrade;
-    req_extra       = [s_criteria, `String req.criteria] }
+    req_extra       = [] }
 )
-
-let get_criteria (_,_,cudf_req) =
-  match Cudf.lookup_typed_request_property cudf_req s_criteria with
-  | `String c -> c
-  | _ -> assert false
 
 let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver)
 
@@ -412,7 +381,8 @@ let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
 
 let solver_calls = ref 0
 
-let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) = function
+let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
+  function
   | None   -> None
   | Some f ->
     ignore ( version_map: int OpamPackage.Map.t );
@@ -420,7 +390,7 @@ let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) = function
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     if extern then
-      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) (get_criteria cudf)
+      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) criteria
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -440,16 +410,20 @@ let dump_cudf_error ~extern ~version_map univ req =
       let (/) = Filename.concat in
       !OpamGlobals.root_dir / "log" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
-  match dump_cudf_request ~extern (to_cudf univ req) ~version_map (Some cudf_file) with
+  match
+    dump_cudf_request ~extern (to_cudf univ req) ~version_map req.criteria
+      (Some cudf_file)
+  with
   | Some f -> f
   | None -> assert false
 
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
-  ignore (dump_cudf_request ~extern:true ~version_map cudf_request !OpamGlobals.cudf_file);
   if Cudf.universe_size univ > 0 then begin
-    let cmd = external_solver_command() in
     let criteria = req.criteria in
+    ignore (dump_cudf_request ~extern:true ~version_map cudf_request
+              criteria !OpamGlobals.cudf_file);
+    let cmd = external_solver_command() in
     try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
     with e ->
       OpamMisc.fatal e;
@@ -565,6 +539,33 @@ let create_graph filter universe =
   let u = Cudf.load_universe pkgs in
   Graph.of_universe u
 
+let find_cycles g =
+  let open ActionGraph in
+  let roots =
+    fold_vertex (fun v acc -> if in_degree g v = 0 then v::acc else acc) g [] in
+  let roots =
+    if roots = [] then fold_vertex (fun v acc -> v::acc) g []
+    else roots in
+  let rec prefix_find acc v = function
+    | x::_ when x = v -> Some (x::acc)
+    | x::r -> prefix_find (x::acc) v r
+    | [] -> None in
+  let seen = Hashtbl.create 17 in
+  let rec follow v path =
+    match prefix_find [] v path with
+    | Some cycle ->
+      Hashtbl.add seen v ();
+      [cycle@[v]]
+    | None ->
+      if Hashtbl.mem seen v then [] else
+        let path = v::path in
+        Hashtbl.add seen v ();
+        List.fold_left (fun acc s -> follow s path @ acc) []
+          (succ g v) in
+  List.fold_left (fun cycles root ->
+    follow root [] @ cycles
+  ) [] roots
+
 let action_graph_of_packages actions packages =
   let g = ActionGraph.create () in
   Map.iter (fun _ act -> ActionGraph.add_vertex g act) actions;
@@ -575,6 +576,10 @@ let action_graph_of_packages actions packages =
         ActionGraph.add_edge g v1 v2
       with Not_found -> ())
     packages;
+  (match find_cycles g with
+  | [] -> ()
+  | cycles -> raise (Cyclic_actions cycles)
+  );
   g
 
 (* Compute the original causes of the actions, from the original set of

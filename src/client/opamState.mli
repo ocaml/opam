@@ -338,6 +338,10 @@ val update_dev_package: state -> package -> package_set
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool
 
+(** May be used to check if a given package metadata has just been
+    initialised. Also returns [true] if there is no opam overlay. *)
+val has_empty_opam: state -> package -> bool
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)
@@ -356,28 +360,25 @@ val is_pinned: state -> name -> bool
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
-(** Returns the versionned package corresponding to the version the package has
-    been pinned to. If not pinned, returns [package] unchanged *)
-val pinning_version: state -> package -> package
+(** Returns the versionned pinned package. @raise Not_found if not pinned *)
+val pinned: state -> name -> package
+
+(** Returns the versionned pinned package. @raise Not_found if not pinned *)
+val pinned_opt: state -> name -> package option
+
+(** The set of pinned packages in the state (warning: costly) *)
+val pinned_packages: state -> package_set
 
 (** Return the URL file associated with a locally pinned package. *)
 val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t
 
-(** Return the repository associtated with a locally pinned
-    package. *)
-val repository_of_locally_pinned_package: state -> name -> repository
-
 (** {2 Overlays} *)
-
-(** Compute the overlay package for a given name. It return the higher
-    package available with this name.  *)
-val overlay_of_name: state -> name -> package
 
 (** Add overlay files for a pinned package *)
 val add_pinned_overlay: state -> name -> unit
 
 (** Remove all overlay files *)
-val remove_overlay: state -> package -> unit
+val remove_overlay: state -> name -> unit
 
 (** {2 System compilers} *)
 

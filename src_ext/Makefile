@@ -11,14 +11,14 @@ MD5_re = 5cbfc137683ef2b0e91f931577f2e673
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.3.tbz
 MD5_cmdliner = d63dd3b03966d65fc242246859c831c7
 
-URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.3.tar.gz
-MD5_graph = ad2dc42f74c77dae9302c40cf2b5ff86
+URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
+MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/31910/cudf-0.6.3.tar.gz
-MD5_cudf = 40c4e2c50ea96d0c9e565db16d20639a
+URL_cudf = https://gforge.inria.fr/frs/download.php/33593/cudf-0.7.tar.gz
+MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
-URL_dose = https://gforge.inria.fr/frs/download.php/31595/dose3-3.1.2.tar.gz
-MD5_dose = e98ff720fcc3873def46c85c6a980a1b
+URL_dose = https://gforge.inria.fr/frs/download.php/33607/dose3-3.2-rc2.tar.gz
+MD5_dose = f2d229129f03ad0971fc9d68f4a90898
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
@@ -170,8 +170,8 @@ export PROJ_dose_common
 
 SRC_dose_debian = architecture.ml format822.ml format822_parser.mly		\
 packages_parser.mly version.ml packages_lexer.mll format822_lexer.mll		\
-packages.ml release.ml sources.ml evolution.ml debutil.ml debcudf.ml apt.ml	\
-edsp.ml
+packages.ml release.ml sources.ml printer.ml evolution.ml debutil.ml debcudf.ml \
+apt.ml edsp.ml
 
 define PROJ_dose_debian
   SOURCES = $(call addmli,dose/deb,$(SRC_dose_debian))
@@ -181,7 +181,7 @@ define PROJ_dose_debian
 endef
 export PROJ_dose_debian
 
-SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml dominator.ml	\
+SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml		\
 dominators.ml flatten.ml statistics.ml depsolver_int.ml depsolver.ml		\
 strongconflicts_int.ml strongconflicts.ml strongdeps_int.ml strongdeps.ml
 

@@ -1,0 +1,589 @@
+diff -Nurp dose3-3.1.5-rc1/algo/defaultgraphs.ml dose-file/algo/defaultgraphs.ml
+--- dose3-3.1.5-rc1/algo/defaultgraphs.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/defaultgraphs.ml	2014-04-13 00:18:04.572923168 +0200
+@@ -16,7 +16,7 @@ open ExtLib
+ open Graph
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/defaultgraphs.ml" end) ;;
+ 
+ let tr_timer = Util.Timer.create "Defaultgraph.GraphOper.transitive_reduction"
+ let trbar = Util.Progress.create "Defaultgraph.GraphOper.transitive_reduction"
+diff -Nurp dose3-3.1.5-rc1/algo/depsolver_int.ml dose-file/algo/depsolver_int.ml
+--- dose3-3.1.5-rc1/algo/depsolver_int.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/depsolver_int.ml	2014-04-13 00:18:04.576923201 +0200
+@@ -32,7 +32,7 @@ open Common
+ let progressbar_init = Util.Progress.create "Depsolver_int.init_solver"
+ let progressbar_univcheck = Util.Progress.create "Depsolver_int.univcheck"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/depsolver_int.ml" end) ;;
+ 
+ module R = struct type reason = Diagnostic_int.reason end
+ module S = EdosSolver.M(R)
+diff -Nurp dose3-3.1.5-rc1/algo/depsolver.ml dose-file/algo/depsolver.ml
+--- dose3-3.1.5-rc1/algo/depsolver.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/depsolver.ml	2014-04-13 00:18:04.580923235 +0200
+@@ -14,7 +14,7 @@ open ExtLib
+ open Common
+ open CudfAdd
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/depsolver.ml" end) ;;
+ 
+ type solver = Depsolver_int.solver
+ 
+diff -Nurp dose3-3.1.5-rc1/algo/diagnostic.ml dose-file/algo/diagnostic.ml
+--- dose3-3.1.5-rc1/algo/diagnostic.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/diagnostic.ml	2014-04-13 00:18:04.592923335 +0200
+@@ -14,7 +14,7 @@ module OcamlHash = Hashtbl
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/diagnostic.ml" end) ;;
+ 
+ (** One un-installability reason for a package *)
+ type reason =
+diff -Nurp dose3-3.1.5-rc1/algo/dominators.ml dose-file/algo/dominators.ml
+--- dose3-3.1.5-rc1/algo/dominators.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/dominators.ml	2014-04-13 00:18:04.596923369 +0200
+@@ -23,7 +23,7 @@ let crtimer = Util.Timer.create "Algo.Do
+ let sdtrtimer = Util.Timer.create "Algo.Dominators.sd_transitive_reduction"
+ let domtrtimer = Util.Timer.create "Algo.Dominators.dom_transitive_reduction"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/dominators.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.GraphOper(G)
+diff -Nurp dose3-3.1.5-rc1/algo/flatten.ml dose-file/algo/flatten.ml
+--- dose3-3.1.5-rc1/algo/flatten.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/flatten.ml	2014-04-13 00:18:04.600923401 +0200
+@@ -6,7 +6,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/flatten.ml" end) ;;
+ 
+ let print_list fmt pr sep l =
+   match l with
+diff -Nurp dose3-3.1.5-rc1/algo/statistics.ml dose-file/algo/statistics.ml
+--- dose3-3.1.5-rc1/algo/statistics.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/statistics.ml	2014-04-13 00:18:04.604923435 +0200
+@@ -22,7 +22,7 @@ open Graph
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/statistics.ml" end) ;;
+ 
+ module Make (G: Sig.I ) = struct
+   module VS = Set.Make (G.V)
+diff -Nurp dose3-3.1.5-rc1/algo/strongconflicts_int.ml dose-file/algo/strongconflicts_int.ml
+--- dose3-3.1.5-rc1/algo/strongconflicts_int.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/strongconflicts_int.ml	2014-04-13 00:18:04.608923469 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongconflicts_int.ml" end) ;;
+ 
+ module SG = Defaultgraphs.IntPkgGraph.G
+ module PkgV = Defaultgraphs.IntPkgGraph.PkgV
+diff -Nurp dose3-3.1.5-rc1/algo/strongconflicts.ml dose-file/algo/strongconflicts.ml
+--- dose3-3.1.5-rc1/algo/strongconflicts.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/strongconflicts.ml	2014-04-13 00:18:04.608923469 +0200
+@@ -14,7 +14,7 @@ open Common
+ open CudfAdd
+ open Defaultgraphs
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongconflicts.ml" end) ;;
+ 
+ module ICG = Strongconflicts_int.CG
+ 
+diff -Nurp dose3-3.1.5-rc1/algo/strongdeps_int.ml dose-file/algo/strongdeps_int.ml
+--- dose3-3.1.5-rc1/algo/strongdeps_int.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/strongdeps_int.ml	2014-04-13 00:18:04.612923502 +0200
+@@ -20,7 +20,7 @@ let conjbar = Util.Progress.create "Stro
+ let strongtimer = Util.Timer.create "Strongdeps_int.strong"
+ let conjtimer = Util.Timer.create "Strongdeps_int.conjdep"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongdeps_int.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.PackageGraph.O
+diff -Nurp dose3-3.1.5-rc1/algo/strongdeps.ml dose-file/algo/strongdeps.ml
+--- dose3-3.1.5-rc1/algo/strongdeps.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/algo/strongdeps.ml	2014-04-13 00:18:04.616923535 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongdeps.ml" end) ;;
+ 
+ (** [strongdeps u l] build the strong dependency graph of all packages in 
+     [l] wrt the universe [u] *)
+diff -Nurp dose3-3.1.5-rc1/applications/ceve.ml dose-file/applications/ceve.ml
+--- dose3-3.1.5-rc1/applications/ceve.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/ceve.ml	2014-04-13 00:18:04.628923635 +0200
+@@ -15,7 +15,7 @@ open ExtLib
+ open Common
+ open Algo
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/ceve.ml" end) ;;
+ 
+ IFDEF HASOCAMLGRAPH THEN
+   module DGraph = Defaultgraphs.SyntacticDependencyGraph
+@@ -274,4 +274,4 @@ END
+   in output [plist]
+ ;;
+ 
+-Boilerplate.if_application ~alternatives:["dose-ceve";"ceve"] __FILE__ (fun () -> main (); 0) ;;
++Boilerplate.if_application ~alternatives:["dose-ceve";"ceve"] "applications/ceve.ml" (fun () -> main (); 0) ;;
+diff -Nurp dose3-3.1.5-rc1/applications/challenged.ml dose-file/applications/challenged.ml
+--- dose3-3.1.5-rc1/applications/challenged.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/challenged.ml	2014-04-13 00:18:04.632923669 +0200
+@@ -19,7 +19,7 @@ open Algo
+ module Boilerplate = BoilerplateNoRpm
+ 
+ let predbar = Util.Progress.create "challenged" ;;
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/challenged.ml" end) ;;
+ 
+ module Options = struct
+   open OptParse
+@@ -335,4 +335,4 @@ let main () =
+ 
+ Boilerplate.if_application 
+ ~alternatives:["dose-challenged";"dose3-challenged";"edos-challenged";"deb-challenged"]
+-__FILE__ main ;;
++"applications/challenged.ml" main ;;
+diff -Nurp dose3-3.1.5-rc1/applications/deb-buildcheck.ml dose-file/applications/deb-buildcheck.ml
+--- dose3-3.1.5-rc1/applications/deb-buildcheck.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/deb-buildcheck.ml	2014-04-13 00:18:04.636923703 +0200
+@@ -49,7 +49,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/deb-buildcheck.ml" end) ;;
+ 
+ let timer = Util.Timer.create "Solver"
+ 
+@@ -184,5 +184,5 @@ Boilerplate.if_application
+     "deb-buildcheck"; "debbuildcheck";"dose-builddebcheck";
+     "deb-crossbuildcheck";"debcrossbuildcheck";
+     "dose-debcrossbuildcheck"]
+-  __FILE__ main
++  "applications/deb-buildcheck.ml" main
+ ;;
+diff -Nurp dose3-3.1.5-rc1/applications/deb-coinstall.ml dose-file/applications/deb-coinstall.ml
+--- dose3-3.1.5-rc1/applications/deb-coinstall.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/deb-coinstall.ml	2014-04-13 00:18:04.640923736 +0200
+@@ -52,7 +52,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/deb-coinstall.ml" end) ;;
+ 
+ let timer = Util.Timer.create "Solver" 
+ 
+@@ -238,5 +238,5 @@ let main () =
+ ;;
+ 
+ Boilerplate.if_application
+-~alternatives:["dose-debcoinstall";"deb-coinstall"] __FILE__ main ;;
++~alternatives:["dose-debcoinstall";"deb-coinstall"] "applications/deb-coinstall.ml" main ;;
+ 
+diff -Nurp dose3-3.1.5-rc1/applications/distcheck.ml dose-file/applications/distcheck.ml
+--- dose3-3.1.5-rc1/applications/distcheck.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/distcheck.ml	2014-04-13 00:18:04.640923736 +0200
+@@ -41,7 +41,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/distcheck.ml" end) ;;
+ 
+ let timer = Util.Timer.create "Solver" 
+ 
+@@ -193,5 +193,5 @@ Boilerplate.if_application
+   "debcheck";"dose-debcheck"; "dose-distcheck";
+   "eclipsecheck";"dose-eclipsecheck";
+   "rpmcheck";"dose-rpmcheck"]
+-__FILE__ main ;;
++"applications/distcheck.ml" main ;;
+ 
+diff -Nurp dose3-3.1.5-rc1/applications/dominators-graph.ml dose-file/applications/dominators-graph.ml
+--- dose3-3.1.5-rc1/applications/dominators-graph.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/dominators-graph.ml	2014-04-13 00:18:04.644923768 +0200
+@@ -39,7 +39,7 @@ end
+ 
+ (* ----------------------------------- *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/dominators-graph.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.PackageGraph.O
+diff -Nurp dose3-3.1.5-rc1/applications/outdated.ml dose-file/applications/outdated.ml
+--- dose3-3.1.5-rc1/applications/outdated.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/outdated.ml	2014-04-13 00:18:04.648923802 +0200
+@@ -19,7 +19,7 @@ open Common
+ open Algo
+ module Boilerplate=BoilerplateNoRpm
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/outdated.ml" end) ;;
+ 
+ module Options = struct
+   open OptParse
+@@ -329,5 +329,5 @@ let main () =
+ 
+ Boilerplate.if_application
+ ~alternatives:["dose-outdated";"dose3-outdated";"edos-outdated";"deb-outdated"] 
+-__FILE__ main ;;
++"applications/outdated.ml" main ;;
+ 
+diff -Nurp dose3-3.1.5-rc1/applications/smallworld.ml dose-file/applications/smallworld.ml
+--- dose3-3.1.5-rc1/applications/smallworld.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/smallworld.ml	2014-04-13 00:18:04.648923802 +0200
+@@ -50,7 +50,7 @@ module Options = struct
+   add options ~long_name:"trim" ~help:"Consider only installable packages" trim;
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/smallworld.ml" end) ;;
+ 
+ (**********************************)
+ 
+diff -Nurp dose3-3.1.5-rc1/applications/strong-deps.ml dose-file/applications/strong-deps.ml
+--- dose3-3.1.5-rc1/applications/strong-deps.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/applications/strong-deps.ml	2014-04-13 00:18:04.652923836 +0200
+@@ -36,7 +36,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/strong-deps.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.GraphOper(G)
+diff -Nurp dose3-3.1.5-rc1/common/cudfAdd.ml dose-file/common/cudfAdd.ml
+--- dose3-3.1.5-rc1/common/cudfAdd.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/cudfAdd.ml	2014-04-13 00:18:04.656923870 +0200
+@@ -18,7 +18,7 @@ module OCAMLHashtbl = Hashtbl
+ open ExtLib
+ 
+ (* Include internal debugging functions for this module (debug, info, warning, fatal). *)
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/cudfAdd.ml" end) ;;
+ 
+ let equal = Cudf.(=%)
+ let compare = Cudf.(<%)
+diff -Nurp dose3-3.1.5-rc1/common/cudfSolver.ml dose-file/common/cudfSolver.ml
+--- dose3-3.1.5-rc1/common/cudfSolver.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/cudfSolver.ml	2014-04-13 00:18:04.660923904 +0200
+@@ -15,7 +15,7 @@
+ module Pcre = Re_pcre
+ 
+ open ExtLib
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/cudfSolver.ml" end) ;;
+ 
+ let check_fail file =
+   let ic = open_in file in
+diff -Nurp dose3-3.1.5-rc1/common/edosSolver.ml dose-file/common/edosSolver.ml
+--- dose3-3.1.5-rc1/common/edosSolver.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/edosSolver.ml	2014-04-13 00:18:04.664923937 +0200
+@@ -47,7 +47,7 @@ module type T = sig
+   val pboidx : state -> int -> int -> int
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/edosSolver.ml" end) ;;
+ 
+ module IntHash = 
+   Hashtbl.Make (struct
+diff -Nurp dose3-3.1.5-rc1/common/input.ml dose-file/common/input.ml
+--- dose3-3.1.5-rc1/common/input.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/input.ml	2014-04-13 00:18:04.676924036 +0200
+@@ -12,7 +12,7 @@
+ 
+ open ExtLib
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/input.ml" end) ;;
+ 
+ let gzip_open_file file =
+ IFDEF HASZIP THEN
+diff -Nurp dose3-3.1.5-rc1/common/url.ml dose-file/common/url.ml
+--- dose3-3.1.5-rc1/common/url.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/url.ml	2014-04-13 00:18:04.684924104 +0200
+@@ -12,7 +12,7 @@
+ 
+ exception Invalid_url of string;;
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/url.ml" end) ;;
+ 
+ (***********************************************************************)
+ (* Input schemes *******************************************************)
+diff -Nurp dose3-3.1.5-rc1/common/util.ml dose-file/common/util.ml
+--- dose3-3.1.5-rc1/common/util.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/util.ml	2014-04-13 00:18:04.692924169 +0200
+@@ -152,7 +152,7 @@ module Logging(X : sig val label : strin
+     Printf.kprintf (fun s -> Printf.eprintf "%s\n %s\n%!" l s; exit (64)) fmt
+ end
+ 
+-include Logging(struct let label = __FILE__ end) ;;
++include Logging(struct let label = "common/util.ml" end) ;;
+ 
+ (** Printf bars are printed immediately on stderr.
+  * they can be enabled or disabled (default) *)
+diff -Nurp dose3-3.1.5-rc1/common/util.mli dose-file/common/util.mli
+--- dose3-3.1.5-rc1/common/util.mli	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/common/util.mli	2014-04-13 00:18:04.696924203 +0200
+@@ -82,7 +82,7 @@ module Notice : Messages
+ *)
+ 
+ (* 
+-  include Util.Logging(struct let label = __FILE__ end) ;;
++  include Util.Logging(struct let label = "common/util.mli" end) ;;
+ *)
+ module Logging :
+   functor (X : sig val label : string end) ->
+diff -Nurp dose3-3.1.5-rc1/deb/apt.ml dose-file/deb/apt.ml
+--- dose3-3.1.5-rc1/deb/apt.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/apt.ml	2014-04-13 00:18:04.700924237 +0200
+@@ -16,7 +16,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/apt.ml" end) ;;
+ 
+ let blank_regexp = Pcre.regexp "[ \t]+" ;;
+ 
+diff -Nurp dose3-3.1.5-rc1/deb/debcudf.ml dose-file/deb/debcudf.ml
+--- dose3-3.1.5-rc1/deb/debcudf.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/debcudf.ml	2014-04-13 00:18:04.712924337 +0200
+@@ -18,7 +18,7 @@ open ExtLib
+ open Common
+ open Packages
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/debcudf.ml" end) ;;
+ module SMap = Map.Make (String)
+ 
+ type tables = {
+diff -Nurp dose3-3.1.5-rc1/deb/debutil.ml dose-file/deb/debutil.ml
+--- dose3-3.1.5-rc1/deb/debutil.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/debutil.ml	2014-04-13 00:18:04.724924437 +0200
+@@ -13,7 +13,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/debutil.ml" end) ;;
+ 
+ let get_source pkg =
+   match pkg.Packages.source with
+diff -Nurp dose3-3.1.5-rc1/deb/edsp.ml dose-file/deb/edsp.ml
+--- dose3-3.1.5-rc1/deb/edsp.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/edsp.ml	2014-04-13 00:18:04.728924471 +0200
+@@ -16,7 +16,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/edsp.ml" end) ;;
+ 
+ type request = {
+   request : string;
+diff -Nurp dose3-3.1.5-rc1/deb/format822.ml dose-file/deb/format822.ml
+--- dose3-3.1.5-rc1/deb/format822.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/format822.ml	2014-04-13 00:18:04.736924537 +0200
+@@ -13,7 +13,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/format822.ml" end) ;;
+ 
+ type loc = Lexing.position * Lexing.position
+ let dummy_loc: loc = Lexing.dummy_pos, Lexing.dummy_pos
+diff -Nurp dose3-3.1.5-rc1/deb/packages.ml dose-file/deb/packages.ml
+--- dose3-3.1.5-rc1/deb/packages.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/packages.ml	2014-04-13 00:18:04.744924605 +0200
+@@ -20,7 +20,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/packages.ml" end) ;;
+ 
+ (** debian package format *)
+ type package = {
+diff -Nurp dose3-3.1.5-rc1/deb/sources.ml dose-file/deb/sources.ml
+--- dose3-3.1.5-rc1/deb/sources.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/deb/sources.ml	2014-04-13 00:18:04.760924738 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/sources.ml" end) ;;
+ 
+ type source = {
+   name : Format822.name;
+diff -Nurp dose3-3.1.5-rc1/doseparse/stdDebug.ml dose-file/doseparse/stdDebug.ml
+--- dose3-3.1.5-rc1/doseparse/stdDebug.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/doseparse/stdDebug.ml	2014-04-13 00:18:04.780924906 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "doseparse/stdDebug.ml" end) ;;
+ 
+ let enable_debug = function
+   |0 -> () (* only warning messages : default *)
+diff -Nurp dose3-3.1.5-rc1/doseparse/stdLoaders.ml dose-file/doseparse/stdLoaders.ml
+--- dose3-3.1.5-rc1/doseparse/stdLoaders.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/doseparse/stdLoaders.ml	2014-04-13 00:18:04.780924906 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "doseparse/stdLoaders.ml" end) ;;
+ 
+ (** read a debian Packages file - compressed or not *)
+ let read_deb ?filter ?(extras=[]) fname =
+diff -Nurp dose3-3.1.5-rc1/doseparse/stdOptions.ml dose-file/doseparse/stdOptions.ml
+--- dose3-3.1.5-rc1/doseparse/stdOptions.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/doseparse/stdOptions.ml	2014-04-13 00:18:04.784924938 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "doseparse/stdOptions.ml" end) ;;
+ 
+ module type Ot = sig
+   val options :
+diff -Nurp dose3-3.1.5-rc1/eclipse/packages.ml dose-file/eclipse/packages.ml
+--- dose3-3.1.5-rc1/eclipse/packages.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/eclipse/packages.ml	2014-04-13 00:18:04.792925006 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "eclipse/packages.ml" end) ;;
+ 
+ (** strip down version of the debian package format *)
+ type package = {
+diff -Nurp dose3-3.1.5-rc1/eclipse/version.ml dose-file/eclipse/version.ml
+--- dose3-3.1.5-rc1/eclipse/version.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/eclipse/version.ml	2014-04-13 00:18:04.792925006 +0200
+@@ -21,7 +21,7 @@ open Common
+  alpha ::= [a..zA..Z]
+ *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "eclipse/version.ml" end) ;;
+ 
+ let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+diff -Nurp dose3-3.1.5-rc1/opencsw/packages.ml dose-file/opencsw/packages.ml
+--- dose3-3.1.5-rc1/opencsw/packages.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/opencsw/packages.ml	2014-04-13 00:18:04.800925072 +0200
+@@ -17,7 +17,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "opencsw/packages.ml" end) ;;
+ 
+ type name = string
+ type version = string
+@@ -45,7 +45,7 @@ module Set = Set.Make(struct
+ end)
+ 
+ let input_raw_priv parse_packages files =
+-  let timer = Util.Timer.create __FILE__ in
++  let timer = Util.Timer.create "opencsw/packages.ml" in
+   Util.Timer.start timer;
+   if List.length files > 1 then info "Merging input lists" ;
+   let s =
+diff -Nurp dose3-3.1.5-rc1/opencsw/version.ml dose-file/opencsw/version.ml
+--- dose3-3.1.5-rc1/opencsw/version.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/opencsw/version.ml	2014-04-13 00:18:04.804925106 +0200
+@@ -23,7 +23,7 @@ open Common
+  alpha ::= [a..zA..Z]
+ *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "opencsw/version.ml" end) ;;
+ 
+ let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+diff -Nurp dose3-3.1.5-rc1/rpm/hdlists.ml dose-file/rpm/hdlists.ml
+--- dose3-3.1.5-rc1/rpm/hdlists.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/rpm/hdlists.ml	2014-04-13 00:18:04.808925140 +0200
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/hdlists.ml" end) ;;
+ 
+ let progressbar = Util.Progress.create "Rpm.Parse.Hdlists.parse_822_iter" ;;
+ Util.Progress.set_total progressbar 8000 (* estimate *) ;
+diff -Nurp dose3-3.1.5-rc1/rpm/packages.ml dose-file/rpm/packages.ml
+--- dose3-3.1.5-rc1/rpm/packages.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/rpm/packages.ml	2014-04-13 00:18:04.808925140 +0200
+@@ -14,7 +14,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/packages.ml" end) ;;
+ 
+ type name = string
+ type version = string
+diff -Nurp dose3-3.1.5-rc1/rpm/rpmcudf.ml dose-file/rpm/rpmcudf.ml
+--- dose3-3.1.5-rc1/rpm/rpmcudf.ml	2014-04-12 14:16:17.000000000 +0200
++++ dose-file/rpm/rpmcudf.ml	2014-04-13 00:18:04.812925173 +0200
+@@ -14,7 +14,7 @@ open ExtLib
+ open ExtString
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/rpmcudf.ml" end) ;;
+ 
+ type tables = {
+   units : (Packages.name, (int * (Packages.rel * string)) list) Hashtbl.t;
+diff -Nurp dose3-3.2-rc2/deb/architecture.ml dose/deb/architecture.ml
+--- dose3-3.2-rc2/deb/architecture.ml   2014-05-02 17:21:51.000000000 +0200
++++ dose/deb/architecture.ml    2014-05-02 18:19:14.820540842 +0200
+@@ -19,7 +19,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/architecture.ml" end) ;;
+ 
+ (* first column of /usr/share/dpkg/cputable *)
+ let cpulist = ref [ "i386"; "ia64"; "alpha"; "amd64"; "armeb"; "arm"; "arm64"; "avr32";

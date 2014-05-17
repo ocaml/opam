@@ -215,7 +215,7 @@ module Switch: sig
 
   (** Build dir for a given pinned package: {i
       $opam/$switch/packages.dev/$name.$version/} *)
-  val dev_package: t -> switch -> package -> dirname
+  val dev_package: t -> switch -> name -> dirname
 
   module Overlay: sig
     (** Switch metadata overlay (over the global metadata): {i
@@ -224,21 +224,21 @@ module Switch: sig
 
     (** Switch metadata overlay (over the global metadata): {i
         $opam/$switch/overlay/$name.$version} *)
-    val package: t -> switch -> package -> dirname
+    val package: t -> switch -> name -> dirname
 
     (** OPAM overlay: {i
         $opam/$switch/cache/$name.$version/opam} *)
-    val opam: t -> switch -> package -> filename
+    val opam: t -> switch -> name -> filename
 
     (** URL overlay: {i
         $opam/$switch/overlay/$name.$version/url} *)
-    val url: t -> switch -> package -> filename
+    val url: t -> switch -> name -> filename
 
     (** Descr orverlay *)
-    val descr: t -> switch -> package -> filename
+    val descr: t -> switch -> name -> filename
 
     (** Files overlay *)
-    val files: t -> switch -> package -> dirname
+    val files: t -> switch -> name -> dirname
   end
 end
 

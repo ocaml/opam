@@ -204,7 +204,7 @@ module Make (G : G) : SIG with module G = G
 
     if G.has_cycle !t.graph then (
       let sccs = G.scc_list !t.graph in
-      let sccs = List.filter (fun l -> List.length l > 1) sccs in
+      let sccs = List.filter (function _::_::_ -> true | _ -> false) sccs in
       raise (Cyclic sccs)
     );
 

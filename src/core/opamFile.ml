@@ -362,40 +362,72 @@ module X = struct
 
     let internal = "export"
 
-    type t = package_set * package_set
+    type t = package_set * package_set * pin_option OpamPackage.Name.Map.t
 
-    let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty)
+    let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty, OpamPackage.Name.Map.empty)
 
-    let of_channel _ ic =
+    let of_channel f ic =
       let lines = Lines.of_channel ic in
-      let installed = ref OpamPackage.Set.empty in
-      let roots = ref OpamPackage.Set.empty in
-      let add n v r =
-        let nv = OpamPackage.create (OpamPackage.Name.of_string n)
-            (OpamPackage.Version.of_string v) in
-        installed := OpamPackage.Set.add nv !installed;
-        if r then
-          roots := OpamPackage.Set.add nv !roots;
+      let state = function
+        | "root" -> `Root
+        | "noroot" | "installed" -> `Installed
+        | "uninstalled" -> `Uninstalled
+        | s ->
+          OpamGlobals.error_and_exit "Invalid installation status (col. 3) in %s: %S"
+            (OpamFilename.to_string f) s
       in
-      List.iter (function
-        | []        -> ()
-        | [n; v]    -> add n v true
-        | [n; v; r] -> add n v (r = "root")
-        | l         ->
-          OpamGlobals.error_and_exit
-            "  Invalid line: %s\nThis is not a valid file to import."
-            (String.concat " " l)
-      ) lines;
-      (!installed, !roots)
+      let add (installed,roots,pinned) n v state p =
+        let name = OpamPackage.Name.of_string n in
+        let nv = OpamPackage.create name (OpamPackage.Version.of_string v) in
+        let installed =
+          if state <> `Uninstalled then OpamPackage.Set.add nv installed
+          else installed in
+        let roots =
+          if state = `Root then OpamPackage.Set.add nv roots
+          else roots in
+        let pinned = match p with
+          | None -> pinned
+          | Some (kind,p) ->
+            OpamPackage.Name.Map.add name (pin_option_of_string ~kind p) pinned
+        in
+        installed, roots, pinned
+      in
+      List.fold_left (fun acc -> function
+          | []        -> acc
+          | [n; v]    -> add acc n v `Root None
+          | [n; v; r] -> add acc n v (state r) None
+          | [n; v; r; pk; p] ->
+            add acc n v (state r) (Some (pin_kind_of_string pk,p))
+          | l ->
+            OpamGlobals.error_and_exit "Invalid line in %s: %S"
+              (OpamFilename.to_string f)
+              (String.concat " " l)
+        )
+        (OpamPackage.Set.empty, OpamPackage.Set.empty, OpamPackage.Name.Map.empty)
+        lines
 
-    let to_string _ (installed, roots) =
+    let to_string _ (installed, roots, pinned) =
       let buf = Buffer.create 1024 in
+      let print_pin pin =
+        Printf.sprintf "\t%s\t%s"
+          (string_of_pin_kind (kind_of_pin_option pin))
+          (string_of_pin_option pin) in
       OpamPackage.Set.iter (fun nv ->
-        Printf.bprintf buf "%s %s %s\n"
-          (OpamPackage.Name.to_string (OpamPackage.name nv))
-          (OpamPackage.Version.to_string (OpamPackage.version nv))
-          (if OpamPackage.Set.mem nv roots then "root" else "noroot")
-      ) installed;
+          let name = OpamPackage.name nv in
+          Printf.bprintf buf "%s\t%s\t%s%s\n"
+            (OpamPackage.Name.to_string (OpamPackage.name nv))
+            (OpamPackage.Version.to_string (OpamPackage.version nv))
+            (if OpamPackage.Set.mem nv roots then "root" else "installed")
+            (try print_pin (OpamPackage.Name.Map.find name pinned)
+             with Not_found -> "")
+        ) installed;
+      let installed_names = OpamPackage.names_of_packages installed in
+      OpamPackage.Name.Map.iter (fun name pin ->
+          if not (OpamPackage.Name.Set.mem name installed_names) then
+            Printf.bprintf buf "%s\t--\tuninstalled\t%s\n"
+              (OpamPackage.Name.to_string name)
+              (print_pin pin)
+        ) pinned;
       Buffer.contents buf
 
   end
@@ -998,8 +1030,8 @@ module X = struct
         OpamFormat.make_option (OpamFilename.Base.to_string @> OpamFormat.make_string)
           OpamFormat.make_filter in
       let name_and_version = match OpamPackage.of_filename filename with
-        | Some nv when not (OpamPackage.is_pinned nv) -> []
-        | _ ->
+        | Some _ -> []
+        | None ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
           [ OpamFormat.make_variable (s_name, name (check "name" t.name));
@@ -1077,10 +1109,11 @@ module X = struct
         | None  , Some nv -> Some (OpamPackage.name nv)
         | Some n, Some nv ->
           if OpamPackage.name nv <> n then
-            OpamGlobals.error_and_exit
-              "Package %s, has inconsistent 'name: %S' field."
-              (OpamPackage.to_string nv)
-              (OpamPackage.Name.to_string n)
+            (OpamGlobals.error
+               "Package %s has inconsistent 'name: %S' field."
+               (OpamPackage.to_string nv)
+               (OpamPackage.Name.to_string n);
+             OpamSystem.internal_error "inconsistent name")
           else Some n in
       let version_f = OpamFormat.assoc_option s s_version
           (OpamFormat.parse_string @> OpamPackage.Version.of_string) in
@@ -1089,11 +1122,12 @@ module X = struct
         | Some v, None    -> Some v
         | None  , Some nv -> Some (OpamPackage.version nv)
         | Some v, Some nv ->
-          if OpamPackage.is_pinned nv then Some v
-          else if OpamPackage.version nv <> v then
-            OpamGlobals.error_and_exit
-              "Inconsistent versioning scheme in %s"
-              (OpamFilename.to_string filename)
+          if OpamPackage.version nv <> v then
+            (OpamGlobals.error
+               "Package %s has inconsistent 'version: %S' field."
+               (OpamPackage.to_string nv)
+               (OpamPackage.Version.to_string v);
+             OpamSystem.internal_error "inconsistent version")
           else Some v in
       let maintainer =
         OpamFormat.assoc_list s s_maintainer OpamFormat.parse_string_list in
@@ -1394,10 +1428,7 @@ module X = struct
 
     let create_preinstalled name version packages env =
       let mk n = Atom (n, Empty) in
-      let aux accu t = match accu, t with
-        | Empty, x  -> mk x
-        | _    , x  -> And(accu, mk x) in
-      let packages = List.fold_left aux OpamFormula.Empty packages in
+      let packages = OpamFormula.ands (List.map mk packages) in
       { empty with name; version; preinstalled = true; packages; env }
 
     let s_opam_version = "opam-version"
@@ -1759,6 +1790,7 @@ module Make (F : F) = struct
       | Lexer_error _ | Parsing.Parse_error as e ->
         raise e (* Message already printed *)
       | e ->
+        OpamMisc.fatal e;
         let pos,msg,btl = match e with
           | OpamFormat.Bad_format (Some pos, btl, msg) -> pos, ":\n  "^msg, btl
           | OpamFormat.Bad_format (None, btl, msg) -> (f,-1,-1), ":\n  "^msg, btl

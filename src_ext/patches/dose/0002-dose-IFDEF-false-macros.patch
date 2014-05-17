@@ -1,0 +1,230 @@
+diff -Nurp dose-ifdef/applications/ceve.ml dose/applications/ceve.ml
+--- dose-ifdef/applications/ceve.ml	2014-04-13 00:12:14.866002974 +0200
++++ dose/applications/ceve.ml	2014-04-13 00:21:12.622494182 +0200
+@@ -17,10 +17,10 @@ open Algo
+ 
+ include Util.Logging(struct let label = "applications/ceve.ml" end) ;;
+ 
+-IFDEF HASOCAMLGRAPH THEN
++(* IFDEF HASOCAMLGRAPH THEN
+   module DGraph = Defaultgraphs.SyntacticDependencyGraph
+   module PGraph = Defaultgraphs.PackageGraph
+-END
++(* END *)
+ 
+ module Options = struct
+   open OptParse
+@@ -227,16 +227,16 @@ let main () =
+       |"dimacs" -> Printf.fprintf oc "%s" (Depsolver.output_clauses ~global_constraints ~enc:Depsolver.Dimacs u)
+       |"cudf" -> Cudf_printer.pp_cudf oc doc
+       |"table" ->
+-IFDEF HASOCAMLGRAPH THEN
++(* IFDEF HASOCAMLGRAPH THEN
+         Printf.fprintf oc "%d\t%d\t%d\n"
+         (Cudf.universe_size u) (DGraph.G.nb_edges (DGraph.dependency_graph u))
+         (nr_conflicts u)
+-ELSE
++ELSE *)
+         failwith (Printf.sprintf "format table not supported: needs ocamlgraph")
+-END
++(* END *)
+ 
+       |("dot" | "gml" | "grml") as t -> 
+-IFDEF HASOCAMLGRAPH THEN
++(* IFDEF HASOCAMLGRAPH THEN
+         let fmt = Format.formatter_of_out_channel oc in
+         begin match OptParse.Opt.get Options.grp_type with
+           |"syn" ->
+@@ -264,9 +264,9 @@ IFDEF HASOCAMLGRAPH THEN
+             else assert false
+           |s -> failwith (Printf.sprintf "type %s not supported" s)
+         end
+-ELSE
++ELSE *)
+         failwith (Printf.sprintf "format %s not supported: needs ocamlgraph" t)
+-END
++(* END *)
+       |_ -> assert false
+       end ;
+       close_out oc;
+diff -Nurp dose-ifdef/applications/challenged.ml dose/applications/challenged.ml
+--- dose-ifdef/applications/challenged.ml	2014-04-13 00:12:14.866002974 +0200
++++ dose/applications/challenged.ml	2014-04-13 00:21:12.622494182 +0200
+@@ -30,18 +30,18 @@ module Options = struct
+   let brokenlist = StdOpt.store_true ()
+   let downgrades = StdOpt.store_true ()
+   let cluster = StdOpt.store_true ()
+-IFDEF HASPARMAP THEN
++(* IFDEF HASPARMAP THEN
+   let ncores = StdOpt.int_option ~default:1 ()
+   let chunksize = StdOpt.int_option ()
+-END
++(* END *)
+   open OptParser ;;
+ 
+-IFDEF HASPARMAP THEN
++(* IFDEF HASPARMAP THEN
+   add options ~long_name:"ncores"
+     ~help:"Number of cores to use on a multicore" ncores;
+   add options ~long_name:"chunksize"
+     ~help:"Size of each task executed by the workers (controls granularity)" chunksize;
+-END
++(* END *)
+ 
+   add options ~long_name:"checkonly"
+     ~help:"Check only these package ex. sn1 (=sv1),sn2 (=sv2)" checkonly;
+@@ -228,16 +228,16 @@ let challenged
+   (* computing *)
+   let results = 
+     let map f l =
+-IFDEF HASPARMAP THEN
++(* IFDEF HASPARMAP THEN
+     let ncores = OptParse.Opt.get Options.ncores in
+     match OptParse.Opt.opt Options.chunksize with
+       None ->     
+ 	Parmap.parmap ~ncores f (Parmap.L l)
+     | Some chunksize ->       
+ 	Parmap.parmap ~ncores ~chunksize f (Parmap.L l)
+-ELSE
++ELSE *)
+     List.map f l
+-END
++(* END *)
+     in
+     map (fun ((sn,sv,version),(cluster,vl,constr)) ->
+       let startd=Unix.gettimeofday() in
+diff -Nurp dose-ifdef/common/input.ml dose/common/input.ml
+--- dose-ifdef/common/input.ml	2014-04-13 00:12:14.870003008 +0200
++++ dose/common/input.ml	2014-04-13 00:21:41.950739242 +0200
+@@ -15,7 +15,7 @@ open ExtLib
+ include Util.Logging(struct let label = "" end) ;;
+ 
+ let gzip_open_file file =
+-IFDEF HASZIP THEN
++(* IFDEF HASZIP THEN
+   let ch = Gzip.open_in file in
+   let input_char ch = try Gzip.input_char ch with End_of_file -> raise IO.No_more_input in
+   let read ch = try Gzip.input ch with End_of_file -> raise IO.No_more_input in
+@@ -23,13 +23,13 @@ IFDEF HASZIP THEN
+   ~read:(fun () -> input_char ch)
+   ~input:(read ch)
+   ~close:(fun () -> Gzip.close_in ch)
+-ELSE
++ELSE *)
+     fatal "gzip not supported. re-configure with --with-zip"
+-END
++(* END *)
+ ;;
+ 
+ let bzip_open_file file =
+-IFDEF HASBZ2 THEN
++(* IFDEF HASBZ2 THEN
+   (* workaround to avoid segfault :
+    * http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=602170 *)
+   let _ = Bz2.version in 
+@@ -47,9 +47,9 @@ IFDEF HASBZ2 THEN
+   ~read:(fun () -> input_char ch)
+   ~input:(read ch)
+   ~close:(fun () -> Bz2.close_in ch)
+-ELSE
++ELSE *)
+     fatal "bzip not supported. re-configure with --with-bz2"
+-END
++(* END *)
+ 
+ ;;
+ let std_open_file file = IO.input_channel (open_in file)
+diff -Nurp dose-ifdef/common/input.mli dose/common/input.mli
+--- dose-ifdef/common/input.mli	2014-04-12 14:16:17.000000000 +0200
++++ dose/common/input.mli	2014-04-13 00:22:56.383361232 +0200
+@@ -14,6 +14,7 @@
+ 
+ open ExtLib
+ 
++(*
+ IFDEF HASZIP THEN
+ (** load a file in gzip format
+     @return ExtLib.IO.input channel *)
+@@ -25,6 +26,7 @@ IFDEF HASBZ2 THEN
+     @return ExtLib.IO.input channel *)
+ val bzip_open_file : string -> IO.input
+ END
++*)
+ 
+ (** load a non compressed file  
+     @return ExtLib.IO.input channel *)
+diff -Nurp dose-ifdef/doseparse/stdLoaders.ml dose/doseparse/stdLoaders.ml
+--- dose-ifdef/doseparse/stdLoaders.ml	2014-04-13 00:12:14.870003008 +0200
++++ dose/doseparse/stdLoaders.ml	2014-04-13 00:22:07.218950385 +0200
+@@ -122,7 +122,7 @@ let deb_load_universe options l =
+  * refactor or not refactor ? *)
+ (** transform a list of rpm control stanza into a cudf packages list *)
+ let rpm_load_list dll =
+-IFDEF HASRPM THEN
++(* IFDEF HASRPM THEN
+   let tables =  Rpm.Rpmcudf.init_tables (List.flatten dll) in
+   let cll = 
+     List.map (fun l -> 
+@@ -135,9 +135,9 @@ IFDEF HASRPM THEN
+   let preamble = Rpm.Rpmcudf.preamble in
+   let request = Cudf.default_request in
+   (preamble,cll,request,from_cudf,to_cudf)
+-ELSE
++ELSE *)
+   failwith "librpm not available. re-configure with --with-rpm"
+-END
++(* END *)
+ 
+ (** transform a list of rpm control stanza into a cudf universe *)
+ let rpm_load_universe l =
+@@ -269,7 +269,7 @@ let parse_input ?(options=None) urilist
+   |`Csw, None -> csw_parse_input filelist
+ 
+   |`Hdlist, None -> 
+-IFDEF HASRPM THEN
++(* IFDEF HASRPM THEN
+       let dll = 
+         List.map (fun l ->
+           let filelist = List.map unpack l in
+@@ -277,12 +277,12 @@ IFDEF HASRPM THEN
+         ) filelist 
+       in
+       rpm_load_list dll
+-ELSE
++ELSE *)
+     fatal "hdlist Not supported. re-configure with --with-rpm"
+-END
++(* END *)
+ 
+   |`Synthesis, None -> 
+-IFDEF HASRPM THEN
++(* IFDEF HASRPM THEN
+       let dll = 
+         List.map (fun l ->
+           let filelist = List.map unpack l in
+@@ -290,20 +290,20 @@ IFDEF HASRPM THEN
+         ) filelist
+       in
+       rpm_load_list dll
+-ELSE
++ELSE *)
+     fatal "synthesis input format not supported. re-configure with --with-rpm"
+-END
++(* END *)
+     |s,_ -> fatal "%s Not supported" (Url.scheme_to_string s)
+ ;;
+ 
+ let supported_formats () =
+   let standard = ["cudf://";"deb://";"deb://-";"eclipse://"] in
+   let rpm = 
+-IFDEF HASRPM THEN
++(* IFDEF HASRPM THEN
+      ["hdlist://";"synthesis://"]
+-ELSE
++ELSE *)
+      []
+-END
++(* END *)
+    in
+    standard@rpm
+ ;;

@@ -250,7 +250,8 @@ module Aliases: IO_FILE with type t = compiler switch_map
 
 (** Import/export file. This difference with [installed] is that we
     are explicit about root packages. *)
-module Export: IO_FILE with type t = package_set * package_set
+module Export: IO_FILE with type t =
+  package_set * package_set * pin_option OpamPackage.Name.Map.t
 
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = package_set
