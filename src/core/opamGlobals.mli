@@ -14,11 +14,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* Convention:
-   all the global OPAM variables can be set using environment variables
-   using OPAM<variable> *)
+(** Convention:
+    all the global OPAM variables can be set using environment variables
+    using OPAM<variable> *)
 
 val debug : bool ref
+val debug_level : int ref
 val verbose : bool ref
 val color_tri_state : [> `Always | `Auto | `Never ]
 val color : bool ref
@@ -56,6 +57,7 @@ val default_preferences : string
 val default_upgrade_preferences : string
 val solver_preferences : string ref
 val solver_upgrade_preferences : string ref
+val solver_fixup_preferences : string ref
 val default_external_solver : string
 val external_solver : string ref
 val default_repository_name : string
@@ -86,18 +88,21 @@ type text_style =
     | `white
     | `yellow ]
 
-(* not nestable *)
+(** not nestable *)
 val colorise : text_style -> string -> string
 
 val indent_left : string -> int -> string
 val acolor : text_style -> out_channel -> string -> unit
 val acolor_w : int -> text_style -> out_channel -> string -> unit
 val timestamp : unit -> string
-val log : string -> ('a, out_channel, unit) format -> 'a
 
-(* Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
-   rather than [log "%s" (to_string x)] to avoid costly unneeded
-   stringifications *)
+(** [log section ~level fmt args]. Used for debug messages, default
+    level is 1 *)
+val log : string -> ?level:int -> ('a, out_channel, unit) format -> 'a
+
+(** Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
+    rather than [log "%s" (to_string x)] to avoid costly unneeded
+    stringifications *)
 val slog : ('a -> string) -> out_channel -> 'a -> unit
 
 val error : ('a, unit, string, unit) format4 -> 'a
