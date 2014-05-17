@@ -16,9 +16,6 @@
 
 (** Common types used by other modules *)
 
-(** {2 Exceptions} *)
-exception Lexer_error of string
-
 (** {2 Error and continuation handling} *)
 type 'a success = [ `Successful of 'a ]
 type 'a error = [
