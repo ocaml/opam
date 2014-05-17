@@ -16,6 +16,8 @@
 
 open OpamTypes
 
+exception Lexer_error of string
+
 let download_map fn = function
   | Up_to_date f    -> Up_to_date (fn f)
   | Result  f       -> Result (fn f)

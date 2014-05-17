@@ -17,6 +17,7 @@
 %{
 
 open OpamTypes
+open OpamTypesBase
 
 let get_pos n =
   let pos = Parsing.rhs_start_pos n in
