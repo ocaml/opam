@@ -44,6 +44,7 @@ else
     ./configure
     make lib-ext
     make
+    make opam-check
     make tests > tests.log 2>&1 || (tail -1000 tests.log && exit 1)
     # Let's see basic tasks works
     sudo make install
