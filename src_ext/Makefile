@@ -14,10 +14,10 @@ MD5_cmdliner = d63dd3b03966d65fc242246859c831c7
 URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
 MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/33593/cudf-0.7.tar.gz
+URL_cudf = https://gforge.inria.fr/frs/download.php/file/33593/cudf-0.7.tar.gz
 MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
-URL_dose = https://gforge.inria.fr/frs/download.php/33607/dose3-3.2-rc2.tar.gz
+URL_dose = https://gforge.inria.fr/frs/download.php/file/33607/dose3-3.2-rc2.tar.gz
 MD5_dose = f2d229129f03ad0971fc9d68f4a90898
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
