@@ -192,20 +192,9 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
     List.map (fun p ->
         unav_reasons (vpkg2atom cudf2opam cudf_universe p)
       ) missing
-  | Missing (p,[missing]) -> (* Dependency missing *)
-    [Printf.sprintf "Unavailable dependency of %s: %s"
-       (OpamPackage.to_string (cudf2opam p))
-       (unav_reasons (vpkg2atom cudf2opam cudf_universe missing))]
-  | Missing (p,missing) -> (* Dependencies missing *)
-    let head =
-      Printf.sprintf
-        "The following dependencies of package %s are not available:"
-        (OpamPackage.to_string (cudf2opam p)) in
-    let deps =
-      List.map (fun p ->
-          "    - " ^ unav_reasons (vpkg2atom cudf2opam cudf_universe p)
-        ) missing in
-    [String.concat "\n" (head::deps)]
+  | Missing (_,missing) -> (* Dependencies missing *)
+    List.map (fun m -> unav_reasons (vpkg2atom cudf2opam cudf_universe m))
+      missing
   | Dependency _  -> []
 
 let make_chains cudf_universe cudf2opam depends =
@@ -218,6 +207,15 @@ let make_chains cudf_universe cudf2opam depends =
         | Dependency (i, vpkgl, jl) when not (is_dose_request i) ->
           Set.add i roots,
           List.fold_left (fun notroots j -> Set.add j notroots) notroots jl,
+          map_addlist i jl deps,
+          map_addlist i vpkgl vpkgs
+        | Missing (i, vpkgl) when not (is_dose_request i) ->
+          let jl =
+            List.map (fun (package,_) ->
+                {Cudf.default_package with Cudf.package})
+              vpkgl in
+          Set.add i roots,
+          notroots,
           map_addlist i jl deps,
           map_addlist i vpkgl vpkgs
         | _ -> roots, notroots, deps, vpkgs)
@@ -272,7 +270,8 @@ let make_chains cudf_universe cudf2opam depends =
 let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
   let open Algo.Diagnostic in
   let depends, reasons =
-    List.partition (function Dependency _ -> true | _ -> false) reasons in
+    reasons,
+    List.filter (function Dependency _ -> false | _ -> true) reasons in
   let b = Buffer.create 1024 in
   let reasons =
     List.flatten
@@ -280,22 +279,21 @@ let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
          (strings_of_reason cudf2opam unav_reasons cudf_universe)
          reasons) in
   let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
-  if reasons <> [] then
-    Printf.bprintf b
-      "Sorry, your request cannot be satisfied:\n%a\n"
-      (fun b -> List.iter (Printf.bprintf b " - %s\n"))
-      reasons;
   let chains = make_chains cudf_universe cudf2opam depends in
   let string_of_chain c =
     String.concat (OpamGlobals.colorise `yellow " -> ")
       (List.map OpamFormula.to_string c) in
   if chains <> [] then
     Printf.bprintf b
-      "The following dependencies couldn't be met:\n%a\n"
+      "The following dependencies couldn't be met:\n%a"
       (fun b ->
          List.iter
            (fun c -> Printf.bprintf b " - %s\n" (string_of_chain c)))
       chains;
+  if reasons <> [] then
+    Printf.bprintf b "Your request can't be satisfied:\n%a\n"
+      (fun b -> List.iter (Printf.bprintf b " - %s\n"))
+      reasons;
   if reasons = [] && chains = [] then (* No explanation found :( *)
     Printf.bprintf b
       "Sorry, no solution found: \
