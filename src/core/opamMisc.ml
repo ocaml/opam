@@ -517,6 +517,8 @@ let prettify_path s =
       Some (Filename.concat short suffix)
     else
       None in
-  match aux ~short:"~" ~prefix:(getenv "HOME") with
-  | Some p -> p
-  | None   -> s
+  try
+    match aux ~short:"~" ~prefix:(getenv "HOME") with
+    | Some p -> p
+    | None   -> s
+  with Not_found -> s
