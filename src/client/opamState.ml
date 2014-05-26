@@ -2321,7 +2321,7 @@ let update_dev_package t nv =
         ["descr", `Digest (OpamFilename.digest d)]) @
       (match files_dir with None -> [] | Some files_dir ->
         List.map (fun f ->
-            OpamFilename.remove_prefix files_dir f,
+            OpamFilename.remove_prefix (OpamFilename.dirname_dir files_dir) f,
             `Digest (OpamFilename.digest f))
           (OpamFilename.rec_files files_dir))
     in
