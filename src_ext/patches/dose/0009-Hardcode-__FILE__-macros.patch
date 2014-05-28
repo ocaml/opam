@@ -1,0 +1,617 @@
+From 495ba5cb2699a1ce3b6aac9d3df1fff98293ed6f Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 14 Mar 2014 17:52:41 +0100
+Subject: [PATCH 09/10] Hardcode __FILE__ macros
+
+Needed to get rid of the camlp4 dependency.
+
+Done using:
+```
+for f in $(git ls-files \*.ml \*.mli); do echo $f; sed -i 's%__FILE__%"'$f'"%g' $f; git add $f; done
+```
+experimental/ excluded because it's not in the release tarball
+
+Not sure if we'd rather add this in the build scripts of opam and of the opam package ?
+---
+ algo/defaultgraphs.ml            | 2 +-
+ algo/depsolver.ml                | 2 +-
+ algo/depsolver_int.ml            | 2 +-
+ algo/diagnostic.ml               | 2 +-
+ algo/dominators.ml               | 2 +-
+ algo/flatten.ml                  | 2 +-
+ algo/statistics.ml               | 2 +-
+ algo/strongconflicts.ml          | 2 +-
+ algo/strongconflicts_int.ml      | 2 +-
+ algo/strongdeps.ml               | 2 +-
+ algo/strongdeps_int.ml           | 2 +-
+ applications/ceve.ml             | 2 +-
+ applications/challenged.ml       | 4 ++--
+ applications/deb-buildcheck.ml   | 2 +-
+ applications/distcheck.ml        | 2 +-
+ applications/dominators-graph.ml | 2 +-
+ applications/outdated.ml         | 4 ++--
+ applications/smallworld.ml       | 2 +-
+ applications/strong-deps.ml      | 2 +-
+ common/cudfAdd.ml                | 2 +-
+ common/cudfSolver.ml             | 2 +-
+ common/edosSolver.ml             | 2 +-
+ common/input.ml                  | 2 +-
+ common/url.ml                    | 2 +-
+ common/util.ml                   | 2 +-
+ common/util.mli                  | 2 +-
+ deb/apt.ml                       | 2 +-
+ deb/debcudf.ml                   | 2 +-
+ deb/debutil.ml                   | 2 +-
+ deb/edsp.ml                      | 2 +-
+ deb/format822.ml                 | 2 +-
+ deb/packages.ml                  | 2 +-
+ deb/sources.ml                   | 2 +-
+ doseparse/boilerplate.ml         | 2 +-
+ eclipse/packages.ml              | 2 +-
+ eclipse/version.ml               | 2 +-
+ opencsw/packages.ml              | 4 ++--
+ opencsw/version.ml               | 2 +-
+ rpm/hdlists.ml                   | 2 +-
+ rpm/packages.ml                  | 2 +-
+ rpm/rpmcudf.ml                   | 2 +-
+ 41 files changed, 44 insertions(+), 44 deletions(-)
+
+diff --git a/algo/defaultgraphs.ml b/algo/defaultgraphs.ml
+index c6a9fb5..69b0c85 100644
+--- a/algo/defaultgraphs.ml
++++ b/algo/defaultgraphs.ml
+@@ -15,7 +15,7 @@
+ open Graph
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/defaultgraphs.ml" end) ;;
+ 
+ let tr_timer = Util.Timer.create "Defaultgraph.GraphOper.transitive_reduction"
+ let trbar = Util.Progress.create "Defaultgraph.GraphOper.transitive_reduction"
+diff --git a/algo/depsolver.ml b/algo/depsolver.ml
+index 71189a5..9597ae8 100644
+--- a/algo/depsolver.ml
++++ b/algo/depsolver.ml
+@@ -14,7 +14,7 @@ open ExtLib
+ open Common
+ open CudfAdd
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/depsolver.ml" end) ;;
+ 
+ type solver = Depsolver_int.solver
+ 
+diff --git a/algo/depsolver_int.ml b/algo/depsolver_int.ml
+index 84451e6..554ad97 100644
+--- a/algo/depsolver_int.ml
++++ b/algo/depsolver_int.ml
+@@ -32,7 +32,7 @@ open Common
+ let progressbar_init = Util.Progress.create "Depsolver_int.init_solver"
+ let progressbar_univcheck = Util.Progress.create "Depsolver_int.univcheck"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/depsolver_int.ml" end) ;;
+ 
+ module R = struct type reason = Diagnostic_int.reason end
+ module S = EdosSolver.M(R)
+diff --git a/algo/diagnostic.ml b/algo/diagnostic.ml
+index dbb8584..80c3dbe 100644
+--- a/algo/diagnostic.ml
++++ b/algo/diagnostic.ml
+@@ -14,7 +14,7 @@ module OcamlHash = Hashtbl
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/diagnostic.ml" end) ;;
+ 
+ (** One un-installability reason for a package *)
+ type reason =
+diff --git a/algo/dominators.ml b/algo/dominators.ml
+index d24ae09..eb484f3 100644
+--- a/algo/dominators.ml
++++ b/algo/dominators.ml
+@@ -23,7 +23,7 @@ let crtimer = Util.Timer.create "Algo.Dominators.cycle_reduction"
+ let sdtrtimer = Util.Timer.create "Algo.Dominators.sd_transitive_reduction"
+ let domtrtimer = Util.Timer.create "Algo.Dominators.dom_transitive_reduction"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/dominators.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.GraphOper(G)
+diff --git a/algo/flatten.ml b/algo/flatten.ml
+index bd99528..7640eee 100644
+--- a/algo/flatten.ml
++++ b/algo/flatten.ml
+@@ -6,7 +6,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/flatten.ml" end) ;;
+ 
+ let print_list fmt pr sep l =
+   match l with
+diff --git a/algo/statistics.ml b/algo/statistics.ml
+index 1962dfc..54b63e7 100644
+--- a/algo/statistics.ml
++++ b/algo/statistics.ml
+@@ -22,7 +22,7 @@ open Graph
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/statistics.ml" end) ;;
+ 
+ module Make (G: Sig.I ) = struct
+   module VS = Set.Make (G.V)
+diff --git a/algo/strongconflicts.ml b/algo/strongconflicts.ml
+index 71226e5..471bd3e 100644
+--- a/algo/strongconflicts.ml
++++ b/algo/strongconflicts.ml
+@@ -14,7 +14,7 @@ open Common
+ open CudfAdd
+ open Defaultgraphs
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongconflicts.ml" end) ;;
+ 
+ module ICG = Strongconflicts_int.CG
+ 
+diff --git a/algo/strongconflicts_int.ml b/algo/strongconflicts_int.ml
+index 8cb910d..36023d6 100644
+--- a/algo/strongconflicts_int.ml
++++ b/algo/strongconflicts_int.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongconflicts_int.ml" end) ;;
+ 
+ module SG = Defaultgraphs.IntPkgGraph.G
+ module PkgV = Defaultgraphs.IntPkgGraph.PkgV
+diff --git a/algo/strongdeps.ml b/algo/strongdeps.ml
+index d8f1772..e8807b4 100644
+--- a/algo/strongdeps.ml
++++ b/algo/strongdeps.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongdeps.ml" end) ;;
+ 
+ (** [strongdeps u l] build the strong dependency graph of all packages in 
+     [l] wrt the universe [u] *)
+diff --git a/algo/strongdeps_int.ml b/algo/strongdeps_int.ml
+index 965574d..7aa2599 100644
+--- a/algo/strongdeps_int.ml
++++ b/algo/strongdeps_int.ml
+@@ -20,7 +20,7 @@ let conjbar = Util.Progress.create "Strongdeps_int.conj"
+ let strongtimer = Util.Timer.create "Strongdeps_int.strong"
+ let conjtimer = Util.Timer.create "Strongdeps_int.conjdep"
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "algo/strongdeps_int.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.PackageGraph.O
+diff --git a/applications/ceve.ml b/applications/ceve.ml
+index cdf0fb4..5cd4ee7 100644
+--- a/applications/ceve.ml
++++ b/applications/ceve.ml
+@@ -15,7 +15,7 @@ open ExtLib
+ open Common
+ open Algo
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/ceve.ml" end) ;;
+ 
+ IFDEF HASOCAMLGRAPH THEN
+   module DGraph = Defaultgraphs.SyntacticDependencyGraph
+diff --git a/applications/challenged.ml b/applications/challenged.ml
+index bd99b83..41236d1 100644
+--- a/applications/challenged.ml
++++ b/applications/challenged.ml
+@@ -19,7 +19,7 @@ open Algo
+ module Boilerplate = BoilerplateNoRpm
+ 
+ let predbar = Util.Progress.create "challenged" ;;
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/challenged.ml" end) ;;
+ 
+ module Options = struct
+   open OptParse
+@@ -328,5 +328,5 @@ let main () =
+ 
+ Boilerplate.if_application 
+ ~alternatives:["dose-challenged";"dose3-challenged";"edos-challenged";"deb-challenged"]
+-__FILE__ main ;;
++"applications/challenged.ml" main ;;
+ 
+diff --git a/applications/deb-buildcheck.ml b/applications/deb-buildcheck.ml
+index 18bf507..53a3693 100644
+--- a/applications/deb-buildcheck.ml
++++ b/applications/deb-buildcheck.ml
+@@ -50,7 +50,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/deb-buildcheck.ml" end) ;;
+ 
+ let timer = Util.Timer.create "Solver"
+ 
+diff --git a/applications/distcheck.ml b/applications/distcheck.ml
+index 768c5e0..5b327d0 100644
+--- a/applications/distcheck.ml
++++ b/applications/distcheck.ml
+@@ -67,7 +67,7 @@ module Options = struct
+ 
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/distcheck.ml" end) ;;
+ 
+ let timer = Util.Timer.create "Solver" 
+ 
+diff --git a/applications/dominators-graph.ml b/applications/dominators-graph.ml
+index c5afe5a..30bc083 100644
+--- a/applications/dominators-graph.ml
++++ b/applications/dominators-graph.ml
+@@ -37,7 +37,7 @@ end
+ 
+ (* ----------------------------------- *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/dominators-graph.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.PackageGraph.O
+diff --git a/applications/outdated.ml b/applications/outdated.ml
+index 583f8be..910480f 100644
+--- a/applications/outdated.ml
++++ b/applications/outdated.ml
+@@ -19,7 +19,7 @@ open Common
+ open Algo
+ module Boilerplate=BoilerplateNoRpm
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/outdated.ml" end) ;;
+ 
+ module Options = struct
+   open OptParse
+@@ -313,5 +313,5 @@ let main () =
+ 
+ Boilerplate.if_application
+ ~alternatives:["dose-outdated";"dose3-outdated";"edos-outdated";"deb-outdated"] 
+-__FILE__ main ;;
++"applications/outdated.ml" main ;;
+ 
+diff --git a/applications/smallworld.ml b/applications/smallworld.ml
+index f772ebb..4405371 100644
+--- a/applications/smallworld.ml
++++ b/applications/smallworld.ml
+@@ -50,7 +50,7 @@ module Options = struct
+   add options ~long_name:"trim" ~help:"Consider only installable packages" trim;
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/smallworld.ml" end) ;;
+ 
+ (**********************************)
+ 
+diff --git a/applications/strong-deps.ml b/applications/strong-deps.ml
+index be62018..ed36391 100644
+--- a/applications/strong-deps.ml
++++ b/applications/strong-deps.ml
+@@ -34,7 +34,7 @@ module Options = struct
+   include Boilerplate.MakeDistribOptions(struct let options = options end);;
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "applications/strong-deps.ml" end) ;;
+ 
+ module G = Defaultgraphs.PackageGraph.G
+ module O = Defaultgraphs.GraphOper(G)
+diff --git a/common/cudfAdd.ml b/common/cudfAdd.ml
+index c47dca6..da29a86 100644
+--- a/common/cudfAdd.ml
++++ b/common/cudfAdd.ml
+@@ -20,7 +20,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ 
+ (* Include internal debugging functions for this module (debug, info, warning, fatal). *)
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/cudfAdd.ml" end) ;;
+ 
+ let equal = Cudf.(=%)
+ let compare = Cudf.(<%)
+diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
+index a40f4b6..1531dd0 100644
+--- a/common/cudfSolver.ml
++++ b/common/cudfSolver.ml
+@@ -15,7 +15,7 @@
+ module Pcre = Re_pcre
+ 
+ open ExtLib
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/cudfSolver.ml" end) ;;
+ 
+ let check_fail file =
+   let ic = open_in file in
+diff --git a/common/edosSolver.ml b/common/edosSolver.ml
+index c55a26a..8200a59 100644
+--- a/common/edosSolver.ml
++++ b/common/edosSolver.ml
+@@ -43,7 +43,7 @@ module type T = sig
+   val stats : state -> unit
+ end
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/edosSolver.ml" end) ;;
+ 
+ module IntHash = 
+   Hashtbl.Make (struct
+diff --git a/common/input.ml b/common/input.ml
+index 9f82211..c6af980 100644
+--- a/common/input.ml
++++ b/common/input.ml
+@@ -12,7 +12,7 @@
+ 
+ open ExtLib
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/input.ml" end) ;;
+ 
+ IFDEF HASZIP THEN
+ let gzip_open_file file =
+diff --git a/common/url.ml b/common/url.ml
+index ce37920..c8ac767 100644
+--- a/common/url.ml
++++ b/common/url.ml
+@@ -12,7 +12,7 @@
+ 
+ exception Invalid_url of string;;
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "common/url.ml" end) ;;
+ 
+ (***********************************************************************)
+ (* Input schemes *******************************************************)
+diff --git a/common/util.ml b/common/util.ml
+index 80b68d2..32ea495 100644
+--- a/common/util.ml
++++ b/common/util.ml
+@@ -143,7 +143,7 @@ module Logging(X : sig val label : string end) = struct
+     Printf.kprintf (fun s -> Printf.eprintf "%s\n %s\n%!" l s; exit (64)) fmt
+ end
+ 
+-include Logging(struct let label = __FILE__ end) ;;
++include Logging(struct let label = "common/util.ml" end) ;;
+ 
+ (** Printf bars are printed immediately on stderr.
+  * they can be enabled or disabled (default) *)
+diff --git a/common/util.mli b/common/util.mli
+index 836ad99..ae5ffb3 100644
+--- a/common/util.mli
++++ b/common/util.mli
+@@ -81,7 +81,7 @@ module Info : Messages
+ *)
+ 
+ (* 
+-  include Util.Logging(struct let label = __FILE__ end) ;;
++  include Util.Logging(struct let label = "common/util.mli" end) ;;
+ *)
+ module Logging :
+   functor (X : sig val label : string end) ->
+diff --git a/deb/apt.ml b/deb/apt.ml
+index 47821af..cc8c2f6 100644
+--- a/deb/apt.ml
++++ b/deb/apt.ml
+@@ -17,7 +17,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/apt.ml" end) ;;
+ 
+ let blank_regexp = Pcre.regexp "[ \t]+" ;;
+ 
+diff --git a/deb/debcudf.ml b/deb/debcudf.ml
+index 096a03b..e04c805 100644
+--- a/deb/debcudf.ml
++++ b/deb/debcudf.ml
+@@ -18,7 +18,7 @@ open ExtLib
+ open Common
+ open Packages
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/debcudf.ml" end) ;;
+ module SMap = Map.Make (String)
+ 
+ type tables = {
+diff --git a/deb/debutil.ml b/deb/debutil.ml
+index 0cf9e67..5f70eda 100644
+--- a/deb/debutil.ml
++++ b/deb/debutil.ml
+@@ -13,7 +13,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/debutil.ml" end) ;;
+ 
+ let get_source pkg =
+   match pkg.Packages.source with
+diff --git a/deb/edsp.ml b/deb/edsp.ml
+index 553afcf..f01fc0f 100644
+--- a/deb/edsp.ml
++++ b/deb/edsp.ml
+@@ -17,7 +17,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/edsp.ml" end) ;;
+ 
+ type request = {
+   request : string;
+diff --git a/deb/format822.ml b/deb/format822.ml
+index 88a9a06..caefea7 100644
+--- a/deb/format822.ml
++++ b/deb/format822.ml
+@@ -13,7 +13,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/format822.ml" end) ;;
+ 
+ type loc = Lexing.position * Lexing.position
+ let dummy_loc: loc = Lexing.dummy_pos, Lexing.dummy_pos
+diff --git a/deb/packages.ml b/deb/packages.ml
+index 33e5166..b460767 100644
+--- a/deb/packages.ml
++++ b/deb/packages.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/packages.ml" end) ;;
+ 
+ (** debian package format *)
+ type package = {
+diff --git a/deb/sources.ml b/deb/sources.ml
+index 1fe8388..ec5210c 100644
+--- a/deb/sources.ml
++++ b/deb/sources.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "deb/sources.ml" end) ;;
+ 
+ type source = {
+   name : Format822.name;
+diff --git a/doseparse/boilerplate.ml b/doseparse/boilerplate.ml
+index 3e3fd2a..a7a0b23 100644
+--- a/doseparse/boilerplate.ml
++++ b/doseparse/boilerplate.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "doseparse/boilerplate.ml" end) ;;
+ 
+ (*************************************************************)
+ (* Options *)
+diff --git a/eclipse/packages.ml b/eclipse/packages.ml
+index 59a4499..19f0e8e 100644
+--- a/eclipse/packages.ml
++++ b/eclipse/packages.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "eclipse/packages.ml" end) ;;
+ 
+ (** strip down version of the debian package format *)
+ type package = {
+diff --git a/eclipse/version.ml b/eclipse/version.ml
+index f94e87a..d6909d1 100644
+--- a/eclipse/version.ml
++++ b/eclipse/version.ml
+@@ -23,7 +23,7 @@ open Common
+  alpha ::= [a..zA..Z]
+ *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "eclipse/version.ml" end) ;;
+ 
+ let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+diff --git a/opencsw/packages.ml b/opencsw/packages.ml
+index e69c7cf..a4e0057 100644
+--- a/opencsw/packages.ml
++++ b/opencsw/packages.ml
+@@ -17,7 +17,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "opencsw/packages.ml" end) ;;
+ 
+ type name = string
+ type version = string
+@@ -45,7 +45,7 @@ module Set = Set.Make(struct
+ end)
+ 
+ let input_raw_priv parse_packages files =
+-  let timer = Util.Timer.create __FILE__ in
++  let timer = Util.Timer.create "opencsw/packages.ml" in
+   Util.Timer.start timer;
+   if List.length files > 1 then info "Merging input lists" ;
+   let s =
+diff --git a/opencsw/version.ml b/opencsw/version.ml
+index f94e87a..10586b1 100644
+--- a/opencsw/version.ml
++++ b/opencsw/version.ml
+@@ -23,7 +23,7 @@ open Common
+  alpha ::= [a..zA..Z]
+ *)
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "opencsw/version.ml" end) ;;
+ 
+ let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+diff --git a/rpm/hdlists.ml b/rpm/hdlists.ml
+index 0302a38..a7a7a1d 100644
+--- a/rpm/hdlists.ml
++++ b/rpm/hdlists.ml
+@@ -15,7 +15,7 @@
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/hdlists.ml" end) ;;
+ 
+ let progressbar = Util.Progress.create "Rpm.Parse.Hdlists.parse_822_iter" ;;
+ Util.Progress.set_total progressbar 8000 (* estimate *) ;
+diff --git a/rpm/packages.ml b/rpm/packages.ml
+index fff6035..7547690 100644
+--- a/rpm/packages.ml
++++ b/rpm/packages.ml
+@@ -15,7 +15,7 @@ module Pcre = Re_pcre
+ open ExtLib
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/packages.ml" end) ;;
+ 
+ type name = string
+ type version = string
+diff --git a/rpm/rpmcudf.ml b/rpm/rpmcudf.ml
+index 2397880..0c2d1aa 100644
+--- a/rpm/rpmcudf.ml
++++ b/rpm/rpmcudf.ml
+@@ -14,7 +14,7 @@ open ExtLib
+ open ExtString
+ open Common
+ 
+-include Util.Logging(struct let label = __FILE__ end) ;;
++include Util.Logging(struct let label = "rpm/rpmcudf.ml" end) ;;
+ 
+ type tables = {
+   units : (Packages.name, (int * (Packages.rel * string)) list) Hashtbl.t;
+-- 
+1.8.5.3
+
