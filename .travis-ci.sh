@@ -25,7 +25,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo apt-get install opam aspcud
     opam init
     eval `opam config env`
-    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re
+    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose.3.1.2 cudf re
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
@@ -33,9 +33,9 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo make install
     make libinstall
     # Compile and run opam-rt
-    wget https://github.com/ocaml/opam-rt/archive/master.tar.gz
-    tar xvfz master.tar.gz
-    cd opam-rt-master
+    wget https://github.com/ocaml/opam-rt/archive/1.1.tar.gz
+    tar xvfz 1.1.tar.gz
+    cd opam-rt-1.1
     make
     make KINDS="local git" run
 else
