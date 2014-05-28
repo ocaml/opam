@@ -5,6 +5,7 @@ ifndef version
 endif
 
 all: opam-lib opam opam-check opam-admin opam-installer opamlfind
+	@
 
 # --
 
