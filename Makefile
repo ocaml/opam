@@ -40,18 +40,21 @@ else
   endif
 endif
 
+# Workaround bug #1355 in opam-installer
+OPAM_INSTALLER = OPAMROOT=/tmp/opam-install-$@ src/opam-installer
+
 libinstall:
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
-	src/opam-installer --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
+	$(OPAM_INSTALLER) --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
 
 install:
-	src/opam-installer --prefix $(DESTDIR) opam.install
+	$(OPAM_INSTALLER) --prefix $(DESTDIR) opam.install
 
 libuninstall:
-	src/opam-installer -u --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
+	$(OPAM_INSTALLER) -u --prefix $(LIBINSTALL_PREFIX) --name opam opam-lib.install
 
 uninstall:
-	src/opam-installer -u --prefix $(DESTDIR) opam.install
+	$(OPAM_INSTALLER) -u --prefix $(DESTDIR) opam.install
 
 .PHONY: tests tests-local tests-git
 tests: opam opam-admin opam-check
