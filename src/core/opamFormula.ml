@@ -194,7 +194,7 @@ let to_string t =
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
     | n, c     ->
-      Printf.sprintf "(%s %s)"
+      Printf.sprintf "%s %s"
         (OpamPackage.Name.to_string n)
         (string_of_formula string_of_constraint c) in
   string_of_formula string_of_pkg t
