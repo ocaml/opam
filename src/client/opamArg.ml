@@ -768,6 +768,7 @@ let config =
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
     ["report"]  , `report,   "Prints a summary of your setup, useful for bug-reports.";
+    ["cudf-universe"], `cudf,"Outputs the current available package universe in CUDF format.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -883,6 +884,12 @@ let config =
       else
         Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
+    | Some `cudf     ->
+      let opam_state = OpamState.load_state "config-universe" in
+      let opam_univ = OpamState.universe opam_state Depends in
+      let cudf_univ =
+        OpamSolver.load_cudf_universe ~depopts:false opam_univ opam_univ.u_available in
+      OpamCudf.dump_universe stdout cudf_univ
     | Some `report   ->
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";

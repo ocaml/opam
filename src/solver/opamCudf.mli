@@ -170,6 +170,9 @@ val strings_of_reason: (Cudf.package -> package) -> (atom -> string) -> Cudf.uni
 val string_of_reasons: (Cudf.package -> package) -> (atom -> string) -> Cudf.universe ->
   Algo.Diagnostic.reason list -> string
 
+(** Dumps the given cudf universe to the given channel *)
+val dump_universe: out_channel -> Cudf.universe -> unit
+
 (** Pretty-print atoms *)
 val string_of_atom: Cudf_types.vpkg -> string
 
