@@ -33,6 +33,17 @@ It is expected than upgrade work transparently between minor releases:
 an OPAM binary with version `x.y.z` should be able to use the OCaml
 packages and compilers created with OPAM version `x.(y-1).0`
 
+* Make sure you have OCaml and GNU make installed.
+* Run `./configure`
+* Run `make lib-ext` if you don't have the dependencies installed and only need
+  the opam binary (not the libs). This will locally take care of all
+  dependencies for you.
+* Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, cudf, dose 3.1.2
+  and re >= 1.2.0 installed. Or run `opam install opam-lib --deps-only` if you
+  already have a working instance.
+* Run `make`
+* Run `make install`
+* Run `make libinstall` if needed (this is incompatible with `make lib-ext`)
 ## Bug tracker
 
 Have a bug or a feature request ?

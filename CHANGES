@@ -1,3 +1,6 @@
+1.1.1-2
+* Backport the new OCamlMakefile-based build system from 1.2
+
 1.1.1
 * Fix `opam-admin make <packages> -r` (#990)
 * Explicitly prettyprint list of lists, to fix `opam-admin depexts` (#997)
