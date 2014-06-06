@@ -379,6 +379,10 @@ let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
 
 let solver_calls = ref 0
 
+let dump_universe oc univ =
+  Cudf_printer.pp_cudf oc
+    (default_preamble, univ, Cudf.default_request)
+
 let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
   function
   | None   -> None

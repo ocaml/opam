@@ -51,6 +51,11 @@ val print_solution:
   rewrite:(package -> package) ->
   solution -> unit
 
+(** Creates a CUDF universe from an OPAM universe, including the given
+    packages *)
+val load_cudf_universe: ?depopts:bool -> universe -> ?version_map:int package_map
+  -> package_set -> Cudf.universe
+
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description. *)
 val resolve :
