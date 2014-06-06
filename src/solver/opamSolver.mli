@@ -51,6 +51,9 @@ val print_solution:
   rewrite:(package -> package) ->
   solution -> unit
 
+(** Computes an opam->cudf version map from a set of package *)
+val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
+
 (** Creates a CUDF universe from an OPAM universe, including the given
     packages *)
 val load_cudf_universe: ?depopts:bool -> universe -> ?version_map:int package_map

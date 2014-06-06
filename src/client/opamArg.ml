@@ -887,9 +887,18 @@ let config =
     | Some `cudf     ->
       let opam_state = OpamState.load_state "config-universe" in
       let opam_univ = OpamState.universe opam_state Depends in
+      let version_map =
+        OpamSolver.cudf_versions_map opam_univ opam_state.OpamState.Types.packages in
       let cudf_univ =
-        OpamSolver.load_cudf_universe ~depopts:false opam_univ opam_univ.u_available in
-      OpamCudf.dump_universe stdout cudf_univ
+        OpamSolver.load_cudf_universe ~depopts:false opam_univ ~version_map
+          opam_univ.u_available in
+      OpamCudf.dump_universe stdout cudf_univ;
+      (* Add explicit bindings to retrieve original versions of non-available packages *)
+      OpamPackage.Map.iter (fun nv i ->
+          if not (OpamPackage.Set.mem nv opam_univ.u_available) then
+            Printf.printf "#v2v:%s:%d=%s\n"
+              (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
+        ) version_map
     | Some `report   ->
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";
