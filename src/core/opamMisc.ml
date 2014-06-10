@@ -423,7 +423,7 @@ let sub_at n s =
 (** To use when catching default exceptions: ensures we don't catch fatal errors
     like C-c *)
 let fatal e = match e with
-  | Sys.Break -> raise e
+  | Sys.Break | Assert_failure _ | Match_failure _ -> raise e
   | _ -> ()
 
 let register_backtrace, get_backtrace =
