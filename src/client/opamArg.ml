@@ -21,6 +21,7 @@ open Cmdliner
 (* Global options *)
 type global_options = {
   debug  : bool;
+  debug_level: int;
   verbose: bool;
   quiet  : bool;
   color  : bool;
@@ -56,12 +57,13 @@ let switch_to_updated_self debug opamroot =
      Unix.execve updated_self_str Sys.argv env)
 
 let create_global_options
-    git_version debug verbose quiet color switch yes strict root
+    git_version debug_level verbose quiet color switch yes strict root
     no_base_packages compat_mode_1_0 external_solver use_internal_solver cudf_file solver_preferences
     no_self_upgrade =
+  let debug = debug_level > 0 in
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
-  { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
+  { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
     no_base_packages; compat_mode_1_0; external_solver; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; }
 
@@ -74,6 +76,7 @@ let apply_global_options o =
     exit 0
   );
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
+  OpamGlobals.debug_level := max !OpamGlobals.debug_level o.debug_level;
   OpamMisc.debug       := !OpamGlobals.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.color    := !OpamGlobals.color || o.color;
@@ -293,9 +296,9 @@ let mk_flag ?section flags doc =
   let doc = Arg.info ?docs:section ~doc flags in
   Arg.(value & flag & doc)
 
-let mk_opt ?section flags value doc conv default =
+let mk_opt ?section ?vopt flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  Arg.(value & opt conv default & doc)
+  Arg.(value & opt ?vopt conv default & doc)
 
 let mk_tristate_opt ?section flags value doc auto default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
@@ -435,12 +438,13 @@ let global_options =
     mk_flag ~section ["git-version"]
       "Print the git version if it exists and exit." in
   let debug =
-    mk_flag ~section ["debug"]
-      "Print debug message on stdout. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value."  in
+    mk_opt ~section ~vopt:1 ["debug"] "LEVEL"
+      "Print debug message to stderr. \
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value."
+      Arg.int 0 in
   let verbose =
     mk_flag ~section ["v";"verbose"]
-      "Be more verbose. \
+      "Be more verbose. Show output of all sub-commands. \
        This is equivalent to setting $(b,\\$OPAMVERBOSE) to a non-empty value." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in

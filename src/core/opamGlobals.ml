@@ -24,6 +24,9 @@ let check var = ref (
   )
 
 let debug            = check "DEBUG"
+let debug_level      =
+  try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
+  with Not_found | Failure _ -> ref 1
 let verbose          = check "VERBOSE"
 let color_tri_state =
     try (match OpamMisc.getenv "OPAMCOLOR" with
@@ -205,8 +208,8 @@ let timestamp () =
     tm.Unix.tm_sec
     (int_of_float (1000.0 *. msec))
 
-let log section fmt =
-  if !debug then
+let log section ?(level=1) fmt =
+  if !debug && level <= !debug_level then
     Printf.fprintf stderr ("%s  %06d  %a  " ^^ fmt ^^ "\n%!")
       (timestamp ()) (Unix.getpid ()) (acolor_w 30 `yellow) section
   else

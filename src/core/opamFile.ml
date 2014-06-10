@@ -1758,7 +1758,8 @@ let print_stats () =
 
 module Make (F : F) = struct
 
-  let log fmt = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal) fmt
+  let log ?level fmt =
+    OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal) ?level fmt
   let slog = OpamGlobals.slog
 
   let write f v =
@@ -1784,7 +1785,7 @@ module Make (F : F) = struct
         let ic = OpamFilename.open_in f in
         let r = F.of_channel f ic in
         close_in ic;
-        log "Read %s in %.3fs" filename (chrono ());
+        log ~level:2 "Read %s in %.3fs" filename (chrono ());
         r
       with
       | Lexer_error _ | Parsing.Parse_error as e ->
