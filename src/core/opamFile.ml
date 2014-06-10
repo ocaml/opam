@@ -976,10 +976,12 @@ module X = struct
       opam_1_0_fields @ opam_1_1_fields
 
     let check name = function
-      | None    -> OpamGlobals.error_and_exit "Invalid OPAM file (%s)" name
+      | None    ->
+        OpamGlobals.error_and_exit "Invalid OPAM file (missing field %S)" name
       | Some n -> n
 
     let name t = check "name" t.name
+    let name_opt t = t.name
     let version t = check "version" t.version
     let version_opt t = t.version
     let maintainer t = t.maintainer
@@ -1183,6 +1185,40 @@ module X = struct
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
         bug_reports; flags
+      }
+
+    let template nv =
+      let t = create nv in
+      let maintainer =
+        let email =
+          try Some (Sys.getenv "EMAIL") with Not_found -> None in
+        try
+          let open Unix in
+          let pw = getpwuid (getuid ()) in
+          let email = match email with
+            | Some e -> e
+            | None -> pw.pw_name^"@"^gethostname () in
+          match OpamMisc.split pw.pw_gecos ',' with
+          | name::_ -> [Printf.sprintf "%s <%s>" name email]
+          | _ -> [email]
+        with Not_found -> match email with
+          | Some e -> [e]
+          | None -> []
+      in
+      { t with
+        maintainer;
+        build      = [[CString "./configure", None], None;
+                      [CIdent "make", None], None;
+                      [CIdent "make", None; CString "install", None], None];
+        remove     = [[CString "ocamlfind", None; CString "remove", None;
+                       CString (OpamPackage.Name.to_string (OpamPackage.name nv)), None],
+                      None];
+        depends    = Atom (OpamPackage.Name.of_string "ocamlfind", Empty);
+        available  = FBool true;
+        author     = maintainer;
+        homepage   = [""];
+        license    = [""];
+        bug_reports= [""];
       }
   end
 

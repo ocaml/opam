@@ -91,11 +91,15 @@ module OPAM: sig
   (** Create an opam file *)
   val create: package -> t
 
+  (** Create an OPAM package template filled with common options *)
+  val template: package -> t
+
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
   (** Package name *)
   val name: t -> name
+  val name_opt: t -> name option
 
   (** Package version *)
   val version: t -> version
