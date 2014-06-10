@@ -39,21 +39,47 @@ type global_options = {
 }
 
 let self_upgrade_exe opamroot =
-  OpamFilename.OP.(opamroot // "opam")
+  OpamFilename.OP.(opamroot // "opam", opamroot // "opam.version")
 
 let switch_to_updated_self debug opamroot =
-  let updated_self = self_upgrade_exe opamroot in
+  let updated_self, updated_self_version = self_upgrade_exe opamroot in
   let updated_self_str = OpamFilename.to_string updated_self in
+  let updated_self_version_str = OpamFilename.to_string updated_self_version in
   if updated_self_str <> Sys.executable_name &&
      OpamFilename.exists updated_self &&
-     OpamFilename.is_exec updated_self then
-    (if debug || !OpamGlobals.debug then
-       Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
-     let env =
-       Array.append
-         [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
-         (Unix.environment ()) in
-     Unix.execve updated_self_str Sys.argv env)
+     OpamFilename.is_exec updated_self &&
+     OpamFilename.exists updated_self_version
+  then
+    let no_version = OpamVersion.of_string "" in
+    let update_version =
+      try
+        let s = OpamSystem.read updated_self_version_str in
+        let s =
+          let len = String.length s in if len > 0 && s.[len-1] = '\n'
+          then String.sub s 0 (len-1) else s in
+        OpamVersion.of_string s
+      with e -> OpamMisc.fatal e; no_version in
+    if update_version = no_version then
+      OpamGlobals.error "%s exists but cannot be read, disabling self-upgrade."
+        updated_self_version_str
+    else if OpamVersion.compare update_version OpamVersion.current <= 0 then
+      OpamGlobals.warning "Obsolete OPAM self-upgrade package v.%s found, \
+                           not using it (current system version is %s)."
+        (OpamVersion.to_string update_version)
+        (OpamVersion.to_string OpamVersion.current)
+    else (
+      if OpamVersion.git <> None then
+        OpamGlobals.warning "Using OPAM self-upgrade to %s while the system \
+                             OPAM is a development version (%s)"
+          (OpamVersion.to_string update_version)
+          (OpamVersion.to_string OpamVersion.full);
+      (if debug || !OpamGlobals.debug then
+         Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
+       let env =
+         Array.append
+           [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
+           (Unix.environment ()) in
+       Unix.execve updated_self_str Sys.argv env))
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
@@ -910,7 +936,7 @@ let config =
       print "opam-version" "%s" version;
       print "self-upgrade" "%s"
         (if OpamGlobals.is_self_upgrade
-         then OpamFilename.prettify (self_upgrade_exe (OpamPath.root()))
+         then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))
          else "no");
       print "os" "%s" (OpamGlobals.os_string ());
       print "external-solver" "%b" (OpamCudf.external_solver_available ());
