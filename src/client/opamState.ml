@@ -339,7 +339,15 @@ let add_pinned_overlay t name =
       OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
       OpamMisc.Option.iter (URL.write (pkg_overlay Ov.url)) url
     | _ ->
-      let rv = OpamPackage.max_version t.packages name in
+      let rv = (* Lookup in package_index to ignore pinned versions *)
+        let versions =
+          OpamPackage.Map.fold (fun nv _ acc ->
+              if OpamPackage.name nv = name then
+                OpamPackage.Set.add nv acc
+              else acc)
+            t.package_index OpamPackage.Set.empty
+        in
+        OpamPackage.max_version versions name in
       let v = OpamPackage.version rv in
       let opam, _url, root, files = get_orig_meta rv in
       let url = url_of_locally_pinned_package t name in
