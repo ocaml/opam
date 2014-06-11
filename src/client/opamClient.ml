@@ -1139,24 +1139,55 @@ module API = struct
   module PIN = struct
     open OpamPinCommand
 
-    let confirm_reinstall t name =
+    let post_pin_action t name =
       let nv = try Some (OpamState.pinned t name) with Not_found -> None in
       match nv with
       | Some nv ->
         let v = OpamPackage.version nv in
-        if OpamState.confirm "%s needs to be reinstalled, do it now ?"
-            (OpamPackage.Name.to_string name) then
+        if OpamState.confirm "%s needs to be %sinstalled, do it now ?"
+            (OpamPackage.Name.to_string name)
+            (if OpamPackage.has_name t.installed name then "re" else "")
+        then
           if OpamPackage.Set.mem nv t.installed
-          then reinstall_t [name, Some (`Eq,v)] t
-          else install_t [name, Some (`Eq,v)] None false t
+          then reinstall_t [name, Some (`Eq,v)] t (* same version *)
+          else install_t [name, Some (`Eq,v)] None false t (* != version or new *)
       | None ->
-        if OpamPackage.has_name t.installed name &&
-           not (OpamPackage.has_name (Lazy.force t.available_packages) name) &&
-           OpamState.confirm "%s needs to be removed, do it now ?"
-             (OpamPackage.Name.to_string name)
-        then remove_t ~autoremove:false ~force:false [name, None] t
+        try
+          let nv = OpamPackage.max_version t.installed name in
+          if OpamPackage.has_name (Lazy.force t.available_packages) name then
+            (if OpamState.confirm "%s needs to be reinstalled, do it now ?"
+                (OpamPackage.Name.to_string name)
+             then
+               if OpamPackage.Set.mem nv (Lazy.force t.available_packages)
+               then reinstall_t [name, Some (`Eq, OpamPackage.version nv)] t
+               else upgrade_t [name, None] t)
+          else if OpamState.confirm "%s needs to be removed, do it now ?"
+              (OpamPackage.to_string nv)
+          then (* Package no longer available *)
+            remove_t ~autoremove:false ~force:false [name, None] t
+        with Not_found -> ()
 
-    let pin name ?(edit=false) pin_option =
+    let get_upstream t name =
+      try
+        let nv = OpamPackage.max_version t.packages name in
+        match OpamState.opam_opt t nv with
+        | None -> raise Not_found
+        | Some o -> match OpamFile.OPAM.dev_repo o with
+          | None -> raise Not_found
+          | Some pin -> pin
+      with Not_found ->
+        OpamGlobals.error_and_exit
+          "\"dev-repo\" field missing in %s metadata, you'll need to specify \
+           the pinning location"
+          (OpamPackage.Name.to_string name)
+
+    let pin name ?(edit=false) ?(action=true) pin_option_opt =
+      let pin_option = match pin_option_opt with
+        | Some o -> o
+        | None ->
+          let t = OpamState.load_state "pin-get-upstream" in
+          get_upstream t name
+      in
       let needs_reinstall = pin name pin_option in
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamGlobals.msg "\n";
@@ -1167,28 +1198,31 @@ module API = struct
         let empty_opam = OpamState.has_empty_opam t nv in
         if empty_opam then
           OpamState.add_pinned_overlay ~template:true t name;
-        if edit || empty_opam
-        then OpamPinCommand.edit t name else None in
-      match needs_reinstall, needs_reinstall2 with
-      | None, None -> ()
-      | _ ->
+        if edit || empty_opam then
+          OpamPinCommand.edit t name else None
+      in
+      if action then
         let t = OpamState.load_state "pin-reinstall-2" in
-        confirm_reinstall t name
+        if not (OpamPackage.has_name t.installed name) ||
+           needs_reinstall <> None ||
+           needs_reinstall2 <> None
+        then post_pin_action t name
 
-    let edit name =
+    let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
       | None -> ()
-      | Some true -> confirm_reinstall t name
+      | Some true ->
+        if action then post_pin_action t name
       | Some false ->
         (* Version changed: reload the state to ensure consistency *)
         let t = OpamState.load_state "pin-edit-2" in
-        confirm_reinstall t name
+        if action then post_pin_action t name
 
-    let unpin name =
+    let unpin ?(action=true) name =
       if unpin name then
         with_switch_backup "pin-reinstall" @@ fun t ->
-        confirm_reinstall t name
+        if action then post_pin_action t name
 
     let list = list
   end
@@ -1312,14 +1346,14 @@ module SafeAPI = struct
 
   module PIN = struct
 
-    let pin name ?edit pin_option =
-      switch_lock (fun () -> API.PIN.pin name ?edit pin_option)
+    let pin name ?edit ?action pin_option =
+      switch_lock (fun () -> API.PIN.pin name ?edit ?action pin_option)
 
-    let edit name =
-      switch_lock (fun () -> API.PIN.edit name)
+    let edit ?action name =
+      switch_lock (fun () -> API.PIN.edit ?action name)
 
-    let unpin name =
-      switch_lock (fun () -> API.PIN.unpin name)
+    let unpin ?action name =
+      switch_lock (fun () -> API.PIN.unpin ?action name)
 
     let list () =
       read_lock API.PIN.list

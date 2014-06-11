@@ -1423,27 +1423,38 @@ let pin ?(unpin_only=false) () =
       "hg"     , `hg
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
-
-  let pin global_options kind edit remove command params =
+  let no_act =
+    mk_flag ["n";"no-action"] "Just record pinning status, don't prompt for \
+                               install / reinstall / removal"
+  in
+  let dev_repo =
+    mk_flag ["dev-repo"] "Pin to the package's upstream source for the latest \
+                          development version"
+  in
+  let pin global_options kind edit remove no_act dev_repo command params =
     apply_global_options global_options;
+    let action = not no_act in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ())
     | Some `remove, [n] | Some `default n, ["none"] ->
-      `Ok (Client.PIN.unpin (OpamPackage.Name.of_string n))
+      `Ok (Client.PIN.unpin ~action (OpamPackage.Name.of_string n))
     | Some `default n, [] when remove ->
-      `Ok (Client.PIN.unpin (OpamPackage.Name.of_string n))
-    | Some `edit, [n]  -> `Ok (Client.PIN.edit (OpamPackage.Name.of_string n))
+      `Ok (Client.PIN.unpin ~action (OpamPackage.Name.of_string n))
+    | Some `edit, [n]  ->
+      `Ok (Client.PIN.edit ~action (OpamPackage.Name.of_string n))
     | Some `add, name::p | Some `default name, p ->
       let n = OpamPackage.Name.of_string name in
       (match p with
        | [] ->
-         if edit then `Ok (Client.PIN.edit n) else
-           `Error (true,
-                   Printf.sprintf
-                     "Please specify the target to pin package %s to." name)
+         if dev_repo then `Ok (Client.PIN.pin n ~edit ~action None) else
+         if edit then `Ok (Client.PIN.edit ~action n) else
+         let err =
+           Printf.sprintf "Please specify the target to pin package %s to."
+             name in
+         `Error (true, err)
        | [p] ->
          let pin_option = pin_option_of_string ?kind:kind p in
-         `Ok (Client.PIN.pin n ~edit pin_option)
+         `Ok (Client.PIN.pin n ~edit ~action (Some pin_option))
        | _::p::_ ->
          `Error (true, Printf.sprintf "Extra argument %S" p))
     | _, [] -> `Error (true, "Missing argument")
@@ -1451,7 +1462,7 @@ let pin ?(unpin_only=false) () =
   in
   Term.ret
     Term.(pure pin
-          $global_options $kind $edit $remove $command $params),
+          $global_options $kind $edit $remove $no_act $dev_repo $command $params),
   term_info "pin" ~doc ~man
 
 (* HELP *)
