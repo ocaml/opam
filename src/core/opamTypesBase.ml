@@ -107,7 +107,8 @@ let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
   | None | Some (`git|`hg|`darcs|`local) ->
-    if not (String.contains s (Filename.dir_sep.[0])) &&
+    if kind = None &&
+       not (String.contains s (Filename.dir_sep.[0])) &&
        String.length s > 0 && '0' <= s.[0] && s.[0] <= '9' then
       Version (OpamPackage.Version.of_string s)
     else
@@ -150,6 +151,12 @@ let kind_of_pin_option = function
   | Darcs _   -> `darcs
   | Hg _      -> `hg
   | Local _   -> `local
+
+let pin_of_url (url,kind) = match kind with
+  | `git -> Git url
+  | `darcs -> Darcs url
+  | `hg -> Hg url
+  | `local | `version | `http -> failwith "Not a recognised version-control URL"
 
 let option fn = function
   | None   -> ""
