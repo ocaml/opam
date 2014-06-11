@@ -2281,9 +2281,9 @@ let update_switch_config t switch =
 (* Dev packages *)
 
 let has_empty_opam t nv =
-  let opam, _, _ =
-    local_opam ~version_override:false nv (dev_package t nv) in
-  opam = None || opam = Some (OpamFile.OPAM.create nv)
+  let f = OpamPath.Switch.Overlay.opam t.root t.switch (OpamPackage.name nv) in
+  not (OpamFilename.exists f) ||
+  OpamFile.OPAM.read f = OpamFile.OPAM.create nv
 
 (* XXX split update_dev taking nv and update_pin taking name ? *)
 let update_dev_package t nv =
