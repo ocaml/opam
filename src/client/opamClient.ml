@@ -1164,7 +1164,10 @@ module API = struct
       ignore (OpamState.update_dev_package t nv);
       OpamGlobals.msg "\n";
       let needs_reinstall2 =
-        if edit || OpamState.has_empty_opam t nv
+        let empty_opam = OpamState.has_empty_opam t nv in
+        if empty_opam then
+          OpamState.add_pinned_overlay ~template:true t name;
+        if edit || empty_opam
         then OpamPinCommand.edit t name else None in
       match needs_reinstall, needs_reinstall2 with
       | None, None -> ()

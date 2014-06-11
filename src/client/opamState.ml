@@ -316,7 +316,7 @@ let package_repo_dir root repositories package_index nv =
   OpamPath.Repository.packages repo prefix nv
 
 (* Copies package definition from the repository to the overlay *)
-let add_pinned_overlay t name =
+let add_pinned_overlay ?(template=false) t name =
   let open OpamFile in
   let module Ov = OpamPath.Switch.Overlay in
   let pkg_overlay f = f t.root t.switch name in
@@ -339,7 +339,15 @@ let add_pinned_overlay t name =
       OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
       OpamMisc.Option.iter (URL.write (pkg_overlay Ov.url)) url
     | _ ->
-      let rv = OpamPackage.max_version t.packages name in
+      let rv = (* Lookup in package_index to ignore pinned versions *)
+        let versions =
+          OpamPackage.Map.fold (fun nv _ acc ->
+              if OpamPackage.name nv = name then
+                OpamPackage.Set.add nv acc
+              else acc)
+            t.package_index OpamPackage.Set.empty
+        in
+        OpamPackage.max_version versions name in
       let v = OpamPackage.version rv in
       let opam, _url, root, files = get_orig_meta rv in
       let url = url_of_locally_pinned_package t name in
@@ -347,10 +355,12 @@ let add_pinned_overlay t name =
         files;
       OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
       URL.write (pkg_overlay Ov.url) url
-  with Not_found -> (* No original meta, just write the URL file *)
+  with Not_found -> (* No original meta *)
     let url = url_of_locally_pinned_package t name in
-    let nv = OpamPackage.create name (OpamPackage.Version.of_string "0") in
-    let opam = OPAM.create nv in
+    let version =
+      OpamPackage.Version.of_string (if template then "0.1" else "0") in
+    let nv = OpamPackage.create name version in
+    let opam = if template then OPAM.template nv else OPAM.create nv in
     OPAM.write (pkg_overlay Ov.opam) opam;
     URL.write (pkg_overlay Ov.url) url
 

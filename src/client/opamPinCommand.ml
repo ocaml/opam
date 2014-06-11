@@ -39,7 +39,8 @@ let edit t name =
     with Not_found -> None
   in
   let file = OpamPath.Switch.Overlay.opam t.root t.switch name in
-  if not (OpamFilename.exists file) then OpamState.add_pinned_overlay t name;
+  if not (OpamFilename.exists file) then
+    OpamState.add_pinned_overlay ~template:true t name;
   let backup =
     OpamFilename.OP.(OpamPath.backup_dir t.root //
                      (OpamPackage.Name.to_string name ^ "-opam.bak")) in
@@ -49,8 +50,20 @@ let edit t name =
       ignore @@ Sys.command
         (Printf.sprintf "%s %s"
            (Lazy.force OpamGlobals.editor) (OpamFilename.to_string file));
-      OpamFile.OPAM.read file
-    with e->
+      let opam = OpamFile.OPAM.read file in
+      let opam =
+        if OpamFile.OPAM.name_opt opam = None then
+          OpamFile.OPAM.with_name opam name
+        else opam in
+      if OpamFile.OPAM.version_opt opam = None then
+        (OpamGlobals.error "The \"version\" field is mandatory";
+         failwith "missing field");
+      if OpamFile.OPAM.name_opt opam <> Some name then
+        (OpamGlobals.error "Inconsistent \"name\" field, it must be %s"
+           (OpamPackage.Name.to_string name);
+         failwith "bad name");
+      opam
+    with e ->
       (try OpamMisc.fatal e with e ->
         OpamFilename.move ~src:backup ~dst:file;
         raise e);

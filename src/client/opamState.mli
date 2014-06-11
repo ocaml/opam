@@ -374,8 +374,9 @@ val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t
 
 (** {2 Overlays} *)
 
-(** Add overlay files for a pinned package *)
-val add_pinned_overlay: state -> name -> unit
+(** Add overlay files for a pinned package. If no definition is found
+    use a minimal OPAM file unless [template] is set to [true] *)
+val add_pinned_overlay: ?template:bool -> state -> name -> unit
 
 (** Remove all overlay files *)
 val remove_overlay: state -> name -> unit
