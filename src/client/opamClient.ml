@@ -447,7 +447,7 @@ module API = struct
       if changes = None then t else
       let available_packages =
         lazy (Lazy.force t.available_packages ++
-              (t.installed -- full_orphans)) in
+              (t.installed -- orphans)) in
       { t with available_packages } in
     log "Orphans: full %a, versions %a"
       (slog OpamPackage.Name.Set.to_string) orphan_names
