@@ -1431,6 +1431,17 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the package's upstream source for the latest \
                           development version"
   in
+  let guess_name path =
+    let open OpamFilename.OP in
+    let opamf = path / "opam" // "opam" in
+    let opamf = if OpamFilename.exists opamf then opamf else path // "opam" in
+    if OpamFilename.exists opamf then
+      try match OpamFile.OPAM.(name_opt (read opamf)) with
+        | Some name -> name
+        | None -> raise Not_found
+      with e -> OpamMisc.fatal e; raise Not_found
+    else raise Not_found
+  in
   let pin global_options kind edit remove no_act dev_repo command params =
     apply_global_options global_options;
     let action = not no_act in
@@ -1443,7 +1454,14 @@ let pin ?(unpin_only=false) () =
     | Some `edit, [n]  ->
       `Ok (Client.PIN.edit ~action (OpamPackage.Name.of_string n))
     | Some `add, name::p | Some `default name, p ->
-      let n = OpamPackage.Name.of_string name in
+      let n,p =
+        try OpamPackage.Name.of_string name, p
+        with Failure _ when p = [] ->
+          try guess_name (OpamFilename.Dir.of_string name), [name]
+          with Not_found ->
+            failwith "%s is neither a valid package name nor a directory \
+                      containing an opam package name definition"
+      in
       (match p with
        | [] ->
          if dev_repo then `Ok (Client.PIN.pin n ~edit ~action None) else
