@@ -183,6 +183,9 @@ module OPAM: sig
   (** The package flags that are present for this package. *)
   val flags: t -> package_flag list
 
+  (** The package source repository address *)
+  val dev_repo: t -> pin_option option
+
   (** construct as [name] *)
   val with_name: t -> name -> t
 

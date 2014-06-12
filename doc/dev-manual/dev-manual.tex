@@ -238,6 +238,7 @@ The field {\tt cores} is the number of parallel process that
     ?homepage:      STRING
     ?authors:       [ STRING+ ]
     ?doc:           STRING
+    ?dev-repo:      STRING
     ?license:       STRING
     ?tags:          [ STRING+ ]
     ?subst:         [ STRING+ ]
@@ -304,9 +305,11 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt maintainer} is the contact address of the
   package maintainer.
 
-\item The {\tt license}, {\tt homepage} {\tt doc} and {\tt authors}
-  fields are optional. {\tt doc} should be the address of the online
-  documentation for the package.
+\item The {\tt license}, {\tt homepage}, {\tt doc}, {\tt authors} and {\tt
+    dev-repo} fields are optional. {\tt doc} should be the address of the online
+  documentation for the package. {\tt dev-repo} should point to the source
+  repository of the package, which may be useful for developpers: not to be
+  mistaken with the URL file, which points to the specific packaged version.
 
 \item The {\tt tags} field is optional contains a list of tags to
   classify the package.

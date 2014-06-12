@@ -850,6 +850,7 @@ module X = struct
       bug_reports : string list;
       post_messages: (string * filter option) list;
       flags      : package_flag list;
+      dev_repo   : pin_option option;
     }
 
     let empty = {
@@ -882,6 +883,7 @@ module X = struct
       post_messages = [];
       bug_reports = [];
       flags      = [];
+      dev_repo   = None;
     }
 
     let create nv =
@@ -920,6 +922,7 @@ module X = struct
     let s_post_messages = "post-messages"
     let s_bug_reports = "bug-reports"
     let s_flags       = "flags"
+    let s_dev_repo    = "dev-repo"
 
     let opam_1_0_fields = [
       s_opam_version;
@@ -956,6 +959,7 @@ module X = struct
       s_post_messages;
       s_bug_reports;
       s_flags;
+      s_dev_repo;
     ]
 
     let to_1_0_fields k v =
@@ -1011,6 +1015,7 @@ module X = struct
     let opam_version t = t.opam_version
     let bug_reports t = t.bug_reports
     let flags t = t.flags
+    let dev_repo t = t.dev_repo
 
     let with_name t name = { t with name = Some name }
     let with_version t version = { t with version = Some version }
@@ -1092,6 +1097,8 @@ module X = struct
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
+          @ option  t.dev_repo      s_dev_repo
+            (string_of_pin_option @> OpamFormat.make_string)
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string [s_os; s_ocaml_version; s_available] s
@@ -1179,12 +1186,16 @@ module X = struct
         OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
       let flags = OpamFormat.assoc_list s s_flags
           OpamFormat.(parse_list parse_flag) in
+      let dev_repo =
+        OpamFormat.assoc_option s s_dev_repo
+          (OpamFormat.parse_string @> address_of_string @> parse_url @> pin_of_url)
+      in
       { opam_version; name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
-        bug_reports; flags
+        bug_reports; flags; dev_repo
       }
 
     let template nv =

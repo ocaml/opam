@@ -33,13 +33,13 @@ val address_of_string: string -> address
 (** Guess an address kind using url suffixes ([.git], etc.) and prefixes
     ([http://], etc.). Defaults to `local. The returned address is a correct
     path in case of [file://] *)
-val parse_url: address -> address * [`http|`local|`git|`darcs|`hg]
+val parse_url: address -> address * repository_kind
 
 (** Pretty-print repository kinds. *)
-val string_of_repository_kind: [`http|`local|`git|`darcs|`hg] -> string
+val string_of_repository_kind: repository_kind -> string
 
 (** Parser of repository kinds. Raise an error if the kind is not valid. *)
-val repository_kind_of_string: string -> [`http|`local|`git|`darcs|`hg]
+val repository_kind_of_string: string -> repository_kind
 
 (** Extract a package from a package action. *)
 val action_contents: 'a action -> 'a
@@ -71,6 +71,9 @@ val string_of_pin_option: pin_option -> string
 
 (** Get the pin kind from a pin option *)
 val kind_of_pin_option: pin_option -> pin_kind
+
+(** Get a pin_option from address and kind *)
+val pin_of_url: address * repository_kind -> pin_option
 
 (** Pretty-print *)
 val string_of_shell: shell -> string

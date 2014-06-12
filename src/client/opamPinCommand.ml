@@ -31,9 +31,12 @@ let cleanup_dev_dirs t name =
 
 let edit t name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
-  if not (OpamState.is_pinned t name) then
-    OpamGlobals.error_and_exit "%s is not pinned."
-      (OpamPackage.Name.to_string name);
+  let pin =
+    try OpamPackage.Name.Map.find name t.pinned
+    with Not_found ->
+      OpamGlobals.error_and_exit "%s is not pinned."
+        (OpamPackage.Name.to_string name)
+  in
   let installed_nv =
     try Some (OpamState.find_installed_package_by_name t name)
     with Not_found -> None
@@ -45,6 +48,7 @@ let edit t name =
     OpamFilename.OP.(OpamPath.backup_dir t.root //
                      (OpamPackage.Name.to_string name ^ "-opam.bak")) in
   OpamFilename.copy ~src:file ~dst:backup;
+  let orig_opam = OpamFile.OPAM.read file in
   let rec edit () =
     try
       ignore @@ Sys.command
@@ -75,6 +79,19 @@ let edit t name =
   in
   let opam = edit () in
   OpamFilename.remove backup;
+  if opam = orig_opam then None else
+  let () = match pin with
+    | Local dir ->
+      let src_opam =
+        OpamFilename.OP.(
+          if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
+          else dir // "opam")
+       in
+       if OpamState.confirm "Save the new opam file back to %S ?"
+           (OpamFilename.to_string src_opam) then
+         OpamFilename.copy ~src:file ~dst:src_opam
+    | Version _ | Git _ | Darcs _ | Hg _ -> ()
+  in
   match installed_nv with
   | None -> None
   | Some nv -> Some (OpamPackage.version nv = OpamFile.OPAM.version opam)
