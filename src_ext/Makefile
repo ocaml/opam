@@ -30,9 +30,10 @@ lib-ext: clone build copy
 	@
 
 build: clone
+	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=bcl
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=ncl
 
-all: ncl
+all: bcl ncl
 
 clone: $(SRC_EXTS:=.stamp) graph-workaround
 	@
@@ -77,7 +78,7 @@ distclean:
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo
 
-inst_objs = cp $(1)/*.cm* $(1)/*.o lib
+inst_objs = cp $(1)/*.cm*i lib
 
 copy: build
 	mkdir -p lib
