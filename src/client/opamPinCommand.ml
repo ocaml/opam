@@ -196,9 +196,10 @@ let unpin name =
     let pins = OpamPackage.Name.Map.remove name pins in
     update_config t name pins;
 
-    OpamGlobals.msg "%s is now %a from %s\n"
+    OpamGlobals.msg "%s is now %a from %s %s\n"
       (OpamPackage.Name.to_string name)
       (OpamGlobals.acolor `bold) "unpinned"
+      (string_of_pin_kind (kind_of_pin_option current))
       (string_of_pin_option current);
 
     needs_reinstall
