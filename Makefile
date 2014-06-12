@@ -68,6 +68,10 @@ tests-%: opam opam-admin opam-check
 doc: opam-lib
 	$(MAKE) -C doc
 
+.PHONY: man
+man: opam-lib
+	$(MAKE) -C doc $@
+
 configure: configure.ac m4/*.m4
 	aclocal -I m4
 	autoconf

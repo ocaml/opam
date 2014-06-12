@@ -3,3 +3,28 @@ bin: [
   "src/opam-admin"
   "src/opam-installer"
 ]
+man: [
+  "?doc/man/opam.1" {"man1/opam.1"}
+  "?doc/man/opam-admin-make.1" {"man1/opam-admin-make.1"}
+  "?doc/man/opam-help.1" {"man1/opam-help.1"}
+  "?doc/man/opam-install.1" {"man1/opam-install.1"}
+  "?doc/man/opam-reinstall.1" {"man1/opam-reinstall.1"}
+  "?doc/man/opam-repository.1" {"man1/opam-repository.1"}
+  "?doc/man/opam-switch.1" {"man1/opam-switch.1"}
+  "?doc/man/opam-update.1" {"man1/opam-update.1"}
+  "?doc/man/opam-admin.1" {"man1/opam-admin.1"}
+  "?doc/man/opam-check.1" {"man1/opam-check.1"}
+  "?doc/man/opam-info.1" {"man1/opam-info.1"}
+  "?doc/man/opam-list.1" {"man1/opam-list.1"}
+  "?doc/man/opam-remote.1" {"man1/opam-remote.1"}
+  "?doc/man/opam-search.1" {"man1/opam-search.1"}
+  "?doc/man/opam-uninstall.1" {"man1/opam-uninstall.1"}
+  "?doc/man/opam-upgrade.1" {"man1/opam-upgrade.1"}
+  "?doc/man/opam-admin-check.1" {"man1/opam-admin-check.1"}
+  "?doc/man/opam-config.1" {"man1/opam-config.1"}
+  "?doc/man/opam-init.1" {"man1/opam-init.1"}
+  "?doc/man/opam-pin.1" {"man1/opam-pin.1"}
+  "?doc/man/opam-remove.1" {"man1/opam-remove.1"}
+  "?doc/man/opam-show.1" {"man1/opam-show.1"}
+  "?doc/man/opam-unpin.1" {"man1/opam-unpin.1"}
+]
