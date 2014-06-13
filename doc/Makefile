@@ -27,9 +27,6 @@ man:
 	for i in $(TOPICS_ADMIN); do\
 	  $(OPAM_ADMIN) $$i $(HELPFMT) > man/opam-admin-$$i.1;\
 	done
-	for i in opam-check; do\
-	  pandoc -s -t man man-ext/$$i.md -o man/$$i.1;\
-	done
 
 tutorials:
 	$(MAKE) -C tutorials
