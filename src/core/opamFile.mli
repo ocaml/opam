@@ -230,6 +230,10 @@ module OPAM: sig
   (** Construct using [depexts] *)
   val with_depexts: t -> tags option -> t
 
+  val with_flags: t -> package_flag list -> t
+
+  val with_dev_repo: t -> pin_option option -> t
+
   (** Convert to OPAM 1.0 *)
   val to_1_0: file -> file
 

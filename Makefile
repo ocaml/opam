@@ -29,6 +29,10 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
+clean:
+	$(MAKE) -C src $@
+	$(MAKE) -C doc $@
+
 ifdef DESTDIR
   LIBINSTALL_PREFIX ?= $(DESTDIR)
 else

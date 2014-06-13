@@ -9,3 +9,10 @@ opam.wiki:
 
 %.pdf: opam.wiki/%.md
 	pandoc $^ -o $@
+
+clean:
+	@[ -d opam.wiki ] && \
+	if cd opam.wiki && git diff-index --quiet origin/master; then \
+	  cd .. && rm -rf opam.wiki; \
+	else echo "WARNING: doc/tutorials/opam.wiki has local changes, not removing"; \
+	fi || true

@@ -1032,6 +1032,8 @@ module X = struct
     let with_patches t patches = { t with patches }
     let with_bug_reports t bug_reports = { t with bug_reports }
     let with_depexts t depexts = { t with depexts }
+    let with_flags t flags = { t with flags }
+    let with_dev_repo t dev_repo = {t with dev_repo }
 
     let to_string filename t =
       let make_file =
