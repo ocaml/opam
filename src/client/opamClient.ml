@@ -861,14 +861,17 @@ module API = struct
           OpamFilename.rmdir root;
         raise e)
 
-  (* Checks a request for [atoms] for conflicts with the orphan packages *)
-  let check_conflicts t atoms =
+  let packages_of_atoms t atoms =
     let check_atoms nv =
       let name = OpamPackage.name nv in
       let atoms = List.filter (fun (n,_) -> n = name) atoms in
       atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
     (* All packages satisfying [atoms] *)
-    let changes = OpamPackage.Set.filter check_atoms t.packages in
+    OpamPackage.Set.filter check_atoms t.packages
+
+  (* Checks a request for [atoms] for conflicts with the orphan packages *)
+  let check_conflicts t atoms =
+    let changes = packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
@@ -1013,6 +1016,13 @@ module API = struct
     log "REMOVE autoremove:%b %a" autoremove
       (slog OpamFormula.string_of_atoms) atoms;
 
+    let t, full_orphans, orphan_versions =
+      let changes =
+        if autoremove then None
+        else Some (packages_of_atoms t atoms) in
+      orphans ?changes t
+    in
+
     let nothing_to_do = ref true in
     let atoms =
       List.filter (fun (n,_) ->
@@ -1055,8 +1065,9 @@ module API = struct
           (OpamSolver.reverse_dependencies
              ~depopts:false ~installed:true universe packages) in
       let to_keep =
-        if autoremove then t.installed_roots -- to_remove
-        else t.installed -- to_remove in
+        (if autoremove then t.installed_roots else t.installed)
+        -- to_remove -- full_orphans -- orphan_versions
+      in
       let to_keep =
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
