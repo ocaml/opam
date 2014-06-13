@@ -13,4 +13,4 @@ html: dev-manual.html
 	links -dump $< > $@
 
 clean:
-	rm -f *~ *.log *.toc *.out *.bbl *.blg *.aux
+	rm -f *~ *.log *toc *.out *.bbl *.blg *aux *.html

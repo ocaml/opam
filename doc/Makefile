@@ -42,5 +42,11 @@ dev:
 	$(MAKE) -C dev-manual
 
 html:
+	rm -rf html
 	mkdir -p html/
 	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/ || true
+
+clean:
+	rm -rf man html
+	$(MAKE) -C dev-manual clean
+	$(MAKE) -C tutorials clean
