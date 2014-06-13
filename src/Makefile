@@ -4,7 +4,7 @@ ifndef version
   $(error Please run ./configure)
 endif
 
-all: opam-lib opam opam-check opam-admin opam-installer opamlfind
+all: opam-lib opam opam-check opam-admin opam-installer opamlfind opam-admin.top
 	@
 
 # --
@@ -57,7 +57,7 @@ opam-lib.byte: $(OPAMLIB:=.cma)
 opam-lib.native: $(OPAMLIB:=.cmxa)
 	@
 
-opam-lib: opam-lib.byte $(if $(USE_BYTE),,opam-lib.native)
+opam-lib: opam-lib.byte $(if $(USE_BYTE),,opam-lib.native) opam-admin.top
 	@
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
@@ -225,17 +225,27 @@ define PROJ_opamlfind
 endef
 export PROJ_opamlfind
 
+opam-admin.top: opam-lib.byte ALWAYS
+	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam-admin-top SUBTARGET=top
+
+define PROJ_opam-admin-top
+  SOURCES = scripts/opam_admin_top.ml
+  RESULT = opam-admin
+  LIBS = $(LIBS) $(OPAMLIB)
+endef
+export PROJ_opam-admin-top
+
 # --
 
 ifndef SUBPROJS
-  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind
+  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind opam-admin-top
 endif
 
 OCAMLMAKEFILE = ../OCamlMakefile
 export OCAMLMAKEFILE
 
 clean-aux:
-	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(SCRIPTS)
+	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(SCRIPTS) opam-admin.top opam_admin_top.*
 
 clean: clean-aux
 

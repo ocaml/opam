@@ -102,4 +102,9 @@ lib: [
   "?src/client/opamClient.cmti"
   "src/client/opamArg.cmi"
   "?src/client/opamArg.cmti"
+  "src/scripts/opam_admin_top.cmi"
+  "?src/scripts/opam_admin_top.cmti"
+]
+bin: [
+  "src/opam-admin.top"
 ]

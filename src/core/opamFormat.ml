@@ -266,6 +266,18 @@ let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 
+let escape_string s =
+  let len = String.length s in
+  let buf = Buffer.create (len * 2) in
+  Buffer.add_char buf '"';
+  for i = 0 to len -1 do
+    match s.[i] with
+    | '\\' | '"' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
+    | c -> Buffer.add_char buf c
+  done;
+  Buffer.add_char buf '"';
+  Buffer.contents buf
+
 let rec pretty_string_of_value depth ~simplify ~indent value =
   let psov =
     pretty_string_of_value (depth + 1) ~simplify ~indent in
@@ -282,9 +294,9 @@ let rec pretty_string_of_value depth ~simplify ~indent value =
     if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
     then Printf.sprintf "\"%%{%s}%%\"" s
     else s
-  | Int (_,i)       -> Printf.sprintf "%d" i
-  | Bool (_,b)      -> Printf.sprintf "%b" b
-  | String (_,s)    -> Printf.sprintf "%S" s
+  | Int (_,i)       -> string_of_int i
+  | Bool (_,b)      -> string_of_bool b
+  | String (_,s)    -> escape_string s
   | List (_,[List(_,[])]) -> Printf.sprintf "[]"
   | List (_,l)      -> pretty_string_of_list depth ~simplify ~indent l
   | Group (_,g)     -> Printf.sprintf "(%s)"
