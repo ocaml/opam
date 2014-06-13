@@ -293,8 +293,27 @@ let import_t filename t =
         | p, None -> p)
       t.pinned import_pins
   in
+  (* Add the imported pins in case they don't exist already *)
+  let available =
+    OpamPackage.Set.fold (fun nv available ->
+        if OpamPackage.Set.mem nv available then available else
+        if OpamPackage.Name.Map.mem (OpamPackage.name nv) import_pins then
+          OpamPackage.Set.add nv available
+        else (
+          OpamGlobals.warning "Package %s is not available, skipping"
+            (OpamPackage.to_string nv);
+          available
+        )
+      )
+      imported (Lazy.force t.available_packages)
+  in
+  let imported = imported %% available in
+  let import_roots = import_roots %% available in
   let old_pinned = t.pinned in
-  let t = {t with pinned} in
+  let t = {t with pinned;
+                  available_packages = lazy available;
+                  packages = t.packages ++ available }
+  in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   try
     let _ =
