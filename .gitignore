@@ -14,11 +14,16 @@ src_ext/*.tar.gz
 *.annot
 *.tar.gz
 *~
+.#*
 ocp-build.root
 ocp-build.root.old
 ocp-get
 ocp-get-server
 ocp-build.root.old.old
+# debug files
+*.log
+*.cudf
+*.dot
 # Generated files:
 *.cmo
 *.cmx
@@ -33,7 +38,6 @@ META
 Makefile.config
 config.log
 config.status
-doc/man-ext/opam-check.md
 src/core/opamGitVersion.ml
 src/core/opamScript.ml
 src/core/opamVersion.ml
@@ -51,3 +55,12 @@ src/opamlfind
 ._bcdi
 aclocal.m4
 autom4te.cache
+# doc
+doc/dev-manual/*aux
+doc/dev-manual/*.html
+doc/dev-manual/*toc
+doc/html
+doc/man-html
+doc/tutorials/opam.wiki
+doc/dev-manual/*.out
+doc/man

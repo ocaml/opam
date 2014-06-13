@@ -4499,7 +4499,7 @@ if test "$prefix" = "NONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config META src/core/opamVersion.ml doc/man-ext/opam-check.md"
+ac_config_files="$ac_config_files Makefile.config META src/core/opamVersion.ml"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5210,7 +5210,6 @@ do
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "META") CONFIG_FILES="$CONFIG_FILES META" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
-    "doc/man-ext/opam-check.md") CONFIG_FILES="$CONFIG_FILES doc/man-ext/opam-check.md" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

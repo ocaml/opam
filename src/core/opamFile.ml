@@ -1275,14 +1275,33 @@ module X = struct
     let share_root t = t.share_root
     let etc t = t.etc
     let doc t = t.doc
+
+    let add_man_section_dir src =
+      let file = Filename.basename (OpamFilename.Base.to_string src.c) in
+      let section =
+        let base =
+          if Filename.check_suffix file ".gz"
+          then Filename.chop_suffix file ".gz" else file
+        in
+        try
+          let dot = String.rindex base '.' in
+          if dot < String.length base - 1 then match base.[dot+1] with
+            | '1'..'8' as c -> Printf.sprintf "man%c" c
+            | _ -> raise Not_found
+          else raise Not_found
+        with Not_found ->
+          OpamGlobals.error_and_exit
+            "Manpage %s does not have a recognised suffix, \
+             and no destination is specified" (OpamFilename.Base.to_string src.c)
+      in
+      OpamFilename.Base.of_string (Filename.concat section file)
+
     let man t =
       List.map (fun (src, dst) ->
           src,
           match dst with
-          | None ->
-            let base = Filename.basename (OpamFilename.Base.to_string src.c) in
-            Some (OpamFilename.Base.of_string (Filename.concat "man3" base))
-          | _    -> dst
+          | Some _ -> dst
+          | None -> Some (add_man_section_dir src)
         ) t.man
 
     let s_lib      = "lib"
