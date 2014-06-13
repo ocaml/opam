@@ -14,10 +14,12 @@
 
 \title{
 OPAM: A Package Management System for OCaml\\
-Developer Manual (version 1.1)\\ ~\ \\
+Developer Manual (version 1.2)\\ ~\ \\
 ~\ \\}
 \author{Thomas GAZAGNAIRE\\
 \url{thomas.gazagnaire@ocamlpro.com}\\
+Louis GESBERT\\
+\url{louis.gesbert@ocamlpro.com}\\
 }
 
 \begin{document}
@@ -1023,9 +1025,11 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/lib/toplevel/+.
 \item Files lister under {\tt stublibs} are copied into \verb+$opam/$SWITCH/lib/stublibs/+
 \item Files listed under {\tt man} are copied into
-  \verb+$opam/$SWITCH/man/man3+. You can change the sub-directory by setting
-  the right optional argument (for instance:
-  \verb+man: [ "foo.1" {"man1/foo.1"} ]+.)
+  \verb+$opam/$SWITCH/man/manN+, where \verb+N+ is taken from the extension of
+  the source file if $1\dots8$ (not considering a \verb+.gz+ extension). If the
+  destination is explicit, it will be taken relative to
+  \verb+$opam/$SWITCH/man+, e.g.
+  \verb+man: [ "foo.1" ]+ is equivalent to \verb+man: [ "foo.1" {"man1/foo.1"} ]+
 \item Files listed under {\tt misc} are processed as follows:
   for each pair \verb+$SRC { $DST }+, the tool asks the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
