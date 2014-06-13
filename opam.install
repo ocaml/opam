@@ -13,7 +13,6 @@ man: [
   "?doc/man/opam-switch.1" {"man1/opam-switch.1"}
   "?doc/man/opam-update.1" {"man1/opam-update.1"}
   "?doc/man/opam-admin.1" {"man1/opam-admin.1"}
-  "?doc/man/opam-check.1" {"man1/opam-check.1"}
   "?doc/man/opam-info.1" {"man1/opam-info.1"}
   "?doc/man/opam-list.1" {"man1/opam-list.1"}
   "?doc/man/opam-remote.1" {"man1/opam-remote.1"}
