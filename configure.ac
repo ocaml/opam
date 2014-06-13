@@ -98,7 +98,6 @@ AC_CONFIG_FILES(
   Makefile.config
   META
   src/core/opamVersion.ml
-  doc/man-ext/opam-check.md
 )
 AC_OUTPUT
 
