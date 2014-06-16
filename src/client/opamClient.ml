@@ -531,6 +531,22 @@ module API = struct
       ) in
     loop repo max_loop
 
+  (* Check atoms for pinned packages, and update them. Returns the state that
+     may have been reloaded if there were changes *)
+  let update_dev_packages_t atoms t =
+    let to_update =
+      List.fold_left (fun to_update (name,_) ->
+          match OpamState.pinned_opt t name with
+          | None -> to_update
+          | Some nv ->
+            OpamPackage.Set.add nv to_update)
+        OpamPackage.Set.empty atoms
+    in
+    if OpamPackage.Set.is_empty to_update then t else
+    let updated = OpamState.update_dev_packages t to_update in
+    if OpamPackage.Set.is_empty updated then t
+    else OpamState.load_state "reload-dev-package-updated"
+
   let compute_upgrade_t atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
     if atoms = [] then
@@ -598,6 +614,7 @@ module API = struct
 
   let upgrade_t atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
+    let t = update_dev_packages_t atoms t in
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
@@ -900,6 +917,7 @@ module API = struct
   let install_t atoms add_to_roots deps_only t =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t atoms in
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
+    let t = update_dev_packages_t atoms t in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
@@ -1102,6 +1120,7 @@ module API = struct
   let reinstall_t ?(force=false) atoms t =
     let atoms = OpamSolution.sanitize_atom_list t atoms in
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
+    let t = update_dev_packages_t atoms t in
 
     let t, _, _ = check_conflicts t atoms in
 

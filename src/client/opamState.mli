@@ -363,7 +363,7 @@ val is_locally_pinned: state -> name -> bool
 (** Returns the versionned pinned package. @raise Not_found if not pinned *)
 val pinned: state -> name -> package
 
-(** Returns the versionned pinned package. @raise Not_found if not pinned *)
+(** Returns the versionned pinned package, or [None] if not pinned *)
 val pinned_opt: state -> name -> package option
 
 (** The set of pinned packages in the state (warning: costly) *)
