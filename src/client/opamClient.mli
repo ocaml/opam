@@ -58,6 +58,9 @@ module API: sig
       An empty list means upgrade all installed packages. *)
   val upgrade: atom list -> unit
 
+  (** Recovers from an inconsistent universe *)
+  val fixup: unit -> unit
+
   (** Remove the given list of packages. *)
   val remove: autoremove:bool -> force:bool -> atom list -> unit
 

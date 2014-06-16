@@ -306,43 +306,57 @@ let make_chains cudf_universe cudf2opam depends =
     List.map (fun cpkg -> [cpkg.Cudf.package,None]) roots_list in
   aux start_constrs roots_list
 
-let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
-  let open Algo.Diagnostic in
-  let depends, reasons =
-    reasons,
-    List.filter (function Dependency _ -> false | _ -> true) reasons in
-  let b = Buffer.create 1024 in
+let strings_of_final_reasons cudf2opam unav_reasons cudf_universe reasons =
   let reasons =
     List.flatten
       (List.map
          (strings_of_reason cudf2opam unav_reasons cudf_universe)
          reasons) in
-  let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
-  let chains = make_chains cudf_universe cudf2opam depends in
+  OpamMisc.StringSet.(elements (of_list reasons))
+
+let arrow_concat =
+  String.concat (OpamGlobals.colorise `yellow " -> ")
+
+let strings_of_chains cudf2opam cudf_universe reasons =
+  let chains = make_chains cudf_universe cudf2opam reasons in
   let string_of_chain c =
-    String.concat (OpamGlobals.colorise `yellow " -> ")
-      (List.map OpamFormula.to_string c) in
+    arrow_concat (List.map OpamFormula.to_string c) in
+  List.map string_of_chain chains
+
+let strings_of_cycles cycles =
+  List.map arrow_concat cycles
+
+let strings_of_conflict unav_reasons = function
+  | univ, Conflict_dep reasons ->
+    let r = reasons () in
+    strings_of_final_reasons cudf2opam unav_reasons univ r,
+    strings_of_chains cudf2opam univ r,
+    []
+  | _univ, Conflict_cycle cycles ->
+    [], [], strings_of_cycles cycles
+
+let string_of_conflict unav_reasons conflict =
+  let final, chains, cycles = strings_of_conflict unav_reasons conflict in
+  let b = Buffer.create 1024 in
+  let pr_items b l = List.iter (Printf.bprintf b "  - %s\n") l in
+  if cycles <> [] then
+    Printf.bprintf b
+      "The actions to process have cyclic dependencies:\n%a"
+      pr_items cycles;
   if chains <> [] then
     Printf.bprintf b
       "The following dependencies couldn't be met:\n%a"
-      (fun b ->
-         List.iter
-           (fun c -> Printf.bprintf b " - %s\n" (string_of_chain c)))
-      chains;
-  if reasons <> [] then
-    Printf.bprintf b "Your request can't be satisfied:\n%a\n"
-      (fun b -> List.iter (Printf.bprintf b " - %s\n"))
-      reasons;
-  if reasons = [] && chains = [] then (* No explanation found :( *)
+      pr_items chains;
+  if final <> [] then
+    Printf.bprintf b
+      "Your request can't be satisfied:\n%a"
+      pr_items final;
+  if final = [] && chains = [] && cycles = [] then (* No explanation found *)
     Printf.bprintf b
       "Sorry, no solution found: \
        there seems to be a problem with your request.\n";
+  Buffer.add_string b "\n";
   Buffer.contents b
-
-let string_of_conflict unav_reasons = function
-  | univ, Conflict_dep reasons ->
-    string_of_reasons cudf2opam unav_reasons univ (reasons ())
-  | _univ, Conflict_cycle cycles -> print_cycles cycles
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true

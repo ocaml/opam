@@ -621,14 +621,47 @@ module API = struct
     match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
-      OpamGlobals.msg "%s"
-        (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs)
+      let reasons, chains, _cycles =
+        OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
+      OpamGlobals.warning
+        "This is a consistency problem with the currently \
+         installed packages:";
+      List.iter (OpamGlobals.msg "  - %s\n") reasons;
+      if chains <> [] then (
+        OpamGlobals.msg "The following dependencies are in cause:\n";
+        List.iter (OpamGlobals.msg "  - %s\n") chains);
+      OpamGlobals.msg
+        "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
+         installation.\n"
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
       OpamSolution.check_solution t result
 
   let upgrade names = with_switch_backup "upgrade" (upgrade_t names)
+
+  let fixup_t t =
+    log "FIXUP";
+    if not (OpamCudf.external_solver_available ()) then
+      (OpamGlobals.msg
+         "Sorry, \"--fixup\" is not available without an external solver. \n\
+          You'll have to select the packages to change or remove by hand, \
+          or install aspcud or another solver on your system.\n";
+       OpamGlobals.exit 1)
+    else
+    let t, _full_orphans, _orphan_versions = orphans ~transitive:true t in
+    let requested = OpamPackage.Name.Set.empty in
+    let action = Upgrade OpamPackage.Set.empty in
+    let solution =
+      OpamSolution.resolve_and_apply t action ~requested
+        { wish_install = [];
+          wish_remove  = [];
+          wish_upgrade = [];
+          criteria = !OpamGlobals.solver_fixup_preferences; }
+    in
+    OpamSolution.check_solution t solution
+
+  let fixup () = with_switch_backup "fixup" fixup_t
 
   let update ~repos_only names =
     let t = OpamState.load_state ~save_cache:true "update" in
@@ -778,8 +811,18 @@ module API = struct
         (OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
          OpamGlobals.msg
            "You can now run 'opam upgrade' to upgrade your system.\n")
-    | _ ->
-      OpamGlobals.msg "No stats"
+    | _, _, Conflicts cs ->
+      let reasons, chains, _cycles =
+        OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
+      OpamGlobals.warning
+        "A conflict was detected in your installation. This can be caused by updated\n\
+         constraints in your installed packages:";
+      List.iter (OpamGlobals.msg "  - %s\n") reasons;
+      if chains <> [] then (
+        OpamGlobals.msg "The following dependencies are in cause:\n";
+        List.iter (OpamGlobals.msg "  - %s\n") chains);
+      OpamGlobals.msg
+        "\nYou should run \"opam upgrade --fixup\" to resolve the situation.\n"
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %a" (slog OpamRepository.to_string) repo;
@@ -1300,6 +1343,9 @@ module SafeAPI = struct
 
   let upgrade names =
     switch_lock (fun () -> API.upgrade names)
+
+  let fixup () =
+    switch_lock API.fixup
 
   let remove ~autoremove ~force names =
     switch_lock (fun () -> API.remove ~autoremove ~force names)

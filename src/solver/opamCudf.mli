@@ -167,6 +167,13 @@ val cycle_conflict: Cudf.universe -> string list list -> ('a, conflict) result
     on an unavailable package (the reason can't be known this deep in the solver) *)
 val string_of_conflict: (atom -> string) -> conflict -> string
 
+(** Returns three lists of strings:
+    - the final reasons why the request can't be satisfied
+    - the dependency chains explaining it
+    - the cycles in the actions to process (exclusive with the other two) *)
+val strings_of_conflict:
+  (atom -> string) -> conflict -> string list * string list * string list
+
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
 
