@@ -20,6 +20,21 @@ open OpamTypesBase
 let log fmt = OpamGlobals.log "CUDF" fmt
 let slog = OpamGlobals.slog
 
+(* custom cudf field labels *)
+let s_source = "opam-name"
+let s_source_number = "opam-version"
+let s_reinstall = "reinstall"
+let s_installed_root = "installed-root"
+let s_builddep = "build-dep"
+let s_pinned = "pinned"
+
+let cudf2opam cpkg =
+  let sname = Cudf.lookup_package_property cpkg s_source in
+  let name = OpamPackage.Name.of_string sname in
+  let sver = Cudf.lookup_package_property cpkg s_source_number in
+  let version = OpamPackage.Version.of_string sver in
+  OpamPackage.create name version
+
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
   match a with
@@ -68,6 +83,12 @@ type solution = (Cudf.package, ActionGraph.t) gen_solution
 
 exception Cyclic_actions of Action.t list list
 
+type conflict_case =
+  | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
+  | Conflict_cycle of string list list
+type conflict =
+  Cudf.universe * conflict_case
+
 module Map = OpamMisc.Map.Make(Pkg)
 module Set = OpamMisc.Set.Make(Pkg)
 module Graph = struct
@@ -112,6 +133,7 @@ module Graph = struct
   include PG
 end
 
+(** Special package used by Dose internally, should generally be filtered out *)
 let dose_dummy_request = "dose-dummy-request"
 let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
 
@@ -162,6 +184,23 @@ let vpkg2opam cudf2opam cudf_universe vpkg =
   match vpkg2atom cudf2opam cudf_universe vpkg with
   | p, None -> p, Empty
   | p, Some (relop,v) -> p, Atom (relop, v)
+
+let conflict_empty univ = Conflicts (univ, Conflict_dep (fun () -> []))
+let make_conflicts univ = function
+  | {Algo.Diagnostic.result = Algo.Diagnostic.Failure f} ->
+    Conflicts (univ, Conflict_dep f)
+  | {Algo.Diagnostic.result = Algo.Diagnostic.Success _} ->
+    raise (Invalid_argument "make_conflicts")
+let cycle_conflict univ cycle =
+  Conflicts (univ, Conflict_cycle cycle)
+
+let print_cycles cycles =
+  Printf.sprintf
+    "The actions to process have cyclic dependencies:\n  - %s\n"
+    (String.concat "\n  - "
+       (List.map
+          (String.concat (OpamGlobals.colorise `yellow " -> "))
+          cycles))
 
 let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
   let open Algo.Diagnostic in
@@ -300,13 +339,10 @@ let string_of_reasons cudf2opam unav_reasons cudf_universe reasons =
        there seems to be a problem with your request.\n";
   Buffer.contents b
 
-(* custom cudf field labels *)
-let s_source = "opam-name"
-let s_source_number = "opam-version"
-let s_reinstall = "reinstall"
-let s_installed_root = "installed-root"
-let s_builddep = "build-dep"
-let s_pinned = "pinned"
+let string_of_conflict unav_reasons = function
+  | univ, Conflict_dep reasons ->
+    string_of_reasons cudf2opam unav_reasons univ (reasons ())
+  | _univ, Conflict_cycle cycles -> print_cycles cycles
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
@@ -437,8 +473,8 @@ let call_external_solver ~version_map univ req =
 let check_request ?(explain=true) ~version_map univ req =
   match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
   | Algo.Depsolver.Unsat
-      (Some {Algo.Diagnostic.result = Algo.Diagnostic.Failure f}) ->
-    Conflicts f
+      (Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _} as r)) ->
+    make_conflicts univ r
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
     let f = dump_cudf_error ~extern:false ~version_map univ req in
@@ -446,7 +482,7 @@ let check_request ?(explain=true) ~version_map univ req =
       msg f;
     failwith "opamSolver"
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
-    Conflicts (fun () -> [])
+    conflict_empty univ
 
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
@@ -464,7 +500,7 @@ let get_final_universe ~version_map univ req =
   | Algo.Depsolver.Unsat r   ->
     let open Algo.Diagnostic in
     match r with
-    | Some {result=Failure f} -> Conflicts f
+    | Some ({result=Failure _} as r) -> make_conflicts univ r
     | Some {result=Success _} -> fail "inconsistent return value."
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
@@ -836,15 +872,4 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
 
   { to_remove; to_process; root_causes }
 
-let opam_string_of_package p =
-  let n = Cudf.lookup_package_property p s_source in
-  let v = Cudf.lookup_package_property p s_source_number in
-  Printf.sprintf "%s.%s" n v
-
-let opam_string_of_packages l =
-  let l = List.map opam_string_of_package l in
-  let l = List.sort String.compare l in
-  String.concat " " l
-
-let opam_string_of_universe u =
-  opam_string_of_packages (List.sort compare (Cudf.get_packages u))
+let packages u = Cudf.get_packages u

@@ -25,7 +25,7 @@ val resolve:
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   atom request ->
-  (OpamSolver.solution, (atom -> string) -> string) result
+  (OpamSolver.solution, OpamCudf.conflict) result
 
 (** Apply a solution returned by the solver. *)
 val apply:

@@ -621,7 +621,8 @@ module API = struct
     match compute_upgrade_t atoms t with
     | _requested, _action, Conflicts cs ->
       log "conflict!";
-      OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t))
+      OpamGlobals.msg "%s"
+        (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs)
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
@@ -995,7 +996,8 @@ module API = struct
       let solution = match solution with
         | Conflicts cs ->
           log "conflict!";
-          OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+          OpamGlobals.msg "%s"
+            (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
           No_solution
         | Success solution ->
           if deps_only then (
@@ -1158,7 +1160,8 @@ module API = struct
     let solution = match solution with
       | Conflicts cs ->
         log "conflict!";
-        OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+        OpamGlobals.msg "%s"
+          (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
         No_solution
       | Success solution ->
         OpamSolution.apply t Reinstall ~requested solution in

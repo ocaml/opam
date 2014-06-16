@@ -171,13 +171,6 @@ let opam2cudf universe ?(depopts=false) version_map package =
     pkg_extra = extras;
   }
 
-let cudf2opam cpkg =
-  let sname = Cudf.lookup_package_property cpkg OpamCudf.s_source in
-  let name = OpamPackage.Name.of_string sname in
-  let sver = Cudf.lookup_package_property cpkg OpamCudf.s_source_number in
-  let version = OpamPackage.Version.of_string sver in
-  OpamPackage.create name version
-
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?depopts opam_universe ?version_map opam_packages =
   let version_map = match version_map with
@@ -267,12 +260,12 @@ let cleanup_request universe (req:atom request) =
       ) req.wish_upgrade in
   { req with wish_install; wish_upgrade }
 
-let print_cycles =
-  Printf.sprintf
-    "Error: the actions to process have cyclic dependencies:\n  - %s\n" @*
-  String.concat "\n  - " @*
-  List.map (String.concat " -> " @*
-            List.map (Action.to_string @* map_action cudf2opam))
+let cycle_conflict univ cycles =
+  OpamCudf.cycle_conflict univ
+    (List.map
+       (List.map
+          (fun a -> Action.to_string (map_action OpamCudf.cudf2opam a)))
+       cycles)
 
 let resolve ?(verbose=true) universe ~requested request =
   log "resolve request=%a" (slog string_of_request) request;
@@ -288,7 +281,7 @@ let resolve ?(verbose=true) universe ~requested request =
     load_cudf_universe universe ~version_map
       (orphan_packages ++
          (OpamPackage.Set.of_list
-            (List.map cudf2opam (Cudf.get_packages u)))) in
+            (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
     if OpamCudf.external_solver_available ()
     then
@@ -300,11 +293,7 @@ let resolve ?(verbose=true) universe ~requested request =
           "Please retry with option --use-internal-solver"
     else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
-  | Conflicts c     ->
-    Conflicts (fun get_unav_reasons ->
-        OpamCudf.string_of_reasons
-          cudf2opam get_unav_reasons simple_universe
-          (c ()))
+  | Conflicts _ as c -> c
   | Success actions ->
     let all_packages =
       universe.u_available ++ orphan_packages in
@@ -316,9 +305,9 @@ let resolve ?(verbose=true) universe ~requested request =
       let cudf_solution =
         OpamCudf.solution_of_actions
           ~simple_universe ~complete_universe ~requested actions in
-      Success (solution cudf2opam cudf_solution)
+      Success (solution OpamCudf.cudf2opam cudf_solution)
     with OpamCudf.Cyclic_actions cycles ->
-      Conflicts (fun _ -> print_cycles cycles)
+      cycle_conflict complete_universe cycles
 
 
 let installable universe =
@@ -327,7 +316,7 @@ let installable universe =
     load_cudf_universe universe universe.u_available in
   let trimed_universe = Algo.Depsolver.trim simple_universe in
   Cudf.fold_packages
-    (fun universe pkg -> OpamPackage.Set.add (cudf2opam pkg) universe)
+    (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
     OpamPackage.Set.empty
     trimed_universe
 
@@ -342,7 +331,7 @@ let filter_dependencies f_direction ~depopts ~installed universe packages =
     List.rev_map (opam2cudf universe ~depopts version_map)
       (OpamPackage.Set.elements packages) in
   let topo_packages = f_direction cudf_universe cudf_packages in
-  let result = List.rev_map cudf2opam topo_packages in
+  let result = List.rev_map OpamCudf.cudf2opam topo_packages in
   log "filter_dependencies packages=%a result=%a"
     (slog OpamPackage.Set.to_string) packages
     (slog (OpamMisc.string_of_list OpamPackage.to_string)) result;
@@ -448,7 +437,7 @@ let sequential_solution universe ~requested actions =
       OpamCudf.solution_of_actions
         ~simple_universe ~complete_universe ~requested
         actions in
-    Success (solution cudf2opam cudf_solution)
+    Success (solution OpamCudf.cudf2opam cudf_solution)
 
   with OpamCudf.Cyclic_actions cycles ->
-    Conflicts (fun _ -> print_cycles cycles)
+    cycle_conflict complete_universe cycles
