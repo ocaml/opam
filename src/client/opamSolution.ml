@@ -550,20 +550,24 @@ let print_external_tags t solution =
 
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
-let confirmation requested solution =
+let confirmation ?ask requested solution =
   !OpamGlobals.yes ||
-  PackageActionGraph.(
+  match ask with
+  | Some false -> true
+  | Some true -> OpamState.confirm "Do you want to continue ?"
+  | None ->
+    let open PackageActionGraph in
     let solution_packages =
       fold_vertex (fun v acc ->
           OpamPackage.Name.Set.add (OpamPackage.name (action_contents v)) acc)
         solution.to_process
         (OpamPackage.Name.Set.of_list
            (List.map OpamPackage.name solution.to_remove)) in
-    OpamPackage.Name.Set.equal requested solution_packages)
-  || OpamState.confirm "Do you want to continue ?"
+    OpamPackage.Name.Set.equal requested solution_packages
+    || OpamState.confirm "Do you want to continue ?"
 
 (* Apply a solution *)
-let apply ?(force = false) t action ~requested solution =
+let apply ?ask t action ~requested solution =
   log "apply";
   if !OpamGlobals.debug then
     PackageActionGraph.Dot.output_graph stdout solution.to_process;
@@ -605,7 +609,7 @@ let apply ?(force = false) t action ~requested solution =
       print_external_tags t solution;
       Aborted
     ) else if not !OpamGlobals.show &&
-              (force || confirmation requested solution)
+              confirmation ?ask requested solution
     then (
       print_variable_warnings t;
       parallel_apply t action solution
@@ -616,11 +620,11 @@ let apply ?(force = false) t action ~requested solution =
 let resolve ?(verbose=true) t action ~requested request =
   OpamSolver.resolve ~verbose (OpamState.universe t action) ~requested request
 
-let resolve_and_apply ?(force=false) t action ~requested request =
+let resolve_and_apply ?ask t action ~requested request =
   match resolve t action ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamGlobals.msg "%s"
       (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
     No_solution
-  | Success solution -> apply ~force t action ~requested solution
+  | Success solution -> apply ?ask t action ~requested solution

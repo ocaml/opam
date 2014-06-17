@@ -216,7 +216,7 @@ let install_packages ~packages switch compiler =
 
   match bad_packages with
   | [] ->
-    let solution = OpamSolution.resolve_and_apply ~force:true t (Switch roots)
+    let solution = OpamSolution.resolve_and_apply ~ask:false t (Switch roots)
 	~requested:roots
         { wish_install = [];
           wish_remove  = [];

@@ -27,18 +27,22 @@ val resolve:
   atom request ->
   (OpamSolver.solution, OpamCudf.conflict) result
 
-(** Apply a solution returned by the solver. *)
+(** Apply a solution returned by the solver. If [ask] is not
+    specified, prompts the user whenever the solution isn't
+    obvious from the request *)
 val apply:
-  ?force:bool ->
+  ?ask:bool ->
   OpamState.state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   OpamSolver.solution ->
   solver_result
 
-(** Call the solver to get a solution and then call [apply]. *)
+(** Call the solver to get a solution and then call [apply]. If [ask] is not
+    specified, prompts the user whenever the solution isn't obvious from the
+    request *)
 val resolve_and_apply:
-  ?force:bool ->
+  ?ask:bool ->
   OpamState.state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
