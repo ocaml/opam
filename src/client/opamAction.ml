@@ -326,6 +326,8 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
   (* Run the remove script *)
   let opam = OpamState.opam_opt t nv in
 
+  let dot_install = OpamPath.Switch.install t.root t.switch name in
+
   OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
 
   begin match opam with
@@ -346,7 +348,8 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
         then p_build, Some name
         else t.root , None in
       try
-        OpamGlobals.msg "%s\n" (string_of_commands remove);
+        if remove <> [] || not (OpamFilename.exists dot_install) then
+          OpamGlobals.msg "%s\n" (string_of_commands remove);
         let metadata = get_metadata t in
         if not !OpamGlobals.dryrun then
           OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true
@@ -371,7 +374,7 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
   let install =
-    OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
+    OpamFile.Dot_install.safe_read dot_install in
 
   let remove_files dst_fn files =
     let files = files install in
