@@ -403,23 +403,26 @@ let is_locally_pinned t name =
 
 let opam_opt t nv =
   let name = OpamPackage.name nv in
-  try
-    if not (OpamPackage.Name.Map.mem name t.pinned) then raise Not_found else
-    let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+  let base () =
+    try Some (OpamPackage.Map.find nv t.opams)
+    with Not_found ->
+      if OpamPackage.Set.mem nv t.installed then
+        (OpamGlobals.warning "no package description left for %s"
+           (OpamPackage.to_string nv);
+         Some (OpamFile.OPAM.create nv))
+      else
+        None
+  in
+  let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+  if OpamFilename.exists overlay then
     let o = OpamFile.OPAM.read overlay in
     if OpamFile.OPAM.version o = OpamPackage.version nv then Some o
     else
       (log "Looking for %s which is pinned to %s (not using overlay)"
          (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
-       raise Not_found)
-  with Not_found -> (* not pinned *)
-    try Some (OpamPackage.Map.find nv t.opams)
-    with Not_found ->
-      if OpamPackage.Set.mem nv t.installed then
-        (* Work-around for installed packages with no more metadata *)
-        Some (OpamFile.OPAM.create nv)
-      else
-        None
+       base ())
+  else
+    base ()
 
 let opam t nv =
   match opam_opt t nv with
@@ -1152,27 +1155,38 @@ let global_consistency_checks t =
     )
 
 let switch_consistency_checks t =
-  let dir = OpamPath.Switch.dev_packages_dir t.root t.switch in
-  let dirs = OpamFilename.dirs dir in
-  let stale_dirs =
-    List.filter (fun d ->
-        try
-          let name =
-            OpamPackage.Name.of_string
-              (OpamFilename.Base.to_string (OpamFilename.basename_dir d)) in
-          not (OpamPackage.has_name t.installed name) &&
-          not (OpamPackage.Name.Map.mem name t.pinned)
-        with Failure _ -> true)
-      dirs
+  let cleanup_dir title dir filter =
+    let dirs = OpamFilename.dirs dir in
+    let stale_dirs =
+      List.filter (fun d ->
+          try
+            let name =
+              OpamPackage.Name.of_string
+                (OpamFilename.Base.to_string (OpamFilename.basename_dir d)) in
+            filter name
+          with Failure _ -> true)
+        dirs
+    in
+    List.iter (fun d ->
+        log "Stale %s directory %s, removing" title (OpamFilename.Dir.to_string d);
+        OpamFilename.rmdir d)
+      stale_dirs;
+    List.iter (fun f ->
+        OpamGlobals.error "Removing %s.\n" (OpamFilename.to_string f);
+        OpamFilename.remove f)
+      (OpamFilename.files dir)
   in
-  List.iter (fun d ->
-      log "Stale dev directory %s, removing" (OpamFilename.Dir.to_string d);
-      OpamFilename.rmdir d)
-    stale_dirs;
-  List.iter (fun f ->
-      OpamGlobals.error "Removing %s.\n" (OpamFilename.to_string f);
-      OpamFilename.remove f)
-    (OpamFilename.files dir)
+  cleanup_dir "dev"
+    (OpamPath.Switch.dev_packages_dir t.root t.switch)
+    (fun name ->
+       not (is_name_installed t name) && not (is_pinned t name));
+  cleanup_dir "overlay"
+    (OpamPath.Switch.Overlay.dir t.root t.switch)
+    (fun name ->
+       not (is_pinned t name) &&
+       (not (is_name_installed t name) ||
+        (* Don't cleanup installed packages which don't have any other metadata *)
+        OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = name) t.package_index))
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;

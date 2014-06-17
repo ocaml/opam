@@ -188,11 +188,13 @@ let unpin name =
 
   try
     let current = OpamPackage.Name.Map.find name pins in
+    let is_installed = OpamState.is_name_installed t name in
     let needs_reinstall = match current with
       | Version _ -> false
-      | _ -> OpamState.is_name_installed t name
+      | _ -> is_installed
     in
-    OpamState.remove_overlay t name;
+    if not is_installed then
+      OpamState.remove_overlay t name;
     let pins = OpamPackage.Name.Map.remove name pins in
     update_config t name pins;
 

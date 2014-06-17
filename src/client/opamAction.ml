@@ -285,14 +285,6 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
   );
   {t with installed; installed_roots; reinstall}
 
-let dev_opam t nv =
-  match OpamState.opam_opt t nv with
-  | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
-  | Some nv' ->
-    OpamFile.OPAM.with_name
-      (OpamFile.OPAM.with_version nv' (OpamPackage.version nv))
-      (OpamPackage.name nv)
-
 let removal_needs_download t nv =
   match OpamState.opam_opt t nv with
   | None ->
@@ -339,7 +331,6 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
          extracted If it does not exist, we try to download and
          extract the archive again, if that fails, we don't really
          care. *)
-      let opam = dev_opam t nv in
       let remove = OpamState.filter_commands t ~opam
           OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
       let name = OpamPackage.Name.to_string name in
@@ -424,6 +415,11 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
   OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
 
   end;
+
+  (* Cleanup if there was any stale overlay (unpinned but left installed
+     package) *)
+  if not (OpamState.is_pinned t name) then
+    OpamState.remove_overlay t name;
 
   (* Update the metadata *)
   if metadata then
@@ -529,7 +525,7 @@ let build_and_install_package_aux t ~metadata nv =
 
     let p_build = OpamPath.Switch.build t.root t.switch nv in
 
-    let opam = dev_opam t nv in
+    let opam = OpamState.opam t nv in
 
     (* Get the env variables set up in the compiler description file *)
     let env = compilation_env t opam in
