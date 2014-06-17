@@ -1221,7 +1221,8 @@ module X = struct
       in
       { t with
         maintainer;
-        build      = [[CString "./configure", None], None;
+        build      = [[CString "./configure", None;
+                       CString "--prefix=%{prefix}%", None;], None;
                       [CIdent "make", None], None;
                       [CIdent "make", None; CString "install", None], None];
         remove     = [[CString "ocamlfind", None; CString "remove", None;
