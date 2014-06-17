@@ -464,7 +464,8 @@ let files =
     OpamFilename.exists_dir
 
 let install_metadata t nv =
-  if OpamFilename.exists (OpamPath.opam t.root nv) then ()
+  if is_pinned t (OpamPackage.name nv) ||
+     OpamFilename.exists (OpamPath.opam t.root nv) then ()
   else
     let opam = opam t nv in
     OpamFile.OPAM.write (OpamPath.opam t.root nv) opam;
@@ -1364,11 +1365,19 @@ let load_state ?(save_cache=true) call_site =
     OpamFile.Package_index.safe_read (OpamPath.package_index root) in
   let compiler_index =
     OpamFile.Compiler_index.safe_read (OpamPath.compiler_index root) in
+  let installed =
+    OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
+  let pinned =
+    OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
+  let installed_roots =
+    OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
   let opams = match opams with
     | None   ->
       let packages =
-        OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) ++
-        OpamPackage.Set.of_list (OpamPackage.Map.keys package_index) in
+        OpamPackage.Set.of_list (OpamPackage.Map.keys package_index) ++
+        OpamPackage.Set.filter
+          (fun nv -> not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned))
+          installed in
       OpamPackage.Set.fold (fun nv map ->
           try
             let file =
@@ -1389,12 +1398,6 @@ let load_state ?(save_cache=true) call_site =
             map
         ) packages OpamPackage.Map.empty
     | Some o -> o in
-  let pinned =
-    OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
-  let installed =
-    OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
-  let installed_roots =
-    OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
   let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let reinstall =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
