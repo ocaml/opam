@@ -630,9 +630,10 @@ module API = struct
       if chains <> [] then (
         OpamGlobals.msg "The following dependencies are in cause:\n";
         List.iter (OpamGlobals.msg "  - %s\n") chains);
-      OpamGlobals.msg
-        "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
-         installation.\n"
+      if OpamCudf.external_solver_available () then
+        OpamGlobals.msg
+          "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
+           installation.\n"
     | requested, action, Success solution ->
       let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
@@ -821,8 +822,9 @@ module API = struct
       if chains <> [] then (
         OpamGlobals.msg "The following dependencies are in cause:\n";
         List.iter (OpamGlobals.msg "  - %s\n") chains);
-      OpamGlobals.msg
-        "\nYou should run \"opam upgrade --fixup\" to resolve the situation.\n"
+      if OpamCudf.external_solver_available () then
+        OpamGlobals.msg
+          "\nYou should run \"opam upgrade --fixup\" to resolve the situation.\n"
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %a" (slog OpamRepository.to_string) repo;

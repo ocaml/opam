@@ -1143,7 +1143,8 @@ let upgrade =
   let fixup =
     mk_flag ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
-       packages installed together...)" in
+       packages installed together...). This requires that you have an \
+       external solver installed (aspcud, cudf-services.irill.org, ...)" in
   let upgrade global_options build_options fixup atoms =
     apply_global_options global_options;
     apply_build_options build_options;
