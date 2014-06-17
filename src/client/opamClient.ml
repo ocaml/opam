@@ -613,8 +613,6 @@ module API = struct
            criteria = !OpamGlobals.solver_upgrade_preferences; })
 
   let upgrade_t ?ask atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
-    let t = update_dev_packages_t atoms t in
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
@@ -639,7 +637,11 @@ module API = struct
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
       OpamSolution.check_solution t result
 
-  let upgrade names = with_switch_backup "upgrade" (upgrade_t names)
+  let upgrade names =
+    with_switch_backup "upgrade" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    let t = update_dev_packages_t atoms t in
+    upgrade_t atoms t
 
   let fixup_t t =
     log "FIXUP";
@@ -961,9 +963,7 @@ module API = struct
       t, full_orphans, orphan_versions
 
   let install_t ?ask atoms add_to_roots deps_only t =
-    let atoms = OpamSolution.sanitize_atom_list ~permissive:true t atoms in
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
-    let t = update_dev_packages_t atoms t in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
@@ -1074,10 +1074,12 @@ module API = struct
     )
 
   let install names add_to_roots deps_only =
-    with_switch_backup "install" (install_t names add_to_roots deps_only)
+    with_switch_backup "install" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
+    let t = update_dev_packages_t atoms t in
+    install_t atoms add_to_roots deps_only t
 
   let remove_t ?ask ~autoremove ~force atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
     log "REMOVE autoremove:%b %a" autoremove
       (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1162,12 +1164,12 @@ module API = struct
       OpamGlobals.msg "Nothing to do.\n"
 
   let remove ~autoremove ~force names =
-    with_switch_backup "remove" (remove_t ~autoremove ~force names)
+    with_switch_backup "remove" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    remove_t ~autoremove ~force atoms t
 
   let reinstall_t ?ask ?(force=false) atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
-    let t = update_dev_packages_t atoms t in
 
     let t, _, _ = check_conflicts t atoms in
 
@@ -1212,7 +1214,11 @@ module API = struct
         OpamSolution.apply ?ask t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 
-  let reinstall names = with_switch_backup "reinstall" (reinstall_t names)
+  let reinstall names =
+    with_switch_backup "reinstall" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    let t = update_dev_packages_t atoms t in
+    reinstall_t atoms t
 
   module PIN = struct
     open OpamPinCommand
