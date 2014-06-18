@@ -612,9 +612,7 @@ module API = struct
            wish_upgrade = upgrade_atoms;
            criteria = !OpamGlobals.solver_upgrade_preferences; })
 
-  let upgrade_t atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
-    let t = update_dev_packages_t atoms t in
+  let upgrade_t ?ask atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
@@ -635,11 +633,15 @@ module API = struct
           "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
            installation.\n"
     | requested, action, Success solution ->
-      let result = OpamSolution.apply t action ~requested solution in
+      let result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
       OpamSolution.check_solution t result
 
-  let upgrade names = with_switch_backup "upgrade" (upgrade_t names)
+  let upgrade names =
+    with_switch_backup "upgrade" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    let t = update_dev_packages_t atoms t in
+    upgrade_t atoms t
 
   let fixup_t t =
     log "FIXUP";
@@ -654,7 +656,7 @@ module API = struct
     let requested = OpamPackage.Name.Set.empty in
     let action = Upgrade OpamPackage.Set.empty in
     let solution =
-      OpamSolution.resolve_and_apply t action ~requested
+      OpamSolution.resolve_and_apply ~ask:true t action ~requested
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = [];
@@ -909,7 +911,7 @@ module API = struct
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
         let solution =
-          OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
+          OpamSolution.resolve_and_apply ~ask:false t (Init compiler_names)
             ~requested:compiler_names
             { wish_install = [];
               wish_remove  = [];
@@ -960,10 +962,8 @@ module API = struct
     else
       t, full_orphans, orphan_versions
 
-  let install_t atoms add_to_roots deps_only t =
-    let atoms = OpamSolution.sanitize_atom_list ~permissive:true t atoms in
+  let install_t ?ask atoms add_to_roots deps_only t =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
-    let t = update_dev_packages_t atoms t in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
@@ -1069,15 +1069,17 @@ module API = struct
                 | _ -> ())
               solution.to_process
           );
-          OpamSolution.apply t action ~requested:names solution in
+          OpamSolution.apply ?ask t action ~requested:names solution in
       OpamSolution.check_solution t solution
     )
 
   let install names add_to_roots deps_only =
-    with_switch_backup "install" (install_t names add_to_roots deps_only)
+    with_switch_backup "install" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
+    let t = update_dev_packages_t atoms t in
+    install_t atoms add_to_roots deps_only t
 
-  let remove_t ~autoremove ~force atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
+  let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove
       (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1152,7 +1154,7 @@ module API = struct
                (OpamSolver.dependencies
                   ~depopts:true ~installed:true universe to_remove))
         else to_remove in
-      let solution = OpamSolution.resolve_and_apply t Remove ~requested
+      let solution = OpamSolution.resolve_and_apply ?ask t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [];
@@ -1162,12 +1164,12 @@ module API = struct
       OpamGlobals.msg "Nothing to do.\n"
 
   let remove ~autoremove ~force names =
-    with_switch_backup "remove" (remove_t ~autoremove ~force names)
+    with_switch_backup "remove" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    remove_t ~autoremove ~force atoms t
 
-  let reinstall_t ?(force=false) atoms t =
-    let atoms = OpamSolution.sanitize_atom_list t atoms in
+  let reinstall_t ?ask ?(force=false) atoms t =
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
-    let t = update_dev_packages_t atoms t in
 
     let t, _, _ = check_conflicts t atoms in
 
@@ -1209,10 +1211,14 @@ module API = struct
           (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
         No_solution
       | Success solution ->
-        OpamSolution.apply t Reinstall ~requested solution in
+        OpamSolution.apply ?ask t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 
-  let reinstall names = with_switch_backup "reinstall" (reinstall_t names)
+  let reinstall names =
+    with_switch_backup "reinstall" @@ fun t ->
+    let atoms = OpamSolution.sanitize_atom_list t names in
+    let t = update_dev_packages_t atoms t in
+    reinstall_t atoms t
 
   module PIN = struct
     open OpamPinCommand
@@ -1222,27 +1228,25 @@ module API = struct
       match nv with
       | Some nv ->
         let v = OpamPackage.version nv in
-        if OpamState.confirm "%s needs to be %sinstalled, do it now ?"
-            (OpamPackage.Name.to_string name)
-            (if OpamPackage.has_name t.installed name then "re" else "")
-        then
-          if OpamPackage.Set.mem nv t.installed
-          then reinstall_t [name, Some (`Eq,v)] t (* same version *)
-          else install_t [name, Some (`Eq,v)] None false t (* != version or new *)
+        OpamGlobals.msg "%s needs to be %sinstalled.\n"
+          (OpamPackage.Name.to_string name)
+          (if OpamPackage.has_name t.installed name then "re" else "");
+        if OpamPackage.Set.mem nv t.installed
+        then reinstall_t ~ask:true [name, Some (`Eq,v)] t (* same version *)
+        else install_t ~ask:true [name, Some (`Eq,v)] None false t (* != version or new *)
       | None ->
         try
           let nv = OpamPackage.max_version t.installed name in
           if OpamPackage.has_name (Lazy.force t.available_packages) name then
-            (if OpamState.confirm "%s needs to be reinstalled, do it now ?"
-                (OpamPackage.Name.to_string name)
-             then
-               if OpamPackage.Set.mem nv (Lazy.force t.available_packages)
-               then reinstall_t [name, Some (`Eq, OpamPackage.version nv)] t
-               else upgrade_t [name, None] t)
-          else if OpamState.confirm "%s needs to be removed, do it now ?"
-              (OpamPackage.to_string nv)
-          then (* Package no longer available *)
-            remove_t ~autoremove:false ~force:false [name, None] t
+            (OpamGlobals.msg "%s needs to be reinstalled.\n"
+               (OpamPackage.Name.to_string name);
+             if OpamPackage.Set.mem nv (Lazy.force t.available_packages)
+             then reinstall_t ~ask:true [name, Some (`Eq, OpamPackage.version nv)] t
+             else upgrade_t ~ask:true [name, None] t)
+          else
+            (OpamGlobals.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
+             (* Package no longer available *)
+             remove_t ~ask:true ~autoremove:false ~force:false [name, None] t)
         with Not_found -> ()
 
     let get_upstream t name =
