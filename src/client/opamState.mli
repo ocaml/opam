@@ -39,7 +39,7 @@ module Types: sig
     (** The current version of the compiler *)
     compiler_version: compiler_version lazy_t;
 
-    (** The list of OPAM files *)
+    (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
     opams: OpamFile.OPAM.t package_map;
 
     (** The list of repositories *)

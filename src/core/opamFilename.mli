@@ -37,6 +37,8 @@ val mkdir: Dir.t -> unit
 (** List the sub-directory recursively *)
 val rec_dirs: Dir.t -> Dir.t list
 
+val dir_is_empty: Dir.t -> bool
+
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 
