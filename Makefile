@@ -1,6 +1,5 @@
 -include Makefile.config
 
-.PHONY: opam-lib opam opam-admin opam-installer
 all: opam-lib opam opam-admin opam-installer
 	@
 
@@ -18,7 +17,8 @@ byte:
 src/%:
 	$(MAKE) -C src $*
 
-%:
+ALWAYS:
+%: ALWAYS
 	$(MAKE) -C src $@
 
 lib-ext:
