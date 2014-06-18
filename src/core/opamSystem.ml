@@ -191,6 +191,10 @@ let rec_dirs dir =
 let dirs dir =
   directories_with_links dir
 
+let dir_is_empty dir =
+  Sys.file_exists dir &&
+  in_dir dir (fun () -> Sys.readdir (Sys.getcwd ()) = [||])
+
 (* XXX: won't work on windows *)
 let remove_dir dir =
   log "rmdir %s" dir;

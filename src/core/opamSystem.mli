@@ -100,6 +100,8 @@ val rec_dirs: string -> string list
 (** Return the list of directories in the current directory. *)
 val dirs: string -> string list
 
+val dir_is_empty: string -> bool
+
 (** Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns [None]. *)
 val ocaml_version: string option Lazy.t

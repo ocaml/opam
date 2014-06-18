@@ -69,6 +69,9 @@ let dirs d =
   let fs = OpamSystem.dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
+let dir_is_empty d =
+  OpamSystem.dir_is_empty (Dir.to_string d)
+
 let in_dir dirname fn =
   if Sys.file_exists dirname then
     OpamSystem.in_dir dirname fn

@@ -486,6 +486,8 @@ let remove_metadata t packages =
   OpamPackage.Set.iter (fun nv ->
       let dir = OpamPath.packages t.root nv in
       OpamFilename.rmdir dir;
+      let parent = OpamFilename.dirname_dir dir in
+      if OpamFilename.dir_is_empty parent then OpamFilename.rmdir parent;
       let archive = OpamPath.archive t.root nv in
       OpamFilename.remove archive;
     ) packages
