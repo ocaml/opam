@@ -620,6 +620,7 @@ let resolve_and_apply ?(force=false) t action ~requested request =
   match resolve t action ~requested request with
   | Conflicts cs ->
     log "conflict!";
-    OpamGlobals.msg "%s" (cs (OpamState.unavailable_reason t));
+    OpamGlobals.msg "%s"
+      (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
     No_solution
   | Success solution -> apply ~force t action ~requested solution

@@ -62,8 +62,8 @@ end
 module ActionGraph: OpamParallel.GRAPH with type V.t = Cudf.package action
 type solution = (Cudf.package, ActionGraph.t) gen_solution
 
-(** Special package used by Dose internally, should generally be filtered out *)
-val is_dose_request: Cudf.package -> bool
+(** Abstract type that may be returned in case of conflicts *)
+type conflict
 
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
@@ -80,14 +80,14 @@ val check_request:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
+  (Cudf.universe, conflict) result
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
+  (Cudf.universe, conflict) result
 
 (** Compute the list of actions to match the difference between two
     universe. Remark: the result order is unspecified, ie. need to use
@@ -106,15 +106,15 @@ val solution_of_actions:
   Cudf.package action list ->
   solution
 
-(** Resolve a CUDF request. The result is either a conflict explaining
-    the error, or a resulting universe.
+(** Resolve a CUDF request. The result is either a conflict holding
+    an explanation of the error, or a resulting universe.
     [~extern] specifies wether the external solver should be used *)
 val resolve:
   extern:bool ->
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result
+  (Cudf.universe, conflict) result
 
 (** Computes a list of actions to proceed from the result of [resolve].
     Note however than the action list is not yet complete: the transitive closure
@@ -125,8 +125,8 @@ val resolve:
 val to_actions:
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
-  (Cudf.universe, (unit -> Algo.Diagnostic.reason list)) result ->
-  (Cudf.package action list, (unit -> Algo.Diagnostic.reason list)) result
+  (Cudf.universe, conflict) result ->
+  (Cudf.package action list, conflict) result
 
 (** [remove universe name constr] Remove all the packages called
     [name] satisfying the constraints [constr] in the universe
@@ -160,15 +160,19 @@ val s_pinned: string         (** true if the package is pinned to this version *
 (** Convert a package constraint to something readable. *)
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
-(** Convert a reason to something readable by the user *)
-val strings_of_reason: (Cudf.package -> package) -> (atom -> string) -> Cudf.universe ->
-  Algo.Diagnostic.reason -> string list
+val cycle_conflict: Cudf.universe -> string list list -> ('a, conflict) result
 
-(** Convert a list of reasons to something readable by the user. The second argument
+(** Convert a conflict to something readable by the user. The first argument
     should return a string like "lwt<3.2.1 is not available because..." when called
     on an unavailable package (the reason can't be known this deep in the solver) *)
-val string_of_reasons: (Cudf.package -> package) -> (atom -> string) -> Cudf.universe ->
-  Algo.Diagnostic.reason list -> string
+val string_of_conflict: (atom -> string) -> conflict -> string
+
+(** Returns three lists of strings:
+    - the final reasons why the request can't be satisfied
+    - the dependency chains explaining it
+    - the cycles in the actions to process (exclusive with the other two) *)
+val strings_of_conflict:
+  (atom -> string) -> conflict -> string list * string list * string list
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
@@ -185,14 +189,11 @@ val string_of_universe: Cudf.universe -> string
 (** Pretty-print of packages *)
 val string_of_packages: Cudf.package list -> string
 
-(** Pretty-print a package using its OPAM version. *)
-val opam_string_of_package: Cudf.package -> string
+(** Convert a cudf package back to an OPAM package *)
+val cudf2opam: Cudf.package -> package
 
-(** Pretty-print a list of packages using OPAM versions. *)
-val opam_string_of_packages: Cudf.package list -> string
-
-(** Pretty-print the universe using OPAM versions.*)
-val opam_string_of_universe: Cudf.universe -> string
+(** Returns the list of packages in a Cudf universe *)
+val packages: Cudf.universe -> Cudf.package list
 
 (** {2 External solver} *)
 val external_solver_available: unit -> bool

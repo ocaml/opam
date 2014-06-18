@@ -1140,11 +1140,21 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
-  let upgrade global_options build_options atoms =
+  let fixup =
+    mk_flag ["fixup"]
+      "Recover from a broken state (eg. missing dependencies, two conflicting \
+       packages installed together...). This requires that you have an \
+       external solver installed (aspcud, cudf-services.irill.org, ...)" in
+  let upgrade global_options build_options fixup atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    Client.upgrade atoms in
-  Term.(pure upgrade $global_options $build_options $atom_list),
+    if fixup then
+      if atoms <> [] then
+        `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
+      else `Ok (Client.fixup ())
+    else
+      `Ok (Client.upgrade atoms) in
+  Term.(ret (pure upgrade $global_options $build_options $fixup $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

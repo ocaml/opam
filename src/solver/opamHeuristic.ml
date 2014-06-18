@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "HEURISTIC" fmt
 let slog = OpamGlobals.slog
@@ -165,13 +166,12 @@ let consistent_packages universe packages =
   | { result = Failure _ } -> false
 
 let dump_state =
-  try
-    if OpamMisc.getenv "OPAMDEBUG" = "42" then
-      (fun l -> log "dump-state: %s" (OpamCudf.opam_string_of_packages l))
-    else
+  if !OpamGlobals.debug && !OpamGlobals.debug_level > 3 then
+    log "dump-state: %a"
+      (slog (OpamMisc.pretty_list
+             @* (List.map (OpamPackage.to_string @* OpamCudf.cudf2opam))))
+  else
       (fun _ -> ())
-  with Not_found ->
-    (fun _ -> ())
 
 (* Explore a given [state_space] to find the optimal solution. Ideally
    the state space should be as small as possible, eg. we rely on
@@ -197,7 +197,7 @@ let explore ?(verbose=true) universe state_space =
    installed in the given universe, its version stays the same.
    Otherwise, if a package appears neither in the state nor is
    installed, it will not appear in the resulting solution. *)
-exception Not_reachable of (unit -> Algo.Diagnostic.reason list)
+exception Not_reachable of OpamCudf.conflict
 
 let satisfy pkg constrs =
   List.exists (fun (n, v) ->
@@ -490,7 +490,11 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
     { request with wish_upgrade } in
   (* We use that request to trim the universe, and keep only the interesting packages. *)
   let universe = trim_universe universe request in
-  log "universe: %s" (OpamCudf.opam_string_of_universe universe);
+  log "universe: %a"
+    (slog (OpamMisc.pretty_list
+           @* List.map (OpamPackage.to_string @* OpamCudf.cudf2opam)
+           @* OpamCudf.packages))
+    universe;
 
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose ~version_map universe request with

@@ -91,16 +91,25 @@ let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" 
   "-removed,-changed,-notuptodate"
 let default_upgrade_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
   "-removed,-notuptodate,-changed"
+let default_fixup_preferences =
+  "-changed"
 
-let solver_preferences, solver_upgrade_preferences  =
-  let get s = OpamMisc.strip (OpamMisc.getenv s) in
-  try
-    let prefs = get "OPAMCRITERIA" in
-    ref prefs, try ref (get "OPAMUPGRADECRITERIA") with Not_found -> ref prefs
-  with Not_found ->
-    ref default_preferences,
-    try ref (get "OPAMUPGRADECRITERIA")
-    with Not_found -> ref default_upgrade_preferences
+let solver_preferences, solver_upgrade_preferences, solver_fixup_preferences =
+  let get s =
+    try Some (OpamMisc.strip (OpamMisc.getenv s)) with Not_found -> None in
+  let prefs = get "OPAMCRITERIA"
+  and upgrade_prefs = get "OPAMUPGRADECRITERIA"
+  and fixup_prefs = get "OPAMFIXUPCRITERIA"
+  in
+  let fixup_prefs =
+    OpamMisc.Option.default default_fixup_preferences fixup_prefs in
+  let upgrade_prefs =
+    OpamMisc.Option.default
+      (OpamMisc.Option.default default_upgrade_preferences prefs)
+      upgrade_prefs in
+  let prefs =
+    OpamMisc.Option.default default_preferences prefs in
+  ref prefs, ref upgrade_prefs, ref fixup_prefs
 
 let default_external_solver = "aspcud"
 

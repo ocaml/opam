@@ -64,7 +64,7 @@ val load_cudf_universe: ?depopts:bool -> universe -> ?version_map:int package_ma
 val resolve :
   ?verbose:bool ->
   universe -> requested:OpamPackage.Name.Set.t -> atom request
-  -> (solution, ((atom -> string) -> string)) result
+  -> (solution, OpamCudf.conflict) result
 
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
@@ -88,4 +88,4 @@ val reverse_dependencies :
 
 (** Create a sequential solution from a list of actions *)
 val sequential_solution: universe -> requested:name_set ->
-  package action list -> (solution, (atom -> string) -> string) result
+  package action list -> (solution, OpamCudf.conflict) result

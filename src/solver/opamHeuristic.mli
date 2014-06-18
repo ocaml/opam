@@ -55,7 +55,7 @@ val resolve:
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.package action list, unit -> Algo.Diagnostic.reason list) result
+  (Cudf.package action list, OpamCudf.conflict) result
 
 (** {2 Internal API} *)
 
