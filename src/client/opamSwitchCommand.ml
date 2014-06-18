@@ -324,8 +324,7 @@ let import_t filename t =
               | _ -> OpamPackage.create n (OpamPackage.Version.of_string "pin")
             in
             OpamPackage.Set.add nv acc)
-          pinned OpamPackage.Set.empty in
-      Printf.eprintf "dev Pkgs: %s\n" (OpamPackage.Set.to_string dev_pkgs);
+          import_pins OpamPackage.Set.empty in
       OpamPackage.Name.Map.iter (fun n _ ->
           let overlay_dir = OpamPath.Switch.Overlay.package t.root t.switch n
           in
