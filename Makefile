@@ -1,5 +1,6 @@
 -include Makefile.config
 
+.PHONY: opam-lib opam opam-admin opam-installer
 all: opam-lib opam opam-admin opam-installer
 	@
 
