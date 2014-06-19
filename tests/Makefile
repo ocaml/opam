@@ -53,7 +53,6 @@ endef
 
 run:
 	$(call RUN,init)
-	$(call RUN,list)
 	$(call RUN,upload)
 	$(call RUN,install-remove)
 	$(call RUN,list)

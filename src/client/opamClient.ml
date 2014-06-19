@@ -242,7 +242,8 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names
+    ) names;
+    if names = [] then OpamGlobals.exit 1
 
   let info ~fields regexps =
     let t = OpamState.load_state "info" in
