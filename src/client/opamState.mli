@@ -147,9 +147,9 @@ val substitute_file: state -> ?opam:OpamFile.OPAM.t -> variable_map -> basename 
 
 (** {2 Filters} *)
 
-(** Lists of available variables *)
-val global_variable_names: string list
-val package_variable_names: string list
+(** Lists of available variables and their description *)
+val global_variable_names: (string * string) list
+val package_variable_names: (string * string) list
 
 (** Check for user-defined variable overwrite. *)
 val get_env_var: full_variable -> variable_contents option

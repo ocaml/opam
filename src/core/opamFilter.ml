@@ -43,14 +43,8 @@ let contents_of_variable env v =
       with e -> OpamMisc.fatal e; [name_str] in
     let names = List.rev_map OpamPackage.Name.of_string names in
     let results =
-      List.rev_map (fun name ->
-          let v = OpamVariable.Full.create name var in
-          match env v with
-          | None   ->
-            OpamGlobals.error_and_exit
-              "%s does not define the variable %s."
-              (OpamPackage.Name.to_string name) (OpamVariable.to_string var)
-          | Some r -> r
+      List.map (fun name ->
+          env (OpamVariable.Full.create name var)
         ) names in
     let rec compose x y = match x,y with
       | S "enable" , S "enable"  -> S "enable"
@@ -66,9 +60,13 @@ let contents_of_variable env v =
             "Cannot compose %s and %s"
             (OpamVariable.string_of_variable_contents x)
             (OpamVariable.string_of_variable_contents y) in
+    let compose_opt x y = match x, y with
+      | Some x, Some y -> Some (compose x y)
+      | None, _ | _, None -> None
+    in
     match results with
-    | [] | [_] -> assert false
-    | h::t     -> Some (List.fold_left compose h t)
+    | [] -> None
+    | h::t -> List.fold_left compose_opt h t
 
 let contents_of_variable_exn env var =
   match contents_of_variable env var with

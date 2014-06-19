@@ -23,23 +23,60 @@ open OpamState.Types
 let need_globals ns =
   ns = []
   || List.mem OpamPackage.Name.global_config ns
-  || List.mem (OpamPackage.Name.of_string "global") ns
 
 (* Implicit variables *)
 let implicits ns =
-  if need_globals ns then
-    List.map (fun variable ->
-      OpamVariable.Full.create
-        OpamPackage.Name.global_config
-        (OpamVariable.of_string variable)
-    ) OpamState.global_variable_names
-  else
-    []
+  List.fold_left (fun acc name ->
+      let vars =
+        if name = OpamPackage.Name.global_config
+        then OpamState.global_variable_names
+        else OpamState.package_variable_names
+      in
+      List.rev_append
+        (List.rev_map (fun (variable,desc) ->
+             OpamVariable.Full.create
+               name
+               (OpamVariable.of_string variable),
+             desc
+           ) vars)
+        acc)
+    [] ns
+
+let help t =
+  OpamGlobals.msg "# Global OPAM configuration variables\n\n";
+  let global = OpamState.dot_config t OpamPackage.Name.global_config in
+  List.iter (fun var ->
+      OpamGlobals.msg "%-20s %s\n"
+        (OpamVariable.to_string var)
+        (match OpamFile.Dot_config.variable global var with
+         | Some c -> OpamVariable.string_of_variable_contents c
+         | None -> "")
+    )
+    (OpamFile.Dot_config.variables global);
+  OpamGlobals.msg "\n# Global variables from the environment\n\n";
+  List.iter (fun (varname, doc) ->
+      let var = OpamVariable.of_string varname in
+      let fullvar =
+        OpamVariable.Full.create OpamPackage.Name.global_config var in
+      OpamGlobals.msg "%-20s %-20s # %s\n"
+        varname
+        (match
+           OpamState.contents_of_variable t OpamVariable.Map.empty fullvar
+         with
+         | Some c -> OpamVariable.string_of_variable_contents c
+         | None -> "")
+        doc)
+    OpamState.global_variable_names;
+  OpamGlobals.msg "\n# Package variables\n\n";
+  List.iter (fun (var, doc) ->
+      OpamGlobals.msg "PKG:%-37s # %s\n" var doc)
+    OpamState.package_variable_names
 
 (* List all the available variables *)
 let list ns =
   log "config-list";
   let t = OpamState.load_state "config-list" in
+  if ns = [] then help t else
   let globals =
     if need_globals ns then
       [OpamPackage.Name.global_config,
@@ -58,18 +95,21 @@ let list ns =
     List.fold_left (fun accu (name, config) ->
         (* add all the global variables *)
         List.fold_left (fun accu variable ->
-          OpamVariable.Full.create name variable :: accu
+          (OpamVariable.Full.create name variable, "") :: accu
         ) accu (OpamFile.Dot_config.variables config)
       ) [] configs in
   let contents =
     List.map
-      (fun v -> v, OpamState.contents_of_variable_exn t OpamVariable.Map.empty v)
+      (fun (v,descr) ->
+         v, descr,
+         OpamState.contents_of_variable_exn t OpamVariable.Map.empty v)
       variables in
-  List.iter (fun (variable, contents) ->
-    OpamGlobals.msg "%-40s %s\n"
-      (OpamVariable.Full.to_string variable)
-      (OpamVariable.string_of_variable_contents contents)
-  ) (List.rev contents)
+  List.iter (fun (variable, descr, contents) ->
+      OpamGlobals.msg "%-20s %-40s %s\n"
+        (OpamVariable.Full.to_string variable)
+        (OpamVariable.string_of_variable_contents contents)
+        (if descr <> "" then "# "^descr else "")
+    ) contents
 
 let print_env env =
   List.iter (fun (k,v) ->

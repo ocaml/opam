@@ -556,14 +556,40 @@ let url t nv =
     (url_file t nv)
 
 (* For documentation *)
-let global_variable_names =
-  [ "ocaml-version"; "opam-version"; "compiler";
-    "preinstalled"; "switch"; "jobs"; "ocaml-native"; "ocaml-tools-opt";
-    "ocaml-native-dynlink"]
-let package_variable_names =
-  [ "enable"; "installed"; "pinned";
-    "bin"; "sbin"; "lib"; "man"; "doc"; "share"; "etc";
-    "name"; "build"; "version"; "depends"; "hash" ]
+let global_variable_names = [
+  "ocaml-version",        "The version of the currently used OCaml compiler";
+  "opam-version",         "The currently running OPAM version";
+  "compiler",             "The name of the current OCaml compiler (may be more \
+                           specific than the version, eg: \"4.01.0+fp\"";
+  "preinstalled",         "Wether the compiler was preinstalled on the system, \
+                           or installed by OPAM";
+  "switch",               "The local name (alias) of the current switch";
+  "jobs",                 "The number of parallel jobs set up in OPAM \
+                           configuration";
+  "ocaml-native",         "Wether the OCaml native compilers are available";
+  "ocaml-tools-opt",      "Wether the .opt versions of the OCaml tools are \
+                           available";
+  "ocaml-native-dynlink", "Wether native dynlink is available on this \
+                           installation";
+]
+let package_variable_names = [
+  "name",      "Name of the package";
+  "version",   "Version of the package";
+  "depends",   "Resolved direct dependencies of the package";
+  "installed", "Wether the package is installed";
+  "enable",    "Takes the value \"enable\" or \"disable\" depending on wether \
+                the package is installed";
+  "pinned",    "Wether the package is pinned";
+  "bin",       "Binary directory for this package";
+  "sbin",      "System binary directory for this package";
+  "lib",       "Library directory for this package";
+  "man",       "Man directory for this package";
+  "doc",       "Doc directory for this package";
+  "share",     "Share directory for this package";
+  "etc",       "Etc directory for this package";
+  "build",     "Directory where the package was built";
+  "hash",      "Hash of the package archive";
+]
 
 let string str = Some (S str)
 let bool b = Some (B b)
@@ -704,8 +730,6 @@ let resolve_variable t ?opam local_variables v =
         get_package_var opam, v';
       ]
   in
-  if contents = None then
-    OpamGlobals.error "Variable %s is not defined" (OpamVariable.Full.to_string v);
   contents
 
 let eval_filter t ?opam local_variables =
