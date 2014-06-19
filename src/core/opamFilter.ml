@@ -34,39 +34,36 @@ let rec to_string = function
 let contents_of_variable env v =
   let name = OpamVariable.Full.package v in
   let var = OpamVariable.Full.variable v in
-  match env v with
-  | Some r -> Some r
-  | None   ->
-    let name_str = OpamPackage.Name.to_string name in
-    let names =
-      try OpamMisc.split name_str '+'
-      with e -> OpamMisc.fatal e; [name_str] in
-    let names = List.rev_map OpamPackage.Name.of_string names in
-    let results =
-      List.map (fun name ->
-          env (OpamVariable.Full.create name var)
-        ) names in
-    let rec compose x y = match x,y with
-      | S "enable" , S "enable"  -> S "enable"
-      | S "disable", S "enable"
-      | S "enable" , S "disable"
-      | S "disable", S "disable" -> S "disable"
-      | B b1       , B b2        -> B (b1 && b2)
-      | S b, r     | r, S b      ->
-        if b = "true" then compose (B true) r
-        else if b = "false" then compose (B false) r
-        else
-          OpamGlobals.error_and_exit
-            "Cannot compose %s and %s"
-            (OpamVariable.string_of_variable_contents x)
-            (OpamVariable.string_of_variable_contents y) in
-    let compose_opt x y = match x, y with
-      | Some x, Some y -> Some (compose x y)
-      | None, _ | _, None -> None
-    in
-    match results with
-    | [] -> None
-    | h::t -> List.fold_left compose_opt h t
+  let name_str = OpamPackage.Name.to_string name in
+  let names =
+    try OpamMisc.split name_str '+'
+    with e -> OpamMisc.fatal e; [name_str] in
+  let names = List.rev_map OpamPackage.Name.of_string names in
+  let results =
+    List.map (fun name ->
+        env (OpamVariable.Full.create name var)
+      ) names in
+  let rec compose x y = match x,y with
+    | S "enable" , S "enable"  -> S "enable"
+    | S "disable", S "enable"
+    | S "enable" , S "disable"
+    | S "disable", S "disable" -> S "disable"
+    | B b1       , B b2        -> B (b1 && b2)
+    | S b, r     | r, S b      ->
+      if b = "true" then compose (B true) r
+      else if b = "false" then compose (B false) r
+      else
+        OpamGlobals.error_and_exit
+          "Cannot compose %s and %s"
+          (OpamVariable.string_of_variable_contents x)
+          (OpamVariable.string_of_variable_contents y) in
+  let compose_opt x y = match x, y with
+    | Some x, Some y -> Some (compose x y)
+    | None, _ | _, None -> None
+  in
+  match results with
+  | [] -> None
+  | h::t -> List.fold_left compose_opt h t
 
 let contents_of_variable_exn env var =
   match contents_of_variable env var with
