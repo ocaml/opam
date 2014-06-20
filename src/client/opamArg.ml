@@ -338,28 +338,31 @@ let mk_tristate_opt ?section flags value doc auto default =
   in
   Term.(pure to_bool $ arg)
 
-let mk_subdoc ?(names="COMMANDS") commands =
-  `S names ::
-    List.map (fun (cs,_,d) ->
-      let bold s = Printf.sprintf "$(b,%s)" s in
-      let cmds = String.concat ", " (List.map bold cs) in
+let mk_subdoc ?(defaults=[]) commands =
+  let bold s = Printf.sprintf "$(b,%s)" s in
+  let it s = Printf.sprintf "$(i,%s)" s in
+  `S "COMMANDS" ::
+  (List.map (function
+       | "", name ->
+         `P (Printf.sprintf "Without argument, defaults to %s."
+               (bold name))
+       | arg, default ->
+         `I (it arg, Printf.sprintf "With a %s argument, defaults to %s %s."
+               (it arg) (bold default) (it arg))
+     ) defaults) @
+  List.map (fun (cs,_,args,d) ->
+      let cmds = String.concat ", " (List.map bold cs) ^ " " ^
+                 String.concat " " (List.map it args) in
       `I (cmds, d)
-    ) commands
+    ) commands @
+  [`S "OPTIONS"] (* Ensures options get after commands *)
 
-let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
+let mk_subcommands_aux my_enum commands =
   let command =
-    let doc =
-      Arg.info ~docv:name ~doc:
-        (Printf.sprintf
-           "Name of the sub-command. See the $(b,%sS) section for more info.%s"
-           name
-           (match default with
-            | None   -> ""
-            | Some d -> " " ^ d))
-        [] in
+    let doc = Arg.info ~docv:"COMMAND" [] in
     let commands =
       List.fold_left
-        (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
+        (fun acc (cs,f,_,_) -> List.map (fun c -> c,f) cs @ acc)
         [] commands in
     Arg.(value & pos 0 (some & my_enum commands) None & doc) in
   let params =
@@ -367,15 +370,38 @@ let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
     Arg.(value & pos_right 0 string [] & doc) in
   command, params
 
-let mk_subcommands ?name commands =
-  mk_subcommands_aux ?name Arg.enum commands None
+let mk_subcommands commands =
+  mk_subcommands_aux Arg.enum commands
 
-let mk_subcommands_with_default ?name commands default =
-  mk_subcommands_aux ?name enum_with_default commands (Some default)
+let mk_subcommands_with_default commands =
+  mk_subcommands_aux enum_with_default commands
+
+let bad_subcommand command subcommands usersubcommand userparams =
+  match usersubcommand with
+  | None ->
+    `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
+              (OpamMisc.pretty_list
+                 (List.flatten (List.map (fun (a,_,_,_) -> a) subcommands))))
+  | Some usersubcommand ->
+    let name, args =
+      match List.find (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
+      | name::_, _, args, _doc -> name, args
+      | _ -> assert false
+    in
+    let exe = Filename.basename Sys.executable_name in
+    let usage =
+      Printf.sprintf "%s %s [OPTION]... %s %s"
+        exe command name (String.concat " " args) in
+    if List.length userparams < List.length args then
+      `Error (false, Printf.sprintf "%s: Missing argument.\nUsage: %s\n"
+                exe usage)
+    else
+      `Error (false, Printf.sprintf "%s: Too many arguments.\nUsage: %s\n"
+                exe usage)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
-  Term.info ~sdocs:global_option_section ~doc ~man title
+  Term.info ~sdocs:global_option_section ~docs:"COMBDS" ~doc ~man title
 
 let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
@@ -764,32 +790,38 @@ let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
   let commands = [
-    ["env"]     , `env     , "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
-                              and CAML_LD_LIBRARY_PATH according to the currently selected \
-                              compiler. The output of this command is meant to be evaluated by a \
-                              shell, for example by doing $(b,eval `opam config env`).";
-    ["setup"]   , `setup   , "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
-                              to display more options. Use $(b,--list) to display the current configuration \
-                              options. You can use this command to automatically update: (i) user-configuration \
-                              files such as ~/.profile and ~/.ocamlinit; and (ii) global-configaration files \
-                              controlling which shell scripts are loaded on startup, such as auto-completion. \
-                              These configuration options can be updated using: $(b,opam config setup --global) \
-                              to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
-                              $(b,opam config setup --user) to setup the user ones. \
-                              To modify both the global and user configuration, use $(b,opam config setup --all).";
-    ["exec"]    , `exec    , "Execute the shell script given in parameter with the correct environment variables. \
-                              This option can be used to cross-compile between switches using \
-                              $(b,opam config exec \"CMD ARG1 ... ARGn\" --switch=SWITCH)";
-    ["var"]     , `var     , "Return the value associated with the given variable. If the variable \
-                              contains a colon such as $(i,pkg:var), then the left element will be \
-                              understood as the package in which the variable is defined.";
-    ["list"]    , `list    , "Without argument, prints a documented list of all available variables. With \
-                              package names as argument, lists all the variables available for these packages.";
-    ["subst"]   , `subst   , "Substitute variables in the given files. The strings $(i,%{var}%) are \
-                              replaced by the value of the variable $(i,var) (see the documentation associated \
-                              to $(b,opam config var)).";
-    ["report"]  , `report,   "Prints a summary of your setup, useful for bug-reports.";
-    ["cudf-universe"], `cudf,"Outputs the current available package universe in CUDF format.";
+    ["env"]     , `env     , [],
+    "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
+     and CAML_LD_LIBRARY_PATH according to the currently selected \
+     compiler. The output of this command is meant to be evaluated by a \
+     shell, for example by doing $(b,eval `opam config env`).";
+    ["setup"]   , `setup   , [],
+    "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
+     to display more options. Use $(b,--list) to display the current configuration \
+     options. You can use this command to automatically update: (i) user-configuration \
+     files such as ~/.profile and ~/.ocamlinit; and (ii) global-configaration files \
+     controlling which shell scripts are loaded on startup, such as auto-completion. \
+     These configuration options can be updated using: $(b,opam config setup --global) \
+     to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
+     $(b,opam config setup --user) to setup the user ones. \
+     To modify both the global and user configuration, use $(b,opam config setup --all).";
+    ["exec"]    , `exec    , ["[--] COMMAND"; "[ARG]..."],
+    "Execute $(i,CMD) with the correct environment variables. \
+     This command can be used to cross-compile between switches using \
+     $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn)";
+    ["var"]     , `var     , ["VAR"],
+    "Return the value associated with variable $(i,VAR). Package variables can \
+     be accessed with the syntax $(i,pkg:var).";
+    ["list"]    , `list    , ["[PACKAGE]..."],
+    "Without argument, prints a documented list of all available variables. With \
+     $(i,PACKAGE), lists all the variables available for these packages.";
+    ["subst"]   , `subst   , ["FILE..."],
+    "Substitute variables in the given files. The strings $(i,%{var}%) are \
+     replaced by the value of variable $(i,var) (see $(b,var)).";
+    ["report"]  , `report  , [],
+    "Prints a summary of your setup, useful for bug-reports.";
+    ["cudf-universe"], `cudf, ["[FILE]"],
+    "Outputs the current available package universe in CUDF format.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -799,9 +831,9 @@ let config =
     `P "Apart from $(b,opam config env), most of these commands are used \
         by OPAM internally, and are of limited interest for the casual \
         user.";
-  ] @ mk_subdoc ~names:"DOMAINS" commands in
+  ] @ mk_subdoc commands in
 
-  let command, params = mk_subcommands ~name:"DOMAIN" commands in
+  let command, params = mk_subcommands commands in
   let all_doc         = "Enable all the global and user configuration options." in
   let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
@@ -822,11 +854,9 @@ let config =
   let global          = mk_flag ["g";"global"]     global_doc in
   let list            = mk_flag ["l";"list"]       list_doc in
   let sexp            = mk_flag ["sexp"]           sexp_doc in
-  let env    =
-    mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
   let config global_options
-      command env sh csh zsh fish sexp
+      command sh csh zsh fish sexp
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -841,14 +871,9 @@ let config =
          | `sh | `bash | `zsh  -> false, false)
       | _ -> csh, fish
     in
-    match command with
-    | None           ->
-      if env="nv" then
-        OpamConfigCommand.env ~csh ~sexp ~fish
-      else
-        OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
-    | Some `env   -> Client.CONFIG.env ~csh ~sexp ~fish
-    | Some `setup ->
+    match command, params with
+    | Some `env, [] -> `Ok (Client.CONFIG.env ~csh ~sexp ~fish)
+    | Some `setup, [] ->
       let user        = all || user in
       let global      = all || global in
       let profile     = user  || profile in
@@ -863,14 +888,14 @@ let config =
         else OpamMisc.guess_shell_compat () in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
-        Client.CONFIG.setup_list shell dot_profile
+        `Ok (Client.CONFIG.setup_list shell dot_profile)
       else if profile || ocamlinit || complete || switch_eval then
         let dot_profile = if profile then Some dot_profile else None in
         let user   = if user then Some { shell; ocamlinit; dot_profile } else None in
         let global = if global then Some { complete; switch_eval } else None in
-        Client.CONFIG.setup user global
+        `Ok (Client.CONFIG.setup user global)
       else
-        OpamGlobals.msg
+        `Ok (OpamGlobals.msg
           "usage: opam config setup [options]\n\
            \n\
            Main options\n\
@@ -890,22 +915,15 @@ let config =
           \    --no-switch-eval     %s\n\n"
           list_doc all_doc
           user_doc ocamlinit_doc profile_doc dot_profile_doc
-          global_doc no_complete_doc no_eval_doc
-    | Some `exec ->
-      let usage = "Usage: 'opam config exec \"<CMD> <ARG1> ... <ARGn>\"'" in
-      begin match params with
-        | []  -> OpamGlobals.error_and_exit "Missing parameter. %s" usage
-        | [c] -> Client.CONFIG.exec c
-        | _   -> OpamGlobals.error_and_exit "Too many parameters. %s" usage
-      end;
-    | Some `list -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
-    | Some `var  ->
-      if params = [] then
-        OpamGlobals.error_and_exit "Missing parameter. Usage: 'opam config var <VARIABLE>'"
-      else
-        Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
-    | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
-    | Some `cudf     ->
+          global_doc no_complete_doc no_eval_doc)
+    | Some `exec, (_::_ as c) -> `Ok (Client.CONFIG.exec c)
+    | Some `list, [] ->
+      `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
+    | Some `var, [var] ->
+      `Ok (Client.CONFIG.variable (OpamVariable.Full.of_string var))
+    | Some `subst, (_::_ as files) ->
+      `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
+    | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe" in
       let opam_univ = OpamState.universe opam_state Depends in
       let version_map =
@@ -913,14 +931,19 @@ let config =
       let cudf_univ =
         OpamSolver.load_cudf_universe ~depopts:false opam_univ ~version_map
           opam_univ.u_available in
-      OpamCudf.dump_universe stdout cudf_univ;
-      (* Add explicit bindings to retrieve original versions of non-available packages *)
-      OpamPackage.Map.iter (fun nv i ->
-          if not (OpamPackage.Set.mem nv opam_univ.u_available) then
-            Printf.printf "#v2v:%s:%d=%s\n"
-              (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
-        ) version_map
-    | Some `report   ->
+      let dump oc =
+        OpamCudf.dump_universe oc cudf_univ;
+        (* Add explicit bindings to retrieve original versions of non-available packages *)
+        OpamPackage.Map.iter (fun nv i ->
+            if not (OpamPackage.Set.mem nv opam_univ.u_available) then
+              Printf.printf "#v2v:%s:%d=%s\n"
+                (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
+          ) version_map in
+      (match params with
+       | [] -> `Ok (dump stdout)
+       | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
+       | _ -> bad_subcommand "config" commands command params)
+    | Some `report, [] -> (
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";
       let version = OpamVersion.to_string OpamVersion.current in
@@ -985,15 +1008,18 @@ let config =
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
               (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
               u.tm_hour u.tm_min);
-        ()
-      with e -> print "read-state" "%s" (Printexc.to_string e)
+        `Ok ()
+      with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
+    | command, params -> bad_subcommand "config" commands command params
   in
 
-  Term.(pure config
-    $global_options $command $env $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
-    $dot_profile_flag $list $all $global $user
-    $profile $ocamlinit $no_complete $no_switch_eval
-    $params),
+  Term.ret (
+    Term.(pure config
+          $global_options $command $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
+          $dot_profile_flag $list $all $global $user
+          $profile $ocamlinit $no_complete $no_switch_eval
+          $params)
+  ),
   term_info "config" ~doc ~man
 
 (* INSTALL *)
@@ -1153,30 +1179,23 @@ let repository_doc = "Manage OPAM repositories."
 let repository =
   let doc = repository_doc in
   let commands = [
-    ["add"]        , `add     ,
-    "Add the repository $(b,name) available at address \
-     $(b,address) to the list of repositories used by OPAM, \
-     with priority $(b,priority). \
-     The repository priority can be optionally specified with \
-     $(b,--priority), otherwise the new repository has a higher \
-     priority then any other existing repositories. \
-     The kind of the repository can be specified with the \
-     $(b,--kind) option, otherwise it will be determined \
-     automatically.";
-    ["remove"]     , `remove  ,
-    "Remove the repository named $(b,name) from the list of \
-     repositories used by OPAM.";
-    ["list"]       , `list    ,
+    ["add"]        , `add     , ["NAME"; "ADDRESS"],
+    "Add the repository at address $(i,ADDRESS) to the list of repositories \
+     used by OPAM, under $(i,NAME). It will have highest priority unless \
+     $(b,--priority) is specified.";
+    ["remove"]     , `remove  , ["NAME"],
+    "Remove the repository $(i,NAME) from the list of repositories used by OPAM.";
+    ["list"]       , `list    , [],
     "List all repositories used by OPAM.";
-    ["priority"]   , `priority,
-    "Change the priority of repository named $(b,name) to $(b,priority).";
+    ["priority"]   , `priority, ["NAME"; "PRIORITY"],
+    "Change the priority of repository named $(i,NAME) to $(i,PRIORITY).";
   ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command is used to manage OPAM repositories. To synchronize OPAM \
         with the last versions of the packages available in remote \
-        repositories, $(b,opam update) should be used.";
-  ] @ mk_subdoc commands in
+        repositories, use $(b,opam update).";
+  ] @ mk_subdoc ~defaults:["","list"] commands in
 
   let command, params = mk_subcommands commands in
   let priority =
@@ -1184,54 +1203,31 @@ let repository =
       "INT" "Set the repository priority (bigger is better)"
       Arg.(some int) None in
 
-  let error number usage =
-    let msg = match number with
-      | `missing -> "Missing parameter(s)"
-      | `toomany -> "Too many parameters" in
-    OpamGlobals.error_and_exit "%s. Usage: '%s'" msg usage in
-
-  let usage_add = "opam repository add <NAME> <ADDRESS>" in
-  let usage_list = "opam repository list" in
-  let usage_priority = "opam repository priority <NAME> <INT>" in
-  let usage_remove = "opam repository remove <NAME>" in
-
   let repository global_options command kind priority short params =
     apply_global_options global_options;
-    let add = function
-      | [] | [_] -> error `missing usage_add
-      | [name;address] ->
-        let name = OpamRepositoryName.of_string name in
-        let address = address_of_string address in
-        let address, kind2 = parse_url address in
-        let kind = OpamMisc.Option.default kind2 kind in
-        Client.REPOSITORY.add name kind address ~priority
-      | _ -> error `toomany usage_add in
-    let list = function
-      | [] -> Client.REPOSITORY.list ~short
-      | _  -> error `toomany usage_list in
-    let priority = function
-      | [] | [_]  -> error `missing usage_priority
-      | [name; p] ->
-        let name = OpamRepositoryName.of_string name in
-        let priority =
-          try int_of_string p
-          with Failure _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
-        Client.REPOSITORY.priority name ~priority
-      | _ -> error `toomany usage_priority in
-    let remove = function
-      | [name] ->
-        let name = OpamRepositoryName.of_string name in
-        Client.REPOSITORY.remove name
-      | [] -> error `missing usage_remove
-      | _  -> error `toomany usage_remove in
-    match command with
-    | Some `add         -> add params
-    | None | Some `list -> list params
-    | Some `priority    -> priority params
-    | Some   `remove    -> remove params in
-
-  Term.(pure repository $global_options $command $repo_kind_flag $priority
-        $print_short_flag $params),
+    match command, params with
+    | Some `add, [name;address] ->
+      let name = OpamRepositoryName.of_string name in
+      let address = address_of_string address in
+      let address, kind2 = parse_url address in
+      let kind = OpamMisc.Option.default kind2 kind in
+      `Ok (Client.REPOSITORY.add name kind address ~priority)
+    | (None | Some `list), [] ->
+      `Ok (Client.REPOSITORY.list ~short)
+    | Some `priority, [name; p] ->
+      let name = OpamRepositoryName.of_string name in
+      let priority =
+        try int_of_string p
+        with Failure _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
+      `Ok (Client.REPOSITORY.priority name ~priority)
+    | Some `remove, [name] ->
+      let name = OpamRepositoryName.of_string name in
+      `Ok (Client.REPOSITORY.remove name)
+    | command, params -> bad_subcommand "repository" commands command params
+  in
+  Term.ret
+    Term.(pure repository $global_options $command $repo_kind_flag $priority
+          $print_short_flag $params),
   term_info "repository" ~doc ~man
 
 (* SWITCH *)
@@ -1239,17 +1235,20 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    ["install"]      , `install  ,
+    ["install"]      , `install  , ["SWITCH"],
     "Install the given compiler. The commands fails if the package is \
      already installed (e.g. it will not transparently switch to the \
-     installed compiler switch, as $(b,opam switch <name>) does).";
-    ["remove"]       , `remove   , "Remove the given compiler.";
-    ["export"]       , `export   , "Export the list installed package to a file.";
-    ["import"]       , `import   , "Install the packages from a file.";
-    ["reinstall"]    , `reinstall,
-    "Reinstall the given compiler switch. This will also try reinstall the \
-     installed packages.";
-    ["list"]         , `list     ,
+     installed compiler switch, as with $(b,set)).";
+    ["set"]          , `set      , ["SWITCH"],
+      "Set the currently active switch, installing it if needed.";
+    ["remove"]       , `remove   , ["SWITCH"], "Remove the given compiler.";
+    ["export"]       , `export   , ["FILE"],
+    "Save the current switch state to a file.";
+    ["import"]       , `import   , ["FILE"], "Import a saved switch state.";
+    ["reinstall"]    , `reinstall, ["SWITCH"],
+    "Reinstall the given compiler switch. This will also reinstall all \
+     packages.";
+    ["list"]         , `list     , [],
     "List compilers. \
      By default, lists installed and `standard' compilers. Use `--all' to get \
      the list of all installable compilers.\n\
@@ -1264,7 +1263,7 @@ let switch =
      (for instance because you already have this compiler version installed), \
      use $(b,opam switch <name> --alias-of <comp>). In case \
      <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
-    ["show"]          , `current  , "Show the current compiler.";
+    ["show"]          , `current  , [], "Show the current compiler.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1275,20 +1274,13 @@ let switch =
         separate state (e.g. list of installed packages...) for each.";
     `P "See the documentation of $(b,opam switch list) to see the compilers which \
         are available, and how to switch or to install a new one."
-  ] @ mk_subdoc commands in
+  ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
 
-  let command, params = mk_subcommands_with_default commands
-      "If a compiler switch is given instead of an usual command, this command \
-       will switch to the given compiler. You will then need to run \
-       $(b,eval `opam config env`) to update your environment variables." in
+  let command, params = mk_subcommands_with_default commands in
   let alias_of =
     mk_opt ["A";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
       Arg.(some string) None in
-  let filename =
-    mk_opt ["f";"filename"]
-      "FILENAME" "The name of the file to export to/import from."
-      Arg.(some filename) None in
   let no_warning =
     mk_flag ["no-warning"]
       "Do not display any warning related to environment variables." in
@@ -1303,13 +1295,10 @@ let switch =
       "List all the compilers which can be installed on the system." in
 
   let switch global_options
-      build_options command alias_of filename print_short installed all
+      build_options command alias_of print_short installed all
       no_warning no_switch params =
     apply_global_options global_options;
     apply_build_options build_options;
-    let no_alias_of () =
-      if alias_of <> None then
-        OpamGlobals.error_and_exit "invalid -alias-of option" in
     let mk_comp alias = match alias_of with
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
@@ -1317,53 +1306,55 @@ let switch =
     match command, params with
     | None      , []
     | Some `list, [] ->
-      no_alias_of ();
-      Client.SWITCH.list ~print_short ~installed ~all
+      Client.SWITCH.list ~print_short ~installed ~all;
+      `Ok ()
     | Some `install, [switch] ->
       Client.SWITCH.install
         ~quiet:global_options.quiet
         ~warning
         ~update_config:(not no_switch)
         (OpamSwitch.of_string switch)
-        (mk_comp switch)
-    | Some `export, [] ->
-      no_alias_of ();
-      Client.SWITCH.export filename
-    | Some `import, [] ->
-      no_alias_of ();
-      Client.SWITCH.import filename
+        (mk_comp switch);
+      `Ok ()
+    | Some `export, [filename] ->
+      Client.SWITCH.export
+        (if filename = "-" then None else Some (OpamFilename.of_string filename));
+      `Ok ()
+    | Some `import, [filename] ->
+      Client.SWITCH.import
+        (if filename = "-" then None else Some (OpamFilename.of_string filename));
+      `Ok ()
     | Some `remove, switches ->
-      no_alias_of ();
       List.iter
         (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch))
-        switches
+        switches;
+      `Ok ()
     | Some `reinstall, [switch] ->
-      no_alias_of ();
-      Client.SWITCH.reinstall (OpamSwitch.of_string switch)
+      Client.SWITCH.reinstall (OpamSwitch.of_string switch);
+      `Ok ()
     | Some `current, [] ->
-      no_alias_of ();
-      Client.SWITCH.show ()
+      Client.SWITCH.show ();
+      `Ok ()
     | Some `default switch, [] ->
       (match alias_of with
        | None ->
          Client.SWITCH.switch ~quiet:global_options.quiet ~warning
-           (OpamSwitch.of_string switch)
+           (OpamSwitch.of_string switch);
+         `Ok ()
        | _    ->
          Client.SWITCH.install
            ~quiet:global_options.quiet
            ~warning
            ~update_config:(not no_switch)
            (OpamSwitch.of_string switch)
-           (mk_comp switch))
-    | _, l ->
-      OpamGlobals.error_and_exit "wrong number of arguments (%d)"
-        (List.length l) in
-
-
-  Term.(pure switch
-    $global_options $build_options $command
-    $alias_of $filename $print_short_flag
-    $installed $all $no_warning $no_switch $params),
+           (mk_comp switch);
+         `Ok ())
+    | command, params -> bad_subcommand "switch" commands command params
+  in
+  Term.(ret (pure switch
+             $global_options $build_options $command
+             $alias_of $print_short_flag
+             $installed $all $no_warning $no_switch $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -1371,22 +1362,25 @@ let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let commands = [
-    ["list"]     , `list, "Lists pinned packages.";
-    ["add"]      , `add  ,
-    "`opam pin add NAME TARGET' pins package $(b,NAME) to $(b,TARGET), \
-     which may be a version, a path, or a url. \
+    ["list"]     , `list, [], "Lists pinned packages.";
+    ["add"]      , `add  , ["NAME"; "TARGET"],
+    "Pins package $(i,NAME) to $(i,TARGET), which may be a version, a path, \
+     or a url. \
+     $(i,NAME) can be omitted if $(i,TARGET) is a local path containing a \
+     package description with a name. $(i,TARGET) can be omitted with \
+     `--dev-repo'. \
      Use url syntax or $(b,--kind) to explicitely set the kind of pinning. Git \
      pins may target a specific branch or commit using $(b,#branch) e.g. \
-     $(b,git:///home/me/pkg#testing). If $(b,NAME) is not a known package \
-     name, OPAM will ask if it should be created. This command can also be \
-     used to change the target of an existing pin.";
-    ["remove"]   , `remove,
-    "`opam pin remove NAME' unpins package $(b,NAME), restoring its \
-     definition from the repository, if any.";
-    ["edit"]     , `edit,
-    "`opam pin edit NAME' pops an editor giving you the opportunity to \
+     $(b,git:///home/me/pkg#testing). \
+     It is possible to create a new package if $(i,NAME) does not exist.";
+    ["remove"]   , `remove, ["NAME"],
+    "Unpins package $(b,NAME), restoring its definition from the repository, if any.";
+    ["edit"]     , `edit, ["NAME"],
+    "Opens an editor giving you the opportunity to \
      change the opam file that OPAM will locally use for pinned package \
-     $(b,NAME).";
+     $(b,NAME). To simply cange the pinning target, use $(b,add). \
+     The chosen editor is determined from environment variables \
+     $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in order.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1396,20 +1390,16 @@ let pin ?(unpin_only=false) () =
         an URL. An `opam' file found at the root of the pinned source will \
         override the package's opam file from the repository, an `opam' \
         directory will override all its metadata."
-  ] @ mk_subdoc commands in
+  ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params =
     if unpin_only then
       Term.pure (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      mk_subcommands_with_default commands
-        "Without further arguments, acts like `opam pin list'. With a package \
-         name argument, `opam pin add' is assumed." in
+      mk_subcommands commands in
   let edit =
     mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
                           `opam pin edit' after pinning." in
-  let remove = (* deprecated unpin flag *)
-    mk_flag ["u";"unpin"] "" in
   let kind =
     let help = "Set the kind of pinning. Must be one of version, \
                 path, git, hg or darcs." in
@@ -1425,8 +1415,9 @@ let pin ?(unpin_only=false) () =
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
-    mk_flag ["n";"no-action"] "Just record pinning status, don't prompt for \
-                               install / reinstall / removal"
+    mk_flag ["n";"no-action"]
+      "Just record the new pinning status, don't prompt for \
+       install / reinstall / removal"
   in
   let dev_repo =
     mk_flag ["dev-repo"] "Pin to the package's upstream source for the latest \
@@ -1443,45 +1434,34 @@ let pin ?(unpin_only=false) () =
       with e -> OpamMisc.fatal e; raise Not_found
     else raise Not_found
   in
-  let pin global_options kind edit remove no_act dev_repo command params =
+  let pin global_options kind edit no_act dev_repo command params =
     apply_global_options global_options;
     let action = not no_act in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ())
-    | Some `remove, [n] | Some `default n, ["none"] ->
-      `Ok (Client.PIN.unpin ~action (OpamPackage.Name.of_string n))
-    | Some `default n, [] when remove ->
+    | Some `remove, [n] ->
       `Ok (Client.PIN.unpin ~action (OpamPackage.Name.of_string n))
     | Some `edit, [n]  ->
       `Ok (Client.PIN.edit ~action (OpamPackage.Name.of_string n))
-    | Some `add, name::p | Some `default name, p ->
-      let n,p =
-        try OpamPackage.Name.of_string name, p
-        with Failure _ when p = [] ->
-          try guess_name (OpamFilename.Dir.of_string name), [name]
-          with Not_found ->
-            failwith "%s is neither a valid package name nor a directory \
-                      containing an opam package name definition"
-      in
-      (match p with
-       | [] ->
-         if dev_repo then `Ok (Client.PIN.pin n ~edit ~action None) else
-         if edit then `Ok (Client.PIN.edit ~action n) else
-         let err =
-           Printf.sprintf "Please specify the target to pin package %s to."
-             name in
-         `Error (true, err)
-       | [p] ->
-         let pin_option = pin_option_of_string ?kind:kind p in
-         `Ok (Client.PIN.pin n ~edit ~action (Some pin_option))
-       | _::p::_ ->
-         `Error (true, Printf.sprintf "Extra argument %S" p))
-    | _, [] -> `Error (true, "Missing argument")
-    | _, _ -> `Error (true, "Too many arguments")
+    | Some `add, [name] when dev_repo ->
+      `Ok (Client.PIN.pin (OpamPackage.Name.of_string name) ~edit ~action None)
+    | Some `add, [path] when not dev_repo ->
+      (try
+         let name = guess_name (OpamFilename.Dir.of_string path) in
+         `Ok (Client.PIN.pin name ~edit ~action None)
+      with Not_found ->
+        `Error (true, Printf.sprintf
+                  "No valid package description found at path %s."
+                  path))
+    | Some `add, [name; target] ->
+      let name = OpamPackage.Name.of_string name in
+      let pin_option = pin_option_of_string ?kind:kind target in
+      `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
+    | command, params -> bad_subcommand "pin" commands command params
   in
   Term.ret
     Term.(pure pin
-          $global_options $kind $edit $remove $no_act $dev_repo $command $params),
+          $global_options $kind $edit $no_act $dev_repo $command $params),
   term_info "pin" ~doc ~man
 
 (* HELP *)
@@ -1567,7 +1547,7 @@ let make_command_alias cmd ?(options="") name =
   ] in
   term,
   Term.info name
-    ~docs:"COMMANDS ALIASES"
+    ~docs:"COMMAND ALIASES"
     ~doc ~man
 
 let commands = [

@@ -161,7 +161,7 @@ let with_switch_backup command f =
       OpamFilename.remove file
     else
      Printf.eprintf "\nThe former state can be restored with \
-                     %s switch import -f %S\n%!"
+                     %s switch import %S\n%!"
        Sys.argv.(0) (OpamFilename.to_string file);
     raise err
 

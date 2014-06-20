@@ -195,10 +195,10 @@ let setup_list shell dot_profile =
   OpamState.display_setup t shell dot_profile
 
 let exec command =
-  log "config-exex command=%s" command;
+  log "config-exex command=%S" (String.concat " " command);
   let t = OpamState.load_state "config-exec" in
   let cmd, args =
-    match OpamMisc.split command ' ' with
+    match command with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let env =
