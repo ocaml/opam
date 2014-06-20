@@ -782,18 +782,9 @@ let config =
                               $(b,opam config exec \"CMD ARG1 ... ARGn\" --switch=SWITCH)";
     ["var"]     , `var     , "Return the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
-                              understood as the package in which the variable is defined. \
-                              The variable resolution is done as follows: first, OPAM will check whether \
-                              $(b,\\$var) exists; for package variables, it will look for $(b,\\$pkg_var). \
-                              If the variable is not found, OPAM will then check whether the variable is \
-                              implicit. There are two global implicit variables: $(i,ocaml-version) and \
-                              $(i,preinstalled) and two implicit variables per package: $(i,pkg:installed) \
-                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is \
-                              either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into \
-                              its global and package config files to find whether these variables exist.";
-    ["list"]    , `list    , "Return the list of all variables defined in the listed packages. It is possible \
-                              to filter the list of variables by giving package names (use $(b,globals) to get \
-                              the list of global variables). No parameter means displaying all the variables.";
+                              understood as the package in which the variable is defined.";
+    ["list"]    , `list    , "Without argument, prints a documented list of all available variables. With \
+                              package names as argument, lists all the variables available for these packages.";
     ["subst"]   , `subst   , "Substitute variables in the given files. The strings $(i,%{var}%) are \
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";

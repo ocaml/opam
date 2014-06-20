@@ -3,6 +3,11 @@
 all: opam-lib opam opam-admin opam-installer
 	@
 
+ALWAYS:
+	@
+
+opam-lib opam opam-admin opam-installer all: ALWAYS
+
 #backwards-compat
 compile with-ocamlbuild: all
 	@
@@ -17,8 +22,7 @@ byte:
 src/%:
 	$(MAKE) -C src $*
 
-ALWAYS:
-%: ALWAYS
+%:
 	$(MAKE) -C src $@
 
 lib-ext:
@@ -92,7 +96,7 @@ $(OPAM_FULL).tar.gz:
 	ln -s .
 
 fast: src/core/opamGitVersion.ml src/core/opamScript.ml
-	@if [ -n "$(wildcard src/*/*.cmi)" ]; then $(MAKE) clean; fi
+	@if [ -n "$(wildcard src/*/*.cmi)" ]; then $(MAKE) -C src clean; fi
 	@ocp-build -init -scan
 	@ln -sf ../_obuild/opam/opam.asm src/opam
 	@ln -sf ../_obuild/opam-admin/opam-admin.asm src/opam-admin

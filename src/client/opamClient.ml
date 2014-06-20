@@ -242,7 +242,8 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names
+    ) names;
+    if names = [] then OpamGlobals.exit 1
 
   let info ~fields regexps =
     let t = OpamState.load_state "info" in
@@ -542,10 +543,12 @@ module API = struct
             OpamPackage.Set.add nv to_update)
         OpamPackage.Set.empty atoms
     in
-    if OpamPackage.Set.is_empty to_update then t else
-    let updated = OpamState.update_dev_packages t to_update in
-    if OpamPackage.Set.is_empty updated then t
-    else OpamState.load_state "reload-dev-package-updated"
+    if OpamPackage.Set.is_empty to_update then t else (
+      OpamGlobals.header_msg "Synchronising pinned packages";
+      let updated = OpamState.update_dev_packages t to_update in
+      if OpamPackage.Set.is_empty updated then t
+      else OpamState.load_state "reload-dev-package-updated"
+    )
 
   let compute_upgrade_t atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
@@ -835,7 +838,7 @@ module API = struct
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
     let root_empty =
-      not (OpamFilename.exists_dir root) || OpamFilename.files root = [] in
+      not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
     let update_setup t =
       let updated = match update_config with
         | `ask -> OpamState.update_setup_interactive t shell dot_profile

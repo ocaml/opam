@@ -65,7 +65,7 @@ let check_solution state = function
   | OK actions ->
     List.iter (post_message state) actions
   | Nothing_to_do -> ()
-  | Aborted     -> OpamGlobals.exit 1
+  | Aborted     -> OpamGlobals.exit 0
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
