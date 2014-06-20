@@ -78,6 +78,8 @@ let edit t name =
             OpamFile.OPAM.read file)
   in
   let opam = edit () in
+  OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
+    (OpamPackage.Name.to_string name);
   OpamFilename.remove backup;
   if opam = orig_opam then None else
   let () = match pin with
