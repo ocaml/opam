@@ -1067,15 +1067,16 @@ module X = struct
         file_contents = [
           OpamFormat.make_variable (s_opam_version,
                     (OpamVersion.to_string @> OpamFormat.make_string) t.opam_version);
-        ] @ list    t.maintainer    s_maintainer    OpamFormat.make_string_list
-          @ list    t.author        s_author        OpamFormat.make_string_list
-          @ name_and_version
+        ] @ name_and_version
+          @ list    t.maintainer    s_maintainer    OpamFormat.make_string_list
+          @ list    t.author        s_authors       OpamFormat.make_string_list
           @ list    t.homepage      s_homepage      OpamFormat.make_string_list
           @ list    t.bug_reports   s_bug_reports   OpamFormat.make_string_list
-
           @ list    t.license       s_license       OpamFormat.make_string_list
           @ list    t.doc           s_doc           OpamFormat.make_string_list
           @ list    t.tags          s_tags          OpamFormat.make_string_list
+          @ option  t.dev_repo      s_dev_repo
+            (string_of_pin_option @> OpamFormat.make_string)
           @ listm   t.substs s_substs
               (OpamFilename.Base.to_string @> OpamFormat.make_string)
           @ listm   t.build_env     s_build_env     OpamFormat.make_env_variable
@@ -1100,8 +1101,6 @@ module X = struct
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
-          @ option  t.dev_repo      s_dev_repo
-            (string_of_pin_option @> OpamFormat.make_string)
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string [s_os; s_ocaml_version; s_available] s
@@ -1229,7 +1228,6 @@ module X = struct
                        CString (OpamPackage.Name.to_string (OpamPackage.name nv)), None],
                       None];
         depends    = Atom (OpamPackage.Name.of_string "ocamlfind", Empty);
-        available  = FBool true;
         author     = maintainer;
         homepage   = [""];
         license    = [""];
