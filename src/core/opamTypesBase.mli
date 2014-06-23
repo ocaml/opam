@@ -18,6 +18,9 @@
     basic OPAM types present in OpamTypes.ml *)
 open OpamTypes
 
+(** {2 Exceptions} *)
+exception Lexer_error of string
+
 (** Upcast a downloaded directory. *)
 val download_dir: dirname download -> generic_file download
 

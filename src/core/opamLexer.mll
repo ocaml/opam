@@ -21,7 +21,7 @@ open OpamTypesBase
 
 let newline lexbuf = Lexing.new_line lexbuf
 let error fmt =
-  Printf.kprintf (fun msg -> raise (OpamTypes.Lexer_error msg)) fmt
+  Printf.kprintf (fun msg -> raise (Lexer_error msg)) fmt
 
 
 let char_for_backslash = function
