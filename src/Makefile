@@ -117,6 +117,7 @@ SRC_core = \
   opamVariable.ml \
   opamFormula.ml \
   opamCompiler.ml \
+  opamTypes.mli \
   opamTypesBase.ml \
   opamPath.ml \
   opamParser.mly \
