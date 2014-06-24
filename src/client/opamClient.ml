@@ -257,13 +257,11 @@ module API = struct
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
-      (* let installed = OpamPackage.Map.fold (fun nv alias map -> *)
-      (*     OpamPackage.Map.add (OpamState.pinning_version t nv) alias map *)
-      (*   ) installed OpamPackage.Map.empty in *)
+
       let installed_str =
         let one (nv, aliases) =
           Printf.sprintf "%s [%s]"
-            (OpamPackage.to_string nv)
+            (OpamPackage.Version.to_string (OpamPackage.version nv))
             (String.concat " " (List.map OpamSwitch.to_string aliases)) in
         String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
@@ -304,10 +302,6 @@ module API = struct
 
       (* All the version of the package *)
       let versions = OpamPackage.versions_of_name t.packages name in
-      let versions =
-        OpamPackage.Version.Set.filter (fun v ->
-          OpamPackage.Map.for_all (fun nv _ -> OpamPackage.version nv <> v) installed
-        ) versions in
 
       let installed_version = match OpamPackage.Map.cardinal installed with
         | 0 -> [ "installed-version" , "" ]
@@ -322,26 +316,19 @@ module API = struct
         | [v] -> [ "available-version" , v ]
         | l   -> [ "available-versions", String.concat ", " l ] in
 
-      let mk (empty, get, to_string) name field =
+      let mk empty to_string name field =
         let v = field opam in
-        if empty = v then
-          []
-        else
-          [name, to_string (get v)] in
+        if empty = v then []
+        else [name, to_string v] in
 
-      let strings = mk (
-          [],
-          (fun l -> l),
-          (String.concat ", ")
-        ) in
-      let formula = mk (
-          Empty,
-          (fun f -> f),
-          OpamFormula.to_string
-        ) in
+      let strings = mk [] (String.concat ", ") in
+      let formula = mk Empty OpamFormula.to_string in
+      let option f = mk None (function None -> "" | Some x -> f x) in
 
       let author   = strings "author"   OpamFile.OPAM.author in
       let homepage = strings "homepage" OpamFile.OPAM.homepage in
+      let bug_reports = strings "bug-reports" OpamFile.OPAM.bug_reports in
+      let dev_repo = option string_of_pin_option "dev-repo" OpamFile.OPAM.dev_repo in
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     OpamFile.OPAM.tags in
@@ -351,12 +338,11 @@ module API = struct
       let libraries = strings "libraries" (fun t -> List.map fst (OpamFile.OPAM.libraries t)) in
       let syntax    = strings "syntax"    (fun t -> List.map fst (OpamFile.OPAM.syntax t)) in
 
-      let os = mk (
-        Empty,
-        (fun f -> f),
-        OpamFormula.string_of_formula (fun (t,s) ->
-          if t then s else "!"^s)
-      ) "os" OpamFile.OPAM.os in
+      let os =
+        mk Empty
+          (OpamFormula.string_of_formula (fun (t,s) ->
+               if t then s else "!"^s))
+          "os" OpamFile.OPAM.os in
 
       let descr =
         let d = OpamState.descr t nv in
@@ -370,6 +356,8 @@ module API = struct
         @ repository
         @ url
         @ homepage
+        @ bug_reports
+        @ dev_repo
         @ author
         @ license
         @ doc
