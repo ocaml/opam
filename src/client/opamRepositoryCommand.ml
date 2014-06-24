@@ -23,6 +23,37 @@ open OpamPackage.Set.Op
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 let slog = OpamGlobals.slog
 
+let update t repo =
+  let max_loop = 10 in
+  (* Recursively traverse redirection links, but stop after 10 steps or if
+     we start to cycle. *)
+  let rec loop r n =
+    if n = 0 then
+      OpamGlobals.warning "%s: Too many redirections, stopping."
+        (OpamRepositoryName.to_string repo.repo_name)
+    else (
+      OpamRepository.update repo;
+      if n <> max_loop && r = repo then
+        OpamGlobals.warning "%s: Cyclic redirections, stopping."
+          (OpamRepositoryName.to_string repo.repo_name)
+      else match OpamState.redirect t r with
+        | None        -> ()
+        | Some (new_repo, f) ->
+          OpamFilename.rmdir repo.repo_root;
+          OpamFile.Repo_config.write (OpamPath.Repository.config repo) new_repo;
+          let reason = match f with
+            | None   -> ""
+            | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
+          OpamGlobals.note
+            "The repository '%s' will be *%s* redirected to %s%s"
+            (OpamRepositoryName.to_string repo.repo_name)
+            ((OpamGlobals.colorise `bold) "permanently")
+            (OpamMisc.prettify_path (string_of_address new_repo.repo_address))
+            reason;
+          loop new_repo (n-1)
+    ) in
+  loop repo max_loop
+
 let print_updated_compilers updates =
 
   let print singular plural map =
@@ -418,52 +449,70 @@ let priority repo_name ~priority =
   (* relink the compiler and package descriptions *)
   fix_descriptions t ~verbose:true
 
+(*
+let priority_t t ~priority =
+  let repo = OpamState.find_repository t repo_name in
+  let config_f = OpamPath.Repository.config repo in
+  let config =
+    let config = OpamFile.Repo_config.read config_f in
+    { config with repo_priority = priority } in
+  OpamFile.Repo_config.write config_f config;
+
+let priority repo_name ~priority =
+  log "repository-priority";
+  (* 1/ update the config file *)
+  let t = OpamState.load_state ~save_cache:false "repository-priority" in
+  priority_t t ~priority
+  (* relink the compiler and package descriptions *)
+  fix_descriptions t ~verbose
+*)
 let add name kind address ~priority:prio =
   log "repository-add";
   let t = OpamState.load_state "repository-add" in
-  let repo = {
-    repo_name     = name;
-    repo_kind     = kind;
-    repo_address  = address;
-    repo_priority = min_int; (* we initially put it as low-priority *)
-    repo_root     = OpamPath.Repository.create t.root name;
-  } in
   if OpamState.mem_repository t name then
     OpamGlobals.error_and_exit
       "%s is already a remote repository"
-      (OpamRepositoryName.to_string name)
-  else (
-    try OpamRepository.init repo with
-    | OpamRepository.Unknown_backend ->
-      OpamGlobals.error_and_exit
-        "\"%s\" is not a supported backend"
-        (string_of_repository_kind repo.repo_kind)
-    | e ->
-      cleanup t repo;
-      raise e
-  );
+      (OpamRepositoryName.to_string name);
   if kind = `local then (
     let repo_dir = OpamFilename.Dir.of_string (string_of_address address) in
     let pkgdir = OpamPath.packages_dir repo_dir in
     let compdir = OpamPath.compilers_dir repo_dir in
-    if not (OpamFilename.exists_dir pkgdir) && not (OpamFilename.exists_dir compdir) then
-      OpamGlobals.warning "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
-                           Is it really the directory of your repo ? \
-                           (\"opam remote remove %s\" to revert)"
-        (OpamFilename.Dir.to_string repo_dir) (OpamRepositoryName.to_string name)
+    if not (OpamFilename.exists_dir pkgdir) &&
+       not (OpamFilename.exists_dir compdir) &&
+       not (OpamState.confirm
+              "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
+               Is it really the directory of your repo ?"
+              (OpamFilename.Dir.to_string repo_dir))
+    then OpamGlobals.exit 1
+  );
+  let prio = match prio with
+    | Some p -> p
+    | None ->
+      if OpamRepositoryName.Map.is_empty t.repositories then 0 else
+      let max_prio =
+        OpamRepositoryName.Map.fold
+          (fun _ { repo_priority } m -> max repo_priority m)
+          t.repositories min_int in
+      10 + max_prio in
+  let repo = {
+    repo_name     = name;
+    repo_kind     = kind;
+    repo_address  = address;
+    repo_priority = prio;
+    repo_root     = OpamPath.Repository.create t.root name;
+  } in
+  (try OpamRepository.init repo with
+   | OpamRepository.Unknown_backend ->
+     OpamGlobals.error_and_exit
+       "\"%s\" is not a supported backend"
+       (string_of_repository_kind repo.repo_kind)
+   | e ->
+     cleanup t repo;
+     raise e
   );
   log "Adding %a" (slog OpamRepository.to_string) repo;
   update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
-    let prio = match prio with
-      | Some p -> p
-      | None ->
-        if OpamRepositoryName.Map.is_empty t.repositories then 0 else
-          let max_prio =
-            OpamRepositoryName.Map.fold
-              (fun _ { repo_priority } m -> max repo_priority m)
-              t.repositories min_int in
-          10 + max_prio in
     OpamState.remove_state_cache ();
     priority name ~priority:prio;
   with e ->

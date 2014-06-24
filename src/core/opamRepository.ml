@@ -108,7 +108,7 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.packages_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.archives_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
-  ignore (B.pull_repo repo)
+  B.pull_repo repo
 
 let pull_url kind package local_dirname checksum remote_url =
   let pull url =
