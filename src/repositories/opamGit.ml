@@ -34,8 +34,23 @@ module Git = struct
 
   let fetch repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
-        OpamSystem.command
-          [ "git" ; "remote" ; "set-url" ; "origin" ; fst repo.repo_address ];
+        let current_remote =
+          try
+            match OpamSystem.read_command_output ~verbose:false
+                    [ "git" ; "config" ; "--get"; "remote.origin.url" ]
+            with
+            | [url] -> Some url
+            | _ -> None
+          with e -> OpamMisc.fatal e; None
+        in
+        if current_remote <> Some (fst repo.repo_address) then (
+          log "Git remote for %s needs updating (was: %s)"
+            (OpamRepository.to_string repo)
+            (OpamMisc.Option.default "<none>" current_remote);
+          OpamSystem.commands
+            [ [ "git" ; "remote" ; "rm" ; "origin" ];
+              [ "git" ; "remote" ; "add" ; "origin"; fst repo.repo_address ] ]
+        );
         OpamSystem.command [ "git" ; "fetch" ; "origin" ]
       )
 
