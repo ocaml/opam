@@ -1097,8 +1097,8 @@ let reinstall =
   let doc = "Reinstall a list of packages." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command removes the given packages, reinstalls them and \
-        recompiles the right package dependencies."
+    `P "This command removes the given packages and the ones \
+        that depend on them, and reinstalls the same versions."
   ] in
   let reinstall global_options build_options atoms =
     apply_global_options global_options;
@@ -1371,7 +1371,7 @@ let pin ?(unpin_only=false) () =
      `--dev-repo'. \
      Use url syntax or $(b,--kind) to explicitely set the kind of pinning. Git \
      pins may target a specific branch or commit using $(b,#branch) e.g. \
-     $(b,git:///home/me/pkg#testing). \
+     $(b,git://host/me/pkg#testing). \
      It is possible to create a new package if $(i,NAME) does not exist.";
     ["remove"]   , `remove, ["NAME"],
     "Unpins package $(b,NAME), restoring its definition from the repository, if any.";

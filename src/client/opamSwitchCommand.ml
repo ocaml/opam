@@ -335,7 +335,10 @@ let import_t importfile t =
             if not (OpamFilename.exists_dir overlay_dir) then
               OpamState.add_pinned_overlay t ?version:(pinned_version n) n)
           pinned;
-        OpamState.update_dev_packages t dev_pkgs
+        if not (OpamPackage.Name.Map.is_empty pinned) then (
+          OpamGlobals.header_msg "Synchronising pinned packages";
+          OpamState.update_dev_packages t dev_pkgs)
+        else OpamPackage.Set.empty
       in
 
       let t =

@@ -59,14 +59,22 @@ let edit t name =
         if OpamFile.OPAM.name_opt opam = None then
           OpamFile.OPAM.with_name opam name
         else opam in
-      if OpamFile.OPAM.version_opt opam = None then
-        (OpamGlobals.error "The \"version\" field is mandatory";
-         failwith "missing field");
       if OpamFile.OPAM.name_opt opam <> Some name then
         (OpamGlobals.error "Inconsistent \"name\" field, it must be %s"
            (OpamPackage.Name.to_string name);
          failwith "bad name");
-      opam
+      match pin, OpamFile.OPAM.version_opt opam with
+      | Version vpin, None -> OpamFile.OPAM.with_version opam vpin
+      | Version vpin, Some v when v <> vpin ->
+        OpamGlobals.error
+          "Bad \"version: %S\" field: the package is version-pinned to %s"
+          (OpamPackage.Version.to_string v)
+          (OpamPackage.Version.to_string vpin);
+        failwith "bad version"
+      | _, None ->
+        OpamGlobals.error "The \"version\" field is mandatory";
+        failwith "missing field"
+      | _ -> opam
     with e ->
       (try OpamMisc.fatal e with e ->
         OpamFilename.move ~src:backup ~dst:file;
