@@ -21,6 +21,9 @@ Developer Manual (version 1.2)\\ ~\ \\
 Louis GESBERT\\
 \url{louis.gesbert@ocamlpro.com}\\
 }
+\author{Louis GESBERT\\
+\url{louis.gesbert@ocamlpro.com}\\
+}
 
 \begin{document}
 
@@ -117,7 +120,7 @@ switches.
   described in \S\ref{file:url}.
 
 \item \verb+$opam/packages/$NAME/$NAME.$VERSION/files/+ contains the
-  eventual overlay files on top of the upstream sources, for version
+  optional overlay files on top of the upstream sources, for version
   \verb+$VERSION+ of package \verb+$NAME+ (which might not be
   installed). This files are copied in the build directory before
   building and installing a package.
@@ -208,7 +211,7 @@ the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     repositories: [ STRING+ ]
     switch: STRING
     cores: INT
@@ -233,7 +236,7 @@ The field {\tt cores} is the number of parallel process that
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     ?name:          STRING
     ?version:       STRING
     maintainer:     STRING
@@ -242,6 +245,7 @@ The field {\tt cores} is the number of parallel process that
     ?doc:           STRING
     ?dev-repo:      STRING
     ?license:       STRING
+    ?bug-reports:   STRING
     ?tags:          [ STRING+ ]
     ?subst:         [ STRING+ ]
     ?patches:       [ (STRING ?{ <filter> } )+ ]
@@ -249,10 +253,10 @@ The field {\tt cores} is the number of parallel process that
     ?build-doc:     commands
     ?build-test:    commands
     ?remove:        commands
-    ?depends:       [ <and-formula(package)>+ ]
-    ?depopts:       [ <or-formula(package)>+ ]
-    ?depexts:       [ [[STRING+] [STRING+]]+ ]
+    ?depends:       [ <and-formula(package)> ]
+    ?depopts:       [ STRING+ ]
     ?conflicts:     [ <package>+ ]
+    ?depexts:       [ [[STRING+] [STRING+]]+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
     ?available:     [ <filter> ]
@@ -307,9 +311,10 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt maintainer} is the contact address of the
   package maintainer.
 
-\item The {\tt license}, {\tt homepage}, {\tt doc}, {\tt authors} and {\tt
+\item The {\tt license}, {\tt homepage}, {\tt doc}, {\tt bug-reports} {\tt authors} and {\tt
     dev-repo} fields are optional. {\tt doc} should be the address of the online
-  documentation for the package. {\tt dev-repo} should point to the source
+  documentation for the package. and {\tt bug-reports} the address where bugs
+  should be reported. {\tt dev-repo} should point to the source
   repository of the package, which may be useful for developpers: not to be
   mistaken with the URL file, which points to the specific packaged version.
 
@@ -359,7 +364,7 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt remove} is the command to run before deleting
   the installed files.
 
-\item The {\tt depends}, {\tt depopts} and {\tt conflicts} fields
+\item The {\tt depends} and {\tt conflicts} fields
   contain formulas over package names, optionally parametrized by
   version constraints. Some examples or package formula:
 
@@ -376,13 +381,22 @@ The field {\tt cores} is the number of parallel process that
   {\tt "foo"} lesser or equal to $1.2$ and either any version of package
   {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}''  \\
 
-The {\tt depopts} field contains a {\em OR} formula over
-  package names, which means that top-level \verb+|+ are not
-  mandatory. This field express optional dependencies that
-  \OPAM\ will not try to install. However, when installing a new
-  package it will check if it is an optional dependency of already
-  installed packages. If it is the case, it will re-install the
-  packages (and their transitive forward-dependency closure).
+\item The {\tt depopts} field contains a list of package names that are optional
+  dependencies: these packages are not required nor automatically installed
+  to build the current package, but they have an effect on it. When an optional
+  dependency is changed, the package is rebuilt.
+
+\item The {\tt conflicts} field contains package names and constraints
+  indicating that the current package can't coexist with some packages or some
+  specific versions. This can be useful to complete {\tt depopts} if the package
+  requires that another package, if present, respects some version constraint.
+  Note that this changed in \OPAM\ 1.2: previously these constraints could be
+  put in {\tt depopts}. You should now write \verb+depopts: "foo"+,
+  \verb+conflicts: "foo" {< "2"}+ rather than \verb+depopts: "foo" {>= "2"}+
+  which meaning was not perfectly obvious.
+
+Here \verb+baz:version = "2"+ is expanded to
+\verb+baz:installed & baz:version = "2"+.
 
 \item The {\tt depexts} field is optional and contains tags describing the
   external dependencies. It contains pairs of lists of the form
@@ -617,7 +631,7 @@ This command will:
   \verb+$opam/repo/$REPO/archives/+. It it is, copy it in the global
   state (in \verb+$opam/archives+). If it is not, download it upstream
   by looking at \verb|$opam/packages/$NAME/$NAME.$VERSION/url| and add
-  the eventual overlay files located in
+  the optional overlay files located in
   \verb|$opam/packages/$NAME/$NAME.$VERSION/files|. Note: this files
   can be overwritten by anything present in
   \verb|$opam/$SWITCH/overlay/$NAME.$VERSION/|.
@@ -858,7 +872,7 @@ The syntax of {\tt comp} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
+    opam-version: "1.2"
     name:       STRING
     ?src:       STRING
     ?archive:   STRING
@@ -964,7 +978,7 @@ For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
 version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
-opam-version: "1"
+opam-version: "1.2"
 name:         "3.12.1"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 make:         [ "world" "world.opt" ]
@@ -977,7 +991,7 @@ trunk, with no {\em tk} support and only in bytecode, and all the
 libraries built with {\tt -g}:
 
 \begin{verbatim}
-opam-version: "1"
+opam-version: "1.2"
 name:         "trunk-g-notk-byte"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 configure:    [ "-no-tk" ]
