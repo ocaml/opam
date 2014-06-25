@@ -65,11 +65,11 @@ INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
 export INCDIRS
 
-opam-lib.byte: $(OPAMLIB:=.cma)
-	@
+opam-lib.byte:
+	$(MAKE) $(OPAMLIB:=.cma)
 
-opam-lib.native: $(OPAMLIB:=.cmxa)
-	@
+opam-lib.native:
+	$(MAKE) $(OPAMLIB:=.cmxa)
 
 opam-lib: opam-lib.byte $(if $(USE_BYTE),,opam-lib.native) opam-admin.top
 	@
