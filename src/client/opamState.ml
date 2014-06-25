@@ -35,7 +35,7 @@ let confirm fmt =
     try
       let rec loop () =
         OpamGlobals.msg "%s [Y/n] %!" msg;
-        if !OpamGlobals.yes then true
+        if !OpamGlobals.yes then (OpamGlobals.msg "y\n"; true)
         else match String.lowercase (read_line ()) with
           | "y" | "yes" | "" -> true
           | "n" | "no" -> false
