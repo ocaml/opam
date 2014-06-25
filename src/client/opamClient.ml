@@ -892,7 +892,7 @@ module API = struct
       let atoms = List.filter (fun (n,_) -> n = name) atoms in
       atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
     (* All packages satisfying [atoms] *)
-    OpamPackage.Set.filter check_atoms t.packages
+    OpamPackage.Set.filter check_atoms (t.packages ++ t.installed)
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
   let check_conflicts t atoms =
@@ -1131,8 +1131,6 @@ module API = struct
   let reinstall_t ?ask ?(force=false) atoms t =
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
-    let t, _, _ = check_conflicts t atoms in
-
     let reinstall, not_installed =
       get_installed_atoms t atoms in
     let t =
@@ -1154,6 +1152,11 @@ module API = struct
     in
 
     let reinstall = OpamPackage.Set.of_list reinstall in
+
+    let atoms = OpamSolution.eq_atoms_of_packages reinstall in
+
+    let t, _, _ = check_conflicts t atoms in
+
     let universe = OpamState.universe t Depends in
     let depends = (* Do not cast to a set, we need to keep the order *)
       OpamSolver.reverse_dependencies

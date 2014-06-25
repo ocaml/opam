@@ -594,7 +594,7 @@ let apply ?ask t action ~requested solution =
         )  messages in
       let rewrite nv =
         let n = OpamPackage.name nv in
-        if OpamState.is_pinned t n then
+        if OpamState.is_pinned t n && OpamState.pinned t n = nv then
           OpamPackage.create n
             (OpamPackage.Version.of_string
                (OpamPackage.Version.to_string (OpamPackage.version nv) ^ "*"))

@@ -420,10 +420,14 @@ let opam_opt t nv =
   if OpamFilename.exists overlay then
     let o = OpamFile.OPAM.read overlay in
     if OpamFile.OPAM.version o = OpamPackage.version nv then Some o
-    else
+    else if OpamPackage.Map.mem nv t.opams then
       (log "Looking for %s which is pinned to %s (not using overlay)"
          (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
        base ())
+    else
+      (log "Opam file for %s not found: using the overlay even if it's for %s"
+         (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
+       Some (OpamFile.OPAM.with_version o (OpamPackage.version nv)))
   else
     base ()
 
@@ -1216,7 +1220,7 @@ let switch_consistency_checks t =
        not (is_pinned t name) &&
        (not (is_name_installed t name) ||
         (* Don't cleanup installed packages which don't have any other metadata *)
-        OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = name) t.package_index))
+        not (OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = name) t.package_index)))
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
@@ -1404,9 +1408,7 @@ let load_state ?(save_cache=true) call_site =
     | None   ->
       let packages =
         OpamPackage.Set.of_list (OpamPackage.Map.keys package_index) ++
-        OpamPackage.Set.filter
-          (fun nv -> not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned))
-          installed in
+        installed in
       OpamPackage.Set.fold (fun nv map ->
           try
             let file =
@@ -1418,8 +1420,9 @@ let load_state ?(save_cache=true) call_site =
                | Lexer_error _ -> map (* Error printed, continue *)
           with
           | Not_found ->
-            OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
-              (OpamPackage.to_string nv);
+            if not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) then
+              OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
+                (OpamPackage.to_string nv);
             map
           | Parsing.Parse_error | OpamSystem.Internal_error _ ->
             OpamGlobals.warning "Errors while parsing %s OPAM file, skipping."
@@ -2385,6 +2388,8 @@ let update_dev_package t nv =
       if pinning_kind = `version then [] else
       hash_meta @@ local_opam ~version_override:false nv srcdir
     in
+    let was_single_opam_file = OpamFilename.exists (srcdir // "opam") in
+    let just_opam = List.filter (function (_, `Opam _) -> true | _ -> false) in
     let user_meta, user_version = (* Installed version (overlay) *)
       let opam,_,_ as files =
         local_opam ~root:true ~version_override:false nv overlay in
@@ -2411,8 +2416,7 @@ let update_dev_package t nv =
       if OpamFilename.exists (srcdir // "opam") then
         (* Single opam file in the project src (ie not a directory):
            don't override other files, restrict to 'opam' *)
-        let f = List.filter (function (_, `Opam _) -> true | _ -> false) in
-        f user_meta, f old_meta, f repo_meta
+        just_opam user_meta, just_opam old_meta, just_opam repo_meta
       else user_meta, old_meta, repo_meta
     in
     let rec diff a b = match a,b with
@@ -2444,7 +2448,8 @@ let update_dev_package t nv =
        new_meta <> old_meta && new_meta <> user_meta
     then
       if old_meta = user_meta || repo_meta = user_meta ||
-         user_meta = ["opam", `Opam (OpamFile.OPAM.create nv)]
+         user_meta = ["opam", `Opam (OpamFile.OPAM.create nv)] ||
+         was_single_opam_file && old_meta = just_opam user_meta
       then
         (* No manual changes *)
         (OpamGlobals.msg "Installing new package description for %s from %s\n"
