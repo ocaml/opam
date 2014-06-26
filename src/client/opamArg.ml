@@ -80,7 +80,16 @@ let switch_to_updated_self debug opamroot =
          Array.append
            [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
            (Unix.environment ()) in
-       Unix.execve updated_self_str Sys.argv env))
+       try
+         Unix.execve updated_self_str Sys.argv env
+       with e ->
+         OpamMisc.fatal e;
+         OpamGlobals.error
+           "Could'nt run the upgraded opam %s found at %s. \
+            Continuing with %s from the system."
+           (OpamVersion.to_string update_version)
+           updated_self_str
+           (OpamVersion.to_string OpamVersion.current)))
 
 let create_global_options
     git_version debug_level verbose quiet color switch yes strict root
