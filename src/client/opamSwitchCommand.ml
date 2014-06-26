@@ -300,8 +300,10 @@ let import_t importfile t =
         if OpamPackage.Name.Map.mem (OpamPackage.name nv) import_pins then
           OpamPackage.Set.add nv available
         else (
-          OpamGlobals.warning "Package %s is not available, skipping"
-            (OpamPackage.to_string nv);
+          OpamGlobals.warning "%s Skipping."
+            (OpamState.unavailable_reason t
+               (OpamSolution.eq_atom
+                  (OpamPackage.name nv) (OpamPackage.version nv)));
           available
         )
       )
