@@ -108,7 +108,7 @@ val solution_of_actions:
 
 (** Resolve a CUDF request. The result is either a conflict holding
     an explanation of the error, or a resulting universe.
-    [~extern] specifies wether the external solver should be used *)
+    [~extern] specifies whether the external solver should be used *)
 val resolve:
   extern:bool ->
   version_map:int OpamPackage.Map.t ->

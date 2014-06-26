@@ -1,18 +1,17 @@
-current
-* Added `opam unpin`, better pinning behaviour (#1250, #1170)
+1.2.0
 * Handle locally installed self-upgrade opam binary (#1257)
 * Added `opam list --depends-on` to show reverse dependencies (#693)
 * More consistent checks on user-specified packages (#1241)
 * Handle version constraints from the command line (`package>=version`) (#380)
 * Output clear and concise messages on non solvable requests (#595, #1238)
 * Much better internal parser. File locations in error messages (#1260, #1222)
-* Added a "flags" field in opam packages (#1217)
-* Removed dependency on camlp4 via patching of Dose (#917)
+* Removed dependency on camlp4 (#917)
 * Fixed orphan packages handling (installed packages with no upstream) (#1198)
 * Solver: optimize default preferences. New --criteria option (#1208)
 * Better PATH modifications handling (#1189)
 * Specify variable overrides with environment OPAMVAR_name (#1153)
-* Much better overall failsafe behaviour. Error reports on interruption (#1202, #1125, #1188...)
+* Much better overall failsafe behaviour. Error reports on interruption (#1202,
+  #1125, #1188...)
 * Better action processing, with downloads first (#984)
 * Much improved and faster interface with the Cudf solver (#1185, #1179)
 * Ask the user to confirm actions whenever non-trivial (#1165)
@@ -21,6 +20,41 @@ current
 * Fixed the stats displayed after update (#1161)
 * Added variables to query ocaml native tools (#979)
 * Enable packagers to specify mirrors in url files (#807)
+* Cleaned up the command-line interface (#1250, #1170, #1472). Incompatible
+  changes:
+  - 'opam switch exec': takes command args directly rather than as a string (use
+    -- for command arguments)
+  - 'opam switch import|export': now have a mandatory FILE argument. '-f' no
+    longer accepted.
+  - 'opam pin' now takes a subcommand 'add', 'remove', 'list' or 'edit'.
+  - 'opam config -env': no longer accepted for 'opam config env'
+  - '--no-aspcud' is now '--use-internal-solver'.
+  - Removed unused `opam config -I`, `opam config {asm,byte}{comp,link}`
+* Much extended pinning features, with the ability to use opam files from the
+  source, pin packages that don't exist in a repository, fill a local opam
+  file from a template, etc.
+* Improved the internal solver to handle much larger problems (#1358)
+* Use Unix.lockf for more reliable repository locks (#1299)
+* Large performance improvements (#1363)
+* Upgraded external dependencies to dose 3.2.2, ocamlgraph 1.8.5, cmdliner
+  0.9.4, cudf 0.7
+* Switch export file now include pinning data. Pinned package restored through
+  'opam switch import' (#1393)
+* Meaningful messages explaining conflicts and why packages aren't available
+  (#1238, #1419, #1398)
+* More informative 'opam config list', more complete 'opam config var'
+* Added 'opam config cudf-universe' for use in external tools
+* opam files: added a 'dev-repo' field, and the experimental 'flags' field
+  (#1217, #1472)
+* Generate an opam-admin.top to easily apply scripts on a package repository
+  (#1454)
+* Added 'opam upgrade --fixup' to save the day if your installed package set
+  gets inconsistent.
+* Fixed some return codes
+* Hundreds of smaller fixes and UI improvements
+
+1.1.2
+* Rewritten, more compatible build system based on Makefiles (#1362, #1424)
 
 1.1.1
 * Fix `opam-admin make <packages> -r` (#990)

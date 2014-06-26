@@ -568,25 +568,25 @@ let global_variable_names = [
   "opam-version",         "The currently running OPAM version";
   "compiler",             "The name of the current OCaml compiler (may be more \
                            specific than the version, eg: \"4.01.0+fp\"";
-  "preinstalled",         "Wether the compiler was preinstalled on the system, \
+  "preinstalled",         "Whether the compiler was preinstalled on the system, \
                            or installed by OPAM";
   "switch",               "The local name (alias) of the current switch";
   "jobs",                 "The number of parallel jobs set up in OPAM \
                            configuration";
-  "ocaml-native",         "Wether the OCaml native compilers are available";
-  "ocaml-tools-opt",      "Wether the .opt versions of the OCaml tools are \
+  "ocaml-native",         "Whether the OCaml native compilers are available";
+  "ocaml-tools-opt",      "Whether the .opt versions of the OCaml tools are \
                            available";
-  "ocaml-native-dynlink", "Wether native dynlink is available on this \
+  "ocaml-native-dynlink", "Whether native dynlink is available on this \
                            installation";
 ]
 let package_variable_names = [
   "name",      "Name of the package";
   "version",   "Version of the package";
   "depends",   "Resolved direct dependencies of the package";
-  "installed", "Wether the package is installed";
-  "enable",    "Takes the value \"enable\" or \"disable\" depending on wether \
+  "installed", "Whether the package is installed";
+  "enable",    "Takes the value \"enable\" or \"disable\" depending on whether \
                 the package is installed";
-  "pinned",    "Wether the package is pinned";
+  "pinned",    "Whether the package is pinned";
   "bin",       "Binary directory for this package";
   "sbin",      "System binary directory for this package";
   "lib",       "Library directory for this package";
@@ -863,7 +863,8 @@ let unavailable_reason t (name, _ as atom) =
   let reasons () =
     let candidates =
       OpamPackage.Set.filter (OpamFormula.check atom) t.packages in
-    let reasons nv =
+    let nv = OpamPackage.max_version candidates name in
+    let r =
       let opam = opam t nv in
       (if consistent_ocaml_version t opam then [] else [
           Printf.sprintf "it requires OCaml %s"
@@ -882,12 +883,10 @@ let unavailable_reason t (name, _ as atom) =
                (OpamFile.OPAM.os opam))
         ]) @
       (if consistent_available_field t opam then [] else [
-          Printf.sprintf "your system doesn't comply with {%s}"
+          Printf.sprintf "your system doesn't comply with %s"
             (string_of_filter (OpamFile.OPAM.available opam))
         ]) in
-    let r =
-      List.concat (List.map reasons (OpamPackage.Set.elements candidates)) in
-    match OpamMisc.remove_duplicates (List.sort compare r) with
+    match r with
     | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
     | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) "    - ") rs) in
