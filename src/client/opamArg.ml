@@ -777,11 +777,13 @@ let show =
         ~doc:"Only display these fields. You can specify multiple fields by separating them with commas."
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
+  let raw =
+    mk_flag ["raw"] "Print the raw opam file for this package" in
 
-  let pkg_info global_options fields packages =
+  let pkg_info global_options fields raw packages =
     apply_global_options global_options;
-    Client.info ~fields packages in
-  Term.(pure pkg_info $global_options $fields $nonempty_pattern_list),
+    Client.info ~fields ~raw_opam:raw packages in
+  Term.(pure pkg_info $global_options $fields $raw $nonempty_pattern_list),
   term_info "show" ~doc ~man
 
 

@@ -177,8 +177,19 @@ let vpkg2atom cudf2opam cudf_universe (name,cstr) =
     with Not_found ->
       log "Could not find corresponding version in cudf universe: %a"
         (slog string_of_atom) (name,cstr);
-      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
-      Some (relop, OpamPackage.Version.of_string ("cudf"^string_of_int v))
+      let solutions =
+        Cudf.lookup_packages ~filter:cstr cudf_universe name in
+      if solutions = [] then
+        OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
+      else
+        let opam_sol = OpamPackage.Set.of_list (List.map cudf2opam solutions) in
+        OpamPackage.name (OpamPackage.Set.choose opam_sol),
+        match relop with
+        | `Leq | `Lt ->
+          Some (`Lt, OpamPackage.version (OpamPackage.Set.min_elt opam_sol))
+        | `Geq | `Gt ->
+          Some (`Gt, OpamPackage.version (OpamPackage.Set.max_elt opam_sol))
+        | `Neq | `Eq -> None
 
 let vpkg2opam cudf2opam cudf_universe vpkg =
   match vpkg2atom cudf2opam cudf_universe vpkg with
