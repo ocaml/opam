@@ -245,7 +245,7 @@ module API = struct
     ) names;
     if names = [] then OpamGlobals.exit 1
 
-  let info ~fields regexps =
+  let info ~fields ~raw_opam regexps =
     let t = OpamState.load_state "info" in
     let names =
       names_of_regexp t ~filter:`all ~depends_on:[]
@@ -372,7 +372,7 @@ module API = struct
         @ descr in
 
       let all_fields = match fields with
-        | [] -> all_fields
+        | [] when not raw_opam -> all_fields
         | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
 
       List.iter (fun (f, desc) ->
@@ -380,7 +380,10 @@ module API = struct
           OpamGlobals.msg "%s "
             (OpamGlobals.colorise `blue (Printf.sprintf "%20s:" f));
         OpamGlobals.msg "%s\n" desc
-      ) all_fields in
+      ) all_fields;
+
+      if raw_opam then OpamFile.OPAM.write_to_channel stdout opam
+    in
 
     OpamPackage.Name.Map.iter print_one names
 
@@ -1301,8 +1304,8 @@ module SafeAPI = struct
         ~exact_name ~case_sensitive pkg_str
     )
 
-  let info ~fields regexps =
-    read_lock (fun () -> API.info ~fields regexps)
+  let info ~fields ~raw_opam regexps =
+    read_lock (fun () -> API.info ~fields ~raw_opam regexps)
 
   let install names add_to_roots deps_only =
     switch_lock (fun () -> API.install names add_to_roots deps_only)

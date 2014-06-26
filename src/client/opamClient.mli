@@ -40,7 +40,7 @@ module API: sig
     unit
 
   (** Display a general summary of a collection of packages. *)
-  val info: fields:string list -> string list -> unit
+  val info: fields:string list -> raw_opam:bool -> string list -> unit
 
   (** Install the given list of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots.
