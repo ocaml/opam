@@ -245,11 +245,12 @@ module API = struct
     ) names;
     if names = [] then OpamGlobals.exit 1
 
-  let info ~fields ~raw_opam regexps =
+  let info ~fields ~raw_opam atoms =
     let t = OpamState.load_state "info" in
     let names =
       names_of_regexp t ~filter:`all ~depends_on:[]
-        ~exact_name:true ~case_sensitive:false regexps in
+        ~exact_name:true ~case_sensitive:false
+        (List.map OpamFormula.short_string_of_atom atoms) in
 
     let show_fields = List.length fields <> 1 in
 
@@ -1042,6 +1043,52 @@ module API = struct
     let t = update_dev_packages_t atoms t in
     install_t atoms add_to_roots deps_only t
 
+  let depends ?(depends=true) ?depexts atoms =
+    let t = OpamState.load_state "client-depends" in
+    let atoms = OpamSolution.sanitize_atom_list ~permissive:true t atoms in
+    let latest_versions_only packages =
+      OpamPackage.Set.map (fun nv ->
+          OpamPackage.max_version packages (OpamPackage.name nv))
+        packages
+    in
+    let packages = latest_versions_only (packages_of_atoms t atoms) in
+    let packages =
+      if depends then
+        let universe = OpamState.universe t Depends in
+        OpamSolver.dependencies
+             ~depopts:false ~installed:false universe packages
+        |> OpamPackage.Set.of_list
+        |> latest_versions_only
+      else packages
+    in
+    let packages = latest_versions_only packages in
+    match depexts with
+    | None | Some [] ->
+      OpamGlobals.msg "%s\n" @@
+      String.concat " " @@
+      List.map OpamPackage.to_string @@
+      OpamPackage.Set.elements packages
+    | Some required_tags ->
+      let required_tags = OpamMisc.StringSet.of_list required_tags in
+      let depexts =
+        OpamPackage.Set.fold (fun nv acc ->
+            let opam = OpamState.opam t nv in
+            match OpamFile.OPAM.depexts opam with
+            | None -> acc
+            | Some tags ->
+              OpamMisc.StringSetMap.fold (fun tags values acc ->
+                  if OpamMisc.StringSet.for_all
+                      (fun tag -> OpamMisc.StringSet.mem tag required_tags)
+                      tags
+                  then OpamMisc.StringSet.union acc values
+                  else acc)
+                tags acc)
+          packages OpamMisc.StringSet.empty
+      in
+      OpamGlobals.msg "%s\n" @@
+      String.concat " " @@
+      OpamMisc.StringSet.elements depexts
+
   let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove
       (slog OpamFormula.string_of_atoms) atoms;
@@ -1306,6 +1353,9 @@ module SafeAPI = struct
 
   let info ~fields ~raw_opam regexps =
     read_lock (fun () -> API.info ~fields ~raw_opam regexps)
+
+  let depends ?depends ?depexts names =
+    read_lock (fun () -> API.depends ?depends ?depexts names)
 
   let install names add_to_roots deps_only =
     switch_lock (fun () -> API.install names add_to_roots deps_only)
