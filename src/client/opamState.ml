@@ -863,7 +863,8 @@ let unavailable_reason t (name, _ as atom) =
   let reasons () =
     let candidates =
       OpamPackage.Set.filter (OpamFormula.check atom) t.packages in
-    let reasons nv =
+    let nv = OpamPackage.max_version candidates name in
+    let r =
       let opam = opam t nv in
       (if consistent_ocaml_version t opam then [] else [
           Printf.sprintf "it requires OCaml %s"
@@ -882,12 +883,10 @@ let unavailable_reason t (name, _ as atom) =
                (OpamFile.OPAM.os opam))
         ]) @
       (if consistent_available_field t opam then [] else [
-          Printf.sprintf "your system doesn't comply with {%s}"
+          Printf.sprintf "your system doesn't comply with %s"
             (string_of_filter (OpamFile.OPAM.available opam))
         ]) in
-    let r =
-      List.concat (List.map reasons (OpamPackage.Set.elements candidates)) in
-    match OpamMisc.remove_duplicates (List.sort compare r) with
+    match r with
     | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
     | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) "    - ") rs) in
