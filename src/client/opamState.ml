@@ -568,25 +568,25 @@ let global_variable_names = [
   "opam-version",         "The currently running OPAM version";
   "compiler",             "The name of the current OCaml compiler (may be more \
                            specific than the version, eg: \"4.01.0+fp\"";
-  "preinstalled",         "Wether the compiler was preinstalled on the system, \
+  "preinstalled",         "Whether the compiler was preinstalled on the system, \
                            or installed by OPAM";
   "switch",               "The local name (alias) of the current switch";
   "jobs",                 "The number of parallel jobs set up in OPAM \
                            configuration";
-  "ocaml-native",         "Wether the OCaml native compilers are available";
-  "ocaml-tools-opt",      "Wether the .opt versions of the OCaml tools are \
+  "ocaml-native",         "Whether the OCaml native compilers are available";
+  "ocaml-tools-opt",      "Whether the .opt versions of the OCaml tools are \
                            available";
-  "ocaml-native-dynlink", "Wether native dynlink is available on this \
+  "ocaml-native-dynlink", "Whether native dynlink is available on this \
                            installation";
 ]
 let package_variable_names = [
   "name",      "Name of the package";
   "version",   "Version of the package";
   "depends",   "Resolved direct dependencies of the package";
-  "installed", "Wether the package is installed";
-  "enable",    "Takes the value \"enable\" or \"disable\" depending on wether \
+  "installed", "Whether the package is installed";
+  "enable",    "Takes the value \"enable\" or \"disable\" depending on whether \
                 the package is installed";
-  "pinned",    "Wether the package is pinned";
+  "pinned",    "Whether the package is pinned";
   "bin",       "Binary directory for this package";
   "sbin",      "System binary directory for this package";
   "lib",       "Library directory for this package";
