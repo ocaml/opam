@@ -12,6 +12,7 @@ Options:
   -t TAG	Git tag of the release
   -f FILE	Add file to be pushed
   -n NAME	Your github name (default \$gitname)
+  -v VERSION    Make opam advertise as this version (instead of TAG)
 EOF
     exit $#
 }
@@ -20,6 +21,7 @@ ACTIONS=()
 UPLOAD_FILES=()
 TAG=
 MAKE=${MAKE:-make}
+VERSION=
 
 while [ $# -gt 0 ]; do
     A=$1
@@ -31,16 +33,19 @@ while [ $# -gt 0 ]; do
         publish)
             ACTIONS+=("publish");;
         -t)
-            shift || help "$A requires an argument"
+            shift; [ $# -gt 0 ] || help "Option $A requires an argument"
             TAG=$1;;
         -f)
-            shift || help "$A requires an argument"
+            shift; [ $# -gt 0 ] || help "Option $A requires an argument"
             F=$1
             [ "${F#/}" != "$F" ] || VAR="$PWD/$F" # make absolute
             UPLOAD_FILES+=("$F");;
         -n)
-            shift || help "$A requires an argument"
+            shift; [ $# -gt 0 ] || help "Option $A requires an argument"
             gitname=$1;;
+        -v)
+            shift; [ $# -gt 0 ] || help "Option $A requires an argument"
+            VERSION=$1;;
         *) help "Unknown option $A"
     esac
     shift
@@ -60,6 +65,9 @@ if [[ " ${ACTIONS[@]} " =~ " full-archive " ]]; then
     if [ -z "$TAG" ]; then
         TAG=$(cd opam && git tag -l '*.*.*' | tail -n1)
     fi
+    if [ -z "$VERSION" ]; then
+        VERSION=$TAG
+    fi
 
     echo -e "\033[43;30mBuilding release tarball for $TAG\033[m"
 
@@ -69,7 +77,7 @@ if [[ " ${ACTIONS[@]} " =~ " full-archive " ]]; then
 
     cd $NAME
     git checkout refs/tags/$TAG
-    sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,'"$TAG"')/' configure.ac
+    sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,'"$VERSION"')/' configure.ac
     ${MAKE} configure
     ./configure
     ${MAKE} download-ext

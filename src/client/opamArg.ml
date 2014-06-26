@@ -80,7 +80,16 @@ let switch_to_updated_self debug opamroot =
          Array.append
            [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
            (Unix.environment ()) in
-       Unix.execve updated_self_str Sys.argv env))
+       try
+         Unix.execve updated_self_str Sys.argv env
+       with e ->
+         OpamMisc.fatal e;
+         OpamGlobals.error
+           "Could'nt run the upgraded opam %s found at %s. \
+            Continuing with %s from the system."
+           (OpamVersion.to_string update_version)
+           updated_self_str
+           (OpamVersion.to_string OpamVersion.current)))
 
 let create_global_options
     git_version debug_level verbose quiet color switch yes strict root
@@ -480,6 +489,12 @@ let atom_list =
      e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
     atom
 
+let nonempty_atom_list =
+  nonempty_arg_list "PACKAGES"
+    "List of package names, with an optional version or constraint, \
+     e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
+    atom
+
 let param_list =
   arg_list "PARAMS" "List of parameters." Arg.string
 
@@ -779,11 +794,27 @@ let show =
     Arg.(value & opt (list string) [] & doc) in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
-
-  let pkg_info global_options fields raw packages =
+  let depends =
+    mk_flag ["d";"depends"] "Print the list of packages these ones \
+                             transitively depend on (latest versions only)" in
+  let depexts =
+    mk_opt ["e";"external"] "TAGS"
+      "Display the external package dependencies associated to the given \
+       $(i,TAGS) (OS, distribution...). With `--depends', display them for \
+       the set of dependencies."
+      Arg.(list string) [] in
+  let pkg_info global_options fields raw depends depexts packages =
     apply_global_options global_options;
-    Client.info ~fields ~raw_opam:raw packages in
-  Term.(pure pkg_info $global_options $fields $raw $nonempty_pattern_list),
+    if depends || depexts <> [] then
+      if raw || fields <> [] then
+        `Error (true, "Incompatible options specified")
+      else
+         `Ok (Client.depends ~depends ~depexts packages)
+    else
+      `Ok (Client.info ~fields ~raw_opam:raw packages) in
+  Term.ret
+    Term.(pure pkg_info $global_options $fields $raw $depends $depexts
+          $nonempty_atom_list),
   term_info "show" ~doc ~man
 
 
@@ -1062,7 +1093,7 @@ let install =
     Client.install atoms add_to_roots deps_only
   in
   Term.(pure install $global_options $build_options
-        $add_to_roots $deps_only $atom_list),
+        $add_to_roots $deps_only $nonempty_atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1106,7 +1137,7 @@ let reinstall =
     apply_global_options global_options;
     apply_build_options build_options;
     Client.reinstall atoms in
-  Term.(pure reinstall $global_options $build_options $atom_list),
+  Term.(pure reinstall $global_options $build_options $nonempty_atom_list),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)

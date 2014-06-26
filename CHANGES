@@ -40,8 +40,7 @@
   0.9.4, cudf 0.7
 * Switch export file now include pinning data. Pinned package restored through
   'opam switch import' (#1393)
-* Meaningful messages explaining conflicts and why packages aren't available
-  (#1238, #1419, #1398)
+* Meaningful messages explaining why packages aren't available (#1419, #1398)
 * More informative 'opam config list', more complete 'opam config var'
 * Added 'opam config cudf-universe' for use in external tools
 * opam files: added a 'dev-repo' field, and the experimental 'flags' field
@@ -51,6 +50,8 @@
 * Added 'opam upgrade --fixup' to save the day if your installed package set
   gets inconsistent.
 * Fixed some return codes
+* Added options '--raw', '--depends', '--external' and more fields to 'opam
+  show'
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
