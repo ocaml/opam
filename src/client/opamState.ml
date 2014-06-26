@@ -1756,6 +1756,8 @@ let env_updates ~opamswitch t =
   let man_path =
     "MANPATH", "=:",
     OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
+  let add_to_c_include_path = OpamPath.Switch.ocaml_dir t.root t.switch in
+  let c_include_path = "C_INCLUDE_PATH", "=+=", OpamFilename.Dir.to_string add_to_c_include_path in
   let comp_env = OpamFile.Comp.env comp in
   let switch =
     if not opamswitch then []
@@ -1769,7 +1771,7 @@ let env_updates ~opamswitch t =
     else
       [] in
 
-  new_path :: man_path :: toplevel_dir :: new_perl5lib :: (switch @ root @ comp_env)
+  new_path :: man_path :: toplevel_dir :: new_perl5lib :: c_include_path :: (switch @ root @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that

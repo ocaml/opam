@@ -101,6 +101,8 @@ module Switch = struct
 
   let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
 
+  let ocaml_dir t a = lib_dir t a / "ocaml"
+
   let stublibs t a = lib_dir t a / "stublibs"
 
   let toplevel t a = lib_dir t a / "toplevel"
