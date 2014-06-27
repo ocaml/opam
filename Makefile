@@ -75,8 +75,8 @@ tests-%: opam opam-admin opam-check
 doc: all
 	$(MAKE) -C doc
 
-.PHONY: man
-man: opam opam-admin opam-installer
+.PHONY: man man-html
+man man-html: opam opam-admin opam-installer
 	$(MAKE) -C doc $@
 
 configure: configure.ac m4/*.m4
