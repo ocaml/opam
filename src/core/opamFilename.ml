@@ -96,7 +96,7 @@ let copy_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error
       "Cannot create %s as the directory already exists." (Dir.to_string dst);
-  OpamSystem.command [ "cp"; "-pPR"; Dir.to_string src; Dir.to_string dst ]
+  OpamSystem.command [ "cp"; "-PR"; Dir.to_string src; Dir.to_string dst ]
 
 let link_dir ~src ~dst =
   if exists_dir dst then
