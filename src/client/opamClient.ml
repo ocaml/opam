@@ -32,6 +32,8 @@ type item = {
   synopsis: string Lazy.t;
   descr: string Lazy.t;
   tags: string list;
+  syntax: string list Lazy.t;
+  libraries: string list Lazy.t;
 }
 
 let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
@@ -119,23 +121,37 @@ let names_of_regexp t ~filter ~depends_on ~exact_name ~case_sensitive regexps =
       let descr = lazy (
         OpamFile.Descr.full (Lazy.force descr_f)
       ) in
-      let tags = OpamFile.OPAM.tags (OpamState.opam t nv) in
+      let opam = OpamState.opam t nv in
+      let tags = OpamFile.OPAM.tags opam in
+      let syntax = lazy (
+        OpamMisc.filter_map (fun (s,filter) ->
+            if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
+            then Some s else None)
+          (OpamFile.OPAM.syntax opam)) in
+      let libraries = lazy (
+        OpamMisc.filter_map (fun (s,filter) ->
+            if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
+            then Some s else None)
+          (OpamFile.OPAM.libraries opam)) in
       OpamPackage.Name.Map.add
-        name { name; current_version; installed_version; synopsis; descr; tags }
+        name { name; current_version; installed_version; synopsis; descr; tags;
+               syntax; libraries }
         map
     ) packages_map OpamPackage.Name.Map.empty in
 
   (* Filter the list of packages, depending on user predicates *)
   let packages_map =
     OpamPackage.Name.Map.filter
-      (fun name { synopsis; descr; tags } ->
+      (fun name { synopsis; descr; tags; syntax; libraries } ->
          regexps = []
          || exact_match (OpamPackage.Name.to_string name)
          || not exact_name &&
             (partial_match (OpamPackage.Name.to_string name)
              || partial_match (Lazy.force synopsis)
              || partial_match (Lazy.force descr)
-             || partial_matchs tags)
+             || partial_matchs tags
+             || partial_matchs (Lazy.force libraries)
+             || partial_matchs (Lazy.force syntax))
       ) packages_map in
 
   if not (OpamPackage.Set.is_empty t.packages)
@@ -254,7 +270,7 @@ module API = struct
 
     let show_fields = List.length fields <> 1 in
 
-    let print_one name  { current_version } =
+    let print_one name  { current_version; tags; syntax; libraries } =
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
@@ -332,12 +348,12 @@ module API = struct
       let dev_repo = option string_of_pin_option "dev-repo" OpamFile.OPAM.dev_repo in
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
-      let tags     = strings "tags"     OpamFile.OPAM.tags in
+      let tags     = strings "tags"     (fun _ -> tags) in
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
-      let libraries = strings "libraries" (fun t -> List.map fst (OpamFile.OPAM.libraries t)) in
-      let syntax    = strings "syntax"    (fun t -> List.map fst (OpamFile.OPAM.syntax t)) in
+      let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
+      let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
 
       let os =
         mk Empty
