@@ -35,6 +35,13 @@ man:
 	done
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
 
+man-html: man
+	rm -rf $@
+	mkdir -p $@
+	for f in $(wildcard man/*); do\
+	  man2html -r $$f > man-html/$$(basename $$f .1).html;\
+	done
+
 tutorials:
 	$(MAKE) -C tutorials
 
@@ -47,6 +54,6 @@ html:
 	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/ || true
 
 clean:
-	rm -rf man html
+	rm -rf man html man-html
 	$(MAKE) -C dev-manual clean
 	$(MAKE) -C tutorials clean
