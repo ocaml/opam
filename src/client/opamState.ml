@@ -1693,13 +1693,21 @@ let init_file = function
   | `bash -> init_sh
   | `fish -> init_fish
 
-let source t ?(interactive_only=false) f =
+let source t ~shell ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init t.root // f) in
   let s =
-    Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
+    match shell with
+    | `csh ->
+      Printf.sprintf "source %s >& /dev/null || true\n" (file f)
+    | _ ->
+      Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
   in
   if interactive_only then
-    Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
+    match shell with
+    | `csh ->
+      Printf.sprintf "if (tty -s >&/dev/null) then\n  %sendif\n" s
+    | _ ->
+      Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
 let expand_env t ?opam (env: env_updates) : env =
@@ -1754,8 +1762,12 @@ let env_updates ~opamswitch t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    "MANPATH", "=:",
-    OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
+    match OpamGlobals.os () with
+    | OpamGlobals.OpenBSD | OpamGlobals.NetBSD ->
+      [] (* MANPATH is a global override on those, so disabled for now *)
+    | _ ->
+      ["MANPATH", "=:",
+       OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch)] in
   let comp_env = OpamFile.Comp.env comp in
   let switch =
     if not opamswitch then []
@@ -1769,7 +1781,7 @@ let env_updates ~opamswitch t =
     else
       [] in
 
-  new_path :: man_path :: toplevel_dir :: new_perl5lib :: (switch @ root @ comp_env)
+  new_path :: toplevel_dir :: new_perl5lib :: (man_path @ switch @ root @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
@@ -1861,17 +1873,17 @@ let string_of_env_update t shell updates =
     export (key, value) in
   String.concat "" (List.rev_map aux updates)
 
-let init_script t ~switch_eval ~complete (variables_sh, switch_eval_sh, complete_sh)=
+let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, complete_sh)=
   let variables =
-    Some (source t variables_sh) in
+    Some (source t ~shell variables_sh) in
   let switch_eval =
     if switch_eval then
-      Some (source t ~interactive_only:true switch_eval_sh)
+      Some (source t ~shell ~interactive_only:true switch_eval_sh)
     else
       None in
   let complete =
     if complete then
-      Some (source t ~interactive_only:true complete_sh)
+      Some (source t ~shell ~interactive_only:true complete_sh)
     else
       None in
   let buf = Buffer.create 128 in
@@ -1890,13 +1902,13 @@ let update_init_scripts t ~global =
     | None   -> []
     | Some g ->
       let scripts = [
-        init_sh , (variables_sh , switch_eval_sh, complete_sh);
-        init_zsh, (variables_sh , switch_eval_sh, complete_zsh);
-        init_csh, (variables_csh, switch_eval_sh, complete_sh);
+        `sh,  init_sh , (variables_sh , switch_eval_sh, complete_sh);
+        `zsh, init_zsh, (variables_sh , switch_eval_sh, complete_zsh);
+        `csh, init_csh, (variables_csh, switch_eval_sh, complete_sh);
       ] in
-      let aux (init, scripts) =
+      let aux (shell, init, scripts) =
         init,
-        init_script t ~switch_eval:g.switch_eval ~complete:g.complete scripts in
+        init_script t ~shell ~switch_eval:g.switch_eval ~complete:g.complete scripts in
       List.map aux scripts in
   let scripts = [
     (complete_sh   , OpamScript.complete);
@@ -2000,7 +2012,7 @@ let update_dot_profile t dot_profile shell =
         "%s\n\n\
          # OPAM configuration\n\
          %s"
-        (OpamMisc.strip body) (source t init_file) in
+        (OpamMisc.strip body) (source t ~shell init_file) in
     OpamFilename.write dot_profile body
 
 let update_setup t user global =
@@ -2090,7 +2102,7 @@ let print_env_warning_at_init t user =
            \n\
           \      %s\n"
           (OpamFilename.prettify f)
-          (source t (init_file user.shell))
+          (source t ~shell:user.shell (init_file user.shell))
     in
     let ocamlinit_string =
       if not user.ocamlinit then "" else
@@ -2143,8 +2155,8 @@ let update_setup_interactive t shell dot_profile =
       \    variables and to load the auto-completion scripts for your shell (%s)\n\
       \    on startup. Specifically, it checks for and appends the following line:\n\
       \n\
-      \    . ~/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true\n\
-       \n\
+      \    %s\n\
+      \n\
       \  - ~/.ocamlinit to ensure that non-system installations of `ocamlfind`\n\
       \    (i.e. those installed by OPAM) will work correctly when running the\n\
       \    OCaml toplevel. It does this by adding $OCAML_TOPLEVEL_PATH to the list\n\
@@ -2162,6 +2174,7 @@ let update_setup_interactive t shell dot_profile =
       \    [N/y/f]"
       (OpamFilename.prettify dot_profile)
       (string_of_shell shell)
+      (source t ~shell (init_file shell))
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
