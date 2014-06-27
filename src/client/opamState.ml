@@ -1768,6 +1768,11 @@ let env_updates ~opamswitch t =
     | _ ->
       ["MANPATH", "=:",
        OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch)] in
+  let utf8 =
+    match OpamGlobals.os () with
+    | OpamGlobals.Darwin -> ["OPAMUTF8MSGS", "=", "1"]
+    | _ -> []
+  in
   let comp_env = OpamFile.Comp.env comp in
   let switch =
     if not opamswitch then []
@@ -1781,7 +1786,8 @@ let env_updates ~opamswitch t =
     else
       [] in
 
-  new_path :: toplevel_dir :: new_perl5lib :: (man_path @ switch @ root @ comp_env)
+  new_path :: toplevel_dir :: new_perl5lib ::
+  (man_path @ switch @ root @ utf8 @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
