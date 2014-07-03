@@ -356,6 +356,15 @@ let fix_package_descriptions t ~verbose =
           OpamFilename.remove (OpamPath.Repository.archive repo nv);
     ) (OpamPackage.Set.union missing_installed_packages updated_packages);
 
+  (* Remove archives of non-installed packages (these may no longer be
+     up-to-date) *)
+  OpamPackage.Set.iter (fun nv ->
+      let f = OpamPath.archive t.root nv in
+      if OpamFilename.exists f then
+        (log "Cleaning up obsolete archive %a" (slog OpamFilename.to_string) f;
+         OpamFilename.remove f))
+    (OpamPackage.keys global_index -- all_installed);
+
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
       let file =
