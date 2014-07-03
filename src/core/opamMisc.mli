@@ -135,8 +135,9 @@ val string_of_list: ('a -> string) -> 'a list -> string
 
 val string_map: (char -> char) -> string -> string
 
-(** Display a pretty list: ["x";"y";"z"] -> "x, y and z" *)
-val pretty_list: string list -> string
+(** Display a pretty list: ["x";"y";"z"] -> "x, y and z".
+    "and" can be changed by specifying [last] *)
+val pretty_list: ?last:string -> string list -> string
 
 (** Removes consecutive duplicates in a list *)
 val remove_duplicates: 'a list -> 'a list

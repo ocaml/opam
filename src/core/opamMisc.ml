@@ -75,10 +75,10 @@ let string_map f s =
   for i = 0 to len - 1 do s'.[i] <- f s.[i] done;
   s'
 
-let rec pretty_list = function
+let rec pretty_list ?(last="and") = function
   | []    -> ""
   | [a]   -> a
-  | [a;b] -> Printf.sprintf "%s and %s" a b
+  | [a;b] -> Printf.sprintf "%s %s %s" a last b
   | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
 let rec remove_duplicates = function

@@ -714,7 +714,7 @@ let list =
         installed version or -- if the package is not installed, and a short \
         description. In color mode, root packages (eg. manually installed) are \
         underlined.";
-    `P " The full description can be obtained by doing $(b,opam info <package>). \
+    `P "The full description can be obtained by doing $(b,opam info <package>). \
         You can search through the package descriptions using the $(b,opam search) \
         command."
   ] in
@@ -723,14 +723,47 @@ let list =
       "List all the packages which can be installed on the system." in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
-    let doc = "List only packages that depend on $(docv)." in
-    Arg.(value & opt_all package [] & info ~doc ~docv:"PACKAGE" ["depends-on"])
+    let doc = "List only packages that directly depend on one of $(docv)." in
+    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
   in
+  let rec_depends_on =
+    let doc = "List only packages that transitively depend on one of $(docv)." in
+    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["rec-depends-on"])
+  in
+  let required_by =
+    let doc = "List only direct dependencies of $(docv)." in
+    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["required-by"])
+  in
+  let rec_required_by =
+    let doc = "List only transitive dependencies of $(docv)." in
+    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["rec-required-by"])
+  in
+  let depopts =
+    mk_flag ["depopts"] "Include optional dependencies in dependency requests." in
+  let depexts =
+    mk_opt ["e";"external"] "TAGS"
+      "Instead of displaying the packages, display their external dependencies \
+       that are associated with any subset of the given $(i,TAGS) (OS, \
+       distribution, etc.). \
+       Common tags include `debian', `x86', `osx', `homebrew', `source'..."
+      Arg.(list string) [] in
   let list global_options print_short all installed
-      installed_roots sort depends_on packages =
+      installed_roots sort
+      depends_on rec_depends_on
+      required_by rec_required_by
+      depopts depexts
+      packages =
     apply_global_options global_options;
+    let alldeps =
+      List.filter ((<>) [])
+        [depends_on; rec_depends_on; required_by; rec_required_by]
+    in
+    if List.length alldeps > 1 then
+      `Error (false, "Only one of --depends-on --rec-depends-on, \
+                      --required-by, --rec-required-by may be given at a time")
+    else
     let filter =
-      match all, installed, installed_roots, depends_on, packages with
+      match all, installed, installed_roots, alldeps, packages with
       | true, _, _, _, _ -> `installable
       | _, _, true, _, _ -> `roots
       | _, true, _, _, _ -> `installed
@@ -738,13 +771,22 @@ let list =
       | _ -> `installable in
     let order = if sort then `depends else `normal in
     Client.list
-      ~print_short ~filter ~order ~depends_on
+      ~print_short ~filter ~order
       ~exact_name:true ~case_sensitive:false
-      packages in
-  Term.(pure list $global_options
-    $print_short_flag $all $installed_flag $installed_roots_flag
-    $sort $depends_on
-    $pattern_list),
+      ~depends:(List.concat alldeps)
+      ~reverse_depends:(depends_on <> [] || rec_depends_on <> [])
+      ~recursive_depends:(rec_depends_on <> [] || rec_required_by <> [])
+      ~depopts ~depexts
+      packages;
+    `Ok ()
+  in
+  Term.ret
+    Term.(pure list $global_options
+          $print_short_flag $all $installed_flag $installed_roots_flag
+          $sort
+          $depends_on $rec_depends_on $required_by $rec_required_by
+          $depopts $depexts
+          $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -769,7 +811,7 @@ let search =
       | true, _ -> `installed
       | _       -> `all in
     let order = `normal in
-    Client.list ~print_short ~filter ~depends_on:[] ~order
+    Client.list ~print_short ~filter ~order
       ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
@@ -800,27 +842,10 @@ let show =
     Arg.(value & opt (list string) [] & doc) in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
-  let depends =
-    mk_flag ["d";"depends"] "Print the list of packages these ones \
-                             transitively depend on (latest versions only)" in
-  let depexts =
-    mk_opt ["e";"external"] "TAGS"
-      "Display the external package dependencies associated to the given \
-       $(i,TAGS) (OS, distribution...). With `--depends', display them for \
-       the set of dependencies."
-      Arg.(list string) [] in
-  let pkg_info global_options fields raw depends depexts packages =
+  let pkg_info global_options fields raw packages =
     apply_global_options global_options;
-    if depends || depexts <> [] then
-      if raw || fields <> [] then
-        `Error (true, "Incompatible options specified")
-      else
-         `Ok (Client.depends ~depends ~depexts packages)
-    else
-      `Ok (Client.info ~fields ~raw_opam:raw packages) in
-  Term.ret
-    Term.(pure pkg_info $global_options $fields $raw $depends $depexts
-          $nonempty_atom_list),
+    Client.info ~fields ~raw_opam:raw packages in
+  Term.(pure pkg_info $global_options $fields $raw $nonempty_atom_list),
   term_info "show" ~doc ~man
 
 
