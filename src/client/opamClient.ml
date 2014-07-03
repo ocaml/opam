@@ -762,7 +762,7 @@ module API = struct
         let t = OpamRepositoryCommand.update_package_index t in
         OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
-      (* Eventually output some JSON file *)
+      (* If necessary, output a JSON file *)
       if OpamJson.verbose () then
         let json to_json update =
           `O [ ("created", to_json update.created);
