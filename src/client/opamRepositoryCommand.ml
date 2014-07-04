@@ -250,11 +250,11 @@ let fix_package_descriptions t ~verbose =
   let updated_packages, new_packages =
     let updated_packages =
       OpamPackage.Map.fold (fun nv state set ->
-          if not (OpamPackage.Map.mem nv global_index)
-          || OpamPackage.Map.find nv global_index <> state then
-            OpamPackage.Set.add nv set
-          else
-            set
+          try
+            if OpamPackage.Map.find nv global_index <> state
+            then OpamPackage.Set.add nv set
+            else set
+          with Not_found -> OpamPackage.Set.add nv set
         ) repo_index OpamPackage.Set.empty in
     OpamPackage.Set.partition (fun nv ->
         OpamPackage.Map.mem nv global_index
@@ -301,16 +301,15 @@ let fix_package_descriptions t ~verbose =
 
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
-  OpamPackage.Map.iter (fun nv _ ->
-      if !OpamGlobals.sync_archives then (
+  if !OpamGlobals.sync_archives then
+    OpamPackage.Map.iter (fun nv _ ->
         log "download %a"
           (slog @@ OpamFilename.to_string @* OpamPath.archive t.root) nv;
         match OpamState.download_archive t nv with
         | None | Some _ -> ()
-      )
-    ) repo_index;
+      ) repo_index;
 
-  (* Do not recompile a package if only only OPAM or descr files have
+  (* Do not recompile a package if only OPAM or descr files have
      changed. We recompile a package:
 
      - if both global and repo states have an archive file and the
@@ -355,6 +354,15 @@ let fix_package_descriptions t ~verbose =
           OpamFilename.remove (OpamPath.archive t.root nv);
           OpamFilename.remove (OpamPath.Repository.archive repo nv);
     ) (OpamPackage.Set.union missing_installed_packages updated_packages);
+
+  (* Remove archives of non-installed packages (these may no longer be
+     up-to-date) *)
+  OpamPackage.Set.iter (fun nv ->
+      let f = OpamPath.archive t.root nv in
+      if OpamFilename.exists f then
+        (log "Cleaning up obsolete archive %a" (slog OpamFilename.to_string) f;
+         OpamFilename.remove f))
+    (OpamPackage.keys global_index -- all_installed);
 
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
