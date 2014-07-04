@@ -217,7 +217,7 @@ module API = struct
         let packages =
           let packages = OpamPackage.Set.of_list (List.map fst packages_info) in
           OpamSolver.dependencies
-            ~depopts:true ~installed:false universe packages in
+            ~depopts:true ~installed:false ~unavailable:true universe packages in
         List.fold_left (fun acc nv ->
             try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
             with Not_found -> acc
@@ -432,8 +432,7 @@ module API = struct
      See also preprocess_request and check_conflicts *)
   let orphans ?changes ?(transitive=false) t =
     let all = t.packages ++ t.installed in
-    let complete_universe =
-      OpamState.universe {t with available_packages = lazy all} Reinstall in
+    let universe = OpamState.universe t Reinstall in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
     (* Restriction to the request-related packages *)
@@ -442,8 +441,9 @@ module API = struct
       | Some ch ->
         let recompile_cone =
           OpamPackage.Set.of_list @@
-          OpamSolver.reverse_dependencies ~depopts:true ~installed:false
-            complete_universe ch
+          OpamSolver.reverse_dependencies
+            ~depopts:true ~installed:false ~unavailable:true
+            universe ch
         in
         orphans %% recompile_cone
     in
@@ -453,8 +453,9 @@ module API = struct
     let orphans =
       if not transitive then orphans else
         OpamPackage.Set.of_list @@
-        OpamSolver.reverse_dependencies ~depopts:false ~installed:false
-        complete_universe orphans
+        OpamSolver.reverse_dependencies
+          ~depopts:false ~installed:false ~unavailable:true
+          universe orphans
     in
     let orphan_names = (* names for which there is no version left *)
       OpamPackage.Name.Set.diff
@@ -1120,7 +1121,7 @@ module API = struct
       if depends then
         let universe = OpamState.universe t Depends in
         OpamSolver.dependencies
-             ~depopts:false ~installed:false universe packages
+          ~depopts:false ~installed:false ~unavailable:true universe packages
         |> OpamPackage.Set.of_list
         |> latest_versions_only
       else packages

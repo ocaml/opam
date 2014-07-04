@@ -317,10 +317,14 @@ let installable universe =
     OpamPackage.Set.empty
     trimed_universe
 
-let filter_dependencies f_direction ~depopts ~installed universe packages =
+let filter_dependencies
+    f_direction ~depopts ~installed ?(unavailable=false) universe packages =
   if OpamPackage.Set.is_empty packages then [] else
   let u_packages =
-    if installed then universe.u_installed else universe.u_available in
+    packages ++
+    if installed then universe.u_installed else
+    if unavailable then universe.u_packages else
+      universe.u_available in
   let version_map = cudf_versions_map universe u_packages in
   let cudf_universe =
     load_cudf_universe ~depopts universe ~version_map u_packages in
