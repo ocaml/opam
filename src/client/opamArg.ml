@@ -140,6 +140,7 @@ type build_options = {
   keep_build_dir: bool;
   make          : string option;
   no_checksums  : bool;
+  req_checksums : bool;
   build_test    : bool;
   build_doc     : bool;
   show          : bool;
@@ -151,10 +152,10 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir make no_checksums build_test
+    keep_build_dir make no_checksums req_checksums build_test
     build_doc show dryrun external_tags fake
     jobs json = {
-  keep_build_dir; make; no_checksums;
+  keep_build_dir; make; no_checksums; req_checksums;
   build_test; build_doc; show; dryrun; external_tags;
   fake; jobs; json
 }
@@ -168,6 +169,7 @@ let json_update = function
 let apply_build_options b =
   OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
   OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
+  OpamGlobals.req_checksums  := !OpamGlobals.req_checksums || b.req_checksums;
   OpamGlobals.build_test     := !OpamGlobals.build_test || b.build_test;
   OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
   OpamGlobals.show           := !OpamGlobals.show || b.show;
@@ -594,6 +596,10 @@ let build_options =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
+  let req_checksums =
+    mk_flag ["require-checksums"]
+      "Reject the installation of packages that don't provide a checksum for the upstream archives. \
+       This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to a non-empty string." in
   let build_test =
     mk_flag ["t";"build-test"]
       "Build and $(b,run) the package unit-tests. \
@@ -623,7 +629,7 @@ let build_options =
        WARNING: This option is dangerous and likely to break your OPAM \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
-    $keep_build_dir $make $no_checksums $build_test
+    $keep_build_dir $make $no_checksums $req_checksums $build_test
     $build_doc $show $dryrun $external_tags $fake
     $jobs_flag $json_flag)
 

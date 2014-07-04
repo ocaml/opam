@@ -26,6 +26,7 @@ val color : bool ref
 val keep_build_dir : bool ref
 val no_base_packages : bool ref
 val no_checksums : bool ref
+val req_checksums : bool ref
 val yes : bool ref
 val strict : bool ref
 val build_test : bool ref
