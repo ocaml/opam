@@ -108,6 +108,8 @@ module API: sig
     (** Set-up repository priority. *)
     val priority: repository_name -> priority:int -> unit
 
+    (** Set-up repository url. *)
+    val set_url: repository_name -> address -> unit
   end
 
   (** Switch API *)

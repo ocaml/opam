@@ -1228,6 +1228,8 @@ let repository =
     "List all repositories used by OPAM.";
     ["priority"]   , `priority, ["NAME"; "PRIORITY"],
     "Change the priority of repository named $(i,NAME) to $(i,PRIORITY).";
+    ["set-url"]    , `set_url, ["NAME"; "ADDRESS"],
+    "Change the URL associated with $(i,NAME)";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1259,6 +1261,10 @@ let repository =
         try int_of_string p
         with Failure _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
       `Ok (Client.REPOSITORY.priority name ~priority)
+    | Some `set_url, [name; address] ->
+      let name = OpamRepositoryName.of_string name in
+      let url = address_of_string address in
+      `Ok (Client.REPOSITORY.set_url name url)
     | Some `remove, [name] ->
       let name = OpamRepositoryName.of_string name in
       `Ok (Client.REPOSITORY.remove name)
