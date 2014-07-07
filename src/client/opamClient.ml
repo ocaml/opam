@@ -1288,7 +1288,7 @@ module API = struct
 
     let post_pin_action t name =
       let nv = try Some (OpamState.pinned t name) with Not_found -> None in
-      match nv with
+      try match nv with
       | Some nv ->
         let v = OpamPackage.version nv in
         OpamGlobals.msg "%s needs to be %sinstalled.\n"
@@ -1311,6 +1311,10 @@ module API = struct
              (* Package no longer available *)
              remove_t ~ask:true ~autoremove:false ~force:false [name, None] t)
         with Not_found -> ()
+      with e ->
+        OpamGlobals.note
+          "Pinning command successful, but your packages may be out of sync.";
+        raise e
 
     let get_upstream t name =
       try
