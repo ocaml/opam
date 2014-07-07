@@ -837,6 +837,40 @@ module API = struct
           (OpamFilename.Dir.to_string root);
         if not (OpamState.confirm "Proceed ?") then OpamGlobals.exit 1);
       try
+
+        (* Check for the external dependencies *)
+        let check_external_dep name =
+          OpamSystem.command_exists name
+        in
+        if not (check_external_dep
+                  (OpamMisc.Option.default "curl" OpamGlobals.curl_command)
+                || check_external_dep "wget") then
+          OpamGlobals.error_and_exit
+            "Missing dependency: %s or %s are required for OPAM to operate, \
+             please install either of them."
+            (OpamGlobals.colorise `bold "curl")
+            (OpamGlobals.colorise `bold "wget");
+        OpamGlobals.msg "Checking for available remotes: ";
+        let repo_types =
+          ["rsync", "rsync and local";
+           "git", "git"; "hg", "mercurial"; "darcs", "darcs"]
+        in
+        let available_repos, unavailable_repos =
+          List.partition (check_external_dep @* fst) repo_types in
+        OpamGlobals.msg "%s.\n"
+          (match available_repos with
+           | [] -> "none"
+           | r -> String.concat ", " (List.map snd r));
+        List.iter (fun (cmd,msg) ->
+            OpamGlobals.note
+              "%s not found, you won't be able to use %s repositories."
+              cmd msg)
+          unavailable_repos;
+        if not (check_external_dep "aspcud") then
+          OpamGlobals.warning
+            "External solver 'aspcud' not found, OPAM will provide better \
+             solutions if you install it.\n";
+
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
