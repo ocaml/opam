@@ -37,7 +37,6 @@ let empty_universe =
     u_action = Install OpamPackage.Name.Set.empty;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_builddeps = OpamPackage.Set.empty;
   }
 
 (* Get the optional depencies of a package *)
@@ -148,8 +147,6 @@ let opam2cudf universe ?(depopts=false) version_map package =
       OpamCudf.s_source_number,
       `String (OpamPackage.Version.to_string (OpamPackage.version package));
     ] in
-    let e = if OpamPackage.Set.mem package universe.u_builddeps
-      then (OpamCudf.s_builddep, `Bool true)::e else e in
     let e = if installed && reinstall
       then (OpamCudf.s_reinstall, `Bool true)::e else e in
     let e = if installed_root
