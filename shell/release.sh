@@ -127,20 +127,33 @@ fi
 
 if [[ " ${ACTIONS[@]} " =~ " publish " ]]; then
     echo -e "\n\033[43;30mUploading ${UPLOAD_FILES[@]} from $TMP to github...\033[m"
-    if [ -z "${gitname:-}" ]; then
-        echo "Please enter your github name: "
-        read gitname
+    if type git-upload-release >&/dev/null; then
+        if [ -z "${gitname:-}" ]; then
+            echo "Please enter your github name: "
+            read gitname
+        fi
+        for f in "${UPLOAD_FILES[@]}"; do
+            echo "Uploading $(basename "$f"), please be patient..."
+            git-upload-release "$gitname" ocaml/opam "$TAG" "$f"
+        done
+    elif type jq >&/dev/null; then
+        url=$(curl "https://api.github.com/repos/ocaml/opam/releases" \
+            | jq '.[] | select(.tag_name == "'"$TAG"'") | .upload_url' \
+            | sed 's%"\([^"{?]*\).*"%\1%')
+        for f in "${UPLOAD_FILES[@]}"; do
+            base=$(basename "$f")
+            echo "Uploading $base, please be patient..."
+            curl -u "$gitname" \
+                -H "name: $base" \
+                -H "Content-Type: application/gzip" \
+                --data-binary "@$f" \
+                "$url?name=$base" | jq ".message"
+        done
+    else
+        echo "Neither 'jq' nor 'git-upload-release' found, can't automatically"
+        echo "upload to github. You can manually upload the following files to"
+        echo "https://github.com/ocaml/opam/releases/tag/$TAG"
+        echo
+        echo "${UPLOAD_FILES[*]}"
     fi
-    url=$(curl "https://api.github.com/repos/ocaml/opam/releases" \
-        | jq '.[] | select(.tag_name == "'"$TAG"'") | .upload_url' \
-        | sed 's%"\([^"{?]*\).*"%\1%')
-    for f in "${UPLOAD_FILES[@]}"; do
-        base=$(basename "$f")
-        echo "Uploading $base, please be patient..."
-        curl -u "$gitname" \
-             -H "name: $base" \
-             -H "Content-Type: application/gzip" \
-             --data-binary "@$f" \
-             "$url?name=$base" | jq ".message"
-    done
 fi

@@ -1051,13 +1051,6 @@ let universe t action =
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;
-    u_builddeps =
-      OpamPackage.Map.fold
-        (fun nv opam set ->
-           if List.mem BuildDep (OpamFile.OPAM.flags opam) then
-             OpamPackage.Set.add nv set
-           else set)
-        opams OpamPackage.Set.empty;
   }
 
 let check_base_packages t =

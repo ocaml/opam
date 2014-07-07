@@ -610,14 +610,12 @@ let parse_messages =
 
 let make_flag = function
   | LightUninstall -> make_ident "light-uninstall"
-  | BuildDep -> make_ident "build-dep"
 
 let parse_flag = function
   | Ident (_,"light-uninstall") -> LightUninstall
-  | Ident (_,"build-dep") -> BuildDep
   | x ->
     bad_format ~pos:(value_pos x)
-      "Expected a package flag"
+      "Expected a package flag. Valid flags are: \"light-uninstall\"."
 
 (* TAGS *)
 
