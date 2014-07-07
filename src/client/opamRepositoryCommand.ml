@@ -457,23 +457,6 @@ let priority repo_name ~priority =
   (* relink the compiler and package descriptions *)
   fix_descriptions t ~verbose:true
 
-(*
-let priority_t t ~priority =
-  let repo = OpamState.find_repository t repo_name in
-  let config_f = OpamPath.Repository.config repo in
-  let config =
-    let config = OpamFile.Repo_config.read config_f in
-    { config with repo_priority = priority } in
-  OpamFile.Repo_config.write config_f config;
-
-let priority repo_name ~priority =
-  log "repository-priority";
-  (* 1/ update the config file *)
-  let t = OpamState.load_state ~save_cache:false "repository-priority" in
-  priority_t t ~priority
-  (* relink the compiler and package descriptions *)
-  fix_descriptions t ~verbose
-*)
 let add name kind address ~priority:prio =
   log "repository-add";
   let t = OpamState.load_state "repository-add" in
@@ -522,7 +505,7 @@ let add name kind address ~priority:prio =
   update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
     OpamState.remove_state_cache ();
-    priority name ~priority:prio;
+    fix_descriptions t ~verbose:true
   with e ->
     cleanup t repo;
     raise e
@@ -532,6 +515,22 @@ let remove name =
   let t = OpamState.load_state "repository-remove" in
   let repo = OpamState.find_repository t name in
   cleanup t repo
+
+let set_url name url =
+  log "repository-remove";
+  let t = OpamState.load_state ~save_cache:false "repository-set-url" in
+  let repo = OpamState.find_repository t name in
+  let url, kind = parse_url url in
+  if repo.repo_kind <> kind then
+    (remove name;
+     add name kind url ~priority:(Some repo.repo_priority))
+  else
+  (* 1/ update the config file *)
+  let config_f = OpamPath.Repository.config repo in
+  let config =
+    let config = OpamFile.Repo_config.read config_f in
+    { config with repo_address = url } in
+  OpamFile.Repo_config.write config_f config
 
 let list ~short =
   log "repository-list";

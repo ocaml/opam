@@ -1468,6 +1468,9 @@ module SafeAPI = struct
     let priority name ~priority =
       global_lock (fun () -> API.REPOSITORY.priority name ~priority)
 
+    let set_url name address =
+      global_lock (fun () -> API.REPOSITORY.set_url name address)
+
   end
 
   module SWITCH = struct

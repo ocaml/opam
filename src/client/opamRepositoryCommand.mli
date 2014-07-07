@@ -52,3 +52,6 @@ val remove: repository_name -> unit
 
 (** Set a repository priority. *)
 val priority: repository_name -> priority:int -> unit
+
+(** Change the registered address of a repo *)
+val set_url: repository_name -> address -> unit
