@@ -111,6 +111,13 @@ let init repo =
   B.pull_repo repo
 
 let pull_url kind package local_dirname checksum remote_url =
+  if !OpamGlobals.req_checksums && checksum = None then
+    OpamGlobals.error_and_exit
+      "Checksum required for %s, but not found in package description.\n\
+       This may be due to an outdated package description, try running `opam update`.\n\
+       In case an update does not fix the problem, you can /bypass the check by not\n\
+       passing the `--require-checksums` command line option."
+      (OpamPackage.to_string package);
   let pull url =
     let module B = (val find_backend_by_kind kind: BACKEND) in
     B.pull_url package local_dirname checksum url in
@@ -163,7 +170,7 @@ let check_digest filename = function
            fixed by running `opam update`.\n\
            In case an update does not fix that problem, you can use the \
            `--no-checksums` command-line option\n\
-           to /bypass any checksum checks."
+           to /bypass checking for invalid checksums."
           (OpamFilename.to_string filename)
           expected
           actual

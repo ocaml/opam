@@ -40,6 +40,7 @@ let color            = ref (color_tri_state = `Always)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
+let req_checksums    = check "REQUIRECHECKSUMS"
 let yes              = check "YES"
 let strict           = check "STRICT"
 let build_test       = check "BUILDTEST"
