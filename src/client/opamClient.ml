@@ -295,8 +295,22 @@ module API = struct
         try
           let pin = OpamPackage.Name.Map.find name t.pinned in
           let kind = kind_of_pin_option pin in
+          let revision =
+            match repository_kind_of_pin_kind kind with
+            | Some kind ->
+              let repo = OpamRepository.default () in
+              let repo =
+                {repo with
+                 repo_kind = kind;
+                 repo_root = OpamPath.Switch.dev_package t.root t.switch name;
+                 repo_address = address_of_string @@ string_of_pin_option pin} in
+              (match OpamRepository.revision repo with
+               | Some v -> Printf.sprintf " (%s)" (OpamPackage.Version.to_string v)
+               | None -> "")
+            | None -> ""
+          in
           (if kind = `version then repo else []) @
-          ["pinned", (string_of_pin_kind kind)]
+          ["pinned", (string_of_pin_kind kind) ^ revision]
         with Not_found ->
           repo
       in
