@@ -354,39 +354,41 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
 
   if not !OpamGlobals.dryrun then begin
 
-  (* Remove the libraries *)
-  OpamFilename.rmdir (OpamPath.Switch.lib t.root t.switch name);
-
-  (* Remove the documentation *)
-  OpamFilename.rmdir (OpamPath.Switch.doc t.root t.switch name);
-
-  (* Remove build/<package> *)
-  if not !OpamGlobals.keep_build_dir then
-    OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-
   let install =
     OpamFile.Dot_install.safe_read dot_install in
 
   let remove_files dst_fn files =
     let files = files install in
+    let dst_dir = dst_fn t.root t.switch in
     List.iter (fun (base, dst) ->
-        let dst_dir = dst_fn t.root t.switch in
         let dst_file = match dst with
           | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
           | Some b -> OpamFilename.create dst_dir b in
         OpamFilename.remove dst_file
       ) files in
 
-  (* Remove the binaries *)
-  log "Removing the binaries";
-  remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
+  let remove_files_and_dir dst_fn files =
+    let dir = dst_fn t.root t.switch name in
+    remove_files (fun _ _ -> dir) files;
+    if OpamFilename.dir_is_empty dir then OpamFilename.rmdir dir
+    else
+      OpamGlobals.warning "Directory %s is not empty, not removing"
+        (OpamFilename.Dir.to_string dir) in
+
+  (* Remove build/<package> *)
+  if not !OpamGlobals.keep_build_dir then
+    OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
+
+  log "Removing files from .install";
   remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
-
-  (* Remove the C bindings *)
+  remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
+  remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
   remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
-
-  (* Remove man pages *)
+  remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
+  remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
+  remove_files_and_dir OpamPath.Switch.etc OpamFile.Dot_install.etc;
   remove_files OpamPath.Switch.man_dir OpamFile.Dot_install.man;
+  remove_files_and_dir OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
   (* Remove the misc files *)
   log "Removing the misc files";
@@ -397,17 +399,6 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
           OpamFilename.remove dst
       end
     ) (OpamFile.Dot_install.misc install);
-
-  (* Removing the shared dir *)
-  (* This one shouldn't be needed (we remove the dir). Yet some packages
-     currently install using '%{share}%/..' to workaround the lack of
-     [share_root] in previous versions *)
-  remove_files (fun t s -> OpamPath.Switch.share t s name) OpamFile.Dot_install.share;
-  OpamFilename.rmdir (OpamPath.Switch.share t.root t.switch name);
-  remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
-
-  (* Removing the etc dir *)
-  OpamFilename.rmdir (OpamPath.Switch.etc t.root t.switch name);
 
   (* Remove .config and .install *)
   log "Removing config and install files";
