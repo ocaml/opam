@@ -2096,17 +2096,19 @@ let print_env_warning_at_init t user =
       | None -> ""
       | Some f ->
         Printf.sprintf
-          "2. To correctly configure OPAM for subsequent use, add the following\n\
-           line to your profile file (for instance %s):\n\
+          "%s To correctly configure OPAM for subsequent use, add the following\n\
+          \   line to your profile file (for instance %s):\n\
            \n\
           \      %s\n"
+          (OpamGlobals.colorise `yellow "2.")
           (OpamFilename.prettify f)
           (source t ~shell:user.shell (init_file user.shell))
     in
     let ocamlinit_string =
       if not user.ocamlinit then "" else
-        "3. To avoid issues related to non-system installations of `ocamlfind`\n\
-        \  add the following lines to ~/.ocamlinit (create it if necessary):\n\
+        OpamGlobals.colorise `yellow "3." ^
+        " To avoid issues related to non-system installations of `ocamlfind`\n\
+        \   add the following lines to ~/.ocamlinit (create it if necessary):\n\
          \n\
         \      let () =\n\
         \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
@@ -2114,15 +2116,18 @@ let print_env_warning_at_init t user =
         \      ;;\n\n"
     in
     let line =
-      "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+      OpamGlobals.colorise `cyan
+        "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
     in
     OpamGlobals.msg
-      "\n%s\n\
-       1. To configure OPAM in the current shell session, you need to run:\n\
+      "\n%s\n\n\
+       %s To configure OPAM in the current shell session, you need to run:\n\
        \n\
       \      %s\n\
-       %s%s%s\n"
-      line (eval_string ()) profile_string ocamlinit_string line
+       %s%s%s\n\n"
+      line
+      (OpamGlobals.colorise `yellow "1.")
+      (eval_string ()) profile_string ocamlinit_string line
 
 let print_env_warning_at_switch t =
   if up_to_date_env t then ()
@@ -2156,7 +2161,7 @@ let update_setup_interactive t shell dot_profile =
       \n\
       \    %s\n\
       \n\
-      \  - ~/.ocamlinit to ensure that non-system installations of `ocamlfind`\n\
+      \  - %s to ensure that non-system installations of `ocamlfind`\n\
       \    (i.e. those installed by OPAM) will work correctly when running the\n\
       \    OCaml toplevel. It does this by adding $OCAML_TOPLEVEL_PATH to the list\n\
       \    of include directories.\n\
@@ -2171,9 +2176,10 @@ let update_setup_interactive t shell dot_profile =
        Do you want OPAM to modify %s and ~/.ocamlinit?\n\
        (default is 'no', use 'f' to name a file other than %s)\n\
       \    [N/y/f]"
-      (OpamFilename.prettify dot_profile)
-      (string_of_shell shell)
+      (OpamGlobals.colorise `cyan @@ OpamFilename.prettify dot_profile)
+      (OpamGlobals.colorise `bold @@ string_of_shell shell)
       (source t ~shell (init_file shell))
+      (OpamGlobals.colorise `cyan @@ "~/.ocamlinit")
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
