@@ -554,12 +554,12 @@ let global_options =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
       "Force use of internal heuristics, even if an external solver is available." in
   let external_solver =
-    mk_opt ["solver"] "CMD"
+    mk_opt ~section ["solver"] "CMD"
       ("Specify the name of the external dependency $(i,solver). \
         The default value is "^OpamGlobals.default_external_solver)
       Arg.(some string) None in
   let solver_preferences =
-    mk_opt ["criteria"] "CRITERIA"
+    mk_opt ~section ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving for this run. \
         Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, see \
@@ -568,7 +568,7 @@ let global_options =
        " for upgrades, and "^OpamGlobals.default_preferences^" otherwise.")
       Arg.(some string) None in
   let cudf_file =
-    mk_opt ["cudf"] "FILENAME"
+    mk_opt ~section ["cudf"] "FILENAME"
       "Debug option: Save the CUDF requests sent to the solver to \
        $(docv)-<n>.cudf."
       Arg.(some string) None in
@@ -1503,6 +1503,88 @@ let pin ?(unpin_only=false) () =
           $global_options $kind $edit $no_act $dev_repo $command $params),
   term_info "pin" ~doc ~man
 
+let source_doc = "Get the source of an OPAM package."
+let source =
+  let doc = source_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Downloads the source for a given package to a local directory, \
+        for developpement, bug fixing or documentation purposes."
+  ] in
+  let atom =
+    Arg.(required & pos 0 (some atom) None & info ~docv:"PACKAGE" []
+           ~doc:"A package name with an optional version constraint")
+  in
+  let dev_repo =
+    mk_flag ["dev-repo"]
+      "Get the latest version-controlled source rather than the \
+       release archive" in
+  let pin =
+    mk_flag ["pin"]
+      "Pin the package to the downloaded source (see `opam pin')." in
+  let dir =
+    mk_opt ["dir"] "DIR" "The directory where to put the source."
+      Arg.(some dirname) None in
+  let source global_options atom dev_repo pin dir =
+    apply_global_options global_options;
+    let open OpamState.Types in
+    let t = OpamState.load_state "source" in
+    let nv =
+      OpamPackage.Set.max_elt
+        (OpamPackage.Set.filter (OpamFormula.check atom) t.packages) in
+    let dir = match dir with
+      | Some d -> d
+      | None -> OpamFilename.OP.(OpamFilename.cwd () / OpamPackage.to_string nv)
+    in
+    if OpamFilename.exists_dir dir then
+      OpamGlobals.error_and_exit
+        "Directory %s already exists. Please remove it or use option `--dir'"
+        (OpamFilename.Dir.to_string dir);
+    if dev_repo then (
+      match OpamFile.OPAM.dev_repo (OpamState.opam t nv) with
+      | None ->
+        OpamGlobals.error_and_exit
+          "Version-controlled repo for %s unknown \
+           (\"dev-repo\" field missing from metadata)"
+          (OpamPackage.to_string nv)
+      | Some pin ->
+        let address = match pin with
+          | Git p | Darcs p | Hg p -> p
+          | _ ->
+            OpamGlobals.error_and_exit "Bad \"dev_repo\" field %S for %s"
+              (string_of_pin_option pin) (OpamPackage.to_string nv)
+        in
+        let kind =
+          match repository_kind_of_pin_kind (kind_of_pin_option pin) with
+          | Some k -> k
+          | None -> assert false
+        in
+        OpamGlobals.error "%s" (OpamFilename.Dir.to_string dir);
+        OpamFilename.mkdir dir;
+        match OpamRepository.pull_url kind nv dir None [address] with
+        | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
+        | Result _ | Up_to_date _ -> ()
+    ) else (
+      OpamGlobals.msg "Downloading archive of %s...\n"
+        (OpamPackage.to_string nv);
+      OpamAction.download_package t nv;
+      OpamAction.extract_package t nv;
+      OpamFilename.move_dir
+        ~src:(OpamPath.Switch.build t.root t.switch nv)
+        ~dst:dir;
+      OpamGlobals.msg "Successfully extracted to %s\n"
+        (OpamFilename.Dir.to_string dir)
+    );
+
+    if pin then
+      let pin_option =
+        pin_option_of_string ~kind:`local (OpamFilename.Dir.to_string dir) in
+      Client.PIN.pin (OpamPackage.name nv) (Some pin_option)
+  in
+  Term.(pure source
+        $global_options $atom $dev_repo $pin $dir),
+  term_info "source" ~doc ~man
+
 (* HELP *)
 let help =
   let doc = "Display help about OPAM and OPAM commands." in
@@ -1601,6 +1683,7 @@ let commands = [
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
+  source;
   help;
 ]
 
