@@ -126,6 +126,9 @@ module OPAM: sig
   (** List of command to run for building the package *)
   val build: t -> command list
 
+  (** List of command to run for installing the package *)
+  val install: t -> command list
+
   (** List of command to run for removing the package *)
   val remove: t -> command list
 
@@ -202,6 +205,8 @@ module OPAM: sig
 
   (** Construct as [build] *)
   val with_build: t -> command list -> t
+
+  val with_install: t -> command list -> t
 
   (** Construct as [remove] *)
   val with_remove : t -> command list -> t

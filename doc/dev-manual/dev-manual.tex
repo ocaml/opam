@@ -250,6 +250,7 @@ The field {\tt cores} is the number of parallel process that
     ?subst:         [ STRING+ ]
     ?patches:       [ (STRING ?{ <filter> } )+ ]
     ?build:         commands
+    ?install:       commands
     ?build-doc:     commands
     ?build-test:    commands
     ?remove:        commands
@@ -329,12 +330,14 @@ The field {\tt cores} is the number of parallel process that
   Substitutions happen before patch application, so patches can
   contain strings which will substituted.
 
-\item The content of {\tt build} is the list of commands to run in
-  order to build the package libraries. The build script should build
+\item The content of {\tt build} and {\tt install} are the list of commands to run in
+  order to build and install the package libraries. The build script should build
   all the libraries and syntax extensions exported by the package and
   it should produce the platform-specific configuration and install
   files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
   \S\ref{file:config} and \S\ref{file:install}).
+  You usually only need an {\tt install} field if you don't provide the
+  \verb+$NAME.install+ file, which is the preferred way.
 
    Each command and command argument is substituted (see
    \S\ref{file:subst} and \S\ref{section:config}, with the identifier

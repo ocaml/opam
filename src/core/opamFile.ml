@@ -828,6 +828,7 @@ module X = struct
       substs     : basename list;
       build_env  : (string * string * string) list;
       build      : command list;
+      install    : command list;
       remove     : command list;
       depends    : formula;
       depopts    : formula;
@@ -861,6 +862,7 @@ module X = struct
       substs     = [];
       build_env  = [];
       build      = [];
+      install    = [];
       remove     = [];
       depends    = OpamFormula.Empty;
       depopts    = OpamFormula.Empty;
@@ -897,6 +899,7 @@ module X = struct
     let s_maintainer  = "maintainer"
     let s_substs      = "substs"
     let s_build       = "build"
+    let s_install     = "install"
     let s_build_env   = "build-env"
     let s_remove      = "remove"
     let s_depends     = "depends"
@@ -991,6 +994,7 @@ module X = struct
     let maintainer t = t.maintainer
     let substs t = t.substs
     let build t = t.build
+    let install t = t.install
     let remove t = t.remove
     let depends t = t.depends
     let depopts t = t.depopts
@@ -1023,6 +1027,7 @@ module X = struct
     let with_depopts t depopts = { t with depopts }
     let with_conflicts t conflicts = {t with conflicts }
     let with_build t build = { t with build }
+    let with_install t install = { t with install }
     let with_remove t remove = { t with remove }
     let with_libraries t libraries = { t with libraries }
     let with_syntax t syntax = { t with syntax }
@@ -1081,6 +1086,7 @@ module X = struct
               (OpamFilename.Base.to_string @> OpamFormat.make_string)
           @ listm   t.build_env     s_build_env     OpamFormat.make_env_variable
           @ listm   t.build         s_build         OpamFormat.make_command
+          @ listm   t.install       s_install       OpamFormat.make_command
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ listm   t.remove        s_remove        OpamFormat.make_command
@@ -1150,6 +1156,7 @@ module X = struct
         OpamFormat.assoc_list s s_build_env
           (OpamFormat.parse_list OpamFormat.parse_env_variable) in
       let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
+      let install = OpamFormat.assoc_list s s_install OpamFormat.parse_commands in
       let remove = OpamFormat.assoc_list s s_remove OpamFormat.parse_commands in
       let depends = OpamFormat.assoc_default OpamFormula.Empty s s_depends
           OpamFormat.parse_formula in
@@ -1192,7 +1199,7 @@ module X = struct
         OpamFormat.assoc_option s s_dev_repo
           (OpamFormat.parse_string @> address_of_string @> parse_url @> pin_of_url)
       in
-      { opam_version; name; version; maintainer; substs; build; remove;
+      { opam_version; name; version; maintainer; substs; build; install; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
@@ -1222,8 +1229,8 @@ module X = struct
         maintainer;
         build      = [[CString "./configure", None;
                        CString "--prefix=%{prefix}%", None;], None;
-                      [CIdent "make", None], None;
-                      [CIdent "make", None; CString "install", None], None];
+                      [CIdent "make", None], None];
+        install    = [[CIdent "make", None; CString "install", None], None];
         remove     = [[CString "ocamlfind", None; CString "remove", None;
                        CString (OpamPackage.Name.to_string (OpamPackage.name nv)), None],
                       None];
