@@ -1405,6 +1405,9 @@ let switch_lock f =
 let global_lock f =
   OpamState.check (Global_lock f)
 
+let global_then_switch_lock f =
+  OpamState.check (Global_with_switch_cont_lock f)
+
 (** We protect each main functions with a lock depending on its access
     on some read/write data. *)
 
@@ -1490,11 +1493,11 @@ module SafeAPI = struct
   module SWITCH = struct
 
     let switch ~quiet ~warning name =
-      global_lock (fun () -> API.SWITCH.switch ~quiet ~warning name)
+      global_then_switch_lock (fun () -> API.SWITCH.switch_cont ~quiet ~warning name)
 
     let install ~quiet ~warning ~update_config switch ocaml_version =
-      global_lock (fun () ->
-        API.SWITCH.install ~quiet ~warning ~update_config switch ocaml_version)
+      global_then_switch_lock (fun () ->
+        API.SWITCH.install_cont ~quiet ~warning ~update_config switch ocaml_version)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)
@@ -1506,7 +1509,7 @@ module SafeAPI = struct
       global_lock (fun () -> API.SWITCH.remove switch)
 
     let reinstall switch =
-      global_lock (fun () -> API.SWITCH.reinstall switch)
+      switch_lock (fun () -> API.SWITCH.reinstall switch)
 
     let list ~print_short ~installed ~all =
       read_lock (fun () -> API.SWITCH.list ~print_short ~installed ~all)

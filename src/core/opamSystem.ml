@@ -508,10 +508,12 @@ let flock ?(read=false) file =
     with Unix.Unix_error (Unix.EAGAIN,_,_) ->
       if attempt > max_tries then
         OpamGlobals.error_and_exit
-          "Could not acquire %s lock to %S, aborting."
+          "Timeout trying to acquire %s lock to %S, \
+           is another opam process running ?"
           (if read then "read" else "write") file;
-      OpamGlobals.msg
-        "Another process has a write lock on %S. (attempt %d/%d)\n"
+      log
+        "Failed to %s-lock %S. (attempt %d/%d)"
+        (if read then "read" else "write")
         file attempt max_tries;
       Unix.sleep 1;
       loop (attempt + 1)

@@ -2563,11 +2563,8 @@ let check f =
         ) ()
 
     | Read_lock f ->
-      (* XXX not locking anything atm: doing so breaks [make tests]
-         and probably mirari
+      (* Global read lock *)
       OpamFilename.with_flock ~read:true (OpamPath.lock root) f ()
-      *)
-      f ()
 
     | Switch_lock f ->
       (* Take a switch lock (and a global read lock). *)
@@ -2581,4 +2578,23 @@ let check f =
           let t = load_state "switch-lock" in
           switch_consistency_checks t;
           OpamFilename.with_flock (OpamPath.Switch.lock root switch) f ()
+        ) ()
+
+    | Global_with_switch_cont_lock f ->
+      (* Take the global lock *)
+      let global_lock = OpamPath.lock root in
+      let switch, cont =
+        OpamFilename.with_flock global_lock (fun () ->
+            (* clean the log directory *)
+            OpamFilename.cleandir (OpamPath.log root);
+            let t = load_state "global-lock" in
+            global_consistency_checks t;
+            f ()
+          ) ()
+      in
+      (* Could be safer to first get the next lock, but there seems to be no
+         guarantee with flock that we can properly turn a write lock to a read
+         lock without unlocking first. *)
+      OpamFilename.with_flock ~read:true global_lock (fun () ->
+          OpamFilename.with_flock (OpamPath.Switch.lock root switch) cont ()
         ) ()
