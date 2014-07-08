@@ -29,7 +29,7 @@ val extract_package: t -> package -> unit
 val build_and_install_package: t -> metadata:bool -> package -> unit
 
 (** Remove a package. *)
-val remove_package: t -> metadata:bool -> ?silent:bool -> package -> unit
+val remove_package: t -> metadata:bool -> ?keep_build:bool -> ?silent:bool -> package -> unit
 
 (** Removes auxiliary files related to a package, after checking that
     they're not needed (even in other switches) *)
