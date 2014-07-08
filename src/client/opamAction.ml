@@ -48,7 +48,9 @@ let install_package t nv =
       OpamFile.Dot_install.write install_f install;
 
       (* .config *)
-      OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
+      let dot_config = OpamPath.Switch.config t.root t.switch name in
+      OpamFilename.mkdir (OpamFilename.dirname dot_config);
+      OpamFile.Dot_config.write dot_config config;
 
       let warnings = ref [] in
       let check ~src ~dst base =
@@ -379,6 +381,11 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   if not (keep_build || !OpamGlobals.keep_build_dir) then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
+  (* Remove .config and .install *)
+  log "Removing config and install files";
+  OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
+  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
+
   log "Removing files from .install";
   remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
   remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
@@ -399,11 +406,6 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
           OpamFilename.remove dst
       end
     ) (OpamFile.Dot_install.misc install);
-
-  (* Remove .config and .install *)
-  log "Removing config and install files";
-  OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
-  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
 
   end;
 

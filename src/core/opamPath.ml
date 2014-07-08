@@ -150,7 +150,9 @@ module Switch = struct
 
   let config_dir t a = root t a / "config"
 
-  let config t a n = config_dir t a // (OpamPackage.Name.to_string n ^ ".config")
+  let config t a n = lib t a n // "opam.config"
+
+  let global_config t a = config_dir t a // "global-config.config"
 
   let pinned t a = root t a // "pinned"
 

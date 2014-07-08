@@ -200,11 +200,15 @@ module Switch: sig
   val reinstall: t -> switch -> filename
 
   (** Compile and link flags for a given package: {i
-      $opam/$switch/config/$name.config} *)
+      $opam/$switch/lib/$name/opam.config} *)
   val config: t -> switch -> name -> filename
 
   (** Configuration folder: {i $opam/$switch/config} *)
   val config_dir: t -> switch -> dirname
+
+  (** Global config for the switch: {i
+      $opam/$switch/config/global-config.config} *)
+  val global_config: t -> switch -> filename
 
   (** Pinned package file: {i $opam/$switch/pinned}  *)
   val pinned: t -> switch -> filename
