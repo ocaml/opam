@@ -388,6 +388,10 @@ type lock =
       a short time. *)
   | Switch_lock of (unit -> unit)
 
+  (** Call the function in a global lock, then relax to a switch
+      lock and call the function it returned *)
+  | Global_with_switch_cont_lock of (unit -> switch * (unit -> unit))
+
 (** A line in {i urls.tx} *)
 type file_attribute = OpamFilename.Attribute.t
 

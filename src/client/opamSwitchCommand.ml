@@ -231,40 +231,52 @@ let install_packages ~packages switch compiler =
     remove_compiler ();
     package_error p
 
-let install_with_packages ~quiet ~packages switch compiler =
-  install_compiler ~quiet switch compiler;
-  install_packages ~packages switch compiler
-
-let install ~quiet ~warning ~update_config switch compiler =
+let install_cont ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
   let comp_dir = OpamPath.Switch.root t.root switch in
   let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
     OpamCompiler.unknown compiler;
-  if not (OpamState.is_switch_installed t switch) then
-    install_with_packages ~quiet ~packages:None switch compiler
-  else (
-    let a = OpamSwitch.Map.find switch t.aliases in
-    if a <> compiler then
-      OpamGlobals.error_and_exit
-        "The compiler switch %s is already installed as an alias for %s."
-        (OpamSwitch.to_string switch)
-        (OpamCompiler.to_string a)
-  );
+  let already_installed = OpamState.is_switch_installed t switch in
+  if already_installed then
+    (let a = OpamSwitch.Map.find switch t.aliases in
+     if a <> compiler then
+       OpamGlobals.error_and_exit
+         "The compiler switch %s is already installed as an alias for %s."
+         (OpamSwitch.to_string switch)
+         (OpamCompiler.to_string a))
+  else
+    install_compiler ~quiet switch compiler;
   if update_config then
-    update_global_config ~warning t switch
+    update_global_config ~warning t switch;
+  switch,
+  fun () ->
+    install_packages ~packages:None switch compiler
 
-let switch ~quiet ~warning switch =
+let install ~quiet ~warning ~update_config switch compiler =
+  (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
+
+let switch_cont ~quiet ~warning switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let t = OpamState.load_state "switch-1" in
-  if not (OpamState.is_switch_installed t switch) then (
-    let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
-    install ~quiet ~warning ~update_config:true switch compiler
-  ) else
-    update_global_config ~warning t switch;
-  let t = OpamState.load_state "switch-2" in
-  OpamState.check_base_packages t
+  let switch, cont =
+    if not (OpamState.is_switch_installed t switch) then (
+      let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
+      install_cont ~quiet ~warning ~update_config:true switch compiler
+    ) else (
+      update_global_config ~warning t switch;
+      switch, fun () -> ()
+    )
+  in
+  switch,
+  fun () ->
+    cont ();
+    let t = OpamState.load_state "switch-2" in
+    OpamState.check_base_packages t
+
+let switch ~quiet ~warning switch =
+  (snd (switch_cont ~quiet ~warning switch)) () 
 
 (* Remove from [set] all the packages whose names appear in
    [filter]. *)
