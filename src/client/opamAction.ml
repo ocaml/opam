@@ -311,7 +311,7 @@ let removal_needs_download t nv =
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
    consistency reasons, this is done in the main function only. *)
-let remove_package_aux t ~metadata ?(silent=false) nv =
+let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   log "Removing %a (%b)" (slog OpamPackage.to_string) nv metadata;
   let name = OpamPackage.name nv in
 
@@ -376,7 +376,7 @@ let remove_package_aux t ~metadata ?(silent=false) nv =
         (OpamFilename.Dir.to_string dir) in
 
   (* Remove build/<package> *)
-  if not !OpamGlobals.keep_build_dir then
+  if not (keep_build || !OpamGlobals.keep_build_dir) then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
   log "Removing files from .install";
@@ -462,11 +462,11 @@ let sources_needed t solution =
         then OpamPackage.Set.add nv1 acc else acc)
     solution.to_process pkgs
 
-let remove_package t ~metadata ?silent nv =
+let remove_package t ~metadata ?keep_build ?silent nv =
   if !OpamGlobals.fake || !OpamGlobals.show then
     OpamGlobals.msg "Would remove: %s.\n" (OpamPackage.to_string nv)
   else
-    remove_package_aux t ~metadata ?silent nv
+    remove_package_aux t ~metadata ?keep_build ?silent nv
 
 (* Remove all the packages appearing in a solution (and which need to
    be removed, eg. because of a direct uninstall action or because of
@@ -565,7 +565,7 @@ let build_and_install_package_aux t ~metadata nv =
       OpamGlobals.error
         "The compilation of %s %s."
         (OpamPackage.to_string nv) cause;
-      ignore (remove_package ~metadata:false t ~silent:true nv);
+      ignore (remove_package ~metadata:false t ~keep_build:true ~silent:true nv);
       raise e
 
 let build_and_install_package t ~metadata nv =
