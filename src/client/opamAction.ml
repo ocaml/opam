@@ -535,7 +535,8 @@ let build_and_install_package_aux t ~metadata nv =
 
     try
       (* First, we build the package. *)
-      exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
+      exec ("Building " ^ OpamPackage.to_string nv)
+        (fun opam -> OpamFile.OPAM.build opam @ OpamFile.OPAM.install opam);
 
       (* If necessary, build and run the test. *)
       if !OpamGlobals.build_test then
