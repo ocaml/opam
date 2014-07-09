@@ -74,6 +74,7 @@ val installable: universe -> package_set
 val dependencies :
   depopts:bool ->
   installed:bool ->
+  ?unavailable:bool ->
   universe ->
   package_set ->
   package list
@@ -82,6 +83,7 @@ val dependencies :
 val reverse_dependencies :
   depopts:bool ->
   installed:bool ->
+  ?unavailable:bool ->
   universe ->
   package_set ->
   package list

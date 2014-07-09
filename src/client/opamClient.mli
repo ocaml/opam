@@ -33,17 +33,16 @@ module API: sig
     print_short:bool ->
     filter:[`all|`installed|`roots|`installable] ->
     order:[`normal|`depends] ->
-    depends_on:(OpamPackage.Name.t * OpamPackage.Version.t option) list ->
     exact_name:bool ->
     case_sensitive:bool ->
+    ?depends:(atom list) ->
+    ?reverse_depends:bool -> ?recursive_depends:bool ->
+    ?depopts:bool -> ?depexts:string list ->
     string list ->
     unit
 
   (** Display a general summary of a collection of packages. *)
   val info: fields:string list -> raw_opam:bool -> atom list -> unit
-
-  (** Display dependencies or external dependencies of packages. *)
-  val depends:  ?depends:bool -> ?depexts:string list -> atom list -> unit
 
   (** Install the given list of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots.
