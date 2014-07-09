@@ -118,6 +118,7 @@ type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
 (** Opam package flags *)
 type package_flag =
   | LightUninstall (** The package doesn't require downloading to uninstall *)
+  | AllSwitches (** The package is pervasive on all switches *)
 
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)
