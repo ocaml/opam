@@ -162,7 +162,7 @@ let quick_lookup v =
       | `Not_set ->
 	let config = OpamPath.config root in
 	OpamFile.Config.switch (OpamFile.Config.read config) in
-    let config = OpamPath.Switch.config root switch OpamPackage.Name.global_config in
+    let config = OpamPath.Switch.global_config root switch in
     let config = OpamFile.Dot_config.read config in
     match OpamState.get_env_var v with
     | Some _ as c -> c

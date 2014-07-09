@@ -131,8 +131,14 @@ let installed_map t =
   OpamPackage.Name.Map.map OpamPackage.Version.Set.choose_one
     (OpamPackage.to_map t.installed)
 
-let dot_config t nv =
-  OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch nv)
+let dot_config t name =
+  let f =
+    if name = OpamPackage.Name.global_config then
+      OpamPath.Switch.global_config t.root t.switch
+    else
+      OpamPath.Switch.config t.root t.switch name
+  in
+  OpamFile.Dot_config.safe_read f
 
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
@@ -1482,7 +1488,7 @@ let install_global_config root switch =
 
   let config = OpamFile.Dot_config.create vars in
   OpamFile.Dot_config.write
-    (OpamPath.Switch.config root switch OpamPackage.Name.global_config)
+    (OpamPath.Switch.global_config root switch)
     config
 
 let fix_descriptions_hook =
@@ -1659,6 +1665,19 @@ let upgrade_to_1_2 () =
     let installed_roots = OpamFile.Installed_roots.safe_read installed_roots_f in
     OpamFile.Installed_roots.write installed_roots_f
       (OpamPackage.Set.map fix_version installed_roots);
+    (* Move .config files *)
+    List.iter (fun f ->
+        let name =
+          OpamPackage.Name.of_string @@
+          OpamFilename.Base.to_string @@
+          OpamFilename.basename @@
+          OpamFilename.chop_extension f in
+        if name <> OpamPackage.Name.global_config then
+          let dst = OpamPath.Switch.config root switch name in
+          OpamFilename.mkdir (OpamFilename.dirname dst);
+          OpamFilename.move ~src:f ~dst
+      )
+      (OpamFilename.files (OpamPath.Switch.config_dir root switch))
   ) aliases
 
 let () =
