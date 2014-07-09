@@ -610,12 +610,17 @@ let parse_messages =
 
 let make_flag = function
   | LightUninstall -> make_ident "light-uninstall"
+  | AllSwitches -> make_ident "all-switches"
 
 let parse_flag = function
-  | Ident (_,"light-uninstall") -> LightUninstall
+  | Ident (_,"light-uninstall") -> Some LightUninstall
+  | Ident (_,"all-switches") -> Some AllSwitches
   | x ->
-    bad_format ~pos:(value_pos x)
-      "Expected a package flag. Valid flags are: \"light-uninstall\"."
+    OpamGlobals.warning
+      "Ignored unknown package flag %S at %s. \
+       Valid flags are: light-uninstall, all-switches."
+      (string_of_value x) (string_of_pos (value_pos x));
+    None
 
 (* TAGS *)
 

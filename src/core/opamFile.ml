@@ -1194,7 +1194,7 @@ module X = struct
       let post_messages =
         OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
       let flags = OpamFormat.assoc_list s s_flags
-          OpamFormat.(parse_list parse_flag) in
+          OpamFormat.(OpamMisc.filter_map (fun x -> x) @* parse_list parse_flag) in
       let dev_repo =
         OpamFormat.assoc_option s s_dev_repo
           (OpamFormat.parse_string @> address_of_string @> parse_url @> pin_of_url)
