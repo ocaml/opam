@@ -25,7 +25,7 @@ let slog = OpamGlobals.slog
 
 let s_not_installed = "--"
 
-type item = {
+type package_details = {
   name: name;
   current_version: version;
   installed_version: version option;
@@ -246,21 +246,23 @@ module API = struct
       regexp =
     let t = OpamState.load_state "list" in
     let depends_mode = depends <> [] in
-    let depends =
-      let atoms = OpamSolution.sanitize_atom_list ~permissive:true t depends in
+    let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
          of the package. Take installed or max version only when there is no
          version constraint *)
+      try OpamState.find_installed_package_by_name t name
+      with Not_found ->
+        try OpamPackage.max_version (Lazy.force t.available_packages) name
+        with Not_found ->
+          OpamPackage.max_version t.packages name
+    in
+    let depends =
+      let atoms = OpamSolution.sanitize_atom_list ~permissive:true t depends in
       let atoms =
         List.map (function
             | _, Some _ as atom -> atom
             | n, None ->
-              try
-                let nv =
-                  try OpamState.find_installed_package_by_name t n
-                  with Not_found ->
-                    OpamPackage.max_version (Lazy.force t.available_packages) n in
-                OpamSolution.eq_atom n (OpamPackage.version nv)
+              try OpamSolution.eq_atom n (OpamPackage.version (get_version n))
               with Not_found -> n, None)
           atoms
       in
@@ -320,10 +322,33 @@ module API = struct
       | `installed   -> t.installed
       | `roots       -> t.installed_roots
       | `installable ->
-        let installable = OpamSolver.installable (OpamState.universe t Depends) in
-        t.installed ++ installable in
+        t.installed ++
+        OpamSolver.installable (OpamState.universe t Depends) in
+    let packages =
+      if depexts <> [] then packages ++ depends
+      else if depends_mode then packages -- depends
+      else packages
+    in
+    let details =
+      details_of_package_regexps t packages ~exact_name ~case_sensitive regexp
+    in
     if depexts <> [] then
       let required_tags = OpamMisc.StringSet.of_list depexts in
+      let packages =
+        OpamPackage.Name.Map.fold (fun name details acc ->
+            let nv =
+              OpamPackage.create name @@
+              OpamMisc.Option.default details.current_version
+                details.installed_version in
+            OpamPackage.Set.add nv acc)
+          details OpamPackage.Set.empty
+      in
+      if not print_short then
+        OpamGlobals.msg "# Known external dependencies for %s on %s\n"
+          (OpamMisc.pretty_list @@
+           List.map (OpamGlobals.colorise `bold @* OpamPackage.to_string) @@
+           OpamPackage.Set.elements packages)
+          (OpamGlobals.colorise `cyan @@ String.concat "," depexts);
       let depexts =
         OpamPackage.Set.fold (fun nv acc ->
             let opam = OpamState.opam t nv in
@@ -342,13 +367,7 @@ module API = struct
       OpamGlobals.msg "%s\n" @@
       String.concat "\n" @@ OpamMisc.StringSet.elements depexts
     else
-    let packages =
-      if depends_mode then packages -- depends
-      else packages
-    in
-    let details =
-      details_of_package_regexps t packages ~exact_name ~case_sensitive regexp in
-    if not print_short && OpamPackage.Name.Map.cardinal details > 0 then (
+    let print_header () =
       let kind = match filter with
         | `roots
         | `installed -> "Installed"
@@ -359,10 +378,13 @@ module API = struct
             (if recursive_depends then "recursively" else "directly")
             (if reverse_depends then "depending on" else "required by")
             (OpamMisc.pretty_list ~last:"or" @@
-             List.map OpamPackage.to_string @@ OpamPackage.Set.elements depends)
+             List.map (OpamGlobals.colorise `bold @* OpamPackage.to_string) @@
+             OpamPackage.Set.elements depends)
       in
-      OpamGlobals.msg "%s packages%s for %s:\n" kind results (OpamSwitch.to_string t.switch);
-    );
+      OpamGlobals.msg "# %s packages%s for %s:\n" kind results
+        (OpamSwitch.to_string t.switch) in
+    if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
+      print_header ();
     print_list t ~uninst_versions:depends_mode ~short:print_short ~order details;
     if OpamPackage.Name.Map.is_empty details then OpamGlobals.exit 1
 
