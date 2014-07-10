@@ -92,10 +92,14 @@ let switch_to_updated_self debug opamroot =
            (OpamVersion.to_string OpamVersion.current)))
 
 let create_global_options
-    git_version debug_level verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 external_solver use_internal_solver cudf_file solver_preferences
-    no_self_upgrade =
-  let debug = debug_level > 0 in
+    git_version debug debug_level verbose quiet color switch yes strict root
+    no_base_packages compat_mode_1_0 external_solver use_internal_solver
+    cudf_file solver_preferences no_self_upgrade =
+  let debug, debug_level = match debug, debug_level with
+    | _, Some lvl -> true, lvl
+    | true, None -> true, 1
+    | false, None -> false, 0
+  in
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
@@ -507,10 +511,14 @@ let global_options =
     mk_flag ~section ["git-version"]
       "Print the git version if it exists and exit." in
   let debug =
-    mk_opt ~section ~vopt:1 ["debug"] "LEVEL"
+    mk_flag ~section ["debug"]
       "Print debug message to stderr. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value."
-      Arg.int 0 in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value." in
+  let debug_level =
+    mk_opt ~section ["debug-level"] "LEVEL"
+      "Like `--debug', but allows specifying the debug level (`--debug' \
+       sets it to 1."
+      Arg.(some int) None in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. Show output of all sub-commands. \
@@ -577,9 +585,9 @@ let global_options =
       "Opam with normally replace itself with a newer version found \
        at $(b,OPAMROOT/opam). This disables this behaviour." in
   Term.(pure create_global_options
-    $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $external_solver $use_internal_solver $cudf_file $solver_preferences
-    $no_self_upgrade)
+        $git_version $debug $debug_level $verbose $quiet $color $switch $yes
+        $strict $root $no_base_packages $compat_mode_1_0 $external_solver
+        $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
@@ -723,21 +731,17 @@ let list =
       "List all the packages which can be installed on the system." in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
-    let doc = "List only packages that directly depend on one of $(docv)." in
+    let doc = "List only packages that depend on one of $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
   in
-  let rec_depends_on =
-    let doc = "List only packages that transitively depend on one of $(docv)." in
-    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["rec-depends-on"])
-  in
   let required_by =
-    let doc = "List only direct dependencies of $(docv)." in
+    let doc = "List only the dependencies of $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["required-by"])
   in
-  let rec_required_by =
-    let doc = "List only transitive dependencies of $(docv)." in
-    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["rec-required-by"])
-  in
+  let recursive =
+    mk_flag ["recursive"]
+      "With `--depends-on' and `--required-by', display all transitive \
+       dependencies rather than just direct dependencies." in
   let depopts =
     mk_flag ["depopts"] "Include optional dependencies in dependency requests." in
   let depexts =
@@ -749,43 +753,42 @@ let list =
       Arg.(list string) [] in
   let list global_options print_short all installed
       installed_roots sort
-      depends_on rec_depends_on
-      required_by rec_required_by
-      depopts depexts
+      depends_on required_by recursive depopts depexts
       packages =
     apply_global_options global_options;
-    let alldeps =
-      List.filter ((<>) [])
-        [depends_on; rec_depends_on; required_by; rec_required_by]
-    in
-    if List.length alldeps > 1 then
-      `Error (false, "Only one of --depends-on --rec-depends-on, \
-                      --required-by, --rec-required-by may be given at a time")
-    else
     let filter =
-      match all, installed, installed_roots, alldeps, packages with
-      | true, _, _, _, _ -> `installable
-      | _, _, true, _, _ -> `roots
-      | _, true, _, _, _ -> `installed
-      | _, _, _, [], [] -> `installed
-      | _ -> `installable in
+      match all, installed, installed_roots with
+      | true,  false, false -> Some `installable
+      | false, true,  false -> Some `installed
+      | false, _,     true  -> Some `roots
+      | false, false, false ->
+        if depends_on = [] && required_by = [] && packages = []
+        then Some `installed else Some `installable
+      | _ -> None
+    in
     let order = if sort then `depends else `normal in
-    Client.list
-      ~print_short ~filter ~order
-      ~exact_name:true ~case_sensitive:false
-      ~depends:(List.concat alldeps)
-      ~reverse_depends:(depends_on <> [] || rec_depends_on <> [])
-      ~recursive_depends:(rec_depends_on <> [] || rec_required_by <> [])
-      ~depopts ~depexts
-      packages;
-    `Ok ()
+    match filter, depends_on, required_by with
+    | Some filter, [], depends | Some filter, depends, [] ->
+      Client.list
+        ~print_short ~filter ~order
+        ~exact_name:true ~case_sensitive:false
+        ~depends ~reverse_depends:(depends_on <> [])
+        ~recursive_depends:recursive
+        ~depopts ~depexts
+        packages;
+      `Ok ()
+    | None, _, _ ->
+      `Error (true, "Conflicting filters: only one of --all, --installed and \
+                     --installed-roots may be given at a time")
+    | _ ->
+      `Error (true, "Only one of --depends-on and --required-by \
+                      may be given at a time")
   in
   Term.ret
     Term.(pure list $global_options
           $print_short_flag $all $installed_flag $installed_roots_flag
           $sort
-          $depends_on $rec_depends_on $required_by $rec_required_by
-          $depopts $depexts
+          $depends_on $required_by $recursive $depopts $depexts
           $pattern_list),
   term_info "list" ~doc ~man
 
