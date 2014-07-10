@@ -238,7 +238,8 @@ let help_sections = [
   `P "Frederic Tuong      <tuong@users.gforge.inria.fr>"; `Noblank;
   `P "Louis Gesbert       <louis.gesbert@ocamlpro.com>"; `Noblank;
   `P "Vincent Bernardoff  <vb@luminar.eu.org>"; `Noblank;
-  `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>";
+  `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>"; `Noblank;
+  `P "Roberto Di Cosmo    <roberto@dicosmo.org>";
 
   `S "BUGS";
   `P "Check bug reports at https://github.com/ocaml/opam/issues.";
@@ -562,8 +563,10 @@ let global_options =
     mk_opt ~section ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving for this run. \
         Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
-        For details on the supported language, see \
+        For details on the supported language, and the external solvers available, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
+        A general guide to using solver preferences can be found at \
+        $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \   
         The default value is "^OpamGlobals.default_upgrade_preferences^
        " for upgrades, and "^OpamGlobals.default_preferences^" otherwise.")
       Arg.(some string) None in
