@@ -1524,7 +1524,8 @@ let pin ?(unpin_only=false) () =
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
-         `Ok (Client.PIN.pin name ~edit ~action None)
+         let pin_option = pin_option_of_string ~kind:`local path in
+         `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
       with Not_found ->
         `Error (true, Printf.sprintf
                   "No valid package description found at path %s."
