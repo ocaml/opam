@@ -92,10 +92,14 @@ let switch_to_updated_self debug opamroot =
            (OpamVersion.to_string OpamVersion.current)))
 
 let create_global_options
-    git_version debug_level verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 external_solver use_internal_solver cudf_file solver_preferences
-    no_self_upgrade =
-  let debug = debug_level > 0 in
+    git_version debug debug_level verbose quiet color switch yes strict root
+    no_base_packages compat_mode_1_0 external_solver use_internal_solver
+    cudf_file solver_preferences no_self_upgrade =
+  let debug, debug_level = match debug, debug_level with
+    | _, Some lvl -> true, lvl
+    | true, None -> true, 1
+    | false, None -> false, 0
+  in
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
@@ -507,10 +511,14 @@ let global_options =
     mk_flag ~section ["git-version"]
       "Print the git version if it exists and exit." in
   let debug =
-    mk_opt ~section ~vopt:1 ["debug"] "LEVEL"
+    mk_flag ~section ["debug"]
       "Print debug message to stderr. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value."
-      Arg.int 0 in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value." in
+  let debug_level =
+    mk_opt ~section ["debug-level"] "LEVEL"
+      "Like `--debug', but allows specifying the debug level (`--debug' \
+       sets it to 1."
+      Arg.(some int) None in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. Show output of all sub-commands. \
@@ -577,9 +585,9 @@ let global_options =
       "Opam with normally replace itself with a newer version found \
        at $(b,OPAMROOT/opam). This disables this behaviour." in
   Term.(pure create_global_options
-    $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $external_solver $use_internal_solver $cudf_file $solver_preferences
-    $no_self_upgrade)
+        $git_version $debug $debug_level $verbose $quiet $color $switch $yes
+        $strict $root $no_base_packages $compat_mode_1_0 $external_solver
+        $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
