@@ -574,7 +574,7 @@ let global_options =
         For details on the supported language, and the external solvers available, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         A general guide to using solver preferences can be found at \
-        $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \   
+        $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \
         The default value is "^OpamGlobals.default_upgrade_preferences^
        " for upgrades, and "^OpamGlobals.default_preferences^" otherwise.")
       Arg.(some string) None in
@@ -1768,8 +1768,11 @@ let run default commands =
         Printf.eprintf "%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
       | Sys.Break -> exit_code := 130
+      | Failure msg ->
+        Printf.eprintf "Fatal error: %s\n" msg;
+        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
       | _ ->
-        Printf.fprintf stderr "Fatal error:\n%s\n" (Printexc.to_string e);
+        Printf.eprintf "Fatal error:\n%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
     end;
     exit !exit_code
