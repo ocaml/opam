@@ -87,10 +87,8 @@ ALWAYS:
 # -- opam-core -- #
 opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamGitVersion.ml ALWAYS
 
-GITREF := $(addsuffix ../.git/, $(shell cat ../.git/HEAD | cut -d ' ' -f 2))
-GITDEP := ../.git/HEAD $(wildcard ${GITREF})
-
-core/opamGitVersion.ml: ../shell/get-git-id.ml ${GITDEP}
+# Only rebuit after a 'make clean'
+core/opamGitVersion.ml: ../shell/get-git-id.ml
 	cd .. && ocaml shell/get-git-id.ml src/$@
 	touch $@
 
@@ -263,6 +261,7 @@ export OCAMLMAKEFILE
 
 clean-aux:
 	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(SCRIPTS) opam-admin.top opam_admin_top.*
+	rm -f core/opamGitVersion.ml core/opamScript.ml
 
 clean: clean-aux
 
