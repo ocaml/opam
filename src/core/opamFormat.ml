@@ -420,13 +420,51 @@ let rec make_constraints t =
   | Empty -> []
   | t -> [aux t]
 
+let parse_dep_flag = function
+  | Ident (_, "build") -> Depflag_Build
+  | Ident (_, "test") -> Depflag_Test
+  | Ident (_, "doc") -> Depflag_Doc
+  | x ->
+    bad_format ~pos:(value_pos x)
+      "Unknown dependency flag %S. Expected one of \"build\", \"test\" or \
+       a version constraint operator"
+      (string_of_value x)
+
+let make_dep_flag = function
+  | Depflag_Build -> make_ident "build"
+  | Depflag_Test -> make_ident "test"
+  | Depflag_Doc -> make_ident "doc"
+
+(* Version constraints with additional leading keywords ("build","test"...) *)
+let rec parse_ext_constraints = function
+  | Ident (_, _) as kw :: r ->
+    let kws, f = parse_ext_constraints r in
+    parse_dep_flag kw :: kws, f
+  | Logop (_, `And, t1, t2) :: r -> parse_ext_constraints (t1::t2::r)
+  | t ->
+    [], parse_constraints t
+
+let make_ext_constraints (kws, t) =
+  (* The kws must be aggregated with an '&' to the first constraint, if any *)
+  match make_constraints t, kws with
+  | [], [] -> []
+  | [], kw::kws ->
+    [List.fold_left (fun acc kw ->
+         Logop (pos_null, `And, make_dep_flag kw, acc))
+        (make_dep_flag kw) kws]
+  | c::cs, kws ->
+    List.fold_left (fun acc kw ->
+        Logop (pos_null, `And, make_dep_flag kw, acc))
+      c kws
+    :: cs
+
 (* parse a list of formulas *)
-let rec parse_formulas opt t =
+let rec parse_formulas opt ~constraints t =
   let name = OpamPackage.Name.of_string in
   let rec aux = function
-    | String (_,n) -> Atom (name n, Empty)
-    | Option (_, String (_,n), g) -> Atom (name n, parse_constraints g)
-    | Group (_,g) -> Block (parse_formulas opt (List (pos_null, g)))
+    | String (_,n) -> Atom (name n, constraints [])
+    | Option (_, String (_,n), g) -> Atom (name n, constraints g)
+    | Group (_,g) -> Block (parse_formulas opt ~constraints (List (pos_null, g)))
     | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
     | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
     | x ->
@@ -436,30 +474,38 @@ let rec parse_formulas opt t =
   OpamFormula.(if opt then ors else ands)
     (List.map aux (lift_list t))
 
-let rec make_formulas opt t =
+let rec make_formulas opt ~constraints t =
   let name = OpamPackage.Name.to_string in
   let rec aux = function
     | Empty             -> assert false
-    | Atom (n, Empty)   -> make_string (name n)
-    | Atom (n, cs)      -> Option (pos_null, make_string (name n), make_constraints cs)
-    | Block f           -> Group (pos_null, lift_list (make_formulas opt f))
+    | Block f           -> Group (pos_null, lift_list (make_formulas opt ~constraints f))
     | And(e,f)          -> Logop (pos_null, `And, aux e, aux f)
     | Or(e,f)           -> Logop (pos_null, `Or, aux e, aux f)
+    | Atom (n, cs)      ->
+      match constraints cs with
+      | [] -> make_string (name n)
+      | cs -> Option (pos_null, make_string (name n), cs)
   in
   let to_list = OpamFormula.(if opt then ors_to_list else ands_to_list) in
   List (pos_null, List.map aux (to_list t))
 
 let make_formula =
-  make_formulas false
+  make_formulas false ~constraints:make_constraints
+
+let make_ext_formula =
+  make_formulas false ~constraints:make_ext_constraints
 
 let parse_formula =
-  parse_formulas false
+  parse_formulas false ~constraints:parse_constraints
+
+let parse_ext_formula =
+  parse_formulas false ~constraints:parse_ext_constraints
 
 let parse_opt_formula =
-  parse_formulas true
+  parse_formulas true ~constraints:parse_ext_constraints
 
 let make_opt_formula =
-  make_formulas true
+  make_formulas true ~constraints:make_ext_constraints
 
 let rec parse_compiler_constraint t =
   let rec aux = function

@@ -830,8 +830,8 @@ module X = struct
       build      : command list;
       install    : command list;
       remove     : command list;
-      depends    : formula;
-      depopts    : formula;
+      depends    : ext_formula;
+      depopts    : ext_formula;
       conflicts  : formula;
       libraries  : (string * filter option) list;
       syntax     : (string * filter option) list;
@@ -1090,7 +1090,7 @@ module X = struct
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ listm   t.remove        s_remove        OpamFormat.make_command
-          @ formula t.depends       s_depends       OpamFormat.make_formula
+          @ formula t.depends       s_depends       OpamFormat.make_ext_formula
           @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
@@ -1159,7 +1159,7 @@ module X = struct
       let install = OpamFormat.assoc_list s s_install OpamFormat.parse_commands in
       let remove = OpamFormat.assoc_list s s_remove OpamFormat.parse_commands in
       let depends = OpamFormat.assoc_default OpamFormula.Empty s s_depends
-          OpamFormat.parse_formula in
+          OpamFormat.parse_ext_formula in
       let depopts = OpamFormat.assoc_default OpamFormula.Empty s s_depopts
           OpamFormat.parse_opt_formula in
       let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts
@@ -1234,7 +1234,8 @@ module X = struct
         remove     = [[CString "ocamlfind", None; CString "remove", None;
                        CString (OpamPackage.Name.to_string (OpamPackage.name nv)), None],
                       None];
-        depends    = Atom (OpamPackage.Name.of_string "ocamlfind", Empty);
+        depends    = Atom (OpamPackage.Name.of_string "ocamlfind",
+                           ([Depflag_Build], Empty));
         author     = maintainer;
         homepage   = [""];
         license    = [""];

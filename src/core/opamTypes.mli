@@ -120,6 +120,12 @@ type package_flag =
   | LightUninstall (** The package doesn't require downloading to uninstall *)
   | AllSwitches (** The package is pervasive on all switches *)
 
+(** Flags on dependencies *)
+type package_dep_flag =
+  | Depflag_Build
+  | Depflag_Test
+  | Depflag_Doc
+
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)
 module type GenericPackage = sig
@@ -143,6 +149,9 @@ type atom = OpamFormula.atom
 
 (** Formula over versionned packages *)
 type formula = OpamFormula.t
+
+(** Formula over versionned packages *)
+type ext_formula = package_dep_flag list OpamFormula.ext_package_formula
 
 (** AND formulat *)
 type 'a conjunction = 'a OpamFormula.conjunction
@@ -247,8 +256,8 @@ type universe = {
   u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
-  u_depends  : formula package_map;
-  u_depopts  : formula package_map;
+  u_depends  : ext_formula package_map;
+  u_depopts  : ext_formula package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;

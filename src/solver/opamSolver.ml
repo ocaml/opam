@@ -40,9 +40,11 @@ let empty_universe =
   }
 
 (* Get the optional depencies of a package *)
-let depopts_of_package universe package =
+let depopts_of_package universe ?build ?test ?doc package =
   let opts =
-    try OpamPackage.Map.find package universe.u_depopts
+    try
+      filter_deps ?build ?test ?doc
+        (OpamPackage.Map.find package universe.u_depopts)
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
 
@@ -112,10 +114,12 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
         if OpamMisc.IntMap.is_empty map then Some (`Lt, 1)
         else Some (result_op, sign (fst (OpamMisc.IntMap.min_binding map)))
 
-let opam2cudf universe ?(depopts=false) version_map package =
+let opam2cudf universe ?(depopts=false) ?build ?test ?doc
+    version_map package =
   let name = OpamPackage.name package in
   let depends =
-    try OpamPackage.Map.find package universe.u_depends
+    try filter_deps ?build ?test ?doc
+          (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
   let depends =
     let opts = depopts_of_package universe package in
@@ -170,7 +174,8 @@ let opam2cudf universe ?(depopts=false) version_map package =
   }
 
 (* load a cudf universe from an opam one *)
-let load_cudf_universe ?depopts opam_universe ?version_map opam_packages =
+let load_cudf_universe ?depopts ?build ?test ?doc
+    opam_universe ?version_map opam_packages =
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
@@ -178,7 +183,7 @@ let load_cudf_universe ?depopts opam_universe ?version_map opam_packages =
     let cudf_packages =
       OpamPackage.Set.fold
         (fun nv list ->
-           opam2cudf opam_universe ?depopts version_map nv :: list)
+           opam2cudf opam_universe ?depopts ?build ?test ?doc version_map nv :: list)
         opam_packages [] in
     try Cudf.load_universe cudf_packages
     with Cudf.Constraint_violation s ->
@@ -319,7 +324,8 @@ let installable universe =
     trimed_universe
 
 let filter_dependencies
-    f_direction ~depopts ~installed ?(unavailable=false) universe packages =
+    f_direction ~depopts ?build ?test ?doc ~installed
+    ?(unavailable=false) universe packages =
   if OpamPackage.Set.is_empty packages then [] else
   let u_packages =
     packages ++
@@ -328,9 +334,10 @@ let filter_dependencies
       universe.u_available in
   let version_map = cudf_versions_map universe u_packages in
   let cudf_universe =
-    load_cudf_universe ~depopts universe ~version_map u_packages in
+    load_cudf_universe ~depopts ?build ?test ?doc universe ~version_map
+      u_packages in
   let cudf_packages =
-    List.rev_map (opam2cudf universe ~depopts version_map)
+    List.rev_map (opam2cudf universe ~depopts ?build ?test ?doc version_map)
       (OpamPackage.Set.elements packages) in
   let topo_packages = f_direction cudf_universe cudf_packages in
   let result = List.rev_map OpamCudf.cudf2opam topo_packages in

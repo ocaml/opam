@@ -133,10 +133,10 @@ module OPAM: sig
   val remove: t -> command list
 
   (** Package dependencies *)
-  val depends: t -> formula
+  val depends: t -> ext_formula
 
   (** Optional dependencies *)
-  val depopts: t -> formula
+  val depopts: t -> ext_formula
 
   (** External dependencies *)
   val depexts: t -> tags option
@@ -196,10 +196,10 @@ module OPAM: sig
   val with_version: t -> version -> t
 
   (** Construct as [depends] *)
-  val with_depends : t -> formula -> t
+  val with_depends : t -> ext_formula -> t
 
   (** Construct as [depopts] *)
-  val with_depopts : t -> formula -> t
+  val with_depopts : t -> ext_formula -> t
 
   val with_conflicts : t -> formula -> t
 

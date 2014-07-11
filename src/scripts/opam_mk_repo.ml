@@ -195,8 +195,8 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
     let opam_f = OpamPath.Repository.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
-      let deps = OpamFile.OPAM.depends opam in
-      let depopts = OpamFile.OPAM.depopts opam in
+      let deps = OpamTypesBase.filter_deps (OpamFile.OPAM.depends opam) in
+      let depopts = OpamTypesBase.filter_deps (OpamFile.OPAM.depopts opam) in
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
         ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])

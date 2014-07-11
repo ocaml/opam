@@ -104,7 +104,8 @@ val ors: 'a formula list -> 'a formula
 (** Converts back an OR-formula to a list (flattens top-level ors) *)
 val ors_to_list: 'a formula -> 'a formula list
 
-(** Map on atoms *)
+(** Map on atoms. Atoms for which the given function returns Empty
+    will be simply removed *)
 val map: ('a -> 'b formula) -> 'a formula -> 'b formula
 
 (** Maps top-down on a formula *)
@@ -168,3 +169,12 @@ val to_cnf: t -> atom cnf
 
 (** Return an equivalent DNF formula *)
 val to_dnf: t -> atom dnf
+
+(** Formula over versionned packages with additional flags (used to handle
+    eg. build-deps) *)
+type 'a ext_package_formula =
+  (OpamPackage.Name.t * ('a * version_formula)) formula
+
+(** Turns an extended package formula to a normal formula, by filtering out
+    the packages on the flags of which [filter] returns [false]. *)
+val formula_of_extended: filter:('a -> bool) -> 'a ext_package_formula -> t
