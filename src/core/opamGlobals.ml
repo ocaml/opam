@@ -88,9 +88,13 @@ let solver_timeout =
   try float_of_string (OpamMisc.getenv "OPAMSOLVERTIMEOUT")
   with Not_found | Failure _ -> 5.
 
-let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
+(* Fixme: in the comments are the preferred values of the preference expression *)
+(*        they will need to replace the old ones when recent external solvers   *)
+(*        will go mainstream                                                    *)
+
+let default_preferences = (* "-count(removed),-notuptodate(request),-count(down),-count(changed)" *)
   "-removed,-changed,-notuptodate"
-let default_upgrade_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
+let default_upgrade_preferences = (* "-count(down),-count(removed),-notuptodate(solution),-count(new)" *)
   "-removed,-notuptodate,-changed"
 let default_fixup_preferences =
   "-changed"
