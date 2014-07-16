@@ -68,6 +68,7 @@ let is_available universe wish_remove (name, _ as c) =
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
 let cudf_versions_map _universe packages =
+  log "cudf_versions_map";
   let pmap = OpamPackage.to_map packages in
   OpamPackage.Name.Map.fold (fun name versions acc ->
       let _, map =
@@ -176,11 +177,16 @@ let opam2cudf universe ?(depopts=false) ?build ?test ?doc
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?depopts ?build ?test ?doc
     opam_universe ?version_map opam_packages =
+  log "Load cudf universe (depopts:%b, build:%b)"
+    (OpamMisc.Option.default false depopts)
+    (OpamMisc.Option.default true build);
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
   let cudf_universe =
     let cudf_packages =
+      (* Doing opam2cudf for every package is inefficient (lots of Set.mem to
+         check if it is installed, etc. Optimise by gathering all info first *)
       OpamPackage.Set.fold
         (fun nv list ->
            opam2cudf opam_universe ?depopts ?build ?test ?doc version_map nv :: list)
@@ -301,9 +307,11 @@ let resolve ?(verbose=true) universe ~requested request =
     let all_packages =
       universe.u_available ++ orphan_packages in
     let simple_universe =
-      load_cudf_universe universe ~version_map all_packages in
+      load_cudf_universe universe ~depopts:true ~build:false
+        ~version_map all_packages in
     let complete_universe =
-      load_cudf_universe ~depopts:true universe ~version_map all_packages in
+      load_cudf_universe universe ~depopts:true ~build:true
+        ~version_map all_packages in
     try
       let cudf_solution =
         OpamCudf.solution_of_actions
@@ -433,13 +441,17 @@ let print_solution ~messages ~rewrite t =
 let sequential_solution universe ~requested actions =
   let version_map =
     cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
+  (* load_cudf_universe is expensive: we may find a way to avoid doing the
+     whole load twice. *)
   let simple_universe =
-    load_cudf_universe universe ~version_map universe.u_available in
+    load_cudf_universe universe ~version_map ~depopts:true ~build:false
+      universe.u_available in
   let complete_universe =
-    load_cudf_universe universe ~version_map ~depopts:true universe.u_available in
+    load_cudf_universe universe ~version_map ~depopts:true ~build:true
+      universe.u_available in
   let actions =
     List.map
-      (map_action (opam2cudf universe ~depopts:true version_map))
+      (map_action (opam2cudf universe ~depopts:true ~build:false version_map))
       actions in
   try
     let cudf_solution =

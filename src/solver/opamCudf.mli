@@ -97,7 +97,13 @@ val actions_of_diff: Diff.universe -> Cudf.package action list
 
 exception Cyclic_actions of Cudf.package action list list
 
-(** Compution the actions to process from a solution.
+(** Computes the actions to process from a solution, from the actions
+    obtained by a simple universe diff. The 'simple' universe
+    should not contain build dependencies and will be used for resolution ;
+    [complete_universe] should include build-deps, it's used for ordering
+    of actions and, together with the [requested] set of package names,
+    for computing the reasons of the actions.
+
     May raise [Cyclic_actions]. *)
 val solution_of_actions:
   simple_universe:Cudf.universe ->

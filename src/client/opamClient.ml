@@ -1350,7 +1350,7 @@ module API = struct
     let universe = OpamState.universe t Reinstall in
     let depends = (* Do not cast to a set, we need to keep the order *)
       OpamSolver.reverse_dependencies
-        ~depopts:true ~installed:true universe reinstall in
+        ~depopts:true ~installed:true ~build:false universe reinstall in
     let to_process =
       List.map (fun pkg -> To_recompile pkg) depends in
     let requested =
