@@ -2468,7 +2468,7 @@ let update_dev_package t nv =
     let diff_to_string = function
       | `Removed f -> Printf.sprintf "%S was removed" f
       | `Added f -> Printf.sprintf "%S was added" f
-      | `Changed f -> Printf.sprintf "The contents of %s changed" f
+      | `Changed f -> Printf.sprintf "The contents of %S changed" f
     in
     let install_meta dir rm_hash hash =
       let root =
@@ -2499,9 +2499,9 @@ let update_dev_package t nv =
           (OpamPackage.to_string nv) (string_of_address remote_url)
           (String.concat "\n  - "
              (List.map diff_to_string (diff user_meta new_meta)));
-        confirm "\nOverride your local changes in %s\n\
+        confirm "\nOverride files in %s\n\
                 \  (there will be a backup) ?"
-          (OpamFilename.Dir.to_string srcdir)
+          (OpamFilename.Dir.to_string overlay)
       then (
         let bak =
           OpamPath.backup_dir t.root / (OpamPackage.to_string nv ^ ".bak") in
