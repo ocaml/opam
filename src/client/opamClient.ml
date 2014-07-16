@@ -567,10 +567,11 @@ module API = struct
     let orphans = match changes with
       | None -> orphans
       | Some ch ->
+        if OpamPackage.Set.is_empty orphans then orphans else
         let recompile_cone =
           OpamPackage.Set.of_list @@
           OpamSolver.reverse_dependencies
-            ~depopts:true ~installed:false ~unavailable:true
+            ~depopts:true ~installed:true ~unavailable:true
             universe ch
         in
         orphans %% recompile_cone
