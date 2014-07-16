@@ -1332,7 +1332,7 @@ module API = struct
              (match not_installed with [_] -> "is" | _ -> "are");
            OpamState.confirm "Install ?")
         then
-          (install_t atoms None false t;
+          (install_t not_installed None false t;
            if reinstall = [] then OpamGlobals.exit 0
            else OpamState.load_state "reinstall-installed")
         else
