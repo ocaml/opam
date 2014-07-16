@@ -191,11 +191,17 @@ val parse_formula : value -> formula
 (** Build a formula where AND are implicit. *)
 val make_formula : formula -> value
 
+(** Parse an AND formula where constraints are extended with leading keywords *)
+val parse_ext_formula : value -> ext_formula
+
+(** Make an AND formula where constraints are extended with leading keywords *)
+val make_ext_formula : ext_formula -> value
+
 (** Parse optional package formula where OR are implicit: [x y -> x | y] *)
-val parse_opt_formula : value -> formula
+val parse_opt_formula : value -> ext_formula
 
 (** Build a formula where OR are implicit. *)
-val make_opt_formula : formula -> value
+val make_opt_formula : ext_formula -> value
 
 (** Parse compiler constraints *)
 val parse_compiler_constraint: value -> compiler_constraint

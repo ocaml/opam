@@ -94,6 +94,8 @@ val logop_of_string: string -> logop (** Raises Invalid_argument*)
 val string_of_pfxop: pfxop -> string
 val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 
+val filter_deps: ?build:bool -> ?test:bool -> ?doc:bool -> ext_formula -> formula
+
 (** Pretty print *)
 val string_of_filter: filter -> string
 

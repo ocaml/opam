@@ -125,9 +125,12 @@ let string_of_formula string_of_a f =
 let rec map f = function
   | Empty    -> Empty
   | Atom x   -> f x
-  | Block x  -> Block (map f x)
   | And(x,y) -> make_and (map f x) (map f y)
   | Or(x,y)  -> make_or (map f x) (map f y)
+  | Block x  ->
+    match map f x with
+    | Empty -> Empty
+    | x -> Block x
 
 (* Maps top-down *)
 let rec map_formula f t =
@@ -322,3 +325,9 @@ let of_disjunction d =
 
 let atoms t =
   fold_left (fun accu x -> x::accu) [] (to_atom_formula t)
+
+type 'a ext_package_formula =
+  (OpamPackage.Name.t * ('a * version_formula)) formula
+
+let formula_of_extended ~filter =
+  map (fun (n, (kws,formula)) -> if filter kws then Atom (n, formula) else Empty)

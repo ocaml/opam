@@ -785,108 +785,73 @@ let compute_root_causes universe actions requested =
 
 (*
   Compute a full solution from a set of root actions. This means:
-  1/ computing the right sequence of removal.
-  2/ computing the transitive closure of reinstallations.
-  3/ computing the root causes of actions
-
-  Parameters:
-  - [simple _universe] is the graph with 'depends' only
-  - [complex_universe] is the graph with 'depends' + 'depopts'
-  - [requested] the set of the package names that were part of the original request
+  1/ computing the right sequence of removals.
+  2/ set all the installed packages which depend on a changed package and have
+     no action planned to 'recompile'
+  3/ compute the DAG of actions to process in order
+  4/ computing the root causes of actions
 *)
 let solution_of_actions ~simple_universe ~complete_universe ~requested root_actions =
   log "graph_of_actions root_actions=%a"
     (slog string_of_actions) root_actions;
 
-  (* The packages to remove or upgrade *)
-  let to_remove_or_upgrade =
-    OpamMisc.filter_map (function
-      | To_change (Some pkg, _)
-      | To_delete pkg -> Some pkg
-      | _ -> None
-    ) root_actions in
-
-  (* Initial actions to process *)
-  let actions =
-    Map.of_list (OpamMisc.filter_map (function
-        | To_recompile pkg
-        | To_change (_, pkg) as act -> Some (pkg, act)
-        | To_delete _ -> None
-      ) root_actions) in
-
-  let all_packages =
-    (* we consider the complete universe here (eg. including optional dependencies) *)
+  let actions_map =
+    List.fold_left (fun map a ->
+        List.fold_left (fun map p -> Map.add p a map)
+          map (full_action_contents a))
+      Map.empty root_actions in
+  let package_graph =
+    (* only installed or mentionned packages may be acted upon *)
     let graph =
       create_graph
-        (fun p -> p.Cudf.installed || Map.mem p actions)
+        (fun p -> p.Cudf.installed || Map.mem p actions_map)
+        simple_universe in
+    Graph.mirror graph in
+
+  (* complete graph includes build-depopts, which may have an inpact on build
+     order *)
+  let full_graph =
+    let graph =
+      create_graph
+        (fun p -> p.Cudf.installed || Map.mem p actions_map)
         complete_universe in
     Graph.mirror graph in
 
-  (* the graph of interesting packages, which might be impacted by the
-     current actions *)
-  let interesting_packages =
-    let graph = Graph.copy all_packages in
-    List.iter (Graph.remove_vertex graph) to_remove_or_upgrade;
-    graph in
-
-  (* the packages to remove *)
+  (* the packages to remove, in order *)
   let to_remove =
-    let remove_roots =
-      Set.of_list (OpamMisc.filter_map (function
-          | To_delete pkg -> Some pkg
-          | _ -> None
-        ) root_actions) in
-    (* we consider here only the simple universe (eg. hard
-       dependencies only): we don't want to uninstall a package if
-       some of its optional dependencies disapear, however we must
-       recompile it (see below). *)
-    let graph = create_graph (fun p -> Set.mem p remove_roots) simple_universe in
-    List.rev (Graph.close_and_linearize graph remove_roots) in
+    Graph.Topo.fold (fun p acc ->
+        try match Map.find p actions_map with
+          | To_delete _ -> p::acc
+          | _ -> acc
+        with Not_found -> acc)
+      full_graph [] in
 
-  (* the packages to recompile *)
-  let to_recompile =
-    let recompile_roots =
-      Set.of_list (OpamMisc.filter_map (function
-          | To_recompile pkg -> Some pkg
-          | _ -> None
-        ) root_actions) in
-    (* add the packages to recompile due to the REMOVAL of packages
-       (ie. when an optional dependency has been removed). *)
-    List.fold_left (fun to_recompile pkg ->
-        let succ = Graph.succ all_packages pkg in
-        Set.union to_recompile (Set.of_list succ)
-      ) recompile_roots to_remove in
-
-  (* Compute the transitive closure of packages to recompile *)
-  let _, actions =
-    Graph.Topo.fold
-      (fun pkg (to_recompile, actions) ->
-        let add_succ pkg action =
-          let succ = Graph.succ interesting_packages pkg in
-          let to_recompile = Set.union to_recompile (Set.of_list succ) in
-          let actions = Map.add pkg action (Map.remove pkg actions) in
-          to_recompile, actions in
-        if Map.mem pkg actions then
-          add_succ pkg (Map.find pkg actions)
-        else if Set.mem pkg to_recompile then
-          add_succ pkg (To_recompile pkg)
-        else
-          to_recompile, actions)
-      interesting_packages
-      (to_recompile, actions) in
+  (* transitively add recompilations *)
+  let actions_map =
+    Graph.Topo.fold (fun p actions_map ->
+        if not (Map.mem p actions_map) &&
+           List.exists
+             (fun p -> try match Map.find p actions_map with
+                | To_change (_,p1) when p = p1 -> false
+                | _ -> true
+                with Not_found -> false)
+             (Graph.pred package_graph p)
+        then Map.add p (To_recompile p) actions_map
+        else actions_map)
+      package_graph actions_map
+  in
 
   (* Construct the full graph of actions to proceed to reach the
      new state given by the solver.  *)
-  let to_process = action_graph_of_packages actions interesting_packages in
+  let nonremove_actions_map =
+    Map.filter (fun _ -> function To_delete _ -> false | _ -> true)
+      actions_map in
 
-  let all_actions =
-    List.fold_left (fun acc a ->
-        List.fold_left (fun acc pkg -> Map.add pkg a acc)
-          acc (full_action_contents a))
-      actions root_actions in
+  let to_process =
+    action_graph_of_packages nonremove_actions_map full_graph in
 
   let root_causes =
-    compute_root_causes complete_universe all_actions requested in
+    compute_root_causes complete_universe actions_map requested in
 
   { to_remove; to_process; root_causes }
 

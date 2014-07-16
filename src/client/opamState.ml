@@ -693,8 +693,8 @@ let resolve_variable t ?opam local_variables v =
       string (OpamPackage.Version.to_string ver)
     | "depends",   Some opam ->
       let deps =
-        OpamFormula.atoms (OpamFile.OPAM.depends opam) @
-        OpamFormula.atoms (OpamFile.OPAM.depopts opam)
+        OpamFormula.atoms (filter_deps (OpamFile.OPAM.depends opam)) @
+        OpamFormula.atoms (filter_deps (OpamFile.OPAM.depopts opam))
       in
       let installed_deps =
         OpamMisc.filter_map

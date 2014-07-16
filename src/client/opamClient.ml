@@ -284,10 +284,10 @@ module API = struct
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamState.opam t nv in
-          let formula = OpamFile.OPAM.depends opam in
+          let formula = filter_deps (OpamFile.OPAM.depends opam) in
           let formula =
             if depopts
-            then OpamFormula.ands [formula; OpamFile.OPAM.depopts opam]
+            then OpamFormula.ands [formula; filter_deps (OpamFile.OPAM.depopts opam)]
             else formula in
           let depends_on nv =
             let name = OpamPackage.name nv in
@@ -308,10 +308,10 @@ module API = struct
         let opam = OpamState.opam t nv in
         let deps =
           packages_of_atoms t @@ OpamFormula.atoms @@
-          OpamFile.OPAM.depends opam in
+          filter_deps @@ OpamFile.OPAM.depends opam in
         if depopts then
           deps ++ (packages_of_atoms t @@ OpamFormula.atoms @@
-                   OpamFile.OPAM.depopts opam)
+                   filter_deps @@ OpamFile.OPAM.depopts opam)
         else deps
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)
@@ -491,8 +491,8 @@ module API = struct
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     (fun _ -> tags) in
-      let depends  = formula "depends"  OpamFile.OPAM.depends in
-      let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
+      let depends  = formula "depends"  (filter_deps @* OpamFile.OPAM.depends) in
+      let depopts  = formula "depopts"  (filter_deps @* OpamFile.OPAM.depopts) in
 
       let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
       let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
@@ -1350,7 +1350,7 @@ module API = struct
     let universe = OpamState.universe t Reinstall in
     let depends = (* Do not cast to a set, we need to keep the order *)
       OpamSolver.reverse_dependencies
-        ~depopts:true ~installed:true universe reinstall in
+        ~depopts:true ~installed:true ~build:false universe reinstall in
     let to_process =
       List.map (fun pkg -> To_recompile pkg) depends in
     let requested =

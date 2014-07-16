@@ -183,6 +183,18 @@ let pfxop_of_string = function
   | "!" -> `Not
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
+let filter_deps
+    ?(build=true)
+    ?(test=build && !OpamGlobals.build_test)
+    ?(doc=build && !OpamGlobals.build_doc) =
+  let filter =
+    List.for_all (function
+        | Depflag_Build -> build
+        | Depflag_Test-> test
+        | Depflag_Doc-> doc)
+  in
+  OpamFormula.formula_of_extended ~filter
+
 let rec string_of_filter = function
   | FBool b    -> string_of_bool b
   | FString s  -> Printf.sprintf "%S" s
