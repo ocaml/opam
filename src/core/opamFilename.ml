@@ -328,6 +328,7 @@ let with_flock ?read file f x =
     OpamSystem.funlock lock;
     r
   with e ->
+    OpamMisc.register_backtrace e;
     OpamSystem.funlock lock;
     raise e
 
