@@ -1714,10 +1714,15 @@ module X = struct
 
     let replace t f =
       let subst str =
+        if not (OpamMisc.ends_with ~suffix:"}%" str) then
+          (OpamGlobals.warning "Unclosed variable replacement in %S: %S\n"
+             t str;
+           str)
+        else
         let str = String.sub str 2 (String.length str - 4) in
         let v = OpamVariable.Full.of_string str in
         OpamVariable.string_of_variable_contents (f v) in
-      let rex = Re_perl.compile_pat "%\\{[^%]+\\}%" in
+      let rex = Re_perl.compile_pat "%\\{(%?\\}?[^}%])+(\\}%)?" in
       Re_pcre.substitute ~rex ~subst t
 
     let replace_string = replace

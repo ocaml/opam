@@ -9,4 +9,4 @@ build: [ [ "./build.sh" ]
          [ "mkdir" "-p" "%{lib}%/p5" ]
          [ "touch" "%{lib}%/p5/p2_present" ] {P2:installed}
          [ "touch" "%{lib}%/p5/p2_absent" ] {!P2:installed} ]
-remove: [ "rm" "-rf" "%{lib}/p5" ]
+remove: [ "rm" "-rf" "%{lib}%/p5" ]

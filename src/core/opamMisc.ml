@@ -429,7 +429,10 @@ let fatal e = match e with
 let register_backtrace, get_backtrace =
   let registered_backtrace = ref None in
   (fun e ->
-     registered_backtrace := Some (e, Printexc.get_backtrace ())),
+     registered_backtrace :=
+       match !registered_backtrace with
+       | Some (e1, _) as reg when e1 == e -> reg
+       | _ -> Some (e, Printexc.get_backtrace ())),
   (fun e ->
      match !registered_backtrace with
      | Some(e1,bt) when e1 == e -> bt
