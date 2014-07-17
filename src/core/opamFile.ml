@@ -99,9 +99,8 @@ module Syntax = struct
               if not !OpamGlobals.skip_version_checks &&
                  OpamVersion.compare opam_version OpamVersion.current > 0 then (
                 OpamGlobals.error
-                  "Your version of OPAM (%s) is not recent enough to read \
-                   %s. Upgrade OPAM to a more recent version (at least %s) \
-                   to read this file correctly."
+                  "Your version of OPAM (%s) is not recent enough to read %s.\n\
+                   Upgrade to version %s or later to read this file."
                   (OpamVersion.to_string OpamVersion.current)
                   (OpamMisc.prettify_path f.file_name)
                   (OpamVersion.to_string opam_version);
@@ -119,7 +118,7 @@ module Syntax = struct
         let invalids = OpamFormat.invalid_fields f.file_contents fields in
         let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
         if too_many <> [] then
-          OpamGlobals.warning "duplicated fields in %s: %s"
+          OpamGlobals.warning "duplicate fields in %s: %s"
             f.file_name
             (OpamMisc.string_of_list (fun x -> x) too_many);
         if !OpamGlobals.strict then (
@@ -1161,8 +1160,41 @@ module X = struct
       let remove = OpamFormat.assoc_list s s_remove OpamFormat.parse_commands in
       let depends = OpamFormat.assoc_default OpamFormula.Empty s s_depends
           OpamFormat.parse_ext_formula in
-      let depopts = OpamFormat.assoc_default OpamFormula.Empty s s_depopts
-          OpamFormat.parse_opt_formula in
+      let depopts =
+        let rec cleanup ~pos acc disjunction =
+          List.fold_left (fun acc -> function
+              | OpamFormula.Atom (_, (_,Empty)) as atom -> atom :: acc
+              | OpamFormula.Atom (name, (flags, cstr)) ->
+                OpamGlobals.warning
+                  "At %s:\n\
+                   Version constraint (%s) no longer allowed in optional \
+                   dependency (ignored).\n\
+                   Use the 'conflicts' field instead."
+                  (string_of_pos pos)
+                  (OpamFormula.string_of_formula (fun (r,v) ->
+                       OpamFormula.string_of_relop r ^" "^
+                       OpamPackage.Version.to_string v)
+                      cstr);
+                OpamFormula.Atom (name, (flags, Empty)) :: acc
+              | f ->
+                OpamGlobals.warning
+                  "At %s:\n\
+                   Optional dependencies must be a disjunction. Treated as such."
+                  (string_of_pos pos);
+                cleanup ~pos acc
+                  (OpamFormula.fold_left (fun acc a -> OpamFormula.Atom a::acc) [] f)
+            )
+            acc disjunction
+        in
+        OpamFormat.assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
+        let f = OpamFormat.parse_opt_formula value in
+        if OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0 then
+            OpamFormula.ors_to_list f
+            |> cleanup ~pos:(OpamFormat.value_pos value) []
+            |> List.rev
+            |> OpamFormula.ors
+        else f
+      in
       let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
       let libraries = OpamFormat.assoc_list s s_libraries OpamFormat.parse_libraries in
