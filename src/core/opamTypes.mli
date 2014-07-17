@@ -244,7 +244,7 @@ type 'a request = {
 type user_action =
   | Install of name_set (** The 'root' packages to be installed *)
   | Upgrade of package_set (** The subset of packages to upgrade *)
-  | Reinstall
+  | Reinstall of package_set
   | Depends
   | Init of name_set (** The 'root' packages to be installed *)
   | Remove

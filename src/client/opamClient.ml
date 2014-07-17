@@ -560,7 +560,7 @@ module API = struct
      See also preprocess_request and check_conflicts *)
   let orphans ?changes ?(transitive=false) t =
     let all = t.packages ++ t.installed in
-    let universe = OpamState.universe t Reinstall in
+    let universe = OpamState.universe t (Reinstall OpamPackage.Set.empty) in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
     (* Restriction to the request-related packages *)
@@ -1347,24 +1347,15 @@ module API = struct
 
     let t, _, _ = check_conflicts t atoms in
 
-    let universe = OpamState.universe t Reinstall in
-    let depends = (* Do not cast to a set, we need to keep the order *)
-      OpamSolver.reverse_dependencies
-        ~depopts:true ~installed:true ~build:false universe reinstall in
-    let to_process =
-      List.map (fun pkg -> To_recompile pkg) depends in
     let requested =
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    let solution =
-      OpamSolver.sequential_solution universe ~requested to_process in
-    let solution = match solution with
-      | Conflicts cs ->
-        log "conflict!";
-        OpamGlobals.msg "%s"
-          (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
-        No_solution
-      | Success solution ->
-        OpamSolution.apply ?ask t Reinstall ~requested solution in
+
+    let solution = OpamSolution.resolve_and_apply ?ask t
+        (Reinstall reinstall) ~requested
+        { wish_install = OpamSolution.eq_atoms_of_packages reinstall;
+          wish_remove  = [];
+          wish_upgrade = [];
+          criteria = !OpamGlobals.solver_fixup_preferences; } in
     OpamSolution.check_solution t solution
 
   let reinstall names =
@@ -1403,7 +1394,8 @@ module API = struct
         with Not_found -> ()
       with e ->
         OpamGlobals.note
-          "Pinning command successful, but your packages may be out of sync.";
+          "Pinning command successful, but your installed packages \
+           may be out of sync.";
         raise e
 
     let get_upstream t name =
