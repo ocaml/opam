@@ -963,6 +963,7 @@ module X = struct
       s_bug_reports;
       s_flags;
       s_dev_repo;
+      s_install;
     ]
 
     let to_1_0_fields k v =
