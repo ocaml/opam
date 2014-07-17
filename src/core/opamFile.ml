@@ -96,7 +96,8 @@ module Syntax = struct
         begin match OpamFormat.assoc_option f.file_contents s_opam_version
             (OpamFormat.parse_string @> OpamVersion.of_string) with
             | Some opam_version ->
-              if OpamVersion.compare opam_version OpamVersion.current > 0 then (
+              if not !OpamGlobals.skip_version_checks &&
+                 OpamVersion.compare opam_version OpamVersion.current > 0 then (
                 OpamGlobals.error
                   "Your version of OPAM (%s) is not recent enough to read \
                    %s. Upgrade OPAM to a more recent version (at least %s) \

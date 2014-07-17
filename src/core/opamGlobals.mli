@@ -42,6 +42,7 @@ val sync_archives : bool ref
 val compat_mode_1_0 : bool ref
 val use_external_solver : bool ref
 val no_self_upgrade : bool ref
+val skip_version_checks : bool ref
 
 (* Value set when opam calls itself *)
 val self_upgrade_bootstrapping_value : string
