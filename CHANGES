@@ -34,7 +34,7 @@
   source, pin packages that don't exist in a repository, fill a local opam
   file from a template, etc.
 * Improved the internal solver to handle much larger problems (#1358)
-* Use Unix.lockf for more reliable repository locks (#1299)
+* Use Unix.lockf for more reliable internal repository locks (#1299)
 * Large performance improvements (#1363)
 * Upgraded external dependencies to dose 3.2.2, ocamlgraph 1.8.5, cmdliner
   0.9.4, cudf 0.7
@@ -46,12 +46,18 @@
 * opam files: added a 'dev-repo' field, and the experimental 'flags' field
   (#1217, #1472)
 * Generate an opam-admin.top to easily apply scripts on a package repository
-  (#1454)
+  (#1454). Provide scripts to ease adding new metadata ('dev-repo', etc.)
 * Added 'opam upgrade --fixup' to save the day if your installed package set
   gets inconsistent.
 * Fixed some return codes
-* Added options '--raw', '--depends', '--external' and more fields to 'opam
-  show'
+* Added option to query (recursive) (reverse) dependencies and external
+  dependencies to 'opam list
+* Fixed opam init for some shells
+* OPAM search now includes the 'syntax' and 'libs' fields in the search
+* 'opam source' command to get the package archive or upstream source easily
+* Added an 'install' field in opam files, to separate from build
+* Added the 'build', 'test' and 'doc' dependency flags to limit the scope
+  of some dependencies
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
