@@ -254,8 +254,8 @@ The field {\tt cores} is the number of parallel process that
     ?build-doc:     commands
     ?build-test:    commands
     ?remove:        commands
-    ?depends:       [ <and-formula(package)> ]
-    ?depopts:       [ STRING+ ]
+    ?depends:       [ <and-formula(package-with-flags)> ]
+    ?depopts:       [ (STRING ?{ <flags> })+ ]
     ?conflicts:     [ <package>+ ]
     ?depexts:       [ [[STRING+] [STRING+]]+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
@@ -286,6 +286,14 @@ The field {\tt cores} is the number of parallel process that
 
 <package>        := STRING
                   | STRING { <and-formula(constraint)> }
+
+<flags>          := IDENT
+                  | IDENT '&' <flags>
+
+<package-with-flags>
+                 := STRING
+                  | STRING { <flags> }
+                  | STRING { ?(<flags> '&') <and-formula(constraint)> }
 
 <constraint>     := <comp> STRING
 <comp>           := '=' | '<' | '>' | '>=' | '<=' | '!='
@@ -388,6 +396,18 @@ The field {\tt cores} is the number of parallel process that
   dependencies: these packages are not required nor automatically installed
   to build the current package, but they have an effect on it. When an optional
   dependency is changed, the package is rebuilt.
+
+\item Additionally, the package constraints of {\tt depends} and {\tt depopts}
+  may contain leading {\em flags}. These are one of \verb+build+, \verb+test+
+  and \verb+doc+ and limit the meaning of the dependency:
+  \begin{itemize}
+  \item \verb+build+ dependencies are no longer needed at run-time: they won't
+    trigger recompilations of your package.
+  \item \verb+test+ dependencies are only needed when building tests
+    (by instructions in the \verb+build-test+ field)
+  \item likewise, \verb+doc+ dependecies are only required when building the
+    package documentation
+  \end{itemize}
 
 \item The {\tt conflicts} field contains package names and constraints
   indicating that the current package can't coexist with some packages or some
