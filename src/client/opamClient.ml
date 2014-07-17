@@ -1345,17 +1345,22 @@ module API = struct
 
     let atoms = OpamSolution.eq_atoms_of_packages reinstall in
 
-    let t, _, _ = check_conflicts t atoms in
+    let t, full_orphans, orphan_versions = check_conflicts t atoms in
 
     let requested =
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
-    let solution = OpamSolution.resolve_and_apply ?ask t
-        (Reinstall reinstall) ~requested
+    let request =
+      preprocess_request t full_orphans orphan_versions
         { wish_install = OpamSolution.eq_atoms_of_packages reinstall;
           wish_remove  = [];
           wish_upgrade = [];
           criteria = !OpamGlobals.solver_fixup_preferences; } in
+
+    let solution =
+      OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested
+        request in
+
     OpamSolution.check_solution t solution
 
   let reinstall names =
