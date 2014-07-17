@@ -589,9 +589,9 @@ let rec parse_filter l =
   in
   match l with
   | [] -> FBool true
-  | [f] -> aux f
-  | x::_ ->
-    bad_format ~pos:(value_pos x) "Expected a single filter expression"
+  | [Group (_, ([] | _::_::_))] | _::_::_ as x ->
+    bad_format ?pos:(values_pos x) "Expected a single filter expression"
+  | [Group(_,[f])] | [f] -> aux f
 
 let lift = function
   | [x] -> x
@@ -600,14 +600,19 @@ let lift = function
     Group (pos, l)
 
 let make_filter f =
-  let rec aux = function
+  let rec aux ?paren f =
+    match f with
     | FString s  -> make_string s
     | FIdent s   -> make_ident s
     | FBool b    -> make_bool b
     | FOp(e,s,f) -> Relop (pos_null, s, aux e, aux f)
-    | FOr(e,f) -> Logop (pos_null, `Or, aux e, aux f)
-    | FAnd(e,f) -> Logop (pos_null, `And, aux e, aux f)
-    | FNot f -> Pfxop (pos_null, `Not, aux f)
+    | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
+      let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
+      (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
+    | FAnd(e,f) ->
+      let f = Logop (pos_null, `And, aux e, aux ~paren:`And f) in
+      (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
+    | FNot f -> Pfxop (pos_null, `Not, aux ~paren:`Not f)
   in
   [aux f]
 
