@@ -462,7 +462,7 @@ let trim_universe universe request =
   let packages = List.filter (fun pkg ->
       List.for_all (List.for_all (fun (name, constr) ->
           let filter p =
-            p.Cudf.package <> name
+            p.Cudf.package = name
             && Cudf.version_matches p.Cudf.version constr in
           Cudf.get_packages ~filter universe <> []
         )) pkg.Cudf.depends
