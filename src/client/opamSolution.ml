@@ -295,7 +295,7 @@ let parallel_apply t action solution =
     | Import r
     | Switch r  -> OpamPackage.Name.Set.union root_installs r
     | Upgrade _
-    | Reinstall -> root_installs
+    | Reinstall _ -> root_installs
     | Depends
     | Remove -> OpamPackage.Name.Set.empty in
 

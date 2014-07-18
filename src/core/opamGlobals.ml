@@ -56,6 +56,7 @@ let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
 let use_external_solver = ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER")))
 let no_self_upgrade  = check "NOSELFUPGRADE"
+let skip_version_checks = check "SKIPVERSIONCHECKS"
 
 (* Value set when opam calls itself *)
 let self_upgrade_bootstrapping_value = "bootstrapping"

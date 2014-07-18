@@ -187,7 +187,8 @@ let check_version repo =
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.opam_version
   end in
-  if OpamVersion.compare repo_version OpamVersion.current > 0 then
+  if not !OpamGlobals.skip_version_checks &&
+     OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamGlobals.error_and_exit
       "\nThe current version of OPAM cannot read the repository. \
        You should upgrade to at least version %s.\n"

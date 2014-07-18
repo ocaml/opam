@@ -141,7 +141,8 @@ let opam2cudf universe ?(depopts=false) ?build ?test ?doc
     (name, None)::OpamFormula.to_conjunction conflicts in
   let installed = OpamPackage.Set.mem package universe.u_installed in
   let reinstall = match universe.u_action with
-    | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
+    | Upgrade reinstall | Reinstall reinstall ->
+      OpamPackage.Set.mem package reinstall
     | _                 -> false in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let pinned_to_current_version =
