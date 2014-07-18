@@ -23,7 +23,7 @@ export OCAMLRUNPARAM=b
 
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
-    sudo apt-get install opam aspcud
+    sudo apt-get install opam $EXTERNAL_SOLVER
     opam init
     eval `opam config env`
     opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re
@@ -38,7 +38,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     tar xvfz master.tar.gz
     cd opam-rt-master
     make
-    make KINDS="local git" run
+    OPAMEXTERNALSOLVER=$EXTERNAL_SOLVER make KINDS="local git" run
 else
     # Compile OPAM from sources and run the basic tests
     ./configure

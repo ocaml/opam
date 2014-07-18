@@ -1,0 +1,28 @@
+From b93f8b64c86ded96b31b49b983beabfd8d7280f2 Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 18 Jul 2014 15:50:24 +0200
+Subject: [PATCH] Removed hard failure cases, in favor of finer diagnostics
+
+---
+ algo/depsolver.ml | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/algo/depsolver.ml b/algo/depsolver.ml
+index f93fb86..a812ede 100644
+--- a/algo/depsolver.ml
++++ b/algo/depsolver.ml
+@@ -37,11 +37,6 @@ let reason map universe =
+   let globalid = Cudf.universe_size universe in
+   List.filter_map (function
+     |Diagnostic_int.Dependency(i,vl,il) when i = globalid -> None
+-    |Diagnostic_int.Missing(i,vl) when i = globalid -> 
+-        fatal "the package encoding global constraints can't be missing"
+-    |Diagnostic_int.Conflict(i,j,vpkg) when i = globalid || j = globalid -> 
+-        fatal "the package encoding global constraints can't be in conflict"
+-
+     |Diagnostic_int.Dependency(i,vl,il) -> Some (
+         Diagnostic.Dependency(from_sat (map#inttovar i),vl,List.map (fun i -> from_sat (map#inttovar i)) il)
+     )
+-- 
+2.0.1
+

@@ -216,7 +216,8 @@ let install_packages ~packages switch compiler =
   match bad_packages with
   | [] ->
     let solution = OpamSolution.resolve_and_apply ~ask:false t (Switch roots)
-	~requested:roots
+        ~requested:roots
+        ~orphans:OpamPackage.Set.empty
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = to_install;
@@ -372,6 +373,7 @@ let import_t importfile t =
 
       OpamSolution.resolve_and_apply t (Import roots)
         ~requested:(OpamPackage.names_of_packages imported)
+        ~orphans:OpamPackage.Set.empty
         { wish_install = to_import;
           wish_remove  = [];
           wish_upgrade = [];

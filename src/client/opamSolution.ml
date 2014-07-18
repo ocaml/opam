@@ -468,6 +468,10 @@ let parallel_apply t action solution =
   | `Successful () ->
     finalize ();
     OK (actions_list solution.to_process)
+  | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
+    OpamGlobals.error "Aborting";
+    finalize ();
+    raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     finalize ();
@@ -617,11 +621,12 @@ let apply ?ask t action ~requested solution =
       Aborted
   )
 
-let resolve ?(verbose=true) t action ~requested request =
-  OpamSolver.resolve ~verbose (OpamState.universe t action) ~requested request
+let resolve ?(verbose=true) t action ~requested ~orphans request =
+  OpamSolver.resolve ~verbose (OpamState.universe t action)
+    ~requested ~orphans request
 
-let resolve_and_apply ?ask t action ~requested request =
-  match resolve t action ~requested request with
+let resolve_and_apply ?ask t action ~requested ~orphans request =
+  match resolve t action ~requested ~orphans request with
   | Conflicts cs ->
     log "conflict!";
     OpamGlobals.msg "%s"
