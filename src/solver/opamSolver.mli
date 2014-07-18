@@ -64,7 +64,7 @@ val load_cudf_universe:
     consistency of the initial description. *)
 val resolve :
   ?verbose:bool ->
-  universe -> requested:OpamPackage.Name.Set.t -> atom request
+  universe -> requested:name_set -> orphans:package_set -> atom request
   -> (solution, OpamCudf.conflict) result
 
 (** Keep only the packages that are installable. *)

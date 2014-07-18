@@ -621,11 +621,12 @@ let apply ?ask t action ~requested solution =
       Aborted
   )
 
-let resolve ?(verbose=true) t action ~requested request =
-  OpamSolver.resolve ~verbose (OpamState.universe t action) ~requested request
+let resolve ?(verbose=true) t action ~requested ~orphans request =
+  OpamSolver.resolve ~verbose (OpamState.universe t action)
+    ~requested ~orphans request
 
-let resolve_and_apply ?ask t action ~requested request =
-  match resolve t action ~requested request with
+let resolve_and_apply ?ask t action ~requested ~orphans request =
+  match resolve t action ~requested ~orphans request with
   | Conflicts cs ->
     log "conflict!";
     OpamGlobals.msg "%s"

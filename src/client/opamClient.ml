@@ -685,6 +685,7 @@ module API = struct
       requested,
       action,
       OpamSolution.resolve t action ~requested
+        ~orphans:(full_orphans ++ orphan_versions)
         (preprocess_request t full_orphans orphan_versions
            { wish_install = [];
              wish_remove  = [];
@@ -733,6 +734,7 @@ module API = struct
     requested,
     action,
     OpamSolution.resolve t action ~requested
+      ~orphans:(full_orphans ++ orphan_versions)
       (preprocess_request t full_orphans orphan_versions
          { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
            wish_remove  = [];
@@ -779,11 +781,12 @@ module API = struct
           or install aspcud or another solver on your system.\n";
        OpamGlobals.exit 1)
     else
-    let t, _full_orphans, _orphan_versions = orphans ~transitive:true t in
+    let t, full_orphans, orphan_versions = orphans ~transitive:true t in
     let requested = OpamPackage.Name.Set.empty in
     let action = Upgrade OpamPackage.Set.empty in
     let solution =
       OpamSolution.resolve_and_apply ~ask:true t action ~requested
+        ~orphans:(full_orphans ++ orphan_versions)
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = [];
@@ -1074,6 +1077,7 @@ module API = struct
         let solution =
           OpamSolution.resolve_and_apply ~ask:false t (Init compiler_names)
             ~requested:compiler_names
+            ~orphans:OpamPackage.Set.empty
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages;
@@ -1199,7 +1203,11 @@ module API = struct
         if add_to_roots = Some false || deps_only then
           Install OpamPackage.Name.Set.empty
         else Install names in
-      let solution = OpamSolution.resolve t action ~requested:names request in
+      let solution =
+        OpamSolution.resolve t action
+          ~requested:names
+          ~orphans:(full_orphans ++ orphan_versions)
+          request in
       let solution = match solution with
         | Conflicts cs ->
           log "conflict!";
@@ -1316,7 +1324,9 @@ module API = struct
                (OpamSolver.dependencies
                   ~depopts:true ~installed:true universe to_remove))
         else to_remove in
-      let solution = OpamSolution.resolve_and_apply ?ask t Remove ~requested
+      let solution =
+        OpamSolution.resolve_and_apply ?ask t Remove ~requested
+          ~orphans:(full_orphans ++ orphan_versions)
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [];
@@ -1371,6 +1381,7 @@ module API = struct
 
     let solution =
       OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested
+        ~orphans:(full_orphans ++ orphan_versions)
         request in
 
     OpamSolution.check_solution t solution
