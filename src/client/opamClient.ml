@@ -665,9 +665,13 @@ module API = struct
     in
     if OpamPackage.Set.is_empty to_update then t else (
       OpamGlobals.header_msg "Synchronising pinned packages";
-      let updated = OpamState.update_dev_packages t to_update in
-      if OpamPackage.Set.is_empty updated then t
-      else OpamState.load_state "reload-dev-package-updated"
+      try
+        let updated = OpamState.update_dev_packages t to_update in
+        if OpamPackage.Set.is_empty updated then t
+        else OpamState.load_state "reload-dev-package-updated"
+      with e ->
+        OpamMisc.fatal e;
+        t
     )
 
   let compute_upgrade_t atoms t =
