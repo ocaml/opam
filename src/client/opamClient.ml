@@ -1091,10 +1091,14 @@ module API = struct
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
       not (OpamFilename.exists_dir (OpamPath.packages t.root nv)) in
-    let orphans =
-      OpamPackage.Set.filter has_no_local_data
-        (full_orphans ++ orphan_versions) in
-    let available = lazy (t.packages -- orphans) in
+    let full_orphans, full_orphans_with_local_data =
+      OpamPackage.Set.partition has_no_local_data
+        full_orphans in
+    let orphan_versions, orphan_versions_with_local_data =
+      OpamPackage.Set.partition has_no_local_data
+        orphan_versions in
+    let available = lazy (t.packages -- full_orphans -- orphan_versions) in
+    let orphans = full_orphans ++ orphan_versions in
     let conflict_atoms =
       List.filter
         (fun (name,_ as a) ->
@@ -1110,7 +1114,12 @@ module API = struct
         (OpamMisc.pretty_list
            (List.map OpamFormula.string_of_atom conflict_atoms))
     else
-      t, full_orphans, orphan_versions
+      {t with available_packages = lazy
+                (Lazy.force t.available_packages ++
+                 full_orphans_with_local_data ++
+                 orphan_versions_with_local_data )},
+      full_orphans,
+      orphan_versions
 
   let install_t ?ask atoms add_to_roots deps_only t =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
