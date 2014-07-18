@@ -468,6 +468,10 @@ let parallel_apply t action solution =
   | `Successful () ->
     finalize ();
     OK (actions_list solution.to_process)
+  | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
+    OpamGlobals.error "Aborting";
+    finalize ();
+    raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     finalize ();

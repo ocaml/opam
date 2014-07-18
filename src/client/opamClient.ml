@@ -619,7 +619,7 @@ module API = struct
     let add_wish_install =
       List.rev_append eqnames
         (OpamSolution.atoms_of_packages
-           (t.installed_roots %% (Lazy.force t.available_packages))) in
+           (t.installed_roots %% Lazy.force t.available_packages)) in
     let wish_install = List.rev_append add_wish_install wish_install in
     let wish_upgrade = List.rev_append neqnames wish_upgrade in
     (* Remove orphans *)
@@ -628,8 +628,7 @@ module API = struct
       OpamSolution.eq_atoms_of_packages orphan_versions @
       wish_remove in
     let available =
-      OpamPackage.Set.Op.(
-        Lazy.force t.available_packages -- orphan_versions -- full_orphans) in
+      Lazy.force t.available_packages -- orphan_versions -- full_orphans in
     let still_available atom =
       OpamPackage.Set.exists
         (fun p -> OpamFormula.check atom p)
