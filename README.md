@@ -9,63 +9,27 @@ OPAM is created and maintained by [OCamlPro](http://www.ocamlpro.com).
 To get started, checkout the [Quick
 Install](http://opam.ocaml.org/doc/Quick_Install.html) guide.
 
-## Versioning
-
-For transparency and insight into our release cycle, and for striving
-to maintain backward compatibility, OPAM will be maintained under
-the Semantic Versioning guidelines as much as possible.
-
-Releases will be numbered with the following format:
-
-```
-<major>.<minor>.<patch>
-```
-
-And constructed with the following guidelines:
-
-* Breaking backward compatibility bumps the major (and resets the minor and patch)
-* New additions without breaking backward compatibility bumps the minor (and resets the patch)
-* Bug fixes and misc changes bumps the patch
-
-For more information on SemVer, please visit http://semver.org/.
-
-It is expected than upgrade work transparently between minor releases:
-an OPAM binary with version `x.y.z` should be able to use the OCaml
-packages and compilers created with OPAM version `x.(y-1).0`
-
 ## Compiling this repo
 
 * Make sure you have OCaml and GNU make installed.
 * Run `./configure`
-* Run `make lib-ext` if you don't have the dependencies installed and only need
-  the opam binary (not the libs). This will locally take care of all OCaml
-  dependencies for you.
+* Run `make lib-ext` as advertised by `./configure` if you don't have the
+  dependencies installed and only need the opam binary (not the libs). This will
+  locally take care of all OCaml dependencies for you.
 * Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, cudf, dose 3.1.2
   and re >= 1.2.0 installed. Or run `opam install opam-lib --deps-only` if you
   already have a working instance. Re-run `./configure` once done.
 * Run `make`
 * Run `make install`
-* Run `make libinstall` if needed (this is incompatible with `make lib-ext`)
+* Run `make libinstall` if needed (this is incompatible with `make lib-ext`, as
+  the opam library would conflict with installed versions of the dependencies)
 
 ## Bug tracker
 
-Have a bug or a feature request ?
-[Please open a new issue](https://github.com/ocaml/opam/issues).
-Before opening any issue, please search for existing issues.
-
-## Community
-
-Keep track of development and community news.
-
-* Have a question that's not a feature request or bug report?
-  [Ask on the mailing list](http://lists.ocaml.org/listinfo/infrastructure).
-
-* Chat with fellow OPAMers in IRC. On the `irc.freenode.net` server,
-  in the `#ocaml` or the `#opam` channel.
-
-## Contributing
-
-Please submit all pull requests against the `master` branch.
+Have a bug or a feature request ? Please open an issue on [our
+bug-tracker](https://github.com/ocaml/opam/issues). Please search for existing
+issues before posting, and include the output of `opam config report` and any
+details that may help track down the issue.
 
 ## Documentation
 
@@ -84,10 +48,30 @@ are also available in PDF format in the `doc/tutorials` directory.
 
 #### API, Code Documentation and Developer Manual
 
-The API documentation is available
- [online](http://htmlpreview.github.com/?https://github.com/ocaml/opam/blob/master/doc/html/index.html)
- and under the `doc/html/` directory; the developer manual is in
- the `doc/dev-manual/` directory.
+A more torough technical document describing OPAM and specifying the package
+description format is available in the
+[doc/dev-manual](https://raw.github.com/ocaml/opam/blob/doc/dev-manual/dev-manual.pdf).
+`make doc` will otherwise make the API documentation available under `doc/`.
+
+## Community
+
+Keep track of development and community news.
+
+* Have a question that's not a feature request or bug report?
+  [Ask on the mailing list](http://lists.ocaml.org/listinfo/infrastructure).
+
+* Chat with fellow OPAMers on IRC. On the `irc.freenode.net` server,
+  in the `#ocaml` or the `#opam` channel.
+
+## Contributing
+
+We welcome contributions ! Please use Github's pull-request mechanism against
+the master branch of the [OPAM repository](https://github.com/ocaml/opam). If
+that's not an option for you, you can use `git format-patch` and email TODO.
+
+## Versioning
+
+The release cycle respects [Semantic Versioning](http://semver.org/).
 
 ### Related repositories
 
