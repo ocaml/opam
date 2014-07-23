@@ -602,7 +602,7 @@ let build_options =
   let keep_build_dir =
     mk_flag ["b";"keep-build-dir"]
       "Keep the build directory. \
-       This is equivalent to setting $(b,\\$OPAMKEEPBUILDIR) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to a non-empty string." in
   let no_checksums =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
