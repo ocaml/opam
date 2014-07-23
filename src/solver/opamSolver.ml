@@ -280,7 +280,8 @@ let cycle_conflict univ cycles =
 let resolve ?(verbose=true) universe ~requested ~orphans request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map =
-    cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
+    cudf_versions_map universe
+      (universe.u_available ++ universe.u_installed ++ orphans) in
   let simple_universe =
     load_cudf_universe universe ~version_map
       (universe.u_available ++ universe.u_installed -- orphans) in
