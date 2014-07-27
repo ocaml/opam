@@ -27,35 +27,17 @@ EOF
     exit 1
 }
 
-#
-#       Report an error and exit
-#
-PROGNAME=$0
-error() {
-    echo -n "`basename $PROGNAME`: " >&2
-    for s in "$@"; do echo $s; done
-    exit 1
-}
-
-
-if which wget >/dev/null; then
-    WGETOPTS="--passive-ftp -q -O"
-else
-    WGETOPTS="-OL -o"
-    wget() {
-	shift
-	curl -OL $*
-    }
-fi
-
 TMP=${TMPDIR:-/tmp}
 
 getopam() {
     url="$1"
     opamfile="$2"
 
-    wget $WGETOPTS $TMP/$opamfile "$url/$opamfile" ||
-	error "Couldn't download $url/$opamfile." "There may not yet be a binary release for your architecture or OS, sorry."
+    if which wget >/dev/null; then
+        wget -q -O "$TMP/$opamfile" "$url/$opamfile"
+    else
+        curl -s -L -o "$TMP/$opamfile" "$url/$opamfile"
+    fi
 }
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
