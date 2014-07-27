@@ -242,7 +242,7 @@ module API = struct
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
-      ?(depopts=false) ?(depexts=[])
+      ?(depopts=false) ?depexts
       regexp =
     let t = OpamState.load_state "list" in
     let depends_mode = depends <> [] in
@@ -325,15 +325,16 @@ module API = struct
         t.installed ++
         OpamSolver.installable (OpamState.universe t Depends) in
     let packages =
-      if depexts <> [] then packages ++ depends
+      if depexts <> None then packages ++ depends
       else if depends_mode then packages -- depends
       else packages
     in
     let details =
       details_of_package_regexps t packages ~exact_name ~case_sensitive regexp
     in
-    if depexts <> [] then
-      let required_tags = OpamMisc.StringSet.of_list depexts in
+    match depexts with
+    | Some tags_list ->
+      let required_tags = OpamMisc.StringSet.of_list tags_list in
       let packages =
         OpamPackage.Name.Map.fold (fun name details acc ->
             let nv =
@@ -344,11 +345,12 @@ module API = struct
           details OpamPackage.Set.empty
       in
       if not print_short then
-        OpamGlobals.msg "# Known external dependencies for %s on %s\n"
+        OpamGlobals.msg "# Known external dependencies for %s %s%s\n"
           (OpamMisc.pretty_list @@
            List.map (OpamGlobals.colorise `bold @* OpamPackage.to_string) @@
            OpamPackage.Set.elements packages)
-          (OpamGlobals.colorise `cyan @@ String.concat "," depexts);
+          (if tags_list <> [] then "on " else "")
+          (OpamGlobals.colorise `cyan @@ String.concat "," tags_list);
       let depexts =
         OpamPackage.Set.fold (fun nv acc ->
             let opam = OpamState.opam t nv in
@@ -356,7 +358,14 @@ module API = struct
             | None -> acc
             | Some tags ->
               OpamMisc.StringSetMap.fold (fun tags values acc ->
-                  if OpamMisc.StringSet.for_all
+                  if tags_list = [] then
+                    let line =
+                      Printf.sprintf "%s: %s"
+                        (String.concat " " (OpamMisc.StringSet.elements tags))
+                        (String.concat " " (OpamMisc.StringSet.elements values))
+                    in
+                    OpamMisc.StringSet.add line acc
+                  else if OpamMisc.StringSet.for_all
                       (fun tag -> OpamMisc.StringSet.mem tag required_tags)
                       tags
                   then OpamMisc.StringSet.union acc values
@@ -366,27 +375,27 @@ module API = struct
       in
       OpamGlobals.msg "%s\n" @@
       String.concat "\n" @@ OpamMisc.StringSet.elements depexts
-    else
-    let print_header () =
-      let kind = match filter with
-        | `roots
-        | `installed -> "Installed"
-        | _          -> "Available" in
-      let results =
-        if not depends_mode then "" else
-          Printf.sprintf " %s %s %s"
-            (if recursive_depends then "recursively" else "directly")
-            (if reverse_depends then "depending on" else "required by")
-            (OpamMisc.pretty_list ~last:"or" @@
-             List.map (OpamGlobals.colorise `bold @* OpamPackage.to_string) @@
-             OpamPackage.Set.elements depends)
-      in
-      OpamGlobals.msg "# %s packages%s for %s:\n" kind results
-        (OpamSwitch.to_string t.switch) in
-    if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
-      print_header ();
-    print_list t ~uninst_versions:depends_mode ~short:print_short ~order details;
-    if OpamPackage.Name.Map.is_empty details then OpamGlobals.exit 1
+    | None ->
+      let print_header () =
+        let kind = match filter with
+          | `roots
+          | `installed -> "Installed"
+          | _          -> "Available" in
+        let results =
+          if not depends_mode then "" else
+            Printf.sprintf " %s %s %s"
+              (if recursive_depends then "recursively" else "directly")
+              (if reverse_depends then "depending on" else "required by")
+              (OpamMisc.pretty_list ~last:"or" @@
+               List.map (OpamGlobals.colorise `bold @* OpamPackage.to_string) @@
+               OpamPackage.Set.elements depends)
+        in
+        OpamGlobals.msg "# %s packages%s for %s:\n" kind results
+          (OpamSwitch.to_string t.switch) in
+      if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
+        print_header ();
+      print_list t ~uninst_versions:depends_mode ~short:print_short ~order details;
+      if OpamPackage.Name.Map.is_empty details then OpamGlobals.exit 1
 
   let info ~fields ~raw_opam atoms =
     let t = OpamState.load_state "info" in

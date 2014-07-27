@@ -748,12 +748,14 @@ let list =
   let depopts =
     mk_flag ["depopts"] "Include optional dependencies in dependency requests." in
   let depexts =
-    mk_opt ["e";"external"] "TAGS"
+    mk_opt ["e";"external"] "TAGS" ~vopt:(Some [])
       "Instead of displaying the packages, display their external dependencies \
        that are associated with any subset of the given $(i,TAGS) (OS, \
        distribution, etc.). \
-       Common tags include `debian', `x86', `osx', `homebrew', `source'..."
-      Arg.(list string) [] in
+       Common tags include `debian', `x86', `osx', `homebrew', `source'... \
+       Without $(i,TAGS), display the tags and all associated external \
+       dependencies."
+      Arg.(some & list string) None in
   let list global_options print_short all installed
       installed_roots sort
       depends_on required_by recursive depopts depexts
@@ -777,7 +779,7 @@ let list =
         ~exact_name:true ~case_sensitive:false
         ~depends ~reverse_depends:(depends_on <> [])
         ~recursive_depends:recursive
-        ~depopts ~depexts
+        ~depopts ?depexts
         packages;
       `Ok ()
     | None, _, _ ->
