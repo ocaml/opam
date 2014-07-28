@@ -27,16 +27,32 @@ EOF
     exit 1
 }
 
+#
+#       Report an error and exit
+#
+PROGNAME=$0
+error() {
+    echo -n "`basename $PROGNAME`: " >&2
+    for s in "$@"; do echo $s; done
+    exit 1
+}
+
+
 TMP=${TMPDIR:-/tmp}
 
+dlerror () {
+    error "Couldn't download $url" \
+        "There may not yet be a binary release for your architecture or OS, sorry."
+}
+
 getopam() {
-    url="$1"
-    opamfile="$2"
+    opamfile=$2
+    url=$1/$opamfile
 
     if which wget >/dev/null; then
-        wget -q -O "$TMP/$opamfile" "$url/$opamfile"
+        wget -q -O "$TMP/$opamfile" "$url" || dlerror
     else
-        curl -s -L -o "$TMP/$opamfile" "$url/$opamfile"
+        curl -s -L -o "$TMP/$opamfile" "$url" || dlerror
     fi
 }
 
