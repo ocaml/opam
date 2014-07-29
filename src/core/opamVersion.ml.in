@@ -44,11 +44,17 @@ let current_raw = "@PACKAGE_VERSION@"
 
 let current = of_string current_raw
 
+let current_nopatch =
+  try
+    let i = String.rindex current_raw '.' in
+    of_string (String.sub current_raw 0 i)
+  with Not_found -> current
+
 let message () =
   Printf.printf "\n\
     %s version %s\n\
     \n\
-    Copyright (C) 2012 OCamlPro - INRIA\n\
+    Copyright (C) 2012 OCamlPro - INRIA, 2013-2014 OCamlPro\n\
     \n\
     This is free software; see the source for copying conditions.  There is NO\n\
     warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
