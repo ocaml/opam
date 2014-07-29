@@ -38,24 +38,22 @@ error() {
 }
 
 
-if which wget >/dev/null; then
-    WGETOPTS="--passive-ftp -q -O"
-else
-    WGETOPTS="-OL -o"
-    wget() {
-	shift
-	curl -OL $*
-    }
-fi
-
 TMP=${TMPDIR:-/tmp}
 
-getopam() {
-    url="$1"
-    opamfile="$2"
+dlerror () {
+    error "Couldn't download $url" \
+        "There may not yet be a binary release for your architecture or OS, sorry."
+}
 
-    wget $WGETOPTS $TMP/$opamfile "$url/$opamfile" ||
-	error "Couldn't download $url/$opamfile." "There may not yet be a binary release for your architecture or OS, sorry."
+getopam() {
+    opamfile=$2
+    url=$1/$opamfile
+
+    if which wget >/dev/null; then
+        wget -q -O "$TMP/$opamfile" "$url" || dlerror
+    else
+        curl -s -L -o "$TMP/$opamfile" "$url" || dlerror
+    fi
 }
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
