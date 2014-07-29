@@ -111,7 +111,13 @@ val error : ('a, unit, string, unit) format4 -> 'a
 val warning : ('a, unit, string, unit) format4 -> 'a
 val note : ('a, unit, string, unit) format4 -> 'a
 
+(** Raised to exit the program in a clean way. Parameter is the exit code. *)
 exception Exit of int
+
+(** Raised to [exec()] another binary, after making sure finalisations have been
+    made properly. Parameters as per [Unix.execvpe] *)
+exception Exec of string * string array * string array
+
 exception Package_error of string
 
 val error_and_exit : ('a, unit, string, 'b) format4 -> 'a

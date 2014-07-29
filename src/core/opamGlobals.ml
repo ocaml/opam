@@ -252,6 +252,8 @@ let note fmt =
 
 exception Exit of int
 
+exception Exec of string * string array * string array
+
 exception Package_error of string
 
 let error_and_exit fmt =
