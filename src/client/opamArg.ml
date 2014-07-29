@@ -136,8 +136,11 @@ let apply_global_options o =
   match o.solver_preferences with
   | None -> ()
   | Some prefs ->
-    OpamGlobals.solver_preferences := prefs;
-    OpamGlobals.solver_upgrade_preferences := prefs
+    OpamGlobals.solver_preferences :=
+      { !OpamGlobals.solver_preferences with
+        OpamGlobals.
+        default = prefs;
+        upgrade = prefs; }
 
 (* Build options *)
 type build_options = {
@@ -204,7 +207,7 @@ let help_sections = [
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
   `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
-      The default value is "^OpamGlobals.default_preferences^". \
+      The default value is "^OpamGlobals.(default_preferences.default)^". \
       See also option --criteria");
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
@@ -220,7 +223,7 @@ let help_sections = [
       `opam config env --switch=SWITCH'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
       when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
-      The default value is "^OpamGlobals.default_upgrade_preferences^". \
+      The default value is "^OpamGlobals.(default_preferences.upgrade)^". \
       See also option --criteria");
   `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
@@ -575,8 +578,8 @@ let global_options =
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         A general guide to using solver preferences can be found at \
         $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \
-        The default value is "^OpamGlobals.default_upgrade_preferences^
-       " for upgrades, and "^OpamGlobals.default_preferences^" otherwise.")
+        The default value is "^OpamGlobals.(default_preferences.upgrade)^
+       " for upgrades, and "^OpamGlobals.(default_preferences.default)^" otherwise.")
       Arg.(some string) None in
   let cudf_file =
     mk_opt ~section ["cudf"] "FILENAME"

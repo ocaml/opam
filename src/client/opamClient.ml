@@ -699,7 +699,7 @@ module API = struct
            { wish_install = [];
              wish_remove  = [];
              wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
-             criteria = !OpamGlobals.solver_upgrade_preferences; })
+             criteria = `Upgrade; })
     else
     let to_reinstall =
       OpamPackage.Set.filter
@@ -748,7 +748,7 @@ module API = struct
          { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
            wish_remove  = [];
            wish_upgrade = upgrade_atoms;
-           criteria = !OpamGlobals.solver_upgrade_preferences; })
+           criteria = `Upgrade; })
 
   let upgrade_t ?ask atoms t =
     log "UPGRADE %a"
@@ -760,7 +760,7 @@ module API = struct
       let reasons, chains, _cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
       OpamGlobals.warning
-        "This is a consistency problem with the currently \
+        "There is a consistency problem with the currently \
          installed packages:";
       List.iter (OpamGlobals.msg "  - %s\n") reasons;
       if chains <> [] then (
@@ -799,7 +799,7 @@ module API = struct
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = [];
-          criteria = !OpamGlobals.solver_fixup_preferences; }
+          criteria = `Fixup; }
     in
     OpamSolution.check_solution t solution
 
@@ -1090,7 +1090,7 @@ module API = struct
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages;
-              criteria = !OpamGlobals.solver_preferences; }
+              criteria = `Default; }
         in
         OpamSolution.check_solution t solution;
         update_setup t
@@ -1206,7 +1206,7 @@ module API = struct
           { wish_install = atoms;
             wish_remove  = [];
             wish_upgrade = [];
-            criteria = !OpamGlobals.solver_preferences; }
+            criteria = `Default; }
       in
       let action =
         if add_to_roots = Some false || deps_only then
@@ -1339,7 +1339,7 @@ module API = struct
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [];
-            criteria = !OpamGlobals.solver_preferences; } in
+            criteria = `Default; } in
       OpamSolution.check_solution t solution
     ) else if !nothing_to_do then
       OpamGlobals.msg "Nothing to do.\n"
@@ -1386,7 +1386,7 @@ module API = struct
         { wish_install = OpamSolution.eq_atoms_of_packages reinstall;
           wish_remove  = [];
           wish_upgrade = [];
-          criteria = !OpamGlobals.solver_fixup_preferences; } in
+          criteria = `Fixup; } in
 
     let solution =
       OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested

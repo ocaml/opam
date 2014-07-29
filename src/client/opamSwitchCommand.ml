@@ -221,7 +221,7 @@ let install_packages ~packages switch compiler =
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = to_install;
-          criteria = !OpamGlobals.solver_preferences; } in
+          criteria = `Default; } in
     begin try
         OpamSolution.check_solution t solution;
       with e ->
@@ -380,7 +380,7 @@ let import_t importfile t =
         { wish_install = to_import;
           wish_remove  = [];
           wish_upgrade = [];
-          criteria = !OpamGlobals.solver_preferences; }
+          criteria = `Default; }
     with e ->
       revert_pins ();
       raise e

@@ -232,9 +232,11 @@ type ('a, 'b) result =
   | Success of 'a
   | Conflicts of 'b
 
+type solver_criteria = [ `Default | `Upgrade | `Fixup ]
+
 (** Solver request *)
 type 'a request = {
-  criteria: string;
+  criteria: solver_criteria;
   wish_install: 'a conjunction;
   wish_remove : 'a conjunction;
   wish_upgrade: 'a conjunction;

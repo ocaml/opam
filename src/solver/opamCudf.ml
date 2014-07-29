@@ -160,7 +160,7 @@ let string_of_request r =
     (string_of_vpkgs r.wish_install)
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
-    r.criteria
+    (OpamGlobals.get_solver_criteria r.criteria)
 
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
@@ -470,7 +470,8 @@ let dump_cudf_error ~extern ~version_map univ req =
       !OpamGlobals.root_dir / "log" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
-    dump_cudf_request ~extern (to_cudf univ req) ~version_map req.criteria
+    dump_cudf_request ~extern (to_cudf univ req) ~version_map
+      (OpamGlobals.get_solver_criteria req.criteria)
       (Some cudf_file)
   with
   | Some f -> f
@@ -479,15 +480,33 @@ let dump_cudf_error ~extern ~version_map univ req =
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then begin
-    let criteria = req.criteria in
-    ignore (dump_cudf_request ~extern:true ~version_map cudf_request
-              criteria !OpamGlobals.cudf_file);
-    let cmd = external_solver_command() in
-    try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
-    with e ->
-      OpamMisc.fatal e;
-      OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
-      failwith "opamSolver"
+    let rec attempt () =
+      let criteria = OpamGlobals.get_solver_criteria req.criteria in
+      ignore (dump_cudf_request ~extern:true ~version_map cudf_request
+                criteria !OpamGlobals.cudf_file);
+      let cmd = external_solver_command() in
+      try
+        match
+          Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+        with
+        | Algo.Depsolver.Unsat
+            (Some {Algo.Diagnostic.result=Algo.Diagnostic.Success _})
+        | Algo.Depsolver.Error _
+          when OpamGlobals.set_compat_preferences req.criteria ->
+          log "Solver failed. Retrying with compat criteria.";
+          attempt ()
+        | r -> r
+      with e ->
+        OpamMisc.fatal e;
+        if OpamGlobals.set_compat_preferences req.criteria then
+          (log "Solver failed with %s. Retrying with compat criteria."
+             (Printexc.to_string e);
+           attempt ())
+        else
+          (OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
+           failwith "opamSolver")
+    in
+    attempt ()
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
