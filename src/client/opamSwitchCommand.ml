@@ -235,6 +235,9 @@ let install_packages ~packages switch compiler =
 let install_cont ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
   let comp_dir = OpamPath.Switch.root t.root switch in
+  if OpamFilename.exists_dir comp_dir then
+    OpamGlobals.error_and_exit "The directory %S already exists"
+      (OpamFilename.Dir.to_string comp_dir);
   let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
