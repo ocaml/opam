@@ -501,7 +501,8 @@ type lock = Unix.file_descr * string
 
 let flock ?(read=false) file =
   let max_tries = 5 in
-  let fd = Unix.openfile file [Unix.O_CREAT; Unix.O_RDWR] 0o600 in
+  let fd =
+    Unix.openfile file [Unix.O_CREAT; Unix.O_RDWR; Unix.O_CLOEXEC] 0o600 in
   let lock_op = if read then Unix.F_TRLOCK else Unix.F_TLOCK in
   let rec loop attempt =
     try Unix.lockf fd lock_op 0

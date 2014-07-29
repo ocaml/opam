@@ -205,4 +205,4 @@ let exec command =
     let env = OpamState.get_full_env t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
-  Unix.execvpe cmd args env
+  raise (OpamGlobals.Exec (cmd, args, env))

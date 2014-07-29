@@ -1758,6 +1758,8 @@ let run default commands =
     | _        -> exit 0
   with
   | OpamGlobals.Exit 0 -> ()
+  | OpamGlobals.Exec (cmd,args,env) ->
+    Unix.execvpe cmd args env
   | e                  ->
     if !OpamGlobals.verbose then
       Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
