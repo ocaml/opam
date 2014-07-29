@@ -205,4 +205,8 @@ let exec command =
     let env = OpamState.get_full_env t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
+  let lock =
+    OpamSystem.flock ~read:true
+      (OpamFilename.to_string (OpamPath.lock (OpamPath.root ()))) in
+  OpamSystem.funlock lock;
   Unix.execvpe cmd args env
