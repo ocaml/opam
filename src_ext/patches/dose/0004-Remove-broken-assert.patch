@@ -1,0 +1,26 @@
+From 06c50a5050aa82c41b1c5f614716fad7a1e0b98d Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Tue, 29 Jul 2014 17:53:45 +0200
+Subject: [PATCH] Remove broken assert
+
+A timer may be stopped by an exception, in which case it's not stopped.
+On the next call, the assert fails at timer start.
+---
+ common/util.ml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/common/util.ml b/common/util.ml
+index 707f159..dc64451 100644
+--- a/common/util.ml
++++ b/common/util.ml
+@@ -266,7 +266,6 @@ module Timer = struct
+   let available () = Hashtbl.fold (fun k _ acc -> k::acc) timers []
+ 
+   let start c =
+-    assert(not c.is_in);
+     c.is_in <- true;
+     c.last <- !gettimeofday()
+ 
+-- 
+2.0.1
+

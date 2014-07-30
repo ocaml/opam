@@ -1,4 +1,4 @@
-opam-version: "1.2.0"
+opam-version: "1.2"
 maintainer: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
 authors: ["Thomas Gazagnaire" "Louis Gesbert" "Anil Madhavapeddy" "Fabrice Le Fessant"]
 name: "opam-bin"
@@ -20,7 +20,7 @@ depends: [
   "ocamlgraph"
   "cmdliner"
   "cudf"
-  "dose" {>= "3.2.2"}
+  "dose" {>= "3.2.2+opam"}
   "re" {>= "1.2.0"}
 ]
 # Restrict self-upgrade to "official" versions, just in case

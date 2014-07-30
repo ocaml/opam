@@ -93,29 +93,66 @@ let solver_timeout =
 (*        they will need to replace the old ones when recent external solvers   *)
 (*        will go mainstream                                                    *)
 
-let default_preferences = (* "-count(removed),-notuptodate(request),-count(down),-count(changed)" *)
-  "-removed,-changed,-notuptodate"
-let default_upgrade_preferences = (* "-count(down),-count(removed),-notuptodate(solution),-count(new)" *)
-  "-removed,-notuptodate,-changed"
-let default_fixup_preferences =
-  "-changed"
+type solver_prefs = {
+  default: string;
+  upgrade: string;
+  fixup: string;
+}
 
-let solver_preferences, solver_upgrade_preferences, solver_fixup_preferences =
-  let get s =
-    try Some (OpamMisc.strip (OpamMisc.getenv s)) with Not_found -> None in
-  let prefs = get "OPAMCRITERIA"
-  and upgrade_prefs = get "OPAMUPGRADECRITERIA"
-  and fixup_prefs = get "OPAMFIXUPCRITERIA"
-  in
-  let fixup_prefs =
-    OpamMisc.Option.default default_fixup_preferences fixup_prefs in
-  let upgrade_prefs =
-    OpamMisc.Option.default
-      (OpamMisc.Option.default default_upgrade_preferences prefs)
-      upgrade_prefs in
+let default_preferences = {
+  default = "-count(removed),-notuptodate(request),-count(down),-count(changed)";
+  upgrade = "-count(down),-count(removed),-notuptodate(solution),-count(new)";
+  fixup = "-changed"
+}
+
+let compat_preferences = { (* Not as good, but for older solver versions *)
+  default = "-removed,-notuptodate,-changed";
+  upgrade = "-removed,-notuptodate,-changed";
+  fixup = "-changed";
+}
+
+let prefs_get p = function
+  | `Default -> p.default
+  | `Upgrade -> p.upgrade
+  | `Fixup -> p.fixup
+
+let prefs_with p x = function
+  | `Default -> {p with default = x}
+  | `Upgrade -> {p with upgrade = x}
+  | `Fixup -> {p with fixup = x}
+
+let solver_preferences =
+  let get p var kind =
+    try prefs_with p (OpamMisc.strip (OpamMisc.getenv var)) kind
+    with Not_found -> p in
+  let prefs = default_preferences in
+  let prefs = get prefs "OPAMCRITERIA" `Default in
+  let prefs = get prefs "OPAMUPGRADECRITERIA" `Upgrade in
+  let prefs = get prefs "OPAMFIXUPCRITERIA" `Fixup in
+  ref prefs
+
+let is_set_to_compat_prefs = ref false
+
+(* Solver failed on an action: set prefs to compat_preferences preserving user
+   settings, and return true if a retry is advised *)
+let set_compat_preferences action =
+  if !is_set_to_compat_prefs then false else
+  let is_default action =
+    prefs_get default_preferences action ==
+    prefs_get !solver_preferences action in
+  if not (is_default action) then false else
   let prefs =
-    OpamMisc.Option.default default_preferences prefs in
-  ref prefs, ref upgrade_prefs, ref fixup_prefs
+    List.fold_left (fun prefs action ->
+        if is_default action then prefs
+        else prefs_with prefs (prefs_get !solver_preferences action) action)
+      compat_preferences [ `Default; `Upgrade; `Fixup ]
+  in
+  let retry = prefs_get prefs action <> prefs_get !solver_preferences action in
+  solver_preferences := prefs;
+  is_set_to_compat_prefs := true;
+  retry
+
+let get_solver_criteria action = prefs_get !solver_preferences action
 
 let default_external_solver = "aspcud"
 

@@ -160,7 +160,7 @@ let string_of_request r =
     (string_of_vpkgs r.wish_install)
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
-    r.criteria
+    (OpamGlobals.get_solver_criteria r.criteria)
 
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
@@ -432,7 +432,11 @@ let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.extern
 
 let external_solver_available () = !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
 
-let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
+let external_solver_command ~input ~output ~criteria =
+  [!OpamGlobals.external_solver;
+   OpamFilename.to_string input;
+   OpamFilename.to_string output;
+   criteria]
 
 let solver_calls = ref 0
 
@@ -449,7 +453,11 @@ let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     if extern then
-      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) criteria
+      Printf.fprintf oc "# %s\n"
+        (String.concat " " (
+            external_solver_command
+              ~input:(OpamFilename.of_string "$in")
+              ~output:(OpamFilename.of_string "$out") ~criteria))
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -470,24 +478,80 @@ let dump_cudf_error ~extern ~version_map univ req =
       !OpamGlobals.root_dir / "log" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
-    dump_cudf_request ~extern (to_cudf univ req) ~version_map req.criteria
+    dump_cudf_request ~extern (to_cudf univ req) ~version_map
+      (OpamGlobals.get_solver_criteria req.criteria)
       (Some cudf_file)
   with
   | Some f -> f
   | None -> assert false
 
+let dose_solver_callback ~criteria (_,universe,_ as cudf) =
+  let solver_in =
+    OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
+  let solver_out =
+    OpamFilename.of_string (OpamSystem.temp_file "solver-out") in
+  try
+    let _ =
+      let oc = OpamFilename.open_out solver_in in
+      Cudf_printer.pp_cudf oc cudf;
+      close_out oc
+    in
+    OpamSystem.command
+      (external_solver_command ~input:solver_in ~output:solver_out ~criteria);
+    OpamFilename.remove solver_in;
+    if not (OpamFilename.exists solver_out) then
+      raise (Common.CudfSolver.Error "External solver didn't produce output")
+    else if
+      (let ic = OpamFilename.open_in solver_out in
+       try
+         let i = input_line ic in close_in ic;
+         i = "FAIL"
+       with End_of_file -> close_in ic; false)
+    then
+      raise Common.CudfSolver.Unsat
+    else
+    let cudf_parser =
+      Cudf_parser.from_file (OpamFilename.to_string solver_out) in
+    let r = Cudf_parser.load_solution cudf_parser universe in
+    OpamFilename.remove solver_out;
+    r
+  with e ->
+    OpamFilename.remove solver_in;
+    OpamFilename.remove solver_out;
+    raise e
+
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then begin
-    let criteria = req.criteria in
-    ignore (dump_cudf_request ~extern:true ~version_map cudf_request
-              criteria !OpamGlobals.cudf_file);
-    let cmd = external_solver_command() in
-    try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
-    with e ->
-      OpamMisc.fatal e;
-      OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
-      failwith "opamSolver"
+    let rec attempt () =
+      let criteria = OpamGlobals.get_solver_criteria req.criteria in
+      ignore (dump_cudf_request ~extern:true ~version_map cudf_request
+                criteria !OpamGlobals.cudf_file);
+      try
+        match
+          Algo.Depsolver.check_request_using
+            ~call_solver:(dose_solver_callback ~criteria)
+            ~criteria ~explain:true cudf_request
+        with
+        | Algo.Depsolver.Unsat
+            (Some {Algo.Diagnostic.result=Algo.Diagnostic.Success _})
+        | Algo.Depsolver.Error _
+          when OpamGlobals.set_compat_preferences req.criteria ->
+          log "Solver failed. Retrying with compat criteria.";
+          attempt ()
+        | r -> r
+      with e ->
+        OpamMisc.fatal e;
+        if OpamGlobals.set_compat_preferences req.criteria then
+          (log "Solver failed with %s. Retrying with compat criteria."
+             (Printexc.to_string e);
+           attempt ())
+        else
+          (OpamGlobals.warning "'%s' failed with %s"
+             !OpamGlobals.external_solver (Printexc.to_string e);
+           failwith "opamSolver")
+    in
+    attempt ()
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 

@@ -97,15 +97,13 @@ module Syntax = struct
             (OpamFormat.parse_string @> OpamVersion.of_string) with
             | Some opam_version ->
               if not !OpamGlobals.skip_version_checks &&
-                 OpamVersion.compare opam_version OpamVersion.current > 0 then (
-                OpamGlobals.error
+                 OpamVersion.compare opam_version OpamVersion.current > 0 then
+                OpamGlobals.error_and_exit
                   "Your version of OPAM (%s) is not recent enough to read %s.\n\
                    Upgrade to version %s or later to read this file."
                   (OpamVersion.to_string OpamVersion.current)
                   (OpamMisc.prettify_path f.file_name)
-                  (OpamVersion.to_string opam_version);
-                OpamFormat.bad_format "opam-version"
-              )
+                  (OpamVersion.to_string opam_version)
             | None ->
               if versioned then (
                 OpamGlobals.error
@@ -855,7 +853,7 @@ module X = struct
     }
 
     let empty = {
-      opam_version = OpamVersion.current;
+      opam_version = OpamVersion.current_nopatch;
       name       = None;
       version    = None;
       maintainer = [];
