@@ -113,6 +113,7 @@ val read: t -> string
 
 (** Open a channel from a given file. *)
 val open_in: t -> in_channel
+val open_out: t -> out_channel
 
 (** Removes everything in [filename] if existed. *)
 val remove: t -> unit

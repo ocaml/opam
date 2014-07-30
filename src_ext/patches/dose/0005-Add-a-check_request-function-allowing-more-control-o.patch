@@ -1,0 +1,83 @@
+From 652059c78bf3d745563a725786b3dce2a7529f57 Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Wed, 30 Jul 2014 12:38:45 +0200
+Subject: [PATCH 5/5] Add a check_request function allowing more control over
+ the underlying process
+
+---
+ algo/depsolver.ml  | 27 ++++++++++++++++++---------
+ algo/depsolver.mli |  9 +++++++++
+ 2 files changed, 27 insertions(+), 9 deletions(-)
+
+diff --git a/algo/depsolver.ml b/algo/depsolver.ml
+index f93fb86..754b44e 100644
+--- a/algo/depsolver.ml
++++ b/algo/depsolver.ml
+@@ -369,9 +369,7 @@ let upgrade_constr universe name =
+       let p = List.hd(List.sort ~cmp:Cudf.(>%) pl) 
+       in (name,Some(`Geq,p.Cudf.version))
+ 
+-(** check if a cudf request is satisfiable. we do not care about
+- * universe consistency . We try to install a dummy package *)
+-let check_request ?cmd ?callback ?criteria ?(explain=false) (pre,universe,request) =
++let check_request_using ?call_solver ?callback ?criteria ?(explain=false) (pre,universe,request) =
+   let intSolver ?(explain=false) universe request =
+ 
+     let deps = 
+@@ -413,19 +411,30 @@ let check_request ?cmd ?callback ?criteria ?(explain=false) (pre,universe,reques
+       let criteria_array = Array.of_list (criteria_parser (Option.get criteria)) in
+       minimize ?callback criteria_array universe dummy
+   in
+-  if Option.is_none cmd then begin
++  match call_solver with
++  | None ->
+     let d = intSolver universe request in
+     if Diagnostic.is_solution d then
+       let is = Diagnostic.get_installationset d in
+       Sat (Some pre,Cudf.load_universe is)
+     else
+       if explain then Unsat (Some d) else Unsat None
+-  end else begin
+-    let cmd = Option.get cmd in
+-    let criteria = if Option.is_none criteria then "-removed,-new" else Option.get criteria in
+-    try Sat(CudfSolver.execsolver cmd criteria (pre,universe,request)) with
++  | Some call_solver ->
++    try Sat(call_solver (pre,universe,request)) with
+     |CudfSolver.Unsat when not explain -> Unsat None
+     |CudfSolver.Unsat when explain -> Unsat (Some (intSolver ~explain universe request))
+     |CudfSolver.Error s -> Error s
+-  end
++
++(** check if a cudf request is satisfiable. we do not care about
++ * universe consistency . We try to install a dummy package *)
++let check_request ?cmd ?callback ?criteria ?explain cudf =
++  let call_solver =
++    match cmd with
++    | Some cmd ->
++        let criteria = Option.default "-removed,-new" criteria in
++        Some (CudfSolver.execsolver cmd criteria)
++    | None -> None
++  in
++  check_request_using ?call_solver ?callback ?explain cudf
++
+ ;;
+diff --git a/algo/depsolver.mli b/algo/depsolver.mli
+index 6c6c397..546a140 100644
+--- a/algo/depsolver.mli
++++ b/algo/depsolver.mli
+@@ -135,3 +135,12 @@ type solver_result =
+ *)
+ val check_request : ?cmd : string -> ?callback:(int array * Diagnostic.diagnosis -> unit) -> 
+   ?criteria:string -> ?explain : bool -> Cudf.cudf -> solver_result
++
++(** Same as [check_request], but allows to specify any function to call the
++    external solver. It should raise [Depsolver.Unsat] on failure *)
++val check_request_using:
++  ?call_solver:(Cudf.cudf -> Cudf.preamble option * Cudf.universe) ->
++  ?callback:(int array * Diagnostic.diagnosis -> unit) ->
++  ?criteria:string ->
++  ?explain : bool ->
++  Cudf.cudf -> solver_result
+-- 
+2.0.1
+

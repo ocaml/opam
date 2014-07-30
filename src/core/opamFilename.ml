@@ -176,6 +176,9 @@ let read filename =
 let open_in filename =
   open_in (to_string filename)
 
+let open_out filename =
+  open_out (to_string filename)
+
 let write filename raw =
   OpamSystem.write (to_string filename) raw
 

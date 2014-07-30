@@ -432,7 +432,11 @@ let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.extern
 
 let external_solver_available () = !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
 
-let external_solver_command () = !OpamGlobals.external_solver^" $in $out $pref"
+let external_solver_command ~input ~output ~criteria =
+  [!OpamGlobals.external_solver;
+   OpamFilename.to_string input;
+   OpamFilename.to_string output;
+   criteria]
 
 let solver_calls = ref 0
 
@@ -449,7 +453,11 @@ let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     if extern then
-      Printf.fprintf oc "#%s %s\n" (external_solver_command ()) criteria
+      Printf.fprintf oc "# %s\n"
+        (String.concat " " (
+            external_solver_command
+              ~input:(OpamFilename.of_string "$in")
+              ~output:(OpamFilename.of_string "$out") ~criteria))
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -477,6 +485,41 @@ let dump_cudf_error ~extern ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
+let dose_solver_callback ~criteria (_,universe,_ as cudf) =
+  let solver_in =
+    OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
+  let solver_out =
+    OpamFilename.of_string (OpamSystem.temp_file "solver-out") in
+  try
+    let _ =
+      let oc = OpamFilename.open_out solver_in in
+      Cudf_printer.pp_cudf oc cudf;
+      close_out oc
+    in
+    OpamSystem.command
+      (external_solver_command ~input:solver_in ~output:solver_out ~criteria);
+    OpamFilename.remove solver_in;
+    if not (OpamFilename.exists solver_out) then
+      raise (Common.CudfSolver.Error "External solver didn't produce output")
+    else if
+      (let ic = OpamFilename.open_in solver_out in
+       try
+         let i = input_line ic in close_in ic;
+         i = "FAIL"
+       with End_of_file -> close_in ic; false)
+    then
+      raise Common.CudfSolver.Unsat
+    else
+    let cudf_parser =
+      Cudf_parser.from_file (OpamFilename.to_string solver_out) in
+    let r = Cudf_parser.load_solution cudf_parser universe in
+    OpamFilename.remove solver_out;
+    r
+  with e ->
+    OpamFilename.remove solver_in;
+    OpamFilename.remove solver_out;
+    raise e
+
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then begin
@@ -484,10 +527,11 @@ let call_external_solver ~version_map univ req =
       let criteria = OpamGlobals.get_solver_criteria req.criteria in
       ignore (dump_cudf_request ~extern:true ~version_map cudf_request
                 criteria !OpamGlobals.cudf_file);
-      let cmd = external_solver_command() in
       try
         match
-          Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+          Algo.Depsolver.check_request_using
+            ~call_solver:(dose_solver_callback ~criteria)
+            ~criteria ~explain:true cudf_request
         with
         | Algo.Depsolver.Unsat
             (Some {Algo.Diagnostic.result=Algo.Diagnostic.Success _})
@@ -503,7 +547,8 @@ let call_external_solver ~version_map univ req =
              (Printexc.to_string e);
            attempt ())
         else
-          (OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
+          (OpamGlobals.warning "'%s' failed with %s"
+             !OpamGlobals.external_solver (Printexc.to_string e);
            failwith "opamSolver")
     in
     attempt ()
