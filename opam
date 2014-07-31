@@ -13,6 +13,7 @@ build: [
   [make "opam"]
   ["sh" "-c" "echo %{version}% > \"%{root}%/opam.version\""]
   ["install" "--backup" "-m" "755" "src/opam" "%{root}%/opam"]
+  [make "libinstall"]
 ]
 remove: ["rm" "-f" "%{root}%/opam" "%{root}%/opam.version"]
 depends: [
