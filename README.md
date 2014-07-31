@@ -16,9 +16,10 @@ Install](http://opam.ocaml.org/doc/Quick_Install.html) guide.
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed and only need the opam binary (not the libs). This will
   locally take care of all OCaml dependencies for you.
-* Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, cudf, dose 3.1.2
-  and re >= 1.2.0 installed. Or run `opam install opam-lib --deps-only` if you
-  already have a working instance. Re-run `./configure` once done.
+* Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, cudf,
+  dose 3.2.2+opam and re >= 1.2.0 installed. Or run `opam install
+  opam-lib --deps-only` if you already have a working instance. Re-run
+  `./configure` once done.
 * Run `make`
 * Run `make install`
 * Run `make libinstall` if needed (this is incompatible with `make lib-ext`, as
