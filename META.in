@@ -1,22 +1,25 @@
-version = "@VERSION@"
+version = "@PACKAGE_VERSION@"
 description = "OCaml Package Manager base API"
 requires = "dose, cudf, ocamlgraph, unix, re, re.str, re.glob"
 archive(byte) = "opam-core.cma"
 archive(native) = "opam-core.cmxa"
 
 package "repositories" (
+  version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-repositories.cma"
   archive(native) = "opam-repositories.cmxa"
   requires = "opam"
 )
 
 package "solver" (
+  version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-solver.cma"
   archive(native) = "opam-solver.cmxa"
   requires = "opam"
 )
 
 package "client" (
+  version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-client.cma"
   archive(native) = "opam-client.cmxa"
   requires = "opam, opam.solver, opam.repositories, cmdliner"
