@@ -1242,20 +1242,35 @@ module X = struct
     let template nv =
       let t = create nv in
       let maintainer =
-        let email =
-          try Some (Sys.getenv "EMAIL") with Not_found -> None in
-        try
-          let open Unix in
-          let pw = getpwuid (getuid ()) in
-          let email = match email with
-            | Some e -> e
-            | None -> pw.pw_name^"@"^gethostname () in
-          match OpamMisc.split pw.pw_gecos ',' with
-          | name::_ -> [Printf.sprintf "%s <%s>" name email]
-          | _ -> [email]
-        with Not_found -> match email with
-          | Some e -> [e]
-          | None -> []
+        let from_git = try
+            match
+              OpamSystem.read_command_output
+                ["git"; "config"; "--get"; "user.name"],
+              OpamSystem.read_command_output
+                ["git"; "config"; "--get"; "user.email"]
+            with
+            | [name], [email] ->
+              Some [Printf.sprintf "%s <%s>" name email]
+            | _ -> raise Not_found
+          with e -> OpamMisc.fatal e; None
+        in
+        match from_git with
+        | Some u -> u
+        | None ->
+          let email =
+            try Some (Sys.getenv "EMAIL") with Not_found -> None in
+          try
+            let open Unix in
+            let pw = getpwuid (getuid ()) in
+            let email = match email with
+              | Some e -> e
+              | None -> pw.pw_name^"@"^gethostname () in
+            match OpamMisc.split pw.pw_gecos ',' with
+            | name::_ -> [Printf.sprintf "%s <%s>" name email]
+            | _ -> [email]
+          with Not_found -> match email with
+            | Some e -> [e]
+            | None -> []
       in
       { t with
         maintainer;
