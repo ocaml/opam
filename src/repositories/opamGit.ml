@@ -67,7 +67,7 @@ module Git = struct
 
   let get_commits repo =
     match snd repo.repo_address with
-    | None -> [ "refs/remotes/origin/master" ]
+    | None -> [ "FETCH_HEAD" ]
     | Some c -> [ "refs/remotes/origin/"^c;
                   "refs/tags/"^c;
                   c ]
@@ -81,7 +81,8 @@ module Git = struct
           List.fold_left (fun ok commit -> if ok then ok else merge commit)
             false (get_commits repo) in
         if not ok then OpamSystem.internal_error "Unknown revision: %s."
-            (match snd repo.repo_address with Some a -> a | None -> "master")
+            (match snd repo.repo_address with Some a -> a
+                                            | None -> "FETCH_HEAD")
       )
 
   let diff repo =
@@ -100,7 +101,8 @@ module Git = struct
         | Some _  -> true
         | None    ->
           OpamSystem.internal_error "Unknown revision: %s."
-            (match snd repo.repo_address with Some a -> a | None -> "master")
+            (match snd repo.repo_address with Some a -> a
+                                            | None -> "FETCH_HEAD")
     )
 
 end
