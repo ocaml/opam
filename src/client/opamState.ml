@@ -2189,7 +2189,7 @@ let update_setup_interactive t shell dot_profile =
        OPAM manually (instructions will be displayed) or launch the automatic setup\n\
        later by running:\n\
       \n\
-       \   `opam config setup -a`.\n\
+       \   opam config setup -a\n\
        \n\
       \n\
        Do you want OPAM to modify %s and ~/.ocamlinit?\n\
