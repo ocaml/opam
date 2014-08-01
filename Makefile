@@ -52,13 +52,13 @@ LIBINSTALL_PREFIX ?= $(prefix)
 
 libinstall:
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
-	src/opam-installer --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) --name opam opam-lib.install
+	src/opam-installer --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) opam-lib.install
 
 install:
 	src/opam-installer --prefix $(DESTDIR)$(prefix) opam.install
 
 libuninstall:
-	src/opam-installer -u --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) --name opam opam-lib.install
+	src/opam-installer -u --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) opam-lib.install
 
 uninstall:
 	src/opam-installer -u --prefix $(DESTDIR)$(prefix) opam.install
