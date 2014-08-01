@@ -428,15 +428,40 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver)
+let external_solver_available =
+  let exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver) in
+  fun () ->
+  !OpamGlobals.use_external_solver && Lazy.force exists
 
-let external_solver_available () = !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
-
-let external_solver_command ~input ~output ~criteria =
-  [!OpamGlobals.external_solver;
-   OpamFilename.to_string input;
-   OpamFilename.to_string output;
-   criteria]
+let external_solver_command =
+  let run = lazy (
+    let cmd = !OpamGlobals.external_solver in
+    let is_old_aspcud =
+      (* Older aspcud exe is a shell script. Run it through 'bash -e' to be sure
+         we catch all errors *)
+      match OpamSystem.find_in_path cmd with
+      | None -> false (* ?? *)
+      | Some dir ->
+        let f = Filename.concat dir cmd in
+        try
+          let ic = open_in_bin f in
+          let bash_shebang = "#!/bin/bash" in
+          let len = String.length bash_shebang in
+          let buf = String.create len in
+          really_input ic buf 0 len;
+          close_in ic;
+          buf = bash_shebang
+        with e -> OpamMisc.fatal e; false
+    in
+    if is_old_aspcud then ["/bin/bash"; "-e"; cmd]
+    else [cmd]
+  ) in
+  fun ~input ~output ~criteria ->
+    Lazy.force run @ [
+      OpamFilename.to_string input;
+      OpamFilename.to_string output;
+      criteria
+    ]
 
 let solver_calls = ref 0
 
