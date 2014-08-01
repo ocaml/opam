@@ -1,8 +1,16 @@
 language: c
 script: bash -ex .travis-ci.sh
+os:
+- linux
+- osx
 env:
   - OCAML_VERSION=4.01.0 OPAM_TEST=1 EXTERNAL_SOLVER=
   - OCAML_VERSION=4.01.0 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
   - OCAML_VERSION=4.01.0 OPAM_TEST=0
   - OCAML_VERSION=4.00.1 OPAM_TEST=0
   - OCAML_VERSION=3.12.1 OPAM_TEST=0
+notifications:
+  email:
+    - opam-commits@lists.ocaml.org
+  irc:
+    - "chat.freenode.net#opam"
