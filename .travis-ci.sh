@@ -14,7 +14,7 @@ install_on_linux () {
 
   echo "yes" | sudo add-apt-repository ppa:$ppa
   sudo apt-get update -qq
-  sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra time $EXTERNAL_SOLVER
+  sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra time $EXTERNAL_SOLVER ${OPAM_TEST:+opam}
 }
 
 install_on_osx () {
@@ -26,7 +26,9 @@ install_on_osx () {
   4.02.0) brew install ocaml --HEAD ;;
   *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
   esac
-  brew install opam $EXTERNAL_SOLVER
+  if [ -n "$EXTERNAL_SOLVER$OPAM_TEST" ]; then
+      brew install $EXTERNAL_SOLVER ${OPAM_TEST:+opam}
+  fi
 }
 
 case $TRAVIS_OS_NAME in
