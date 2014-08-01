@@ -950,9 +950,11 @@ module API = struct
     | _, _, Success upgrade ->
       let stats = OpamSolver.stats upgrade in
       if OpamSolution.sum stats > 0 then
-        (OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
-         OpamGlobals.msg
-           "You can now run 'opam upgrade' to upgrade your system.\n")
+        OpamGlobals.msg
+          "\nUpdates available for %s, apply them with 'opam upgrade':\n\
+           === %s ===\n"
+          (OpamSwitch.to_string t.switch)
+          (OpamSolver.string_of_stats stats)
     | _, _, Conflicts cs ->
       let reasons, chains, _cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
