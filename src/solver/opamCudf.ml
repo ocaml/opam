@@ -500,7 +500,7 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
       (external_solver_command ~input:solver_in ~output:solver_out ~criteria);
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
-      raise (Common.CudfSolver.Error "External solver didn't produce output")
+      raise (Common.CudfSolver.Error "no output")
     else if
       (let ic = OpamFilename.open_in solver_out in
        try
@@ -510,10 +510,15 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     then
       raise Common.CudfSolver.Unsat
     else
-    let cudf_parser =
-      Cudf_parser.from_file (OpamFilename.to_string solver_out) in
-    let r = Cudf_parser.load_solution cudf_parser universe in
+    let r =
+      Cudf_parser.load_solution_from_file
+        (OpamFilename.to_string solver_out) universe in
     OpamFilename.remove solver_out;
+    if Cudf.universe_size (snd r) = 0 &&
+       not !OpamGlobals.no_base_packages &&
+       Cudf.universe_size universe <> 0
+    then
+      raise (Common.CudfSolver.Error "empty solution");
     r
   with e ->
     OpamFilename.remove solver_in;
