@@ -26,9 +26,7 @@ install_on_osx () {
   4.02.0) brew install ocaml --HEAD ;;
   *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
   esac
-  if [ "$EXTERNAL_SOLVER" != "" ]; then
-    brew install $EXTERNAL_SOLVER
-  fi
+  brew install opam $EXTERNAL_SOLVER
 }
 
 case $TRAVIS_OS_NAME in
