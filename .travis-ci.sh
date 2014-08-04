@@ -2,18 +2,37 @@
 git config --global user.email "travis@example.com"
 git config --global user.name "Travis CI"
 
-# Install OCaml and OPAM PPAs
-case "$OCAML_VERSION" in
-3.12.1) ppa=avsm/ocaml312+opam11 ;;
-4.00.1) ppa=avsm/ocaml40+opam11 ;;
-4.01.0) ppa=avsm/ocaml41+opam11 ;;
-*) echo Unknown $OCAML_VERSION; exit 1 ;;
-esac
+install_on_linux () {
+  # Install OCaml PPAs
+  case "$OCAML_VERSION" in
+  3.12.1) ppa=avsm/ocaml312+opam11 ;;
+  4.00.1) ppa=avsm/ocaml40+opam11 ;;
+  4.01.0) ppa=avsm/ocaml41+opam11 ;;
+  4.02.0) ppa=avsm/ocaml42+opam11 ;;
+  *) echo Unknown $OCAML_VERSION; exit 1 ;;
+  esac
 
-# Install OCaml
-echo "yes" | sudo add-apt-repository ppa:$ppa
-sudo apt-get update -qq
-sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra time
+  echo "yes" | sudo add-apt-repository ppa:$ppa
+  sudo apt-get update -qq
+  sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra time $EXTERNAL_SOLVER
+}
+
+install_on_osx () {
+  curl -OL "http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.6.dmg"
+  sudo hdiutil attach XQuartz-2.7.6.dmg
+  sudo installer -verbose -pkg /Volumes/XQuartz-2.7.6/XQuartz.pkg -target /
+  case "$OCAML_VERSION" in
+  4.01.0) brew install ocaml;;
+  4.02.0) brew install ocaml --HEAD ;;
+  *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
+  esac
+  brew install opam $EXTERNAL_SOLVER
+}
+
+case $TRAVIS_OS_NAME in
+osx) install_on_osx ;;
+linux) install_on_linux ;;
+esac
 
 echo OCaml version
 ocaml -version
@@ -23,7 +42,6 @@ export OCAMLRUNPARAM=b
 
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
-    sudo apt-get install opam $EXTERNAL_SOLVER
     opam init
     eval `opam config env`
     opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re
