@@ -70,14 +70,15 @@ module Make (VCS: VCS) = struct
       | Some _ -> OpamGlobals.note "Skipping checksum for dev package %s"
                     (OpamPackage.to_string package) in
     let repo = repo dirname remote_url in
-    OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamPackage.to_string package)
+    OpamGlobals.msg "[%s] \tFetching %s\n"
+      (OpamGlobals.colorise `green (OpamPackage.to_string package))
       (string_of_address remote_url);
     download_dir (pull_repo repo)
 
   let pull_repo repo =
-    OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
+    OpamGlobals.msg "[%s] \tFetching %s\n"
+      (OpamGlobals.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address);
     ignore (pull_repo repo)
 
@@ -86,8 +87,9 @@ module Make (VCS: VCS) = struct
     let basename = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname basename in
     if OpamFilename.exists local_file then (
-      OpamGlobals.msg "%-10s Using %s\n"
-        (OpamRepositoryName.to_string repo.repo_name)
+      OpamGlobals.msg "[%s] \tUsing %s\n"
+        (OpamGlobals.colorise `green
+           (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.prettify local_file);
       Up_to_date local_file
     ) else

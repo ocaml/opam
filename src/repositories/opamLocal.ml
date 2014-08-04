@@ -90,8 +90,9 @@ module B = struct
 
   let pull_repo repo =
     log "pull-repo";
-    OpamGlobals.msg "%-10s Synchronizing with %s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
+    OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+      (OpamGlobals.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address);
     ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.remote_repo repo));
     List.iter
@@ -117,14 +118,15 @@ module B = struct
 
   let pull_file package local_dirname remote_filename =
     if OpamFilename.exists remote_filename then
-      OpamGlobals.msg "%-10s Synchronizing with %s\n"
-        (OpamPackage.to_string package)
+      OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+        (OpamGlobals.colorise `green
+           (OpamPackage.to_string package))
         (OpamFilename.to_string remote_filename);
     pull_file_quiet local_dirname remote_filename
 
   let pull_dir package local_dirname remote_dirname =
-    OpamGlobals.msg "%-10s Synchronizing with %s\n"
-      (OpamPackage.to_string package)
+    OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+      (OpamGlobals.colorise `green (OpamPackage.to_string package))
       (OpamFilename.Dir.to_string remote_dirname);
     pull_dir_quiet local_dirname remote_dirname
 
@@ -143,8 +145,9 @@ module B = struct
 
   let pull_archive repo filename =
     if OpamFilename.exists filename then
-      OpamGlobals.msg "%-10s Synchronizing with %s\n"
-        (OpamRepositoryName.to_string repo.repo_name)
+      OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+        (OpamGlobals.colorise `green
+           (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.to_string filename);
     let local_dir = OpamPath.Repository.archives_dir repo in
     OpamFilename.mkdir local_dir;
