@@ -28,7 +28,7 @@ val to_string: filter -> string
     is not defined in the given environment. *)
 val contents_of_variable: env -> full_variable -> variable_contents option
 
-(** Return the contents of a variable. Fail if an exception if the
+(** Return the contents of a variable. Raises [Not_found] if the
     variable is not defined in the given environment. *)
 val contents_of_variable_exn: env -> full_variable -> variable_contents
 
@@ -38,7 +38,8 @@ val substitute_string: env -> string -> string
 (** Substitute a file. *)
 val substitute_file: env -> basename -> unit
 
-(** Evaluate a filter. *)
+(** Evaluate a filter. May raise Not_found if the filter contains undefined
+    variables *)
 val eval: env -> filter -> bool
 
 (** Evaluate an optional filter. *)

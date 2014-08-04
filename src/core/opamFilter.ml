@@ -68,8 +68,9 @@ let contents_of_variable env v =
 let contents_of_variable_exn env var =
   match contents_of_variable env var with
   | None  ->
-    OpamGlobals.error_and_exit "%s is not a valid variable."
-      (OpamVariable.Full.to_string var)
+    OpamGlobals.error "%s is not a valid variable."
+      (OpamVariable.Full.to_string var);
+    raise Not_found
   | Some c -> c
 
 let substitute_ident env i =
@@ -81,7 +82,13 @@ let substitute_file env f =
   let f = OpamFilename.of_basename f in
   let src = OpamFilename.add_extension f "in" in
   let contents = OpamFile.Subst.read src in
-  let newcontents = OpamFile.Subst.replace contents (contents_of_variable_exn env) in
+  let newcontents =
+    OpamFile.Subst.replace contents
+      (fun v ->
+         try contents_of_variable_exn env v
+         with Not_found ->
+           OpamGlobals.msg "In %s" (OpamFilename.to_string f);
+           OpamVariable.S ("%{"^OpamVariable.Full.to_string v^"}%")) in
   OpamFile.Subst.write f newcontents
 
 (* Substitue the string contents *)
@@ -109,7 +116,8 @@ let eval_to_string env = function
   | FIdent s  -> string_of_variable_contents s (substitute_ident env s)
   | f         -> filter_type_error f "bool" "string"
 
-let rec eval env = function
+let rec eval env v =
+  try match v with
   | FBool b    -> b
   | FString s  -> substitute_string env s = "true"
   | FIdent s   -> bool_of_variable_contents s (substitute_ident env s)
@@ -120,12 +128,13 @@ let rec eval env = function
   | FOr(e,f)  -> eval env e || eval env f
   | FAnd(e,f) -> eval env e && eval env f
   | FNot e    -> not (eval env e)
+  with Not_found -> false (* XXX: need to implement correct "undef" value *)
 
 let eval_opt env = function
   | None   -> true
   | Some f ->
     try eval env f
-    with e -> OpamMisc.fatal e; false
+    with Not_found -> false
 
 let arg env (a,f) =
   if eval_opt env f then

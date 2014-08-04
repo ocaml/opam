@@ -155,7 +155,7 @@ let prepare_package_build t nv =
         then f base
       ) patches in
 
-  if !OpamGlobals.dryrun then
+  if !OpamGlobals.dryrun || !OpamGlobals.fake then
     iter_patches (fun base ->
         OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base))
   else
@@ -179,7 +179,14 @@ let prepare_package_build t nv =
       let root = OpamPath.Switch.build t.root t.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
       OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
-      OpamFilename.patch patch p_build);
+      try OpamFilename.patch patch p_build
+      with e ->
+        OpamMisc.fatal e;
+        OpamGlobals.error "Could not apply patch to %s (%s in %s)"
+          (OpamPackage.to_string nv)
+          (OpamFilename.Base.to_string base)
+          (OpamFilename.Dir.to_string root);
+        raise e);
 
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the

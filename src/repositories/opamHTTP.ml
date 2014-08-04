@@ -60,8 +60,9 @@ let make_state ~download_index repo =
         if OpamFilename.exists local_index_file then
           OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
         try
-	  OpamGlobals.msg "%-10s Downloading %s\n"
-	    (OpamRepositoryName.to_string repo.repo_name)
+	  OpamGlobals.msg "[%s] \tDownloading %s\n"
+	    (OpamGlobals.colorise `green
+               (OpamRepositoryName.to_string repo.repo_name))
 	    (OpamFilename.to_string remote_index_file);
           let file =
             OpamFilename.download ~compress:true ~overwrite:false
@@ -141,8 +142,9 @@ module B = struct
       let state = make_state ~download_index:true repo in
       try
         (* Download index.tar.gz *)
-	OpamGlobals.msg "%-10s Downloading %s\n"
-	  (OpamRepositoryName.to_string repo.repo_name)
+	OpamGlobals.msg "[%s] \tDownloading %s\n"
+	  (OpamGlobals.colorise `green
+             (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.to_string state.remote_index_archive);
         let file =
           OpamFilename.download ~overwrite:true
@@ -208,13 +210,14 @@ module B = struct
        match checksum with
        | None   -> false
        | Some c -> OpamFilename.digest local_file = c then (
-      OpamGlobals.msg "%-10s %s is in the local cache, using it.\n"
-        (OpamPackage.to_string package) (OpamFilename.Base.to_string base);
+      OpamGlobals.msg "[%s] \t%s is in the local cache, using it.\n"
+        (OpamGlobals.colorise `green (OpamPackage.to_string package))
+        (OpamFilename.Base.to_string base);
       Result (F local_file)
     )
     else (
-      OpamGlobals.msg "%-10s Downloading %s\n"
-        (OpamPackage.to_string package)
+      OpamGlobals.msg "[%s] \tDownloading %s\n"
+        (OpamGlobals.colorise `green (OpamPackage.to_string package))
         (OpamFilename.to_string filename);
       try
         let local_file = OpamFilename.download ~overwrite:true filename dirname in
@@ -233,8 +236,9 @@ module B = struct
       if is_up_to_date state local_file then
         Up_to_date local_file
       else (
-	OpamGlobals.msg "%-10s Downloading %s\n"
-	  (OpamRepositoryName.to_string repo.repo_name)
+	OpamGlobals.msg "[%s] \tDownloading %s\n"
+	  (OpamGlobals.colorise `green
+             (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.prettify filename);
 	curl ~remote_file:filename ~local_file;
         Result local_file
