@@ -51,7 +51,8 @@ module Git = struct
             [ [ "git" ; "remote" ; "rm" ; "origin" ];
               [ "git" ; "remote" ; "add" ; "origin"; fst repo.repo_address ] ]
         );
-        OpamSystem.command [ "git" ; "fetch" ; "origin" ]
+        let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
+        OpamSystem.command [ "git" ; "fetch" ; "origin"; branch ]
       )
 
   let revision repo =
