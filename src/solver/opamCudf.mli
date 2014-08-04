@@ -202,3 +202,7 @@ val packages: Cudf.universe -> Cudf.package list
 
 (** {2 External solver} *)
 val external_solver_available: unit -> bool
+
+(** Runs a test to check the version of the optimisation criteria accepted by
+    the external solver. Result is cached for subsequent queries. *)
+val check_cudf_version: unit -> [`Compat | `Latest]

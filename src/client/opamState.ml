@@ -1335,6 +1335,23 @@ let load_state ?(save_cache=true) call_site =
       config
     ) else
       config in
+  let solver_prefs =
+    let config_crit =
+      !OpamGlobals.solver_preferences @ OpamFile.Config.criteria config in
+    let f kind =
+      kind, try List.assoc kind config_crit
+      with Not_found ->
+        match OpamCudf.check_cudf_version () with
+        | `Latest -> OpamGlobals.default_preferences kind
+        | `Compat -> OpamGlobals.compat_preferences kind
+    in
+    [f `Default; f `Upgrade; f `Fixup]
+  in
+  OpamGlobals.solver_preferences := solver_prefs;
+  OpamGlobals.external_solver :=
+    (match !OpamGlobals.external_solver with
+     | None -> OpamFile.Config.solver config
+     | some -> some);
 
   let opams =
     let file = OpamPath.state_cache root in

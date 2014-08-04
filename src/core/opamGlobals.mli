@@ -55,21 +55,20 @@ val download_retry : int
 val cudf_file : string option ref
 val solver_timeout : float
 
-type solver_prefs = {
-  default: string;
-  upgrade: string;
-  fixup: string;
-}
-val default_preferences : solver_prefs
-val solver_preferences : solver_prefs ref
-(** Call if the solver didn't handle the advanced preferences. Returns
-    true if the preferences have been changed and you should retry *)
-val set_compat_preferences : [ `Default | `Upgrade | `Fixup ] -> bool
+type solver_criteria = [ `Default | `Upgrade | `Fixup ]
+val default_preferences : solver_criteria -> string 
+val compat_preferences : solver_criteria -> string
+
+(** Solver preference bindings. Used with List.assoc: first one wins *)
+val solver_preferences : (solver_criteria * string) list ref
+
 (** Get the currently configured solver criteria as a string *)
 val get_solver_criteria : [ `Default | `Upgrade | `Fixup ] -> string
 
 val default_external_solver : string
-val external_solver : string ref
+val external_solver : string option ref
+val get_external_solver : unit -> string
+
 val default_repository_name : string
 val default_repository_address : string
 (* val default_build_command : string list list *)

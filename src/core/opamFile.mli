@@ -53,6 +53,8 @@ module Config: sig
   val create:
     switch ->
     repository_name list ->
+    ?criteria:(OpamTypes.solver_criteria * string) list ->
+    ?solver:string ->
     int ->
     int ->
     t
@@ -65,6 +67,10 @@ module Config: sig
 
   (** Update opam-version to the current one *)
   val with_current_opam_version: t -> t
+
+  val with_criteria: t -> (solver_criteria * string) list -> t
+
+  val with_solver: t -> string option -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -80,6 +86,10 @@ module Config: sig
 
   (** Return the number of download jobs *)
   val dl_jobs: t -> int
+
+  val criteria: t -> (solver_criteria * string) list
+
+  val solver: t -> string option
 
 end
 

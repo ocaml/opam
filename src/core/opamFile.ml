@@ -704,21 +704,28 @@ module X = struct
       switch        : switch;
       jobs          : int;
       dl_jobs       : int;
+      criteria      : (solver_criteria * string) list;
+      solver        : string option;
     }
 
     let with_repositories t repositories = { t with repositories }
     let with_switch t switch = { t with switch }
     let with_current_opam_version t = { t with opam_version = OpamVersion.current }
+    let with_criteria t criteria = { t with criteria }
+    let with_solver t solver = { t with solver }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let switch t = t.switch
     let jobs t = t.jobs
     let dl_jobs t = t.dl_jobs
+    let criteria t = t.criteria
+    let solver t = t.solver
 
-    let create switch repositories jobs dl_jobs =
+    let create switch repositories ?(criteria=[]) ?solver jobs dl_jobs =
       { opam_version = OpamVersion.current;
-        repositories ; switch ; jobs ; dl_jobs}
+        repositories ; switch ; jobs ; dl_jobs ;
+        criteria ; solver }
 
     let empty = {
       opam_version = OpamVersion.current;
@@ -726,6 +733,8 @@ module X = struct
       switch = OpamSwitch.of_string "<empty>";
       jobs = OpamGlobals.default_jobs;
       dl_jobs = OpamGlobals.default_dl_jobs;
+      criteria = [];
+      solver = None;
     }
 
     let s_opam_version = "opam-version"
@@ -736,6 +745,10 @@ module X = struct
 
     let s_jobs = "jobs"
     let s_dl_jobs = "download-jobs"
+    let s_criteria = "solver-criteria"
+    let s_upgrade_criteria = "solver-upgrade-criteria"
+    let s_fixup_criteria = "solver-fixup-criteria"
+    let s_solver = "solver"
 
     let s_cores = "cores"
 
@@ -748,6 +761,10 @@ module X = struct
       s_switch;
       s_jobs;
       s_dl_jobs;
+      s_criteria;
+      s_upgrade_criteria;
+      s_fixup_criteria;
+      s_solver;
 
       (* this fields are no longer useful, but we keep it for backward
          compatibility *)
@@ -793,9 +810,43 @@ module X = struct
                 OpamFormat.parse_int with
         | Some i -> i
         | None -> OpamGlobals.default_dl_jobs in
-      { opam_version; repositories; switch; jobs; dl_jobs; }
+
+      let criteria =
+        let crit kind fld acc =
+          match
+            OpamFormat.assoc_option s.file_contents fld OpamFormat.parse_string
+          with
+          | Some c -> (kind,c)::acc
+          | None -> acc in
+        []
+        |> crit `Fixup s_fixup_criteria
+        |> crit `Upgrade s_upgrade_criteria
+        |> crit `Default s_criteria
+      in
+
+      let solver =
+        OpamFormat.assoc_option s.file_contents s_solver OpamFormat.parse_string
+      in
+      { opam_version; repositories; switch; jobs; dl_jobs;
+        criteria; solver }
 
     let to_string filename t =
+      let criteria =
+        let mk kind s acc =
+          try
+            let c = List.assoc kind t.criteria in
+            OpamFormat.make_variable (s, OpamFormat.make_string c) :: acc
+          with Not_found -> acc in
+        []
+        |> mk `Fixup s_fixup_criteria
+        |> mk `Upgrade s_upgrade_criteria
+        |> mk `Default s_criteria
+      in
+      let solver = match t.solver with
+        | None -> []
+        | Some s ->
+          [OpamFormat.make_variable (s_solver, OpamFormat.make_string s)]
+      in
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
@@ -809,7 +860,8 @@ module X = struct
           OpamFormat.make_variable (s_jobs , OpamFormat.make_int t.jobs);
           OpamFormat.make_variable (s_dl_jobs , OpamFormat.make_int t.dl_jobs);
           OpamFormat.make_variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
-        ]
+        ] @ criteria
+          @ solver
       } in
       Syntax.to_string [] s
   end
