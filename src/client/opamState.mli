@@ -134,7 +134,7 @@ val update_setup: state -> user_config option -> global_config option -> unit
 val contents_of_variable: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
   full_variable -> variable_contents option
 
-(** Compute the value of a variable. Raise [Exit] if the variable is
+(** Compute the value of a variable. Raise [Not_found] if the variable is
     not valid. *)
 val contents_of_variable_exn: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
   full_variable -> variable_contents
