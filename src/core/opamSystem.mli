@@ -133,6 +133,9 @@ type command = string list
 (** Test whether a command exists in the environment. *)
 val command_exists: ?env:string array -> string -> bool
 
+(** Find directory containing a file by the name [name] in the PATH *)
+val find_in_path: string -> string option
+
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
 val command: ?verbose:bool -> ?env:string array -> ?name:string ->
