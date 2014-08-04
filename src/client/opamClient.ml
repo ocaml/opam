@@ -1046,7 +1046,8 @@ module API = struct
         (* Create ~/.opam/config *)
         let config =
           OpamFile.Config.create switch [repo.repo_name] jobs
-            OpamGlobals.default_dl_jobs in
+            OpamGlobals.default_dl_jobs
+        in
         OpamFile.Config.write config_f config;
 
         (* Create ~/.opam/aliases *)

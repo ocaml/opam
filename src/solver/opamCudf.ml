@@ -428,12 +428,14 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-let external_solver_exists = lazy (OpamSystem.command_exists !OpamGlobals.external_solver)
+let external_solver_exists =
+  lazy (OpamSystem.command_exists (OpamGlobals.get_external_solver ()))
 
-let external_solver_available () = !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
+let external_solver_available () =
+  !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
 
 let external_solver_command ~input ~output ~criteria =
-  [!OpamGlobals.external_solver;
+  [OpamGlobals.get_external_solver ();
    OpamFilename.to_string input;
    OpamFilename.to_string output;
    criteria]
@@ -525,39 +527,43 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     OpamFilename.remove solver_out;
     raise e
 
+let check_cudf_version =
+  let r = lazy (
+    if external_solver_available () then
+      try
+        log "Checking version of criteria accepted by the external solver";
+        OpamSystem.command ~verbose:false [OpamGlobals.get_external_solver(); "-v"];
+        log "Solver seems to accept latest version criteria";
+        `Latest
+      with OpamSystem.Process_error _ ->
+        log "Seems to be an older version: using compat criteria";
+(*
+        OpamGlobals.note "You seem to be using an older version of the external solver %s. \
+                          Consider upgrading for best results"
+          (OpamGlobals.get_external_solver());
+*)
+        `Compat
+    else
+      `Compat
+  )
+  in
+  fun () -> Lazy.force r
+
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
-  if Cudf.universe_size univ > 0 then begin
-    let rec attempt () =
-      let criteria = OpamGlobals.get_solver_criteria req.criteria in
-      ignore (dump_cudf_request ~extern:true ~version_map cudf_request
-                criteria !OpamGlobals.cudf_file);
-      try
-        match
-          Algo.Depsolver.check_request_using
-            ~call_solver:(dose_solver_callback ~criteria)
-            ~criteria ~explain:true cudf_request
-        with
-        | Algo.Depsolver.Unsat
-            (Some {Algo.Diagnostic.result=Algo.Diagnostic.Success _})
-        | Algo.Depsolver.Error _
-          when OpamGlobals.set_compat_preferences req.criteria ->
-          log "Solver failed. Retrying with compat criteria.";
-          attempt ()
-        | r -> r
-      with e ->
-        OpamMisc.fatal e;
-        if OpamGlobals.set_compat_preferences req.criteria then
-          (log "Solver failed with %s. Retrying with compat criteria."
-             (Printexc.to_string e);
-           attempt ())
-        else
-          (OpamGlobals.warning "'%s' failed with %s"
-             !OpamGlobals.external_solver (Printexc.to_string e);
-           failwith "opamSolver")
-    in
-    attempt ()
-  end else
+  if Cudf.universe_size univ > 0 then
+    let criteria = OpamGlobals.get_solver_criteria req.criteria in
+    ignore (dump_cudf_request ~extern:true ~version_map cudf_request
+              criteria !OpamGlobals.cudf_file);
+    try
+      Algo.Depsolver.check_request_using
+        ~call_solver:(dose_solver_callback ~criteria)
+        ~criteria ~explain:true cudf_request
+    with e ->
+      OpamMisc.fatal e;
+      OpamGlobals.warning "External solver failed with %s" (Printexc.to_string e);
+      failwith "opamSolver"
+  else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
 let check_request ?(explain=true) ~version_map univ req =

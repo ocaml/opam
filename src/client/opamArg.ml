@@ -128,7 +128,7 @@ let apply_global_options o =
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
-  OpamGlobals.external_solver := begin match o.external_solver with None -> !OpamGlobals.external_solver | Some v -> v end;
+  OpamGlobals.external_solver := o.external_solver;
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.use_internal_solver;
   OpamGlobals.cudf_file := o.cudf_file;
@@ -137,10 +137,7 @@ let apply_global_options o =
   | None -> ()
   | Some prefs ->
     OpamGlobals.solver_preferences :=
-      { !OpamGlobals.solver_preferences with
-        OpamGlobals.
-        default = prefs;
-        upgrade = prefs; }
+      [`Default,prefs; `Upgrade,prefs; `Fixup,prefs]
 
 (* Build options *)
 type build_options = {
@@ -207,7 +204,7 @@ let help_sections = [
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
   `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
-      The default value is "^OpamGlobals.(default_preferences.default)^". \
+      The default value is "^OpamGlobals.default_preferences `Default^". \
       See also option --criteria");
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
@@ -223,7 +220,7 @@ let help_sections = [
       `opam config env --switch=SWITCH'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
       when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
-      The default value is "^OpamGlobals.(default_preferences.upgrade)^". \
+      The default value is "^OpamGlobals.default_preferences `Upgrade^". \
       See also option --criteria");
   `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
@@ -578,8 +575,8 @@ let global_options =
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         A general guide to using solver preferences can be found at \
         $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \
-        The default value is "^OpamGlobals.(default_preferences.upgrade)^
-       " for upgrades, and "^OpamGlobals.(default_preferences.default)^" otherwise.")
+        The default value is "^OpamGlobals.default_preferences `Upgrade^
+       " for upgrades, and "^OpamGlobals.default_preferences `Default^" otherwise.")
       Arg.(some string) None in
   let cudf_file =
     mk_opt ~section ["cudf"] "FILENAME"
