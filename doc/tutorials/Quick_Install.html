@@ -1,0 +1,76 @@
+<blockquote><h3 id="Notice">Notice</h3><p>OPAM 1.2.0 is just being released. It may take a few days before the binary
+packages make it to your distribution, we&#39;ll keep updating as it goes. If you
+don&#39;t want to wait:</p>
+<ul>
+ <li><p><a href='#FromSources'>install from source</a></p>
+ </li>
+ <li><p>or use the <a href='#Binaryinstaller'>binary installer</a>.</p>
+ </li>
+</ul>
+</blockquote>
+<h1 id="InstallOPAMin2minutes">Install OPAM in 2 minutes</h1>
+<p>This page describes how to install and configure OPAM.
+For further help on how to use OPAM, either read
+<code>opam --help</code> or move on to the <a href='Basic_Usage.html'>Basic Usage</a> guide.</p>
+<h2 id="InstallingOPAMwithyourdistribution">Installing OPAM with your distribution</h2>
+<p>You can use the OPAM package of your distribution if
+available. Here is a list of supported distributions:</p>
+<h4 id="Archlinux">Archlinux</h4>
+<p>The <a href='http://aur.archlinux.org/packages.php?ID=62127'>opam</a> and <a href='http://aur.archlinux.org/packages.php?ID=62387'>opam-git</a> packages are available in the <a href='https://wiki.archlinux.org/index.php/AUR'>AUR</a>. Replace <code>opam</code> with <code>opam-git</code> in the following instruction to get the development version:</p>
+<pre><code>yaourt -S opam</code></pre>
+<h4 id="Debian">Debian</h4>
+<p>Binary packages of OPAM 1.1.1 are available for the <a href='http://packages.debian.org/jessie/opam'>testing</a> and <a href='http://packages.debian.org/sid/opam'>unstable</a> distributions.  Wheezy users are left with the options of compiling from source, pinning the packages from the testing repository, requesting a backport from Debian, or using our binary installer below.</p>
+<pre><code>apt-get install opam</code></pre>
+<h4 id="Exherbo"><a href='http://exherbo.org'>Exherbo</a></h4>
+<p>Simply install the <a href='http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html'><code>dev-ocaml/opam</code></a> package: <code>cave resolve -x dev-ocaml/opam</code>.
+You might need to add the <code>::ocaml-unofficial</code> repository first: <code>cave resolve -x repository/ocaml-unofficial</code>.</p>
+<h4 id="Mageia">Mageia</h4>
+<p>The opam package for Mageia can be installed with the command:</p>
+<pre><code>urpmi opam</code></pre>
+<h4 id="OSX">OSX</h4>
+<p>OPAM packages for <a href='http://mxcl.github.com/homebrew/'>homebrew</a> and <a href='http://www.macports.org/'>MacPorts</a> are available:</p>
+<pre><code>brew install opam                   # using Homebrew on OSX Mavericks
+brew install opam --without-aspcud  # using Homebrew on OSX Mountain Lion (or lower)
+port install opam                   # using MacPort</code></pre>
+<p>See also <a href='https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage'>howto setup Emacs.app</a> for opam usage.</p>
+<h4 id="UbuntuPreciseQuantalRaringandSaucy">Ubuntu (Precise, Quantal, Raring and Saucy)</h4>
+<pre><code>add-apt-repository ppa:avsm/ppa
+apt-get update
+apt-get install ocaml opam</code></pre>
+<p>There are also PPAs available that are <a href='http://launchpad.net/~avsm'>pinned to specific revisions</a> of OCaml and OPAM to help with <a href='http://anil.recoil.org/2013/09/30/travis-and-ocaml.html'>automated testing</a>.</p>
+<p>If the command <code>add-apt-repository</code> is not available, you can install the package <code>python-software-properties</code> with <code>apt-get install python-software-properties</code>. Alternatively, you may manually edit the file <code>/etc/apt/sources.list</code> to add the PPA for your Ubuntu release.</p>
+<h4 id="UbuntuTrustyLTS">Ubuntu Trusty LTS</h4>
+<p>OCaml 4.01.0 and OPAM 1.1.1 are included in Ubuntu Trusty&#39;s <code>universe</code> repository, so just install them as normal.</p>
+<pre><code>apt-get update
+apt-get install ocaml ocaml-native-compilers camlp4-extra opam</code></pre>
+<h2 id="Binaryinstaller">Binary installer</h2>
+<p>Pre-compiled versions for most common architectures and OSes are available on <a href='https://github.com/ocaml/opam/releases/latest'>the Github &quot;releases&quot; page</a>. We also provide a very simple installer script that will automatically download the right version for you, put it in your binary directory and initialize it.</p>
+<p>Download <a href='https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh'>opam_installer.sh</a> and run it as follows:</p>
+<pre><code>sh &lt;path to&gt;/opam_installer.sh /usr/local/bin</code></pre>
+<p>You can also specify which version of OCaml you want to install:</p>
+<pre><code>sh ./opam_installer.sh /usr/local/bin 3.12.1 # Install the latest OPAM and OCaml 3.12.1
+sh ./opam_installer.sh /usr/local/bin system # Install the latest OPAM using the system compiler (if any)</code></pre>
+<h2 id="FromSources">From Sources</h2>
+<h4 id="GettingtheSources">Getting the Sources</h4>
+<p>Sources of the latest stable version of OPAM are available on Github:</p>
+<ul>
+ <li><a href='https://github.com/ocaml/opam/releases'>OPAM releases on Github</a></li>
+</ul>
+
+<p>You can also download the full archives, including OPAM dependencies:</p>
+<ul>
+ <li><a href='https://github.com/ocaml/opam/releases/download/1.2.0-beta/opam-full-1.2.0-beta.tar.gz'>1.2.0-beta</a>
+ MD5 (opam-full-1.2.0-beta.tar.gz) = fa0422311dd7949654b909b0235cc6b5</li>
+ <li><a href='https://github.com/ocaml/opam/releases/download/1.1.2/opam-full-1.1.2.tar.gz'>1.1.2</a>
+ MD5 (opam-full-1.1.2.tar.gz) = ba2a4136b65003c04d905de786f3c3ab</li>
+ <li><a href='https://github.com/ocaml/opam/releases/download/1.1.1/opam-full-1.1.1.tar.gz'>1.1.1</a>
+ MD5 (opam-full-1.1.1.tar.gz) = a7bebe947b3e6c1c10ccafabb839d374</li>
+ <li><a href='http://www.ocamlpro.com/pub/opam-full-1.1.0.tar.gz'>1.1.0</a>
+ MD5 (opam-full-1.1.0.tar.gz) = d6e2f56b10c0be73b5677963e6659d24</li>
+</ul>
+
+<p>Follow the instructions in <code>README.md</code> to get OPAM built and installed from
+there.</p>
+<h4 id="Usingocamlbrew">Using ocamlbrew</h4>
+<p><a href='https://github.com/hcarty/ocamlbrew'>ocamlbrew</a> is a script that can bootstrap an OCaml environment including OPAM, from source.  This option does not require an existing OCaml installation, or a pre-compiled OPAM binary for your platform.  To bootstrap a new OCaml environment including OPAM, make sure that you have the necessary pre-requisites installed to run ocamlbrew, and then run:</p>
+<pre><code>curl -kL https://raw.github.com/hcarty/ocamlbrew/master/ocamlbrew-install | env OCAMLBREW_FLAGS=&quot;-r&quot; bash</code></pre>

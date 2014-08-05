@@ -1,0 +1,32 @@
+<h1 id="LearntouseOPAMin2minutes">Learn to use OPAM in 2 minutes</h1>
+<p>This short tutorial covers the very basic use cases to get you started with
+OPAM. A more lengthy introduction can be found in the
+<a href='Advanced_Usage.html'>Advanced Usage</a> guide.</p>
+<h2 id="InitialisingOPAM">Initialising OPAM</h2>
+<pre><code>opam init</code></pre>
+<p>This will create the <code>~/.opam</code> directory, within which packages will be
+installed and where OPAM will store its data.</p>
+<h2 id="Browsingavailablepackages">Browsing available packages</h2>
+<p>The following commands will enable you to obtain information on available
+packages:</p>
+<pre><code>opam list -a            # List all available packages
+opam search QUERY       # List packages with QUERY in their name or description
+opam show PACKAGE       # Display information about PACKAGE</code></pre>
+<p>You may prefer to <a href='https://opam.ocaml.org/packages'>browse them online</a>. If you
+find a package there but not on your computer, either it has been recently added
+and you should simply run <code>opam update</code>, or it&#39;s not available on your system or
+OCaml version -- <code>opam install PACKAGE</code> should give you the reason.</p>
+<h2 id="Installingapackage">Installing a package</h2>
+<p>The two commands you will probably use the most with OPAM are:</p>
+<pre><code>opam update             # Update the packages database
+opam install PACKAGE    # Download, build and install the latest version of PACKAGE</code></pre>
+<h2 id="Upgradingyourinstalledpackages">Upgrading your installed packages</h2>
+<p>You may want to regularly issue these commands to keep your packages up-to-date:</p>
+<pre><code>opam update             # Update the packages database
+opam upgrade            # Re-install packages that were updated since last upgrade</code></pre>
+<h2 id="DomorewithOPAM">Do more with OPAM</h2>
+<p>If you need more details and options, OPAM is self-documented through</p>
+<pre><code>opam --help</code></pre>
+<p>To learn how to use more advanced features of OPAM (package pinning, multiple
+repositories, multiple compilers...), move on to the <a href='Advanced_Usage.html'>Advanced
+Usage</a> guide, or the <a href='Packaging.html'>Packaging tutorial</a>.</p>

@@ -1,0 +1,121 @@
+<h1 id="OPAMFAQ">OPAM FAQ</h1>
+<h4 id="HowtogetinstallandupgradeOPAM">→ How to get, install and upgrade OPAM ?</h4>
+<p>See the <a href='Quick_Install.html'>Quick install guide</a>.</p>
+<h4 id="Whereisthemanual">→ Where is the manual ?</h4>
+<p>OPAM has git-like, hierarchical manpages. Try <code>opam --help</code> for a starting point.</p>
+<p>Get started with OPAM packages by reading the <a href='Packaging.html'>Packaging Howto</a>.</p>
+<p>See the details on the file formats and more in the <a href='https://github.com/ocaml/opam/blob/master/doc/dev-manual/dev-manual.pdf?raw=true'>Developper
+Guide</a>
+(pdf).</p>
+<h4 id="WhatchangesdoesOPAMdotomyfilesystem">→ What changes does OPAM do to my filesystem ?</h4>
+<p>OPAM is designed to be run strictly as user (non-root), and apart for the
+explicit options provided during <code>opam init</code>, only writes within <code>~/.opam</code> (and
+<code>/tmp</code>). This directory -- the default &quot;OPAM root&quot; -- contains configuration,
+various internal data, a cache of downloaded archives, and your OCaml
+installations.</p>
+<h4 id="Whydoesopaminitneedtoaddstufftomyinitscriptswhyisevalopamconfigenvneeded">→ Why does <code>opam init</code> need to add stuff to my init scripts / why is <code>eval $(opam config env)</code> needed ?</h4>
+<p>You need two things when you install OPAM packages: to have their libraries
+accessible, and to access binary programs. To provide those, OPAM needs to setup
+a few ocaml-related environment variables, and to prepend to your PATH variable.</p>
+<p>Of course, you may choose not to let OPAM change anything at <code>opam init</code>, and
+run <code>eval $(opam config env)</code> yourself whenever you will be needing it.</p>
+<h4 id="Whatisaquotswitchquot">→ What is a &quot;switch&quot; ?</h4>
+<p>An ocaml installation and a set of installed packages within an OPAM
+installation. This can be used to keep different OCaml versions side-by-side, or
+different sets of packages. See the <a href='Advanced_Usage.html#opamswitch'>related
+section</a> in the Advanced usage manual and
+<code>opam switch --help</code>. The &quot;prefix&quot; for a given installation is simply
+<code>~/.opam/&lt;switch-name&gt;</code>.</p>
+<p>A switch is either based on a system-wide OCaml installation, or on a local
+installation. In the former case, OPAM will need to recompile all packages when
+your system compiler changes. In the latter case, OCaml will be downloaded and
+compiled on creation of the switch.</p>
+<h4 id="CanIworkondifferentswitchesatthesametimeindifferentshells">→ Can I work on different switches at the same time in different shells ?</h4>
+<p>Yes. Use one of:</p>
+<pre><code>eval $(opam config env --switch &lt;switch&gt;)     # for the current shell
+opam config exec --switch &lt;switch&gt; &lt;command&gt;  # for one command</code></pre>
+<p>This only affects the environment.</p>
+<h4 id="CanIgetanewswitchwiththesamepackagesinstalled">→ Can I get a new switch with the same packages installed ?</h4>
+<p>Yes. Use:</p>
+<pre><code>opam switch export file.export  # from the previous switch
+opam switch &lt;new switch&gt;
+opam switch import file.export</code></pre>
+<p>OPAM might fail if you had packages installed that are not compatible with the
+OCaml version in your new switch. In that case, you&#39;ll need to remove them from
+the <code>file.export</code> file by hand (the format is straight-forward, one line per
+package).</p>
+<h4 id="IinstalledapackagebyhandusedocamlfindremovefiddledwiththeinstalledpackagesandOPAMisoutofsyncHelp">→ I installed a package by hand / used <code>ocamlfind remove</code> / fiddled with the installed packages and OPAM is out of sync. Help !</h4>
+<p>Don&#39;t panic. OPAM assumes it&#39;s controlling what&#39;s below <code>~/.opam/&lt;switch&gt;</code>, but
+there are several ways you can recover:</p>
+<ul>
+ <li><code>opam remove --force</code> will attempt to uninstall even if not registered as
+ installed. Then <code>opam install</code></li>
+ <li><code>opam reinstall</code> will try to remove an installed package, but go on to
+ re-installing even if that fails.</li>
+ <li>If all else fails, you can re-install your current set of packages from
+ scratch using <code>opam switch reinstall</code></li>
+ <li>You can force OPAM to register an installation or removal <em>without actually
+ performing anything</em> using <code>opam install|remove --fake</code>. This is not
+ recommended though, as your manual install may not be exactly equivalent to
+ the one expected by other OPAM packages, and OPAM may later on trigger
+ reinstallations or upgrades of the package. Don&#39;t complain if you mess up your
+ installation using this! If you want to control how a package is installed or
+ modify it, the right way is <code>opam pin</code>.</li>
+</ul>
+
+<h4 id="Whataretheminimumrequirements">→ What are the minimum requirements ?</h4>
+<p>1GB of memory should be all you need. It was reported that you may run into
+problems with 512MB of RAM and no swap. Of course, software packages themselves
+may be more greedy.</p>
+<h4 id="Somepackagefailduringcompilationcomplainingaboutmissingdependenciesquotm4quotquotlibgtkquotetc">→ Some package fail during compilation, complaining about missing dependencies (&quot;m4&quot;, &quot;libgtk&quot;, etc.)</h4>
+<p>They probably depend on system, non-OCaml libraries: you&#39;ll need to install them
+using your system package manager (apt-get, yum, pacman, homebrew, etc.). If you
+have no idea what the missing system package might be:</p>
+<ul>
+ <li>Check for hints printed by the failing package</li>
+ <li>Check the output of <code>opam list &lt;package&gt; --external</code></li>
+ <li>Lookup the development packages corresponding to the error in your system&#39;s
+ package repositories. If you got to this point and found the appropriate
+ packages, we&#39;d be glad if you could tell us your system details and the answer
+ in <a href='https://github.com/ocaml/opam-repository/issues'>the opam-repository
+ tracker</a>, to save the others
+ the trouble of searching. Thanks.</li>
+</ul>
+
+<h4 id="Ihaveweirdchecksumerrorswheredotheycomefrom">→ I have weird checksum errors: where do they come from ?</h4>
+<p>First of all, you should make sure your repositories are up-to-date:</p>
+<pre><code>opam update</code></pre>
+<p>If this isn&#39;t enough, or if you get the checksum errors while running <code>opam
+init</code>, this could be caused by a badly configured proxy cache that is serving
+stale files. To clear your proxy cache, you can use <code>wget --no-cache
+&lt;remote-file&gt;</code> and retry.</p>
+<p>As a last resort, you can bypass the checksum checks using <code>--no-checksums</code>.</p>
+<h4 id="OPAMispromptingmetoinstallorupgradepackagesthatIamnotinterestedinordoesn39tinstallthelatestversionbydefaultWhyWhatcanIdo">→ OPAM is prompting me to install or upgrade packages that I am not interested in, or doesn&#39;t install the latest version by default. Why ? What can I do ?</h4>
+<ul>
+ <li>You can be more explicit in your request (<code>opam upgrade PACKAGES</code>, <code>opam
+  install &#39;PACKAGE&gt;=VERSION&#39; PACKAGE...</code>, etc.)</li>
+ <li>Action resolution in a package set is known to be a NP-complete problem; OPAM
+ uses state-of-the-art algorithms through an external, dedicated solver: make
+ sure you have the latest version of <a href='http://potassco.sourceforge.net/'>aspcud</a>
+ installed.</li>
+ <li>Another benefit of the external solvers is that they allow to be <a href='Specifying_Solver_Preferences.html'>quite
+ expressive</a> on your expectations.</li>
+</ul>
+
+<h4 id="WheredoIreportBugsIssuesandFeatureRequests">→ Where do I report Bugs, Issues and Feature Requests?</h4>
+<ul>
+ <li><p>Bug reports and feature requests for the OPAM tool should be reported on
+<a href='https://github.com/ocaml/opam/issues'>OPAM&#39;s issue-tracker</a>.</p>
+ </li>
+ <li><p>Packaging issues or requests for a new package can be reported on the
+<a href='https://github.com/ocaml/opam-repository/issues'>official repository&#39;s
+issue-tracker</a>.</p>
+ </li>
+ <li><p>General queries for both the tool and the packages can be addressed on the
+<a href='http://lists.ocaml.org/listinfo/platform'>OCaml-platform mailing-list</a> and
+insights and evolution of OPAM internals can discussed on the <a href='http://lists.ocaml.org/listinfo/opam-devel'>OPAM-devel
+mailing-list</a>.</p>
+ </li>
+ <li><p>You may also try IRC channel <code>#opam</code> on Freenode.</p>
+ </li>
+</ul>
