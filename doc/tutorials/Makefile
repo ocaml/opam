@@ -1,14 +1,14 @@
 all: opam.wiki
 	cd opam.wiki && git pull
-	$(MAKE) Advanced_Install.pdf Basic_Usage.pdf \
-	        Advanced_Usage.pdf Basic_Usage.pdf \
-	        Packaging.pdf Developing.pdf
+	$(MAKE) Quick_Install.html Basic_Usage.html FAQ.html \
+		Advanced_Usage.html Packaging.html \
+	        Specifying_Solver_Preferences.html
 
 opam.wiki:
 	git clone git://github.com/ocaml/opam.wiki.git
 
-%.pdf: opam.wiki/%.md
-	pandoc $^ -o $@
+%.html: opam.wiki/%.md
+	omd $^ -o $@
 
 clean:
 	@[ -d opam.wiki ] && \

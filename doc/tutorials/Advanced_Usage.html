@@ -1,0 +1,87 @@
+<h1 id="UsingOPAM">Using OPAM</h1>
+<p>This document covers most of the common OPAM features. If you&#39;re looking for a
+quick introduction, check the <a href='Basic_Usage.html'>Basic Usage</a> tutorial first.</p>
+<p>If you are a developper and want to get a project packaged or change an existing
+package, see the step-by-step <a href='Packaging.html'>packaging guide</a></p>
+<p>The full documentation is available inline, using</p>
+<pre><code>opam --help
+opam &lt;command&gt; --help</code></pre>
+<p>This document is intended as a quicker overview, use the above to dig into the
+details.</p>
+<h3 id="opaminit">opam init</h3>
+<p>OPAM needs to initialise its internal state in a <code>~/.opam</code> directory to work.
+This command can also take care of installing a version of OCaml if needed.</p>
+<p>To operate as expected, some variables need to be set in your environment. You
+will be prompted to update your configuration, and given instructions on how
+to proceed manually if you decline.</p>
+<h3 id="opamupdate">opam update</h3>
+<p>This command synchronises OPAM&#39;s database with the package repositories. The
+lists of available packages and their details are stored into
+<code>~/.opam/repo/&lt;name&gt;</code>. Remember to run this regularly if you want to keep
+up-to-date, or if you are having trouble with a package.</p>
+<h3 id="Lookinguppackages">Looking up packages</h3>
+<p>There are three useful commands for that:</p>
+<ul>
+ <li><code>opam list</code> List installed packages, or packages matching a pattern</li>
+ <li><code>opam search</code> Search in package descriptions</li>
+ <li><code>opam show</code> Print details on a given package.</li>
+</ul>
+
+<h3 id="opaminstall">opam install</h3>
+<p>This command installs packages along with all their dependencies. You can
+specify one or several packages, along with version constraints. E.g:</p>
+<pre><code>opam install lwt
+opam install ocp-indent ocp-index.1.0.2
+opam install &quot;ocamlfind&gt;=1.4.0&quot;</code></pre>
+<h3 id="opamupgrade">opam upgrade</h3>
+<p>Will attempt to upgrade the installed packages to their newest versions. You
+should run it after <code>opam update</code>, and may use <code>opam pin</code> to prevent specific
+packages from being upgraded.</p>
+<h3 id="opamswitch">opam switch</h3>
+<p>This command enables the user to have several installations on disk, each with
+their own prefix, set of installed packages, and OCaml version. Use cases
+include having to work or test with different OCaml versions, keeping separate
+development environments for specific projects, etc.</p>
+<p>Use <code>opam switch &lt;version&gt;</code> to <em>switch</em> to a different OCaml version, or <code>opam
+switch &lt;name&gt; --alias-of &lt;version&gt;</code> to name the new <em>switch</em> as you like. Don&#39;t
+forget to run the advertised <code>eval $(opam config env)</code> to update your PATH
+accordingly.</p>
+<p>Creating a new switch requires re-compiling OCaml, unless you make it an alias
+of the &quot;system&quot; switch, relying on the global OCaml installation.</p>
+<p>There are a bunch of specific or experimental OCaml compiler definitions on the
+official repository, list them all with <code>opan switch list --all</code>.</p>
+<h3 id="opampin">opam pin</h3>
+<p>This command allows to pin a package to a specific version, but in fact, as you
+know if you&#39;ve read the <a href='Packaging.html'>Packaging guide</a>, it can do much more.</p>
+<p>The syntax is</p>
+<pre><code>opam pin add &lt;package name&gt; &lt;target&gt;</code></pre>
+<p>Where <code>&lt;target&gt;</code> may be a version, but also a local path, an http address or
+even a git, mercurial or darcs URL. The package will be kept up-to-date with its
+origin on <code>opam update</code> and when explicitely mentionned in a command, so that
+you can simply run <code>opam upgrade &lt;package name&gt;</code> to re-compile it from its
+upstream. If the upstream includes OPAM metadata, that will be used as well.</p>
+<pre><code>opam pin add camlpdf 1.7                                      # version pin
+opam pin add camlpdf ~/src/camlpdf                            # path
+opam pin add opam-lib https://github.com/ocaml/opam.git#1.2   # specific branch or commit
+opam pin add opam-lib --dev-repo                              # upstream repository</code></pre>
+<p>This can be used in conjunction with <code>opam source</code> to start and hack an existing
+package before you know it:</p>
+<pre><code>opam source &lt;package&gt; --dev-repo --pin
+cd &lt;package&gt;; hack hack hack;
+opam upgrade &lt;package&gt;</code></pre>
+<h3 id="opamrepo">opam repo</h3>
+<p>OPAM is configured by default to use the community&#39;s software repository at
+<a href='https://opam.ocaml.org'>opam.ocaml.org</a>, but this can easily be
+changed at <code>opam init</code> time or later.</p>
+<p><code>opam repo add &lt;name&gt; &lt;address&gt;</code> will make OPAM use the definitions of any
+package versions defined at <code>&lt;address&gt;</code>, falling back to the previously defined
+repositories for those which aren&#39;t defined. The <code>&lt;address&gt;</code> may point to an
+http, local or version-controlled repository.</p>
+<p>Defining your own repository, either locally or online, is quite easy: you can
+start off by cloning <a href='https://github.com/ocaml/opam-repository'>the official
+repository</a> if you intend it as a
+replacement, or just create a new directory with <code>packages</code> and <code>compilers</code>
+sub-directories. See the <a href='Packaging.html'>packaging guide</a> if you need help on
+the package format.</p>
+<p>If your repository is going to be served over HTTP, you should generate an index
+using the <code>opam-admin</code> tool.</p>
