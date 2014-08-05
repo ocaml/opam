@@ -1003,14 +1003,6 @@ module API = struct
         let check_external_dep name =
           OpamSystem.command_exists name
         in
-        if not (check_external_dep
-                  (OpamMisc.Option.default "curl" OpamGlobals.curl_command)
-                || check_external_dep "wget") then
-          OpamGlobals.error_and_exit
-            "Missing dependency: %s or %s are required for OPAM to operate, \
-             please install either of them."
-            (OpamGlobals.colorise `bold "curl")
-            (OpamGlobals.colorise `bold "wget");
         OpamGlobals.msg "Checking for available remotes: ";
         let repo_types =
           ["rsync", "rsync and local";
@@ -1024,13 +1016,38 @@ module API = struct
            | r -> String.concat ", " (List.map snd r));
         List.iter (fun (cmd,msg) ->
             OpamGlobals.note
-              "%s not found, you won't be able to use %s repositories."
-              cmd msg)
+              "%s not found, you won't be able to use %s repositories \
+               unless you install it."
+              (OpamGlobals.colorise `bold cmd) msg)
           unavailable_repos;
-        if not (check_external_dep "aspcud") then
+        if not (check_external_dep (OpamGlobals.get_external_solver())) then
           OpamGlobals.warning
-            "External solver 'aspcud' not found, OPAM will provide better \
-             solutions if you install it.\n";
+            "Recommendend external solver %s not found."
+            (OpamGlobals.colorise `bold (OpamGlobals.get_external_solver ()));
+        let advised_deps = [!OpamGlobals.makecmd(); "m4"; "cc"] in
+        (match List.filter (not @* check_external_dep) advised_deps with
+         | [] -> ()
+         | missing ->
+           OpamGlobals.warning
+             "Recommended dependencies -- \
+              most packages rely on those:\n  - %s"
+             (String.concat "\n  - "
+                (List.map (OpamGlobals.colorise `bold) missing)));
+        let required_deps =
+          ["curl or wget",
+           check_external_dep
+             (OpamMisc.Option.default "curl" OpamGlobals.curl_command)
+           || check_external_dep "wget";
+           "patch", check_external_dep "patch"]
+        in
+        (match List.filter (not @* snd) required_deps with
+         | [] -> ()
+         | missing ->
+           OpamGlobals.error_and_exit
+             "Missing dependencies -- \
+              the following commands are required for OPAM to operate:\n  - %s"
+             (String.concat "\n  - "
+                (List.map (OpamGlobals.colorise `bold @* fst) missing)));
 
         (* Create (possibly empty) configuration files *)
         let switch =
