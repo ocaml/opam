@@ -92,14 +92,16 @@ let edit t name =
   if opam = orig_opam then None else
   let () = match pin with
     | Local dir ->
-      let src_opam =
-        OpamFilename.OP.(
-          if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
-          else dir // "opam")
-       in
-       if OpamState.confirm "Save the new opam file back to %S ?"
-           (OpamFilename.to_string src_opam) then
-         OpamFilename.copy ~src:file ~dst:src_opam
+      if OpamFilename.exists_dir dir then
+        let src_opam =
+          OpamFilename.OP.(
+            if OpamFilename.exists_dir (dir / "opam")
+            then dir / "opam" // "opam"
+            else dir // "opam")
+        in
+        if OpamState.confirm "Save the new opam file back to %S ?"
+            (OpamFilename.to_string src_opam) then
+          OpamFilename.copy ~src:file ~dst:src_opam
     | Version _ | Git _ | Darcs _ | Hg _ -> ()
   in
   match installed_nv with

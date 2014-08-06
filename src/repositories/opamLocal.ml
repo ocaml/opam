@@ -22,52 +22,70 @@ let slog = OpamGlobals.slog
 
 let rsync_arg = "-rLptgoDrvc"
 
+let call_rsync args result unavail =
+  try
+    result (OpamSystem.read_command_output ("rsync"::args))
+  with OpamSystem.Process_error r as e ->
+    match r.OpamProcess.r_code with
+    | 3 | 5 | 10 | 11 | 12 -> (* protocol or file errors *)
+      unavail
+    | 20 -> (* signal *)
+      raise Sys.Break
+    | 23 | 24 -> (* partial, mostly mode, link or perm errors *)
+      OpamGlobals.warning "Rsync partially failed:\n  %s"
+        (String.concat "\n  " r.OpamProcess.r_stderr);
+      if not !OpamGlobals.debug then OpamProcess.clean_files r;
+      result r.OpamProcess.r_stdout
+    | 30 | 35 -> (* timeouts *)
+      unavail
+    | _ -> raise e
+
 let rsync src dst =
   log "rsync: src=%s dst=%s" src dst;
-  if Sys.file_exists src then (
-    if src <> dst then (
-      OpamSystem.mkdir src;
-      OpamSystem.mkdir dst;
-      let lines =
-        try
-          OpamSystem.read_command_output (
-            [ "rsync" ; rsync_arg;
-              "--exclude"; ".git";
-              "--exclude"; "_darcs";
-              "--exclude"; ".hg";
-              "--exclude"; ".#*";
-              "--delete";
-              src; dst; ]
-          )
-        with OpamSystem.Process_error r when r.OpamProcess.r_code = 23 ->
-          OpamGlobals.warning "Rsync partially failed:\n  %s" (String.concat "\n  " r.OpamProcess.r_stderr);
-          if not !OpamGlobals.debug then OpamProcess.clean_files r;
-          r.OpamProcess.r_stdout
-      in
-      match OpamMisc.rsync_trim lines with
-      | []    -> Up_to_date []
-      | lines -> Result lines
-    ) else
-      Up_to_date []
-  ) else
+  let remote = String.contains src ':' in
+  if not(remote || Sys.file_exists src) then
     Not_available src
+  else if src = dst then
+    Up_to_date []
+  else
+  let result lines =
+    match OpamMisc.rsync_trim lines with
+    | []    -> Up_to_date []
+    | lines -> Result lines in
+  OpamSystem.mkdir dst;
+  call_rsync [ rsync_arg;
+               "--exclude"; ".git";
+               "--exclude"; "_darcs";
+               "--exclude"; ".hg";
+               "--exclude"; ".#*";
+               "--delete";
+               src; dst; ]
+    result (Not_available src)
 
 let rsync_dirs src dst =
-  let src_s = Filename.concat (OpamFilename.Dir.to_string src) "" in
+  let src_s =
+    (* ensure trailing '/' *)
+    Filename.concat (OpamFilename.Dir.to_string src) ""
+  in
   let dst_s = OpamFilename.Dir.to_string dst in
+  let remote = String.contains src_s ':' in
+  if not remote then OpamFilename.mkdir src;
   match rsync src_s dst_s with
   | Not_available s -> Not_available s
   | Result _        -> Result dst
   | Up_to_date _    -> Up_to_date dst
 
 let rsync_file src dst =
-  log "rsync_file src=%a dst=%a"
-    (slog OpamFilename.to_string) src
-    (slog OpamFilename.to_string) dst;
-  if OpamFilename.exists src then (
-    let lines = OpamSystem.read_command_output [
-        "rsync"; rsync_arg; OpamFilename.to_string src; OpamFilename.to_string dst;
-      ] in
+  let src_s = OpamFilename.to_string src in
+  let dst_s = OpamFilename.to_string dst in
+  log "rsync_file src=%s dst=%s" src_s dst_s;
+  let remote = String.contains src_s ':' in
+  if not (remote || OpamFilename.exists src) then
+    Not_available src_s
+  else if src_s = dst_s then
+    Up_to_date src
+  else
+  let result lines =
     match OpamMisc.rsync_trim lines with
     | []  -> Up_to_date dst
     | [_] -> Result dst
@@ -75,8 +93,9 @@ let rsync_file src dst =
       OpamSystem.internal_error
         "unknown rsync output: {%s}"
         (String.concat ", " l)
-  ) else
-    Not_available (OpamFilename.to_string src)
+  in
+  call_rsync [ rsync_arg; src_s; dst_s ]
+    result (Not_available src_s)
 
 module B = struct
 
@@ -116,32 +135,31 @@ module B = struct
         | _               -> ()
       ) archives
 
-  let pull_file package local_dirname remote_filename =
-    if OpamFilename.exists remote_filename then
-      OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
-        (OpamGlobals.colorise `green
-           (OpamPackage.to_string package))
-        (OpamFilename.to_string remote_filename);
-    pull_file_quiet local_dirname remote_filename
-
-  let pull_dir package local_dirname remote_dirname =
-    OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
-      (OpamGlobals.colorise `green (OpamPackage.to_string package))
-      (OpamFilename.Dir.to_string remote_dirname);
-    pull_dir_quiet local_dirname remote_dirname
-
   let pull_url package local_dirname checksum remote_url =
     let remote_url = string_of_address remote_url in
     OpamFilename.mkdir local_dirname;
-    if Sys.file_exists remote_url && Sys.is_directory remote_url then
-      download_dir
-        (pull_dir package local_dirname (OpamFilename.Dir.of_string remote_url))
-    else if Sys.file_exists remote_url then (
-      let filename = OpamFilename.of_string remote_url in
+    OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+      (OpamGlobals.colorise `green
+         (OpamPackage.to_string package))
+      remote_url;
+    let dir = OpamFilename.Dir.to_string local_dirname in
+    let remote_url =
+      if Sys.file_exists remote_url && Sys.is_directory remote_url
+      (* ensure that rsync doesn't recreate a subdir: add trailing '/' *)
+      then Filename.concat remote_url ""
+      else remote_url in
+    match rsync remote_url dir with
+    | Result [f] | Up_to_date [f] as r
+      when not (Sys.is_directory (Filename.concat dir f)) ->
+      let filename = OpamFilename.OP.(local_dirname // f) in
       OpamRepository.check_digest filename checksum;
-      download_file (pull_file package local_dirname filename)
-    ) else
-      Not_available remote_url
+      (match r with
+       | Result _ -> Result (F filename)
+       | Up_to_date _ -> Up_to_date (F filename)
+       | _ -> assert false)
+    | Result _ -> Result (D local_dirname)
+    | Up_to_date _ -> Up_to_date (D local_dirname)
+    | Not_available d -> Not_available d
 
   let pull_archive repo filename =
     if OpamFilename.exists filename then
