@@ -1580,8 +1580,13 @@ let source =
     let open OpamState.Types in
     let t = OpamState.load_state "source" in
     let nv =
-      OpamPackage.Set.max_elt
-        (OpamPackage.Set.filter (OpamFormula.check atom) t.packages) in
+      try
+        OpamPackage.Set.max_elt
+          (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+      with Not_found ->
+        OpamGlobals.error_and_exit "No package matching %s found."
+          (OpamFormula.short_string_of_atom atom)
+    in
     let dir = match dir with
       | Some d -> d
       | None -> OpamFilename.OP.(OpamFilename.cwd () / OpamPackage.to_string nv)
