@@ -106,3 +106,9 @@ fast: src/core/opamGitVersion.ml src/core/opamScript.ml
 fastclean:
 	@ocp-build -clean
 	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
+
+cold:
+	./shell/bootstrap-ocaml.sh
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE) lib-ext
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE)
