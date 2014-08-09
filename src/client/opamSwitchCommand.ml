@@ -386,6 +386,9 @@ let import_t importfile t =
       revert_pins ();
       raise e
   in
+  (match solution with
+   | No_solution | Aborted -> revert_pins ()
+   | Error _ | OK _ | Nothing_to_do -> ());
   OpamSolution.check_solution t solution
 
 let export filename =
