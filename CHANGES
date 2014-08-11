@@ -59,6 +59,8 @@
 * Added the 'build', 'test' and 'doc' dependency flags to limit the scope
   of some dependencies
 * Added Check for common dependencies at init time
+* Pinning to a local git directory will now automatically select the pin kind to
+  'git' (#1555)
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
