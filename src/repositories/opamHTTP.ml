@@ -201,15 +201,34 @@ module B = struct
     )
 
   let pull_url package dirname checksum remote_url =
-    log "pull-file";
     let remote_url = OpamTypesBase.string_of_address remote_url in
+    log "pull-file into %a: %s"
+      (slog OpamFilename.Dir.to_string) dirname
+      remote_url;
     let filename = OpamFilename.of_string remote_url in
     let base = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname base in
-    if OpamFilename.exists local_file &&
-       match checksum with
-       | None   -> false
-       | Some c -> OpamFilename.digest local_file = c then (
+    let check_sum f = match checksum with
+      | None   -> false
+      | Some c -> OpamFilename.digest f = c
+    in
+    let files = OpamFilename.files dirname in
+    let uptodate =
+      let found, extra =
+        List.partition (fun f -> f = local_file && check_sum f) files
+      in
+      if extra <> [] &&
+         OpamMisc.starts_with (* Just a safeguard *)
+           ~prefix:(OpamFilename.Dir.to_string (OpamPath.root ()))
+           (OpamFilename.Dir.to_string dirname)
+      then
+        (log "Removing stale files in download dir: %a"
+           (slog @@ List.map OpamFilename.to_string @> OpamMisc.pretty_list)
+           extra;
+         List.iter OpamFilename.remove extra);
+      found <> []
+    in
+    if uptodate then (
       OpamGlobals.msg "[%s] %s is in the local cache, using it.\n"
         (OpamGlobals.colorise `green (OpamPackage.to_string package))
         (OpamFilename.Base.to_string base);
