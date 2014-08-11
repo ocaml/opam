@@ -38,7 +38,8 @@ type t = {
     which is used to run the process is recorded into [env_file] (if
     set). *)
 val create :
-  ?info_file:string -> ?env_file:string -> ?stdout_file:string -> ?stderr_file:string ->
+  ?info_file:string -> ?env_file:string ->
+  ?allow_stdin:bool -> ?stdout_file:string -> ?stderr_file:string ->
   ?env:string array -> ?metadata:(string*string) list ->
   verbose:bool -> string -> string list -> t
 
@@ -61,7 +62,8 @@ val wait: t -> result
     created, and contains the process main description, the environment
     variables, the standard output and the standard error. *)
 val run : ?env:string array -> ?verbose:bool -> ?name:string ->
-  ?metadata:(string*string) list -> string -> string list -> result
+  ?metadata:(string*string) list -> ?allow_stdin:bool ->
+  string -> string list -> result
 
 (** Is the process result a success ? *)
 val is_success : result -> bool

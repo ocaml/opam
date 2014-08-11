@@ -304,7 +304,7 @@ let log_file name = match name with
 let log_cleanup r =
   if not !OpamGlobals.debug then OpamProcess.clean_files r
 
-let run_process ?verbose ?(env=default_env) ~name ?metadata command =
+let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command =
   let chrono = OpamGlobals.timer () in
   runs := command :: !runs;
   match command with
@@ -321,7 +321,7 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata command =
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
 
-      let r = OpamProcess.run ~env ~name ~verbose ?metadata cmd args in
+      let r = OpamProcess.run ~env ~name ~verbose ?metadata ?allow_stdin cmd args in
       let str = String.concat " " (cmd :: args) in
       log "[%a] (in %.3fs) %s"
         (OpamGlobals.slog Filename.basename) name
@@ -331,9 +331,9 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata command =
       (* Display a user-friendly message if the command does not exist *)
       command_not_found cmd
 
-let command ?verbose ?env ?name ?metadata cmd =
+let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
   let name = log_file name in
-  let r = run_process ?verbose ?env ~name ?metadata cmd in
+  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
   if OpamProcess.is_success r then log_cleanup r
   else process_error r
 
