@@ -532,7 +532,9 @@ let check_cudf_version =
     if external_solver_available () then
       try
         log "Checking version of criteria accepted by the external solver";
-        OpamSystem.command ~verbose:false [OpamGlobals.get_external_solver(); "-v"];
+        (* Run with closed stdin to workaround bug in some solver scripts *)
+        OpamSystem.command ~verbose:false ~allow_stdin:false
+          [OpamGlobals.get_external_solver(); "-v"];
         log "Solver seems to accept latest version criteria";
         `Latest
       with OpamSystem.Process_error _ ->

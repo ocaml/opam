@@ -73,7 +73,7 @@ let string_of_info ?(color=`yellow) info =
         (OpamGlobals.colorise color k) v) info;
   Buffer.contents b
 
-let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
+let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[])
     ~verbose cmd args =
   let nothing () = () in
   let tee f =
@@ -88,6 +88,11 @@ let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
       Unix.descr_of_out_channel chan, close
     ) else
       fd, close_fd in
+  let stdin_fd =
+    if allow_stdin then Unix.stdin else
+      let fd = Unix.dup Unix.stdin in
+      Unix.close fd; fd
+  in
   let stdout_fd, close_stdout = match stdout_file with
     | None   -> Unix.stdout, nothing
     | Some f -> tee f in
@@ -128,7 +133,7 @@ let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
       cmd
       (Array.of_list (cmd :: args))
       env
-      Unix.stdin stdout_fd stderr_fd in
+      stdin_fd stdout_fd stderr_fd in
   close_stdout ();
   close_stderr ();
   {
@@ -195,7 +200,7 @@ let wait p =
     | _ -> iter () in
   iter ()
 
-let run ?env ?(verbose=false) ?name ?(metadata=[]) cmd args =
+let run ?env ?(verbose=false) ?name ?(metadata=[]) ?allow_stdin cmd args =
   let file f = match name with
     | None   -> None
     | Some n -> Some (f n) in
@@ -207,7 +212,7 @@ let run ?env ?(verbose=false) ?name ?(metadata=[]) cmd args =
 
   let p =
     create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ~metadata
-      cmd args in
+      ?allow_stdin cmd args in
   wait p
 
 let is_success r = r.r_code = 0

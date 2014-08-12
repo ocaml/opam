@@ -60,7 +60,7 @@ let make_state ~download_index repo =
         if OpamFilename.exists local_index_file then
           OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
         try
-	  OpamGlobals.msg "[%s] \tDownloading %s\n"
+	  OpamGlobals.msg "[%s] Downloading %s\n"
 	    (OpamGlobals.colorise `green
                (OpamRepositoryName.to_string repo.repo_name))
 	    (OpamFilename.to_string remote_index_file);
@@ -142,7 +142,7 @@ module B = struct
       let state = make_state ~download_index:true repo in
       try
         (* Download index.tar.gz *)
-	OpamGlobals.msg "[%s] \tDownloading %s\n"
+	OpamGlobals.msg "[%s] Downloading %s\n"
 	  (OpamGlobals.colorise `green
              (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.to_string state.remote_index_archive);
@@ -210,13 +210,13 @@ module B = struct
        match checksum with
        | None   -> false
        | Some c -> OpamFilename.digest local_file = c then (
-      OpamGlobals.msg "[%s] \t%s is in the local cache, using it.\n"
+      OpamGlobals.msg "[%s] %s is in the local cache, using it.\n"
         (OpamGlobals.colorise `green (OpamPackage.to_string package))
         (OpamFilename.Base.to_string base);
       Result (F local_file)
     )
     else (
-      OpamGlobals.msg "[%s] \tDownloading %s\n"
+      OpamGlobals.msg "[%s] Downloading %s\n"
         (OpamGlobals.colorise `green (OpamPackage.to_string package))
         (OpamFilename.to_string filename);
       try
@@ -236,7 +236,7 @@ module B = struct
       if is_up_to_date state local_file then
         Up_to_date local_file
       else (
-	OpamGlobals.msg "[%s] \tDownloading %s\n"
+	OpamGlobals.msg "[%s] Downloading %s\n"
 	  (OpamGlobals.colorise `green
              (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.prettify filename);
