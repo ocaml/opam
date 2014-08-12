@@ -417,7 +417,7 @@ let bad_subcommand command subcommands usersubcommand userparams =
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
-  Term.info ~sdocs:global_option_section ~docs:"COMBDS" ~doc ~man title
+  Term.info ~sdocs:global_option_section ~docs:"COMMANDS" ~doc ~man title
 
 let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
