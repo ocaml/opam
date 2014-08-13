@@ -109,6 +109,6 @@ fastclean:
 
 cold:
 	./shell/bootstrap-ocaml.sh
-	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure $(CONFIGURE_ARGS)
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE) lib-ext
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE)
