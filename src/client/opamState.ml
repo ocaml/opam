@@ -41,7 +41,9 @@ let confirm fmt =
           | "n" | "no" -> false
           | _  -> loop ()
       in loop ()
-    with End_of_file -> false
+    with
+    | End_of_file -> OpamGlobals.msg "n\n"; false
+    | Sys.Break as e -> OpamGlobals.msg "\n"; raise e
   ) fmt
 
 let read fmt =
