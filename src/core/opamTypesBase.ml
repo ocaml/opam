@@ -35,6 +35,14 @@ let address_of_string str =
   | None       -> OpamSystem.real_path str, None
   | Some (a,c) -> OpamSystem.real_path a, Some c
 
+let guess_version_control dir =
+  let open OpamFilename in
+  let open OP in
+  if exists_dir (dir / ".git") then Some`git else
+  if exists_dir (dir / ".hg") then Some `hg else
+  if exists_dir (dir / "_darcs") then Some `darcs else
+    None
+
 let parse_url (s,c) =
   let url_kind_of_string = function
     | "http" | "https" | "ftp" -> `http
@@ -55,15 +63,7 @@ let parse_url (s,c) =
     match Re_str.bounded_split (Re_str.regexp_string "://") s 2 with
     | ["file"; address] -> (address,c), `local
     | [proto; _] -> (s,c), url_kind_of_string proto
-    | [address] ->
-      let dir = OpamFilename.Dir.of_string address in
-      if OpamFilename.exists_dir OpamFilename.OP.(dir / ".git")
-      then (address,c), `git
-      else if OpamFilename.exists_dir OpamFilename.OP.(dir / ".hg")
-      then (address,c), `hg
-      else if OpamFilename.exists_dir OpamFilename.OP.(dir / "_darcs")
-      then (address,c), `darcs
-      else (address,c), `local
+    | [address] -> (address,c), `local
     | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
 
 let string_of_repository_kind = function
