@@ -585,8 +585,8 @@ let global_options =
       Arg.(some string) None in
   let no_self_upgrade =
     mk_flag ~section ["no-self-upgrade"]
-      "Opam with normally replace itself with a newer version found \
-       at $(b,OPAMROOT/opam). This disables this behaviour." in
+      "OPAM will replace itself with a newer binary found \
+       at $(b,OPAMROOT/opam) if present. This disables this behaviour." in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $no_base_packages $compat_mode_1_0 $external_solver
