@@ -484,6 +484,13 @@ let uname_s () =
   with Unix.Unix_error _ | Sys_error _ ->
     None
 
+let uname_m () =
+  try
+    with_process_in "uname -m"
+      (fun ic -> Some (strip (input_line ic)))
+  with Unix.Unix_error _ | Sys_error _ ->
+    None
+
 let shell_of_string = function
   | "tcsh"
   | "csh"  -> `csh

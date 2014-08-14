@@ -586,6 +586,7 @@ let global_variable_names = [
                            available";
   "ocaml-native-dynlink", "Whether native dynlink is available on this \
                            installation";
+  "arch",                 "The current arch, as returned by \"uname -m\"";
 ]
 let package_variable_names = [
   "name",      "Name of the package";
@@ -659,6 +660,7 @@ let resolve_variable t ?opam local_variables v =
     | "ocaml-native-dynlink" ->
       bool (OpamSystem.ocaml_natdynlink_available
               (OpamFilename.Dir.to_string (OpamPath.Switch.lib_dir t.root t.switch)))
+    | "arch"          -> string (OpamGlobals.arch ())
     | _               -> None
   in
   let get_package_var opam v =

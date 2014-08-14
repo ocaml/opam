@@ -375,6 +375,12 @@ let os () =
     os
   | Some os -> os
 
+let arch =
+  let arch =
+    lazy (OpamMisc.Option.default "Unknown" (OpamMisc.uname_m ()))
+  in
+  fun () -> Lazy.force arch
+
 let string_of_os = function
   | Darwin    -> "darwin"
   | Linux     -> "linux"
