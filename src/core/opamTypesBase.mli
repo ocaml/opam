@@ -38,6 +38,9 @@ val address_of_string: string -> address
     path in case of [file://] *)
 val parse_url: address -> address * repository_kind
 
+(** Scan the given directory for version control *)
+val guess_version_control: dirname -> [`git|`hg|`darcs] option
+
 (** Pretty-print repository kinds. *)
 val string_of_repository_kind: repository_kind -> string
 

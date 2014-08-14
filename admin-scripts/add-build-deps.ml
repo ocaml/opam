@@ -1,6 +1,6 @@
 #!/usr/bin/env opam-admin.top
 
-#directory "+../opam";;
+#directory "+../opam-lib";;
 open Opam_admin_top;;
 
 (* Add the "build" dependency flag to all ocamlfind depends *)

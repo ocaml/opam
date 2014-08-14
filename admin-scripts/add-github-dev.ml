@@ -1,5 +1,5 @@
 #!/usr/bin/env opam-admin.top
-#directory "+../opam";;
+#directory "+../opam-lib";;
 open Opam_admin_top;;
 
 #use "topfind";;

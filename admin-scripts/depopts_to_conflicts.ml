@@ -1,23 +1,37 @@
 #!/usr/bin/env opam-admin.top
 
-#directory "+../opam";;
+#directory "+../opam-lib";;
 open Opam_admin_top;;
 
 map_packages ~opam:(fun opam ->
     let depopts =
+      let formula = OpamFile.OPAM.depopts opam in
       let names =
-        OpamMisc.remove_duplicates
-          (List.map fst (OpamFormula.atoms (OpamFile.OPAM.depopts opam))) in
-      OpamFormula.ors (List.rev_map (fun n -> OpamFormula.Atom (n, OpamFormula.Empty)) names)
+        OpamMisc.remove_duplicates @@
+        List.map fst @@
+        OpamFormula.atoms @@
+        OpamFormula.formula_of_extended ~filter:(fun _ -> true) @@
+        formula in
+      OpamFormula.ors @@
+      List.rev_map (fun n ->
+          let flags =
+            OpamMisc.remove_duplicates @@
+            OpamFormula.fold_left (fun acc (name,(flags,_)) ->
+                if name = n then flags @ acc else acc)
+              [] formula
+          in
+          OpamFormula.Atom (n, (flags,OpamFormula.Empty)))
+        names
     in
     let conflicts = (* add complement of the depopts as conflicts *)
       let module NM = OpamPackage.Name.Map in
       let depopts = (* get back a map (name => version_constraint) *)
         (* XXX this takes _all_ the atoms not considering con/disjunctions *)
-        OpamFormula.fold_left (fun acc (name,f) ->
-            try NM.add name (OpamFormula.ors [f; NM.find name acc]) acc
+        OpamFormula.fold_left (fun acc (name,(_,f)) ->
+            try
+              NM.add name ((OpamFormula.ors [f; NM.find name acc])) acc
             with Not_found -> NM.add name f acc)
-          OpamPackage.Name.Map.empty
+          NM.empty
           (OpamFile.OPAM.depopts opam) in
       let neg_depopts =
         NM.fold (fun name f acc ->

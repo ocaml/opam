@@ -1,6 +1,6 @@
 #!/usr/bin/env opam-admin.top
 
-#directory "+../opam";;
+#directory "+../opam-lib";;
 open Opam_admin_top;;
 
 (* Remove '!=' from the formulas, for backwards compatibility with 1.1 *)
