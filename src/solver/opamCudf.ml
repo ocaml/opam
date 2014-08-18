@@ -499,6 +499,7 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
       close_out oc
     in
     OpamSystem.command
+      ~verbose:(!OpamGlobals.debug_level >= 2)
       (external_solver_command ~input:solver_in ~output:solver_out ~criteria);
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
