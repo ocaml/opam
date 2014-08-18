@@ -148,6 +148,8 @@ type os =
 val os : unit -> os
 val os_string : unit -> string
 
+val arch : unit -> string
+
 val makecmd : (unit -> string) ref
 
 val log_limit : int
