@@ -52,7 +52,7 @@ module Git = struct
               [ "git" ; "remote" ; "add" ; "origin"; fst repo.repo_address ] ]
         );
         let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
-        let refspec = Printf.sprintf "+%s:FETCH_HEAD" branch in
+        let refspec = Printf.sprintf "+%s:refs/heads/FETCH_HEAD" branch in
         OpamSystem.command [ "git" ; "fetch" ; "origin"; refspec ]
       )
 
