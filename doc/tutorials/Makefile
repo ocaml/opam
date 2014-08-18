@@ -1,4 +1,8 @@
-all: opam.wiki
+all:
+	@echo "**DEPRECATED**"
+	@echo "Use 'make wiki' if you really want to build the doc the old way"
+
+wiki: opam.wiki
 	cd opam.wiki && git pull
 	$(MAKE) Quick_Install.html Basic_Usage.html FAQ.html \
 		Advanced_Usage.html Packaging.html \

@@ -19,8 +19,8 @@ endif
 SRCEXTDIR = ../src_ext/lib
 INCLUDE = $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
 
-.PHONY: man html dev-manual tutorials
-all: man tutorials dev html
+.PHONY: man html dev-manual tutorials pages
+all: man dev html pages
 
 man:
 	rm -rf man
@@ -53,7 +53,14 @@ html:
 	mkdir -p html/
 	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/ || true
 
+pages/%.html: pages/%.md
+	omd $^ -o $@
+
+PAGES=$(wildcard pages/*.md)
+
+pages: $(PAGES:.md=.html)
+
 clean:
-	rm -rf man html man-html
+	rm -rf man html man-html pages/*.html
 	$(MAKE) -C dev-manual clean
 	$(MAKE) -C tutorials clean
