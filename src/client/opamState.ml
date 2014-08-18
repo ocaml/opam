@@ -1713,6 +1713,7 @@ let complete_sh    = "complete.sh"
 let complete_zsh   = "complete.zsh"
 let variables_sh   = "variables.sh"
 let variables_csh  = "variables.csh"
+let variables_fish = "variables.fish"
 let init_sh        = "init.sh"
 let init_zsh       = "init.zsh"
 let init_csh       = "init.csh"
@@ -1730,6 +1731,8 @@ let source t ~shell ?(interactive_only=false) f =
     match shell with
     | `csh ->
       Printf.sprintf "source %s >& /dev/null || true\n" (file f)
+    | `fish ->
+      Printf.sprintf ". %s > /dev/null 2> /dev/null or true\n" (file f)
     | _ ->
       Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
   in
@@ -1737,6 +1740,8 @@ let source t ~shell ?(interactive_only=false) f =
     match shell with
     | `csh ->
       Printf.sprintf "if (tty -s >&/dev/null) then\n  %sendif\n" s
+    | `fish ->
+      Printf.sprintf "if tty -s >/dev/null 2>&1\n %send\n" s
     | _ ->
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
@@ -1891,11 +1896,13 @@ let update_ocamlinit () =
 
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
-  let sh  (k,v) = Printf.sprintf "%s=%s; export %s;\n" k v k in
-  let csh (k,v) = Printf.sprintf "setenv %s %S;\n" k v in
+  let sh   (k,v) = Printf.sprintf "%s=%s; export %s;\n" k v k in
+  let csh  (k,v) = Printf.sprintf "setenv %s %S;\n" k v in
+  let fish (k,v) = Printf.sprintf "set -gx %s %s\n" k v in
   let export = match shell with
     | `zsh
     | `sh  -> sh
+    | `fish -> fish
     | `csh -> csh in
   let aux (ident, symbol, string) =
     let string = OpamFilter.substitute_string fenv string in
@@ -1939,9 +1946,10 @@ let update_init_scripts t ~global =
     | None   -> []
     | Some g ->
       let scripts = [
-        `sh,  init_sh , (variables_sh , switch_eval_sh, complete_sh);
-        `zsh, init_zsh, (variables_sh , switch_eval_sh, complete_zsh);
-        `csh, init_csh, (variables_csh, switch_eval_sh, complete_sh);
+        `sh,   init_sh ,  (variables_sh  , switch_eval_sh, complete_sh);
+        `zsh,  init_zsh,  (variables_sh  , switch_eval_sh, complete_zsh);
+        `csh,  init_csh,  (variables_csh , switch_eval_sh, complete_sh);
+        `fish, init_fish, (variables_fish, switch_eval_sh, complete_sh);
       ] in
       let aux (shell, init, scripts) =
         init,
@@ -1951,17 +1959,20 @@ let update_init_scripts t ~global =
     (complete_sh   , OpamScript.complete);
     (complete_zsh  , OpamScript.complete_zsh);
     (switch_eval_sh, OpamScript.switch_eval);
-    (variables_sh  , string_of_env_update t `sh  (env_updates ~opamswitch:false t));
-    (variables_csh , string_of_env_update t `csh (env_updates ~opamswitch:false t));
+    (variables_sh  , string_of_env_update t `sh   (env_updates ~opamswitch:false t));
+    (variables_csh , string_of_env_update t `csh  (env_updates ~opamswitch:false t));
+    (variables_fish, string_of_env_update t `fish (env_updates ~opamswitch:false t));
   ] @
                 init_scripts
   in
   let overwrite = [
     init_sh;
     init_csh;
+    init_fish;
     init_zsh;
     variables_sh;
     variables_csh;
+    variables_fish;
   ] in
   let updated = ref false in
   let write (name, body) =
@@ -1994,7 +2005,7 @@ let update_init_scripts t ~global =
             o.switch_eval
         else
           OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_file)
-      [ init_sh; init_zsh; init_csh ]
+      [ init_sh; init_zsh; init_csh; init_fish ]
 
 let status_of_init_file t init_sh =
   let init_sh = OpamPath.init t.root // init_sh in
@@ -2118,7 +2129,11 @@ let eval_string () =
       Printf.sprintf " --root=%s" !OpamGlobals.root_dir
     else
       "" in
-  Printf.sprintf "eval `opam config env%s`\n" root
+  match OpamMisc.guess_shell_compat () with
+  | `fish ->
+    Printf.sprintf "eval (opam config env%s)\n" root
+  | _ ->
+    Printf.sprintf "eval `opam config env%s`\n" root
 
 let up_to_date_env t =
   let changes =
@@ -2178,7 +2193,10 @@ let update_setup_interactive t shell dot_profile =
   let update dot_profile =
     let modify_user_conf = dot_profile <> None in
     let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
-    let global = Some { complete = true ; switch_eval = true } in
+    let complete, switch_eval = match shell with
+      | `fish | `csh -> false, false
+      | _     -> true, true in
+    let global = Some { complete ; switch_eval } in
     OpamGlobals.msg "\n";
     update_setup t user global;
     modify_user_conf in
