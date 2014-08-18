@@ -1,0 +1,17 @@
+# Contains the documentation menu with the following syntax:
+# <string> without extension -> A menu title
+# <string>.md -> A markdown page
+# empty <string> -> A menu divider
+OPAM 1.2 BETA
+index.md
+
+Basics
+Quick_Install.md
+Basic_Usage.md
+FAQ.md
+
+Advanced
+Advanced_Usage.md
+Packaging.md
+Specifying_Solver_Preferences.md
+
