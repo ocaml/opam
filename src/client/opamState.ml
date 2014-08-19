@@ -554,7 +554,13 @@ let dev_package t nv =
 
 let pinned_packages t =
   OpamPackage.Name.Map.fold
-    (fun name _ -> OpamPackage.Set.add (pinned t name))
+    (fun name _ acc ->
+       try OpamPackage.Set.add (pinned t name) acc
+       with e ->
+         OpamMisc.fatal e;
+         OpamGlobals.error "Ignoring invalid pinned package %s"
+           (OpamPackage.Name.to_string name);
+         acc)
     t.pinned OpamPackage.Set.empty
 
 let descr_opt t nv =
