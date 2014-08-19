@@ -125,7 +125,7 @@ module B = struct
     pull_file_quiet local_dirname remote_filename
 
   let pull_dir package local_dirname remote_dirname =
-    OpamGlobals.msg "[%s] \tSynchronizing with %s\n"
+    OpamGlobals.msg "[%s] Synchronizing with %s\n"
       (OpamGlobals.colorise `green (OpamPackage.to_string package))
       (OpamFilename.Dir.to_string remote_dirname);
     pull_dir_quiet local_dirname remote_dirname
