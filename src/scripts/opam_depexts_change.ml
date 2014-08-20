@@ -23,6 +23,14 @@ type args = {
   deps: string list;
 }
 
+let package_name =
+  let parse str =
+    try `Ok (OpamPackage.Name.of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf pkg = Format.pp_print_string ppf (OpamPackage.Name.to_string pkg) in
+  parse, print
+
 let args =
   let open Cmdliner in
   let os =
@@ -35,7 +43,7 @@ let args =
   in
   let pkg =
     let doc = "OPAM package name" in
-    Arg.(required & pos 1 (some OpamArg.package_name) None & info [] ~doc)
+    Arg.(required & pos 1 (some package_name) None & info [] ~doc)
   in
   Term.(pure (fun os deps pkg -> { os; deps; pkg }) $ os $ deps $ pkg)
 

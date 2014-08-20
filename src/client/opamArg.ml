@@ -281,7 +281,10 @@ let compiler =
   parse, print
 
 let package_name =
-  let parse str = `Ok (OpamPackage.Name.of_string str) in
+  let parse str =
+    try `Ok (OpamPackage.Name.of_string str)
+    with Failure msg -> `Error msg
+  in
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 

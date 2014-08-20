@@ -27,9 +27,7 @@ let args =
     let doc = "Normalize all files in the repository." in
     Arg.(value & flag & info ["n";"normalize"] ~doc)
   in
-  Term.(pure (fun globals normalize ->
-      OpamArg.apply_global_options globals; { normalize }
-    ) $ OpamArg.global_options $ normalize)
+  Term.(pure (fun normalize -> { normalize }) $ normalize)
 
 let process args =
 
