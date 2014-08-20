@@ -202,6 +202,15 @@ module Option: sig
   val iter: ('a -> unit) -> 'a option -> unit
 
   val default: 'a -> 'a option -> 'a
+
+  val default_map: 'a option -> 'a option -> 'a option
+
+  module Op: sig
+    val (>>=): 'a option -> ('a -> 'b option) -> 'b option
+    val (>>|): 'a option -> ('a -> 'b) -> 'b option
+    val (+!): 'a option -> 'a -> 'a
+    val (++): 'a option -> 'a option -> 'a option
+  end
 end
 
 (** {2 Misc} *)

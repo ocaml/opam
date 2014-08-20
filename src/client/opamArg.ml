@@ -128,10 +128,12 @@ let apply_global_options o =
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
-  OpamGlobals.external_solver := o.external_solver;
+  OpamGlobals.external_solver :=
+    OpamMisc.Option.Op.(o.external_solver ++ !OpamGlobals.external_solver);
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.use_internal_solver;
-  OpamGlobals.cudf_file := o.cudf_file;
+  OpamGlobals.cudf_file :=
+    OpamMisc.Option.Op.(o.cudf_file ++ !OpamGlobals.cudf_file);
   OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
   match o.solver_preferences with
   | None -> ()

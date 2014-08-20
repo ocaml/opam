@@ -1359,9 +1359,9 @@ let load_state ?(save_cache=true) call_site =
   in
   OpamGlobals.solver_preferences := solver_prefs;
   OpamGlobals.external_solver :=
-    (match !OpamGlobals.external_solver with
-     | None -> OpamFile.Config.solver config
-     | some -> some);
+    OpamMisc.Option.Op.(
+      !OpamGlobals.external_solver ++
+      OpamFile.Config.solver config);
 
   let opams =
     let file = OpamPath.state_cache root in
