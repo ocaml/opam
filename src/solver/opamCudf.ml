@@ -429,7 +429,17 @@ let to_cudf univ req = (
 )
 
 let external_solver_exists =
-  lazy (OpamSystem.command_exists (OpamGlobals.get_external_solver ()))
+  lazy (
+    let ex = OpamSystem.command_exists (OpamGlobals.get_external_solver ()) in
+    if not ex && !OpamGlobals.use_external_solver &&
+       !OpamGlobals.external_solver <> None
+    then
+      OpamGlobals.error_and_exit
+        "You specified you wanted to use external solver %s, but it cannot be found.\n\
+         Fix your installation, your configuration or use '--use-internal-solver'."
+        (OpamGlobals.get_external_solver ())
+    else ex
+  )
 
 let external_solver_available () =
   !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)

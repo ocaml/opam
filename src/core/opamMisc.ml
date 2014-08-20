@@ -273,6 +273,21 @@ module Option = struct
   let default dft = function
     | None -> dft
     | Some x -> x
+
+  let default_map dft = function
+    | None -> dft
+    | some -> some
+
+  module Op = struct
+    let (>>=) = function
+      | None -> fun _ -> None
+      | Some x -> fun f -> f x
+    let (>>|) opt f = map f opt
+    let (+!) opt dft = default dft opt
+    let (++) = function
+      | None -> fun opt -> opt
+      | some -> fun _ -> some
+  end
 end
 
 let strip str =
