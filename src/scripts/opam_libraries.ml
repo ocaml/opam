@@ -26,6 +26,14 @@ type args = {
   infer: bool;
 }
 
+let package_name =
+  let parse str =
+    try `Ok (OpamPackage.Name.of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf pkg = Format.pp_print_string ppf (OpamPackage.Name.to_string pkg) in
+  parse, print
+
 let args =
   let open Cmdliner in
   let infer =
@@ -42,7 +50,7 @@ let args =
   in
   let pkg =
     let doc = "OPAM package name" in
-    Arg.(required & pos 0 (some OpamArg.package_name) None & info [] ~doc)
+    Arg.(required & pos 0 (some package_name) None & info [] ~doc)
   in
   Term.(pure (fun infer lib syntax pkg ->
       let mk x = StringMap.of_list (List.map (fun l -> l, None) x) in
