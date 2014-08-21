@@ -586,7 +586,7 @@ PACKAGE_URL=''
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
-OCAML_PKG_dose
+OCAML_PKG_dose3
 OCAML_PKG_cudf
 OCAML_PKG_ocamlgraph
 OCAML_PKG_cmdliner
@@ -4451,17 +4451,17 @@ $as_echo "not found" >&6; }
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package dose" >&5
-$as_echo_n "checking for OCaml findlib package dose... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package dose3" >&5
+$as_echo_n "checking for OCaml findlib package dose3... " >&6; }
 
   unset found
   unset pkg
   found=no
-  for pkg in dose  ; do
+  for pkg in dose3  ; do
     if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
 $as_echo "found" >&6; }
-      OCAML_PKG_dose=$pkg
+      OCAML_PKG_dose3=$pkg
       found=yes
       break
     fi
@@ -4469,7 +4469,7 @@ $as_echo "found" >&6; }
   if test "$found" = "no" ; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-    OCAML_PKG_dose=no
+    OCAML_PKG_dose3=no
   fi
 
 
@@ -4482,7 +4482,7 @@ if test "$OCAML_PKG_extlib" = "no" ||
    test "$OCAML_PKG_cmdliner" = "no" ||
    test "$OCAML_PKG_ocamlgraph" = "no" ||
    test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose" = "no"; then
+   test "$OCAML_PKG_dose3" = "no"; then
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "binaries, run 'make lib-ext' to download and include them."
