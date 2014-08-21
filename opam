@@ -1,0 +1,16 @@
+opam-version: "1.1"
+name: "opam-lib"
+maintainer: "opam-devel@lists.ocaml.org"
+homepage: "https://github.com/ocaml/opam"
+build: [
+  ["./configure"]
+  [make]
+]
+depends: [
+  "ocamlgraph"
+  "cmdliner"
+  "dose" {= "3.2.2+opam"}
+  "cudf"
+  "re" {>= "1.2.0"}
+  "ocamlfind"
+]
