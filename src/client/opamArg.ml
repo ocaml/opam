@@ -201,7 +201,8 @@ let help_sections = [
 
   `S "ENVIRONMENT VARIABLES";
   `P "OPAM makes use of the environment variables listed here. Boolean \
-      variables are considered true when set to a non-empty string.";
+      variables should be set to \"0\", \"no\" of \"false\" to disable, \
+      \"1\", \"yes\" or \"true\" to enable.";
 
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
@@ -211,7 +212,7 @@ let help_sections = [
       See also option --criteria");
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
-  `P "$(i,OPAMDEBUG) see option `--debug'.";
+  `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
@@ -520,16 +521,17 @@ let global_options =
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message to stderr. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value." in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to \"true\"." in
   let debug_level =
     mk_opt ~section ["debug-level"] "LEVEL"
       "Like `--debug', but allows specifying the debug level (`--debug' \
-       sets it to 1."
+       sets it to 1). Equivalent to setting $(b,\\$OPAMDEBUG) to a positive \
+       integer."
       Arg.(some int) None in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. Show output of all sub-commands. \
-       This is equivalent to setting $(b,\\$OPAMVERBOSE) to a non-empty value." in
+       This is equivalent to setting $(b,\\$OPAMVERBOSE) to \"true\"." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let color =
@@ -546,7 +548,7 @@ let global_options =
       "Disable interactive mode and answer yes \
        to all questions that would otherwise be \
        asked to the user. \
-       This is equivalent to setting $(b,\\$OPAMYES) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMYES) to \"true\"." in
   let strict =
     mk_flag ~section ["strict"]
       "Fail whenever an error is found in a package definition \
@@ -608,23 +610,23 @@ let build_options =
   let keep_build_dir =
     mk_flag ["b";"keep-build-dir"]
       "Keep the build directory. \
-       This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to \"true\"." in
   let no_checksums =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
-       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"." in
   let req_checksums =
     mk_flag ["require-checksums"]
       "Reject the installation of packages that don't provide a checksum for the upstream archives. \
-       This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
     mk_flag ["t";"build-test"]
       "Build and $(b,run) the package unit-tests. \
-       This is equivalent to setting $(b,\\$OPAMBUILDTEST) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMBUILDTEST) to \"true\"." in
   let build_doc =
     mk_flag ["d";"build-doc"]
       "Build the package documentation. \
-       This is equivalent to setting $(b,\\$OPAMBUILDDOC) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMBUILDDOC) to \"true\"." in
   let make =
     mk_opt ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
