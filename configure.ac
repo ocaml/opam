@@ -63,7 +63,7 @@ AC_CHECK_OCAML_PKG([re.glob])
 AC_CHECK_OCAML_PKG([cmdliner])
 AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG([cudf])
-AC_CHECK_OCAML_PKG([dose])
+AC_CHECK_OCAML_PKG([dose3])
 
 dnl echo
 dnl echo "extlib........................ ${OCAML_PKG_extlib}"
@@ -71,7 +71,7 @@ dnl echo "re............................ ${OCAML_PKG_re}"
 dnl echo "cmdliner...................... ${OCAML_PKG_cmdliner}"
 dnl echo "graph......................... ${OCAML_PKG_ocamlgraph}"
 dnl echo "cudf.......................... ${OCAML_PKG_cudf}"
-dnl echo "dose.......................... ${OCAML_PKG_dose}"
+dnl echo "dose3......................... ${OCAML_PKG_dose3}"
 echo
 
 if test "$OCAML_PKG_extlib" = "no" ||
@@ -79,7 +79,7 @@ if test "$OCAML_PKG_extlib" = "no" ||
    test "$OCAML_PKG_cmdliner" = "no" ||
    test "$OCAML_PKG_ocamlgraph" = "no" ||
    test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose" = "no"; then
+   test "$OCAML_PKG_dose3" = "no"; then
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "binaries, run 'make lib-ext' to download and include them."
