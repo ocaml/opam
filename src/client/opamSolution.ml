@@ -204,7 +204,7 @@ let print_variable_warnings t =
       OpamGlobals.msg "The following variables are set in your environment, it \
                        is advised to unset them for OPAM to work correctly.\n";
       List.iter (OpamGlobals.msg " - %s\n") !variables;
-      if not (OpamState.confirm "Do you want to continue ?") then
+      if not (OpamGlobals.confirm "Do you want to continue ?") then
         OpamGlobals.exit 1;
     );
     variable_warnings := true;
@@ -558,7 +558,7 @@ let confirmation ?ask requested solution =
   !OpamGlobals.yes ||
   match ask with
   | Some false -> true
-  | Some true -> OpamState.confirm "Do you want to continue ?"
+  | Some true -> OpamGlobals.confirm "Do you want to continue ?"
   | None ->
     let open PackageActionGraph in
     let solution_packages =
@@ -568,7 +568,7 @@ let confirmation ?ask requested solution =
         (OpamPackage.Name.Set.of_list
            (List.map OpamPackage.name solution.to_remove)) in
     OpamPackage.Name.Set.equal requested solution_packages
-    || OpamState.confirm "Do you want to continue ?"
+    || OpamGlobals.confirm "Do you want to continue ?"
 
 (* Apply a solution *)
 let apply ?ask t action ~requested solution =

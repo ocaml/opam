@@ -393,11 +393,6 @@ val jobs: state -> int
 (** {2 Download Jobs} *)
 val dl_jobs: state -> int
 
-(** {2 Misc} *)
-
-(** Ask the user to press Y/y/N/n to continue *)
-val confirm: ('a, unit, string, bool) format4 -> 'a
-
 (** Consistency checks: do the base package for the current compiler
     are installed ? *)
 val check_base_packages: state -> unit

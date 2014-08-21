@@ -30,36 +30,6 @@ let () =
   OpamLocal.register ();
   OpamHg.register ()
 
-let confirm fmt =
-  Printf.ksprintf (fun msg ->
-    try
-      let rec loop () =
-        OpamGlobals.msg "%s [Y/n] %!" msg;
-        if !OpamGlobals.yes then (OpamGlobals.msg "y\n"; true)
-        else match String.lowercase (read_line ()) with
-          | "y" | "yes" | "" -> true
-          | "n" | "no" -> false
-          | _  -> loop ()
-      in loop ()
-    with
-    | End_of_file -> OpamGlobals.msg "n\n"; false
-    | Sys.Break as e -> OpamGlobals.msg "\n"; raise e
-  ) fmt
-
-let read fmt =
-  Printf.ksprintf (fun msg ->
-    OpamGlobals.msg "%s %!" msg;
-    if not !OpamGlobals.yes then (
-      try match read_line () with
-        | "" -> None
-        | s  -> Some s
-      with End_of_file ->
-        OpamGlobals.msg "\n";
-        None
-    ) else
-      None
-  ) fmt
-
 let switch_reinstall_hook = ref (fun _ -> assert false)
 
 module Types = struct
@@ -1298,7 +1268,7 @@ let remove_state_cache () =
 let reinstall_system_compiler t =
   log "reinstall-system-compiler";
   let continue =
-    confirm "Your system compiler has been upgraded. Do you want to upgrade \
+    OpamGlobals.confirm "Your system compiler has been upgraded. Do you want to upgrade \
              your OPAM installation?" in
 
   if continue then (
@@ -2211,7 +2181,7 @@ let update_setup_interactive t shell dot_profile =
 
   OpamGlobals.msg "\n";
 
-  match read
+  match OpamGlobals.read
       "In normal operation, OPAM only alters files within ~/.opam.\n\
        \n\
        During this initialisation, you can allow OPAM to add information to two\n\
@@ -2249,7 +2219,7 @@ let update_setup_interactive t shell dot_profile =
   with
   | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
   | Some ("f" | "F" | "file" | "FILE") ->
-    begin match read "  Enter the name of the file to update:" with
+    begin match OpamGlobals.read "  Enter the name of the file to update:" with
       | None   ->
         OpamGlobals.msg "-- No filename: skipping the auto-configuration step --\n";
         false
@@ -2544,8 +2514,8 @@ let update_dev_package t nv =
           (OpamPackage.to_string nv) (string_of_address remote_url)
           (String.concat "\n  - "
              (List.map diff_to_string (diff user_meta new_meta)));
-        confirm "\nOverride files in %s\n\
-                \  (there will be a backup) ?"
+        OpamGlobals.confirm "\nOverride files in %s\n\
+                            \  (there will be a backup) ?"
           (OpamFilename.Dir.to_string overlay)
       then (
         let bak =

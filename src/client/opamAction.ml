@@ -115,12 +115,12 @@ let install_package t nv =
         (fun (src, dst) ->
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst
-          && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+          && OpamGlobals.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
             OpamFilename.install ~src:src_file ~dst ()
           else begin
             OpamGlobals.msg "Installing %s to %s.\n"
               (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
-            if OpamState.confirm "Continue ?" then
+            if OpamGlobals.confirm "Continue ?" then
               OpamFilename.install ~src:src_file ~dst ()
           end
         ) (OpamFile.Dot_install.misc install);
@@ -409,7 +409,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   List.iter (fun (_,dst) ->
       if OpamFilename.exists dst then begin
         OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-        if OpamState.confirm "Continue ?" then
+        if OpamGlobals.confirm "Continue ?" then
           OpamFilename.remove dst
       end
     ) (OpamFile.Dot_install.misc install);

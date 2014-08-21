@@ -996,7 +996,7 @@ module API = struct
       if not root_empty then (
         OpamGlobals.warning "%s exists and is not empty"
           (OpamFilename.Dir.to_string root);
-        if not (OpamState.confirm "Proceed ?") then OpamGlobals.exit 1);
+        if not (OpamGlobals.confirm "Proceed ?") then OpamGlobals.exit 1);
       try
 
         (* Check for the external dependencies *)
@@ -1382,7 +1382,7 @@ module API = struct
              (OpamMisc.pretty_list
                 (List.map OpamFormula.short_string_of_atom not_installed))
              (match not_installed with [_] -> "is" | _ -> "are");
-           OpamState.confirm "Install ?")
+           OpamGlobals.confirm "Install ?")
         then
           (install_t not_installed None false t;
            if reinstall = [] then OpamGlobals.exit 0
