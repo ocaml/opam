@@ -1331,6 +1331,11 @@ module API = struct
           (OpamSolver.reverse_dependencies
              ~depopts:false ~installed:true universe packages) in
       let to_keep =
+        if force then OpamPackage.Set.filter (fun p ->
+            let name = OpamPackage.Name.to_string (OpamPackage.name p) in
+            try
+              String.sub name 0 5 = "base-" && name <> "base-bytes"
+            with _ -> false) t.installed else
         (if autoremove then t.installed_roots else t.installed)
         -- to_remove -- full_orphans -- orphan_versions
       in
