@@ -77,7 +77,7 @@ module Make (VCS: VCS) = struct
 
   let pull_repo repo =
     OpamGlobals.msg "[%s] Fetching %s\n"
-      (OpamGlobals.colorise `green
+      (OpamGlobals.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address);
     ignore (pull_repo repo)
@@ -88,7 +88,7 @@ module Make (VCS: VCS) = struct
     let local_file = OpamFilename.create dirname basename in
     if OpamFilename.exists local_file then (
       OpamGlobals.msg "[%s] Using %s\n"
-        (OpamGlobals.colorise `green
+        (OpamGlobals.colorise `blue
            (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.prettify local_file);
       Up_to_date local_file

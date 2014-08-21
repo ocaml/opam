@@ -61,7 +61,7 @@ let make_state ~download_index repo =
           OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
         try
 	  OpamGlobals.msg "[%s] Downloading %s\n"
-	    (OpamGlobals.colorise `green
+	    (OpamGlobals.colorise `blue
                (OpamRepositoryName.to_string repo.repo_name))
 	    (OpamFilename.to_string remote_index_file);
           let file =
@@ -143,7 +143,7 @@ module B = struct
       try
         (* Download index.tar.gz *)
 	OpamGlobals.msg "[%s] Downloading %s\n"
-	  (OpamGlobals.colorise `green
+	  (OpamGlobals.colorise `blue
              (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.to_string state.remote_index_archive);
         let file =
@@ -256,7 +256,7 @@ module B = struct
         Up_to_date local_file
       else (
 	OpamGlobals.msg "[%s] Downloading %s\n"
-	  (OpamGlobals.colorise `green
+	  (OpamGlobals.colorise `blue
              (OpamRepositoryName.to_string repo.repo_name))
 	  (OpamFilename.prettify filename);
 	curl ~remote_file:filename ~local_file;

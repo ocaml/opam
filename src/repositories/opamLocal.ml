@@ -91,7 +91,7 @@ module B = struct
   let pull_repo repo =
     log "pull-repo";
     OpamGlobals.msg "[%s] Synchronizing with %s\n"
-      (OpamGlobals.colorise `green
+      (OpamGlobals.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address);
     ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.remote_repo repo));
@@ -146,7 +146,7 @@ module B = struct
   let pull_archive repo filename =
     if OpamFilename.exists filename then
       OpamGlobals.msg "[%s] Synchronizing with %s\n"
-        (OpamGlobals.colorise `green
+        (OpamGlobals.colorise `blue
            (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.to_string filename);
     let local_dir = OpamPath.Repository.archives_dir repo in
