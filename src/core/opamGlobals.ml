@@ -281,40 +281,39 @@ let header_width () = 80
 
 let header_msg fmt =
   let utf8camel = "\xF0\x9F\x90\xAB " in (* UTF-8 <U+1F42B, U+0020> *)
-  let padding = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
+  let padding = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\
+                 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
   Printf.ksprintf (fun str ->
     flush stderr;
     if !display_messages then (
       print_char '\n';
       let wpad = header_width () - String.length str - 2 in
-      let wpadl = max (wpad / 2) 3 in
-      if !utf8_msgs then
-        (print_string (colorise `yellow utf8camel);
-         for _i = 1 to wpadl - 6 do print_char ' ' done;
-         for _i = wpadl - 5 to wpadl - 3 do print_char '-' done)
-      else
+      let wpadl = 4 in
         print_string (colorise `cyan (String.sub padding 0 wpadl));
       print_char ' ';
       print_string (colorise `bold str);
       print_char ' ';
-      let wpadr = wpad - wpadl in
+      let wpadr = wpad - wpadl - if !utf8_msgs then 4 else 0 in
       if wpadr > 0 then
-        if !utf8_msgs then print_string "---" else
         print_string
           (colorise `cyan
              (String.sub padding (String.length padding - wpadr) wpadr));
+      if wpadr >= 0 && !utf8_msgs then
+        (print_string "  ";
+         print_string (colorise `yellow utf8camel));
       print_char '\n';
       flush stdout;
     )
   ) fmt
 
 let header_error fmt =
-  let padding = "#=========================================================#" in
+  let padding = "#=======================================\
+                 ========================================#" in
   Printf.ksprintf (fun head fmt ->
       Printf.ksprintf (fun contents ->
           output_char stderr '\n';
           let wpad = header_width () - String.length head - 8 in
-          let wpadl = max (wpad / 2) 3 in
+          let wpadl = 4 in
           output_string stderr (colorise `red (String.sub padding 0 wpadl));
           output_char stderr ' ';
           output_string stderr (colorise `bold "ERROR");
