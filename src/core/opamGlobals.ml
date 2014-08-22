@@ -18,15 +18,24 @@
    all the global OPAM variables can be set using environment variables
    using OPAM<variable> *)
 
-let check var = ref (
-    try OpamMisc.getenv ("OPAM"^var) <> ""
+let check ?(warn=true) var = ref (
+    try
+      match String.lowercase (OpamMisc.getenv ("OPAM"^var)) with
+      | "" | "0" | "no" | "false" -> false
+      | "1" | "yes" | "true" -> true
+      | v ->
+        if warn then
+          Printf.eprintf "[WARNING] Invalid value %S for env variable OPAM%s, \
+                          assumed true.\n" v var;
+        true
     with Not_found -> false
   )
 
-let debug            = check "DEBUG"
+let debug            = check ~warn:false "DEBUG"
 let debug_level      =
   try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
   with Not_found | Failure _ -> ref 1
+let _ = if !debug_level > 1 then debug := true
 let verbose          = check "VERBOSE"
 let color_tri_state =
     try (match OpamMisc.getenv "OPAMCOLOR" with
@@ -54,7 +63,6 @@ let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
-let use_external_solver = ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER")))
 let no_self_upgrade  = check "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 
@@ -122,6 +130,10 @@ let default_external_solver = "aspcud"
 let external_solver = ref(
   try Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER"))
   with Not_found -> None)
+
+let use_external_solver =
+  ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER") ||
+            !external_solver = Some ""))
 
 let get_external_solver () =
   OpamMisc.Option.default default_external_solver !external_solver
