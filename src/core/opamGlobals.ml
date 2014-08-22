@@ -63,7 +63,6 @@ let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
-let use_external_solver = ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER")))
 let no_self_upgrade  = check "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 
@@ -131,6 +130,10 @@ let default_external_solver = "aspcud"
 let external_solver = ref(
   try Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER"))
   with Not_found -> None)
+
+let use_external_solver =
+  ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER") ||
+            !external_solver = Some ""))
 
 let get_external_solver () =
   OpamMisc.Option.default default_external_solver !external_solver
