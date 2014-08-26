@@ -29,8 +29,11 @@ module Git = struct
       OpamSystem.commands [
         [ "git" ; "init" ] ;
         [ "git" ; "remote" ; "add" ; "origin" ; fst repo.repo_address ] ;
+        [ "git" ; "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ] ;
       ]
     )
+
+  let remote_ref = "refs/remotes/opam-ref"
 
   let fetch repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
@@ -52,7 +55,7 @@ module Git = struct
               [ "git" ; "remote" ; "add" ; "origin"; fst repo.repo_address ] ]
         );
         let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
-        let refspec = Printf.sprintf "+%s:refs/heads/FETCH_HEAD" branch in
+        let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
         OpamSystem.command [ "git" ; "fetch" ; "origin"; refspec ]
       )
 
@@ -67,45 +70,24 @@ module Git = struct
             full
       )
 
-  let get_commits repo =
-    match snd repo.repo_address with
-    | None -> [ "FETCH_HEAD" ]
-    | Some c -> [ "refs/remotes/origin/"^c;
-                  "refs/tags/"^c;
-                  c ]
-
   let reset repo =
-    let merge commit =
-      try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit; "--" ]; true
-      with e -> OpamMisc.fatal e; false in
     OpamFilename.in_dir repo.repo_root (fun () ->
-        let ok =
-          List.fold_left (fun ok commit -> if ok then ok else merge commit)
-            false (get_commits repo) in
-        if not ok then OpamSystem.internal_error "Unknown revision: %s."
-            (match snd repo.repo_address with Some a -> a
-                                            | None -> "FETCH_HEAD")
+        try OpamSystem.command [ "git" ; "reset" ; "--hard"; remote_ref; "--" ]
+        with e ->
+          OpamMisc.fatal e;
+          OpamSystem.internal_error "Git error: %s not found." remote_ref
       )
 
   let diff repo =
-    let diff commit =
-      try Some (
-        OpamSystem.read_command_output ["git" ; "diff" ; "--name-only" ; commit ; "--" ])
-      with e -> OpamMisc.fatal e; None in
     OpamFilename.in_dir repo.repo_root (fun () ->
-        let diff =
-          List.fold_left (fun r commit -> match r with
-              | None -> diff commit
-              | Some x -> Some x)
-            None (get_commits repo) in
-        match diff with
-        | Some [] -> false
-        | Some _  -> true
-        | None    ->
-          OpamSystem.internal_error "Unknown revision: %s."
-            (match snd repo.repo_address with Some a -> a
-                                            | None -> "FETCH_HEAD")
-    )
+        try
+          OpamSystem.read_command_output
+            ["git" ; "diff" ; "--name-only" ; "HEAD"; remote_ref; "--" ]
+          <> []
+        with e ->
+          OpamMisc.fatal e;
+          OpamSystem.internal_error "Git error: %s not found." remote_ref
+      )
 
 end
 
