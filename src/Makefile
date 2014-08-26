@@ -215,7 +215,7 @@ SRC_opam-admin = \
   opam_repo_check.ml \
   opam_stats.ml \
   opam_depexts_change.ml \
-  opam_libraries.ml \
+  opam_findlib.ml \
   opam_admin.ml
 
 define PROJ_opam-admin

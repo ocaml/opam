@@ -41,10 +41,10 @@ let depexts_cmd =
   Term.(Opam_depexts_change.(pure process $ args)),
   Term.info "depexts" ~doc
 
-let library_cmd =
-  let doc = "Add library/syntax information." in
-  Term.(Opam_libraries.(pure process $ args)),
-  Term.info "libs" ~doc
+let findlib_cmd =
+  let doc = "Add findlib information." in
+  Term.(Opam_findlib.(pure process $ args)),
+  Term.info "findlib" ~doc
 
 let () =
   try
@@ -52,7 +52,7 @@ let () =
       Term.eval_choice ~catch:false
         default_cmd [
         make_repo_cmd; check_repo_cmd; stats_cmd;
-        depexts_cmd; library_cmd
+        depexts_cmd; findlib_cmd
       ]
     with
     | `Error _ -> exit 2
