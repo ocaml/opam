@@ -10,6 +10,7 @@ all:
 	$(MAKE) opam-check
 	$(MAKE) opam-admin
 	$(MAKE) opam-installer
+	$(MAKE) opam-publish
 	$(MAKE) opamlfind
 	$(MAKE) opam-admin.top
 
@@ -198,7 +199,7 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-TOOLS = opam-check opam-admin opam-installer opamlfind
+TOOLS = opam-check opam-admin opam-installer opam-publish opamlfind
 
 $(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)
@@ -232,6 +233,13 @@ define PROJ_opam-installer
 endef
 export PROJ_opam-installer
 
+define PROJ_opam-publish
+  SOURCES = tools/opam_publish.ml
+  RESULT = opam-publish
+  LIBS = $(LIBS) $(OPAMLIB)
+endef
+export PROJ_opam-publish
+
 define PROJ_opamlfind
   SOURCES = tools/opamlfind.ml
   RESULT = opamlfind
@@ -252,7 +260,7 @@ export PROJ_opam-admin-top
 # --
 
 ifndef SUBPROJS
-  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind opam-admin-top
+  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opam-publish opamlfind opam-admin-top
 endif
 
 OCAMLMAKEFILE = ../OCamlMakefile

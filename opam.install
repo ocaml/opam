@@ -2,6 +2,7 @@ bin: [
   "src/opam"
   "src/opam-admin"
   "src/opam-installer"
+  "src/opam-publish"
 ]
 man: [
   "?doc/man/opam.1"

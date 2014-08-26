@@ -1,12 +1,12 @@
 -include Makefile.config
 
-all: opam-lib opam opam-admin opam-installer
+all: opam-lib opam opam-admin opam-installer opam-publish
 	@
 
 ALWAYS:
 	@
 
-opam-lib opam opam-admin opam-installer all: ALWAYS
+opam-lib opam opam-admin opam-installer opam-publish all: ALWAYS
 
 #backwards-compat
 compile with-ocamlbuild: all
@@ -76,7 +76,7 @@ doc: all
 	$(MAKE) -C doc
 
 .PHONY: man man-html
-man man-html: opam opam-admin opam-installer
+man man-html: opam opam-admin opam-installer opam-publish
 	$(MAKE) -C doc $@
 
 configure: configure.ac m4/*.m4
@@ -101,11 +101,12 @@ fast: src/core/opamGitVersion.ml src/core/opamScript.ml
 	@ln -sf ../_obuild/opam/opam.asm src/opam
 	@ln -sf ../_obuild/opam-admin/opam-admin.asm src/opam-admin
 	@ln -sf ../_obuild/opam-installer/opam-installer.asm src/opam-installer
+	@ln -sf ../_obuild/opam-publish/opam-publish.asm src/opam-publish
 	@ln -sf ../_obuild/opam-check/opam-check.asm src/opam-check
 
 fastclean:
 	@ocp-build -clean
-	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
+	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-publish opam-check)
 
 cold:
 	./shell/bootstrap-ocaml.sh
