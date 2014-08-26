@@ -45,7 +45,9 @@ let color_tri_state =
       )
     with
       | Not_found -> `Auto
-let color            = ref (color_tri_state = `Always)
+let color            =
+  ref (color_tri_state = `Always ||
+       color_tri_state = `Auto && Unix.isatty Unix.stdout)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
