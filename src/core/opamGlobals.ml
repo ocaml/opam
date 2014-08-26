@@ -141,6 +141,8 @@ let get_external_solver () =
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
 
+let search_files = ref ["findlib"]
+
 let default_build_command = [ [ "./build.sh" ] ]
 
 let global_config = "global-config"

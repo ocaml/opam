@@ -44,6 +44,9 @@ module type IO_FILE = sig
 
 end
 
+(** Lines of space-separated words. *)
+module Lines: IO_FILE with type t = string list list
+
 (** Configuration file: [$opam/config] *)
 module Config: sig
 
