@@ -22,19 +22,10 @@ open OpamMisc.OP
 module StringSet = OpamMisc.StringSet
 
 type args = {
-  opam_pkg: name;
+  opam_pkgs: string list;
   findlib_pkgs: string list;
   infer: bool;
 }
-
-let package_name =
-  let parse str =
-    try `Ok (OpamPackage.Name.of_string str)
-    with Failure msg -> `Error msg
-  in
-  let print ppf pkg =
-    Format.pp_print_string ppf (OpamPackage.Name.to_string pkg) in
-  parse, print
 
 let args =
   let open Cmdliner in
@@ -47,26 +38,40 @@ let args =
     Arg.(value & opt (list string) [] & info ["pkg"] ~doc
            ~docv:"FINDLIB-PKGS")
   in
-  let opam_pkg =
-    let doc = "OPAM package name" in
-    Arg.(required & pos 0 (some package_name) None & info [] ~doc
+  let opam_pkgs =
+    let doc = "OPAM package pattern" in
+    Arg.(value & pos_all string [] & info [] ~doc
            ~docv:"OPAM-PKG")
   in
-  Term.(pure (fun infer findlib_pkgs opam_pkg ->
-      { infer; findlib_pkgs; opam_pkg }
-    ) $ infer $ findlib_pkgs $ opam_pkg)
+  Term.(pure (fun infer findlib_pkgs opam_pkgs ->
+      { infer; findlib_pkgs; opam_pkgs }
+    ) $ infer $ findlib_pkgs $ opam_pkgs)
 
 let process args =
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
-
   let packages = OpamRepository.packages_with_prefixes repo in
-
+  let regexps =
+    List.map (fun pattern ->
+        if OpamPackage.Map.exists (fun pkg _ ->
+            OpamPackage.Name.to_string (OpamPackage.name pkg) = pattern
+          ) packages
+        then pattern ^ ".*"
+        else pattern
+      ) args.opam_pkgs
+    |> List.map (fun pattern -> Re.compile (Re_glob.globx pattern))
+  in
+  let should_process package = match regexps with
+    | [] -> true
+    | _  ->
+      let str = OpamPackage.to_string package in
+      List.exists (fun re -> OpamMisc.exact_match re str) regexps
+  in
   OpamPackage.Map.iter (fun package prefix ->
-      let opam_f = OpamPath.Repository.opam repo prefix package in
-      let opam = OpamFile.OPAM.read opam_f in
-      let pkgname = OpamFile.OPAM.name opam in
-      if pkgname = args.opam_pkg then (
-        OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
+      if should_process package then (
+        OpamGlobals.msg "Processing (package) %s\n"
+          (OpamPackage.to_string package);
+        let opam_f = OpamPath.Repository.opam repo prefix package in
+        let opam = OpamFile.OPAM.read opam_f in
         let filename = OpamFilename.dirname opam_f // "findlib" in
         let pkgs0 =
           OpamFile.Lines.safe_read filename
@@ -90,5 +95,5 @@ let process args =
         in
         let pkgs = StringSet.union pkgs0 pkgs1 in
         let contents = List.map (fun x -> [x]) (StringSet.elements pkgs) in
-        OpamFile.Lines.write filename contents)
+        if contents <> [] then OpamFile.Lines.write filename contents)
     ) packages
