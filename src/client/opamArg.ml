@@ -118,7 +118,7 @@ let apply_global_options o =
   OpamGlobals.debug_level := max !OpamGlobals.debug_level o.debug_level;
   OpamMisc.debug       := !OpamGlobals.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
-  OpamGlobals.color    := !OpamGlobals.color || o.color;
+  OpamGlobals.color    := o.color;
   begin match o.switch with
     | None   -> ()
     | Some s -> OpamGlobals.switch := `Command_line s
