@@ -163,7 +163,7 @@ module B = struct
   let curl ~remote_file ~local_file =
     log "curl";
     log "dowloading %a" (slog OpamFilename.to_string) remote_file;
-    OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file);
+    (* OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file); *)
     OpamFilename.download_as ~overwrite:true remote_file local_file
 
   let pull_repo repo =
@@ -196,6 +196,10 @@ module B = struct
         OpamFilename.Set.iter (fun local_file ->
           let remote_file,_,_ =
             OpamFilename.Map.find local_file state.local_remote in
+          OpamGlobals.msg "[%s] Downloading %s\n"
+            (OpamGlobals.colorise `blue
+               (OpamRepositoryName.to_string repo.repo_name))
+            (OpamFilename.prettify remote_file);
           curl ~remote_file ~local_file
         ) new_files;
     )
