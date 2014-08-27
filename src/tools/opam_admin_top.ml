@@ -15,6 +15,7 @@
 
 (* To be used for quick repo scripts using the toplevel *)
 open OpamFilename.OP
+open OpamMisc.OP
 
 let identity _ x = x
 let true_ _ = true
