@@ -785,7 +785,28 @@ module API = struct
            installation.\n"
     | requested, action, Success solution ->
       let result = OpamSolution.apply ?ask t action ~requested solution in
-      if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
+      if result = Nothing_to_do then (
+        let to_check =
+          if atoms = [] then t.installed else packages_of_atoms t atoms
+        in
+        let latest =
+          OpamPackage.Name.Set.fold (fun name acc ->
+              OpamPackage.Set.add (OpamPackage.max_version t.packages name) acc)
+            (OpamPackage.names_of_packages to_check)
+            OpamPackage.Set.empty in
+        let notuptodate = latest -- to_check in
+        if OpamPackage.Set.is_empty notuptodate then
+          OpamGlobals.msg "Already up-to-date.\n"
+        else
+          OpamGlobals.msg
+            "Nothing to do. The following aren't at their latest \
+             version due to constraints, conflicts or pinnings:\n  - %s\n\
+             ('opam upgrade <package>.<version>' to force \
+             the newer version.)\n"
+            (String.concat "\n  - "
+               (List.map OpamPackage.to_string
+                  (OpamPackage.Set.elements notuptodate)))
+      );
       OpamSolution.check_solution t result
 
   let upgrade names =
