@@ -17,7 +17,7 @@ let rewrite_formula ~conj =
         | atom -> Atom atom)
 ;;
 
-map_packages ~opam:(fun opam ->
+iter_packages ~opam:(fun _ opam ->
     let open OpamFile.OPAM in
     let opam = with_conflicts opam @@ rewrite_formula ~conj:true @@ conflicts opam in
     let opam = with_depends opam @@ rewrite_formula ~conj:false @@ depends opam in
