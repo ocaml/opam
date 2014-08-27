@@ -19,6 +19,7 @@ open OpamTypesBase
 open OpamState.Types
 open OpamMisc.OP
 open OpamPackage.Set.Op
+open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 let slog = OpamGlobals.slog
@@ -34,6 +35,7 @@ type package_details = {
   tags: string list;
   syntax: string list Lazy.t;
   libraries: string list Lazy.t;
+  others: string list Lazy.t; (* words in lines in files *)
 }
 
 let details_of_package t name versions =
@@ -69,9 +71,19 @@ let details_of_package t name versions =
         if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
         then Some s else None)
       (OpamFile.OPAM.libraries opam)) in
+  let others = lazy (
+    match OpamState.repository_and_prefix_of_package t nv with
+    | None  -> []
+    | Some (repo, prefix) ->
+      List.fold_left (fun acc filename ->
+          let file = OpamPath.Repository.packages repo prefix nv // filename in
+          let file = OpamFile.Lines.safe_read file in
+          List.flatten file @ acc
+        ) [] !OpamGlobals.search_files
+  ) in
   { name; current_version; installed_version;
     synopsis; descr; tags;
-    syntax; libraries }
+    syntax; libraries; others; }
 
 let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
   log "names_of_regexp regexps=%a"
@@ -118,7 +130,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
   (* Filter the list of packages, depending on user predicates *)
   let packages_map =
     OpamPackage.Name.Map.filter
-      (fun name { synopsis; descr; tags; syntax; libraries } ->
+      (fun name { synopsis; descr; tags; syntax; libraries; others } ->
          regexps = []
          || exact_match (OpamPackage.Name.to_string name)
          || not exact_name &&
@@ -127,7 +139,8 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
              || partial_match (Lazy.force descr)
              || partial_matchs tags
              || partial_matchs (Lazy.force libraries)
-             || partial_matchs (Lazy.force syntax))
+             || partial_matchs (Lazy.force syntax)
+             || partial_matchs (Lazy.force others))
       ) packages_map in
 
   if not (OpamPackage.Set.is_empty packages)

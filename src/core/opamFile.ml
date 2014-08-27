@@ -18,141 +18,145 @@ open OpamTypes
 open OpamTypesBase
 open OpamMisc.OP
 
-module Lines = struct
-
-  (* Lines of space separated words *)
-  type t = string list list
-
-  let find_escapes s len =
-    let rec aux acc i =
-      if i < 0 then acc else
-      let acc =
-        match s.[i] with
-        | '\\' | ' ' | '\t' | '\n' ->
-          let esc,count = acc in
-          i::esc, count + 1
-        | _ -> acc in
-      aux acc (i-1) in
-    aux ([],0) (len - 1)
-
-  let escape_spaces str =
-    let len = String.length str in
-    match find_escapes str len with
-    | [], _ -> str
-    | escapes, n ->
-      let buf = String.create (len + n) in
-      let rec aux i = function
-        | ofs1::(ofs2::_ as r) ->
-          String.blit str ofs1 buf (ofs1+i) (ofs2-ofs1);
-          buf.[ofs2+i] <- '\\';
-          aux (i+1) r
-        | [ofs] ->
-          String.blit str ofs buf (ofs+i) (len-ofs);
-          buf
-        | [] -> assert false
-      in
-      aux 0 (0::escapes)
-
-  let of_channel ic =
-    OpamLineLexer.main (Lexing.from_channel ic)
-
-  let to_string (lines: t) =
-    let buf = Buffer.create 1024 in
-    List.iter (fun l ->
-      (match l with
-      | [] -> ()
-      | w::r ->
-        Buffer.add_string buf (escape_spaces w);
-        List.iter (fun w ->
-            Buffer.add_char buf ' ';
-            Buffer.add_string buf (escape_spaces w))
-          r);
-      Buffer.add_string buf "\n"
-    ) lines;
-    Buffer.contents buf
-
-end
-
-module Syntax = struct
-
-  type t = file
-
-  let of_channel (filename:filename) (ic:in_channel) =
-    let lexbuf = Lexing.from_channel ic in
-    let filename = OpamFilename.to_string filename in
-    lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
-                                  Lexing.pos_fname = filename };
-    OpamParser.main OpamLexer.token lexbuf filename
-
-  let to_string ignore (t: t) =
-    OpamFormat.string_of_file ~simplify:true ~indent:true ~ignore t
-
-  let s_opam_version = "opam-version"
-
-  let check ?(versioned=true) =
-    let not_already_warned = ref true in
-    fun f fields ->
-      if List.mem s_opam_version fields then
-        begin match OpamFormat.assoc_option f.file_contents s_opam_version
-            (OpamFormat.parse_string @> OpamVersion.of_string) with
-            | Some opam_version ->
-              if not !OpamGlobals.skip_version_checks &&
-                 OpamVersion.compare opam_version OpamVersion.current > 0 then
-                OpamGlobals.error_and_exit
-                  "Your version of OPAM (%s) is not recent enough to read %s.\n\
-                   Upgrade to version %s or later to read this file."
-                  (OpamVersion.to_string OpamVersion.current)
-                  (OpamMisc.prettify_path f.file_name)
-                  (OpamVersion.to_string opam_version)
-            | None ->
-              if versioned then (
-                OpamGlobals.error
-                  "%s is missing the opam-version field: syntax check failed."
-                  (OpamMisc.prettify_path f.file_name);
-                OpamFormat.bad_format "opam-version"
-              )
-        end;
-      if not (OpamFormat.is_valid f.file_contents fields) then
-        let invalids = OpamFormat.invalid_fields f.file_contents fields in
-        let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
-        if too_many <> [] then
-          OpamGlobals.warning "duplicate fields in %s: %s"
-            f.file_name
-            (OpamMisc.string_of_list (fun x -> x) too_many);
-        if !OpamGlobals.strict then (
-          if invalids <> [] then
-            (let are,s = match invalids with [_] -> "is an","" | _ -> "are","s" in
-             OpamGlobals.error "%s %s invalid field name%s in %s. Valid fields: %s\n\
-                                Either there is an error in the package, or your \
-                                OPAM is not up-to-date."
-               (OpamMisc.string_of_list (fun x -> x) invalids)
-               are s f.file_name
-               (OpamMisc.string_of_list (fun x -> x) fields));
-          OpamGlobals.exit 5
-        ) else if !not_already_warned then (
-          not_already_warned := false;
-          let is_, s_ =
-            if List.length invalids <= 1 then "is an", "" else "are", "s" in
-          if invalids <> [] then
-            OpamGlobals.warning "%s %s unknown field%s in %s: is your OPAM up-to-date ?"
-              (OpamMisc.pretty_list invalids)
-              is_ s_
-              f.file_name
-        )
-
-  let to_1_0 file =
-    let file_contents = List.map (function
-        | Variable (pos, v, _) as c ->
-          if v = s_opam_version then
-            Variable (pos,s_opam_version, OpamFormat.make_string "1")
-          else c
-        | c -> c
-      ) file.file_contents in
-    { file with file_contents; file_format = OpamVersion.of_string "1" }
-
-end
-
 module X = struct
+
+  module Lines = struct
+
+    (* Lines of space separated words *)
+    type t = string list list
+
+    let empty = []
+
+    let internal = "lines"
+
+    let find_escapes s len =
+      let rec aux acc i =
+        if i < 0 then acc else
+        let acc =
+          match s.[i] with
+          | '\\' | ' ' | '\t' | '\n' ->
+            let esc,count = acc in
+            i::esc, count + 1
+          | _ -> acc in
+        aux acc (i-1) in
+      aux ([],0) (len - 1)
+
+    let escape_spaces str =
+      let len = String.length str in
+      match find_escapes str len with
+      | [], _ -> str
+      | escapes, n ->
+        let buf = String.create (len + n) in
+        let rec aux i = function
+          | ofs1::(ofs2::_ as r) ->
+            String.blit str ofs1 buf (ofs1+i) (ofs2-ofs1);
+            buf.[ofs2+i] <- '\\';
+            aux (i+1) r
+          | [ofs] ->
+            String.blit str ofs buf (ofs+i) (len-ofs);
+            buf
+          | [] -> assert false
+        in
+        aux 0 (0::escapes)
+
+    let of_channel (_:filename) ic =
+      OpamLineLexer.main (Lexing.from_channel ic)
+
+    let to_string (_:filename) (lines: t) =
+      let buf = Buffer.create 1024 in
+      List.iter (fun l ->
+          (match l with
+           | [] -> ()
+           | w::r ->
+             Buffer.add_string buf (escape_spaces w);
+             List.iter (fun w ->
+                 Buffer.add_char buf ' ';
+                 Buffer.add_string buf (escape_spaces w))
+               r);
+          Buffer.add_string buf "\n"
+        ) lines;
+      Buffer.contents buf
+
+  end
+
+  module Syntax = struct
+
+    type t = file
+
+    let of_channel (filename:filename) (ic:in_channel) =
+      let lexbuf = Lexing.from_channel ic in
+      let filename = OpamFilename.to_string filename in
+      lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
+                                    Lexing.pos_fname = filename };
+      OpamParser.main OpamLexer.token lexbuf filename
+
+    let to_string ignore (t: t) =
+      OpamFormat.string_of_file ~simplify:true ~indent:true ~ignore t
+
+    let s_opam_version = "opam-version"
+
+    let check ?(versioned=true) =
+      let not_already_warned = ref true in
+      fun f fields ->
+        if List.mem s_opam_version fields then
+          begin match OpamFormat.assoc_option f.file_contents s_opam_version
+                        (OpamFormat.parse_string @> OpamVersion.of_string) with
+          | Some opam_version ->
+            if not !OpamGlobals.skip_version_checks &&
+               OpamVersion.compare opam_version OpamVersion.current > 0 then
+              OpamGlobals.error_and_exit
+                "Your version of OPAM (%s) is not recent enough to read %s.\n\
+                 Upgrade to version %s or later to read this file."
+                (OpamVersion.to_string OpamVersion.current)
+                (OpamMisc.prettify_path f.file_name)
+                (OpamVersion.to_string opam_version)
+          | None ->
+            if versioned then (
+              OpamGlobals.error
+                "%s is missing the opam-version field: syntax check failed."
+                (OpamMisc.prettify_path f.file_name);
+              OpamFormat.bad_format "opam-version"
+            )
+          end;
+        if not (OpamFormat.is_valid f.file_contents fields) then
+          let invalids = OpamFormat.invalid_fields f.file_contents fields in
+          let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
+          if too_many <> [] then
+            OpamGlobals.warning "duplicate fields in %s: %s"
+              f.file_name
+              (OpamMisc.string_of_list (fun x -> x) too_many);
+          if !OpamGlobals.strict then (
+            if invalids <> [] then
+              (let are,s = match invalids with [_] -> "is an","" | _ -> "are","s" in
+               OpamGlobals.error "%s %s invalid field name%s in %s. Valid fields: %s\n\
+                                  Either there is an error in the package, or your \
+                                  OPAM is not up-to-date."
+                 (OpamMisc.string_of_list (fun x -> x) invalids)
+                 are s f.file_name
+                 (OpamMisc.string_of_list (fun x -> x) fields));
+            OpamGlobals.exit 5
+          ) else if !not_already_warned then (
+            not_already_warned := false;
+            let is_, s_ =
+              if List.length invalids <= 1 then "is an", "" else "are", "s" in
+            if invalids <> [] then
+              OpamGlobals.warning "%s %s unknown field%s in %s: is your OPAM up-to-date ?"
+                (OpamMisc.pretty_list invalids)
+                is_ s_
+                f.file_name
+          )
+
+    let to_1_0 file =
+      let file_contents = List.map (function
+          | Variable (pos, v, _) as c ->
+            if v = s_opam_version then
+              Variable (pos,s_opam_version, OpamFormat.make_string "1")
+            else c
+          | c -> c
+        ) file.file_contents in
+      { file with file_contents; file_format = OpamVersion.of_string "1" }
+
+  end
 
   module Prefix = struct
 
@@ -162,8 +166,8 @@ module X = struct
 
     let empty = OpamPackage.Name.Map.empty
 
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       List.fold_left (fun map -> function
         | []          -> map
         | [nv;prefix] -> OpamPackage.Name.Map.add (OpamPackage.Name.of_string nv)
@@ -174,12 +178,12 @@ module X = struct
             (String.concat " " s)
       ) OpamPackage.Name.Map.empty lines
 
-    let to_string _ s =
+    let to_string filename s =
       let lines =
         OpamPackage.Name.Map.fold (fun nv prefix l ->
           [OpamPackage.Name.to_string nv; prefix] :: l
         ) s [] in
-      Lines.to_string lines
+      Lines.to_string filename lines
 
   end
 
@@ -191,8 +195,8 @@ module X = struct
 
     let empty = OpamFilename.Set.empty
 
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       let lines = OpamMisc.filter_map (function
           | []  -> None
           | [f] -> Some (OpamFilename.of_string f)
@@ -201,12 +205,12 @@ module X = struct
         ) lines in
       OpamFilename.Set.of_list lines
 
-    let to_string _ s =
+    let to_string filename s =
       let lines =
         List.rev_map
           (fun f -> [OpamFilename.to_string f])
           (OpamFilename.Set.elements s) in
-      Lines.to_string lines
+      Lines.to_string filename lines
 
   end
 
@@ -218,8 +222,8 @@ module X = struct
 
     let empty = OpamFilename.Attribute.Set.empty
 
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       let rs = OpamMisc.filter_map (function
           | [] -> None
           | [s] -> (* backwards-compat *)
@@ -229,12 +233,12 @@ module X = struct
         ) lines in
       OpamFilename.Attribute.Set.of_list rs
 
-    let to_string _ t =
+    let to_string filename t =
       let lines =
         List.rev_map
           (fun r -> OpamFilename.Attribute.to_string_list r)
           (OpamFilename.Attribute.Set.elements t) in
-      Lines.to_string lines
+      Lines.to_string filename lines
 
   end
 
@@ -364,15 +368,15 @@ module X = struct
 
     let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty, OpamPackage.Name.Map.empty)
 
-    let of_channel f ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       let state = function
         | "root" -> `Root
         | "noroot" | "installed" -> `Installed
         | "uninstalled" -> `Uninstalled
         | s ->
           OpamGlobals.error_and_exit "Invalid installation status (col. 3) in %s: %S"
-            (OpamFilename.to_string f) s
+            (OpamFilename.to_string filename) s
       in
       let add (installed,roots,pinned) n v state p =
         let name = OpamPackage.Name.of_string n in
@@ -398,7 +402,7 @@ module X = struct
             add acc n v (state r) (Some (pin_kind_of_string pk,p))
           | l ->
             OpamGlobals.error_and_exit "Invalid line in %s: %S"
-              (OpamFilename.to_string f)
+              (OpamFilename.to_string filename)
               (String.concat " " l)
         )
         (OpamPackage.Set.empty, OpamPackage.Set.empty, OpamPackage.Name.Map.empty)
@@ -446,8 +450,8 @@ module X = struct
             (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string vs)
       ) map
 
-    let of_channel name ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       let map,_ =
         List.fold_left (fun (map,i) -> function
             | [] -> map, i+1
@@ -460,7 +464,7 @@ module X = struct
               i+1
             | s ->
               OpamGlobals.error "At %s:%d: skipped invalid line %S"
-                (OpamFilename.prettify name) i (String.concat " " s);
+                (OpamFilename.prettify filename) i (String.concat " " s);
               map, i+1
           ) (empty,1) lines in
       map
@@ -502,8 +506,8 @@ module X = struct
 
     let empty = A.Map.empty
 
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       List.fold_left (fun map -> function
           | [] | [_]                 -> map
           | a_s :: repos_s :: prefix ->
@@ -519,7 +523,7 @@ module X = struct
               A.Map.add a (repo_name, prefix) map
         ) A.Map.empty lines
 
-    let to_string _ map =
+    let to_string filename map =
       let lines = A.Map.fold (fun nv (repo_name, prefix) lines ->
           let repo_s = OpamRepositoryName.to_string repo_name in
           let prefix_s = match prefix with
@@ -527,7 +531,7 @@ module X = struct
             | Some p -> [p] in
           (A.to_string nv :: repo_s :: prefix_s) :: lines
         ) map [] in
-      Lines.to_string (List.rev lines)
+      Lines.to_string filename (List.rev lines)
 
   end
 
@@ -543,8 +547,8 @@ module X = struct
 
     let empty = OpamPackage.Name.Map.empty
 
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
+    let of_channel filename ic =
+      let lines = Lines.of_channel filename ic in
       let add name_s pin map =
         let name = OpamPackage.Name.of_string name_s in
         if OpamPackage.Name.Map.mem name map then
@@ -560,7 +564,7 @@ module X = struct
         | _     -> OpamGlobals.error_and_exit "too many pinning options"
       ) OpamPackage.Name.Map.empty lines
 
-    let to_string _ map =
+    let to_string filename map =
       let lines = OpamPackage.Name.Map.fold (fun name pin lines ->
           let kind = kind_of_pin_option pin in
           let l = [
@@ -570,7 +574,7 @@ module X = struct
           ] in
           l :: lines
         ) map [] in
-      Lines.to_string (List.rev lines)
+      Lines.to_string filename (List.rev lines)
 
   end
 
@@ -676,15 +680,15 @@ module X = struct
 
     let empty = OpamSwitch.Map.empty
 
-    let to_string _ t =
+    let to_string filename t =
       let l =
         OpamSwitch.Map.fold (fun switch compiler lines ->
           [OpamSwitch.to_string switch; OpamCompiler.to_string compiler] :: lines
         ) t [] in
-      Lines.to_string l
+      Lines.to_string filename l
 
-    let of_channel _ ic =
-      let l = Lines.of_channel ic in
+    let of_channel filename ic =
+      let l = Lines.of_channel filename ic in
       List.fold_left (fun map -> function
         | []            -> map
         | [switch; comp] -> OpamSwitch.Map.add (OpamSwitch.of_string switch)
@@ -1952,9 +1956,9 @@ module Make (F : F) = struct
   let string_of_backtrace_list = function
     | [] | _ when not (Printexc.backtrace_status ()) -> ""
     | btl -> List.fold_left (fun s bts ->
-      let bt_lines = OpamMisc.split bts '\n' in
-      "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
-    ) "" btl
+        let bt_lines = OpamMisc.split bts '\n' in
+        "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
+      ) "" btl
 
   let read f =
     let filename = OpamFilename.prettify f in
@@ -2020,6 +2024,11 @@ module type IO_FILE = sig
   val safe_read: filename -> t
   val read_from_channel: in_channel -> t
   val write_to_channel: out_channel -> t -> unit
+end
+
+module Lines = struct
+  include Lines
+  include Make (Lines)
 end
 
 module Config = struct

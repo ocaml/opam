@@ -56,7 +56,7 @@ val cudf_file : string option ref
 val solver_timeout : float
 
 type solver_criteria = [ `Default | `Upgrade | `Fixup ]
-val default_preferences : solver_criteria -> string 
+val default_preferences : solver_criteria -> string
 val compat_preferences : solver_criteria -> string
 
 (** Solver preference bindings. Used with List.assoc: first one wins *)
@@ -71,6 +71,9 @@ val get_external_solver : unit -> string
 
 val default_repository_name : string
 val default_repository_address : string
+
+val search_files: string list ref
+
 (* val default_build_command : string list list *)
 val global_config : string
 val system : string
