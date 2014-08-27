@@ -389,7 +389,10 @@ let import_t importfile t =
   (match solution with
    | No_solution | Aborted -> revert_pins ()
    | Error _ | OK _ | Nothing_to_do -> ());
-  OpamSolution.check_solution t solution
+  OpamSolution.check_solution t solution;
+  OpamFile.Installed_roots.write
+    (OpamPath.Switch.installed_roots t.root t.switch)
+    OpamPackage.Set.Op.(t.installed_roots ++ import_roots)
 
 let export filename =
   let t = OpamState.load_state "switch-export" in
