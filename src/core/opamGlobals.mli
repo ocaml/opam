@@ -135,6 +135,12 @@ val msg : ('a, out_channel, unit, unit) format4 -> 'a
 val header_msg : ('a, unit, string, unit) format4 -> 'a
 val header_error :
   ('a, unit, string, ('b, unit, string, unit) format4 -> 'b) format4 -> 'a
+
+(** Ask the user to press Y/y/N/n to continue (returns a boolean) *)
+val confirm: ('a, unit, string, bool) format4 -> 'a
+(** Read some input from the user (returns a string option) *)
+val read: ('a, unit, string, string option) format4 -> 'a
+
 val editor : string lazy_t
 
 type os =

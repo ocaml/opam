@@ -66,7 +66,7 @@ let do_commands project_root =
       OpamGlobals.warning "%S doesn't exist" (OpamFilename.to_string f)
   in
   let confirm s f =
-    if OpamState.confirm "%s" s then f ()
+    if OpamGlobals.confirm "%s" s then f ()
   in
   { mkdir; rmdir; cp; rm; confirm }
 

@@ -1077,7 +1077,9 @@ module X = struct
     let dev_repo t = t.dev_repo
 
     let with_name t name = { t with name = Some name }
+    let with_name_opt t name = { t with name }
     let with_version t version = { t with version = Some version }
+    let with_version_opt t version = { t with version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
     let with_conflicts t conflicts = {t with conflicts }

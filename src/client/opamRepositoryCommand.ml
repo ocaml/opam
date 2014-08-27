@@ -470,7 +470,7 @@ let add name kind address ~priority:prio =
     let compdir = OpamPath.compilers_dir repo_dir in
     if not (OpamFilename.exists_dir pkgdir) &&
        not (OpamFilename.exists_dir compdir) &&
-       not (OpamState.confirm
+       not (OpamGlobals.confirm
               "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
                Is it really the directory of your repo ?"
               (OpamFilename.Dir.to_string repo_dir))
