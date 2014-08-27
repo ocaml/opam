@@ -201,9 +201,11 @@ module OPAM: sig
 
   (** construct as [name] *)
   val with_name: t -> name -> t
+  val with_name_opt: t -> name option -> t
 
   (** construct as [version] *)
   val with_version: t -> version -> t
+  val with_version_opt: t -> version option -> t
 
   (** Construct as [depends] *)
   val with_depends : t -> ext_formula -> t

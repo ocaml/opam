@@ -10,6 +10,7 @@ all:
 	$(MAKE) opam-check
 	$(MAKE) opam-admin
 	$(MAKE) opam-installer
+	$(MAKE) opam-publish
 	$(MAKE) opamlfind
 	$(MAKE) opam-admin.top
 
@@ -198,13 +199,13 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-SCRIPTS = opam-check opam-admin opam-installer opamlfind
+TOOLS = opam-check opam-admin opam-installer opam-publish opamlfind
 
-$(SCRIPTS): opam ALWAYS
+$(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)
 
 define PROJ_opam-check
-  SOURCES = scripts/opam_check.ml
+  SOURCES = tools/opam_check.ml
   RESULT = opam-check
   LIBS = $(LIBS) $(OPAMLIB)
 endef
@@ -219,21 +220,28 @@ SRC_opam-admin = \
   opam_admin.ml
 
 define PROJ_opam-admin
-  SOURCES = $(call addmli,scripts,$(SRC_opam-admin))
+  SOURCES = $(call addmli,tools,$(SRC_opam-admin))
   RESULT = opam-admin
   LIBS = $(LIBS) $(OPAMLIB)
 endef
 export PROJ_opam-admin
 
 define PROJ_opam-installer
-  SOURCES = scripts/opam_installer.ml
+  SOURCES = tools/opam_installer.ml
   RESULT = opam-installer
   LIBS = $(LIBS) $(OPAMLIB)
 endef
 export PROJ_opam-installer
 
+define PROJ_opam-publish
+  SOURCES = tools/opam_publish.ml
+  RESULT = opam-publish
+  LIBS = $(LIBS) $(OPAMLIB)
+endef
+export PROJ_opam-publish
+
 define PROJ_opamlfind
-  SOURCES = scripts/opamlfind.ml
+  SOURCES = tools/opamlfind.ml
   RESULT = opamlfind
   LIBS = $(LIBS) $(OPAMLIB)
 endef
@@ -243,7 +251,7 @@ opam-admin.top: opam-lib.byte ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam-admin-top SUBTARGET=top
 
 define PROJ_opam-admin-top
-  SOURCES = scripts/opam_admin_top.ml
+  SOURCES = tools/opam_admin_top.ml
   RESULT = opam-admin
   LIBS = $(LIBS) $(OPAMLIB)
 endef
@@ -252,14 +260,14 @@ export PROJ_opam-admin-top
 # --
 
 ifndef SUBPROJS
-  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind opam-admin-top
+  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opam-publish opamlfind opam-admin-top
 endif
 
 OCAMLMAKEFILE = ../OCamlMakefile
 export OCAMLMAKEFILE
 
 clean-aux:
-	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(SCRIPTS) opam-admin.top opam_admin_top.*
+	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
 	rm -f core/opamGitVersion.ml core/opamScript.ml
 
 clean: clean-aux

@@ -45,7 +45,9 @@ let color_tri_state =
       )
     with
       | Not_found -> `Auto
-let color            = ref (color_tri_state = `Always)
+let color            =
+  ref (color_tri_state = `Always ||
+       color_tri_state = `Auto && Unix.isatty Unix.stdout)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -424,3 +426,33 @@ let default_dl_jobs = 3
 
 let exit i =
   raise (Exit i)
+
+let confirm fmt =
+  Printf.ksprintf (fun s ->
+    try
+      let rec loop () =
+        msg "%s [Y/n] %!" s;
+        if !yes then (msg "y\n"; true)
+        else match String.lowercase (read_line ()) with
+          | "y" | "yes" | "" -> true
+          | "n" | "no" -> false
+          | _  -> loop ()
+      in loop ()
+    with
+    | End_of_file -> msg "n\n"; false
+    | Sys.Break as e -> msg "\n"; raise e
+  ) fmt
+
+let read fmt =
+  Printf.ksprintf (fun s ->
+    msg "%s %!" s;
+    if not !yes then (
+      try match read_line () with
+        | "" -> None
+        | s  -> Some s
+      with End_of_file ->
+        msg "\n";
+        None
+    ) else
+      None
+  ) fmt

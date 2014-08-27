@@ -79,7 +79,7 @@ let edit t name =
       (try OpamMisc.fatal e with e ->
         OpamFilename.move ~src:backup ~dst:file;
         raise e);
-      if OpamState.confirm "Errors in %s, retry editing ?"
+      if OpamGlobals.confirm "Errors in %s, retry editing ?"
           (OpamFilename.to_string file)
       then edit ()
       else (OpamFilename.move ~src:backup ~dst:file;
@@ -97,7 +97,7 @@ let edit t name =
           if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
           else dir // "opam")
        in
-       if OpamState.confirm "Save the new opam file back to %S ?"
+       if OpamGlobals.confirm "Save the new opam file back to %S ?"
            (OpamFilename.to_string src_opam) then
          OpamFilename.copy ~src:file ~dst:src_opam
     | Version _ | Git _ | Darcs _ | Hg _ -> ()
@@ -151,13 +151,13 @@ let pin name pin_option =
           "%s is already pinned to %s."
           (OpamPackage.Name.to_string name)
           (string_of_pin_option current);
-      if OpamState.confirm "Proceed ?" then no_changes
+      if OpamGlobals.confirm "Proceed ?" then no_changes
       else OpamGlobals.exit 0
     with Not_found -> false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
   if OpamState.find_packages_by_name t name = None &&
-     not (OpamState.confirm
+     not (OpamGlobals.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
             (OpamGlobals.colorise `bold "NEW"))

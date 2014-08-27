@@ -31,7 +31,10 @@ begin library "opam-core"
 
   requires = [
     "cudf"
-    "dose"
+    "dose3"
+    "dose3.algo"
+    "dose3.common"
+    "dose3.debian"
     "unix"
     "ocamlgraph"
     "re.glob"

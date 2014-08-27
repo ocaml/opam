@@ -22,6 +22,13 @@ begin program "opam-installer"
   requires = [ "opam-client" ]
 end
 
+begin program "opam-publish"
+  files = [
+    "opam_publish.ml"
+  ]
+  requires = [ "opam-client" ]
+end
+
 begin program "opamlfind"
   files = [
     "opamlfind.ml"

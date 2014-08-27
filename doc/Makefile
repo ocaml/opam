@@ -16,6 +16,11 @@ ifndef OPAM_INSTALLER
   OPAM_INSTALLER = $(BINDIR)/opam-installer
 endif
 
+ifndef OPAM_PUBLISH
+  OPAM_PUBLISH = $(BINDIR)/opam-publish
+endif
+TOPICS_PUBLISH = prepare submit
+
 SRCEXTDIR = ../src_ext/lib
 INCLUDE = $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
 
@@ -34,6 +39,10 @@ man:
 	  $(OPAM_ADMIN) $$i $(HELPFMT) > man/opam-admin-$$i.1;\
 	done
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
+	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
+	for i in $(TOPICS_PUBLISH); do\
+	  $(OPAM_PUBLISH) $$i $(HELPFMT) > man/opam-publish-$$i.1;\
+	done
 
 man-html: man
 	rm -rf $@
