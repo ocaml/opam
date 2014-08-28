@@ -1176,7 +1176,7 @@ module X = struct
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
       let name_f = OpamFormat.assoc_option s s_name
-          (OpamFormat.parse_string @> OpamPackage.Name.of_string) in
+          OpamFormat.parse_package_name in
       let name = match name_f, nv with
         | None  , None    -> None
         | Some n, None    -> Some n

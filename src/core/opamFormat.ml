@@ -458,12 +458,17 @@ let make_ext_constraints (kws, t) =
       c kws
     :: cs
 
+let parse_package_name = function
+  | String (pos,n) ->
+    (try OpamPackage.Name.of_string n with
+     | Failure _ -> bad_format ~pos "Invalid package name %s" n)
+  | x -> bad_format ~pos:(value_pos x) "Expected a package name"
+
 (* parse a list of formulas *)
 let rec parse_formulas opt ~constraints t =
-  let name = OpamPackage.Name.of_string in
   let rec aux = function
-    | String (_,n) -> Atom (name n, constraints [])
-    | Option (_, String (_,n), g) -> Atom (name n, constraints g)
+    | String _ as t -> Atom (parse_package_name t, constraints [])
+    | Option (_, t, g) -> Atom (parse_package_name t, constraints g)
     | Group (_,g) -> Block (parse_formulas opt ~constraints (List (pos_null, g)))
     | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
     | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)

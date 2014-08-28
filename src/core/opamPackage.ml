@@ -105,7 +105,9 @@ let of_string_opt s =
     None
   else match OpamMisc.cut_at s sep with
     | None        -> None
-    | Some (n, v) -> Some { name = Name.of_string n; version = Version.of_string v }
+    | Some (n, v) ->
+      try Some { name = Name.of_string n; version = Version.of_string v }
+      with Failure _ -> None
 
 let of_string s = match of_string_opt s with
   | Some x -> x

@@ -38,7 +38,9 @@ let contents_of_variable env v =
   let names =
     try OpamMisc.split name_str '+'
     with e -> OpamMisc.fatal e; [name_str] in
-  let names = List.rev_map OpamPackage.Name.of_string names in
+  let names =
+    try List.rev_map OpamPackage.Name.of_string names
+    with Failure _ -> [] in
   let results =
     List.map (fun name ->
         env (OpamVariable.Full.create name var)
@@ -74,8 +76,13 @@ let contents_of_variable_exn env var =
   | Some c -> c
 
 let substitute_ident env i =
-  let v = OpamVariable.Full.of_string i in
-  contents_of_variable_exn env v
+  try
+    let v = OpamVariable.Full.of_string i in
+    contents_of_variable_exn env v
+  with e ->
+    OpamMisc.fatal e;
+    OpamGlobals.warning "Invalid variable %s in filter" i;
+    S i
 
 (* Substitute the file contents *)
 let substitute_file env f =
