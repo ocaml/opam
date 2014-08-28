@@ -2397,9 +2397,8 @@ let update_dev_package t nv =
   let nv, pinned =
     try pinned t name, true
     with Not_found -> nv, false in
-  let skip = OpamPackage.Set.empty in
   match url t nv with
-  | None     -> skip
+  | None     -> false
   | Some url ->
     let remote_url = OpamFile.URL.url url in
     let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -2414,12 +2413,12 @@ let update_dev_package t nv =
       match r with
       | Not_available u ->
         OpamGlobals.error "Upstream %s of %s is unavailable" u (OpamPackage.to_string nv);
-        skip
-      | Up_to_date _    -> skip
-      | Result _        -> OpamPackage.Set.singleton nv
+        false
+      | Up_to_date _    -> false
+      | Result _        -> true
     in
     if not pinned then
-      if kind = `http then skip else fetch ()
+      if kind = `http then false else fetch ()
     else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
     let overlay = OpamPath.Switch.Overlay.package t.root t.switch name in
@@ -2500,7 +2499,7 @@ let update_dev_package t nv =
         hash
     in
     (* Metadata from the package changed *)
-    if result <> skip && new_meta <> [] &&
+    if result && new_meta <> [] &&
        new_meta <> old_meta && new_meta <> user_meta
     then
       if old_meta = user_meta || repo_meta = user_meta ||
@@ -2538,7 +2537,9 @@ let update_dev_packages t packages =
   let packages = OpamPackage.Set.elements packages in
   let updates =
     OpamPackage.Parallel.map_reduce_l 1 packages
-      ~map:(fun nv -> update_dev_package t nv)
+      ~map:(fun nv -> if update_dev_package t nv
+             then OpamPackage.Set.singleton nv
+             else OpamPackage.Set.empty)
       ~merge:OpamPackage.Set.union
       ~init:OpamPackage.Set.empty in
 
