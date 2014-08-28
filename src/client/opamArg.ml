@@ -842,7 +842,7 @@ let show =
     `S "DESCRIPTION";
     `P "This command displays the information block for the selected \
         package(s).";
-    `P "The information block consists in the name of the package, \
+    `P "The information block consists of the name of the package, \
         the installed version if this package is installed in the currently \
         selected compiler, the list of available (installable) versions, and a \
         complete description.";
@@ -1149,7 +1149,7 @@ let remove =
   let doc = remove_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command removes (i.e. uninstalls) one or more packages currently \
+    `P "This command uninstalls one or more packages currently \
         installed in the currently selected compiler switch. To remove packages \
         installed in another compiler, you need to switch compilers using \
         $(b,opam switch) or use the $(b,--switch) flag. This command is the \
@@ -1455,7 +1455,7 @@ let pin ?(unpin_only=false) () =
      $(i,NAME) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be omitted with \
      `--dev-repo'. \
-     Use url syntax or $(b,--kind) to explicitely set the kind of pinning. Git \
+     Use url syntax or $(b,--kind) to explicitly set the kind of pinning. Git \
      pins may target a specific branch or commit using $(b,#branch) e.g. \
      $(b,git://host/me/pkg#testing). \
      It is possible to create a new package if $(i,NAME) does not exist.";
@@ -1464,7 +1464,7 @@ let pin ?(unpin_only=false) () =
     ["edit"]     , `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the opam file that OPAM will locally use for pinned package \
-     $(b,NAME). To simply cange the pinning target, use $(b,add). \
+     $(b,NAME). To simply change the pinning target, use $(b,add). \
      The chosen editor is determined from environment variables \
      $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in order.";
   ] in
@@ -1473,8 +1473,8 @@ let pin ?(unpin_only=false) () =
     `P "This command allows local customisation of the packages in a given \
         switch. A package can be pinned to a specific upstream version, to \
         a path containing its source, to a version-controlled location or to \
-        an URL. An `opam' file found at the root of the pinned source will \
-        override the package's opam file from the repository, an `opam' \
+        a URL. An `opam' file found at the root of the pinned source will \
+        override the package's opam file from the repository, and an `opam' \
         directory will override all its metadata."
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params =
@@ -1502,11 +1502,11 @@ let pin ?(unpin_only=false) () =
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
     mk_flag ["n";"no-action"]
-      "Just record the new pinning status, don't prompt for \
-       install / reinstall / removal"
+      "Just record the new pinning status, and don't prompt for \
+       (re)installation or removal of affected packages."
   in
   let dev_repo =
-    mk_flag ["dev-repo"] "Pin to the package's upstream source for the latest \
+    mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
   let guess_name path =
@@ -1558,8 +1558,8 @@ let source =
   let doc = source_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "Downloads the source for a given package to a local directory, \
-        for developpement, bug fixing or documentation purposes."
+    `P "Downloads the source for a given package to a local directory \
+        for development, bug fixing or documentation purposes."
   ] in
   let atom =
     Arg.(required & pos 0 (some atom) None & info ~docv:"PACKAGE" []
