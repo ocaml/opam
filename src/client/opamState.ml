@@ -2266,7 +2266,7 @@ let add_switch root switch compiler =
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
    - update $opam/switch
    - update $opam/config *)
-let install_compiler t ~quiet switch compiler =
+let install_compiler t ~quiet:_ switch compiler =
   log "install_compiler switch=%a compiler=%a"
     (slog OpamSwitch.to_string) switch
     (slog OpamCompiler.to_string) compiler;
@@ -2314,8 +2314,6 @@ let install_compiler t ~quiet switch compiler =
   begin try
       if not (OpamFile.Comp.preinstalled comp) then begin
 
-        OpamGlobals.verbose := not quiet;
-
         (* Install the compiler *)
         let comp_src = match OpamFile.Comp.src comp with
           | Some f -> f
@@ -2344,6 +2342,8 @@ let install_compiler t ~quiet switch compiler =
             OpamFilename.download ~overwrite:true f build_dir
           ) patches in
         List.iter (fun f -> OpamFilename.patch f build_dir) patches;
+        OpamGlobals.msg "Now compiling OCaml. This may take a while, \
+                         please bear with us...\n";
         if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
           OpamFilename.exec build_dir
             [ ( "./configure" :: OpamFile.Comp.configure comp )
@@ -2361,6 +2361,7 @@ let install_compiler t ~quiet switch compiler =
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
+        OpamGlobals.msg "Done.\n";
         if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
       end;
 
