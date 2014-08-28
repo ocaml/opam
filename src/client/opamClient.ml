@@ -1516,14 +1516,18 @@ module API = struct
       let nv = OpamState.pinned t name in
       ignore (OpamState.update_dev_package t nv);
       OpamGlobals.msg "\n";
+      let empty_opam = OpamState.has_empty_opam t nv in
       let needs_reinstall2 =
-        let empty_opam = OpamState.has_empty_opam t nv in
         if empty_opam then
           OpamState.add_pinned_overlay ~template:true t name;
         if edit || empty_opam then
-          OpamPinCommand.edit t name else None
+          OpamPinCommand.edit t name
+        else None
       in
-      if action then
+      let skip_action =
+        (* Unedited, empty opam *)
+        needs_reinstall2 = None && empty_opam in
+      if action && not skip_action then
         let t = OpamState.load_state "pin-reinstall-2" in
         if not (OpamPackage.has_name t.installed name) ||
            needs_reinstall <> None ||
