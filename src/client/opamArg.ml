@@ -406,22 +406,23 @@ let bad_subcommand command subcommands usersubcommand userparams =
     `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
               (OpamMisc.pretty_list
                  (List.flatten (List.map (fun (a,_,_,_) -> a) subcommands))))
+  | Some (`default cmd) ->
+    `Error (true, Printf.sprintf "Invalid %s subcommand %S" command cmd)
   | Some usersubcommand ->
-    let name, args =
-      match List.find (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
-      | name::_, _, args, _doc -> name, args
-      | _ -> assert false
-    in
     let exe = Filename.basename Sys.executable_name in
-    let usage =
-      Printf.sprintf "%s %s [OPTION]... %s %s"
-        exe command name (String.concat " " args) in
-    if List.length userparams < List.length args then
-      `Error (false, Printf.sprintf "%s: Missing argument.\nUsage: %s\n"
-                exe usage)
-    else
-      `Error (false, Printf.sprintf "%s: Too many arguments.\nUsage: %s\n"
-                exe usage)
+    match List.find_all (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
+    | [name::_, _, args, _doc] ->
+      let usage =
+        Printf.sprintf "%s %s [OPTION]... %s %s"
+          exe command name (String.concat " " args) in
+      if List.length userparams < List.length args then
+        `Error (false, Printf.sprintf "%s: Missing argument.\nUsage: %s\n"
+                  exe usage)
+      else
+        `Error (false, Printf.sprintf "%s: Too many arguments.\nUsage: %s\n"
+                  exe usage)
+    | _ ->
+      `Error (true, Printf.sprintf "Invalid %s subcommand" command)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
