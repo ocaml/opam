@@ -998,7 +998,7 @@ let config =
           user_doc ocamlinit_doc profile_doc dot_profile_doc
           global_doc no_complete_doc no_eval_doc)
     | Some `exec, (_::_ as c) -> `Ok (Client.CONFIG.exec c)
-    | Some `list, [] ->
+    | Some `list, params ->
       (try `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
     | Some `var, [var] ->
