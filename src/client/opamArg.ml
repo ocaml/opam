@@ -326,7 +326,8 @@ let atom =
       let version = OpamPackage.Version.of_string sversion in
       `Ok (name, Some (op, version))
     with Failure _ | Invalid_argument _ ->
-      `Ok (OpamPackage.Name.of_string str, None)
+      try `Ok (OpamPackage.Name.of_string str, None)
+      with Failure msg -> `Error msg
   in
   let print ppf atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
@@ -998,9 +999,11 @@ let config =
           global_doc no_complete_doc no_eval_doc)
     | Some `exec, (_::_ as c) -> `Ok (Client.CONFIG.exec c)
     | Some `list, [] ->
-      `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
+      (try `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
+       with Failure msg -> `Error (false, msg))
     | Some `var, [var] ->
-      `Ok (Client.CONFIG.variable (OpamVariable.Full.of_string var))
+      (try `Ok (Client.CONFIG.variable (OpamVariable.Full.of_string var))
+       with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
     | Some `cudf, params ->
@@ -1526,11 +1529,17 @@ let pin ?(unpin_only=false) () =
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ())
     | Some `remove, [n] ->
-      `Ok (Client.PIN.unpin ~action (OpamPackage.Name.of_string n))
+      (match (fst package_name) n with
+       | `Ok name -> `Ok (Client.PIN.unpin ~action name)
+       | `Error e -> `Error (false, e))
     | Some `edit, [n]  ->
-      `Ok (Client.PIN.edit ~action (OpamPackage.Name.of_string n))
-    | Some `add, [name] when dev_repo ->
-      `Ok (Client.PIN.pin (OpamPackage.Name.of_string name) ~edit ~action None)
+      (match (fst package_name) n with
+       | `Ok name -> `Ok (Client.PIN.edit ~action name)
+       | `Error e -> `Error (false, e))
+    | Some `add, [n] when dev_repo ->
+      (match (fst package_name) n with
+       | `Ok name -> `Ok (Client.PIN.pin name ~edit ~action None)
+       | `Error e -> `Error (false, e))
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
@@ -1542,10 +1551,12 @@ let pin ?(unpin_only=false) () =
                    Please supply at least a package name \
                    (e.g. `opam pin add NAME PATH')"
                   path))
-    | Some `add, [name; target] ->
-      let name = OpamPackage.Name.of_string name in
-      let pin_option = pin_option_of_string ?kind:kind target in
-      `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
+    | Some `add, [n; target] ->
+      (match (fst package_name) n with
+       | `Ok name ->
+         let pin_option = pin_option_of_string ?kind:kind target in
+         `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
+       | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand "pin" commands command params
   in
   Term.ret
@@ -1580,8 +1591,13 @@ let source =
     let open OpamState.Types in
     let t = OpamState.load_state "source" in
     let nv =
-      OpamPackage.Set.max_elt
-        (OpamPackage.Set.filter (OpamFormula.check atom) t.packages) in
+      try
+        OpamPackage.Set.max_elt
+          (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+      with Not_found ->
+        OpamGlobals.error_and_exit "No package matching %s found."
+          (OpamFormula.short_string_of_atom atom)
+    in
     let dir = match dir with
       | Some d -> d
       | None -> OpamFilename.OP.(OpamFilename.cwd () / OpamPackage.to_string nv)

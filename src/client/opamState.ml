@@ -339,7 +339,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
   with Not_found -> (* No original meta *)
     let url = url_of_locally_pinned_package t name in
     let version =
-      OpamPackage.Version.of_string (if template then "0.1" else "0") in
+      OpamPackage.Version.of_string (if template then "0.1" else "") in
     let nv = OpamPackage.create name version in
     let opam = if template then OPAM.template nv else OPAM.create nv in
     OPAM.write (pkg_overlay Ov.opam) opam;
@@ -1775,6 +1775,8 @@ let env_updates ~opamswitch t =
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
+  let makeflags = "MAKEFLAGS", "=", "" in
+  let makelevel = "MAKELEVEL", "=", "" in
   let man_path =
     match OpamGlobals.os () with
     | OpamGlobals.OpenBSD | OpamGlobals.NetBSD ->
@@ -1801,6 +1803,7 @@ let env_updates ~opamswitch t =
       [] in
 
   new_path :: toplevel_dir :: new_perl5lib ::
+  makeflags :: makelevel ::
   (man_path @ switch @ root @ utf8 @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
@@ -2266,7 +2269,7 @@ let add_switch root switch compiler =
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
    - update $opam/switch
    - update $opam/config *)
-let install_compiler t ~quiet switch compiler =
+let install_compiler t ~quiet:_ switch compiler =
   log "install_compiler switch=%a compiler=%a"
     (slog OpamSwitch.to_string) switch
     (slog OpamCompiler.to_string) compiler;
@@ -2314,8 +2317,6 @@ let install_compiler t ~quiet switch compiler =
   begin try
       if not (OpamFile.Comp.preinstalled comp) then begin
 
-        OpamGlobals.verbose := not quiet;
-
         (* Install the compiler *)
         let comp_src = match OpamFile.Comp.src comp with
           | Some f -> f
@@ -2344,6 +2345,8 @@ let install_compiler t ~quiet switch compiler =
             OpamFilename.download ~overwrite:true f build_dir
           ) patches in
         List.iter (fun f -> OpamFilename.patch f build_dir) patches;
+        OpamGlobals.msg "Now compiling OCaml. This may take a while, \
+                         please bear with us...\n";
         if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
           OpamFilename.exec build_dir
             [ ( "./configure" :: OpamFile.Comp.configure comp )
@@ -2361,6 +2364,7 @@ let install_compiler t ~quiet switch compiler =
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
+        OpamGlobals.msg "Done.\n";
         if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
       end;
 
@@ -2393,9 +2397,8 @@ let update_dev_package t nv =
   let nv, pinned =
     try pinned t name, true
     with Not_found -> nv, false in
-  let skip = OpamPackage.Set.empty in
   match url t nv with
-  | None     -> skip
+  | None     -> false
   | Some url ->
     let remote_url = OpamFile.URL.url url in
     let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -2410,12 +2413,12 @@ let update_dev_package t nv =
       match r with
       | Not_available u ->
         OpamGlobals.error "Upstream %s of %s is unavailable" u (OpamPackage.to_string nv);
-        skip
-      | Up_to_date _    -> skip
-      | Result _        -> OpamPackage.Set.singleton nv
+        false
+      | Up_to_date _    -> false
+      | Result _        -> true
     in
     if not pinned then
-      if kind = `http then skip else fetch ()
+      if kind = `http then false else fetch ()
     else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
     let overlay = OpamPath.Switch.Overlay.package t.root t.switch name in
@@ -2496,7 +2499,7 @@ let update_dev_package t nv =
         hash
     in
     (* Metadata from the package changed *)
-    if result <> skip && new_meta <> [] &&
+    if result && new_meta <> [] &&
        new_meta <> old_meta && new_meta <> user_meta
     then
       if old_meta = user_meta || repo_meta = user_meta ||
@@ -2534,7 +2537,9 @@ let update_dev_packages t packages =
   let packages = OpamPackage.Set.elements packages in
   let updates =
     OpamPackage.Parallel.map_reduce_l 1 packages
-      ~map:(fun nv -> update_dev_package t nv)
+      ~map:(fun nv -> if update_dev_package t nv
+             then OpamPackage.Set.singleton nv
+             else OpamPackage.Set.empty)
       ~merge:OpamPackage.Set.union
       ~init:OpamPackage.Set.empty in
 

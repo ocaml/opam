@@ -333,7 +333,9 @@ val dev_packages: state -> package_set
     the reinstall files. *)
 val update_dev_packages: state -> package_set -> package_set
 
-val update_dev_package: state -> package -> package_set
+(** Updates a dev or pinned package from its upstream; returns true
+    if changed, false otherwise *)
+val update_dev_package: state -> package -> bool
 
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool
