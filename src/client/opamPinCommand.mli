@@ -23,7 +23,9 @@ open OpamTypes
 val pin: name -> pin_option -> bool option
 
 (** Let the user edit a pinned package's opam file.
-    Returns [Some is_same_version] if the package should be rebuilt *)
+    Returns [Some is_same_version] if the package should be rebuilt.
+    raises [Not_found] if no valid opam file is available and the user didn't
+    succeed in producing one. *)
 val edit: OpamState.state -> name -> bool option
 
 (** Unpin a package. Returns true if the package should be rebuilt *)

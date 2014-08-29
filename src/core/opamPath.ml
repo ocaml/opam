@@ -168,6 +168,8 @@ module Switch = struct
 
     let opam t a n = package t a n // "opam"
 
+    let tmp_opam t a n = package t a n // "opam_"
+
     let url t a n = package t a n // "url"
 
     let descr t a n = package t a n // "descr"

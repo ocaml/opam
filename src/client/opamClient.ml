@@ -1518,16 +1518,15 @@ module API = struct
       OpamGlobals.msg "\n";
       let empty_opam = OpamState.has_empty_opam t nv in
       let needs_reinstall2 =
-        if empty_opam then
-          OpamState.add_pinned_overlay ~template:true t name;
         if edit || empty_opam then
-          OpamPinCommand.edit t name
+          try OpamPinCommand.edit t name
+          with Not_found ->
+            (OpamGlobals.error "No valid metadata available.";
+             ignore (unpin name);
+             OpamGlobals.exit 1)
         else None
       in
-      let skip_action =
-        (* Unedited, empty opam *)
-        needs_reinstall2 = None && empty_opam in
-      if action && not skip_action then
+      if action then
         let t = OpamState.load_state "pin-reinstall-2" in
         if not (OpamPackage.has_name t.installed name) ||
            needs_reinstall <> None ||
