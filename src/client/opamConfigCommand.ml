@@ -102,7 +102,8 @@ let list ns =
     List.map
       (fun (v,descr) ->
          v, descr,
-         OpamState.contents_of_variable_exn t OpamVariable.Map.empty v)
+         OpamMisc.Option.default (S "#undefined")
+           (OpamState.contents_of_variable t OpamVariable.Map.empty v))
       variables in
   List.iter (fun (variable, descr, contents) ->
       OpamGlobals.msg "%-20s %-40s %s\n"
@@ -181,7 +182,8 @@ let variable v =
     | Some c -> c
     | None   ->
       let t = OpamState.load_state "config-variable" in
-      OpamState.contents_of_variable_exn t OpamVariable.Map.empty v in
+      OpamMisc.Option.default (S "#undefined")
+        (OpamState.contents_of_variable t OpamVariable.Map.empty v) in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =
