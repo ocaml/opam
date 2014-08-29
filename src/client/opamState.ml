@@ -657,6 +657,10 @@ let resolve_variable t ?opam local_variables v =
     | "installed", Some _    -> bool true
     | "installed", None      -> bool false
     | "pinned",    _         -> bool    (OpamPackage.Name.Map.mem name t.pinned)
+    | "name",      _         ->
+      if OpamPackage.has_name t.packages name
+      then string (OpamPackage.Name.to_string name)
+      else None
     | _,           None      -> None
     | "bin",       _         -> dirname (OpamPath.Switch.bin     t.root t.switch)
     | "sbin",      _         -> dirname (OpamPath.Switch.sbin    t.root t.switch)
@@ -665,7 +669,6 @@ let resolve_variable t ?opam local_variables v =
     | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root t.switch name)
     | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch name)
     | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch name)
-    | "name",      _         -> string  (OpamPackage.Name.to_string name)
     | "build",     Some opam ->
       dirname (OpamPath.Switch.build t.root t.switch (get_nv opam))
     | "version",   Some opam ->

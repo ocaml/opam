@@ -67,7 +67,7 @@ let help t =
          | None -> "")
         doc)
     OpamState.global_variable_names;
-  OpamGlobals.msg "\n# Package variables\n\n";
+  OpamGlobals.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
   List.iter (fun (var, doc) ->
       OpamGlobals.msg "PKG:%-37s # %s\n" var doc)
     OpamState.package_variable_names
