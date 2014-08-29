@@ -113,9 +113,8 @@ val ocaml_native_available: bool Lazy.t
     available*)
 val ocaml_opt_available: bool Lazy.t
 
-(** Checks if native dynlink is available in a given ocaml lib prefix
-    (looks for libdir/ocaml/dynlink.cmxa) *)
-val ocaml_natdynlink_available: string -> bool
+(** Checks if native dynlink is available with the current OCaml compiler *)
+val ocaml_natdynlink_available: bool Lazy.t
 
 (** Return the path where the system ocamlc library is installed *)
 val system_ocamlc_where: string option Lazy.t
