@@ -728,8 +728,9 @@ let list =
   let doc = list_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of installed packages, or the list of \
-        all the available packages if the $(b,--all) flag is used.";
+    `P "This command displays the list of installed packages when called \
+        without argument, or the list of available packages matching the \
+        given pattern.";
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or -- if the package is not installed, and a short \
@@ -742,6 +743,9 @@ let list =
   let all =
     mk_flag ["a";"all"]
       "List all the packages which can be installed on the system." in
+  let unavailable =
+    mk_flag ["A";"unavailable"]
+      "List all packages, even those which can't be installed on the system" in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
     let doc = "List only packages that depend on one of $(docv)." in
@@ -767,16 +771,17 @@ let list =
        dependencies."
       Arg.(some & list string) None in
   let list global_options print_short all installed
-      installed_roots sort
+      installed_roots unavailable sort
       depends_on required_by recursive depopts depexts
       packages =
     apply_global_options global_options;
     let filter =
-      match all, installed, installed_roots with
-      | true,  false, false -> Some `installable
-      | false, true,  false -> Some `installed
-      | false, _,     true  -> Some `roots
-      | false, false, false ->
+      match unavailable, all, installed, installed_roots with
+      | true,  false, false, false -> Some `all
+      | false, true,  false, false -> Some `installable
+      | false, false, true,  false -> Some `installed
+      | false, false, _,     true  -> Some `roots
+      | false, false, false, false ->
         if depends_on = [] && required_by = [] && packages = []
         then Some `installed else Some `installable
       | _ -> None
@@ -802,7 +807,7 @@ let list =
   Term.ret
     Term.(pure list $global_options
           $print_short_flag $all $installed_flag $installed_roots_flag
-          $sort
+          $unavailable $sort
           $depends_on $required_by $recursive $depopts $depexts
           $pattern_list),
   term_info "list" ~doc ~man
