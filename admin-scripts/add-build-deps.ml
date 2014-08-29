@@ -14,7 +14,7 @@ let addbuild (pkg, (flags, cstr) as atom) =
     OpamFormula.Atom atom
 ;;
 
-map_packages ~opam:(fun opam ->
+iter_packages ~opam:(fun _ opam ->
     let open OpamFile.OPAM in
     let opam = with_depends opam @@ OpamFormula.map addbuild @@ depends opam in
     let opam = with_depopts opam @@ OpamFormula.map addbuild @@ depopts opam in

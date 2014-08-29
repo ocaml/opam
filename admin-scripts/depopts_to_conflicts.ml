@@ -3,7 +3,7 @@
 #directory "+../opam-lib";;
 open Opam_admin_top;;
 
-map_packages ~opam:(fun opam ->
+iter_packages ~opam:(fun _ opam ->
     let depopts =
       let formula = OpamFile.OPAM.depopts opam in
       let names =

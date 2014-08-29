@@ -8,7 +8,7 @@ open Opam_admin_top;;
 let github_re =
   Re.compile (Re_perl.re "https?://([^/]*github.com/.*)/archive/.*");;
 
-map_packages_gen @@ fun nv ~opam ~descr ~url ~dot_install ->
+iter_packages_gen @@ fun nv ~opam ~descr ~url ~dot_install ->
 let opam =
   if OpamFile.OPAM.dev_repo opam <> None then opam else
     match url with

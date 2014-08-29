@@ -11,32 +11,50 @@ val compilers : OpamCompiler.Set.t
 
 open OpamFile
 
+type 'a action = [`Update of 'a | `Remove | `Keep ]
+
 (** Maps on the files of every package. Only changed files are written back to
-    disk. Removes the file if [None] is returned. *)
-val map_packages_gen:
+    disk. *)
+val iter_packages_gen:
   (OpamPackage.t ->
+   prefix:string option ->
    opam:OPAM.t ->
    descr:Descr.t option ->
    url:URL.t option ->
    dot_install:Dot_install.t option ->
-   OPAM.t * Descr.t option * URL.t option * Dot_install.t option)
+   OPAM.t * Descr.t action * URL.t action * Dot_install.t action)
   -> unit
 
+(** Turn a list of glob patterns into a proper filtering function on
+    package names. *)
+val filter_packages: string list -> (OpamPackage.t -> bool)
+
 (** Quicker interface when considering a single type of file *)
-val map_packages:
-  ?opam:(OPAM.t -> OPAM.t) ->
-  ?descr:(Descr.t -> Descr.t) ->
-  ?url:(URL.t -> URL.t) ->
-  ?dot_install:(Dot_install.t -> Dot_install.t) ->
+val iter_packages:
+  ?filter:(OpamPackage.t -> bool) ->
+  ?f:(OpamPackage.t -> string option -> OPAM.t -> unit) ->
+  ?opam:(OpamPackage.t -> OPAM.t -> OPAM.t) ->
+  ?descr:(OpamPackage.t -> Descr.t -> Descr.t) ->
+  ?url:(OpamPackage.t -> URL.t -> URL.t) ->
+  ?dot_install:(OpamPackage.t -> Dot_install.t -> Dot_install.t) ->
   unit -> unit
 
 (** Similarly for compiler descriptions *)
-val map_compilers_gen:
-  (OpamCompiler.t -> comp:Comp.t -> descr:Descr.t option ->
-   Comp.t * Descr.t option)
+val iter_compilers_gen:
+  (OpamCompiler.t ->
+   prefix:string option ->
+   comp:Comp.t ->
+   descr:Descr.t option ->
+   Comp.t * Descr.t action)
   -> unit
 
-val map_compilers:
-  ?comp:(Comp.t -> Comp.t) ->
-  ?descr:(Descr.t -> Descr.t) ->
+(** Turn a list of glob patterns into a proper filtering function on
+    compiler names. *)
+val filter_compilers: string list -> (OpamCompiler.t -> bool)
+
+val iter_compilers:
+  ?filter:(OpamCompiler.t -> bool) ->
+  ?f:(OpamCompiler.t -> string option -> Comp.t -> unit) ->
+  ?comp:(OpamCompiler.t -> Comp.t -> Comp.t) ->
+  ?descr:(OpamCompiler.t -> Descr.t -> Descr.t) ->
   unit -> unit
