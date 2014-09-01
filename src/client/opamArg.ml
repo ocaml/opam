@@ -1046,7 +1046,23 @@ let config =
          then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))
          else "no");
       print "os" "%s" (OpamGlobals.os_string ());
-      print "external-solver" "%b" (OpamCudf.external_solver_available ());
+      print "external-solver" "%s"
+        (if OpamCudf.external_solver_available () then
+           OpamGlobals.get_external_solver ()
+         else "no");
+      print "default-criteria" "%s"
+        (try List.assoc `Default !OpamGlobals.solver_preferences
+         with Not_found ->
+           try
+             let cfg =
+               OpamFile.Config.read (OpamPath.config (OpamPath.root())) in
+             List.assoc `Default (OpamFile.Config.criteria cfg)
+           with
+           | e ->
+             OpamMisc.fatal e;
+             match OpamCudf.check_cudf_version () with
+              | `Latest -> OpamGlobals.default_preferences `Default ^ "*"
+              | `Compat -> OpamGlobals.compat_preferences `Default ^ "*");
       try
         let state = OpamState.load_state "config-report" in
         let open OpamState.Types in
