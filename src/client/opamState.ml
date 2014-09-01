@@ -558,8 +558,8 @@ let global_variable_names = [
   "jobs",                 "The number of parallel jobs set up in OPAM \
                            configuration";
   "ocaml-native",         "Whether the OCaml native compilers are available";
-  "ocaml-tools-opt",      "Whether the .opt versions of the OCaml tools are \
-                           available";
+  "ocaml-native-tools",   "Whether the native \".opt\" version of the OCaml \
+                           toolchain is available";
   "ocaml-native-dynlink", "Whether native dynlink is available on this \
                            installation";
   "arch",                 "The current arch, as returned by \"uname -m\"";
@@ -632,10 +632,8 @@ let resolve_variable t ?opam local_variables v =
     | "switch"        -> string (OpamSwitch.to_string t.switch)
     | "jobs"          -> int (jobs t)
     | "ocaml-native"  -> bool (Lazy.force OpamSystem.ocaml_native_available)
-    | "ocaml-tools-opt" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
-    | "ocaml-native-dynlink" ->
-      bool (OpamSystem.ocaml_natdynlink_available
-              (OpamFilename.Dir.to_string (OpamPath.Switch.lib_dir t.root t.switch)))
+    | "ocaml-native-tools" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
+    | "ocaml-native-dynlink" -> bool (Lazy.force OpamSystem.ocaml_natdynlink_available)
     | "arch"          -> string (OpamGlobals.arch ())
     | _               -> None
   in
@@ -657,6 +655,10 @@ let resolve_variable t ?opam local_variables v =
     | "installed", Some _    -> bool true
     | "installed", None      -> bool false
     | "pinned",    _         -> bool    (OpamPackage.Name.Map.mem name t.pinned)
+    | "name",      _         ->
+      if OpamPackage.has_name t.packages name
+      then string (OpamPackage.Name.to_string name)
+      else None
     | _,           None      -> None
     | "bin",       _         -> dirname (OpamPath.Switch.bin     t.root t.switch)
     | "sbin",      _         -> dirname (OpamPath.Switch.sbin    t.root t.switch)
@@ -665,7 +667,6 @@ let resolve_variable t ?opam local_variables v =
     | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root t.switch name)
     | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch name)
     | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch name)
-    | "name",      _         -> string  (OpamPackage.Name.to_string name)
     | "build",     Some opam ->
       dirname (OpamPath.Switch.build t.root t.switch (get_nv opam))
     | "version",   Some opam ->
@@ -2167,7 +2168,7 @@ let print_env_warning_at_switch t =
   if up_to_date_env t then ()
   else
     OpamGlobals.msg
-      "# To complete the configuration of OPAM, you need to run:\n%s"
+      "# To setup the new switch in the current shell, you need to run:\n%s"
       (eval_string ())
 
 let update_setup_interactive t shell dot_profile =

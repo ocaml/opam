@@ -406,22 +406,23 @@ let bad_subcommand command subcommands usersubcommand userparams =
     `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
               (OpamMisc.pretty_list
                  (List.flatten (List.map (fun (a,_,_,_) -> a) subcommands))))
+  | Some (`default cmd) ->
+    `Error (true, Printf.sprintf "Invalid %s subcommand %S" command cmd)
   | Some usersubcommand ->
-    let name, args =
-      match List.find (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
-      | name::_, _, args, _doc -> name, args
-      | _ -> assert false
-    in
     let exe = Filename.basename Sys.executable_name in
-    let usage =
-      Printf.sprintf "%s %s [OPTION]... %s %s"
-        exe command name (String.concat " " args) in
-    if List.length userparams < List.length args then
-      `Error (false, Printf.sprintf "%s: Missing argument.\nUsage: %s\n"
-                exe usage)
-    else
-      `Error (false, Printf.sprintf "%s: Too many arguments.\nUsage: %s\n"
-                exe usage)
+    match List.find_all (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
+    | [name::_, _, args, _doc] ->
+      let usage =
+        Printf.sprintf "%s %s [OPTION]... %s %s"
+          exe command name (String.concat " " args) in
+      if List.length userparams < List.length args then
+        `Error (false, Printf.sprintf "%s: Missing argument.\nUsage: %s\n"
+                  exe usage)
+      else
+        `Error (false, Printf.sprintf "%s: Too many arguments.\nUsage: %s\n"
+                  exe usage)
+    | _ ->
+      `Error (true, Printf.sprintf "Invalid %s subcommand" command)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
@@ -727,8 +728,9 @@ let list =
   let doc = list_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of installed packages, or the list of \
-        all the available packages if the $(b,--all) flag is used.";
+    `P "This command displays the list of installed packages when called \
+        without argument, or the list of available packages matching the \
+        given pattern.";
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or -- if the package is not installed, and a short \
@@ -741,6 +743,9 @@ let list =
   let all =
     mk_flag ["a";"all"]
       "List all the packages which can be installed on the system." in
+  let unavailable =
+    mk_flag ["A";"unavailable"]
+      "List all packages, even those which can't be installed on the system" in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
     let doc = "List only packages that depend on one of $(docv)." in
@@ -766,16 +771,17 @@ let list =
        dependencies."
       Arg.(some & list string) None in
   let list global_options print_short all installed
-      installed_roots sort
+      installed_roots unavailable sort
       depends_on required_by recursive depopts depexts
       packages =
     apply_global_options global_options;
     let filter =
-      match all, installed, installed_roots with
-      | true,  false, false -> Some `installable
-      | false, true,  false -> Some `installed
-      | false, _,     true  -> Some `roots
-      | false, false, false ->
+      match unavailable, all, installed, installed_roots with
+      | true,  false, false, false -> Some `all
+      | false, true,  false, false -> Some `installable
+      | false, false, true,  false -> Some `installed
+      | false, false, _,     true  -> Some `roots
+      | false, false, false, false ->
         if depends_on = [] && required_by = [] && packages = []
         then Some `installed else Some `installable
       | _ -> None
@@ -801,7 +807,7 @@ let list =
   Term.ret
     Term.(pure list $global_options
           $print_short_flag $all $installed_flag $installed_roots_flag
-          $sort
+          $unavailable $sort
           $depends_on $required_by $recursive $depopts $depexts
           $pattern_list),
   term_info "list" ~doc ~man
@@ -998,7 +1004,7 @@ let config =
           user_doc ocamlinit_doc profile_doc dot_profile_doc
           global_doc no_complete_doc no_eval_doc)
     | Some `exec, (_::_ as c) -> `Ok (Client.CONFIG.exec c)
-    | Some `list, [] ->
+    | Some `list, params ->
       (try `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
     | Some `var, [var] ->

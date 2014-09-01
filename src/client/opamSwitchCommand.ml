@@ -78,7 +78,7 @@ let list ~print_short ~installed ~all =
       (not_installed_str, not_installed_str, c, d) :: acc
     ) [] l in
 
-  let all =
+  let to_show =
     if installed then
       installed_s
     else if all then
@@ -92,9 +92,9 @@ let list ~print_short ~installed ~all =
       let s = max (String.length state) s in
       let c = max (String.length compiler) c in
       (n, s, c)
-    ) (0,0,0) all in
+    ) (0,0,0) to_show in
 
-  let count = ref (List.length all) in
+  let count = ref (List.length to_show) in
   let print_compiler (name, state, compiler, descr) =
     decr count;
     if print_short then (
@@ -131,7 +131,11 @@ let list ~print_short ~installed ~all =
         (OpamMisc.indent_left colored_compiler ~visual:compiler max_compiler)
         colored_descr colored_body in
 
-  List.iter print_compiler all
+  List.iter print_compiler to_show;
+  if not installed && not all then
+    OpamGlobals.msg "# %d more patched or experimental compilers, \
+                     use '--all' to show\n"
+      (List.length patches)
 
 let remove_t switch t =
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;

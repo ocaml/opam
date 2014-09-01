@@ -393,6 +393,7 @@ module API = struct
         let kind = match filter with
           | `roots
           | `installed -> "Installed"
+          | `all       -> "Existing"
           | _          -> "Available" in
         let results =
           if not depends_mode then "" else

@@ -557,8 +557,15 @@ let exists_alongside_ocamlc name =
 
 let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
 let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
-let ocaml_natdynlink_available libdir =
-  Sys.file_exists (libdir / "ocaml" / "dynlink.cmxa")
+let ocaml_natdynlink_available = lazy (
+  match
+    read_command_output_opt ~verbose:false [ "ocamlc"; "-where" ]
+  with
+  | Some (h::_) ->
+    let libdir = OpamMisc.strip h in
+    Sys.file_exists (libdir / "dynlink.cmxa")
+  | None | Some []   -> false
+)
 
 (* Reset the path to get the system compiler *)
 let system command = lazy (

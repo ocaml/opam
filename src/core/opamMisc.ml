@@ -474,13 +474,15 @@ let get_terminal_columns () =
   try           (* terminfo *)
     with_process_in "tput cols"
       (fun ic -> int_of_string (input_line ic))
-  with Unix.Unix_error _ | Sys_error _ | Failure _ -> try (* GNU stty *)
+  with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file ->
+    try (* GNU stty *)
       with_process_in "stty size"
         (fun ic ->
           match split (input_line ic) ' ' with
           | [_ ; v] -> int_of_string v
           | _ -> failwith "stty")
-    with Unix.Unix_error _ | Sys_error _ | Failure _  -> try (* shell envvar *)
+    with Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file ->
+      try (* shell envvar *)
         int_of_string (getenv "COLUMNS")
       with Not_found | Failure _ ->
         default_columns
