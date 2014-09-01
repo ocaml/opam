@@ -1345,7 +1345,7 @@ let run_external_command () =
 
 let run default commands =
   Sys.catch_break true;
-  let _ = Sys.signal Sys.sigpipe Sys.Signal_ignore in
+  let _ = Sys.signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ())) in
   try
     if is_external_command () then run_external_command ();
     match Term.eval_choice ~catch:false default commands with
