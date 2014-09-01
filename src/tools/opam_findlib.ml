@@ -29,6 +29,7 @@ type args = {
   findlib_pkgs: string list;
   infer: bool;
   install: bool;
+  force: bool;
   orphans: bool;
 }
 
@@ -39,8 +40,15 @@ let args =
                `remove` field." in
     Arg.(value & flag & info ~doc ["infer"]) in
   let install =
-    let doc = "Try to install the package if is not already installed." in
+    let doc = "Try to install the package if is not already installed and no \
+               previous information is known about that package." in
     Arg.(value & flag & info ~doc ["install"]) in
+  let force =
+    let doc = "Used in conjunction with `--infer` or `--install` to force \
+               the installation of packages, even if previous information \
+               about `findlib' libraries are already known for that package."
+    in
+    Arg.(value & flag & info ~doc ["force"]) in
   let orphans =
     let doc = "Display the orphans findlib packages" in
     Arg.(value & flag & info ~doc ["orphans"]) in
@@ -54,9 +62,9 @@ let args =
     Arg.(value & pos_all string [] & info [] ~doc
            ~docv:"OPAM-PKG")
   in
-  Term.(pure (fun infer install orphans findlib_pkgs opam_pkgs ->
-      { infer; install; orphans; findlib_pkgs; opam_pkgs }
-    ) $ infer $ install $ orphans $ findlib_pkgs $ opam_pkgs)
+  Term.(pure (fun infer install force orphans findlib_pkgs opam_pkgs ->
+      { infer; install; force; orphans; findlib_pkgs; opam_pkgs }
+    ) $ infer $ install $ force $ orphans $ findlib_pkgs $ opam_pkgs)
 
 let state = lazy (OpamState.load_state "opam-admin-findlib")
 
@@ -65,8 +73,8 @@ let installed_findlibs () =
   let libdir = OpamPath.Switch.lib_dir root switch in
   let dirs = OpamFilename.dirs libdir in
   let libs = List.fold_left (fun acc dir ->
-      let meta = dir // "META" in
-      if OpamFilename.exists meta then
+      let file = dir // "META" in
+      if OpamFilename.exists file then
         let lib = Filename.basename (OpamFilename.Dir.to_string dir) in
         StringSet.add lib acc
       else
@@ -164,26 +172,29 @@ let process args =
   in
   OpamPackage.Map.iter (fun package prefix ->
       if should_process package then (
-        OpamGlobals.msg "Processing (package) %s\n"
-          (OpamPackage.to_string package);
         let opam_f = OpamPath.Repository.opam repo prefix package in
-        let opam = OpamFile.OPAM.read opam_f in
         let filename = OpamFilename.dirname opam_f // "findlib" in
-        let pkgs0 =
-          OpamFile.Lines.safe_read filename
-          |> List.flatten
-          |> StringSet.of_list
-        in
-        let pkgs1 =
-          if args.infer then (
-            StringSet.union
-              (infer_from_name args package)
-              (infer_from_remove_command opam)
-          ) else StringSet.of_list args.findlib_pkgs
-        in
-        let pkgs = StringSet.union pkgs0 pkgs1 in
-        let contents = List.map (fun x -> [x]) (StringSet.elements pkgs) in
-        if contents <> [] then OpamFile.Lines.write filename contents)
+        if OpamFilename.exists filename && not args.force then
+          ()
+        else (
+          OpamGlobals.msg "Processing %s\n" (OpamPackage.to_string package);
+          let opam = OpamFile.OPAM.read opam_f in
+          let pkgs0 =
+            OpamFile.Lines.safe_read filename
+            |> List.flatten
+            |> StringSet.of_list
+          in
+          let pkgs1 =
+            if args.infer then (
+              StringSet.union
+                (infer_from_name args package)
+                (infer_from_remove_command opam)
+            ) else StringSet.of_list args.findlib_pkgs
+          in
+          let pkgs = StringSet.union pkgs0 pkgs1 in
+          let contents = List.map (fun x -> [x]) (StringSet.elements pkgs) in
+          if contents <> [] then OpamFile.Lines.write filename contents)
+      )
     ) packages
   else
     OpamGlobals.msg "Nothing to do.\n"
