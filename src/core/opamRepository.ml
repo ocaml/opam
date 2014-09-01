@@ -190,8 +190,9 @@ let check_version repo =
   if not !OpamGlobals.skip_version_checks &&
      OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamGlobals.error_and_exit
-      "\nThe current version of OPAM cannot read the repository. \
+      "The current version of OPAM cannot read the repository %S. \n\
        You should upgrade to at least version %s.\n"
+      (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_version)
 
 let extract_prefix repo dir nv =
