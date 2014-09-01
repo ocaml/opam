@@ -234,6 +234,10 @@ module Switch: sig
         $opam/$switch/cache/$name.$version/opam} *)
     val opam: t -> switch -> name -> filename
 
+    (** OPAM temp overlay (for user editing): {i
+        $opam/$switch/cache/$name.$version/opam_} *)
+    val tmp_opam: t -> switch -> name -> filename
+
     (** URL overlay: {i
         $opam/$switch/overlay/$name.$version/url} *)
     val url: t -> switch -> name -> filename

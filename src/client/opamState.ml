@@ -480,7 +480,9 @@ let remove_metadata t packages =
 (* Returns [opam, descr_file, files_dir]. We don't consider [url] since
    this is for pinned packages. if [root], don't look for a subdir [opam]
    to find [files] and [descr]. *)
-let local_opam ?(root=false) ?(version_override=true) nv dir =
+let local_opam
+    ?(root=false) ?(version_override=true) ?copy_invalid_to
+    nv dir =
   let has_dir d = if OpamFilename.exists_dir d then Some d else None in
   let has_file f = if OpamFilename.exists f then Some f else None in
   let opam_dir, descr, files_dir =
@@ -504,9 +506,14 @@ let local_opam ?(root=false) ?(version_override=true) nv dir =
         else Some opam
       with e ->
         OpamMisc.fatal e;
-        OpamGlobals.error "opam file for %s contains errors, ignoring"
-          (OpamPackage.to_string nv);
-        None
+        match copy_invalid_to with
+        | Some dst ->
+          OpamGlobals.warning
+            "Errors in opam file from %s source, \
+             ignored (fix with 'opam pin edit')"
+            (OpamPackage.to_string nv);
+          OpamFilename.copy ~src:local_opam ~dst; None
+        | None -> None
   in
   opam, descr, files_dir
 
@@ -2466,7 +2473,11 @@ let update_dev_package t nv =
     (* Do the update *)
     let result = fetch () in
     let new_meta = (* New version from the source *)
-      hash_meta @@ local_opam ~version_override:false nv srcdir
+      hash_meta @@
+      local_opam
+        ~version_override:false
+        ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam t.root t.switch name)
+        nv srcdir
     in
     let user_meta, old_meta, repo_meta =
       if OpamFilename.exists (srcdir // "opam") then
@@ -2511,6 +2522,8 @@ let update_dev_package t nv =
         (OpamGlobals.msg "Installing new package description for %s from %s\n"
            (OpamPackage.to_string nv)
            (Filename.concat (string_of_address remote_url) "opam");
+         OpamFilename.remove
+           (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
          install_meta srcdir user_meta new_meta)
       else if
         OpamGlobals.msg

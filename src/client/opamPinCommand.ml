@@ -42,29 +42,35 @@ let edit t name =
     with Not_found -> None
   in
   let file = OpamPath.Switch.Overlay.opam t.root t.switch name in
-  if not (OpamFilename.exists file) then
-    OpamState.add_pinned_overlay ~template:true t name;
-  let backup =
-    OpamFilename.OP.(OpamPath.backup_dir t.root //
-                     (OpamPackage.Name.to_string name ^ "-opam.bak")) in
-  OpamFilename.copy ~src:file ~dst:backup;
-  let orig_opam = OpamFile.OPAM.read file in
+  let temp_file = OpamPath.Switch.Overlay.tmp_opam t.root t.switch name in
+  let orig_opam =
+    try Some (OpamFile.OPAM.read file) with e -> OpamMisc.fatal e; None
+  in
+  let empty_opam =
+    match orig_opam with
+    | None -> true
+    | Some opam ->
+      try opam = OpamFile.OPAM.create
+            (OpamPackage.create name (OpamFile.OPAM.version opam))
+      with OpamSystem.Internal_error _ -> true
+  in
+  if empty_opam then
+    if not (OpamFilename.exists temp_file)
+    then OpamState.add_pinned_overlay ~template:true t name;
+  if not (OpamFilename.exists temp_file) then
+    OpamFilename.copy ~src:file ~dst:temp_file;
   let rec edit () =
     try
       ignore @@ Sys.command
         (Printf.sprintf "%s %s"
-           (Lazy.force OpamGlobals.editor) (OpamFilename.to_string file));
-      let opam = OpamFile.OPAM.read file in
-      let opam =
-        if OpamFile.OPAM.name_opt opam = None then
-          OpamFile.OPAM.with_name opam name
-        else opam in
+           (Lazy.force OpamGlobals.editor) (OpamFilename.to_string temp_file));
+      let opam = OpamFile.OPAM.read temp_file in
       if OpamFile.OPAM.name_opt opam <> Some name then
-        (OpamGlobals.error "Inconsistent \"name\" field, it must be %s"
+        (OpamGlobals.error
+           "Inconsistent or missing \"name\" field, it must be %S"
            (OpamPackage.Name.to_string name);
          failwith "bad name");
       match pin, OpamFile.OPAM.version_opt opam with
-      | Version vpin, None -> OpamFile.OPAM.with_version opam vpin
       | Version vpin, Some v when v <> vpin ->
         OpamGlobals.error
           "Bad \"version: %S\" field: the package is version-pinned to %s"
@@ -74,37 +80,36 @@ let edit t name =
       | _, None ->
         OpamGlobals.error "The \"version\" field is mandatory";
         failwith "missing field"
-      | _ -> opam
+      | _ -> Some opam
     with e ->
-      (try OpamMisc.fatal e with e ->
-        OpamFilename.move ~src:backup ~dst:file;
-        raise e);
+      OpamMisc.fatal e;
       if OpamGlobals.confirm "Errors in %s, retry editing ?"
           (OpamFilename.to_string file)
       then edit ()
-      else (OpamFilename.move ~src:backup ~dst:file;
-            OpamFile.OPAM.read file)
+      else None
   in
-  let opam = edit () in
-  OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
-    (OpamPackage.Name.to_string name);
-  OpamFilename.remove backup;
-  if opam = orig_opam then None else
-  let () = match pin with
-    | Local dir ->
-      let src_opam =
-        OpamFilename.OP.(
-          if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
-          else dir // "opam")
-       in
-       if OpamGlobals.confirm "Save the new opam file back to %S ?"
-           (OpamFilename.to_string src_opam) then
-         OpamFilename.copy ~src:file ~dst:src_opam
-    | Version _ | Git _ | Darcs _ | Hg _ -> ()
-  in
-  match installed_nv with
-  | None -> None
-  | Some nv -> Some (OpamPackage.version nv = OpamFile.OPAM.version opam)
+  match edit () with
+  | None -> if empty_opam then (prerr_endline "EO"; raise Not_found) else (prerr_endline "NEO"; None)
+  | Some new_opam ->
+    OpamFilename.move ~src:temp_file ~dst:file;
+    OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
+      (OpamPackage.Name.to_string name);
+    if Some new_opam = orig_opam then None else
+    let () = match pin with
+      | Local dir ->
+        let src_opam =
+          OpamFilename.OP.(
+            if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
+            else dir // "opam")
+        in
+        if OpamGlobals.confirm "Save the new opam file back to %S ?"
+            (OpamFilename.to_string src_opam) then
+          OpamFilename.copy ~src:file ~dst:src_opam
+      | Version _ | Git _ | Darcs _ | Hg _ -> ()
+    in
+    match installed_nv with
+    | None -> None
+    | Some nv -> Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
 
 let update_set set old cur save =
   if OpamPackage.Set.mem old set then
@@ -151,7 +156,10 @@ let pin name pin_option =
           "%s is already pinned to %s."
           (OpamPackage.Name.to_string name)
           (string_of_pin_option current);
-      if OpamGlobals.confirm "Proceed ?" then no_changes
+      if OpamGlobals.confirm "Proceed ?" then
+        (OpamFilename.remove
+           (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
+         no_changes)
       else OpamGlobals.exit 0
     with Not_found -> false
   in

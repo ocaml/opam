@@ -285,7 +285,7 @@ let switch_cont ~quiet ~warning switch =
     OpamState.check_base_packages t
 
 let switch ~quiet ~warning switch =
-  (snd (switch_cont ~quiet ~warning switch)) () 
+  (snd (switch_cont ~quiet ~warning switch)) ()
 
 (* Remove from [set] all the packages whose names appear in
    [filter]. *)
