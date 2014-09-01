@@ -93,15 +93,20 @@ let installed_findlibs () =
   libs
 
 let declared_findlibs repo packages =
-  let aux package prefix acc =
-    let findlib_f =
-      OpamPath.Repository.packages repo prefix package // "findlib"
-    in
-    let findlib = OpamFile.Lines.safe_read findlib_f in
-    let findlib = StringSet.of_list (List.flatten findlib) in
-    StringSet.union acc findlib
+  let aux package acc =
+    try
+      let prefix = OpamPackage.Map.find package packages in
+      let findlib_f =
+        OpamPath.Repository.packages repo prefix package // "findlib"
+      in
+      let findlib = OpamFile.Lines.safe_read findlib_f in
+      let findlib = StringSet.of_list (List.flatten findlib) in
+      StringSet.union acc findlib
+    with Not_found ->
+      acc
   in
-  OpamPackage.Map.fold aux packages StringSet.empty
+  let { OpamState.Types.installed } = Lazy.force state in
+  OpamPackage.Set.fold aux installed StringSet.empty
 
 let infer_from_remove_command opam =
   let cmds = OpamFile.OPAM.remove opam in
