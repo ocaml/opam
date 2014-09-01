@@ -306,8 +306,7 @@ let compiler_index repositories =
 let update repo =
   log "update %a" (slog to_string) repo;
   let module B = (val find_backend repo: BACKEND) in
-  B.pull_repo repo;
-  check_version repo
+  B.pull_repo repo
 
 let make_archive ?(gener_digest=false) repo prefix nv =
   let url_file = OpamPath.Repository.url repo prefix nv in

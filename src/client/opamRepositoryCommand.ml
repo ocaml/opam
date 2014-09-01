@@ -37,7 +37,7 @@ let update t repo =
         OpamGlobals.warning "%s: Cyclic redirections, stopping."
           (OpamRepositoryName.to_string repo.repo_name)
       else match OpamState.redirect t r with
-        | None        -> ()
+        | None -> ()
         | Some (new_repo, f) ->
           OpamFilename.rmdir repo.repo_root;
           OpamFile.Repo_config.write (OpamPath.Repository.config repo) new_repo;
@@ -52,7 +52,8 @@ let update t repo =
             reason;
           loop new_repo (n-1)
     ) in
-  loop repo max_loop
+  loop repo max_loop;
+  OpamRepository.check_version repo
 
 let print_updated_compilers updates =
 

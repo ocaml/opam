@@ -97,7 +97,7 @@ module X = struct
 
     let check_opam_version =
       let already_warned = ref false in
-      fun f v ->
+      fun ?(allow_major=false) f v ->
         let diff_full = OpamVersion.(compare current v) in
         if diff_full >= 0 then true else
         let diff_major = OpamVersion.(compare (major current) (major v)) in
@@ -105,7 +105,7 @@ module X = struct
           OpamGlobals.error_and_exit
             "Strict mode: %s refers to OPAM %s, this is %s."
             f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
-        if diff_major < 0 then
+        if diff_major < 0 && not allow_major then
           OpamFormat.bad_format
             ~pos:OpamFormat.(assoc f.file_contents s_opam_version value_pos)
             "Can't read OPAM %s files yet, this is OPAM %s."
@@ -118,7 +118,7 @@ module X = struct
         already_warned := true;
         false
 
-    let check ?(versioned=true) =
+    let check ?allow_major ?(versioned=true) =
       fun f fields ->
         let f_opam_version =
           if List.mem s_opam_version fields then
@@ -129,7 +129,7 @@ module X = struct
         (* Reading a file with a newer minor version triggers permissive
            mode: silently ignore new fields and try to be more tolerant *)
         let permissive_mode = match f_opam_version with
-          | Some v -> not (check_opam_version f v)
+          | Some v -> not (check_opam_version ?allow_major f v)
           | None ->
             if versioned then (
               if !OpamGlobals.strict then
@@ -1938,7 +1938,8 @@ module X = struct
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      let permissive = Syntax.check ~versioned:false s valid_fields in
+      let permissive =
+        Syntax.check ~allow_major:true ~versioned:false s valid_fields in
       let get f =
         try OpamFormat.assoc_option s.file_contents f
               OpamFormat.parse_string

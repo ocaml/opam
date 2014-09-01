@@ -87,6 +87,9 @@ val init: repository -> unit
 (** Update {i $opam/repo/$repo}. *)
 val update: repository -> unit
 
+(** Error and exit on incompatible version *)
+val check_version: repository -> unit
+
 (** Backend signature *)
 module type BACKEND = sig
 
