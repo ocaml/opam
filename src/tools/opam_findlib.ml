@@ -156,8 +156,9 @@ let process args =
     let orphans =
       StringSet.diff (installed_findlibs ()) (declared_findlibs repo packages)
     in
-    let orphans = StringSet.elements orphans in
-    OpamGlobals.msg "%s\n" (String.concat "\n" orphans)
+    match StringSet.elements orphans with
+    | []      -> ()
+    | orphans -> OpamGlobals.msg "%s\n" (String.concat "\n" orphans)
   else if args.infer || args.opam_pkgs <> [] || args.findlib_pkgs <> [] then
   let regexps =
     List.map (fun pattern ->
