@@ -1255,11 +1255,11 @@ let save_state ~update t =
   let file = OpamPath.state_cache t.root in
   OpamFilename.remove file;
   if update then (
-    OpamGlobals.msg
+    log
       "Updating the cache of metadata (%s) ...\n"
       (OpamFilename.prettify file);
   ) else
-    OpamGlobals.msg
+    log
       "Creating a cache of metadata in %s ...\n"
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in

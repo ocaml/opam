@@ -1050,7 +1050,7 @@ let config =
         (if OpamCudf.external_solver_available () then
            OpamGlobals.get_external_solver ()
          else "no");
-      print "default-criteria" "%s"
+      print "criteria" "%s"
         (try List.assoc `Default !OpamGlobals.solver_preferences
          with Not_found ->
            try
