@@ -95,56 +95,74 @@ module X = struct
 
     let s_opam_version = "opam-version"
 
-    let check ?(versioned=true) =
-      let not_already_warned = ref true in
+    let check_opam_version =
+      let already_warned = ref false in
+      fun ?(allow_major=false) f v ->
+        let diff_full = OpamVersion.(compare current v) in
+        if diff_full >= 0 then true else
+        let diff_major = OpamVersion.(compare (major current) (major v)) in
+        if !OpamGlobals.strict then
+          OpamGlobals.error_and_exit
+            "Strict mode: %s refers to OPAM %s, this is %s."
+            f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
+        if diff_major < 0 && not allow_major then
+          OpamFormat.bad_format
+            ~pos:OpamFormat.(assoc f.file_contents s_opam_version value_pos)
+            "Can't read OPAM %s files yet, this is OPAM %s."
+            (OpamVersion.to_string v) OpamVersion.(to_string current);
+        if not (!already_warned) then
+          OpamGlobals.note
+            "File %s is written for OPAM %s, and this is %s.\n\
+             It may depend on new features, consider upgrading."
+            f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
+        already_warned := true;
+        false
+
+    let check ?allow_major ?(versioned=true) =
       fun f fields ->
-        if List.mem s_opam_version fields then
-          begin match OpamFormat.assoc_option f.file_contents s_opam_version
-                        (OpamFormat.parse_string @> OpamVersion.of_string) with
-          | Some opam_version ->
-            if not !OpamGlobals.skip_version_checks &&
-               OpamVersion.compare opam_version OpamVersion.current > 0 then
-              OpamGlobals.error_and_exit
-                "Your version of OPAM (%s) is not recent enough to read %s.\n\
-                 Upgrade to version %s or later to read this file."
-                (OpamVersion.to_string OpamVersion.current)
-                (OpamMisc.prettify_path f.file_name)
-                (OpamVersion.to_string opam_version)
+        let f_opam_version =
+          if List.mem s_opam_version fields then
+            OpamFormat.assoc_option f.file_contents s_opam_version
+              (OpamFormat.parse_string @> OpamVersion.of_string)
+          else None
+        in
+        (* Reading a file with a newer minor version triggers permissive
+           mode: silently ignore new fields and try to be more tolerant *)
+        let permissive_mode = match f_opam_version with
+          | Some v -> not (check_opam_version ?allow_major f v)
           | None ->
             if versioned then (
-              OpamGlobals.error
-                "%s is missing the opam-version field: syntax check failed."
+              if !OpamGlobals.strict then
+                OpamGlobals.error_and_exit
+                  "Strict mode: %s missing the opam-version field"
+                  (OpamMisc.prettify_path f.file_name);
+              OpamGlobals.warning
+                "%s is missing the 'opam-version:' field."
                 (OpamMisc.prettify_path f.file_name);
-              OpamFormat.bad_format "opam-version"
-            )
-          end;
-        if not (OpamFormat.is_valid f.file_contents fields) then
+              true
+            ) else false
+        in
+        if not permissive_mode &&
+           not (OpamFormat.is_valid f.file_contents fields) then
           let invalids = OpamFormat.invalid_fields f.file_contents fields in
-          let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
+          let too_many, invalids =
+            List.partition (fun x -> List.mem x fields) invalids
+          in
           if too_many <> [] then
             OpamGlobals.warning "duplicate fields in %s: %s"
               f.file_name
               (OpamMisc.string_of_list (fun x -> x) too_many);
-          if !OpamGlobals.strict then (
-            if invalids <> [] then
-              (let are,s = match invalids with [_] -> "is an","" | _ -> "are","s" in
-               OpamGlobals.error "%s %s invalid field name%s in %s. Valid fields: %s\n\
-                                  Either there is an error in the package, or your \
-                                  OPAM is not up-to-date."
-                 (OpamMisc.string_of_list (fun x -> x) invalids)
-                 are s f.file_name
-                 (OpamMisc.string_of_list (fun x -> x) fields));
-            OpamGlobals.exit 5
-          ) else if !not_already_warned then (
-            not_already_warned := false;
-            let is_, s_ =
-              if List.length invalids <= 1 then "is an", "" else "are", "s" in
-            if invalids <> [] then
-              OpamGlobals.warning "%s %s unknown field%s in %s: is your OPAM up-to-date ?"
-                (OpamMisc.pretty_list invalids)
-                is_ s_
-                f.file_name
-          )
+          let is_, s_ =
+            if List.length invalids <= 1 then "is an", "" else "are", "s" in
+          if invalids <> [] then
+            OpamGlobals.warning "%s %s unknown field%s in %s."
+              (OpamMisc.pretty_list invalids)
+              is_ s_ f.file_name;
+          if !OpamGlobals.strict then
+            OpamGlobals.error_and_exit "Strict mode: bad fields in %s"
+              f.file_name;
+          false
+        else permissive_mode
 
     let to_1_0 file =
       let file_contents = List.map (function
@@ -276,6 +294,7 @@ module X = struct
     let s_mirrors = "mirrors"
 
     let valid_fields = [
+      Syntax.s_opam_version;
       s_archive;
       s_src;
       s_http;
@@ -310,9 +329,13 @@ module X = struct
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
-      let get f = OpamFormat.assoc_option s.file_contents f
-          (OpamFormat.parse_string @> address_of_string) in
+      let permissive = Syntax.check ~versioned:false s valid_fields in
+      let get f =
+        try
+          OpamFormat.assoc_option s.file_contents f
+            (OpamFormat.parse_string @> address_of_string)
+        with OpamFormat.Bad_format _ when permissive -> None
+      in
       let archive  = get s_archive in
       let http     = get s_http in
       let src      = get s_src in
@@ -770,7 +793,7 @@ module X = struct
       s_fixup_criteria;
       s_solver;
 
-      (* this fields are no longer useful, but we keep it for backward
+      (* these fields are no longer useful, but we keep them for backward
          compatibility *)
       s_switch1;
       s_switch2;
@@ -781,13 +804,16 @@ module X = struct
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
+      let permissive = Syntax.check s valid_fields in
       let opam_version = OpamFormat.assoc s.file_contents s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
       let repositories =
-        OpamFormat.assoc_list s.file_contents s_repositories
-          (OpamFormat.parse_list
-             (OpamFormat.parse_string @> OpamRepositoryName.of_string)) in
+        try
+          OpamFormat.assoc_list s.file_contents s_repositories
+            (OpamFormat.parse_list
+               (OpamFormat.parse_string @> OpamRepositoryName.of_string))
+        with OpamFormat.Bad_format _ when permissive -> []
+      in
       let mk_switch str =
         OpamFormat.assoc_option s.file_contents str
           (OpamFormat.parse_string @> OpamSwitch.of_string) in
@@ -801,19 +827,26 @@ module X = struct
         | _     , _     , Some v -> v
         | None  , None  , None   -> OpamGlobals.error_and_exit
                                       "No current switch defined." in
-
       let jobs =
+        try
         let mk str = OpamFormat.assoc_option s.file_contents str OpamFormat.parse_int in
         match mk s_jobs, mk s_cores with
         | Some i, _      -> i
         | _     , Some i -> i
-        | _              -> 1 in
+        | _              -> 1
+        with OpamFormat.Bad_format _ when permissive ->
+          OpamGlobals.default_jobs
+      in
 
       let dl_jobs =
+        try
         match OpamFormat.assoc_option s.file_contents s_dl_jobs
                 OpamFormat.parse_int with
         | Some i -> i
-        | None -> OpamGlobals.default_dl_jobs in
+        | None -> OpamGlobals.default_dl_jobs
+        with OpamFormat.Bad_format _ when permissive ->
+          OpamGlobals.default_dl_jobs
+      in
 
       let criteria =
         let crit kind fld acc =
@@ -1171,32 +1204,38 @@ module X = struct
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
       let f = Syntax.of_channel filename ic in
-      Syntax.check f valid_fields;
+      let permissive = Syntax.check f valid_fields in
+      let safe default f x y z =
+        try f x y z with OpamFormat.Bad_format _ when permissive -> default
+      in
+      let assoc_option x y z = safe None OpamFormat.assoc_option x y z in
+      let assoc_list x y z = safe [] OpamFormat.assoc_list x y z in
+      let assoc_default dft = safe dft (OpamFormat.assoc_default dft) in
       let s = f.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
-      let name_f = OpamFormat.assoc_option s s_name
-          OpamFormat.parse_package_name in
+      let name_f =
+        assoc_option s s_name OpamFormat.parse_package_name in
       let name = match name_f, nv with
         | None  , None    -> None
         | Some n, None    -> Some n
         | None  , Some nv -> Some (OpamPackage.name nv)
         | Some n, Some nv ->
-          if OpamPackage.name nv <> n then
+          if OpamPackage.name nv <> n && not permissive then
             (OpamGlobals.error
                "Package %s has inconsistent 'name: %S' field."
                (OpamPackage.to_string nv)
                (OpamPackage.Name.to_string n);
              OpamSystem.internal_error "inconsistent name")
           else Some n in
-      let version_f = OpamFormat.assoc_option s s_version
+      let version_f = assoc_option s s_version
           (OpamFormat.parse_string @> OpamPackage.Version.of_string) in
       let version = match version_f, nv with
         | None  , None    -> None
         | Some v, None    -> Some v
         | None  , Some nv -> Some (OpamPackage.version nv)
         | Some v, Some nv ->
-          if OpamPackage.version nv <> v then
+          if OpamPackage.version nv <> v && not permissive then
             (OpamGlobals.error
                "Package %s has inconsistent 'version: %S' field."
                (OpamPackage.to_string nv)
@@ -1204,18 +1243,19 @@ module X = struct
              OpamSystem.internal_error "inconsistent version")
           else Some v in
       let maintainer =
-        OpamFormat.assoc_list s s_maintainer OpamFormat.parse_string_list in
+        assoc_list s s_maintainer OpamFormat.parse_string_list in
       let substs =
-        OpamFormat.assoc_list s s_substs
+        assoc_list s s_substs
           (OpamFormat.parse_list (OpamFormat.parse_string @>
-                                    OpamFilename.Base.of_string)) in
+                                  OpamFilename.Base.of_string)) in
       let build_env =
-        OpamFormat.assoc_list s s_build_env
+        assoc_list s s_build_env
           (OpamFormat.parse_list OpamFormat.parse_env_variable) in
-      let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
-      let install = OpamFormat.assoc_list s s_install OpamFormat.parse_commands in
-      let remove = OpamFormat.assoc_list s s_remove OpamFormat.parse_commands in
-      let depends = OpamFormat.assoc_default OpamFormula.Empty s s_depends
+      let build = assoc_list s s_build OpamFormat.parse_commands in
+      let install = assoc_list s s_install OpamFormat.parse_commands in
+      let remove = assoc_list s s_remove OpamFormat.parse_commands in
+      let depends =
+        assoc_default OpamFormula.Empty s s_depends
           OpamFormat.parse_ext_formula in
       let depopts =
         let rec cleanup ~pos acc disjunction =
@@ -1243,7 +1283,7 @@ module X = struct
             )
             acc disjunction
         in
-        OpamFormat.assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
+        assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f = OpamFormat.parse_opt_formula value in
         if OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0 then
             OpamFormula.ors_to_list f
@@ -1252,41 +1292,42 @@ module X = struct
             |> OpamFormula.ors
         else f
       in
-      let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts
+      let conflicts = assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
-      let libraries = OpamFormat.assoc_list s s_libraries OpamFormat.parse_libraries in
-      let syntax = OpamFormat.assoc_list s s_syntax OpamFormat.parse_libraries in
-      let ocaml_version = OpamFormat.assoc_option s s_ocaml_version
+      let libraries = assoc_list s s_libraries OpamFormat.parse_libraries in
+      let syntax = assoc_list s s_syntax OpamFormat.parse_libraries in
+      let ocaml_version = assoc_option s s_ocaml_version
           OpamFormat.parse_compiler_constraint in
-      let os = OpamFormat.assoc_default OpamFormula.Empty s s_os
+      let os = assoc_default OpamFormula.Empty s s_os
           OpamFormat.parse_os_constraint in
-      let available = OpamFormat.assoc_default (FBool true) s s_available
+      let available = assoc_default (FBool true) s s_available
           (OpamFormat.parse_list (fun x -> x) @> OpamFormat.parse_filter) in
-      let parse_file = OpamFormat.parse_option
+      let parse_file =
+        OpamFormat.parse_option
           (OpamFormat.parse_string @> OpamFilename.Base.of_string)
           OpamFormat.parse_filter in
-      let patches = OpamFormat.assoc_list s s_patches
+      let patches = assoc_list s s_patches
           (OpamFormat.parse_list parse_file) in
-      let homepage = OpamFormat.assoc_list s s_homepage OpamFormat.parse_string_list in
+      let homepage = assoc_list s s_homepage OpamFormat.parse_string_list in
       let author =
-        let x = OpamFormat.assoc_list s s_authors OpamFormat.parse_string_list in
-        let y = OpamFormat.assoc_list s s_author  OpamFormat.parse_string_list in
+        let x = assoc_list s s_authors OpamFormat.parse_string_list in
+        let y = assoc_list s s_author  OpamFormat.parse_string_list in
         x @ y in
-      let license = OpamFormat.assoc_list s s_license OpamFormat.parse_string_list in
-      let doc = OpamFormat.assoc_list s s_doc OpamFormat.parse_string_list in
-      let tags = OpamFormat.assoc_list s s_tags OpamFormat.parse_string_list in
-      let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
-      let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
-      let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
-      let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
+      let license = assoc_list s s_license OpamFormat.parse_string_list in
+      let doc = assoc_list s s_doc OpamFormat.parse_string_list in
+      let tags = assoc_list s s_tags OpamFormat.parse_string_list in
+      let build_test = assoc_list s s_build_test OpamFormat.parse_commands in
+      let build_doc = assoc_list s s_build_doc OpamFormat.parse_commands in
+      let depexts = assoc_option s s_depexts OpamFormat.parse_tags in
+      let messages = assoc_list s s_messages OpamFormat.parse_messages in
       let bug_reports =
-        OpamFormat.assoc_list s s_bug_reports OpamFormat.parse_string_list in
+        assoc_list s s_bug_reports OpamFormat.parse_string_list in
       let post_messages =
-        OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
-      let flags = OpamFormat.assoc_list s s_flags
+        assoc_list s s_post_messages OpamFormat.parse_messages in
+      let flags = assoc_list s s_flags
           OpamFormat.(OpamMisc.filter_map (fun x -> x) @* parse_list parse_flag) in
       let dev_repo =
-        OpamFormat.assoc_option s s_dev_repo
+        assoc_option s s_dev_repo
           (OpamFormat.parse_string @> address_of_string @> parse_url @> pin_of_url)
       in
       { opam_version; name; version; maintainer; substs; build; install; remove;
@@ -1432,6 +1473,7 @@ module X = struct
     let s_man      = "man"
 
     let valid_fields = [
+      Syntax.s_opam_version;
       s_lib;
       s_bin;
       s_sbin;
@@ -1496,7 +1538,7 @@ module X = struct
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
+      let _permissive = Syntax.check ~versioned:false s valid_fields in
       let src = OpamFormat.parse_string @> optional_of_string in
       let mk field =
         let dst = OpamFormat.parse_string @> OpamFilename.Base.of_string in
@@ -1690,35 +1732,47 @@ module X = struct
 
     let of_channel filename ic =
       let file = Syntax.of_channel filename ic in
-      Syntax.check file valid_fields;
+      let permissive = Syntax.check file valid_fields in
       let s = file.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
       let name_d, version_d = match OpamCompiler.of_filename filename with
-        | None   -> OpamSystem.internal_error
-                      "%s is not a valid compiler description file."
-                      (OpamFilename.to_string filename)
+        | None   ->
+          OpamFormat.bad_format "Filename %S isn't in the form <name>.<version>"
+            (OpamFilename.to_string filename)
         | Some c -> c, OpamCompiler.version c in
       let name =
-        OpamFormat.assoc_default name_d s s_name
-          (OpamFormat.parse_string @> OpamCompiler.of_string) in
-      if name_d <> name then
+        try OpamFormat.assoc_default name_d s s_name
+              (OpamFormat.parse_string @> OpamCompiler.of_string)
+        with OpamFormat.Bad_format _ when permissive -> name_d
+      in
+      if name_d <> name then (
         OpamGlobals.warning "The file %s contains a bad 'name' field: %s instead of %s"
           (OpamFilename.to_string filename)
           (OpamCompiler.to_string name)
           (OpamCompiler.to_string name_d);
+        if !OpamGlobals.strict then
+          OpamGlobals.error_and_exit "Strict mode: bad compiler name"
+      );
       let version =
-        OpamFormat.assoc_default version_d s s_version
-          (OpamFormat.parse_string @> OpamCompiler.Version.of_string) in
-      if name <> OpamCompiler.system && version_d <> version then
+        try OpamFormat.assoc_default version_d s s_version
+              (OpamFormat.parse_string @> OpamCompiler.Version.of_string)
+        with OpamFormat.Bad_format _ when permissive -> version_d
+      in
+      if name <> OpamCompiler.system && version_d <> version then (
         OpamGlobals.warning
           "The file %s contains a bad 'version' field: %s instead of %s"
           (OpamFilename.to_string filename)
           (OpamCompiler.Version.to_string version)
           (OpamCompiler.Version.to_string version_d);
+        if !OpamGlobals.strict then
+          OpamGlobals.error_and_exit "Strict mode: bad compiler version"
+      );
       let address field =
-        OpamFormat.assoc_option s field
-          (OpamFormat.parse_string @> address_of_string) in
+        try OpamFormat.assoc_option s field
+              (OpamFormat.parse_string @> address_of_string)
+        with OpamFormat.Bad_format _ when permissive -> None
+      in
       let src = address s_src in
       let archive = address s_archive in
       let http = address s_http in
@@ -1727,27 +1781,38 @@ module X = struct
       let hg = address s_hg in
       let local = address s_local in
       let src, kind =
-        match URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
-        with Some (u,k) -> Some u, k | None -> None, `http in
+        try match URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
+          with Some (u,k) -> Some u, k | None -> None, `http
+        with OpamFormat.Bad_format _ when permissive -> None, `http
+      in
+      let safe dft f x y z =
+        try f x y z
+        with OpamFormat.Bad_format _ when permissive -> dft
+      in
+      let assoc_string_list x y =
+        try OpamFormat.assoc_string_list x y
+        with OpamFormat.Bad_format _ when permissive -> []
+      in
       let patches =
-        OpamFormat.assoc_list s s_patches
+        safe [] OpamFormat.assoc_list s s_patches
           (OpamFormat.parse_list (OpamFormat.parse_string @> OpamFilename.raw)) in
-      let configure = OpamFormat.assoc_string_list s s_configure in
-      let make = OpamFormat.assoc_string_list s s_make      in
-      let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
-      let env = OpamFormat.assoc_list s s_env
+      let configure = assoc_string_list s s_configure in
+      let make = assoc_string_list s s_make in
+      let build = safe [] OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
+      let env = safe [] OpamFormat.assoc_list s s_env
           (OpamFormat.parse_list_list OpamFormat.parse_env_variable) in
-      let packages = OpamFormat.assoc_default
-          OpamFormula.Empty s s_packages OpamFormat.parse_formula in
-      let preinstalled =
-        OpamFormat.assoc_default false s s_preinstalled OpamFormat.parse_bool in
-      let tags = OpamFormat.assoc_string_list s s_tags in
+      let packages = safe OpamFormula.Empty 
+          (OpamFormat.assoc_default OpamFormula.Empty)
+          s s_packages OpamFormat.parse_formula in
+      let preinstalled = safe false
+          (OpamFormat.assoc_default false) s s_preinstalled OpamFormat.parse_bool in
+      let tags = assoc_string_list s s_tags in
 
-      if build <> [] && (configure @ make) <> [] then
+      if build <> [] && (configure @ make) <> [] && not permissive then
         OpamGlobals.error_and_exit
           "%s: You cannot use 'build' and 'make'/'configure' fields at the same time."
           (OpamFilename.to_string filename);
-      if not preinstalled && src = None then
+      if not preinstalled && src = None && not permissive then
         OpamGlobals.error_and_exit
           "%s: You should either specify an url (with 'sources')  or use 'preinstalled: \
            true' to pick the already installed compiler version."
@@ -1873,15 +1938,21 @@ module X = struct
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      Syntax.check ~versioned:false s valid_fields;
-      let get f = OpamFormat.assoc_option s.file_contents f
-        OpamFormat.parse_string in
+      let permissive =
+        Syntax.check ~allow_major:true ~versioned:false s valid_fields in
+      let get f =
+        try OpamFormat.assoc_option s.file_contents f
+              OpamFormat.parse_string
+        with OpamFormat.Bad_format _ when permissive -> None
+      in
       let opam_version = version_of_maybe_string (get s_opam_version) in
       let browse   = get s_browse in
       let upstream = get s_upstream in
-      let redirect = OpamFormat.assoc_list s.file_contents s_redirect
-          (OpamFormat.parse_list
-             (OpamFormat.parse_option OpamFormat.parse_string OpamFormat.parse_filter))
+      let redirect =
+        try OpamFormat.assoc_list s.file_contents s_redirect
+              (OpamFormat.parse_list
+                 (OpamFormat.parse_option OpamFormat.parse_string OpamFormat.parse_filter))
+        with OpamFormat.Bad_format _ when permissive -> []
       in
       { opam_version; browse; upstream; redirect }
 
@@ -1975,7 +2046,9 @@ module Make (F : F) = struct
         r
       with
       | Lexer_error _ | Parsing.Parse_error as e ->
-        raise e (* Message already printed *)
+        if !OpamGlobals.strict then
+          OpamGlobals.error_and_exit "Strict mode: aborting"
+        else raise e (* Message already printed *)
       | e ->
         OpamMisc.fatal e;
         let pos,msg,btl = match e with
@@ -1985,7 +2058,9 @@ module Make (F : F) = struct
         let e = OpamFormat.add_pos pos e in
         OpamGlobals.error "At %s%s%s"
           (string_of_pos pos) msg (string_of_backtrace_list btl);
-        raise e
+        if !OpamGlobals.strict then
+          OpamGlobals.error_and_exit "Strict mode: aborting"
+        else raise e
     else
       OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
 
@@ -2006,10 +2081,14 @@ module Make (F : F) = struct
     | OpamFormat.Bad_format (Some pos, btl, msg) as e ->
       OpamGlobals.error "At %s: %s%s"
         (string_of_pos pos) msg (string_of_backtrace_list btl);
-      raise e
+      if !OpamGlobals.strict then
+        OpamGlobals.error_and_exit "Strict mode: aborting"
+      else raise e
     | OpamFormat.Bad_format (None, btl, msg) as e ->
       OpamGlobals.error "Input error: %s%s" msg (string_of_backtrace_list btl);
-      raise e
+      if !OpamGlobals.strict then
+        OpamGlobals.error_and_exit "Strict mode: aborting"
+      else raise e
 
   let write_to_channel oc str =
     output_string oc (F.to_string dummy_file str)

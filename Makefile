@@ -97,9 +97,10 @@ $(OPAM_FULL).tar.gz:
 
 prefast: ALWAYS
 	@if [ -n "$(wildcard src/*/*.cmi)" ]; then $(MAKE) -C src clean; fi
+	$(MAKE) -C src core/opamGitVersion.ml core/opamScript.ml
 	@ocp-build -init
 
-fast: prefast src/core/opamGitVersion.ml src/core/opamScript.ml
+fast: prefast
 	@ocp-build
 	@ln -sf ../_obuild/opam/opam.asm src/opam
 	@ln -sf ../_obuild/opam-admin/opam-admin.asm src/opam-admin

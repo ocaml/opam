@@ -190,8 +190,9 @@ let check_version repo =
   if not !OpamGlobals.skip_version_checks &&
      OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamGlobals.error_and_exit
-      "\nThe current version of OPAM cannot read the repository. \
+      "The current version of OPAM cannot read the repository %S. \n\
        You should upgrade to at least version %s.\n"
+      (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_version)
 
 let extract_prefix repo dir nv =
@@ -305,8 +306,7 @@ let compiler_index repositories =
 let update repo =
   log "update %a" (slog to_string) repo;
   let module B = (val find_backend repo: BACKEND) in
-  B.pull_repo repo;
-  check_version repo
+  B.pull_repo repo
 
 let make_archive ?(gener_digest=false) repo prefix nv =
   let url_file = OpamPath.Repository.url repo prefix nv in

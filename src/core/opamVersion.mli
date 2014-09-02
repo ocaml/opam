@@ -21,6 +21,9 @@ include OpamMisc.ABSTRACT
 (** The current OPAM version *)
 val current: t
 
+(** Extracts the major version *)
+val major: t -> t
+
 (** The current OPAM version, truncated (only MAJOR.MINOR) *)
 val current_nopatch: t
 

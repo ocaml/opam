@@ -1313,6 +1313,11 @@ let load_state ?(save_cache=true) call_site =
     let config = OpamFile.Config.read config_p in
     let config_version = OpamFile.Config.opam_version config in
     if config_version <> OpamVersion.current then (
+      if OpamVersion.(compare current config_version) < 0 &&
+         not !OpamGlobals.skip_version_checks then
+        OpamGlobals.error_and_exit
+          "%s reports a newer OPAM version, aborting."
+          (OpamFilename.Dir.to_string (OpamPath.root ()));
       (* opam has been updated, so refresh the configuration file and
          clean-up the cache. *)
       if OpamVersion.compare config_version (OpamVersion.of_string "1.2") < 0 then

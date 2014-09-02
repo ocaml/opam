@@ -44,6 +44,12 @@ let current_raw = "@PACKAGE_VERSION@"
 
 let current = of_string current_raw
 
+let major v =
+  try
+    let i = String.index v '.' in
+    of_string (String.sub v 0 i)
+  with Not_found -> v
+
 let current_nopatch =
   try
     let i = String.rindex current_raw '.' in
