@@ -1387,6 +1387,80 @@ module X = struct
         license    = [""];
         bug_reports= [""];
       }
+
+    let validate t =
+      let cond cd msg = if cd then Some msg else None in
+      let warnings = [
+          cond (OpamVersion.nopatch t.opam_version <> t.opam_version)
+            "Field 'opam-version' refers to the patch version of opam, should \
+             be of the form MAJOR.MINOR";
+          cond (OpamVersion.compare t.opam_version OpamVersion.current_nopatch
+                <> 0)
+            "Field 'opam-version' doesn't match the current version, validation \
+             may not be accurate";
+          cond (t.name = None)
+            "Missing field 'name' or directory in the form 'name.version'";
+          cond (t.version = None)
+            "Missing field 'version' or directory in the form 'name.version'";
+          cond (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
+                t.license = [""] || t.doc = [""] || t.tags = [""] ||
+                t.bug_reports = [""])
+            "Some fields are present but empty; remove or fill them";
+          cond (t.maintainer = [])
+            "Missing field 'maintainer'";
+          cond (List.mem "contact@ocamlpro.com" t.maintainer &&
+                not (List.mem "org:ocamlpro" t.tags))
+            "Field 'maintainer' set to the old default value";
+          cond (t.author = [])
+            "Missing field 'author'";
+          cond (t.install = [] && t.build <> [] && t.remove <> [])
+            "No field 'install', but a field 'remove': install instructions \
+             probably part of 'build'. Use the 'install' field or a .install \
+             file";
+          cond (t.install <> [] && t.remove = [])
+            "No field 'remove' while a field 'install' is present";
+          cond (List.exists (function
+              | OpamFormula.Atom (_, (_,Empty)) -> false
+              | _ -> true)
+              (OpamFormula.ors_to_list t.depopts))
+            "Field 'depopts' contains formulas or version constraints";
+          cond (
+            let names f = List.map fst OpamFormula.(
+                atoms @@ formula_of_extended ~filter:(fun _ -> true) f
+              ) in
+            not OpamPackage.Name.Set.(
+                is_empty @@ inter
+                  (of_list @@ names t.depends)
+                  (of_list @@ names t.depopts)
+              ))
+            "Fields 'depends' and 'depopts' refer to the same package names"
+            (* hmm, this might be valid if under different filters ? *);
+          cond (t.ocaml_version <> None)
+            "Field 'ocaml-version' is deprecated, use 'available' instead";
+          cond (t.os <> Empty)
+            "Field 'os' is deprecated, use 'available' instead";
+          (* t.available: check that it never refers to package variables *)
+          cond (t.homepage = [])
+            "Missing field 'homepage'";
+          (* cond (t.doc = []) *)
+          (*   "Missing field 'doc'"; *)
+          cond (t.bug_reports = [])
+            "Missing field 'bug-reports'";
+          cond (t.dev_repo = None)
+            "Missing field 'dev-repo'";
+          cond (t.depexts <> None && t.post_messages = [])
+            "Package declares 'depexts', but has no 'post-messages' to help \
+             the user out when they are missing";
+          cond (List.exists (function
+              | (CString "make", _)::_, _ -> true
+              | _ -> false
+            ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc))
+            "Command 'make' called directly, use the built-in variable \
+             instead";
+      ]
+      in
+      OpamMisc.filter_map (fun x -> x) warnings
+
   end
 
   module Dot_install = struct

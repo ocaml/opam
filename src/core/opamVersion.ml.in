@@ -50,11 +50,14 @@ let major v =
     of_string (String.sub v 0 i)
   with Not_found -> v
 
-let current_nopatch =
+let nopatch v =
   try
-    let i = String.rindex current_raw '.' in
-    of_string (String.sub current_raw 0 i)
-  with Not_found -> current
+    let i = String.index v '.' in
+    let i = String.index_from v (i+1) '.' in
+    (String.sub v 0 i)
+  with Not_found -> v
+
+let current_nopatch = nopatch current_raw
 
 let message () =
   Printf.printf "\n\
