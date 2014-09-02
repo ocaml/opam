@@ -28,9 +28,10 @@ let list ~print_short ~installed ~all =
   let t = OpamState.load_state "switch-list" in
   let descr c =
     if c = OpamCompiler.system then
-      let system_version = match OpamCompiler.Version.system () with
+      let system_version =
+        match Lazy.force OpamSystem.system_ocamlc_version with
         | None   -> "<none>"
-        | Some v -> OpamCompiler.Version.to_string v in
+        | Some v -> v in
       OpamFile.Descr.of_string (Printf.sprintf "System compiler (%s)" system_version)
     else
       OpamFile.Descr.safe_read (OpamPath.compiler_descr t.root c) in
