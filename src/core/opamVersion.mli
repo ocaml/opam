@@ -24,6 +24,9 @@ val current: t
 (** Extracts the major version *)
 val major: t -> t
 
+(** Major+minor version, strips the patch version *)
+val nopatch: t -> t
+
 (** The current OPAM version, truncated (only MAJOR.MINOR) *)
 val current_nopatch: t
 

@@ -80,7 +80,15 @@ let edit t name =
       | _, None ->
         OpamGlobals.error "The \"version\" field is mandatory";
         failwith "missing field"
-      | _ -> Some opam
+      | _ ->
+        match OpamFile.OPAM.validate opam with
+        | [] -> Some opam
+        | warns ->
+          OpamGlobals.warning "The opam file didn't pass validation:\n  - %s\n"
+            (String.concat "\n  - " warns);
+          if OpamGlobals.confirm "Continue anyway ('no' will reedit) ?"
+          then Some opam
+          else edit ()
     with e ->
       OpamMisc.fatal e;
       if OpamGlobals.confirm "Errors in %s, retry editing ?"

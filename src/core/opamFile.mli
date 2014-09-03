@@ -107,6 +107,10 @@ module OPAM: sig
   (** Create an OPAM package template filled with common options *)
   val template: package -> t
 
+  (** Runs several sanity checks on the opam file; returns a list of
+      warnings *)
+  val validate: t -> string list
+
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
