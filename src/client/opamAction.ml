@@ -223,15 +223,20 @@ let extract_package t nv =
   OpamFilename.rmdir build_dir;
 
   let extract_and_copy_files dir =
+    let extract_dir () = OpamFilename.extract_generic_file (D dir) build_dir in
     let () = match OpamFilename.files dir with
       | [] -> log "No files found in %s" (OpamFilename.Dir.to_string dir)
       | [f] ->
         log "archive %a => extracting" (slog OpamFilename.to_string) f;
-        OpamFilename.extract_generic_file (F f) build_dir
+        begin
+          try OpamFilename.extract_generic_file (F f) build_dir
+          with OpamSystem.Internal_error _ -> extract_dir ()
+        end
       | _::_::_ ->
         log "multiple files in %a: assuming dev directory & copying"
           (slog OpamFilename.Dir.to_string) dir;
-        OpamFilename.extract_generic_file (D dir) build_dir in
+        extract_dir ()
+    in
     OpamState.copy_files t nv build_dir in
 
   let name = OpamPackage.name nv in
