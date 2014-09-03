@@ -111,6 +111,9 @@ module OPAM: sig
       warnings *)
   val validate: t -> string list
 
+  (** Returns true if the given OPAM file contains 'name' or 'version' fields *)
+  val is_explicit: filename -> bool
+
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
