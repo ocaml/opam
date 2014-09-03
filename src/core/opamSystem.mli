@@ -19,6 +19,8 @@
 (** Exception raised when subprocess fails *)
 exception Process_error of OpamProcess.result
 
+exception Command_not_found of string
+
 (** raise [Process_error] *)
 val process_error: OpamProcess.result -> 'a
 

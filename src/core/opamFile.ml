@@ -1075,6 +1075,18 @@ module X = struct
         OpamGlobals.error_and_exit "Invalid OPAM file (missing field %S)" name
       | Some n -> n
 
+    let is_explicit filename =
+      try
+        let ic = OpamFilename.open_in filename in
+        try
+          let file = Syntax.of_channel filename ic in
+          let fields = OpamFormat.variables file.file_contents in
+          List.exists (fun (f,_) -> f = s_name || f = s_version) fields
+        with e ->
+          close_in ic;
+          raise e
+      with e -> OpamMisc.fatal e; false
+
     let name t = check "name" t.name
     let name_opt t = t.name
     let version t = check "version" t.version
@@ -2114,10 +2126,12 @@ module Make (F : F) = struct
     if OpamFilename.exists f then
       try
         let ic = OpamFilename.open_in f in
-        let r = F.of_channel f ic in
-        close_in ic;
-        log ~level:2 "Read %s in %.3fs" filename (chrono ());
-        r
+        try
+          let r = F.of_channel f ic in
+          close_in ic;
+          log ~level:2 "Read %s in %.3fs" filename (chrono ());
+          r
+        with e -> close_in ic; raise e
       with
       | Lexer_error _ | Parsing.Parse_error as e ->
         if !OpamGlobals.strict then
