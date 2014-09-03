@@ -7,7 +7,8 @@
 * Much better internal parser. File locations in error messages (#1260, #1222)
 * Removed dependency on camlp4 (#917)
 * Fixed orphan packages handling (installed packages with no upstream) (#1198)
-* Solver: optimize default preferences. New --criteria option (#1208)
+* Solver: optimize default preferences, depending on the solver version. New
+  --criteria option (#1208)
 * Better PATH modifications handling (#1189)
 * Specify variable overrides with environment OPAMVAR_name (#1153)
 * Much better overall failsafe behaviour. Error reports on interruption (#1202,
@@ -18,7 +19,7 @@
 * Added option --show-actions, made --dry-run simulate actions (#1142)
 * Now prints meaningful causes explaining the actions (#1174)
 * Fixed the stats displayed after update (#1161)
-* Added variables to query ocaml native tools (#979)
+* Added variables to query ocaml native tools and arch (#979)
 * Enable packagers to specify mirrors in url files (#807)
 * Cleaned up the command-line interface (#1250, #1170, #1472). Incompatible
   changes:
@@ -53,14 +54,26 @@
 * Added option to query (recursive) (reverse) dependencies and external
   dependencies to 'opam list
 * Fixed opam init for some shells
-* OPAM search now includes the 'syntax' and 'libs' fields in the search
+* OPAM search now includes the 'syntax' and 'libs' fields in the search, as well
+  as 'findlib' files
 * 'opam source' command to get the package archive or upstream source easily
 * Added an 'install' field in opam files, to separate from build
 * Added the 'build', 'test' and 'doc' dependency flags to limit the scope
   of some dependencies
 * Added Check for common dependencies at init time
-* Pinning to a local git directory will now automatically select the pin kind to
-  'git' (#1555)
+* Pinning to a local git directory pins as path, but advertises pinning as git
+  will now automatically select the pin kind to 'git' (#1555)
+* Fixed init scripts for fish and csh (#952)
+* More reliable and faster usage of git branches in the git backend
+* Friendlier env variable handling (true/1/yes or false/0/no/"" for true and
+  false) (#1608)
+* Specify what is not rather than 'already up-to-date' when some packages
+  couldn't be upgradedd (#1645)
+* Override Make variables in sub-processes (#1617)
+* 'opam update' no longer needed after 'opam repo add'
+* Attempt to read files in 'permissive mode' when they claim a newer OPAM
+  version (#1662)
+* Fixed ignore of SIGPIPE in sub-processes (#1681)
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
