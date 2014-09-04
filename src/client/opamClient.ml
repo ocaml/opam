@@ -1693,8 +1693,8 @@ module SafeAPI = struct
     let unpin ?action name =
       switch_lock (fun () -> API.PIN.unpin ?action name)
 
-    let list () =
-      read_lock API.PIN.list
+    let list ~short () =
+      read_lock (fun () -> API.PIN.list ~short ())
 
   end
 

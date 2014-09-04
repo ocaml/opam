@@ -156,7 +156,7 @@ module API: sig
     val unpin: ?action:bool -> OpamPackage.Name.t -> unit
 
     (** List the current pinned packages. *)
-    val list: unit -> unit
+    val list: short:bool -> unit -> unit
 
   end
 

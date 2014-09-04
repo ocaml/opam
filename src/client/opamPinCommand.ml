@@ -252,14 +252,18 @@ let unpin name =
     false
 
 
-let list () =
+let list ~short () =
   log "pin_list";
   let t = OpamState.load_state "pin-list" in
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
+  let print_short n _ =
+    OpamGlobals.msg "%s " (OpamPackage.Name.to_string n)
+  in
   let print n a =
     let kind = string_of_pin_kind (kind_of_pin_option a) in
     OpamGlobals.msg "%-25s %s %s\n"
       (OpamPackage.to_string (OpamState.pinned t n))
       (OpamGlobals.colorise `blue (Printf.sprintf "%-8s" kind))
       (string_of_pin_option a) in
-  OpamPackage.Name.Map.iter print pins
+  OpamPackage.Name.Map.iter (if short then print_short else print) pins;
+  if short then print_newline ();
