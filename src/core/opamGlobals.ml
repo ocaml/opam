@@ -171,9 +171,11 @@ let default_opam_dir =
   try OpamMisc.getenv "OPAMROOT"
   with Not_found -> Filename.concat home ".opam"
 
-let root_dir =
-  ref (Filename.concat Filename.temp_dir_name
-         ("opam-" ^ string_of_int (Unix.getpid ())))
+let root_dir_tmp =
+  Filename.concat Filename.temp_dir_name
+    ("opam-" ^ string_of_int (Unix.getpid ()))
+
+let root_dir = ref root_dir_tmp
 
 let timer () =
   if !debug then
