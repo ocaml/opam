@@ -32,4 +32,4 @@ val edit: OpamState.state -> name -> bool option
 val unpin: name -> bool
 
 (** List the pinned packages. *)
-val list: unit -> unit
+val list: short:bool -> unit -> unit

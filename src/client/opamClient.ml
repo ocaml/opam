@@ -251,7 +251,8 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names
+    ) names;
+    if short then print_newline ()
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
@@ -1636,7 +1637,7 @@ module SafeAPI = struct
   module REPOSITORY = struct
 
     let list ~short =
-      global_lock (fun () -> API.REPOSITORY.list ~short)
+      read_lock (fun () -> API.REPOSITORY.list ~short)
 
     let add name kind address ~priority =
       global_lock (fun () -> API.REPOSITORY.add name kind address ~priority)
@@ -1692,8 +1693,8 @@ module SafeAPI = struct
     let unpin ?action name =
       switch_lock (fun () -> API.PIN.unpin ?action name)
 
-    let list () =
-      read_lock API.PIN.list
+    let list ~short () =
+      read_lock (fun () -> API.PIN.list ~short ())
 
   end
 
