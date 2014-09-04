@@ -3,81 +3,35 @@ _opam_add()
   _opam_reply="$_opam_reply $1"
 }
 
-_opam_global_options()
+_opam_add_f()
 {
-  local res
-  res="$( opam --help=plain 2>/dev/null | grep '^       -' | sed 's/ *//;s/[ ,\[\=].*//' )"
-  _opam_add "$res"
-}
-
-_opam_commands()
-{
-  local res
-  res="$( opam help topics )"
-  _opam_add "$res"
+  local cmd
+  cmd=$1; shift
+  _opam_add "$($cmd "$@")"
 }
 
 _opam_flags()
 {
-  local res cmd
-  cmd="$1"
-  res="$( opam $cmd --help=plain 2>/dev/null | grep '^       -' | sed 's/ *//;s/[ ,\[\=].*//' )"
-  _opam_add "$res"
+  opam "$@" --help=groff 2>/dev/null | \
+      sed -n 's#\\-#-#g; s#^\\fB\(-[^,= ]*\)\\fR.*#\1#p'
 }
 
-_opam_packages()
+_opam_commands()
 {
-  local res
-  res="$( opam list -a -s )"
-  _opam_add "$res"
+  opam "$@" --help=groff 2>/dev/null | \
+      sed -n '/^\.SH COMMANDS$/,/^\.SH/ { s#\\-#-#g; s#^\\fB\([^,= ]*\)\\fR.*#\1#p }'
+  echo '--help'
 }
 
-_opam_installed_packages()
+_opam_vars()
 {
-  local res
-  res="$( opam list -i -s )"
-  _opam_add "$res"
-}
-
-_opam_compilers()
-{
-  local res
-  res="$( opam switch -s )"
-  _opam_add "$res"
-}
-
-_opam_config_subcommands()
-{
-  _opam_add "env var list subst includes bytecomp asmcomp bytelink asmlink"
-}
-
-_opam_config_vars()
-{
-  local res
-  res="$( opam config list 2>/dev/null | sed 's/ *//;s/ .*//' )"
-  _opam_reply="$res"
-}
-
-_opam_repository_subcommands()
-{
-  _opam_add "add remove list priority"
-}
-
-_opam_repositories()
-{
-  local res
-  res="$( opam remote -s )"
-  _opam_add "$res"
-}
-
-_opam_repositories_only()
-{
-  _opam_reply="$( opam remote -s )"
+  opam config list --safe 2>/dev/null | \
+      sed -n '/^PKG:/d; s/^\([^# ][^ ]*\).*/\1/p'
 }
 
 _opam()
 {
-  local cmd cur prev
+  local cmd subcmd cur prev
 
   COMPREPLY=()
   cmd=${COMP_WORDS[1]}
@@ -86,40 +40,111 @@ _opam()
   prev=${COMP_WORDS[COMP_CWORD-1]}
   _opam_reply=""
 
-  _opam_global_options
-
   if [ $COMP_CWORD -eq 1 ]; then
-      _opam_commands
-  elif [ $COMP_CWORD -gt 1 ]; then
-      _opam_flags "$cmd"
-      case "$cmd" in
-          install|info)
-              _opam_packages
-              ;;
-          reinstall|remove)
-              _opam_installed_packages
-              ;;
-          switch)
-              _opam_compilers
-              ;;
-          config)
-              _opam_config_subcommands
-              if [ "$prev" = "var" ]; then _opam_config_vars; fi
-              ;;
-          repository)
-              _opam_repository_subcommands
-              case "$subcmd" in
-                  remove)
-                      _opam_repositories_only
-                      ;;
-              esac
-              ;;
-          update)
-              _opam_repositories
-              ;;
-      esac
-
+      _opam_add_f opam help topics
+      COMPREPLY=( $(compgen -W "$_opam_reply" -- $cur) )
+      unset _opam_reply
+      return 0
   fi
+  case "$cmd" in
+      install|show|info)
+          _opam_add_f opam list --safe -a -s
+          if [ $COMP_CWORD -gt 2 ]; then
+              _opam_add_f _opam_flags "$cmd"
+          fi;;
+      reinstall|remove|uninstall)
+          _opam_add_f opam list --safe -i -s
+          if [ $COMP_CWORD -gt 2 ]; then
+              _opam_add_f _opam_flags "$cmd"
+          fi;;
+      upgrade)
+          _opam_add_f opam list --safe -i -s
+          _opam_add_f _opam_flags "$cmd"
+          ;;
+      switch)
+          case $COMP_CWORD in
+              2)
+                  _opam_add_f _opam_commands "$cmd"
+                  _opam_add_f opam switch list --safe -s -i;;
+              3)
+                  case "$subcmd" in
+                      install|set)
+                          _opam_add_f opam switch list --safe -s -a;;
+                      remove|reinstall)
+                          _opam_add_f opam switch list --safe -s -i;;
+                      import|export)
+                          _opam_add_f compgen -A file;;
+                      *)
+                          _opam_add_f _opam_flags "$cmd"
+                  esac;;
+              *)
+                  _opam_add_f _opam_flags "$cmd"
+          esac;;
+      config)
+          if [ $COMP_CWORD -eq 2 ]; then
+              _opam_add_f _opam_commands "$cmd"
+          else
+              if [ $COMP_CWORD -eq 3 ] && [ "$subcmd" = "var" ]; then
+                  _opam_add_f _opam_vars
+              else
+                  _opam_add_f _opam_flags "$cmd"
+              fi
+          fi;;
+      repository|remote)
+          case $COMP_CWORD in
+              2)
+                  _opam_add_f _opam_commands "$cmd";;
+              3)
+                  case "$subcmd" in
+                      add)
+                          if [ $COMP_CWORD -gt 3 ]; then
+                              _opam_add_f compgen -A file
+                          fi;;
+                      remove|priority|set-url)
+                          _opam_add_f opam repository list --safe -s;;
+                      *)
+                          _opam_add_f _opam_flags "$cmd"
+                  esac;;
+              *)
+                  _opam_add_f _opam_flags "$cmd"
+                  case "$subcmd" in
+                      set-url|add) _opam_add_f compgen -A file;;
+                  esac;;
+          esac;;
+      update)
+          _opam_add_f opam repository list --safe -s
+          _opam_add_f opam pin list --safe -s
+          ;;
+      source)
+          _opam_add_f opam list --safe -A -s
+          _opam_add_f _opam_flags "$cmd"
+          ;;
+      pin)
+          case $COMP_CWORD in
+              2)
+                  _opam_add_f _opam_commands "$cmd";;
+              3)
+                  case "$subcmd" in
+                      add)
+                          _opam_add_f opam list --safe -A -s;;
+                      remove|edit)
+                          _opam_add_f opam pin list --safe -s;;
+                      *)
+                          _opam_add_f _opam_flags "$cmd"
+                  esac;;
+              *)
+                  _opam_add_f _opam_flags "$cmd"
+          esac;;
+      unpin)
+          if [ $COMP_CWORD -eq 2 ]; then
+              _opam_add_f opam pin list --safe -s
+          else
+              _opam_add_f _opam_flags "$cmd"
+          fi;;
+      *)
+          _opam_add_f _opam_commands "$cmd"
+          _opam_add_f _opam_flags "$cmd"
+  esac
 
   COMPREPLY=( $(compgen -W "$_opam_reply" -- $cur) )
   unset _opam_reply
