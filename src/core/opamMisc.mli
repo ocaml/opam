@@ -293,6 +293,13 @@ val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
 (** Guess the location of .profile *)
 val guess_dot_profile: [`csh|`zsh|`sh|`bash|`fish] -> string
 
+(** Like Pervasives.at_exit but with the possibility to call manually
+    (eg. before exec()) *)
+val at_exit: (unit -> unit) -> unit
+
+(** Calls the functions registered in at_exit *)
+val exec_at_exit: unit -> unit
+
 (** / *)
 
 val debug: bool ref

@@ -82,6 +82,7 @@ let switch_to_updated_self debug opamroot =
            [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
            (Unix.environment ()) in
        try
+         OpamMisc.exec_at_exit ();
          Unix.execve updated_self_str Sys.argv env
        with e ->
          OpamMisc.fatal e;
@@ -1801,6 +1802,7 @@ let check_and_run_external_commands () =
     then
       let args = Array.sub Sys.argv 1 (len - 1) in
       args.(0) <- command;
+      OpamMisc.exec_at_exit ();
       Unix.execvp command args
   ) else
     ()
@@ -1816,6 +1818,7 @@ let run default commands =
   with
   | OpamGlobals.Exit 0 -> ()
   | OpamGlobals.Exec (cmd,args,env) ->
+    OpamMisc.exec_at_exit ();
     Unix.execvpe cmd args env
   | e                  ->
     if !OpamGlobals.verbose then

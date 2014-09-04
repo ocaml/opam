@@ -89,7 +89,7 @@ let rec temp_file ?dir prefix =
     | None   ->
       let dir = !OpamGlobals.root_dir in
       if !check_remove_temp_dir && dir = OpamGlobals.root_dir_tmp then (
-        at_exit (fun () -> remove_dir OpamGlobals.root_dir_tmp);
+        OpamMisc.at_exit (fun () -> remove_dir OpamGlobals.root_dir_tmp);
         check_remove_temp_dir := false);
       dir / "log"
     | Some d -> d in
