@@ -53,6 +53,7 @@ let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
 let req_checksums    = check "REQUIRECHECKSUMS"
 let yes              = check "YES"
+let no               = check "NO"
 let strict           = check "STRICT"
 let build_test       = check "BUILDTEST"
 let build_doc        = check "BUILDDOC"
@@ -67,6 +68,7 @@ let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
 let no_self_upgrade  = check "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
+let safe_mode        = check "SAFE"
 
 (* Value set when opam calls itself *)
 let self_upgrade_bootstrapping_value = "bootstrapping"
@@ -432,9 +434,11 @@ let exit i =
 let confirm fmt =
   Printf.ksprintf (fun s ->
     try
+      if !safe_mode then false else
       let rec loop () =
         msg "%s [Y/n] %!" s;
         if !yes then (msg "y\n"; true)
+        else if !no then (msg "n\n"; false)
         else match String.lowercase (read_line ()) with
           | "y" | "yes" | "" -> true
           | "n" | "no" -> false
@@ -448,13 +452,15 @@ let confirm fmt =
 let read fmt =
   Printf.ksprintf (fun s ->
     msg "%s %!" s;
-    if not !yes then (
+    if not !yes || !no || !safe_mode then (
       try match read_line () with
         | "" -> None
         | s  -> Some s
-      with End_of_file ->
+      with
+      | End_of_file ->
         msg "\n";
         None
+      | Sys.Break as e -> msg "\n"; raise e
     ) else
       None
   ) fmt

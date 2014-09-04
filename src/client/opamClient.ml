@@ -1636,7 +1636,7 @@ module SafeAPI = struct
   module REPOSITORY = struct
 
     let list ~short =
-      global_lock (fun () -> API.REPOSITORY.list ~short)
+      read_lock (fun () -> API.REPOSITORY.list ~short)
 
     let add name kind address ~priority =
       global_lock (fun () -> API.REPOSITORY.add name kind address ~priority)

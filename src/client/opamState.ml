@@ -1375,6 +1375,8 @@ let load_state ?(save_cache=true) call_site =
       log "%a does not contain the compiler name associated to the switch %a"
         (slog @@ OpamFilename.to_string @* OpamPath.aliases) root
         (slog OpamSwitch.to_string) switch;
+      if !OpamGlobals.safe_mode then
+        OpamGlobals.error_and_exit "Safe mode: invalid switch selected";
       match !OpamGlobals.switch with
       | `Command_line s
       | `Env s   -> OpamSwitch.not_installed (OpamSwitch.of_string s)
@@ -1513,6 +1515,8 @@ let upgrade_to_1_1 () =
   let compilers = root / "compilers" in
   let repo_index = root / "repo" // "index" in
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
+    if !OpamGlobals.safe_mode then
+      OpamGlobals.error_and_exit "Safe mode: not upgrading from opamroot <1.1";
     let cwd = OpamFilename.cwd () in
     let () = OpamSystem.chdir OpamGlobals.home in
 
@@ -1632,6 +1636,8 @@ let upgrade_to_1_1 () =
   )
 
 let upgrade_to_1_2 () =
+  if !OpamGlobals.safe_mode then
+    OpamGlobals.error_and_exit "Safe mode: not upgrading from opamroot <1.2";
   log "Upgrade pinned packages format to 1.2";
   let root  = OpamPath.root () in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in

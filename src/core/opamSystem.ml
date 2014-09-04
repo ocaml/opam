@@ -500,7 +500,9 @@ let link src dst =
 type lock = Unix.file_descr * string
 
 let flock ?(read=false) file =
-  let max_tries = 5 in
+  let max_tries = if !OpamGlobals.safe_mode then 1 else 5 in
+  if not read && !OpamGlobals.safe_mode then
+    OpamGlobals.error_and_exit "Write lock attempt in safe mode";
   let fd =
     Unix.openfile file [Unix.O_CREAT; Unix.O_RDWR] 0o600 in
   let lock_op = if read then Unix.F_TRLOCK else Unix.F_TLOCK in

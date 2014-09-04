@@ -37,6 +37,7 @@ type global_options = {
   cudf_file : string option;
   solver_preferences : string option;
   no_self_upgrade : bool;
+  safe_mode : bool;
 }
 
 let self_upgrade_exe opamroot =
@@ -94,7 +95,7 @@ let switch_to_updated_self debug opamroot =
 let create_global_options
     git_version debug debug_level verbose quiet color switch yes strict root
     no_base_packages compat_mode_1_0 external_solver use_internal_solver
-    cudf_file solver_preferences no_self_upgrade =
+    cudf_file solver_preferences no_self_upgrade safe_mode =
   let debug, debug_level = match debug, debug_level with
     | _, Some lvl -> true, lvl
     | true, None -> true, 1
@@ -104,7 +105,7 @@ let create_global_options
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
     no_base_packages; compat_mode_1_0; external_solver; use_internal_solver; cudf_file; solver_preferences;
-    no_self_upgrade; }
+    no_self_upgrade; safe_mode; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -114,7 +115,7 @@ let apply_global_options o =
     end;
     exit 0
   );
-  OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
+  OpamGlobals.debug    := not o.safe_mode && !OpamGlobals.debug || o.debug;
   OpamGlobals.debug_level := max !OpamGlobals.debug_level o.debug_level;
   OpamMisc.debug       := !OpamGlobals.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
@@ -136,6 +137,7 @@ let apply_global_options o =
   OpamGlobals.cudf_file :=
     OpamMisc.Option.Op.(o.cudf_file ++ !OpamGlobals.cudf_file);
   OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
+  OpamGlobals.safe_mode := o.safe_mode;
   match o.solver_preferences with
   | None -> ()
   | Some prefs ->
@@ -597,10 +599,18 @@ let global_options =
     mk_flag ~section ["no-self-upgrade"]
       "OPAM will replace itself with a newer binary found \
        at $(b,OPAMROOT/opam) if present. This disables this behaviour." in
+  let safe_mode =
+    mk_flag ~section ["safe"]
+      "Make sure nothing will be automatically updated or rewritten. Useful \
+       for calling from completion scripts, for example. Will fail whenever \
+       such an operation is needed ; also avoids waiting for locks, skips \
+       interactive questions and overrides the OPAMDEBUG variable."
+  in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $no_base_packages $compat_mode_1_0 $external_solver
-        $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade)
+        $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade
+        $safe_mode)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
