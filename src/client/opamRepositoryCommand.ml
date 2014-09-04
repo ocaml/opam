@@ -542,10 +542,7 @@ let list ~short =
       List.map
         (fun r -> OpamRepositoryName.to_string r.repo_name)
         (OpamState.sorted_repositories t) in
-    let pinned =
-      List.map OpamPackage.Name.to_string (OpamPackage.Name.Map.keys t.pinned) in
-    let all = repos @ pinned in
-    OpamGlobals.msg "%s\n" (String.concat " " all)
+    OpamGlobals.msg "%s\n" (String.concat " " repos)
   ) else (
     let pretty_print r =
       OpamGlobals.msg "%4d %-7s %10s     %s\n"

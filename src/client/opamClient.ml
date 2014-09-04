@@ -251,7 +251,8 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names
+    ) names;
+    if short then print_newline ()
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
