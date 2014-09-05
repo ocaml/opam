@@ -83,6 +83,9 @@ val external_tags : string list ref
 val home : string
 val default_opam_dir : string
 val root_dir : string ref
+
+(** The initial value of root_dir, set in the tmpdir before initialised *)
+val root_dir_tmp : string
 val timer : unit -> unit -> float
 
 (* For forked process, we want to get the time since the beginning of

@@ -17,7 +17,7 @@
 open OpamArg
 
 let () =
-  at_exit (fun () ->
+  OpamMisc.at_exit (fun () ->
       flush stderr;
       flush stdout;
       if !OpamGlobals.print_stats then (

@@ -549,3 +549,12 @@ let prettify_path s =
     | Some p -> p
     | None   -> s
   with Not_found -> s
+
+let registered_at_exit = ref []
+let at_exit f =
+  Pervasives.at_exit f;
+  registered_at_exit := f :: !registered_at_exit
+let exec_at_exit () =
+  List.iter
+    (fun f -> try f () with _ -> ())
+    !registered_at_exit

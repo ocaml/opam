@@ -72,11 +72,26 @@ let mkdir dir =
     end in
   aux dir
 
+(* XXX: won't work on windows *)
+let remove_dir dir =
+  log "rmdir %s" dir;
+  if Sys.file_exists dir then (
+    let err = Sys.command (Printf.sprintf "rm -rf %s" dir) in
+      if err <> 0 then
+        internal_error "Cannot remove %s (error %d)." dir err
+  )
+
 let temp_files = Hashtbl.create 1024
+let check_remove_temp_dir = ref true
 
 let rec temp_file ?dir prefix =
   let temp_dir = match dir with
-    | None   -> !OpamGlobals.root_dir / "log"
+    | None   ->
+      let dir = !OpamGlobals.root_dir in
+      if !check_remove_temp_dir && dir = OpamGlobals.root_dir_tmp then (
+        OpamMisc.at_exit (fun () -> remove_dir OpamGlobals.root_dir_tmp);
+        check_remove_temp_dir := false);
+      dir / "log"
     | Some d -> d in
   mkdir temp_dir;
   let file = temp_dir / temp_basename prefix in
@@ -194,15 +209,6 @@ let dirs dir =
 let dir_is_empty dir =
   Sys.file_exists dir &&
   in_dir dir (fun () -> Sys.readdir (Sys.getcwd ()) = [||])
-
-(* XXX: won't work on windows *)
-let remove_dir dir =
-  log "rmdir %s" dir;
-  if Sys.file_exists dir then (
-    let err = Sys.command (Printf.sprintf "rm -rf %s" dir) in
-      if err <> 0 then
-        internal_error "Cannot remove %s (error %d)." dir err
-  )
 
 let with_tmp_dir fn =
   let dir = mk_temp_dir () in
