@@ -339,7 +339,11 @@ let add_pinned_overlay ?(template=false) ?version t name =
   with Not_found -> (* No original meta *)
     let url = url_of_locally_pinned_package t name in
     let version =
-      OpamPackage.Version.of_string (if template then "0.1" else "~unknown") in
+      OpamMisc.Option.default
+        (OpamPackage.Version.of_string
+           (if template then "0.1" else "~unknown"))
+        version
+    in
     let nv = OpamPackage.create name version in
     let opam = if template then OPAM.template nv else OPAM.create nv in
     OPAM.write (pkg_overlay Ov.opam) opam;
