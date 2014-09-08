@@ -7,7 +7,7 @@ _opam_add_f()
 {
   local cmd
   cmd=$1; shift
-  _opam_add "$($cmd "$@")"
+  _opam_add "$($cmd "$@" 2>/dev/null)"
 }
 
 _opam_flags()
@@ -31,13 +31,14 @@ _opam_vars()
 
 _opam()
 {
-  local cmd subcmd cur prev
+  local cmd subcmd cur prev compgen_opt
 
   COMPREPLY=()
   cmd=${COMP_WORDS[1]}
   subcmd=${COMP_WORDS[2]}
   cur=${COMP_WORDS[COMP_CWORD]}
   prev=${COMP_WORDS[COMP_CWORD-1]}
+  compgen_opt=""
   _opam_reply=""
 
   if [ $COMP_CWORD -eq 1 ]; then
@@ -73,7 +74,7 @@ _opam()
                       remove|reinstall)
                           _opam_add_f opam switch list --safe -s -i;;
                       import|export)
-                          _opam_add_f compgen -A file;;
+                          compgen_opt="-o filenames -f";;
                       *)
                           _opam_add_f _opam_flags "$cmd"
                   esac;;
@@ -98,7 +99,7 @@ _opam()
                   case "$subcmd" in
                       add)
                           if [ $COMP_CWORD -gt 3 ]; then
-                              _opam_add_f compgen -A file
+                              compgen_opt="-o filenames -f"
                           fi;;
                       remove|priority|set-url)
                           _opam_add_f opam repository list --safe -s;;
@@ -108,7 +109,7 @@ _opam()
               *)
                   _opam_add_f _opam_flags "$cmd"
                   case "$subcmd" in
-                      set-url|add) _opam_add_f compgen -A file;;
+                      set-url|add) compgen_opt="-o filenames -f";;
                   esac;;
           esac;;
       update)
@@ -146,7 +147,7 @@ _opam()
           _opam_add_f _opam_flags "$cmd"
   esac
 
-  COMPREPLY=( $(compgen -W "$_opam_reply" -- $cur) )
+  COMPREPLY=( $(compgen -W "$_opam_reply" $compgen_opt -- "$cur") )
   unset _opam_reply
   return 0
 }
