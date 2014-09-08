@@ -120,13 +120,13 @@ module B = struct
     if OpamFilename.exists remote_filename then
     OpamGlobals.msg "[%s] Synchronizing with %s\n"
         (OpamGlobals.colorise `green
-           (OpamPackage.to_string package))
+           (OpamPackage.name_to_string package))
         (OpamFilename.to_string remote_filename);
     pull_file_quiet local_dirname remote_filename
 
   let pull_dir package local_dirname remote_dirname =
     OpamGlobals.msg "[%s] Synchronizing with %s\n"
-      (OpamGlobals.colorise `green (OpamPackage.to_string package))
+      (OpamGlobals.colorise `green (OpamPackage.name_to_string package))
       (OpamFilename.Dir.to_string remote_dirname);
     pull_dir_quiet local_dirname remote_dirname
 
