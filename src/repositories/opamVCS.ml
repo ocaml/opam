@@ -71,7 +71,7 @@ module Make (VCS: VCS) = struct
                     (OpamPackage.to_string package) in
     let repo = repo dirname remote_url in
     OpamGlobals.msg "[%s] Fetching %s\n"
-      (OpamGlobals.colorise `green (OpamPackage.to_string package))
+      (OpamGlobals.colorise `green (OpamPackage.name_to_string package))
       (string_of_address remote_url);
     download_dir (pull_repo repo)
 

@@ -2535,7 +2535,7 @@ let update_dev_package t nv =
       then
         (* No manual changes *)
         (OpamGlobals.msg "Installing new package description for %s from %s\n"
-           (OpamPackage.to_string nv)
+           (OpamPackage.name_to_string nv)
            (Filename.concat (string_of_address remote_url) "opam");
          OpamFilename.remove
            (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
