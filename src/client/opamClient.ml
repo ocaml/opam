@@ -770,8 +770,12 @@ module API = struct
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
     match compute_upgrade_t atoms t with
-    | _requested, _action, Conflicts cs ->
+    | requested, _action, Conflicts cs ->
       log "conflict!";
+      if not (OpamPackage.Name.Set.is_empty requested) then
+        OpamGlobals.msg "%s"
+          (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs)
+      else
       let reasons, chains, _cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
       OpamGlobals.warning
@@ -789,7 +793,8 @@ module API = struct
       let result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
         let to_check =
-          if atoms = [] then t.installed else packages_of_atoms t atoms
+          if OpamPackage.Name.Set.is_empty requested then t.installed
+          else OpamPackage.packages_of_names t.installed requested
         in
         let latest =
           OpamPackage.Name.Set.fold (fun name acc ->

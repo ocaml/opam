@@ -2614,7 +2614,8 @@ let check f =
   if not (OpamFilename.exists_dir root)
   || not (OpamFilename.exists (OpamPath.config root)) then
     OpamGlobals.error_and_exit
-      "Please run 'opam init' first to initialize the state of OPAM."
+      "No OPAM root found at %s.\n\
+       Please run 'opam init' first to initialize the state of OPAM."
       (OpamFilename.Dir.to_string root);
 
   match f with
