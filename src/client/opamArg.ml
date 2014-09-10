@@ -943,6 +943,10 @@ let config =
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
   let sexp_doc        = "Display environment variables as an s-expression" in
+  let inplace_path_doc= "When updating the PATH variable, replace any pre-existing OPAM path \
+                         in-place rather than putting the new path in front. This means programs \
+                         installed in OPAM that were shadowed will remain so after \
+                         $(b,opam config env)" in
   let profile         = mk_flag ["profile"]        profile_doc in
   let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
@@ -952,9 +956,10 @@ let config =
   let global          = mk_flag ["g";"global"]     global_doc in
   let list            = mk_flag ["l";"list"]       list_doc in
   let sexp            = mk_flag ["sexp"]           sexp_doc in
+  let inplace_path    = mk_flag ["inplace-path"]   inplace_path_doc in
 
   let config global_options
-      command sh csh zsh fish sexp
+      command sh csh zsh fish sexp inplace_path
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -970,7 +975,7 @@ let config =
       | _ -> csh, fish
     in
     match command, params with
-    | Some `env, [] -> `Ok (Client.CONFIG.env ~csh ~sexp ~fish)
+    | Some `env, [] -> `Ok (Client.CONFIG.env ~csh ~sexp ~fish ~inplace_path)
     | Some `setup, [] ->
       let user        = all || user in
       let global      = all || global in
@@ -1132,6 +1137,7 @@ let config =
   Term.ret (
     Term.(pure config
           $global_options $command $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
+          $inplace_path
           $dot_profile_flag $list $all $global $user
           $profile $ocamlinit $no_complete $no_switch_eval
           $params)

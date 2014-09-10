@@ -105,8 +105,9 @@ val universe: state -> user_action -> universe
 (** Get the current environment. *)
 val get_full_env: ?opam:OpamFile.OPAM.t -> state -> env
 
-(** Get only environment modified by OPAM. *)
-val get_opam_env: state -> env
+(** Get only environment modified by OPAM. If [force_path], the PATH is modified
+    to ensure opam dirs are leading. *)
+val get_opam_env: force_path:bool -> state -> env
 
 (** Update an environment. *)
 val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env -> (string * string * string) list -> env

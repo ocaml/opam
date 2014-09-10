@@ -1616,8 +1616,8 @@ module SafeAPI = struct
 
   module CONFIG = struct
 
-    let env ~csh ~sexp ~fish =
-      read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish)
+    let env ~csh ~sexp ~fish ~inplace_path =
+      read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish ~inplace_path)
 
     let setup local global =
       global_lock (fun () -> API.CONFIG.setup local global)

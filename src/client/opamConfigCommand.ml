@@ -134,10 +134,10 @@ let print_fish_env env =
     OpamGlobals.msg "set -x %s %s;\n" k (String.concat " " (OpamMisc.split v ':'));
   ) env
 
-let env ~csh ~sexp ~fish=
+let env ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
   let t = OpamState.load_env_state "config-env" in
-  let env = OpamState.get_opam_env t in
+  let env = OpamState.get_opam_env ~force_path:(not inplace_path) t in
   if sexp then
     print_sexp_env env
   else if csh then

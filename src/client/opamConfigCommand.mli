@@ -18,8 +18,11 @@
 
 open OpamTypes
 
-(** Display the current environment *)
-val env: csh:bool -> sexp:bool -> fish:bool -> unit
+(** Display the current environment. Booleans csh, sexp and fish set an alternative
+    output (unspecified if more than one is true, sh-style by default).
+    [inplace_path] changes how the PATH variable is updated when there is already
+    an opam entry: either at the same rank, or pushed in front. *)
+val env: csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool -> unit
 
 (** Display the content of all available variables *)
 val list: name list -> unit
