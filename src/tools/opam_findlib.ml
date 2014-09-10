@@ -1,7 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2013 OCamlPro                                        *)
-(*    Copyright 2012 INRIA                                                *)
+(*    Copyright 2014 Thomas Gazagnaire <thomas@gazagnaire.org>            *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
 (*  GNU Lesser General Public License version 3.0 with linking            *)

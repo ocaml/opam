@@ -46,13 +46,18 @@ let findlib_cmd =
   Term.(Opam_findlib.(pure process $ args)),
   Term.info "findlib" ~doc
 
+let rename_cmd =
+  let doc = "Rename a package." in
+  Term.(Opam_rename.(pure process $ args)),
+  Term.info "rename" ~doc
+
 let () =
   try
     match
       Term.eval_choice ~catch:false
         default_cmd [
         make_repo_cmd; check_repo_cmd; stats_cmd;
-        depexts_cmd; findlib_cmd
+        depexts_cmd; findlib_cmd; rename_cmd;
       ]
     with
     | `Error _ -> exit 2
