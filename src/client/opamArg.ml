@@ -560,7 +560,7 @@ let global_options =
        or a configuration file. The default is to continue silently \
        if possible." in
   let root =
-    mk_opt ~section ["r";"root"]
+    mk_opt ~section ["root"]
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       dirname (OpamFilename.Dir.of_string OpamGlobals.default_opam_dir) in
