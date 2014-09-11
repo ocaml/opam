@@ -1339,8 +1339,16 @@ module X = struct
       let flags = assoc_list s s_flags
           OpamFormat.(OpamMisc.filter_map (fun x -> x) @* parse_list parse_flag) in
       let dev_repo =
-        assoc_option s s_dev_repo
-          (OpamFormat.parse_string @> address_of_string @> parse_url @> pin_of_url)
+        assoc_option s s_dev_repo @@ fun v ->
+        OpamFormat.parse_string v |> address_of_string |>
+        (fun addr ->
+           try parse_url addr with
+           | Invalid_argument msg ->
+             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg) |>
+        (fun url ->
+           try pin_of_url url with
+           | Failure msg ->
+             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg)
       in
       { opam_version; name; version; maintainer; substs; build; install; remove;
         depends; depopts; conflicts; libraries; syntax;
