@@ -1787,11 +1787,14 @@ let add_to_env t ?opam (env: env) (updates: env_updates) =
     List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
   env @ expand_env t ?opam updates
 
-let env_updates ~opamswitch t =
+let env_updates ~opamswitch ?(force_path=false) t =
   let comp = compiler_comp t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
-  let new_path = "PATH", "=+=", OpamFilename.Dir.to_string add_to_path in
+  let new_path =
+    "PATH",
+    (if force_path then "+=" else "=+="),
+    OpamFilename.Dir.to_string add_to_path in
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
@@ -1837,12 +1840,12 @@ let env_updates ~opamswitch t =
 
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
-let get_opam_env t =
+let get_opam_env ~force_path t =
   let t = match !OpamGlobals.switch with
     | `Command_line _
     | `Not_set -> t
     | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
-  add_to_env t [] (env_updates ~opamswitch:true t)
+  add_to_env t [] (env_updates ~opamswitch:true ~force_path t)
 
 let get_full_env ?opam t =
   let env0 = OpamMisc.env () in
@@ -2143,7 +2146,7 @@ let up_to_date_env t =
   let changes =
     List.filter
       (fun (s, v) -> Some v <> try Some (OpamMisc.getenv s) with Not_found -> None)
-      (get_opam_env t) in
+      (get_opam_env ~force_path:false t) in
   changes = []
 
 let print_env_warning_at_init t user =
