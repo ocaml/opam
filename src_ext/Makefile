@@ -24,7 +24,7 @@ ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
 
 # Portable md5check
-MD5CHECK = ocaml ../shell/md5check.ml
+MD5CHECK = $(OCAML) ../shell/md5check.ml
 
 lib-ext: clone build copy
 	@
