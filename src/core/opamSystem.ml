@@ -347,17 +347,21 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   let name = log_file name in
   let run = run_process ?verbose ?env ~name ?metadata in
   let command r0 c =
-    if keep_going || OpamProcess.is_success r0 then
-      let r = run c in
-      (if OpamProcess.is_failure r0 then r0 else r)
-    else r0
+    match r0, keep_going with
+    | (`Error _ | `Exception _), false -> r0
+    | _ ->
+      let r1 = try
+          let r = run c in
+          if OpamProcess.is_success r then `Successful r else `Error r
+        with Command_not_found _ as e -> `Exception e
+      in
+      match r0 with `Start | `Successful _ -> r1 | _ -> r0
   in
-  match commands with
-  | [] -> ()
-  | c1::c ->
-    let r = List.fold_left command (run c1) c in
-    if OpamProcess.is_success r then log_cleanup r
-    else process_error r
+  match List.fold_left command `Start commands with
+  | `Start -> ()
+  | `Successful r -> log_cleanup r
+  | `Error e -> process_error e
+  | `Exception e -> raise e
 
 let read_command_output ?verbose ?env ?metadata cmd =
   let name = log_file None in

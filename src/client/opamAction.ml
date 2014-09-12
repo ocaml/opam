@@ -359,11 +359,17 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
         if not !OpamGlobals.dryrun then
           OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true
             remove
-      with OpamSystem.Process_error r ->
+      with
+      | OpamSystem.Process_error r ->
+          if not silent then
+            OpamGlobals.warning
+              "failure in package uninstall script, some files may remain:\n%s"
+              (OpamProcess.string_of_result r)
+      | OpamSystem.Command_not_found cmd ->
         if not silent then
           OpamGlobals.warning
-            "failure in package uninstall script, some files may remain:\n%s"
-            (OpamProcess.string_of_result r)
+            "failure in package uninstall script, some files may remain:\n%s%s"
+            cmd ": command not found"
   end;
 
   if not !OpamGlobals.dryrun then begin
