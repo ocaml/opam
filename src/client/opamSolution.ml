@@ -31,14 +31,6 @@ let post_message ?(failed=false) state action =
   let pkg = action_contents action in
   let opam = OpamState.opam state pkg in
   let messages = OpamFile.OPAM.post_messages opam in
-  let print_message message =
-    if failed then
-      (OpamGlobals.header_msg "%s troubleshooting" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s\n" message)
-    else
-      (OpamGlobals.header_msg "%s information" (OpamPackage.to_string pkg);
-       OpamGlobals.msg "%s\n" message)
-  in
   let local_variables = OpamVariable.Map.empty in
   let local_variables =
     OpamVariable.Map.add (OpamVariable.of_string "success")
@@ -48,10 +40,24 @@ let post_message ?(failed=false) state action =
     OpamVariable.Map.add (OpamVariable.of_string "failure")
       (B failed) local_variables
   in
-  List.iter (fun (message,filter) ->
-      if OpamState.eval_filter state ~opam local_variables filter then
-        print_message
-          (OpamState.substitute_string state ~opam local_variables message))
+  let messages =
+    OpamMisc.filter_map (fun (message,filter) ->
+        if OpamState.eval_filter state ~opam local_variables filter then
+          Some (OpamState.substitute_string state ~opam local_variables message)
+        else None)
+      messages
+  in
+  if messages = [] then () else
+  let mark = "=> " in
+  let indent = String.make (String.length mark) ' ' in
+  let mark = OpamGlobals.colorise (if failed then `red else `green) mark in
+  OpamGlobals.header_msg "%s %s"
+    (OpamPackage.to_string pkg)
+    (if failed then "troubleshooting" else "installed successfully");
+  let rex = Re_pcre.regexp "\n" in
+  List.iter (fun msg ->
+      OpamGlobals.msg "%s%s\n" mark
+        (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
     messages
 
 let check_solution state = function
