@@ -383,10 +383,11 @@ let parallel_apply t action solution =
     | PackageGraph.Parallel.Errors (errors, _) ->
       (* Error during download *)
       let msg =
-        Printf.sprintf "Errors while downloading archives of %s"
-          (String.concat ", "
+        Printf.sprintf "Could not download archives of %s"
+          (OpamMisc.pretty_list
              (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors)) in
-      `Error (Aborted, msg), finalize
+      OpamGlobals.error "%s" msg;
+      `Error (Error ([],[],[]), msg), finalize
     | e ->
       `Exception e, finalize
   in
@@ -438,16 +439,6 @@ let parallel_apply t action solution =
           (OpamState.jobs t) solution.to_process ~pre ~child ~post;
         `Successful (), finalize
       with
-      | PackageActionGraph.Parallel.Cyclic actions ->
-        let packages = List.map (List.map action_contents) actions in
-        let strings = List.map (List.map OpamPackage.to_string) packages in
-        let mk l = Printf.sprintf " - %s" (String.concat ", " l) in
-        let msg =
-          Printf.sprintf
-            "Aborting, as the following packages have a cyclic dependency:\n%s"
-            (String.concat "\n" (List.map mk strings)) in
-        OpamGlobals.error "%s" msg;
-        `Error (Aborted, msg), finalize
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->
         let msg =
           Printf.sprintf
@@ -483,8 +474,6 @@ let parallel_apply t action solution =
     finalize ();
     raise e
   | `Error (err, _msg) ->
-    (* OpamGlobals.msg "\n"; *)
-    (* OpamGlobals.error "%s" msg; *)
     match err with
     | Aborted -> finalize (); err
     | Error (successful, failed, remaining) ->
