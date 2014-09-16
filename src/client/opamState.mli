@@ -273,6 +273,9 @@ val all_installed: state -> package_set
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
 
+(** Returns a timestamp when the given package was last installed *)
+val installed_timestamp: state -> name -> float
+
 (** Returns a message about an atom that doesn't exist *)
 val unknown_package: state -> atom -> string
 
