@@ -13,4 +13,5 @@ depends: [
   "cudf"
   "re" {>= "1.2.0"}
   "ocamlfind"
+  "jsonm"
 ]
