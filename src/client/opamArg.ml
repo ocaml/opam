@@ -876,10 +876,13 @@ let show =
     Arg.(value & opt (list string) [] & doc) in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
-  let pkg_info global_options fields raw packages =
+  let where =
+    mk_flag ["where"]
+      "Print the location of the opam file used for this package" in
+  let pkg_info global_options fields raw where packages =
     apply_global_options global_options;
-    Client.info ~fields ~raw_opam:raw packages in
-  Term.(pure pkg_info $global_options $fields $raw $nonempty_atom_list),
+    Client.info ~fields ~raw_opam:raw ~where packages in
+  Term.(pure pkg_info $global_options $fields $raw $where $nonempty_atom_list),
   term_info "show" ~doc ~man
 
 

@@ -412,7 +412,7 @@ module API = struct
       print_list t ~uninst_versions:depends_mode ~short:print_short ~order details;
       if OpamPackage.Name.Map.is_empty details then OpamGlobals.exit 1
 
-  let info ~fields ~raw_opam atoms =
+  let info ~fields ~raw_opam ~where atoms =
     let t = OpamState.load_state "info" in
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
     let details =
@@ -436,6 +436,22 @@ module API = struct
 
       let nv = OpamPackage.create name current_version in
       let opam = OpamState.opam t nv in
+      let opam_f () =
+        (* The above gives the opam structure, but the location of the orig file
+           is lost: re-compute *)
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+        if OpamFilename.exists overlay &&
+           OpamFile.OPAM.(version (read overlay)) = current_version
+        then overlay else
+        let global = OpamPath.opam t.root nv in
+        if OpamFilename.exists global then global else
+        match OpamState.repository_and_prefix_of_package t nv with
+        | Some (repo,pfx) -> OpamPath.Repository.opam repo pfx nv
+        | None ->
+          OpamSystem.internal_error "opam file location for %s not found"
+            (OpamPackage.to_string nv)
+      in
+      if where then OpamGlobals.msg "%s\n" (OpamFilename.prettify (opam_f ()));
 
       (* where does it come from (eg. which repository) *)
       let repository =
@@ -555,7 +571,7 @@ module API = struct
         @ descr in
 
       let all_fields = match fields with
-        | [] when not raw_opam -> all_fields
+        | [] when not (raw_opam || where) -> all_fields
         | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
 
       List.iter (fun (f, desc) ->
@@ -1593,8 +1609,8 @@ module SafeAPI = struct
         pkg_str
     )
 
-  let info ~fields ~raw_opam regexps =
-    read_lock (fun () -> API.info ~fields ~raw_opam regexps)
+  let info ~fields ~raw_opam ~where regexps =
+    read_lock (fun () -> API.info ~fields ~raw_opam ~where regexps)
 
   let install names add_to_roots deps_only =
     switch_lock (fun () -> API.install names add_to_roots deps_only)
