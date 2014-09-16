@@ -138,7 +138,7 @@ let list ~print_short ~installed ~all =
                      use '--all' to show\n"
       (List.length patches)
 
-let remove_t switch t =
+let remove_t switch ?(confirm = true) t =
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;
   let comp_dir = OpamPath.Switch.root t.root switch in
   if not (OpamFilename.exists_dir comp_dir) then (
@@ -151,9 +151,14 @@ let remove_t switch t =
       (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
-  OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
-  OpamFilename.rmdir comp_dir
+  if not confirm ||
+     OpamGlobals.confirm
+       "Switch %s and all its packages will be wiped. Are you sure ?"
+       (OpamSwitch.to_string switch)
+  then
+    let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
+    OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
+    OpamFilename.rmdir comp_dir
 
 let update_global_config t ~warning switch =
   OpamState.update_switch_config t switch;
@@ -216,7 +221,7 @@ let install_packages ~packages switch compiler =
 
   let remove_compiler () =
     let t = OpamState.load_state "remove-compiler" in
-    remove_t switch t in
+    remove_t ~confirm:false switch t in
 
   match bad_packages with
   | [] ->
