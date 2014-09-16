@@ -876,10 +876,13 @@ let show =
     Arg.(value & opt (list string) [] & doc) in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
-  let pkg_info global_options fields raw packages =
+  let where =
+    mk_flag ["where"]
+      "Print the location of the opam file used for this package" in
+  let pkg_info global_options fields raw where packages =
     apply_global_options global_options;
-    Client.info ~fields ~raw_opam:raw packages in
-  Term.(pure pkg_info $global_options $fields $raw $nonempty_atom_list),
+    Client.info ~fields ~raw_opam:raw ~where packages in
+  Term.(pure pkg_info $global_options $fields $raw $where $nonempty_atom_list),
   term_info "show" ~doc ~man
 
 
@@ -1691,6 +1694,53 @@ let source =
         $global_options $atom $dev_repo $pin $dir),
   term_info "source" ~doc ~man
 
+(* LINT *)
+let lint_doc = "Checks and validate package description ('opam') files."
+let lint =
+  let doc = lint_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Given an $(i,opam) file, performs several quality checks on it and \
+        outputs recommendations warnings or errors."
+  ] in
+  let file = Arg.(value & pos 0 file Filename.current_dir_name &
+                  info ~docv:"FILE" []
+                    ~doc:"Name of the opam file to check, or directory \
+                          containing it. Current directory if unspecified")
+  in
+  let lint global_options file =
+    apply_global_options global_options;
+    let opam_f =
+      if Sys.is_directory file then
+        OpamFilename.OP.(OpamFilename.Dir.of_string file // "opam")
+      else OpamFilename.of_string file
+    in
+    if OpamFilename.exists opam_f then
+      try
+        let opam = OpamFile.OPAM.read opam_f in
+        let warnings = OpamFile.OPAM.validate opam in
+        if warnings = [] then
+          OpamGlobals.msg "%s\n" (OpamGlobals.colorise `green "Passed.")
+        else
+          (OpamGlobals.msg "Validation %s for %s: \n  - %s\n"
+             (OpamGlobals.colorise `red "failed")
+             (OpamFilename.prettify opam_f)
+             (String.concat "\n  - " warnings);
+           OpamGlobals.exit 1)
+      with
+      | Parsing.Parse_error
+      | Lexer_error _
+      | OpamFormat.Bad_format _ ->
+        OpamGlobals.msg "File format error\n";
+        OpamGlobals.exit 1
+    else
+      (OpamGlobals.error_and_exit "No opam file found at %s"
+         (OpamFilename.to_string opam_f))
+  in
+  Term.(pure lint $global_options $file),
+  term_info "lint" ~doc ~man
+
+
 (* HELP *)
 let help =
   let doc = "Display help about OPAM and OPAM commands." in
@@ -1790,6 +1840,7 @@ let commands = [
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   source;
+  lint;
   help;
 ]
 

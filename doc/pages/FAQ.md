@@ -176,3 +176,21 @@ lib``, which is by default `~/.opam/<switch>/lib`. Note that using `ocamlc`'s
 option `-I +dir` will make `dir` relative to `lib/ocaml`, and will only work for
 the libraries that ship with the compiler. Also, remember to add the dependency when
 you package your project !
+
+
+#### 🐫  How does OPAM tell which version of a package is newer ?
+
+We use the basics of the [version
+ordering](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version)
+from Debian:
+
+- version strings are sliced into alternate, possibly empty non-digit / digit
+  sequences, always starting with a non-digit sequence.
+- those are sorted lexicographically, using resp. ASCII (with symbol > letter)
+  and number order. For example `a` gives `["a"]`, and `1` gives `["";1]`, so
+  `a` is latest (`"" < "a"`).
+- the `~` character is special as it sorts even before the end of sequence. It's
+  most convenient for pre-releases, allowing `1.0~beta` to be before `1.0`.
+
+Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`, `0.1`,
+`1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`
