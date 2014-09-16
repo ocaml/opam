@@ -1080,6 +1080,10 @@ let installed_versions t name =
       map
   ) t.aliases OpamPackage.Map.empty
 
+let installed_timestamp t name =
+  let instfile = OpamPath.Switch.install t.root t.switch name in
+  (Unix.stat (OpamFilename.to_string instfile)).Unix.st_mtime
+
 (* Checks:
    * correct opam version
    * only installed packages have something in $repo/tmp
