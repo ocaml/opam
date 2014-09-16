@@ -442,7 +442,7 @@ let reinstall_t t =
       save backups;
       (try
          OpamFilename.rmdir (OpamPath.Switch.root t.root t.switch);
-         install_compiler ~quiet:false t.switch ocaml_version;
+         OpamState.install_compiler t ~quiet:false t.switch ocaml_version
        with e ->
          restore backups;
          restore overlays;
