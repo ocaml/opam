@@ -503,7 +503,9 @@ let add name kind address ~priority:prio =
      raise e
   );
   log "Adding %a" (slog OpamRepository.to_string) repo;
-  update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
+  let repositories = OpamRepositoryName.Map.add name repo t.repositories in
+  update_config t (OpamRepositoryName.Map.keys repositories);
+  let t = { t with repositories } in
   OpamState.remove_state_cache ();
   update t repo;
   try

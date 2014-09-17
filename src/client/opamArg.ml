@@ -1701,43 +1701,50 @@ let lint =
   let man = [
     `S "DESCRIPTION";
     `P "Given an $(i,opam) file, performs several quality checks on it and \
-        outputs recommendations warnings or errors."
+        outputs recommendations, warnings or errors on stderr."
   ] in
   let file = Arg.(value & pos 0 file Filename.current_dir_name &
                   info ~docv:"FILE" []
                     ~doc:"Name of the opam file to check, or directory \
                           containing it. Current directory if unspecified")
   in
-  let lint global_options file =
+  let normalise =
+    mk_flag ["normalise"]
+      "Output a normalised version of the opam file to stdout"
+  in
+  let lint global_options file normalise =
     apply_global_options global_options;
     let opam_f =
       if Sys.is_directory file then
         OpamFilename.OP.(OpamFilename.Dir.of_string file // "opam")
       else OpamFilename.of_string file
     in
+    let msg = Printf.eprintf in
     if OpamFilename.exists opam_f then
       try
         let opam = OpamFile.OPAM.read opam_f in
         let warnings = OpamFile.OPAM.validate opam in
         if warnings = [] then
-          OpamGlobals.msg "%s\n" (OpamGlobals.colorise `green "Passed.")
+          msg "%s\n" (OpamGlobals.colorise `green "Passed.")
         else
-          (OpamGlobals.msg "Validation %s for %s: \n  - %s\n"
-             (OpamGlobals.colorise `red "failed")
-             (OpamFilename.prettify opam_f)
-             (String.concat "\n  - " warnings);
-           OpamGlobals.exit 1)
+          msg "Validation %s for %s: \n  - %s\n"
+            (OpamGlobals.colorise `red "failed")
+            (OpamFilename.prettify opam_f)
+            (String.concat "\n  - " warnings);
+        if normalise then
+          OpamFile.OPAM.write_to_channel stdout opam;
+        if warnings <> [] then OpamGlobals.exit 1
       with
       | Parsing.Parse_error
       | Lexer_error _
       | OpamFormat.Bad_format _ ->
-        OpamGlobals.msg "File format error\n";
+        msg "File format error\n";
         OpamGlobals.exit 1
     else
       (OpamGlobals.error_and_exit "No opam file found at %s"
          (OpamFilename.to_string opam_f))
   in
-  Term.(pure lint $global_options $file),
+  Term.(pure lint $global_options $file $normalise),
   term_info "lint" ~doc ~man
 
 
