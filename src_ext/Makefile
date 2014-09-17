@@ -1,6 +1,6 @@
 -include ../Makefile.config
 
-SRC_EXTS = extlib re cmdliner graph cudf dose
+SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm
 
 URL_extlib = http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
 MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
@@ -19,6 +19,12 @@ MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
 URL_dose = https://gforge.inria.fr/frs/download.php/file/33677/dose3-3.2.2.tar.gz
 MD5_dose = 3ffed1987a040024076c08f4a7af9b21
+
+URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
+MD5_uutf = 708c0421e158b390c7cc341f37b40add
+
+URL_jsonm = http://erratique.ch/software/jsonm/releases/jsonm-0.9.1.tbz
+MD5_jsonm = 631a5dabdada83236c83056f60e42685
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
@@ -70,13 +76,13 @@ clean:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
 
 distclean:
-	rm -rf cudf extlib re graph dose cmdliner
+	rm -rf cudf extlib re graph dose cmdliner uutf jsonm
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp
 	rm -f *.cm* *.o *.a
 	rm -rf lib
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
 
 inst_objs = cp $(1)/*.cm*i lib
 
@@ -93,6 +99,8 @@ copy: build
 	$(call inst_objs,dose/common)
 	$(call inst_objs,dose/deb)
 	$(call inst_objs,dose/algo)
+	$(call inst_objs,uutf/src)
+	$(call inst_objs,jsonm/src)
 	$(call inst_objs,.)
 
 # --
@@ -194,6 +202,20 @@ define PROJ_dose_algo
 endef
 export PROJ_dose_algo
 
+define PROJ_uutf
+  SOURCES = $(call addmli,uutf/src,uutf.ml)
+  RESULT = uutf
+  LIB_PACK_NAME =
+endef
+export PROJ_uutf
+
+define PROJ_jsonm
+  SOURCES = $(call addmli,jsonm/src,jsonm.ml)
+  RESULT = jsonm
+  LIB_PACK_NAME =
+  INCDIRS = uutf/src
+endef
+export PROJ_jsonm
 
 # --
 
