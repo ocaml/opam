@@ -1121,6 +1121,7 @@ module X = struct
     let flags t = t.flags
     let dev_repo t = t.dev_repo
 
+    let with_opam_version t opam_version = { t with opam_version }
     let with_name t name = { t with name = Some name }
     let with_name_opt t name = { t with name }
     let with_version t version = { t with version = Some version }

@@ -206,6 +206,9 @@ module OPAM: sig
   (** The package flags that are present for this package. *)
   val flags: t -> package_flag list
 
+  (** Sets the opam version *)
+  val with_opam_version: t -> opam_version -> t
+
   (** The package source repository address *)
   val dev_repo: t -> pin_option option
 
