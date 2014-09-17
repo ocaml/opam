@@ -1298,7 +1298,9 @@ module X = struct
         in
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f = OpamFormat.parse_opt_formula value in
-        if OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0 then
+        if not !OpamGlobals.skip_version_checks &&
+           OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
+        then
             OpamFormula.ors_to_list f
             |> cleanup ~pos:(OpamFormat.value_pos value) []
             |> List.rev

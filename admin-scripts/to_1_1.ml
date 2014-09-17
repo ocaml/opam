@@ -7,7 +7,17 @@
    * remove the new fields: install, flags and dev-repo
    * remove dependency flags ('build', 'test', 'doc')
    * set file version
+   * replace inequality constraints with '> & <'
 *)
+
+let rewrite_constraint ~conj = (* Rewrites '!=' *)
+  OpamFormula.map OpamFormula.(function
+      | (`Neq,v) ->
+        prerr_endline "XX";
+        if conj then And (Atom (`Lt,v), Atom (`Gt,v))
+        else Or (Atom (`Lt,v), Atom (`Gt,v))
+      | atom -> Atom atom)
+;;
 
 let to_1_1 _ opam =
   let module OF = OpamFile.OPAM in
@@ -22,11 +32,17 @@ let to_1_1 _ opam =
   let opam = OF.with_dev_repo opam None in
   let opam = OF.with_opam_version opam (OpamVersion.of_string "1.1") in
   let remove_ext =
-    OpamFormula.map (fun (n, (_,formula)) ->
-        OpamFormula.Atom (n, ([], formula)))
+    OpamFormula.map (fun (n, (_,cstr)) ->
+        OpamFormula.Atom (n, ([], rewrite_constraint ~conj:false cstr)))
   in
   let opam = OF.with_depends opam (remove_ext (OF.depends opam)) in
   let opam = OF.with_depopts opam (remove_ext (OF.depopts opam)) in
+  let opam =
+    OF.with_conflicts opam
+      (OpamFormula.map (fun (n, cstr) ->
+           OpamFormula.Atom (n, rewrite_constraint ~conj:true cstr))
+          (OF.conflicts opam))
+  in
   opam
 ;;
 
