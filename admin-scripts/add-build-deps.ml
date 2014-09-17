@@ -14,9 +14,14 @@ let addbuild (pkg, (flags, cstr) as atom) =
     OpamFormula.Atom atom
 ;;
 
-iter_packages ~opam:(fun _ opam ->
+iter_packages ~opam:(fun _ opam0 ->
     let open OpamFile.OPAM in
+    let opam = opam0 in
     let opam = with_depends opam @@ OpamFormula.map addbuild @@ depends opam in
     let opam = with_depopts opam @@ OpamFormula.map addbuild @@ depopts opam in
+    let opam = if opam <> opam0
+      then with_opam_version opam @@ OpamVersion.of_string "1.2"
+      else opam
+    in
     opam)
   ()

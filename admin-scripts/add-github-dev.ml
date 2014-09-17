@@ -8,7 +8,7 @@ open Opam_admin_top;;
 let github_re =
   Re.compile (Re_perl.re "https?://([^/]*github.com/.*)/archive/.*");;
 
-iter_packages_gen @@ fun nv ~opam ~descr ~url ~dot_install ->
+iter_packages_gen @@ fun nv ~prefix:_ ~opam ~descr:_ ~url ~dot_install:_ ->
 let opam =
   if OpamFile.OPAM.dev_repo opam <> None then opam else
     match url with
@@ -18,7 +18,10 @@ let opam =
         | `http, (addr,None) when Re.execp github_re addr ->
             let substrings = Re.exec github_re addr in
             let git = Printf.sprintf "git://%s" (Re.get substrings 1) in
-            OpamFile.OPAM.with_dev_repo opam (Some (OpamTypes.Git (git,None)))
+            let opam =
+              OpamFile.OPAM.with_dev_repo opam (Some (OpamTypes.Git (git,None)))
+            in
+            OpamFile.OPAM.with_opam_version opam (OpamVersion.of_string "1.2")
         | _ -> opam
 in
-opam, descr, url, dot_install
+opam, `Keep, `Keep, `Keep
