@@ -1144,7 +1144,9 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
-        OpamRepositoryCommand.fix_descriptions t ~save_cache:false ~verbose:false;
+        OpamRepositoryCommand.update t repo;
+        OpamRepositoryCommand.fix_descriptions t
+          ~save_cache:false ~verbose:false;
 
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";

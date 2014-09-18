@@ -291,7 +291,7 @@ let make_urls_txt ~write repo_root =
 
 let make_index_tar_gz repo_root =
   OpamFilename.in_dir repo_root (fun () ->
-    let dirs = [ "version"; "compilers"; "packages" ] in
+    let dirs = [ "version"; "compilers"; "packages"; "repo" ] in
     match List.filter Sys.file_exists dirs with
     | [] -> ()
     | d  -> OpamSystem.command ("tar" :: "czf" :: "index.tar.gz" :: d)

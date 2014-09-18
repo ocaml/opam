@@ -107,8 +107,7 @@ let init repo =
   OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
   OpamFilename.mkdir (OpamPath.Repository.packages_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.archives_dir repo);
-  OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
-  B.pull_repo repo
+  OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo)
 
 let pull_url kind package local_dirname checksum remote_url =
   if !OpamGlobals.req_checksums && checksum = None then

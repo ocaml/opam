@@ -493,24 +493,22 @@ let add name kind address ~priority:prio =
     repo_priority = prio;
     repo_root     = OpamPath.Repository.create t.root name;
   } in
-  (try OpamRepository.init repo with
-   | OpamRepository.Unknown_backend ->
-     OpamGlobals.error_and_exit
-       "\"%s\" is not a supported backend"
-       (string_of_repository_kind repo.repo_kind)
-   | e ->
-     cleanup t repo;
-     raise e
-  );
+  OpamRepository.init repo;
   log "Adding %a" (slog OpamRepository.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo t.repositories in
   update_config t (OpamRepositoryName.Map.keys repositories);
   let t = { t with repositories } in
   OpamState.remove_state_cache ();
-  update t repo;
   try
+    update t repo;
     fix_descriptions t ~verbose:true
-  with e ->
+  with
+  | OpamRepository.Unknown_backend ->
+    cleanup t repo;
+    OpamGlobals.error_and_exit
+      "\"%s\" is not a supported backend"
+      (string_of_repository_kind repo.repo_kind)
+  | e ->
     cleanup t repo;
     raise e
 
