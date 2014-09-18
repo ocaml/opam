@@ -13,20 +13,26 @@ _opam_add_f()
 _opam_flags()
 {
   opam "$@" --help=groff 2>/dev/null | \
-      sed -n 's#\\-#-#g; s#^\\fB\(-[^,= ]*\)\\fR.*#\1#p'
+      sed -n \
+      -e 's%\\-%-%g' \
+      -e 's%^\\fB\(-[^,= ]*\)\\fR.*%\1%p'
 }
 
 _opam_commands()
 {
   opam "$@" --help=groff 2>/dev/null | \
-      sed -n '/^\.SH COMMANDS$/,/^\.SH/ { s#\\-#-#g; s#^\\fB\([^,= ]*\)\\fR.*#\1#p }'
+      sed -n \
+      -e 's%\\-%-%g' \
+      -e '/^\.SH COMMANDS$/,/^\.SH/ s%^\\fB\([^,= ]*\)\\fR.*%\1%p'
   echo '--help'
 }
 
 _opam_vars()
 {
   opam config list --safe 2>/dev/null | \
-      sed -n '/^PKG:/d; s/^\([^# ][^ ]*\).*/\1/p'
+      sed -n \
+      -e '/^PKG:/d' \
+      -e 's%^\([^# ][^ ]*\).*%\1%p'
 }
 
 _opam()
