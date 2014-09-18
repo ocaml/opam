@@ -140,7 +140,12 @@ _opam()
                           _opam_add_f _opam_flags "$cmd"
                   esac;;
               *)
-                  _opam_add_f _opam_flags "$cmd"
+                  case "$subcmd" in
+                      add)
+                          compgen_opt="-o filenames -f";;
+                      *)
+                          _opam_add_f _opam_flags "$cmd"
+                  esac
           esac;;
       unpin)
           if [ $COMP_CWORD -eq 2 ]; then
