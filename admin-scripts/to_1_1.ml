@@ -10,6 +10,8 @@
    * replace inequality constraints with '> & <'
 *)
 
+OpamGlobals.all_parens := true;;
+
 let rewrite_constraint ~conj = (* Rewrites '!=' *)
   OpamFormula.map OpamFormula.(function
       | (`Neq,v) ->

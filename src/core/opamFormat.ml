@@ -610,7 +610,9 @@ let make_filter f =
     | FString s  -> make_string s
     | FIdent s   -> make_ident s
     | FBool b    -> make_bool b
-    | FOp(e,s,f) -> Relop (pos_null, s, aux e, aux f)
+    | FOp(e,s,f) ->
+      let f = Relop (pos_null, s, aux e, aux f) in
+      if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
     | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
       let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
       (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))

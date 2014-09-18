@@ -109,9 +109,15 @@ let make_or a b = match a, b with
 
 let string_of_formula string_of_a f =
   let rec aux ?paren f =
+    let paren = match paren with
+      | Some _ when !OpamGlobals.all_parens -> Some `All
+      | paren -> paren
+    in
     match f with
     | Empty    -> "0"
-    | Atom a   -> string_of_a a
+    | Atom a   ->
+      let s = string_of_a a in
+      if !OpamGlobals.all_parens then Printf.sprintf "(%s)" s else s
     | Block x  -> Printf.sprintf "(%s)" (aux x)
     | And(x,y) -> (* And, Or have the same priority, left-associative *)
       let lpar, rpar = if paren = Some `Or then "(",")" else "","" in
