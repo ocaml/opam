@@ -390,7 +390,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   let remove_files_and_dir dst_fn files =
     let dir = dst_fn t.root t.switch name in
     remove_files (fun _ _ -> dir) files;
-    if OpamFilename.dir_is_empty dir then OpamFilename.rmdir dir
+    if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
     else if OpamFilename.exists_dir dir then
       OpamGlobals.warning "Directory %s is not empty, not removing"
         (OpamFilename.Dir.to_string dir) in
