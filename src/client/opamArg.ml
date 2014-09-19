@@ -907,7 +907,7 @@ let config =
      $(b,opam config setup --user) to setup the user ones. \
      To modify both the global and user configuration, use $(b,opam config setup --all).";
     ["exec"]    , `exec    , ["[--] COMMAND"; "[ARG]..."],
-    "Execute $(i,CMD) with the correct environment variables. \
+    "Execute $(i,COMMAND) with the correct environment variables. \
      This command can be used to cross-compile between switches using \
      $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn)";
     ["var"]     , `var     , ["VAR"],
