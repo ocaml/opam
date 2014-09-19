@@ -1136,6 +1136,7 @@ module X = struct
     let with_syntax t syntax = { t with syntax }
     let with_substs t substs = { t with substs }
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
+    let with_os t os = { t with os }
     let with_maintainer t maintainer = { t with maintainer }
     let with_patches t patches = { t with patches }
     let with_bug_reports t bug_reports = { t with bug_reports }
