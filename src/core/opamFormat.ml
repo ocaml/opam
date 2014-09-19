@@ -491,7 +491,8 @@ let rec make_formulas opt ~constraints t =
       | [] -> make_string (name n)
       | cs -> Option (pos_null, make_string (name n), cs)
   in
-  let to_list = OpamFormula.(if opt then ors_to_list else ands_to_list) in
+  let to_list =
+    OpamFormula.(if opt then ors_to_list else ands_to_list) in
   List (pos_null, List.map aux (to_list t))
 
 let make_formula =
@@ -565,7 +566,11 @@ let rec make_os_constraint l =
     | Or(e,f)          -> Logop (pos_null, `Or, aux e, aux f) in
   match l with
   | Empty -> List (pos_null, [])
-  | l -> List (pos_null, List.map aux (OpamFormula.ors_to_list l))
+  | l ->
+    let l =
+      if !OpamGlobals.all_parens then [l]
+      else OpamFormula.ors_to_list l in
+    List (pos_null, List.map aux l)
 
 let parse_env_variable l =
   let aux = function
@@ -610,14 +615,18 @@ let make_filter f =
     | FString s  -> make_string s
     | FIdent s   -> make_ident s
     | FBool b    -> make_bool b
-    | FOp(e,s,f) -> Relop (pos_null, s, aux e, aux f)
+    | FOp(e,s,f) ->
+      let f = Relop (pos_null, s, aux e, aux f) in
+      if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
     | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
       let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
       (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
     | FAnd(e,f) ->
       let f = Logop (pos_null, `And, aux e, aux ~paren:`And f) in
       (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
-    | FNot f -> Pfxop (pos_null, `Not, aux ~paren:`Not f)
+    | FNot f ->
+      let f = Pfxop (pos_null, `Not, aux ~paren:`Not f) in
+      if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
   in
   [aux f]
 

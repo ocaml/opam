@@ -248,6 +248,8 @@ module OPAM: sig
   (** Construct as [compiler_version] *)
   val with_ocaml_version: t -> compiler_constraint option -> t
 
+  val with_os: t -> (bool * string) generic_formula -> t
+
   (** Construct as [maintainer] *)
   val with_maintainer: t -> string list -> t
 

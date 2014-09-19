@@ -69,6 +69,7 @@ let compat_mode_1_0  = check "COMPATMODE_1_0"
 let no_self_upgrade  = check "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 let safe_mode        = check "SAFE"
+let all_parens       = ref false
 
 (* Value set when opam calls itself *)
 let self_upgrade_bootstrapping_value = "bootstrapping"
