@@ -56,8 +56,8 @@ compiled on creation of the switch.
 Yes. Use one of:
 
 ```
-eval $(opam config env --switch <switch>)     # for the current shell
-opam config exec --switch <switch> <command>  # for one command
+eval $(opam config env --switch <switch>)        # for the current shell
+opam config exec --switch <switch> -- <command>  # for one command
 ```
 
 This only affects the environment.
@@ -194,3 +194,14 @@ from Debian:
 
 Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`, `0.1`,
 `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`
+
+
+#### 🐫  What does the `--jobs` option do ? It doesn't seem to enable parallel builds.
+
+It does, but at the _package_ granularity: it will only be noticeable if you
+build independent packages in the same command. Each package has its own build
+commands, and it's up to them to enable parallelism: you may try to set
+`MAKEFLAGS="-j 4"` but be aware that some packages may fail to build.
+
+If you are a packager, you may use the `jobs` opam variable, e.g. `make
+"-j%{jobs}%"`.
