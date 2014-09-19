@@ -32,7 +32,7 @@ let update t repo =
       OpamGlobals.warning "%s: Too many redirections, stopping."
         (OpamRepositoryName.to_string repo.repo_name)
     else (
-      OpamRepository.update repo;
+      OpamRepository.update r;
       if n <> max_loop && r = repo then
         OpamGlobals.warning "%s: Cyclic redirections, stopping."
           (OpamRepositoryName.to_string repo.repo_name)
@@ -53,7 +53,15 @@ let update t repo =
           loop new_repo (n-1)
     ) in
   loop repo max_loop;
-  OpamRepository.check_version repo
+  let repo =
+    repo
+    |> OpamPath.Repository.config
+    |> OpamFile.Repo_config.safe_read
+  in
+  OpamRepository.check_version repo;
+  let repositories =
+    OpamRepositoryName.Map.add repo.repo_name repo t.repositories in
+  { t with repositories }
 
 let print_updated_compilers updates =
 
@@ -500,7 +508,7 @@ let add name kind address ~priority:prio =
   let t = { t with repositories } in
   OpamState.remove_state_cache ();
   try
-    update t repo;
+    let t = update t repo in
     fix_descriptions t ~verbose:true
   with
   | OpamRepository.Unknown_backend ->
