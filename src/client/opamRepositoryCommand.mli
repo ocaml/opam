@@ -19,7 +19,7 @@
 open OpamState.Types
 open OpamTypes
 
-val update: t -> repository -> unit
+val update: t -> repository -> OpamState.state
 
 (** Update the package index. *)
 val update_package_index: t -> t

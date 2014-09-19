@@ -961,7 +961,7 @@ module API = struct
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
       let child repo =
-        try OpamRepositoryCommand.update t repo
+        try ignore (OpamRepositoryCommand.update t repo)
         with e ->
           OpamMisc.fatal e;
           OpamGlobals.error "Skipping %s as the repository is not available.\n"
@@ -1144,7 +1144,9 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
-        OpamRepositoryCommand.fix_descriptions t ~save_cache:false ~verbose:false;
+        let t = OpamRepositoryCommand.update t repo in
+        OpamRepositoryCommand.fix_descriptions t
+          ~save_cache:false ~verbose:false;
 
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";

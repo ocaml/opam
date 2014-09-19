@@ -32,7 +32,7 @@ let update t repo =
       OpamGlobals.warning "%s: Too many redirections, stopping."
         (OpamRepositoryName.to_string repo.repo_name)
     else (
-      OpamRepository.update repo;
+      OpamRepository.update r;
       if n <> max_loop && r = repo then
         OpamGlobals.warning "%s: Cyclic redirections, stopping."
           (OpamRepositoryName.to_string repo.repo_name)
@@ -53,7 +53,15 @@ let update t repo =
           loop new_repo (n-1)
     ) in
   loop repo max_loop;
-  OpamRepository.check_version repo
+  let repo =
+    repo
+    |> OpamPath.Repository.config
+    |> OpamFile.Repo_config.safe_read
+  in
+  OpamRepository.check_version repo;
+  let repositories =
+    OpamRepositoryName.Map.add repo.repo_name repo t.repositories in
+  { t with repositories }
 
 let print_updated_compilers updates =
 
@@ -493,24 +501,22 @@ let add name kind address ~priority:prio =
     repo_priority = prio;
     repo_root     = OpamPath.Repository.create t.root name;
   } in
-  (try OpamRepository.init repo with
-   | OpamRepository.Unknown_backend ->
-     OpamGlobals.error_and_exit
-       "\"%s\" is not a supported backend"
-       (string_of_repository_kind repo.repo_kind)
-   | e ->
-     cleanup t repo;
-     raise e
-  );
+  OpamRepository.init repo;
   log "Adding %a" (slog OpamRepository.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo t.repositories in
   update_config t (OpamRepositoryName.Map.keys repositories);
   let t = { t with repositories } in
   OpamState.remove_state_cache ();
-  update t repo;
   try
+    let t = update t repo in
     fix_descriptions t ~verbose:true
-  with e ->
+  with
+  | OpamRepository.Unknown_backend ->
+    cleanup t repo;
+    OpamGlobals.error_and_exit
+      "\"%s\" is not a supported backend"
+      (string_of_repository_kind repo.repo_kind)
+  | e ->
     cleanup t repo;
     raise e
 
