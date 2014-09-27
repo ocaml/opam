@@ -81,5 +81,8 @@ val check_availability: ?permissive: bool ->
     Exits with a message on error. *)
 val sanitize_atom_list: ?permissive: bool -> OpamState.state -> atom list -> atom list
 
+(** @return whether package description matches given atom *)
+val match_package_atom : OpamPackage.t -> atom -> bool
+
 (** {2 Stats} *)
 val sum: stats -> int
