@@ -1606,6 +1606,13 @@ module API = struct
 
   let bundle ~dryrun ~deps_only bundle atoms =
     let open OpamFilename in
+    (* OpamSystem.real_path is pure evil *)
+    let bundle =
+      if Filename.is_relative @@ OpamFilename.Dir.to_string bundle then
+        OP.(OpamFilename.cwd () / OpamFilename.Dir.to_string bundle)
+      else
+        bundle
+    in
     let archives = OP.(bundle / "archives") in
     if not dryrun && exists_dir bundle then
       OpamGlobals.error_and_exit "Directory %s already exists" (Dir.to_string bundle);
@@ -1663,6 +1670,11 @@ module API = struct
         OpamAction.extract_package t nv;
         let p_build = OpamPath.Switch.build t.root t.switch nv in
         let archive = OP.(archives // (OpamPackage.to_string nv ^ ".tar.gz")) in
+(*
+        OpamGlobals.msg "p_build: %s\n" (OpamFilename.Dir.to_string p_build);
+        OpamGlobals.msg "archives: %s\n" (OpamFilename.Dir.to_string archives);
+        OpamGlobals.msg "archive: %s\n" (OpamFilename.to_string archive);
+*)
         exec (dirname_dir p_build) [
           [ "tar"; "czf"; to_string archive; Base.to_string (basename_dir p_build) ]
         ];
