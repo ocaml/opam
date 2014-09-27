@@ -1579,16 +1579,8 @@ module API = struct
 
   let resolve_deps t atoms =
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
-    let opams = t.OpamState.Types.opams in (* all opam files known *)
-    let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
-    let universe = {
-      OpamSolver.empty_universe with
-      u_packages = packages;
-      u_available = packages; (* XXX add a compiler/OS option ? *)
-      u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-      u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-      u_action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms));
-    } in
+    let action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms)) in
+    let universe = { (OpamState.universe t action) with u_installed = OpamPackage.Set.empty; } in
     let request = { wish_install = atoms; wish_remove = []; wish_upgrade = []; criteria = `Default; } in
     let requested = OpamPackage.Name.Set.of_list @@ List.map fst atoms in
     match OpamSolver.resolve ~verbose:true universe ~requested ~orphans:OpamPackage.Set.empty request with
@@ -1625,6 +1617,11 @@ module API = struct
     in
     (* sync: variables and OpamPath.Switch directories *)
     let root_dirs = [ "lib"; "bin"; "sbin"; "man"; "doc"; "share"; "etc" ] in
+    let variables =
+      let vars1 = List.map (fun k -> OpamVariable.(of_string k, S (Filename.concat "$BUNDLE_PREFIX" k))) root_dirs in
+      let vars2 = OpamVariable.([of_string "prefix", S "$BUNDLE_PREFIX"; of_string "preinstalled", B true]) in
+      OpamVariable.Map.of_list (vars1 @ vars2)
+    in
     let b = Buffer.create 10 in
     (* expecting quoted commands *)
     let shellout_build ~archive ~env commands =
@@ -1681,9 +1678,6 @@ module API = struct
         let archive = Base.to_string (basename archive) in
         let opam = OpamState.opam t nv in (* dev? *)
         let env = OpamState.add_to_env t ~opam [] (OpamFile.OPAM.build_env opam) in
-        let vars1 = List.map (fun k -> OpamVariable.(of_string k, S (Filename.concat "$BUNDLE_PREFIX" k))) root_dirs in
-        let vars2 = OpamVariable.([of_string "prefix", S "$BUNDLE_PREFIX"; of_string "preinstalled", B true]) in
-        let variables = OpamVariable.Map.of_list (vars1 @ vars2) in
         let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.build_install t.root t.switch nv) in
         let commands = OpamState.filter_commands t ~opam variables (OpamFile.OPAM.build opam) in
         let commands = List.map (fun l -> l @ [">>build.log 2>>build.log || (echo FAILED; tail build.log; exit 1)"]) commands in
