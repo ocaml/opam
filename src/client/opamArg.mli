@@ -164,6 +164,14 @@ val compiler: compiler Arg.converter
 (** Package name converter *)
 val package_name: name Arg.converter
 
+(** {2 Argument terms} *)
+
+val nonempty_atom_list : atom list Term.t
+
+val atom_list : atom list Term.t
+
+val param_list : string list Term.t
+
 (** {2 Misc} *)
 
 (** Enumeration with a default command *)
