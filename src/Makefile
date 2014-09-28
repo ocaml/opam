@@ -177,7 +177,8 @@ SRC_client = \
   opamConfigCommand.ml \
   opamRepositoryCommand.ml \
   opamPinCommand.ml \
-  opamClient.ml
+  opamClient.ml \
+  opamArg.ml
 
 define PROJ_client
   SOURCES = $(call addmli,client,$(SRC_client))
@@ -190,7 +191,7 @@ opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
 
 define PROJ_opam
-  SOURCES = $(call addmli,client,opamArg.ml opamMain.ml)
+  SOURCES = $(call addmli,client,opamMain.ml)
   RESULT = opam
   LIBS = $(LIBS) $(OPAMLIB)
 endef
