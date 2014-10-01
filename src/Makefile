@@ -17,11 +17,11 @@ all:
 
 OCAMLFLAGS = -g -w +a-4-9-32-41-44-45
 OCAMLLDFLAGS = -g -w +a-4-9-32-41-44-45
-ifeq ($OCAML_4,true)
+ifeq ($(OCAML_4),true)
   OCAMLFLAGS += -bin-annot
   OCAMLLDFLAGS += -bin-annot
 endif
-ifeq ($OCAML_4_01,true)
+ifeq ($(OCAML_4_01),true)
   OCAMLFLAGS += -short-paths
 endif
 
