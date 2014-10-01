@@ -25,8 +25,15 @@ module Git = struct
     OpamFilename.exists_dir (repo.repo_root / ".git")
 
   let init repo =
+    let env =
+      Array.append (Unix.environment ()) [|
+        "GIT_AUTHOR_NAME=Opam";
+        "GIT_AUTHOR_EMAIL=opam@ocaml.org";
+        "GIT_COMMITTER_NAME=Opam";
+        "GIT_COMMITTER_EMAIL=opam@ocaml.org"
+      |] in
     OpamFilename.in_dir repo.repo_root (fun () ->
-      OpamSystem.commands [
+      OpamSystem.commands ~env [
         [ "git" ; "init" ] ;
         [ "git" ; "remote" ; "add" ; "origin" ; fst repo.repo_address ] ;
         [ "git" ; "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ] ;
