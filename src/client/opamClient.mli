@@ -79,7 +79,7 @@ module API: sig
     val setup_list: shell -> filename -> unit
 
     (** Execute a command in a subshell with the right environment variables. *)
-    val exec: string list -> unit
+    val exec: inplace_path:bool -> string list -> unit
 
     (** Display variables and their contents. *)
     val list: name list -> unit

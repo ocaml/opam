@@ -196,7 +196,7 @@ let setup_list shell dot_profile =
   let t = OpamState.load_state "config-setup-list" in
   OpamState.display_setup t shell dot_profile
 
-let exec command =
+let exec ~inplace_path command =
   log "config-exex command=%S" (String.concat " " command);
   let t = OpamState.load_state "config-exec" in
   let cmd, args =
@@ -204,7 +204,7 @@ let exec command =
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let env =
-    let env = OpamState.get_full_env t in
+    let env = OpamState.get_full_env ~force_path:(not inplace_path) t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
   raise (OpamGlobals.Exec (cmd, args, env))

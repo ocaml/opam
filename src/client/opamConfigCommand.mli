@@ -40,4 +40,4 @@ val setup: user_config option -> global_config option -> unit
 val setup_list: shell -> filename -> unit
 
 (** Execute a command in a subshell *)
-val exec: string list -> unit
+val exec: inplace_path:bool -> string list -> unit
