@@ -9,7 +9,8 @@
 * Fixed orphan packages handling (installed packages with no upstream) (#1198)
 * Solver: optimize default preferences, depending on the solver version. New
   --criteria option (#1208)
-* Better PATH modifications handling (#1189)
+* Better PATH modifications handling, add 'opam config env --inplace-path'
+  (#1189, #1749)
 * Specify variable overrides with environment OPAMVAR_name (#1153)
 * Much better overall failsafe behaviour. Error reports on interruption (#1202,
   #1125, #1188...)
@@ -31,6 +32,7 @@
   - 'opam config -env': no longer accepted for 'opam config env'
   - '--no-aspcud' is now '--use-internal-solver'.
   - Removed unused `opam config -I`, `opam config {asm,byte}{comp,link}`
+  - '-r' isn't accepted anymore for '--root'
 * Much extended pinning features, with the ability to use opam files from the
   source, pin packages that don't exist in a repository, fill a local opam
   file from a template, etc.
@@ -74,6 +76,9 @@
 * Attempt to read files in 'permissive mode' when they claim a newer OPAM
   version (#1662)
 * Fixed ignore of SIGPIPE in sub-processes (#1681)
+* New shell completion scripts
+* Added 'opam lint' to perform checks on opam files
+* Use the published version of jsonm rather than include it (#1574)
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
