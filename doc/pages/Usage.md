@@ -1,7 +1,7 @@
 # Using OPAM
 
-This document covers most of the common OPAM features. If you're looking for a
-quick introduction, check the [Basic Usage](Basic_Usage.html) tutorial first.
+This document starts with a quick introduction, then covers most commonly-used
+OPAM features.
 
 If you are a developper and want to get a project packaged or change an existing
 package, see the step-by-step [packaging guide](Packaging.html)
@@ -15,6 +15,34 @@ opam <command> --help
 
 This document is intended as a quicker overview, use the above to dig into the
 details.
+
+## Basics
+
+```
+# ** Lookup **
+opam list -a         # List all available packages
+opam search QUERY    # List packages with QUERY in their name or description
+opam show PACKAGE    # Display information about PACKAGE
+
+# ** Install **
+opam install PACKAGE # Download, build and install the latest version of PACKAGE
+                     # and all its dependencies
+
+# ** Upgrade **
+opam update          # Update the packages database
+opam upgrade         # Bring everything to the latest version possible
+
+# ** More **
+opam CMD --help      # Command-specific manpage
+```
+
+You may prefer to [browse packages online](https://opam.ocaml.org/packages). If you
+find a package there but not on your computer, either it has been recently added
+and you should simply run `opam update`, or it's not available on your system or
+OCaml version -- `opam install PACKAGE` will give you the reason.
+
+
+## Details on commands
 
 ### opam init
 
