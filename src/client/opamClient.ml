@@ -1079,7 +1079,7 @@ module API = struct
           unavailable_repos;
         if not (check_external_dep (OpamGlobals.get_external_solver())) then
           OpamGlobals.warning
-            "Recommendend external solver %s not found."
+            "Recommended external solver %s not found."
             (OpamGlobals.colorise `bold (OpamGlobals.get_external_solver ()));
         let advised_deps = [!OpamGlobals.makecmd(); "m4"; "cc"] in
         (match List.filter (not @* check_external_dep) advised_deps with
