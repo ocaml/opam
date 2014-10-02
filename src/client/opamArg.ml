@@ -1367,7 +1367,7 @@ let switch =
   let doc = switch_doc in
   let commands = [
     ["install"]      , `install  , ["SWITCH"],
-    "Install the given compiler. The commands fails if the package is \
+    "Install the given compiler. The command fails if the switch is \
      already installed (e.g. it will not transparently switch to the \
      installed compiler switch, as with $(b,set)).";
     ["set"]          , `set      , ["SWITCH"],
