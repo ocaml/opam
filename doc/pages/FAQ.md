@@ -3,7 +3,7 @@
 
 #### 🐫  How to get, install and upgrade OPAM ?
 
-See the [Quick install guide](Quick_Install.html).
+See the [install guide](Install.html).
 
 
 #### 🐫  Where is the manual ?
@@ -41,7 +41,7 @@ run `eval $(opam config env)` yourself whenever you will be needing it.
 An ocaml installation and a set of installed packages within an OPAM
 installation. This can be used to keep different OCaml versions side-by-side, or
 different sets of packages. See the [related
-section](Advanced_Usage.html#opamswitch) in the Advanced usage manual and
+section](Usage.html#opamswitch) in the Advanced usage manual and
 `opam switch --help`. The "prefix" for a given installation is simply
 `~/.opam/<switch-name>`.
 

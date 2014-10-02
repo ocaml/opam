@@ -11,7 +11,7 @@
 
 This page describes how to install and configure OPAM.
 For further help on how to use OPAM, either read
-`opam --help` or move on to the [Basic Usage](Basic_Usage.html) guide.
+`opam --help` or move on to the [Basic Usage](Usage.html) guide.
 
 ## Installing OPAM with your distribution
 
