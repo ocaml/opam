@@ -5,13 +5,10 @@
 OPAM 1.2 BETA
 index.md
 
-Basics
-Quick_Install.md
-Basic_Usage.md
-FAQ.md
+Install.md
+Usage.md
 
-Advanced
-Advanced_Usage.md
+FAQ.md
 Packaging.md
 Specifying_Solver_Preferences.md
 
