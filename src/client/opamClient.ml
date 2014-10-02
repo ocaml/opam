@@ -1643,8 +1643,8 @@ module SafeAPI = struct
     let setup_list shell dot_profile =
       read_lock (fun () -> API.CONFIG.setup_list shell dot_profile)
 
-    let exec command =
-      read_lock (fun () -> API.CONFIG.exec command)
+    let exec ~inplace_path command =
+      read_lock (fun () -> API.CONFIG.exec ~inplace_path command)
 
     let list names =
       read_lock (fun () -> API.CONFIG.list names)

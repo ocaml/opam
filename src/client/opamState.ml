@@ -1851,9 +1851,9 @@ let get_opam_env ~force_path t =
     | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
   add_to_env t [] (env_updates ~opamswitch:true ~force_path t)
 
-let get_full_env ?opam t =
+let get_full_env ~force_path ?opam t =
   let env0 = OpamMisc.env () in
-  add_to_env t ?opam env0 (env_updates ~opamswitch:true t)
+  add_to_env t ?opam env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
