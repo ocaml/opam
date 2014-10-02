@@ -40,7 +40,7 @@ to the opam file format.
 ## Creating a local package
 
 We'll be assuming that you have a working OPAM installation. If not, please
-first read the [quick install guide](Quick_Install.html).
+first read the [install guide](Install.html).
 
 ### Get the source
 
