@@ -38,30 +38,33 @@ clean:
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 
+OPAMINSTALLER_FLAGS = --prefix $(DESTDIR)$(prefix)
+OPAMINSTALLER_FLAGS += --mandir $(DESTDIR)$(mandir)
+
 # With ocamlfind, prefer to install to the standard directory rather
 # than $(prefix) if there are no overrides
-ifndef LIBINSTALL_PREFIX
 ifndef DESTDIR
 ifneq ($(OCAMLFIND),no)
-    LIBINSTALL_PREFIX = $(dir $(shell $(OCAMLFIND) printconf destdir))
-endif
+    LIBINSTALL_DIR ?= $(shell $(OCAMLFIND) printconf destdir)
 endif
 endif
 
-LIBINSTALL_PREFIX ?= $(prefix)
+ifneq ($(LIBINSTALL_DIR),)
+    OPAMINSTALLER_FLAGS += --libdir $(LIBINSTALL_DIR)
+endif
 
 libinstall:
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
-	src/opam-installer --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) opam-lib.install
+	src/opam-installer $(OPAMINSTALLER_FLAGS) opam-lib.install
 
 install:
-	src/opam-installer --prefix $(DESTDIR)$(prefix) opam.install
+	src/opam-installer $(OPAMINSTALLER_FLAGS) opam.install
 
 libuninstall:
-	src/opam-installer -u --prefix $(DESTDIR)$(LIBINSTALL_PREFIX) opam-lib.install
+	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam-lib.install
 
 uninstall:
-	src/opam-installer -u --prefix $(DESTDIR)$(prefix) opam.install
+	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
 
 .PHONY: tests tests-local tests-git
 tests: opam opam-admin opam-check

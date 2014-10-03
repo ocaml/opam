@@ -52,7 +52,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     # overwrite the previous install of OPAM with the new binary
     # and libraries
     sudo make install
-    make libinstall
+    make libinstall prefix=$(opam config var prefix)
     # Compile and run opam-rt
     wget https://github.com/ocaml/opam-rt/archive/master.tar.gz
     tar xvfz master.tar.gz
