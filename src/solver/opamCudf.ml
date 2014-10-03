@@ -291,6 +291,9 @@ let make_chains cudf_universe cudf2opam depends =
           List.map (List.filter (fun (n,_) -> n = name)) constrs in
         let name_constrs = List.filter ((<>) []) name_constrs in
         let name_constrs =
+          List.map (fun c -> OpamMisc.remove_duplicates (List.sort compare c))
+            name_constrs in
+        let name_constrs =
           OpamMisc.remove_duplicates (List.sort compare name_constrs) in
         let to_opam_and_formula constrs =
           let atoms =
