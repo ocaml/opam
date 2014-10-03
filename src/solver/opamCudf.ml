@@ -274,19 +274,19 @@ let make_chains cudf_universe cudf2opam depends =
   let roots = Set.diff roots notroots in
   if Set.is_empty roots then [] else
   let children cpkgs =
-    List.fold_left (fun acc c ->
-        List.fold_left (fun m a -> a :: m) acc
+    Set.fold (fun c acc ->
+        List.fold_left (fun m a -> Set.add a m) acc
           (try Map.find c deps with Not_found -> []))
-      [] cpkgs
+      cpkgs Set.empty
   in
   let rec aux constrs direct_deps =
-    if direct_deps = [] then [[]] else
+    if Set.is_empty direct_deps then [[]] else
     let depnames =
-      List.fold_left (fun set p -> OpamMisc.StringSet.add p.Cudf.package set)
-        OpamMisc.StringSet.empty direct_deps in
+      Set.fold (fun p set -> OpamMisc.StringSet.add p.Cudf.package set)
+        direct_deps OpamMisc.StringSet.empty in
     OpamMisc.StringSet.fold (fun name acc ->
         let name_deps = (* Gather all deps with the given name *)
-          List.filter (fun p -> p.Cudf.package = name) direct_deps in
+          Set.filter (fun p -> p.Cudf.package = name) direct_deps in
         let name_constrs =
           List.map (List.filter (fun (n,_) -> n = name)) constrs in
         let name_constrs = List.filter ((<>) []) name_constrs in
@@ -303,7 +303,8 @@ let make_chains cudf_universe cudf2opam depends =
           | [f] -> to_opam_and_formula f
           | fs -> OpamFormula.ors (List.map to_opam_and_formula fs) in
         let children_constrs =
-          List.map (fun p -> try Map.find p vpkgs with Not_found -> []) name_deps in
+          List.map (fun p -> try Map.find p vpkgs with Not_found -> [])
+            (Set.elements name_deps) in
         let chains = aux children_constrs (children name_deps) in
         List.fold_left
           (fun acc chain -> (formula :: chain) :: acc)
@@ -311,10 +312,12 @@ let make_chains cudf_universe cudf2opam depends =
       )
       depnames []
   in
-  let roots_list = Set.elements roots in
   let start_constrs =
-    List.map (fun cpkg -> [cpkg.Cudf.package,None]) roots_list in
-  aux start_constrs roots_list
+    let set =
+      Set.fold (fun p acc -> OpamMisc.StringSet.add p.Cudf.package acc)
+        roots OpamMisc.StringSet.empty in
+    List.map (fun name -> [name,None]) (OpamMisc.StringSet.elements set) in
+  aux start_constrs roots
 
 let strings_of_final_reasons cudf2opam unav_reasons cudf_universe reasons =
   let reasons =
