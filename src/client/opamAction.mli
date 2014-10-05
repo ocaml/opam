@@ -25,6 +25,17 @@ val download_package: t -> package -> unit
 (** Extracts and patches the source of a package found in the local cache. *)
 val extract_package: t -> package -> unit
 
+(** Perform the instructions in .install file,
+  either directly via [`Install (build_directory, target_root_directory)]
+  or offshoring to shell via [`Shell command_evaluator]
+*)
+val perform_dot_install :
+  name ->
+  OpamFile.Dot_install.t ->
+  [ `Shell of (string list -> unit) | `Install of dirname * dirname ] ->
+  OpamTypes.switch ->
+  unit
+
 (** Build and install a package from its downloaded source. *)
 val build_and_install_package: t -> metadata:bool -> package -> unit
 
