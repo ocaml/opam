@@ -9,7 +9,7 @@ TOPICS  = $(shell $(OPAM) help topics)
 ifndef OPAM_ADMIN
   OPAM_ADMIN = $(BINDIR)/opam-admin
 endif
-TOPICS_ADMIN = check make depexts libs stats
+TOPICS_ADMIN = check depexts findlib make rename stats
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
