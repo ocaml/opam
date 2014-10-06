@@ -110,7 +110,7 @@ val get_full_env: ?opam:OpamFile.OPAM.t -> state -> env
 val get_opam_env: force_path:bool -> state -> env
 
 (** Update an environment. *)
-val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env -> (string * string * string) list -> env
+val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env -> (string * string * string) list -> variable_map -> env
 
 (** Print a warning if the environment is not set-up properly on init. *)
 val print_env_warning_at_init: state -> user_config -> unit

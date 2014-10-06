@@ -300,7 +300,7 @@ let compilation_env t opam =
     ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
     ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
   ] @ env0 in
-  OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
+  OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam) OpamVariable.Map.empty
 
 let get_metadata t =
   let compiler =

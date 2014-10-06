@@ -1751,8 +1751,8 @@ let source t ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let expand_env t ?opam (env: env_updates) : env =
-  let fenv = resolve_variable t ?opam OpamVariable.Map.empty in
+let expand_env t ?opam (env: env_updates) variables : env =
+  let fenv = resolve_variable t ?opam variables in
   List.rev_map (fun (ident, symbol, string) ->
     let string = OpamFilter.substitute_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
@@ -1786,10 +1786,10 @@ let expand_env t ?opam (env: env_updates) : env =
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
-let add_to_env t ?opam (env: env) (updates: env_updates) =
+let add_to_env t ?opam (env: env) (updates: env_updates) variables =
   let env =
     List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
-  env @ expand_env t ?opam updates
+  env @ expand_env t ?opam updates variables
 
 let env_updates ~opamswitch ?(force_path=false) t =
   let comp = compiler_comp t t.compiler in
@@ -1849,11 +1849,11 @@ let get_opam_env ~force_path t =
     | `Command_line _
     | `Not_set -> t
     | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
-  add_to_env t [] (env_updates ~opamswitch:true ~force_path t)
+  add_to_env t [] (env_updates ~opamswitch:true ~force_path t) OpamVariable.Map.empty
 
 let get_full_env ?opam t =
   let env0 = OpamMisc.env () in
-  add_to_env t ?opam env0 (env_updates ~opamswitch:true t)
+  add_to_env t ?opam env0 (env_updates ~opamswitch:true t) OpamVariable.Map.empty
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
