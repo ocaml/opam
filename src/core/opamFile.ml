@@ -1929,11 +1929,6 @@ module X = struct
         OpamGlobals.error_and_exit
           "%s: You cannot use 'build' and 'make'/'configure' fields at the same time."
           (OpamFilename.to_string filename);
-      if not preinstalled && src = None && not permissive then
-        OpamGlobals.error_and_exit
-          "%s: You should either specify an url (with 'sources')  or use 'preinstalled: \
-           true' to pick the already installed compiler version."
-          (OpamFilename.to_string filename);
       { opam_version; name; version; src; kind;
         patches; configure; make; build;
         packages; preinstalled; env;
