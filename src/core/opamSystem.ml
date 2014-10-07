@@ -363,9 +363,9 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   | `Error e -> process_error e
   | `Exception e -> raise e
 
-let read_command_output ?verbose ?env ?metadata cmd =
+let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
-  let r = run_process ?verbose ?env ~name ?metadata cmd in
+  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
   if OpamProcess.is_success r then
     (log_cleanup r; r.OpamProcess.r_stdout)
   else
