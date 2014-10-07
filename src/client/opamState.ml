@@ -1061,6 +1061,10 @@ let universe t action =
         else map)
       t.pinned t.opams
   in
+  let base =
+    let p = List.map fst (get_compiler_packages t t.compiler) in
+    OpamPackage.Name.Set.of_list p
+  in
   {
     u_packages  = t.installed ++ t.packages;
     u_action    = action;
@@ -1071,6 +1075,7 @@ let universe t action =
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;
+    u_base      = base;
   }
 
 let check_base_packages t =
