@@ -1336,6 +1336,11 @@ let load_state ?(save_cache=true) call_site =
       config
     ) else
       config in
+
+  OpamGlobals.external_solver :=
+    OpamMisc.Option.Op.(
+      !OpamGlobals.external_solver ++
+      OpamFile.Config.solver config);
   let solver_prefs =
     let config_crit =
       !OpamGlobals.solver_preferences @ OpamFile.Config.criteria config in
@@ -1349,10 +1354,6 @@ let load_state ?(save_cache=true) call_site =
     [f `Default; f `Upgrade; f `Fixup]
   in
   OpamGlobals.solver_preferences := solver_prefs;
-  OpamGlobals.external_solver :=
-    OpamMisc.Option.Op.(
-      !OpamGlobals.external_solver ++
-      OpamFile.Config.solver config);
 
   let opams =
     let file = OpamPath.state_cache root in
