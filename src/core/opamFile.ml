@@ -1148,13 +1148,6 @@ module X = struct
       let make_file =
         OpamFormat.make_option (OpamFilename.Base.to_string @> OpamFormat.make_string)
           OpamFormat.make_filter in
-      let name_and_version = match OpamPackage.of_filename filename with
-        | Some _ -> []
-        | None ->
-          let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
-          let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
-          [ OpamFormat.make_variable (s_name, name (check "name" t.name));
-            OpamFormat.make_variable (s_version, version (check "version" t.version)) ] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ OpamFormat.make_variable (s, f v) ] in
@@ -1170,6 +1163,14 @@ module X = struct
       let filter c s f = match c with
         | FBool true -> []
         | x     -> [ OpamFormat.make_variable (s, f x) ] in
+      let name_and_version = match OpamPackage.of_filename filename with
+        | Some _ -> []
+        | None ->
+          option t.name s_name
+            (OpamPackage.Name.to_string @> OpamFormat.make_string) @
+          option t.version s_version
+            (OpamPackage.Version.to_string @> OpamFormat.make_string)
+      in
       let s = {
         file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
@@ -1422,10 +1423,12 @@ module X = struct
                 <> 0)
             "Field 'opam-version' doesn't match the current version, validation \
              may not be accurate";
+(*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
           cond (t.version = None)
             "Missing field 'version' or directory in the form 'name.version'";
+*)
           cond (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
                 t.license = [""] || t.doc = [""] || t.tags = [""] ||
                 t.bug_reports = [""])
