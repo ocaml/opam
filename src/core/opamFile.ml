@@ -1423,10 +1423,12 @@ module X = struct
                 <> 0)
             "Field 'opam-version' doesn't match the current version, validation \
              may not be accurate";
+(*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
           cond (t.version = None)
             "Missing field 'version' or directory in the form 'name.version'";
+*)
           cond (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
                 t.license = [""] || t.doc = [""] || t.tags = [""] ||
                 t.bug_reports = [""])
