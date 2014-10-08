@@ -661,7 +661,11 @@ module API = struct
         (OpamSolution.atoms_of_packages
            (t.installed_roots %% Lazy.force t.available_packages)) in
     let wish_install = List.rev_append add_wish_install wish_install in
+    let uninstalled_eqnames =
+      List.filter (fun (name,_) -> not (OpamState.is_name_installed t name))
+        eqnames in
     let wish_upgrade = List.rev_append neqnames wish_upgrade in
+    let wish_upgrade = List.rev_append uninstalled_eqnames wish_upgrade in
     (* Remove orphans *)
     let wish_remove =
       OpamSolution.atoms_of_packages full_orphans @
