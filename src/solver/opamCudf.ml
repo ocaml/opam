@@ -451,10 +451,18 @@ let external_solver_available () =
   !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
 
 let external_solver_command ~input ~output ~criteria =
-  [OpamGlobals.get_external_solver ();
-   OpamFilename.to_string input;
-   OpamFilename.to_string output;
-   criteria]
+  let s = OpamGlobals.get_external_solver () in
+  match Filename.basename s with
+  | "packup" ->
+    [s;
+     OpamFilename.to_string input;
+     OpamFilename.to_string output;
+     "-u"; criteria]
+  | "aspcud" | _ ->
+    [s;
+     OpamFilename.to_string input;
+     OpamFilename.to_string output;
+     criteria]
 
 let solver_calls = ref 0
 
@@ -550,20 +558,26 @@ let check_cudf_version =
       try
         log "Checking version of criteria accepted by the external solver";
         (* Run with closed stdin to workaround bug in some solver scripts *)
-        OpamSystem.command ~verbose:false ~allow_stdin:false
-          [OpamGlobals.get_external_solver(); "-v"];
-        log "Solver seems to accept latest version criteria";
-        `Latest
+        match
+          OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
+            [OpamGlobals.get_external_solver(); "-v"]
+        with
+        | [] ->
+          log "No response from 'solver -v', using compat criteria";
+          `Compat
+        | s::_ ->
+          match OpamMisc.split s ' ' with
+          | "aspcud"::_::v::_ when Debian.Version.compare v "1.9" >= 0 ->
+            log "Solver is aspcud > 1.9: using latest version criteria";
+            `Latest
+          | _ ->
+            log "Solver is'nt aspcud > 1.9, using compat criteria";
+            `Compat
       with OpamSystem.Process_error _ ->
-        log "Seems to be an older version: using compat criteria";
-(*
-        OpamGlobals.note "You seem to be using an older version of the external solver %s. \
-                          Consider upgrading for best results"
-          (OpamGlobals.get_external_solver());
-*)
+        log "Solver doesn't know about '-v': using compat criteria";
         `Compat
     else
-      `Compat
+      `Compat (* don't care, internal solver doesn't handle them *)
   )
   in
   fun () -> Lazy.force r
@@ -580,7 +594,7 @@ let call_external_solver ~version_map univ req =
         ~criteria ~explain:true cudf_request
     with e ->
       OpamMisc.fatal e;
-      OpamGlobals.warning "External solver failed with %s" (Printexc.to_string e);
+      OpamGlobals.warning "External solver failed:\n%s" (Printexc.to_string e);
       failwith "opamSolver"
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])

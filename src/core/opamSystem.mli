@@ -151,7 +151,8 @@ val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
     exists normally. If the command does not exist or if the command exited
     with a non-empty exit-code, throw an error. *)
 val read_command_output: ?verbose:bool -> ?env:string array ->
-  ?metadata:(string * string) list -> command -> string list
+  ?metadata:(string * string) list ->  ?allow_stdin:bool ->
+  command -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
