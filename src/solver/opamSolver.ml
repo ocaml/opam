@@ -37,7 +37,7 @@ let empty_universe =
     u_action = Install OpamPackage.Name.Set.empty;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_base = OpamPackage.Name.Set.empty;
+    u_base = OpamPackage.Set.empty;
   }
 
 (* Get the optional depencies of a package *)
@@ -145,7 +145,7 @@ let opam2cudf universe ?(depopts=false) ?build ?test ?doc
   let conflicts = (* prevents install of multiple versions of the same pkg *)
     (name, None)::OpamFormula.to_conjunction conflicts in
   let installed = OpamPackage.Set.mem package universe.u_installed in
-  let base = OpamPackage.Name.Set.mem name universe.u_base in
+  let base = OpamPackage.Set.mem package universe.u_base in
   let reinstall = match universe.u_action with
     | Upgrade reinstall | Reinstall reinstall ->
       OpamPackage.Set.mem package reinstall
