@@ -914,63 +914,53 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
   log "graph_of_actions root_actions=%a"
     (slog string_of_actions) root_actions;
 
-  let actions_map =
-    List.fold_left (fun map a ->
-        List.fold_left (fun map p -> Map.add p a map)
-          map (full_action_contents a))
-      Map.empty root_actions in
-  let package_graph =
-    (* only installed or mentionned packages may be acted upon *)
-    let graph =
-      create_graph
-        (fun p -> p.Cudf.installed || Map.mem p actions_map)
-        simple_universe in
-    Graph.mirror graph in
+  let pre_actions_map, post_actions_map =
+    List.fold_left (fun (pre,post) a -> match a with
+        | To_change (Some p1,p2) -> Map.add p1 a pre, Map.add p2 a post
+        | To_change (None,p) -> pre, Map.add p a post
+        | To_recompile p -> Map.add p a pre, Map.add p a post
+        | To_delete p -> Map.add p a pre, post)
+      (Map.empty, Map.empty) root_actions in
+  let full_actions_map =
+    Map.union (fun a b -> assert (a == b); a)
+      pre_actions_map post_actions_map in
 
-  (* complete graph includes build-depopts, which may have an inpact on build
-     order *)
-  let full_graph =
+  let mkgraph universe actions_map =
     let graph =
       create_graph
         (fun p -> p.Cudf.installed || Map.mem p actions_map)
-        complete_universe in
+        universe in
     Graph.mirror graph in
 
   (* the packages to remove, in order *)
   let to_remove =
     Graph.Topo.fold (fun p acc ->
-        try match Map.find p actions_map with
+        try match Map.find p pre_actions_map with
           | To_delete _ -> p::acc
           | _ -> acc
         with Not_found -> acc)
-      full_graph [] in
+      (mkgraph complete_universe pre_actions_map) [] in
 
   (* transitively add recompilations *)
-  let actions_map =
+  let post_actions_map =
+    let graph = mkgraph simple_universe full_actions_map in
     Graph.Topo.fold (fun p actions_map ->
         if not (Map.mem p actions_map) &&
+           not (Map.mem p full_actions_map) &&
            List.exists
-             (fun p -> try match Map.find p actions_map with
-                | To_change (_,p1) when p = p1 -> false
-                | _ -> true
-                with Not_found -> false)
-             (Graph.pred package_graph p)
+             (fun p0 -> Map.mem p0 actions_map || Map.mem p0 pre_actions_map)
+             (Graph.pred graph p)
         then Map.add p (To_recompile p) actions_map
         else actions_map)
-      package_graph actions_map
+      graph post_actions_map
   in
 
-  (* Construct the full graph of actions to proceed to reach the
-     new state given by the solver.  *)
-  let nonremove_actions_map =
-    Map.filter (fun _ -> function To_delete _ -> false | _ -> true)
-      actions_map in
-
   let to_process =
-    action_graph_of_packages nonremove_actions_map full_graph in
+    action_graph_of_packages post_actions_map
+      (mkgraph complete_universe post_actions_map) in
 
   let root_causes =
-    compute_root_causes complete_universe actions_map requested in
+    compute_root_causes complete_universe post_actions_map requested in
 
   { to_remove; to_process; root_causes }
 
