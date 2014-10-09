@@ -793,9 +793,9 @@ module API = struct
     | requested, _action, Conflicts cs ->
       log "conflict!";
       if not (OpamPackage.Name.Set.is_empty requested) then
-        OpamGlobals.msg "%s"
-          (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs)
-      else
+        (OpamGlobals.msg "%s"
+           (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
+         OpamGlobals.exit 3);
       let reasons, chains, cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
       if cycles <> [] then begin
@@ -818,7 +818,8 @@ module API = struct
           OpamGlobals.msg
             "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
              installation.\n"
-      end
+      end;
+      OpamGlobals.exit 3
     | requested, action, Success solution ->
       let result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
