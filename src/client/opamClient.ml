@@ -675,7 +675,9 @@ module API = struct
       List.rev_append eqnames
         (OpamSolution.atoms_of_packages
            (t.installed_roots %% Lazy.force t.available_packages)) in
+    let base_packages = OpamState.get_compiler_packages t t.compiler in
     let wish_install = List.rev_append add_wish_install wish_install in
+    let wish_install = List.rev_append base_packages wish_install in
     let uninstalled_eqnames =
       List.filter (fun (name,_) -> not (OpamState.is_name_installed t name))
         eqnames in
