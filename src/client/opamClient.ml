@@ -796,19 +796,29 @@ module API = struct
         OpamGlobals.msg "%s"
           (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs)
       else
-      let reasons, chains, _cycles =
+      let reasons, chains, cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
-      OpamGlobals.warning
-        "There is a consistency problem with the currently \
-         installed packages:";
-      List.iter (OpamGlobals.msg "  - %s\n") reasons;
-      if chains <> [] then (
-        OpamGlobals.msg "The following dependencies are in cause:\n";
-        List.iter (OpamGlobals.msg "  - %s\n") chains);
-      if OpamCudf.external_solver_available () then
-        OpamGlobals.msg
-          "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
-           installation.\n"
+      if cycles <> [] then begin
+        OpamGlobals.error
+          "Dependency errors in the upgrade actions. Please update, and \
+           report the\n\
+           following to the package maintainers if the error persists:\n\
+          \  - %s\n\
+           You may try upgrading packages individually to work around this."
+          (String.concat "\n  - " cycles)
+      end else begin
+        OpamGlobals.warning
+          "There is a consistency problem with the currently \
+           installed packages:";
+        List.iter (OpamGlobals.msg "  - %s\n") reasons;
+        if chains <> [] then (
+          OpamGlobals.msg "The following dependencies are in cause:\n";
+          List.iter (OpamGlobals.msg "  - %s\n") chains);
+        if OpamCudf.external_solver_available () then
+          OpamGlobals.msg
+            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
+             installation.\n"
+      end
     | requested, action, Success solution ->
       let result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
