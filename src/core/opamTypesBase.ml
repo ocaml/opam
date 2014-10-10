@@ -50,6 +50,7 @@ let parse_url (s,c) =
     | "git" -> `git
     | "darcs" -> `darcs
     | "hg" -> `hg
+    | "rsync" | "ssh" | "scp" | "sftp" -> `local
     | p -> raise (Invalid_argument (Printf.sprintf "Unsupported protocol %s" p))
   in
   let suffix =
@@ -61,8 +62,12 @@ let parse_url (s,c) =
   | "hg" ->(s,c), `hg
   | _ ->
     match Re_str.bounded_split (Re_str.regexp_string "://") s 2 with
-    | ["file"; address] -> (address,c), `local
-    | [proto; _] -> (s,c), url_kind_of_string proto
+    | ["file"|"rsync"|"ssh"|"scp"|"sftp"; address] ->
+      (* strip the leading xx:// *)
+      (address,c), `local
+    | [proto; _] ->
+      (* keep the leading xx:// *)
+      (s,c), url_kind_of_string proto
     | [address] -> (address,c), `local
     | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
 

@@ -105,9 +105,11 @@ let edit t name =
     if Some new_opam = orig_opam then None else
     let () = match pin with
       | Local dir ->
+      if OpamFilename.exists_dir dir then
         let src_opam =
           OpamFilename.OP.(
-            if OpamFilename.exists_dir (dir / "opam") then dir / "opam" // "opam"
+            if OpamFilename.exists_dir (dir / "opam")
+            then dir / "opam" // "opam"
             else dir // "opam")
         in
         if OpamGlobals.confirm "Save the new opam file back to %S ?"
