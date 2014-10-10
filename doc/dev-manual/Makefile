@@ -7,7 +7,7 @@ html: dev-manual.html
 	pdflatex $*
 
 %.html: %.tex
-	hevea htmlmacros.hva $<
+	hevea -fix htmlmacros.hva $<
 
 %.txt: %.html
 	links -dump $< > $@
