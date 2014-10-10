@@ -533,7 +533,6 @@ module API = struct
       let tags     = strings "tags"     (fun _ -> tags) in
       let depends  = formula "depends"  (filter_deps @* OpamFile.OPAM.depends) in
       let depopts  = formula "depopts"  (filter_deps @* OpamFile.OPAM.depopts) in
-
       let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
       let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
 

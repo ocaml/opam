@@ -21,6 +21,9 @@ Developer Manual (version 1.2)\\ ~\ \\
 Louis GESBERT\\
 \url{louis.gesbert@ocamlpro.com}\\
 }
+\author{Louis GESBERT\\
+\url{louis.gesbert@ocamlpro.com}\\
+}
 
 
 \begin{document}
@@ -253,9 +256,10 @@ The field {\tt cores} is the number of parallel process that
     ?build-test:    commands
     ?remove:        commands
     ?depends:       [ <and-formula(package-with-flags)> ]
-    ?depopts:       [ (STRING ?{ <flags> })+ ]
+    ?depopts:       [ STRING+ ]
     ?conflicts:     [ <package>+ ]
     ?depexts:       [ [[STRING+] [STRING+]]+ ]
+    ?features:      [ (IDENT STRING { <filter> })+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
     ?available:     [ <filter> ]
@@ -415,6 +419,21 @@ The field {\tt cores} is the number of parallel process that
   put in {\tt depopts}. You should now write \verb+depopts: "foo"+,
   \verb+conflicts: "foo" {< "2"}+ rather than \verb+depopts: "foo" {>= "2"}+
   which meaning was not perfectly obvious.
+  
+\item The optional {\tt features} field is used to advertise optional package
+  features that may depend on the environment. Each feature has an identifier, a
+  user-readable description and a filter. The filter is evaluated and the
+  resulting boolean value is bound to the identifier, that can typically be used
+  in the {\tt build} field to trigger \verb+./configure+ options. For example,
+  package {\tt foo} may have an {\tt overdrive} feature that requires that both
+  {\tt bar} and {\tt baz.2} are installed. You would write it like this:
+
+  \begin{Verbatim}
+build: [ ["./configure" "-prefix=%{prefix}%" "-%{overdrive:enable}%-overdrive"]
+         ... ]
+depopts: [ "bar" "baz" ]
+features: [ overdrive "Cool feature" { bar:installed & baz:version = "2" } ]
+\end{Verbatim}
 
 Here \verb+baz:version = "2"+ is expanded to
 \verb+baz:installed & baz:version = "2"+.
@@ -427,6 +446,7 @@ Here \verb+baz:version = "2"+ is expanded to
   architecture names (e.g. \verb+"debian"+, \verb+"x86"+, in which case the
   \verb+ext-package+ list will correspond to {\tt apt-get} package names).
 
+%XXX deprecate ? Use with features ?
 \item The {\tt messages} field (since version $1.0.1$) is used to
   display an alternative message when prompting a solution implying
   the given package. The typical use-case is to tell the user that
@@ -446,6 +466,7 @@ Here \verb+baz:version = "2"+ is expanded to
   the package is disabled. The {\tt os} and {\tt ocaml-version} fields are
   deprecated, please use {\tt available} instead in newly created packages.
 
+%XXX todo: update
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package. See
   Section~\ref{section:config} for more details.
@@ -1313,6 +1334,8 @@ and in substition files (see below). There are three kinds:
 \item User-defined variables, as defined in {\tt *.config} files (see
   \S\ref{file:dotconfig}). This can also be used to override values of the above
   variables.
+\item User-defined variables using the {\tt features} field of OPAM files. See
+  \ref{file:opam}. These behave like boolean package-local variables.
 \end{enumerate}
 
 \subsection{Files}
