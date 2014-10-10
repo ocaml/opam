@@ -227,6 +227,9 @@ val make_env_variable: (string * string * string) -> value
 
 (** {2 filter expressions} *)
 
+(** Variable substitution in strings *)
+val replace: string -> (full_variable -> variable_contents) -> string
+
 (** Parsing *)
 val parse_filter: value list -> filter
 
@@ -267,3 +270,11 @@ val parse_tags: value -> tags
 
 (** Make tags *)
 val make_tags: tags -> value
+
+(** {2 Features} *)
+
+(** Parse features list *)
+val parse_features: value -> (OpamVariable.t * string * filter) list
+
+(** Make features list *)
+val make_features: (OpamVariable.t * string * filter) list -> value

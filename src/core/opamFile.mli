@@ -164,6 +164,9 @@ module OPAM: sig
   (** Package conflicts *)
   val conflicts: t -> formula
 
+  (** Custom features definitions *)
+  val features: t -> (OpamVariable.t * string * filter) list
+
   (** List of exported libraries *)
   val libraries: t -> (string * filter option) list
 

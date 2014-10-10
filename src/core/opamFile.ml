@@ -920,6 +920,7 @@ module X = struct
       depends    : ext_formula;
       depopts    : ext_formula;
       conflicts  : formula;
+      features   : (OpamVariable.t * string * filter) list;
       libraries  : (string * filter option) list;
       syntax     : (string * filter option) list;
       patches    : (basename * filter option) list;
@@ -954,6 +955,7 @@ module X = struct
       depends    = OpamFormula.Empty;
       depopts    = OpamFormula.Empty;
       conflicts  = OpamFormula.Empty;
+      features   = [];
       libraries  = [];
       syntax     = [];
       patches    = [];
@@ -992,6 +994,7 @@ module X = struct
     let s_depends     = "depends"
     let s_depopts     = "depopts"
     let s_conflicts   = "conflicts"
+    let s_features    = "features"
     let s_libraries   = "libraries"
     let s_syntax      = "syntax"
     let s_ocaml_version = "ocaml-version"
@@ -1048,9 +1051,13 @@ module X = struct
       s_messages;
       s_post_messages;
       s_bug_reports;
+    ]
+
+    let opam_1_2_fields = [
       s_flags;
       s_dev_repo;
       s_install;
+      s_features;
     ]
 
     let to_1_0_fields k v =
@@ -1068,7 +1075,7 @@ module X = struct
       Syntax.to_1_0 file
 
     let valid_fields =
-      opam_1_0_fields @ opam_1_1_fields
+      opam_1_0_fields @ opam_1_1_fields @ opam_1_2_fields
 
     let check name = function
       | None    ->
@@ -1099,6 +1106,7 @@ module X = struct
     let depends t = t.depends
     let depopts t = t.depopts
     let conflicts t = t.conflicts
+    let features t = t.features
     let libraries t = t.libraries
     let syntax t = t.syntax
     let ocaml_version t = t.ocaml_version
@@ -1199,6 +1207,7 @@ module X = struct
           @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
+          @ list    t.features      s_features      OpamFormat.make_features
           @ list    t.libraries     s_libraries     OpamFormat.make_libraries
           @ list    t.syntax        s_syntax        OpamFormat.make_libraries
           @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
@@ -1311,6 +1320,8 @@ module X = struct
       in
       let conflicts = assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
+      let features = OpamFormat.assoc_default [] s s_features
+          OpamFormat.parse_features in
       let libraries = assoc_list s s_libraries OpamFormat.parse_libraries in
       let syntax = assoc_list s s_syntax OpamFormat.parse_libraries in
       let ocaml_version = assoc_option s s_ocaml_version
@@ -1356,7 +1367,7 @@ module X = struct
              OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg)
       in
       { opam_version; name; version; maintainer; substs; build; install; remove;
-        depends; depopts; conflicts; libraries; syntax;
+        depends; depopts; conflicts; features; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
@@ -1984,18 +1995,7 @@ module X = struct
 
     let to_string _ t = t
 
-    let replace t f =
-      let subst str =
-        if not (OpamMisc.ends_with ~suffix:"}%" str) then
-          (OpamGlobals.warning "Unclosed variable replacement in %S: %S\n"
-             t str;
-           str)
-        else
-        let str = String.sub str 2 (String.length str - 4) in
-        let v = OpamVariable.Full.of_string str in
-        OpamVariable.string_of_variable_contents (f v) in
-      let rex = Re_perl.compile_pat "%\\{(%?\\}?[^}%])+(\\}%)?" in
-      Re_pcre.substitute ~rex ~subst t
+    let replace t f = OpamFormat.replace t f
 
     let replace_string = replace
 
