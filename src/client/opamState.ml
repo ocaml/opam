@@ -898,7 +898,12 @@ let unavailable_reason t (name, _ as atom) =
     Printf.sprintf
       "%s is not available because the package is pinned to %s."
       (OpamFormula.short_string_of_atom atom)
-      (string_of_pin_option pin)
+      (match pin with
+       | Version v ->
+         Printf.sprintf "version %s" (OpamPackage.Version.to_string v)
+       | _ ->
+         Printf.sprintf "%s, version %s" (string_of_pin_option pin)
+           (OpamPackage.Version.to_string (version_of_pin t name pin)))
   with Not_found ->
     unknown_package t atom
 
