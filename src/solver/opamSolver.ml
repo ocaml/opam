@@ -94,16 +94,17 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
     with Not_found ->
       (* The version for comparison doesn't exist: match to the closest
          existing version according to the direction of the comparison *)
+      let all_versions =
+        OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
+          version_map in
       match op with
       | `Neq -> None (* Always true *)
-      | `Eq -> Some (`Lt, 1) (* Always false *)
+      | `Eq -> (* Always false *)
+        Some (`Eq, OpamPackage.Map.cardinal all_versions + 1)
       | (`Geq | `Gt | `Leq | `Lt) as op ->
         let sign, result_op =  match op with
           | `Geq | `Gt -> (fun x -> x), `Geq
           | `Leq | `Lt -> (fun x -> -x), `Leq in
-        let all_versions =
-          OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
-            version_map in
         let rev_version_map =
           OpamPackage.Map.fold (fun nv cv acc ->
               OpamMisc.IntMap.add (sign cv) (OpamPackage.version nv) acc)
@@ -112,7 +113,10 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
           OpamMisc.IntMap.filter
             (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
             rev_version_map in
-        if OpamMisc.IntMap.is_empty map then Some (`Lt, 1)
+        if OpamMisc.IntMap.is_empty map then
+          match result_op with
+          | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
+          | `Leq -> Some (`Lt, 1)
         else Some (result_op, sign (fst (OpamMisc.IntMap.min_binding map)))
 
 let opam2cudf universe ?(depopts=false) ?build ?test ?doc
