@@ -832,13 +832,14 @@ module API = struct
               OpamPackage.Set.add (OpamPackage.max_version t.packages name) acc)
             (OpamPackage.names_of_packages to_check)
             OpamPackage.Set.empty in
-        let notuptodate = latest -- to_check
-                          -- Lazy.force t.available_packages in
+        let notuptodate = latest -- to_check in
         if OpamPackage.Set.is_empty notuptodate then
           OpamGlobals.msg "Already up-to-date.\n"
         else
           (OpamGlobals.msg "Everything as up-to-date as possible";
-           if !OpamGlobals.verbose then
+           let unav = notuptodate -- Lazy.force t.available_packages in
+           let unopt = notuptodate %% Lazy.force t.available_packages in
+           if !OpamGlobals.verbose && not (OpamPackage.Set.is_empty unav) then
              OpamGlobals.msg
                ".\n\
                 The following newer versions couldn't be installed:\n  - %s\n"
@@ -847,11 +848,18 @@ module API = struct
                        OpamState.unavailable_reason t
                          (OpamSolution.eq_atom
                             (OpamPackage.name p) (OpamPackage.version p))
-                     ) (OpamPackage.Set.elements notuptodate)
-                  ))
+                     ) (OpamPackage.Set.elements unav)))
            else
              OpamGlobals.msg " (run with --verbose to show unavailable \
-                              upgrades).\n")
+                              upgrades).\n";
+           if not (OpamPackage.Set.is_empty unopt) then
+             OpamGlobals.msg
+               "The following would require downgrades or uninstalls, but \
+                you may upgrade them explicitely:\n  - %s\n"
+               (String.concat "\n  - "
+                  (List.map OpamPackage.to_string
+                     (OpamPackage.Set.elements unopt)));
+          )
       );
       OpamSolution.check_solution t result
 
