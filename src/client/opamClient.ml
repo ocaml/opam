@@ -762,6 +762,27 @@ module API = struct
              wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
              criteria = `Upgrade; })
     else
+    let atoms =
+      List.map (function
+          | (n,None) ->
+            (* force strict update for unchanged, non dev or pinned packages
+               (strict update makes no sense for pinned packages which have
+               a fixed version) *)
+            (try
+               let nv = OpamState.find_installed_package_by_name t n in
+               if OpamState.is_dev_package t nv ||
+                  OpamState.is_pinned t n ||
+                  OpamPackage.Set.mem nv t.reinstall
+               then (n, None)
+               else
+                 let atom = (n, Some (`Gt, OpamPackage.version nv)) in
+                 if OpamPackage.Set.exists (OpamFormula.check atom)
+                     (Lazy.force t.available_packages)
+                 then atom
+                 else (n, None)
+             with Not_found -> (n,None))
+          | atom -> atom
+        ) atoms in
     let to_reinstall =
       OpamPackage.Set.filter
         (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
@@ -1563,7 +1584,7 @@ module API = struct
                (OpamPackage.Name.to_string name);
              if OpamPackage.Set.mem nv (Lazy.force t.available_packages)
              then reinstall_t ~ask:true [name, Some (`Eq, OpamPackage.version nv)] t
-             else upgrade_t ~ask:true [name, None] t)
+             else upgrade_t ~ask:true [name, Some (`Neq, OpamPackage.version nv)] t)
           else
             (OpamGlobals.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
              (* Package no longer available *)
