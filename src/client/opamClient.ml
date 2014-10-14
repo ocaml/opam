@@ -832,18 +832,26 @@ module API = struct
               OpamPackage.Set.add (OpamPackage.max_version t.packages name) acc)
             (OpamPackage.names_of_packages to_check)
             OpamPackage.Set.empty in
-        let notuptodate = latest -- to_check in
+        let notuptodate = latest -- to_check
+                          -- Lazy.force t.available_packages in
         if OpamPackage.Set.is_empty notuptodate then
           OpamGlobals.msg "Already up-to-date.\n"
         else
-          OpamGlobals.msg
-            "Nothing to do. The following aren't at their latest \
-             version due to constraints, conflicts or pinnings:\n  - %s\n\
-             ('opam upgrade <package>.<version>' to force \
-             the newer version.)\n"
-            (String.concat "\n  - "
-               (List.map OpamPackage.to_string
-                  (OpamPackage.Set.elements notuptodate)))
+          (OpamGlobals.msg "Everything as up-to-date as possible";
+           if !OpamGlobals.verbose then
+             OpamGlobals.msg
+               ".\n\
+                The following newer versions couldn't be installed:\n  - %s\n"
+               (String.concat "\n  - "
+                  (List.map (fun p ->
+                       OpamState.unavailable_reason t
+                         (OpamSolution.eq_atom
+                            (OpamPackage.name p) (OpamPackage.version p))
+                     ) (OpamPackage.Set.elements notuptodate)
+                  ))
+           else
+             OpamGlobals.msg " (run with --verbose to show unavailable \
+                              upgrades).\n")
       );
       OpamSolution.check_solution t result
 
