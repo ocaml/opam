@@ -18,7 +18,7 @@ OPAM: A Package Management System for OCaml\\
 Developer Manual (version 1.2)\\ ~\ \\
 ~\ \\}
 \author{Thomas GAZAGNAIRE\\
-\url{thomas.gazagnaire@ocamlpro.com}\\
+\url{thomas@gazagnaire.org}\\
 Louis GESBERT\\
 \url{louis.gesbert@ocamlpro.com}\\
 }
@@ -534,7 +534,7 @@ This command will:
   every file in \verb+$opam/repo/$REPO/packages/+ to
   \verb+$opam/packages/+).
 
-\item Create \verb+$opam/repo/index+ and for each version
+\item Create \verb+$opam/repo/package-index+ and for each version
   \verb+$VERSION+ of package \verb+$NAME+ appearing in the repository,
   append the line \verb+'$REPO $NAME $VERSION'+ to the file.
 
@@ -894,13 +894,8 @@ The syntax of {\tt comp} files follows the one described in
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
     ?packages:  <package>+
-    ?requires:  [ STRING+ ]
-    ?pp:        [ <ppflag>+ ]
     ?preinstalled: BOOL
     ?env:       [ <env>+ ]
-
-<ppflag> := CAMLP4 { STRING+ }
-          | STRING+
 
 <env>    := IDENT <eq> STRING
 <eq>     := '=' | '+=' | '=+' | ':=' | '=:'
@@ -945,23 +940,7 @@ The syntax of {\tt comp} files follows the one described in
   the commands listed in {\tt build}.
 
 \item {\tt packages} is the list of packages to install just after the
-  compiler installation finished. These libraries will not consider
-  what is in the {\tt requires} nor {\tt pp} (as {\tt requires} and
-  {\tt pp} might want to use things already installed with {\tt
-    packages}).
-
-\item {\tt requires} is a list of libraries and syntax extensions
-  dependencies which will be added to every packages installed with
-  this compiler. The libraries and syntax extensions should be present
-  in packages defined in {\tt packages}, otherwise an error should be
-  thrown.
-
-\item {\tt pp} is the command to use with the {\tt -pp} command-line
-  argument. It is either a full command line or a {\tt camlp4} command,
-  such as \verb+CAMLP4 [ "pp-trace" ]+: this will look for the
-  compilation flags for the syntax extension \verb+"pp-trace"+ and expand
-  the {\tt camlp4} command-line accordingly. All the syntax extensions used
-  should be present in {\tt packages}.
+  compiler installation finished.
 
 \item {\tt preinstall} is {\tt true} when the version of the compiler available
   in the path is the same as {\tt name}.
