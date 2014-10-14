@@ -1607,6 +1607,7 @@ let pin ?(unpin_only=false) () =
           $command $params),
   term_info "pin" ~doc ~man
 
+(* SOURCE *)
 let source_doc = "Get the source of an OPAM package."
 let source =
   let doc = source_doc in
@@ -1645,12 +1646,14 @@ let source =
       | Some d -> d
       | None -> OpamFilename.OP.(OpamFilename.cwd () / OpamPackage.to_string nv)
     in
-    if OpamFilename.exists_dir dir then
+    let open OpamFilename in
+    if exists_dir dir then
       OpamGlobals.error_and_exit
         "Directory %s already exists. Please remove it or use option `--dir'"
-        (OpamFilename.Dir.to_string dir);
+        (Dir.to_string dir);
+    let opam = OpamState.opam t nv in
     if dev_repo then (
-      match OpamFile.OPAM.dev_repo (OpamState.opam t nv) with
+      match OpamFile.OPAM.dev_repo opam with
       | None ->
         OpamGlobals.error_and_exit
           "Version-controlled repo for %s unknown \
@@ -1668,8 +1671,8 @@ let source =
           | Some k -> k
           | None -> assert false
         in
-        OpamGlobals.error "%s" (OpamFilename.Dir.to_string dir);
-        OpamFilename.mkdir dir;
+        OpamGlobals.error "%s" (Dir.to_string dir);
+        mkdir dir;
         match OpamRepository.pull_url kind nv dir None [address] with
         | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ -> ()
@@ -1678,11 +1681,16 @@ let source =
         (OpamPackage.to_string nv);
       OpamAction.download_package t nv;
       OpamAction.extract_package t nv;
-      OpamFilename.move_dir
+      move_dir
         ~src:(OpamPath.Switch.build t.root t.switch nv)
         ~dst:dir;
-      OpamGlobals.msg "Successfully extracted to %s\n"
-        (OpamFilename.Dir.to_string dir)
+      OpamGlobals.msg "Successfully extracted to %s\n" (Dir.to_string dir);
+      if not (exists OP.(dir // "opam") || exists_dir OP.(dir / "opam"))
+      then
+        OpamFile.OPAM.write OP.(dir // "opam")
+          (OpamFile.OPAM.with_substs
+             (OpamFile.OPAM.with_patches opam [])
+             [])
     );
 
     if pin then
