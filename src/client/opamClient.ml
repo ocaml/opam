@@ -790,7 +790,6 @@ module API = struct
         \  %s\n\
          Please run \"opam upgrade\" without argument to get to a clean state."
         (OpamPackage.Set.to_string conflicts);
-    let installed_roots = t.installed -- to_upgrade in
     let requested = names in
     let action = Upgrade to_reinstall in
     let upgrade_atoms =
@@ -806,10 +805,10 @@ module API = struct
     OpamSolution.resolve t action ~requested
       ~orphans:(full_orphans ++ orphan_versions)
       (preprocess_request t full_orphans orphan_versions
-         { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
+         { wish_install = [];
            wish_remove  = [];
            wish_upgrade = upgrade_atoms;
-           criteria = `Upgrade; })
+           criteria = `Default; })
 
   let upgrade_t ?ask atoms t =
     log "UPGRADE %a"
