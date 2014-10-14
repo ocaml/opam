@@ -1815,7 +1815,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
   let makelevel = "MAKELEVEL", "=", "" in
   let man_path =
     match OpamGlobals.os () with
-    | OpamGlobals.OpenBSD | OpamGlobals.NetBSD ->
+    | OpamGlobals.OpenBSD | OpamGlobals.NetBSD | OpamGlobals.FreeBSD ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
       ["MANPATH", "=:",
