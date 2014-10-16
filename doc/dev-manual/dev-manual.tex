@@ -11,13 +11,14 @@
 
 \newenvironment{remark}[1][Remark]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\RecustomVerbatimEnvironment{Verbatim}{Verbatim}{fontsize=\small,frame=single}
 
 \title{
 OPAM: A Package Management System for OCaml\\
 Developer Manual (version 1.2)\\ ~\ \\
 ~\ \\}
 \author{Thomas GAZAGNAIRE\\
-\url{thomas.gazagnaire@ocamlpro.com}\\
+\url{thomas@gazagnaire.org}\\
 Louis GESBERT\\
 \url{louis.gesbert@ocamlpro.com}\\
 }
@@ -182,8 +183,7 @@ syntax defined in this section.
 
 All structured files share the same syntax:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file>  := <item>*
 
 <item>  := IDENT : <value>
@@ -198,7 +198,6 @@ All structured files share the same syntax:
          | [ <value>+ ]
          | value { <value>+ }
 \end{Verbatim}
-}
 
 \subsubsection{Global Configuration File: {\tt config}}
 \label{file:config}
@@ -206,15 +205,13 @@ All structured files share the same syntax:
 \verb+$opam/config+ follows the syntax defined in \S\ref{file:general} with
 the following restrictions:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file> :=
     opam-version: "1.2"
     repositories: [ STRING+ ]
     switch: STRING
     cores: INT
 \end{Verbatim}
-}
 
 The field {\tt opam-version} indicates the current \OPAM\ format.
 
@@ -231,8 +228,7 @@ The field {\tt cores} is the number of parallel process that
 \verb+$opam/packages/$NAME/$NAME.$VERSION/opam+ follows the syntax defined in
 \S\ref{file:general} with the following restrictions:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file> :=
     opam-version: "1.2"
     ?name:          STRING
@@ -305,7 +301,6 @@ The field {\tt cores} is the number of parallel process that
 <os>             := STRING
                   | '!' STRING
 \end{Verbatim}
-}
 
 \begin{itemize}
 
@@ -362,7 +357,7 @@ The field {\tt cores} is the number of parallel process that
      ["mv" "Makefile.win32" "Makefile"] {os  = "win32"}
      [make]
     ]
-  \end{Verbatim}
+\end{Verbatim}
 
 \item {\tt build-doc} is optional and describes how the documentation
   is built.
@@ -373,8 +368,8 @@ The field {\tt cores} is the number of parallel process that
 \item The content of {\tt remove} is the command to run before deleting
   the installed files.
 
-\item The {\tt depends} and {\tt conflicts} fields
-  contain formulas over package names, optionally parametrized by
+\item The {\tt depends} field
+  contains formulas over package names, optionally parametrized by
   version constraints. Some examples or package formula:
 
 \begin{itemize}
@@ -416,9 +411,6 @@ The field {\tt cores} is the number of parallel process that
   \verb+conflicts: "foo" {< "2"}+ rather than \verb+depopts: "foo" {>= "2"}+
   which meaning was not perfectly obvious.
 
-Here \verb+baz:version = "2"+ is expanded to
-\verb+baz:installed & baz:version = "2"+.
-
 \item The {\tt depexts} field is optional and contains tags describing the
   external dependencies. It contains pairs of lists of the form
   \verb+[ [predicates] [ext-packages] ]+. The predicates are tags that must be
@@ -458,8 +450,7 @@ Here \verb+baz:version = "2"+ is expanded to
 The syntax of {\tt url} files follows the one described in
 \S\ref{file:general} with the following restrictions:
 
-{
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file> :=
     ?src:       STRING
     ?archive:   STRING
@@ -471,7 +462,6 @@ The syntax of {\tt url} files follows the one described in
     ?mirrors:   [ STRING+ ]
     ?checksum:  STRING
 \end{Verbatim}
-}
 
 {\tt src}, {\tt archive}, {\tt http}, {\tt local}, {\tt git}, {\tt
   hg}, {\tt darcs} are the location where the package upstream sources
@@ -544,7 +534,7 @@ This command will:
   every file in \verb+$opam/repo/$REPO/packages/+ to
   \verb+$opam/packages/+).
 
-\item Create \verb+$opam/repo/index+ and for each version
+\item Create \verb+$opam/repo/package-index+ and for each version
   \verb+$VERSION+ of package \verb+$NAME+ appearing in the repository,
   append the line \verb+'$REPO $NAME $VERSION'+ to the file.
 
@@ -577,7 +567,7 @@ not installed, then running the previous command should display:
 \begin{verbatim}
     batteries   1.1.3  Batteries is a standard library replacement
     ounit     2.3+dev  Test framework
-    camomille      --  Unicode support
+    camomile       --  Unicode support
 \end{verbatim}
 
 \subsubsection{Getting Package Info}
@@ -877,12 +867,10 @@ For instance, if {\tt batteries} version {\tt 1.0+beta} and {\tt
   ocamlfind} version {\tt 1.2} are installed, then
 \verb+$opam/$SWITCH/installed+ will contain:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 batteries 1.0+beta
 ocamlfind 1.2
 \end{Verbatim}
-}
 
 \subsubsection{Compiler Description Files: {\tt comp}}
 \label{file:comp}
@@ -890,8 +878,7 @@ ocamlfind 1.2
 The syntax of {\tt comp} files follows the one described in
 \S\ref{file:general} with the following restrictions:
 
-{
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file> :=
     opam-version: "1.2"
     name:       STRING
@@ -906,19 +893,13 @@ The syntax of {\tt comp} files follows the one described in
     ?build:     [[STRING+]]
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
-    ?packages:  <cnf-formula>
-    ?requires:  [ STRING+ ]
-    ?pp:        [ <ppflag>+ ]
+    ?packages:  <package>+
     ?preinstalled: BOOL
     ?env:       [ <env>+ ]
-
-<ppflag> := CAMLP4 { STRING+ }
-          | STRING+
 
 <env>    := IDENT <eq> STRING
 <eq>     := '=' | '+=' | '=+' | ':=' | '=:'
 \end{Verbatim}
-}
 \begin{itemize}
 
 \item {\tt name} is the compiler name, it should be identical to the filename.
@@ -959,23 +940,7 @@ The syntax of {\tt comp} files follows the one described in
   the commands listed in {\tt build}.
 
 \item {\tt packages} is the list of packages to install just after the
-  compiler installation finished. These libraries will not consider
-  what is in the {\tt requires} nor {\tt pp} (as {\tt requires} and
-  {\tt pp} might want to use things already installed with {\tt
-    packages}).
-
-\item {\tt requires} is a list of libraries and syntax extensions
-  dependencies which will be added to every packages installed with
-  this compiler. The libraries and syntax extensions should be present
-  in packages defined in {\tt packages}, otherwise an error should be
-  thrown.
-
-\item {\tt pp} is the command to use with the {\tt -pp} command-line
-  argument. It is either a full command line or a {\tt camlp4} command,
-  such as \verb+CAMLP4 [ "pp-trace" ]+: this will look for the
-  compilation flags for the syntax extension \verb+"pp-trace"+ and expand
-  the {\tt camlp4} command-line accordingly. All the syntax extensions used
-  should be present in {\tt packages}.
+  compiler installation finished.
 
 \item {\tt preinstall} is {\tt true} when the version of the compiler available
   in the path is the same as {\tt name}.
@@ -1029,8 +994,7 @@ env:          [ CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs" ]
 \verb+$opam/$SWITCH/install/NAME.install+ follows the syntax defined
 in \S\ref{file:general} with the following restrictions:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 <file> :=
     ?lib:        [ <mv>+ ]
     ?bin:        [ <mv>+ ]
@@ -1047,7 +1011,6 @@ in \S\ref{file:general} with the following restrictions:
 <mv> := STRING
       | STRING { STRING }
 \end{Verbatim}
-}
 
 \begin{itemize}
 \item Files listed under {\tt lib} are copied into \verb+$opam/$SWITCH/lib/$NAME/+.
@@ -1225,12 +1188,10 @@ is available in the {\tt default} and testing repositories (where {\tt
   default} is one being used), then \verb+$opam/repo/index+ will
 contain:
 
-{\small
-\begin{Verbatim}[frame=single]
+\begin{Verbatim}
 batteries.1.0+beta testing
 ocamlfind.1.2 default testing
 \end{Verbatim}
-}
 
 \subsection{Commands}
 

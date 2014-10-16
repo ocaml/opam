@@ -176,19 +176,28 @@ let vpkg2atom cudf2opam cudf_universe (name,cstr) =
     with Not_found ->
       log "Could not find corresponding version in cudf universe: %a"
         (slog string_of_atom) (name,cstr);
+      let candidates =
+        Cudf.lookup_packages cudf_universe name in
       let solutions =
         Cudf.lookup_packages ~filter:cstr cudf_universe name in
-      if solutions = [] then
-        OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
-      else
-        let opam_sol = OpamPackage.Set.of_list (List.map cudf2opam solutions) in
-        OpamPackage.name (OpamPackage.Set.choose opam_sol),
-        match relop with
-        | `Leq | `Lt ->
-          Some (`Lt, OpamPackage.version (OpamPackage.Set.min_elt opam_sol))
-        | `Geq | `Gt ->
-          Some (`Gt, OpamPackage.version (OpamPackage.Set.max_elt opam_sol))
-        | `Neq | `Eq -> None
+      let module OVS = OpamPackage.Version.Set in
+      let to_version_set l =
+        OVS.of_list
+          (List.map (fun p -> OpamPackage.version (cudf2opam p)) l) in
+      let solutions = to_version_set solutions in
+      let others = OVS.Op.(to_version_set candidates -- solutions) in
+      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
+      match relop, OVS.is_empty solutions, OVS.is_empty others with
+      | _, true, true -> None
+      | `Leq, false, _ | `Lt, false, true -> Some (`Leq, OVS.max_elt solutions)
+      | `Lt, _, false | `Leq, true, false -> Some (`Lt, OVS.min_elt others)
+      | `Geq, false, _ | `Gt, false, true -> Some (`Geq, OVS.min_elt solutions)
+      | `Gt, _, false | `Geq, true, false -> Some (`Gt, OVS.max_elt others)
+      | `Eq, false, _ -> Some (`Eq, OVS.choose solutions)
+      | `Eq, true, _ ->
+        Some (`Eq, OpamPackage.Version.of_string "<unavailable version>")
+      | `Neq, false, true -> None
+      | `Neq, _, false -> Some (`Neq, OVS.choose others)
 
 let vpkg2opam cudf2opam cudf_universe vpkg =
   match vpkg2atom cudf2opam cudf_universe vpkg with
