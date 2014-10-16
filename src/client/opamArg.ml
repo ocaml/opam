@@ -1503,13 +1503,16 @@ let pin ?(unpin_only=false) () =
      Use url syntax or $(b,--kind) to explicitly set the kind of pinning. Git \
      pins may target a specific branch or commit using $(b,#branch) e.g. \
      $(b,git://host/me/pkg#testing). \
-     It is possible to create a new package if $(i,NAME) does not exist.";
+     It is possible to create a new package if $(i,NAME) does not exist. \
+     Its version may then be specified in the source opam file or with \
+     $(b,edit).";
     ["remove"]   , `remove, ["NAME"],
     "Unpins package $(b,NAME), restoring its definition from the repository, if any.";
     ["edit"]     , `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the opam file that OPAM will locally use for pinned package \
-     $(b,NAME). To simply change the pinning target, use $(b,add). \
+     $(b,NAME), including its version. \
+     To simply change the pinning target, use $(b,add). \
      The chosen editor is determined from environment variables \
      $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in order.";
   ] in
