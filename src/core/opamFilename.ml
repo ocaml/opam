@@ -73,10 +73,12 @@ let dir_is_empty d =
 
 let in_dir dirname fn = OpamSystem.in_dir dirname fn
 
+let env_of_list l = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)
+
 let exec dirname ?env ?name ?metadata ?keep_going cmds =
   let env = match env with
     | None   -> None
-    | Some l -> Some (Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)) in
+    | Some l -> Some (env_of_list l) in
   in_dir dirname
     (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
 

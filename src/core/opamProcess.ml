@@ -175,32 +175,9 @@ let read_lines f =
     List.rev !lines
   with Sys_error _ -> []
 
-let wait p =
-  let rec iter () =
-    let _, status = Unix.waitpid [] p.p_pid in
-    match status with
-    | Unix.WEXITED code ->
-      let duration = Unix.gettimeofday () -. p.p_time in
-      let stdout = option_default [] (option_map read_lines p.p_stdout) in
-      let stderr = option_default [] (option_map read_lines p.p_stderr) in
-      let cleanup =
-        OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
-      in
-      let info =
-        make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
-          ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
-      {
-        r_code     = code;
-        r_duration = duration;
-        r_info     = info;
-        r_stdout   = stdout;
-        r_stderr   = stderr;
-        r_cleanup  = cleanup;
-      }
-    | _ -> iter () in
-  iter ()
-
-let run ?env ?(verbose=false) ?name ?(metadata=[]) ?allow_stdin cmd args =
+let run_background
+    ?env ?(verbose= !OpamGlobals.verbose) ?name ?(metadata=[]) ?allow_stdin
+    cmd args =
   let file f = match name with
     | None   -> None
     | Some n -> Some (f n) in
@@ -209,10 +186,70 @@ let run ?env ?(verbose=false) ?name ?(metadata=[]) ?allow_stdin cmd args =
   let env_file    = file (Printf.sprintf "%s.env") in
   let info_file   = file (Printf.sprintf "%s.info") in
   let env = match env with Some e -> e | None -> Unix.environment () in
+  create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ~metadata
+    ?allow_stdin cmd args
 
-  let p =
-    create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ~metadata
-      ?allow_stdin cmd args in
+let exit_status p code =
+  let duration = Unix.gettimeofday () -. p.p_time in
+  let stdout = option_default [] (option_map read_lines p.p_stdout) in
+  let stderr = option_default [] (option_map read_lines p.p_stderr) in
+  let cleanup =
+    OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
+  in
+  let info =
+    make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
+      ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
+  {
+    r_code     = code;
+    r_duration = duration;
+    r_info     = info;
+    r_stdout   = stdout;
+    r_stderr   = stderr;
+    r_cleanup  = cleanup;
+  }
+
+let wait p =
+  let rec iter () =
+    let _, status = Unix.waitpid [] p.p_pid in
+    match status with
+    | Unix.WEXITED code -> exit_status p code
+    | _ -> iter () in
+  iter ()
+
+let dontwait p =
+  match Unix.waitpid [Unix.WNOHANG] p.p_pid with
+  | 0, _ -> None
+  | _, Unix.WEXITED code -> Some (exit_status p code)
+  | _, _ -> None
+
+let dead_childs = Hashtbl.create 13
+let wait_one processes =
+  if processes = [] then raise (Invalid_argument "wait_one");
+  try
+    let p =
+      List.find (fun p -> Hashtbl.mem dead_childs p.p_pid) processes
+    in
+    let code = Hashtbl.find dead_childs p.p_pid in
+    Hashtbl.remove dead_childs p.p_pid;
+    p, exit_status p code
+  with Not_found ->
+    (* No multiple wait on Windows. We'll need to either use some C code, or
+       threads. In the meantime we could [Unix.waitpid (List.hd processes)] *)
+    let rec aux () =
+      match Unix.wait () with
+      | pid, Unix.WEXITED code ->
+        (try
+           let p = List.find (fun p -> p.p_pid = pid) processes in
+           p, exit_status p code
+         with Not_found ->
+           Hashtbl.add dead_childs pid code;
+           aux ())
+      | _ -> aux ()
+    in
+    aux ()
+
+let run ?env ?verbose ?name ?metadata ?allow_stdin cmd args =
+  let p = run_background ?env ?verbose ?name ?metadata ?allow_stdin cmd args in
   wait p
 
 let is_success r = r.r_code = 0
@@ -224,6 +261,9 @@ let safe_unlink f =
 
 let clean_files r =
   List.iter safe_unlink r.r_cleanup
+
+let cleanup ?(force=false) r =
+  if not !OpamGlobals.debug || not force && is_failure r then clean_files r
 
 let truncate_str = "...[truncated]"
 

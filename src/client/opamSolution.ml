@@ -138,13 +138,9 @@ let display_error (n, error) =
     let disp =
       OpamGlobals.header_error "while %s %s" action (OpamPackage.to_string nv) in
     match error with
-    | OpamParallel.Process_error r  ->
-      disp "%s" (OpamProcess.string_of_result ~color:`red r)
-    | OpamParallel.Internal_error "User interruption" -> ()
-    | OpamParallel.Internal_error s ->
-      disp "Internal error:\n  %s" s
-    | OpamParallel.Package_error s ->
-      disp "%s" s in
+    | OpamSystem.Internal_error "User interruption" -> ()
+    | e -> disp "%s" (Printexc.to_string e)
+  in
   match n with
   | To_change (Some o, nv) ->
     if
@@ -251,24 +247,24 @@ let output_json_solution solution =
   OpamJson.add json
 
 let output_json_actions action_errors =
-  let open OpamParallel in
-  let open OpamProcess in
-  let json_error = function
-    | Process_error r ->
-      `O [ ("process-error",
-            `O [ ("code", `String (string_of_int r.r_code));
-                 ("duration", `Float r.r_duration);
-                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info));
-                 ("stdout", `A (List.map (fun s -> `String s) r.r_stdout));
-                 ("stderr", `A (List.map (fun s -> `String s) r.r_stderr));
-               ])]
-    | Internal_error s ->
-      `O [ ("internal-error", `String s) ]
-    | Package_error s ->
-      `O [ ("package-error", `String s) ] in
-  let json_action (a, e) =
+  (* let open OpamParallel in *)
+  (* let open OpamProcess in *)
+  (* let json_error = function *)
+  (*   | Process_error r -> *)
+  (*     `O [ ("process-error", *)
+  (*           `O [ ("code", `String (string_of_int r.r_code)); *)
+  (*                ("duration", `Float r.r_duration); *)
+  (*                ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info)); *)
+  (*                ("stdout", `A (List.map (fun s -> `String s) r.r_stdout)); *)
+  (*                ("stderr", `A (List.map (fun s -> `String s) r.r_stderr)); *)
+  (*              ])] *)
+  (*   | Internal_error s -> *)
+  (*     `O [ ("internal-error", `String s) ] *)
+  (*   | Package_error s -> *)
+  (*     `O [ ("package-error", `String s) ] in *)
+  let json_action (a, _e) =
     `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
-         ("error"  ,  json_error e) ] in
+         (* ("error"  ,  json_error e) *) ] in
   List.iter (fun a ->
       let json = json_action a in
       OpamJson.add json
@@ -327,26 +323,24 @@ let parallel_apply t action solution =
 
   let actions_list a = PackageActionGraph.fold_vertex (fun a b -> a::b) a [] in
 
-  (* Installation and recompilation are done by child the processes *)
-  let child n =
+  (* Installation and recompilation are done by the child processes *)
+  let job ~pred n =
     (* We are guaranteed to get the state when all the dependencies
        have been correctly updated. Thus [t.installed] should be
        up-to-date. *)
     let t = !t_ref in
+    if not (List.for_all snd pred) then Done false else
     match n with
     | To_change (_, nv) | To_recompile nv ->
-      OpamAction.build_and_install_package ~metadata:false t nv
-    | To_delete _ -> assert false in
-
-  (* Not pre-condition (yet ?) *)
-  let pre _ = () in
-
-  (* Post-condition on the parent process: we modify of the global
-     OPAM state to keep the list of installed packages up-to-date. *)
-  let post = function
-    | To_delete _       -> assert false
-    | To_recompile nv
-    | To_change (_, nv) -> add_to_install nv in
+      OpamParallel.Job.(
+        OpamAction.build_and_install_package ~metadata:false t nv
+        @@+ function
+        | true -> add_to_install nv; Done true
+        | false -> failwith (Printf.sprintf "Compilation of %s failed"
+                               (OpamPackage.name_to_string nv))
+      )
+    | To_delete _ -> assert false
+  in
 
   (* - Start processing - *)
 
@@ -371,14 +365,19 @@ let parallel_apply t action solution =
           sources_needed
       in
       OpamGlobals.header_msg "Synchronizing package archives";
+      OpamPackage.Set.iter (OpamAction.download_package t) sources_needed;
+(*
       let dl_graph =
         let g = PackageGraph.create () in
         OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
           sources_needed;
         g in
-      PackageGraph.Parallel.iter (OpamState.dl_jobs t) dl_graph
-        ~pre:ignore ~post:ignore
-        ~child:(OpamAction.download_package t);
+      PackageGraph.Parallel.iter
+        ~jobs:(OpamState.dl_jobs t)
+        ~command:
+        ~child:(OpamAction.download_package t)
+        dl_graph;
+*)
       `Successful (), finalize
     with
     | PackageGraph.Parallel.Errors (errors, _) ->
@@ -434,10 +433,12 @@ let parallel_apply t action solution =
     | #error -> status, finalize
     | `Successful () ->
       if not (PackageActionGraph.is_empty solution.to_process) then
-        OpamGlobals.header_msg "Installing packages";
+        OpamGlobals.header_msg "Building and installing packages";
       try
         PackageActionGraph.Parallel.iter
-          (OpamState.jobs t) solution.to_process ~pre ~child ~post;
+          ~jobs:(OpamState.jobs t)
+          ~command:job
+          solution.to_process;
         `Successful (), finalize
       with
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->

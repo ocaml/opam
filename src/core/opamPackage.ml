@@ -267,22 +267,6 @@ let unknown name version =
       (Name.to_string name)
       (Version.to_string v)
 
-module Graph = struct
-  module Vertex = struct
-    include O
-    let equal x y = compare x y = 0
-    let hash = Hashtbl.hash
-  end
-  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
-  module Topological = Graph.Topological.Make (PG)
-  module Traverse = Graph.Traverse.Dfs(PG)
-  module Components = Graph.Components.Make(PG)
-  module Parallel = OpamParallel.Make(struct
-    let string_of_vertex = to_string
-    include PG
-    include Topological
-    include Traverse
-    include Components
-  end)
-end
+module Graph = OpamParallel.MakeGraph (O)
+
 module Parallel = Graph.Parallel

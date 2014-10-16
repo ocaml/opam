@@ -45,6 +45,9 @@ val dirs: Dir.t -> Dir.t list
 (** Evaluate a function in a given directory *)
 val in_dir: Dir.t -> (unit -> 'a) -> 'a
 
+(** Turns an assoc list into an array suitable to be provided as environment *)
+val env_of_list: (string * string) list -> string array
+
 (** Execute a list of commands in a given directory *)
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
   ?metadata:(string * string) list -> ?keep_going:bool -> string list list -> unit

@@ -383,25 +383,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
         )
     )
 
-module Graph = struct
-  module Vertex =  struct
-    type t = repository
-    let compare = compare
-    let hash = Hashtbl.hash
-    let equal r1 r2 = compare r1 r2 = 0
-  end
-  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
-  module Topological = Graph.Topological.Make (PG)
-  module Traverse = Graph.Traverse.Dfs(PG)
-  module Components = Graph.Components.Make(PG)
-  module Parallel = OpamParallel.Make(struct
-    let string_of_vertex = to_string
-    include PG
-    include Topological
-    include Traverse
-    include Components
-  end)
-end
+module Graph = OpamParallel.MakeGraph (O)
 
 module Parallel = Graph.Parallel
 

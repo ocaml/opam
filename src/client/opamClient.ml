@@ -1048,8 +1048,9 @@ module API = struct
             (string_of_address repo.repo_address) in
 
       (* Update each remote backend *)
-      OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
-        ~child ~post:ignore ~pre:ignore;
+      List.iter child repos;
+      (* OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos *)
+      (*   ~child ~post:ignore ~pre:ignore; *)
 
       let t, compiler_updates =
         let t = OpamRepositoryCommand.update_compiler_index t in

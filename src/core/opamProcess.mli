@@ -53,9 +53,6 @@ type result = {
   r_cleanup  : string list; (** List of files to clean-up *)
 }
 
-(** [wait p] waits for the processus [p] to end and returns its results. *)
-val wait: t -> result
-
 (** [run ~name cmd args] synchronously call the command [cmd] with
     arguments [args]. It waits until the process is finished. The file
     [name.info], [name.env], [name.out] and [name.err] and are
@@ -65,6 +62,22 @@ val run : ?env:string array -> ?verbose:bool -> ?name:string ->
   ?metadata:(string*string) list -> ?allow_stdin:bool ->
   string -> string list -> result
 
+(** Same as [run], but doesn't wait. Use wait_one to wait and collect
+    results *)
+val run_background: ?env:string array -> ?verbose:bool -> ?name:string ->
+  ?metadata:(string*string) list -> ?allow_stdin:bool ->
+  string -> string list -> t
+
+(** [wait p] waits for the processus [p] to end and returns its results. *)
+val wait: t -> result
+
+(** Like [wait], but returns None immediately if the process hasn't ended *)
+val dontwait: t -> result option
+
+(** Wait for the first of the listed processes to terminate, and return its
+    termination status *)
+val wait_one: t list -> t * result
+
 (** Is the process result a success ? *)
 val is_success : result -> bool
 
@@ -73,6 +86,11 @@ val is_failure : result -> bool
 
 (** Clean-up process result files *)
 val clean_files : result -> unit
+
+(** Should be called after process termination, to cleanup temporary files.
+    Leaves artefacts in case OpamGlobals.debug is on, or when the command fails
+    and force hasn't been set. *)
+val cleanup : ?force:bool -> result -> unit
 
 (** {2 Misc} *)
 val read_lines: string -> string list

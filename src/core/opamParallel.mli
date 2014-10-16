@@ -14,60 +14,56 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module type G = sig
-  include Graph.Sig.I
-  include Graph.Topological.G with type t := t and module V := V
-  val has_cycle: t -> bool
-  val scc_list: t -> V.t list list
-  val string_of_vertex: V.t -> string
+module type VERTEX = sig
+  include OpamMisc.OrderedType
+  include Graph.Sig.COMPARABLE with type t := t
 end
 
-type error =
-  | Process_error of OpamProcess.result
-  | Internal_error of string
-  | Package_error of string
+module type G = sig
+  include Graph.Sig.I
+  module Vertex: VERTEX with type t = V.t
+  module Topological: sig
+    val fold: (V.t -> 'a -> 'a) -> t -> 'a -> 'a
+  end
+  val has_cycle: t -> bool
+  val scc_list: t -> V.t list list
+end
+
+type command
+val command:
+  ?env:string array -> ?verbose:bool -> ?name:string ->
+  ?metadata:(string*string) list -> ?dir:OpamFilename.Dir.t ->
+  ?text:string ->
+  string -> string list -> command
+
+val string_of_command: command -> string
+
+type 'a job =
+  | Done of 'a
+  | Run of command * (OpamProcess.result -> 'a job)
 
 module type SIG = sig
 
   module G : G
 
-  val iter: int -> G.t ->
-    pre:(G.V.t -> unit) ->
-    child:(G.V.t -> unit) ->
-    post:(G.V.t -> unit) ->
+  val iter:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
+    G.t ->
     unit
 
-  val iter_l: int -> G.vertex list ->
-    pre:(G.V.t -> unit) ->
-    child:(G.V.t -> unit) ->
-    post:(G.V.t -> unit) ->
+  val iter_l:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
+    G.V.t list ->
     unit
 
-  val map_reduce: int -> G.t ->
-    map:(G.V.t -> 'a) ->
-    merge:('a -> 'a -> 'a) ->
-    init:'a ->
-    'a
-
-  val map_reduce_l: int -> G.vertex list ->
-    map:(G.V.t -> 'a) ->
-    merge:('a -> 'a -> 'a) ->
-    init:'a ->
-    'a
-
-  val create: G.V.t list -> G.t
-
-  exception Errors of (G.V.t * error) list * G.V.t list
+  exception Errors of (G.V.t * exn) list * G.V.t list
   exception Cyclic of G.V.t list list
 end
 
 module Make (G : G) : SIG with module G = G
                            and type G.V.t = G.V.t
-
-module type VERTEX = sig
-  include Graph.Sig.COMPARABLE
-  val to_string: t -> string
-end
 
 module type GRAPH = sig
   include Graph.Sig.I
@@ -81,4 +77,27 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
 end
 
-module MakeGraph (V: VERTEX) : GRAPH with type V.t = V.t
+module MakeGraph (V: OpamMisc.OrderedType) : GRAPH with type V.t = V.t
+
+(** Helper module to handle job-returning functions *)
+module Job: sig
+  (** Stage a shell command with its continuation, eg:
+      {[
+        command "ls" ["-a"] @@> fun result ->
+        if OpamProcess.is_success result then Done result.r_stdout
+        else failwith "ls"
+      ]}
+  *)
+  val (@@>): command -> (OpamProcess.result -> 'a job) -> 'a job
+
+  (** [job1 @@+ fun r -> job2] appends the computation of tasks in [job2] after
+      [job1] *)
+  val (@@+): 'a job -> ('a -> 'b job) -> 'b job
+
+  (** Sequential run of a job *)
+  val run: 'a job -> 'a
+
+  (** Same as [run] but doesn't actually run any shell command,
+      and feed a dummy result to the cont. *)
+  val dry_run: 'a job -> 'a
+end

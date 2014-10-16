@@ -36,7 +36,7 @@ let install_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
-      OpamGlobals.msg "Installing %s.\n" (OpamPackage.to_string nv);
+      log "Installing %s.\n" (OpamPackage.to_string nv);
       let name = OpamPackage.name nv in
       let config_f = OpamPath.Switch.build_config t.root t.switch nv in
       let config = OpamFile.Dot_config.safe_read config_f in
@@ -521,75 +521,78 @@ let remove_all_packages t ~metadata sol =
   with e ->
     update_metadata (), `Exception e
 
-(* Build and install a package. In case of error, simply return the
-   error traces, and let the repo in a state that the user can
-   explore.  Do not try to recover yet.
-   Assumes the package has already been downloaded to [p_build].
- *)
-let build_and_install_package_aux t ~metadata nv =
+(* Build and install a package.
+   Assumes the package has already been downloaded to its build dir.
+*)
+let build_and_install_package_aux t ~metadata:save_meta nv =
   (* OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv); *)
 
-  let exec =
-    extract_package t nv;
+  extract_package t nv;
 
-    let p_build = OpamPath.Switch.build t.root t.switch nv in
-
-    let opam = OpamState.opam t nv in
-
-    (* Get the env variables set up in the compiler description file *)
-    let env = compilation_env t opam in
-
-    (* Exec the given commands. *)
-    fun name f ->
-      match OpamState.filter_commands t ~opam OpamVariable.Map.empty (f opam) with
-      | []       -> ()
-      | commands ->
-        OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-        if !OpamGlobals.dryrun then () else
-        let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
-        let metadata = get_metadata t in
-        OpamFilename.exec ~env ~name ~metadata p_build commands
+  let opam = OpamState.opam t nv in
+  let commands =
+    OpamFile.OPAM.build opam @
+    (if !OpamGlobals.build_test then OpamFile.OPAM.build_test opam else []) @
+    (if !OpamGlobals.build_doc then OpamFile.OPAM.build_doc opam else []) @
+    OpamFile.OPAM.install opam
   in
-
-    try
-      (* First, we build the package. *)
-      exec ("Building " ^ OpamPackage.to_string nv)
-        (fun opam -> OpamFile.OPAM.build opam @ OpamFile.OPAM.install opam);
-
-      (* If necessary, build and run the test. *)
-      if !OpamGlobals.build_test then
-        exec "Building and running the test" OpamFile.OPAM.build_test;
-
-      (* If necessary, build the documentation. *)
-      if !OpamGlobals.build_doc then
-        exec "Generating the documentation" OpamFile.OPAM.build_doc;
-
-      (* If everyting went fine, finally install the package. *)
+  let commands =
+    OpamState.filter_commands t ~opam OpamVariable.Map.empty commands
+  in
+  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let name = OpamPackage.name_to_string nv in
+  let metadata = get_metadata t in
+  let dir = OpamPath.Switch.build t.root t.switch nv in
+  let rec run_commands = function
+    | (cmd::args)::commands ->
+      let text =
+        Printf.sprintf "[%s: %s%s]"
+          (OpamGlobals.colorise `green name) cmd
+          (match
+             List.filter (fun s ->
+                  String.length s > 0 && s.[0] <> '-' &&
+                  not (String.contains s '/') && not (String.contains s '='))
+               args
+           with
+           | [] -> ""
+           | a::_ -> " "^a)
+      in
+      (* OpamGlobals.msg "%s: %s\n" name (String.concat " " (cmd::args)); *)
+      OpamParallel.Job.(
+        OpamParallel.command ~env ~name ~metadata ~dir ~text cmd args
+        @@> fun result ->
+        if OpamProcess.is_success result then
+          run_commands commands
+        else (
+          OpamGlobals.error
+            "The compilation of %s failed at %s."
+            name (String.concat " " (cmd::args));
+          ignore @@
+          remove_package ~metadata:false t ~keep_build:true ~silent:true nv;
+          Done false
+        ))
+    | []::commands -> run_commands commands
+    | [] ->
       install_package t nv;
-
-      (* update the metadata *)
-      if metadata then (
+      if save_meta then (
         let installed = OpamPackage.Set.add nv t.installed in
         let installed_roots = OpamPackage.Set.add nv t.installed_roots in
         let reinstall = OpamPackage.Set.remove nv t.reinstall in
         let t = update_metadata t ~installed ~installed_roots ~reinstall in
         OpamState.install_metadata t nv;
-      )
-
-    with e ->
-      let cause = match e with
-        | Sys.Break -> "was aborted"
-        | _         -> "failed" in
-      (* We keep the build dir to help debugging *)
-      OpamGlobals.error
-        "The compilation of %s %s."
-        (OpamPackage.to_string nv) cause;
-      ignore (remove_package ~metadata:false t ~keep_build:true ~silent:true nv);
-      raise e
+      );
+      OpamGlobals.msg "%s installed\n" (OpamGlobals.colorise `bold name);
+      Done true
+  in
+  if !OpamGlobals.dryrun then
+    Done (OpamParallel.Job.dry_run (run_commands commands))
+  else
+    run_commands commands
 
 let build_and_install_package t ~metadata nv =
   if not !OpamGlobals.fake then
     build_and_install_package_aux t ~metadata nv
   else
-    OpamGlobals.msg "(simulation) Building and installing %s.\n"
-      (OpamPackage.to_string nv)
+    (OpamGlobals.msg "(simulation) Building and installing %s.\n"
+       (OpamPackage.to_string nv);
+     OpamParallel.Done true)

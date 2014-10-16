@@ -39,8 +39,13 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
         (P.name_to_string o) vo vp
     | To_recompile p -> Printf.sprintf "recompile %s" (P.to_string p)
     | To_delete p    -> Printf.sprintf "remove    %s" (P.to_string p)
+  let to_json = function
+    | To_change (None, p)   -> `O ["install", P.to_json p]
+    | To_change (Some o, p) -> `O ["change", `A [P.to_json o;P.to_json p]]
+    | To_recompile p -> `O ["recompile", P.to_json p]
+    | To_delete p    -> `O ["remove", P.to_json p]
+
 end
 
 module Make (A: ACTION) : OpamParallel.GRAPH with type V.t = A.t
   = OpamParallel.MakeGraph (A)
-
