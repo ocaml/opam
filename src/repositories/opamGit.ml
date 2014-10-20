@@ -63,7 +63,7 @@ module Git = struct
         );
         let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
         let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
-        OpamSystem.command [ "git" ; "fetch" ; "origin"; refspec ]
+        OpamSystem.command [ "git" ; "fetch" ; "-q"; "origin"; refspec ]
       )
 
   let revision repo =
@@ -88,7 +88,7 @@ module Git = struct
   let diff repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
         try
-          OpamSystem.read_command_output
+          OpamSystem.read_command_output ~verbose:false
             ["git" ; "diff" ; "--name-only" ; "HEAD"; remote_ref; "--" ]
           <> []
         with e ->
