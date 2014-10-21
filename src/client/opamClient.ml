@@ -939,12 +939,15 @@ module API = struct
             (List.rev_map
                (OpamPackage.name @> OpamPackage.Name.to_string)
                (OpamPackage.Set.elements t.packages)) in
-        let (--) = OpamMisc.StringSet.diff in
+        let open OpamMisc.StringSet.Op in
         let unknown_names = all -- valid_repositories -- valid_names in
         let not_pinned =
-          (OpamMisc.StringSet.inter all valid_names)
+          (all %% valid_names)
           -- valid_pinned_packages
-          -- valid_repositories in
+          -- valid_repositories
+          -- (OpamPackage.Set.fold (fun nv acc ->
+              OpamMisc.StringSet.add (OpamPackage.name_to_string nv) acc)
+              dev_packages OpamMisc.StringSet.empty) in
         OpamMisc.StringSet.elements unknown_names,
         OpamMisc.StringSet.elements not_pinned in
 
