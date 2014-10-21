@@ -1,0 +1,73 @@
+Proposal for a plugin architecture for supporting checking and resolving
+of external dependencies (depexts) in OPAM > 1.2
+========================================================================
+
+Rationale
+---------
+
+The opam package metadata now contains a specific field for declaring
+dependencies on external packages handled through external package managers
+(typically, distribution and OS dependent, but may in general be any other
+package manager).
+
+There are two main functionalities that are needed:
+
+ - checking whether external dependencies are satisified at a given moment; this
+   is an operation that can be implemented in linear time (we are just checking
+   whether a boolean formula is true or false); since external packages are
+   managed outside opam, this check needs to be performed at the beginning of
+   each opam run, to discover packages that are no longer functional, and report
+   the issue to the user.
+   With proper, OS specific integration, this operation can be made blazingly fast;
+   a simple hack, calling an external command each time, may be functionally equivalent,
+   but quite slow.
+
+ - finding a way of satisfying external dependencies required by a set of opam
+   packages; this is potentially much more expensive, it involves not only a
+   dependency solving phase, but also the fetch and installation phase, and
+   requires proper interfacing with the existing OS specific package manager.
+   This should be done only when modifying or fixing an opam configuration and
+   after asking user confirmation.
+
+Making things work smoothly and efficiently requires OS specific knowledge that
+is best found among experienced users of each OS, which may be different people,
+with different knowledge of Opam internals: a well designed plugin
+infrastructure can separate concerns and facilitate contributions.
+
+
+Proposal
+--------
+
+It is proposed to create a plugin architecture for OS specific external
+dependencies, extending the following module signature for the modules
+implementing a plugin
+
+module type OSDependencyLayer =
+  sig
+    type depexts   (* external dependencies, a CNF involvin OS-specific stuff *)
+    type actions   (* an abstract token corresponding to actions, and a textual
+                      representation of them to present to the user *)
+    type explanations (* in case the depexts cannot be satisfied, explain why *)
+
+    type result = Can of actions | Cannot of explanations
+
+    type outcome   (* result of the execution of the OS-specific actions *)
+
+    val satisfied : depexts -> bool    (* are the depexts already satisfied ? *)
+    val cansatisfydepexts : depexts -> result
+    val perform : actions -> outcome
+  end
+
+Notice that there are two distinct sets of functions for the very different
+cases outlined above: 
+
+ - satisfied performs just a check to see whether depexts are already satisfied
+  
+ - cansatisfydepexts tries to solve the external dependencies, and returns a proposed action,
+   or an explanation for the failure, while perform executes the actions (typically
+   after user confirmation)
+
+The proposed module interface is purposedly incomplete, as it makes no assumption
+on the way in which plugins are identified, and registered, which is an orthogonal
+issue.
+
