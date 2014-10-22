@@ -25,23 +25,23 @@ module type VCS = sig
   val exists: repository -> bool
 
   (** Init a repository. *)
-  val init: repository -> unit
+  val init: repository -> unit OpamProcess.job
 
   (** Fetch changes from upstream. This is supposed to put the changes
       in a staging area.
       Be aware that the remote URL might have been changed, so make sure
       to update accordingly. *)
-  val fetch: repository -> unit
+  val fetch: repository -> unit OpamProcess.job
 
-    (** Reset the master branch of the repository to match the remote
-        repository state. *)
-  val reset: repository -> unit
+  (** Reset the master branch of the repository to match the remote
+      repository state. *)
+  val reset: repository -> unit OpamProcess.job
 
   (** Check whether the staging area is empty. *)
-  val diff: repository -> bool
+  val diff: repository -> bool OpamProcess.job
 
   (** Return the HEAD revision. *)
-  val revision: repository -> string
+  val revision: repository -> string OpamProcess.job
 
 end
 

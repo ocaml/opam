@@ -254,11 +254,11 @@ let wait p =
     | _ -> iter () in
   iter ()
 
-let dontwait p =
+let rec dontwait p =
   match Unix.waitpid [Unix.WNOHANG] p.p_pid with
   | 0, _ -> None
   | _, Unix.WEXITED code -> Some (exit_status p code)
-  | _, _ -> None
+  | _, _ -> dontwait p
 
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
@@ -376,6 +376,8 @@ module Job = struct
     let rec (@@+) job1 fjob2 = match job1 with
       | Done x -> fjob2 x
       | Run (cmd,cont) -> Run (cmd, fun r -> cont r @@+ fjob2)
+
+    let (@@|) job f = job @@+ fun x -> Done (f x)
   end
 
   open Op
@@ -383,7 +385,9 @@ module Job = struct
   let run =
     let rec aux = function
       | Done x -> x
-      | Run (cmd,cont) -> aux (cont (run cmd))
+      | Run (cmd,cont) ->
+        (* Printf.eprintf "Sequential run: %s\n%!" (string_of_command cmd); *)
+        aux (cont (run cmd))
     in
     aux
 
@@ -401,12 +405,19 @@ module Job = struct
   let rec catch handler = function
     | Done x -> Done x
     | Run (cmd,cont) ->
-      Run (cmd, fun r -> try catch handler (cont r) with e -> handler e)
+      let cont r =
+        match
+          try `Cont (cont r) with e -> `Hndl (handler e)
+        with
+        | `Cont job -> catch handler job
+        | `Hndl job -> job
+      in
+      Run (cmd, cont)
 
   let rec finally fin = function
     | Done x -> fin (); Done x
     | Run (cmd,cont) ->
-      Run (cmd, fun r -> try finally fin (cont r) with e -> fin (); raise e)
+      Run (cmd, fun r -> finally fin (try cont r with e -> fin (); raise e))
 
   let of_list ?(keep_going=false) l =
     let rec aux err = function
@@ -422,6 +433,10 @@ module Job = struct
     in
     aux None l
 
+  let rec with_text text = function
+    | Done _ as j -> j
+    | Run (cmd, cont) ->
+      Run ({cmd with cmd_text = Some text}, fun r -> with_text text (cont r))
 end
 
 type 'a job = 'a Job.Op.job

@@ -118,6 +118,10 @@ module Job: sig
     (** [job1 @@+ fun r -> job2] appends the computation of tasks in [job2] after
         [job1] *)
     val (@@+): 'a job -> ('a -> 'b job) -> 'b job
+
+    (** [job @@| f] maps [f] on the results of [job].
+        Equivalent to [job @@+ fun r -> Done (f r)] *)
+    val (@@|): 'a job -> ('a -> 'b) -> 'b job
   end
 
   (** Sequential run of a job *)
@@ -140,6 +144,9 @@ module Job: sig
       Unless [keep_going] is true, stops on first error. *)
   val of_list: ?keep_going:bool -> command list ->
     (command * result) option Op.job
+
+  (** Sets and overrides text of the underlying commands *)
+  val with_text: string -> 'a Op.job -> 'a Op.job
 end
 
 type 'a job = 'a Job.Op.job

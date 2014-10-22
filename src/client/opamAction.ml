@@ -158,7 +158,8 @@ let prepare_package_build t nv =
 
   if !OpamGlobals.dryrun || !OpamGlobals.fake then
     iter_patches (fun base ->
-        OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base))
+        OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
+          (OpamFilename.Base.to_string base))
   else
 
   let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -177,7 +178,8 @@ let prepare_package_build t nv =
   iter_patches (fun base ->
       let root = OpamPath.Switch.build t.root t.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
-      OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
+      OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
+        (OpamFilename.Base.to_string base);
       try OpamFilename.patch patch p_build
       with e ->
         OpamMisc.fatal e;
@@ -561,7 +563,7 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
       in
       (* OpamGlobals.msg "%s: %s\n" name (String.concat " " (cmd::args)); *)
       let dir = OpamFilename.Dir.to_string dir in
-      OpamProcess.command ~env ~name ~metadata ~dir ~text cmd args
+      OpamSystem.make_command ~env ~name ~metadata ~dir ~text cmd args
       @@> fun result ->
       if OpamProcess.is_success result then
         run_commands commands

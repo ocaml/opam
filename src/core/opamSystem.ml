@@ -229,6 +229,7 @@ let with_tmp_dir fn =
 
 let with_tmp_dir_job fjob =
   let dir = mk_temp_dir () in
+  mkdir dir;
   OpamProcess.Job.finally (fun () -> remove_dir dir) (fjob dir)
 
 let remove file =
@@ -297,35 +298,45 @@ let env_var env var =
   aux 0
 
 let command_exists =
-  let check_existence env name =
+  let is_external_cmd name = Filename.basename name <> name in
+  let check_existence ?dir env name =
     let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-  let r =
-    OpamProcess.run
-      (OpamProcess.command ~env ~name:(temp_file "command") ~verbose:false cmd args)
-  in
-  OpamProcess.cleanup ~force:true r;
+    let r =
+      OpamProcess.run
+        (OpamProcess.command ~env ?dir ~name:(temp_file "command") ~verbose:false
+           cmd args)
+    in
+    OpamProcess.cleanup ~force:true r;
     if OpamProcess.is_success r then
-      let is_external_cmd s = String.contains s '/' in
       match r.OpamProcess.r_stdout with
-        cmdname::_ ->
+      | cmdname::_ ->
         (* check that we have permission to execute the command *)
-	if is_external_cmd cmdname then
-	  (try 
-	     let open Unix in
-	     let uid = getuid() and groups = Array.to_list(getgroups()) in
-	     let s = stat cmdname in
-	     let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
+        if is_external_cmd cmdname then
+          let cmdname =
+            match Filename.is_relative cmdname, dir with
+            | true, Some dir -> Filename.concat dir cmdname
+            | _ -> cmdname
+          in
+          (try
+
+             let open Unix in
+             let uid = getuid() and groups = Array.to_list(getgroups()) in
+             let s = stat cmdname in
+             let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
              let mask = 0o001
-		        lor (if uid = cmd_uid then 0o100 else 0)
-		        lor (if List.mem cmd_gid groups then 0o010 else 0) in
-	     (cmd_perms land mask) <> 0
+                        lor (if uid = cmd_uid then 0o100 else 0)
+                        lor (if List.mem cmd_gid groups then 0o010 else 0) in
+             (cmd_perms land mask) <> 0
            with _ -> false)
-	else true
+        else true
       | _ -> false
     else false
   in
   let cached_results = Hashtbl.create 17 in
-  fun ?(env=default_env) name ->
+  fun ?(env=default_env) ?dir name ->
+    if dir <> None && is_external_cmd name then
+      check_existence env ?dir name (* relative command, no caching *)
+    else
     let path = env_var env "PATH" in
     try Hashtbl.find (Hashtbl.find cached_results path) name
     with Not_found ->
@@ -348,6 +359,20 @@ let print_stats () =
 let log_file name = match name with
   | None   -> temp_file "log"
   | Some n -> temp_file ~dir:(Sys.getcwd ()) n
+
+let make_command ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir cmd args =
+  let name = log_file name in
+  let verbose =
+    OpamMisc.Option.default (!OpamGlobals.debug || !OpamGlobals.verbose) verbose
+  in
+  (* Check that the command doesn't contain whitespaces *)
+  if None <> try Some (String.index cmd ' ') with Not_found -> None then
+    OpamGlobals.warning "Command %S contains 1 space" cmd;
+  if command_exists ~env ?dir cmd then
+    OpamProcess.command ~env ~name ?text ~verbose ?metadata ?allow_stdin ?dir
+      cmd args
+  else
+    command_not_found cmd
 
 let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command =
   let chrono = OpamGlobals.timer () in
@@ -643,7 +668,7 @@ let download_command =
       "-t"; retry;
       src
     ] in
-    OpamProcess.command ~dir "wget" wget_args @@> fun r ->
+    make_command ~dir "wget" wget_args @@> fun r ->
     raise_on_process_error r;
     Done ()
   in
@@ -654,7 +679,7 @@ let download_command =
     ] @ (if compress then ["--compressed"] else []) @ [
         "-OL"; src
     ] in
-    OpamProcess.command ~dir command curl_args @@> fun r ->
+    make_command ~dir command curl_args @@> fun r ->
     match r.OpamProcess.r_stdout with
     | [] -> internal_error "curl: empty response while downloading %s" src
     | l  ->
@@ -680,38 +705,33 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
   let download = (Lazy.force download_command) in
   let aux dir =
     download ~compress dir src @@+ fun () ->
-    match list (fun _ -> true) "." with
+    match list (fun _ -> true) dir with
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
     | [filename] ->
-      if not overwrite && Sys.file_exists dst then
-        internal_error "The downloaded file will overwrite %s." dst;
-      OpamProcess.Job.of_list [
-        OpamProcess.command ~dir "rm" ["-f"; dst];
-        OpamProcess.command ~dir "mv" [filename; dst ];
-      ] @@+ function
-      | Some (_,err) -> process_error err
-      | None -> Done dst
+      if Sys.file_exists dst then
+        if overwrite then remove dst
+        else internal_error "The downloaded file will overwrite %s." dst;
+      OpamProcess.command ~dir "mv" [filename; dst ]
+      @@> fun r -> raise_on_process_error r; Done dst
   in
-  try with_tmp_dir (fun tmp_dir -> aux tmp_dir)
-  with
-  | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
-  | e ->
-    OpamMisc.fatal e;
-    internal_error "Cannot download %s, please check your connection settings." src
+  OpamProcess.Job.catch
+    (function
+      | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
+      | e ->
+        OpamMisc.fatal e;
+        internal_error "Cannot download %s, please check your connection settings." src)
+    (with_tmp_dir_job aux)
 
 let download ~overwrite ?compress ~filename:src ~dst:dst =
   if dst = src then
     Done dst
   else if Sys.file_exists src then (
-    if not overwrite && Sys.file_exists dst then
-      internal_error "The downloaded file will overwrite %s." dst;
-    OpamProcess.Job.of_list
-      [ OpamProcess.command "rm" ["-f"; dst];
-        OpamProcess.command "cp" [src; dst] ]
-    @@+ function
-    | None -> Done dst
-    | Some (_,err) -> process_error err
+    if Sys.file_exists dst then
+      if overwrite then remove dst
+      else internal_error "The downloaded file will overwrite %s." dst;
+    OpamProcess.command "cp" [src; dst]
+    @@> fun r -> raise_on_process_error r; Done dst
   ) else
     really_download ~overwrite ?compress ~src ~dst
 

@@ -375,8 +375,8 @@ let make_archive ?(gener_digest=false) repo prefix nv =
     ) else
       None in
 
-  OpamFilename.with_tmp_dir (fun extract_root ->
-      OpamFilename.with_tmp_dir (fun download_dir ->
+  OpamFilename.with_tmp_dir_job (fun extract_root ->
+      OpamFilename.with_tmp_dir_job (fun download_dir ->
           download download_dir @@+ fun local_filename ->
           let extract_dir = extract_root / OpamPackage.to_string nv in
           extract local_filename extract_dir;

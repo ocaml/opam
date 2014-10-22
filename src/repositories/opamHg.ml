@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamFilename.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "HG" fmt
 
@@ -24,68 +25,63 @@ module Hg = struct
   let exists repo =
     OpamFilename.exists_dir (repo.repo_root / ".hg")
 
+  let hg repo =
+    let dir = OpamFilename.Dir.to_string repo.repo_root in
+    fun ?verbose ?env args ->
+      OpamSystem.make_command ~dir ?verbose ?env "hg" args
+
   let init repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-        OpamSystem.command [ "hg" ; "init" ];
-        OpamFilename.write
-          (OpamFilename.of_string ".hg/hgrc")
-          (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address))
-      )
+    hg repo [ "init" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    OpamFilename.write
+      OpamFilename.OP.(repo.repo_root / ".hg" // "hgrc")
+      (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address));
+    Done ()
 
   let fetch repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-      let url =
-        OpamSystem.read_command_output
-          [ "hg" ; "showconfig" ; "paths.default" ] in
-      if url <> [fst repo.repo_address] then (
-        OpamSystem.remove_dir ".hg";
+    let check_and_fix_remote =
+      hg repo [ "showconfig" ; "paths.default" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      if r.OpamProcess.r_stdout <> [fst repo.repo_address] then (
+        OpamFilename.rmdir OpamFilename.OP.(repo.repo_root / ".hg");
         init repo
-      );
-      OpamSystem.command [ "hg" ; "pull" ]
-    )
+      ) else Done ()
+    in
+    check_and_fix_remote @@+ fun () ->
+    hg repo [ "pull" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
 
   let revision repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-        match OpamSystem.read_command_output [ "hg" ; "id" ; "-i" ] with
-        | []      -> "<none>"
-        | full::_ ->
-          if String.length full > 8 then
-            String.sub full 0 8
-          else
-            full
-      )
+    hg repo [ "id"; "-i" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    match r.OpamProcess.r_stdout with
+    | [] -> Done "<none>"
+    | full::_ ->
+      if String.length full > 8 then Done (String.sub full 0 8)
+      else Done full
 
   let unknown_commit commit =
     OpamSystem.internal_error "Unknown mercurial revision/branch/bookmark: %s."
       commit
 
   let reset repo =
-    let merge commit =
-      try OpamSystem.command [ "hg" ; "update" ; "--clean"; commit ]; true
-      with e -> OpamMisc.fatal e; false in
     let commit = match snd repo.repo_address with
       | None   -> "tip"
-      | Some c -> c in
-    OpamFilename.in_dir repo.repo_root (fun () ->
-      if not (merge commit) then
-        unknown_commit commit
-    )
+      | Some c -> c
+    in
+    hg repo [ "update" ; "--clean"; commit ] @@> fun r ->
+      if OpamProcess.is_failure r then unknown_commit commit;
+      Done ()
 
   let diff repo =
-    let diff commit =
-      try Some (
-        OpamSystem.read_command_output
-          ["hg" ; "diff" ; "--stat" ; "-r" ; commit ])
-      with e -> OpamMisc.fatal e; None in
     let commit = match snd repo.repo_address with
       | None   -> "tip"
       | Some c -> c in
-    OpamFilename.in_dir repo.repo_root (fun () ->
-      match diff commit with
-      | Some [] -> false
-      | Some _  -> true
-      | None    -> unknown_commit commit
-    )
+    hg repo [ "diff" ; "--stat" ; "-r" ; commit ] @@> fun r ->
+    if OpamProcess.is_failure r then unknown_commit commit;
+    Done (r.OpamProcess.r_stdout <> [])
 
 end
 

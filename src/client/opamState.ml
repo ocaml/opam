@@ -25,11 +25,11 @@ let log fmt = OpamGlobals.log "STATE" fmt
 let slog = OpamGlobals.slog
 
 let () =
-  OpamHTTP.register ()(* ; *)
-  (* OpamGit.register (); *)
-  (* OpamDarcs.register(); *)
-  (* OpamLocal.register (); *)
-  (* OpamHg.register () *)
+  OpamHTTP.register ();
+  OpamGit.register ();
+  OpamDarcs.register();
+  OpamLocal.register ();
+  OpamHg.register ()
 
 let switch_reinstall_hook = ref (fun _ -> assert false)
 
@@ -2601,7 +2601,10 @@ let download_archive t nv =
   try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
-    OpamRepository.pull_archive repo nv @@+ function
+    OpamProcess.Job.with_text
+      (Printf.sprintf "[dl %s]" (OpamPackage.name_to_string nv))
+      (OpamRepository.pull_archive repo nv)
+    @@+ function
     | Not_available _ -> Done None
     | Up_to_date f
     | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
@@ -2618,7 +2621,10 @@ let download_upstream t nv dirname =
     let mirrors = remote_url :: OpamFile.URL.mirrors u in
     let kind = OpamFile.URL.kind u in
     let checksum = OpamFile.URL.checksum u in
-    OpamRepository.pull_url kind nv dirname checksum mirrors @@+ function
+    OpamProcess.Job.with_text
+      (Printf.sprintf "[dl %s]" (OpamPackage.name_to_string nv))
+      (OpamRepository.pull_url kind nv dirname checksum mirrors)
+    @@+ function
     | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
     | Result f | Up_to_date f -> Done (Some f)
 

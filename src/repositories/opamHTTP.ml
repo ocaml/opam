@@ -60,20 +60,20 @@ let make_state ~download_index repo =
       if download_index then (
         if OpamFilename.exists local_index_file then
           OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
-        try
-          OpamGlobals.msg "[%s] Downloading %s\n"
-            (OpamGlobals.colorise `blue
-               (OpamRepositoryName.to_string repo.repo_name))
-            (OpamFilename.to_string remote_index_file);
-          OpamFilename.download ~compress:true ~overwrite:false
-            remote_index_file repo.repo_root
-          @@+ fun file ->
-          OpamFilename.remove local_index_file_save;
-          Done file
-        with e ->
-          if OpamFilename.exists local_index_file_save then
-            OpamFilename.move ~src:local_index_file_save ~dst:local_index_file;
-          raise e
+        OpamProcess.Job.catch
+          (fun e ->
+             if OpamFilename.exists local_index_file_save then
+               OpamFilename.move ~src:local_index_file_save ~dst:local_index_file;
+             raise e)
+          (OpamGlobals.msg "[%s] Downloading %s\n"
+             (OpamGlobals.colorise `blue
+                (OpamRepositoryName.to_string repo.repo_name))
+             (OpamFilename.to_string remote_index_file);
+           OpamFilename.download ~compress:true ~overwrite:false
+             remote_index_file repo.repo_root
+           @@+ fun file ->
+           OpamFilename.remove local_index_file_save;
+           Done file)
       ) else
         Done local_index_file
     in
@@ -140,32 +140,33 @@ module B = struct
 
   let init repo =
     log "init";
-    try
+    OpamProcess.Job.catch
+      (fun e ->
+         OpamMisc.fatal e;
+         OpamGlobals.error_and_exit "%s is unavailable."
+           (OpamTypesBase.string_of_address repo.repo_address))
       (* Download urls.txt *)
-      make_state ~download_index:true repo @@+ fun state ->
-      try
-        (* Download index.tar.gz *)
-	OpamGlobals.msg "[%s] Downloading %s\n"
-	  (OpamGlobals.colorise `blue
-             (OpamRepositoryName.to_string repo.repo_name))
-	  (OpamFilename.to_string state.remote_index_archive);
-        OpamFilename.download ~overwrite:true
-          state.remote_index_archive state.local_dir
-        @@+ fun file ->
-        Done (OpamFilename.extract_in file state.local_dir)
-      with e ->
-        OpamMisc.fatal e;
-        OpamGlobals.msg
-          "Cannot find index.tar.gz on the OPAM repository. \
-           Initialisation might take some time.\n";
-        Done ()
-    with e ->
-      OpamMisc.fatal e;
-      OpamGlobals.error_and_exit "%s is unavailable."
-        (OpamTypesBase.string_of_address repo.repo_address)
+      (make_state ~download_index:true repo)
+    @@+ fun state ->
+    OpamProcess.Job.catch
+      (fun e ->
+         OpamMisc.fatal e;
+         OpamGlobals.msg
+           "Cannot find index.tar.gz on the OPAM repository. \
+            Initialisation might take some time.\n";
+         Done ())
+      (* Download index.tar.gz *)
+      (OpamGlobals.msg "[%s] Downloading %s\n"
+         (OpamGlobals.colorise `blue
+            (OpamRepositoryName.to_string repo.repo_name))
+         (OpamFilename.to_string state.remote_index_archive);
+       OpamFilename.download ~overwrite:true
+         state.remote_index_archive state.local_dir
+       @@+ fun file ->
+       log "Done %s" (OpamFilename.to_string file);
+       Done (OpamFilename.extract_in file state.local_dir))
 
   let curl ~remote_file ~local_file =
-    log "curl";
     log "dowloading %a" (slog OpamFilename.to_string) remote_file;
     (* OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file); *)
     OpamFilename.download_as ~overwrite:true remote_file local_file
