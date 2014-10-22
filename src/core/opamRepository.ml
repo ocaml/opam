@@ -18,6 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamMisc.OP
 open OpamFilename.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 let slog = OpamGlobals.slog
@@ -75,10 +76,10 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_url: package -> dirname -> string option -> address -> generic_file download
-  val pull_repo: repository -> unit
-  val pull_archive: repository -> filename -> filename download
-  val revision: repository -> version option
+  val pull_url: package -> dirname -> string option -> address -> generic_file download OpamProcess.job
+  val pull_repo: repository -> unit OpamProcess.job
+  val pull_archive: repository -> filename -> filename download OpamProcess.job
+  val revision: repository -> version option OpamProcess.job
 end
 
 exception Unknown_backend
@@ -107,7 +108,10 @@ let init repo =
   OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
   OpamFilename.mkdir (OpamPath.Repository.packages_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.archives_dir repo);
-  OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo)
+  OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
+  Done ()
+
+open OpamProcess.Job.Op
 
 let pull_url kind package local_dirname checksum remote_url =
   if !OpamGlobals.req_checksums && checksum = None then
@@ -124,11 +128,11 @@ let pull_url kind package local_dirname checksum remote_url =
     | [] -> assert false
     | [url] -> pull url
     | url::mirrors ->
-      match pull url with
+      pull url @@+ function
       | Not_available s ->
         OpamGlobals.warning "download of %s failed, trying mirror" s;
         attempt mirrors
-      | r -> r
+      | r -> Done r
   in
   attempt remote_url
 
@@ -138,10 +142,10 @@ let revision repo =
   B.revision repo
 
 let pull_url_and_fix_digest kind package dirname checksum file url =
-  match pull_url kind package dirname None url with
+  pull_url kind package dirname None url @@+ function
   | Not_available _
   | Up_to_date _
-  | Result (D _) as r -> r
+  | Result (D _) as r -> Done r
   | Result (F f) as r ->
     let actual = OpamFilename.digest f in
     if checksum <> actual then (
@@ -151,7 +155,7 @@ let pull_url_and_fix_digest kind package dirname checksum file url =
       let u = OpamFile.URL.read file in
       OpamFile.URL.write file (OpamFile.URL.with_checksum u actual)
     );
-    r
+    Done r
 
 let check_digest filename = function
   | None          -> ()
@@ -180,12 +184,12 @@ let pull_archive repo nv =
   B.pull_archive repo filename
 
 let check_version repo =
-  let repo_version = begin
+  let repo_version =
     repo
     |> OpamPath.Repository.repo
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.opam_version
-  end in
+  in
   if not !OpamGlobals.skip_version_checks &&
      OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamGlobals.error_and_exit
@@ -193,6 +197,7 @@ let check_version repo =
        You should upgrade to at least version %s.\n"
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_version)
+  else Done ()
 
 let extract_prefix repo dir nv =
   let prefix =
@@ -328,17 +333,15 @@ let make_archive ?(gener_digest=false) repo prefix nv =
         (slog string_of_repository_kind) kind;
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;
-      OpamFilename.in_dir download_dir (fun () ->
-          match checksum with
-          | None   -> Some (pull_url kind nv download_dir None mirrors)
-          | Some c ->
-            if gener_digest then
-              Some (pull_url_and_fix_digest kind nv download_dir c url_file mirrors)
-            else
-              Some (pull_url kind nv download_dir checksum mirrors)
-        )
+      match checksum with
+      | Some c when gener_digest ->
+        pull_url_and_fix_digest kind nv download_dir c url_file mirrors
+        @@+ fun f -> Done (Some f)
+      | _ ->
+        pull_url kind nv download_dir checksum mirrors
+        @@+ fun f -> Done (Some f)
     ) else
-      None
+      Done None
   in
 
   (* if we've downloaded a file, extract it, otherwise just copy it *)
@@ -374,12 +377,12 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
   OpamFilename.with_tmp_dir (fun extract_root ->
       OpamFilename.with_tmp_dir (fun download_dir ->
-          let local_filename = download download_dir in
+          download download_dir @@+ fun local_filename ->
           let extract_dir = extract_root / OpamPackage.to_string nv in
           extract local_filename extract_dir;
           let files = copy_files extract_dir in
           match create_archive files extract_root with
-          | None | Some _ -> ()
+          | None | Some _ -> Done ()
         )
     )
 

@@ -29,18 +29,17 @@ module type G = sig
   val scc_list: t -> V.t list list
 end
 
-type command
-val command:
-  ?env:string array -> ?verbose:bool -> ?name:string ->
-  ?metadata:(string*string) list -> ?dir:OpamFilename.Dir.t ->
-  ?text:string ->
-  string -> string list -> command
+(** Simply parallel execution of tasks *)
 
-val string_of_command: command -> string
+val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> 'a list -> unit
 
-type 'a job =
-  | Done of 'a
-  | Run of command * (OpamProcess.result -> 'a job)
+val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> 'a list -> 'b list
+
+val reduce: jobs:int -> command:('a -> 'b OpamProcess.job) ->
+  merge:('b -> 'b -> 'b) -> nil:'b ->
+  'a list -> 'b
+
+(** More complex parallelism with dependency graphs *)
 
 module type SIG = sig
 
@@ -48,14 +47,8 @@ module type SIG = sig
 
   val iter:
     jobs:int ->
-    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     G.t ->
-    unit
-
-  val iter_l:
-    jobs:int ->
-    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
-    G.V.t list ->
     unit
 
   exception Errors of (G.V.t * exn) list * G.V.t list
@@ -78,26 +71,3 @@ module type GRAPH = sig
 end
 
 module MakeGraph (V: OpamMisc.OrderedType) : GRAPH with type V.t = V.t
-
-(** Helper module to handle job-returning functions *)
-module Job: sig
-  (** Stage a shell command with its continuation, eg:
-      {[
-        command "ls" ["-a"] @@> fun result ->
-        if OpamProcess.is_success result then Done result.r_stdout
-        else failwith "ls"
-      ]}
-  *)
-  val (@@>): command -> (OpamProcess.result -> 'a job) -> 'a job
-
-  (** [job1 @@+ fun r -> job2] appends the computation of tasks in [job2] after
-      [job1] *)
-  val (@@+): 'a job -> ('a -> 'b job) -> 'b job
-
-  (** Sequential run of a job *)
-  val run: 'a job -> 'a
-
-  (** Same as [run] but doesn't actually run any shell command,
-      and feed a dummy result to the cont. *)
-  val dry_run: 'a job -> 'a
-end

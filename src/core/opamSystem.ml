@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamProcess.Job.Op
+
 exception Process_error of OpamProcess.result
 exception Internal_error of string
 exception Command_not_found of string
@@ -29,6 +31,9 @@ let internal_error fmt =
 
 let process_error r =
   raise (Process_error r)
+
+let raise_on_process_error r =
+  if OpamProcess.is_failure r then raise (Process_error r)
 
 let command_not_found cmd =
   raise (Command_not_found cmd)
@@ -222,6 +227,10 @@ let with_tmp_dir fn =
     remove_dir dir;
     raise e
 
+let with_tmp_dir_job fjob =
+  let dir = mk_temp_dir () in
+  OpamProcess.Job.finally (fun () -> remove_dir dir) (fjob dir)
+
 let remove file =
   if (try Sys2.is_directory file with Sys_error _ -> false) then
     remove_dir file
@@ -290,14 +299,17 @@ let env_var env var =
 let command_exists =
   let check_existence env name =
     let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-    let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
-    OpamProcess.clean_files r;
+  let r =
+    OpamProcess.run
+      (OpamProcess.command ~env ~name:(temp_file "command") ~verbose:false cmd args)
+  in
+  OpamProcess.cleanup ~force:true r;
     if OpamProcess.is_success r then
       let is_external_cmd s = String.contains s '/' in
       match r.OpamProcess.r_stdout with
         cmdname::_ ->
         (* check that we have permission to execute the command *)
-	if is_external_cmd cmdname then 
+	if is_external_cmd cmdname then
 	  (try 
 	     let open Unix in
 	     let uid = getuid() and groups = Array.to_list(getgroups()) in
@@ -337,9 +349,6 @@ let log_file name = match name with
   | None   -> temp_file "log"
   | Some n -> temp_file ~dir:(Sys.getcwd ()) n
 
-let log_cleanup r =
-  if not !OpamGlobals.debug then OpamProcess.clean_files r
-
 let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command =
   let chrono = OpamGlobals.timer () in
   runs := command :: !runs;
@@ -357,7 +366,11 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
 
-      let r = OpamProcess.run ~env ~name ~verbose ?metadata ?allow_stdin cmd args in
+      let r =
+        OpamProcess.run
+          (OpamProcess.command ~env ~name ~verbose ?metadata ?allow_stdin
+             cmd args)
+      in
       let str = String.concat " " (cmd :: args) in
       log "[%a] (in %.3fs) %s"
         (OpamGlobals.slog Filename.basename) name
@@ -370,8 +383,8 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
 let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
   let name = log_file name in
   let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
-  if OpamProcess.is_success r then log_cleanup r
-  else process_error r
+  OpamProcess.cleanup r;
+  raise_on_process_error r
 
 let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   let name = log_file name in
@@ -389,17 +402,16 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   in
   match List.fold_left command `Start commands with
   | `Start -> ()
-  | `Successful r -> log_cleanup r
+  | `Successful r -> OpamProcess.cleanup r
   | `Error e -> process_error e
   | `Exception e -> raise e
 
 let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
   let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
-  if OpamProcess.is_success r then
-    (log_cleanup r; r.OpamProcess.r_stdout)
-  else
-    process_error r
+  OpamProcess.cleanup r;
+  raise_on_process_error r;
+  r.OpamProcess.r_stdout
 
 (* Return [None] if the command does not exist *)
 let read_command_output_opt ?verbose ?env cmd =
@@ -625,30 +637,33 @@ let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
-  let wget ~compress:_ src =
-    let wget = [
-      "wget";
+  let wget ~compress:_ dir src =
+    let wget_args = [
       "--content-disposition"; "--no-check-certificate";
       "-t"; retry;
       src
     ] in
-    command wget in
-  let curl command ~compress src =
-    let curl = [
-      command;
+    OpamProcess.command ~dir "wget" wget_args @@> fun r ->
+    raise_on_process_error r;
+    Done ()
+  in
+  let curl command ~compress dir src =
+    let curl_args = [
       "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
     ] @ (if compress then ["--compressed"] else []) @ [
         "-OL"; src
     ] in
-    match read_command_output curl with
+    OpamProcess.command ~dir command curl_args @@> fun r ->
+    match r.OpamProcess.r_stdout with
     | [] -> internal_error "curl: empty response while downloading %s" src
     | l  ->
       let code = List.hd (List.rev l) in
-      try if int_of_string code >= 400 then raise Exit
+      try if int_of_string code >= 400 then raise Exit else Done ()
       with e ->
         OpamMisc.fatal e;
-        internal_error "curl: code %s while downloading %s" code src in
+        internal_error "curl: code %s while downloading %s" code src
+  in
   lazy (
     match OpamGlobals.curl_command with
     | Some cmd -> curl cmd
@@ -663,21 +678,22 @@ let download_command =
 
 let really_download ~overwrite ?(compress=false) ~src ~dst =
   let download = (Lazy.force download_command) in
-  let aux () =
-    download ~compress src;
+  let aux dir =
+    download ~compress dir src @@+ fun () ->
     match list (fun _ -> true) "." with
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
     | [filename] ->
       if not overwrite && Sys.file_exists dst then
         internal_error "The downloaded file will overwrite %s." dst;
-      commands [
-        [ "rm"; "-f"; dst ];
-        [ "mv"; filename; dst ];
-      ];
-      dst
+      OpamProcess.Job.of_list [
+        OpamProcess.command ~dir "rm" ["-f"; dst];
+        OpamProcess.command ~dir "mv" [filename; dst ];
+      ] @@+ function
+      | Some (_,err) -> process_error err
+      | None -> Done dst
   in
-  try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
+  try with_tmp_dir (fun tmp_dir -> aux tmp_dir)
   with
   | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
   | e ->
@@ -686,15 +702,16 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
 
 let download ~overwrite ?compress ~filename:src ~dst:dst =
   if dst = src then
-    dst
+    Done dst
   else if Sys.file_exists src then (
     if not overwrite && Sys.file_exists dst then
       internal_error "The downloaded file will overwrite %s." dst;
-    commands [
-      [ "rm"; "-f"; dst ];
-      [ "cp"; src; dst ]
-    ];
-    dst
+    OpamProcess.Job.of_list
+      [ OpamProcess.command "rm" ["-f"; dst];
+        OpamProcess.command "cp" [src; dst] ]
+    @@+ function
+    | None -> Done dst
+    | Some (_,err) -> process_error err
   ) else
     really_download ~overwrite ?compress ~src ~dst
 

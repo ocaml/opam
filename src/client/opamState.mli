@@ -284,11 +284,13 @@ val unknown_package: state -> atom -> string
 val unavailable_reason: state -> atom -> string
 
 (** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
-val download_archive: state -> package -> filename option
+val download_archive: state -> package ->
+  filename option OpamProcess.job
 
 (** Download the upstream archive, add the eventual additional files
     and return the directory.. *)
-val download_upstream: state -> package -> dirname -> generic_file option
+val download_upstream: state -> package -> dirname ->
+  generic_file option OpamProcess.job
 
 (** Global package state. *)
 val package_state: state -> checksums package_map

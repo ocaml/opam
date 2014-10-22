@@ -19,10 +19,7 @@ let log fmt = OpamGlobals.log "SOLUTION" fmt
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
-
-(* Graph of packages providing OpamParallel *)
-module PackageGraph : OpamParallel.GRAPH with type V.t = package
-  = OpamParallel.MakeGraph (OpamPackage)
+open OpamProcess.Job.Op
 
 module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
@@ -332,13 +329,11 @@ let parallel_apply t action solution =
     if not (List.for_all snd pred) then Done false else
     match n with
     | To_change (_, nv) | To_recompile nv ->
-      OpamParallel.Job.(
-        OpamAction.build_and_install_package ~metadata:false t nv
-        @@+ function
-        | true -> add_to_install nv; Done true
-        | false -> failwith (Printf.sprintf "Compilation of %s failed"
-                               (OpamPackage.name_to_string nv))
-      )
+      (OpamAction.build_and_install_package ~metadata:false t nv
+       @@+ function
+       | true -> add_to_install nv; Done true
+       | false -> failwith (Printf.sprintf "Compilation of %s failed"
+                              (OpamPackage.name_to_string nv)))
     | To_delete _ -> assert false
   in
 
@@ -365,22 +360,15 @@ let parallel_apply t action solution =
           sources_needed
       in
       OpamGlobals.header_msg "Synchronizing package archives";
-      OpamPackage.Set.iter (OpamAction.download_package t) sources_needed;
-(*
-      let dl_graph =
-        let g = PackageGraph.create () in
-        OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
-          sources_needed;
-        g in
-      PackageGraph.Parallel.iter
+      (* Todo: gather results in a more clever way ; don't fail on first
+         error *)
+      OpamParallel.iter
         ~jobs:(OpamState.dl_jobs t)
-        ~command:
-        ~child:(OpamAction.download_package t)
-        dl_graph;
-*)
+        ~command:(OpamAction.download_package t)
+        (OpamPackage.Set.elements sources_needed);
       `Successful (), finalize
     with
-    | PackageGraph.Parallel.Errors (errors, _) ->
+    | OpamPackage.Graph.Parallel.Errors (errors, _) ->
       (* Error during download *)
       let msg =
         Printf.sprintf "Could not download archives of %s"

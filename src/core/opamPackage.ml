@@ -267,6 +267,4 @@ let unknown name version =
       (Name.to_string name)
       (Version.to_string v)
 
-module Graph = OpamParallel.MakeGraph (O)
-
-module Parallel = Graph.Parallel
+module Graph = (OpamParallel.MakeGraph (O) : OpamParallel.GRAPH with type V.t = t)

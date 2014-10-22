@@ -20,7 +20,7 @@ open OpamTypes
 open OpamState.Types
 
 (** Downloads the source for a package to the local cache. *)
-val download_package: t -> package -> unit
+val download_package: t -> package -> unit OpamProcess.job
 
 (** Extracts and patches the source of a package found in the local cache. *)
 val extract_package: t -> package -> unit
@@ -28,7 +28,7 @@ val extract_package: t -> package -> unit
 (** Build and install a package from its downloaded source. Returns true on
     success *)
 val build_and_install_package:
-  t -> metadata:bool -> package -> bool OpamParallel.job
+  t -> metadata:bool -> package -> bool OpamProcess.job
 
 (** Remove a package. *)
 val remove_package: t -> metadata:bool -> ?keep_build:bool -> ?silent:bool -> package -> unit

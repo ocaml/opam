@@ -14,6 +14,29 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Shell commands *)
+type command = {
+  cmd: string;
+  args: string list;
+  cmd_text: string option;
+  cmd_dir: string option;
+  cmd_env: string array option;
+  cmd_stdin: bool option;
+  cmd_verbose: bool option;
+  cmd_name: string option;
+  cmd_metadata: (string * string) list option;
+}
+
+let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?text cmd args =
+  { cmd; args;
+    cmd_env=env; cmd_verbose=verbose; cmd_name=name; cmd_metadata=metadata;
+    cmd_dir=dir; cmd_stdin=allow_stdin; cmd_text=text; }
+
+let string_of_command c = String.concat " " (c.cmd::c.args)
+let text_of_command c = c.cmd_text
+
+(** Running processes *)
+
 type t = {
   p_name   : string;
   p_args   : string list;
@@ -73,7 +96,14 @@ let string_of_info ?(color=`yellow) info =
         (OpamGlobals.colorise color k) v) info;
   Buffer.contents b
 
-let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[])
+(** [create cmd args] create a new process to execute the command
+    [cmd] with arguments [args]. If [stdout_file] or [stderr_file] are
+    set, the channels are redirected to the corresponding files.  The
+    outputs are discarded is [verbose] is set to false. The current
+    environment can also be overriden if [env] is set. The environment
+    which is used to run the process is recorded into [env_file] (if
+    set). *)
+let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
     ~verbose cmd args =
   let nothing () = () in
   let tee f =
@@ -88,6 +118,9 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       Unix.descr_of_out_channel chan, close
     ) else
       fd, close_fd in
+  let oldcwd = Sys.getcwd () in
+  let cwd = OpamMisc.Option.default oldcwd dir in
+  OpamMisc.Option.iter Unix.chdir dir;
   let stdin_fd =
     if allow_stdin then Unix.stdin else
     let fd,outfd = Unix.pipe () in
@@ -103,7 +136,6 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     | None   -> Unix.environment ()
     | Some e -> e in
   let time = Unix.gettimeofday () in
-  let cwd = Sys.getcwd () in
 
   let () =
     (* write the env file before running the command*)
@@ -136,6 +168,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       stdin_fd stdout_fd stderr_fd in
   close_stdout ();
   close_stderr ();
+  Unix.chdir oldcwd;
   {
     p_name   = cmd;
     p_args   = args;
@@ -175,9 +208,15 @@ let read_lines f =
     List.rev !lines
   with Sys_error _ -> []
 
-let run_background
-    ?env ?(verbose= !OpamGlobals.verbose) ?name ?(metadata=[]) ?allow_stdin
-    cmd args =
+let run_background command =
+  let { cmd; args;
+        cmd_env=env; cmd_verbose=verbose; cmd_name=name;
+        cmd_metadata=metadata; cmd_dir=dir; cmd_stdin=allow_stdin } =
+    command
+  in
+  let verbose = OpamMisc.Option.default !OpamGlobals.verbose verbose in
+  let allow_stdin = OpamMisc.Option.default false allow_stdin in
+  let env = match env with Some e -> e | None -> Unix.environment () in
   let file f = match name with
     | None   -> None
     | Some n -> Some (f n) in
@@ -185,9 +224,8 @@ let run_background
   let stderr_file = file (Printf.sprintf "%s.err") in
   let env_file    = file (Printf.sprintf "%s.env") in
   let info_file   = file (Printf.sprintf "%s.info") in
-  let env = match env with Some e -> e | None -> Unix.environment () in
-  create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ~metadata
-    ?allow_stdin cmd args
+  create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
+    ~allow_stdin ?dir cmd args
 
 let exit_status p code =
   let duration = Unix.gettimeofday () -. p.p_time in
@@ -248,8 +286,12 @@ let wait_one processes =
     in
     aux ()
 
-let run ?env ?verbose ?name ?metadata ?allow_stdin cmd args =
-  let p = run_background ?env ?verbose ?name ?metadata ?allow_stdin cmd args in
+let run command =
+  let command =
+    { command with
+      cmd_stdin = OpamMisc.Option.Op.(command.cmd_stdin ++ Some true) }
+  in
+  let p = run_background command in
   wait p
 
 let is_success r = r.r_code = 0
@@ -259,20 +301,19 @@ let is_failure r = r.r_code <> 0
 let safe_unlink f =
   try Unix.unlink f with Unix.Unix_error _ -> ()
 
-let clean_files r =
-  List.iter safe_unlink r.r_cleanup
-
 let cleanup ?(force=false) r =
-  if not !OpamGlobals.debug || not force && is_failure r then clean_files r
+  if force || not !OpamGlobals.debug || is_success r then
+    List.iter safe_unlink r.r_cleanup
 
-let truncate_str = "...[truncated]"
+let truncate_str = "[...]"
 
 (* Truncate long lines *)
 let truncate_line str =
   if String.length str <= OpamGlobals.log_line_limit then
     str
   else
-    String.sub str 0 (OpamGlobals.log_line_limit) ^ truncate_str
+    String.sub str 0 (OpamGlobals.log_line_limit - String.length truncate_str)
+    ^ truncate_str
 
 (* Take the last [n] elements of [l] (trying to keep an unindented header line
    for context, like diff) *)
@@ -318,3 +359,69 @@ let string_of_result ?(color=`yellow) r =
     (truncate r.r_stderr);
 
   Buffer.contents b
+
+
+(* Higher-level interface to allow parallelism *)
+
+module Job = struct
+  module Op = struct
+    type 'a job = (* Open the variant type *)
+      | Done of 'a
+      | Run of command * (result -> 'a job)
+
+    (* Parallelise shell commands *)
+    let (@@>) command f = Run (command, f)
+
+    (* Sequentialise jobs *)
+    let rec (@@+) job1 fjob2 = match job1 with
+      | Done x -> fjob2 x
+      | Run (cmd,cont) -> Run (cmd, fun r -> cont r @@+ fjob2)
+  end
+
+  open Op
+
+  let run =
+    let rec aux = function
+      | Done x -> x
+      | Run (cmd,cont) -> aux (cont (run cmd))
+    in
+    aux
+
+  let rec dry_run = function
+    | Done x -> x
+    | Run (_command,cont) ->
+      let result = { r_code = 0;
+                     r_duration = 0.;
+                     r_info = [];
+                     r_stdout = [];
+                     r_stderr = [];
+                     r_cleanup = []; }
+      in dry_run (cont result)
+
+  let rec catch handler = function
+    | Done x -> Done x
+    | Run (cmd,cont) ->
+      Run (cmd, fun r -> try catch handler (cont r) with e -> handler e)
+
+  let rec finally fin = function
+    | Done x -> fin (); Done x
+    | Run (cmd,cont) ->
+      Run (cmd, fun r -> try finally fin (cont r) with e -> fin (); raise e)
+
+  let of_list ?(keep_going=false) l =
+    let rec aux err = function
+      | [] -> Done err
+      | cmd::commands ->
+        let cont = fun r ->
+          if is_success r then aux err commands
+          else if keep_going then
+            aux OpamMisc.Option.Op.(err ++ Some (cmd,r)) commands
+          else Done (Some (cmd,r))
+        in
+        Run (cmd,cont)
+    in
+    aux None l
+
+end
+
+type 'a job = 'a Job.Op.job

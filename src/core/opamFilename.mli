@@ -79,6 +79,9 @@ val raw_dir: string -> Dir.t
 (** Execute a function in a temp directory *)
 val with_tmp_dir: (Dir.t -> 'a) -> 'a
 
+(** Provide an automatically cleaned up temp directory to a job *)
+val with_tmp_dir_job: (Dir.t -> 'a OpamProcess.job) -> 'a OpamProcess.job
+
 include OpamMisc.ABSTRACT
 
 (** Generic filename *)
@@ -201,14 +204,11 @@ val remove_suffix: Base.t -> t -> string
     of the downloaded file if the download is successful.
     Compress activates http content compression if supported. May break
     on gzipped files, only use for text files *)
-val download: overwrite:bool -> ?compress:bool -> t -> Dir.t -> t
+val download: overwrite:bool -> ?compress:bool -> t -> Dir.t -> t OpamProcess.job
 
 (** same as [download], but with a specified destination filename instead of a
     directory *)
-val download_as: overwrite:bool -> ?compress:bool -> t -> t -> unit
-
-(** iterate downloads until one is sucessful *)
-val download_iter: overwrite:bool -> t list -> Dir.t -> t
+val download_as: overwrite:bool -> ?compress:bool -> t -> t -> unit OpamProcess.job
 
 (** Apply a patch to a directory *)
 val patch: t -> Dir.t -> unit

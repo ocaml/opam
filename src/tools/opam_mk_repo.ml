@@ -128,11 +128,11 @@ let resolve_deps index names =
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let () =
-    OpamHTTP.register ();
-    OpamGit.register ();
-    OpamDarcs.register ();
-    OpamLocal.register ();
-    OpamHg.register () in
+    OpamHTTP.register ()(* ; *)
+    (* OpamGit.register (); *)
+    (* OpamDarcs.register (); *)
+    (* OpamLocal.register (); *)
+    (* OpamHg.register () *) in
   OpamGlobals.debug := !OpamGlobals.debug || debug;
 
   let tmp_dirs = [ "tmp"; "log" ] in
@@ -296,8 +296,9 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
              OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
           then (
             OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
-            if not dryrun then
-              OpamRepository.make_archive ~gener_digest repo prefix nv;
+            let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
+            if dryrun then OpamProcess.Job.dry_run job
+            else OpamProcess.Job.run job
           )
         with e ->
           OpamFilename.remove local_archive;

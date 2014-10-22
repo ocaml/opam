@@ -472,7 +472,7 @@ module API = struct
                  repo_kind = kind;
                  repo_root = OpamPath.Switch.dev_package t.root t.switch name;
                  repo_address = address_of_string @@ string_of_pin_option pin} in
-              (match OpamRepository.revision repo with
+              (match OpamProcess.Job.run (OpamRepository.revision repo) with
                | Some v -> Printf.sprintf " (%s)" (OpamPackage.Version.to_string v)
                | None -> "")
             | None -> ""
@@ -1218,7 +1218,7 @@ module API = struct
         OpamFile.Compiler_index.write (OpamPath.compiler_index root)
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
-        OpamRepository.init repo;
+        OpamProcess.Job.run (OpamRepository.init repo);
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);
@@ -1227,7 +1227,7 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
-        let t = OpamRepositoryCommand.update t repo in
+        let t = OpamProcess.Job.run (OpamRepositoryCommand.update t repo) t in
         OpamRepositoryCommand.fix_descriptions t
           ~save_cache:false ~verbose:false;
 

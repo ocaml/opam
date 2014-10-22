@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamMisc.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "PARALLEL" fmt
 let slog = OpamGlobals.slog
@@ -34,50 +35,21 @@ module type G = sig
   val scc_list: t -> V.t list list
 end
 
-type command = {
-  cmd: string;
-  args: string list;
-  cmd_text: string option;
-  cmd_dir: OpamFilename.Dir.t option;
-  cmd_env: string array option;
-  cmd_verbose: bool option;
-  cmd_name: string option;
-  cmd_metadata: (string * string) list option
-}
-
-let command ?env ?verbose ?name ?metadata ?dir ?text cmd args =
-  { cmd; args;
-    cmd_env=env; cmd_verbose=verbose; cmd_name=name; cmd_metadata=metadata;
-    cmd_dir=dir; cmd_text=text; }
-
-let string_of_command c = String.concat " " (c.cmd::c.args)
-
-type 'a job =
-  | Done of 'a
-  | Run of command * (OpamProcess.result -> 'a job)
-
 module type SIG = sig
 
   module G : G
 
   val iter:
     jobs:int ->
-    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     G.t ->
-    unit
-
-  val iter_l:
-    jobs:int ->
-    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a job) ->
-    G.V.t list ->
     unit
 
   exception Errors of (G.V.t * exn) list * G.V.t list
   exception Cyclic of G.V.t list list
 end
 
-module Make (G : G) : SIG with module G = G
-= struct
+module Make (G : G) = struct
 
   module G = G
 
@@ -130,19 +102,11 @@ module Make (G : G) : SIG with module G = G
           loop (nslots + 1) results running (ready ++ S.of_list new_ready)
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
-            (slog (String.concat " ")) (cmd.cmd::cmd.args);
-          let run_process () =
-            OpamProcess.run_background
-              ?env:cmd.cmd_env ?verbose:cmd.cmd_verbose ?name:cmd.cmd_name
-              ?metadata:cmd.cmd_metadata
-              ~allow_stdin:false (* bad idea in parallel ! *)
-              cmd.cmd cmd.args
+            (slog OpamProcess.string_of_command) cmd;
+          let p = OpamProcess.run_background cmd in
+          let running =
+            M.add n (p, cont, OpamProcess.text_of_command cmd) running
           in
-          let p = match cmd.cmd_dir with
-            | None -> run_process ()
-            | Some dir -> OpamFilename.in_dir dir run_process
-          in
-          let running = M.add n (p,cont,cmd.cmd_text) running in
           print_status running;
           loop nslots results running ready
       in
@@ -160,13 +124,13 @@ module Make (G : G) : SIG with module G = G
                 | None -> (* process still running *)
                   Unix.kill p.OpamProcess.p_pid Sys.sigint;
                   (* XXX sigkill only on windows *)
-                  (n,OpamSystem.Internal_error "User interruption") :: errors,
+                  (n,Sys.Break) :: errors,
                   p::pend
                 | Some result ->
                   match cont result with
                   | Done _ -> errors, pend
                   | Run _ ->
-                    (n,OpamSystem.Internal_error "User interruption") :: errors,
+                    (n,Sys.Break) :: errors,
                     pend
               with
               | Unix.Unix_error _ -> errors, pend
@@ -198,7 +162,9 @@ module Make (G : G) : SIG with module G = G
         run_seq_command (nslots - 1) (S.remove n ready) n cmd
       else
       (* Wait for a process to end *)
-      let processes = M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running [] in
+      let processes =
+        M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
+      in
       let process,result =
         try match List.map fst processes with
           | [p] -> p, OpamProcess.wait p
@@ -224,14 +190,6 @@ module Make (G : G) : SIG with module G = G
   let iter ~jobs ~command g =
     ignore (map ~jobs ~command g)
 
-  let flat_graph_of_list l =
-    let g = G.create () in
-    List.iter (G.add_vertex g) l;
-    g
-
-  let iter_l ~jobs ~command l =
-    iter ~jobs ~command (flat_graph_of_list l)
-
 end
 
 module type GRAPH = sig
@@ -246,8 +204,7 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
 end
 
-module MakeGraph (X: OpamMisc.OrderedType) : GRAPH with type V.t = X.t
-= struct
+module MakeGraph (X: OpamMisc.OrderedType) = struct
   module Vertex = struct
     include X
     let hash = Hashtbl.hash
@@ -278,38 +235,41 @@ module MakeGraph (X: OpamMisc.OrderedType) : GRAPH with type V.t = X.t
   include Graph.Oper.I (PG)
 end
 
-module Job = struct
-  (* Parallelise shell commands *)
-  let (@@>) command f = Run (command, f)
+(* Simple polymorphic implem on lists when we don't need full graphs.
+   We piggy-back on the advanced implem using an array and an int-graph *)
+module IntGraph = MakeGraph(struct
+    type t = int
+    let compare = compare
+    let hash x = x
+    let to_string = string_of_int
+    let to_json x = `Float (float_of_int x)
+  end)
 
-  let rec (@@+) job1 fjob2 = match job1 with
-    | Done x -> fjob2 x
-    | Run (cmd,cont) -> Run (cmd, fun r -> cont r @@+ fjob2)
+let flat_graph_of_array a =
+  let g = IntGraph.create () in
+  Array.iteri (fun i _ -> IntGraph.add_vertex g i) a;
+  g
 
-  let rec run = function
-    | Done x -> x
-    | Run (cmd,cont) ->
-      let run_process () =
-        OpamProcess.run
-          ?env:cmd.cmd_env ?verbose:cmd.cmd_verbose ?name:cmd.cmd_name
-          ?metadata:cmd.cmd_metadata
-          cmd.cmd cmd.args
-      in
-      let result = match cmd.cmd_dir with
-        | None -> run_process ()
-        | Some dir -> OpamFilename.in_dir dir run_process
-      in
-      run (cont result)
+let iter ~jobs ~command l =
+  let a = Array.of_list l in
+  let g = flat_graph_of_array a in
+  let command ~pred:_ i = command a.(i) in
+  ignore (IntGraph.Parallel.iter ~jobs ~command g)
 
-  let rec dry_run = function
-    | Done x -> x
-    | Run (_command,cont) ->
-      let result = { OpamProcess.
-                     r_code = 0;
-                     r_duration = 0.;
-                     r_info = [];
-                     r_stdout = [];
-                     r_stderr = [];
-                     r_cleanup = []; }
-      in dry_run (cont result)
-end
+let map ~jobs ~command l =
+  let a = Array.of_list l in
+  let g = flat_graph_of_array a in
+  let command ~pred:_ i = command a.(i) in
+  let r = IntGraph.Parallel.map ~jobs ~command g in
+  let rec mklist acc n =
+    if n < 0 then acc
+    else mklist (IntGraph.Parallel.M.find n r :: acc) (n-1)
+  in
+  mklist [] (Array.length a - 1)
+
+let reduce ~jobs ~command ~merge ~nil l =
+  let a = Array.of_list l in
+  let g = flat_graph_of_array a in
+  let command ~pred:_ i = command a.(i) in
+  let r = IntGraph.Parallel.map ~jobs ~command g in
+  IntGraph.Parallel.M.fold (fun _ -> merge) r nil

@@ -19,7 +19,10 @@
 open OpamState.Types
 open OpamTypes
 
-val update: t -> repository -> OpamState.state
+(** Update the given repository from its upstream. Returns a concurrency-safe
+    state update function *)
+val update: t -> repository ->
+  (OpamState.state -> OpamState.state) OpamProcess.job
 
 (** Update the package index. *)
 val update_package_index: t -> t

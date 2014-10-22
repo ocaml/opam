@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 module Base = OpamMisc.Base
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "FILENAME" fmt
 let slog = OpamGlobals.slog
@@ -45,6 +46,9 @@ let raw_dir s = s
 
 let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
+
+let with_tmp_dir_job fjob =
+  OpamSystem.with_tmp_dir_job (fun dir -> fjob (Dir.of_string dir))
 
 let rmdir dirname =
   OpamSystem.remove_dir (Dir.to_string dirname)
@@ -299,26 +303,17 @@ let remove_suffix suffix filename =
 let download ~overwrite ?compress filename dirname =
   mkdir dirname;
   let dst = to_string (create dirname (basename filename)) in
-  let file = OpamSystem.download ~overwrite ?compress
-      ~filename:(to_string filename) ~dst in
-  of_string file
+  OpamSystem.download ~overwrite ?compress
+    ~filename:(to_string filename) ~dst
+  @@+ fun file -> Done (of_string file)
 
 let download_as ~overwrite ?(compress=false) filename dest =
   mkdir (dirname dest);
-  let file = OpamSystem.download ~overwrite ~compress
-      ~filename:(to_string filename) ~dst:(to_string dest) in
+  OpamSystem.download ~overwrite ~compress
+    ~filename:(to_string filename) ~dst:(to_string dest)
+  @@+ fun file ->
   assert (file = to_string dest);
-  ()
-
-let download_iter ~overwrite filenames dirname =
-  let rec aux = function
-    | []   ->
-      let filenames = List.map to_string filenames in
-      OpamSystem.internal_error "Cannot download %s." (OpamMisc.pretty_list filenames)
-    | h::t ->
-      try download ~overwrite h dirname
-      with e -> OpamMisc.fatal e; aux t in
-  aux filenames
+  Done ()
 
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))

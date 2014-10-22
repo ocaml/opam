@@ -34,7 +34,7 @@ let call_rsync args result unavail =
     | 23 | 24 -> (* partial, mostly mode, link or perm errors *)
       OpamGlobals.warning "Rsync partially failed:\n  %s"
         (String.concat "\n  " r.OpamProcess.r_stderr);
-      if not !OpamGlobals.debug then OpamProcess.clean_files r;
+      OpamProcess.cleanup r;
       result r.OpamProcess.r_stdout
     | 30 | 35 -> (* timeouts *)
       unavail
@@ -176,5 +176,5 @@ module B = struct
 
 end
 
-let register () =
-  OpamRepository.register_backend `local (module B: OpamRepository.BACKEND)
+let register () = assert false
+  (* OpamRepository.register_backend `local (module B: OpamRepository.BACKEND) *)

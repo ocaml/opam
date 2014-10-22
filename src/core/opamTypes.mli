@@ -368,11 +368,6 @@ type file = {
   file_format  : opam_version;
 }
 
-(** Parallelisable shell commands with continuations *)
-type 'a job = 'a OpamParallel.job =
-  | Done of 'a
-  | Run of OpamParallel.command * (OpamProcess.result -> 'a job)
-
 (** {2 Switches} *)
 
 (** Compiler switches *)

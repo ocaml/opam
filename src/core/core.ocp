@@ -1,4 +1,5 @@
 begin library "opam-core"
+  sort = false
   files   = [
     "opamScript.ml"
     "opamJson.ml"
@@ -7,9 +8,9 @@ begin library "opam-core"
     "opamGitVersion.ml"
     "opamVersion.ml"
     "opamProcess.ml"
+    "opamParallel.ml"
     "opamSystem.ml"
     "opamFilename.ml"
-    "opamParallel.ml"
     "opamActionGraph.ml"
     "opamSwitch.ml"
     "opamPackage.ml"

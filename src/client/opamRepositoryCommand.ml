@@ -19,6 +19,7 @@ open OpamTypesBase
 open OpamState.Types
 open OpamMisc.OP
 open OpamPackage.Set.Op
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 let slog = OpamGlobals.slog
@@ -27,17 +28,19 @@ let update t repo =
   let max_loop = 10 in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we start to cycle. *)
-  let rec loop r n =
+  let rec job r n =
     if n = 0 then
-      OpamGlobals.warning "%s: Too many redirections, stopping."
-        (OpamRepositoryName.to_string repo.repo_name)
-    else (
-      OpamRepository.update r;
+      (OpamGlobals.warning "%s: Too many redirections, stopping."
+         (OpamRepositoryName.to_string repo.repo_name);
+       Done ())
+    else
+      OpamRepository.update r @@+ fun () ->
       if n <> max_loop && r = repo then
-        OpamGlobals.warning "%s: Cyclic redirections, stopping."
-          (OpamRepositoryName.to_string repo.repo_name)
+        (OpamGlobals.warning "%s: Cyclic redirections, stopping."
+           (OpamRepositoryName.to_string repo.repo_name);
+         Done ())
       else match OpamState.redirect t r with
-        | None -> ()
+        | None -> Done ()
         | Some (new_repo, f) ->
           OpamFilename.rmdir repo.repo_root;
           OpamFile.Repo_config.write (OpamPath.Repository.config repo) new_repo;
@@ -50,18 +53,21 @@ let update t repo =
             ((OpamGlobals.colorise `bold) "permanently")
             (OpamMisc.prettify_path (string_of_address new_repo.repo_address))
             reason;
-          loop new_repo (n-1)
-    ) in
-  loop repo max_loop;
+          job new_repo (n-1)
+  in
+  job repo max_loop @@+ fun () ->
   let repo =
     repo
     |> OpamPath.Repository.config
     |> OpamFile.Repo_config.safe_read
   in
-  OpamRepository.check_version repo;
-  let repositories =
-    OpamRepositoryName.Map.add repo.repo_name repo t.repositories in
-  { t with repositories }
+  OpamRepository.check_version repo @@+ fun () ->
+  Done (
+    fun t ->
+      { t with
+        repositories =
+          OpamRepositoryName.Map.add repo.repo_name repo t.repositories }
+  )
 
 let print_updated_compilers updates =
 
@@ -311,12 +317,13 @@ let fix_package_descriptions t ~verbose =
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
   if !OpamGlobals.sync_archives then
-    OpamPackage.Map.iter (fun nv _ ->
-        log "download %a"
-          (slog @@ OpamFilename.to_string @* OpamPath.archive t.root) nv;
-        match OpamState.download_archive t nv with
-        | None | Some _ -> ()
-      ) repo_index;
+    OpamParallel.iter
+      ~jobs:(OpamState.dl_jobs t)
+      ~command:(fun nv ->
+          log "download %a"
+            (slog @@ OpamFilename.to_string @* OpamPath.archive t.root) nv;
+          OpamState.download_archive t nv @@+ fun _ -> Done ())
+      (OpamPackage.Map.keys repo_index);
 
   (* Do not recompile a package if only OPAM or descr files have
      changed. We recompile a package:
@@ -501,14 +508,14 @@ let add name kind address ~priority:prio =
     repo_priority = prio;
     repo_root     = OpamPath.Repository.create t.root name;
   } in
-  OpamRepository.init repo;
+  OpamProcess.Job.run (OpamRepository.init repo);
   log "Adding %a" (slog OpamRepository.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo t.repositories in
   update_config t (OpamRepositoryName.Map.keys repositories);
   let t = { t with repositories } in
   OpamState.remove_state_cache ();
   try
-    let t = update t repo in
+    let t = OpamProcess.Job.run (update t repo) t in
     fix_descriptions t ~verbose:true
   with
   | OpamRepository.Unknown_backend ->

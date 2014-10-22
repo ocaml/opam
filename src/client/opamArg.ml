@@ -1677,13 +1677,16 @@ let source =
         in
         OpamGlobals.error "%s" (Dir.to_string dir);
         mkdir dir;
-        match OpamRepository.pull_url kind nv dir None [address] with
+        match
+          OpamProcess.Job.run
+            (OpamRepository.pull_url kind nv dir None [address])
+        with
         | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ -> ()
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
-      OpamAction.download_package t nv;
+      OpamProcess.Job.run (OpamAction.download_package t nv);
       OpamAction.extract_package t nv;
       move_dir
         ~src:(OpamPath.Switch.build t.root t.switch nv)
