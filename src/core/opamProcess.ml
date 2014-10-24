@@ -90,8 +90,8 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       fd, close_fd in
   let stdin_fd =
     if allow_stdin then Unix.stdin else
-      let fd = Unix.dup Unix.stdin in
-      Unix.close fd; fd
+    let fd,outfd = Unix.pipe () in
+    Unix.close outfd; fd
   in
   let stdout_fd, close_stdout = match stdout_file with
     | None   -> Unix.stdout, nothing
