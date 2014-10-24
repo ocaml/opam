@@ -278,28 +278,56 @@ let reset_env = lazy (
   Array.of_list env
 )
 
-let command_exists ?(env=default_env) name =
-  let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-  let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
-  OpamProcess.clean_files r;
-  if OpamProcess.is_success r then
-    let is_external_cmd s = String.contains s '/' in
-    match r.OpamProcess.r_stdout with 
-      cmdname::_ -> (* check that we have permission to execute the command *)
+let env_var env var =
+  let len = Array.length env in
+  let prefix = var^"=" in
+  let pfxlen = String.length prefix in
+  let rec aux i =
+    if i >= len then "" else
+    let s = env.(i) in
+    if OpamMisc.starts_with ~prefix s then
+      String.sub s pfxlen (String.length s - pfxlen)
+    else aux (i+1)
+  in
+  aux 0
+
+let command_exists =
+  let check_existence env name =
+    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
+    let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
+    OpamProcess.clean_files r;
+    if OpamProcess.is_success r then
+      let is_external_cmd s = String.contains s '/' in
+      match r.OpamProcess.r_stdout with
+        cmdname::_ ->
+        (* check that we have permission to execute the command *)
 	if is_external_cmd cmdname then 
 	  (try 
-	    let open Unix in 
-	    let uid = getuid() and groups = Array.to_list(getgroups()) in
-	    let s = stat cmdname in
-	    let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
-            let mask = 0o001
-		lor (if uid = cmd_uid then 0o100 else 0)
-		lor (if List.mem cmd_gid groups then 0o010 else 0) in
-	    (cmd_perms land mask) <> 0
-          with _ -> false)
+	     let open Unix in
+	     let uid = getuid() and groups = Array.to_list(getgroups()) in
+	     let s = stat cmdname in
+	     let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
+             let mask = 0o001
+		        lor (if uid = cmd_uid then 0o100 else 0)
+		        lor (if List.mem cmd_gid groups then 0o010 else 0) in
+	     (cmd_perms land mask) <> 0
+           with _ -> false)
 	else true
-    | _ -> false
-  else false
+      | _ -> false
+    else false
+  in
+  let cached_results = Hashtbl.create 17 in
+  fun ?(env=default_env) name ->
+    let path = env_var env "PATH" in
+    try Hashtbl.find (Hashtbl.find cached_results path) name
+    with Not_found ->
+      let r = check_existence env name in
+      (try Hashtbl.add (Hashtbl.find cached_results path) name r
+       with Not_found ->
+         let phash = Hashtbl.create 17 in
+         Hashtbl.add phash name r;
+         Hashtbl.add cached_results path phash);
+      r
 
 let runs = ref []
 let print_stats () =
