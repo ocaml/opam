@@ -228,7 +228,13 @@ let remove file =
     remove_file file
 
 let getchdir s =
-  let p = Sys.getcwd () in
+  let p =
+    try Sys.getcwd ()
+    with Sys_error _ ->
+      if Sys.file_exists !OpamGlobals.root_dir
+      then !OpamGlobals.root_dir
+      else Filename.temp_dir_name
+  in
   chdir s;
   p
 

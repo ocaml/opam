@@ -5,7 +5,7 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014
 
-VERSION='1.1.1'
+VERSION='1.2.0'
 
 default_ocaml=4.01.0
 
@@ -56,7 +56,7 @@ getopam() {
     fi
 }
 
-if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+if [ $# -lt 1 ] || [ $# -gt 2 ] || [ "${1#-}" != "$1" ]; then
     echo "OPAM binary installer v. $VERSION"
     usage
 fi
