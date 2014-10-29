@@ -28,7 +28,20 @@ yaourt -S opam
 
 #### Debian
 
-Binary packages of OPAM 1.1.1 are available for the [testing](http://packages.debian.org/jessie/opam) and [unstable](http://packages.debian.org/sid/opam) distributions.  Wheezy users are left with the options of compiling from source, pinning the packages from the testing repository, requesting a backport from Debian, or using our binary installer below.
+Binary packages of OPAM 1.1.1 are available for the [testing](http://packages.debian.org/jessie/opam) and [unstable](http://packages.debian.org/sid/opam) distributions.
+
+Wheezy users are left with the options of compiling from source, pinning the packages from the testing repository, or using our [custom-built binary packages](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam) from the OpenSUSE Build Service.
+
+On Debian Wheezy, you can add the custom apt source by:
+
+```
+wget http://download.opensuse.org/repositories/home:ocaml/Debian_7.0/Release.key
+apt-key add - < Release.key  
+echo 'deb http://download.opensuse.org/repositories/home:/ocaml/Debian_7.0/ /' >> /etc/apt/sources.list.d/opam.list 
+apt-get update
+```
+
+Once you have done this (or if you are on a more recent version of Debian), install it as normal:
 
 ```
 apt-get install opam
@@ -47,33 +60,52 @@ The opam package for Mageia can be installed with the command:
 urpmi opam
 ```
 
+#### [Fedora](http://fedoraproject.org) and [CentOS](http://centos.org)
+
+Prebuilt RPMs for Fedora, CentOS and Red Hat Enterprise Linux are available via the OpenSUSE Build Server.
+
+Navigate to the [OPAM download page](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam),
+click on the relevant operating system and follow the instructions there to install prebuilt binaries.
+
+Source installation also works out-of-the-box; if your version of OCaml is too old then you can bootstrap
+OPAM without an existing OCaml installation by running `make cold` after the configuration phase.
+
 #### OSX
 
 OPAM packages for [homebrew](http://mxcl.github.com/homebrew/) and [MacPorts](http://www.macports.org/) are available:
 
 ```
-brew install opam                   # using Homebrew on OSX Mavericks
+brew install opam                   # using Homebrew on OSX Mavericks or later
 brew install opam --without-aspcud  # using Homebrew on OSX Mountain Lion (or lower)
 port install opam                   # using MacPort
 ```
 
 See also [howto setup Emacs.app](https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage) for opam usage.
 
-#### Ubuntu (Precise, Quantal, Raring and Saucy)
+#### OpenBSD
+
+OPAM builds via sources fine on OpenBSD 5.6 or earlier, and is available in the ports and packages tree on OpenBSD 5.7 or higher.
+
+```
+cd /usr/ports/sysutils/opam
+make install
+```
+
+Note that the `aspcud` external solver is not yet available on OpenBSD, so you may see some odd upgrade attempts due to the use of the internal solver.
+
+#### Ubuntu (Precise and Trusty)
 
 ```
 add-apt-repository ppa:avsm/ppa
 apt-get update
-apt-get install ocaml opam
+apt-get install ocaml ocaml-native-compilers camlp4-extra opam
 ```
 
 There are also PPAs available that are [pinned to specific revisions](http://launchpad.net/~avsm) of OCaml and OPAM to help with [automated testing](http://anil.recoil.org/2013/09/30/travis-and-ocaml.html).
 
-If the command `add-apt-repository` is not available, you can install the package `python-software-properties` with `apt-get install python-software-properties`. Alternatively, you may manually edit the file `/etc/apt/sources.list` to add the PPA for your Ubuntu release.
+If the command `add-apt-repository` is not available, you can install the package `software-properties-common` with `apt-get install software-properties-common`. Alternatively, you may manually edit the file `/etc/apt/sources.list` to add the PPA for your Ubuntu release.
 
-#### Ubuntu Trusty LTS
-
-OCaml 4.01.0 and OPAM 1.1.1 are included in Ubuntu Trusty's `universe` repository, so just install them as normal.
+OCaml 4.01.0 and OPAM 1.1.1 are included in Ubuntu Trusty's `universe` repository, so just install them as normal if you don't need the very latest version (although we do recommend you use OPAM 1.2 where possible).
 
 ```
 apt-get update
