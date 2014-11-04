@@ -535,6 +535,10 @@ let guess_dot_profile shell =
       bash_profile
     else
       bashrc
+  | `csh ->
+    let cshrc = home ".cshrc" in
+    let tcshrc = home ".tcshrc" in
+    if Sys.file_exists cshrc then cshrc else tcshrc
   | _     -> home ".profile"
 
 let prettify_path s =
