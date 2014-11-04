@@ -587,7 +587,6 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
 OCAML_PKG_jsonm
-OCAML_PKG_uutf
 OCAML_PKG_dose3
 OCAML_PKG_cudf
 OCAML_PKG_ocamlgraph
@@ -4477,30 +4476,6 @@ $as_echo "not found" >&6; }
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package uutf" >&5
-$as_echo_n "checking for OCaml findlib package uutf... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in uutf  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_uutf=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_uutf=no
-  fi
-
-
-
-
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package jsonm" >&5
 $as_echo_n "checking for OCaml findlib package jsonm... " >&6; }
 
@@ -4532,7 +4507,8 @@ if test "$OCAML_PKG_extlib" = "no" ||
    test "$OCAML_PKG_cmdliner" = "no" ||
    test "$OCAML_PKG_ocamlgraph" = "no" ||
    test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose3" = "no"; then
+   test "$OCAML_PKG_dose3" = "no" ||
+   test "$OCAML_PKG_jsonm" = "no"; then
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "binaries, run 'make lib-ext' to download and include them."

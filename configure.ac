@@ -73,6 +73,7 @@ dnl echo "cmdliner...................... ${OCAML_PKG_cmdliner}"
 dnl echo "graph......................... ${OCAML_PKG_ocamlgraph}"
 dnl echo "cudf.......................... ${OCAML_PKG_cudf}"
 dnl echo "dose3......................... ${OCAML_PKG_dose3}"
+dnl echo "jsonm......................... ${OCAML_PKG_jsonm}"
 echo
 
 if test "$OCAML_PKG_extlib" = "no" ||
@@ -80,7 +81,8 @@ if test "$OCAML_PKG_extlib" = "no" ||
    test "$OCAML_PKG_cmdliner" = "no" ||
    test "$OCAML_PKG_ocamlgraph" = "no" ||
    test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose3" = "no"; then
+   test "$OCAML_PKG_dose3" = "no" ||
+   test "$OCAML_PKG_jsonm" = "no"; then
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "binaries, run 'make lib-ext' to download and include them."
