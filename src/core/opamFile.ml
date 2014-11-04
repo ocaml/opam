@@ -1137,10 +1137,13 @@ module X = struct
     let with_substs t substs = { t with substs }
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
     let with_os t os = { t with os }
+    let with_available t available = { t with available }
     let with_maintainer t maintainer = { t with maintainer }
     let with_patches t patches = { t with patches }
     let with_bug_reports t bug_reports = { t with bug_reports }
     let with_depexts t depexts = { t with depexts }
+    let with_messages t messages = { t with messages }
+    let with_post_messages t post_messages = { t with post_messages }
     let with_flags t flags = { t with flags }
     let with_dev_repo t dev_repo = {t with dev_repo }
 

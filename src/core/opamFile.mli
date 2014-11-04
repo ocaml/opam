@@ -161,6 +161,10 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
+  val with_messages: t -> (string * filter option) list -> t
+
+  val with_post_messages: t -> (string * filter option) list -> t
+
   (** Package conflicts *)
   val conflicts: t -> formula
 
@@ -249,6 +253,8 @@ module OPAM: sig
   val with_ocaml_version: t -> compiler_constraint option -> t
 
   val with_os: t -> (bool * string) generic_formula -> t
+
+  val with_available : t -> filter -> t
 
   (** Construct as [maintainer] *)
   val with_maintainer: t -> string list -> t
