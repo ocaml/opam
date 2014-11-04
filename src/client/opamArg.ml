@@ -680,10 +680,11 @@ let init =
   let doc = init_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "The $(b,init) command creates a fresh client state.  This initializes OPAM \
-        configuration in $(i,~/.opam) and configures a default package repository.";
+    `P "The $(b,init) command creates a fresh client state. This initializes OPAM \
+        configuration in $(i,~/.opam) (or the given $(b,--root)) and configures \
+        the initial remote package repository.";
     `P "Once the fresh client has been created, OPAM will ask the user if he wants \
-        $(i,~/.profile) (or $i,~/.zshrc, depending on his shell) and $(i,~/.ocamlinit) \
+        $(i,~/.profile) (or $(i,~/.zshrc), depending on his shell) and $(i,~/.ocamlinit) \
         to be updated. \
         If $(b,--auto-setup) is used, OPAM will modify the configuration files automatically, \
         without asking the user. If $(b,--no-setup) is used, OPAM will *NOT* modify \
@@ -694,7 +695,7 @@ let init =
   ] in
   let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
   let compiler =
-    mk_opt ["comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
+    mk_opt ["compiler"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in

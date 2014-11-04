@@ -19,6 +19,11 @@ details.
 ## Basics
 
 ```
+# ** Get started **
+opam init            # Initialise ~/.opam using an already installed OCaml
+opam init --compiler 4.02.1
+                     # Initialise with a freshly compiled OCaml 4.02.1
+
 # ** Lookup **
 opam list -a         # List all available packages
 opam search QUERY    # List packages with QUERY in their name or description
@@ -47,7 +52,8 @@ OCaml version -- `opam install PACKAGE` will give you the reason.
 ### opam init
 
 OPAM needs to initialise its internal state in a `~/.opam` directory to work.
-This command can also take care of installing a version of OCaml if needed.
+This command can also take care of installing a version of OCaml there if
+needed, using the `--comp VERSION` option.
 
 To operate as expected, some variables need to be set in your environment. You
 will be prompted to update your configuration, and given instructions on how
