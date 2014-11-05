@@ -1129,7 +1129,9 @@ module API = struct
            check_external_dep
              (OpamMisc.Option.default "curl" OpamGlobals.curl_command)
            || check_external_dep "wget";
-           "patch", check_external_dep "patch"]
+           "patch", check_external_dep "patch";
+           "tar", check_external_dep "tar";
+           "unzip", check_external_dep "unzip" ]
         in
         (match List.filter (not @* snd) required_deps with
          | [] -> ()
