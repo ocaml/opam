@@ -148,8 +148,8 @@ You can also download the full archives, including OPAM dependencies:
 * [1.1.0](http://www.ocamlpro.com/pub/opam-full-1.1.0.tar.gz)
   MD5 (opam-full-1.1.0.tar.gz) = d6e2f56b10c0be73b5677963e6659d24
 
-Follow the instructions in `README.md` to get OPAM built and installed from
-there.
+Follow the instructions in [`README.md`](https://github.com/ocaml/opam#readme)
+to get OPAM built and installed from there.
 
 
 #### Using ocamlbrew
