@@ -600,6 +600,7 @@ module API = struct
      See also preprocess_request and check_conflicts *)
   let orphans ?changes ?(transitive=false) t =
     let all = t.packages ++ t.installed in
+    let allnames = OpamPackage.names_of_packages all in
     let universe = OpamState.universe t (Reinstall OpamPackage.Set.empty) in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
@@ -618,22 +619,35 @@ module API = struct
     in
     (* Pinned versions of packages remain always available *)
     let orphans = orphans -- OpamState.pinned_packages t in
-    (* Closure *)
-    let orphans =
-      if not transitive then orphans else
-        OpamPackage.Set.of_list @@
-        OpamSolver.reverse_dependencies
-          ~depopts:false ~installed:false ~unavailable:true
-          universe orphans
-    in
-    let orphan_names = (* names for which there is no version left *)
-      OpamPackage.Name.Set.diff
-        (OpamPackage.names_of_packages all)
-        (OpamPackage.names_of_packages (all -- orphans)) in
-    let full_orphans, orphan_versions =
+    (* Splits between full orphans (no version left) and partial ones *)
+    let full_partition orphans =
+      let orphan_names = (* names for which there is no version left *)
+        OpamPackage.Name.Set.diff
+          allnames
+          (OpamPackage.names_of_packages (all -- orphans)) in
       OpamPackage.Set.partition
         (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) orphan_names)
-        orphans in
+        orphans
+    in
+    let full_orphans, orphan_versions = full_partition orphans in
+    (* Closure *)
+    let full_orphans, orphan_versions =
+      if not transitive then full_orphans, orphan_versions else
+        let rec add_trans full_orphans orphan_versions =
+          (* fixpoint to check all packages with no available version *)
+          let new_orphans =
+            OpamPackage.Set.of_list @@
+              OpamSolver.reverse_dependencies
+                ~depopts:false ~installed:false ~unavailable:true
+                universe full_orphans
+          in
+          let full, versions = full_partition (new_orphans++orphan_versions) in
+          if OpamPackage.Set.equal full_orphans full
+          then full, versions
+          else add_trans full versions
+        in
+        add_trans full_orphans orphan_versions
+    in
     (* Installed packages outside the set of changes are otherwise safe:
        re-add them to the universe *)
     let t =
@@ -643,7 +657,8 @@ module API = struct
               (t.installed -- orphans)) in
       { t with available_packages } in
     log "Orphans: full %a, versions %a"
-      (slog OpamPackage.Name.Set.to_string) orphan_names
+      (slog @@ OpamPackage.Name.Set.to_string @* OpamPackage.names_of_packages)
+      full_orphans
       (slog OpamPackage.Set.to_string) orphan_versions;
     t, full_orphans, orphan_versions
 
