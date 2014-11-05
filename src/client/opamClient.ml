@@ -738,7 +738,8 @@ module API = struct
     if atoms = [] then
       let to_reinstall = t.reinstall %% t.installed in
       let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-      let to_upgrade = t.installed -- full_orphans in
+      let to_upgrade = t.installed -- full_orphans -- orphan_versions in
+      let to_install = t.installed -- full_orphans in
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade to_reinstall in
       requested,
@@ -746,7 +747,7 @@ module API = struct
       OpamSolution.resolve t action ~requested
         ~orphans:(full_orphans ++ orphan_versions)
         (preprocess_request t full_orphans orphan_versions
-           { wish_install = [];
+           { wish_install = OpamSolution.atoms_of_packages to_install;
              wish_remove  = [];
              wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
              criteria = `Upgrade; })
