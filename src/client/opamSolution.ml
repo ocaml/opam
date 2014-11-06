@@ -86,7 +86,8 @@ let atom_of_package nv =
   OpamPackage.name nv, None
 
 let atoms_of_packages set =
-  List.rev_map atom_of_package (OpamPackage.Set.elements set)
+  List.rev_map (fun n -> n, None)
+    (OpamPackage.Name.Set.elements (OpamPackage.names_of_packages set))
 
 let atom_of_name name =
   name, None
