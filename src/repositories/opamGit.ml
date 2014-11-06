@@ -63,7 +63,14 @@ module Git = struct
         );
         let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
         let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
-        OpamSystem.command [ "git" ; "fetch" ; "-q"; "origin"; refspec ]
+        (try
+           OpamSystem.command [ "git" ; "fetch" ; "-q"; "origin"; refspec ]
+         with OpamSystem.Process_error _ ->
+           (* fallback to trying to fetch all (workaround, git 2.1 fails with
+              'fetch HASH' when HASH isn't available locally already) *)
+           OpamSystem.commands
+             [ [ "git" ; "fetch" ; "-q"; "origin" ];
+               [ "git" ; "fetch" ; "-q"; "origin"; refspec ] ])
       )
 
   let revision repo =
