@@ -824,16 +824,16 @@ module API = struct
           (String.concat "\n  - " cycles)
       end else begin
         OpamGlobals.warning
-          "There is a consistency problem with the currently \
-           installed packages:";
+          "Upgrade is not possible because of conflicts or packages that \
+           are no longer available:";
         List.iter (OpamGlobals.msg "  - %s\n") reasons;
         if chains <> [] then (
           OpamGlobals.msg "The following dependencies are in cause:\n";
           List.iter (OpamGlobals.msg "  - %s\n") chains);
         if OpamCudf.external_solver_available () then
           OpamGlobals.msg
-            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
-             installation.\n"
+            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
+             current state.\n"
       end;
       OpamGlobals.exit 3
     | requested, action, Success solution ->
