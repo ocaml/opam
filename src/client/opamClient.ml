@@ -688,12 +688,22 @@ module API = struct
       wish_remove in
     let available =
       Lazy.force t.available_packages -- orphan_versions -- full_orphans in
-    let still_available atom =
-      OpamPackage.Set.exists
-        (fun p -> OpamFormula.check atom p)
-        available in
-    let wish_install = List.filter still_available wish_install in
-    let wish_upgrade = List.filter still_available wish_upgrade in
+    let still_available ?(up=false) (name,_ as atom) =
+      let installed =
+        if up then
+          try Some (OpamPackage.version @@ OpamPackage.Set.choose_one @@
+                    OpamPackage.packages_of_name t.installed name)
+          with Not_found -> None
+        else None in
+       OpamPackage.Set.exists
+        (fun p -> OpamFormula.check atom p &&
+                  match installed with Some i -> OpamPackage.version p >= i
+                                     | None -> true)
+         available in
+    let upgradeable, non_upgradeable =
+      List.partition (still_available ~up:true) wish_upgrade in
+    let wish_install = List.filter still_available (non_upgradeable @ wish_install) in
+    let wish_upgrade = List.filter (still_available ~up:true) upgradeable in
     let nrequest = { wish_install; wish_remove; wish_upgrade; criteria } in
     log "Preprocess request: %a => %a"
       (slog OpamSolver.string_of_request) request
