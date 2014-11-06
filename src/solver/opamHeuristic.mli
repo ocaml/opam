@@ -150,5 +150,5 @@ val state_of_request: ?verbose:bool  ->
     to build a solution than we can propose to the user. *)
 val actions_of_state:
   version_map:int OpamPackage.Map.t ->
-  Cudf.universe -> (Cudf.universe -> Cudf.universe) ->
+  Cudf.universe ->
   Cudf_types.vpkg request -> Cudf.package state -> Cudf.package action list

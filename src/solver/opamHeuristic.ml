@@ -204,7 +204,7 @@ let satisfy pkg constrs =
       n = pkg.Cudf.package && Cudf.version_matches pkg.Cudf.version v
     ) constrs
 
-let actions_of_state ~version_map universe map_init_u request state =
+let actions_of_state ~version_map universe request state =
   log "actions_of_state %a" (slog OpamCudf.string_of_packages) state;
   let installed =
     let filter p =
@@ -233,7 +233,7 @@ let actions_of_state ~version_map universe map_init_u request state =
     raise (Not_reachable c)
   | Success u   ->
     try
-      let diff = OpamCudf.Diff.diff (map_init_u universe) u in
+      let diff = OpamCudf.Diff.diff universe u in
       let actions = OpamCudf.actions_of_diff diff in
       let actions = minimize_actions (List.map fst state) actions in
       actions
@@ -489,7 +489,18 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
       ) request.wish_upgrade in
     { request with wish_upgrade } in
   (* We use that request to trim the universe, and keep only the interesting packages. *)
+  let full_universe = universe in
   let universe = trim_universe universe request in
+  let untrim universe =
+    let open OpamCudf.Set in
+    let open Op in
+    let pkgs =
+      of_list (Cudf.get_packages universe) ++
+      of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed)
+                 full_universe)
+    in
+    Cudf.load_universe (elements pkgs)
+  in
   log "universe: %a"
     (slog (OpamMisc.pretty_list
            @* List.map (OpamPackage.to_string @* OpamCudf.cudf2opam)
@@ -499,7 +510,7 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose ~version_map universe request with
   | None       ->
-    OpamCudf.to_actions map_init_u universe
+    OpamCudf.to_actions map_init_u (untrim universe)
       (OpamCudf.resolve ~extern:false ~version_map universe request)
   | Some state ->
     log "STATE(0) %a" (slog OpamCudf.string_of_packages) state;
@@ -565,7 +576,8 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
       List.fold_left installed_first state packages in
 
     log "STATE(2) %a" (slog OpamCudf.string_of_packages) state;
-    Success (actions_of_state ~version_map universe map_init_u request state)
+    let universe = map_init_u (untrim universe) in
+    Success (actions_of_state ~version_map universe request state)
 
 let resolve ?(verbose=true) ~version_map map_init_u universe request =
   try
