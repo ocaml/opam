@@ -600,6 +600,7 @@ module API = struct
      See also preprocess_request and check_conflicts *)
   let orphans ?changes ?(transitive=false) t =
     let all = t.packages ++ t.installed in
+    let allnames = OpamPackage.names_of_packages all in
     let universe = OpamState.universe t (Reinstall OpamPackage.Set.empty) in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
@@ -618,22 +619,35 @@ module API = struct
     in
     (* Pinned versions of packages remain always available *)
     let orphans = orphans -- OpamState.pinned_packages t in
-    (* Closure *)
-    let orphans =
-      if not transitive then orphans else
-        OpamPackage.Set.of_list @@
-        OpamSolver.reverse_dependencies
-          ~depopts:false ~installed:false ~unavailable:true
-          universe orphans
-    in
-    let orphan_names = (* names for which there is no version left *)
-      OpamPackage.Name.Set.diff
-        (OpamPackage.names_of_packages all)
-        (OpamPackage.names_of_packages (all -- orphans)) in
-    let full_orphans, orphan_versions =
+    (* Splits between full orphans (no version left) and partial ones *)
+    let full_partition orphans =
+      let orphan_names = (* names for which there is no version left *)
+        OpamPackage.Name.Set.diff
+          allnames
+          (OpamPackage.names_of_packages (all -- orphans)) in
       OpamPackage.Set.partition
         (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) orphan_names)
-        orphans in
+        orphans
+    in
+    let full_orphans, orphan_versions = full_partition orphans in
+    (* Closure *)
+    let full_orphans, orphan_versions =
+      if not transitive then full_orphans, orphan_versions else
+        let rec add_trans full_orphans orphan_versions =
+          (* fixpoint to check all packages with no available version *)
+          let new_orphans =
+            OpamPackage.Set.of_list @@
+              OpamSolver.reverse_dependencies
+                ~depopts:false ~installed:false ~unavailable:true
+                universe full_orphans
+          in
+          let full, versions = full_partition (new_orphans++orphan_versions) in
+          if OpamPackage.Set.equal full_orphans full
+          then full, versions
+          else add_trans full versions
+        in
+        add_trans full_orphans orphan_versions
+    in
     (* Installed packages outside the set of changes are otherwise safe:
        re-add them to the universe *)
     let t =
@@ -643,7 +657,8 @@ module API = struct
               (t.installed -- orphans)) in
       { t with available_packages } in
     log "Orphans: full %a, versions %a"
-      (slog OpamPackage.Name.Set.to_string) orphan_names
+      (slog @@ OpamPackage.Name.Set.to_string @* OpamPackage.names_of_packages)
+      full_orphans
       (slog OpamPackage.Set.to_string) orphan_versions;
     t, full_orphans, orphan_versions
 
@@ -673,12 +688,22 @@ module API = struct
       wish_remove in
     let available =
       Lazy.force t.available_packages -- orphan_versions -- full_orphans in
-    let still_available atom =
-      OpamPackage.Set.exists
-        (fun p -> OpamFormula.check atom p)
-        available in
-    let wish_install = List.filter still_available wish_install in
-    let wish_upgrade = List.filter still_available wish_upgrade in
+    let still_available ?(up=false) (name,_ as atom) =
+      let installed =
+        if up then
+          try Some (OpamPackage.version @@ OpamPackage.Set.choose_one @@
+                    OpamPackage.packages_of_name t.installed name)
+          with Not_found -> None
+        else None in
+       OpamPackage.Set.exists
+        (fun p -> OpamFormula.check atom p &&
+                  match installed with Some i -> OpamPackage.version p >= i
+                                     | None -> true)
+         available in
+    let upgradeable, non_upgradeable =
+      List.partition (still_available ~up:true) wish_upgrade in
+    let wish_install = List.filter still_available (non_upgradeable @ wish_install) in
+    let wish_upgrade = List.filter (still_available ~up:true) upgradeable in
     let nrequest = { wish_install; wish_remove; wish_upgrade; criteria } in
     log "Preprocess request: %a => %a"
       (slog OpamSolver.string_of_request) request
@@ -723,7 +748,8 @@ module API = struct
     if atoms = [] then
       let to_reinstall = t.reinstall %% t.installed in
       let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-      let to_upgrade = t.installed -- full_orphans in
+      let to_upgrade = t.installed -- full_orphans -- orphan_versions in
+      let to_install = t.installed -- full_orphans in
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade to_reinstall in
       requested,
@@ -731,7 +757,7 @@ module API = struct
       OpamSolution.resolve t action ~requested
         ~orphans:(full_orphans ++ orphan_versions)
         (preprocess_request t full_orphans orphan_versions
-           { wish_install = [];
+           { wish_install = OpamSolution.atoms_of_packages to_install;
              wish_remove  = [];
              wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
              criteria = `Upgrade; })
@@ -808,16 +834,16 @@ module API = struct
           (String.concat "\n  - " cycles)
       end else begin
         OpamGlobals.warning
-          "There is a consistency problem with the currently \
-           installed packages:";
+          "Upgrade is not possible because of conflicts or packages that \
+           are no longer available:";
         List.iter (OpamGlobals.msg "  - %s\n") reasons;
         if chains <> [] then (
           OpamGlobals.msg "The following dependencies are in cause:\n";
           List.iter (OpamGlobals.msg "  - %s\n") chains);
         if OpamCudf.external_solver_available () then
           OpamGlobals.msg
-            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix your \
-             installation.\n"
+            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
+             current state.\n"
       end;
       OpamGlobals.exit 3
     | requested, action, Success solution ->
