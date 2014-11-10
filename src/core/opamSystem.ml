@@ -170,7 +170,7 @@ let list kind dir =
       let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
-      List.sort compare (List.rev_map (Filename.concat dir) l)
+      List.map (Filename.concat dir) (List.sort compare l)
     )
   else
     []

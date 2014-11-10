@@ -2595,7 +2595,6 @@ let update_dev_packages t packages =
 let download_archive t nv =
   log "get_archive %a" (slog OpamPackage.to_string) nv;
   let dst = OpamPath.archive t.root nv in
-  if OpamFilename.exists dst then Some dst else
   try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
