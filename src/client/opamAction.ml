@@ -162,9 +162,7 @@ let prepare_package_build t nv =
 
   let p_build = OpamPath.Switch.build t.root t.switch nv in
 
-  if not (OpamFilename.exists_dir p_build) then
-    OpamFilename.mkdir p_build;
-
+  OpamFilename.mkdir p_build;
   OpamFilename.in_dir p_build (fun () ->
     let all = OpamFile.OPAM.substs opam in
     let patches =

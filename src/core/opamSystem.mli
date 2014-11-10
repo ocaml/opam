@@ -59,6 +59,10 @@ val real_path: string -> string
 (** Return the contents of a channel. *)
 val string_of_channel: in_channel -> string
 
+(** Raised when a file or directory can't be accessed (doesn't exist,
+    bad permissions, etc.) *)
+exception File_not_found of string
+
 (** [read filename] returns the contents of [filename] *)
 val read: string -> string
 

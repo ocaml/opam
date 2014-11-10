@@ -2141,16 +2141,17 @@ module Make (F : F) = struct
     let filename = OpamFilename.prettify f in
     read_files := filename :: !read_files;
     let chrono = OpamGlobals.timer () in
-    if OpamFilename.exists f then
+    try
+      let ic = OpamFilename.open_in f in
       try
-        let ic = OpamFilename.open_in f in
-        try
-          let r = F.of_channel f ic in
-          close_in ic;
-          log ~level:2 "Read %s in %.3fs" filename (chrono ());
-          r
-        with e -> close_in ic; raise e
+        let r = F.of_channel f ic in
+        close_in ic;
+        log ~level:2 "Read %s in %.3fs" filename (chrono ());
+        r
+      with e -> close_in ic; raise e
       with
+      | OpamSystem.File_not_found s ->
+        OpamSystem.internal_error "File %s does not exist" s
       | Lexer_error _ | Parsing.Parse_error as e ->
         if !OpamGlobals.strict then
           OpamGlobals.error_and_exit "Strict mode: aborting"
@@ -2167,8 +2168,6 @@ module Make (F : F) = struct
         if !OpamGlobals.strict then
           OpamGlobals.error_and_exit "Strict mode: aborting"
         else raise e
-    else
-      OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
 
   let safe_read f =
     if OpamFilename.exists f then
