@@ -249,8 +249,8 @@ let timestamp () =
 
 let log section ?(level=1) fmt =
   if !debug && level <= !debug_level then
-    Printf.fprintf stderr ("%s  %06d  %a  " ^^ fmt ^^ "\n%!")
-      (timestamp ()) (Unix.getpid ()) (acolor_w 30 `yellow) section
+    Printf.fprintf stderr ("%s  %a  " ^^ fmt ^^ "\n%!")
+      (timestamp ()) (acolor_w 30 `yellow) section
   else
     Printf.ifprintf stderr fmt
 
