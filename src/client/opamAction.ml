@@ -20,7 +20,6 @@ let slog = OpamGlobals.slog
 open OpamTypes
 open OpamFilename.OP
 open OpamState.Types
-open OpamMisc.OP
 open OpamProcess.Job.Op
 
 module PackageActionGraph = OpamSolver.ActionGraph
@@ -336,10 +335,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
 
   let dot_install = OpamPath.Switch.install t.root t.switch name in
 
-  OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
-
-  begin match opam with
-    | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
+  let remove_job =
+    match opam with
+    | None      -> OpamGlobals.msg "No OPAM file has been found!\n"; Done ()
     | Some opam ->
       let env = compilation_env t opam in
       let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -354,27 +352,36 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
         if OpamFilename.exists_dir p_build
         then p_build, Some name
         else t.root , None in
-      try
-        if remove <> [] || not (OpamFilename.exists dot_install) then
-          OpamGlobals.msg "%s\n" (string_of_commands remove);
-        let metadata = get_metadata t in
-        if not !OpamGlobals.dryrun then
-          OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true
-            remove
-      with
-      | OpamSystem.Process_error r ->
-          if not silent then
-            OpamGlobals.warning
-              "failure in package uninstall script, some files may remain:\n%s"
-              (OpamProcess.string_of_result r)
-      | OpamSystem.Command_not_found cmd ->
+      (* if remove <> [] || not (OpamFilename.exists dot_install) then *)
+      (*   OpamGlobals.msg "%s\n" (string_of_commands remove); *)
+      let metadata = get_metadata t in
+      if !OpamGlobals.dryrun then Done ()
+      else
+      let commands =
+        OpamMisc.filter_map (function
+            | [] -> None
+            | cmd::args ->
+              let text =
+                Printf.sprintf "[%s: %s]"
+                  (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
+                  cmd
+              in
+              Some
+                (OpamSystem.make_command ?name ~metadata ~text cmd args
+                   ~env:(OpamFilename.env_of_list env)
+                   ~dir:(OpamFilename.Dir.to_string exec_dir)))
+          remove
+      in
+      OpamProcess.Job.of_list ~keep_going:true commands
+      @@+ function
+      | Some (_,err) ->
         if not silent then
           OpamGlobals.warning
-            "failure in package uninstall script, some files may remain:\n%s%s"
-            cmd ": command not found"
-  end;
-
-  if not !OpamGlobals.dryrun then begin
+            "failure in package uninstall script, some files may remain:\n%s"
+            (OpamProcess.string_of_result err);
+        Done ()
+      | None -> Done ()
+  in
 
   let install =
     OpamFile.Dot_install.safe_read dot_install in
@@ -397,49 +404,57 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       OpamGlobals.warning "Directory %s is not empty, not removing"
         (OpamFilename.Dir.to_string dir) in
 
-  (* Remove build/<package> *)
-  if not (keep_build || !OpamGlobals.keep_build_dir) then
-    OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
+  let uninstall_files () =
+    (* Remove build/<package> *)
+    if not (keep_build || !OpamGlobals.keep_build_dir) then
+      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
-  (* Remove .config and .install *)
-  log "Removing config and install files";
-  OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
-  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
+    (* Remove .config and .install *)
+    log "Removing config and install files";
+    OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
+    OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
 
-  log "Removing files from .install";
-  remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
-  remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
-  remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
-  remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
-  remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
-  remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
-  remove_files_and_dir OpamPath.Switch.etc OpamFile.Dot_install.etc;
-  remove_files OpamPath.Switch.man_dir OpamFile.Dot_install.man;
-  remove_files_and_dir OpamPath.Switch.doc OpamFile.Dot_install.doc;
+    log "Removing files from .install";
+    remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
+    remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
+    remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
+    remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
+    remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
+    remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
+    remove_files_and_dir OpamPath.Switch.etc OpamFile.Dot_install.etc;
+    remove_files OpamPath.Switch.man_dir OpamFile.Dot_install.man;
+    remove_files_and_dir OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
-  (* Remove the misc files *)
-  log "Removing the misc files";
-  List.iter (fun (_,dst) ->
-      if OpamFilename.exists dst then begin
-        OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-        if OpamGlobals.confirm "Continue ?" then
-          OpamFilename.remove dst
-      end
-    ) (OpamFile.Dot_install.misc install);
+    (* Remove the misc files *)
+    log "Removing the misc files";
+    List.iter (fun (_,dst) ->
+        if OpamFilename.exists dst then begin
+          OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
+          if OpamGlobals.confirm "Continue ?" then
+            OpamFilename.remove dst
+        end
+      ) (OpamFile.Dot_install.misc install);
 
-  end;
+    (* Cleanup if there was any stale overlay (unpinned but left installed
+       package) *)
+    if not (OpamState.is_pinned t name) then
+      OpamState.remove_overlay t name;
+  in
 
-  (* Cleanup if there was any stale overlay (unpinned but left installed
-     package) *)
-  if not (OpamState.is_pinned t name) then
-    OpamState.remove_overlay t name;
-
-  (* Update the metadata *)
-  if metadata then
+  let cleanup_meta () =
+    (* Update the metadata *)
     let installed = OpamPackage.Set.remove nv t.installed in
     let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
     let reinstall = OpamPackage.Set.remove nv t.reinstall in
     ignore (update_metadata t ~installed ~installed_roots ~reinstall)
+  in
+  remove_job @@+ fun () ->
+  if not !OpamGlobals.dryrun then uninstall_files ();
+  if metadata then cleanup_meta ();
+  OpamGlobals.msg "%s removed\n"
+    (OpamGlobals.colorise `bold (OpamPackage.name_to_string nv));
+  Done ()
+
 
 (* Removes build dir and source cache of package if unneeded *)
 let cleanup_package_artefacts t nv =
@@ -486,7 +501,7 @@ let sources_needed t solution =
 
 let remove_package t ~metadata ?keep_build ?silent nv =
   if !OpamGlobals.fake || !OpamGlobals.show then
-    OpamGlobals.msg "Would remove: %s.\n" (OpamPackage.to_string nv)
+    Done (OpamGlobals.msg "Would remove: %s.\n" (OpamPackage.to_string nv))
   else
     remove_package_aux t ~metadata ?keep_build ?silent nv
 
@@ -511,16 +526,17 @@ let remove_all_packages t ~metadata sol =
     if !deleted = [] then
       OpamGlobals.header_msg "Removing Packages";
     deleted := nv :: !deleted; (* first mark as deleted *)
-    try ignore (remove_package t ~metadata:false nv)
-    with e -> OpamMisc.fatal e (* ignore individual errors *)
+    remove_package t ~metadata:false nv
   in
   let action n =
     match n with
     | To_change (Some nv, _) | To_delete nv | To_recompile nv -> delete nv
-    | To_change (None, _) -> () in
+    | To_change (None, _) -> Done () in
   try
-    List.iter delete sol.to_remove;
-    PackageActionGraph.(Topological.iter action (mirror sol.to_process));
+    List.iter (fun nv -> OpamProcess.Job.run (delete nv)) sol.to_remove;
+    PackageActionGraph.Parallel.iter ~jobs:(OpamState.jobs t)
+      ~command:(fun ~pred:_ n -> action n)
+      (PackageActionGraph.mirror sol.to_process);
     update_metadata (), `Successful ()
   with e ->
     update_metadata (), `Exception e
@@ -571,9 +587,8 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
         OpamGlobals.error
           "The compilation of %s failed at %s."
           name (String.concat " " (cmd::args));
-        ignore @@
-        remove_package ~metadata:false t ~keep_build:true ~silent:true nv;
-        Done false
+        remove_package ~metadata:false t ~keep_build:true ~silent:true nv
+        @@| fun () -> false
       )
     | []::commands -> run_commands commands
     | [] ->

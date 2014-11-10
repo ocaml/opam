@@ -2366,9 +2366,13 @@ let install_compiler t ~quiet:_ switch compiler =
         else
           OpamProcess.Job.run @@
           OpamFilename.with_tmp_dir_job (fun download_dir ->
-              OpamRepository.pull_url kind
-                (OpamPackage.of_string "compiler.get")
-                download_dir None [comp_src]
+              let text = match repository_and_prefix_of_compiler t compiler with
+                | None -> OpamPackage.of_string "compiler.get"
+                | Some (repo,_) ->
+                  OpamPackage.of_string (OpamRepositoryName.to_string
+                                           repo.repo_name ^ ".comp")
+              in
+              OpamRepository.pull_url kind text download_dir None [comp_src]
               @@+ function
               | Not_available u ->
                 OpamGlobals.error_and_exit "%s is not available." u
@@ -2386,8 +2390,8 @@ let install_compiler t ~quiet:_ switch compiler =
         List.iter (fun f -> OpamFilename.patch f build_dir) patches;
         OpamGlobals.msg "Now compiling OCaml. This may take a while, \
                          please bear with us...\n";
-        if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
-          OpamFilename.exec build_dir
+        let commands =
+          if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then
             [ ( "./configure" :: OpamFile.Comp.configure comp )
               @ [ "-prefix";  OpamFilename.Dir.to_string switch_dir ]
             (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
@@ -2397,14 +2401,39 @@ let install_compiler t ~quiet:_ switch compiler =
             ; ( !OpamGlobals.makecmd () :: OpamFile.Comp.make comp )
             ; [ !OpamGlobals.makecmd () ; "install" ]
             ]
-        end else begin
+          else
           let t = { t with switch } in
           let env = resolve_variable t OpamVariable.Map.empty in
-          let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
-          OpamFilename.exec build_dir builds
-        end;
-        OpamGlobals.msg "Done.\n";
-        if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
+          OpamFilter.commands env (OpamFile.Comp.build comp)
+        in
+        let commands =
+          OpamMisc.filter_map (function
+              | [] -> None
+              | cmd::args ->
+                let text =
+                  Printf.sprintf "[%s%s]" cmd
+                    (match
+                       List.filter (fun s ->
+                           String.length s > 0 && s.[0] <> '-' &&
+                           not (String.contains s '/') && not (String.contains s '='))
+                         args
+                     with
+                     | [] -> ""
+                     | a::_ -> " "^a)
+                in
+                Some (OpamSystem.make_command
+                        ~text
+                        ~dir:(OpamFilename.Dir.to_string build_dir)
+                        cmd args))
+            commands
+        in
+        match
+          OpamProcess.Job.run (OpamProcess.Job.of_list commands)
+        with
+        | None ->
+          OpamGlobals.msg "Done.\n";
+          if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
+        | Some (_,err) -> OpamSystem.process_error err
       end;
 
       (* Update ~/.opam/aliases *)

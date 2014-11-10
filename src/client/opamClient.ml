@@ -1447,7 +1447,7 @@ module API = struct
           try
             let nv = OpamPackage.max_version candidates (fst atom) in
             OpamGlobals.note "Forcing removal of (uninstalled) %s" (OpamPackage.to_string nv);
-            OpamAction.remove_package ~metadata:false t nv;
+            OpamProcess.Job.run (OpamAction.remove_package ~metadata:false t nv);
             OpamAction.cleanup_package_artefacts t nv;
             nothing_to_do := false
           with Not_found ->
