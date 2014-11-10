@@ -47,8 +47,7 @@ let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
 
 let rmdir dirname =
-  log "rmdir %a" (slog Dir.to_string) dirname;
-  OpamSystem.remove (Dir.to_string dirname)
+  OpamSystem.remove_dir (Dir.to_string dirname)
 
 let cwd () =
   Dir.of_string (Unix.getcwd ())
@@ -72,11 +71,7 @@ let dirs d =
 let dir_is_empty d =
   OpamSystem.dir_is_empty (Dir.to_string d)
 
-let in_dir dirname fn =
-  if Sys.file_exists dirname then
-    OpamSystem.in_dir dirname fn
-  else
-    OpamSystem.internal_error "Cannot CD to %s: the directory does not exist!" dirname
+let in_dir dirname fn = OpamSystem.in_dir dirname fn
 
 let exec dirname ?env ?name ?metadata ?keep_going cmds =
   let env = match env with
@@ -89,8 +84,8 @@ let move_dir ~src ~dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]
 
 let exists_dir dirname =
-  let f = Dir.to_string dirname in
-  Sys.file_exists f && Sys.is_directory f
+  try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
+  with Unix.Unix_error _ -> false
 
 let copy_dir ~src ~dst =
   if exists_dir dst then
@@ -174,10 +169,12 @@ let read filename =
   OpamSystem.read (to_string filename)
 
 let open_in filename =
-  open_in (to_string filename)
+  try open_in (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let open_out filename =
-  open_out (to_string filename)
+  try open_out (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let write filename raw =
   OpamSystem.write (to_string filename) raw
@@ -186,8 +183,8 @@ let remove filename =
   OpamSystem.remove_file (to_string filename)
 
 let exists filename =
-  let f = to_string filename in
-  Sys.file_exists f && not (Sys.is_directory f)
+  try (Unix.stat (to_string filename)).Unix.st_kind = Unix.S_REG
+  with Unix.Unix_error _ -> false
 
 let with_contents fn filename =
   fn (read filename)

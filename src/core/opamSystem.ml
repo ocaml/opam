@@ -17,6 +17,7 @@
 exception Process_error of OpamProcess.result
 exception Internal_error of string
 exception Command_not_found of string
+exception File_not_found of string
 
 let log fmt = OpamGlobals.log "SYSTEM" fmt
 
@@ -57,12 +58,11 @@ let rec mk_temp_dir () =
     s
 
 let safe_mkdir dir =
-  if not (Sys.file_exists dir) then
-    try
-      log "mkdir %s" dir;
-      Unix.mkdir dir 0o755
-    with
-      Unix.Unix_error(Unix.EEXIST,_,_) -> ()
+  try
+    log "mkdir %s" dir;
+    Unix.mkdir dir 0o755
+  with
+    Unix.Unix_error(Unix.EEXIST,_,_) -> ()
 
 let mkdir dir =
   let rec aux dir =
@@ -103,8 +103,8 @@ let rec temp_file ?dir prefix =
   )
 
 let remove_file file =
-  if Sys.file_exists file
-  || (try let _ = Unix.lstat file in true with Unix.Unix_error _ -> false)
+  if
+    try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
   then (
     try
       log "rm %s" file;
@@ -129,22 +129,24 @@ let string_of_channel ic =
   Buffer.contents b
 
 let read file =
-  let ic = open_in_bin file in
+  let ic =
+    try open_in_bin file
+    with Sys_error _ -> raise (File_not_found file) in
   let s = string_of_channel ic in
   close_in ic;
   s
 
 let write file contents =
   mkdir (Filename.dirname file);
-  let oc = open_out_bin file in
+  let oc =
+    try open_out_bin file
+    with Sys_error _ -> raise (File_not_found file) in
   output_string oc contents;
   close_out oc
 
 let chdir dir =
-  if Sys.file_exists dir then (
-    Unix.chdir dir
-  ) else
-    internal_error "%s does not exist." dir
+  try Unix.chdir dir
+  with Unix.Unix_error _ -> raise (File_not_found dir)
 
 let in_dir dir fn =
   let reset_cwd =
@@ -154,7 +156,7 @@ let in_dir dir fn =
     fun () ->
       match cwd with
       | None     -> ()
-      | Some cwd -> try chdir cwd with Unix.Unix_error _ -> () in
+      | Some cwd -> try chdir cwd with File_not_found _ -> () in
   chdir dir;
   try
     let r = fn () in
@@ -165,15 +167,14 @@ let in_dir dir fn =
     raise e
 
 let list kind dir =
-  if Sys.file_exists dir then
+  try
     in_dir dir (fun () ->
       let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
-      List.sort compare (List.rev_map (Filename.concat dir) l)
+      List.map (Filename.concat dir) (List.sort compare l)
     )
-  else
-    []
+  with File_not_found _ -> []
 
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
@@ -207,8 +208,8 @@ let dirs dir =
   directories_with_links dir
 
 let dir_is_empty dir =
-  Sys.file_exists dir &&
-  in_dir dir (fun () -> Sys.readdir (Sys.getcwd ()) = [||])
+  try in_dir dir (fun () -> Sys.readdir (Sys.getcwd ()) = [||])
+  with File_not_found _ -> false
 
 let with_tmp_dir fn =
   let dir = mk_temp_dir () in
@@ -222,7 +223,7 @@ let with_tmp_dir fn =
     raise e
 
 let remove file =
-  if Sys.file_exists file && Sys2.is_directory file then
+  if (try Sys2.is_directory file with Sys_error _ -> false) then
     remove_dir file
   else
     remove_file file
@@ -241,23 +242,18 @@ let getchdir s =
 let normalize s =
   getchdir (getchdir s)
 
-let needs_normalization f =
-  Sys.file_exists f && Filename.is_relative f
-
 let real_path p =
-  if not (needs_normalization p) then p
-  else if Sys.is_directory p then
-    normalize p
-  else (
-    let dir =
-      let d = Filename.dirname p in
-      if needs_normalization d then normalize d else d in
-    let base = Filename.basename p in
-    if base = "." then
-      dir
-    else
-      dir / base
-  )
+  if Filename.is_relative p then
+    match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
+    | None -> p
+    | Some true -> normalize p
+    | Some false ->
+      let dir = normalize (Filename.dirname p) in
+      match Filename.basename p with
+      | "." -> dir
+      | base -> dir / base
+  else p
+
 type command = string list
 
 let default_env =
@@ -278,28 +274,56 @@ let reset_env = lazy (
   Array.of_list env
 )
 
-let command_exists ?(env=default_env) name =
-  let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-  let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
-  OpamProcess.clean_files r;
-  if OpamProcess.is_success r then
-    let is_external_cmd s = String.contains s '/' in
-    match r.OpamProcess.r_stdout with 
-      cmdname::_ -> (* check that we have permission to execute the command *)
+let env_var env var =
+  let len = Array.length env in
+  let prefix = var^"=" in
+  let pfxlen = String.length prefix in
+  let rec aux i =
+    if i >= len then "" else
+    let s = env.(i) in
+    if OpamMisc.starts_with ~prefix s then
+      String.sub s pfxlen (String.length s - pfxlen)
+    else aux (i+1)
+  in
+  aux 0
+
+let command_exists =
+  let check_existence env name =
+    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
+    let r = OpamProcess.run ~env ~name:(temp_file "command") ~verbose:false cmd args in
+    OpamProcess.clean_files r;
+    if OpamProcess.is_success r then
+      let is_external_cmd s = String.contains s '/' in
+      match r.OpamProcess.r_stdout with
+        cmdname::_ ->
+        (* check that we have permission to execute the command *)
 	if is_external_cmd cmdname then 
 	  (try 
-	    let open Unix in 
-	    let uid = getuid() and groups = Array.to_list(getgroups()) in
-	    let s = stat cmdname in
-	    let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
-            let mask = 0o001
-		lor (if uid = cmd_uid then 0o100 else 0)
-		lor (if List.mem cmd_gid groups then 0o010 else 0) in
-	    (cmd_perms land mask) <> 0
-          with _ -> false)
+	     let open Unix in
+	     let uid = getuid() and groups = Array.to_list(getgroups()) in
+	     let s = stat cmdname in
+	     let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
+             let mask = 0o001
+		        lor (if uid = cmd_uid then 0o100 else 0)
+		        lor (if List.mem cmd_gid groups then 0o010 else 0) in
+	     (cmd_perms land mask) <> 0
+           with _ -> false)
 	else true
-    | _ -> false
-  else false
+      | _ -> false
+    else false
+  in
+  let cached_results = Hashtbl.create 17 in
+  fun ?(env=default_env) name ->
+    let path = env_var env "PATH" in
+    try Hashtbl.find (Hashtbl.find cached_results path) name
+    with Not_found ->
+      let r = check_existence env name in
+      (try Hashtbl.add (Hashtbl.find cached_results path) name r
+       with Not_found ->
+         let phash = Hashtbl.create 17 in
+         Hashtbl.add phash name r;
+         Hashtbl.add cached_results path phash);
+      r
 
 let runs = ref []
 let print_stats () =
@@ -383,12 +407,13 @@ let read_command_output_opt ?verbose ?env cmd =
   with Command_not_found _ -> None
 
 let copy src dst =
-  if Sys.is_directory src then
-    internal_error "Cannot copy %s: it is a directory." src;
-  if Sys.file_exists dst && Sys.is_directory dst then
-    internal_error "Cannot copy to %s: it is a directory." dst;
-  if Sys.file_exists dst then
-    remove_file dst;
+  if (try Sys.is_directory src
+      with Sys_error _ -> raise (File_not_found src))
+  then internal_error "Cannot copy %s: it is a directory." src;
+  if (try Sys.is_directory dst with Sys_error _ -> false)
+  then internal_error "Cannot copy to %s: it is a directory." dst;
+  if Sys.file_exists dst
+  then remove_file dst;
   mkdir (Filename.dirname dst);
   command ["cp"; src; dst ]
 
@@ -400,7 +425,7 @@ let is_exec file =
 let install ?exec src dst =
   if Sys.is_directory src then
     internal_error "Cannot install %s: it is a directory." src;
-  if Sys.file_exists dst && Sys.is_directory dst then
+  if (try Sys.is_directory dst with Sys_error _ -> false) then
     internal_error "Cannot install to %s: it is a directory." dst;
   mkdir (Filename.dirname dst);
   let exec = match exec with

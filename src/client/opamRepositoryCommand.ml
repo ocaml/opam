@@ -142,8 +142,9 @@ let fix_compiler_descriptions t ~verbose =
       | Some (repo, prefix) ->
         let files = OpamRepository.compiler_files repo prefix comp in
         let dir = OpamPath.compilers t.root comp in
-        if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
+        OpamFilename.rmdir dir;
         OpamFilename.mkdir dir;
+        prerr_endline ("mkdir" ^ OpamFilename.Dir.to_string dir);
         List.iter (fun file ->
             OpamFilename.copy_in file dir
           ) files;

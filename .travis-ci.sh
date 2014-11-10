@@ -44,9 +44,13 @@ export OCAMLRUNPARAM=b
 
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
+    # ignore the warnings
     opam init
+    # Needed to get the fixed up remote on opam 1.1
+    # Can be removed once we switch to the 1.2 PPAs
+    opam update
     eval `opam config env`
-    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re jsonm
+    opam install ocamlfind lwt cohttp.0.11.2 ssl cmdliner ocamlgraph dose cudf re jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary

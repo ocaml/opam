@@ -121,7 +121,7 @@ val remove: t -> unit
 (** Removes everything in [filename] if existed, then write [contents] instead. *)
 val write: t -> string -> unit
 
-(** see [Sys.file_exists] *)
+(** Returns true if the file exists and is a regular file or a symlink to one *)
 val exists: t -> bool
 
 (** Check whether a file has a given suffix *)

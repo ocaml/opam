@@ -1531,8 +1531,7 @@ let upgrade_to_1_1 () =
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
     if !OpamGlobals.safe_mode then
       OpamGlobals.error_and_exit "Safe mode: not upgrading from opamroot <1.1";
-    let cwd = OpamFilename.cwd () in
-    let () = OpamSystem.chdir OpamGlobals.home in
+    OpamSystem.in_dir OpamGlobals.home @@ fun () ->
 
     OpamGlobals.header_msg
       "Upgrading to OPAM 1.1 %s"
@@ -1638,10 +1637,6 @@ let upgrade_to_1_1 () =
         if not (OpamFilename.exists dst) then OpamFilename.copy ~src:file ~dst
       ) (OpamFilename.files opam_tmp);
     OpamFilename.rmdir opam_tmp;
-
-    let () =
-      try OpamSystem.chdir (OpamFilename.Dir.to_string cwd)
-      with OpamSystem.Internal_error _ -> () in
 
     OpamGlobals.header_msg
       "Upgrade complete. Now continuing with \"%s\""
@@ -2595,7 +2590,6 @@ let update_dev_packages t packages =
 let download_archive t nv =
   log "get_archive %a" (slog OpamPackage.to_string) nv;
   let dst = OpamPath.archive t.root nv in
-  if OpamFilename.exists dst then Some dst else
   try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
