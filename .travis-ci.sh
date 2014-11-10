@@ -50,7 +50,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     # Can be removed once we switch to the 1.2 PPAs
     opam update
     eval `opam config env`
-    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re jsonm
+    opam install ocamlfind lwt cohttp.0.11.2 ssl cmdliner ocamlgraph dose cudf re jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
