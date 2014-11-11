@@ -51,7 +51,7 @@ module type SIG = sig
     G.t ->
     (G.V.t * 'a) list
 
-  exception Errors of (G.V.t * exn) list * G.V.t list
+  exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
   exception Cyclic of G.V.t list list
 end
 
@@ -63,7 +63,7 @@ module Make (G : G) = struct
   module M = OpamMisc.Map.Make (V)
   module S = OpamMisc.Set.Make (V)
 
-  exception Errors of (V.t * exn) list * V.t list
+  exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
   exception Cyclic of V.t list list
 
   open S.Op
@@ -156,7 +156,7 @@ module Make (G : G) = struct
               if M.mem n results || List.mem_assoc n errors then remaining
               else n::remaining)
             g [] in
-        raise (Errors (errors, List.rev remaining))
+        raise (Errors (M.keys results, errors, List.rev remaining))
       in
 
       if M.is_empty running && S.is_empty ready then
@@ -263,6 +263,8 @@ let flat_graph_of_array a =
   let g = IntGraph.create () in
   Array.iteri (fun i _ -> IntGraph.add_vertex g i) a;
   g
+
+exception Errors = IntGraph.Parallel.Errors
 
 let iter ~jobs ~command l =
   let a = Array.of_list l in

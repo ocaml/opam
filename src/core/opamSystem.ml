@@ -680,6 +680,7 @@ let download_command =
         "-OL"; src
     ] in
     make_command ~dir command curl_args @@> fun r ->
+    raise_on_process_error r;
     match r.OpamProcess.r_stdout with
     | [] -> internal_error "curl: empty response while downloading %s" src
     | l  ->

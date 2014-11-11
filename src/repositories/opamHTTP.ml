@@ -246,30 +246,35 @@ module B = struct
       (fun e -> OpamMisc.fatal e; Done (Not_available remote_url)) @@
     OpamFilename.download ~overwrite:true filename dirname
     @@+ fun local_file ->
-    OpamRepository.check_digest local_file checksum;
-    OpamGlobals.msg "[%s] %s downloaded\n"
-      (OpamGlobals.colorise `green (OpamPackage.to_string package))
-      (OpamFilename.to_string filename);
-    Done (Result (F local_file))
+    if OpamRepository.check_digest local_file checksum then
+      (OpamGlobals.msg "[%s] %s downloaded\n"
+         (OpamGlobals.colorise `green (OpamPackage.to_string package))
+         (OpamFilename.to_string filename);
+       Done (Result (F local_file)))
+    else
+      (OpamFilename.remove local_file;
+       Done (Not_available remote_url))
 
   let pull_archive repo filename =
     log "pull-archive";
     make_state ~download_index:false repo
     @@+ fun state ->
-    try
-      let local_file = OpamFilename.Map.find filename state.remote_local in
-      if is_up_to_date state local_file then
-        Done (Up_to_date local_file)
-      else (
-	OpamGlobals.msg "[%s] Downloading %s\n"
-	  (OpamGlobals.colorise `blue
-             (OpamRepositoryName.to_string repo.repo_name))
-	  (OpamFilename.prettify filename);
-	curl ~remote_file:filename ~local_file
-        @@+ fun () -> Done (Result local_file)
-      )
-    with Not_found ->
-      Done (Not_available (OpamFilename.to_string filename))
+    let local_file = OpamFilename.Map.find filename state.remote_local in
+    if is_up_to_date state local_file then
+      Done (Up_to_date local_file)
+    else
+      OpamProcess.Job.catch
+        (function
+          | Not_found ->
+            Done (Not_available (OpamFilename.to_string filename))
+          | e -> raise e) @@
+      curl ~remote_file:filename ~local_file
+      @@+ fun () ->
+      OpamGlobals.msg "[%s] %s downloaded\n"
+        (OpamGlobals.colorise `blue
+           (OpamRepositoryName.to_string repo.repo_name))
+        (OpamFilename.prettify filename);
+      Done (Result local_file)
 
   let revision _ =
     Done None

@@ -2648,13 +2648,18 @@ let download_archive t nv =
   try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
-    OpamProcess.Job.with_text
-      (Printf.sprintf "[dl %s]" (OpamPackage.name_to_string nv))
-      (OpamRepository.pull_archive repo nv)
-    @@+ function
-    | Not_available _ -> Done None
-    | Up_to_date f
-    | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
+    if repo.repo_kind = `http then
+      let text = Printf.sprintf "[%s: %s]"
+          (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
+          (OpamRepositoryName.to_string repo.repo_name)
+      in
+      OpamProcess.Job.with_text text @@
+      OpamRepository.pull_archive repo nv
+      @@+ function
+      | Not_available _ -> Done None
+      | Up_to_date f
+      | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
+    else Done None
   with Not_found ->
     Done None
 
@@ -2668,12 +2673,13 @@ let download_upstream t nv dirname =
     let mirrors = remote_url :: OpamFile.URL.mirrors u in
     let kind = OpamFile.URL.kind u in
     let checksum = OpamFile.URL.checksum u in
-    OpamProcess.Job.with_text
-      (Printf.sprintf "[dl %s]" (OpamPackage.name_to_string nv))
-      (OpamRepository.pull_url kind nv dirname checksum mirrors)
-    @@+ function
-    | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
-    | Result f | Up_to_date f -> Done (Some f)
+    let text = Printf.sprintf "[%s: %s]"
+        (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
+        (string_of_repository_kind kind)
+    in
+    OpamProcess.Job.with_text text @@
+    OpamRepository.pull_url kind nv dirname checksum mirrors
+    @@| fun x -> Some x
 
 let check f =
   let root = OpamPath.root () in

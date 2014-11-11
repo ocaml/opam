@@ -31,6 +31,10 @@ end
 
 (** Simply parallel execution of tasks *)
 
+(** In the simple iter, map and reduce cases, ints are the indexes of the jobs
+    in the list *)
+exception Errors of int list * (int * exn) list * int list
+
 val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> 'a list -> unit
 
 val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> 'a list -> 'b list
@@ -62,7 +66,12 @@ module type SIG = sig
     G.t ->
     (G.V.t * 'a) list
 
-  exception Errors of (G.V.t * exn) list * G.V.t list
+  (** Raised when the [command] functions raised exceptions. Parameters are
+      (successfully traversed nodes, exception nodes and corresponding
+      exceptions, remaining nodes that weren't traversed) *)
+  exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
+
+  (** Raised when the graph to traverse has cycles. Returns the cycles found. *)
   exception Cyclic of G.V.t list list
 end
 

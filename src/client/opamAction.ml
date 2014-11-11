@@ -200,21 +200,29 @@ let prepare_package_build t nv =
 let download_package t nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
-  if !OpamGlobals.dryrun || !OpamGlobals.fake then Done () else
+  if !OpamGlobals.dryrun || !OpamGlobals.fake then Done None else
   let dir =
     try match OpamPackage.Name.Map.find name t.pinned with
       | Version _ -> Some (OpamPath.dev_package t.root nv)
       | _ -> Some (OpamPath.Switch.dev_package t.root t.switch name)
     with Not_found -> None
   in
+  let opt_of_dl = function
+    | Some (Up_to_date f | Result f) -> Some f
+    | Some (Not_available _) -> None
+    | None -> None
+  in
   match dir with
-  | Some dir -> OpamState.download_upstream t nv dir @@+ fun _ -> Done ()
+  | Some dir ->
+    OpamState.download_upstream t nv dir @@| opt_of_dl
   | None ->
     OpamState.download_archive t nv @@+ function
-    | Some f -> assert (f = OpamPath.archive t.root nv); Done ()
+    | Some f ->
+      assert (f = OpamPath.archive t.root nv);
+      Done (Some (F f))
     | None ->
       let dir = OpamPath.dev_package t.root nv in
-      OpamState.download_upstream t nv dir @@+ fun _ -> Done ()
+      OpamState.download_upstream t nv dir @@| opt_of_dl
 
 let extract_package t nv =
   log "extract_package: %a" (slog OpamPackage.to_string) nv;

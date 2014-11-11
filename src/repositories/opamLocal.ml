@@ -72,7 +72,9 @@ let rsync_dirs src dst =
   if not remote then OpamFilename.mkdir src;
   rsync src_s dst_s @@| function
   | Not_available s -> Not_available s
-  | Result _        -> Result dst
+  | Result _        ->
+    if OpamFilename.exists_dir dst then Result dst
+    else Not_available dst_s
   | Up_to_date _    -> Up_to_date dst
 
 let rsync_file src dst =
@@ -89,7 +91,9 @@ let rsync_file src dst =
   @@| function
   | None -> Not_available src_s
   | Some [] -> Up_to_date dst
-  | Some [_] -> Result dst
+  | Some [_] ->
+    if OpamFilename.exists dst then Result dst
+    else Not_available src_s
   | Some l ->
     OpamSystem.internal_error
       "unknown rsync output: {%s}"
@@ -155,11 +159,14 @@ module B = struct
       | Result [f] | Up_to_date [f] as r
         when not (Sys.is_directory (Filename.concat dir f)) ->
         let filename = OpamFilename.OP.(local_dirname // f) in
-        OpamRepository.check_digest filename checksum;
-        (match r with
-         | Result _ -> Result (F filename)
-         | Up_to_date _ -> Up_to_date (F filename)
-         | _ -> assert false)
+        if OpamRepository.check_digest filename checksum then
+          match r with
+          | Result _ -> Result (F filename)
+          | Up_to_date _ -> Up_to_date (F filename)
+          | _ -> assert false
+        else
+          (OpamFilename.remove filename;
+           Not_available remote_url)
       | Result _ -> Result (D local_dirname)
       | Up_to_date _ -> Up_to_date (D local_dirname)
       | Not_available d -> Not_available d
@@ -167,20 +174,18 @@ module B = struct
     OpamGlobals.msg "[%s] %s %s\n"
       (OpamGlobals.colorise `green (OpamPackage.to_string package))
       remote_url
-      (match r with
-       | Up_to_date _ -> "already up-to-date"
-       | Result _ -> "synchronized"
-       | Not_available _ -> "unavailable");
+      (string_of_download r);
     r
 
   let pull_archive repo filename =
     let local_dir = OpamPath.Repository.archives_dir repo in
     OpamFilename.mkdir local_dir;
     pull_file_quiet local_dir filename @@| fun r ->
-    OpamGlobals.msg "[%s] %s synchronized\n"
+    OpamGlobals.msg "[%s] %s %s\n"
       (OpamGlobals.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
-      (OpamFilename.to_string filename);
+      (OpamFilename.to_string filename)
+      (string_of_download r);
     r
 
   let revision _ =

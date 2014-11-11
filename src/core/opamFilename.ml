@@ -366,6 +366,7 @@ let copy_files ~src ~dst =
       if not !OpamGlobals.do_not_copy_files then
         let base = remove_prefix src file in
         let dst_file = create dst (Base.of_string base) in
+        if !OpamGlobals.verbose then
         OpamGlobals.msg "Copying %s %s %s/\n"
           (prettify file)
           (if exists dst_file then "over" else "to")

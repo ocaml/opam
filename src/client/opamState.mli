@@ -288,9 +288,9 @@ val download_archive: state -> package ->
   filename option OpamProcess.job
 
 (** Download the upstream archive, add the eventual additional files
-    and return the directory.. *)
+    and return the directory. *)
 val download_upstream: state -> package -> dirname ->
-  generic_file option OpamProcess.job
+  generic_file download option OpamProcess.job
 
 (** Global package state. *)
 val package_state: state -> checksums package_map

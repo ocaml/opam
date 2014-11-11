@@ -25,6 +25,10 @@ let download_map fn = function
 
 let download_dir = download_map (fun d -> D d)
 let download_file = download_map (fun f -> F f)
+let string_of_download = function
+  | Up_to_date _ -> "already up-to-date"
+  | Result _ -> "synchronized"
+  | Not_available _ -> "unavailable"
 
 let string_of_address = function
   | url, None   -> url

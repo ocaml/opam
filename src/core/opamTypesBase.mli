@@ -27,6 +27,9 @@ val download_dir: dirname download -> generic_file download
 (** Upcast a downloaded file. *)
 val download_file: filename download -> generic_file download
 
+(** Corresponding user message *)
+val string_of_download: _ download -> string
+
 (** Print an address *)
 val string_of_address: address -> string
 

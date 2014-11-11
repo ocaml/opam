@@ -346,41 +346,39 @@ let parallel_apply t action solution =
 
   (* 0/ Download everything that we will need, for parallelism and failing
         early in case there is a failure *)
-  let status, finalize = try
-      let sources_needed = OpamAction.sources_needed t solution in
-      if OpamPackage.Set.is_empty sources_needed then
-        `Successful (), finalize
-      else
-      let _cache =
-        OpamPackage.Set.iter (fun nv ->
-            if not (OpamState.is_locally_pinned t (OpamPackage.name nv)) then
-              try
-                let repo =
-                  OpamState.find_repository t
-                    (fst (OpamPackage.Map.find nv t.package_index)) in
-                if repo.repo_kind = `http then OpamHTTP.preload_state repo
-              with Not_found -> ())
+  let status, finalize =
+    let sources_needed = OpamAction.sources_needed t solution in
+    if OpamPackage.Set.is_empty sources_needed then
+      `Successful (), finalize
+    else
+    let _cache =
+      OpamPackage.Set.iter (fun nv ->
+          if not (OpamState.is_locally_pinned t (OpamPackage.name nv)) then
+            try
+              let repo =
+                OpamState.find_repository t
+                  (fst (OpamPackage.Map.find nv t.package_index)) in
+              if repo.repo_kind = `http then OpamHTTP.preload_state repo
+            with Not_found -> ())
+        sources_needed
+    in
+    let sources_needed = OpamPackage.Set.elements sources_needed in
+    OpamGlobals.header_msg "Gathering package archives";
+    try
+      let results =
+        OpamParallel.map
+          ~jobs:(OpamState.dl_jobs t)
+          ~command:(OpamAction.download_package t)
           sources_needed
       in
-      OpamGlobals.header_msg "Synchronizing package archives";
-      (* Todo: gather results in a more clever way ; don't fail on first
-         error *)
-      OpamParallel.iter
-        ~jobs:(OpamState.dl_jobs t)
-        ~command:(OpamAction.download_package t)
-        (OpamPackage.Set.elements sources_needed);
-      `Successful (), finalize
+      if not !OpamGlobals.dryrun && not !OpamGlobals.fake &&
+         List.mem None results then
+        `Error (Error ([],[],[])), finalize
+      else
+        `Successful (), finalize
     with
-    | OpamPackage.Graph.Parallel.Errors (errors, _) ->
-      (* Error during download *)
-      let msg =
-        Printf.sprintf "Could not download archives of %s"
-          (OpamMisc.pretty_list
-             (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors)) in
-      OpamGlobals.error "%s" msg;
-      `Error (Error ([],[],[])), finalize
-    | e ->
-      `Exception e, finalize
+    | OpamParallel.Errors _ -> `Error (Error ([],[],[])), finalize
+    | e -> `Exception e, finalize
   in
 
   (* 1/ We remove all installed packages appearing in the solution. *)
@@ -448,17 +446,8 @@ let parallel_apply t action solution =
           List.iter display_error failed;
           output_json_actions failed
       with
-      | PackageActionGraph.Parallel.Errors (errors, remaining) ->
-        let failed = List.map fst errors in
-        let successful =
-          PackageActionGraph.fold_vertex
-            (fun pkg successful ->
-               if not (List.mem pkg failed) && not (List.mem pkg remaining)
-               then pkg::successful
-               else successful)
-            solution.to_process []
-        in
-        `Error (Error (successful, failed, remaining)),
+      | PackageActionGraph.Parallel.Errors (successful, errors, remaining) ->
+        `Error (Error (successful, List.map fst errors, remaining)),
         fun () ->
           finalize ();
           List.iter display_error errors;

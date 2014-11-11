@@ -19,8 +19,9 @@
 open OpamTypes
 open OpamState.Types
 
-(** Downloads the source for a package to the local cache. *)
-val download_package: t -> package -> unit OpamProcess.job
+(** Downloads the source for a package to the local cache. Returns the file or
+    dir downloaded, or None if the download failed. *)
+val download_package: t -> package -> OpamTypes.generic_file option OpamProcess.job
 
 (** Extracts and patches the source of a package found in the local cache. *)
 val extract_package: t -> package -> unit

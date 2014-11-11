@@ -124,7 +124,7 @@ val pull_url_and_fix_digest: repository_kind ->
 
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
-val check_digest: filename -> string option -> unit
+val check_digest: filename -> string option -> bool
 
 (** Pull an archive in a repository *)
 val pull_archive: repository -> package -> filename download OpamProcess.job

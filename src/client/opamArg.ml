@@ -1686,7 +1686,8 @@ let source =
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
-      OpamProcess.Job.run (OpamAction.download_package t nv);
+      if OpamProcess.Job.run (OpamAction.download_package t nv) = None
+      then OpamGlobals.error_and_exit "Download failed";
       OpamAction.extract_package t nv;
       move_dir
         ~src:(OpamPath.Switch.build t.root t.switch nv)

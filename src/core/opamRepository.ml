@@ -158,25 +158,18 @@ let pull_url_and_fix_digest kind package dirname checksum file url =
     Done r
 
 let check_digest filename = function
-  | None          -> ()
-  | Some expected ->
-    if !OpamGlobals.no_checksums then ()
+  | Some expected when not (!OpamGlobals.no_checksums) ->
+    let actual = OpamFilename.digest filename in
+    if actual = expected then true
     else
-      let actual = OpamFilename.digest filename in
-      if actual = expected then ()
-      else
-        OpamGlobals.error_and_exit
-          "Wrong checksum for %s:\n\
-          \  - %s [expected result]\n\
-          \  - %s [actual result]\n\
-           This is surely due to outdated package descriptions and should be \
-           fixed by running `opam update`.\n\
-           In case an update does not fix that problem, you can use the \
-           `--no-checksums` command-line option\n\
-           to /bypass checking for invalid checksums."
-          (OpamFilename.to_string filename)
-          expected
-          actual
+      (OpamGlobals.error
+         "Bad checksum for %s:\n\
+         \  - %s [expected result]\n\
+         \  - %s [actual result]\n\
+          This may be fixed by running `opam update`.\n"
+         (OpamFilename.to_string filename) expected actual;
+       false)
+  | _ -> true
 
 let pull_archive repo nv =
   let module B = (val find_backend_by_kind repo.repo_kind: BACKEND) in
