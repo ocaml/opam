@@ -342,7 +342,7 @@ val update_dev_packages: state -> package_set -> package_set
 
 (** Updates a dev or pinned package from its upstream; returns true
     if changed, false otherwise *)
-val update_dev_package: state -> package -> bool
+val update_dev_package: state -> package -> bool OpamProcess.job
 
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool

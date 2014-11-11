@@ -20,6 +20,7 @@ open OpamState.Types
 open OpamMisc.OP
 open OpamPackage.Set.Op
 open OpamFilename.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 let slog = OpamGlobals.slog
@@ -1619,7 +1620,7 @@ module API = struct
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamGlobals.msg "\n";
       let nv = OpamState.pinned t name in
-      ignore (OpamState.update_dev_package t nv);
+      OpamProcess.Job.run (OpamState.update_dev_package t nv @@| fun _ -> ());
       OpamGlobals.msg "\n";
       let empty_opam = OpamState.has_empty_opam t nv in
       let needs_reinstall2 =

@@ -2466,7 +2466,7 @@ let update_dev_package t nv =
     try pinned t name, true
     with Not_found -> nv, false in
   match url t nv with
-  | None     -> false
+  | None     -> Done false
   | Some url ->
     let remote_url = OpamFile.URL.url url in
     let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -2477,11 +2477,13 @@ let update_dev_package t nv =
         (slog string_of_address) remote_url
         (slog string_of_repository_kind) kind;
       let checksum = OpamFile.URL.checksum url in
-      let r =
-        OpamProcess.Job.run
-          (OpamRepository.pull_url kind nv srcdir checksum mirrors)
-      in
-      match r with
+      let text =
+        Printf.sprintf "[%s: %s]"
+          (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
+          (string_of_repository_kind kind) in
+      OpamProcess.Job.with_text text @@
+      OpamRepository.pull_url kind nv srcdir checksum mirrors
+      @@| function
       | Not_available u ->
         OpamGlobals.error "Upstream %s of %s is unavailable" u (OpamPackage.to_string nv);
         false
@@ -2489,7 +2491,7 @@ let update_dev_package t nv =
       | Result _        -> true
     in
     if not pinned then
-      if kind = `http then false else fetch ()
+      if kind = `http then Done false else fetch ()
     else
     (* XXX need to also consider updating metadata for version-pinned packages ? *)
     let overlay = OpamPath.Switch.Overlay.package t.root t.switch name in
@@ -2534,7 +2536,7 @@ let update_dev_package t nv =
          None, None)
     in
     (* Do the update *)
-    let result = fetch () in
+    fetch () @@+ fun result ->
     let new_meta = (* New version from the source *)
       hash_meta @@
       local_opam
@@ -2607,15 +2609,19 @@ let update_dev_package t nv =
           (OpamFilename.Dir.to_string bak);
         install_meta srcdir user_meta new_meta;
       );
-    result
+    Done result
 
 let update_dev_packages t packages =
   log "update-dev-packages";
   let updates =
-    OpamPackage.Set.fold (fun nv set ->
-        if update_dev_package t nv then OpamPackage.Set.add nv set
-        else set)
-      packages OpamPackage.Set.empty
+    OpamParallel.reduce ~jobs:(dl_jobs t)
+      ~command:(fun nv ->
+          update_dev_package t nv @@| function
+          | true -> OpamPackage.Set.singleton nv
+          | false -> OpamPackage.Set.empty)
+      ~merge:OpamPackage.Set.union
+      ~nil:OpamPackage.Set.empty
+      (OpamPackage.Set.elements packages)
   in
   let global =
     OpamPackage.Set.of_list (OpamPackage.Map.keys (global_dev_packages t)) in
