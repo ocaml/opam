@@ -48,6 +48,7 @@ type t = {
   p_env    : string option;
   p_info   : string option;
   p_metadata: (string * string) list;
+  p_verbose: bool;
 }
 
 let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND]
@@ -109,14 +110,14 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
     let close_fd () = Unix.close fd in
-    if verbose then (
-      flush stderr;
-      let chan = Unix.open_process_out ("tee -a " ^ Filename.quote f) in
-      let close () =
-        match Unix.close_process_out chan with
-        | _ -> close_fd () in
-      Unix.descr_of_out_channel chan, close
-    ) else
+    (* if verbose then ( *)
+    (*   flush stderr; *)
+    (*   let chan = Unix.open_process_out ("tee -a " ^ Filename.quote f) in *)
+    (*   let close () = *)
+    (*     match Unix.close_process_out chan with *)
+    (*     | _ -> close_fd () in *)
+    (*   Unix.descr_of_out_channel chan, close *)
+    (* ) else *)
       fd, close_fd in
   let oldcwd = Sys.getcwd () in
   let cwd = OpamMisc.Option.default oldcwd dir in
@@ -180,6 +181,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     p_env    = env_file;
     p_info   = info_file;
     p_metadata = metadata;
+    p_verbose = verbose;
   }
 
 type result = {
@@ -243,6 +245,14 @@ let exit_status p code =
   let cleanup =
     OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
   in
+  if p.p_verbose then
+    (OpamGlobals.msg "%s %s %s\n" (OpamGlobals.colorise `yellow "+")
+       p.p_name (String.concat " " (List.map (Printf.sprintf "%S") p.p_args));
+     let pfx = OpamGlobals.colorise `yellow "- " in
+     let p s = print_string pfx; print_string s; print_newline () in
+     List.iter p stdout;
+     List.iter p stderr;
+     flush Pervasives.stdout);
   let info =
     make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
       ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
