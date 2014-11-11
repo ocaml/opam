@@ -1052,10 +1052,10 @@ module API = struct
       in
       let t, compiler_updates =
         let t = OpamRepositoryCommand.update_compiler_index t in
-        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
+        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:!OpamGlobals.verbose in
       let package_updates =
         let t = OpamRepositoryCommand.update_package_index t in
-        OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
+        OpamRepositoryCommand.fix_package_descriptions t ~verbose:!OpamGlobals.verbose in
 
       (* If necessary, output a JSON file *)
       if OpamJson.verbose () then
@@ -1073,7 +1073,8 @@ module API = struct
 
     if dev_packages_need_update then (
       let updates =
-        OpamRepositoryCommand.update_dev_packages ~verbose:true t dev_packages in
+        OpamRepositoryCommand.update_dev_packages ~verbose:!OpamGlobals.verbose
+          t dev_packages in
       let json = `O [ "dev-packages-update", OpamPackage.Set.to_json updates ] in
       OpamJson.add json
     );
