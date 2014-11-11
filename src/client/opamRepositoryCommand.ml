@@ -34,6 +34,13 @@ let update t repo =
          (OpamRepositoryName.to_string repo.repo_name);
        Done ())
     else
+      let text =
+        Printf.sprintf "[%s: %s]"
+          (OpamGlobals.colorise `blue
+             (OpamRepositoryName.to_string repo.repo_name))
+          (string_of_repository_kind repo.repo_kind)
+      in
+      OpamProcess.Job.with_text text @@
       OpamRepository.update r @@+ fun () ->
       if n <> max_loop && r = repo then
         (OpamGlobals.warning "%s: Cyclic redirections, stopping."
@@ -102,8 +109,9 @@ let filter_compiler_checksums cs =
   List.filter keep cs
 
 let fix_compiler_descriptions t ~verbose =
-  OpamGlobals.msg "Updating %s/ ...\n"
-    (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
+  log "Updating %a/ ...\n"
+    (slog (OpamFilename.prettify_dir @* OpamPath.compilers_dir))
+    t.root;
   let global_index = OpamState.compiler_state t in
   let repo_index = OpamState.compiler_repository_state t in
   let niet = String.concat ":" in
@@ -253,8 +261,8 @@ let filter_package_checksums cs =
 (* Update the package contents, display the new packages and update
    reinstall *)
 let fix_package_descriptions t ~verbose =
-  OpamGlobals.msg "Updating %s/ ...\n"
-    (OpamFilename.prettify_dir (OpamPath.packages_dir t.root));
+  log "Updating %a/ ...\n"
+    (slog (OpamFilename.prettify_dir @* OpamPath.packages_dir)) t.root;
 
   let global_index = OpamState.package_state t in
   let repo_index   = OpamState.package_repository_state t in
@@ -420,14 +428,14 @@ let compare_repo t r1 r2 =
 
 let update_package_index t =
   let file = OpamPath.package_index t.root in
-  OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
+  log "Updating %a ...\n" (slog OpamFilename.prettify) file;
   let package_index = OpamState.package_index t in
   OpamFile.Package_index.write file package_index;
   { t with package_index }
 
 let update_compiler_index t =
   let file = OpamPath.compiler_index t.root in
-  OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
+  log "Updating %a ...\n" (slog OpamFilename.prettify) file;
   let compiler_index = OpamState.compiler_index t in
   OpamFile.Compiler_index.write file compiler_index;
   { t with compiler_index }
