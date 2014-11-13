@@ -1040,6 +1040,7 @@ module API = struct
     end;
 
     if repositories_need_update then (
+      OpamGlobals.header_msg "Updating package repositories";
       let repos = OpamRepositoryName.Map.values repositories in
       let t =
         OpamParallel.reduce
@@ -1072,6 +1073,7 @@ module API = struct
     );
 
     if dev_packages_need_update then (
+      OpamGlobals.header_msg "Synchronizing development packages";
       let updates =
         OpamRepositoryCommand.update_dev_packages ~verbose:!OpamGlobals.verbose
           t dev_packages in

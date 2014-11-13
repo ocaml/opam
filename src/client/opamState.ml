@@ -2355,7 +2355,9 @@ let install_compiler t ~quiet:_ switch compiler =
               "No source for compiler %s"
               (OpamCompiler.to_string compiler) in
         let build_dir = OpamPath.Switch.build_ocaml t.root switch in
-        let kind = OpamFile.Comp.kind comp in
+        let kind = OpamFile.Comp. kind comp in
+        let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
+        OpamGlobals.header_msg "Installing compiler %s" comp_name;
         if kind = `local
         && Sys.file_exists (fst comp_src)
         && Sys.is_directory (fst comp_src)
@@ -2366,13 +2368,18 @@ let install_compiler t ~quiet:_ switch compiler =
         else
           OpamProcess.Job.run @@
           OpamFilename.with_tmp_dir_job (fun download_dir ->
-              let text = match repository_and_prefix_of_compiler t compiler with
+              let fake_pkg =
+                match repository_and_prefix_of_compiler t compiler with
                 | None -> OpamPackage.of_string "compiler.get"
                 | Some (repo,_) ->
                   OpamPackage.of_string (OpamRepositoryName.to_string
                                            repo.repo_name ^ ".comp")
               in
-              OpamRepository.pull_url kind text download_dir None [comp_src]
+              let text =
+                Printf.sprintf "[%s: %s]" comp_name (string_of_repository_kind kind)
+              in
+              OpamProcess.Job.with_text text @@
+              OpamRepository.pull_url kind fake_pkg download_dir None [comp_src]
               @@+ function
               | Not_available u ->
                 OpamGlobals.error_and_exit "%s is not available." u
@@ -2384,6 +2391,11 @@ let install_compiler t ~quiet:_ switch compiler =
           OpamParallel.map
             ~jobs:(dl_jobs t)
             ~command:(fun f ->
+                let text =
+                  Printf.sprintf "[dl %s]"
+                    (OpamFilename.Base.to_string (OpamFilename.basename f))
+                in
+                OpamProcess.Job.with_text text @@
                 OpamFilename.download ~overwrite:true f build_dir)
             patches
         in

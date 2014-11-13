@@ -405,6 +405,9 @@ module Job = struct
     let rec aux = function
       | Done x -> x
       | Run (cmd,cont) ->
+        OpamMisc.Option.iter
+          (fun txt -> OpamGlobals.msg "Processing: %s\r" txt; print_string "\027[K")
+          (text_of_command cmd);
         (* Printf.eprintf "Sequential run: %s\n%!" (string_of_command cmd); *)
         aux (cont (run cmd))
     in

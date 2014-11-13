@@ -76,9 +76,9 @@ module Make (G : G) = struct
     let print_status (running: (OpamProcess.t * 'a * string option) M.t) =
       let texts =
         OpamMisc.filter_map (fun (_,_,t) -> t) (M.values running) in
-      if texts <> [] then
-        (OpamGlobals.msg "\r[KRunning: %s\r" (String.concat " " texts);
-         print_string "[K")
+      if texts <> [] && !OpamGlobals.color then
+        (OpamGlobals.msg "\r\027[KProcessing: %s\r" (String.concat " " texts);
+         print_string "\027[K")
     in
 
     (* nslots is the number of free slots *)
@@ -103,6 +103,10 @@ module Make (G : G) = struct
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
+          if !OpamGlobals.verbose && not !OpamGlobals.color then
+            OpamMisc.Option.iter
+              (OpamGlobals.msg "RUN %s\n")
+              (OpamProcess.text_of_command cmd);
           let p = OpamProcess.run_background cmd in
           let running =
             M.add n (p, cont, OpamProcess.text_of_command cmd) running
