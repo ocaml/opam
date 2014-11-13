@@ -65,14 +65,14 @@ let make_state ~download_index repo =
              if OpamFilename.exists local_index_file_save then
                OpamFilename.move ~src:local_index_file_save ~dst:local_index_file;
              raise e)
-          (OpamGlobals.msg "[%s] Downloading %s\n"
-             (OpamGlobals.colorise `blue
-                (OpamRepositoryName.to_string repo.repo_name))
-             (OpamFilename.to_string remote_index_file);
-           OpamFilename.download ~compress:true ~overwrite:false
+          (OpamFilename.download ~compress:true ~overwrite:false
              remote_index_file repo.repo_root
            @@+ fun file ->
            OpamFilename.remove local_index_file_save;
+           (* OpamGlobals.msg "[%s] %s downloaded\n" *)
+           (*   (OpamGlobals.colorise `blue *)
+           (*      (OpamRepositoryName.to_string repo.repo_name)) *)
+           (*   (OpamFilename.to_string remote_index_file); *)
            Done file)
       ) else
         Done local_index_file
@@ -156,19 +156,18 @@ module B = struct
             Initialisation might take some time.\n";
          Done ())
       (* Download index.tar.gz *)
-      (OpamGlobals.msg "[%s] Downloading %s\n"
-         (OpamGlobals.colorise `blue
-            (OpamRepositoryName.to_string repo.repo_name))
-         (OpamFilename.to_string state.remote_index_archive);
-       OpamFilename.download ~overwrite:true
+      (OpamFilename.download ~overwrite:true
          state.remote_index_archive state.local_dir
        @@+ fun file ->
        log "Done %s" (OpamFilename.to_string file);
+       (* OpamGlobals.msg "[%s] %s downloaded\n" *)
+       (*   (OpamGlobals.colorise `blue *)
+       (*      (OpamRepositoryName.to_string repo.repo_name)) *)
+       (*   (OpamFilename.to_string state.remote_index_archive); *)
        Done (OpamFilename.extract_in file state.local_dir))
 
   let curl ~remote_file ~local_file =
     log "dowloading %a" (slog OpamFilename.to_string) remote_file;
-    (* OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file); *)
     OpamFilename.download_as ~overwrite:true remote_file local_file
 
   let pull_repo repo =
@@ -202,12 +201,14 @@ module B = struct
         OpamFilename.Set.fold (fun local_file job ->
             let remote_file,_,_ =
               OpamFilename.Map.find local_file state.local_remote in
-            OpamGlobals.msg "[%s] Downloading %s\n"
-              (OpamGlobals.colorise `blue
-                 (OpamRepositoryName.to_string repo.repo_name))
-              (OpamFilename.prettify remote_file);
-            job @@+ fun () -> curl ~remote_file ~local_file
-          ) new_files (Done ());
+            job @@+ fun () ->
+            curl ~remote_file ~local_file
+          ) new_files (Done ())
+        @@| fun () ->
+        OpamGlobals.msg "[%s] %s fetched\n"
+          (OpamGlobals.colorise `blue
+             (OpamRepositoryName.to_string repo.repo_name))
+          (OpamTypesBase.string_of_address repo.repo_address)
     )
     else Done ()
 
@@ -239,25 +240,17 @@ module B = struct
          List.iter OpamFilename.remove extra);
       found <> []
     in
-    if uptodate then (
-      OpamGlobals.msg "[%s] %s is in the local cache, using it.\n"
-        (OpamGlobals.colorise `green (OpamPackage.to_string package))
-        (OpamFilename.Base.to_string base);
-      Done (Result (F local_file))
-    )
-    else (
-      OpamGlobals.msg "[%s] Downloading %s\n"
-        (OpamGlobals.colorise `green (OpamPackage.to_string package))
-        (OpamFilename.to_string filename);
-      try
-        OpamFilename.download ~overwrite:true filename dirname
-        @@+ fun local_file ->
-        OpamRepository.check_digest local_file checksum;
-        Done (Result (F local_file))
-      with e ->
-        OpamMisc.fatal e;
-        Done (Not_available remote_url)
-    )
+    if uptodate then Done (Result (F local_file))
+    else
+    OpamProcess.Job.catch
+      (fun e -> OpamMisc.fatal e; Done (Not_available remote_url)) @@
+    OpamFilename.download ~overwrite:true filename dirname
+    @@+ fun local_file ->
+    OpamRepository.check_digest local_file checksum;
+    OpamGlobals.msg "[%s] %s downloaded\n"
+      (OpamGlobals.colorise `green (OpamPackage.to_string package))
+      (OpamFilename.to_string filename);
+    Done (Result (F local_file))
 
   let pull_archive repo filename =
     log "pull-archive";

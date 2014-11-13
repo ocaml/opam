@@ -107,10 +107,6 @@ module B = struct
 
   let pull_repo repo =
     log "pull-repo";
-    OpamGlobals.msg "[%s] Synchronizing with %s\n"
-      (OpamGlobals.colorise `blue
-         (OpamRepositoryName.to_string repo.repo_name))
-      (string_of_address repo.repo_address);
     pull_file_quiet repo.repo_root (OpamPath.Repository.remote_repo repo)
     @@+ fun _ ->
     pull_dir_quiet
@@ -138,15 +134,15 @@ module B = struct
           | Not_available _ -> OpamFilename.remove archive; dl_archives archives
           | _ -> dl_archives archives
     in
-    dl_archives archives
+    dl_archives archives @@| fun () ->
+    OpamGlobals.msg "[%s] %s synchronized\n"
+      (OpamGlobals.colorise `blue
+         (OpamRepositoryName.to_string repo.repo_name))
+      (string_of_address repo.repo_address)
 
   let pull_url package local_dirname checksum remote_url =
     let remote_url = string_of_address remote_url in
     OpamFilename.mkdir local_dirname;
-    OpamGlobals.msg "[%s] Synchronizing with %s\n"
-      (OpamGlobals.colorise `green
-         (OpamPackage.to_string package))
-      remote_url;
     let dir = OpamFilename.Dir.to_string local_dirname in
     let remote_url =
       if Sys.file_exists remote_url && Sys.is_directory remote_url
@@ -154,28 +150,38 @@ module B = struct
       then Filename.concat remote_url ""
       else remote_url in
     rsync remote_url dir
-    @@| function
-    | Result [f] | Up_to_date [f] as r
-      when not (Sys.is_directory (Filename.concat dir f)) ->
-      let filename = OpamFilename.OP.(local_dirname // f) in
-      OpamRepository.check_digest filename checksum;
+    @@| fun r ->
+    let r = match r with
+      | Result [f] | Up_to_date [f] as r
+        when not (Sys.is_directory (Filename.concat dir f)) ->
+        let filename = OpamFilename.OP.(local_dirname // f) in
+        OpamRepository.check_digest filename checksum;
+        (match r with
+         | Result _ -> Result (F filename)
+         | Up_to_date _ -> Up_to_date (F filename)
+         | _ -> assert false)
+      | Result _ -> Result (D local_dirname)
+      | Up_to_date _ -> Up_to_date (D local_dirname)
+      | Not_available d -> Not_available d
+    in
+    OpamGlobals.msg "[%s] %s %s\n"
+      (OpamGlobals.colorise `green (OpamPackage.to_string package))
+      remote_url
       (match r with
-       | Result _ -> Result (F filename)
-       | Up_to_date _ -> Up_to_date (F filename)
-       | _ -> assert false)
-    | Result _ -> Result (D local_dirname)
-    | Up_to_date _ -> Up_to_date (D local_dirname)
-    | Not_available d -> Not_available d
+       | Up_to_date _ -> "already up-to-date"
+       | Result _ -> "synchronized"
+       | Not_available _ -> "unavailable");
+    r
 
   let pull_archive repo filename =
-    if OpamFilename.exists filename then
-      OpamGlobals.msg "[%s] Synchronizing with %s\n"
-        (OpamGlobals.colorise `blue
-           (OpamRepositoryName.to_string repo.repo_name))
-        (OpamFilename.to_string filename);
     let local_dir = OpamPath.Repository.archives_dir repo in
     OpamFilename.mkdir local_dir;
-    pull_file_quiet local_dir filename
+    pull_file_quiet local_dir filename @@| fun r ->
+    OpamGlobals.msg "[%s] %s synchronized\n"
+      (OpamGlobals.colorise `blue
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamFilename.to_string filename);
+    r
 
   let revision _ =
     Done None

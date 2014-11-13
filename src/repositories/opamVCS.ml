@@ -63,18 +63,27 @@ module Make (VCS: VCS) = struct
       | Some _ -> OpamGlobals.note "Skipping checksum for dev package %s"
                     (OpamPackage.to_string package) in
     let repo = repo dirname remote_url in
-    OpamGlobals.msg "[%s] Fetching %s\n"
+    pull_repo repo @@+ fun r ->
+    OpamGlobals.msg "[%s] %s %s\n"
       (OpamGlobals.colorise `green (OpamPackage.name_to_string package))
-      (string_of_address remote_url);
-    pull_repo repo @@+ fun dir ->
-    Done (download_dir dir)
+      (string_of_address remote_url)
+      (match r with
+       | Result _ -> "updated"
+       | Up_to_date _ -> "already up-to-date"
+       | Not_available _ -> "unavailable");
+    Done (download_dir r)
 
   let pull_repo repo =
-    OpamGlobals.msg "[%s] Fetching %s\n"
+    pull_repo repo @@+ fun r ->
+    OpamGlobals.msg "[%s] %s %s\n"
       (OpamGlobals.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
-      (string_of_address repo.repo_address);
-    pull_repo repo @@+ fun _ -> Done ()
+      (string_of_address repo.repo_address)
+      (match r with
+       | Result _ -> "updated"
+       | Up_to_date _ -> "already up-to-date"
+       | Not_available _ -> "unavailable");
+    Done ()
 
   let pull_archive repo filename =
     let dirname = OpamPath.Repository.archives_dir repo in

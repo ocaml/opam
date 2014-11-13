@@ -37,7 +37,8 @@ module type VCS = sig
       repository state. *)
   val reset: repository -> unit OpamProcess.job
 
-  (** Check whether the staging area is empty. *)
+  (** Check whether the staging area is empty. Returns true if not (eg. there is
+      an update pending) *)
   val diff: repository -> bool OpamProcess.job
 
   (** Return the HEAD revision. *)
