@@ -144,7 +144,6 @@ let fix_compiler_descriptions t ~verbose =
         let dir = OpamPath.compilers t.root comp in
         OpamFilename.rmdir dir;
         OpamFilename.mkdir dir;
-        prerr_endline ("mkdir" ^ OpamFilename.Dir.to_string dir);
         List.iter (fun file ->
             OpamFilename.copy_in file dir
           ) files;

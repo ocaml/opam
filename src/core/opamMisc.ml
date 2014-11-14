@@ -489,7 +489,7 @@ let get_terminal_columns () =
         default_columns
 
 let terminal_columns =
-  let v = Lazy.lazy_from_fun get_terminal_columns in
+  let v = Lazy.from_fun get_terminal_columns in
   fun () ->
     if Unix.isatty Unix.stdout
     then Lazy.force v

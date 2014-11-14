@@ -173,7 +173,7 @@ let default_opam_dir =
   with Not_found -> Filename.concat home ".opam"
 
 let root_dir_tmp =
-  Filename.concat Filename.temp_dir_name
+  Filename.concat (Filename.get_temp_dir_name ())
     ("opam-" ^ string_of_int (Unix.getpid ()))
 
 let root_dir = ref root_dir_tmp
@@ -261,16 +261,19 @@ let slog to_string channel x = output_string channel (to_string x)
 
 let error fmt =
   Printf.ksprintf (fun str ->
+    flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]" str
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
+    flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]" str
   ) fmt
 
 let note fmt =
   Printf.ksprintf (fun str ->
+    flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]" str
   ) fmt
 
