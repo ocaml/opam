@@ -69,11 +69,7 @@ let string_of_list f = function
     Buffer.add_string buf " }";
     Buffer.contents buf
 
-let string_map f s =
-  let len = String.length s in
-  let s' = String.create len in
-  for i = 0 to len - 1 do s'.[i] <- f s.[i] done;
-  s'
+let string_map f s = String.map f s
 
 let rec pretty_list ?(last="and") = function
   | []    -> ""
@@ -530,11 +526,11 @@ let get_terminal_columns () =
 let tty_out = Unix.isatty Unix.stdout
 
 let terminal_columns =
-  let v = ref (Lazy.lazy_from_fun get_terminal_columns) in
+  let v = ref (lazy (get_terminal_columns ())) in
   let () =
     try Sys.set_signal 28 (* SIGWINCH *)
           (Sys.Signal_handle
-             (fun _ -> v := Lazy.lazy_from_fun get_terminal_columns))
+             (fun _ -> v := lazy (get_terminal_columns ())))
     with Invalid_argument _ -> ()
   in
   fun () ->

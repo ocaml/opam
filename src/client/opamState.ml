@@ -1246,15 +1246,17 @@ type cache = {
 let check_marshaled_file file =
   let ic = open_in_bin (OpamFilename.to_string file) in
   let magic_len = String.length OpamVersion.magic in
-  let magic = String.create magic_len in
-  really_input ic magic 0 magic_len;
+  let magic =
+    let b = Bytes.create magic_len in
+    really_input ic b 0 magic_len;
+    Bytes.to_string b in
   if magic <> OpamVersion.magic then (
     close_in ic;
     OpamSystem.internal_error
       "Wrong magic string in the cache (actual:%s expected:%s)."
       magic OpamVersion.magic;
   );
-  let header = String.create Marshal.header_size in
+  let header = Bytes.create Marshal.header_size in
   really_input ic header 0 Marshal.header_size;
   let expected_size = magic_len + Marshal.total_size header 0 in
   let current_size = in_channel_length ic in

@@ -191,7 +191,7 @@ let default_opam_dir =
   with Not_found -> Filename.concat home ".opam"
 
 let root_dir_tmp =
-  Filename.concat Filename.temp_dir_name
+  Filename.concat (Filename.get_temp_dir_name ())
     ("opam-" ^ string_of_int (Unix.getpid ()))
 
 let root_dir = ref root_dir_tmp
@@ -236,13 +236,6 @@ let colorise (c: text_style) s =
       | `white     -> "37"
     in
     Printf.sprintf "\027[%sm%s\027[m" code s
-
-let indent_left str n =
-  if String.length str >= n then str
-  else
-    let nstr = String.make n ' ' in
-    String.blit str 0 nstr 0 (String.length str);
-    nstr
 
 let acolor_with_width width c oc s =
   let str = colorise c s in

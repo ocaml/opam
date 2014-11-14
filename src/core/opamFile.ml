@@ -46,18 +46,18 @@ module X = struct
       match find_escapes str len with
       | [], _ -> str
       | escapes, n ->
-        let buf = String.create (len + n) in
+        let buf = Bytes.create (len + n) in
         let rec aux i = function
           | ofs1::(ofs2::_ as r) ->
-            String.blit str ofs1 buf (ofs1+i) (ofs2-ofs1);
-            buf.[ofs2+i] <- '\\';
+            Bytes.blit_string str ofs1 buf (ofs1+i) (ofs2-ofs1);
+            Bytes.set buf (ofs2+i) '\\';
             aux (i+1) r
           | [ofs] ->
-            String.blit str ofs buf (ofs+i) (len-ofs);
+            Bytes.blit_string str ofs buf (ofs+i) (len-ofs);
             buf
           | [] -> assert false
         in
-        aux 0 (0::escapes)
+        Bytes.to_string (aux 0 (0::escapes))
 
     let of_channel (_:filename) ic =
       OpamLineLexer.main (Lexing.from_channel ic)

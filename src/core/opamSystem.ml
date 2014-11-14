@@ -56,7 +56,7 @@ let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
 
 let rec mk_temp_dir () =
-  let s = Filename.temp_dir_name / temp_basename "opam" in
+  let s = Filename.get_temp_dir_name () / temp_basename "opam" in
   if Sys.file_exists s then
     mk_temp_dir ()
   else
@@ -120,14 +120,14 @@ let remove_file file =
 
 let string_of_channel ic =
   let n = 32768 in
-  let s = String.create n in
+  let s = Bytes.create n in
   let b = Buffer.create 1024 in
   let rec iter ic b s =
     let nread =
       try input ic s 0 n
       with End_of_file -> 0 in
     if nread > 0 then (
-      Buffer.add_substring b s 0 nread;
+      Buffer.add_subbytes b s 0 nread;
       iter ic b s
     ) in
   iter ic b s;
@@ -244,7 +244,7 @@ let getchdir s =
     with Sys_error _ ->
       if Sys.file_exists !OpamGlobals.root_dir
       then !OpamGlobals.root_dir
-      else Filename.temp_dir_name
+      else Filename.get_temp_dir_name ()
   in
   chdir s;
   p
