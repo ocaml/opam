@@ -451,8 +451,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   remove_job @@+ fun () ->
   if not !OpamGlobals.dryrun then uninstall_files ();
   if metadata then cleanup_meta ();
-  OpamGlobals.msg "%s removed\n"
-    (OpamGlobals.colorise `bold (OpamPackage.name_to_string nv));
+  if not silent then
+    OpamGlobals.msg "%s removed\n"
+      (OpamGlobals.colorise `bold (OpamPackage.name_to_string nv));
   Done ()
 
 
