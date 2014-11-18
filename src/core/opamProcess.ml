@@ -217,13 +217,22 @@ let run_background command =
   let verbose = OpamMisc.Option.default !OpamGlobals.verbose verbose in
   let allow_stdin = OpamMisc.Option.default false allow_stdin in
   let env = match env with Some e -> e | None -> Unix.environment () in
-  let file f = match name with
-    | None   -> None
-    | Some n -> Some (f n) in
-  let stdout_file = file (Printf.sprintf "%s.out") in
-  let stderr_file = file (Printf.sprintf "%s.err") in
-  let env_file    = file (Printf.sprintf "%s.env") in
-  let info_file   = file (Printf.sprintf "%s.info") in
+  let file ext = match name with
+    | None -> None
+    | Some n ->
+      let d =
+        if Filename.is_relative n then
+          match dir with
+            | Some d -> d
+            | None -> (Filename.concat !OpamGlobals.root_dir "log")
+        else ""
+      in
+      Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
+  in
+  let stdout_file = file "out" in
+  let stderr_file = file "err" in
+  let env_file    = file "env" in
+  let info_file   = file "info" in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
     ~allow_stdin ?dir cmd args
 
