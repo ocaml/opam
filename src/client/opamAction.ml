@@ -585,10 +585,10 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
         run_commands commands
       else (
         OpamGlobals.error
-          "The compilation of %s failed at %s."
+          "The compilation of %s failed at %S."
           name (String.concat " " (cmd::args));
         remove_package ~metadata:false t ~keep_build:true ~silent:true nv
-        @@| fun () -> false
+        @@| fun () -> Some (OpamSystem.Process_error result)
       )
     | []::commands -> run_commands commands
     | [] ->
@@ -601,7 +601,7 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
         OpamState.install_metadata t nv;
       );
       OpamGlobals.msg "%s installed\n" (OpamGlobals.colorise `bold name);
-      Done true
+      Done None
   in
   if !OpamGlobals.dryrun then
     Done (OpamProcess.Job.dry_run (run_commands commands))
@@ -614,4 +614,4 @@ let build_and_install_package t ~metadata nv =
   else
     (OpamGlobals.msg "(simulation) Building and installing %s.\n"
        (OpamPackage.to_string nv);
-     Done true)
+     Done None)

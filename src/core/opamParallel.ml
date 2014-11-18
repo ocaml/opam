@@ -45,6 +45,12 @@ module type SIG = sig
     G.t ->
     unit
 
+  val map:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    G.t ->
+    (G.V.t * 'a) list
+
   exception Errors of (G.V.t * exn) list * G.V.t list
   exception Cyclic of G.V.t list list
 end
@@ -63,7 +69,7 @@ module Make (G : G) = struct
   open S.Op
 
   (* Returns a map (node -> return value) *)
-  let map ~jobs ~command g =
+  let aux_map ~jobs ~command g =
     log "Iterate over %a task(s) with %d process(es)"
       (slog @@ G.nb_vertex @> string_of_int) g jobs;
 
@@ -120,6 +126,7 @@ module Make (G : G) = struct
           (slog (string_of_int @* V.hash)) node
           (slog V.to_string) node;
         OpamGlobals.error "%s" (Printexc.to_string error);
+        let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =
           M.fold (fun n (p,cont,_text) (errors,pend) ->
@@ -193,8 +200,10 @@ module Make (G : G) = struct
     loop jobs M.empty M.empty roots
 
   let iter ~jobs ~command g =
-    ignore (map ~jobs ~command g)
+    ignore (aux_map ~jobs ~command g)
 
+  let map ~jobs ~command g =
+    M.bindings (aux_map ~jobs ~command g)
 end
 
 module type GRAPH = sig
@@ -265,7 +274,7 @@ let map ~jobs ~command l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  let r = IntGraph.Parallel.map ~jobs ~command g in
+  let r = IntGraph.Parallel.aux_map ~jobs ~command g in
   let rec mklist acc n =
     if n < 0 then acc
     else mklist (IntGraph.Parallel.M.find n r :: acc) (n-1)
@@ -276,5 +285,5 @@ let reduce ~jobs ~command ~merge ~nil l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  let r = IntGraph.Parallel.map ~jobs ~command g in
+  let r = IntGraph.Parallel.aux_map ~jobs ~command g in
   IntGraph.Parallel.M.fold (fun _ -> merge) r nil

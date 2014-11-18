@@ -45,11 +45,22 @@ module type SIG = sig
 
   module G : G
 
+  (** Runs the job [command ~pred v] for every node [v] in a graph, in
+      topological order, using [jobs] concurrent processes. [pred] is the
+      associative list of job results on direct predecessors of [v]. *)
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     G.t ->
     unit
+
+  (** Same as [iter], but returns the results of all jobs as a [vertex,result]
+      associative list *)
+  val map:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    G.t ->
+    (G.V.t * 'a) list
 
   exception Errors of (G.V.t * exn) list * G.V.t list
   exception Cyclic of G.V.t list list

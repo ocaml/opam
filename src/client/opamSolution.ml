@@ -135,7 +135,7 @@ let display_error (n, error) =
     let disp =
       OpamGlobals.header_error "while %s %s" action (OpamPackage.to_string nv) in
     match error with
-    | OpamSystem.Internal_error "User interruption" -> ()
+    | Sys.Break -> ()
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
@@ -320,20 +320,23 @@ let parallel_apply t action solution =
 
   let actions_list a = PackageActionGraph.fold_vertex (fun a b -> a::b) a [] in
 
+  let cancelled_exn = Failure "cancelled" in
+
   (* Installation and recompilation are done by the child processes *)
   let job ~pred n =
     (* We are guaranteed to get the state when all the dependencies
        have been correctly updated. Thus [t.installed] should be
        up-to-date. *)
     let t = !t_ref in
-    if not (List.for_all snd pred) then Done false else
+    if not (List.for_all (fun (_,r) -> r = None) pred) then
+      Done (Some cancelled_exn)
+    else
     match n with
     | To_change (_, nv) | To_recompile nv ->
       (OpamAction.build_and_install_package ~metadata:false t nv
        @@+ function
-       | true -> add_to_install nv; Done true
-       | false -> failwith (Printf.sprintf "Compilation of %s failed"
-                              (OpamPackage.name_to_string nv)))
+       | None -> add_to_install nv; Done None
+       | Some exn -> Done (Some exn))
     | To_delete _ -> assert false
   in
 
@@ -375,7 +378,7 @@ let parallel_apply t action solution =
           (OpamMisc.pretty_list
              (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors)) in
       OpamGlobals.error "%s" msg;
-      `Error (Error ([],[],[]), msg), finalize
+      `Error (Error ([],[],[])), finalize
     | e ->
       `Exception e, finalize
   in
@@ -398,9 +401,7 @@ let parallel_apply t action solution =
                if not (OpamState.is_pinned t (OpamPackage.name nv)) then
                  OpamAction.cleanup_package_artefacts !t_ref nv)
             deleted
-      | `Exception (e) ->
-        let err = Printexc.to_string e in
-        let msg = Printf.sprintf "%s during package removal" err in
+      | `Exception _ ->
         let actions = actions_list solution.to_process in
         let successful, remaining =
           List.partition (function
@@ -412,7 +413,7 @@ let parallel_apply t action solution =
               | To_change (Some nv, _) | To_recompile nv
                 when not (OpamPackage.Set.mem nv t.installed) -> true
               | _ -> false) remaining in
-        `Error (Error (successful, failed, remaining), msg), finalize
+        `Error (Error (successful, failed, remaining)), finalize
   in
 
   (* 2/ We install the new packages *)
@@ -423,16 +424,31 @@ let parallel_apply t action solution =
       if not (PackageActionGraph.is_empty solution.to_process) then
         OpamGlobals.header_msg "Building and installing packages";
       try
-        PackageActionGraph.Parallel.iter
-          ~jobs:(OpamState.jobs t)
-          ~command:job
-          solution.to_process;
-        `Successful (), finalize
+        let results =
+          PackageActionGraph.Parallel.map
+            ~jobs:(OpamState.jobs t)
+            ~command:job
+            solution.to_process
+        in
+        let successful, failed =
+          List.partition (fun (_,r) -> r = None) results
+        in
+        if failed = [] then `Successful (), finalize
+        else
+        let failed =
+          List.map (function (act,Some e) -> act, e | _ -> assert false) failed
+        in
+        let cancelled, failed =
+          List.partition (fun (_,e) -> e = cancelled_exn) failed
+        in
+        let act r = List.map fst r in
+        `Error (Error (act successful, act failed, act cancelled)),
+        fun () ->
+          finalize ();
+          List.iter display_error failed;
+          output_json_actions failed
       with
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->
-        let msg =
-          Printf.sprintf
-            "Failure while processing %s" (string_of_errors errors) in
         let failed = List.map fst errors in
         let successful =
           PackageActionGraph.fold_vertex
@@ -442,7 +458,7 @@ let parallel_apply t action solution =
                else successful)
             solution.to_process []
         in
-        `Error (Error (successful, failed, remaining), msg),
+        `Error (Error (successful, failed, remaining)),
         fun () ->
           finalize ();
           List.iter display_error errors;
@@ -463,7 +479,7 @@ let parallel_apply t action solution =
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     finalize ();
     raise e
-  | `Error (err, _msg) ->
+  | `Error err ->
     match err with
     | Aborted -> finalize (); err
     | Error (successful, failed, remaining) ->
