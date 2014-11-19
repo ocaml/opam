@@ -29,9 +29,21 @@ let rewrite_constraint ~conj = (* Rewrites '!=' *)
 let vars_new_1_2 = [ "compiler"; "ocaml-native"; "ocaml-native-tools";
                      "ocaml-native-dynlink"; "arch" ]
 
+let filter_string s =
+  let subst var =
+    match OpamVariable.Full.to_string var with
+    | "compiler" -> OpamVariable.S "%{ocaml-version}%"
+    | "ocaml-native" | "ocaml-native-tools" | "ocaml-native-dynlink" ->
+      OpamVariable.S "true"
+    | s when List.mem s vars_new_1_2 -> OpamVariable.S ""
+    | s -> OpamVariable.S (Printf.sprintf "%%{%s}%%" s)
+  in
+  OpamFile.Subst.replace_string s subst
+
 let rec filter_vars = function
   | FIdent i when List.mem i vars_new_1_2 -> None
-  | FBool _ | FString _ | FIdent _ as f -> Some f
+  | FString s -> Some (FString (filter_string s))
+  | FBool _ | FIdent _ as f -> Some f
   | FOp (f1,op,f2) ->
      (match filter_vars f1, filter_vars f2 with
       | Some f1, Some f2 -> Some (FOp (f1, op, f2))
@@ -54,9 +66,18 @@ let filter_vars_optlist ol =
     (fun (x, filter) -> x, filter >>= filter_vars)
     ol
 
+let filter_args sl =
+  OpamMisc.filter_map
+    (fun (s, filter) -> match s with
+       | CString s -> Some (CString (filter_string s),filter)
+       | CIdent i when List.mem i vars_new_1_2 -> None
+       | id -> Some (id,filter))
+    sl
+
 let filter_vars_commands ol =
   List.map
-    (fun (args, filter) -> filter_vars_optlist args, filter >>= filter_vars)
+    (fun (args, filter) -> filter_args (filter_vars_optlist args),
+                           filter >>= filter_vars)
     ol
 
 let to_1_1 _ opam =
