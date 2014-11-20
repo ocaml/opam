@@ -78,7 +78,6 @@ end
 
 module Action = OpamActionGraph.MakeAction(Pkg)
 module ActionGraph = OpamActionGraph.Make(Action)
-type solution = (Cudf.package, ActionGraph.t) gen_solution
 
 exception Cyclic_actions of Action.t list list
 
@@ -742,68 +741,22 @@ let find_cycles g =
     follow root [] @ cycles
   ) [] roots
 
-let action_graph_of_packages actions packages =
-  let g = ActionGraph.create () in
-  Map.iter (fun _ act -> ActionGraph.add_vertex g act) actions;
-  Graph.iter_edges (fun v1 v2 ->
-      try
-        let v1 = Map.find v1 actions in
-        let v2 = Map.find v2 actions in
-        ActionGraph.add_edge g v1 v2
-      with Not_found -> ())
-    packages;
-  (match find_cycles g with
-  | [] -> ()
-  | cycles -> raise (Cyclic_actions cycles)
-  );
-  g
-
 (* Compute the original causes of the actions, from the original set of
    packages in the user request. In the restricted dependency graph, for each
    action we find the closest package belonging to the user request and print
    out the closest neighbour that gets there. This way, if a -> b -> c and the
    user requests a to be installed, we can print:
    - install a - install b [required by a] - intall c [required by b] *)
-let compute_root_causes universe actions requested =
+let compute_root_causes g requested =
   let module StringSet = OpamMisc.StringSet in
   let module StringMap = OpamMisc.StringMap in
-  let act_packages =
-    Map.fold (fun pkg _ acc -> StringSet.add pkg.Cudf.package acc)
-      actions StringSet.empty in
-  (* g is the graph of actions:
-     prerequisite -> action -> postrequisite (eg. recompile) *)
-  let g =
-    let cudf_univ =
-      let filter p = StringSet.mem p.Cudf.package act_packages in
-      Cudf.load_universe (Cudf.get_packages ~filter universe) in
-    let packages =
-      Algo.Defaultgraphs.PackageGraph.dependency_graph cudf_univ in
-    let g =
-      ActionGraph.mirror (action_graph_of_packages actions packages) in
-    let conflicts_graph =
-      Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ in
-    (* add conflicts to the graph to get all causality relations:
-       cause (removed required pkg or conflicting pkg) -> removed pkg *)
-    Map.iter (fun _ -> function
-        | To_delete pkg as act when
-            Algo.Defaultgraphs.PackageGraph.UG.mem_vertex conflicts_graph pkg ->
-          Algo.Defaultgraphs.PackageGraph.UG.iter_succ (fun v1 ->
-              if v1.Cudf.package <> pkg.Cudf.package then
-                try ActionGraph.add_edge g (Map.find v1 actions) act
-                with Not_found -> ())
-            conflicts_graph pkg
-        | _ -> ()
-      ) actions;
-    g in
-  let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
-    let filename = Printf.sprintf "%s-actions.dot" f in
-    let oc = open_out filename in
-    ActionGraph.Dot.output_graph oc g;
-    close_out oc in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
         StringSet.add (Common.CudfAdd.encode (OpamPackage.Name.to_string n)) s)
       requested StringSet.empty in
+  let actions =
+    ActionGraph.fold_vertex (fun a acc -> Map.add (action_contents a) a acc)
+      g Map.empty in
   let requested_actions =
     Map.filter (fun pkg _ ->
         StringSet.mem pkg.Cudf.package requested_pkgnames)
@@ -825,17 +778,17 @@ let compute_root_causes universe actions requested =
     match (cause, consequence, dep) with
     | To_change(_,p), To_change(_,_),      `Provides -> Required_by [p]
     | To_change(_,p), To_change(Some _,_), `Depends  -> Use [p]
-    | a,              To_recompile _,      `Depends       -> Use [action_contents a]
+    | a,              To_recompile _,      `Depends  -> Use [action_contents a]
     | _,              To_recompile _,      `Provides -> Unknown
-    | To_delete p,    To_delete _,         `Depends  -> Use [p]
-    | To_delete p,    To_delete _,         `Provides -> Required_by [p]
-    | To_delete p,    To_change _,         `Depends  -> Use [p]
+    | To_delete p,    To_delete _,         `Provides -> Use [p]
+    | To_delete p,    To_delete _,         `Depends  -> Required_by [p]
+    | To_delete p,    To_change _,         `Provides -> Use [p]
     | To_recompile p, To_change _,         `Provides -> Required_by [p]
     | _,              To_change(None,_),   `Depends  -> Unknown
     | _,              To_change _,         _         -> Upstream_changes
-    | To_change _,    To_delete _,         `Depends  -> Conflicts_with
+    | To_change _,    To_delete _,         `Provides -> Conflicts_with
                                                           [action_contents cause]
-    | To_recompile p, To_delete _,         `Depends  -> Conflicts_with [p]
+    | To_recompile p, To_delete _,         `Provides -> Conflicts_with [p]
     | _,              _,                   _         -> Unknown
   in
   let get_causes acc roots =
@@ -876,7 +829,7 @@ let compute_root_causes universe actions requested =
   let causes = Map.empty in
   let causes =
       let roots =
-        if Map.is_empty requested_actions then (* Assume a global update *)
+        if Map.is_empty requested_actions then (* Assume a global upgrade *)
           make_roots causes Requested (function
               | To_change (Some p1,p2) when p1.Cudf.version < p2.Cudf.version ->
                 true
@@ -902,66 +855,112 @@ let compute_root_causes universe actions requested =
       get_causes causes roots in
   Map.fold (fun p (cause,_depth) acc -> (p,cause)::acc) causes []
 
-(*
-  Compute a full solution from a set of root actions. This means:
-  1/ computing the right sequence of removals.
-  2/ set all the installed packages which depend on a changed package and have
-     no action planned to 'recompile'
-  3/ compute the DAG of actions to process in order
-  4/ computing the root causes of actions
-*)
-let solution_of_actions ~simple_universe ~complete_universe ~requested root_actions =
+(* Turn atomic actions (only install and remove) to higher-level actions
+   (install, remove, up/downgrade, recompile) *)
+let reduce_actions g =
+  let removals =
+    ActionGraph.fold_vertex (fun v acc -> match v with
+        | To_delete p ->
+          OpamMisc.StringMap.add p.Cudf.package p acc
+        | _ -> acc)
+      g OpamMisc.StringMap.empty
+  in
+  let reduced = ref Map.empty in
+  let g =
+    ActionGraph.map_vertex (function
+        | To_change (None, p) as act ->
+          (try
+             let p0 = OpamMisc.StringMap.find p.Cudf.package removals in
+             let act =
+               if Pkg.equal p0 p then To_recompile p
+               else To_change (Some p0, p)
+             in
+             reduced := Map.add p0 act !reduced;
+             act
+           with Not_found -> act)
+        | act -> act)
+      g
+  in
+  Map.iter (fun p act ->
+      let rm_act = To_delete p in
+      ActionGraph.iter_pred (fun v -> ActionGraph.add_edge g v act) g rm_act;
+      ActionGraph.remove_vertex g rm_act
+    ) !reduced;
+  g
+
+(* Compute a full solution from a set of root actions. This means adding all
+   required reinstallations and computing the graph of dependency of required
+   actions *)
+let atomic_actions ~simple_universe ~complete_universe root_actions =
   log "graph_of_actions root_actions=%a"
     (slog string_of_actions) root_actions;
 
-  let pre_actions_map, post_actions_map =
-    List.fold_left (fun (pre,post) a -> match a with
-        | To_change (Some p1,p2) -> Map.add p1 a pre, Map.add p2 a post
-        | To_change (None,p) -> pre, Map.add p a post
-        | To_recompile p -> Map.add p a pre, Map.add p a post
-        | To_delete p -> Map.add p a pre, post)
-      (Map.empty, Map.empty) root_actions in
-  let full_actions_map =
-    Map.union (fun a b -> assert (a == b); a)
-      pre_actions_map post_actions_map in
-
-  let mkgraph universe actions_map =
-    let graph =
-      create_graph
-        (fun p -> p.Cudf.installed || Map.mem p actions_map)
-        universe in
-    Graph.mirror graph in
-
-  (* the packages to remove, in order *)
-  let to_remove =
-    Graph.Topo.fold (fun p acc ->
-        try match Map.find p pre_actions_map with
-          | To_delete _ -> p::acc
-          | _ -> acc
-        with Not_found -> acc)
-      (mkgraph complete_universe pre_actions_map) [] in
+  let to_remove, to_install =
+    List.fold_left (fun (rm,inst) a -> match a with
+        | To_change (Some p1,p2) -> Set.add p1 rm, Set.add p2 inst
+        | To_change (None,p) -> rm, Set.add p inst
+        | To_recompile p -> Set.add p rm, Set.add p inst
+        | To_delete p -> Set.add p rm, inst)
+      (Set.empty, Set.empty) root_actions in
 
   (* transitively add recompilations *)
-  let post_actions_map =
-    let graph = mkgraph simple_universe full_actions_map in
-    Graph.Topo.fold (fun p actions_map ->
-        if not (Map.mem p actions_map) &&
-           not (Map.mem p full_actions_map) &&
-           List.exists
-             (fun p0 -> Map.mem p0 actions_map || Map.mem p0 pre_actions_map)
-             (Graph.pred graph p)
-        then Map.add p (To_recompile p) actions_map
-        else actions_map)
-      graph post_actions_map
+  let to_remove, to_install =
+    let packages = Set.union to_remove to_install in
+    let package_graph =
+      let filter p = p.Cudf.installed || Set.mem p packages in
+      Graph.mirror (create_graph filter simple_universe)
+    in
+    Graph.Topo.fold (fun p (rm,inst) ->
+        let actionned p = Set.mem p rm || Set.mem p inst in
+        if not (actionned p) &&
+           List.exists actionned (Graph.pred package_graph p)
+        then Set.add p rm, Set.add p inst
+        else rm, inst)
+      package_graph (to_remove, to_install)
   in
+  let pkggraph set = create_graph (fun p -> Set.mem p set) complete_universe in
 
-  let to_process =
-    action_graph_of_packages post_actions_map
-      (mkgraph complete_universe post_actions_map) in
-
-  let root_causes =
-    compute_root_causes complete_universe post_actions_map requested in
-
-  { to_remove; to_process; root_causes }
+  (* Build the graph of atomic actions: Removals or installs *)
+  let g = ActionGraph.create () in
+  Set.iter (fun p -> ActionGraph.add_vertex g (To_delete p)) to_remove;
+  Set.iter (fun p -> ActionGraph.add_vertex g (To_change (None,p))) to_install;
+  (* reinstalls and upgrades: remove first *)
+  Set.iter
+    (fun p1 ->
+       try
+         let p2 =
+           Set.find (fun p2 -> p1.Cudf.package = p2.Cudf.package) to_install
+         in
+         ActionGraph.add_edge g (To_delete p1) (To_change (None,p2))
+       with Not_found -> ())
+    to_remove;
+  (* uninstall order *)
+  Graph.iter_edges (fun p1 p2 ->
+      ActionGraph.add_edge g (To_delete p1) (To_delete p2)
+    ) (pkggraph to_remove);
+  (* install order *)
+  Graph.iter_edges (fun p1 p2 ->
+      if Set.mem p1 to_install then
+        let cause =
+          if Set.mem p2 to_install then To_change (None, p2) else To_delete p2
+        in
+        ActionGraph.add_edge g cause (To_change (None, p1))
+    ) (pkggraph (Set.union to_install to_remove));
+  (* conflicts *)
+  let conflicts_graph =
+    let filter p = Set.mem p to_remove || Set.mem p to_install in
+    Algo.Defaultgraphs.PackageGraph.conflict_graph
+      (Cudf.load_universe (Cudf.get_packages ~filter complete_universe))
+  in
+  Algo.Defaultgraphs.PackageGraph.UG.iter_edges (fun p1 p2 ->
+      if Set.mem p1 to_remove && Set.mem p2 to_install then
+        ActionGraph.add_edge g (To_delete p1) (To_change (None, p2))
+      else if Set.mem p2 to_remove && Set.mem p1 to_install then
+        ActionGraph.add_edge g (To_delete p2) (To_change (None, p1)))
+    conflicts_graph;
+  (* check for cycles *)
+  match find_cycles g with
+  | [] -> g
+  | cycles -> raise (Cyclic_actions cycles)
 
 let packages u = Cudf.get_packages u

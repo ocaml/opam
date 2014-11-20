@@ -212,7 +212,6 @@ type 'a cause =
 
 (** The type for solutions *)
 type ('a,'b) gen_solution = {
-  to_remove : 'a list;
   to_process: 'b; (* should be 'a OpamActionGraph.Make(X).t *)
   root_causes: ('a * 'a cause) list;
 }

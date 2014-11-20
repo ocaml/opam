@@ -491,10 +491,6 @@ let cleanup_package_artefacts t nv =
   )
 
 let sources_needed t solution =
-  let pkgs =
-    OpamPackage.Set.of_list
-      (List.filter (removal_needs_download t)
-         solution.to_remove) in
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
       | To_delete nv ->
@@ -506,7 +502,7 @@ let sources_needed t solution =
         let acc = OpamPackage.Set.add nv2 acc in
         if removal_needs_download t nv1
         then OpamPackage.Set.add nv1 acc else acc)
-    solution.to_process pkgs
+    solution.to_process OpamPackage.Set.empty
 
 let remove_package t ~metadata ?keep_build ?silent nv =
   if !OpamGlobals.fake || !OpamGlobals.show then
@@ -542,7 +538,6 @@ let remove_all_packages t ~metadata sol =
     | To_change (Some nv, _) | To_delete nv | To_recompile nv -> delete nv
     | To_change (None, _) -> Done () in
   try
-    List.iter (fun nv -> OpamProcess.Job.run (delete nv)) sol.to_remove;
     PackageActionGraph.Parallel.iter ~jobs:(OpamState.jobs t)
       ~command:(fun ~pred:_ n -> action n)
       (PackageActionGraph.mirror sol.to_process);

@@ -218,50 +218,50 @@ type state = {
 }
 
 let output_json_solution solution =
-  let to_remove = List.map OpamPackage.to_json solution.to_remove in
-  let to_proceed =  ref [] in
-  PackageActionGraph.Topological.iter (function
-      | To_change(o,p)  ->
-        let json = match o with
-          | None   -> `O ["install", OpamPackage.to_json p]
-          | Some o ->
-            if OpamPackage.Version.compare
-                (OpamPackage.version o) (OpamPackage.version p) < 0
-            then
-              `O ["upgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]]
-            else
-              `O ["downgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]] in
-        to_proceed := json :: !to_proceed
-      | To_recompile p ->
-        let json = `O ["recompile", OpamPackage.to_json p] in
-        to_proceed := json :: !to_proceed
-      | To_delete _    -> ()
-    ) solution.to_process;
-  let json = `O [
-      "to-remove" , `A to_remove;
-      "to-proceed", `A (List.rev !to_proceed);
-    ] in
-  OpamJson.add json
+  let to_proceed =
+    PackageActionGraph.Topological.fold (fun a to_proceed ->
+        match a with
+        | To_change(o,p)  ->
+          let json = match o with
+            | None   -> `O ["install", OpamPackage.to_json p]
+            | Some o ->
+              if OpamPackage.Version.compare
+                  (OpamPackage.version o) (OpamPackage.version p) < 0
+              then
+                `O ["upgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]]
+              else
+                `O ["downgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]] in
+          json :: to_proceed
+        | To_recompile p ->
+          let json = `O ["recompile", OpamPackage.to_json p] in
+          json :: to_proceed
+        | To_delete p    ->
+          let json = `O ["delete", OpamPackage.to_json p] in
+          json :: to_proceed
+      ) solution.to_process []
+  in
+  OpamJson.add (`A to_proceed)
 
 let output_json_actions action_errors =
-  (* let open OpamParallel in *)
-  (* let open OpamProcess in *)
-  (* let json_error = function *)
-  (*   | Process_error r -> *)
-  (*     `O [ ("process-error", *)
-  (*           `O [ ("code", `String (string_of_int r.r_code)); *)
-  (*                ("duration", `Float r.r_duration); *)
-  (*                ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info)); *)
-  (*                ("stdout", `A (List.map (fun s -> `String s) r.r_stdout)); *)
-  (*                ("stderr", `A (List.map (fun s -> `String s) r.r_stderr)); *)
-  (*              ])] *)
-  (*   | Internal_error s -> *)
-  (*     `O [ ("internal-error", `String s) ] *)
-  (*   | Package_error s -> *)
-  (*     `O [ ("package-error", `String s) ] in *)
-  let json_action (a, _e) =
+  let json_error = function
+    | OpamSystem.Process_error
+        {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr} ->
+      `O [ ("process-error",
+            `O [ ("code", `String (string_of_int r_code));
+                 ("duration", `Float r_duration);
+                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
+                 ("stdout", `A (List.map (fun s -> `String s) r_stdout));
+                 ("stderr", `A (List.map (fun s -> `String s) r_stderr));
+               ])]
+    | OpamSystem.Internal_error s ->
+      `O [ ("internal-error", `String s) ]
+    | OpamGlobals.Package_error s ->
+      `O [ ("package-error", `String s) ]
+    | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
+  in
+  let json_action (a, e) =
     `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
-         (* ("error"  ,  json_error e) *) ] in
+         ("error"  ,  json_error e) ] in
   List.iter (fun a ->
       let json = json_action a in
       OpamJson.add json
@@ -337,7 +337,7 @@ let parallel_apply t action solution =
        @@+ function
        | None -> add_to_install nv; Done None
        | Some exn -> Done (Some exn))
-    | To_delete _ -> assert false
+    | To_delete _ -> Done None
   in
 
   (* - Start processing - *)
@@ -503,9 +503,6 @@ let parallel_apply t action solution =
     | _ -> assert false
 
 let simulate_new_state state t =
-  let installed = List.fold_left
-      (fun installed p -> OpamPackage.Set.remove p installed)
-      state.installed t.to_remove in
   let installed =
     OpamSolver.ActionGraph.Topological.fold
       (fun action installed ->
@@ -515,7 +512,7 @@ let simulate_new_state state t =
         | To_delete p ->
           OpamPackage.Set.remove p installed
       )
-      t.to_process installed in
+      t.to_process state.installed in
   { state with installed }
 
 let print_external_tags t solution =
@@ -555,8 +552,7 @@ let confirmation ?ask requested solution =
       fold_vertex (fun v acc ->
           OpamPackage.Name.Set.add (OpamPackage.name (action_contents v)) acc)
         solution.to_process
-        (OpamPackage.Name.Set.of_list
-           (List.map OpamPackage.name solution.to_remove)) in
+        OpamPackage.Name.Set.empty in
     OpamPackage.Name.Set.equal requested solution_packages
     || OpamGlobals.confirm "Do you want to continue ?"
 

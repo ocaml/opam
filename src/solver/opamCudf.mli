@@ -60,7 +60,6 @@ end
 
 (** Cudf action graph *)
 module ActionGraph: OpamParallel.GRAPH with type V.t = Cudf.package action
-type solution = (Cudf.package, ActionGraph.t) gen_solution
 
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
@@ -91,7 +90,7 @@ val get_final_universe:
 
 (** Compute the list of actions to match the difference between two
     universe. Remark: the result order is unspecified, ie. need to use
-    [solution_of_actions] to get a solution which respects the
+    [atomic_actions] to get a solution which respects the
     topological order induced by dependencies. *)
 val actions_of_diff: Diff.universe -> Cudf.package action list
 
@@ -100,17 +99,32 @@ exception Cyclic_actions of Cudf.package action list list
 (** Computes the actions to process from a solution, from the actions
     obtained by a simple universe diff. The 'simple' universe
     should not contain build dependencies and will be used for resolution ;
-    [complete_universe] should include build-deps, it's used for ordering
-    of actions and, together with the [requested] set of package names,
-    for computing the reasons of the actions.
+    [complete_universe] should include build-deps, it's used to get the
+    dependency ordering of actions.
+
+    Returns a graph of atomic actions, i.e. only removals and installs. Use
+    [reduce_actions] to reduce it to a graph including reinstall and
+    up/down-grade actions.
 
     May raise [Cyclic_actions]. *)
-val solution_of_actions:
+val atomic_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->
-  requested:OpamPackage.Name.Set.t ->
   Cudf.package action list ->
-  solution
+  ActionGraph.t
+
+(** Reduces a graph of atomic actions by turning removal+install to reinstalls
+    or up/down-grades, best for display. Dependency ordering won't be as
+    accurate though, as there is no proper ordering of (reinstall a, reinstall
+    b) if b depends on a.
+    The resulting graph contains at most one action per package name.
+*)
+val reduce_actions: ActionGraph.t -> ActionGraph.t
+
+(** Heuristic to compute the likely cause of all actions in a graph from the set
+    of packages passed in the original request. Assumes a reduced graph. *)
+val compute_root_causes: ActionGraph.t -> OpamPackage.Name.Set.t ->
+  (Cudf.package * Cudf.package cause) list
 
 (** Resolve a CUDF request. The result is either a conflict holding
     an explanation of the error, or a resulting universe.
