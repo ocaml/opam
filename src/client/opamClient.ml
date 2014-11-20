@@ -809,7 +809,7 @@ module API = struct
         "These packages would need to be recompiled, but they are no longer available \
          upstream:\n\
         \  %s\n\
-         Please run \"opam upgrade\" without argument to get to a clean state."
+         Please run \"opam upgrade\" without any arguments to get to a clean state."
         (OpamPackage.Set.to_string conflicts);
     let requested = names in
     let action = Upgrade to_reinstall in
@@ -901,7 +901,7 @@ module API = struct
            if not (OpamPackage.Set.is_empty unopt) then
              OpamGlobals.msg
                "The following would require downgrades or uninstalls, but \
-                you may upgrade them explicitely:\n  - %s\n"
+                you may upgrade them explicitly:\n  - %s\n"
                (String.concat "\n  - "
                   (List.map OpamPackage.to_string
                      (OpamPackage.Set.elements unopt)));
@@ -1034,7 +1034,7 @@ module API = struct
           s valid_pinned_packages
       | _   ->
         OpamGlobals.msg
-          "Cannot update %s because none of them is pinned.%s\n"
+          "Cannot update %s because none are pinned.%s\n"
           (OpamMisc.pretty_list not_pinned) valid_pinned_packages
     end;
 
@@ -1167,7 +1167,7 @@ module API = struct
          | missing ->
            OpamGlobals.warning
              "Recommended dependencies -- \
-              most packages rely on those:\n  - %s"
+              most packages rely on these:\n  - %s"
              (String.concat "\n  - "
                 (List.map (OpamGlobals.colorise `bold) missing)));
         let required_deps =
