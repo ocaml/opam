@@ -2410,9 +2410,14 @@ let install_compiler t ~quiet:_ switch compiler =
 
 (* write the new version in the configuration file *)
 let update_switch_config t switch =
+  let compiler = OpamSwitch.Map.find switch t.aliases in
+  let compiler_version = lazy (
+    let comp_f = OpamPath.compiler_comp t.root compiler in
+    OpamFile.Comp.version (OpamFile.Comp.read comp_f)) in
+  let t = { t with switch; compiler; compiler_version } in
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
-  update_init_scripts { t with switch }  ~global:None
+  update_init_scripts t ~global:None
 
 (* Dev packages *)
 
