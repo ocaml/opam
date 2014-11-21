@@ -135,6 +135,8 @@ module O = struct
   type tmp = t
   type t = tmp
   let compare = compare
+  let hash = hash
+  let equal = equal
   let to_string = to_string
   let to_json = to_json
 end

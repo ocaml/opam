@@ -27,10 +27,26 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   module Pkg = P
   type package = P.t
   type t = package action
-  let contents = function To_change (_, p) | To_recompile p | To_delete p -> p
-  let compare t1 t2 = P.compare (contents t1) (contents t2)
-  let hash t = P.hash (contents t)
-  let equal t1 t2 = P.equal (contents t1) (contents t2)
+
+  let compare t1 t2 =
+    (* To_change > To_recompile > To_delete *)
+    match t1,t2 with
+    | To_delete p, To_delete q
+    | To_recompile p, To_recompile q ->
+      P.compare p q
+    | To_change (po,p), To_change (qo,q) ->
+      let c = P.compare p q in
+      if c <> 0 then c else OpamMisc.Option.compare P.compare po qo
+    | To_change _, _ | _, To_delete _ -> 1
+    | _, To_change _ | To_delete _, _ -> -1
+
+  let hash = function
+    | To_change (None, p) -> Hashtbl.hash (`C, P.hash p)
+    | To_change (Some p1, p2) -> Hashtbl.hash (`C, P.hash p1, P.hash p2)
+    | To_delete p -> Hashtbl.hash (`D, P.hash p)
+    | To_recompile p -> Hashtbl.hash (`R, P.hash p)
+
+  let equal t1 t2 = compare t1 t2 = 0
   let to_string = function
     | To_change (None, p)   ->
       Printf.sprintf "install   %s" (P.to_string p)

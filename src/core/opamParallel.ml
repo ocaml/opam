@@ -218,12 +218,8 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
 end
 
-module MakeGraph (X: OpamMisc.OrderedType) = struct
-  module Vertex = struct
-    include X
-    let hash = Hashtbl.hash
-    let equal x y = compare x y = 0
-  end
+module MakeGraph (X: VERTEX) = struct
+  module Vertex = X
   module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
   module Topological = Graph.Topological.Make (PG)
   module Traverse = Graph.Traverse.Dfs(PG)
@@ -253,8 +249,9 @@ end
    We piggy-back on the advanced implem using an array and an int-graph *)
 module IntGraph = MakeGraph(struct
     type t = int
-    let compare = compare
+    let compare x y = x - y
     let hash x = x
+    let equal x y = x = y
     let to_string = string_of_int
     let to_json x = `Float (float_of_int x)
   end)

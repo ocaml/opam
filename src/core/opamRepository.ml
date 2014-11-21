@@ -64,6 +64,8 @@ module O = struct
   type tmp = repository
   type t = tmp
   let compare = compare
+  let hash t = Hashtbl.hash (t.repo_name, t.repo_priority)
+  let equal t1 t2 = compare t1 t2 = 0
   let to_string = to_string
   let to_json = to_json
 end

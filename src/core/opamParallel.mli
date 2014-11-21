@@ -90,4 +90,4 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
 end
 
-module MakeGraph (V: OpamMisc.OrderedType) : GRAPH with type V.t = V.t
+module MakeGraph (V: VERTEX) : GRAPH with type V.t = V.t

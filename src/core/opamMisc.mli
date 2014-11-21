@@ -205,6 +205,8 @@ module Option: sig
 
   val default_map: 'a option -> 'a option -> 'a option
 
+  val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
+
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option
     val (>>|): 'a option -> ('a -> 'b) -> 'b option
