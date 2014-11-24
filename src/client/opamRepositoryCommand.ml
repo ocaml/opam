@@ -35,9 +35,8 @@ let update t repo =
        Done ())
     else
       let text =
-        Printf.sprintf "[%s: %s]"
-          (OpamGlobals.colorise `blue
-             (OpamRepositoryName.to_string repo.repo_name))
+        OpamProcess.make_command_text ~color:`blue
+          (OpamRepositoryName.to_string repo.repo_name)
           (string_of_repository_kind repo.repo_kind)
       in
       OpamProcess.Job.with_text text @@

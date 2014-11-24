@@ -356,7 +356,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       let remove = OpamState.filter_commands t ~opam
           OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
       let name = OpamPackage.Name.to_string name in
-      let exec_dir, name =
+      let exec_dir, nameopt =
         if OpamFilename.exists_dir p_build
         then p_build, Some name
         else t.root , None in
@@ -369,13 +369,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
         OpamMisc.filter_map (function
             | [] -> None
             | cmd::args ->
-              let text =
-                Printf.sprintf "[%s: %s]"
-                  (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
-                  cmd
-              in
+              let text = OpamProcess.make_command_text name ~args cmd in
               Some
-                (OpamSystem.make_command ?name ~metadata ~text cmd args
+                (OpamSystem.make_command ?name:nameopt ~metadata ~text cmd args
                    ~env:(OpamFilename.env_of_list env)
                    ~dir:(OpamFilename.Dir.to_string exec_dir)))
           remove
@@ -569,19 +565,7 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
   let dir = OpamPath.Switch.build t.root t.switch nv in
   let rec run_commands = function
     | (cmd::args)::commands ->
-      let text =
-        Printf.sprintf "[%s: %s%s]"
-          (OpamGlobals.colorise `green name) cmd
-          (match
-             List.filter (fun s ->
-                  String.length s > 0 && s.[0] <> '-' &&
-                  not (String.contains s '/') && not (String.contains s '='))
-               args
-           with
-           | [] -> ""
-           | a::_ -> " "^a)
-      in
-      (* OpamGlobals.msg "%s: %s\n" name (String.concat " " (cmd::args)); *)
+      let text = OpamProcess.make_command_text name ~args cmd in
       let dir = OpamFilename.Dir.to_string dir in
       OpamSystem.make_command ~env ~name ~metadata ~dir ~text cmd args
       @@> fun result ->

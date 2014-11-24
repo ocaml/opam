@@ -27,13 +27,27 @@ type command = {
   cmd_metadata: (string * string) list option;
 }
 
+let string_of_command c = String.concat " " (c.cmd::c.args)
+let text_of_command c = c.cmd_text
+
+let make_command_text ?(color=`green) str ?(args=[]) cmd =
+  let summary =
+    match
+      List.filter (fun s ->
+          String.length s > 0 && s.[0] <> '-' &&
+          not (String.contains s '/') && not (String.contains s '='))
+        args
+    with
+    | hd::_ -> String.concat " " [cmd; hd]
+    | [] -> cmd
+  in
+  Printf.sprintf "[%s: %s]" (OpamGlobals.colorise color str) summary
+
 let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?text cmd args =
   { cmd; args;
     cmd_env=env; cmd_verbose=verbose; cmd_name=name; cmd_metadata=metadata;
     cmd_dir=dir; cmd_stdin=allow_stdin; cmd_text=text; }
 
-let string_of_command c = String.concat " " (c.cmd::c.args)
-let text_of_command c = c.cmd_text
 
 (** Running processes *)
 

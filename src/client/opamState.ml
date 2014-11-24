@@ -2376,7 +2376,8 @@ let install_compiler t ~quiet:_ switch compiler =
                                            repo.repo_name ^ ".comp")
               in
               let text =
-                Printf.sprintf "[%s: %s]" comp_name (string_of_repository_kind kind)
+                OpamProcess.make_command_text ~color:`magenta
+                  comp_name (string_of_repository_kind kind)
               in
               OpamProcess.Job.with_text text @@
               OpamRepository.pull_url kind fake_pkg download_dir None [comp_src]
@@ -2391,9 +2392,11 @@ let install_compiler t ~quiet:_ switch compiler =
           OpamParallel.map
             ~jobs:(dl_jobs t)
             ~command:(fun f ->
-                let text =
-                  Printf.sprintf "[dl %s]"
-                    (OpamFilename.Base.to_string (OpamFilename.basename f))
+                let text = OpamProcess.make_command_text ~color:`magenta
+                    comp_name
+                    ~args:[OpamFilename.Base.to_string
+                             (OpamFilename.basename f)]
+                    "download"
                 in
                 OpamProcess.Job.with_text text @@
                 OpamFilename.download ~overwrite:true f build_dir)
@@ -2423,15 +2426,8 @@ let install_compiler t ~quiet:_ switch compiler =
               | [] -> None
               | cmd::args ->
                 let text =
-                  Printf.sprintf "[%s%s]" cmd
-                    (match
-                       List.filter (fun s ->
-                           String.length s > 0 && s.[0] <> '-' &&
-                           not (String.contains s '/') && not (String.contains s '='))
-                         args
-                     with
-                     | [] -> ""
-                     | a::_ -> " "^a)
+                  OpamProcess.make_command_text ~color:`magenta comp_name
+                    ~args cmd
                 in
                 Some (OpamSystem.make_command
                         ~text
@@ -2490,8 +2486,7 @@ let update_dev_package t nv =
         (slog string_of_repository_kind) kind;
       let checksum = OpamFile.URL.checksum url in
       let text =
-        Printf.sprintf "[%s: %s]"
-          (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
+        OpamProcess.make_command_text (OpamPackage.Name.to_string name)
           (string_of_repository_kind kind) in
       OpamProcess.Job.with_text text @@
       OpamRepository.pull_url kind nv srcdir checksum mirrors
@@ -2649,9 +2644,11 @@ let download_archive t nv =
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
     if repo.repo_kind = `http then
-      let text = Printf.sprintf "[%s: %s]"
-          (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
-          (OpamRepositoryName.to_string repo.repo_name)
+      let text =
+        OpamProcess.make_command_text
+          (OpamPackage.name_to_string nv)
+          ~args:[OpamRepositoryName.to_string repo.repo_name]
+          "from"
       in
       OpamProcess.Job.with_text text @@
       OpamRepository.pull_archive repo nv
@@ -2673,8 +2670,8 @@ let download_upstream t nv dirname =
     let mirrors = remote_url :: OpamFile.URL.mirrors u in
     let kind = OpamFile.URL.kind u in
     let checksum = OpamFile.URL.checksum u in
-    let text = Printf.sprintf "[%s: %s]"
-        (OpamGlobals.colorise `green (OpamPackage.name_to_string nv))
+    let text =
+      OpamProcess.make_command_text (OpamPackage.name_to_string nv)
         (string_of_repository_kind kind)
     in
     OpamProcess.Job.with_text text @@

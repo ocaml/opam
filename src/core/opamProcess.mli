@@ -35,6 +35,11 @@ val command:
 val string_of_command: command -> string
 val text_of_command: command -> string option
 
+(** Returns a label suitable for printing the summary of running commands. First
+    string is the topic (e.g. package), second the action (e.g. command name).
+    Optional command arguments may be used for details (e.g. make action). *)
+val make_command_text: ?color:OpamGlobals.text_style -> string -> ?args:string list -> string -> string
+
 (** The type for processes *)
 type t = {
   p_name   : string;        (** Command name *)
