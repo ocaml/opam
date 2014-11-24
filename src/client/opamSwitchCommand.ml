@@ -133,10 +133,20 @@ let list ~print_short ~installed ~all =
         colored_descr colored_body in
 
   List.iter print_compiler to_show;
-  if not installed && not all then
+  if not installed && not all && not print_short && patches <> [] then
     OpamGlobals.msg "# %d more patched or experimental compilers, \
                      use '--all' to show\n"
-      (List.length patches)
+      (List.length patches);
+  match !OpamGlobals.switch with
+  | `Env s ->
+    let sys = OpamSwitch.to_string (OpamFile.Config.switch t.config) in
+    if sys <> s && not print_short then
+      (OpamGlobals.msg "\n";
+       OpamGlobals.note
+         "Current switch is set locally through the OPAMSWITCH variable.\n\
+         \       The current global system switch is %s."
+         (OpamGlobals.colorise `bold sys))
+  | _ -> ()
 
 let remove_t switch ?(confirm = true) t =
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;

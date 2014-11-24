@@ -1822,11 +1822,8 @@ let env_updates ~opamswitch ?(force_path=false) t =
   in
   let comp_env = OpamFile.Comp.env comp in
   let switch =
-    if not opamswitch then []
-    else match !OpamGlobals.switch with
-      | `Command_line s -> [ "OPAMSWITCH", "=", s ]
-      | `Env _
-      | `Not_set -> [] in
+    if opamswitch then [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ]
+    else [] in
   let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
@@ -1846,11 +1843,12 @@ let env_updates ~opamswitch ?(force_path=false) t =
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
 let get_opam_env ~force_path t =
-  let t = match !OpamGlobals.switch with
-    | `Command_line _
-    | `Not_set -> t
-    | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
-  add_to_env t [] (env_updates ~opamswitch:true ~force_path t)
+  let t,opamswitch = match !OpamGlobals.switch with
+    | `Command_line _ -> t, true
+    | `Not_set -> t, false
+    | `Env _   -> { t with switch = OpamFile.Config.switch t.config }, true
+  in
+  add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
   let env0 = OpamMisc.env () in
