@@ -462,8 +462,11 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   if not !OpamGlobals.dryrun then uninstall_files ();
   if metadata then cleanup_meta ();
   if not silent then
-    OpamGlobals.msg "%s removed\n"
-      (OpamGlobals.colorise `bold (OpamPackage.name_to_string nv));
+    OpamGlobals.msg "%s removed   %s.%s\n"
+      (if not !OpamGlobals.utf8 then "->"
+       else OpamActionGraph.(action_color `rm (action_strings `rm)))
+      (OpamGlobals.colorise `bold (OpamPackage.name_to_string nv))
+      (OpamPackage.version_to_string nv);
   Done ()
 
 
@@ -596,7 +599,11 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
         let t = update_metadata t ~installed ~installed_roots ~reinstall in
         OpamState.install_metadata t nv;
       );
-      OpamGlobals.msg "%s installed\n" (OpamGlobals.colorise `bold name);
+      OpamGlobals.msg "%s installed %s.%s\n"
+        (if not !OpamGlobals.utf8 then "->"
+         else OpamActionGraph.(action_color `inst (action_strings `inst)))
+        (OpamGlobals.colorise `bold name)
+        (OpamPackage.version_to_string nv);
       Done None
   in
   if !OpamGlobals.dryrun then

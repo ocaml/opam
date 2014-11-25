@@ -21,8 +21,10 @@
 val debug : bool ref
 val debug_level : int ref
 val verbose : bool ref
-val color_tri_state : [> `Always | `Auto | `Never ]
+val color_when : [> `Always | `Auto | `Never ]
 val color : bool ref
+val utf8_when : [> `Always | `Auto | `Never ]
+val utf8 : bool ref
 val keep_build_dir : bool ref
 val no_base_packages : bool ref
 val no_checksums : bool ref

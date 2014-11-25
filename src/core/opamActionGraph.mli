@@ -20,6 +20,7 @@ module type ACTION = sig
   type package
   module Pkg: GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
+  val to_aligned_strings: t list -> string list
 end
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t and type t = P.t OpamTypes.action
@@ -39,3 +40,11 @@ module type SIG = sig
 end
 
 module Make (A: ACTION) : SIG with type package = A.package
+
+(** Some messages that may be used for displaying actions. Single utf8 chars if
+    the corresponding option is set, otherwise words. *)
+val action_strings:
+  ?utf8:bool -> [ `inst | `rm | `up | `down | `reinst ] -> string
+
+(** Colorise string according to the action *)
+val action_color: [ `inst | `rm | `up | `down | `reinst ] -> string -> string

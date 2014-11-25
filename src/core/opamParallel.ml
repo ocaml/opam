@@ -79,12 +79,33 @@ module Make (G : G) = struct
       raise (Cyclic sccs)
     );
 
-    let print_status (running: (OpamProcess.t * 'a * string option) M.t) =
+    let njobs = G.nb_vertex g in
+
+    let print_status
+        (finished: int)
+        (running: (OpamProcess.t * 'a * string option) M.t) =
       let texts =
         OpamMisc.filter_map (fun (_,_,t) -> t) (M.values running) in
+      let rec limit_width acc rem_cols = function
+        | [] -> List.rev acc
+        | t::ts ->
+          let len = OpamMisc.visual_length t in
+          if ts = [] && len < rem_cols then List.rev (t::acc)
+          else if len > rem_cols - 3 then
+            List.rev ((String.make (rem_cols - 2) ' ' ^ "+") :: acc)
+          else
+            limit_width (t::acc) (rem_cols - OpamMisc.visual_length t - 1) ts
+      in
+      let title =
+        Printf.sprintf "Processing %2d/%d:"
+          (finished + M.cardinal running) njobs
+      in
       if texts <> [] && !OpamGlobals.color then
-        (OpamGlobals.msg "\r\027[KProcessing: %s\r" (String.concat " " texts);
-         print_string "\027[K")
+        let texts =
+          limit_width [] (OpamMisc.terminal_columns ()) (title::texts)
+        in
+        (OpamGlobals.msg "\r\027[K%s" (String.concat " " texts);
+         print_string "\r\027[K")
     in
 
     (* nslots is the number of free slots *)
@@ -99,7 +120,7 @@ module Make (G : G) = struct
           log "Job %a finished" (slog (string_of_int @* V.hash)) n;
           let results = M.add n r results in
           let running = M.remove n running in
-          print_status running;
+          print_status (M.cardinal results) running;
           let new_ready =
             List.filter
               (fun n -> List.for_all (fun n -> M.mem n results) (G.pred g n))
@@ -117,7 +138,7 @@ module Make (G : G) = struct
           let running =
             M.add n (p, cont, OpamProcess.text_of_command cmd) running
           in
-          print_status running;
+          print_status (M.cardinal results) running;
           loop nslots results running ready
       in
 
@@ -236,7 +257,7 @@ module MakeGraph (X: VERTEX) = struct
       let default_edge_attributes _ = []
       let get_subgraph _ = None
       let vertex_attributes _ = []
-      let vertex_name v = Printf.sprintf "%S" (Vertex.to_string v)
+      let vertex_name v = Printf.sprintf "\"%s\"" (Vertex.to_string v)
       let default_vertex_attributes _ = []
       let graph_attributes _ = []
       include PG

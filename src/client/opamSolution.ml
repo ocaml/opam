@@ -25,37 +25,40 @@ module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
-  let pkg = action_contents action in
-  let opam = OpamState.opam state pkg in
-  let messages = OpamFile.OPAM.post_messages opam in
-  let local_variables = OpamVariable.Map.empty in
-  let local_variables =
-    OpamVariable.Map.add (OpamVariable.of_string "success")
-      (B (not failed)) local_variables
-  in
-  let local_variables =
-    OpamVariable.Map.add (OpamVariable.of_string "failure")
-      (B failed) local_variables
-  in
-  let messages =
-    OpamMisc.filter_map (fun (message,filter) ->
-        if OpamState.eval_filter state ~opam local_variables filter then
-          Some (OpamState.substitute_string state ~opam local_variables message)
-        else None)
+  match action with
+  | To_delete _ | To_recompile _ -> ()
+  | To_change (_,pkg) ->
+    let opam = OpamState.opam state pkg in
+    let messages = OpamFile.OPAM.post_messages opam in
+    let local_variables = OpamVariable.Map.empty in
+    let local_variables =
+      OpamVariable.Map.add (OpamVariable.of_string "success")
+        (B (not failed)) local_variables
+    in
+    let local_variables =
+      OpamVariable.Map.add (OpamVariable.of_string "failure")
+        (B failed) local_variables
+    in
+    let messages =
+      OpamMisc.filter_map (fun (message,filter) ->
+          if OpamState.eval_filter state ~opam local_variables filter then
+            Some (OpamState.substitute_string
+                    state ~opam local_variables message)
+          else None)
+        messages
+    in
+    if messages = [] then () else
+    let mark = "=> " in
+    let indent = String.make (String.length mark) ' ' in
+    let mark = OpamGlobals.colorise (if failed then `red else `green) mark in
+    OpamGlobals.header_msg "%s %s"
+      (OpamPackage.to_string pkg)
+      (if failed then "troubleshooting" else "installed successfully");
+    let rex = Re_pcre.regexp "\n" in
+    List.iter (fun msg ->
+        OpamGlobals.msg "%s%s\n" mark
+          (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
       messages
-  in
-  if messages = [] then () else
-  let mark = "=> " in
-  let indent = String.make (String.length mark) ' ' in
-  let mark = OpamGlobals.colorise (if failed then `red else `green) mark in
-  OpamGlobals.header_msg "%s %s"
-    (OpamPackage.to_string pkg)
-    (if failed then "troubleshooting" else "installed successfully");
-  let rex = Re_pcre.regexp "\n" in
-  List.iter (fun msg ->
-      OpamGlobals.msg "%s%s\n" mark
-        (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
-    messages
 
 let check_solution state = function
   | No_solution ->
@@ -451,7 +454,7 @@ let parallel_apply t action action_graph =
   | `Error err ->
     match err with
     | Aborted -> err
-    | Error (successful, failed, remaining) ->
+    | Error (successful, failed, _remaining) ->
       let filter_graph g l =
         if l = [] then PackageActionGraph.create () else
         let g = PackageActionGraph.copy g in
@@ -463,31 +466,26 @@ let parallel_apply t action action_graph =
       let successful = filter_graph action_graph successful in
       cleanup_artefacts successful;
       let failed = filter_graph action_graph failed in
-      let remaining = filter_graph action_graph remaining in
-      if PackageActionGraph.(
-          nb_vertex successful + nb_vertex failed + nb_vertex remaining
-        ) <= 1
+      if PackageActionGraph.(nb_vertex successful + nb_vertex failed) <= 1
       then err else
       let print_actions oc actions =
-        let pr a = Printf.fprintf oc "  - %s\n" (PackageAction.to_string a) in
-        PackageActionGraph.Topological.iter pr actions in
+        let actions =
+          PackageActionGraph.Topological.fold (fun v acc -> v::acc) actions []
+        in
+        List.iter (Printf.fprintf oc "  %s\n")
+          (PackageAction.to_aligned_strings actions) in
       OpamGlobals.msg "\n";
       OpamGlobals.header_msg "Error report";
-      if not (PackageActionGraph.is_empty successful) then
-        OpamGlobals.msg
-          "These actions have been completed %s\n%a"
-          (OpamGlobals.colorise `bold "successfully")
-          print_actions successful;
       if not (PackageActionGraph.is_empty failed) then
         OpamGlobals.msg
           "The following %s\n%a"
           (OpamGlobals.colorise `bold "failed")
           print_actions failed;
-      if not (PackageActionGraph.is_empty remaining) then
+      if not (PackageActionGraph.is_empty successful) then
         OpamGlobals.msg
-          "Due to the errors, the following have been %s\n%a"
-          (OpamGlobals.colorise `bold "cancelled")
-          print_actions remaining;
+          "These actions have been %s\n%a"
+          (OpamGlobals.colorise `bold "completed")
+          print_actions successful;
       err
     | _ -> assert false
 
@@ -581,7 +579,8 @@ let apply ?ask t action ~requested solution =
         else nv
       in
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;
-      OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
+      if sum stats >= 2 then
+        OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
       output_json_solution action_graph;
     );
 

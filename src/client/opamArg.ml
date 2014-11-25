@@ -542,7 +542,7 @@ let global_options =
   let color =
     mk_tristate_opt ~section ["color"] "WHEN"
       "Colorize the output. $(docv) must be `always', `never' or `auto'."
-      (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_tri_state in
+      (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_when in
   let switch =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \

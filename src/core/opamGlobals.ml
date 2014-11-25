@@ -31,23 +31,30 @@ let check ?(warn=true) var = ref (
     with Not_found -> false
   )
 
-let debug            = check ~warn:false "DEBUG"
-let debug_level      =
-  try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
-  with Not_found | Failure _ -> ref 1
-let _ = if !debug_level > 1 then debug := true
-let verbose          = check "VERBOSE"
-let color_tri_state =
-    try (match OpamMisc.getenv "OPAMCOLOR" with
+let when_var v =
+    try (match OpamMisc.getenv ("OPAM"^v) with
       | "always" -> `Always
       | "never" -> `Never
       | _ -> `Auto
       )
     with
       | Not_found -> `Auto
+
+let locale_utf8 () =
+  let checkv v =
+    try OpamMisc.ends_with ~suffix:"UTF-8" (OpamMisc.getenv v)
+    with Not_found -> false in
+  checkv "LANG" || checkv "LC_ALL"
+
+let debug            = check ~warn:false "DEBUG"
+let debug_level      =
+  try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
+  with Not_found | Failure _ -> ref 1
+let _ = if !debug_level > 1 then debug := true
+let verbose          = check "VERBOSE"
+let color_when       = when_var "COLOR"
 let color            =
-  ref (color_tri_state = `Always ||
-       color_tri_state = `Auto && Unix.isatty Unix.stdout)
+  ref (color_when = `Always || color_when = `Auto && Unix.isatty Unix.stdout)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -62,6 +69,9 @@ let dryrun           = check "DRYRUN"
 let fake             = check "FAKE"
 let print_stats      = check "STATS"
 let utf8_msgs        = check "UTF8MSGS"
+let utf8_when        = when_var "UTF8"
+let utf8             =
+  ref (utf8_when = `Always || utf8_when = `Auto && locale_utf8 () || !utf8_msgs)
 let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"

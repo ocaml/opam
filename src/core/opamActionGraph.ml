@@ -20,7 +20,30 @@ module type ACTION = sig
   type package
   module Pkg : GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
+  val to_aligned_strings: t list -> string list
 end
+
+let action_strings ?utf8 x =
+  if utf8 = None && !OpamGlobals.utf8 || utf8 = Some true then
+    List.assoc x
+      [`inst,   "\xe2\x88\x97 ";
+       `up,     "\xe2\x86\x97 ";
+       `down,   "\xe2\x86\x98 ";
+       `reinst, "\xe2\x86\xbb ";
+       `rm,     "\xe2\x8a\x98 "]
+  else
+    List.assoc x
+      [`inst,   "install";
+       `up,     "upgrade";
+       `down,   "downgrade";
+       `reinst, "recompile";
+       `rm,     "remove"]
+
+let action_color c =
+  OpamGlobals.colorise (match c with
+      | `inst | `up -> `green
+      | `rm | `down -> `red
+      | `reinst -> `yellow)
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 = struct
@@ -47,16 +70,50 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
     | To_recompile p -> Hashtbl.hash (`R, P.hash p)
 
   let equal t1 t2 = compare t1 t2 = 0
-  let to_string = function
+
+  let to_string =
+    function
     | To_change (None, p)   ->
-      Printf.sprintf "install   %s" (P.to_string p)
+      Printf.sprintf "%s %s" (action_strings `inst) (P.to_string p)
     | To_change (Some o, p) ->
-      let vo = P.version_to_string o and vp = P.version_to_string p in
-      Printf.sprintf "%s %s from %s to %s"
-        (if P.compare o p < 0 then "upgrade  " else "downgrade")
-        (P.name_to_string o) vo vp
-    | To_recompile p -> Printf.sprintf "recompile %s" (P.to_string p)
-    | To_delete p    -> Printf.sprintf "remove    %s" (P.to_string p)
+      Printf.sprintf "%s.%s %s %s"
+        (P.name_to_string o)
+        (P.version_to_string o)
+        (action_strings (if P.compare o p < 0 then `up else `down))
+        (P.version_to_string p)
+    | To_recompile p ->
+      Printf.sprintf "%s %s" (action_strings `reinst) (P.to_string p)
+    | To_delete p    ->
+      Printf.sprintf "%s %s" (action_strings `rm) (P.to_string p)
+
+  let to_aligned_strings l =
+    let code c =
+      if !OpamGlobals.utf8 then action_color c (action_strings c)
+      else "-"
+    in
+    let name p = OpamGlobals.colorise `bold (P.name_to_string p) in
+    let tbl =
+      List.map (function
+          | To_change (None, p) ->
+            [ code `inst; "install";
+              name p; P.version_to_string p ]
+          | To_change (Some o, p) ->
+            let up = P.compare o p < 0 in
+            [ code (if up then `up else `down);
+              if up then "upgrade" else "downgrade";
+              name p;
+              Printf.sprintf "%s to %s"
+                (P.version_to_string o) (P.version_to_string p) ]
+          | To_recompile p ->
+            [ code `reinst; "recompile";
+              name p; P.version_to_string p ]
+          | To_delete p ->
+            [ code `rm; "remove";
+              name p; P.version_to_string p ])
+        l
+    in
+    List.map (String.concat " ") (OpamMisc.align_table tbl)
+
   let to_json = function
     | To_change (None, p)   -> `O ["install", P.to_json p]
     | To_change (Some o, p) -> `O ["change", `A [P.to_json o;P.to_json p]]
