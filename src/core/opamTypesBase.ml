@@ -229,7 +229,9 @@ let full_action_contents = function
   | To_change (None, p) | To_recompile p | To_delete p -> [p]
 
 let string_of_cause to_string =
-  let list_to_string l = String.concat ", " (List.map to_string l) in
+  let list_to_string l = match List.map to_string l with
+    | a::b::c::_::_::_ -> Printf.sprintf "%s, %s, %s, etc." a b c
+    | l -> String.concat ", " l in
   function
   | Upstream_changes -> "upstream changes"
   | Use pkgs         -> Printf.sprintf "uses %s" (list_to_string pkgs)

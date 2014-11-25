@@ -234,17 +234,25 @@ let truncate_line str =
   else
     String.sub str 0 (OpamGlobals.log_line_limit) ^ truncate_str
 
-(* Take the last [n] elements of [l] *)
-let rec truncate = function
-  | [] -> []
-  | l  ->
-    if List.length l < OpamGlobals.log_limit then
-      List.map truncate_line l
-    else if List.length l = OpamGlobals.log_limit then
-      truncate_str :: l
-    else match l with
-      | []     -> []
-      | _ :: t -> truncate t
+(* Take the last [n] elements of [l] (trying to keep an unindented header line
+   for context, like diff) *)
+let truncate l =
+  let l = List.rev l in
+  let rec cut n acc = function
+    | [] -> acc
+    | [x] when n = 0 -> x :: acc
+    | _ when n = 0 -> truncate_str :: acc
+    | x::_ as l when n = 1 ->
+      (try
+         List.find
+           (fun s -> String.length s > 0 && s.[0] <> ' ' && s.[0] <> '\t')
+           l
+         :: truncate_str :: acc
+       with Not_found ->
+         truncate_str :: x :: acc)
+    | x::r -> cut (n-1) (x::acc) r
+  in
+  cut OpamGlobals.log_limit [] l
 
 let string_of_result ?(color=`yellow) r =
   let b = Buffer.create 2048 in
