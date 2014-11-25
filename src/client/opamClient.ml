@@ -755,7 +755,7 @@ module API = struct
       let action = Upgrade to_reinstall in
       requested,
       action,
-      OpamSolution.resolve t action ~requested
+      OpamSolution.resolve t action
         ~orphans:(full_orphans ++ orphan_versions)
         (preprocess_request t full_orphans orphan_versions
            { wish_install = OpamSolution.atoms_of_packages to_install;
@@ -824,7 +824,7 @@ module API = struct
         (OpamPackage.Set.elements to_upgrade) in
     requested,
     action,
-    OpamSolution.resolve t action ~requested
+    OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
       (preprocess_request t full_orphans orphan_versions
          { wish_install = [];
@@ -1377,7 +1377,6 @@ module API = struct
         else Install names in
       let solution =
         OpamSolution.resolve t action
-          ~requested:names
           ~orphans:(full_orphans ++ orphan_versions)
           request in
       let solution = match solution with
@@ -1387,12 +1386,13 @@ module API = struct
             (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
           No_solution
         | Success solution ->
+          let action_graph = OpamSolver.get_atomic_action_graph solution in
           if deps_only then (
             let to_install =
               OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
                   | To_change (_, p) -> OpamPackage.Set.add p acc
                   | _ -> acc)
-                solution.to_process OpamPackage.Set.empty in
+                action_graph OpamPackage.Set.empty in
             let all_deps =
               let universe = OpamState.universe t (Install names) in
               OpamPackage.Name.Set.fold (fun name deps ->
@@ -1407,9 +1407,9 @@ module API = struct
                 | To_change (_, p) as v ->
                   if not (OpamPackage.Set.mem p all_deps) then
                     OpamSolver.ActionGraph.remove_vertex
-                      solution.to_process v
+                      action_graph v
                 | _ -> ())
-              solution.to_process
+              action_graph
           );
           OpamSolution.apply ?ask t action ~requested:names solution in
       OpamSolution.check_solution t solution

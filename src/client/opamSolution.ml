@@ -238,7 +238,7 @@ let output_json_solution solution =
         | To_delete p    ->
           let json = `O ["delete", OpamPackage.to_json p] in
           json :: to_proceed
-      ) solution.to_process []
+      ) solution []
   in
   OpamJson.add (`A to_proceed)
 
@@ -267,11 +267,13 @@ let output_json_actions action_errors =
       OpamJson.add json
     ) action_errors
 
-(* Mean function for applying solver solutions. One main process is
-   deleting the packages and updating the global state of
-   OPAM. Children processes are spawned to deal with parallele builds
-   and installations. *)
-let parallel_apply t action solution =
+(* Process the atomic actions in a graph in parallel, respecting graph order,
+   and report to user *)
+let parallel_apply t action action_graph =
+  log "parallel_apply";
+
+  (* We keep an imperative state up-to-date and flush it to disk as soon
+     as an operation terminates *)
   let state = {
     s_installed       = t.installed;
     s_installed_roots = t.installed_roots;
@@ -283,156 +285,130 @@ let parallel_apply t action solution =
     let installed_roots = state.s_installed_roots in
     let reinstall       = state.s_reinstall in
     t_ref :=
-      OpamAction.update_metadata t ~installed ~installed_roots ~reinstall in
+      OpamAction.update_metadata t ~installed ~installed_roots ~reinstall
+  in
 
   let root_installs =
-    let names =
-      List.rev_map OpamPackage.name (OpamPackage.Set.elements t.installed_roots) in
-    OpamPackage.Name.Set.of_list names in
-  let root_installs = match action with
-    | Init r
-    | Install r
-    | Import r
-    | Switch r  -> OpamPackage.Name.Set.union root_installs r
-    | Upgrade _
-    | Reinstall _ -> root_installs
-    | Depends
-    | Remove -> OpamPackage.Name.Set.empty in
+    let names = OpamPackage.names_of_packages t.installed_roots in
+    match action with
+    | Init r | Install r | Import r | Switch r  ->
+      OpamPackage.Name.Set.union names r
+    | Upgrade _ | Reinstall _ -> names
+    | Depends | Remove -> OpamPackage.Name.Set.empty
+  in
 
-  (* flush the contents of installed and installed.root to disk. This
-     should be called as often as possible to keep the global state of
-     OPAM consistent (as the user is free to kill OPAM at every
-     moment). We are not guaranteed to always be consistent, but we
-     try hard to be.*)
   let add_to_install nv =
     state.s_installed <- OpamPackage.Set.add nv state.s_installed;
     state.s_reinstall <- OpamPackage.Set.remove nv state.s_reinstall;
     if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
     update_state ();
-    if not !OpamGlobals.dryrun then
-      OpamState.install_metadata !t_ref nv in
+    if not !OpamGlobals.dryrun then OpamState.install_metadata !t_ref nv
+  in
 
   let remove_from_install deleted =
-    state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;
-    state.s_installed_roots <- OpamPackage.Set.diff state.s_installed_roots deleted;
-    state.s_reinstall       <- OpamPackage.Set.diff state.s_reinstall deleted in
-
-  let actions_list a = PackageActionGraph.fold_vertex (fun a b -> a::b) a [] in
+    let rm = OpamPackage.Set.remove deleted in
+    state.s_installed       <- rm state.s_installed;
+    state.s_installed_roots <- rm state.s_installed_roots;
+    state.s_reinstall       <- rm state.s_reinstall;
+    update_state () in
 
   let cancelled_exn = Failure "cancelled" in
 
-  (* Installation and recompilation are done by the child processes *)
-  let job ~pred n =
-    (* We are guaranteed to get the state when all the dependencies
-       have been correctly updated. Thus [t.installed] should be
-       up-to-date. *)
-    let t = !t_ref in
+  (* 1/ fetch needed package archives *)
+
+  let _package_sources, failed_downloads =
+    let sources_needed = OpamAction.sources_needed t action_graph in
+    (* preload http repos indexes *)
+    let repos =
+      OpamPackage.Set.fold (fun nv repos ->
+          try
+            let repo_name = fst (OpamPackage.Map.find nv t.package_index) in
+            OpamRepositoryName.Set.add repo_name repos
+          with Not_found -> repos)
+        sources_needed OpamRepositoryName.Set.empty
+    in
+    OpamRepositoryName.Set.iter (fun repo_name ->
+        let repo = OpamState.find_repository t repo_name in
+        if repo.repo_kind = `http then OpamHTTP.preload_state repo)
+      repos;
+    let sources_list = OpamPackage.Set.elements sources_needed in
+    if sources_list <> [] then
+      OpamGlobals.header_msg "Gathering package archives";
+    let results =
+      OpamParallel.map
+        ~jobs:(OpamState.dl_jobs t)
+        ~command:(OpamAction.download_package t)
+        sources_list
+    in
+    List.fold_left2 (fun (sources,failed) nv -> function
+        | `Successful None -> sources, failed
+        | `Successful (Some dl) -> OpamPackage.Map.add nv dl sources, failed
+        | _ -> sources, OpamPackage.Set.add nv failed)
+      (OpamPackage.Map.empty,OpamPackage.Set.empty) sources_list results
+  in
+
+  let fatal_dl_error =
+    PackageActionGraph.fold_vertex
+      (fun a acc -> acc || match a with
+         | To_delete _ -> false
+         | _ -> OpamPackage.Set.mem (action_contents a) failed_downloads)
+      action_graph false
+  in
+  if fatal_dl_error then
+    OpamGlobals.error_and_exit
+      "The sources of the following couldn't be obtained, aborting:\n  - %s\n\
+       (This may be fixed by running 'opam update')"
+      (String.concat "\n  - " (List.map OpamPackage.to_string
+                                 (OpamPackage.Set.elements failed_downloads)))
+  else if not (OpamPackage.Set.is_empty failed_downloads) then
+    OpamGlobals.warning
+      "The sources of the following couldn't be obtained, they may be \
+       uncleanly uninstalled:\n  - %s\n"
+      (String.concat "\n  - "
+         (List.map OpamPackage.to_string
+            (OpamPackage.Set.elements failed_downloads)));
+
+
+  (* 2/ process the package actions (installations and removals) *)
+
+  (* the child job to run on each action *)
+  let job ~pred action =
     if not (List.for_all (fun (_,r) -> r = None) pred) then
       Done (Some cancelled_exn)
     else
-    match n with
+    let t = !t_ref in
+    match action with
+    (* todo: use package_sources rather than guess again *)
     | To_change (_, nv) | To_recompile nv ->
       (OpamAction.build_and_install_package ~metadata:false t nv
        @@+ function
-       | None -> add_to_install nv; Done None
+       | None ->  add_to_install nv; Done None
        | Some exn -> Done (Some exn))
-    | To_delete _ -> Done None
+    | To_delete nv ->
+      if OpamAction.removal_needs_download t nv then
+        (try OpamAction.extract_package t nv with e -> OpamMisc.fatal e);
+      (OpamProcess.Job.catch (fun e -> OpamMisc.fatal e; Done ()) @@
+       OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
+      remove_from_install nv;
+      None
   in
 
-  (* - Start processing - *)
-
-  let finalize () = () in
-
-  (* 0/ Download everything that we will need, for parallelism and failing
-        early in case there is a failure *)
-  let status, finalize =
-    let sources_needed = OpamAction.sources_needed t solution in
-    if OpamPackage.Set.is_empty sources_needed then
-      `Successful (), finalize
-    else
-    let _cache =
-      OpamPackage.Set.iter (fun nv ->
-          if not (OpamState.is_locally_pinned t (OpamPackage.name nv)) then
-            try
-              let repo =
-                OpamState.find_repository t
-                  (fst (OpamPackage.Map.find nv t.package_index)) in
-              if repo.repo_kind = `http then OpamHTTP.preload_state repo
-            with Not_found -> ())
-        sources_needed
-    in
-    let sources_needed = OpamPackage.Set.elements sources_needed in
-    OpamGlobals.header_msg "Gathering package archives";
+  let action_results =
+    OpamGlobals.header_msg "Processing package actions";
     try
       let results =
-        OpamParallel.map
-          ~jobs:(OpamState.dl_jobs t)
-          ~command:(OpamAction.download_package t)
-          sources_needed
+        PackageActionGraph.Parallel.map
+          ~jobs:(OpamState.jobs t)
+          ~command:job
+          action_graph
       in
-      if not !OpamGlobals.dryrun && not !OpamGlobals.fake &&
-         List.mem None results then
-        `Error (Error ([],[],[])), finalize
-      else
-        `Successful (), finalize
-    with
-    | OpamParallel.Errors _ -> `Error (Error ([],[],[])), finalize
-    | e -> `Exception e, finalize
-  in
-
-  (* 1/ We remove all installed packages appearing in the solution. *)
-  let status, finalize =
-    match status with
-    | #error as e -> e, finalize
-    | `Successful () ->
-      let (t,deleted),st =
-        OpamAction.remove_all_packages t ~metadata:true solution in
-      t_ref := t;
-      remove_from_install deleted;
-      match st with
-      | `Successful () ->
-        `Successful (),
-        fun () ->
-          OpamPackage.Set.iter
-            (fun nv ->
-               if not (OpamState.is_pinned t (OpamPackage.name nv)) then
-                 OpamAction.cleanup_package_artefacts !t_ref nv)
-            deleted
-      | `Exception _ ->
-        let actions = actions_list solution.to_process in
-        let successful, remaining =
-          List.partition (function
-              | To_delete nv
-                when not (OpamPackage.Set.mem nv t.installed) -> true
-              | _ -> false) actions in
-        let failed, remaining =
-          List.partition (function
-              | To_change (Some nv, _) | To_recompile nv
-                when not (OpamPackage.Set.mem nv t.installed) -> true
-              | _ -> false) remaining in
-        `Error (Error (successful, failed, remaining)), finalize
-  in
-
-  (* 2/ We install the new packages *)
-  let status, finalize =
-    match status with
-    | #error -> status, finalize
-    | `Successful () ->
-      if not (PackageActionGraph.is_empty solution.to_process) then
-        OpamGlobals.header_msg "Building and installing packages";
-      try
-        let results =
-          PackageActionGraph.Parallel.map
-            ~jobs:(OpamState.jobs t)
-            ~command:job
-            solution.to_process
-        in
-        let successful, failed =
-          List.partition (fun (_,r) -> r = None) results
-        in
-        if failed = [] then `Successful (), finalize
-        else
+      let successful, failed =
+        List.partition (fun (_,r) -> r = None) results
+      in
+      match failed with
+      | [] -> `Successful ()
+      | _::_ ->
         let failed =
           List.map (function (act,Some e) -> act, e | _ -> assert false) failed
         in
@@ -440,65 +416,78 @@ let parallel_apply t action solution =
           List.partition (fun (_,e) -> e = cancelled_exn) failed
         in
         let act r = List.map fst r in
-        `Error (Error (act successful, act failed, act cancelled)),
-        fun () ->
-          finalize ();
-          List.iter display_error failed;
-          output_json_actions failed
-      with
-      | PackageActionGraph.Parallel.Errors (successful, errors, remaining) ->
-        `Error (Error (successful, List.map fst errors, remaining)),
-        fun () ->
-          finalize ();
-          List.iter display_error errors;
-          output_json_actions errors
-      | e -> `Exception e, finalize
+        List.iter display_error failed;
+        output_json_actions failed;
+        `Error (Error (act successful, act failed, act cancelled))
+    with
+    | PackageActionGraph.Parallel.Errors (successful, errors, remaining) ->
+      List.iter display_error errors;
+      output_json_actions errors;
+      `Error (Error (successful, List.map fst errors, remaining))
+    | e -> `Exception e
   in
+  let t = !t_ref in
 
   (* 3/ Display errors and finalize *)
-  match status with
+
+  let cleanup_artefacts graph =
+    PackageActionGraph.iter_vertex (function
+        | To_delete nv | To_change (Some nv, _)
+          when not (OpamState.is_pinned t (OpamPackage.name nv)) ->
+          OpamAction.cleanup_package_artefacts t nv (* no-op if reinstalled *)
+        | _ -> ())
+      graph
+  in
+  match action_results with
   | `Successful () ->
-    finalize ();
-    OK (actions_list solution.to_process)
+    cleanup_artefacts action_graph;
+    OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
   | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
-    OpamGlobals.error "Aborting";
-    finalize ();
+    OpamGlobals.msg "Aborting";
     raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
-    finalize ();
     raise e
   | `Error err ->
     match err with
-    | Aborted -> finalize (); err
+    | Aborted -> err
     | Error (successful, failed, remaining) ->
-      OpamGlobals.msg "\n";
-      finalize ();
-      if
-        List.length successful + List.length failed + List.length remaining <= 1
+      let filter_graph g l =
+        if l = [] then PackageActionGraph.create () else
+        let g = PackageActionGraph.copy g in
+        PackageActionGraph.iter_vertex (fun v ->
+            if not (List.mem v l) then PackageActionGraph.remove_vertex g v)
+          g;
+        PackageActionGraph.reduce g
+      in
+      let successful = filter_graph action_graph successful in
+      cleanup_artefacts successful;
+      let failed = filter_graph action_graph failed in
+      let remaining = filter_graph action_graph remaining in
+      if PackageActionGraph.(
+          nb_vertex successful + nb_vertex failed + nb_vertex remaining
+        ) <= 1
       then err else
-      let () = OpamGlobals.header_msg "Error report" in
       let print_actions oc actions =
-        let pr a = Printf.fprintf oc " - %s\n" (PackageAction.to_string a) in
-        List.iter pr actions in
-      if successful <> [] then (
+        let pr a = Printf.fprintf oc "  - %s\n" (PackageAction.to_string a) in
+        PackageActionGraph.Topological.iter pr actions in
+      OpamGlobals.msg "\n";
+      OpamGlobals.header_msg "Error report";
+      if not (PackageActionGraph.is_empty successful) then
         OpamGlobals.msg
           "These actions have been completed %s\n%a"
           (OpamGlobals.colorise `bold "successfully")
-          print_actions successful
-      );
-      if failed <> [] then (
+          print_actions successful;
+      if not (PackageActionGraph.is_empty failed) then
         OpamGlobals.msg
           "The following %s\n%a"
           (OpamGlobals.colorise `bold "failed")
-          print_actions failed
-      );
-      if remaining <> [] then (
+          print_actions failed;
+      if not (PackageActionGraph.is_empty remaining) then
         OpamGlobals.msg
           "Due to the errors, the following have been %s\n%a"
           (OpamGlobals.colorise `bold "cancelled")
-          print_actions remaining
-      );
+          print_actions remaining;
       err
     | _ -> assert false
 
@@ -512,7 +501,7 @@ let simulate_new_state state t =
         | To_delete p ->
           OpamPackage.Set.remove p installed
       )
-      t.to_process state.installed in
+      t state.installed in
   { state with installed }
 
 let print_external_tags t solution =
@@ -551,7 +540,7 @@ let confirmation ?ask requested solution =
     let solution_packages =
       fold_vertex (fun v acc ->
           OpamPackage.Name.Set.add (OpamPackage.name (action_contents v)) acc)
-        solution.to_process
+        solution
         OpamPackage.Name.Set.empty in
     OpamPackage.Name.Set.equal requested solution_packages
     || OpamGlobals.confirm "Do you want to continue ?"
@@ -559,8 +548,6 @@ let confirmation ?ask requested solution =
 (* Apply a solution *)
 let apply ?ask t action ~requested solution =
   log "apply";
-  if !OpamGlobals.debug then
-    PackageActionGraph.Dot.output_graph stdout solution.to_process;
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
     Nothing_to_do
@@ -568,12 +555,13 @@ let apply ?ask t action ~requested solution =
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
     let show_solution = (!OpamGlobals.external_tags = []) in
+    let action_graph = OpamSolver.get_atomic_action_graph solution in
     if show_solution then (
       OpamGlobals.msg
         "The following actions %s be %s:\n"
         (if !OpamGlobals.show then "would" else "will")
         (if !OpamGlobals.fake then "simulated" else "performed");
-      let new_state = simulate_new_state t solution in
+      let new_state = simulate_new_state t action_graph in
       let messages p =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
@@ -583,36 +571,37 @@ let apply ?ask t action ~requested solution =
           else None
         )  messages in
       let rewrite nv =
+        (* mark pinned packages with a star *)
         let n = OpamPackage.name nv in
         if OpamState.is_pinned t n && OpamState.pinned t n = nv then
           OpamPackage.create n
             (OpamPackage.Version.of_string
-               (OpamPackage.Version.to_string (OpamPackage.version nv) ^ "*"))
+               (match OpamPackage.version_to_string nv with
+                | "~unknown" -> "*" | v -> v ^ "*"))
         else nv
       in
-      OpamSolver.print_solution ~messages ~rewrite solution;
+      OpamSolver.print_solution ~messages ~rewrite ~requested solution;
       OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
-      output_json_solution solution;
+      output_json_solution action_graph;
     );
 
     if !OpamGlobals.external_tags <> [] then (
       print_external_tags t solution;
       Aborted
     ) else if not !OpamGlobals.show &&
-              confirmation ?ask requested solution
+              confirmation ?ask requested action_graph
     then (
       print_variable_warnings t;
-      parallel_apply t action solution
+      parallel_apply t action action_graph
     ) else
       Aborted
   )
 
-let resolve ?(verbose=true) t action ~requested ~orphans request =
-  OpamSolver.resolve ~verbose (OpamState.universe t action)
-    ~requested ~orphans request
+let resolve ?(verbose=true) t action ~orphans request =
+  OpamSolver.resolve ~verbose (OpamState.universe t action) ~orphans request
 
 let resolve_and_apply ?ask t action ~requested ~orphans request =
-  match resolve t action ~requested ~orphans request with
+  match resolve t action ~orphans request with
   | Conflicts cs ->
     log "conflict!";
     OpamGlobals.msg "%s"

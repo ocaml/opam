@@ -18,11 +18,13 @@ open OpamTypes
 
 module type ACTION = sig
   type package
+  module Pkg : GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
 end
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 = struct
+  module Pkg = P
   type package = P.t
   type t = package action
   let contents = function To_change (_, p) | To_recompile p | To_delete p -> p
@@ -47,5 +49,49 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 
 end
 
-module Make (A: ACTION) : OpamParallel.GRAPH with type V.t = A.t
-  = OpamParallel.MakeGraph (A)
+module type SIG = sig
+  type package
+  include OpamParallel.GRAPH with type V.t = package OpamTypes.action
+  val reduce: t -> t
+end
+
+module Make (A: ACTION) : SIG with type package = A.package = struct
+  type package = A.package
+
+  include OpamParallel.MakeGraph(A)
+
+  module Map = OpamMisc.Map.Make (A.Pkg)
+
+  (* Turn atomic actions (only install and remove) to higher-level actions
+     (install, remove, up/downgrade, recompile) *)
+  let reduce g =
+    let removals =
+      fold_vertex (fun v acc -> match v with
+          | To_delete p ->
+            OpamMisc.StringMap.add (A.Pkg.name_to_string p) p acc
+          | _ -> acc)
+        g OpamMisc.StringMap.empty
+    in
+    let reduced = ref Map.empty in
+    let g =
+      map_vertex (function
+          | To_change (None, p) as act ->
+            (try
+               let p0 = OpamMisc.StringMap.find (A.Pkg.name_to_string p) removals in
+               let act =
+                 if A.Pkg.equal p0 p then To_recompile p
+                 else To_change (Some p0, p)
+               in
+               reduced := Map.add p0 act !reduced;
+               act
+             with Not_found -> act)
+          | act -> act)
+        g
+    in
+    Map.iter (fun p act ->
+        let rm_act = To_delete p in
+        iter_pred (fun v -> add_edge g v act) g rm_act;
+        remove_vertex g rm_act
+      ) !reduced;
+    g
+end

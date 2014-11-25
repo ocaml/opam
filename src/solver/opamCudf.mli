@@ -59,7 +59,7 @@ module Diff: sig
 end
 
 (** Cudf action graph *)
-module ActionGraph: OpamParallel.GRAPH with type V.t = Cudf.package action
+module ActionGraph: OpamActionGraph.SIG with type package = Cudf.package
 
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
@@ -113,18 +113,10 @@ val atomic_actions:
   Cudf.package action list ->
   ActionGraph.t
 
-(** Reduces a graph of atomic actions by turning removal+install to reinstalls
-    or up/down-grades, best for display. Dependency ordering won't be as
-    accurate though, as there is no proper ordering of (reinstall a, reinstall
-    b) if b depends on a.
-    The resulting graph contains at most one action per package name.
-*)
-val reduce_actions: ActionGraph.t -> ActionGraph.t
-
 (** Heuristic to compute the likely cause of all actions in a graph from the set
     of packages passed in the original request. Assumes a reduced graph. *)
 val compute_root_causes: ActionGraph.t -> OpamPackage.Name.Set.t ->
-  (Cudf.package * Cudf.package cause) list
+  Cudf.package cause Map.t
 
 (** Resolve a CUDF request. The result is either a conflict holding
     an explanation of the error, or a resulting universe.

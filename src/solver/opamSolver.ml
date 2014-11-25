@@ -24,7 +24,7 @@ let slog = OpamGlobals.slog
 
 module Action = OpamActionGraph.MakeAction(OpamPackage)
 module ActionGraph = OpamActionGraph.Make(Action)
-type solution = (OpamPackage.t, ActionGraph.t) gen_solution
+type solution = OpamCudf.ActionGraph.t
 
 let empty_universe =
   {
@@ -226,12 +226,11 @@ let map_cause f = function
   | Requested        -> Requested
   | Unknown          -> Unknown
 
-let graph cudf2opam cudf_graph =
+let cudf_to_opam_graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in
   let opam_graph = ActionGraph.create ~size () in
   OpamCudf.ActionGraph.iter_vertex (fun package ->
     ActionGraph.add_vertex opam_graph (map_action cudf2opam package)
-
   ) cudf_graph;
   OpamCudf.ActionGraph.iter_edges (fun p1 p2 ->
     ActionGraph.add_edge opam_graph
@@ -239,14 +238,6 @@ let graph cudf2opam cudf_graph =
       (map_action cudf2opam p2)
   ) cudf_graph;
   opam_graph
-
-let solution cudf2opam cudf_solution =
-  let to_process = graph cudf2opam cudf_solution.to_process in
-  let root_causes =
-    List.rev_map
-      (fun (p, c) -> cudf2opam p, map_cause cudf2opam c)
-      cudf_solution.root_causes in
-  { to_process; root_causes }
 
 let map_request f r =
   let f = List.rev_map f in
@@ -279,7 +270,7 @@ let cycle_conflict univ cycles =
           (fun a -> Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
-let resolve ?(verbose=true) universe ~requested ~orphans request =
+let resolve ?(verbose=true) universe ~orphans request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map =
     cudf_versions_map universe
@@ -319,14 +310,12 @@ let resolve ?(verbose=true) universe ~requested ~orphans request =
       let atomic_actions =
         OpamCudf.atomic_actions
           ~simple_universe ~complete_universe actions in
-      let to_process = OpamCudf.reduce_actions atomic_actions in
-      let root_causes =
-        OpamCudf.compute_root_causes to_process requested
-      in
-      Success (solution OpamCudf.cudf2opam {to_process; root_causes})
+      Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
       cycle_conflict complete_universe cycles
 
+let get_atomic_action_graph t =
+  cudf_to_opam_graph OpamCudf.cudf2opam t
 
 let installable universe =
   log "trim";
@@ -365,35 +354,24 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
-let delete_or_update t =
-  ActionGraph.fold_vertex
-    (fun v acc ->
-      acc || match v with To_change (Some _, _) -> true | _ -> false)
-    t.to_process
-    false
-
 let new_packages sol =
-  ActionGraph.fold_vertex (fun action packages ->
-    OpamPackage.Set.add (action_contents action) packages
-  ) sol.to_process OpamPackage.Set.empty
+  OpamCudf.ActionGraph.fold_vertex (fun action packages ->
+    OpamPackage.Set.add (OpamCudf.cudf2opam (action_contents action)) packages
+  ) sol OpamPackage.Set.empty
 
 let stats sol =
-  let s_remove, s_install, s_reinstall, s_upgrade, s_downgrade =
-    ActionGraph.fold_vertex (fun action (rm,i,r,u,d) ->
+  OpamCudf.ActionGraph.fold_vertex (fun action stats ->
       match action with
-      | To_change (None, _) -> rm, i+1, r, u, d
-      | To_change (Some x, y) when x<>y ->
-        if OpamPackage.Version.compare
-            (OpamPackage.version x) (OpamPackage.version y) < 0 then
-          rm, i, r, u+1, d
-        else
-          rm, i, r, u, d+1
-      | To_change (Some _, _)
-      | To_recompile _ -> rm, i, r+1, u, d
-      | To_delete _ -> rm+1, i, r, u, d)
-      sol.to_process
-      (0, 0, 0, 0, 0) in
-  { s_install; s_reinstall; s_upgrade; s_downgrade; s_remove }
+      | To_change (None, _) -> {stats with s_install = stats.s_install+1}
+      | To_change (Some x, y) ->
+        let c = Common.CudfAdd.compare x y in
+        if c < 0 then {stats with s_upgrade = stats.s_upgrade+1} else
+        if c > 0 then {stats with s_downgrade = stats.s_downgrade+1} else
+          {stats with s_reinstall = stats.s_reinstall+1}
+      | To_recompile _ -> {stats with s_reinstall = stats.s_reinstall+1}
+      | To_delete _ -> {stats with s_remove = stats.s_remove+1})
+    (OpamCudf.ActionGraph.reduce sol)
+    { s_install=0; s_reinstall=0; s_upgrade=0; s_downgrade=0; s_remove=0 }
 
 let string_of_stats stats =
   let col n =
@@ -422,26 +400,44 @@ let string_of_stats stats =
     List.map (fun (n,t) -> Printf.sprintf "%s to %s" (col n) t) msgs
 
 let solution_is_empty t =
-  ActionGraph.is_empty t.to_process
+  OpamCudf.ActionGraph.is_empty t
 
-let print_solution ~messages ~rewrite t =
-  if not (solution_is_empty t) then
-    let print_action a =
-      let cause = try List.assoc (action_contents a) t.root_causes
+let print_solution ~messages ~rewrite ~requested t =
+  let t = OpamCudf.ActionGraph.reduce t in
+  let causes = OpamCudf.compute_root_causes t requested in
+  OpamCudf.ActionGraph.Topological.iter (fun a ->
+      let cause =
+        try OpamCudf.Map.find (action_contents a) causes
         with Not_found -> Unknown in
-      let to_string a = Action.to_string (map_action rewrite a) in
-      match string_of_cause OpamPackage.name_to_string cause with
-      | "" -> OpamGlobals.msg " - %s\n" (to_string a)
-      | c  -> OpamGlobals.msg " - %-47s [%s]\n" (to_string a) c in
-    ActionGraph.Topological.iter (function action ->
-        print_action action;
-        match action with
-        | To_change(_,p)
-        | To_recompile p -> List.iter (OpamGlobals.msg "     %s.\n")  (messages p)
-        | To_delete _    -> ()
-      ) t.to_process
+      let str_action a =
+        Action.to_string @@
+        map_action (fun p -> rewrite (OpamCudf.cudf2opam p)) a
+      in
+      let cudf_name p = OpamPackage.name_to_string (OpamCudf.cudf2opam p) in
+      (match string_of_cause cudf_name cause with
+       | "" -> OpamGlobals.msg "  - %s\n" (str_action a)
+       | c  -> OpamGlobals.msg "  - %-46s [%s]\n" (str_action a) c);
+      match a with
+      | To_change(_,p) | To_recompile p ->
+        List.iter (OpamGlobals.msg "     %s.\n")
+          (messages (OpamCudf.cudf2opam p))
+      | To_delete _    -> ()
+    ) t
 
-(* unused !? *)
+let dump_universe universe oc =
+  let version_map = cudf_versions_map universe universe.u_packages in
+  let cudf_univ =
+    load_cudf_universe ~depopts:false universe ~version_map
+      universe.u_available in
+  OpamCudf.dump_universe oc cudf_univ;
+  (* Add explicit bindings to retrieve original versions of non-available packages *)
+  OpamPackage.Map.iter (fun nv i ->
+      if not (OpamPackage.Set.mem nv universe.u_available) then
+        Printf.fprintf oc "#v2v:%s:%d=%s\n"
+          (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
+    ) version_map
+
+(* (* unused !? *)
 let sequential_solution universe ~requested actions =
   let version_map =
     cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
@@ -461,9 +457,10 @@ let sequential_solution universe ~requested actions =
     let atomic_actions =
       OpamCudf.atomic_actions ~simple_universe ~complete_universe actions
     in
-    let to_process = OpamCudf.reduce_actions atomic_actions in
+    let to_process = OpamCudf.ActionGraph.reduce atomic_actions in
     let root_causes = OpamCudf.compute_root_causes to_process requested in
     Success (solution OpamCudf.cudf2opam {to_process; root_causes})
 
   with OpamCudf.Cyclic_actions cycles ->
     cycle_conflict complete_universe cycles
+*)

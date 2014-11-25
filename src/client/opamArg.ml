@@ -1035,19 +1035,7 @@ let config =
     | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe" in
       let opam_univ = OpamState.universe opam_state Depends in
-      let version_map =
-        OpamSolver.cudf_versions_map opam_univ opam_state.OpamState.Types.packages in
-      let cudf_univ =
-        OpamSolver.load_cudf_universe ~depopts:false opam_univ ~version_map
-          opam_univ.u_available in
-      let dump oc =
-        OpamCudf.dump_universe oc cudf_univ;
-        (* Add explicit bindings to retrieve original versions of non-available packages *)
-        OpamPackage.Map.iter (fun nv i ->
-            if not (OpamPackage.Set.mem nv opam_univ.u_available) then
-              Printf.printf "#v2v:%s:%d=%s\n"
-                (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
-          ) version_map in
+      let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
@@ -1686,7 +1674,7 @@ let source =
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
-      if OpamProcess.Job.run (OpamAction.download_package t nv) = None
+      if OpamProcess.Job.run (OpamAction.download_package t nv) = `Error ()
       then OpamGlobals.error_and_exit "Download failed";
       OpamAction.extract_package t nv;
       move_dir

@@ -162,7 +162,7 @@ let string_of_request r =
     (OpamGlobals.get_solver_criteria r.criteria)
 
 let string_of_universe u =
-  string_of_packages (List.sort compare (Cudf.get_packages u))
+  string_of_packages (List.sort Common.CudfAdd.compare (Cudf.get_packages u))
 
 let vpkg2atom cudf2opam cudf_universe (name,cstr) =
   match cstr with
@@ -853,40 +853,7 @@ let compute_root_causes g requested =
         make_roots causes Upstream_changes
           (fun a -> ActionGraph.in_degree g a = 0) in
       get_causes causes roots in
-  Map.fold (fun p (cause,_depth) acc -> (p,cause)::acc) causes []
-
-(* Turn atomic actions (only install and remove) to higher-level actions
-   (install, remove, up/downgrade, recompile) *)
-let reduce_actions g =
-  let removals =
-    ActionGraph.fold_vertex (fun v acc -> match v with
-        | To_delete p ->
-          OpamMisc.StringMap.add p.Cudf.package p acc
-        | _ -> acc)
-      g OpamMisc.StringMap.empty
-  in
-  let reduced = ref Map.empty in
-  let g =
-    ActionGraph.map_vertex (function
-        | To_change (None, p) as act ->
-          (try
-             let p0 = OpamMisc.StringMap.find p.Cudf.package removals in
-             let act =
-               if Pkg.equal p0 p then To_recompile p
-               else To_change (Some p0, p)
-             in
-             reduced := Map.add p0 act !reduced;
-             act
-           with Not_found -> act)
-        | act -> act)
-      g
-  in
-  Map.iter (fun p act ->
-      let rm_act = To_delete p in
-      ActionGraph.iter_pred (fun v -> ActionGraph.add_edge g v act) g rm_act;
-      ActionGraph.remove_vertex g rm_act
-    ) !reduced;
-  g
+  Map.map fst causes
 
 (* Compute a full solution from a set of root actions. This means adding all
    required reinstallations and computing the graph of dependency of required

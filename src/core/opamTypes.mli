@@ -210,12 +210,6 @@ type 'a cause =
   | Requested
   | Unknown
 
-(** The type for solutions *)
-type ('a,'b) gen_solution = {
-  to_process: 'b; (* should be 'a OpamActionGraph.Make(X).t *)
-  root_causes: ('a * 'a cause) list;
-}
-
 (** Solver result *)
 type solver_result =
   | Nothing_to_do

@@ -200,29 +200,35 @@ let prepare_package_build t nv =
 let download_package t nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
-  if !OpamGlobals.dryrun || !OpamGlobals.fake then Done None else
+  if !OpamGlobals.dryrun || !OpamGlobals.fake then Done (`Successful None) else
   let dir =
     try match OpamPackage.Name.Map.find name t.pinned with
       | Version _ -> Some (OpamPath.dev_package t.root nv)
       | _ -> Some (OpamPath.Switch.dev_package t.root t.switch name)
     with Not_found -> None
   in
-  let opt_of_dl = function
-    | Some (Up_to_date f | Result f) -> Some f
-    | Some (Not_available _) -> None
-    | None -> None
+  let of_dl = function
+    | Some (Up_to_date f | Result f) -> `Successful (Some f)
+    | Some (Not_available _) -> `Error ()
+    | None -> `Successful None
   in
-  match dir with
-  | Some dir ->
-    OpamState.download_upstream t nv dir @@| opt_of_dl
-  | None ->
-    OpamState.download_archive t nv @@+ function
-    | Some f ->
-      assert (f = OpamPath.archive t.root nv);
-      Done (Some (F f))
+  let job = match dir with
+    | Some dir ->
+      OpamState.download_upstream t nv dir @@| of_dl
     | None ->
-      let dir = OpamPath.dev_package t.root nv in
-      OpamState.download_upstream t nv dir @@| opt_of_dl
+      OpamState.download_archive t nv @@+ function
+      | Some f ->
+        assert (f = OpamPath.archive t.root nv);
+        Done (`Successful (Some (F f)))
+      | None ->
+        let dir = OpamPath.dev_package t.root nv in
+        OpamState.download_upstream t nv dir @@| of_dl
+  in
+  job @@| function
+  | `Error () ->
+    OpamGlobals.error "Could not get source of %s" (OpamPackage.to_string nv);
+    `Error ()
+  | success -> success
 
 let extract_package t nv =
   log "extract_package: %a" (slog OpamPackage.to_string) nv;
@@ -486,7 +492,7 @@ let cleanup_package_artefacts t nv =
     OpamFilename.rmdir dev;
   )
 
-let sources_needed t solution =
+let sources_needed t g =
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
       | To_delete nv ->
@@ -498,7 +504,7 @@ let sources_needed t solution =
         let acc = OpamPackage.Set.add nv2 acc in
         if removal_needs_download t nv1
         then OpamPackage.Set.add nv1 acc else acc)
-    solution.to_process OpamPackage.Set.empty
+    g OpamPackage.Set.empty
 
 let remove_package t ~metadata ?keep_build ?silent nv =
   if !OpamGlobals.fake || !OpamGlobals.show then
@@ -506,6 +512,7 @@ let remove_package t ~metadata ?keep_build ?silent nv =
   else
     remove_package_aux t ~metadata ?keep_build ?silent nv
 
+(*
 (* Remove all the packages appearing in a solution (and which need to
    be removed, eg. because of a direct uninstall action or because of
    recompilation. Ensure any possibly partially removed package is
@@ -540,6 +547,7 @@ let remove_all_packages t ~metadata sol =
     update_metadata (), `Successful ()
   with e ->
     update_metadata (), `Exception e
+*)
 
 (* Build and install a package.
    Assumes the package has already been downloaded to its build dir.
