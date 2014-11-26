@@ -2643,20 +2643,18 @@ let download_archive t nv =
   try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
-    if repo.repo_kind = `http then
-      let text =
-        OpamProcess.make_command_text
-          (OpamPackage.name_to_string nv)
-          ~args:[OpamRepositoryName.to_string repo.repo_name]
-          "from"
-      in
-      OpamProcess.Job.with_text text @@
-      OpamRepository.pull_archive repo nv
-      @@+ function
-      | Not_available _ -> Done None
-      | Up_to_date f
-      | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
-    else Done None
+    let text =
+      OpamProcess.make_command_text
+        (OpamPackage.name_to_string nv)
+        ~args:[OpamRepositoryName.to_string repo.repo_name]
+        "from"
+    in
+    OpamProcess.Job.with_text text @@
+    OpamRepository.pull_archive repo nv
+    @@+ function
+    | Not_available _ -> Done None
+    | Up_to_date f
+    | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
   with Not_found ->
     Done None
 
