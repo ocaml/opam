@@ -56,10 +56,10 @@ val url: t -> package -> filename
 (** Additional files: {i $opam/packages/$NAME/$NAME.$VERSION/files} *)
 val files: t -> package -> dirname
 
-(** Tempory folder for dev packages {i $opam/packages.dev/} *)
+(** Temporary folder for dev packages {i $opam/packages.dev/} *)
 val dev_packages_dir: t -> dirname
 
-(** Tempory folder for dev packages {i $opam/packages.dev/$NAME.$VERSION/} *)
+(** Temporary folder for dev packages {i $opam/packages.dev/$NAME.$VERSION/} *)
 val dev_package: t -> package -> dirname
 
 (** Description file: {i $opam/packages/$NAME/$NAME.$VERSION/descr} *)
@@ -164,27 +164,27 @@ module Switch: sig
       {i $opam/$switch/installed} *)
   val installed: t -> switch -> filename
 
-  (** List of packages expliciterly installed by the user: {i
+  (** List of packages explicitly installed by the user: {i
       $opam/$switch/installed.roots} *)
   val installed_roots: t -> switch -> filename
 
-  (** Tempory folders used to decompress and compile
+  (** Temporary folders used to decompress and compile
       the corresponding archives:
       {i $opam/$switch/build/$packages} *)
   val build: t -> switch -> package -> dirname
 
-  (** Tempory folders used to decompress and compile the OCaml
+  (** Temporary folders used to decompress and compile the OCaml
       compiler: {i $opam/$switch/build/ocaml} *)
   val build_ocaml: t -> switch -> dirname
 
-  (** Tempory folder: {i $opam/$switch/build} *)
+  (** Temporary folder: {i $opam/$switch/build} *)
   val build_dir: t -> switch -> dirname
 
-  (** Tempory location of install files: {i
+  (** Temporary location of install files: {i
       $opam/$switch/build/$package/$name.install} *)
   val build_install: t -> switch -> package -> filename
 
-  (** Tempory location of config files: {i
+  (** Temporary location of config files: {i
       $opam/$switch/build/$packages/$name.config} *)
   val build_config: t -> switch -> package -> filename
 
