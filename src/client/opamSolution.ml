@@ -391,8 +391,8 @@ let parallel_apply t action action_graph =
     | To_delete nv ->
       if OpamAction.removal_needs_download t nv then
         (try OpamAction.extract_package t nv with e -> OpamMisc.fatal e);
-      (OpamProcess.Job.catch (fun e -> OpamMisc.fatal e; Done ()) @@
-       OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
+      OpamProcess.Job.catch (fun e -> OpamMisc.fatal e; Done ())
+         (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
       remove_from_install nv;
       None
   in

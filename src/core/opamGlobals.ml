@@ -183,7 +183,7 @@ let default_opam_dir =
   with Not_found -> Filename.concat home ".opam"
 
 let root_dir_tmp =
-  Filename.concat (Filename.get_temp_dir_name ())
+  Filename.concat Filename.temp_dir_name
     ("opam-" ^ string_of_int (Unix.getpid ()))
 
 let root_dir = ref root_dir_tmp

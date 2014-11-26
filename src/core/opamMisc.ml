@@ -528,10 +528,11 @@ let get_terminal_columns () =
         default_columns
 
 let terminal_columns =
-  let v = ref (Lazy.from_fun get_terminal_columns) in
+  let v = ref (Lazy.lazy_from_fun get_terminal_columns) in
   let () =
     try Sys.set_signal 28 (* SIGWINCH *)
-          (Sys.Signal_handle (fun _ -> v := Lazy.from_fun get_terminal_columns))
+          (Sys.Signal_handle
+             (fun _ -> v := Lazy.lazy_from_fun get_terminal_columns))
     with Invalid_argument _ -> ()
   in
   fun () ->
