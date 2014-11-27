@@ -183,12 +183,19 @@ val contains: string -> char -> bool
 (** Split a string *)
 val split: string -> char -> string list
 
+(** Returns the length of the string in terminal chars, ignoring ANSI color
+    sequences from OpamGlobals.colorise *)
+val visual_length: string -> int
+
 (** left indenting. [~visual] can be used to indent eg. ANSI colored
     strings and should correspond to the visible characters of s *)
 val indent_left: string -> ?visual:string -> int -> string
 
 (** right indenting *)
 val indent_right: string -> ?visual:string -> int -> string
+
+(** Pads fields in a table with spaces for alignment. *)
+val align_table: string list list -> string list list
 
 (** Cut a string *)
 val sub_at: int -> string -> string
@@ -204,6 +211,8 @@ module Option: sig
   val default: 'a -> 'a option -> 'a
 
   val default_map: 'a option -> 'a option -> 'a option
+
+  val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option

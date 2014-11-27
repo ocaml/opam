@@ -82,13 +82,13 @@ val compiler_state: repository -> string option -> compiler -> checksums
 (** {2 Repository backends} *)
 
 (** Initialize {i $opam/repo/$repo} *)
-val init: repository -> unit
+val init: repository -> unit OpamProcess.job
 
 (** Update {i $opam/repo/$repo}. *)
-val update: repository -> unit
+val update: repository -> unit OpamProcess.job
 
 (** Error and exit on incompatible version *)
-val check_version: repository -> unit
+val check_version: repository -> unit OpamProcess.job
 
 (** Backend signature *)
 module type BACKEND = sig
@@ -96,45 +96,47 @@ module type BACKEND = sig
   (** [pull_url package local_dir checksum remote_url] pull the contents of
       [remote_url] into [local_dir]. Can return either a file or a
       directory. [checksum] is the optional expected checksum. *)
-  val pull_url: package -> dirname -> string option -> address -> generic_file download
+  val pull_url: package -> dirname -> string option -> address -> generic_file download OpamProcess.job
 
   (** [pull_repo] pull the contents of a repository. *)
-  val pull_repo: repository -> unit
+  val pull_repo: repository -> unit OpamProcess.job
 
   (** [pull_archive repo archive] pull [archive] in the given
       repository. *)
-  val pull_archive: repository -> filename -> filename download
+  val pull_archive: repository -> filename -> filename download OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful
       for VCS backends. *)
-  val revision: repository -> version option
+  val revision: repository -> version option OpamProcess.job
 
 end
 
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)
 val pull_url: repository_kind ->
-  package -> dirname -> string option -> address list -> generic_file download
+  package -> dirname -> string option -> address list ->
+  generic_file download OpamProcess.job
 
 (** Pull and fix the resulting digest *)
 val pull_url_and_fix_digest: repository_kind ->
-  package -> dirname -> string -> filename -> address list -> generic_file download
+  package -> dirname -> string -> filename -> address list ->
+  generic_file download OpamProcess.job
 
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
-val check_digest: filename -> string option -> unit
+val check_digest: filename -> string option -> bool
 
 (** Pull an archive in a repository *)
-val pull_archive: repository -> package -> filename download
+val pull_archive: repository -> package -> filename download OpamProcess.job
 
 (** Get the optional revision associated to a backend. *)
-val revision: repository -> version option
+val revision: repository -> version option OpamProcess.job
 
 (** [make_archive ?gener_digest repo prefix package] builds the
     archive for the given [package]. By default, the digest that
     appears in {i $NAME.$VERSION/url} is not modified, unless
     [gener_digest] is set. *)
-val make_archive: ?gener_digest:bool -> repository -> string option -> package -> unit
+val make_archive: ?gener_digest:bool -> repository -> string option -> package -> unit OpamProcess.job
 
 (** Register a repository backend *)
 val register_backend: repository_kind -> (module BACKEND) -> unit

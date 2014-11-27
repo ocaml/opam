@@ -24,6 +24,9 @@ exception Command_not_found of string
 (** raise [Process_error] *)
 val process_error: OpamProcess.result -> 'a
 
+(** raise [Process_error] if the process didn't return 0 *)
+val raise_on_process_error: OpamProcess.result -> unit
+
 (** Exception raised when a computation in the current process
     fails. *)
 exception Internal_error of string
@@ -31,9 +34,11 @@ exception Internal_error of string
 (** Raise [Internal_error] *)
 val internal_error: ('a, unit, string, 'b) format4 -> 'a
 
-
 (** [with_tmp_dir fn] executes [fn] in a tempory directory *)
 val with_tmp_dir: (string -> 'a) -> 'a
+
+(** Runs a job with a temp dir that is cleaned up afterwards *)
+val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
 (** [copy src dst] copies [src] to [dst]. Remove [dst] before the copy
     if it is a link. *)
@@ -132,11 +137,19 @@ val system_ocamlc_version: string option Lazy.t
     Links pointing to directory are also returned. *)
 val directories_with_links: string -> string list
 
+(** Make a comman suitable for OpamProcess.Job *)
+val make_command:
+  ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
+  ?metadata:(string * string) list -> ?allow_stdin:bool -> ?dir:string ->
+  string -> string list -> OpamProcess.command
+
+(** OLD COMMAND API, DEPRECATED *)
+
 (** a command is a list of words *)
 type command = string list
 
 (** Test whether a command exists in the environment. *)
-val command_exists: ?env:string array -> string -> bool
+val command_exists: ?env:string array -> ?dir:string -> string -> bool
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
@@ -157,6 +170,8 @@ val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
 val read_command_output: ?verbose:bool -> ?env:string array ->
   ?metadata:(string * string) list ->  ?allow_stdin:bool ->
   command -> string list
+
+(** END *)
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
@@ -189,7 +204,7 @@ val funlock: lock -> unit
 
 (** download compiler sources *)
 val download: overwrite:bool -> ?compress:bool ->
-  filename:string -> dst:string -> string
+  filename:string -> dst:string -> string OpamProcess.job
 
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit

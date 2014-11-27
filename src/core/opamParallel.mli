@@ -14,60 +14,69 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module type G = sig
-  include Graph.Sig.I
-  include Graph.Topological.G with type t := t and module V := V
-  val has_cycle: t -> bool
-  val scc_list: t -> V.t list list
-  val string_of_vertex: V.t -> string
+module type VERTEX = sig
+  include OpamMisc.OrderedType
+  include Graph.Sig.COMPARABLE with type t := t
 end
 
-type error =
-  | Process_error of OpamProcess.result
-  | Internal_error of string
-  | Package_error of string
+module type G = sig
+  include Graph.Sig.I
+  module Vertex: VERTEX with type t = V.t
+  module Topological: sig
+    val fold: (V.t -> 'a -> 'a) -> t -> 'a -> 'a
+  end
+  val has_cycle: t -> bool
+  val scc_list: t -> V.t list list
+end
+
+(** Simply parallel execution of tasks *)
+
+(** In the simple iter, map and reduce cases, ints are the indexes of the jobs
+    in the list *)
+exception Errors of int list * (int * exn) list * int list
+
+val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> 'a list -> unit
+
+val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> 'a list -> 'b list
+
+val reduce: jobs:int -> command:('a -> 'b OpamProcess.job) ->
+  merge:('b -> 'b -> 'b) -> nil:'b ->
+  'a list -> 'b
+
+(** More complex parallelism with dependency graphs *)
 
 module type SIG = sig
 
   module G : G
 
-  val iter: int -> G.t ->
-    pre:(G.V.t -> unit) ->
-    child:(G.V.t -> unit) ->
-    post:(G.V.t -> unit) ->
+  (** Runs the job [command ~pred v] for every node [v] in a graph, in
+      topological order, using [jobs] concurrent processes. [pred] is the
+      associative list of job results on direct predecessors of [v]. *)
+  val iter:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    G.t ->
     unit
 
-  val iter_l: int -> G.vertex list ->
-    pre:(G.V.t -> unit) ->
-    child:(G.V.t -> unit) ->
-    post:(G.V.t -> unit) ->
-    unit
+  (** Same as [iter], but returns the results of all jobs as a [vertex,result]
+      associative list *)
+  val map:
+    jobs:int ->
+    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    G.t ->
+    (G.V.t * 'a) list
 
-  val map_reduce: int -> G.t ->
-    map:(G.V.t -> 'a) ->
-    merge:('a -> 'a -> 'a) ->
-    init:'a ->
-    'a
+  (** Raised when the [command] functions raised exceptions. Parameters are
+      (successfully traversed nodes, exception nodes and corresponding
+      exceptions, remaining nodes that weren't traversed) *)
+  exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
 
-  val map_reduce_l: int -> G.vertex list ->
-    map:(G.V.t -> 'a) ->
-    merge:('a -> 'a -> 'a) ->
-    init:'a ->
-    'a
-
-  val create: G.V.t list -> G.t
-
-  exception Errors of (G.V.t * error) list * G.V.t list
+  (** Raised when the graph to traverse has cycles. Returns the cycles found. *)
   exception Cyclic of G.V.t list list
 end
 
 module Make (G : G) : SIG with module G = G
                            and type G.V.t = G.V.t
-
-module type VERTEX = sig
-  include Graph.Sig.COMPARABLE
-  val to_string: t -> string
-end
 
 module type GRAPH = sig
   include Graph.Sig.I

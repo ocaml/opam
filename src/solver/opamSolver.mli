@@ -19,9 +19,9 @@
 open OpamTypes
 
 module Action : OpamActionGraph.ACTION with type package = package
-module ActionGraph : OpamParallel.GRAPH with type V.t = package action
+module ActionGraph : OpamActionGraph.SIG with type package = package
 
-type solution = (OpamPackage.t, ActionGraph.t) gen_solution
+type solution
 
 val empty_universe: universe
 
@@ -42,13 +42,11 @@ val string_of_stats: stats -> string
 (** Is the solution empty ? *)
 val solution_is_empty: solution -> bool
 
-(** Does the solution implies deleting or updating a package *)
-val delete_or_update : solution -> bool
-
 (** Display a solution *)
 val print_solution:
   messages:(package -> string list) ->
   rewrite:(package -> package) ->
+  requested:name_set ->
   solution -> unit
 
 (** Computes an opam->cudf version map from a set of package *)
@@ -64,8 +62,11 @@ val load_cudf_universe:
     consistency of the initial description. *)
 val resolve :
   ?verbose:bool ->
-  universe -> requested:name_set -> orphans:package_set -> atom request
+  universe -> orphans:package_set -> atom request
   -> (solution, OpamCudf.conflict) result
+
+(** Returns the graph of atomic actions (rm, inst) from a solution *)
+val get_atomic_action_graph : solution -> ActionGraph.t
 
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
@@ -89,6 +90,12 @@ val reverse_dependencies :
   package_set ->
   package list
 
+(** Dumps a cudf file containing all available packages in the given universe,
+    plus version bindings (as '#v2v' comments) for the other ones. *)
+val dump_universe: universe -> out_channel -> unit
+
+(*
 (** Create a sequential solution from a list of actions *)
 val sequential_solution: universe -> requested:name_set ->
   package action list -> (solution, OpamCudf.conflict) result
+*)

@@ -135,6 +135,8 @@ module O = struct
   type tmp = t
   type t = tmp
   let compare = compare
+  let hash = hash
+  let equal = equal
   let to_string = to_string
   let to_json = to_json
 end
@@ -267,22 +269,4 @@ let unknown name version =
       (Name.to_string name)
       (Version.to_string v)
 
-module Graph = struct
-  module Vertex = struct
-    include O
-    let equal x y = compare x y = 0
-    let hash = Hashtbl.hash
-  end
-  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
-  module Topological = Graph.Topological.Make (PG)
-  module Traverse = Graph.Traverse.Dfs(PG)
-  module Components = Graph.Components.Make(PG)
-  module Parallel = OpamParallel.Make(struct
-    let string_of_vertex = to_string
-    include PG
-    include Topological
-    include Traverse
-    include Components
-  end)
-end
-module Parallel = Graph.Parallel
+module Graph = (OpamParallel.MakeGraph (O) : OpamParallel.GRAPH with type V.t = t)

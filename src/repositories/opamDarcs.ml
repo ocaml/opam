@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamFilename.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "Darcs" fmt
 
@@ -24,40 +25,41 @@ module Darcs = struct
   let exists repo =
     OpamFilename.exists_dir (repo.repo_root / "_darcs")
 
+  let darcs repo =
+    let dir = OpamFilename.Dir.to_string repo.repo_root in
+    fun ?verbose ?env args ->
+      OpamSystem.make_command ~dir ?verbose ?env "darcs" args
+
   let init repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-        OpamSystem.commands [
-          [ "darcs" ; "init" ];
-          [ "darcs" ; "get" ; fst repo.repo_address; "--lazy" ];
-        ];
-      )
+    OpamProcess.Job.of_list
+      [ darcs repo [ "init" ];
+        darcs repo [ "get" ; fst repo.repo_address; "--lazy" ] ]
+    @@+ function
+    | None -> Done ()
+    | Some (_,err) -> OpamSystem.process_error err
 
   (* With darcs, it is apparently easier to compute a diff between
      remote and local, without fething at all. So we set fetch to be a
      no-op. *)
   let fetch _ =
-    ()
+    Done ()
 
   (* Merge is actually a full pull *)
   let reset repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-        OpamSystem.command [
-          "darcs" ; "pull"; fst repo.repo_address; "--all"; "--quiet"
-        ];
-    )
+    darcs repo [ "pull"; fst repo.repo_address; "--all"; "--quiet" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
 
   (* Difference between remote and local is a 'pull --dry-run' *)
   let diff repo =
-    OpamFilename.in_dir repo.repo_root (fun () ->
-        let patches =
-          OpamSystem.read_command_output [
-            "darcs" ; "pull" ; fst repo.repo_address; "--dry-run" ; "--quiet"
-          ] in
-        patches <> []
-      )
+    darcs repo [ "pull" ; fst repo.repo_address; "--dry-run" ; "--quiet" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done (r.OpamProcess.r_stdout <> [])
 
   let revision _ =
-    "<darcs-???>"
+    Done "<darcs-???>"
 
 end
 

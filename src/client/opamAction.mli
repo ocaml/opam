@@ -19,31 +19,40 @@
 open OpamTypes
 open OpamState.Types
 
-(** Downloads the source for a package to the local cache. *)
-val download_package: t -> package -> unit
+(** Downloads the source for a package to the local cache. Returns the file or
+    dir downloaded, or None if the download failed. *)
+val download_package: t -> package ->
+  [ `Error of unit | `Successful of generic_file option ] OpamProcess.job
 
 (** Extracts and patches the source of a package found in the local cache. *)
 val extract_package: t -> package -> unit
 
-(** Build and install a package from its downloaded source. *)
-val build_and_install_package: t -> metadata:bool -> package -> unit
+(** Build and install a package from its downloaded source. Returns [None] on
+    success, [Some exn] on error. *)
+val build_and_install_package:
+  t -> metadata:bool -> package -> exn option OpamProcess.job
+
+(** Find out if the package source is needed for uninstall *)
+val removal_needs_download: t -> package -> bool
 
 (** Remove a package. *)
-val remove_package: t -> metadata:bool -> ?keep_build:bool -> ?silent:bool -> package -> unit
+val remove_package: t -> metadata:bool -> ?keep_build:bool -> ?silent:bool -> package -> unit OpamProcess.job
 
 (** Removes auxiliary files related to a package, after checking that
     they're not needed (even in other switches) *)
 val cleanup_package_artefacts: t -> package -> unit
 
+(*
 (** Remove all the packages from a solution. This includes the package to
     delete, to upgrade and to recompile. Return the updated state and set of all
     deleted packages. *)
 val remove_all_packages: t -> metadata:bool -> OpamSolver.solution
   -> (t * package_set) * [ `Successful of unit | `Exception of exn ]
+*)
 
 (** Compute the set of packages which will need to be downloaded to apply a
     solution *)
-val sources_needed: t -> OpamSolver.solution -> package_set
+val sources_needed: t -> OpamSolver.ActionGraph.t -> package_set
 
 (** Update package metadata *)
 val update_metadata:

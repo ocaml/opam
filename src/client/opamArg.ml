@@ -542,7 +542,7 @@ let global_options =
   let color =
     mk_tristate_opt ~section ["color"] "WHEN"
       "Colorize the output. $(docv) must be `always', `never' or `auto'."
-      (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_tri_state in
+      (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_when in
   let switch =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
@@ -1035,19 +1035,7 @@ let config =
     | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe" in
       let opam_univ = OpamState.universe opam_state Depends in
-      let version_map =
-        OpamSolver.cudf_versions_map opam_univ opam_state.OpamState.Types.packages in
-      let cudf_univ =
-        OpamSolver.load_cudf_universe ~depopts:false opam_univ ~version_map
-          opam_univ.u_available in
-      let dump oc =
-        OpamCudf.dump_universe oc cudf_univ;
-        (* Add explicit bindings to retrieve original versions of non-available packages *)
-        OpamPackage.Map.iter (fun nv i ->
-            if not (OpamPackage.Set.mem nv opam_univ.u_available) then
-              Printf.printf "#v2v:%s:%d=%s\n"
-                (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
-          ) version_map in
+      let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
@@ -1677,13 +1665,17 @@ let source =
         in
         OpamGlobals.error "%s" (Dir.to_string dir);
         mkdir dir;
-        match OpamRepository.pull_url kind nv dir None [address] with
+        match
+          OpamProcess.Job.run
+            (OpamRepository.pull_url kind nv dir None [address])
+        with
         | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ -> ()
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
-      OpamAction.download_package t nv;
+      if OpamProcess.Job.run (OpamAction.download_package t nv) = `Error ()
+      then OpamGlobals.error_and_exit "Download failed";
       OpamAction.extract_package t nv;
       move_dir
         ~src:(OpamPath.Switch.build t.root t.switch nv)
@@ -1885,7 +1877,10 @@ let check_and_run_external_commands () =
 
 let run default commands =
   Sys.catch_break true;
-  let _ = Sys.signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ())) in
+  let () =
+    try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
+    with Invalid_argument _ -> ()
+  in
   try
     check_and_run_external_commands ();
     match Term.eval_choice ~catch:false default commands with

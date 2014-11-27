@@ -278,6 +278,12 @@ module Option = struct
     | None -> dft
     | some -> some
 
+  let compare cmp o1 o2 = match o1,o2 with
+    | None, None -> 0
+    | Some _, None -> 1
+    | None, Some _ -> -1
+    | Some x1, Some x2 -> cmp x1 x2
+
   module Op = struct
     let (>>=) = function
       | None -> fun _ -> None
@@ -356,6 +362,39 @@ let split s c =
 
 let split_delim s c =
   Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
+
+let visual_length s =
+  let rec aux s i =
+    try
+      let i = String.index_from s i '\027' in
+      let j = String.index_from s (i+1) 'm' in
+      j - i + 1 + aux s (j+1)
+    with Not_found | Invalid_argument _ -> 0
+  in
+  String.length s - aux s 0
+
+let align_table ll =
+  let rec transpose ll =
+    if List.for_all ((=) []) ll then [] else
+    let col, rest =
+      List.fold_left (fun (col,rest) -> function
+          | hd::tl -> hd::col, tl::rest
+          | [] -> ""::col, []::rest)
+        ([],[]) ll
+    in
+    List.rev col::transpose (List.rev rest)
+  in
+  let columns = transpose ll in
+  let pad n s =
+    let sn = visual_length s in
+    if sn >= n then s
+    else s ^ (String.make (n - sn) ' ')
+  in
+  let align sl =
+    let len = List.fold_left (fun m s -> max m (visual_length s)) 0 sl in
+    List.map (pad len) sl
+  in
+  transpose (List.map align columns)
 
 (* Remove from a c-separated list of string the one with the given prefix *)
 let reset_env_value ~prefix c v =
@@ -489,10 +528,16 @@ let get_terminal_columns () =
         default_columns
 
 let terminal_columns =
-  let v = Lazy.lazy_from_fun get_terminal_columns in
+  let v = ref (Lazy.lazy_from_fun get_terminal_columns) in
+  let () =
+    try Sys.set_signal 28 (* SIGWINCH *)
+          (Sys.Signal_handle
+             (fun _ -> v := Lazy.lazy_from_fun get_terminal_columns))
+    with Invalid_argument _ -> ()
+  in
   fun () ->
     if Unix.isatty Unix.stdout
-    then Lazy.force v
+    then Lazy.force !v
     else 80
 
 let uname_s () =

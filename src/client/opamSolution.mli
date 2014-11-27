@@ -23,7 +23,6 @@ val resolve:
   ?verbose:bool ->
   OpamState.state ->
   user_action ->
-  requested:name_set ->
   orphans:package_set ->
   atom request ->
   (OpamSolver.solution, OpamCudf.conflict) result

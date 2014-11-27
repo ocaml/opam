@@ -20,6 +20,7 @@ open OpamState.Types
 open OpamMisc.OP
 open OpamPackage.Set.Op
 open OpamFilename.OP
+open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 let slog = OpamGlobals.slog
@@ -166,8 +167,8 @@ let with_switch_backup command f =
       OpamFilename.remove file
     else
      Printf.eprintf "\nThe former state can be restored with \
-                     %s switch import %S\n%!"
-       Sys.argv.(0) (OpamFilename.to_string file);
+                     '%s switch import %S'\n%!"
+       Sys.argv.(0) (OpamFilename.prettify file);
     raise err
 
 let packages_of_atoms t atoms =
@@ -472,7 +473,7 @@ module API = struct
                  repo_kind = kind;
                  repo_root = OpamPath.Switch.dev_package t.root t.switch name;
                  repo_address = address_of_string @@ string_of_pin_option pin} in
-              (match OpamRepository.revision repo with
+              (match OpamProcess.Job.run (OpamRepository.revision repo) with
                | Some v -> Printf.sprintf " (%s)" (OpamPackage.Version.to_string v)
                | None -> "")
             | None -> ""
@@ -754,7 +755,7 @@ module API = struct
       let action = Upgrade to_reinstall in
       requested,
       action,
-      OpamSolution.resolve t action ~requested
+      OpamSolution.resolve t action
         ~orphans:(full_orphans ++ orphan_versions)
         (preprocess_request t full_orphans orphan_versions
            { wish_install = OpamSolution.atoms_of_packages to_install;
@@ -823,7 +824,7 @@ module API = struct
         (OpamPackage.Set.elements to_upgrade) in
     requested,
     action,
-    OpamSolution.resolve t action ~requested
+    OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
       (preprocess_request t full_orphans orphan_versions
          { wish_install = [];
@@ -1039,24 +1040,23 @@ module API = struct
     end;
 
     if repositories_need_update then (
+      OpamGlobals.header_msg "Updating package repositories";
       let repos = OpamRepositoryName.Map.values repositories in
-      let child repo =
-        try ignore (OpamRepositoryCommand.update t repo)
-        with e ->
-          OpamMisc.fatal e;
-          OpamGlobals.error "Skipping %s as the repository is not available.\n"
-            (string_of_address repo.repo_address) in
-
-      (* Update each remote backend *)
-      OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
-        ~child ~post:ignore ~pre:ignore;
-
+      let t =
+        OpamParallel.reduce
+          ~jobs:(OpamState.dl_jobs t)
+          ~command:(OpamRepositoryCommand.update t)
+          ~merge:(fun f1 f2 x -> f1 (f2 x))
+          ~nil:(fun x -> x)
+          repos
+          t
+      in
       let t, compiler_updates =
         let t = OpamRepositoryCommand.update_compiler_index t in
-        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
+        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:!OpamGlobals.verbose in
       let package_updates =
         let t = OpamRepositoryCommand.update_package_index t in
-        OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
+        OpamRepositoryCommand.fix_package_descriptions t ~verbose:!OpamGlobals.verbose in
 
       (* If necessary, output a JSON file *)
       if OpamJson.verbose () then
@@ -1073,8 +1073,10 @@ module API = struct
     );
 
     if dev_packages_need_update then (
+      OpamGlobals.header_msg "Synchronizing development packages";
       let updates =
-        OpamRepositoryCommand.update_dev_packages ~verbose:true t dev_packages in
+        OpamRepositoryCommand.update_dev_packages ~verbose:!OpamGlobals.verbose
+          t dev_packages in
       let json = `O [ "dev-packages-update", OpamPackage.Set.to_json updates ] in
       OpamJson.add json
     );
@@ -1217,7 +1219,7 @@ module API = struct
         OpamFile.Compiler_index.write (OpamPath.compiler_index root)
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
-        OpamRepository.init repo;
+        OpamProcess.Job.run (OpamRepository.init repo);
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);
@@ -1226,7 +1228,7 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
-        let t = OpamRepositoryCommand.update t repo in
+        let t = OpamProcess.Job.run (OpamRepositoryCommand.update t repo) t in
         OpamRepositoryCommand.fix_descriptions t
           ~save_cache:false ~verbose:false;
 
@@ -1375,7 +1377,6 @@ module API = struct
         else Install names in
       let solution =
         OpamSolution.resolve t action
-          ~requested:names
           ~orphans:(full_orphans ++ orphan_versions)
           request in
       let solution = match solution with
@@ -1385,12 +1386,13 @@ module API = struct
             (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
           No_solution
         | Success solution ->
+          let action_graph = OpamSolver.get_atomic_action_graph solution in
           if deps_only then (
             let to_install =
               OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
                   | To_change (_, p) -> OpamPackage.Set.add p acc
                   | _ -> acc)
-                solution.to_process OpamPackage.Set.empty in
+                action_graph OpamPackage.Set.empty in
             let all_deps =
               let universe = OpamState.universe t (Install names) in
               OpamPackage.Name.Set.fold (fun name deps ->
@@ -1405,9 +1407,9 @@ module API = struct
                 | To_change (_, p) as v ->
                   if not (OpamPackage.Set.mem p all_deps) then
                     OpamSolver.ActionGraph.remove_vertex
-                      solution.to_process v
+                      action_graph v
                 | _ -> ())
-              solution.to_process
+              action_graph
           );
           OpamSolution.apply ?ask t action ~requested:names solution in
       OpamSolution.check_solution t solution
@@ -1449,7 +1451,7 @@ module API = struct
           try
             let nv = OpamPackage.max_version candidates (fst atom) in
             OpamGlobals.note "Forcing removal of (uninstalled) %s" (OpamPackage.to_string nv);
-            OpamAction.remove_package ~metadata:false t nv;
+            OpamProcess.Job.run (OpamAction.remove_package ~metadata:false t nv);
             OpamAction.cleanup_package_artefacts t nv;
             nothing_to_do := false
           with Not_found ->
@@ -1621,7 +1623,7 @@ module API = struct
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamGlobals.msg "\n";
       let nv = OpamState.pinned t name in
-      ignore (OpamState.update_dev_package t nv);
+      OpamProcess.Job.run (OpamState.update_dev_package t nv @@| fun _ -> ());
       OpamGlobals.msg "\n";
       let empty_opam = OpamState.has_empty_opam t nv in
       let needs_reinstall2 =

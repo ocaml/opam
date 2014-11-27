@@ -110,14 +110,14 @@ let resolve_deps index names =
   } in
   let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [];
                   criteria = `Default; } in
-  match OpamSolver.resolve ~verbose:true universe ~requested
+  match OpamSolver.resolve ~verbose:true universe
           ~orphans:OpamPackage.Set.empty request
   with
   | Success solution ->
     OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
         | To_change (_, p) -> OpamPackage.Set.add p acc
         | _ -> acc)
-      solution.to_process OpamPackage.Set.empty
+      (OpamSolver.get_atomic_action_graph solution) OpamPackage.Set.empty
   | Conflicts cs ->
     OpamGlobals.error_and_exit "%s"
       (OpamCudf.string_of_conflict
@@ -296,8 +296,9 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
              OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
           then (
             OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
-            if not dryrun then
-              OpamRepository.make_archive ~gener_digest repo prefix nv;
+            let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
+            if dryrun then OpamProcess.Job.dry_run job
+            else OpamProcess.Job.run job
           )
         with e ->
           OpamFilename.remove local_archive;

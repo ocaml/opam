@@ -25,6 +25,10 @@ let download_map fn = function
 
 let download_dir = download_map (fun d -> D d)
 let download_file = download_map (fun f -> F f)
+let string_of_download = function
+  | Up_to_date _ -> "already up-to-date"
+  | Result _ -> "synchronized"
+  | Not_available _ -> "unavailable"
 
 let string_of_address = function
   | url, None   -> url
@@ -229,7 +233,9 @@ let full_action_contents = function
   | To_change (None, p) | To_recompile p | To_delete p -> [p]
 
 let string_of_cause to_string =
-  let list_to_string l = String.concat ", " (List.map to_string l) in
+  let list_to_string l = match List.map to_string l with
+    | a::b::c::_::_::_ -> Printf.sprintf "%s, %s, %s, etc." a b c
+    | l -> String.concat ", " l in
   function
   | Upstream_changes -> "upstream changes"
   | Use pkgs         -> Printf.sprintf "uses %s" (list_to_string pkgs)
