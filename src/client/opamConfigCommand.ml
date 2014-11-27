@@ -131,8 +131,13 @@ let print_sexp_env env =
 
 let print_fish_env env =
   List.iter (fun (k,v) ->
-    OpamGlobals.msg "set -x %s %s;\n" k (String.concat " " (OpamMisc.split v ':'));
-  ) env
+      match k with
+      | "PATH" | "MANPATH" ->
+        let to_space_sep = String.concat " " (OpamMisc.split v ':') in
+        OpamGlobals.msg "set -gx %s %s\n" k to_space_sep
+      | _ ->
+        OpamGlobals.msg "set -gx %s %S\n" k v
+    ) env
 
 let env ~csh ~sexp ~fish ~inplace_path =
   log "config-env";

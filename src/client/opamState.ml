@@ -1907,9 +1907,14 @@ let update_ocamlinit () =
 
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
-  let sh   (k,v) = Printf.sprintf "%s=%s; export %s;\n" k v k in
+  let sh   (k,v) = Printf.sprintf "%s=%S; export %s;\n" k v k in
   let csh  (k,v) = Printf.sprintf "setenv %s %S;\n" k v in
-  let fish (k,v) = Printf.sprintf "set -gx %s %s\n" k v in
+  let fish (k,v) = match k with
+    | "PATH" | "MANPATH" ->
+      let to_space_sep = String.concat " " (OpamMisc.split v ':') in
+      Printf.sprintf "set -gx %s %s\n" k to_space_sep
+    | _ ->
+      Printf.sprintf "set -gx %s %S\n" k v in
   let export = match shell with
     | `zsh
     | `sh  -> sh
