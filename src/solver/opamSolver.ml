@@ -439,7 +439,7 @@ let print_solution ~messages ~rewrite ~requested t =
   List.iter2 (fun act (cause,messages) ->
       if cause <> "" then OpamGlobals.msg "  %-60s  [%s]\n" act cause
       else OpamGlobals.msg "  %s\n" act;
-      List.iter (OpamGlobals.msg "    %s\n") messages
+      List.iter (OpamGlobals.msg "       %s\n") messages
     ) actions_str details
 
 let dump_universe universe oc =
