@@ -403,28 +403,24 @@ type os =
   | Unix
   | Other of string
 
-let osref = ref None
-
-let os () =
-  match !osref with
-  | None ->
-    let os = match Sys.os_type with
-      | "Unix" -> begin
-          match OpamMisc.uname_s () with
-          | Some "Darwin"    -> Darwin
-          | Some "Linux"     -> Linux
-          | Some "FreeBSD"   -> FreeBSD
-          | Some "OpenBSD"   -> OpenBSD
-          | Some "NetBSD"    -> NetBSD
-          | Some "DragonFly" -> DragonFly
-          | _                -> Unix
-        end
-      | "Win32"  -> Win32
-      | "Cygwin" -> Cygwin
-      | s        -> Other s in
-    osref := Some os;
-    os
-  | Some os -> os
+let os =
+  let os = lazy (
+    match Sys.os_type with
+    | "Unix" -> begin
+        match OpamMisc.uname_s () with
+        | Some "Darwin"    -> Darwin
+        | Some "Linux"     -> Linux
+        | Some "FreeBSD"   -> FreeBSD
+        | Some "OpenBSD"   -> OpenBSD
+        | Some "NetBSD"    -> NetBSD
+        | Some "DragonFly" -> DragonFly
+        | _                -> Unix
+      end
+    | "Win32"  -> Win32
+    | "Cygwin" -> Cygwin
+    | s        -> Other s
+  ) in
+  fun () -> Lazy.force os
 
 let arch =
   let arch =

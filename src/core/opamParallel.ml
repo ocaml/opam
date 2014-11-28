@@ -155,8 +155,7 @@ module Make (G : G) = struct
               try
                 match OpamProcess.dontwait p with
                 | None -> (* process still running *)
-                  Unix.kill p.OpamProcess.p_pid Sys.sigint;
-                  (* XXX sigkill only on windows *)
+                  OpamProcess.interrupt p;
                   (n,Sys.Break) :: errors,
                   p::pend
                 | Some result ->

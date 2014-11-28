@@ -124,15 +124,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
     let close_fd () = Unix.close fd in
-    (* if verbose then ( *)
-    (*   flush stderr; *)
-    (*   let chan = Unix.open_process_out ("tee -a " ^ Filename.quote f) in *)
-    (*   let close () = *)
-    (*     match Unix.close_process_out chan with *)
-    (*     | _ -> close_fd () in *)
-    (*   Unix.descr_of_out_channel chan, close *)
-    (* ) else *)
-      fd, close_fd in
+    fd, close_fd in
   let oldcwd = Sys.getcwd () in
   let cwd = OpamMisc.Option.default oldcwd dir in
   OpamMisc.Option.iter Unix.chdir dir;
@@ -224,6 +216,11 @@ let read_lines f =
     List.rev !lines
   with Sys_error _ -> []
 
+(* Compat function (Windows) *)
+let interrupt p = match OpamGlobals.os () with
+  | OpamGlobals.Win32 -> Unix.kill p.p_pid Sys.sigkill
+  | _ -> Unix.kill p.p_pid Sys.sigint
+
 let run_background command =
   let { cmd; args;
         cmd_env=env; cmd_verbose=verbose; cmd_name=name;
@@ -279,13 +276,13 @@ let exit_status p code =
     r_cleanup  = cleanup;
   }
 
-let wait p =
-  let rec iter () =
-    let _, status = Unix.waitpid [] p.p_pid in
-    match status with
-    | Unix.WEXITED code -> exit_status p code
-    | _ -> iter () in
-  iter ()
+let rec wait p =
+  match
+    try Some (Unix.waitpid [] p.p_pid)
+    with Unix.Unix_error (Unix.EINTR,_,_) -> None (* handled signal *)
+  with
+  | Some (_, Unix.WEXITED code) -> exit_status p code
+  | _ -> wait p
 
 let rec dontwait p =
   match Unix.waitpid [Unix.WNOHANG] p.p_pid with
@@ -296,6 +293,17 @@ let rec dontwait p =
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
   if processes = [] then raise (Invalid_argument "wait_one");
+  if OpamGlobals.os () = OpamGlobals.Win32 then
+    (* No waiting for any child pid on Windows, this is highly sub-optimal
+       but should at least work. Todo: C binding for better behaviour *)
+    let p = List.hd processes in
+    let rec aux () = match Unix.waitpid [] p.p_pid with
+      | _, Unix.WEXITED code ->
+        p, exit_status p code
+      | _ -> aux ()
+    in
+    aux ()
+  else
   try
     let p =
       List.find (fun p -> Hashtbl.mem dead_childs p.p_pid) processes
@@ -304,18 +312,19 @@ let wait_one processes =
     Hashtbl.remove dead_childs p.p_pid;
     p, exit_status p code
   with Not_found ->
-    (* No multiple wait on Windows. We'll need to either use some C code, or
-       threads. In the meantime we could [Unix.waitpid (List.hd processes)] *)
     let rec aux () =
-      match Unix.wait () with
-      | pid, Unix.WEXITED code ->
-        (try
-           let p = List.find (fun p -> p.p_pid = pid) processes in
-           p, exit_status p code
-         with Not_found ->
+      try
+        match Unix.wait () with
+        | pid, Unix.WEXITED code ->
+          (try
+             let p = List.find (fun p -> p.p_pid = pid) processes in
+             p, exit_status p code
+           with Not_found ->
            Hashtbl.add dead_childs pid code;
            aux ())
-      | _ -> aux ()
+        | _ -> aux ()
+      with Unix.Unix_error (Unix.EINTR,_,_) ->
+        aux () (* Happens on handled signal *)
     in
     aux ()
 
@@ -325,7 +334,12 @@ let run command =
       cmd_stdin = OpamMisc.Option.Op.(command.cmd_stdin ++ Some true) }
   in
   let p = run_background command in
-  wait p
+  try wait p with e ->
+    match (try dontwait p with _ -> raise e) with
+    | None -> (* still running *)
+      (try interrupt p with Unix.Unix_error _ -> ());
+      raise e
+    | _ -> raise e
 
 let is_success r = r.r_code = 0
 
