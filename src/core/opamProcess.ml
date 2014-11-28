@@ -420,9 +420,8 @@ module Job = struct
       | Done x -> x
       | Run (cmd,cont) ->
         OpamMisc.Option.iter
-          (fun txt -> OpamGlobals.msg "Processing: %s\r" txt; print_string "\027[K")
+          (OpamGlobals.status_line "Processing: %s")
           (text_of_command cmd);
-        (* Printf.eprintf "Sequential run: %s\n%!" (string_of_command cmd); *)
         aux (cont (run cmd))
     in
     aux

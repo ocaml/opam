@@ -467,9 +467,7 @@ let parallel_apply t action action_graph =
       let successful = filter_graph action_graph successful in
       cleanup_artefacts successful;
       let failed = filter_graph action_graph failed in
-      if PackageActionGraph.(nb_vertex successful + nb_vertex failed) <= 1
-      then err else
-      let print_actions filter header actions =
+      let print_actions filter header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
               if filter v then v::acc else acc)
@@ -482,6 +480,9 @@ let parallel_apply t action action_graph =
                List.iter (Printf.fprintf oc "  %s\n")
                  (PackageAction.to_aligned_strings actions))
             actions
+        else match empty with
+          | Some s -> OpamGlobals.msg "%s\n" s
+          | None -> ()
       in
       OpamGlobals.msg "\n";
       OpamGlobals.header_msg "Error report";
@@ -492,6 +493,7 @@ let parallel_apply t action action_graph =
       print_actions
         (function To_recompile _ -> false | _ -> true)
         "The following changes have been performed"
+        ~empty:"No changes have been performed"
         successful;
       err
     | _ -> assert false

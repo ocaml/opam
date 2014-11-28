@@ -46,6 +46,9 @@ let locale_utf8 () =
     with Not_found -> false in
   checkv "LANG" || checkv "LC_ALL"
 
+let dumb_term =
+  try OpamMisc.getenv "TERM" = "dumb" with Not_found -> true
+
 let debug            = check ~warn:false "DEBUG"
 let debug_level      =
   try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
@@ -54,7 +57,13 @@ let _ = if !debug_level > 1 then debug := true
 let verbose          = check "VERBOSE"
 let color_when       = when_var "COLOR"
 let color            =
-  ref (color_when = `Always || color_when = `Auto && Unix.isatty Unix.stdout)
+  ref (color_when = `Always ||
+       color_when = `Auto && OpamMisc.tty_out && not dumb_term)
+let disp_status_line_when = when_var "STATUSLINE"
+let disp_status_line () =
+  disp_status_line_when = `Always ||
+  disp_status_line_when = `Auto &&
+  OpamMisc.tty_out && (!color || not dumb_term)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -301,15 +310,24 @@ let error_and_exit fmt =
 
 let display_messages = ref true
 
-let msg =
+let msg fmt =
   if !display_messages then (
-    fun fmt ->
-      flush stderr;
-      Printf.kfprintf flush stdout fmt
+    flush stderr;
+    Printf.printf (fmt ^^ "%!")
   ) else (
-    fun fmt ->
-      Printf.ifprintf stdout fmt
+    Printf.ifprintf stdout fmt
   )
+
+let status_line fmt =
+  let carriage_delete = "\r\027[K" in
+  if !display_messages && disp_status_line () then (
+    flush stderr;
+    Printf.kfprintf
+      (fun ch -> output_string ch carriage_delete (* unflushed *))
+      stdout
+      ("%s" ^^ fmt ^^ "%!") carriage_delete
+  ) else
+    Printf.ifprintf stdout fmt
 
 let header_width () = 80
 

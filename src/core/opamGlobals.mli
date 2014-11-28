@@ -145,6 +145,10 @@ val header_msg : ('a, unit, string, unit) format4 -> 'a
 val header_error :
   ('a, unit, string, ('b, unit, string, unit) format4 -> 'b) format4 -> 'a
 
+(** Display a dynamic status line to stdout, that will be erased on next output.
+    The message should not be wider than screen nor contain newlines. *)
+val status_line : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
+
 (** Ask the user to press Y/y/N/n to continue (returns a boolean) *)
 val confirm: ('a, unit, string, bool) format4 -> 'a
 (** Read some input from the user (returns a string option) *)

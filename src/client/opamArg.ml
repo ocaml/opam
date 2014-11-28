@@ -223,20 +223,26 @@ let help_sections = [
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam config env --root=DIR' when DIR is non-default.";
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
+  `P "$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
+      currently going on on the terminal. \
+      (one of $(i,always), $(i,never) or $(i,auto))";
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam config env --switch=SWITCH'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
       when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
       The default value is "^OpamGlobals.default_preferences `Upgrade^". \
       See also option --criteria");
-  `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
-  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
+  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
+  `P "$(i,OPAMUTF8) use UTF8 characters in output \
+      (one of $(i,always), $(i,never) or $(i,auto)).";
+  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in OPAM \
+      messages. Implies $(i,OPAMUTF8).";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
       substituting `%{var}%` strings in `opam` files.";
   `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
       $(i,package:var) when substituting `%{package:var}%` strings in \
       `opam` files.";
-  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
+  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";

@@ -527,6 +527,8 @@ let get_terminal_columns () =
       with Not_found | Failure _ ->
         default_columns
 
+let tty_out = Unix.isatty Unix.stdout
+
 let terminal_columns =
   let v = ref (Lazy.lazy_from_fun get_terminal_columns) in
   let () =
@@ -536,7 +538,7 @@ let terminal_columns =
     with Invalid_argument _ -> ()
   in
   fun () ->
-    if Unix.isatty Unix.stdout
+    if tty_out
     then Lazy.force !v
     else 80
 
