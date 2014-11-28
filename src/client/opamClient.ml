@@ -1385,31 +1385,12 @@ module API = struct
             (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
           No_solution
         | Success solution ->
-          let action_graph = OpamSolver.get_atomic_action_graph solution in
-          if deps_only then (
-            let to_install =
-              OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
-                  | To_change (_, p) -> OpamPackage.Set.add p acc
-                  | _ -> acc)
-                action_graph OpamPackage.Set.empty in
-            let all_deps =
-              let universe = OpamState.universe t (Install names) in
-              OpamPackage.Name.Set.fold (fun name deps ->
-                  let nvs = OpamPackage.packages_of_name to_install name in
-                  let deps_nv =
-                    OpamSolver.dependencies ~depopts:false ~installed:false
-                      universe nvs in
-                  let deps_only = OpamPackage.Set.of_list deps_nv -- nvs in
-                  deps ++ deps_only)
-                names OpamPackage.Set.empty in
-            OpamSolver.ActionGraph.iter_vertex (function
-                | To_change (_, p) as v ->
-                  if not (OpamPackage.Set.mem p all_deps) then
-                    OpamSolver.ActionGraph.remove_vertex
-                      action_graph v
-                | _ -> ())
-              action_graph
-          );
+          let solution =
+            if deps_only then
+              OpamSolver.filter_solution (fun nv ->
+                  not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names))
+                solution
+            else solution in
           OpamSolution.apply ?ask t action ~requested:names solution in
       OpamSolution.check_solution t solution
     )
