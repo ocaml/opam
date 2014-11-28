@@ -131,9 +131,9 @@ module Make (G : G) = struct
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
-          if !OpamGlobals.verbose && not !OpamGlobals.color then
+          if !OpamGlobals.verbose || not (OpamGlobals.disp_status_line ()) then
             OpamMisc.Option.iter
-              (OpamGlobals.msg "RUN %s\n")
+              (OpamGlobals.msg "%s\n")
               (OpamProcess.text_of_command cmd);
           let p = OpamProcess.run_background cmd in
           let running =

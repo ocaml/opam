@@ -1227,6 +1227,7 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
+        OpamGlobals.header_msg "Fetching repository information";
         let t = OpamProcess.Job.run (OpamRepositoryCommand.update t repo) t in
         OpamRepositoryCommand.fix_descriptions t
           ~save_cache:false ~verbose:false;
@@ -1258,6 +1259,7 @@ module API = struct
         update_setup t
 
       with e ->
+        OpamGlobals.error "%s" (Printexc.to_string e);
         if not !OpamGlobals.debug && root_empty then
           OpamFilename.rmdir root;
         raise e)

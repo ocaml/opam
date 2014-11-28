@@ -455,7 +455,7 @@ let makecmd = ref (fun () ->
 let log_limit = 10
 let log_line_limit = 5 * 80
 
-let default_jobs = 1
+let default_jobs = 4
 let default_dl_jobs = 3
 
 let exit i =

@@ -23,6 +23,7 @@ val debug_level : int ref
 val verbose : bool ref
 val color_when : [> `Always | `Auto | `Never ]
 val color : bool ref
+val disp_status_line : unit -> bool
 val utf8_when : [> `Always | `Auto | `Never ]
 val utf8 : bool ref
 val keep_build_dir : bool ref

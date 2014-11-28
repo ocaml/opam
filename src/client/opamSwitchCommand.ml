@@ -188,6 +188,7 @@ let install_compiler ~quiet switch compiler =
   (* install the new OCaml version *)
   try OpamState.install_compiler t ~quiet switch compiler
     with e ->
+      OpamGlobals.error "%s" (Printexc.to_string e);
       (* in case of reinstall, the switch may still be in t.aliases *)
       let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
       OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;

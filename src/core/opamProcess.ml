@@ -434,7 +434,9 @@ module Job = struct
       | Done x -> x
       | Run (cmd,cont) ->
         OpamMisc.Option.iter
-          (OpamGlobals.status_line "Processing: %s")
+          (if OpamGlobals.disp_status_line () then
+             OpamGlobals.status_line "Processing: %s"
+           else OpamGlobals.msg "%s\n")
           (text_of_command cmd);
         aux (cont (run cmd))
     in
