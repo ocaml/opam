@@ -942,7 +942,7 @@ let system_needs_upgrade t =
          has been found in the current path.\n\
          You should either:\n\
         \  (i)  reinstall OCaml version %s on your system; or\n\
-        \  (ii) use a working compiler switch."
+        \  (ii) use 'opam switch <version>' to use a local OCaml compiler."
         (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
     );
     false
@@ -1826,7 +1826,10 @@ let env_updates ~opamswitch ?(force_path=false) t =
     if opamswitch then [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ]
     else [] in
   let root =
-    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
+    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir ||
+       try !OpamGlobals.root_dir <> OpamMisc.getenv "OPAMROOT"
+       with Not_found -> false
+    then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
     else
       [] in
