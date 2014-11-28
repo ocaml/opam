@@ -221,7 +221,7 @@ module API = struct
             if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
               OpamGlobals.colorise `underline name_str
             else name_str in
-          Printf.printf "%s " colored_name
+          Printf.printf "%s\n" colored_name
       else
         let synop_len =
           let col = OpamMisc.terminal_columns () in
@@ -252,8 +252,7 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names;
-    if short then print_newline ()
+    ) names
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)

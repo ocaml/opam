@@ -442,7 +442,7 @@ let nonempty_arg_list name doc conv =
 (* Common flags *)
 let print_short_flag =
   mk_flag ["s";"short"]
-    "Output the names separated by one whitespace instead of using the usual formatting."
+    "Output raw lists of names, one per line, skipping any details."
 
 let installed_flag =
   mk_flag ["i";"installed"] "List installed packages only."

@@ -559,13 +559,12 @@ let set_url name url =
 let list ~short =
   log "repository-list";
   let t = OpamState.load_state "repository-list" in
-  if short then (
-    let repos =
-      List.map
-        (fun r -> OpamRepositoryName.to_string r.repo_name)
-        (OpamState.sorted_repositories t) in
-    OpamGlobals.msg "%s\n" (String.concat " " repos)
-  ) else (
+  if short then
+    List.iter
+      (fun r ->
+         OpamGlobals.msg "%s\n" (OpamRepositoryName.to_string r.repo_name))
+      (OpamState.sorted_repositories t)
+  else
     let pretty_print r =
       OpamGlobals.msg "%4d %-7s %10s     %s\n"
         r.repo_priority
@@ -574,4 +573,3 @@ let list ~short =
         (string_of_address r.repo_address) in
     let repos = OpamState.sorted_repositories t in
     List.iter pretty_print repos
-  )
