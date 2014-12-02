@@ -1413,6 +1413,7 @@ module X = struct
         author     = maintainer;
         homepage   = [""];
         license    = [""];
+        dev_repo   = Some (Local (OpamFilename.Dir.of_string ""));
         bug_reports= [""];
       }
 
