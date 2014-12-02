@@ -120,12 +120,12 @@ let string_of_upload u =
 
 let repository_kind_of_pin_kind = function
   | `version -> None
-  | (`git|`darcs|`hg|`local as k) -> Some k
+  | (`http|`git|`darcs|`hg|`local as k) -> Some k
 
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
-  | None | Some (`git|`hg|`darcs|`local) ->
+  | None | Some (`http|`git|`hg|`darcs|`local) ->
     if kind = None &&
        not (String.contains s (Filename.dir_sep.[0])) &&
        String.length s > 0 && '0' <= s.[0] && s.[0] <= '9' then
@@ -134,7 +134,8 @@ let pin_option_of_string ?kind s =
     let s, k = parse_url (address_of_string s) in
     match kind, k with
     | Some `version, _ | None, `version -> assert false
-    | Some `git, _ | None, (`git|`http) -> Git s
+    | Some `http, _ | None, `http -> Http s
+    | Some `git, _ | None, `git -> Git s
     | Some `hg, _ | None, `hg   -> Hg s
     | Some `darcs, _ | None, `darcs -> Darcs s
     | Some `local, _ | None, `local ->
@@ -145,10 +146,12 @@ let string_of_pin_kind = function
   | `git     -> "git"
   | `darcs   -> "darcs"
   | `hg      -> "hg"
+  | `http    -> "http"
   | `local   -> "path"
 
 let pin_kind_of_string = function
   | "version" -> `version
+  | "http"    -> `http
   | "git"     -> `git
   | "darcs"   -> `darcs
   | "hg"      -> `hg
@@ -159,6 +162,7 @@ let pin_kind_of_string = function
 
 let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
+  | Http p
   | Git p
   | Darcs p
   | Hg p      -> string_of_address p
@@ -166,16 +170,18 @@ let string_of_pin_option = function
 
 let kind_of_pin_option = function
   | Version _ -> `version
+  | Http _    -> `http
   | Git _     -> `git
   | Darcs _   -> `darcs
   | Hg _      -> `hg
   | Local _   -> `local
 
 let pin_of_url (url,kind) = match kind with
+  | `http -> Http url
   | `git -> Git url
   | `darcs -> Darcs url
   | `hg -> Hg url
-  | `local | `version | `http -> failwith "Not a recognised version-control URL"
+  | `local | `version -> failwith "Not a recognised version-control URL"
 
 let option fn = function
   | None   -> ""

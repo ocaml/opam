@@ -1356,7 +1356,13 @@ module X = struct
         (fun url ->
            try pin_of_url url with
            | Failure msg ->
-             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg)
+             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg) |>
+        (function
+          | Git _ | Darcs _ | Hg _ as pin -> pin
+          | Http u -> Git u
+          | _ ->
+            OpamFormat.bad_format ~pos:(OpamFormat.value_pos v)
+              "Unrecognised version-control address")
       in
       { opam_version; name; version; maintainer; substs; build; install; remove;
         depends; depopts; conflicts; libraries; syntax;

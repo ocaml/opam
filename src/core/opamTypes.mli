@@ -275,9 +275,10 @@ type pin_option =
   | Git of address
   | Darcs of address
   | Hg of address
+  | Http of address
 
 (** Pin kind *)
-type pin_kind = [`version|`git|`darcs|`hg|`local]
+type pin_kind = [`version|`http|`git|`darcs|`hg|`local]
 
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]

@@ -115,7 +115,7 @@ let edit t name =
         if OpamGlobals.confirm "Save the new opam file back to %S ?"
             (OpamFilename.to_string src_opam) then
           OpamFilename.copy ~src:file ~dst:src_opam
-      | Version _ | Git _ | Darcs _ | Hg _ -> ()
+      | Version _ | Git _ | Darcs _ | Hg _ | Http _ -> ()
     in
     match installed_nv with
     | None -> None
