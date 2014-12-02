@@ -18,6 +18,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamProcess.Job.Op
 open Opam_admin_top
 ;;
 
@@ -45,11 +46,12 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
   in
   let prefix = Some (OpamPackage.Name.to_string (OpamPackage.name nv)) in
   let patches =
-    List.map (fun f ->
+    OpamParallel.map
+      ~jobs:3
+      ~command:(fun f ->
         OpamFilename.download ~overwrite:true f
           (OpamPath.Repository.files repo prefix nv)
-        |> OpamFilename.basename
-      )
+        @@| OpamFilename.basename)
       (OpamFile.Comp.patches comp)
   in
   let (@) f x y = f y x in

@@ -247,7 +247,6 @@ let install_packages ~packages switch compiler =
     try
       let solution =
         OpamSolution.resolve t (Switch roots)
-          ~requested:roots
           ~orphans:OpamPackage.Set.empty
           { wish_install = [];
             wish_remove  = [];
@@ -258,18 +257,13 @@ let install_packages ~packages switch compiler =
         | _ ->
           OpamGlobals.error_and_exit "Could not resolve set of base packages"
       in
-      if solution.to_remove <> [] then
-        OpamGlobals.error_and_exit
-          "Inconsistent resolution of base package installs";
-      let to_install_pkgs =
-        OpamSolver.ActionGraph.fold_vertex (fun action acc -> match action with
-            | To_change (None, p) -> OpamPackage.Set.add (p:OpamPackage.t) acc
-            | _ ->
-              OpamGlobals.error_and_exit
-                "Inconsistent set of base compiler packages. \
-                 (unexpected action)")
-          solution.to_process
-          OpamPackage.Set.empty in
+      (match OpamSolver.stats solution with
+       | { s_install = _; s_reinstall = 0; s_upgrade = 0;
+           s_downgrade=0; s_remove = 0 } -> ()
+       | _ ->
+         OpamGlobals.error_and_exit
+           "Inconsistent resolution of base package installs");
+      let to_install_pkgs = OpamSolver.new_packages solution in
       let to_install_names = OpamPackage.names_of_packages to_install_pkgs in
       if not (OpamPackage.Name.Set.equal to_install_names roots)
       then
