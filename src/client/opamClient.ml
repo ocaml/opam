@@ -1613,7 +1613,7 @@ module API = struct
           try OpamPinCommand.edit t name
           with Not_found ->
             (OpamGlobals.error "No valid metadata available.";
-             ignore (unpin name);
+             ignore (unpin ~state:t name);
              OpamGlobals.exit 1)
         else None
       in
@@ -1627,7 +1627,7 @@ module API = struct
     let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
-      | None -> ()
+      | None -> OpamGlobals.msg "Package metadata unchanged."
       | Some true ->
         if action then post_pin_action t name
       | Some false ->

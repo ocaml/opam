@@ -29,7 +29,7 @@ val pin: name -> pin_option -> bool option
 val edit: OpamState.state -> name -> bool option
 
 (** Unpin a package. Returns true if the package should be rebuilt *)
-val unpin: name -> bool
+val unpin: ?state:OpamState.state -> name -> bool
 
 (** List the pinned packages. *)
 val list: short:bool -> unit -> unit
