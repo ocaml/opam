@@ -23,6 +23,7 @@ val debug_level : int ref
 val verbose : bool ref
 val color_when : [> `Always | `Auto | `Never ]
 val color : bool ref
+val disp_status_line : unit -> bool
 val utf8_when : [> `Always | `Auto | `Never ]
 val utf8 : bool ref
 val keep_build_dir : bool ref
@@ -144,6 +145,10 @@ val msg : ('a, out_channel, unit, unit) format4 -> 'a
 val header_msg : ('a, unit, string, unit) format4 -> 'a
 val header_error :
   ('a, unit, string, ('b, unit, string, unit) format4 -> 'b) format4 -> 'a
+
+(** Display a dynamic status line to stdout, that will be erased on next output.
+    The message should not be wider than screen nor contain newlines. *)
+val status_line : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
 
 (** Ask the user to press Y/y/N/n to continue (returns a boolean) *)
 val confirm: ('a, unit, string, bool) format4 -> 'a

@@ -337,7 +337,7 @@ let parallel_apply t action action_graph =
       repos;
     let sources_list = OpamPackage.Set.elements sources_needed in
     if sources_list <> [] then
-      OpamGlobals.header_msg "Gathering package archives";
+      OpamGlobals.header_msg "Gathering sources";
     let results =
       OpamParallel.map
         ~jobs:(OpamState.dl_jobs t)
@@ -398,7 +398,7 @@ let parallel_apply t action action_graph =
   in
 
   let action_results =
-    OpamGlobals.header_msg "Processing package actions";
+    OpamGlobals.header_msg "Processing actions";
     try
       let results =
         PackageActionGraph.Parallel.map
@@ -444,9 +444,10 @@ let parallel_apply t action action_graph =
   match action_results with
   | `Successful () ->
     cleanup_artefacts action_graph;
+    OpamGlobals.msg "Done.\n";
     OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
   | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
-    OpamGlobals.msg "Aborting";
+    OpamGlobals.msg "Aborting.\n";
     raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
@@ -466,26 +467,34 @@ let parallel_apply t action action_graph =
       let successful = filter_graph action_graph successful in
       cleanup_artefacts successful;
       let failed = filter_graph action_graph failed in
-      if PackageActionGraph.(nb_vertex successful + nb_vertex failed) <= 1
-      then err else
-      let print_actions oc actions =
+      let print_actions filter header ?empty actions =
         let actions =
-          PackageActionGraph.Topological.fold (fun v acc -> v::acc) actions []
+          PackageActionGraph.fold_vertex (fun v acc ->
+              if filter v then v::acc else acc)
+            actions []
         in
-        List.iter (Printf.fprintf oc "  %s\n")
-          (PackageAction.to_aligned_strings actions) in
+        let actions = List.sort PackageAction.compare actions in
+        if actions <> [] then
+          OpamGlobals.msg "%s\n%a\n" header
+            (fun oc actions ->
+               List.iter (Printf.fprintf oc "  %s\n")
+                 (PackageAction.to_aligned_strings actions))
+            actions
+        else match empty with
+          | Some s -> OpamGlobals.msg "%s\n" s
+          | None -> ()
+      in
       OpamGlobals.msg "\n";
       OpamGlobals.header_msg "Error report";
-      if not (PackageActionGraph.is_empty failed) then
-        OpamGlobals.msg
-          "The following %s\n%a"
-          (OpamGlobals.colorise `bold "failed")
-          print_actions failed;
-      if not (PackageActionGraph.is_empty successful) then
-        OpamGlobals.msg
-          "These actions have been %s\n%a"
-          (OpamGlobals.colorise `bold "completed")
-          print_actions successful;
+      print_actions (fun _ -> true)
+        (Printf.sprintf "The following actions %s"
+           (OpamGlobals.colorise `red "failed"))
+        failed;
+      print_actions
+        (function To_recompile _ -> false | _ -> true)
+        "The following changes have been performed"
+        ~empty:"No changes have been performed"
+        successful;
       err
     | _ -> assert false
 
@@ -580,7 +589,7 @@ let apply ?ask t action ~requested solution =
       in
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;
       if sum stats >= 2 then
-        OpamGlobals.msg "=== %s ===\n" (OpamSolver.string_of_stats stats);
+        OpamGlobals.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
       output_json_solution action_graph;
     );
 

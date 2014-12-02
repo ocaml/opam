@@ -221,7 +221,7 @@ module API = struct
             if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
               OpamGlobals.colorise `underline name_str
             else name_str in
-          Printf.printf "%s " colored_name
+          Printf.printf "%s\n" colored_name
       else
         let synop_len =
           let col = OpamMisc.terminal_columns () in
@@ -252,8 +252,7 @@ module API = struct
             (OpamMisc.indent_right colored_version ~visual:sversion max_v)
             pinned
             (OpamMisc.sub_at synop_len (Lazy.force info.synopsis))
-    ) names;
-    if short then print_newline ()
+    ) names
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
@@ -1228,6 +1227,7 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_state ~save_cache:false "init-1" in
+        OpamGlobals.header_msg "Fetching repository information";
         let t = OpamProcess.Job.run (OpamRepositoryCommand.update t repo) t in
         OpamRepositoryCommand.fix_descriptions t
           ~save_cache:false ~verbose:false;
@@ -1259,6 +1259,7 @@ module API = struct
         update_setup t
 
       with e ->
+        OpamGlobals.error "%s" (Printexc.to_string e);
         if not !OpamGlobals.debug && root_empty then
           OpamFilename.rmdir root;
         raise e)
@@ -1386,31 +1387,12 @@ module API = struct
             (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
           No_solution
         | Success solution ->
-          let action_graph = OpamSolver.get_atomic_action_graph solution in
-          if deps_only then (
-            let to_install =
-              OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
-                  | To_change (_, p) -> OpamPackage.Set.add p acc
-                  | _ -> acc)
-                action_graph OpamPackage.Set.empty in
-            let all_deps =
-              let universe = OpamState.universe t (Install names) in
-              OpamPackage.Name.Set.fold (fun name deps ->
-                  let nvs = OpamPackage.packages_of_name to_install name in
-                  let deps_nv =
-                    OpamSolver.dependencies ~depopts:false ~installed:false
-                      universe nvs in
-                  let deps_only = OpamPackage.Set.of_list deps_nv -- nvs in
-                  deps ++ deps_only)
-                names OpamPackage.Set.empty in
-            OpamSolver.ActionGraph.iter_vertex (function
-                | To_change (_, p) as v ->
-                  if not (OpamPackage.Set.mem p all_deps) then
-                    OpamSolver.ActionGraph.remove_vertex
-                      action_graph v
-                | _ -> ())
-              action_graph
-          );
+          let solution =
+            if deps_only then
+              OpamSolver.filter_solution (fun nv ->
+                  not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names))
+                solution
+            else solution in
           OpamSolution.apply ?ask t action ~requested:names solution in
       OpamSolution.check_solution t solution
     )

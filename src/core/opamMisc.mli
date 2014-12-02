@@ -286,6 +286,9 @@ module OP: sig
 
 end
 
+(** true if stdout is bound to a terminal *)
+val tty_out : bool
+
 (** When [stdout] refers to a terminal, query the number of columns.
     Otherwise return [max_int]. *)
 val terminal_columns : unit -> int

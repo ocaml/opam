@@ -67,16 +67,19 @@ type result = {
 
 (** [run ~name cmd args] synchronously call the command [cmd] with
     arguments [args]. It waits until the process is finished. The file
-    [name.info], [name.env], [name.out] and [name.err] and are
-    created, and contains the process main description, the environment
-    variables, the standard output and the standard error. *)
+    [name.info], [name.env], [name.out] and [name.err] are
+    created, and contain the process main description, the environment
+    variables, the standard output and the standard error.
+    Don't forget to call [cleanup result] afterwards *)
 val run : command -> result
 
 (** Same as [run], but doesn't wait. Use wait_one to wait and collect
-    results *)
+    results;
+    Don't forget to call [cleanup result] afterwards *)
 val run_background: command -> t
 
-(** [wait p] waits for the processus [p] to end and returns its results. *)
+(** [wait p] waits for the processus [p] to end and returns its results. Be
+    careful to handle Sys.Break *)
 val wait: t -> result
 
 (** Like [wait], but returns None immediately if the process hasn't ended *)
@@ -85,6 +88,9 @@ val dontwait: t -> result option
 (** Wait for the first of the listed processes to terminate, and return its
     termination status *)
 val wait_one: t list -> t * result
+
+(** Send SIGINT to a process (or SIGKILL on Windows) *)
+val interrupt: t -> unit
 
 (** Is the process result a success ? *)
 val is_success : result -> bool

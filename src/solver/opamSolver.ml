@@ -439,7 +439,7 @@ let print_solution ~messages ~rewrite ~requested t =
   List.iter2 (fun act (cause,messages) ->
       if cause <> "" then OpamGlobals.msg "  %-60s  [%s]\n" act cause
       else OpamGlobals.msg "  %s\n" act;
-      List.iter (OpamGlobals.msg "    %s\n") messages
+      List.iter (OpamGlobals.msg "       %s\n") messages
     ) actions_str details
 
 let dump_universe universe oc =
@@ -455,30 +455,19 @@ let dump_universe universe oc =
           (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
     ) version_map
 
-(* (* unused !? *)
-let sequential_solution universe ~requested actions =
-  let version_map =
-    cudf_versions_map universe (universe.u_available ++ universe.u_installed) in
-  (* load_cudf_universe is expensive: we may find a way to avoid doing the
-     whole load twice. *)
-  let simple_universe =
-    load_cudf_universe universe ~version_map ~depopts:true ~build:false
-      universe.u_available in
-  let complete_universe =
-    load_cudf_universe universe ~version_map ~depopts:true ~build:true
-      universe.u_available in
-  let actions =
-    List.map
-      (map_action (opam2cudf universe ~depopts:true ~build:false version_map))
-      actions in
-  try
-    let atomic_actions =
-      OpamCudf.atomic_actions ~simple_universe ~complete_universe actions
-    in
-    let to_process = OpamCudf.ActionGraph.reduce atomic_actions in
-    let root_causes = OpamCudf.compute_root_causes to_process requested in
-    Success (solution OpamCudf.cudf2opam {to_process; root_causes})
-
-  with OpamCudf.Cyclic_actions cycles ->
-    cycle_conflict complete_universe cycles
-*)
+let filter_solution filter t =
+  let t = OpamCudf.ActionGraph.copy t in
+  let rec rm iter_deps v =
+    if OpamCudf.ActionGraph.mem_vertex t v then (
+      iter_deps (rm iter_deps) t v;
+      OpamCudf.ActionGraph.remove_vertex t v
+    ) in
+  OpamCudf.ActionGraph.iter_vertex
+    (function
+      | To_delete nv as a when not (filter (OpamCudf.cudf2opam nv)) ->
+        rm OpamCudf.ActionGraph.iter_pred a
+      | To_change (_, nv) as a when not (filter (OpamCudf.cudf2opam nv)) ->
+        rm OpamCudf.ActionGraph.iter_succ a
+      | _ -> ())
+    t;
+  t

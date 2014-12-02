@@ -848,10 +848,11 @@ let compute_root_causes g requested =
           | _ -> false) in
       get_causes causes roots in
     let causes =
-      (* Compute causes for remaining changes (assume upstream changes) *)
+      (* Compute causes for packages marked to reinstall *)
       let roots =
         make_roots causes Upstream_changes
-          (fun a -> ActionGraph.in_degree g a = 0) in
+          (function To_recompile p -> need_reinstall p
+                  | _ -> false) in
       get_causes causes roots in
   Map.map fst causes
 

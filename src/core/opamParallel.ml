@@ -91,21 +91,22 @@ module Make (G : G) = struct
         | t::ts ->
           let len = OpamMisc.visual_length t in
           if ts = [] && len < rem_cols then List.rev (t::acc)
-          else if len > rem_cols - 3 then
-            List.rev ((String.make (rem_cols - 2) ' ' ^ "+") :: acc)
+          else if len > rem_cols - 5 then
+            List.rev
+              (Printf.sprintf "%s+%2d"
+                 (String.make (rem_cols - 4) ' ') (List.length ts)
+               :: acc)
           else
-            limit_width (t::acc) (rem_cols - OpamMisc.visual_length t - 1) ts
+            limit_width (t::acc) (rem_cols - len - 1) ts
       in
       let title =
         Printf.sprintf "Processing %2d/%d:"
           (finished + M.cardinal running) njobs
       in
-      if texts <> [] && !OpamGlobals.color then
-        let texts =
-          limit_width [] (OpamMisc.terminal_columns ()) (title::texts)
-        in
-        (OpamGlobals.msg "\r\027[K%s" (String.concat " " texts);
-         print_string "\r\027[K")
+      let texts =
+        limit_width [] (OpamMisc.terminal_columns ()) (title::texts)
+      in
+      OpamGlobals.status_line "%s" (String.concat " " texts)
     in
 
     (* nslots is the number of free slots *)
@@ -130,9 +131,9 @@ module Make (G : G) = struct
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
-          if !OpamGlobals.verbose && not !OpamGlobals.color then
+          if !OpamGlobals.verbose || not (OpamGlobals.disp_status_line ()) then
             OpamMisc.Option.iter
-              (OpamGlobals.msg "RUN %s\n")
+              (OpamGlobals.msg "%s\n")
               (OpamProcess.text_of_command cmd);
           let p = OpamProcess.run_background cmd in
           let running =
@@ -154,8 +155,7 @@ module Make (G : G) = struct
               try
                 match OpamProcess.dontwait p with
                 | None -> (* process still running *)
-                  Unix.kill p.OpamProcess.p_pid Sys.sigint;
-                  (* XXX sigkill only on windows *)
+                  OpamProcess.interrupt p;
                   (n,Sys.Break) :: errors,
                   p::pend
                 | Some result ->

@@ -94,8 +94,6 @@ val reverse_dependencies :
     plus version bindings (as '#v2v' comments) for the other ones. *)
 val dump_universe: universe -> out_channel -> unit
 
-(*
-(** Create a sequential solution from a list of actions *)
-val sequential_solution: universe -> requested:name_set ->
-  package action list -> (solution, OpamCudf.conflict) result
-*)
+(** Filters actions in a solution. Dependents of a removed actions are removed
+    to keep consistency *)
+val filter_solution: (package -> bool) -> solution -> solution

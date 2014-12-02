@@ -49,7 +49,7 @@ let list ~print_short ~installed ~all =
       let n = OpamSwitch.to_string name in
       let c = OpamCompiler.to_string comp in
       let d = descr comp in
-      (n, s, c, d) :: acc
+      (OpamCompiler.version comp, n, s, c, d) :: acc
     ) t.aliases [] in
 
   let descrs =
@@ -76,39 +76,39 @@ let list ~print_short ~installed ~all =
     List.fold_left (fun acc comp ->
       let c = OpamCompiler.to_string comp in
       let d = descr comp in
-      (not_installed_str, not_installed_str, c, d) :: acc
+      (OpamCompiler.version comp,
+       not_installed_str, not_installed_str, c, d) :: acc
     ) [] l in
 
   let to_show =
     if installed then
       installed_s
     else if all then
-      installed_s @ mk officials @ mk patches
+      mk officials @ installed_s @ mk patches
     else
-      installed_s @ mk officials in
+      mk officials @ installed_s in
+
+  let to_show =
+    List.sort
+      (fun (v1,_,_,_,_) (v2,_,_,_,_) -> OpamCompiler.Version.compare v1 v2)
+      to_show in
 
   let max_name, max_state, max_compiler =
-    List.fold_left (fun (n,s,c) (name, state, compiler, _) ->
+    List.fold_left (fun (n,s,c) (_,name, state, compiler, _) ->
       let n = max (String.length name) n in
       let s = max (String.length state) s in
       let c = max (String.length compiler) c in
       (n, s, c)
     ) (0,0,0) to_show in
 
-  let count = ref (List.length to_show) in
-  let print_compiler (name, state, compiler, descr) =
-    decr count;
-    if print_short then (
+  let print_compiler (_, name, state, compiler, descr) =
+    if print_short then
       let name =
         if name = not_installed_str
         then compiler
         else name in
-      let sep =
-        if !count = 0
-        then "\n"
-        else " " in
-      OpamGlobals.msg "%s%s" name sep
-    ) else
+      OpamGlobals.msg "%s\n" name
+    else
       let bold_current s =
         if name = OpamSwitch.to_string t.switch
         then OpamGlobals.colorise `bold s
@@ -188,6 +188,7 @@ let install_compiler ~quiet switch compiler =
   (* install the new OCaml version *)
   try OpamState.install_compiler t ~quiet switch compiler
     with e ->
+      OpamGlobals.error "%s" (Printexc.to_string e);
       (* in case of reinstall, the switch may still be in t.aliases *)
       let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
       OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
