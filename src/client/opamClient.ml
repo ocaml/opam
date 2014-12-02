@@ -1701,7 +1701,7 @@ module SafeAPI = struct
   module CONFIG = struct
 
     let env ~csh ~sexp ~fish ~inplace_path =
-      read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish ~inplace_path)
+      API.CONFIG.env ~csh ~sexp ~fish ~inplace_path
 
     let setup local global =
       global_lock (fun () -> API.CONFIG.setup local global)
@@ -1710,7 +1710,7 @@ module SafeAPI = struct
       read_lock (fun () -> API.CONFIG.setup_list shell dot_profile)
 
     let exec ~inplace_path command =
-      read_lock (fun () -> API.CONFIG.exec ~inplace_path command)
+      API.CONFIG.exec ~inplace_path command
 
     let list names =
       read_lock (fun () -> API.CONFIG.list names)
