@@ -36,8 +36,8 @@ On Debian Wheezy, you can add the custom apt source by:
 
 ```
 wget http://download.opensuse.org/repositories/home:ocaml/Debian_7.0/Release.key
-apt-key add - < Release.key  
-echo 'deb http://download.opensuse.org/repositories/home:/ocaml/Debian_7.0/ /' >> /etc/apt/sources.list.d/opam.list 
+apt-key add - < Release.key
+echo 'deb http://download.opensuse.org/repositories/home:/ocaml/Debian_7.0/ /' >> /etc/apt/sources.list.d/opam.list
 apt-get update
 ```
 
@@ -66,9 +66,6 @@ Prebuilt RPMs for Fedora, CentOS and Red Hat Enterprise Linux are available via 
 
 Navigate to the [OPAM download page](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam),
 click on the relevant operating system and follow the instructions there to install prebuilt binaries.
-
-Source installation also works out-of-the-box; if your version of OCaml is too old then you can bootstrap
-OPAM without an existing OCaml installation by running `make cold` after the configuration phase.
 
 #### OSX
 
