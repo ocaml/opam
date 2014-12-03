@@ -325,7 +325,6 @@ let rec simplify_items items =
     items
 
 let string_of_file ~simplify f =
-  let simplify = not !OpamGlobals.compat_mode_1_0 && simplify in
   let items =
     if simplify then simplify_items f.file_contents
     else f.file_contents

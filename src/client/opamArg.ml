@@ -31,7 +31,6 @@ type global_options = {
   root   : dirname;
   no_base_packages: bool;
   git_version     : bool;
-  compat_mode_1_0 : bool;
   external_solver : string option;
   use_internal_solver : bool;
   cudf_file : string option;
@@ -95,7 +94,7 @@ let switch_to_updated_self debug opamroot =
 
 let create_global_options
     git_version debug debug_level verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 external_solver use_internal_solver
+    no_base_packages external_solver use_internal_solver
     cudf_file solver_preferences no_self_upgrade safe_mode =
   let debug, debug_level = match debug, debug_level with
     | _, Some lvl -> true, lvl
@@ -105,7 +104,7 @@ let create_global_options
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; external_solver; use_internal_solver; cudf_file; solver_preferences;
+    no_base_packages; external_solver; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; safe_mode; }
 
 let apply_global_options o =
@@ -129,7 +128,6 @@ let apply_global_options o =
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
-  OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
   OpamGlobals.external_solver :=
     OpamMisc.Option.Op.(o.external_solver ++ !OpamGlobals.external_solver);
   OpamGlobals.use_external_solver :=
@@ -575,9 +573,6 @@ let global_options =
       "Do not install base packages (useful for testing purposes). \
        This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
        string." in
-  let compat_mode_1_0 =
-    mk_flag ~section ["compat-mode-1.0"]
-      "Compatibility mode with OPAM 1.0" in
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
       "Force use of internal heuristics, even if an external solver is available." in
@@ -615,7 +610,7 @@ let global_options =
   in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
-        $strict $root $no_base_packages $compat_mode_1_0 $external_solver
+        $strict $root $no_base_packages $external_solver
         $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade
         $safe_mode)
 

@@ -84,7 +84,6 @@ let utf8             =
 let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
-let compat_mode_1_0  = check "COMPATMODE_1_0"
 let no_self_upgrade  = check "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 let safe_mode        = check "SAFE"
