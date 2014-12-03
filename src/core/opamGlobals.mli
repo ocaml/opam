@@ -42,7 +42,6 @@ val utf8_msgs : bool ref
 (* val autoremove : bool ref *)
 val do_not_copy_files : bool ref
 val sync_archives : bool ref
-val compat_mode_1_0 : bool ref
 val use_external_solver : bool ref
 val no_self_upgrade : bool ref
 val skip_version_checks : bool ref

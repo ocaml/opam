@@ -561,7 +561,8 @@ let apply ?ask t action ~requested solution =
   else (
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
-    let show_solution = (!OpamGlobals.external_tags = []) in
+    let show_solution = ask <> Some false &&
+                        !OpamGlobals.external_tags = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     if show_solution then (
       OpamGlobals.msg

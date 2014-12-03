@@ -1218,7 +1218,6 @@ module X = struct
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
       } in
-      let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string s
 
     let of_channel filename ic =
@@ -1976,7 +1975,6 @@ module X = struct
             if not s.preinstalled then []
             else [ make_variable (s_preinstalled, make_bool s.preinstalled) ])
       } in
-      let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string s
 
   end

@@ -643,9 +643,25 @@ let resolve_variable t ?opam local_variables v =
                                  (compiler_comp t t.compiler))
     | "switch"        -> string (OpamSwitch.to_string t.switch)
     | "jobs"          -> int (jobs t)
-    | "ocaml-native"  -> bool (Lazy.force OpamSystem.ocaml_native_available)
-    | "ocaml-native-tools" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
-    | "ocaml-native-dynlink" -> bool (Lazy.force OpamSystem.ocaml_natdynlink_available)
+    | "ocaml-native"  ->
+      if t.compiler = OpamCompiler.system then
+        bool (Lazy.force OpamSystem.ocaml_native_available)
+      else
+        bool (OpamFilename.exists
+                (OpamPath.Switch.bin t.root t.switch//"ocamlopt"))
+    | "ocaml-native-tools" ->
+      if t.compiler = OpamCompiler.system then
+        bool (Lazy.force OpamSystem.ocaml_opt_available)
+      else
+        bool (OpamFilename.exists
+                (OpamPath.Switch.bin t.root t.switch//"ocamlc.opt"))
+    | "ocaml-native-dynlink" ->
+      if t.compiler = OpamCompiler.system then
+        bool (Lazy.force OpamSystem.ocaml_natdynlink_available)
+      else
+        bool (OpamFilename.exists
+                (OpamPath.Switch.lib_dir t.root t.switch
+                 /"ocaml"//"dynlink.cmxa"))
     | "arch"          -> string (OpamGlobals.arch ())
     | _               -> None
   in
