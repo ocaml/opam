@@ -1613,7 +1613,7 @@ module API = struct
           try OpamPinCommand.edit t name
           with Not_found ->
             (OpamGlobals.error "No valid metadata available.";
-             ignore (unpin name);
+             ignore (unpin ~state:t name);
              OpamGlobals.exit 1)
         else None
       in
@@ -1627,7 +1627,7 @@ module API = struct
     let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
-      | None -> ()
+      | None -> OpamGlobals.msg "Package metadata unchanged."
       | Some true ->
         if action then post_pin_action t name
       | Some false ->
@@ -1701,7 +1701,7 @@ module SafeAPI = struct
   module CONFIG = struct
 
     let env ~csh ~sexp ~fish ~inplace_path =
-      read_lock (fun () -> API.CONFIG.env ~csh ~sexp ~fish ~inplace_path)
+      API.CONFIG.env ~csh ~sexp ~fish ~inplace_path
 
     let setup local global =
       global_lock (fun () -> API.CONFIG.setup local global)
@@ -1710,7 +1710,7 @@ module SafeAPI = struct
       read_lock (fun () -> API.CONFIG.setup_list shell dot_profile)
 
     let exec ~inplace_path command =
-      read_lock (fun () -> API.CONFIG.exec ~inplace_path command)
+      API.CONFIG.exec ~inplace_path command
 
     let list names =
       read_lock (fun () -> API.CONFIG.list names)

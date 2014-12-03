@@ -97,7 +97,7 @@ let edit t name =
       else None
   in
   match edit () with
-  | None -> if empty_opam then (prerr_endline "EO"; raise Not_found) else (prerr_endline "NEO"; None)
+  | None -> if empty_opam then raise Not_found else None
   | Some new_opam ->
     OpamFilename.move ~src:temp_file ~dst:file;
     OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
@@ -115,7 +115,7 @@ let edit t name =
         if OpamGlobals.confirm "Save the new opam file back to %S ?"
             (OpamFilename.to_string src_opam) then
           OpamFilename.copy ~src:file ~dst:src_opam
-      | Version _ | Git _ | Darcs _ | Hg _ -> ()
+      | Version _ | Git _ | Darcs _ | Hg _ | Http _ -> ()
     in
     match installed_nv with
     | None -> None
@@ -223,9 +223,12 @@ let pin name pin_option =
     else Some false
   else None
 
-let unpin name =
+let unpin ?state name =
   log "unpin %a" (slog OpamPackage.Name.to_string) name;
-  let t = OpamState.load_state "pin" in
+  let t = match state with
+    | None -> OpamState.load_state "pin"
+    | Some t -> t
+  in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
 
