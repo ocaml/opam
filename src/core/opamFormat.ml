@@ -97,31 +97,6 @@ let invalid_fields items fields =
 let is_valid items fields =
   invalid_fields items fields = []
 
-let rec string_of_value = function
-  | Relop (_,op,l,r) ->
-    Printf.sprintf "%s %s %s"
-      (string_of_value l) (string_of_relop op) (string_of_value r)
-  | Logop (_,op,l,r) ->
-    Printf.sprintf "%s %s %s"
-      (string_of_value l) (string_of_logop op) (string_of_value r)
-  | Pfxop (_,op,r) ->
-    Printf.sprintf "%s %s" (string_of_pfxop op) (string_of_value r)
-  | Prefix_relop (_,op,r) ->
-    Printf.sprintf "%s %s"
-      (string_of_relop op) (string_of_value r)
-  | Ident (_,s)     -> Printf.sprintf "%s" s
-  | Int (_,i)       -> Printf.sprintf "%d" i
-  | Bool (_,b)      -> Printf.sprintf "%b" b
-  | String (_,s)    -> Printf.sprintf "%S" s
-  | List (_,l)      -> Printf.sprintf "[%s]" (string_of_values l)
-  | Group (_,g)     -> Printf.sprintf "(%s)" (string_of_values g)
-  | Option(_,v,l)   -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
-  | Env_binding (_,op,id,v) ->
-    Printf.sprintf "[ %s %s %s ]" (string_of_value id) op (string_of_value v)
-
-and string_of_values l =
-  String.concat " " (List.rev (List.rev_map string_of_value l))
-
 let is_list = function
   | List _ -> true
   | _      -> false
@@ -269,86 +244,93 @@ let make_string_pair = make_pair make_string make_string
 let escape_string s =
   let len = String.length s in
   let buf = Buffer.create (len * 2) in
-  Buffer.add_char buf '"';
   for i = 0 to len -1 do
     match s.[i] with
     | '\\' | '"' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
     | c -> Buffer.add_char buf c
   done;
-  Buffer.add_char buf '"';
   Buffer.contents buf
 
-let rec pretty_string_of_value depth ~simplify ~indent value =
-  let psov =
-    pretty_string_of_value (depth + 1) ~simplify ~indent in
-  match value with
-  | Logop (_,op,l,r) ->
-    Printf.sprintf "%s %s %s" (psov l) (string_of_logop op) (psov r)
-  | Pfxop (_,op,r) ->
-    Printf.sprintf "%s %s" (string_of_pfxop op) (psov r)
+let rec format_value fmt = function
   | Relop (_,op,l,r) ->
-    Printf.sprintf "%s %s %s" (psov l) (string_of_relop op) (psov r)
+    Format.fprintf fmt "@[<h>%a %s@ %a@]"
+      format_value l (string_of_relop op) format_value r
+  | Logop (_,op,l,r) ->
+    Format.fprintf fmt "@[<hov>%a %s@ %a@]"
+      format_value l (string_of_logop op) format_value r
+  | Pfxop (_,op,r) ->
+    Format.fprintf fmt "@[<h>%s%a@]" (string_of_pfxop op) format_value r
   | Prefix_relop (_,op,r) ->
-    Printf.sprintf "%s %s" (string_of_relop op) (psov r)
-  | Ident (_,s)     ->
-    if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
-    then Printf.sprintf "\"%%{%s}%%\"" s
-    else s
-  | Int (_,i)       -> string_of_int i
-  | Bool (_,b)      -> string_of_bool b
-  | String (_,s)    -> escape_string s
-  | List (_,[List(_,[])]) -> Printf.sprintf "[]"
-  | List (_,l)      -> pretty_string_of_list depth ~simplify ~indent l
-  | Group (_,g)     -> Printf.sprintf "(%s)"
-                     (pretty_string_of_values (depth+1) ~simplify ~indent g)
-  | Option(_,v,l) ->
-    Printf.sprintf "%s {%s}"
-      (pretty_string_of_value depth ~simplify ~indent v)
-      (pretty_string_of_values depth ~simplify ~indent l)
-  | Env_binding (_,op,l,r) ->
-    Printf.sprintf "[ %s %s %s ]" (psov l) op (psov r)
+    Format.fprintf fmt "@[<h>%s@ %a@]"
+      (string_of_relop op) format_value r
+  | Ident (_,s)     -> Format.fprintf fmt "%s" s
+  | Int (_,i)       -> Format.fprintf fmt "%d" i
+  | Bool (_,b)      -> Format.fprintf fmt "%b" b
+  | String (_,s)    ->
+    if String.contains s '\n'
+    then Format.fprintf fmt "@[<h>\"\n%s@\n\"@]" (escape_string s)
+    else Format.fprintf fmt "\"%s\"" (escape_string s)
+  | List (_, l) ->
+    Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
+  | Group (_,g)     -> Format.fprintf fmt "(%a)" format_values g
+  | Option(_,v,l)   -> Format.fprintf fmt "@[<h 2>%a@ {%a}@]" format_value v format_values l
+  | Env_binding (_,op,id,v) ->
+    Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]" format_value id op format_value v
 
-and pretty_string_of_list depth ~simplify ~indent = function
-  | []                             -> "[]"
-  | [v] when depth = 0 && simplify -> pretty_string_of_value (depth+1) ~simplify ~indent v
-  | l                              ->
-    if depth = 0 && indent && List.length l > 1 then
-      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values depth ~simplify ~indent l)
-    else
-      Printf.sprintf "[%s]" (pretty_string_of_values depth ~simplify ~indent l)
+and format_values fmt = function
+  | [] -> ()
+  | [v] -> format_value fmt v
+  | v::r ->
+    format_value fmt v;
+    Format.pp_print_space fmt ();
+    format_values fmt r
 
-and pretty_string_of_values depth ~simplify ~indent l =
-  let sep = if depth = 0 && indent then "\n  " else " " in
-  String.concat sep
-    (List.rev (List.rev_map (pretty_string_of_value (depth+1) ~simplify ~indent) l))
+let string_of_value v =
+  format_value Format.str_formatter v; Format.flush_str_formatter ()
+let string_of_values vs =
+  format_values Format.str_formatter vs; Format.flush_str_formatter ()
 
-let incr tab = "  " ^ tab
+let rec format_item fmt = function
+  | Variable (_, _, List (_,[])) -> ()
+  | Variable (_, _, List (_,[List(_,[])])) -> ()
+  | Variable (_, i, List (_,l)) ->
+    if List.exists (function List _ | Option (_,_,_::_) -> true | _ -> false) l
+    then Format.fprintf fmt "@[<v>%s: [@;<0 2>@[<v>%a@]@,]@]" i format_values l
+    else Format.fprintf fmt "@[<hv>%s: [@;<0 2>@[<hv>%a@]@,]@]" i format_values l
+  | Variable (_, i, v) ->
+    Format.fprintf fmt "@[<hov 2>%s:@ %a@]" i format_value v
+  | Section (_,s) ->
+    Format.fprintf fmt "%s \"%s\" {@[<v 2>%a@]}"
+      s.section_kind
+      (escape_string s.section_name)
+      format_items s.section_items
+and format_items fmt is =
+  Format.pp_open_vbox fmt 0;
+  List.iter (fun i -> format_item fmt i; Format.pp_print_cut fmt ()) is;
+  Format.pp_close_box fmt ()
 
-let rec string_of_item_aux tab ~simplify ~indent ~ignore = function
-  | Variable (_, _, List (_,[]))      -> None
-  | Variable (_, _, List (_,[List(_,[])])) -> None
-  | Variable (_, i, v)            ->
-    let return ~simplify ~indent =
-      Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value 0 ~simplify ~indent v)) in
-    if List.mem i ignore then
-      return ~simplify:false ~indent:false
-    else
-      return ~simplify ~indent
-  | Section (_,s)                 ->
-    Some (Printf.sprintf "%s%s %S {\n%s\n}"
-            tab s.section_kind s.section_name
-            (string_of_items_aux (incr tab) ~simplify ~indent ~ignore s.section_items))
+let string_of_item i =
+  format_item Format.str_formatter i; Format.flush_str_formatter ()
+let string_of_items l =
+  format_items Format.str_formatter l; Format.flush_str_formatter ()
 
-and string_of_items_aux tab ~simplify ~indent ~ignore is =
-  String.concat "\n"
-    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent ~ignore) is)
+let rec simplify_items items =
+  List.map (function
+      | Variable
+          (pos, name, List
+             (_, [(String _ | List _) as v])) -> Variable (pos, name, v)
+      | Section (pos, s) ->
+        Section (pos, {s with section_items = simplify_items s.section_items})
+      | i -> i)
+    items
 
-let string_of_item = string_of_item_aux ""
-let string_of_items = string_of_items_aux ""
-
-let string_of_file ~simplify ~indent ?(ignore=[]) f =
+let string_of_file ~simplify f =
   let simplify = not !OpamGlobals.compat_mode_1_0 && simplify in
-  string_of_items f.file_contents ~simplify ~indent ~ignore ^ "\n"
+  let items =
+    if simplify then simplify_items f.file_contents
+    else f.file_contents
+  in
+  string_of_items items
 
 (* Reading section contents *)
 

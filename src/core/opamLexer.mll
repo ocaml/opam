@@ -97,17 +97,22 @@ and string b = parse
 | '\"'    { () }
 | '\n'    { newline lexbuf ;
             Buffer.add_char b '\n'            ; string b lexbuf }
-| '\\'    { Buffer.add_char b (escape lexbuf) ; string b lexbuf }
+| '\\'    { (match escape lexbuf with
+            | Some c -> Buffer.add_char b c
+            | None -> ());
+            string b lexbuf }
 | _ as c  { Buffer.add_char b c               ; string b lexbuf }
 | eof     { error "unterminated string" }
 
 and escape = parse
+| '\n' space *
+          { newline lexbuf; None }
 | ['\\' '\"' ''' 'n' 'r' 't' 'b' ' '] as c
-          { char_for_backslash c }
+          { Some (char_for_backslash c) }
 | digit digit digit
-          { char_for_decimal_code lexbuf 0 }
+          { Some (char_for_decimal_code lexbuf 0) }
 | 'x' ['0'-'9''a'-'f''A'-'F'] ['0'-'9''a'-'f''A'-'F']
-          { char_for_hexadecimal_code lexbuf 1 }
+          { Some (char_for_hexadecimal_code lexbuf 1) }
 | ""      { error "illegal escape sequence" }
 
 and comment n = parse
