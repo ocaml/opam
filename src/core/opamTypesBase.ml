@@ -122,6 +122,13 @@ let repository_kind_of_pin_kind = function
   | `version -> None
   | (`http|`git|`darcs|`hg|`local as k) -> Some k
 
+let pin_of_url (url,kind) = match kind with
+  | `http -> Http url
+  | `git -> Git url
+  | `darcs -> Darcs url
+  | `hg -> Hg url
+  | `local | `version -> failwith "Not a recognised version-control URL"
+
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
@@ -138,8 +145,13 @@ let pin_option_of_string ?kind s =
     | Some `git, _ | None, `git -> Git s
     | Some `hg, _ | None, `hg   -> Hg s
     | Some `darcs, _ | None, `darcs -> Darcs s
-    | Some `local, _ | None, `local ->
+    | Some `local, _ ->
       Local (OpamFilename.Dir.of_string (fst s))
+    | None, `local ->
+      let dir = OpamFilename.Dir.of_string (fst s) in
+      match guess_version_control dir with
+      | Some vc -> pin_of_url (s, vc)
+      | None -> Local dir
 
 let string_of_pin_kind = function
   | `version -> "version"
@@ -175,13 +187,6 @@ let kind_of_pin_option = function
   | Darcs _   -> `darcs
   | Hg _      -> `hg
   | Local _   -> `local
-
-let pin_of_url (url,kind) = match kind with
-  | `http -> Http url
-  | `git -> Git url
-  | `darcs -> Darcs url
-  | `hg -> Hg url
-  | `local | `version -> failwith "Not a recognised version-control URL"
 
 let option fn = function
   | None   -> ""

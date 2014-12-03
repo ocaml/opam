@@ -40,7 +40,7 @@ let call_rsync args =
     Done None
   | _ -> OpamSystem.process_error r
 
-let rsync src dst =
+let rsync ?(args=[]) src dst =
   log "rsync: src=%s dst=%s" src dst;
   let remote = String.contains src ':' in
   if not(remote || Sys.file_exists src) then
@@ -49,20 +49,20 @@ let rsync src dst =
     Done (Up_to_date [])
   else (
     OpamSystem.mkdir dst;
-    call_rsync [ rsync_arg;
+    call_rsync ( rsync_arg :: args @ [
                  "--exclude"; ".git";
                  "--exclude"; "_darcs";
                  "--exclude"; ".hg";
                  "--exclude"; ".#*";
                  "--delete";
-                 src; dst; ]
+                 src; dst; ])
     @@| function
     | None -> Not_available src
     | Some [] -> Up_to_date []
     | Some lines -> Result lines
   )
 
-let rsync_dirs src dst =
+let rsync_dirs ?args src dst =
   let src_s =
     (* ensure trailing '/' *)
     Filename.concat (OpamFilename.Dir.to_string src) ""
@@ -70,14 +70,14 @@ let rsync_dirs src dst =
   let dst_s = OpamFilename.Dir.to_string dst in
   let remote = String.contains src_s ':' in
   if not remote then OpamFilename.mkdir src;
-  rsync src_s dst_s @@| function
+  rsync ?args src_s dst_s @@| function
   | Not_available s -> Not_available s
   | Result _        ->
     if OpamFilename.exists_dir dst then Result dst
     else Not_available dst_s
   | Up_to_date _    -> Up_to_date dst
 
-let rsync_file src dst =
+let rsync_file ?(args=[]) src dst =
   let src_s = OpamFilename.to_string src in
   let dst_s = OpamFilename.to_string dst in
   log "rsync_file src=%s dst=%s" src_s dst_s;
@@ -87,7 +87,7 @@ let rsync_file src dst =
   else if src_s = dst_s then
     Done (Up_to_date src)
   else
-  call_rsync [ rsync_arg; src_s; dst_s ]
+  call_rsync ( rsync_arg :: args @ [ src_s; dst_s ])
   @@| function
   | None -> Not_available src_s
   | Some [] -> Up_to_date dst

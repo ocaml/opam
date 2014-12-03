@@ -200,18 +200,13 @@ let pin name pin_option =
       (string_of_pin_option pin_option);
 
   (match pin_option with
-   | Local dir -> (match guess_version_control dir with
-       | Some vc ->
-         let kind = string_of_pin_kind (vc :> pin_kind) in
-         OpamGlobals.note
-           "You are pinning to %s as a raw path while it seems to be a %s \
-            repository."
-           (OpamFilename.Dir.to_string dir) kind;
-         OpamGlobals.note
-           "Consider pinning with '-k %s' to have OPAM synchronise with \
-            your commits and ignore build artefacts."
-           kind
-       | None -> ())
+   | Git (dir, None) | Hg (dir, None) | Darcs (dir, None)
+     when OpamFilename.exists_dir (OpamFilename.Dir.of_string dir) ->
+     OpamGlobals.note
+       "Pinning in mixed mode: OPAM will use tracked files in the current \
+        working\ntree from %s. If this is not what you want, pin to a given \
+        branch (e.g.\n%s#HEAD)"
+       dir dir
    | _ -> ());
 
   if not no_changes && installed_version <> None then
