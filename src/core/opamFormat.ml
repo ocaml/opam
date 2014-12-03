@@ -649,7 +649,7 @@ let parse_commands =
   ]
 
 let parse_message =
-  parse_option parse_string parse_filter
+  parse_option (parse_string @> OpamMisc.strip) parse_filter
 
 let parse_messages =
   parse_list parse_message

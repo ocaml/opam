@@ -1210,11 +1210,9 @@ module X = struct
           @ filter  t.available     s_available
               (OpamFormat.make_filter @> OpamFormat.make_list (fun x -> x))
           @ list    t.messages      s_messages
-              OpamFormat.(make_list (make_option
-                                       (OpamMisc.strip @> make_string) make_filter))
+              OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.post_messages s_post_messages
-              OpamFormat.(make_list (make_option
-                                       (OpamMisc.strip @> make_string) make_filter))
+              OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
       } in
