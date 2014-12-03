@@ -145,7 +145,7 @@ val string_of_value : value -> string
 val string_of_values : value list -> string
 
 (** Print a file *)
-val string_of_file: simplify:bool -> indent:bool -> ?ignore:(string list) -> file -> string
+val string_of_file: simplify:bool -> file -> string
 
 (** {2 Finding functions} *)
 
