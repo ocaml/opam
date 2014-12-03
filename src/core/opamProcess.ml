@@ -438,7 +438,10 @@ module Job = struct
              OpamGlobals.status_line "Processing: %s"
            else OpamGlobals.msg "%s\n")
           (text_of_command cmd);
-        aux (cont (run cmd))
+        let r = run cmd in
+        let k = try cont r with e -> cleanup r; raise e in
+        cleanup r;
+        aux k
     in
     aux
 
