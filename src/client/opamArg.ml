@@ -1488,11 +1488,15 @@ let pin ?(unpin_only=false) () =
     "Pins package $(i,NAME) to $(i,TARGET), which may be a version, a path, \
      or a url. \
      $(i,NAME) can be omitted if $(i,TARGET) is a local path containing a \
-     package description with a name. $(i,TARGET) can be omitted with \
+     package description with a name. $(i,TARGET) can be replaced by \
      `--dev-repo'. \
-     Use url syntax or $(b,--kind) to explicitly set the kind of pinning. Git \
-     pins may target a specific branch or commit using $(b,#branch) e.g. \
-     $(b,git://host/me/pkg#testing). \
+     OPAM will attempt to guess the desired pinning kind, unless you use \
+     URL syntax or an explicit $(b,--kind) option. \
+     Pins may target a specific branch or commit using $(b,#branch) e.g. \
+     $(b,git://host/me/pkg#testing). When they don't, in the special case \
+     of version-controlled pinning to a local path, OPAM will use \
+     \"mixed mode\": it will only use version-controlled files, but at their \
+     current version. \
      It is possible to create a new package if $(i,NAME) does not exist. \
      Its version may then be specified in the source opam file or with \
      $(b,edit).";
