@@ -954,7 +954,7 @@ let system_needs_upgrade t =
     if not !system_needs_upgrade_displayed then (
       system_needs_upgrade_displayed := true;
       OpamGlobals.error
-        "You current switch use the system compiler, but no OCaml compiler \
+        "You current switch uses the system compiler, but no OCaml compiler \
          has been found in the current path.\n\
          You should either:\n\
         \  (i)  reinstall OCaml version %s on your system; or\n\
