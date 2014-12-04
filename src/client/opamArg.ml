@@ -1529,6 +1529,7 @@ let pin ?(unpin_only=false) () =
                 path, git, hg or darcs." in
     let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
     let kinds = [
+      "http"   , `http;
       "git"    , `git;
       "darcs"  , `darcs;
       "version", `version;
