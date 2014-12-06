@@ -11,7 +11,8 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
 ## Compiling this repo
 
-* Make sure you have OCaml and GNU make installed.
+* Make sure you have OCaml and GNU make installed. If you don't have a recent
+  enough version of OCaml (>= 3.12.1) at hand, see next paragraph.
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed and only need the opam binary (not the libs). This will
@@ -24,6 +25,18 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 * Run `make install`
 * Run `make libinstall` if needed (this is incompatible with `make lib-ext`, as
   the opam library would conflict with installed versions of the dependencies)
+
+## Compiling without OCaml
+
+`make cold` is provided as a facility to compile OCaml, then bootstrap OPAM.
+You don't need need to run `./configure` in that case, but
+you may specify `CONFIGURE_ARGS` if needed, e.g.:
+
+```
+make cold CONFIGURE_ARGS="--prefix ~/local"
+```
+
+You'll still need GNU make.
 
 ## Bug tracker
 

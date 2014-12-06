@@ -256,7 +256,7 @@ let rec format_value fmt = function
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
       format_value l (string_of_relop op) format_value r
   | Logop (_,op,l,r) ->
-    Format.fprintf fmt "@[<hov>%a %s@ %a@]"
+    Format.fprintf fmt "@[<hv>%a %s@ %a@]"
       format_value l (string_of_logop op) format_value r
   | Pfxop (_,op,r) ->
     Format.fprintf fmt "@[<h>%s%a@]" (string_of_pfxop op) format_value r
@@ -272,8 +272,9 @@ let rec format_value fmt = function
     else Format.fprintf fmt "\"%s\"" (escape_string s)
   | List (_, l) ->
     Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
-  | Group (_,g)     -> Format.fprintf fmt "(%a)" format_values g
-  | Option(_,v,l)   -> Format.fprintf fmt "@[<h 2>%a@ {%a}@]" format_value v format_values l
+  | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
+  | Option(_,v,l)   -> Format.fprintf fmt "@[<hv 2>%a@ {@[<hv>%a@]}@]"
+                         format_value v format_values l
   | Env_binding (_,op,id,v) ->
     Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]" format_value id op format_value v
 
@@ -601,10 +602,12 @@ let make_filter f =
       if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
     | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
       let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
-      (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
+      if !OpamGlobals.all_parens then Group (pos_null, [f]) else
+        (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
     | FAnd(e,f) ->
       let f = Logop (pos_null, `And, aux e, aux ~paren:`And f) in
-      (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
+      if !OpamGlobals.all_parens then Group (pos_null, [f]) else
+        (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
     | FNot f ->
       let f = Pfxop (pos_null, `Not, aux ~paren:`Not f) in
       if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
@@ -649,7 +652,7 @@ let parse_commands =
   ]
 
 let parse_message =
-  parse_option parse_string parse_filter
+  parse_option (parse_string @> OpamMisc.strip) parse_filter
 
 let parse_messages =
   parse_list parse_message
