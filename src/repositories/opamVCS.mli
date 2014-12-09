@@ -44,6 +44,8 @@ module type VCS = sig
   (** Return the HEAD revision. *)
   val revision: repository -> string OpamProcess.job
 
+  (** Returns the list of files under version control *)
+  val versionned_files: repository -> string list OpamProcess.job
 end
 
 (** Create a backend from a [VCS] implementation. *)

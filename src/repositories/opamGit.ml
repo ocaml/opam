@@ -114,6 +114,11 @@ module Git : OpamVCS.VCS= struct
     else
       Done (r.OpamProcess.r_stdout <> [])
 
+  let versionned_files repo =
+    git repo ~verbose:false [ "ls-files" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done r.OpamProcess.r_stdout
+
 end
 
 module B = OpamVCS.Make(Git)

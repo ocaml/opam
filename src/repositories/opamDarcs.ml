@@ -61,6 +61,12 @@ module Darcs = struct
   let revision _ =
     Done "<darcs-???>"
 
+  let versionned_files repo =
+    darcs repo [ "show" ; "files" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done r.OpamProcess.r_stdout
+
 end
 
 module B = OpamVCS.Make(Darcs)

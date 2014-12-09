@@ -27,16 +27,50 @@ module type VCS = sig
   val reset: repository -> unit OpamProcess.job
   val diff: repository -> bool OpamProcess.job
   val revision: repository -> string OpamProcess.job
+  val versionned_files: repository -> string list OpamProcess.job
 end
 
 
 module Make (VCS: VCS) = struct
 
+  (* Local repos without a branch set actually use the rsync backend, but
+     limited to versionned files *)
+  let is_synched_repo repo =
+    match repo.repo_address with
+    | _, Some _ -> false
+    | addr, None ->
+      not (Re_str.string_match (Re_str.regexp_string "://") addr 0) &&
+      OpamFilename.exists_dir (OpamFilename.Dir.of_string addr)
+
+  let rsync repo =
+    let source_repo =
+      { repo with repo_root =
+                    OpamFilename.Dir.of_string (fst repo.repo_address) }
+    in
+    VCS.versionned_files source_repo
+    @@+ fun files ->
+    List.iter prerr_endline files;
+    let stdout_file =
+      let f = OpamSystem.temp_file "rsync-files" in
+      let fd = open_out f in
+      List.iter (fun s -> output_string fd s; output_char fd '\n') files;
+      close_out fd;
+      f
+    in
+    OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
+      (OpamFilename.Dir.of_string (fst repo.repo_address))
+      repo.repo_root
+    @@+ fun dl ->
+    OpamSystem.remove stdout_file;
+    Done dl
+
   let init repo =
     VCS.init repo
 
   let pull_repo repo =
-    if VCS.exists repo then
+    if is_synched_repo repo then
+      rsync repo
+    else if VCS.exists repo then
       VCS.fetch repo @@+ fun () ->
       VCS.diff repo @@+ fun diff ->
       VCS.reset repo @@+ fun () ->

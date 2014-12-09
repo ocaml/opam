@@ -83,6 +83,10 @@ module Hg = struct
     if OpamProcess.is_failure r then unknown_commit commit;
     Done (r.OpamProcess.r_stdout <> [])
 
+  let versionned_files repo =
+    hg repo [ "locate" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done r.OpamProcess.r_stdout
 end
 
 module B = OpamVCS.Make(Hg)
