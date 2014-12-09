@@ -49,7 +49,6 @@ module Make (VCS: VCS) = struct
     in
     VCS.versionned_files source_repo
     @@+ fun files ->
-    List.iter prerr_endline files;
     let stdout_file =
       let f = OpamSystem.temp_file "rsync-files" in
       let fd = open_out f in
