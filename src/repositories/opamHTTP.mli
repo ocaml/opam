@@ -18,6 +18,7 @@
 
 open OpamTypes
 
+(** Run before starting downloads, so that concurrent downloads won't be run *)
 val preload_state: repository -> unit
 
 val make_index_tar_gz: repository_root -> unit
