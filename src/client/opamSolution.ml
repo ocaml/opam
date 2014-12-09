@@ -322,19 +322,6 @@ let parallel_apply t action action_graph =
 
   let _package_sources, failed_downloads =
     let sources_needed = OpamAction.sources_needed t action_graph in
-    (* preload http repos indexes *)
-    let repos =
-      OpamPackage.Set.fold (fun nv repos ->
-          try
-            let repo_name = fst (OpamPackage.Map.find nv t.package_index) in
-            OpamRepositoryName.Set.add repo_name repos
-          with Not_found -> repos)
-        sources_needed OpamRepositoryName.Set.empty
-    in
-    OpamRepositoryName.Set.iter (fun repo_name ->
-        let repo = OpamState.find_repository t repo_name in
-        if repo.repo_kind = `http then OpamHTTP.preload_state repo)
-      repos;
     let sources_list = OpamPackage.Set.elements sources_needed in
     if sources_list <> [] then
       OpamGlobals.header_msg "Gathering sources";

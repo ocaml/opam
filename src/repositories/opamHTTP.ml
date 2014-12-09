@@ -89,9 +89,6 @@ let get_state repo =
     state_cache := (repo.repo_address, state) :: !state_cache;
     state
 
-let preload_state repo =
-  ignore (get_state repo)
-
 let sync_state repo =
   let old_state = get_state repo in
   let repo_address = OpamFilename.raw_dir (fst repo.repo_address) in
