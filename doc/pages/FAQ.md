@@ -1,21 +1,53 @@
 # OPAM FAQ
 
+> This FAQ is for general questions about OPAM and its usage. You may also be
+> interested in the more advanced [Tricks](Tricks.html) for specific use-cases
+> or advanced users.
+
+#### 🐫  What is OPAM for ?
+
+Easily installing, upgrading and managing your OCaml compiler(s), tools and
+libraries. It's made of a tool, the
+[OPAM package manager](https://github.com/ocaml/opam), and a
+community-maintained
+[package repository](https://github.com/ocaml/opam-repository).
+
+--
 
 #### 🐫  How to get, install and upgrade OPAM ?
 
 See the [install guide](Install.html).
 
+--
 
 #### 🐫  Where is the manual ?
 
 OPAM has git-like, hierarchical manpages. Try `opam --help` for a starting point.
 
-Get started with OPAM packages by reading the [Packaging Howto](Packaging.html).
+Or get started from the [Usage](Usage.html) guide.
 
-See the details on the file formats and more in the [Developper
-Guide](https://github.com/ocaml/opam/blob/latest/doc/dev-manual/dev-manual.pdf?raw=true)
-(pdf).
+If you want to know more about OPAM packages, see the [Packaging Howto](Packaging.html).
 
+Last but not least, the reference on the file formats and more is in the
+[Developper Guide](http://opam.ocaml.org/doc/manual/dev-manual.html).
+
+--
+
+#### 🐫  `opam init` gives me lots of errors about upgrading
+
+In case you can't or really don't want to switch to 1.2 for some reason, we
+still support OPAM 1.1 via a compatibility layer on the repository, but there
+may be glitches at `opam init`.
+
+For **OPAM 1.1**, you should initialise with:
+
+```
+opam init https://opam.ocaml.org/1.1
+```
+
+Or if your repository is already initialised, just run `opam update`.
+
+--
 
 #### 🐫  What changes does OPAM do to my filesystem ?
 
@@ -25,6 +57,7 @@ explicit options provided during `opam init`, only writes within `~/.opam` (and
 various internal data, a cache of downloaded archives, and your OCaml
 installations.
 
+--
 
 #### 🐫  Why does ``opam init`` need to add stuff to my init scripts / why is ``eval $(opam config env)`` needed ?
 
@@ -35,13 +68,14 @@ a few ocaml-related environment variables, and to prepend to your PATH variable.
 Of course, you may choose not to let OPAM change anything at `opam init`, and
 run `eval $(opam config env)` yourself whenever you will be needing it.
 
+--
 
 #### 🐫  What is a "switch" ?
 
-An ocaml installation and a set of installed packages within an OPAM
+An OCaml installation and a set of installed packages within an OPAM
 installation. This can be used to keep different OCaml versions side-by-side, or
 different sets of packages. See the [related
-section](Usage.html#opamswitch) in the Advanced usage manual and
+section](Usage.html#opamswitch) in the usage manual and
 `opam switch --help`. The "prefix" for a given installation is simply
 `~/.opam/<switch-name>`.
 
@@ -50,6 +84,7 @@ installation. In the former case, OPAM will need to recompile all packages when
 your system compiler changes. In the latter case, OCaml will be downloaded and
 compiled on creation of the switch.
 
+--
 
 #### 🐫  Can I work on different switches at the same time in different shells ?
 
@@ -62,6 +97,7 @@ opam config exec --switch <switch> -- <command>  # for one command
 
 This only affects the environment.
 
+--
 
 #### 🐫  Can I get a new switch with the same packages installed ?
 
@@ -78,17 +114,18 @@ OCaml version in your new switch. In that case, you'll need to remove them from
 the `file.export` file by hand (the format is straight-forward, one line per
 package).
 
+--
 
 #### 🐫  I installed a package by hand / used ``ocamlfind remove`` / fiddled with the installed packages and OPAM is out of sync. Help !
 
 Don't panic. OPAM assumes it's controlling what's below `~/.opam/<switch>`, but
 there are several ways you can recover:
-* `opam remove --force` will attempt to uninstall even if not registered as
-  installed. Then `opam install`
+* `opam remove --force` will run the uninstall instructions even if the package
+  is not registered as installed. Then retry `opam install`.
 * `opam reinstall` will try to remove an installed package, but go on to
   re-installing even if that fails.
 * If all else fails, you can re-install your current set of packages from
-  scratch using `opam switch reinstall`
+  scratch using `opam switch reinstall`.
 * You can force OPAM to register an installation or removal _without actually
   performing anything_ using `opam install|remove --fake`. This is not
   recommended though, as your manual install may not be exactly equivalent to
@@ -96,7 +133,10 @@ there are several ways you can recover:
   reinstallations or upgrades of the package. Don't complain if you mess up your
   installation using this! If you want to control how a package is installed or
   modify it, the right way is `opam pin`.
+* You shouldn't have to, but if you want to restart from scratch, just delete
+  `~/.opam` and get back to `opam init`
 
+--
 
 #### 🐫  What are the minimum requirements ?
 
@@ -104,6 +144,7 @@ there are several ways you can recover:
 problems with 512MB of RAM and no swap. Of course, software packages themselves
 may be more greedy.
 
+--
 
 #### 🐫  Some package fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
 
@@ -119,6 +160,7 @@ have no idea what the missing system package might be:
   tracker](https://github.com/ocaml/opam-repository/issues), to save the others
   the trouble of searching. Thanks.
 
+--
 
 #### 🐫  I have weird checksum errors: where do they come from ?
 
@@ -135,6 +177,7 @@ stale files. To clear your proxy cache, you can use `wget --no-cache
 
 As a last resort, you can bypass the checksum checks using `--no-checksums`.
 
+--
 
 #### 🐫  OPAM is prompting me to install or upgrade packages that I am not interested in, or doesn't install the latest version by default. Why ? What can I do ?
 
@@ -147,6 +190,7 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
 * Another benefit of the external solvers is that they allow to be [quite
   expressive](Specifying_Solver_Preferences.html) on your expectations.
 
+--
 
 #### 🐫  Where do I report Bugs, Issues and Feature Requests?
 
@@ -164,6 +208,7 @@ mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
 - You may also try IRC channel `#opam` on Freenode.
 
+--
 
 #### 🐫  How to link to libraries installed with OPAM ?
 
@@ -177,6 +222,7 @@ option `-I +dir` will make `dir` relative to `lib/ocaml`, and will only work for
 the libraries that ship with the compiler. Also, remember to add the dependency when
 you package your project !
 
+--
 
 #### 🐫  How does OPAM tell which version of a package is newer ?
 
@@ -195,6 +241,7 @@ from Debian:
 Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`, `0.1`,
 `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`
 
+--
 
 #### 🐫  What does the `--jobs` option do ? It doesn't seem to enable parallel builds.
 
