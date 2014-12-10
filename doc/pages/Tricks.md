@@ -1,7 +1,7 @@
 > The following are beyond the scope of the [FAQ](FAQ.html), but have been found
 > useful for specific use-cases or for advanced users.
 
-### Simulate actions from the current switch state (for debugging)
+#### Simulate actions from the current switch state (for debugging)
 
 - `opam upgrade --show-actions` (stop at the action summary dialog)
 - `opam upgrade --dry-run` (display only)
@@ -18,8 +18,9 @@
     * run e.g. aspcud with `aspcud cudf-file-1.cudf /dev/stdout CRITERIA`
     * `admin-scripts/cudf-debug.ml cudf-file-1.cudf` may help with conflicts
 
+---
 
-### Install in all switches
+#### Install in all switches
 
 Not supported natively at the moment, but it's being considered. Quick hack:
 ```
@@ -29,8 +30,9 @@ done
 ```
 You may want to add `--yes` if you're confident.
 
+---
 
-### Update OPAM environment within emacs
+#### Update OPAM environment within emacs
 
 You may use the following snippet to define an `opam-env` function:
 
@@ -44,8 +46,9 @@ You may use the following snippet to define an `opam-env` function:
 You may want to run this at emacs startup if it doesn't inherit the proper shell
 environment.
 
+---
 
-### Easily provide a set of packages for a group of users to install
+#### Easily provide a set of packages for a group of users to install
 
 The easiest way is to create a package with your prerequisites as `depends` and
 have them pin that. A quick way to host the file is to use a
