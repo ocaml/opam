@@ -19,9 +19,13 @@ $ opam pin remove <package>
 ```
 
 Publish to the OPAM repository:
-* Fork [https://github.com/ocaml/opam-repository]()
-* Add your `opam`, `descr` and `url` files to `packages/<pkgname>/<pkgname>.<version>`
-* File a [pull-request](https://github.com/ocaml/opam-repository/compare/)
+* Use the [opam-publish](https://github.com/AltGr/opam-publish#opam-publish)
+  tool (`opam install opam-publish`)
+* Or by hand:
+    - Fork [https://github.com/ocaml/opam-repository]()
+    - Add your `opam`, `descr` and `url` files to
+      `packages/<pkgname>/<pkgname>.<version>`
+    - File a [pull-request](https://github.com/ocaml/opam-repository/compare/)
 
 
 # Creating OPAM packages
@@ -41,6 +45,7 @@ to the opam file format.
 
 We'll be assuming that you have a working OPAM installation. If not, please
 first read the [install guide](Install.html).
+
 
 ### Get the source
 
@@ -70,6 +75,7 @@ $ opam pin add <project> . -n
 ```
 (`-n` tells OPAM to not try and install just yet, we'll get to it later)
 
+
 ### The "opam" file
 
 At this stage, OPAM will be looking for metadata for the package `<project>`, on
@@ -80,13 +86,14 @@ information we're interested in, only in a less normalised format.
 
 ```
 opam-version: "1.2"
-maintainer: "Name <email>"
-author: "Name <email>"
 name: "project"
 version: "0.1"
+maintainer: "Name <email>"
+author: "Name <email>"
 homepage: ""
 bug-reports: ""
 license: ""
+dev-repo: ""
 build: [
   ["./configure" "--prefix=%{prefix}%"]
   [make]
@@ -124,6 +131,7 @@ than a single element: `maintainer`, `author`, `homepage`, `bug-reports`,
 One you save and quit, OPAM will syntax-check and let you edit again in case of
 errors.
 
+
 ## Installing
 
 The best test is to let OPAM attempt to install your just created package. As
@@ -145,7 +153,7 @@ You can now check that everything is installed as expected. Do also check that
 If you need to change anything, simply do
 
 ```
-opam pin edit <project>
+$ opam pin edit <project>
 ```
 
 to get back to editing the `opam` file. Manually editing the `opam` file in
@@ -156,16 +164,38 @@ installed on your system, but that will be checked automatically by the
 continuous integration system when you attempt to publish your package to the
 OPAM repository, so don't worry.
 
+
 ## Getting a full OPAM package
 
 There are still two things missing for a complete package.
-* An appealing description. Put it in a simple utf-8 text file named `descr`.
-  Like for git commits, the first line is a short summary, and a longer text may
-  follow.
+* An appealing description.
 * An URL where OPAM may download the project source for the release. If your
   project is hosted on github, pushing `TAG` will automatically provide
-  https://github.com/me/project/archive/TAG.zip. This shoud be put in
-  an `url` file, with a format similar to that of `opam`:
+  https://github.com/me/project/archive/TAG.zip.
+
+[opam-publish](https://github.com/AltGr/opam-publish) is a tool that automates
+most of the steps to get a full package ready, reviewed and published. It's
+still to be considered beta quality, though, so you'll also find the full manual
+instructions here.
+
+### With opam-publish
+
+```
+$ opam install opam-publish
+$ opam-publish prepare <URL>
+```
+
+This'll provide you with a `<package>.<version>` directory, where you'll have to
+write a description within the `descr` file if your package is new. Check the
+files in that directory, it's the full contents of what will be included in the
+opam repository.
+
+### By hand
+
+* Write a cool description of your package within a simple utf-8 text file
+  `descr`. Like for git commits, the first line is a short summary, and a longer
+  text may follow.
+* Create a `url` file, with a format similar to that of `opam`:
 
     ```
     archive: "https://address/of/project.1.0.tar.gz"
@@ -175,9 +205,9 @@ There are still two things missing for a complete package.
   The checksum is a simple md5 of the archive, which you can obtain with:
 
     ```
-    curl -L "https://address/of/project.1.0.tar.gz" | md5sum
+    $ curl -L "https://address/of/project.1.0.tar.gz" | md5sum
     ```
-That's it !
+
 
 ## Publishing
 
@@ -186,6 +216,21 @@ mechanism. If you're not familiar with it, it is a fancy way to:
 * Make a patch to the OPAM repository
 * Propose this patch for review and integration. This will also trigger tests
   that your package installs successfully from scratch.
+
+### With opam-publish
+
+It's just:
+
+```
+opam-publish submit <package>.<version>
+```
+
+If all goes well, you'll be redirected to the github page that will track your
+pull-request (automated tests, discussion with the repository maintainers,
+etc.). You can re-run this command as needed if you want to update your package
+description.
+
+### By hand
 
 Here is how to do it from scratch:
 
@@ -300,4 +345,4 @@ into too much details, here are some of the most useful features:
     ```
 
 For more, see the
-[OPAM Developer's Manual](https://github.com/ocaml/opam/blob/latest/doc/dev-manual/dev-manual.pdf?raw=true)
+[OPAM Developer's Manual](http://opam.ocaml.org/doc/manual/dev-manual.html)

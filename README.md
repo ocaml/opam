@@ -53,19 +53,18 @@ The main documentation entry point to OPAM is the user manual,
 available using `opam --help`. To get help for a specific command, use
 `opam <command> --help`.
 
-#### Tutorials
+#### Guides and Tutorials
 
-A collection of tutorials are available online at <http://opam.ocaml.org>.
-These tutorials are automatically generated from the
-[wiki](https://github.com/ocaml/opam/wiki/_pages) and
-are also available in PDF format in the `doc/tutorials` directory.
+A collection of guides and tutorials is available
+[online](http://opam.ocaml.org/doc/Usage.html). They are generated from the
+files in [doc/pages](https://github.com/ocaml/opam/tree/master/doc/pages).
 
 #### API, Code Documentation and Developer Manual
 
 A more torough technical document describing OPAM and specifying the package
 description format is available in the
-[doc/dev-manual](https://raw.github.com/ocaml/opam/blob/doc/dev-manual/dev-manual.pdf).
-`make doc` will otherwise make the API documentation available under `doc/`.
+[developper manual](http://opam.ocaml.org/doc/manual/dev-manual.html). `make
+doc` will otherwise make the API documentation available under `doc/`.
 
 ## Community
 
@@ -87,16 +86,22 @@ that's not an option for you, you can use `git format-patch` and email TODO.
 
 The release cycle respects [Semantic Versioning](http://semver.org/).
 
-### Related repositories
+## Related repositories
 
-- [ocaml/opam-repository](https://github.com/ocaml/opam-repository) is the official repository for OPAM packages and compilers. A number of non-official repositories are also available on the interwebs, for instance on [Github](https://github.com/search?q=opam-repo&type=Repositories).
-- [opam2web](https://github.com/ocaml/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocaml.org.
+- [ocaml/opam-repository](https://github.com/ocaml/opam-repository) is the
+  official repository for OPAM packages and compilers. A number of non-official
+  repositories are also available on the interwebs, for instance on
+  [Github](https://github.com/search?q=opam-repo&type=Repositories).
+- [opam2web](https://github.com/ocaml/opam2web) generates a collection of
+  browsable HTML files for a given repository. It is used to generate
+  http://opam.ocaml.org.
 - [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for OPAM.
-- [opamlot](https://github.com/ocamllabs/ocamlot) is the automated QA environment for OPAM. 
+- [opam-publish](https://github.com/AltGr/opam-publish) is a tool to facilitate
+  the creation, update and publication of OPAM packages.
 
 ## Copyright and license
 
-Copyright 2012-2014 OCamlPro  
+Copyright 2012-2014 OCamlPro
 Copyright 2012 INRIA
 
 All rights reserved. OPAM is distributed under the terms of
