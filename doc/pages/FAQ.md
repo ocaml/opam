@@ -252,3 +252,25 @@ commands, and it's up to them to enable parallelism: you may try to set
 
 If you are a packager, you may use the `jobs` opam variable, e.g. `make
 "-j%{jobs}%"`.
+
+---
+
+#### 🐫  What is "mixed mode VC pin" ?
+
+When you pin a package to a local directory that is under version control, we
+used to have OPAM use the version control mechanism to synchronise the package.
+This turned to be often confusing, because it wouldn't "see" your latest changes
+until you committed them. Pinning the directory as a raw path isn't perfect
+either, because it makes OPAM register all files, including temporary files or
+build artifacts.
+
+The idea of "mixed mode", which is the default in upcoming OPAM 1.2.1, is to
+take the best of both worlds: OPAM will synchronise only files under version
+control, but at their current state on the filesystem. You may just need to
+remember to register them if you added new files (e.g. `git add`).
+
+If for some reason you want the old behaviour, use one of:
+* `--kind path` for raw filesystem pinning
+* an address of the form `vc-controlled-dir#branch`, typically `#master`
+* on Git you can use `#HEAD` to always get to the currently checked out branch
+  (which used to be the default, and still is for remote gits)
