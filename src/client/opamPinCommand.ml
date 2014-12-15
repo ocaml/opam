@@ -103,9 +103,16 @@ let edit t name =
     OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
     if Some new_opam = orig_opam then None else
-    let () = match pin with
-      | Local dir ->
-      if OpamFilename.exists_dir dir then
+    let () =
+      let dir = match pin with
+        | Local dir -> Some dir
+        | Git (a,None) | Darcs (a,None) | Hg (a,None) ->
+          Some (OpamFilename.Dir.of_string a)
+        | Version _ | Git _ | Darcs _ | Hg _ | Http _ ->
+          None
+      in
+      match dir with
+      | Some dir when OpamFilename.exists_dir dir ->
         let src_opam =
           OpamFilename.OP.(
             if OpamFilename.exists_dir (dir / "opam")
@@ -115,7 +122,7 @@ let edit t name =
         if OpamGlobals.confirm "Save the new opam file back to %S ?"
             (OpamFilename.to_string src_opam) then
           OpamFilename.copy ~src:file ~dst:src_opam
-      | Version _ | Git _ | Darcs _ | Hg _ | Http _ -> ()
+      | _ -> ()
     in
     match installed_nv with
     | None -> None
