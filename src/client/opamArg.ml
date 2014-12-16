@@ -1669,7 +1669,6 @@ let source =
           | Some k -> k
           | None -> assert false
         in
-        OpamGlobals.error "%s" (Dir.to_string dir);
         mkdir dir;
         match
           OpamProcess.Job.run
