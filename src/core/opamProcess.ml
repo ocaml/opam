@@ -177,7 +177,10 @@ let read_lines f =
 
 let wait p =
   let rec iter () =
-    let _, status = Unix.waitpid [] p.p_pid in
+    let status =
+      try snd (Unix.waitpid [] p.p_pid)
+      with Unix.Unix_error (Unix.EINTR, _, _) -> Unix.WSTOPPED Sys.sigterm
+    in
     match status with
     | Unix.WEXITED code ->
       let duration = Unix.gettimeofday () -. p.p_time in
