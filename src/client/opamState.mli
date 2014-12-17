@@ -113,6 +113,13 @@ val get_opam_env: force_path:bool -> state -> env
 (** Update an environment. *)
 val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env -> (string * string * string) list -> env
 
+(** Check if the shell environment is in sync with the current OPAM switch *)
+val up_to_date_env: state -> bool
+
+(** The shell command to run by the user to set his OPAM environement ([eval
+    `opam config env`]) *)
+val eval_string: unit -> string
+
 (** Print a warning if the environment is not set-up properly on init. *)
 val print_env_warning_at_init: state -> user_config -> unit
 
