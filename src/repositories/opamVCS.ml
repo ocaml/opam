@@ -132,7 +132,15 @@ module Make (VCS: VCS) = struct
       Done (Not_available (OpamFilename.to_string filename))
 
   let revision repo =
-    VCS.revision repo @@+ fun r ->
-    Done (Some (OpamPackage.Version.of_string r))
+    let repo =
+      if is_synched_repo repo then
+        (* Actually get the revision at the source *)
+        { repo with repo_root =
+                      OpamFilename.Dir.of_string (fst repo.repo_address) }
+      else repo
+    in
+    VCS.revision repo
+    @@+ fun r ->
+        Done (Some (OpamPackage.Version.of_string r))
 
 end
