@@ -4,6 +4,18 @@
 > interested in the more advanced [Tricks](Tricks.html) for specific use-cases
 > or advanced users.
 
+#### 🐫  OPAM fails, trying to reinstall already installed packages at first upgrade ?
+
+**Ubuntu "utopic" currently ships with a broken OPAM package**, that shouldn't
+happen and didn't in any stable OPAM release. See
+[the bug-report on Ubuntu's launchpad](https://bugs.launchpad.net/ubuntu/+source/opam/+bug/1401346)
+for the details.
+
+The best fix is to install [OPAM 1.2](Install.html) using the community
+packages.
+
+---
+
 #### 🐫  What is OPAM for ?
 
 Easily installing, upgrading and managing your OCaml compiler(s), tools and
