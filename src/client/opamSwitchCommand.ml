@@ -146,6 +146,11 @@ let list ~print_short ~installed ~all =
          "Current switch is set locally through the OPAMSWITCH variable.\n\
          \       The current global system switch is %s."
          (OpamGlobals.colorise `bold sys))
+  | `Not_set ->
+     if not (OpamState.up_to_date_env t) then
+       OpamGlobals.warning
+         "The environment is not in sync with the current switch.\n\
+          You should run: %s" (OpamState.eval_string ())
   | _ -> ()
 
 let remove_t switch ?(confirm = true) t =
