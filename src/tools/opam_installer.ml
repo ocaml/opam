@@ -54,12 +54,30 @@ let do_commands project_root =
       OpamGlobals.warning "Directory %S is not empty\n" (OpamFilename.Dir.to_string d)
   in
   let cp ?exec ~opt ~src ~dst () =
+    let print src dst =
+      OpamGlobals.msg "%-32s => %s\n"
+        (OpamFilename.remove_prefix project_root src)
+        (OpamFilename.to_string dst)
+    in
     if OpamFilename.exists src then
       (mkdir (OpamFilename.dirname dst);
-       OpamGlobals.msg "%-32s => %s\n"
-         (OpamFilename.remove_prefix project_root src)
-         (OpamFilename.to_string dst);
-       OpamFilename.install ?exec ~src ~dst ())
+       print src dst;
+       OpamFilename.install ?exec ~src ~dst ();
+       if exec <> Some true &&
+          OpamFilename.ends_with ".cmi" src &&
+          OpamFilename.ends_with ".cmi" dst then
+         let install_ext e =
+           let replace_ext f =
+             OpamFilename.add_extension (OpamFilename.chop_extension f)
+           in
+           let src = replace_ext src e in
+           if OpamFilename.exists src then
+             let dst = replace_ext dst e in
+             print src dst;
+             OpamFilename.install ~src ~dst ()
+         in
+         install_ext "cmti";
+         install_ext "cmt")
     else if not opt then
       OpamGlobals.error "Could not find %S" (OpamFilename.to_string src)
   in
@@ -101,6 +119,15 @@ let script_commands project_root ochan =
     let dst = OpamFilename.to_string dst in
     Printf.fprintf ochan "if [ -e %S ]\n" src;
     Printf.fprintf ochan "then install %s %S %S\n" mode src dst;
+    if exec <> Some true &&
+       OpamMisc.ends_with ~suffix:".cmi" src &&
+       OpamMisc.ends_with ~suffix:".cmi" dst
+    then
+      (let chext f e = OpamMisc.remove_suffix ~suffix:"cmi" f ^ e in
+       Printf.fprintf ochan "if [ -e %S ]; then install %s %S %S; fi"
+         (chext src "cmt") mode (chext src "cmt") (chext dst "cmt");
+       Printf.fprintf ochan "if [ -e %S ]; then install %s %S %S; fi"
+         (chext src "cmti") mode (chext src "cmti") (chext dst "cmti"));
     if not opt then
       Printf.fprintf ochan "else echo \"Error: %s doesn't exist\"\n" src;
     Printf.fprintf ochan "fi\n"
