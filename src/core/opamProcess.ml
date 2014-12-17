@@ -14,6 +14,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
+let log ?level fmt =
+  OpamGlobals.log "PROC" ?level fmt
+let slog = OpamGlobals.slog
+
 (** Shell commands *)
 type command = {
   cmd: string;
@@ -84,7 +88,8 @@ let option_default d = function
   | None   -> d
   | Some v -> v
 
-let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () =
+let make_info ?code ?signal
+    ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () =
   let b = ref [] in
   let print name str = b := (name, str) :: !b in
   let print_opt name = function
@@ -97,6 +102,7 @@ let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadat
   print     "path"         cwd;
   List.iter (fun (k,v) -> print k v) metadata;
   print_opt "exit-code"    (option_map string_of_int code);
+  print_opt "signalled"    (option_map string_of_int signal);
   print_opt "env-file"     env_file;
   print_opt "stdout-file"  stdout_file;
   print_opt "stderr-file"  stderr_file;
@@ -192,6 +198,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
 
 type result = {
   r_code     : int;
+  r_signal   : int option;
   r_duration : float;
   r_info     : (string * string) list;
   r_stdout   : string list;
@@ -249,12 +256,17 @@ let run_background command =
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
     ~allow_stdin ?dir cmd args
 
-let exit_status p code =
+let exit_status p return =
   let duration = Unix.gettimeofday () -. p.p_time in
   let stdout = option_default [] (option_map read_lines p.p_stdout) in
   let stderr = option_default [] (option_map read_lines p.p_stderr) in
   let cleanup =
     OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
+  in
+  let code,signal = match return with
+    | Unix.WEXITED r -> Some r, None
+    | Unix.WSIGNALED s -> None, Some s
+    | _ -> None, None
   in
   if p.p_verbose then
     (OpamGlobals.msg "%s %s %s\n" (OpamGlobals.colorise `yellow "+")
@@ -265,10 +277,12 @@ let exit_status p code =
      List.iter p stderr;
      flush Pervasives.stdout);
   let info =
-    make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
+    make_info ?code ?signal
+      ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
       ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
   {
-    r_code     = code;
+    r_code     = OpamMisc.Option.default 256 code;
+    r_signal   = signal;
     r_duration = duration;
     r_info     = info;
     r_stdout   = stdout;
@@ -276,19 +290,28 @@ let exit_status p code =
     r_cleanup  = cleanup;
   }
 
-let rec wait p =
+let rec safe_wait fallback_pid f x =
   match
-    try Some (Unix.waitpid [] p.p_pid)
-    with Unix.Unix_error (Unix.EINTR,_,_) -> None (* handled signal *)
+    try f x with
+    | Unix.Unix_error (Unix.EINTR,_,_) -> (* handled signal *)
+      safe_wait fallback_pid f x
+    | Unix.Unix_error (Unix.ECHILD,_,_) ->
+      log "Warn: no child to wait for %d" fallback_pid;
+      fallback_pid, Unix.WEXITED 256
   with
-  | Some (_, Unix.WEXITED code) -> exit_status p code
-  | _ -> wait p
+  | _, Unix.WSTOPPED _ ->
+    (* shouldn't happen as we don't use WUNTRACED *)
+    safe_wait fallback_pid f x
+  | r -> r
 
-let rec dontwait p =
-  match Unix.waitpid [Unix.WNOHANG] p.p_pid with
+let wait p =
+  let _, return = safe_wait p.p_pid (Unix.waitpid []) p.p_pid in
+  exit_status p return
+
+let dontwait p =
+  match safe_wait p.p_pid (Unix.waitpid [Unix.WNOHANG]) p.p_pid with
   | 0, _ -> None
-  | _, Unix.WEXITED code -> Some (exit_status p code)
-  | _, _ -> dontwait p
+  | _, return -> Some (exit_status p return)
 
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
@@ -297,34 +320,24 @@ let wait_one processes =
     (* No waiting for any child pid on Windows, this is highly sub-optimal
        but should at least work. Todo: C binding for better behaviour *)
     let p = List.hd processes in
-    let rec aux () = match Unix.waitpid [] p.p_pid with
-      | _, Unix.WEXITED code ->
-        p, exit_status p code
-      | _ -> aux ()
-    in
-    aux ()
+    p, wait p
   else
   try
     let p =
       List.find (fun p -> Hashtbl.mem dead_childs p.p_pid) processes
     in
-    let code = Hashtbl.find dead_childs p.p_pid in
+    let return = Hashtbl.find dead_childs p.p_pid in
     Hashtbl.remove dead_childs p.p_pid;
-    p, exit_status p code
+    p, exit_status p return
   with Not_found ->
     let rec aux () =
+      let pid, return = safe_wait (List.hd processes).p_pid Unix.wait () in
       try
-        match Unix.wait () with
-        | pid, Unix.WEXITED code ->
-          (try
-             let p = List.find (fun p -> p.p_pid = pid) processes in
-             p, exit_status p code
-           with Not_found ->
-           Hashtbl.add dead_childs pid code;
-           aux ())
-        | _ -> aux ()
-      with Unix.Unix_error (Unix.EINTR,_,_) ->
-        aux () (* Happens on handled signal *)
+        let p = List.find (fun p -> p.p_pid = pid) processes in
+        p, exit_status p return
+      with Not_found ->
+        Hashtbl.add dead_childs pid return;
+        aux ()
     in
     aux ()
 
@@ -449,6 +462,7 @@ module Job = struct
     | Done x -> x
     | Run (_command,cont) ->
       let result = { r_code = 0;
+                     r_signal = None;
                      r_duration = 0.;
                      r_info = [];
                      r_stdout = [];

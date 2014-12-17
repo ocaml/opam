@@ -57,7 +57,8 @@ type t = {
 
 (** Process results *)
 type result = {
-  r_code     : int;         (** Process exit code *)
+  r_code     : int;         (** Process exit code, or 256 on error *)
+  r_signal   : int option;  (** Signal received if the processed was killed *)
   r_duration : float;       (** Process duration *)
   r_info     : (string * string) list; (** Process info *)
   r_stdout   : string list; (** Content of stdout dump file *)
