@@ -803,14 +803,8 @@ module API = struct
            (List.rev_map OpamFormula.short_string_of_atom not_installed))
         (match not_installed with [_] -> "is" | _ -> "are");
     let t, full_orphans, orphan_versions = orphans ~changes:to_upgrade t in
-    let conflicts = to_upgrade %% full_orphans in
-    if not (OpamPackage.Set.is_empty conflicts) then
-      OpamGlobals.error_and_exit
-        "These packages would need to be recompiled, but they are no longer available \
-         upstream:\n\
-        \  %s\n\
-         Please run \"opam upgrade\" without any arguments to get to a clean state."
-        (OpamPackage.Set.to_string conflicts);
+    let to_remove = to_upgrade %% full_orphans in
+    let to_upgrade = to_upgrade -- full_orphans in
     let requested = names in
     let action = Upgrade to_reinstall in
     let upgrade_atoms =
@@ -827,7 +821,7 @@ module API = struct
       ~orphans:(full_orphans ++ orphan_versions)
       (preprocess_request t full_orphans orphan_versions
          { wish_install = [];
-           wish_remove  = [];
+           wish_remove  = OpamSolution.atoms_of_packages to_remove;
            wish_upgrade = upgrade_atoms;
            criteria = `Default; })
 
