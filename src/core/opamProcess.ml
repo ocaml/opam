@@ -256,6 +256,62 @@ let run_background command =
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
     ~allow_stdin ?dir cmd args
 
+let verbose_print_cmd p =
+  OpamGlobals.msg "%s %s %s\n"
+    (OpamGlobals.colorise `yellow "+")
+    p.p_name
+    (String.concat " " (List.map (Printf.sprintf "%S") p.p_args))
+
+let verbose_print_out =
+  let pfx = OpamGlobals.colorise `yellow "- " in
+  fun s ->
+    print_string pfx;
+    print_string s;
+    print_char '\n'
+
+(** Semi-synchronous printing of the output of a command *)
+let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
+  let verbose_f = ref None in
+  let stop () = match !verbose_f with
+    | None -> ()
+    | Some (ics,_) ->
+      List.iter close_in_noerr ics;
+      verbose_f := None
+  in
+  let set files =
+    stop ();
+    (* implem relies on sigalrm, not implemented on win32.
+       This will fall back to buffered output. *)
+    if OpamGlobals.os () = OpamGlobals.Win32 then () else
+    let ics =
+      List.map
+        (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
+        files
+    in
+    let f () =
+      List.iter (fun ic ->
+          try while true do verbose_print_out (input_line ic) done
+          with End_of_file -> flush stdout
+        ) ics
+    in
+    verbose_f := Some (ics, f)
+  in
+  let print () = match !verbose_f with
+    | Some (_, f) -> f ()
+    | None -> ()
+  in
+  let isset () = !verbose_f <> None in
+  let flush_and_stop () = print (); stop () in
+  set, print, isset, flush_and_stop
+
+let set_verbose_process p =
+  if p.p_verbose then
+    let fs = OpamMisc.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
+    if fs <> [] then (
+      verbose_print_cmd p;
+      set_verbose_f fs
+    )
+
 let exit_status p return =
   let duration = Unix.gettimeofday () -. p.p_time in
   let stdout = option_default [] (option_map read_lines p.p_stdout) in
@@ -268,13 +324,12 @@ let exit_status p return =
     | Unix.WSIGNALED s -> None, Some s
     | _ -> None, None
   in
-  if p.p_verbose then
-    (OpamGlobals.msg "%s %s %s\n" (OpamGlobals.colorise `yellow "+")
-       p.p_name (String.concat " " (List.map (Printf.sprintf "%S") p.p_args));
-     let pfx = OpamGlobals.colorise `yellow "- " in
-     let p s = print_string pfx; print_string s; print_newline () in
-     List.iter p stdout;
-     List.iter p stderr;
+  if isset_verbose_f () then
+    stop_verbose_f ()
+  else if p.p_verbose then
+    (verbose_print_cmd p;
+     List.iter verbose_print_out stdout;
+     List.iter verbose_print_out stderr;
      flush Pervasives.stdout);
   let info =
     make_info ?code ?signal
@@ -290,21 +345,37 @@ let exit_status p return =
     r_cleanup  = cleanup;
   }
 
-let rec safe_wait fallback_pid f x =
-  match
-    try f x with
-    | Unix.Unix_error (Unix.EINTR,_,_) -> (* handled signal *)
-      safe_wait fallback_pid f x
-    | Unix.Unix_error (Unix.ECHILD,_,_) ->
-      log "Warn: no child to wait for %d" fallback_pid;
-      fallback_pid, Unix.WEXITED 256
-  with
-  | _, Unix.WSTOPPED _ ->
-    (* shouldn't happen as we don't use WUNTRACED *)
-    safe_wait fallback_pid f x
-  | r -> r
+let safe_wait fallback_pid f x =
+  let sh =
+    if isset_verbose_f () then
+      let hndl _ = print_verbose_f () in
+      Some (Sys.signal Sys.sigalrm (Sys.Signal_handle hndl))
+    else None
+  in
+  let rec aux () =
+    if sh <> None then ignore (Unix.alarm 1);
+    match
+      try f x with
+      | Unix.Unix_error (Unix.EINTR,_,_) -> aux () (* handled signal *)
+      | Unix.Unix_error (Unix.ECHILD,_,_) ->
+        log "Warn: no child to wait for %d" fallback_pid;
+        fallback_pid, Unix.WEXITED 256
+      with
+      | _, Unix.WSTOPPED _ ->
+        (* shouldn't happen as we don't use WUNTRACED *)
+        aux ()
+      | r -> r
+  in
+  let r = aux () in
+  match sh with
+  | Some sh ->
+    ignore (Unix.alarm 0); (* cancels the alarm *)
+    Sys.set_signal Sys.sigalrm sh;
+    r
+  | None -> r
 
 let wait p =
+  set_verbose_process p;
   let _, return = safe_wait p.p_pid (Unix.waitpid []) p.p_pid in
   exit_status p return
 

@@ -198,8 +198,8 @@ module Make (G : G) = struct
         M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
       in
       let process,result =
-        try match List.map fst processes with
-          | [p] -> p, OpamProcess.wait p
+        try match processes with
+          | [p,_] -> p, OpamProcess.wait p
           | _ -> OpamProcess.wait_one (List.map fst processes)
         with e -> fail (fst (snd (List.hd processes))) e
       in
