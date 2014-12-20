@@ -1607,7 +1607,7 @@ module API = struct
           try OpamPinCommand.edit t name
           with Not_found ->
             (OpamGlobals.error "No valid metadata available.";
-             ignore (unpin ~state:t name);
+             ignore (unpin ~state:t [name]);
              OpamGlobals.exit 1)
         else None
       in
@@ -1621,7 +1621,7 @@ module API = struct
     let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
-      | None -> OpamGlobals.msg "Package metadata unchanged."
+      | None -> OpamGlobals.msg "Package metadata unchanged.\n"
       | Some true ->
         if action then post_pin_action t name
       | Some false ->
@@ -1629,10 +1629,25 @@ module API = struct
         let t = OpamState.load_state "pin-edit-2" in
         if action then post_pin_action t name
 
-    let unpin ?(action=true) name =
-      if unpin name then
+    let unpin ?(action=true) names =
+      let reinstall = unpin names in
+      if action && reinstall <> [] then
         with_switch_backup "pin-reinstall" @@ fun t ->
-        if action then post_pin_action t name
+        let t,atoms =
+          List.fold_left (fun (t,atoms) name ->
+              try
+                let nv = OpamPackage.max_version t.installed name in
+                let avail = Lazy.force t.available_packages in
+                if OpamPackage.Set.mem nv avail then
+                  {t with reinstall = OpamPackage.Set.add nv t.reinstall},
+                  (name, Some (`Eq, OpamPackage.version nv))::atoms
+                else
+                  t, (name, None)::atoms
+              with Not_found -> t, atoms
+            )
+            (t,[]) names
+        in
+        upgrade_t ~ask:true atoms t
 
     let list = list
   end
@@ -1773,8 +1788,8 @@ module SafeAPI = struct
     let edit ?action name =
       switch_lock (fun () -> API.PIN.edit ?action name)
 
-    let unpin ?action name =
-      switch_lock (fun () -> API.PIN.unpin ?action name)
+    let unpin ?action names =
+      switch_lock (fun () -> API.PIN.unpin ?action names)
 
     let list ~short () =
       read_lock (fun () -> API.PIN.list ~short ())

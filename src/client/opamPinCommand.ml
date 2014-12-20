@@ -225,39 +225,43 @@ let pin name pin_option =
     else Some false
   else None
 
-let unpin ?state name =
-  log "unpin %a" (slog OpamPackage.Name.to_string) name;
+let unpin ?state names =
+  log "unpin %a"
+    (slog @@ String.concat " " @* List.map OpamPackage.Name.to_string) names;
   let t = match state with
     | None -> OpamState.load_state "pin"
     | Some t -> t
   in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
-  let pins = OpamFile.Pinned.safe_read pin_f in
-
-  try
-    let current = OpamPackage.Name.Map.find name pins in
-    let is_installed = OpamState.is_name_installed t name in
-    let needs_reinstall = match current with
-      | Version _ -> false
-      | _ -> is_installed
-    in
-    if not is_installed then
-      OpamState.remove_overlay t name;
-    let pins = OpamPackage.Name.Map.remove name pins in
-    update_config t name pins;
-
-    OpamGlobals.msg "%s is now %a from %s %s\n"
-      (OpamPackage.Name.to_string name)
-      (OpamGlobals.acolor `bold) "unpinned"
-      (string_of_pin_kind (kind_of_pin_option current))
-      (string_of_pin_option current);
-
-    needs_reinstall
-
-  with Not_found ->
-    OpamGlobals.note "%s is not pinned." (OpamPackage.Name.to_string name);
-    false
-
+  let pins, needs_reinstall =
+    List.fold_left (fun (pins, needs_reinstall) name ->
+        try
+          let current = OpamPackage.Name.Map.find name pins in
+          let is_installed = OpamState.is_name_installed t name in
+          let pins = OpamPackage.Name.Map.remove name pins in
+          let needs_reinstall = match current with
+            | Version _ -> needs_reinstall
+            | _ when is_installed -> name::needs_reinstall
+            | _ -> needs_reinstall
+          in
+          if not is_installed then
+            OpamState.remove_overlay t name;
+          OpamGlobals.msg "%s is now %a from %s %s\n"
+            (OpamPackage.Name.to_string name)
+            (OpamGlobals.acolor `bold) "unpinned"
+            (string_of_pin_kind (kind_of_pin_option current))
+            (string_of_pin_option current);
+          pins, needs_reinstall
+        with Not_found ->
+          OpamGlobals.note "%s is not pinned."
+            (OpamPackage.Name.to_string name);
+          pins, needs_reinstall)
+      (OpamFile.Pinned.safe_read pin_f, [])
+      names
+  in
+  OpamFile.Pinned.write pin_f pins;
+  List.iter (cleanup_dev_dirs t) names;
+  needs_reinstall
 
 let list ~short () =
   log "pin_list";

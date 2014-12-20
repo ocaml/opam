@@ -1500,8 +1500,9 @@ let pin ?(unpin_only=false) () =
      It is possible to create a new package if $(i,NAME) does not exist. \
      Its version may then be specified in the source opam file or with \
      $(b,edit).";
-    ["remove"]   , `remove, ["NAME"],
-    "Unpins package $(b,NAME), restoring its definition from the repository, if any.";
+    ["remove"]   , `remove, ["NAMES"],
+    "Unpins packages $(b,NAMES), restoring their definition from the \
+     repository, if any.";
     ["edit"]     , `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the opam file that OPAM will locally use for pinned package \
@@ -1568,10 +1569,16 @@ let pin ?(unpin_only=false) () =
     let action = not no_act in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ~short:print_short ())
-    | Some `remove, [n] ->
-      (match (fst package_name) n with
-       | `Ok name -> `Ok (Client.PIN.unpin ~action name)
-       | `Error e -> `Error (false, e))
+    | Some `remove, names ->
+      let names,errs =
+        List.fold_left (fun (names,errs) n -> match (fst package_name) n with
+          | `Ok name -> name::names,errs
+          | `Error e -> names,e::errs)
+          ([],[]) names
+      in
+      (match errs with
+       | [] -> `Ok (Client.PIN.unpin ~action names)
+       | es -> `Error (false, String.concat "\n" es))
     | Some `edit, [n]  ->
       (match (fst package_name) n with
        | `Ok name -> `Ok (Client.PIN.edit ~action name)

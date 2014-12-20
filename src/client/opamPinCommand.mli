@@ -19,7 +19,7 @@
 open OpamTypes
 
 (** Pin a package. Returns [Some is_same_version] if the package should be
-    reinstalled (or upgraded if [is_same_version] is false *)
+    reinstalled (or upgraded if [is_same_version] is false) *)
 val pin: name -> pin_option -> bool option
 
 (** Let the user edit a pinned package's opam file.
@@ -28,8 +28,8 @@ val pin: name -> pin_option -> bool option
     succeed in producing one. *)
 val edit: OpamState.state -> name -> bool option
 
-(** Unpin a package. Returns true if the package should be rebuilt *)
-val unpin: ?state:OpamState.state -> name -> bool
+(** Unpin packages. Returns the list of packages that should be rebuilt *)
+val unpin: ?state:OpamState.state -> name list -> name list
 
 (** List the pinned packages. *)
 val list: short:bool -> unit -> unit
