@@ -153,7 +153,7 @@ module API: sig
 
     val edit: ?action:bool -> OpamPackage.Name.t -> unit
 
-    val unpin: ?action:bool -> OpamPackage.Name.t -> unit
+    val unpin: ?action:bool -> OpamPackage.Name.t list -> unit
 
     (** List the current pinned packages. *)
     val list: short:bool -> unit -> unit
