@@ -18,6 +18,8 @@
    all the global OPAM variables can be set using environment variables
    using OPAM<variable> *)
 
+open OpamCompat
+
 let check ?(warn=true) var = ref (
     try
       match String.lowercase (OpamMisc.getenv ("OPAM"^var)) with

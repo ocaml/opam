@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamProcess.Job.Op
+open OpamCompat
 
 exception Process_error of OpamProcess.result
 exception Internal_error of string

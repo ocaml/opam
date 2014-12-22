@@ -16,6 +16,8 @@
 
 open OpamTypes
 
+include OpamCompat
+
 exception Lexer_error of string
 
 let download_map fn = function

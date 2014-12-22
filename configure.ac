@@ -25,6 +25,8 @@ AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.00.0])
 AC_SUBST(ocaml_4,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.01.0])
 AC_SUBST(ocaml_4_01,"$ax_compare_version")
+AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
+AC_SUBST(ocaml_4_02,"$ax_compare_version")
 
 AC_PROG_OCAMLLEX
 AC_PROG_OCAMLYACC

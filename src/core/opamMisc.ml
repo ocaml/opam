@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 module type SET = sig
   include Set.S
   val map: (elt -> elt) -> t -> t
@@ -69,7 +71,11 @@ let string_of_list f = function
     Buffer.add_string buf " }";
     Buffer.contents buf
 
-let string_map f s = String.map f s
+let string_map f s =
+  let len = String.length s in
+  let b = Bytes.create len in
+  for i = 0 to len - 1 do Bytes.set b i (f s.[i]) done;
+  Bytes.to_string b
 
 let rec pretty_list ?(last="and") = function
   | []    -> ""
