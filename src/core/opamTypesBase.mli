@@ -18,6 +18,8 @@
     basic OPAM types present in OpamTypes.ml *)
 open OpamTypes
 
+include module type of OpamCompat
+
 (** {2 Exceptions} *)
 exception Lexer_error of string
 

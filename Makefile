@@ -98,21 +98,30 @@ $(OPAM_FULL).tar.gz:
 	rm -f $(OPAM_FULL) $(OPAM_FULL).tar.gz
 	ln -s .
 
-prefast: ALWAYS
-	@if [ -n "$(wildcard src/*/*.cmi)" ]; then $(MAKE) -C src clean; fi
-	$(MAKE) -C src core/opamGitVersion.ml core/opamScript.ml
+fastlink:
+	@$(foreach b,opam opam-admin opam-installer opam-check,\
+	   ln -sf ../_obuild/$b/$b.asm src/$b;)
+	@$(foreach l,core solver repositories client,\
+	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
+	   ln -sf $(addprefix ../../,\
+	        $(foreach e,o cmo cmx cmi cmt cmti,$(wildcard _obuild/opam-$l/*.$e)))\
+	      src/$l/;)
+
+rmartefacts: ALWAYS
+	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
+	@$(foreach l,core solver repositories client,\
+	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
+	   $(foreach e,o cmo cmx cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
+
+prefast: rmartefacts src/core/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
 	@ocp-build -init
 
 fast: prefast
 	@ocp-build
-	@ln -sf ../_obuild/opam/opam.asm src/opam
-	@ln -sf ../_obuild/opam-admin/opam-admin.asm src/opam-admin
-	@ln -sf ../_obuild/opam-installer/opam-installer.asm src/opam-installer
-	@ln -sf ../_obuild/opam-check/opam-check.asm src/opam-check
+	@$(MAKE) fastlink
 
-fastclean:
+fastclean: rmartefacts
 	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null
-	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
 
 cold:
 	./shell/bootstrap-ocaml.sh

@@ -1,0 +1,35 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2014 OCamlPro                                             *)
+(*                                                                        *)
+(*  All rights reserved.This file is distributed under the terms of the   *)
+(*  GNU Lesser General Public License version 3.0 with linking            *)
+(*  exception.                                                            *)
+(*                                                                        *)
+(*  OPAM is distributed in the hope that it will be useful, but WITHOUT   *)
+(*  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY    *)
+(*  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public        *)
+(*  License for more details.                                             *)
+(*                                                                        *)
+(**************************************************************************)
+
+module Bytes : sig
+  include module type of String
+  val empty : t
+  val of_string : string -> t
+  val to_string : t -> string
+  val sub_string : t -> int -> int -> string
+  val blit_string : string -> int -> t -> int -> int -> unit
+  external unsafe_to_string : t -> string = "%identity"
+  external unsafe_of_string : string -> t = "%identity"
+end
+
+module Buffer : sig
+  include module type of Buffer with type t = Buffer.t
+  val add_subbytes : t -> Bytes.t -> int -> int -> unit
+end
+
+module Filename : sig
+  include module type of Filename
+  val get_temp_dir_name : unit -> string
+end

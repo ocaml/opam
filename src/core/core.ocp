@@ -1,6 +1,7 @@
 begin library "opam-core"
   sort = false
   files   = [
+    "opamCompat.ml"
     "opamScript.ml"
     "opamJson.ml"
     "opamMisc.ml"

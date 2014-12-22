@@ -112,7 +112,6 @@ type text_style =
 (** not nestable *)
 val colorise : text_style -> string -> string
 
-val indent_left : string -> int -> string
 val acolor : text_style -> out_channel -> string -> unit
 val acolor_w : int -> text_style -> out_channel -> string -> unit
 val timestamp : unit -> string

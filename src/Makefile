@@ -24,6 +24,10 @@ endif
 ifeq ($(OCAML_4_01),true)
   OCAMLFLAGS += -short-paths
 endif
+ifeq ($(OCAML_4_02),true)
+  OCAMLFLAGS += -safe-string
+  OCAMLLDFLAGS += -safe-string
+endif
 
 export OCAMLFLAGS OCAMLLDFLAGS
 
@@ -85,7 +89,7 @@ ALWAYS:
 	@
 
 # -- opam-core -- #
-opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamGitVersion.ml ALWAYS
+opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamGitVersion.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
 
 # Only rebuit after a 'make clean'
 core/opamGitVersion.ml: ../shell/get-git-id.ml
@@ -97,7 +101,17 @@ core/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
 	ocaml ../shell/crunch.ml "switch_eval"  < ../shell/opam_switch_eval.sh >> $@
 
+ifeq ($(OCAML_4_02),true)
+  COMPATV = 4.02
+else
+  COMPATV = 4.01
+endif
+
+core/opamCompat.%: core/opamCompat.%.$(COMPATV)
+	cp -f $< $@
+
 SRC_core = \
+  opamCompat.ml \
   opamJson.ml \
   opamLineLexer.mll \
   opamMisc.ml \
@@ -261,7 +275,7 @@ export OCAMLMAKEFILE
 
 clean-aux:
 	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
-	rm -f core/opamGitVersion.ml core/opamScript.ml
+	rm -f core/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
 
 clean: clean-aux
 
