@@ -38,13 +38,15 @@ META
 Makefile.config
 config.log
 config.status
-src/core/opamGitVersion.ml
+src/client/opamGitVersion.ml
 src/core/opamScript.ml
 src/core/opamVersion.ml
 src/core/opamLexer.ml
 src/core/opamLineLexer.ml
 src/core/opamParser.ml
 src/core/opamParser.mli
+src/core/opamCompat.ml
+src/core/opamCompat.mli
 src/opam
 src/opam-admin
 src/opam-installer

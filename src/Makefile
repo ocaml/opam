@@ -89,12 +89,7 @@ ALWAYS:
 	@
 
 # -- opam-core -- #
-opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamGitVersion.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
-
-# Only rebuit after a 'make clean'
-core/opamGitVersion.ml: ../shell/get-git-id.ml
-	cd .. && ocaml shell/get-git-id.ml src/$@
-	touch $@
+opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
 
 core/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
@@ -116,7 +111,6 @@ SRC_core = \
   opamLineLexer.mll \
   opamMisc.ml \
   opamScript.ml \
-  opamGitVersion.ml \
   opamVersion.ml \
   opamGlobals.ml \
   opamProcess.ml \
@@ -200,11 +194,16 @@ endef
 export PROJ_client
 
 # -- opam binary -- #
-opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
+
+client/opamGitVersion.ml: ALWAYS
+	cd .. && ocaml shell/get-git-id.ml src/$@
+	touch $@
+
+opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) client/opamGitVersion.ml ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
 
 define PROJ_opam
-  SOURCES = $(call addmli,client,opamArg.ml opamMain.ml)
+  SOURCES = $(call addmli,client,opamGitVersion.ml opamArg.ml opamMain.ml)
   RESULT = opam
   LIBS = $(LIBS) $(OPAMLIB)
 endef
@@ -275,7 +274,7 @@ export OCAMLMAKEFILE
 
 clean-aux:
 	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
-	rm -f core/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
+	rm -f client/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
 
 clean: clean-aux
 

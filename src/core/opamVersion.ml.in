@@ -70,8 +70,12 @@ let message () =
     Sys.argv.(0) current_raw;
   exit 0
 
+let gitversion = ref None
+
+let set_git s = gitversion := Some s
+
 let git =
-  match OpamGitVersion.version with
+  match !gitversion with
   | None   -> None
   | Some v -> Some (of_string v)
 

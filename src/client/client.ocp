@@ -9,7 +9,6 @@ begin library "opam-client"
     "opamRepositoryCommand.ml"
     "opamPinCommand.ml"
     "opamClient.ml"
-    "opamArg.ml"
   ]
 
   requires = [
@@ -24,6 +23,8 @@ end
 begin program "opam"
 
   files    = [
+    "opamGitVersion.ml"
+    "opamArg.ml"
     "opamMain.ml"
   ]
   requires = [

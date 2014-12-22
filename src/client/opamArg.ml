@@ -1888,6 +1888,7 @@ let check_and_run_external_commands () =
     ()
 
 let run default commands =
+  OpamMisc.Option.iter OpamVersion.set_git OpamGitVersion.version;
   Sys.catch_break true;
   let () =
     try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
