@@ -4,4 +4,4 @@ preinstalled: true
 env: [
   [ TEST="1" ]
 ]
-packages: [ "P4" ]
+packages: [ "P1" "P2" "P3" "P4" ]

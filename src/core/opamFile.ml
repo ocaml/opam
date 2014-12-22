@@ -1840,6 +1840,13 @@ module X = struct
     let env t = t.env
     let tags t = t.tags
 
+    let with_src t src = {t with src}
+    let with_patches t patches = {t with patches}
+    let with_configure t configure = {t with configure}
+    let with_make t make = {t with make}
+    let with_build t build = {t with build}
+    let with_packages t packages = {t with packages}
+
     let of_channel filename ic =
       let file = Syntax.of_channel filename ic in
       let permissive = Syntax.check file valid_fields in
@@ -1921,11 +1928,6 @@ module X = struct
       if build <> [] && (configure @ make) <> [] && not permissive then
         OpamGlobals.error_and_exit
           "%s: You cannot use 'build' and 'make'/'configure' fields at the same time."
-          (OpamFilename.to_string filename);
-      if not preinstalled && src = None && not permissive then
-        OpamGlobals.error_and_exit
-          "%s: You should either specify an url (with 'sources')  or use 'preinstalled: \
-           true' to pick the already installed compiler version."
           (OpamFilename.to_string filename);
       { opam_version; name; version; src; kind;
         patches; configure; make; build;

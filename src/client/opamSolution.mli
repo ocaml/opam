@@ -55,11 +55,14 @@ val check_solution: OpamState.state -> solver_result -> unit
 
 (** {2 Atoms} *)
 
-(** Return an atom with a string version constraint *)
+(** Return an atom with a strict version constraint *)
 val eq_atom: name -> version -> atom
 
 (** Return a simple atom, with no version constrain, from a package*)
 val atom_of_package: package -> atom
+
+(** Returns an atom with a strict version constraint from a package *)
+val eq_atom_of_package: package -> atom
 
 (** Return a list of simple atoms (ie. with no version constraints)
     from a set of packages *)

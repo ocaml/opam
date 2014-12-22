@@ -675,7 +675,17 @@ module API = struct
       List.rev_append eqnames
         (OpamSolution.atoms_of_packages
            (t.installed_roots %% Lazy.force t.available_packages)) in
+    let base_packages =
+      let comp = OpamState.compiler_comp t t.compiler in
+      OpamFormula.to_conjunction (OpamFile.Comp.packages comp) in
+    let base_packages =
+      List.map (fun atom ->
+          try OpamPackage.Set.find (OpamFormula.check atom) t.installed
+              |> OpamSolution.eq_atom_of_package
+          with Not_found -> atom)
+        base_packages in
     let wish_install = List.rev_append add_wish_install wish_install in
+    let wish_install = List.rev_append base_packages wish_install in
     let uninstalled_eqnames =
       List.filter (fun (name,_) -> not (OpamState.is_name_installed t name))
         eqnames in

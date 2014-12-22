@@ -79,8 +79,11 @@ let sum stats =
 let eq_atom name version =
   name, Some (`Eq, version)
 
+let eq_atom_of_package nv =
+  eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+
 let eq_atoms_of_packages set =
-  List.rev_map (fun nv -> eq_atom (OpamPackage.name nv) (OpamPackage.version nv)) (OpamPackage.Set.elements set)
+  List.rev_map eq_atom_of_package (OpamPackage.Set.elements set)
 
 let atom_of_package nv =
   OpamPackage.name nv, None

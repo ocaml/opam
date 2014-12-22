@@ -222,11 +222,19 @@ let print_cycles cycles =
 
 let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
   let open Algo.Diagnostic in
+  let is_base cpkg = cpkg.Cudf.keep = `Keep_version in
   match r with
   | Conflict (i,j,_) ->
     if is_dose_request i || is_dose_request j then
       let a = if is_dose_request i then j else i in
       if is_dose_request a then [] else
+      if is_base a then
+        let str =
+          Printf.sprintf "Package %s is part of the base for this compiler \
+                          and can't be changed"
+            (OpamPackage.to_string (cudf2opam a)) in
+        [str]
+      else
         let str =
           Printf.sprintf "Conflicting query for package %s"
             (OpamPackage.to_string (cudf2opam a)) in
@@ -237,6 +245,13 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
       let nvj = cudf2opam j in
       min nvi nvj, max nvi nvj in
     if i.Cudf.package = j.Cudf.package then
+      if is_base j then
+        let str =
+          Printf.sprintf "Package %s is part of the base for this compiler \
+                          and can't be changed"
+            (OpamPackage.to_string nvb) in
+        [str]
+      else
       let str = Printf.sprintf "Conflicting version constraints for %s"
           (OpamPackage.name_to_string nva) in
       [str]

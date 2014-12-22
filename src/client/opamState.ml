@@ -924,7 +924,7 @@ let unavailable_reason t (name, _ as atom) =
   with Not_found ->
     unknown_package t atom
 
-let base_packages =
+let static_base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let create_system_compiler_description root = function
@@ -940,7 +940,8 @@ let create_system_compiler_description root = function
       let f =
         OpamFile.Comp.create_preinstalled
           OpamCompiler.system version
-          (if not !OpamGlobals.no_base_packages then base_packages else [])
+          (if !OpamGlobals.no_base_packages then []
+           else static_base_packages)
           [ "CAML_LD_LIBRARY_PATH", "=",
             "%{lib}%/stublibs" ^ String.make 1 OpamSystem.path_sep ^
             Filename.concat dir "stublibs" ] in
@@ -1033,7 +1034,7 @@ let get_compiler_packages t comp =
       if not !OpamGlobals.no_base_packages then
         pkg_not
       else
-        List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
+        List.filter (fun n -> not (List.mem n static_base_packages)) pkg_not in
     if pkg_not <> [] then (
       List.iter
         (OpamPackage.Name.to_string @> OpamGlobals.error "Package %s not found")
@@ -1043,6 +1044,12 @@ let get_compiler_packages t comp =
 
     pkg_available
   )
+
+let base_packages t =
+  let comp = compiler_comp t t.compiler in
+  let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
+  OpamPackage.packages_of_names t.installed
+    (OpamPackage.Name.Set.of_list (List.map fst atoms))
 
 let is_compiler_installed t comp =
   OpamSwitch.Map.exists (fun _ c -> c = comp) t.aliases
@@ -1061,6 +1068,7 @@ let universe t action =
         else map)
       t.pinned t.opams
   in
+  let base = base_packages t in
   {
     u_packages  = t.installed ++ t.packages;
     u_action    = action;
@@ -1071,6 +1079,7 @@ let universe t action =
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;
+    u_base      = base;
   }
 
 let check_base_packages t =
@@ -2371,7 +2380,9 @@ let install_compiler t ~quiet:_ switch compiler =
     install_global_config t.root switch;
 
     let comp = OpamFile.Comp.read comp_f in
-    if not (OpamFile.Comp.preinstalled comp) then begin
+    if not (OpamFile.Comp.preinstalled comp) &&
+       OpamFile.Comp.src comp <> None
+    then begin
 
       (* Install the compiler *)
       let comp_src = match OpamFile.Comp.src comp with

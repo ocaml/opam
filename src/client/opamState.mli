@@ -271,8 +271,8 @@ val find_packages_by_name: state -> name -> package_set option
 (** Return a map from package names to package installed version *)
 val installed_map: state -> version name_map
 
-(** Return the base packages *)
-val base_packages: name list
+(** Return the installed base packages of the current compiler *)
+val base_packages: state -> package_set
 
 (** Return all the collection of installed packages, for all the
     available packages *)
