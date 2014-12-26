@@ -347,7 +347,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
     in
     let nv = OpamPackage.create name version in
     let opam = if template then OPAM.template nv else OPAM.create nv in
-    OPAM.write (pkg_overlay Ov.opam) opam;
+    OPAM.write (pkg_overlay (if template then Ov.tmp_opam else Ov.opam)) opam;
     URL.write (pkg_overlay Ov.url) url
 
 let overlay_of_name t name =
