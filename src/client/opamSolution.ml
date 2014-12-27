@@ -445,7 +445,7 @@ let parallel_apply t action action_graph =
   | `Error err ->
     match err with
     | Aborted -> err
-    | Error (successful, failed, _remaining) ->
+    | Error (successful, failed, remaining) ->
       let filter_graph g l =
         if l = [] then PackageActionGraph.create () else
         let g = PackageActionGraph.copy g in
@@ -476,6 +476,10 @@ let parallel_apply t action action_graph =
       in
       OpamGlobals.msg "\n";
       OpamGlobals.header_msg "Error report";
+      print_actions (fun _ -> true)
+        (Printf.sprintf "The following actions were %s"
+           (OpamGlobals.colorise `yellow "aborted"))
+        (filter_graph action_graph remaining);
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions %s"
            (OpamGlobals.colorise `red "failed"))

@@ -262,6 +262,7 @@ let timestamp () =
 
 let log section ?(level=1) fmt =
   if !debug && level <= !debug_level then
+    let () = flush stdout in
     Printf.fprintf stderr ("%s  %a  " ^^ fmt ^^ "\n%!")
       (timestamp ()) (acolor_w 30 `yellow) section
   else
@@ -314,10 +315,11 @@ let msg fmt =
 
 let status_line fmt =
   let carriage_delete = "\r\027[K" in
+  let endline = if !debug then "\n" else carriage_delete in
   if !display_messages && disp_status_line () then (
     flush stderr;
     Printf.kfprintf
-      (fun ch -> output_string ch carriage_delete (* unflushed *))
+      (fun ch -> output_string ch endline (* unflushed *))
       stdout
       ("%s" ^^ fmt ^^ "%!") carriage_delete
   ) else

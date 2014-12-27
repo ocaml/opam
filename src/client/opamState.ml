@@ -111,7 +111,10 @@ let dot_config t name =
     else
       OpamPath.Switch.config t.root t.switch name
   in
-  OpamFile.Dot_config.safe_read f
+  if OpamFilename.exists f then
+    OpamFile.Dot_config.safe_read f
+  else
+    OpamFile.Dot_config.empty
 
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
@@ -347,7 +350,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
     in
     let nv = OpamPackage.create name version in
     let opam = if template then OPAM.template nv else OPAM.create nv in
-    OPAM.write (pkg_overlay Ov.opam) opam;
+    OPAM.write (pkg_overlay (if template then Ov.tmp_opam else Ov.opam)) opam;
     URL.write (pkg_overlay Ov.url) url
 
 let overlay_of_name t name =
