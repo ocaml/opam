@@ -1284,11 +1284,10 @@ module API = struct
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
-        OpamState.update_switch_config t switch;
+        let t = OpamState.update_switch_config t switch in
 
         (* Finally, load the complete state and install the compiler packages *)
         log "installing compiler packages";
-        let t = OpamState.load_state "init-3" in
         let compiler_packages = OpamState.get_compiler_packages t compiler in
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in

@@ -233,7 +233,7 @@ val install_global_config: dirname -> switch -> unit
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
 
 (** Write the right compiler switch in ~/.opam/config *)
-val update_switch_config: state -> switch -> unit
+val update_switch_config: state -> switch -> state
 
 (** Get the packages associated with the given compiler *)
 val get_compiler_packages: state -> compiler -> atom list
