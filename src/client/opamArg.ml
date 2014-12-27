@@ -1484,7 +1484,7 @@ let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let commands = [
     ["list"]     , `list, [], "Lists pinned packages.";
-    ["add"]      , `add  , ["NAME"; "TARGET"],
+    ["add"]      , `add  , ["PACKAGE"; "TARGET"],
     "Pins package $(i,NAME) to $(i,TARGET), which may be a version, a path, \
      or a url. \
      $(i,NAME) can be omitted if $(i,TARGET) is a local path containing a \
@@ -1583,26 +1583,27 @@ let pin ?(unpin_only=false) () =
       (match (fst package_name) n with
        | `Ok name -> `Ok (Client.PIN.edit ~action name)
        | `Error e -> `Error (false, e))
-    | Some `add, [n] when dev_repo ->
-      (match (fst package_name) n with
-       | `Ok name -> `Ok (Client.PIN.pin name ~edit ~action None)
+    | Some `add, [nv] when dev_repo ->
+      (match (fst package) nv with
+       | `Ok (name,version) ->
+         `Ok (Client.PIN.pin name ~edit ?version ~action None)
        | `Error e -> `Error (false, e))
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
          let pin_option = pin_option_of_string ?kind path in
          `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
-      with Not_found ->
+       with Not_found ->
         `Error (false, Printf.sprintf
                   "No valid package description found at path %s.\n\
                    Please supply at least a package name \
                    (e.g. `opam pin add NAME PATH')"
                   path))
     | Some `add, [n; target] ->
-      (match (fst package_name) n with
-       | `Ok name ->
+      (match (fst package) n with
+       | `Ok (name,version) ->
          let pin_option = pin_option_of_string ?kind:kind target in
-         `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
+         `Ok (Client.PIN.pin name ?version ~edit ~action (Some pin_option))
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand "pin" commands command params
   in

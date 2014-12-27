@@ -114,7 +114,9 @@ let of_string s = match of_string_opt s with
   | None   -> OpamGlobals.error_and_exit "%s is not a valid versioned package name" s
 
 let to_string t =
-  Printf.sprintf "%s%c%s" (Name.to_string t.name) sep (Version.to_string t.version)
+  match Version.to_string t.version with
+  | "" -> Name.to_string t.name
+  | _ -> Printf.sprintf "%s%c%s" (Name.to_string t.name) sep (Version.to_string t.version)
 
 let compare nv1 nv2 =
   match Name.compare nv1.name nv2.name with

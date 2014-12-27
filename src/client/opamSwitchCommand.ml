@@ -400,24 +400,19 @@ let import_t importfile t =
   let solution =
     try
       let _ =
-        let dev_pkgs =
-          OpamPackage.Name.Map.fold (fun n pin acc ->
-              let nv = match pin with
-                | Version v -> OpamPackage.create n v
-                | _ -> OpamPackage.create n (OpamPackage.Version.of_string "pin")
-              in
-              OpamPackage.Set.add nv acc)
-            import_pins OpamPackage.Set.empty in
-        OpamPackage.Name.Map.iter (fun n _ ->
-            let overlay_dir = OpamPath.Switch.Overlay.package t.root t.switch n
+        OpamPackage.Name.Map.iter (fun name _ ->
+            let overlay_dir =
+              OpamPath.Switch.Overlay.package t.root t.switch name
             in
             if not (OpamFilename.exists_dir overlay_dir) then
-              OpamState.add_pinned_overlay t ?version:(pinned_version n) n)
+              OpamState.add_pinned_overlay t ?version:(pinned_version name)
+                name)
           pinned;
         if not (OpamPackage.Name.Map.is_empty pinned) then (
           OpamGlobals.header_msg "Synchronising pinned packages";
-          OpamState.update_dev_packages t dev_pkgs)
-        else OpamPackage.Set.empty
+          OpamState.update_pinned_packages t
+            (OpamPackage.Name.Set.of_list (OpamPackage.Name.Map.keys pinned))
+        ) else OpamPackage.Set.empty
       in
 
       let t =

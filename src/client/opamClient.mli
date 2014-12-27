@@ -148,7 +148,8 @@ module API: sig
     (** Set a package pinning. if [pin_option] is [None], set the package defined
         upstream. If [action], prompt for install/reinstall as appropriate after
         pinning. *)
-    val pin: OpamPackage.Name.t -> ?edit:bool -> ?action:bool ->
+    val pin: OpamPackage.Name.t ->
+      ?edit:bool -> ?version:version -> ?action:bool ->
       pin_option option -> unit
 
     val edit: ?action:bool -> OpamPackage.Name.t -> unit
