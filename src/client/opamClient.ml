@@ -959,15 +959,14 @@ module API = struct
     let dev_packages =
       if repos_only then OpamPackage.Set.empty
       else
-        let all = t.installed %% OpamState.dev_packages t in
         if names = [] then
-          all
+          t.installed %% OpamState.dev_packages t
         else
           OpamPackage.Set.filter (fun nv ->
               let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
               let pkg = OpamPackage.to_string nv in
               List.exists (fun s -> s = name || s = pkg) names
-            ) all in
+            ) (OpamState.dev_packages t) in
     let dev_packages_need_update =
       not (OpamPackage.Set.is_empty dev_packages) in
 
