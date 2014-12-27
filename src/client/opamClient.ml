@@ -959,15 +959,14 @@ module API = struct
     let dev_packages =
       if repos_only then OpamPackage.Set.empty
       else
-        let all = t.installed %% OpamState.dev_packages t in
         if names = [] then
-          all
+          t.installed %% OpamState.dev_packages t
         else
           OpamPackage.Set.filter (fun nv ->
               let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
               let pkg = OpamPackage.to_string nv in
               List.exists (fun s -> s = name || s = pkg) names
-            ) all in
+            ) (OpamState.dev_packages t) in
     let dev_packages_need_update =
       not (OpamPackage.Set.is_empty dev_packages) in
 
@@ -1598,20 +1597,24 @@ module API = struct
            the pinning location"
           (OpamPackage.Name.to_string name)
 
-    let pin name ?(edit=false) ?(action=true) pin_option_opt =
+    let pin name ?(edit=false) ?version ?(action=true) pin_option_opt =
       let pin_option = match pin_option_opt with
         | Some o -> o
         | None ->
           let t = OpamState.load_state "pin-get-upstream" in
           get_upstream t name
       in
-      let needs_reinstall = pin name pin_option in
+      let needs_reinstall = pin name ?version pin_option in
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamGlobals.msg "\n";
-      let nv = OpamState.pinned t name in
-      OpamProcess.Job.run (OpamState.update_dev_package t nv @@| fun _ -> ());
+      OpamProcess.Job.run
+        (OpamState.update_pinned_package t ?fixed_version:version name
+         @@| fun _ -> ());
       OpamGlobals.msg "\n";
-      let empty_opam = OpamState.has_empty_opam t nv in
+      let opam_f = OpamPath.Switch.Overlay.opam t.root t.switch name in
+      let empty_opam = OpamFile.OPAM.(
+          empty = with_name_opt (with_version_opt (read opam_f) None) None
+        ) in
       let needs_reinstall2 =
         if edit || empty_opam then
           try OpamPinCommand.edit t name
@@ -1792,8 +1795,8 @@ module SafeAPI = struct
 
   module PIN = struct
 
-    let pin name ?edit ?action pin_option =
-      switch_lock (fun () -> API.PIN.pin name ?edit ?action pin_option)
+    let pin name ?edit ?version ?action pin_option =
+      switch_lock (fun () -> API.PIN.pin name ?edit ?version ?action pin_option)
 
     let edit ?action name =
       switch_lock (fun () -> API.PIN.edit ?action name)

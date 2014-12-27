@@ -46,17 +46,18 @@ let edit t name =
   let orig_opam =
     try Some (OpamFile.OPAM.read file) with e -> OpamMisc.fatal e; None
   in
-  let empty_opam =
+  let version,empty_opam =
     match orig_opam with
-    | None -> true
+    | None -> None,true
     | Some opam ->
-      try opam = OpamFile.OPAM.create
-            (OpamPackage.create name (OpamFile.OPAM.version opam))
+      Some (OpamFile.OPAM.version opam),
+      try
+        opam = OpamFile.OPAM.create
+          (OpamPackage.create name (OpamFile.OPAM.version opam))
       with OpamSystem.Internal_error _ -> true
   in
-  if empty_opam then
-    if not (OpamFilename.exists temp_file)
-    then OpamState.add_pinned_overlay ~template:true t name;
+  if empty_opam && not (OpamFilename.exists temp_file) then
+    OpamState.add_pinned_overlay ~template:true ?version t name;
   if not (OpamFilename.exists temp_file) then
     OpamFilename.copy ~src:file ~dst:temp_file;
   let rec edit () =
@@ -137,7 +138,7 @@ let update_config t name pins =
   cleanup_dev_dirs t name;
   OpamFile.Pinned.write pin_f pins
 
-let pin name pin_option =
+let pin name ?version pin_option =
   log "pin %a to %a"
     (slog OpamPackage.Name.to_string) name
     (slog string_of_pin_option) pin_option;
@@ -155,7 +156,10 @@ let pin name pin_option =
     | Version v ->
       if not (OpamPackage.Set.mem (OpamPackage.create name v) t.packages) then
         OpamGlobals.error_and_exit "Package %s has no version %s"
-          (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v)
+          (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v);
+      if version <> None && version <> Some v then
+        OpamGlobals.error_and_exit "Inconsistent version request for %s"
+          (OpamPackage.Name.to_string name);
     | _ -> ()
   in
 
@@ -165,7 +169,8 @@ let pin name pin_option =
       let no_changes = pin_option = current in
       if no_changes then
         OpamGlobals.note
-          "Package %s is already pinned to %s. This will reset metadata."
+          "Package %s is already pinned to %s.\n\
+           This will erase any previous custom definition."
           (OpamPackage.Name.to_string name)
           (string_of_pin_option current)
       else
@@ -197,7 +202,7 @@ let pin name pin_option =
   let pinned = OpamPackage.Name.Map.add name pin_option pins in
   update_config t name pinned;
   let t = { t with pinned } in
-  OpamState.add_pinned_overlay t name;
+  OpamState.add_pinned_overlay t ?version name;
 
   if not no_changes then
     OpamGlobals.msg "%s is now %a-pinned to %s\n"

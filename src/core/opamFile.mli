@@ -101,6 +101,8 @@ module OPAM: sig
 
   include IO_FILE
 
+  val empty: t
+
   (** Create an opam file *)
   val create: package -> t
 

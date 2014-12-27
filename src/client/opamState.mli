@@ -354,12 +354,16 @@ val update_dev_packages: state -> package_set -> package_set
     if changed, false otherwise *)
 val update_dev_package: state -> package -> bool OpamProcess.job
 
+(** A subset of update_dev_packages that only takes packages names and only
+    works on pinned packages. Also updates reinstall files *)
+val update_pinned_packages: state -> name_set -> package_set
+
+(** Updates a dev pinned package from its upstream; returns true if changed,
+    false otherwise *)
+val update_pinned_package: state -> ?fixed_version:version -> name -> bool OpamProcess.job
+
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool
-
-(** May be used to check if a given package metadata has just been
-    initialised. Also returns [true] if there is no opam overlay. *)
-val has_empty_opam: state -> package -> bool
 
 (** {2 Configuration files} *)
 
