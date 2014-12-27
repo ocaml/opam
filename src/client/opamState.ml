@@ -2501,7 +2501,9 @@ let install_compiler t ~quiet:_ switch compiler =
 let update_switch_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
-  update_init_scripts { t with switch }  ~global:None
+  let t = load_state "switch-config" in
+  update_init_scripts t ~global:None;
+  t
 
 (* Dev packages *)
 

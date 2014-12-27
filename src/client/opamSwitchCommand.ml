@@ -176,8 +176,7 @@ let remove_t switch ?(confirm = true) t =
     OpamFilename.rmdir comp_dir
 
 let update_global_config t ~warning switch =
-  OpamState.update_switch_config t switch;
-  let t = OpamState.load_state "switch-update-config" in
+  let t = OpamState.update_switch_config t switch in
   if warning then
     OpamState.print_env_warning_at_switch t
 
@@ -271,18 +270,6 @@ let install_packages ~packages switch compiler =
           "Inconsistent set of base compiler packages: \
            %s needed but not included"
           OpamPackage.Name.Set.(to_string (diff to_install_names roots));
-(*
-      let pinned =
-        OpamPackage.Set.fold (fun pkg pins ->
-            OpamPackage.Name.Map.add
-              (OpamPackage.name pkg) (Version (OpamPackage.version pkg))
-              pins)
-          to_install_pkgs
-          OpamPackage.Name.Map.empty in
-      OpamFile.Pinned.write (OpamPath.Switch.pinned t.root t.switch) pinned;
-      let t = { t with pinned } in
-      OpamPackage.Name.Set.iter (OpamState.add_pinned_overlay t) to_install_names;
-*)
       let result =
         OpamSolution.apply ~ask:false t (Switch roots)
           ~requested:roots
