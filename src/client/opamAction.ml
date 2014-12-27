@@ -515,43 +515,6 @@ let remove_package t ~metadata ?keep_build ?silent nv =
   else
     remove_package_aux t ~metadata ?keep_build ?silent nv
 
-(*
-(* Remove all the packages appearing in a solution (and which need to
-   be removed, eg. because of a direct uninstall action or because of
-   recompilation. Ensure any possibly partially removed package is
-   marked as removed (it's the best we can do) *)
-let remove_all_packages t ~metadata sol =
-  let deleted = ref [] in
-  let update_metadata () =
-    let deleted = OpamPackage.Set.of_list !deleted in
-    if metadata then (
-      let installed = OpamPackage.Set.diff t.installed deleted in
-      let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
-      let reinstall = OpamPackage.Set.diff t.reinstall deleted in
-      let t = update_metadata t ~installed ~installed_roots ~reinstall in
-      t, deleted
-    )
-    else t, deleted in
-  let delete nv =
-    if removal_needs_download t nv then extract_package t nv;
-    if !deleted = [] then
-      OpamGlobals.header_msg "Removing Packages";
-    deleted := nv :: !deleted; (* first mark as deleted *)
-    remove_package t ~metadata:false nv
-  in
-  let action n =
-    match n with
-    | To_change (Some nv, _) | To_delete nv | To_recompile nv -> delete nv
-    | To_change (None, _) -> Done () in
-  try
-    PackageActionGraph.Parallel.iter ~jobs:(OpamState.jobs t)
-      ~command:(fun ~pred:_ n -> action n)
-      (PackageActionGraph.mirror sol.to_process);
-    update_metadata (), `Successful ()
-  with e ->
-    update_metadata (), `Exception e
-*)
-
 (* Build and install a package.
    Assumes the package has already been downloaded to its build dir.
 *)

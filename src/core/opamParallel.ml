@@ -106,7 +106,7 @@ module Make (G : G) = struct
       let texts =
         limit_width [] (OpamMisc.terminal_columns ()) (title::texts)
       in
-      OpamGlobals.status_line "%s" (String.concat " " texts)
+      if texts <> [] then OpamGlobals.status_line "%s" (String.concat " " texts)
     in
 
     (* nslots is the number of free slots *)
@@ -121,7 +121,8 @@ module Make (G : G) = struct
           log "Job %a finished" (slog (string_of_int @* V.hash)) n;
           let results = M.add n r results in
           let running = M.remove n running in
-          print_status (M.cardinal results) running;
+          if not (M.is_empty running) then
+            print_status (M.cardinal results) running;
           let new_ready =
             List.filter
               (fun n -> List.for_all (fun n -> M.mem n results) (G.pred g n))
