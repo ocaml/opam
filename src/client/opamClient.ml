@@ -929,17 +929,60 @@ module API = struct
        OpamGlobals.exit 1)
     else
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-    let requested = OpamPackage.Name.Set.empty in
     let action = Upgrade OpamPackage.Set.empty in
-    let solution =
-      OpamSolution.resolve_and_apply ~ask:true t action ~requested
-        ~orphans:(full_orphans ++ orphan_versions)
-        { wish_install = [];
+    let all_orphans = full_orphans ++ orphan_versions in
+    let resolve pkgs =
+      pkgs,
+      OpamSolution.resolve t action ~orphans:all_orphans
+        { wish_install = OpamSolution.atoms_of_packages pkgs;
           wish_remove  = [];
           wish_upgrade = [];
           criteria = `Fixup; }
     in
-    OpamSolution.check_solution t solution
+    let is_success = function
+      | _, Success _ -> true
+      | _, Conflicts cs ->
+        log "conflict: %a"
+          (slog (OpamCudf.string_of_conflict @@ OpamState.unavailable_reason t))
+          cs;
+        false
+    in
+    let requested, solution =
+      let s =
+        log "fixup-1/ keep installed packages with orphaned versions and roots";
+        resolve (t.installed_roots -- full_orphans ++ orphan_versions)
+      in
+      if is_success s then s else
+      let s =
+        log "fixup-2/ keep just roots";
+        resolve (t.installed_roots -- full_orphans)
+      in
+      if is_success s then s else
+      let s =
+        log "fixup-3/ keep packages with orphaned versions";
+        resolve orphan_versions
+      in
+      if is_success s then s else
+      let s =
+        log "fixup-4/ last resort: no constraints. This should never fail";
+        resolve OpamPackage.Set.empty
+      in
+      s
+      (* Could still fail with uninstallable base packages actually, but we
+         can only fix so far *)
+    in
+    let result = match solution with
+      | Conflicts cs -> (* ouch... *)
+        OpamGlobals.msg "%s"
+          (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
+        No_solution
+      | Success solution ->
+        let _, req_rm, _ = orphans ~transitive:false t in
+        OpamSolution.apply ~ask:true t action
+          ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
+          solution
+    in
+    OpamSolution.check_solution t result
 
   let fixup () = with_switch_backup "fixup" fixup_t
 
