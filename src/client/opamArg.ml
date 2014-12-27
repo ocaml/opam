@@ -103,6 +103,8 @@ let create_global_options
   in
   if not (no_self_upgrade) then
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
+  if not safe_mode && Unix.getuid () = 0 then
+    OpamGlobals.warning "Running as root is not recommended";
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
     no_base_packages; external_solver; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; safe_mode; }
