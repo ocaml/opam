@@ -113,7 +113,7 @@ rmartefacts: ALWAYS
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
 
-prefast: rmartefacts src/core/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
+prefast: rmartefacts src/client/opamGitVersion.ml src/core/opamScript.ml src/core/opamCompat.ml src/core/opamCompat.mli
 	@ocp-build -init
 
 fast: prefast
