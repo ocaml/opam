@@ -1,3 +1,9 @@
+1.2.1
+* Rewritten parallel command execution engine
+* Rewritten action resolution mechanism to be based on atomic actions
+* Stronger handling of compiler "base" packages
+* Non-system compiler definitions without source are now allowed
+
 1.2.0
 * Handle locally installed self-upgrade opam binary (#1257)
 * Added `opam list --depends-on` to show reverse dependencies (#693)
