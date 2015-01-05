@@ -94,7 +94,7 @@ module Make (G : G) = struct
           else if len > rem_cols - 5 then
             List.rev
               (Printf.sprintf "%s+%2d"
-                 (String.make (rem_cols - 4) ' ') (List.length ts)
+                 (String.make (rem_cols - 4) ' ') (List.length ts + 1)
                :: acc)
           else
             limit_width (t::acc) (rem_cols - len - 1) ts

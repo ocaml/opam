@@ -259,8 +259,7 @@ Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`, `0.1`
 
 It does, but at the _package_ granularity: it will only be noticeable if you
 build independent packages in the same command. Each package has its own build
-commands, and it's up to them to enable parallelism: you may try to set
-`MAKEFLAGS="-j 4"` but be aware that some packages may fail to build.
+commands, and it's up to them to enable parallelism.
 
 If you are a packager, you may use the `jobs` opam variable, e.g. `make
 "-j%{jobs}%"`.
