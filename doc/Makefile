@@ -19,7 +19,7 @@ endif
 SRCEXTDIR = ../src_ext/lib
 INCLUDE = $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
 
-.PHONY: man html dev-manual tutorials pages
+.PHONY: man html dev-manual pages
 all: man dev html pages
 
 man:
@@ -42,9 +42,6 @@ man-html: man
 	  man2html -r $$f > man-html/$$(basename $$f .1).html;\
 	done
 
-tutorials:
-	$(MAKE) -C tutorials
-
 dev:
 	$(MAKE) -C dev-manual
 
@@ -63,4 +60,3 @@ pages: $(PAGES:.md=.html)
 clean:
 	rm -rf man html man-html pages/*.html
 	$(MAKE) -C dev-manual clean
-	$(MAKE) -C tutorials clean
