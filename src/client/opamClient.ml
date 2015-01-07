@@ -1544,7 +1544,7 @@ module API = struct
 
     let reinstall, not_installed =
       get_installed_atoms t atoms in
-    let t =
+    let to_install =
       if not_installed <> [] then
         if
           force ||
@@ -1553,18 +1553,15 @@ module API = struct
                 (List.map OpamFormula.short_string_of_atom not_installed))
              (match not_installed with [_] -> "is" | _ -> "are");
            OpamGlobals.confirm "Install ?")
-        then
-          (install_t not_installed None false t;
-           if reinstall = [] then OpamGlobals.exit 0
-           else OpamState.load_state "reinstall-installed")
-        else
-          OpamGlobals.exit 1
-      else t
+        then not_installed
+        else OpamGlobals.exit 1
+      else []
     in
 
     let reinstall = OpamPackage.Set.of_list reinstall in
 
-    let atoms = OpamSolution.eq_atoms_of_packages reinstall in
+    let atoms =
+      to_install @ OpamSolution.eq_atoms_of_packages reinstall in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
 
@@ -1573,7 +1570,7 @@ module API = struct
 
     let request =
       preprocess_request t full_orphans orphan_versions
-        { wish_install = OpamSolution.eq_atoms_of_packages reinstall;
+        { wish_install = atoms;
           wish_remove  = [];
           wish_upgrade = [];
           criteria = `Fixup; } in
