@@ -138,6 +138,9 @@ let stats repo =
     ) commits in
   Printf.printf "\n";
   let stats = List.sort compare_stats stats in
+  (* Drop the initial zero values. *)
+  let stats =
+    List.filter (fun s -> not(OpamPackage.Set.is_empty s.packages)) stats in
   (* Because of merges, the number of contributors or packages is not
      monotone.  Filter the list so it is. *)
   let ge s1 s2 = List.length s1.authors <= List.length s2.authors
