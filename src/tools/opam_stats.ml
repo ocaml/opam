@@ -105,6 +105,15 @@ type stats = {
 let compare_stats s1 s2 =
   int_of_float (s1.date -. s2.date)
 
+let rec filter_monotone_loop s0 ge = function
+  | [] -> []
+  | s :: tl -> if ge s0 s then s :: filter_monotone_loop s ge tl
+              else filter_monotone_loop s0 ge tl
+
+let filter_monotone ge = function
+  | [] -> []
+  | s0 :: tl -> s0 :: filter_monotone_loop s0 ge tl
+
 let stats repo =
   let commits = Git.commits repo in
   let n = List.length commits in
@@ -128,7 +137,13 @@ let stats repo =
       { commit; date; authors; packages; names }
     ) commits in
   Printf.printf "\n";
-  List.sort compare_stats stats
+  let stats = List.sort compare_stats stats in
+  (* Because of merges, the number of contributors or packages is not
+     monotone.  Filter the list so it is. *)
+  let ge s1 s2 = List.length s1.authors <= List.length s2.authors
+                 && OpamPackage.Set.cardinal s1.packages
+                   <= OpamPackage.Set.cardinal s2.packages in
+  filter_monotone ge stats
 
 let display stats fn ylabel output =
   let dotfile = output ^ ".dot" in
@@ -139,7 +154,7 @@ let display stats fn ylabel output =
      set timefmt \"%%s\"\n\
      set format x \"%%m/%%Y\"\n\
      set term png size 800,400 font \"Arial,10\"\n\
-     set output '%s.png\n\
+     set output \"%s.png\"\n\
      unset key\n\
      set style data lines\n\
      set style fill transparent solid 0.4\n\
