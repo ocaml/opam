@@ -297,7 +297,9 @@ let parallel_apply t action action_graph =
   let root_installs =
     let names = OpamPackage.names_of_packages t.installed_roots in
     match action with
-    | Init r | Install r | Import r | Switch r  ->
+    | Init ->
+      OpamPackage.Name.Set.union names (OpamState.base_package_names t)
+    | Install r | Import r | Switch r  ->
       OpamPackage.Name.Set.union names r
     | Upgrade _ | Reinstall _ -> names
     | Depends | Remove -> OpamPackage.Name.Set.empty

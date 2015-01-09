@@ -171,14 +171,6 @@ let with_switch_backup command f =
        Sys.argv.(0) (OpamFilename.prettify file);
     raise err
 
-let packages_of_atoms t atoms =
-  let check_atoms nv =
-    let name = OpamPackage.name nv in
-    let atoms = List.filter (fun (n,_) -> n = name) atoms in
-    atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
-  (* All packages satisfying [atoms] *)
-  OpamPackage.Set.filter check_atoms (t.packages ++ t.installed)
-
 module API = struct
 
   (* Prints a list of package details in the 'opam list' format *)
@@ -280,7 +272,7 @@ module API = struct
               with Not_found -> n, None)
           atoms
       in
-      packages_of_atoms t atoms
+      OpamState.packages_of_atoms t atoms
     in
 
     let packages =
@@ -321,10 +313,10 @@ module API = struct
       let deps nv =
         let opam = OpamState.opam t nv in
         let deps =
-          packages_of_atoms t @@ OpamFormula.atoms @@
+          OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
           filter_deps @@ OpamFile.OPAM.depends opam in
         if depopts then
-          deps ++ (packages_of_atoms t @@ OpamFormula.atoms @@
+          deps ++ (OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
                    filter_deps @@ OpamFile.OPAM.depopts opam)
         else deps
       in
@@ -416,7 +408,7 @@ module API = struct
     let t = OpamState.load_state "info" in
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
     let details =
-      let map = OpamPackage.to_map (packages_of_atoms t atoms) in
+      let map = OpamPackage.to_map (OpamState.packages_of_atoms t atoms) in
       OpamPackage.Name.Map.mapi (details_of_package t) map
     in
 
@@ -1288,16 +1280,13 @@ module API = struct
 
         (* Finally, load the complete state and install the compiler packages *)
         log "installing compiler packages";
-        let compiler_packages = OpamState.get_compiler_packages t compiler in
-        let compiler_names =
-          OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
         let solution =
-          OpamSolution.resolve_and_apply ~ask:false t (Init compiler_names)
-            ~requested:compiler_names
+          OpamSolution.resolve_and_apply ~ask:false t Init
+            ~requested:(OpamState.base_package_names t)
             ~orphans:OpamPackage.Set.empty
             { wish_install = [];
               wish_remove  = [];
-              wish_upgrade = compiler_packages;
+              wish_upgrade = [];
               criteria = `Default; }
         in
         OpamSolution.check_solution t solution;
@@ -1311,7 +1300,7 @@ module API = struct
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
   let check_conflicts t atoms =
-    let changes = packages_of_atoms t atoms in
+    let changes = OpamState.packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
@@ -1455,7 +1444,7 @@ module API = struct
     let t, full_orphans, orphan_versions =
       let changes =
         if autoremove then None
-        else Some (packages_of_atoms t atoms) in
+        else Some (OpamState.packages_of_atoms t atoms) in
       orphans ?changes t
     in
 

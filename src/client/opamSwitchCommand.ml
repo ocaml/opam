@@ -148,9 +148,10 @@ let list ~print_short ~installed ~all =
          (OpamGlobals.colorise `bold sys))
   | `Not_set ->
      if not (OpamState.up_to_date_env t) then
-       OpamGlobals.warning
-         "The environment is not in sync with the current switch.\n\
-          You should run: %s" (OpamState.eval_string ())
+       (OpamGlobals.msg "\n";
+        OpamGlobals.warning
+          "The environment is not in sync with the current switch.\n\
+           You should run: %s" (OpamState.eval_string ()))
   | _ -> ()
 
 let remove_t switch ?(confirm = true) t =
@@ -201,7 +202,7 @@ let install_compiler ~quiet switch compiler =
       raise e
 
 
-let install_packages ~packages switch compiler =
+let install_packages ~packages switch =
   (* install the compiler packages *)
   OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
@@ -210,9 +211,7 @@ let install_packages ~packages switch compiler =
     | Some (p, r)  ->
       (OpamSolution.eq_atoms_of_packages p, OpamPackage.names_of_packages r)
     | None         ->
-      let to_install = OpamState.get_compiler_packages t compiler in
-      let roots = OpamPackage.Name.Set.of_list (List.map fst to_install) in
-      to_install, roots in
+      [], OpamState.base_package_names t in
 
   let bad_packages =
     OpamMisc.filter_map (fun (n, c) ->
@@ -304,7 +303,7 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
     update_global_config ~warning t switch;
   switch,
   fun () ->
-    install_packages ~packages:None switch compiler
+    install_packages ~packages:None switch
 
 let install ~quiet ~warning ~update_config switch compiler =
   (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
@@ -322,10 +321,7 @@ let switch_cont ~quiet ~warning switch =
     )
   in
   switch,
-  fun () ->
-    cont ();
-    let t = OpamState.load_state "switch-2" in
-    OpamState.check_base_packages t
+  cont
 
 let switch ~quiet ~warning switch =
   (snd (switch_cont ~quiet ~warning switch)) ()

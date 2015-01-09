@@ -100,6 +100,15 @@ let find_packages_by_name t name =
   if OpamPackage.Set.is_empty r then None
   else Some r
 
+let packages_of_atoms t atoms =
+  let check_atoms nv =
+    let name = OpamPackage.name nv in
+    let atoms = List.filter (fun (n,_) -> n = name) atoms in
+    atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
+  (* All packages satisfying [atoms] *)
+  OpamPackage.Set.filter check_atoms t.packages ++
+  OpamPackage.Set.filter check_atoms t.installed
+
 let installed_map t =
   OpamPackage.Name.Map.map OpamPackage.Version.Set.choose_one
     (OpamPackage.to_map t.installed)
@@ -571,7 +580,8 @@ let global_variable_names = [
   "ocaml-version",        "The version of the currently used OCaml compiler";
   "opam-version",         "The currently running OPAM version";
   "compiler",             "The name of the current OCaml compiler (may be more \
-                           specific than the version, eg: \"4.01.0+fp\"";
+                           specific than the version, eg: \"4.01.0+fp\", or \
+                           \"system\")";
   "preinstalled",         "Whether the compiler was preinstalled on the system, \
                            or installed by OPAM";
   "switch",               "The local name (alias) of the current switch";
@@ -1022,42 +1032,30 @@ let load_env_state call_site =
     package_index; compiler_index;
   }
 
-let get_compiler_packages t comp =
-  let comp = compiler_comp t comp in
-  let available = OpamPackage.to_map (Lazy.force t.available_packages) in
-
-  if OpamPackage.Name.Map.is_empty available then
-    []
-
-  else (
-    let pkg_available, pkg_not =
-      List.partition
-        (fun (n, _) -> OpamPackage.Name.Map.mem n available)
-        (OpamFormula.atoms (OpamFile.Comp.packages comp)) in
-
-    (* check that all packages in [comp] are in [available] except for
-       "base-..."  (depending if "-no-base-packages" is set or not) *)
-    let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
-    let pkg_not =
-      if not !OpamGlobals.no_base_packages then
-        pkg_not
-      else
-        List.filter (fun n -> not (List.mem n static_base_packages)) pkg_not in
-    if pkg_not <> [] then (
-      List.iter
-        (OpamPackage.Name.to_string @> OpamGlobals.error "Package %s not found")
-        pkg_not;
-      OpamGlobals.exit 1
-    );
-
-    pkg_available
-  )
+let base_package_names t =
+  let comp = compiler_comp t t.compiler in
+  let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
+  OpamPackage.Name.Set.of_list (List.map fst atoms)
 
 let base_packages t =
   let comp = compiler_comp t t.compiler in
   let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
-  OpamPackage.packages_of_names t.installed
-    (OpamPackage.Name.Set.of_list (List.map fst atoms))
+  let candidates = packages_of_atoms t atoms in
+
+  List.fold_left (fun acc (name,_ as atom) ->
+      let nvs = OpamPackage.packages_of_name candidates name in
+      if OpamPackage.Set.is_empty nvs then
+        (OpamGlobals.error "Base package %s of compiler %s not found! Ignored."
+           (OpamFormula.short_string_of_atom atom)
+           (OpamCompiler.to_string t.compiler);
+         acc)
+      else
+      let installed = nvs %% t.installed in
+      if OpamPackage.Set.is_empty installed then
+        OpamPackage.Set.add (OpamPackage.Set.choose nvs) acc
+      else
+        installed ++ acc
+    ) OpamPackage.Set.empty atoms
 
 let is_compiler_installed t comp =
   OpamSwitch.Map.exists (fun _ c -> c = comp) t.aliases
@@ -1089,19 +1087,6 @@ let universe t action =
     u_pinned    = pinned_packages t;
     u_base      = base;
   }
-
-let check_base_packages t =
-  let base_packages = get_compiler_packages t t.compiler in
-  let missing_packages =
-    List.filter
-      (fun (name,_) -> not (is_name_installed t name))
-      base_packages in
-  if missing_packages <> [] then (
-    let names = List.map (fst @> OpamPackage.Name.to_string) missing_packages in
-    OpamGlobals.warning "Some of the compiler base packages are not installed. \
-                         You should run:\n\n    $ opam install %s\n"
-      (String.concat " " names)
-  )
 
 let installed_versions t name =
   OpamSwitch.Map.fold (fun switch _ map ->
