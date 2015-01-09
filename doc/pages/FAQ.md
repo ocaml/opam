@@ -45,19 +45,19 @@ Last but not least, the reference on the file formats and more is in the
 
 ---
 
-#### 🐫  `opam init` gives me lots of errors about upgrading
+#### 🐫  Gasp! `opam init` gives me screens fulls of errors about upgrading !
 
-In case you can't or really don't want to switch to 1.2 for some reason, we
-still support OPAM 1.1 via a compatibility layer on the repository, but there
-may be glitches at `opam init`.
-
-For **OPAM 1.1**, you should initialise with:
+This is a glitch, at init only, on the older OPAM 1.1. We recommend upgrading
+to 1.2 -- but 1.1 is still supported through a compatibility layer on the
+repository, just use the following initialisation command to workaround the
+errors:
 
 ```
 opam init https://opam.ocaml.org/1.1
 ```
 
-Or if your repository is already initialised, just run `opam update`.
+If your repository is already initialised, `opam update` should automatically
+redirect to 1.1 and you should be fine.
 
 ---
 
