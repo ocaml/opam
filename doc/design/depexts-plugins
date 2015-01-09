@@ -42,21 +42,21 @@ It is proposed to create a plugin architecture for OS specific external
 dependencies, extending the following module signature for the modules
 implementing a plugin
 
-module type OSDependencyLayer =
-  sig
-    type depexts   (* external dependencies, a CNF involvin OS-specific stuff *)
-    type actions   (* an abstract token corresponding to actions, and a textual
-                      representation of them to present to the user *)
-    type explanations (* in case the depexts cannot be satisfied, explain why *)
+    module type OSDependencyLayer =
+    sig
+      type depexts   (* external dependencies, a CNF involvin OS-specific stuff *)
+      type actions   (* an abstract token corresponding to actions, and a textual
+                        representation of them to present to the user *)
+      type explanations (* in case the depexts cannot be satisfied, explain why *)
+    
+      type result = Can of actions | Cannot of explanations
 
-    type result = Can of actions | Cannot of explanations
-
-    type outcome   (* result of the execution of the OS-specific actions *)
-
-    val satisfied : depexts -> bool    (* are the depexts already satisfied ? *)
-    val cansatisfydepexts : depexts -> result
-    val perform : actions -> outcome
-  end
+      type outcome   (* result of the execution of the OS-specific actions *)
+    
+      val satisfied : depexts -> bool    (* are the depexts already satisfied ? *)
+      val cansatisfydepexts : depexts -> result
+      val perform : actions -> outcome
+    end
 
 Notice that there are two distinct sets of functions for the very different
 cases outlined above: 
@@ -71,3 +71,45 @@ The proposed module interface is purposedly incomplete, as it makes no assumptio
 on the way in which plugins are identified, and registered, which is an orthogonal
 issue.
 
+
+Note on OCaml detection
+-----------------------
+
+The OCaml compiler itself is an external dependency when using "system"
+switches. It's currently handled by a specific, dynamically generated compiler
+definition, with some ad-hoc code to treat it specifically, or check that it
+didn't change at startup time.
+
+With the current trend to move compiler handling to packages, the above won't
+work anymore, because "system" would now need to be a specific, dynamic package.
+While re-implementing the system switch hacks in this context would certainly be
+possible, having the depexts mechanism flexible enough to handle all this
+consistently would certainly be more consistent and easier to maintain.
+
+Here is a possibility: having an 'ocaml-system' package (that would "provide"
+ocaml) with depext on the system ocaml.
+* the package needs to be able to export some environment variables that are
+  currently exported by the switch (`CAML_LD_LIBRARY_PATH`).
+* a change of this package should be detected at OPAM startup -- like for any
+  depexts
+* "system" compilers currently don't have to be managed by the OS, they are just
+  looked for in the PATH. Keeping this would probably require a specific (lower
+  level) "depext" plugin, that wouldn't have the functionalities to install the
+  depext.
+* this raises a new, but valid, concern: the above handles a binary state for
+  depexts, while for this, we'd need to detect changes also. Creating one
+  'ocaml-system' package version for each possible compiler version may be an
+  answer: on system compiler change, the installed 'ocaml-system' becomes
+  invalid, and you'll need to replace it by the fitting version (recompiling all
+  dependent packages as you go).
+* However, it sounds quite difficult to hold a middle ground between
+  - "resolve with all OPAM packages installable, then check and handle their
+    depexts", and
+  - "check depexts, and then resolve with OPAM packages that can be installed
+    with what's currently on the system;" (don't install them, except on
+    conflict (how exactly?))
+    
+  and the above won't play well with first option here, second option raising
+  many more questions.
+
+Maybe this doesn't fit well with depexts, but it's worth considering
