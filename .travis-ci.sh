@@ -5,10 +5,10 @@ git config --global user.name "Travis CI"
 install_on_linux () {
   # Install OCaml PPAs
   case "$OCAML_VERSION" in
-  3.12.1) ppa=avsm/ocaml312+opam11 ;;
-  4.00.1) ppa=avsm/ocaml40+opam11 ;;
-  4.01.0) ppa=avsm/ocaml41+opam11 ;;
-  4.02.0) ppa=avsm/ocaml42+opam11 ;;
+  3.12.1) ppa=avsm/ocaml312+opam12 ;;
+  4.00.1) ppa=avsm/ocaml40+opam12 ;;
+  4.01.0) ppa=avsm/ocaml41+opam12 ;;
+  4.02.0) ppa=avsm/ocaml42+opam12 ;;
   *) echo Unknown $OCAML_VERSION; exit 1 ;;
   esac
 
@@ -46,9 +46,6 @@ if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
     # ignore the warnings
     opam init
-    # Needed to get the fixed up remote on opam 1.1
-    # Can be removed once we switch to the 1.2 PPAs
-    opam update
     eval `opam config env`
     opam install ocamlfind lwt cohttp.0.11.2 ssl cmdliner ocamlgraph dose cudf re jsonm
     ./configure
