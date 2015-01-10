@@ -138,9 +138,11 @@ iter_packages ~opam:(fun nv opam ->
       )
     in
     let opam = OpamFile.OPAM.with_ocaml_version opam None in
-    let opam = OpamFile.OPAM.with_depends opam depends in
-    let opam = OpamFile.OPAM.with_available opam available in
-    opam)
+    if OpamPackage.name_to_string nv <> "ocaml" then
+      let opam = OpamFile.OPAM.with_depends opam depends in
+      let opam = OpamFile.OPAM.with_available opam available in
+      opam
+    else opam)
   ()
   (* Warning : no conversion done on the _variable_ ocaml-version *)
 ;;

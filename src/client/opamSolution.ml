@@ -439,6 +439,14 @@ let parallel_apply t action action_graph =
   | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
     OpamGlobals.msg "Aborting.\n";
     raise e
+  | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
+    OpamGlobals.error "Cycles found during dependency resolution:\n  - %s\n"
+      (String.concat "\n  - "
+         (List.map
+            (fun cy ->
+               String.concat " -> " (List.map OpamSolver.Action.to_string cy))
+            cycles));
+    raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     raise e
