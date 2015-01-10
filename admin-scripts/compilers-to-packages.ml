@@ -89,23 +89,58 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
   comp, `Keep
 ;;
 
-iter_packages ~opam:(fun _ opam ->
+iter_packages ~opam:(fun nv opam ->
     let ocaml_version = OpamFile.OPAM.ocaml_version opam in
-    match ocaml_version with
-    | None -> opam
-    | Some v ->
-      let depends = OpamFormula.(
-          And (Atom (OpamPackage.Name.of_string "ocaml",
-                     ([],
-                      map (fun (op,v) ->
-                          Atom (op, OpamPackage.Version.of_string (OpamCompiler.Version.to_string v))
-                        ) v)),
-               OpamFile.OPAM.depends opam)
-        )
-      in
-      let opam = OpamFile.OPAM.with_ocaml_version opam None in
-      let opam = OpamFile.OPAM.with_depends opam depends in
-      opam)
+    let ocaml_version_formula, available =
+      match ocaml_version with
+      | None ->
+        let available = OpamFile.OPAM.available opam in
+        let rec aux = function
+          | FOp (FIdent "ocaml-version", op, FString v) ->
+            Atom (op, OpamPackage.Version.of_string v)
+          | FNot f ->
+            OpamFormula.neg (fun (op,v) -> OpamFormula.neg_relop op, v)
+              (aux f)
+          | FAnd (f1,f2) -> OpamFormula.ands [aux f1; aux f2]
+          | FOr (f1,f2) -> OpamFormula.ors [aux f1; aux f2]
+          | _ -> Empty
+        in
+        let ocaml_dep_formula = aux available in
+        let rec aux =
+          function
+          | FOp (FIdent "ocaml-version", op, FString v) -> None
+          | FNot f -> OpamMisc.Option.map (fun f -> FNot f) (aux f)
+          | FAnd (f1,f2) -> (match aux f1, aux f2 with
+              | Some f1, Some f2 -> Some (FAnd (f1,f2))
+              | None, f | f, None -> f)
+          | FOr (f1,f2) -> (match aux f1, aux f2 with
+              | Some f1, Some f2 -> Some (FOr (f1,f2))
+              | None, f | f, None ->
+                OpamGlobals.error_and_exit "Unconvertible 'available' field in %s"
+                  (OpamPackage.to_string nv))
+          | f -> Some f
+        in
+        let rem_available =
+          OpamMisc.Option.default (FBool true) (aux available)
+        in
+        ocaml_dep_formula, rem_available
+      | Some f ->
+        OpamFormula.map (fun (op,v) ->
+            Atom (op, OpamPackage.Version.of_string
+                    (OpamCompiler.Version.to_string v))
+          ) f,
+        OpamFile.OPAM.available opam
+    in
+    let depends = OpamFormula.(
+        And (Atom (OpamPackage.Name.of_string "ocaml",
+                   ([],ocaml_version_formula)),
+             OpamFile.OPAM.depends opam)
+      )
+    in
+    let opam = OpamFile.OPAM.with_ocaml_version opam None in
+    let opam = OpamFile.OPAM.with_depends opam depends in
+    let opam = OpamFile.OPAM.with_available opam available in
+    opam)
   ()
   (* Warning : no conversion done on the _variable_ ocaml-version *)
 ;;
