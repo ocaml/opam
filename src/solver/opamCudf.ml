@@ -566,7 +566,7 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     OpamFilename.remove solver_out;
     if Cudf.universe_size (snd r) = 0 &&
        not !OpamGlobals.no_base_packages &&
-       Cudf.universe_size universe <> 0
+       Cudf.installed_size universe <> 0
     then
       raise (Common.CudfSolver.Error "empty solution");
     r
