@@ -1050,6 +1050,10 @@ let base_packages t =
   let candidates = packages_of_atoms t atoms in
 
   List.fold_left (fun acc (name,_ as atom) ->
+      if is_pinned t name then
+        (* Allow overriding of base package through pinning *)
+        OpamPackage.Set.add (pinned t name) acc
+      else
       let nvs = OpamPackage.packages_of_name candidates name in
       if OpamPackage.Set.is_empty nvs then
         (OpamGlobals.error "Base package %s of compiler %s not found! Ignored."
