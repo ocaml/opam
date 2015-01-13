@@ -1961,12 +1961,13 @@ let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, c
     Some (source t ~shell variables_sh) in
   let switch_eval =
     if switch_eval then
-      Some (source t ~shell ~interactive_only:true switch_eval_sh)
+      OpamMisc.Option.map (source t ~shell ~interactive_only:true)
+        switch_eval_sh
     else
       None in
   let complete =
     if complete then
-      Some (source t ~shell ~interactive_only:true complete_sh)
+      OpamMisc.Option.map (source t ~shell ~interactive_only:true) complete_sh
     else
       None in
   let buf = Buffer.create 128 in
@@ -1985,10 +1986,10 @@ let update_init_scripts t ~global =
     | None   -> []
     | Some g ->
       let scripts = [
-        `sh,   init_sh ,  (variables_sh  , switch_eval_sh, complete_sh);
-        `zsh,  init_zsh,  (variables_sh  , switch_eval_sh, complete_zsh);
-        `csh,  init_csh,  (variables_csh , switch_eval_sh, complete_sh);
-        `fish, init_fish, (variables_fish, switch_eval_sh, complete_sh);
+        `sh,   init_sh ,  (variables_sh  , Some switch_eval_sh, Some complete_sh);
+        `zsh,  init_zsh,  (variables_sh  , Some switch_eval_sh, Some complete_zsh);
+        `csh,  init_csh,  (variables_csh , None, None);
+        `fish, init_fish, (variables_fish, None, None);
       ] in
       let aux (shell, init, scripts) =
         init,
@@ -2029,21 +2030,13 @@ let update_init_scripts t ~global =
       with e -> OpamMisc.fatal e
     ) in
   List.iter write scripts;
-  match global with
-  | None   -> ()
-  | Some o ->
+  if global <> None then
     List.iter
       (fun init_file ->
-        let pretty_init_file =
-          OpamFilename.prettify (OpamPath.init t.root // init_file) in
-        if !updated then
-          OpamGlobals.msg
-            "  Updating %s\n    auto-completion : [%b]\n    opam-switch-eval: [%b]\n"
-            pretty_init_file
-            o.complete
-            o.switch_eval
-        else
-          OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_file)
+         let pretty_init_file =
+           OpamFilename.prettify (OpamPath.init t.root // init_file) in
+         if !updated then OpamGlobals.msg "  Updating %s\n" pretty_init_file
+         else OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_file)
       [ init_sh; init_zsh; init_csh; init_fish ]
 
 let status_of_init_file t init_sh =
@@ -2232,12 +2225,8 @@ let update_setup_interactive t shell dot_profile =
   let update dot_profile =
     let modify_user_conf = dot_profile <> None in
     let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
-    let complete, switch_eval = match shell with
-      | `fish | `csh -> false, false
-      | _     -> true, true in
-    let global = Some { complete ; switch_eval } in
     OpamGlobals.msg "\n";
-    update_setup t user global;
+    update_setup t user (Some {complete=true; switch_eval=true});
     modify_user_conf in
 
   OpamGlobals.msg "\n";
