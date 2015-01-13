@@ -114,16 +114,23 @@ let installed_map t =
     (OpamPackage.to_map t.installed)
 
 let dot_config t name =
+  let global =
+    name = OpamPackage.Name.global_config
+  in
   let f =
-    if name = OpamPackage.Name.global_config then
+    if global then
       OpamPath.Switch.global_config t.root t.switch
     else
       OpamPath.Switch.config t.root t.switch name
   in
   if OpamFilename.exists f then
     OpamFile.Dot_config.safe_read f
+  else if not global then OpamFile.Dot_config.empty
   else
-    OpamFile.Dot_config.empty
+    (OpamGlobals.error "No global config file found for switch %s. \
+                        Switch broken ?"
+       (OpamSwitch.to_string t.switch);
+     OpamFile.Dot_config.empty)
 
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
@@ -1416,7 +1423,7 @@ let load_state ?(save_cache=true) call_site =
       | `Command_line s
       | `Env s   -> OpamSwitch.not_installed (OpamSwitch.of_string s)
       | `Not_set ->
-        if OpamSwitch.Map.cardinal aliases > 0 then (
+        if not (OpamSwitch.Map.is_empty aliases) then (
           let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
           OpamGlobals.error "The current switch (%s) is an unknown compiler \
                              switch. Switching back to %s ..."
@@ -1774,7 +1781,12 @@ let source t ~shell ?(interactive_only=false) f =
   else s
 
 let expand_env t ?opam (env: env_updates) : env =
-  let fenv = resolve_variable t ?opam OpamVariable.Map.empty in
+  let fenv v =
+    try resolve_variable t ?opam OpamVariable.Map.empty v
+    with Not_found ->
+      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      None
+  in
   List.rev_map (fun (ident, symbol, string) ->
     let string = OpamFilter.substitute_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
@@ -2335,12 +2347,6 @@ let install_compiler t ~quiet:_ switch compiler =
   if not (is_switch_installed t switch)
   && OpamFilename.exists_dir switch_dir then
     OpamFilename.rmdir switch_dir;
-
-  if OpamFilename.exists_dir switch_dir then (
-    OpamGlobals.msg "The compiler %s is already installed.\n"
-      (OpamSwitch.to_string switch);
-    OpamGlobals.exit 0;
-  );
 
   try
     (* Create base directories *)

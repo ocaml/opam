@@ -1186,10 +1186,11 @@ module API = struct
         in
         let available_repos, unavailable_repos =
           List.partition (check_external_dep @* fst) repo_types in
-        OpamGlobals.msg "%s.\n"
+        OpamGlobals.msg "%s.%s\n"
           (match available_repos with
            | [] -> "none"
-           | r -> String.concat ", " (List.map snd r));
+           | r -> String.concat ", " (List.map snd r))
+          (if unavailable_repos = [] then " Perfect!" else "");
         List.iter (fun (cmd,msg) ->
             OpamGlobals.note
               "%s not found, you won't be able to use %s repositories \
@@ -1248,7 +1249,7 @@ module API = struct
         (* Create ~/.opam/aliases *)
         OpamFile.Aliases.write
           (OpamPath.aliases root)
-          (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
+          (OpamSwitch.Map.singleton switch compiler);
 
         (* Init repository *)
         OpamFile.Package_index.write (OpamPath.package_index root)
@@ -1257,6 +1258,7 @@ module API = struct
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
         OpamProcess.Job.run (OpamRepository.init repo);
+        OpamState.install_global_config root switch;
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);
@@ -1272,10 +1274,11 @@ module API = struct
 
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";
-        let t = OpamState.load_state ~save_cache:false "init-2" in
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
+
+        let t = OpamState.load_state ~save_cache:false "init-2" in
         let t = OpamState.update_switch_config t switch in
 
         (* Finally, load the complete state and install the compiler packages *)
