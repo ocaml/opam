@@ -133,7 +133,7 @@ let install_package t nv =
         OpamGlobals.error
           "While installing the following files:\n%s"
           (String.concat "\n" (List.map print !warnings));
-        failwith (Printf.sprintf "Error processing %s.install"
+        failwith (Printf.sprintf "Error processing %s"
                     (OpamFilename.to_string install_f));
       )
     );
