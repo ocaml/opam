@@ -1,0 +1,81 @@
+src
+├── client                              Everything related to the OPAM state, installation and front-end
+│   │   [ opam-client lib ]
+│   │   # State and actions
+│   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
+│   ├── opamAction.ml                   Handles concrete actions on packages, like installations and removals
+│   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
+│   │   # User command handling
+│   ├── opamClient.ml                   High-level execution of user-facing functions like "upgrade", and wrappers around the *Command modules
+│   ├── opamConfigCommand.ml            Functions for the "opam config" subcommand
+│   ├── opamPinCommand.ml               Functions for the "opam pin" subcommand
+│   ├── opamRepositoryCommand.ml        Functions for the "opam repository" subcommand
+│   ├── opamSwitchCommand.ml            Functions for the "opam switch" subcommand
+│   │   [ opam exe ]
+│   ├── opamGitVersion.mli              (generated) Current git version of OPAM
+│   ├── opamArg.ml                      Command-line argument parser (opam exec only)
+│   └── opamMain.ml                     Main
+│
+├── core                                Library of functions needed by OPAM, system and file support, OPAM file-format, global variables
+│   │   [ opam-core lib ]
+│   ├── opamVersion.ml                  (generated) Current OPAM version
+│   ├── opamScript.mli                  (generated) Shell config scripts as OCaml strings
+│   ├── opamMisc.ml                     Generic stdlib functions (string_split, Option submodule...)
+│   ├── opamTypes.mli                   Definitions of many types used throughout
+│   ├── opamTypesBase.ml                Helper functions on the base types. Often opened
+│   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
+│   ├── opamGlobals.ml                  Global configuration references of general use ("debug","root"...)
+│   │   # basic types, used as keys
+│   ├── opamCompiler.ml                 The compiler type (string, version pairs)
+│   ├── opamPackage.ml                  The package type, and package name type (name+version, values often called "nv" in the code)
+│   ├── opamRepositoryName.ml           The repository type
+│   ├── opamSwitch.ml                   The switch type
+│   ├── opamVariable.ml                 OPAM variables with scope (global or module)
+│   │   # system handling
+│   ├── opamProcess.ml                  Process and job handling, with logs, termination status, etc.
+│   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations
+│   ├── opamFilename.ml                 Higher level file and directory name manipulation AND file operations, wrappers on OpamSystem using the filename type
+│   ├── opamParallel.ml                 Parallel execution of jobs following a directed graph
+│   ├── opamActionGraph.ml              Handles graphs of actions (package changes), based on ocamlgraph
+│   │   # more advanced types
+│   ├── opamFilter.ml                   Formulas on variables, as used in opam files build scripts
+│   ├── opamFormula.ml                  Formulas on packages, opt. with sub-formulas on versions, and conversion functions
+│   ├── opamRepository.ml               Repositories, and operations (update, download...) on top of the opam-repository lib
+│   │   # file format
+│   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some (as of now) unused debug options
+│   ├── opamLineLexer.mll               A simple lexer to list of lines, which are lists of words
+│   ├── opamLexer.mll                   OPAM config file lexer
+│   ├── opamParser.mly                  OPAM config file generic type parser
+│   ├── opamFormat.ml                   OPAM config files higher-level parsers and conversion tools
+│   ├── opamFile.ml                     Handles all OPAM file formats as record types and submodules
+│   └── opamPath.ml                     Defines all paths under ~/.opam using a hierarchy of modules
+│
+├── repositories                        Handling of remote sources
+│   │   [ opam-repositories lib ]
+│   ├── opamHTTP.ml                     Main HTTP backend
+│   ├── opamLocal.ml                    Rsync backend, for local or ssh sources
+│   ├── opamVCS.ml                      Layer for handling version control sources
+│   ├── opamDarcs.ml                    Darcs support (through OpamVCS)
+│   ├── opamGit.ml                      Git support (through OpamVCS)
+│   └── opamHg.ml                       Mercurial support (through OpamVCS)
+│
+├── solver                              Solver and Cudf interaction
+│   │   [ opam-solver lib ]
+│   ├── opamCudf.ml                     Solver interaction, conversion of answer to solution
+│   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker
+│   └── opamSolver.ml                   Entry point, conversion of universe to cudf, dependencies computation
+│
+└── tools
+    │   [ opam-admin tool ]
+    ├── opam_mk_repo.ml                 Repo index and archives generation
+    ├── opam_depexts_change.ml          Operation on external dependencies in a repo
+    ├── opam_findlib.ml                 Automatically add some findlib information to a repo
+    ├── opam_rename.ml                  Package renaming
+    ├── opam_stats.ml                   Repo stats & graphs generation
+    ├── opam_repo_check.ml              Check the repo for errors
+    ├── opam_admin.ml                   Source of the opam-admin tool, main
+    │   [ other stand-alone tools ]
+    ├── opam_admin_top.ml               Tiny library for admin-scripts, included in opam-admin.top
+    ├── opam_check.ml                   Tiny tool used in internal checks
+    ├── opam_installer.ml               Handles OPAM's ".install" files
+    └── opamlfind.ml                    Experimental ocamlfind wrapper tool
