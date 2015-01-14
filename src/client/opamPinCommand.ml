@@ -279,14 +279,32 @@ let unpin ?state names =
 let list ~short () =
   log "pin_list";
   let t = OpamState.load_state "pin-list" in
-  let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
-  let print_short n _ =
-    OpamGlobals.msg "%s\n" (OpamPackage.Name.to_string n)
+  let pins =
+    OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch)
   in
-  let print n a =
+  if short then
+    OpamPackage.Name.Map.iter
+      (fun n _ -> OpamGlobals.msg "%s\n" (OpamPackage.Name.to_string n))
+      pins
+  else
+  let lines (n,a) =
     let kind = string_of_pin_kind (kind_of_pin_option a) in
-    OpamGlobals.msg "%-25s %s %s\n"
-      (OpamPackage.to_string (OpamState.pinned t n))
-      (OpamGlobals.colorise `blue (Printf.sprintf "%-8s" kind))
-      (string_of_pin_option a) in
-  OpamPackage.Name.Map.iter (if short then print_short else print) pins
+    let state, extra =
+      try
+        let nv = OpamState.find_installed_package_by_name t n in
+        match OpamState.pinned_opt t n with
+        | None -> OpamGlobals.colorise `red " (invalid)",[]
+        | Some nvp when nvp = nv -> "",[]
+        | _ -> OpamGlobals.colorise `red " (not in sync)",
+               [Printf.sprintf " (installed:%s)"
+                  (OpamPackage.version_to_string nv)]
+      with Not_found -> OpamGlobals.colorise `yellow " (uninstalled)", []
+    in
+    [ OpamPackage.to_string (OpamState.pinned t n);
+      state;
+      OpamGlobals.colorise `blue kind;
+      string_of_pin_option a ]
+    @ extra
+  in
+  let table = List.map lines (OpamPackage.Name.Map.bindings pins) in
+  OpamMisc.print_table stdout ~sep:"  " (OpamMisc.align_table table)

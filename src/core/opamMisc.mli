@@ -197,6 +197,9 @@ val indent_right: string -> ?visual:string -> int -> string
 (** Pads fields in a table with spaces for alignment. *)
 val align_table: string list list -> string list list
 
+(** Prints a table *)
+val print_table: out_channel -> sep:string -> string list list -> unit
+
 (** Cut a string *)
 val sub_at: int -> string -> string
 
