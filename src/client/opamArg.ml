@@ -763,11 +763,11 @@ let list =
       "List all packages, even those which can't be installed on the system" in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
-    let doc = "List only packages that depend on one of $(docv)." in
+    let doc = "List only packages that depend on one of (comma-separated) $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
   in
   let required_by =
-    let doc = "List only the dependencies of $(docv)." in
+    let doc = "List only the dependencies of (comma-separated) $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["required-by"])
   in
   let recursive =

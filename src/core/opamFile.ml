@@ -1461,16 +1461,18 @@ module X = struct
               (OpamFormula.ors_to_list t.depopts))
             "Field 'depopts' contains formulas or version constraints";
           cond (
-            let names f = List.map fst OpamFormula.(
-                atoms @@ formula_of_extended ~filter:(fun _ -> true) f
-              ) in
+            let names flag f =
+              OpamPackage.Name.Set.of_list @@
+              List.map fst OpamFormula.(
+                  atoms @@ filter_deps ~test:flag ~doc:flag f
+                )
+            in
             not OpamPackage.Name.Set.(
                 is_empty @@ inter
-                  (of_list @@ names t.depends)
-                  (of_list @@ names t.depopts)
+                  (names false t.depends)
+                  (names true t.depopts)
               ))
-            "Fields 'depends' and 'depopts' refer to the same package names"
-            (* hmm, this might be valid if under different filters ? *);
+            "Fields 'depends' and 'depopts' refer to the same package names";
           cond (t.ocaml_version <> None)
             "Field 'ocaml-version' is deprecated, use 'available' instead";
           cond (t.os <> Empty)
