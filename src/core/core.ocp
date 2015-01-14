@@ -25,9 +25,9 @@ begin library "opam-core"
     "opamLexer.mll"
     "opamLineLexer.mll"
     "opamPath.ml"
+    "opamFilter.ml"
     "opamFile.ml"
     "opamRepository.ml"
-    "opamFilter.ml"
   ]
 
   requires = [

@@ -1477,7 +1477,11 @@ module X = struct
             "Field 'ocaml-version' is deprecated, use 'available' instead";
           cond (t.os <> Empty)
             "Field 'os' is deprecated, use 'available' instead";
-          (* t.available: check that it never refers to package variables *)
+          cond (List.for_all
+                  (fun v -> OpamVariable.Full.package v =
+                            OpamPackage.Name.global_config)
+                  (OpamFilter.variables t.available))
+            "Field 'available' contains references to package-local variables";
           cond (t.homepage = [])
             "Missing field 'homepage'";
           (* cond (t.doc = []) *)
@@ -1995,21 +1999,6 @@ module X = struct
       OpamSystem.string_of_channel ic
 
     let to_string _ t = t
-
-    let replace t f =
-      let subst str =
-        if not (OpamMisc.ends_with ~suffix:"}%" str) then
-          (OpamGlobals.warning "Unclosed variable replacement in %S: %S\n"
-             t str;
-           str)
-        else
-        let str = String.sub str 2 (String.length str - 4) in
-        let v = OpamVariable.Full.of_string str in
-        OpamVariable.string_of_variable_contents (f v) in
-      let rex = Re_perl.compile_pat "%\\{(%?\\}?[^}%])+(\\}%)?" in
-      Re_pcre.substitute ~rex ~subst t
-
-    let replace_string = replace
 
   end
 

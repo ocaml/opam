@@ -30,6 +30,19 @@ let rec to_string = function
   | FOr (e,f)  -> Printf.sprintf "%s | %s" (to_string e) (to_string f)
   | FNot e     -> Printf.sprintf "!%s" (to_string e)
 
+let rec fold_down_left f acc filter = match filter with
+  | FOp(l,_,r) | FAnd(l,r) | FOr(l,r) ->
+    fold_down_left f (fold_down_left f (f acc filter) l) r
+  | FNot(x) -> fold_down_left f (f acc filter) x
+  | x -> f acc x
+
+let variables filter =
+  fold_down_left (fun acc -> function
+      | FIdent i -> OpamVariable.Full.of_string i :: acc
+      | _ -> acc)
+    [] filter
+
+
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable env v =
   let name = OpamVariable.Full.package v in
@@ -84,23 +97,45 @@ let substitute_ident env i =
     OpamGlobals.warning "Invalid variable %s in filter" i;
     S i
 
+let replace_variables text f =
+  let subst str =
+    if not (OpamMisc.ends_with ~suffix:"}%" str) then
+      (OpamGlobals.warning "Unclosed variable replacement: %S\n" str;
+       str)
+    else
+    let str = String.sub str 2 (String.length str - 4) in
+    let v = OpamVariable.Full.of_string str in
+    OpamVariable.string_of_variable_contents (f v) in
+  let rex = Re_perl.compile_pat "%\\{(%?\\}?[^}%])+(\\}%)?" in
+  Re_pcre.substitute ~rex ~subst text
+
 (* Substitute the file contents *)
 let substitute_file env f =
   let f = OpamFilename.of_basename f in
   let src = OpamFilename.add_extension f "in" in
-  let contents = OpamFile.Subst.read src in
-  let newcontents =
-    OpamFile.Subst.replace contents
-      (fun v ->
-         try contents_of_variable_exn env v
-         with Not_found ->
-           OpamGlobals.msg "In %s" (OpamFilename.to_string f);
-           OpamVariable.S ("%{"^OpamVariable.Full.to_string v^"}%")) in
-  OpamFile.Subst.write f newcontents
+  let ic = OpamFilename.open_in src in
+  let oc = OpamFilename.open_out f in
+  let resolve v =
+    try contents_of_variable_exn env v
+    with Not_found ->
+      OpamGlobals.msg "In %s" (OpamFilename.to_string f);
+      OpamVariable.S ("%{"^OpamVariable.Full.to_string v^"}%")
+  in
+  let rec aux () =
+    match try Some (input_line ic) with End_of_file -> None with
+    | Some s ->
+      output_string oc (replace_variables s resolve);
+      output_char oc '\n';
+      aux ()
+    | None -> ()
+  in
+  aux ();
+  close_in ic;
+  close_out oc
 
 (* Substitue the string contents *)
 let substitute_string env s =
-  OpamFile.Subst.replace_string s (contents_of_variable_exn env)
+  replace_variables s (contents_of_variable_exn env)
 
 exception Filter_type_error
 

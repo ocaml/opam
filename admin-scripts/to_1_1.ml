@@ -38,7 +38,7 @@ let filter_string s =
     | s when List.mem s vars_new_1_2 -> OpamVariable.S ""
     | s -> OpamVariable.S (Printf.sprintf "%%{%s}%%" s)
   in
-  OpamFile.Subst.replace_string s subst
+  OpamFilter.replace_variables s subst
 
 let rec filter_vars = function
   | FIdent i when List.mem i vars_new_1_2 -> None
