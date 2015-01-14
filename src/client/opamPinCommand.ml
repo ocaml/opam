@@ -65,31 +65,44 @@ let edit t name =
       ignore @@ Sys.command
         (Printf.sprintf "%s %s"
            (Lazy.force OpamGlobals.editor) (OpamFilename.to_string temp_file));
-      let opam = OpamFile.OPAM.read temp_file in
-      if OpamFile.OPAM.name_opt opam <> Some name then
-        (OpamGlobals.error
-           "Inconsistent or missing \"name\" field, it must be %S"
-           (OpamPackage.Name.to_string name);
-         failwith "bad name");
-      match pin, OpamFile.OPAM.version_opt opam with
-      | Version vpin, Some v when v <> vpin ->
-        OpamGlobals.error
-          "Bad \"version: %S\" field: the package is version-pinned to %s"
-          (OpamPackage.Version.to_string v)
-          (OpamPackage.Version.to_string vpin);
-        failwith "bad version"
-      | _, None ->
-        OpamGlobals.error "The \"version\" field is mandatory";
-        failwith "missing field"
-      | _ ->
-        match OpamFile.OPAM.validate opam with
-        | [] -> Some opam
-        | warns ->
-          OpamGlobals.warning "The opam file didn't pass validation:\n  - %s\n"
-            (String.concat "\n  - " warns);
-          if OpamGlobals.confirm "Continue anyway ('no' will reedit) ?"
-          then Some opam
-          else edit ()
+      let warnings,opam_opt =
+        OpamFile.OPAM.validate_file temp_file
+      in
+      let opam =
+        match opam_opt with
+        | None -> failwith "Syntax errors"
+        | Some opam -> opam
+      in
+      let namecheck = match OpamFile.OPAM.name_opt opam with
+        | None ->
+          OpamGlobals.error "Missing \"name: %S\" field."
+            (OpamPackage.Name.to_string name);
+          false
+        | Some n when n <> name ->
+          OpamGlobals.error "Bad \"name: %S\" field, package name is %s"
+            (OpamPackage.Name.to_string n) (OpamPackage.Name.to_string name);
+          false
+        | _ -> true
+      in
+      let versioncheck = match pin, OpamFile.OPAM.version_opt opam with
+        | _, None ->
+          OpamGlobals.error "Missing \"version\" field.";
+          false
+        | Version vpin, Some v when v <> vpin ->
+          OpamGlobals.error "Bad \"version: %S\" field, package is pinned to %s"
+            (OpamPackage.Version.to_string v) (OpamPackage.Version.to_string vpin);
+          false
+        | _ -> true
+      in
+      if not namecheck || not versioncheck then failwith "Bad name/version";
+      match warnings with
+      | [] -> Some opam
+      | ws ->
+        OpamGlobals.warning "The opam file didn't pass validation:\n%s\n"
+          (OpamFile.OPAM.warns_to_string ws);
+        if OpamGlobals.confirm "Continue anyway ('no' will reedit) ?"
+        then Some opam
+        else edit ()
     with e ->
       OpamMisc.fatal e;
       if OpamGlobals.confirm "Errors in %s, retry editing ?"

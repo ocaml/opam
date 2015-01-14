@@ -1218,10 +1218,23 @@ module X = struct
       } in
       Syntax.to_string s
 
-    let of_channel filename ic =
-      let nv = OpamPackage.of_filename filename in
-      let f = Syntax.of_channel filename ic in
-      let permissive = Syntax.check f valid_fields in
+    let check_name ?(permissive=false) n s =
+      let name_f =
+        try OpamFormat.assoc_option s s_name
+              (OpamFormat.parse_package_name ?expected:n)
+        with OpamFormat.Bad_format _ when permissive -> None
+      in
+      OpamMisc.Option.Op.(name_f ++ n)
+
+    let check_version ?(permissive=false) v s =
+      let version_f =
+        try OpamFormat.assoc_option s s_version
+              (OpamFormat.parse_package_version ?expected:v)
+        with OpamFormat.Bad_format _ when permissive -> None
+      in
+      OpamMisc.Option.Op.(version_f ++ v)
+
+    let of_syntax ?(permissive=false) ?(conservative=false) f nv =
       let safe default f x y z =
         try f x y z with OpamFormat.Bad_format _ when permissive -> default
       in
@@ -1229,36 +1242,14 @@ module X = struct
       let assoc_list x y z = safe [] OpamFormat.assoc_list x y z in
       let assoc_default dft = safe dft (OpamFormat.assoc_default dft) in
       let s = f.file_contents in
+      let name =
+        check_name ~permissive (OpamMisc.Option.map OpamPackage.name nv) s
+      in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
-      let name_f =
-        assoc_option s s_name OpamFormat.parse_package_name in
-      let name = match name_f, nv with
-        | None  , None    -> None
-        | Some n, None    -> Some n
-        | None  , Some nv -> Some (OpamPackage.name nv)
-        | Some n, Some nv ->
-          if OpamPackage.name nv <> n && not permissive then
-            (OpamGlobals.error
-               "Package %s has inconsistent 'name: %S' field."
-               (OpamPackage.to_string nv)
-               (OpamPackage.Name.to_string n);
-             OpamSystem.internal_error "inconsistent name")
-          else Some n in
-      let version_f = assoc_option s s_version
-          (OpamFormat.parse_string @> OpamPackage.Version.of_string) in
-      let version = match version_f, nv with
-        | None  , None    -> None
-        | Some v, None    -> Some v
-        | None  , Some nv -> Some (OpamPackage.version nv)
-        | Some v, Some nv ->
-          if OpamPackage.version nv <> v && not permissive then
-            (OpamGlobals.error
-               "Package %s has inconsistent 'version: %S' field."
-               (OpamPackage.to_string nv)
-               (OpamPackage.Version.to_string v);
-             OpamSystem.internal_error "inconsistent version")
-          else Some v in
+      let version =
+        check_version ~permissive (OpamMisc.Option.map OpamPackage.version nv) s
+      in
       let maintainer =
         assoc_list s s_maintainer OpamFormat.parse_string_list in
       let substs =
@@ -1302,7 +1293,8 @@ module X = struct
         in
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f = OpamFormat.parse_opt_formula value in
-        if not !OpamGlobals.skip_version_checks &&
+        if not conservative &&
+           not !OpamGlobals.skip_version_checks &&
            OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
         then
             OpamFormula.ors_to_list f
@@ -1371,6 +1363,12 @@ module X = struct
         bug_reports; flags; dev_repo
       }
 
+    let of_channel filename ic =
+      let nv = OpamPackage.of_filename filename in
+      let f = Syntax.of_channel filename ic in
+      let permissive = Syntax.check f valid_fields in
+      of_syntax ~permissive f nv
+
     let template nv =
       let t = create nv in
       let maintainer =
@@ -1423,85 +1421,189 @@ module X = struct
       }
 
     let validate t =
-      let cond cd msg = if cd then Some msg else None in
+      let cond level msg cd =
+        if cd then Some (level, msg) else None
+      in
       let warnings = [
-          cond (OpamVersion.nopatch t.opam_version <> t.opam_version)
-            "Field 'opam-version' refers to the patch version of opam, should \
-             be of the form MAJOR.MINOR";
-          cond (OpamVersion.compare t.opam_version OpamVersion.current_nopatch
-                <> 0)
-            "Field 'opam-version' doesn't match the current version, validation \
-             may not be accurate";
+        cond `Warning
+          "Field 'opam-version' refers to the patch version of opam, should \
+           be of the form MAJOR.MINOR"
+          (OpamVersion.nopatch t.opam_version <> t.opam_version) ;
+        cond `Error
+          "Field 'opam-version' doesn't match the current version, \
+           validation may not be accurate"
+          (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0);
 (*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
           cond (t.version = None)
             "Missing field 'version' or directory in the form 'name.version'";
 *)
-          cond (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
-                t.license = [""] || t.doc = [""] || t.tags = [""] ||
-                t.bug_reports = [""])
-            "Some fields are present but empty; remove or fill them";
-          cond (t.maintainer = [])
-            "Missing field 'maintainer'";
-          cond (List.mem "contact@ocamlpro.com" t.maintainer &&
-                not (List.mem "org:ocamlpro" t.tags))
-            "Field 'maintainer' set to the old default value";
-          cond (t.author = [])
-            "Missing field 'author'";
-          cond (t.install = [] && t.build <> [] && t.remove <> [])
-            "No field 'install', but a field 'remove': install instructions \
-             probably part of 'build'. Use the 'install' field or a .install \
-             file";
-          cond (t.install <> [] && t.remove = [])
-            "No field 'remove' while a field 'install' is present";
-          cond (List.exists (function
-              | OpamFormula.Atom (_, (_,Empty)) -> false
-              | _ -> true)
-              (OpamFormula.ors_to_list t.depopts))
-            "Field 'depopts' contains formulas or version constraints";
-          cond (
-            let names flag f =
-              OpamPackage.Name.Set.of_list @@
-              List.map fst OpamFormula.(
-                  atoms @@ filter_deps ~test:flag ~doc:flag f
-                )
-            in
-            not OpamPackage.Name.Set.(
-                is_empty @@ inter
-                  (names false t.depends)
-                  (names true t.depopts)
-              ))
-            "Fields 'depends' and 'depopts' refer to the same package names";
-          cond (t.ocaml_version <> None)
-            "Field 'ocaml-version' is deprecated, use 'available' instead";
-          cond (t.os <> Empty)
-            "Field 'os' is deprecated, use 'available' instead";
-          cond (List.for_all
-                  (fun v -> OpamVariable.Full.package v =
-                            OpamPackage.Name.global_config)
-                  (OpamFilter.variables t.available))
-            "Field 'available' contains references to package-local variables";
-          cond (t.homepage = [])
-            "Missing field 'homepage'";
-          (* cond (t.doc = []) *)
-          (*   "Missing field 'doc'"; *)
-          cond (t.bug_reports = [])
-            "Missing field 'bug-reports'";
-          cond (t.dev_repo = None)
-            "Missing field 'dev-repo'";
-          cond (t.depexts <> None && t.post_messages = [])
-            "Package declares 'depexts', but has no 'post-messages' to help \
-             the user out when they are missing";
-          cond (List.exists (function
-              | (CString "make", _)::_, _ -> true
-              | _ -> false
-            ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc))
-            "Command 'make' called directly, use the built-in variable \
-             instead";
+        cond `Error
+          "Some fields are present but empty; remove or fill them"
+          (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
+           t.license = [""] || t.doc = [""] || t.tags = [""] ||
+           t.bug_reports = [""]);
+        cond `Error
+          "Missing field 'maintainer'"
+          (t.maintainer = []);
+        cond `Error
+          "Field 'maintainer' set to the old default value"
+          (List.mem "contact@ocamlpro.com" t.maintainer &&
+           not (List.mem "org:ocamlpro" t.tags));
+        cond `Error
+          "Missing field 'authors'"
+          (t.author = []);
+        cond `Warning
+          "No field 'install', but a field 'remove': install instructions \
+           probably part of 'build'. Use the 'install' field or a .install \
+           file"
+          (t.install = [] && t.build <> [] && t.remove <> []);
+        cond `Warning
+          "No field 'remove' while a field 'install' is present, uncomplete \
+           uninstallation suspected"
+          (t.install <> [] && t.remove = []);
+        cond `Error
+          "Field 'depopts' contains formulas or version constraints"
+          (List.exists (function
+               | OpamFormula.Atom (_, (_,Empty)) -> false
+               | _ -> true)
+              (OpamFormula.ors_to_list t.depopts));
+        cond `Error
+          "Fields 'depends' and 'depopts' refer to the same package names"
+          (let names flag f =
+             OpamPackage.Name.Set.of_list @@
+             List.map fst OpamFormula.(
+                 atoms @@ filter_deps ~test:flag ~doc:flag f
+               )
+           in
+           not OpamPackage.Name.Set.(
+               is_empty @@ inter
+                 (names false t.depends)
+                 (names true t.depopts)));
+        cond `Error
+          "Field 'ocaml-version' is deprecated, use 'available' and the \
+           'ocaml-version' variable instead"
+          (t.ocaml_version <> None);
+        cond `Error
+          "Field 'os' is deprecated, use 'available' and the 'os' variable \
+           instead"
+          (t.os <> Empty);
+        cond `Error
+          "Field 'available' contains references to package-local variables. \
+           It should only be determined from global configuration variables"
+          (List.exists (fun v -> OpamVariable.Full.package v <>
+                                 OpamPackage.Name.global_config)
+             (OpamFilter.variables t.available));
+        cond `Error
+          "Missing field 'homepage'"
+          (t.homepage = []);
+        (* cond (t.doc = []) *)
+        (*   "Missing field 'doc'"; *)
+        cond `Warning
+          "Missing field 'bug-reports'"
+          (t.bug_reports = []);
+        cond `Warning
+          "Missing field 'dev-repo'"
+          (t.dev_repo = None);
+        cond `Warning
+          "Package declares 'depexts', but has no 'post-messages' to help \
+           the user out when they are missing"
+          (t.depexts <> None && t.post_messages = []);
+        cond `Error
+          "Command 'make' called directly, use the built-in variable \
+           instead"
+          (List.exists (function
+               | (CString "make", _)::_, _ -> true
+               | _ -> false
+             ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc))
       ]
       in
       OpamMisc.filter_map (fun x -> x) warnings
+
+    let validate_file filename =
+      let warnings, t =
+        try
+          let ic = OpamFilename.open_in filename in
+          let name =
+            OpamMisc.Option.map OpamPackage.name
+              (OpamPackage.of_filename filename)
+          in
+          let version =
+            OpamMisc.Option.map OpamPackage.version
+              (OpamPackage.of_filename filename)
+          in
+          let f =
+            try
+              let f = Syntax.of_channel filename ic in
+              close_in ic; f
+            with e -> close_in ic; raise e
+          in
+          let invalid_fields =
+            OpamFormat.invalid_fields f.file_contents valid_fields
+          in
+          let warnings =
+            List.map (fun f -> `Error, Printf.sprintf "Invalid field: %s" f)
+              invalid_fields
+          in
+          let t, warnings =
+            try
+              Some (of_syntax ~permissive:false ~conservative:true f None),
+              warnings
+            with OpamFormat.Bad_format (pos,_,msg) ->
+              None,
+              warnings @
+              [ `Error, Printf.sprintf "File format error: %s%s"
+                  (match pos with
+                   | Some p -> Printf.sprintf "at %s, " (string_of_pos p)
+                   | None -> "")
+                  msg ]
+          in
+          let warnings =
+            if t = None then warnings else
+            try
+              ignore (check_name name f.file_contents);
+              warnings
+            with OpamFormat.Bad_format (_,_,msg) ->
+              [ `Warning,
+                Printf.sprintf "%s, the directory name or pinning implied %s"
+                  msg
+                  OpamMisc.Option.Op.((name >>| OpamPackage.Name.to_string) +! "" )
+              ]
+          in
+          let warnings =
+            if t = None then warnings else
+            try
+              ignore (check_version version f.file_contents);
+              warnings
+            with OpamFormat.Bad_format (_,_,msg) ->
+              [ `Warning,
+                Printf.sprintf "%s, the directory name or pinning implied %s"
+                  msg
+                  OpamMisc.Option.Op.((version >>| OpamPackage.Version.to_string) +! "" )
+              ]
+          in
+          close_in ic;
+          warnings, t
+        with
+        | OpamSystem.File_not_found _ ->
+          OpamGlobals.error "%s not found" (OpamFilename.prettify filename);
+          [`Error, "File does not exist"], None
+        | Lexer_error _ | Parsing.Parse_error ->
+          [`Error, "File does not parse"], None
+      in
+      warnings @ (match t with Some t -> validate t | None -> []),
+      t
+
+    let warns_to_string ws =
+      String.concat "\n" @@ List.map
+        (fun (w,s) ->
+           let ws = match w with
+             | `Warning -> OpamGlobals.colorise `yellow "warning"
+             | `Error -> OpamGlobals.colorise `red "error"
+           in
+           Printf.sprintf "  %15s: %s" ws s)
+        ws
 
   end
 
@@ -2147,7 +2249,7 @@ module Make (F : F) = struct
         log ~level:2 "Read %s in %.3fs" filename (chrono ());
         r
       with e -> close_in ic; raise e
-      with
+    with
       | OpamSystem.File_not_found s ->
         OpamSystem.internal_error "File %s does not exist" s
       | Lexer_error _ | Parsing.Parse_error as e ->
@@ -2163,8 +2265,7 @@ module Make (F : F) = struct
         let e = OpamFormat.add_pos pos e in
         OpamGlobals.error "At %s%s%s"
           (string_of_pos pos) msg (string_of_backtrace_list btl);
-        if !OpamGlobals.strict then
-          OpamGlobals.error_and_exit "Strict mode: aborting"
+        if !OpamGlobals.strict then OpamGlobals.exit 66
         else raise e
 
   let safe_read f =

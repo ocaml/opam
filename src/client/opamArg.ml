@@ -1741,18 +1741,22 @@ let lint =
     let msg = Printf.eprintf in
     if OpamFilename.exists opam_f then
       try
-        let opam = OpamFile.OPAM.read opam_f in
-        let warnings = OpamFile.OPAM.validate opam in
+        let warnings,opam = OpamFile.OPAM.validate_file opam_f in
+        let failed =
+          List.exists (function `Error,_ -> true | _ -> false) warnings
+        in
         if warnings = [] then
-          msg "%s\n" (OpamGlobals.colorise `green "Passed.")
-        else
-          msg "Validation %s for %s: \n  - %s\n"
-            (OpamGlobals.colorise `red "failed")
+          msg "%s: %s\n"
             (OpamFilename.prettify opam_f)
-            (String.concat "\n  - " warnings);
+            (OpamGlobals.colorise `green "Passed.")
+        else
+          msg "%s found in %s:\n%s\n"
+            (if failed then "Errors" else "Warnings")
+            (OpamFilename.prettify opam_f)
+            (OpamFile.OPAM.warns_to_string warnings);
         if normalise then
-          OpamFile.OPAM.write_to_channel stdout opam;
-        if warnings <> [] then OpamGlobals.exit 1
+          OpamMisc.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
+        if failed then OpamGlobals.exit 1
       with
       | Parsing.Parse_error
       | Lexer_error _

@@ -440,11 +440,28 @@ let make_ext_constraints (kws, t) =
       c kws
     :: cs
 
-let parse_package_name = function
+let parse_package_name ?expected = function
   | String (pos,n) ->
-    (try OpamPackage.Name.of_string n with
-     | Failure _ -> bad_format ~pos "Invalid package name %s" n)
+    let name =
+      (try OpamPackage.Name.of_string n with
+       | Failure _ -> bad_format ~pos "Invalid package name %s" n)
+    in
+    (match expected with
+     | Some exp when name <> exp ->
+       bad_format ~pos "Unexpected name %s"
+         (OpamPackage.Name.to_string name)
+     | _ -> name)
   | x -> bad_format ~pos:(value_pos x) "Expected a package name"
+
+let parse_package_version ?expected = function
+  | String (pos,n) ->
+    let version = OpamPackage.Version.of_string n in
+    (match expected with
+     | Some exp when version <> exp ->
+       bad_format ~pos "Unexpected version %s"
+         (OpamPackage.Version.to_string version)
+     | _ -> version)
+  | x -> bad_format ~pos:(value_pos x) "Expected a package version"
 
 (* parse a list of formulas *)
 let rec parse_formulas opt ~constraints t =
