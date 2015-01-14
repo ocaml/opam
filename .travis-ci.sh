@@ -45,7 +45,14 @@ export OCAMLRUNPARAM=b
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
     # ignore the warnings
-    opam init
+
+    # We still have OPAM 1.1 on OSX 4.01.0
+    OPAMV=$(opam --version)
+    if [ "${OPAMV%.*}" = "1.1" ]; then
+        opam init https://opam.ocaml.org/1.1
+    else
+        opam init
+    fi
     eval `opam config env`
     opam install ocamlfind lwt cohttp.0.11.2 ssl cmdliner ocamlgraph dose cudf re jsonm
     ./configure

@@ -241,7 +241,7 @@ type user_action =
   | Upgrade of package_set (** The subset of packages to upgrade *)
   | Reinstall of package_set
   | Depends
-  | Init of name_set (** The 'root' packages to be installed *)
+  | Init
   | Remove
   | Switch of name_set  (** The 'root' packages to be installed *)
   | Import of name_set  (** The 'root' packages to be installed *)

@@ -297,7 +297,9 @@ let parallel_apply t action action_graph =
   let root_installs =
     let names = OpamPackage.names_of_packages t.installed_roots in
     match action with
-    | Init r | Install r | Import r | Switch r  ->
+    | Init ->
+      OpamPackage.Name.Set.union names (OpamState.base_package_names t)
+    | Install r | Import r | Switch r  ->
       OpamPackage.Name.Set.union names r
     | Upgrade _ | Reinstall _ -> names
     | Depends | Remove -> OpamPackage.Name.Set.empty
@@ -438,6 +440,14 @@ let parallel_apply t action action_graph =
     OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
   | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
     OpamGlobals.msg "Aborting.\n";
+    raise e
+  | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
+    OpamGlobals.error "Cycles found during dependency resolution:\n  - %s\n"
+      (String.concat "\n  - "
+         (List.map
+            (fun cy ->
+               String.concat " -> " (List.map OpamSolver.Action.to_string cy))
+            cycles));
     raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);

@@ -235,9 +235,6 @@ val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
 (** Write the right compiler switch in ~/.opam/config *)
 val update_switch_config: state -> switch -> state
 
-(** Get the packages associated with the given compiler *)
-val get_compiler_packages: state -> compiler -> atom list
-
 (** Is a compiler installed ? *)
 val is_compiler_installed: state -> compiler -> bool
 
@@ -268,6 +265,9 @@ val find_installed_package_by_name: state -> name -> package
 (** Return all the packages with the given name *)
 val find_packages_by_name: state -> name -> package_set option
 
+(** Return all packages satisfying one of the given atoms from a state *)
+val packages_of_atoms: state -> atom list -> package_set
+
 (** Return a map from package names to package installed version *)
 val installed_map: state -> version name_map
 
@@ -276,6 +276,10 @@ val static_base_packages: name list
 
 (** Return the installed base packages of the current compiler *)
 val base_packages: state -> package_set
+
+(** Return the names of packages marked as "base" in the current compiler
+    description *)
+val base_package_names: state -> name_set
 
 (** Return all the collection of installed packages, for all the
     available packages *)
@@ -415,10 +419,6 @@ val jobs: state -> int
 
 (** {2 Download Jobs} *)
 val dl_jobs: state -> int
-
-(** Consistency checks: do the base package for the current compiler
-    are installed ? *)
-val check_base_packages: state -> unit
 
 (** / **)
 

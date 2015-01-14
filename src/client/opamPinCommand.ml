@@ -183,7 +183,15 @@ let pin name ?version pin_option =
            (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
          no_changes)
       else OpamGlobals.exit 0
-    with Not_found -> false
+    with Not_found ->
+      if OpamPackage.Name.Set.mem name (OpamState.base_package_names t) then (
+        OpamGlobals.warning
+          "Package %s is part of the base packages of this compiler."
+          (OpamPackage.Name.to_string name);
+        if not @@ OpamGlobals.confirm
+            "Are you sure you want to override this and pin it anyway ?"
+        then OpamGlobals.exit 0);
+      false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
   if OpamState.find_packages_by_name t name = None &&

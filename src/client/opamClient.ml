@@ -171,14 +171,6 @@ let with_switch_backup command f =
        Sys.argv.(0) (OpamFilename.prettify file);
     raise err
 
-let packages_of_atoms t atoms =
-  let check_atoms nv =
-    let name = OpamPackage.name nv in
-    let atoms = List.filter (fun (n,_) -> n = name) atoms in
-    atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
-  (* All packages satisfying [atoms] *)
-  OpamPackage.Set.filter check_atoms (t.packages ++ t.installed)
-
 module API = struct
 
   (* Prints a list of package details in the 'opam list' format *)
@@ -280,7 +272,7 @@ module API = struct
               with Not_found -> n, None)
           atoms
       in
-      packages_of_atoms t atoms
+      OpamState.packages_of_atoms t atoms
     in
 
     let packages =
@@ -321,10 +313,10 @@ module API = struct
       let deps nv =
         let opam = OpamState.opam t nv in
         let deps =
-          packages_of_atoms t @@ OpamFormula.atoms @@
+          OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
           filter_deps @@ OpamFile.OPAM.depends opam in
         if depopts then
-          deps ++ (packages_of_atoms t @@ OpamFormula.atoms @@
+          deps ++ (OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
                    filter_deps @@ OpamFile.OPAM.depopts opam)
         else deps
       in
@@ -416,7 +408,7 @@ module API = struct
     let t = OpamState.load_state "info" in
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
     let details =
-      let map = OpamPackage.to_map (packages_of_atoms t atoms) in
+      let map = OpamPackage.to_map (OpamState.packages_of_atoms t atoms) in
       OpamPackage.Name.Map.mapi (details_of_package t) map
     in
 
@@ -1194,10 +1186,11 @@ module API = struct
         in
         let available_repos, unavailable_repos =
           List.partition (check_external_dep @* fst) repo_types in
-        OpamGlobals.msg "%s.\n"
+        OpamGlobals.msg "%s.%s\n"
           (match available_repos with
            | [] -> "none"
-           | r -> String.concat ", " (List.map snd r));
+           | r -> String.concat ", " (List.map snd r))
+          (if unavailable_repos = [] then " Perfect!" else "");
         List.iter (fun (cmd,msg) ->
             OpamGlobals.note
               "%s not found, you won't be able to use %s repositories \
@@ -1256,7 +1249,7 @@ module API = struct
         (* Create ~/.opam/aliases *)
         OpamFile.Aliases.write
           (OpamPath.aliases root)
-          (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
+          (OpamSwitch.Map.singleton switch compiler);
 
         (* Init repository *)
         OpamFile.Package_index.write (OpamPath.package_index root)
@@ -1265,6 +1258,7 @@ module API = struct
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
         OpamProcess.Job.run (OpamRepository.init repo);
+        OpamState.install_global_config root switch;
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);
@@ -1280,24 +1274,22 @@ module API = struct
 
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";
-        let t = OpamState.load_state ~save_cache:false "init-2" in
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
+
+        let t = OpamState.load_state ~save_cache:false "init-2" in
         let t = OpamState.update_switch_config t switch in
 
         (* Finally, load the complete state and install the compiler packages *)
         log "installing compiler packages";
-        let compiler_packages = OpamState.get_compiler_packages t compiler in
-        let compiler_names =
-          OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
         let solution =
-          OpamSolution.resolve_and_apply ~ask:false t (Init compiler_names)
-            ~requested:compiler_names
+          OpamSolution.resolve_and_apply ~ask:false t Init
+            ~requested:(OpamState.base_package_names t)
             ~orphans:OpamPackage.Set.empty
             { wish_install = [];
               wish_remove  = [];
-              wish_upgrade = compiler_packages;
+              wish_upgrade = [];
               criteria = `Default; }
         in
         OpamSolution.check_solution t solution;
@@ -1311,7 +1303,7 @@ module API = struct
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
   let check_conflicts t atoms =
-    let changes = packages_of_atoms t atoms in
+    let changes = OpamState.packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
@@ -1455,7 +1447,7 @@ module API = struct
     let t, full_orphans, orphan_versions =
       let changes =
         if autoremove then None
-        else Some (packages_of_atoms t atoms) in
+        else Some (OpamState.packages_of_atoms t atoms) in
       orphans ?changes t
     in
 
@@ -1544,7 +1536,7 @@ module API = struct
 
     let reinstall, not_installed =
       get_installed_atoms t atoms in
-    let t =
+    let to_install =
       if not_installed <> [] then
         if
           force ||
@@ -1553,18 +1545,15 @@ module API = struct
                 (List.map OpamFormula.short_string_of_atom not_installed))
              (match not_installed with [_] -> "is" | _ -> "are");
            OpamGlobals.confirm "Install ?")
-        then
-          (install_t not_installed None false t;
-           if reinstall = [] then OpamGlobals.exit 0
-           else OpamState.load_state "reinstall-installed")
-        else
-          OpamGlobals.exit 1
-      else t
+        then not_installed
+        else OpamGlobals.exit 1
+      else []
     in
 
     let reinstall = OpamPackage.Set.of_list reinstall in
 
-    let atoms = OpamSolution.eq_atoms_of_packages reinstall in
+    let atoms =
+      to_install @ OpamSolution.eq_atoms_of_packages reinstall in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
 
@@ -1573,7 +1562,7 @@ module API = struct
 
     let request =
       preprocess_request t full_orphans orphan_versions
-        { wish_install = OpamSolution.eq_atoms_of_packages reinstall;
+        { wish_install = atoms;
           wish_remove  = [];
           wish_upgrade = [];
           criteria = `Fixup; } in
