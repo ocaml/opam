@@ -1912,6 +1912,8 @@ let run default commands =
     OpamMisc.exec_at_exit ();
     Unix.execvpe cmd args env
   | e                  ->
+    flush stdout;
+    flush stderr;
     if !OpamGlobals.verbose then
       Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
@@ -1920,9 +1922,14 @@ let run default commands =
         exit_code := i;
         if !OpamGlobals.debug && i <> 0 then
           Printf.eprintf "%s" (OpamMisc.pretty_backtrace e)
-      | OpamSystem.Internal_error _
-      | OpamSystem.Process_error _ ->
-        Printf.eprintf "%s\n" (Printexc.to_string e);
+      | OpamSystem.Internal_error _ ->
+        Printf.eprintf "%s" (Printexc.to_string e)
+      | OpamSystem.Process_error result ->
+        Printf.eprintf "%s Command %S failed:\n%s\n"
+          (OpamGlobals.colorise `red "[ERROR]")
+          (try List.assoc "command" result.OpamProcess.r_info with
+           | Not_found -> "")
+          (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
       | Sys.Break -> exit_code := 130
       | Failure msg ->

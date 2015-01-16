@@ -2470,7 +2470,10 @@ let install_compiler t ~quiet:_ switch compiler =
       | None ->
         OpamGlobals.msg "Done.\n";
         if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
-      | Some (_,err) -> OpamSystem.process_error err
+      | Some (cmd,err) ->
+        OpamGlobals.error_and_exit "Compiler build failed at %S:\n%s"
+          (OpamProcess.string_of_command cmd)
+          (OpamProcess.string_of_result err)
     end;
 
     (* Update ~/.opam/aliases *)
