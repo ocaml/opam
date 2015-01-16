@@ -433,7 +433,7 @@ let safe_unlink f =
   try Unix.unlink f with Unix.Unix_error _ -> ()
 
 let cleanup ?(force=false) r =
-  if force || not !OpamGlobals.debug || is_success r then
+  if force || (not !OpamGlobals.debug && is_success r) then
     List.iter safe_unlink r.r_cleanup
 
 let truncate_str = "[...]"
