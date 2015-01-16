@@ -25,10 +25,6 @@ open OpamProcess.Job.Op
 module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
-(* IMPORTANT: this function is executed by the children processes,
-   thus it is important to NOT modify the global state of OPAM here.
-   Thus, the update of ~/.opam/<switch/installed MUST not be done
-   here.*)
 let install_package t nv =
   if !OpamGlobals.dryrun then
       OpamGlobals.msg "Installing %s.\n" (OpamPackage.to_string nv)
@@ -127,14 +123,18 @@ let install_package t nv =
 
       if !warnings <> [] then (
         let print (dir, base) =
-          Printf.sprintf " - %s in %s"
-            (OpamFilename.Base.to_string base)
+          Printf.sprintf "  - %s to %s\n"
+            (OpamFilename.to_string (OpamFilename.create build_dir base))
             (OpamFilename.Dir.to_string dir) in
-        OpamGlobals.error
-          "While installing the following files:\n%s"
-          (String.concat "\n" (List.map print !warnings));
-        failwith (Printf.sprintf "Error processing %s"
-                    (OpamFilename.to_string install_f));
+        OpamGlobals.error "Installation of %s failed"
+          (OpamPackage.to_string nv);
+        let msg =
+          Printf.sprintf
+            "Some files in %s couldn't be installed:\n%s"
+            (OpamFilename.prettify install_f)
+            (String.concat "" (List.map print !warnings))
+        in
+        failwith msg
       )
     );
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
@@ -554,20 +554,22 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
       )
     | []::commands -> run_commands commands
     | [] ->
-      install_package t nv;
-      if save_meta then (
-        let installed = OpamPackage.Set.add nv t.installed in
-        let installed_roots = OpamPackage.Set.add nv t.installed_roots in
-        let reinstall = OpamPackage.Set.remove nv t.reinstall in
-        let t = update_metadata t ~installed ~installed_roots ~reinstall in
-        OpamState.install_metadata t nv;
-      );
-      OpamGlobals.msg "%s installed %s.%s\n"
-        (if not !OpamGlobals.utf8 then "->"
-         else OpamActionGraph.(action_color `inst (action_strings `inst)))
-        (OpamGlobals.colorise `bold name)
-        (OpamPackage.version_to_string nv);
-      Done None
+      try
+        install_package t nv;
+        if save_meta then (
+          let installed = OpamPackage.Set.add nv t.installed in
+          let installed_roots = OpamPackage.Set.add nv t.installed_roots in
+          let reinstall = OpamPackage.Set.remove nv t.reinstall in
+          let t = update_metadata t ~installed ~installed_roots ~reinstall in
+          OpamState.install_metadata t nv;
+        );
+        OpamGlobals.msg "%s installed %s.%s\n"
+          (if not !OpamGlobals.utf8 then "->"
+           else OpamActionGraph.(action_color `inst (action_strings `inst)))
+          (OpamGlobals.colorise `bold name)
+          (OpamPackage.version_to_string nv);
+        Done None
+      with e -> OpamMisc.fatal e; Done (Some e)
   in
   if !OpamGlobals.dryrun then
     Done (OpamProcess.Job.dry_run (run_commands commands))

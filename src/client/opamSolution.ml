@@ -142,6 +142,7 @@ let display_error (n, error) =
       OpamGlobals.header_error "while %s %s" action (OpamPackage.to_string nv) in
     match error with
     | Sys.Break -> ()
+    | Failure s -> disp "%s" s
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
