@@ -740,7 +740,8 @@ let download ~overwrite ?compress ~filename:src ~dst:dst =
 let patch p =
   let max_trying = 5 in
   if not (Sys.file_exists p) then
-    internal_error "Patch file %S not found." p;
+    (OpamGlobals.error "Patch file %S not found." p;
+     raise Not_found);
   let patch ~dryrun n =
     let opts = if dryrun then
         let open OpamGlobals in
