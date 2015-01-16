@@ -116,7 +116,10 @@ let edit t name =
     OpamFilename.move ~src:temp_file ~dst:file;
     OpamGlobals.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
-    if Some new_opam = orig_opam then None else
+    if Some new_opam = orig_opam then (
+      OpamGlobals.msg "Package metadata unchanged.\n";
+      None
+    ) else
     let () =
       let dir = match pin with
         | Local dir -> Some dir

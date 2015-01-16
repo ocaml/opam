@@ -2470,7 +2470,10 @@ let install_compiler t ~quiet:_ switch compiler =
       | None ->
         OpamGlobals.msg "Done.\n";
         if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
-      | Some (_,err) -> OpamSystem.process_error err
+      | Some (cmd,err) ->
+        OpamGlobals.error_and_exit "Compiler build failed at %S:\n%s"
+          (OpamProcess.string_of_command cmd)
+          (OpamProcess.string_of_result err)
     end;
 
     (* Update ~/.opam/aliases *)
@@ -2546,7 +2549,7 @@ let update_pinned_package t ?fixed_version name =
     let opam,_,_ as files = local_opam ~root:true ?fixed_version name overlay in
     hash_meta files,
     (match opam with Some o -> OpamFile.OPAM.(empty = with_name_opt (with_version_opt o None) None)
-                  | None -> true),
+                   | None -> true),
     OpamMisc.Option.map OpamFile.OPAM.version opam
   in
   let repo_meta = (* Version from the repo *)
@@ -2618,7 +2621,12 @@ let update_pinned_package t ?fixed_version name =
       if OpamFilename.exists_dir d then d else dir in
     List.iter (fun (f, _) -> OpamFilename.remove (overlay // f)) rm_hash;
     List.iter (fun (f,kind) -> match kind with
-        | `Opam o -> OpamFile.OPAM.write (overlay // f) o
+        | `Opam o ->
+          let vo =
+            OpamMisc.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
+          in
+          OpamFile.OPAM.write (overlay // f)
+            (OpamFile.OPAM.with_version_opt o vo)
         | `Digest _ -> OpamFilename.copy_in ~root (root // f) overlay)
       hash
   in
