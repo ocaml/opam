@@ -1665,7 +1665,7 @@ module API = struct
     let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
-      | None -> OpamGlobals.msg "Package metadata unchanged.\n"
+      | None -> ()
       | Some true ->
         if action then post_pin_action t name
       | Some false ->
