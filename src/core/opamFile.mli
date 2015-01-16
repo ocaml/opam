@@ -110,8 +110,17 @@ module OPAM: sig
   val template: package -> t
 
   (** Runs several sanity checks on the opam file; returns a list of
-      warnings *)
-  val validate: t -> string list
+      warnings. [`Error] level should be considered unfit for publication,
+      while [`Warning] are advisory but may be accepted *)
+  val validate: t -> ([`Warning|`Error] * string) list
+
+  (** Same as [validate], but operates on a file, which allows catching parse
+      errors too. You can specify an expected name and version *)
+  val validate_file: filename ->
+    ([`Warning|`Error] * string) list * t option
+
+  (** Utility function to print validation results *)
+  val warns_to_string: ([`Warning|`Error] * string) list -> string
 
   (** Returns true if the given OPAM file contains 'name' or 'version' fields *)
   val is_explicit: filename -> bool
@@ -473,19 +482,6 @@ module Repo: sig
 end
 
 (** {2 Substitution files} *)
-
-(** Substitution files *)
-module Subst: sig
-
-  include IO_FILE
-
-  (** Substitute the variables appearing in a file *)
-  val replace: t ->  (full_variable -> variable_contents)-> t
-
-  (** Substitute the variables appearing in a string *)
-  val replace_string: string -> (full_variable -> variable_contents) -> string
-
-end
 
 (** {2 Urls for OPAM repositories} *)
 module URL: sig

@@ -46,8 +46,8 @@ src
 │   ├── opamLineLexer.mll               A simple lexer to list of lines, which are lists of words
 │   ├── opamLexer.mll                   OPAM config file lexer
 │   ├── opamParser.mly                  OPAM config file generic type parser
-│   ├── opamFormat.ml                   OPAM config files higher-level parsers and conversion tools
-│   ├── opamFile.ml                     Handles all OPAM file formats as record types and submodules
+│   ├── opamFormat.ml                   OPAM config files syntax and conversion tools, printing
+│   ├── opamFile.ml                     Handles all OPAM file formats as record types and submodules, conversion to and from syntax
 │   └── opamPath.ml                     Defines all paths under ~/.opam using a hierarchy of modules
 │
 ├── repositories                        Handling of remote sources

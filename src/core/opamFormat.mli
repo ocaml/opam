@@ -185,7 +185,9 @@ val assoc_sections: file_item list -> string -> (file_section -> 'a) -> 'a list
 
 open OpamTypes
 
-val parse_package_name : value -> name
+val parse_package_name : ?expected:name -> value -> name
+
+val parse_package_version : ?expected:version -> value -> version
 
 (** Parse package formula where AND are implicit: [x y -> x & y] *)
 val parse_formula : value -> formula

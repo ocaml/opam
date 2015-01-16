@@ -7,7 +7,8 @@ iter_packages ~opam:(fun nv opam ->
     match OpamFile.OPAM.validate opam with
     | [] -> opam
     | w ->
-      OpamGlobals.warning "In %s:\n  - %s\n"
-        (OpamPackage.to_string nv) (String.concat "\n  - " w);
+      OpamGlobals.warning "In %s:\n%s\n"
+        (OpamPackage.to_string nv)
+        (OpamFile.OPAM.warns_to_string warnings);
       opam
   ) ()

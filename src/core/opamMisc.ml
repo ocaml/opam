@@ -398,6 +398,12 @@ let align_table ll =
   in
   transpose (List.map align columns)
 
+let print_table oc ~sep =
+  List.iter (fun l ->
+      let l = match l with s::l -> output_string oc s; l | [] -> [] in
+      List.iter (fun s -> output_string oc sep; output_string oc s) l;
+      output_char oc '\n')
+
 (* Remove from a c-separated list of string the one with the given prefix *)
 let reset_env_value ~prefix c v =
   let v = split_delim v c in

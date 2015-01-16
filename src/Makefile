@@ -129,9 +129,9 @@ SRC_core = \
   opamParser.mly \
   opamLexer.mll \
   opamFormat.ml \
+  opamFilter.ml \
   opamFile.ml \
   opamActionGraph.ml \
-  opamFilter.ml \
   opamRepository.ml
 
 define PROJ_core
