@@ -207,6 +207,9 @@ val parse_opt_formula : value -> ext_formula
 (** Build a formula where OR are implicit. *)
 val make_opt_formula : ext_formula -> value
 
+(** Parse compiler versions *)
+val parse_compiler_version: value -> compiler_version
+
 (** Parse compiler constraints *)
 val parse_compiler_constraint: value -> compiler_constraint
 

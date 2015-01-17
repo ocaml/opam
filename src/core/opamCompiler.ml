@@ -24,9 +24,9 @@ module Version = struct
   include OpamMisc.Base
 
   let of_string str =
-    match OpamMisc.cut_at str '+' with
-    | None       -> of_string str
-    | Some (s,_) -> of_string s
+    if OpamMisc.contains str '+' then
+      raise (Invalid_argument "'+' is not allowed in compiler versions");
+    of_string str
 
   type constr = (OpamFormula.relop * t) OpamFormula.formula
 
@@ -59,8 +59,9 @@ module O = struct
   let to_string t = t.name
 
   let of_string str =
-    let version = Version.of_string str in
-    { version; name = str }
+    match OpamMisc.cut_at str '+' with
+    | Some (v,_) -> { name = str; version = Version.of_string v }
+    | None -> { name = str; version = Version.of_string str }
 
   let to_json t = `String (to_string t)
 
