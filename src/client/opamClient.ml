@@ -881,6 +881,11 @@ module API = struct
           (OpamGlobals.msg "Everything as up-to-date as possible";
            let unav = notuptodate -- Lazy.force t.available_packages in
            let unopt = notuptodate %% Lazy.force t.available_packages in
+           let base =
+             OpamPackage.packages_of_names unopt
+               (OpamState.base_package_names t)
+           in
+           let unopt = unopt -- base in
            if !OpamGlobals.verbose && not (OpamPackage.Set.is_empty unav) then
              OpamGlobals.msg
                ".\n\
