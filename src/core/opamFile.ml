@@ -1981,7 +1981,7 @@ module X = struct
       );
       let version =
         try OpamFormat.assoc_default version_d s s_version
-              (OpamFormat.parse_string @> OpamCompiler.Version.of_string)
+              OpamFormat.parse_compiler_version
         with OpamFormat.Bad_format _ when permissive -> version_d
       in
       if name <> OpamCompiler.system && version_d <> version then (

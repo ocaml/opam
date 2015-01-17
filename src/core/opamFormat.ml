@@ -512,13 +512,21 @@ let parse_opt_formula =
 let make_opt_formula =
   make_formulas true ~constraints:make_ext_constraints
 
+let parse_compiler_version = function
+  | Ident (_,v)
+    when v = OpamCompiler.to_string OpamCompiler.system ->
+    OpamCompiler.Version.of_string v
+  | String (pos,v) ->
+    (try OpamCompiler.Version.of_string v
+     with Invalid_argument msg -> bad_format ~pos "%s" msg)
+  | x -> bad_format ~pos:(value_pos x)
+           "Expected a compiler version"
+
+
 let rec parse_compiler_constraint t =
   let rec aux = function
-    | Prefix_relop (_, op, Ident (_,v))
-      when v = OpamCompiler.to_string OpamCompiler.system ->
-      Atom (op, OpamCompiler.Version.of_string v)
-    | Prefix_relop (_, op, String (_,v)) ->
-      Atom (op, OpamCompiler.Version.of_string v)
+    | Prefix_relop (_, op, v) ->
+      Atom (op, parse_compiler_version v)
     | Group (_, g) -> Block (parse_compiler_constraint (List (pos_null,g)))
     | Logop (_, `Or, e1, e2) -> Or (aux e1, aux e2)
     | Logop (_, `And, e1, e2) -> And (aux e1, aux e2)
