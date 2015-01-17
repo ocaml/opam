@@ -29,6 +29,10 @@ module type G = sig
   val scc_list: t -> V.t list list
 end
 
+(** When one job fails due to an exception, other running jobs are interrupted
+    and reported with this sub-exception in the Errors list *)
+exception Aborted
+
 (** Simply parallel execution of tasks *)
 
 (** In the simple iter, map and reduce cases, ints are the indexes of the jobs

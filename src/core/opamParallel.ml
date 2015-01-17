@@ -20,6 +20,8 @@ open OpamProcess.Job.Op
 let log fmt = OpamGlobals.log "PARALLEL" fmt
 let slog = OpamGlobals.slog
 
+exception Aborted
+
 module type VERTEX = sig
   include OpamMisc.OrderedType
   include Graph.Sig.COMPARABLE with type t := t
@@ -148,7 +150,7 @@ module Make (G : G) = struct
         log "Exception while computing job %a: %a"
           (slog (string_of_int @* V.hash)) node
           (slog V.to_string) node;
-        (* OpamGlobals.error "%s" (Printexc.to_string error); *)
+        if error = Sys.Break then OpamGlobals.error "User interruption";
         let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =
@@ -157,13 +159,13 @@ module Make (G : G) = struct
                 match OpamProcess.dontwait p with
                 | None -> (* process still running *)
                   OpamProcess.interrupt p;
-                  (n,Sys.Break) :: errors,
+                  (n,Aborted) :: errors,
                   p::pend
                 | Some result ->
                   match cont result with
                   | Done _ -> errors, pend
                   | Run _ ->
-                    (n,Sys.Break) :: errors,
+                    (n,Aborted) :: errors,
                     pend
               with
               | Unix.Unix_error _ -> errors, pend
