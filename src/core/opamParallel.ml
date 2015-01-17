@@ -148,7 +148,7 @@ module Make (G : G) = struct
         log "Exception while computing job %a: %a"
           (slog (string_of_int @* V.hash)) node
           (slog V.to_string) node;
-        OpamGlobals.error "%s" (Printexc.to_string error);
+        (* OpamGlobals.error "%s" (Printexc.to_string error); *)
         let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =

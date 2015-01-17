@@ -150,15 +150,17 @@ let prepare_package_build t nv =
   let patches = OpamFile.OPAM.patches opam in
 
   let iter_patches f =
-    List.iter (fun (base, filter) ->
-        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
-        then f base
-      ) patches in
+    List.fold_left (fun acc (base, filter) ->
+        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter then
+          try f base; acc
+          with e -> OpamMisc.fatal e; OpamFilename.Base.to_string base :: acc
+        else acc
+      ) [] patches in
 
   if !OpamGlobals.dryrun || !OpamGlobals.fake then
-    iter_patches (fun base ->
+    ignore (iter_patches (fun base ->
         OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
-          (OpamFilename.Base.to_string base))
+          (OpamFilename.Base.to_string base)))
   else
 
   let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -174,19 +176,14 @@ let prepare_package_build t nv =
   );
 
   (* Apply the patches *)
-  iter_patches (fun base ->
+  let patching_errors =
+    iter_patches (fun base ->
       let root = OpamPath.Switch.build t.root t.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
       OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
         (OpamFilename.Base.to_string base);
-      try OpamFilename.patch patch p_build
-      with e ->
-        OpamMisc.fatal e;
-        OpamGlobals.error "Could not apply patch to %s (%s in %s)"
-          (OpamPackage.to_string nv)
-          (OpamFilename.Base.to_string base)
-          (OpamFilename.Dir.to_string root);
-        raise e);
+      OpamFilename.patch patch p_build)
+  in
 
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the
@@ -195,6 +192,14 @@ let prepare_package_build t nv =
   OpamFilename.in_dir p_build (fun () ->
     List.iter (OpamState.substitute_file t ~opam OpamVariable.Map.empty)
       (OpamFile.OPAM.substs opam)
+  );
+  if patching_errors <> [] then (
+    let msg =
+      Printf.sprintf "These patches didn't apply at %s:\n  - %s\n"
+        (OpamFilename.Dir.to_string (OpamPath.Switch.build t.root t.switch nv))
+        (String.concat "\n  - " patching_errors)
+    in
+    failwith msg
   )
 
 let download_package t nv =

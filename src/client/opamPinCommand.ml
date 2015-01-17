@@ -68,9 +68,11 @@ let edit t name =
       let warnings,opam_opt =
         OpamFile.OPAM.validate_file temp_file
       in
-      let opam =
-        match opam_opt with
-        | None -> failwith "Syntax errors"
+      let opam = match opam_opt with
+        | None ->
+          OpamGlobals.msg "Invalid opam file:\n%s\n"
+            (OpamFile.OPAM.warns_to_string warnings);
+          failwith "Syntax errors"
         | Some opam -> opam
       in
       let namecheck = match OpamFile.OPAM.name_opt opam with
