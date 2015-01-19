@@ -180,7 +180,7 @@ module Make (G : G) = struct
               if M.mem n results || List.mem_assoc n errors then remaining
               else n::remaining)
             g [] in
-        raise (Errors (M.keys results, errors, List.rev remaining))
+        raise (Errors (M.keys results, List.rev errors, List.rev remaining))
       in
 
       if M.is_empty running && S.is_empty ready then
@@ -228,6 +228,16 @@ module Make (G : G) = struct
 
   let map ~jobs ~command g =
     M.bindings (aux_map ~jobs ~command g)
+
+  (* Only print the originally raised exception, which should come first. Ignore
+     Aborted exceptions due to other commands termination, and simultaneous
+     exceptions in other command's continuations (unlikely as that would require
+     both commands to have terminated simultaneously) *)
+  let error_printer = function
+    | Errors (_, (_,exc)::_, _) -> Some (Printexc.to_string exc)
+    | _ -> None
+
+  let () = Printexc.register_printer error_printer
 end
 
 module type GRAPH = sig
