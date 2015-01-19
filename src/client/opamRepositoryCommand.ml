@@ -532,7 +532,7 @@ let add name kind address ~priority:prio =
       (string_of_repository_kind repo.repo_kind)
   | e ->
     cleanup t repo;
-    raise e
+    OpamGlobals.error_and_exit "Could not fetch repo"
 
 let remove name =
   log "repository-remove";

@@ -1084,10 +1084,14 @@ module API = struct
     if repositories_need_update then (
       OpamGlobals.header_msg "Updating package repositories";
       let repos = OpamRepositoryName.Map.values repositories in
+      let command repo =
+        OpamProcess.Job.ignore_errors ~default:(fun t -> t) @@
+        OpamRepositoryCommand.update t repo
+      in
       let t =
         OpamParallel.reduce
           ~jobs:(OpamState.dl_jobs t)
-          ~command:(OpamRepositoryCommand.update t)
+          ~command
           ~merge:(fun f1 f2 x -> f1 (f2 x))
           ~nil:(fun x -> x)
           repos

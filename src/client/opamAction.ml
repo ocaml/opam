@@ -229,7 +229,7 @@ let download_package t nv =
         let dir = OpamPath.dev_package t.root nv in
         OpamState.download_upstream t nv dir @@| of_dl
   in
-  job @@| function
+  OpamProcess.Job.ignore_errors ~default:(`Error ()) job @@| function
   | `Error () ->
     OpamGlobals.error "Could not get source of %s" (OpamPackage.to_string nv);
     `Error ()
