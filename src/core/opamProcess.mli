@@ -147,6 +147,9 @@ module Job: sig
   (** Catch exceptions raised within a job *)
   val catch: (exn -> 'a Op.job) -> 'a Op.job -> 'a Op.job
 
+  (** Ignore all non-fatal exceptions raised by job and return default *)
+  val ignore_errors: default:'a -> 'a Op.job -> 'a Op.job
+
   (** Register an exception-safe finaliser in a job.
       [finally job fin] is equivalent to
       [catch job (fun e -> fin (); raise e) @@+ fun r -> fin (); Done r] *)

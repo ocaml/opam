@@ -553,6 +553,9 @@ module Job = struct
       in
       Run (cmd, cont)
 
+  let ignore_errors ~default job =
+    catch (fun e -> OpamMisc.fatal e; Done default) job
+
   let rec finally fin = function
     | Done x -> fin (); Done x
     | Run (cmd,cont) ->
