@@ -1,10 +1,11 @@
 opam-version: "1.2"
 name: "opam-lib"
+version: "1.2.1"
+maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
   "Louis Gesbert <louis.gesbert@ocamlpro.com>"
 ]
-maintainer: "opam-devel@lists.ocaml.org"
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam"
@@ -15,7 +16,7 @@ build: [
 depends: [
   "ocamlgraph"
   "cmdliner"
-  "dose" {= "3.2.2+opam"}
+  "dose" {>= "3.2.2+opam"}
   "cudf"
   "re" {>= "1.2.0"}
   "ocamlfind"
