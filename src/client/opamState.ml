@@ -2417,18 +2417,20 @@ let install_compiler t ~quiet:_ switch compiler =
               Done (OpamFilename.extract_generic_file r build_dir)
           ));
       let patches = OpamFile.Comp.patches comp in
+      let patch_command file =
+        let text = OpamProcess.make_command_text ~color:`magenta
+            comp_name
+            ~args:[OpamFilename.Base.to_string
+                     (OpamFilename.basename file)]
+            "download"
+        in
+        OpamProcess.Job.with_text text @@
+        OpamFilename.download ~overwrite:true file build_dir
+      in
       let patches =
         OpamParallel.map
           ~jobs:(dl_jobs t)
-          ~command:(fun f ->
-              let text = OpamProcess.make_command_text ~color:`magenta
-                  comp_name
-                  ~args:[OpamFilename.Base.to_string
-                           (OpamFilename.basename f)]
-                  "download"
-              in
-              OpamProcess.Job.with_text text @@
-              OpamFilename.download ~overwrite:true f build_dir)
+          ~command:patch_command
           patches
       in
       List.iter (fun f -> OpamFilename.patch f build_dir) patches;
@@ -2679,12 +2681,15 @@ let update_dev_package t nv =
 
 let update_dev_packages t packages =
   log "update-dev-packages";
+  let command nv =
+    OpamProcess.Job.ignore_errors ~default:OpamPackage.Set.empty @@
+    update_dev_package t nv @@| function
+    | true -> OpamPackage.Set.singleton nv
+    | false -> OpamPackage.Set.empty
+  in
   let updates =
     OpamParallel.reduce ~jobs:(dl_jobs t)
-      ~command:(fun nv ->
-          update_dev_package t nv @@| function
-          | true -> OpamPackage.Set.singleton nv
-          | false -> OpamPackage.Set.empty)
+      ~command
       ~merge:OpamPackage.Set.union
       ~nil:OpamPackage.Set.empty
       (OpamPackage.Set.elements packages)
@@ -2697,12 +2702,15 @@ let update_dev_packages t packages =
 
 let update_pinned_packages t names =
   log "update-pinned-packages";
+  let command name =
+    OpamProcess.Job.ignore_errors ~default:OpamPackage.Name.Set.empty @@
+    update_pinned_package t name @@| function
+    | true -> OpamPackage.Name.Set.singleton name
+    | false -> OpamPackage.Name.Set.empty
+  in
   let updates =
     OpamParallel.reduce ~jobs:(dl_jobs t)
-      ~command:(fun name ->
-          update_pinned_package t name @@| function
-          | true -> OpamPackage.Name.Set.singleton name
-          | false -> OpamPackage.Name.Set.empty)
+      ~command
       ~merge:OpamPackage.Name.Set.union
       ~nil:OpamPackage.Name.Set.empty
       (OpamPackage.Name.Set.elements names)

@@ -20,6 +20,8 @@ open OpamProcess.Job.Op
 let log fmt = OpamGlobals.log "PARALLEL" fmt
 let slog = OpamGlobals.slog
 
+exception Aborted
+
 module type VERTEX = sig
   include OpamMisc.OrderedType
   include Graph.Sig.COMPARABLE with type t := t
@@ -148,7 +150,7 @@ module Make (G : G) = struct
         log "Exception while computing job %a: %a"
           (slog (string_of_int @* V.hash)) node
           (slog V.to_string) node;
-        (* OpamGlobals.error "%s" (Printexc.to_string error); *)
+        if error = Sys.Break then OpamGlobals.error "User interruption";
         let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =
@@ -157,13 +159,13 @@ module Make (G : G) = struct
                 match OpamProcess.dontwait p with
                 | None -> (* process still running *)
                   OpamProcess.interrupt p;
-                  (n,Sys.Break) :: errors,
+                  (n,Aborted) :: errors,
                   p::pend
                 | Some result ->
                   match cont result with
                   | Done _ -> errors, pend
                   | Run _ ->
-                    (n,Sys.Break) :: errors,
+                    (n,Aborted) :: errors,
                     pend
               with
               | Unix.Unix_error _ -> errors, pend
@@ -178,7 +180,7 @@ module Make (G : G) = struct
               if M.mem n results || List.mem_assoc n errors then remaining
               else n::remaining)
             g [] in
-        raise (Errors (M.keys results, errors, List.rev remaining))
+        raise (Errors (M.keys results, List.rev errors, List.rev remaining))
       in
 
       if M.is_empty running && S.is_empty ready then
@@ -226,6 +228,16 @@ module Make (G : G) = struct
 
   let map ~jobs ~command g =
     M.bindings (aux_map ~jobs ~command g)
+
+  (* Only print the originally raised exception, which should come first. Ignore
+     Aborted exceptions due to other commands termination, and simultaneous
+     exceptions in other command's continuations (unlikely as that would require
+     both commands to have terminated simultaneously) *)
+  let error_printer = function
+    | Errors (_, (_,exc)::_, _) -> Some (Printexc.to_string exc)
+    | _ -> None
+
+  let () = Printexc.register_printer error_printer
 end
 
 module type GRAPH = sig

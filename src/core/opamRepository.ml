@@ -120,7 +120,7 @@ let pull_url kind package local_dirname checksum remote_url =
     OpamGlobals.error_and_exit
       "Checksum required for %s, but not found in package description.\n\
        This may be due to an outdated package description, try running `opam update`.\n\
-       In case an update does not fix the problem, you can /bypass the check by not\n\
+       In case an update does not fix the problem, you can bypass the check by not\n\
        passing the `--require-checksums` command line option."
       (OpamPackage.to_string package);
   let pull url =
