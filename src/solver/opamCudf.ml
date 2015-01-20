@@ -232,7 +232,7 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
         let str =
           Printf.sprintf "Package %s is part of the base for this compiler \
                           and can't be changed"
-            (OpamPackage.to_string (cudf2opam a)) in
+            (OpamPackage.name_to_string (cudf2opam a)) in
         [str]
       else
         let str =
@@ -249,7 +249,7 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
         let str =
           Printf.sprintf "Package %s is part of the base for this compiler \
                           and can't be changed"
-            (OpamPackage.to_string nvb) in
+            (OpamPackage.name_to_string nvb) in
         [str]
       else
       let str = Printf.sprintf "Conflicting version constraints for %s"
