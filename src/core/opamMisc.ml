@@ -286,6 +286,10 @@ module Option = struct
     | None, Some _ -> -1
     | Some x1, Some x2 -> cmp x1 x2
 
+  let to_string ?(none="") f = function
+    | Some x -> f x
+    | None -> none
+
   module Op = struct
     let (>>=) = function
       | None -> fun _ -> None

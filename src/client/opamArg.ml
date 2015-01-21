@@ -1689,19 +1689,20 @@ let source =
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
-      if OpamProcess.Job.run (OpamAction.download_package t nv) = `Error ()
-      then OpamGlobals.error_and_exit "Download failed";
-      (try OpamAction.extract_package t nv with Failure _ -> ());
-      move_dir
-        ~src:(OpamPath.Switch.build t.root t.switch nv)
-        ~dst:dir;
-      OpamGlobals.msg "Successfully extracted to %s\n" (Dir.to_string dir);
-      if not (exists OP.(dir // "opam") || exists_dir OP.(dir / "opam"))
-      then
-        OpamFile.OPAM.write OP.(dir // "opam")
-          (OpamFile.OPAM.with_substs
-             (OpamFile.OPAM.with_patches opam [])
-             [])
+      match OpamProcess.Job.run (OpamAction.download_package t nv) with
+      | `Error () -> OpamGlobals.error_and_exit "Download failed"
+      | `Successful s ->
+        (try OpamAction.extract_package t s nv with Failure _ -> ());
+        move_dir
+          ~src:(OpamPath.Switch.build t.root t.switch nv)
+          ~dst:dir;
+        OpamGlobals.msg "Successfully extracted to %s\n" (Dir.to_string dir);
+        if not (exists OP.(dir // "opam") || exists_dir OP.(dir / "opam"))
+        then
+          OpamFile.OPAM.write OP.(dir // "opam")
+            (OpamFile.OPAM.with_substs
+               (OpamFile.OPAM.with_patches opam [])
+               [])
     );
 
     if pin then

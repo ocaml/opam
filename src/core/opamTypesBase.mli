@@ -32,6 +32,8 @@ val download_file: filename download -> generic_file download
 (** Corresponding user message *)
 val string_of_download: _ download -> string
 
+val string_of_generic_file: generic_file -> string
+
 (** Print an address *)
 val string_of_address: address -> string
 

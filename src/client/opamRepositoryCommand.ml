@@ -530,7 +530,7 @@ let add name kind address ~priority:prio =
     OpamGlobals.error_and_exit
       "\"%s\" is not a supported backend"
       (string_of_repository_kind repo.repo_kind)
-  | e ->
+  | _ ->
     cleanup t repo;
     OpamGlobals.error_and_exit "Could not fetch repo"
 

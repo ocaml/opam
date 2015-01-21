@@ -111,7 +111,7 @@ let dl_jobs = ref (
 
 let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))
-  with Not_found | Failure _ -> 10
+  with Not_found | Failure _ -> 3
 
 let cudf_file = ref (
     try Some (OpamMisc.getenv "OPAMCUDFFILE")

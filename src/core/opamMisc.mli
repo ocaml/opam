@@ -217,6 +217,8 @@ module Option: sig
 
   val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
+  val to_string: ?none:string -> ('a -> string) -> 'a option -> string
+
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option
     val (>>|): 'a option -> ('a -> 'b) -> 'b option

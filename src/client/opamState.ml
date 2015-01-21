@@ -2739,9 +2739,15 @@ let download_archive t nv =
     OpamProcess.Job.with_text text @@
     OpamRepository.pull_archive repo nv
     @@+ function
-    | Not_available _ -> Done None
-    | Up_to_date f
-    | Result f        -> OpamFilename.copy ~src:f ~dst; Done (Some dst)
+    | Not_available _ ->
+      if !OpamGlobals.verbose then
+        OpamGlobals.msg "%s Repo archive not found" text;
+      Done None
+    | Up_to_date f ->
+      OpamGlobals.msg "%s Archive in cache" text;
+      OpamFilename.copy ~src:f ~dst; Done (Some dst)
+    | Result f ->
+      OpamFilename.copy ~src:f ~dst; Done (Some dst)
   with Not_found ->
     Done None
 
