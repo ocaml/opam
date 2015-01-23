@@ -700,7 +700,7 @@ let download_command =
       else if command_exists "wget" then
         wget
       else
-        internal_error "Cannot find curl nor wget."
+        OpamGlobals.error_and_exit "Cannot find curl nor wget."
   )
 
 let really_download ~overwrite ?(compress=false) ~src ~dst =

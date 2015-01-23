@@ -1085,7 +1085,9 @@ module API = struct
       OpamGlobals.header_msg "Updating package repositories";
       let repos = OpamRepositoryName.Map.values repositories in
       let command repo =
-        OpamProcess.Job.ignore_errors ~default:(fun t -> t) @@
+        OpamProcess.Job.ignore_errors ~default:(fun t -> t)
+          ~message:("Could not update repository " ^
+                    OpamRepositoryName.to_string repo.repo_name) @@
         OpamRepositoryCommand.update t repo
       in
       let t =

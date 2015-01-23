@@ -33,6 +33,8 @@ type command = {
 
 let string_of_command c = String.concat " " (c.cmd::c.args)
 let text_of_command c = c.cmd_text
+let is_verbose_command c =
+  OpamMisc.Option.default !OpamGlobals.verbose c.cmd_verbose
 
 let make_command_text ?(color=`green) str ?(args=[]) cmd =
   let summary =
@@ -553,8 +555,12 @@ module Job = struct
       in
       Run (cmd, cont)
 
-  let ignore_errors ~default job =
-    catch (fun e -> OpamMisc.fatal e; Done default) job
+  let ignore_errors ~default ?message job =
+    catch (fun e ->
+        OpamMisc.fatal e;
+        OpamMisc.Option.iter (OpamGlobals.error "%s") message;
+        Done default)
+      job
 
   let rec finally fin = function
     | Done x -> fin (); Done x

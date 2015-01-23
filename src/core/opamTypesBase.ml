@@ -32,6 +32,10 @@ let string_of_download = function
   | Result _ -> "synchronized"
   | Not_available _ -> "unavailable"
 
+let string_of_generic_file = function
+  | D d -> OpamFilename.Dir.to_string d
+  | F f -> OpamFilename.to_string f
+
 let string_of_address = function
   | url, None   -> url
   | url, Some c -> Printf.sprintf "%s#%s" url c

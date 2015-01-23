@@ -24,13 +24,13 @@ open OpamState.Types
 val download_package: t -> package ->
   [ `Error of unit | `Successful of generic_file option ] OpamProcess.job
 
-(** Extracts and patches the source of a package found in the local cache. *)
-val extract_package: t -> package -> unit
+(** Extracts and patches the source of a package *)
+val extract_package: t -> generic_file option -> package -> unit
 
 (** Build and install a package from its downloaded source. Returns [None] on
     success, [Some exn] on error. *)
 val build_and_install_package:
-  t -> metadata:bool -> package -> exn option OpamProcess.job
+  t -> metadata:bool -> generic_file option -> package -> exn option OpamProcess.job
 
 (** Find out if the package source is needed for uninstall *)
 val removal_needs_download: t -> package -> bool

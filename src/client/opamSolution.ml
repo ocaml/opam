@@ -326,7 +326,7 @@ let parallel_apply t action action_graph =
 
   (* 1/ fetch needed package archives *)
 
-  let _package_sources, failed_downloads =
+  let package_sources, failed_downloads =
     let sources_needed = OpamAction.sources_needed t action_graph in
     let sources_list = OpamPackage.Set.elements sources_needed in
     if sources_list <> [] then
@@ -374,16 +374,20 @@ let parallel_apply t action action_graph =
       Done (Some cancelled_exn)
     else
     let t = !t_ref in
+    let nv = action_contents action in
+    let source =
+      try Some (OpamPackage.Map.find nv package_sources)
+      with Not_found -> None in
     match action with
-    (* todo: use package_sources rather than guess again *)
     | To_change (_, nv) | To_recompile nv ->
-      (OpamAction.build_and_install_package ~metadata:false t nv
+      (OpamAction.build_and_install_package ~metadata:false t source nv
        @@+ function
        | None ->  add_to_install nv; Done None
        | Some exn -> Done (Some exn))
     | To_delete nv ->
       if OpamAction.removal_needs_download t nv then
-        (try OpamAction.extract_package t nv with e -> OpamMisc.fatal e);
+        (try OpamAction.extract_package t source nv
+         with e -> OpamMisc.fatal e);
       OpamProcess.Job.catch (fun e -> OpamMisc.fatal e; Done ())
          (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
       remove_from_install nv;

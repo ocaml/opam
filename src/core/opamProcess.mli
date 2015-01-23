@@ -34,6 +34,7 @@ val command:
 
 val string_of_command: command -> string
 val text_of_command: command -> string option
+val is_verbose_command: command -> bool
 
 (** Returns a label suitable for printing the summary of running commands. First
     string is the topic (e.g. package), second the action (e.g. command name).
@@ -148,7 +149,7 @@ module Job: sig
   val catch: (exn -> 'a Op.job) -> 'a Op.job -> 'a Op.job
 
   (** Ignore all non-fatal exceptions raised by job and return default *)
-  val ignore_errors: default:'a -> 'a Op.job -> 'a Op.job
+  val ignore_errors: default:'a -> ?message:string -> 'a Op.job -> 'a Op.job
 
   (** Register an exception-safe finaliser in a job.
       [finally job fin] is equivalent to

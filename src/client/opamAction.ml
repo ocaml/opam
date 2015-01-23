@@ -159,7 +159,7 @@ let prepare_package_build t nv =
 
   if !OpamGlobals.dryrun || !OpamGlobals.fake then
     ignore (iter_patches (fun base ->
-        OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
+        log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
           (OpamFilename.Base.to_string base)))
   else
 
@@ -180,7 +180,7 @@ let prepare_package_build t nv =
     iter_patches (fun base ->
       let root = OpamPath.Switch.build t.root t.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
-      OpamGlobals.msg "%s: applying %s.\n" (OpamPackage.name_to_string nv)
+      log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
         (OpamFilename.Base.to_string base);
       OpamFilename.patch patch p_build)
   in
@@ -235,43 +235,24 @@ let download_package t nv =
     `Error ()
   | success -> success
 
-let extract_package t nv =
-  log "extract_package: %a" (slog OpamPackage.to_string) nv;
-
+let extract_package t source nv =
+  log "extract_package: %a from %a"
+    (slog OpamPackage.to_string) nv
+    (slog (OpamMisc.Option.to_string OpamTypesBase.string_of_generic_file))
+    source;
   if !OpamGlobals.dryrun then () else
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
-
-  let extract_and_copy_files dir =
-    let extract_dir () = OpamFilename.extract_generic_file (D dir) build_dir in
-    let () = match OpamFilename.files dir with
-      | [] -> log "No files found in %s" (OpamFilename.Dir.to_string dir)
-      | [f] ->
-        log "archive %a => extracting" (slog OpamFilename.to_string) f;
-        begin
-          try OpamFilename.extract_generic_file (F f) build_dir
-          with OpamSystem.Internal_error _ -> extract_dir ()
-        end
-      | _::_::_ ->
-        log "multiple files in %a: assuming dev directory & copying"
-          (slog OpamFilename.Dir.to_string) dir;
-        extract_dir ()
-    in
-    OpamState.copy_files t nv build_dir in
-
-  let name = OpamPackage.name nv in
-  (try match OpamPackage.Name.Map.find name t.pinned with
-     | Version _ ->
-       extract_and_copy_files (OpamPath.dev_package t.root nv)
-     | _ ->
-       extract_and_copy_files (OpamPath.Switch.dev_package t.root t.switch name)
-   with Not_found ->
-     let archive = OpamPath.archive t.root nv in
-     if OpamFilename.exists archive then
-       OpamFilename.extract archive build_dir
-     else
-       extract_and_copy_files (OpamPath.dev_package t.root nv));
-
+  let () =
+    match source with
+    | None -> ()
+    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:build_dir
+    | Some (F archive) -> OpamFilename.extract archive build_dir
+  in
+  let is_repackaged_archive =
+    Some (F (OpamPath.archive t.root nv)) = source
+  in
+  if not is_repackaged_archive then OpamState.copy_files t nv build_dir;
   prepare_package_build t nv
 
 let string_of_commands commands =
@@ -523,10 +504,10 @@ let remove_package t ~metadata ?keep_build ?silent nv =
 (* Build and install a package.
    Assumes the package has already been downloaded to its build dir.
 *)
-let build_and_install_package_aux t ~metadata:save_meta nv =
+let build_and_install_package_aux t ~metadata:save_meta source nv =
   (* OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv); *)
 
-  extract_package t nv;
+  extract_package t source nv;
 
   let opam = OpamState.opam t nv in
   let commands =
@@ -581,9 +562,9 @@ let build_and_install_package_aux t ~metadata:save_meta nv =
   else
     run_commands commands
 
-let build_and_install_package t ~metadata nv =
+let build_and_install_package t ~metadata source nv =
   if not !OpamGlobals.fake then
-    build_and_install_package_aux t ~metadata nv
+    build_and_install_package_aux t ~metadata source nv
   else
     (OpamGlobals.msg "(simulation) Building and installing %s.\n"
        (OpamPackage.to_string nv);
