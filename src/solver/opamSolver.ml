@@ -324,7 +324,7 @@ let installable universe =
   log "trim";
   let simple_universe =
     load_cudf_universe universe universe.u_available in
-  let trimed_universe = Algo.Depsolver.trim simple_universe in
+  let trimed_universe = (* Algo.Depsolver.trim *) simple_universe in
   Cudf.fold_packages
     (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
     OpamPackage.Set.empty
