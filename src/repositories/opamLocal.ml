@@ -23,7 +23,7 @@ let slog = OpamGlobals.slog
 
 let rsync_arg = "-rLptgoDrvc"
 
-let call_rsync args =
+let call_rsync check args =
   OpamSystem.make_command "rsync" args
   @@> fun r ->
   match r.OpamProcess.r_code with
@@ -32,10 +32,14 @@ let call_rsync args =
     Done None
   | 20 -> (* signal *)
     raise Sys.Break
-  | 23 | 24 -> (* partial, mostly mode, link or perm errors *)
-    OpamGlobals.warning "Rsync partially failed:\n  %s"
-      (String.concat "\n  " r.OpamProcess.r_stderr);
-    Done (Some (OpamMisc.rsync_trim r.OpamProcess.r_stdout))
+  | 23 | 24 ->
+    (* partial, mostly mode, link or perm errors. But may also be a
+       complete error so we do an additional check *)
+    if check () then
+      (OpamGlobals.warning "Rsync partially failed:\n  %s"
+         (String.concat "\n  " r.OpamProcess.r_stderr);
+       Done (Some (OpamMisc.rsync_trim r.OpamProcess.r_stdout)))
+    else Done None
   | 30 | 35 -> (* timeouts *)
     Done None
   | _ -> OpamSystem.process_error r
@@ -49,13 +53,14 @@ let rsync ?(args=[]) src dst =
     Done (Up_to_date [])
   else (
     OpamSystem.mkdir dst;
-    call_rsync ( rsync_arg :: args @ [
-                 "--exclude"; ".git";
-                 "--exclude"; "_darcs";
-                 "--exclude"; ".hg";
-                 "--exclude"; ".#*";
-                 "--delete";
-                 src; dst; ])
+    call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
+      ( rsync_arg :: args @ [
+            "--exclude"; ".git";
+            "--exclude"; "_darcs";
+            "--exclude"; ".hg";
+            "--exclude"; ".#*";
+            "--delete";
+            src; dst; ])
     @@| function
     | None -> Not_available src
     | Some [] -> Up_to_date []
@@ -87,7 +92,8 @@ let rsync_file ?(args=[]) src dst =
   else if src_s = dst_s then
     Done (Up_to_date src)
   else
-  call_rsync ( rsync_arg :: args @ [ src_s; dst_s ])
+  call_rsync (fun () -> Sys.file_exists dst_s)
+    ( rsync_arg :: args @ [ src_s; dst_s ])
   @@| function
   | None -> Not_available src_s
   | Some [] -> Up_to_date dst
