@@ -588,12 +588,22 @@ let guess_dot_profile shell =
   | `fish -> List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
   | `zsh  -> home ".zshrc"
   | `bash ->
-    let bash_profile = home ".bash_profile" in
-    let bashrc = home ".bashrc" in
-    if Sys.file_exists bash_profile then
-      bash_profile
-    else
-      bashrc
+    (try
+       List.find Sys.file_exists [
+         (* Bash looks up these 3 files in order and only loads the first,
+            for LOGIN shells *)
+         home ".bash_profile";
+         home ".bash_login";
+         home ".profile";
+         (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
+            but it's often included from the above.
+            We may include our variables in both to be sure ; for now we rely
+            on non-login shells inheriting their env from a login shell
+            somewhere... *)
+       ]
+     with Not_found ->
+       (* iff none of the above exist, creating this should be safe *)
+       home ".bash_profile")
   | `csh ->
     let cshrc = home ".cshrc" in
     let tcshrc = home ".tcshrc" in

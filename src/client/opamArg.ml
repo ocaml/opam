@@ -456,17 +456,19 @@ let installed_flag =
 let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
-let fish_flag =
-  mk_flag ["fish"] "Use fish-compatible mode for configuring OPAM."
-
-let zsh_flag =
-  mk_flag ["zsh"] "Use zsh-compatible mode for configuring OPAM."
-
-let csh_flag =
-  mk_flag ["csh"] "Use csh-compatible mode for configuring OPAM."
-
-let sh_flag =
-  mk_flag ["sh"] "Use sh-compatible mode for configuring OPAM."
+let shell_opt =
+  let enum =
+    Arg.enum [
+      "bash",`bash;
+      "sh",`sh;
+      "csh",`csh;
+      "zsh",`zsh;
+      "fish",`fish;
+    ] in
+  mk_opt ["shell"] "SHELL"
+    "Sets the configuration mode for OPAM environment appropriate for $(docv). \
+     One of `bash', `sh', `csh', `zsh' or `fish'."
+    enum (OpamMisc.guess_shell_compat ())
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
@@ -687,7 +689,7 @@ let init =
         configuration in $(i,~/.opam) (or the given $(b,--root)) and configures \
         the initial remote package repository.";
     `P "Once the fresh client has been created, OPAM will ask the user if he wants \
-        $(i,~/.profile) (or $(i,~/.zshrc), depending on his shell) and $(i,~/.ocamlinit) \
+        $(i,~/.profile) (or $(i,~/.zshrc), etc. depending on his shell) and $(i,~/.ocamlinit) \
         to be updated. \
         If $(b,--auto-setup) is used, OPAM will modify the configuration files automatically, \
         without asking the user. If $(b,--no-setup) is used, OPAM will *NOT* modify \
@@ -709,7 +711,7 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
-      no_setup auto_setup sh csh zsh fish dot_profile_o =
+      no_setup auto_setup shell dot_profile_o =
     (* Create the dir in current directory so that it can be made absolute *)
     OpamFilename.mkdir global_options.root;
     apply_global_options global_options;
@@ -724,17 +726,11 @@ let init =
       if no_setup then `no
       else if auto_setup then `yes
       else `ask in
-    let shell =
-      if sh then `sh
-      else if csh then `csh
-      else if zsh then `zsh
-      else if fish then `fish
-      else OpamMisc.guess_shell_compat () in
     let dot_profile = init_dot_profile shell dot_profile_o in
     Client.init repository compiler ~jobs shell dot_profile update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
-    $no_setup $auto_setup $sh_flag $csh_flag $zsh_flag $fish_flag $dot_profile_flag),
+    $no_setup $auto_setup $shell_opt $dot_profile_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -943,7 +939,7 @@ let config =
   let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
   let ocamlinit_doc   = "Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel." in
-  let profile_doc     = "Modify ~/.profile (or ~/.zshrc if running zsh) to \
+  let profile_doc     = "Modify ~/.profile (or ~/.zshrc, etc., depending on your shell) to \
                          setup an OPAM-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
   let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
@@ -966,23 +962,15 @@ let config =
   let inplace_path    = mk_flag ["inplace-path"]   inplace_path_doc in
 
   let config global_options
-      command sh csh zsh fish sexp inplace_path
+      command shell sexp inplace_path
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
     apply_global_options global_options;
-    let csh, fish =
-      match sh, csh, sexp, fish with
-      | false, false, false, false ->
-        (* No overrides have been provided, so guess which shell is active *)
-        (match OpamMisc.guess_shell_compat () with
-         | `csh                -> true , false
-         | `fish               -> false, true
-         | `sh | `bash | `zsh  -> false, false)
-      | _ -> csh, fish
-    in
     match command, params with
-    | Some `env, [] -> `Ok (Client.CONFIG.env ~csh ~sexp ~fish ~inplace_path)
+    | Some `env, [] ->
+      `Ok (Client.CONFIG.env
+             ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | Some `setup, [] ->
       let user        = all || user in
       let global      = all || global in
@@ -990,12 +978,6 @@ let config =
       let ocamlinit   = user  || ocamlinit in
       let complete    = global && not no_complete in
       let switch_eval = global && not no_switch_eval in
-      let shell       =
-        if sh then `sh
-        else if csh then `csh
-        else if zsh then `zsh
-        else if fish then `fish
-        else OpamMisc.guess_shell_compat () in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         `Ok (Client.CONFIG.setup_list shell dot_profile)
@@ -1011,7 +993,8 @@ let config =
            Main options\n\
           \    -l, --list           %s\n\
           \    -a, --all            %s\n\
-          \    --sh,--csh,--zsh,--fish     Force the configuration mode to a given shell.\n\
+          \    --shell=<bash|sh|csh|zsh|fish>\n\
+          \                         Configure assuming the given shell.\n\
            \n\
            User configuration\n\
           \    -u, --user           %s\n\
@@ -1131,7 +1114,7 @@ let config =
 
   Term.ret (
     Term.(pure config
-          $global_options $command $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
+          $global_options $command $shell_opt $sexp
           $inplace_path
           $dot_profile_flag $list $all $global $user
           $profile $ocamlinit $no_complete $no_switch_eval
