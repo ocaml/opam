@@ -151,7 +151,7 @@ let list ~print_short ~installed ~all =
        (OpamGlobals.msg "\n";
         OpamGlobals.warning
           "The environment is not in sync with the current switch.\n\
-           You should run: %s" (OpamState.eval_string ()))
+           You should run: %s" (OpamState.eval_string t))
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) t switch =
@@ -189,7 +189,7 @@ let remove_t switch ?(confirm = true) t =
 let update_global_config t ~warning switch =
   let t = OpamState.update_switch_config t switch in
   if warning then
-    OpamState.print_env_warning_at_switch t
+    OpamState.print_env_warning_at_switch {t with switch}
 
 
 let install_compiler ~quiet switch compiler =

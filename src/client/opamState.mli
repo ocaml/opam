@@ -118,7 +118,7 @@ val up_to_date_env: state -> bool
 
 (** The shell command to run by the user to set his OPAM environement ([eval
     `opam config env`]) *)
-val eval_string: unit -> string
+val eval_string: state -> string
 
 (** Print a warning if the environment is not set-up properly on init. *)
 val print_env_warning_at_init: state -> user_config -> unit

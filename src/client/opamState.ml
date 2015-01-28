@@ -1843,8 +1843,6 @@ let env_updates ~opamswitch ?(force_path=false) t =
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
-  let makeflags = "MAKEFLAGS", "=", "" in
-  let makelevel = "MAKELEVEL", "=", "" in
   let man_path =
     match OpamGlobals.os () with
     | OpamGlobals.OpenBSD | OpamGlobals.NetBSD | OpamGlobals.FreeBSD ->
@@ -1871,7 +1869,6 @@ let env_updates ~opamswitch ?(force_path=false) t =
       [] in
 
   new_path :: toplevel_dir :: new_perl5lib ::
-  makeflags :: makelevel ::
   (man_path @ switch @ root @ utf8 @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
@@ -1883,11 +1880,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
 let get_opam_env ~force_path t =
-  let t,opamswitch = match !OpamGlobals.switch with
-    | `Command_line _ -> t, true
-    | `Not_set -> t, false
-    | `Env _   -> { t with switch = OpamFile.Config.switch t.config }, true
-  in
+  let opamswitch = !OpamGlobals.switch <> `Not_set in
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
@@ -2171,17 +2164,30 @@ let display_setup t shell dot_profile =
   OpamGlobals.msg "Global configuration:\n";
   List.iter print global_setup
 
-let eval_string () =
+let eval_string t =
   let root =
-    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
-      Printf.sprintf " --root=%s" !OpamGlobals.root_dir
+    let opamroot_cur = OpamFilename.Dir.to_string t.root in
+    let opamroot_env =
+      try OpamMisc.getenv "OPAMROOT"
+      with Not_found -> OpamGlobals.default_opam_dir
+    in
+    if opamroot_cur <> opamroot_env then
+      Printf.sprintf " --root=%s" opamroot_cur
     else
       "" in
+  let switch =
+    try
+      let sw_cur = OpamSwitch.to_string t.switch in
+      let sw_env = OpamMisc.getenv "OPAMSWITCH" in
+      if sw_cur <> sw_env then Printf.sprintf " --switch=%s" sw_cur
+      else ""
+    with Not_found -> ""
+  in
   match OpamMisc.guess_shell_compat () with
   | `fish ->
-    Printf.sprintf "eval (opam config env%s)\n" root
+    Printf.sprintf "eval (opam config env%s%s)\n" root switch
   | _ ->
-    Printf.sprintf "eval `opam config env%s`\n" root
+    Printf.sprintf "eval `opam config env%s%s`\n" root switch
 
 let up_to_date_env t =
   let changes =
@@ -2228,14 +2234,14 @@ let print_env_warning_at_init t user =
        %s%s%s\n\n"
       line
       (OpamGlobals.colorise `yellow "1.")
-      (eval_string ()) profile_string ocamlinit_string line
+      (eval_string t) profile_string ocamlinit_string line
 
 let print_env_warning_at_switch t =
   if up_to_date_env t then ()
   else
     OpamGlobals.msg
       "# To setup the new switch in the current shell, you need to run:\n%s"
-      (eval_string ())
+      (eval_string t)
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =
