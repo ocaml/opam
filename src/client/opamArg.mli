@@ -89,17 +89,8 @@ val installed_flag: bool Term.t
 (** --installed-root *)
 val installed_roots_flag: bool Term.t
 
-(** --fish *)
-val fish_flag: bool Term.t
-
-(** --zsh *)
-val zsh_flag: bool Term.t
-
-(** --csh *)
-val csh_flag: bool Term.t
-
-(** --sh *)
-val sh_flag: bool Term.t
+(** --shell *)
+val shell_opt: shell Term.t
 
 (** --dot-profile *)
 val dot_profile_flag: filename option Term.t
