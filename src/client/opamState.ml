@@ -1843,8 +1843,6 @@ let env_updates ~opamswitch ?(force_path=false) t =
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
-  let makeflags = "MAKEFLAGS", "=", "" in
-  let makelevel = "MAKELEVEL", "=", "" in
   let man_path =
     match OpamGlobals.os () with
     | OpamGlobals.OpenBSD | OpamGlobals.NetBSD | OpamGlobals.FreeBSD ->
@@ -1871,7 +1869,6 @@ let env_updates ~opamswitch ?(force_path=false) t =
       [] in
 
   new_path :: toplevel_dir :: new_perl5lib ::
-  makeflags :: makelevel ::
   (man_path @ switch @ root @ utf8 @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to

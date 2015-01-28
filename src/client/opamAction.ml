@@ -266,6 +266,8 @@ let string_of_commands commands =
 let compilation_env t opam =
   let env0 = OpamState.get_full_env ~opam ~force_path:true t in
   let env1 = [
+    ("MAKEFLAGS", "");
+    ("MAKELEVEL", "");
     ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
     ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
   ] @ env0 in
