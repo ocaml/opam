@@ -2744,7 +2744,7 @@ let download_archive t nv =
         OpamGlobals.msg "%s Repo archive not found" text;
       Done None
     | Up_to_date f ->
-      OpamGlobals.msg "%s Archive in cache" text;
+      OpamGlobals.msg "%s Archive in cache\n" text;
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
     | Result f ->
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
