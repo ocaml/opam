@@ -275,7 +275,7 @@ until you committed them. Pinning the directory as a raw path isn't perfect
 either, because it makes OPAM register all files, including temporary files or
 build artifacts.
 
-The idea of "mixed mode", which is the default in upcoming OPAM 1.2.1, is to
+The idea of "mixed mode", which is the default in OPAM 1.2.1, is to
 take the best of both worlds: OPAM will synchronise only files under version
 control, but at their current state on the filesystem. You may just need to
 remember to register them if you added new files (e.g. `git add`).

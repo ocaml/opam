@@ -2,16 +2,13 @@
 
 * Update version (and copyright year) in `configure.ac`, `shell/opam_installer.sh`
 * Run `make configure` to regenerate `./configure`
-* Run `make tests`
-* Run `opam-rt` (with and without aspcud)
+* Run `make tests`, `opam-rt` (with and without aspcud) -- now checked by travis
 * Run `make doc` to re-generate the API documetation
-* Check that 'make with-ocamlbuild install-with-ocamlbuild' works
-* Check that 'make libinstall-with-ocamlbuild' works (try to compile `opam-rt` and `opam2web` with it)
 
 --
 
 * update the CHANGELOG
-* tag the release
+* tag the release (git tag -a 1.2.1; git push origin 1.2.1)
 * create a release on github based on your tag (https://github.com/ocaml/opam/releases/new)
 
 --
@@ -29,7 +26,7 @@ bash -ue ./release.sh -t $VERSION
 
 --
 
-* Add some news about the release on opam2web
-* Update the installation instructions in [the Wiki](http://opam.ocaml.org/doc/Quick_Install.html)
+* Add some news about the release on the platform blog
+* Update the installation instructions in doc/pages
 * Update the opam-lib, opamfu, opam2web opam packages
 * Announce ! (platform-list, caml-list)
