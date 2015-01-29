@@ -3,7 +3,7 @@
 set -ue
 
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
-# (c) Copyright Louis Gesbert OCamlPro 2014
+# (c) Copyright Louis Gesbert OCamlPro 2014-2015
 
 VERSION='1.2.0'
 
