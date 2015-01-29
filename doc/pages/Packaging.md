@@ -185,7 +185,7 @@ $ opam install opam-publish
 $ opam-publish prepare <URL>
 ```
 
-This'll provide you with a `<package>.<version>` directory, where you'll have to
+This will provide you with a `<package>.<version>` directory, where you'll have to
 write a description within the `descr` file if your package is new. Check the
 files in that directory, it's the full contents of what will be included in the
 opam repository.
@@ -313,15 +313,15 @@ into too much details, here are some of the most useful features:
   versions are strings too, don't forget the quotes.
 * **Formulas**: depends are by default a conjunction (all of them are required),
   but you can use the logical "and" `&` and "or" `|` operators, and even group
-  with parens. The same is true for version constraints: `("pkg1" & "pkg2") |
+  with parentheses. The same is true for version constraints: `("pkg1" & "pkg2") |
   "pkg3" {>= "3.2" & != "3.7"}`.
 * **Build depends**: you may add the key `build` in front of the version
   constraints, e.g. `"package" {build & >= "3.2"}`, to indicate that there is no
   run-time dependency to this package: it is required but won't trigger rebuilds
   of your package when changed.
 * **OS and OCaml constraints**: The `available` field is a formula that
-  determines your package availability based on the os, OCaml version or other
-  constraints. For example:
+  determines your package availability based on the operating system
+  (OS), OCaml version or other constraints. For example:
 
     ```
     available: [ os != "darwin" | ocaml-version >= "4.00" ]

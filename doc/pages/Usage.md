@@ -3,7 +3,7 @@
 This document starts with a quick introduction, then covers most commonly-used
 OPAM features.
 
-If you are a developper and want to get a project packaged or change an existing
+If you are a developer and want to get a project packaged or change an existing
 package, see the step-by-step [packaging guide](Packaging.html)
 
 The full documentation is available inline, using
@@ -20,9 +20,9 @@ details.
 
 ```
 # ** Get started **
-opam init            # Initialise ~/.opam using an already installed OCaml
+opam init            # Initialize ~/.opam using an already installed OCaml
 opam init --comp 4.02.1
-                     # Initialise with a freshly compiled OCaml 4.02.1
+                     # Initialize with a freshly compiled OCaml 4.02.1
 
 # ** Lookup **
 opam list -a         # List all available packages
@@ -51,7 +51,7 @@ OCaml version -- `opam install PACKAGE` will give you the reason.
 
 ### opam init
 
-OPAM needs to initialise its internal state in a `~/.opam` directory to work.
+OPAM needs to initialize its internal state in a `~/.opam` directory to work.
 This command can also take care of installing a version of OCaml there if
 needed, using the `--comp VERSION` option.
 
@@ -61,7 +61,7 @@ to proceed manually if you decline.
 
 ### opam update
 
-This command synchronises OPAM's database with the package repositories. The
+This command synchronizes OPAM's database with the package repositories. The
 lists of available packages and their details are stored into
 `~/.opam/repo/<name>`. Remember to run this regularly if you want to keep
 up-to-date, or if you are having trouble with a package.
@@ -106,7 +106,7 @@ Creating a new switch requires re-compiling OCaml, unless you make it an alias
 of the "system" switch, relying on the global OCaml installation.
 
 There are a bunch of specific or experimental OCaml compiler definitions on the
-official repository, list them all with `opan switch list --all`.
+official repository, list them all with `opam switch list --all`.
 
 ### opam pin
 
@@ -121,7 +121,7 @@ opam pin add <package name> <target>
 
 Where `<target>` may be a version, but also a local path, an http address or
 even a git, mercurial or darcs URL. The package will be kept up-to-date with its
-origin on `opam update` and when explicitely mentionned in a command, so that
+origin on `opam update` and when explicitly mentioned in a command, so that
 you can simply run `opam upgrade <package name>` to re-compile it from its
 upstream. If the upstream includes OPAM metadata, that will be used as well.
 
