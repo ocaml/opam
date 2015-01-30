@@ -361,7 +361,9 @@ let log_file name = match name with
   | None   -> temp_file "log"
   | Some n -> temp_file ~dir:(Sys.getcwd ()) n
 
-let make_command ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir cmd args =
+let make_command
+    ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir ?(check_existence=true)
+    cmd args =
   let name = log_file name in
   let verbose =
     OpamMisc.Option.default (!OpamGlobals.debug || !OpamGlobals.verbose) verbose
@@ -369,7 +371,7 @@ let make_command ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin 
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
     OpamGlobals.warning "Command %S contains 1 space" cmd;
-  if command_exists ~env ?dir cmd then
+  if not check_existence || command_exists ~env ?dir cmd then
     OpamProcess.command ~env ~name ?text ~verbose ?metadata ?allow_stdin ?dir
       cmd args
   else
