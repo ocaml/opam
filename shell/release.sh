@@ -103,8 +103,8 @@ if [ -z "${NAME:-}" ]; then NAME=opam-full-"$TAG"; fi
 if [ -z "${TARBALL:-}" ]; then TARBALL="$NAME".tar.gz; fi
 
 if [[ " ${ACTIONS[@]} " =~ " binary " ]]; then
-    if [ "$(ocaml -vnum)" != "4.01.0" ]; then
-        echo "Error: you should use OCaml 4.01.0 for building the release"
+    if [ "$(ocaml -vnum)" != "4.02.1" ]; then
+        echo "Error: you should use OCaml 4.02.1 for building the release"
         exit 1
     fi
 
