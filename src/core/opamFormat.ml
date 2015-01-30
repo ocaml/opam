@@ -406,6 +406,8 @@ let parse_dep_flag = function
   | Ident (_, "build") -> Depflag_Build
   | Ident (_, "test") -> Depflag_Test
   | Ident (_, "doc") -> Depflag_Doc
+  | Ident (_, "dev") -> Depflag_Dev
+  | Ident (_, s) -> Depflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
       "Unknown dependency flag %S. Expected one of \"build\", \"test\" or \
@@ -416,6 +418,8 @@ let make_dep_flag = function
   | Depflag_Build -> make_ident "build"
   | Depflag_Test -> make_ident "test"
   | Depflag_Doc -> make_ident "doc"
+  | Depflag_Dev -> make_ident "dev"
+  | Depflag_Unknown s -> make_ident s
 
 (* Version constraints with additional leading keywords ("build","test"...) *)
 let rec parse_ext_constraints = function

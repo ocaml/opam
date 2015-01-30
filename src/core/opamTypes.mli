@@ -125,6 +125,8 @@ type package_dep_flag =
   | Depflag_Build
   | Depflag_Test
   | Depflag_Doc
+  | Depflag_Dev
+  | Depflag_Unknown of string
 
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)

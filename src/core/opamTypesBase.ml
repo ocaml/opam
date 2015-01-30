@@ -224,8 +224,10 @@ let filter_deps
   let filter =
     List.for_all (function
         | Depflag_Build -> build
-        | Depflag_Test-> test
-        | Depflag_Doc-> doc)
+        | Depflag_Test -> test
+        | Depflag_Doc -> doc
+        | Depflag_Dev -> true (* unimplemented *)
+        | Depflag_Unknown _ -> true (* ignored *))
   in
   OpamFormula.formula_of_extended ~filter
 
