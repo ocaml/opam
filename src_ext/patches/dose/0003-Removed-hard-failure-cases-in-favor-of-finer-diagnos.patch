@@ -1,14 +1,14 @@
-From b93f8b64c86ded96b31b49b983beabfd8d7280f2 Mon Sep 17 00:00:00 2001
+From 43c0a01d18e442dd8d51b21630a784c0c1dad0f5 Mon Sep 17 00:00:00 2001
 From: Louis Gesbert <louis.gesbert@ocamlpro.com>
 Date: Fri, 18 Jul 2014 15:50:24 +0200
-Subject: [PATCH] Removed hard failure cases, in favor of finer diagnostics
+Subject: [PATCH 3/3] Removed hard failure cases, in favor of finer diagnostics
 
 ---
  algo/depsolver.ml | 5 -----
  1 file changed, 5 deletions(-)
 
 diff --git a/algo/depsolver.ml b/algo/depsolver.ml
-index f93fb86..a812ede 100644
+index 5815f8a..3f25cd8 100644
 --- a/algo/depsolver.ml
 +++ b/algo/depsolver.ml
 @@ -37,11 +37,6 @@ let reason map universe =
@@ -24,5 +24,5 @@ index f93fb86..a812ede 100644
          Diagnostic.Dependency(from_sat (map#inttovar i),vl,List.map (fun i -> from_sat (map#inttovar i)) il)
      )
 -- 
-2.0.1
+2.1.4
 

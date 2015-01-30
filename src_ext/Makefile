@@ -17,8 +17,8 @@ MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 URL_cudf = https://gforge.inria.fr/frs/download.php/file/33593/cudf-0.7.tar.gz
 MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/33677/dose3-3.2.2.tar.gz
-MD5_dose = 3ffed1987a040024076c08f4a7af9b21
+URL_dose = https://gforge.inria.fr/frs/download.php/file/34277/dose3-3.3.tar.gz
+MD5_dose = ea947804c636059bb8b64dbda5c1df08
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
