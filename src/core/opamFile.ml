@@ -1262,9 +1262,29 @@ module X = struct
       let build = assoc_list s s_build OpamFormat.parse_commands in
       let install = assoc_list s s_install OpamFormat.parse_commands in
       let remove = assoc_list s s_remove OpamFormat.parse_commands in
+      let check_flags ~pos ext_formula =
+        if conservative then ext_formula else
+        OpamFormula.map (fun (name, (flags, cstr)) ->
+              let known_flags =
+                List.filter
+                  (function Depflag_Unknown _ -> false | _ -> true) flags in
+              if not permissive && known_flags <> flags then
+                OpamGlobals.warning
+                  "At %s: Unknown flags %s ignored for dependency %s"
+                  (string_of_pos pos)
+                  (OpamMisc.pretty_list (OpamMisc.filter_map (function
+                       | Depflag_Unknown s -> Some s
+                       | _ -> None)
+                       flags))
+                  (OpamPackage.Name.to_string name);
+              Atom (name, (known_flags, cstr)))
+          ext_formula
+      in
       let depends =
         assoc_default OpamFormula.Empty s s_depends
-          OpamFormat.parse_ext_formula in
+          (fun v ->
+             OpamFormat.parse_ext_formula v |>
+             check_flags ~pos:(OpamFormat.value_pos v)) in
       let depopts =
         let rec cleanup ~pos acc disjunction =
           List.fold_left (fun acc -> function
@@ -1292,7 +1312,9 @@ module X = struct
             acc disjunction
         in
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
-        let f = OpamFormat.parse_opt_formula value in
+        let f =
+          OpamFormat.parse_opt_formula value |>
+          check_flags ~pos:(OpamFormat.value_pos value) in
         if not conservative &&
            not !OpamGlobals.skip_version_checks &&
            OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
@@ -1463,6 +1485,13 @@ module X = struct
           "No field 'remove' while a field 'install' is present, uncomplete \
            uninstallation suspected"
           (t.install <> [] && t.remove = []);
+        cond `Error
+          "Unknown dependency flags in depends or depopts"
+          (OpamFormula.fold_left (fun acc (_, (flags, _)) ->
+               acc || List.exists
+                 (function Depflag_Unknown _ -> true | _ -> false)
+                 flags)
+              false (OpamFormula.ands [t.depends;t.depopts]));
         cond `Error
           "Field 'depopts' contains formulas or version constraints"
           (List.exists (function
