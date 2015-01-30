@@ -1635,7 +1635,11 @@ let source =
     in
     let dir = match dir with
       | Some d -> d
-      | None -> OpamFilename.OP.(OpamFilename.cwd () / OpamPackage.to_string nv)
+      | None ->
+        let dirname =
+          if dev_repo then OpamPackage.name_to_string nv
+          else OpamPackage.to_string nv in
+        OpamFilename.OP.(OpamFilename.cwd () / dirname)
     in
     let open OpamFilename in
     if exists_dir dir then
@@ -1663,12 +1667,19 @@ let source =
           | None -> assert false
         in
         mkdir dir;
+        let text =
+          OpamProcess.make_command_text (OpamPackage.name_to_string nv)
+            (string_of_repository_kind kind)
+        in
         match
           OpamProcess.Job.run
-            (OpamRepository.pull_url kind nv dir None [address])
+            (OpamProcess.Job.with_text text
+               (OpamRepository.pull_url kind nv dir None [address]))
         with
         | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
-        | Result _ | Up_to_date _ -> ()
+        | Result _ | Up_to_date _ ->
+          OpamGlobals.msg "Successfully fetched %s development repo to ./%s/\n"
+            (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
     ) else (
       OpamGlobals.msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
@@ -1689,8 +1700,14 @@ let source =
     );
 
     if pin then
+      let kind =
+        if dev_repo then match OpamFile.OPAM.dev_repo opam with
+          | Some pin -> kind_of_pin_option pin
+          | None -> `local
+        else `local
+      in
       let pin_option =
-        pin_option_of_string ~kind:`local (OpamFilename.Dir.to_string dir) in
+        pin_option_of_string ~kind (OpamFilename.Dir.to_string dir) in
       Client.PIN.pin (OpamPackage.name nv) (Some pin_option)
   in
   Term.(pure source
