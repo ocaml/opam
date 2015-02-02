@@ -148,8 +148,9 @@ val header_error :
     The message should not be wider than screen nor contain newlines. *)
 val status_line : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
 
-(** Ask the user to press Y/y/N/n to continue (returns a boolean) *)
-val confirm: ('a, unit, string, bool) format4 -> 'a
+(** Ask the user to press Y/y/N/n to continue (returns a boolean).
+    Defaults to true (yes) if unspecified *)
+val confirm: ?default:bool -> ('a, unit, string, bool) format4 -> 'a
 (** Read some input from the user (returns a string option) *)
 val read: ('a, unit, string, string option) format4 -> 'a
 
