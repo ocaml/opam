@@ -74,13 +74,13 @@ let gitversion = ref None
 
 let set_git s = gitversion := Some s
 
-let git =
+let git () =
   match !gitversion with
   | None   -> None
   | Some v -> Some (of_string v)
 
-let full =
-  let git_version = match git with
+let full () =
+  let git_version = match git () with
     | None   -> ""
     | Some v -> Printf.sprintf " (%s)" (to_string v) in
   Printf.sprintf "%s%s" (to_string current) git_version

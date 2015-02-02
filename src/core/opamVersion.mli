@@ -31,13 +31,13 @@ val nopatch: t -> t
 val current_nopatch: t
 
 (** The 'git' version of OPAM *)
-val git: t option
+val git: unit -> t option
 
 (** Side-effect to set the git version later in the build *)
 val set_git: string -> unit
 
 (** The full version (current + git) *)
-val full: t
+val full: unit -> t
 
 (** Magic string *)
 val magic: string

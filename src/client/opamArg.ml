@@ -69,11 +69,11 @@ let switch_to_updated_self debug opamroot =
         (OpamVersion.to_string update_version)
         (OpamVersion.to_string OpamVersion.current)
     else (
-      if OpamVersion.git <> None then
+      if OpamVersion.git () <> None then
         OpamGlobals.warning "Using OPAM self-upgrade to %s while the system \
                              OPAM is a development version (%s)"
           (OpamVersion.to_string update_version)
-          (OpamVersion.to_string OpamVersion.full);
+          (OpamVersion.to_string (OpamVersion.full ()));
       (if debug || !OpamGlobals.debug then
          Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
        let env =
@@ -1029,12 +1029,7 @@ let config =
     | Some `report, [] -> (
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM status report\n";
-      let version = OpamVersion.to_string OpamVersion.current in
-      let version = match OpamVersion.git with
-        | None   -> version
-        | Some v -> Printf.sprintf "%s (%s)" version (OpamVersion.to_string v)
-      in
-      print "opam-version" "%s" version;
+      print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
         (if OpamGlobals.is_self_upgrade
          then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))

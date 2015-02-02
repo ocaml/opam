@@ -98,7 +98,7 @@ let make_info ?code ?signal
     | None   -> ()
     | Some s -> print name s in
 
-  print     "opam-version" (OpamVersion.to_string OpamVersion.full);
+  print     "opam-version" (OpamVersion.to_string (OpamVersion.full ()));
   print     "os"           (OpamGlobals.os_string ());
   print     "command"      (String.concat " " (cmd :: args));
   print     "path"         cwd;
