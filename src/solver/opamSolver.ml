@@ -357,6 +357,26 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
+let check_for_conflicts universe =
+  let version_map = cudf_versions_map universe universe.u_packages in
+  let cudf_universe =
+    load_cudf_universe ~depopts:false ~build:true ~test:false ~doc:false
+      ~version_map universe  universe.u_packages
+  in
+  let installed =
+    List.rev_map
+      (opam2cudf universe ~depopts:false ~build:true ~test:false ~doc:false
+         version_map)
+      (OpamPackage.Set.elements universe.u_installed)
+  in
+  match Algo.Depsolver.edos_coinstall cudf_universe installed with
+  | { Algo.Diagnostic.result = Algo.Diagnostic.Success _ } ->
+    None
+  | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _ } as c ->
+    match OpamCudf.make_conflicts cudf_universe c with
+    | Conflicts cs -> Some cs
+    | _ -> None
+
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
     OpamPackage.Set.add (OpamCudf.cudf2opam (action_contents action)) packages

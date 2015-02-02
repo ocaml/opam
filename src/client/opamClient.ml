@@ -1132,29 +1132,46 @@ module API = struct
     OpamState.rebuild_state_cache ();
 
     log "dry-upgrade";
-    let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
-    match compute_upgrade_t [] t with
-    | _, _, Success upgrade ->
-      let stats = OpamSolver.stats upgrade in
-      if OpamSolution.sum stats > 0 then
-        OpamGlobals.msg
-          "\nUpdates available for %s, apply them with 'opam upgrade':\n\
-           === %s ===\n"
-          (OpamSwitch.to_string t.switch)
-          (OpamSolver.string_of_stats stats)
-    | _, _, Conflicts cs ->
+    let broken_state_message ~need_fixup conflicts =
       let reasons, chains, _cycles =
-        OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
+        OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) conflicts
+      in
       OpamGlobals.warning
-        "A conflict was detected in your installation. This can be caused by updated\n\
-         constraints in your installed packages:";
+        "A conflict was detected in your installation. \
+         This can be caused by updated\n\
+         constraints or conflicts in your installed packages:";
       List.iter (OpamGlobals.msg "  - %s\n") reasons;
       if chains <> [] then (
         OpamGlobals.msg "The following dependencies are in cause:\n";
         List.iter (OpamGlobals.msg "  - %s\n") chains);
-      if OpamCudf.external_solver_available () then
-        OpamGlobals.msg
-          "\nYou should run \"opam upgrade --fixup\" to resolve the situation.\n"
+      OpamGlobals.msg
+        "\nYou should run \"opam upgrade%s\" to resolve the situation.\n"
+        (if need_fixup && OpamCudf.external_solver_available () then " --fixup"
+         else "")
+    in
+    let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
+    let universe = OpamState.universe t (Upgrade OpamPackage.Set.empty) in
+    match OpamSolver.check_for_conflicts universe with
+    | Some cs ->
+      let need_fixup = match compute_upgrade_t [] t with
+        | _, _, Success _ -> false
+        | _, _, Conflicts _ -> true
+      in
+      broken_state_message ~need_fixup cs
+    | None ->
+      match compute_upgrade_t [] t with
+      | _, _, Success upgrade ->
+        let stats = OpamSolver.stats upgrade in
+        if OpamSolution.sum stats > 0 then
+          OpamGlobals.msg
+            "\nUpdates available for %s, apply them with 'opam upgrade':\n\
+             === %s ===\n"
+            (OpamSwitch.to_string t.switch)
+            (OpamSolver.string_of_stats stats)
+      | _, _, Conflicts cs ->
+        log "State isn't broken but upgrade fails: something might be wrong.";
+        OpamGlobals.warning "fishy!";
+        broken_state_message ~need_fixup:true cs
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %a" (slog OpamRepository.to_string) repo;

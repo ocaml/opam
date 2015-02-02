@@ -90,6 +90,10 @@ val reverse_dependencies :
   package_set ->
   package list
 
+(** Check the current set of installed packages in a universe for
+    inconsistencies *)
+val check_for_conflicts : universe -> OpamCudf.conflict option
+
 (** Dumps a cudf file containing all available packages in the given universe,
     plus version bindings (as '#v2v' comments) for the other ones. *)
 val dump_universe: universe -> out_channel -> unit
