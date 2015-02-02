@@ -137,10 +137,17 @@ val system_ocamlc_version: string option Lazy.t
     Links pointing to directory are also returned. *)
 val directories_with_links: string -> string list
 
-(** Make a comman suitable for OpamProcess.Job *)
+(** Make a comman suitable for OpamProcess.Job. if [verbose], is set,
+    command and output will be displayed (at command end for the
+    latter, if concurrent commands are running). [name] is used for
+    naming log files. [text] is what is displayed in the status line
+    for this command. May raise Command_not_found, unless
+    [check_existence] is set to false (in which case you can end up
+    with a process error instead) *)
 val make_command:
   ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
   ?metadata:(string * string) list -> ?allow_stdin:bool -> ?dir:string ->
+  ?check_existence:bool ->
   string -> string list -> OpamProcess.command
 
 (** OLD COMMAND API, DEPRECATED *)
