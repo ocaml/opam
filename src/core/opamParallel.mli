@@ -59,6 +59,7 @@ module type SIG = sig
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     unit
 
@@ -67,6 +68,7 @@ module type SIG = sig
   val map:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     (G.V.t * 'a) list
 
