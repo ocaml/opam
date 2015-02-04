@@ -1262,7 +1262,7 @@ module X = struct
       let build = assoc_list s s_build OpamFormat.parse_commands in
       let install = assoc_list s s_install OpamFormat.parse_commands in
       let remove = assoc_list s s_remove OpamFormat.parse_commands in
-      let check_flags ~pos ext_formula =
+      let check_depflags ~pos ext_formula =
         if conservative then ext_formula else
         OpamFormula.map (fun (name, (flags, cstr)) ->
               let known_flags =
@@ -1284,7 +1284,7 @@ module X = struct
         assoc_default OpamFormula.Empty s s_depends
           (fun v ->
              OpamFormat.parse_ext_formula v |>
-             check_flags ~pos:(OpamFormat.value_pos v)) in
+             check_depflags ~pos:(OpamFormat.value_pos v)) in
       let depopts =
         let rec cleanup ~pos acc disjunction =
           List.fold_left (fun acc -> function
@@ -1314,7 +1314,7 @@ module X = struct
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f =
           OpamFormat.parse_opt_formula value |>
-          check_flags ~pos:(OpamFormat.value_pos value) in
+          check_depflags ~pos:(OpamFormat.value_pos value) in
         if not conservative &&
            not !OpamGlobals.skip_version_checks &&
            OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
@@ -1357,8 +1357,23 @@ module X = struct
         assoc_list s s_bug_reports OpamFormat.parse_string_list in
       let post_messages =
         assoc_list s s_post_messages OpamFormat.parse_messages in
-      let flags = assoc_list s s_flags
-          OpamFormat.(OpamMisc.filter_map (fun x -> x) @* parse_list parse_flag) in
+      let flags =
+        let parse v =
+          let allflags = OpamFormat.(parse_list parse_flag v) in
+          if conservative then allflags else
+          let known_flags =
+            List.filter (function Pkgflag_Unknown _ -> false | _ -> true)
+              allflags in
+          if not permissive && known_flags <> allflags then
+            OpamGlobals.warning
+              "At %s: Unknown package flags %s ignored"
+              (string_of_pos (OpamFormat.value_pos v))
+              (OpamMisc.pretty_list (OpamMisc.filter_map (function
+                   | Pkgflag_Unknown s -> Some s
+                   | _ -> None)
+                   allflags));
+          known_flags in
+        assoc_list s s_flags parse in
       let dev_repo =
         assoc_option s s_dev_repo @@ fun v ->
         OpamFormat.parse_string v |> address_of_string |>
@@ -1485,6 +1500,9 @@ module X = struct
           "No field 'remove' while a field 'install' is present, uncomplete \
            uninstallation suspected"
           (t.install <> [] && t.remove = []);
+        cond `Error
+          "Unknown package flag found"
+          (List.exists (function Pkgflag_Unknown _ -> true | _ -> false) t.flags);
         cond `Error
           "Unknown dependency flags in depends or depopts"
           (OpamFormula.fold_left (fun acc (_, (flags, _)) ->
