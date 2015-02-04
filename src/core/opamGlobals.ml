@@ -457,21 +457,43 @@ let default_dl_jobs = 3
 let exit i =
   raise (Exit i)
 
-let confirm fmt =
+let confirm ?(default=true) fmt =
   Printf.ksprintf (fun s ->
     try
       if !safe_mode then false else
-      let rec loop () =
-        msg "%s [Y/n] %!" s;
-        if !yes then (msg "y\n"; true)
-        else if !no then (msg "n\n"; false)
-        else match String.lowercase (read_line ()) with
-          | "y" | "yes" | "" -> true
+      let prompt () = msg "%s [%s] " s (if default then "Y/n" else "y/N") in
+      if !yes then (prompt (); msg "y\n"; true)
+      else if !no then (prompt (); msg "n\n"; false)
+      else if os () = Win32 then
+        let rec loop () =
+          prompt ();
+          match String.lowercase (read_line ()) with
+          | "y" | "yes" -> true
           | "n" | "no" -> false
+          | "" -> default
           | _  -> loop ()
-      in loop ()
+        in loop ()
+      else
+      let open Unix in
+      prompt ();
+      let attr = tcgetattr stdin in
+      tcsetattr stdin TCSAFLUSH {attr with c_icanon = false; c_echo = false};
+      tcflush stdin TCIFLUSH;
+      let buf = Bytes.create 1 in
+      let rec loop () =
+        if read stdin buf 0 1 = 0 then raise End_of_file
+        else match Bytes.get  buf 0 with
+        | 'y' | 'Y' -> print_endline (Bytes.to_string buf); true
+        | 'n' | 'N' -> print_endline (Bytes.to_string buf); false
+        | '\n' -> print_endline (if default then "y" else "n"); default
+        | _ -> loop ()
+      in
+      let r = loop () in
+      tcsetattr stdin TCSAFLUSH attr;
+      tcflush stdin TCIFLUSH;
+      r
     with
-    | End_of_file -> msg "n\n"; false
+    | End_of_file -> msg "%s\n" (if default then "y" else "n"); default
     | Sys.Break as e -> msg "\n"; raise e
   ) fmt
 

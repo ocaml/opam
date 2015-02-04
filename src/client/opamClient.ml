@@ -143,10 +143,6 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
              || partial_matchs (Lazy.force syntax)
              || partial_matchs (Lazy.force others))
       ) packages_map in
-
-  if not (OpamPackage.Set.is_empty packages)
-  && OpamPackage.Name.Map.is_empty packages_map then
-    OpamGlobals.msg "No packages found.\n";
   packages_map
 
 let with_switch_backup command f =
@@ -338,6 +334,10 @@ module API = struct
     let details =
       details_of_package_regexps t packages ~exact_name ~case_sensitive regexp
     in
+    if not print_short && not (OpamPackage.Set.is_empty packages) &&
+       OpamPackage.Name.Map.is_empty details
+    then
+      OpamGlobals.msg "No packages found.\n";
     match depexts with
     | Some tags_list ->
       let required_tags = OpamMisc.StringSet.of_list tags_list in
