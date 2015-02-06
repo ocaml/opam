@@ -4,7 +4,7 @@ OPAM is a source-based package manager for OCaml. It supports multiple simultane
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
-OPAM is created and maintained by [OCamlPro](http://www.ocamlpro.com).
+OPAM was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
 
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
@@ -12,7 +12,7 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 ## Compiling this repo
 
 * Make sure you have OCaml and GNU make installed. If you don't have a recent
-  enough version of OCaml (>= 3.12.1) at hand, see next paragraph.
+  enough version of OCaml (>= 3.12.1) at hand, see the next paragraph.
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed and only need the opam binary (not the libs). This will
@@ -36,7 +36,7 @@ you may specify `CONFIGURE_ARGS` if needed, e.g.:
 make cold CONFIGURE_ARGS="--prefix ~/local"
 ```
 
-You'll still need GNU make.
+NOTE: You'll still need GNU make.
 
 ## Bug tracker
 
@@ -61,9 +61,9 @@ files in [doc/pages](https://github.com/ocaml/opam/tree/master/doc/pages).
 
 #### API, Code Documentation and Developer Manual
 
-A more torough technical document describing OPAM and specifying the package
+A more thorough technical document describing OPAM and specifying the package
 description format is available in the
-[developper manual](http://opam.ocaml.org/doc/manual/dev-manual.html). `make
+[developer manual](http://opam.ocaml.org/doc/manual/dev-manual.html). `make
 doc` will otherwise make the API documentation available under `doc/`.
 
 ## Community
