@@ -149,6 +149,7 @@ let iter_install f instfile o =
     [ dest_global                 D.bin,      S.bin instfile,        true;
       dest_global                 D.sbin,     S.sbin instfile,       true;
       dest_pkg    ?fix:o.libdir   D.lib,      S.lib instfile,        false;
+      dest_pkg    ?fix:o.libdir   D.lib,      S.libexec instfile,    true;
       dest_global ?fix:o.topdir   D.toplevel, S.toplevel instfile,   false;
       dest_global ?fix:o.stubsdir D.stublibs, S.stublibs instfile,   true;
       dest_global ?fix:o.mandir   D.man_dir,  S.man instfile,        false;

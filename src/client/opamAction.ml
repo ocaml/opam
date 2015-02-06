@@ -84,6 +84,7 @@ let install_package t nv =
 
       (* lib *)
       install_files false OpamPath.Switch.lib OpamFile.Dot_install.lib;
+      install_files true OpamPath.Switch.lib OpamFile.Dot_install.libexec;
 
       (* toplevel *)
       install_files false (fun r s _ -> OpamPath.Switch.toplevel r s)
@@ -417,6 +418,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
     remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
     remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
+    remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.libexec;
     remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
     remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
     remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;

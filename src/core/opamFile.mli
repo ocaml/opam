@@ -421,6 +421,9 @@ module Dot_install: sig
   (** Man pages *)
   val man: t -> (basename optional * basename option) list
 
+  (** Executable files under lib/ *)
+  val libexec: t -> (basename optional * basename option) list
+
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
 

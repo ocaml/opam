@@ -1669,6 +1669,7 @@ module X = struct
       etc     : (basename optional * basename option) list;
       doc     : (basename optional * basename option) list;
       man     : (basename optional * basename option) list;
+      libexec : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
     }
 
@@ -1683,6 +1684,7 @@ module X = struct
       share_root = [];
       etc      = [];
       man      = [];
+      libexec  = [];
       doc      = [];
     }
 
@@ -1696,6 +1698,7 @@ module X = struct
     let share_root t = t.share_root
     let etc t = t.etc
     let doc t = t.doc
+    let libexec t = t.libexec
 
     let add_man_section_dir src =
       let file = Filename.basename (OpamFilename.Base.to_string src.c) in
@@ -1736,6 +1739,7 @@ module X = struct
     let s_etc      = "etc"
     let s_doc      = "doc"
     let s_man      = "man"
+    let s_libexec  = "libexec"
 
     let valid_fields = [
       Syntax.s_opam_version;
@@ -1750,6 +1754,7 @@ module X = struct
       s_etc;
       s_doc;
       s_man;
+      s_libexec;
     ]
 
     (* Filenames starting by ? are not always present. *)
@@ -1796,6 +1801,7 @@ module X = struct
           make_variable (s_etc     , mk      t.etc);
           make_variable (s_doc     , mk      t.doc);
           make_variable (s_man     , mk      t.man);
+          make_variable (s_libexec , mk      t.libexec);
           make_variable (s_misc    , mk_misc t.misc);
         ]
       } in
@@ -1828,7 +1834,8 @@ module X = struct
       let etc      = mk s_etc      in
       let doc      = mk s_doc      in
       let man      = mk s_man      in
-      { lib; bin; sbin; misc; toplevel; stublibs; share; share_root; etc; doc; man }
+      let libexec  = mk s_libexec  in
+      { lib; bin; sbin; misc; toplevel; stublibs; share; share_root; etc; doc; man; libexec }
 
   end
 
