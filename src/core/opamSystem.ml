@@ -769,7 +769,7 @@ let patch p =
 
 let () =
   let with_opam_info m =
-    let git_version = match OpamVersion.git with
+    let git_version = match OpamVersion.git () with
       | None   -> ""
       | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
     let opam_version =
