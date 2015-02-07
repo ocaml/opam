@@ -162,20 +162,22 @@ module B = struct
     rsync remote_url dir
     @@| fun r ->
     let r = match r with
-      | Result [f] | Up_to_date [f] as r
-        when not (Sys.is_directory (Filename.concat dir f)) ->
-        let filename = OpamFilename.OP.(local_dirname // f) in
-        if OpamRepository.check_digest filename checksum then
-          match r with
-          | Result _ -> Result (F filename)
-          | Up_to_date _ -> Up_to_date (F filename)
-          | _ -> assert false
-        else
-          (OpamFilename.remove filename;
-           Not_available remote_url)
-      | Result _ -> Result (D local_dirname)
-      | Up_to_date _ -> Up_to_date (D local_dirname)
       | Not_available d -> Not_available d
+      | Result _ | Up_to_date _ ->
+        let res x = match r with
+          | Result _ -> Result x
+          | Up_to_date _ -> Up_to_date x
+          | _ -> assert false
+        in
+        if OpamMisc.ends_with ~suffix:"/" remote_url then
+          res (D local_dirname)
+        else match Sys.readdir dir with
+          | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
+            let filename = OpamFilename.OP.(local_dirname // f) in
+            if OpamRepository.check_digest filename checksum
+            then res (F filename)
+            else (OpamFilename.remove filename; Not_available remote_url)
+          | _ -> res (D local_dirname)
     in
     OpamGlobals.msg "[%s] %s %s\n"
       (OpamGlobals.colorise `green (OpamPackage.to_string package))
