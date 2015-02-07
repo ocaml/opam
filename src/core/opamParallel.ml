@@ -44,12 +44,14 @@ module type SIG = sig
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     unit
 
   val map:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     (G.V.t * 'a) list
 
@@ -65,15 +67,19 @@ module Make (G : G) = struct
   module M = OpamMisc.Map.Make (V)
   module S = OpamMisc.Set.Make (V)
 
+  let map_keys m = M.fold (fun k _ s -> S.add k s) m S.empty
+
   exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
   exception Cyclic of V.t list list
 
   open S.Op
 
   (* Returns a map (node -> return value) *)
-  let aux_map ~jobs ~command g =
+  let aux_map ~jobs ~command ?(mutually_exclusive=[]) g =
     log "Iterate over %a task(s) with %d process(es)"
       (slog @@ G.nb_vertex @> string_of_int) g jobs;
+
+    let mutually_exclusive = List.map S.of_list mutually_exclusive in
 
     if G.has_cycle g then (
       let sccs = G.scc_list g in
@@ -118,6 +124,10 @@ module Make (G : G) = struct
         (running: (OpamProcess.t * 'a * string option) M.t)
         (ready: S.t)
       =
+      let mutual_exclusion_set n =
+        List.fold_left (fun acc s -> if S.mem n s then acc ++ s else acc)
+          S.empty mutually_exclusive
+      in
       let run_seq_command nslots ready n = function
         | Done r ->
           log "Job %a finished" (slog (string_of_int @* V.hash)) n;
@@ -126,11 +136,13 @@ module Make (G : G) = struct
           if not (M.is_empty running) then
             print_status (M.cardinal results) running;
           let new_ready =
-            List.filter
-              (fun n -> List.for_all (fun n -> M.mem n results) (G.pred g n))
-              (G.succ g n)
+            S.filter
+              (fun n ->
+                 List.for_all (fun n -> M.mem n results) (G.pred g n) &&
+                 S.is_empty (mutual_exclusion_set n %% map_keys running))
+              (S.of_list (G.succ g n) ++ mutual_exclusion_set n)
           in
-          loop (nslots + 1) results running (ready ++ S.of_list new_ready)
+          loop (nslots + 1) results running (ready ++ new_ready)
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
@@ -195,7 +207,8 @@ module Make (G : G) = struct
         let pred = G.pred g n in
         let pred = List.map (fun n -> n, M.find n results) pred in
         let cmd = try command ~pred n with e -> fail n e in
-        run_seq_command (nslots - 1) (S.remove n ready) n cmd
+        let ready = S.remove n ready -- mutual_exclusion_set n in
+        run_seq_command (nslots - 1) ready n cmd
       else
       (* Wait for a process to end *)
       let processes =
@@ -224,11 +237,11 @@ module Make (G : G) = struct
     in
     loop jobs M.empty M.empty roots
 
-  let iter ~jobs ~command g =
-    ignore (aux_map ~jobs ~command g)
+  let iter ~jobs ~command ?mutually_exclusive g =
+    ignore (aux_map ~jobs ~command ?mutually_exclusive g)
 
-  let map ~jobs ~command g =
-    M.bindings (aux_map ~jobs ~command g)
+  let map ~jobs ~command ?mutually_exclusive g =
+    M.bindings (aux_map ~jobs ~command ?mutually_exclusive g)
 
   (* Only print the originally raised exception, which should come first. Ignore
      Aborted exceptions due to other commands termination, and simultaneous
