@@ -61,7 +61,8 @@ val expand_string: env -> string -> string
     provided *)
 val eval: ?default:variable_contents -> env -> filter -> variable_contents
 
-(** Like [to_value] but casts the result to a bool *)
+(** Like [to_value] but casts the result to a bool. Raises [Invalid_argument] if
+    not a valid bool and no default supplied. *)
 val eval_to_bool: ?default:bool -> env -> filter -> bool
 
 (** Same as [eval_to_bool], but takes an option as filter and returns always

@@ -33,11 +33,11 @@ let post_message ?(failed=false) state action =
     let local_variables = OpamVariable.Map.empty in
     let local_variables =
       OpamVariable.Map.add (OpamVariable.of_string "success")
-        (B (not failed)) local_variables
+        (Some (B (not failed))) local_variables
     in
     let local_variables =
       OpamVariable.Map.add (OpamVariable.of_string "failure")
-        (B failed) local_variables
+        (Some (B failed)) local_variables
     in
     let messages =
       let filter_env = OpamState.filter_env ~opam ~local_variables state in

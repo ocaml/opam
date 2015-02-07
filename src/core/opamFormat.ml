@@ -749,3 +749,33 @@ let parse_tags v =
 let make_tags t =
   let l = OpamMisc.StringSetMap.bindings t in
   make_list make_tag_line l
+
+(* FEATURES *)
+
+let parse_features t =
+  let rec aux = function
+    | [] -> []
+    | id :: opt :: r ->
+      let id = OpamVariable.of_string (parse_ident id) in
+      (match parse_option parse_string parse_filter opt with
+       | doc, Some fil -> (id, doc, fil) :: aux r
+       | _, None ->
+         bad_format ~pos:(value_pos opt) "Expecting a filter definition, e.g. \
+                                          `var \"Enable var\" { <condition> }'")
+    | t ->
+      bad_format ?pos:(values_pos t) "Bad feature definition, expected \
+                                      `var \"Enable var\" { <condition> }'"
+  in
+  match t with
+  | List (_, l) -> aux l
+  | _ -> bad_format ~pos:(value_pos t) "Expected a list of feature definitions"
+
+let make_features feat =
+  let rec aux = function
+    | [] -> []
+    | (var,doc,fil) :: r ->
+      make_ident (OpamVariable.to_string var) ::
+      make_option make_string make_filter (doc, Some fil) ::
+      aux r
+  in
+  List (pos_null, aux feat)

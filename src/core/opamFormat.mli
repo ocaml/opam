@@ -272,3 +272,11 @@ val parse_tags: value -> tags
 
 (** Make tags *)
 val make_tags: tags -> value
+
+(** {2 Features} *)
+
+(** Parse features list *)
+val parse_features: value -> (OpamVariable.t * string * filter) list
+
+(** Make features list *)
+val make_features: (OpamVariable.t * string * filter) list -> value

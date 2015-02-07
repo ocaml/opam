@@ -149,7 +149,7 @@ val get_env_var: full_variable -> variable_contents option
 (** The main Filter.env value to be used to resolve variables in filters *)
 val filter_env:
   ?opam:OpamFile.OPAM.t ->
-  ?local_variables:(variable_contents OpamVariable.Map.t) ->
+  ?local_variables:((variable_contents option) OpamVariable.Map.t) ->
   state -> full_variable -> variable_contents option
 
 (** {2 Helpers} *)

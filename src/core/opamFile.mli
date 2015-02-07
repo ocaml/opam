@@ -179,6 +179,9 @@ module OPAM: sig
   (** Package conflicts *)
   val conflicts: t -> formula
 
+  (** Contents of the 'features' field *)
+  val features: t -> (OpamVariable.t * string * filter) list
+
   (** List of exported libraries *)
   val libraries: t -> (string * filter option) list
 
@@ -242,6 +245,8 @@ module OPAM: sig
   val with_depopts : t -> ext_formula -> t
 
   val with_conflicts : t -> formula -> t
+
+  val with_features : t -> (OpamVariable.t * string * filter) list -> t
 
   (** Construct as [build] *)
   val with_build: t -> command list -> t

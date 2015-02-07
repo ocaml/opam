@@ -93,6 +93,7 @@ let to_1_1 _ opam =
   let opam = OF.with_install opam [] in
   let opam = OF.with_flags opam [] in
   let opam = OF.with_dev_repo opam None in
+  let opam = OF.with_features opam [] in
   let opam = OF.with_opam_version opam (OpamVersion.of_string "1.1") in
   let remove_ext =
     OpamFormula.map (fun (n, (_,cstr)) ->

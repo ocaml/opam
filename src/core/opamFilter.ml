@@ -79,17 +79,21 @@ let value_string ?default = function
   | FUndef ->
     (match default with
      | Some d -> d
-     | None -> failwith "Undefined filter value")
+     | None -> failwith "Undefined string filter value")
   | e -> raise (Invalid_argument ("value_string: "^to_string e))
 
 let value_bool ?default = function
   | FBool b -> b
-  | FString s -> bool_of_string s
+  | FString "true" -> true
+  | FString "false" -> false
   | FUndef ->
     (match default with
      | Some d -> d
-     | None -> failwith "Undefined filter value")
-  | e -> raise (Invalid_argument ("value_bool: "^to_string e))
+     | None -> failwith "Undefined boolean filter value")
+  | e ->
+    (match default with
+     | Some d -> d
+     | None -> raise (Invalid_argument ("value_bool: "^to_string e)))
 
 (* Desugars the "enable" pseudo-variable *)
 let desugar_fident ((packages,var,converter) as fident) =
@@ -190,7 +194,9 @@ let eval ?default env e = value ?default (reduce env e)
 let eval_to_bool ?default env e = value_bool ?default (reduce env e)
 
 let opt_eval_to_bool env opt =
-  match opt with None -> true | Some e -> value_bool ~default:false (reduce env e)
+  match opt with
+  | None -> true
+  | Some e -> value_bool ~default:false (reduce env e)
 
 let eval_to_string ?default env e = value_string ?default (reduce env e)
 
