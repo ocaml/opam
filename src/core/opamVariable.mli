@@ -39,6 +39,9 @@ module Full: sig
   (** Create a variable local for a given library/syntax extension *)
   val create: OpamPackage.Name.t -> variable -> t
 
+  (** Create a global variable *)
+  val global: variable -> t
+
   (** Return the package the variable is defined in *)
   val package: t -> OpamPackage.Name.t
 

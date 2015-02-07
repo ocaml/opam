@@ -16,6 +16,26 @@
 
 (** Manage filters *)
 
+(** Filters are a small language of formulas over strings and booleans used for
+    conditions and text replacements. It has relational operators over strings
+    (using version-number comparison), And, Or and Not boolean operations,
+    dynamic casting (using strings "true" and "false"), and string
+    interpolation. Variables are resolved using a user function returning an
+    option, undefined values are propagated.
+
+    String interpolation uses the syntax '%{identifier}%'
+
+    Identifiers have the form {v[package:]var[?str_if_true:str_if_false_or_undef]v}.
+    The last optional part specifies a conversion from boolean to static strings.
+
+    The syntax [pkg1+pkg2+pkgn:var] is allowed as a shortcut to
+    [pkg1:var & pkg2:var & pkgn:var].
+
+    The special variable [pkg:enable] is allowed as a shortcut for
+    [pkg:installed?enable:disable]
+*)
+
+
 open OpamTypes
 
 (** Pretty-print *)
@@ -30,33 +50,45 @@ val variables: filter -> full_variable list
 (** Type of filter environment. *)
 type env = full_variable -> variable_contents option
 
-(** Return the contents of a variable. Return [None] if the variable
-    is not defined in the given environment. *)
-val contents_of_variable: env -> full_variable -> variable_contents option
+(** The type of filter idents with (optionally multiple) qualifying package
+    names and optional string converter *)
+type fident = name list * variable * (string * string) option
 
-(** Return the contents of a variable. Raises [Not_found] if the
-    variable is not defined in the given environment. *)
-val contents_of_variable_exn: env -> full_variable -> variable_contents
+(** Rewrites string interpolations within a string *)
+val expand_string: env -> string -> string
 
-(** Replace variables escapes "%{var}%" using the given resolution function on a
-    string *)
-val replace_variables: string -> (full_variable -> variable_contents) -> string
+(** Computes the value of a filter. May raise [Failure] if [default] isn't
+    provided *)
+val eval: ?default:variable_contents -> env -> filter -> variable_contents
 
-(** Substitutes variables escapes "%{var}%" with their values in a string *)
-val substitute_string: env -> string -> string
+(** Like [to_value] but casts the result to a bool *)
+val eval_to_bool: ?default:bool -> env -> filter -> bool
 
-(** Substitutes variables escapes "%{var}%" with their values in file [base.in]
-    and writes the results to [base] *)
-val substitute_file: env -> basename -> unit
+(** Same as [eval_to_bool], but takes an option as filter and returns always
+    [true] on [None], [false] when the filter is [Undefined]. This is the
+    most common behaviour for using "filters" for filtering *)
+val opt_eval_to_bool: env -> filter option -> bool
 
-(** Evaluate a filter. May raise Not_found if the filter contains undefined
-    variables *)
-val eval: env -> filter -> bool
+(** Like [to_value] but casts the result to a string *)
+val eval_to_string: ?default:string -> env -> filter -> string
 
-(** Evaluate an optional filter. *)
-val eval_opt: env -> filter option -> bool
+(** Wraps a full_variable into a fident accessor *)
+val ident_of_var: full_variable -> fident
 
-(** Filter a list of commands by:
-    - evaluating the substitution strings; and
-    - removing the commands with a filter evaluating to "false" *)
+(** Resolves a filter ident. Like [eval], may raise Failure if no default is
+    provided *)
+val ident_value: ?default:variable_contents -> env -> fident -> variable_contents
+
+(** Like [ident_value], but casts the result to a string *)
+val ident_string: ?default:string -> env -> fident -> string
+
+(** Like [ident_value], but casts the result to a bool *)
+val ident_bool: ?default:bool -> env -> fident -> bool
+
+(** Rewrites [basename].in to [basename], expanding interpolations *)
+val expand_interpolations_in_file: env -> basename -> unit
+
+
+(** Processes filters evaluation in a command list: parameter expansion and
+    conditional filtering *)
 val commands: env -> command list -> string list list

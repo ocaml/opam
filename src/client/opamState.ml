@@ -779,24 +779,8 @@ let resolve_variable t ?opam local_variables v =
   in
   contents
 
-let eval_filter t ?opam local_variables =
-  OpamFilter.eval_opt (resolve_variable t ?opam local_variables)
-
-let filter_commands t ?opam local_variables =
-  OpamFilter.commands (resolve_variable t ?opam local_variables)
-
-let substitute_file t ?opam local_variables =
-  OpamFilter.substitute_file (resolve_variable t ?opam local_variables)
-
-let substitute_string t ?opam local_variables =
-  OpamFilter.substitute_string (resolve_variable t ?opam local_variables)
-
-let contents_of_variable t ?opam local_variables =
-  OpamFilter.contents_of_variable (resolve_variable t ?opam local_variables)
-
-let contents_of_variable_exn t ?opam local_variables =
-  OpamFilter.contents_of_variable_exn
-    (resolve_variable t ?opam local_variables)
+let filter_env ?opam ?(local_variables=OpamVariable.Map.empty) t =
+  resolve_variable t ?opam local_variables
 
 let redirect t repo =
   if repo.repo_kind <> `http then None else
@@ -807,10 +791,9 @@ let redirect t repo =
     |> OpamFile.Repo.redirect
   in
   let redirect = List.fold_left (fun acc (redirect, filter) ->
-      if eval_filter t OpamVariable.Map.empty filter then
-        (redirect, filter) :: acc
-      else
-        acc
+      if OpamFilter.opt_eval_to_bool (filter_env t) filter
+      then (redirect, filter) :: acc
+      else acc
     ) [] redirect in
   match redirect with
   | []         -> None
@@ -859,8 +842,8 @@ let consistent_os opam =
     OpamFormula.eval atom f
 
 let consistent_available_field t opam =
-  let env opam = resolve_variable t ~opam OpamVariable.Map.empty in
-  OpamFilter.eval (env opam) (OpamFile.OPAM.available opam)
+  OpamFilter.eval_to_bool ~default:false (filter_env ~opam t)
+    (OpamFile.OPAM.available opam)
 
 (* List the packages which do fulfil the compiler and OS constraints *)
 let available_packages t =
@@ -924,7 +907,7 @@ let unavailable_reason t (name, _ as atom) =
         ]) @
       (if consistent_available_field t opam then [] else [
           Printf.sprintf "your system doesn't comply with %s"
-            (string_of_filter (OpamFile.OPAM.available opam))
+            (OpamFilter.to_string (OpamFile.OPAM.available opam))
         ]) in
     match r with
     | [] -> raise Not_found
@@ -1792,7 +1775,7 @@ let expand_env t ?opam (env: env_updates) : env =
       None
   in
   List.rev_map (fun (ident, symbol, string) ->
-    let string = OpamFilter.substitute_string fenv string in
+    let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
       try OpamMisc.reset_env_value ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
@@ -1953,7 +1936,7 @@ let string_of_env_update t shell updates =
     | `fish -> fish
     | `csh -> csh in
   let aux (ident, symbol, string) =
-    let string = OpamFilter.substitute_string fenv string in
+    let string = OpamFilter.expand_string fenv string in
     let key, value = match symbol with
       | "="  -> (ident, string)
       | "+="

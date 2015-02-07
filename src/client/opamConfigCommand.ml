@@ -56,15 +56,10 @@ let help t =
   OpamGlobals.msg "\n# Global variables from the environment\n\n";
   List.iter (fun (varname, doc) ->
       let var = OpamVariable.of_string varname in
-      let fullvar =
-        OpamVariable.Full.create OpamPackage.Name.global_config var in
       OpamGlobals.msg "%-20s %-20s # %s\n"
         varname
-        (match
-           OpamState.contents_of_variable t OpamVariable.Map.empty fullvar
-         with
-         | Some c -> OpamVariable.string_of_variable_contents c
-         | None -> "")
+        (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
+           ([],var,None))
         doc)
     OpamState.global_variable_names;
   OpamGlobals.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
@@ -102,13 +97,13 @@ let list ns =
     List.map
       (fun (v,descr) ->
          v, descr,
-         OpamMisc.Option.default (S "#undefined")
-           (OpamState.contents_of_variable t OpamVariable.Map.empty v))
+         (OpamFilter.ident_string (OpamState.filter_env t) ~default:"#undefined"
+            (OpamFilter.ident_of_var v)))
       variables in
-  List.iter (fun (variable, descr, contents) ->
+  List.iter (fun (variable, descr, value) ->
       OpamGlobals.msg "%-20s %-40s %s\n"
         (OpamVariable.Full.to_string variable)
-        (OpamVariable.string_of_variable_contents contents)
+        value
         (if descr <> "" then "# "^descr else "")
     ) contents
 
@@ -155,7 +150,9 @@ let env ~csh ~sexp ~fish ~inplace_path =
 let subst fs =
   log "config-substitute";
   let t = OpamState.load_state "config-substitute" in
-  List.iter (OpamState.substitute_file t OpamVariable.Map.empty) fs
+  List.iter
+    (OpamFilter.expand_interpolations_in_file (OpamState.filter_env t))
+    fs
 
 let quick_lookup v =
   let name = OpamVariable.Full.package v in
@@ -187,8 +184,9 @@ let variable v =
     | Some c -> c
     | None   ->
       let t = OpamState.load_state "config-variable" in
-      OpamMisc.Option.default (S "#undefined")
-        (OpamState.contents_of_variable t OpamVariable.Map.empty v) in
+      OpamFilter.ident_value (OpamState.filter_env t) ~default:(S "#undefined")
+        (OpamFilter.ident_of_var v)
+  in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =

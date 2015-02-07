@@ -152,9 +152,10 @@ let prepare_package_build t nv =
 
   let iter_patches f =
     List.fold_left (fun acc (base, filter) ->
-        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter then
-          try f base; acc
-          with e -> OpamMisc.fatal e; OpamFilename.Base.to_string base :: acc
+        if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
+        then
+          try f base; acc with e ->
+            OpamMisc.fatal e; OpamFilename.Base.to_string base :: acc
         else acc
       ) [] patches in
 
@@ -173,7 +174,9 @@ let prepare_package_build t nv =
       OpamMisc.filter_map (fun (f,_) ->
         if List.mem f all then Some f else None
       ) patches in
-    List.iter (OpamState.substitute_file t ~opam OpamVariable.Map.empty) patches
+    List.iter
+      (OpamFilter.expand_interpolations_in_file (OpamState.filter_env ~opam t))
+      patches
   );
 
   (* Apply the patches *)
@@ -191,7 +194,8 @@ let prepare_package_build t nv =
      substitution files (see [substitute_file] and
      [OpamFilename.of_basename]. *)
   OpamFilename.in_dir p_build (fun () ->
-    List.iter (OpamState.substitute_file t ~opam OpamVariable.Map.empty)
+    List.iter
+      (OpamFilter.expand_interpolations_in_file (OpamState.filter_env ~opam t))
       (OpamFile.OPAM.substs opam)
   );
   if patching_errors <> [] then (
@@ -314,8 +318,8 @@ let removal_needs_download t nv =
     if List.mem Pkgflag_LightUninstall (OpamFile.OPAM.flags opam) then true
     else
     let commands =
-      OpamState.filter_commands t ~opam
-        OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+      OpamFilter.commands (OpamState.filter_env ~opam t)
+        (OpamFile.OPAM.remove opam) in
     (* We use a small hack: if the remove command is simply
        'ocamlfind remove xxx' then, no need to extract the archive
        again. *)
@@ -348,8 +352,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
          extracted If it does not exist, we try to download and
          extract the archive again, if that fails, we don't really
          care. *)
-      let remove = OpamState.filter_commands t ~opam
-          OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+      let remove =
+        OpamFilter.commands (OpamState.filter_env ~opam t)
+          (OpamFile.OPAM.remove opam) in
       let name = OpamPackage.Name.to_string name in
       let exec_dir, nameopt =
         if OpamFilename.exists_dir p_build
@@ -521,9 +526,7 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
     (if !OpamGlobals.build_doc then OpamFile.OPAM.build_doc opam else []) @
     OpamFile.OPAM.install opam
   in
-  let commands =
-    OpamState.filter_commands t ~opam OpamVariable.Map.empty commands
-  in
+  let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
   let env = OpamFilename.env_of_list (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let metadata = get_metadata t in

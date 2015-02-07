@@ -40,10 +40,10 @@ let post_message ?(failed=false) state action =
         (B failed) local_variables
     in
     let messages =
+      let filter_env = OpamState.filter_env ~opam ~local_variables state in
       OpamMisc.filter_map (fun (message,filter) ->
-          if OpamState.eval_filter state ~opam local_variables filter then
-            Some (OpamState.substitute_string
-                    state ~opam local_variables message)
+          if OpamFilter.opt_eval_to_bool filter_env filter
+          then Some (OpamFilter.expand_string filter_env message)
           else None)
         messages
     in
@@ -583,7 +583,8 @@ let apply ?ask t action ~requested solution =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
         OpamMisc.filter_map (fun (s,f) ->
-          if OpamState.eval_filter new_state ~opam OpamVariable.Map.empty f
+          if OpamFilter.opt_eval_to_bool
+              (OpamState.filter_env ~opam new_state) f
           then Some s
           else None
         )  messages in
