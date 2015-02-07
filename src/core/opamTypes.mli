@@ -117,8 +117,10 @@ type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
 
 (** Opam package flags *)
 type package_flag =
-  | LightUninstall (** The package doesn't require downloading to uninstall *)
-  | AllSwitches (** The package is pervasive on all switches *)
+  | Pkgflag_LightUninstall (** The package doesn't require downloading to uninstall *)
+  | Pkgflag_AllSwitches (** The package is pervasive on all switches *)
+  | Pkgflag_Verbose (** The package's scripts output is to be displayed to the user *)
+  | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** Flags on dependencies *)
 type package_dep_flag =
@@ -126,7 +128,7 @@ type package_dep_flag =
   | Depflag_Test
   | Depflag_Doc
   | Depflag_Dev
-  | Depflag_Unknown of string
+  | Depflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)

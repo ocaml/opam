@@ -1262,7 +1262,7 @@ module X = struct
       let build = assoc_list s s_build OpamFormat.parse_commands in
       let install = assoc_list s s_install OpamFormat.parse_commands in
       let remove = assoc_list s s_remove OpamFormat.parse_commands in
-      let check_flags ~pos ext_formula =
+      let check_depflags ~pos ext_formula =
         if conservative then ext_formula else
         OpamFormula.map (fun (name, (flags, cstr)) ->
               let known_flags =
@@ -1284,7 +1284,7 @@ module X = struct
         assoc_default OpamFormula.Empty s s_depends
           (fun v ->
              OpamFormat.parse_ext_formula v |>
-             check_flags ~pos:(OpamFormat.value_pos v)) in
+             check_depflags ~pos:(OpamFormat.value_pos v)) in
       let depopts =
         let rec cleanup ~pos acc disjunction =
           List.fold_left (fun acc -> function
@@ -1314,7 +1314,7 @@ module X = struct
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f =
           OpamFormat.parse_opt_formula value |>
-          check_flags ~pos:(OpamFormat.value_pos value) in
+          check_depflags ~pos:(OpamFormat.value_pos value) in
         if not conservative &&
            not !OpamGlobals.skip_version_checks &&
            OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
@@ -1357,8 +1357,23 @@ module X = struct
         assoc_list s s_bug_reports OpamFormat.parse_string_list in
       let post_messages =
         assoc_list s s_post_messages OpamFormat.parse_messages in
-      let flags = assoc_list s s_flags
-          OpamFormat.(OpamMisc.filter_map (fun x -> x) @* parse_list parse_flag) in
+      let flags =
+        let parse v =
+          let allflags = OpamFormat.(parse_list parse_flag v) in
+          if conservative then allflags else
+          let known_flags =
+            List.filter (function Pkgflag_Unknown _ -> false | _ -> true)
+              allflags in
+          if not permissive && known_flags <> allflags then
+            OpamGlobals.warning
+              "At %s: Unknown package flags %s ignored"
+              (string_of_pos (OpamFormat.value_pos v))
+              (OpamMisc.pretty_list (OpamMisc.filter_map (function
+                   | Pkgflag_Unknown s -> Some s
+                   | _ -> None)
+                   allflags));
+          known_flags in
+        assoc_list s s_flags parse in
       let dev_repo =
         assoc_option s s_dev_repo @@ fun v ->
         OpamFormat.parse_string v |> address_of_string |>
@@ -1485,6 +1500,9 @@ module X = struct
           "No field 'remove' while a field 'install' is present, uncomplete \
            uninstallation suspected"
           (t.install <> [] && t.remove = []);
+        cond `Error
+          "Unknown package flag found"
+          (List.exists (function Pkgflag_Unknown _ -> true | _ -> false) t.flags);
         cond `Error
           "Unknown dependency flags in depends or depopts"
           (OpamFormula.fold_left (fun acc (_, (flags, _)) ->
@@ -1651,6 +1669,7 @@ module X = struct
       etc     : (basename optional * basename option) list;
       doc     : (basename optional * basename option) list;
       man     : (basename optional * basename option) list;
+      libexec : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
     }
 
@@ -1665,6 +1684,7 @@ module X = struct
       share_root = [];
       etc      = [];
       man      = [];
+      libexec  = [];
       doc      = [];
     }
 
@@ -1678,6 +1698,7 @@ module X = struct
     let share_root t = t.share_root
     let etc t = t.etc
     let doc t = t.doc
+    let libexec t = t.libexec
 
     let add_man_section_dir src =
       let file = Filename.basename (OpamFilename.Base.to_string src.c) in
@@ -1718,6 +1739,7 @@ module X = struct
     let s_etc      = "etc"
     let s_doc      = "doc"
     let s_man      = "man"
+    let s_libexec  = "libexec"
 
     let valid_fields = [
       Syntax.s_opam_version;
@@ -1732,6 +1754,7 @@ module X = struct
       s_etc;
       s_doc;
       s_man;
+      s_libexec;
     ]
 
     (* Filenames starting by ? are not always present. *)
@@ -1778,6 +1801,7 @@ module X = struct
           make_variable (s_etc     , mk      t.etc);
           make_variable (s_doc     , mk      t.doc);
           make_variable (s_man     , mk      t.man);
+          make_variable (s_libexec , mk      t.libexec);
           make_variable (s_misc    , mk_misc t.misc);
         ]
       } in
@@ -1810,7 +1834,8 @@ module X = struct
       let etc      = mk s_etc      in
       let doc      = mk s_doc      in
       let man      = mk s_man      in
-      { lib; bin; sbin; misc; toplevel; stublibs; share; share_root; etc; doc; man }
+      let libexec  = mk s_libexec  in
+      { lib; bin; sbin; misc; toplevel; stublibs; share; share_root; etc; doc; man; libexec }
 
   end
 

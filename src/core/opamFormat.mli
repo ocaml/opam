@@ -263,7 +263,7 @@ val parse_libraries: value -> (string * filter option) list
 val make_flag: package_flag -> value
 
 (** Parse a package flag *)
-val parse_flag: value -> package_flag option
+val parse_flag: value -> package_flag
 
 (** {2 Tags} *)
 
