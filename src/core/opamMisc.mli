@@ -130,8 +130,17 @@ module IntMap: MAP with type key = int
 (** Set of ints *)
 module IntSet: SET with type elt = int
 
+(** Convert list items to string and concat. [sconcat_map sep f x] is equivalent
+    to String.concat sep (List.map f x) but tail-rec. *)
+val sconcat_map:
+  ?left:string -> ?right:string -> ?nil:string ->
+  string -> ('a -> string) -> 'a list -> string
+
 (** Display a list of strings *)
 val string_of_list: ('a -> string) -> 'a list -> string
+
+(** Convert a list of items to string as a dashed list *)
+val itemize: ?bullet:string -> ('a -> string) -> 'a list -> string
 
 val string_map: (char -> char) -> string -> string
 
@@ -203,6 +212,8 @@ val print_table: out_channel -> sep:string -> string list list -> unit
 (** Cut a string *)
 val sub_at: int -> string -> string
 
+(** Cut long lines in string according to the terminal width *)
+val reformat: ?indent:int -> string -> string
 
 (** {2 Option} *)
 

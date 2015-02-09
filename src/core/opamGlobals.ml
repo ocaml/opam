@@ -313,6 +313,17 @@ let msg fmt =
     Printf.ifprintf stdout fmt
   )
 
+let formatted_msg ?indent fmt =
+  if !display_messages then (
+    flush stderr;
+    Printf.ksprintf
+      (fun s -> print_string (OpamMisc.reformat ?indent s); flush stdout)
+      fmt
+  ) else (
+    Printf.ksprintf ignore fmt
+  )
+
+
 let status_line fmt =
   let carriage_delete = "\r\027[K" in
   let endline = if !debug then "\n" else carriage_delete in

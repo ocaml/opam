@@ -56,20 +56,38 @@ end
 
 let debug = ref false
 
-let string_of_list f = function
-  | [] -> "{}"
-  | l  ->
-    let buf = Buffer.create 1024 in
-    let n = List.length l in
-    let i = ref 0 in
-    Buffer.add_string buf "{ ";
-    List.iter (fun x ->
-      incr i;
-      Buffer.add_string buf (f x);
-      if !i <> n then Buffer.add_string buf ", ";
-    ) l;
-    Buffer.add_string buf " }";
-    Buffer.contents buf
+let sconcat_map ?(left="") ?(right="") ?nil sep f =
+  function
+  | [] -> (match nil with Some s -> s | None -> left^right)
+  | l ->
+    let seplen = String.length sep in
+    let strs,len =
+      List.fold_left (fun (strs,len) x ->
+          let s = f x in s::strs, String.length s + seplen + len)
+        ([],String.length left + String.length right - seplen)
+        l
+    in
+    let buf = Bytes.create len in
+    let prepend i s =
+      let slen = String.length s in
+      Bytes.blit_string s 0 buf (i - slen) slen;
+      i - slen
+    in
+    let pos = prepend len right in
+    let pos = prepend pos (List.hd strs) in
+    let pos =
+      List.fold_left (fun pos s -> prepend (prepend pos sep) s)
+        pos (List.tl strs)
+    in
+    let pos = prepend pos left in
+    assert (pos = 0);
+    Bytes.to_string buf
+
+let string_of_list f =
+  sconcat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
+
+let itemize ?(bullet="  - ") f =
+  sconcat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet) f
 
 let string_map f s =
   let len = String.length s in
@@ -369,15 +387,18 @@ let split s c =
 let split_delim s c =
   Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
 
-let visual_length s =
+let visual_length_substring s ofs len =
   let rec aux s i =
     try
       let i = String.index_from s i '\027' in
       let j = String.index_from s (i+1) 'm' in
-      j - i + 1 + aux s (j+1)
+      if j > ofs + len then 0 else
+        j - i + 1 + aux s (j+1)
     with Not_found | Invalid_argument _ -> 0
   in
-  String.length s - aux s 0
+  len - aux s ofs
+
+let visual_length s = visual_length_substring s 0 (String.length s)
 
 let align_table ll =
   let rec transpose ll =
@@ -505,13 +526,6 @@ let register_backtrace, get_backtrace =
      | Some(e1,bt) when e1 == e -> bt
      | _ -> Printexc.get_backtrace ())
 
-let pretty_backtrace e =
-  match get_backtrace e with
-  | "" -> ""
-  | b  ->
-    let b = String.concat "\n  " (split b '\n') in
-    Printf.sprintf "Backtrace:\n  %s\n" b
-
 let default_columns = 100
 
 let with_process_in cmd f =
@@ -553,6 +567,50 @@ let terminal_columns =
     if tty_out
     then Lazy.force !v
     else 80
+
+let reformat ?(indent=0) s =
+  let slen = String.length s in
+  let buf = Buffer.create 1024 in
+  let rec find_nonsp i =
+    if i >= slen then i else
+    match s.[i] with ' ' -> find_nonsp (i+1) | _ -> i
+  in
+  let rec find_split i =
+    if i >= slen then i else
+    match s.[i] with ' ' | '\n' -> i | _ -> find_split (i+1)
+  in
+  let newline i =
+    Buffer.add_char buf '\n';
+    if i+1 < slen && s.[i+1] <> '\n' then
+    for _i = 1 to indent do Buffer.add_char buf ' ' done
+  in
+  let rec print i col =
+    if i >= slen then () else
+    if s.[i] = '\n' then (newline i; print (i+1) indent) else
+    let j = find_nonsp i in
+    let k = find_split j in
+    let len_visual = visual_length_substring s i (k - i) in
+    if col + len_visual >= terminal_columns () && col > indent then
+      (newline i;
+       Buffer.add_substring buf s j (k - j);
+       print k (indent + len_visual - j + i))
+    else
+      (Buffer.add_substring buf s i (k - i);
+       print k (col + len_visual))
+  in
+  print 0 0;
+  Buffer.contents buf
+
+let itemize ?(bullet="  - ") f =
+  sconcat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet)
+    (fun s -> reformat ~indent:(String.length bullet) (f s))
+
+let pretty_backtrace e =
+  match get_backtrace e with
+  | "" -> ""
+  | b  ->
+    let b = itemize ~bullet:"  " (fun x -> x) (split b '\n') in
+    Printf.sprintf "Backtrace:\n%s" b
 
 let uname_s () =
   try

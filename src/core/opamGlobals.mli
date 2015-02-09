@@ -140,6 +140,7 @@ exception Package_error of string
 
 val error_and_exit : ('a, unit, string, 'b) format4 -> 'a
 val msg : ('a, out_channel, unit, unit) format4 -> 'a
+val formatted_msg : ?indent:int -> ('a, unit, string, unit) format4 -> 'a
 val header_msg : ('a, unit, string, unit) format4 -> 'a
 val header_error :
   ('a, unit, string, ('b, unit, string, unit) format4 -> 'b) format4 -> 'a
