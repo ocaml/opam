@@ -25,12 +25,22 @@ let need_globals ns =
   || List.mem OpamPackage.Name.global_config ns
 
 (* Implicit variables *)
-let implicits ns =
+let implicits t ns =
   List.fold_left (fun acc name ->
       let vars =
         if name = OpamPackage.Name.global_config
         then OpamState.global_variable_names
-        else OpamState.package_variable_names
+        else
+          OpamState.package_variable_names @
+          try
+            let nv =
+              try OpamState.find_installed_package_by_name t name with
+              | Not_found ->
+                OpamPackage.Set.choose (OpamState.find_packages_by_name t name)
+            in
+            List.map (fun (v,desc,_) -> OpamVariable.to_string v,desc)
+              (OpamFile.OPAM.features (OpamState.opam t nv))
+          with Not_found -> []
       in
       List.rev_append
         (List.rev_map (fun (variable,desc) ->
@@ -86,7 +96,7 @@ let list ns =
       (name, file) :: l
     ) t.installed [] in
   let variables =
-    implicits ns @
+    implicits t ns @
     List.fold_left (fun accu (name, config) ->
         (* add all the global variables *)
         List.fold_left (fun accu variable ->

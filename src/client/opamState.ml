@@ -96,9 +96,7 @@ let find_installed_package_by_name t name =
   find_installed_package_by_name_aux t.installed name
 
 let find_packages_by_name t name =
-  let r = OpamPackage.packages_of_name t.packages name in
-  if OpamPackage.Set.is_empty r then None
-  else Some r
+  OpamPackage.packages_of_name t.packages name
 
 let packages_of_atoms t atoms =
   let check_atoms nv =

@@ -243,7 +243,7 @@ val is_package_installed: state -> package -> bool
 val find_installed_package_by_name: state -> name -> package
 
 (** Return all the packages with the given name *)
-val find_packages_by_name: state -> name -> package_set option
+val find_packages_by_name: state -> name -> package_set
 
 (** Return all packages satisfying one of the given atoms from a state *)
 val packages_of_atoms: state -> atom list -> package_set
