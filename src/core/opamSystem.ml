@@ -357,14 +357,18 @@ let print_stats () =
     OpamGlobals.msg "%d external processes called:\n  %s\n%!"
       (List.length l) (String.concat "\n  " (List.map (String.concat " ") l))
 
-let log_file name = match name with
+let log_file ?dir name = match name with
   | None   -> temp_file "log"
-  | Some n -> temp_file ~dir:(Sys.getcwd ()) n
+  | Some n ->
+    let dir =
+      OpamMisc.Option.default (Filename.concat !OpamGlobals.root_dir "log") dir
+    in
+    temp_file ~dir n
 
 let make_command
     ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir ?(check_existence=true)
     cmd args =
-  let name = log_file name in
+  let name = log_file ?dir name in
   let verbose =
     OpamMisc.Option.default (!OpamGlobals.debug || !OpamGlobals.verbose) verbose
   in
