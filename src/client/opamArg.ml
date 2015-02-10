@@ -1872,26 +1872,25 @@ let commands = [
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
-  let len = Array.length Sys.argv in
-  if len > 1 then (
-    let opam = Filename.basename Sys.argv.(0) in
-    let name = Sys.argv.(1) in
-    let command = opam ^ "-" ^ name in
+  match Array.to_list Sys.argv with
+  | [] | [_] -> ()
+  | opam :: name :: args ->
     if
-      String.length name > 1
-      && name.[0] <> '-'
+      not (OpamMisc.starts_with ~prefix:"-" name)
       && List.for_all (fun (_,info) -> Term.name info <> name) commands
-      && OpamSystem.command_exists command
     then
-      let args = Array.sub Sys.argv 1 (len - 1) in
-      args.(0) <- command;
-      OpamMisc.exec_at_exit ();
-      Unix.execvp command args
-  ) else
-    ()
+    (* No such command, check if there is a matching plugin *)
+    let command = opam ^ "-" ^ name in
+    let t = OpamState.load_env_state "plugins" in
+    let env = OpamState.get_full_env ~force_path:false t in
+    let env = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env) in
+    if OpamSystem.command_exists ~env command then
+      let argv = Array.of_list (command :: args) in
+      raise (OpamGlobals.Exec (command, argv, env))
 
 let run default commands =
   OpamMisc.Option.iter OpamVersion.set_git OpamGitVersion.version;
+  OpamGlobals.root_dir := OpamGlobals.default_opam_dir;
   Sys.catch_break true;
   let () =
     try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
