@@ -212,13 +212,13 @@ let make_conflicts univ = function
 let cycle_conflict univ cycle =
   Conflicts (univ, Conflict_cycle cycle)
 
+let arrow_concat =
+  String.concat (OpamGlobals.colorise `yellow " -> ")
+
 let print_cycles cycles =
   Printf.sprintf
-    "The actions to process have cyclic dependencies:\n  - %s\n"
-    (String.concat "\n  - "
-       (List.map
-          (String.concat (OpamGlobals.colorise `yellow " -> "))
-          cycles))
+    "The actions to process have cyclic dependencies:\n%s"
+    (OpamMisc.itemize arrow_concat cycles)
 
 let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
   let open Algo.Diagnostic in
@@ -352,9 +352,6 @@ let strings_of_final_reasons cudf2opam unav_reasons cudf_universe reasons =
          (strings_of_reason cudf2opam unav_reasons cudf_universe)
          reasons) in
   OpamMisc.StringSet.(elements (of_list reasons))
-
-let arrow_concat =
-  String.concat (OpamGlobals.colorise `yellow " -> ")
 
 let strings_of_chains cudf2opam cudf_universe reasons =
   let chains = make_chains cudf_universe cudf2opam reasons in

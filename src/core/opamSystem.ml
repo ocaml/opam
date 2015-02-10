@@ -354,8 +354,8 @@ let print_stats () =
   match !runs with
   | [] -> ()
   | l  ->
-    OpamGlobals.msg "%d external processes called:\n  %s\n%!"
-      (List.length l) (String.concat "\n  " (List.map (String.concat " ") l))
+    OpamGlobals.msg "%d external processes called:\n%s%!"
+      (List.length l) (OpamMisc.itemize ~bullet:"  " (String.concat " ") l)
 
 let log_file ?dir name = match name with
   | None   -> temp_file "log"

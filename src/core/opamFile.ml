@@ -1659,7 +1659,7 @@ module X = struct
       t
 
     let warns_to_string ws =
-      String.concat "\n" @@ List.map
+      OpamMisc.sconcat_map "\n"
         (fun (w,s) ->
            let ws = match w with
              | `Warning -> OpamGlobals.colorise `yellow "warning"

@@ -66,31 +66,31 @@ let short_string_of_atom = function
       (OpamPackage.Version.to_string c)
 
 let string_of_atoms atoms =
-  String.concat " & " (List.map short_string_of_atom atoms)
+  OpamMisc.sconcat_map " & " short_string_of_atom atoms
 
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =
-  Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_atom c))
+  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_atom c)
 
 type 'a disjunction = 'a list
 
 let string_of_disjunction string_of_atom c =
-  Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_atom c))
+  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_atom c)
 
 type 'a cnf = 'a list list
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_atom c)) in
-  Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_clause cnf))
+    Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_atom c) in
+  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_clause cnf)
 
 type 'a dnf = 'a list list
 
 let string_of_dnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_atom c)) in
-  Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_clause cnf))
+    Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_atom c) in
+  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_clause cnf)
 
 type 'a formula =
   | Empty

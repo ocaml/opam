@@ -334,6 +334,6 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
       | _ -> disp "%s" (Printexc.to_string error) in
     let all_errors = List.map fst !errors in
     OpamGlobals.error "Got some errors while processing: %s"
-      (String.concat ", " (List.map OpamPackage.to_string all_errors));
+      (OpamMisc.sconcat_map ", " OpamPackage.to_string all_errors);
     List.iter display_error !errors
   )

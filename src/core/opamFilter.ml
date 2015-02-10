@@ -30,7 +30,7 @@ let rec to_string = function
   | FBool b    -> string_of_bool b
   | FString s  -> Printf.sprintf "%S" s
   | FIdent (pkgs,var,converter) ->
-    String.concat "+" (List.map OpamPackage.Name.to_string pkgs) ^
+    OpamMisc.sconcat_map "+" OpamPackage.Name.to_string pkgs ^
     (if pkgs <> [] then ":" else "") ^
     OpamVariable.to_string var ^
     (match converter with

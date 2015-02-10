@@ -200,9 +200,9 @@ let prepare_package_build t nv =
   );
   if patching_errors <> [] then (
     let msg =
-      Printf.sprintf "These patches didn't apply at %s:\n  - %s\n"
+      Printf.sprintf "These patches didn't apply at %s:\n%s"
         (OpamFilename.Dir.to_string (OpamPath.Switch.build t.root t.switch nv))
-        (String.concat "\n  - " patching_errors)
+        (OpamMisc.itemize (fun x -> x) patching_errors)
     in
     failwith msg
   )

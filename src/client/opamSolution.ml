@@ -56,7 +56,8 @@ let post_message ?(failed=false) state action =
       (if failed then "troubleshooting" else "installed successfully");
     let rex = Re_pcre.regexp "\n" in
     List.iter (fun msg ->
-        OpamGlobals.msg "%s%s\n" mark
+        OpamGlobals.formatted_msg ~indent:(OpamMisc.visual_length mark)
+          "%s%s\n" mark
           (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
       messages
 
@@ -353,17 +354,16 @@ let parallel_apply t action action_graph =
   in
   if fatal_dl_error then
     OpamGlobals.error_and_exit
-      "The sources of the following couldn't be obtained, aborting:\n  - %s\n\
+      "The sources of the following couldn't be obtained, aborting:\n%s\
        (This may be fixed by running 'opam update')"
-      (String.concat "\n  - " (List.map OpamPackage.to_string
-                                 (OpamPackage.Set.elements failed_downloads)))
+      (OpamMisc.itemize OpamPackage.to_string
+         (OpamPackage.Set.elements failed_downloads))
   else if not (OpamPackage.Set.is_empty failed_downloads) then
     OpamGlobals.warning
       "The sources of the following couldn't be obtained, they may be \
-       uncleanly uninstalled:\n  - %s\n"
-      (String.concat "\n  - "
-         (List.map OpamPackage.to_string
-            (OpamPackage.Set.elements failed_downloads)));
+       uncleanly uninstalled:\n%s"
+      (OpamMisc.itemize OpamPackage.to_string
+         (OpamPackage.Set.elements failed_downloads));
 
 
   (* 2/ process the package actions (installations and removals) *)
@@ -447,12 +447,11 @@ let parallel_apply t action action_graph =
     OpamGlobals.msg "Aborting.\n";
     raise e
   | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
-    OpamGlobals.error "Cycles found during dependency resolution:\n  - %s\n"
-      (String.concat "\n  - "
-         (List.map
-            (fun cy ->
-               String.concat " -> " (List.map OpamSolver.Action.to_string cy))
-            cycles));
+    OpamGlobals.error "Cycles found during dependency resolution:\n%s"
+      (OpamMisc.itemize
+         (OpamMisc.sconcat_map (OpamGlobals.colorise `yellow " -> ")
+            OpamSolver.Action.to_string)
+         cycles);
     raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
@@ -480,11 +479,9 @@ let parallel_apply t action action_graph =
         in
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
-          OpamGlobals.msg "%s\n%a\n" header
-            (fun oc actions ->
-               List.iter (Printf.fprintf oc "  %s\n")
-                 (PackageAction.to_aligned_strings actions))
-            actions
+          OpamGlobals.msg "%s\n%s" header
+            (OpamMisc.itemize ~bullet:"  " (fun x -> x)
+               (PackageAction.to_aligned_strings actions))
         else match empty with
           | Some s -> OpamGlobals.msg "%s\n" s
           | None -> ()

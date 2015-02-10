@@ -207,11 +207,10 @@ let parse_pair fa fb =
     bad_format ~pos:(value_pos x) "Expected a pair"
 
 let parse_or fns v =
-  let dbg = List.map fst fns in
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expected %s" (String.concat " or " dbg)
+        "Expected %s" (OpamMisc.sconcat_map " or " fst fns)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
@@ -635,9 +634,8 @@ let make_filter f =
     | FString s  -> make_string s
     | FIdent (pkgs,var,converter) ->
       let s =
-        (if pkgs <> [] && pkgs <> [OpamPackage.Name.global_config] then
-           String.concat "+" (List.map OpamPackage.Name.to_string pkgs) ^ ":"
-         else "") ^
+        OpamMisc.sconcat_map ~nil:"" "+" ~right:":"
+          OpamPackage.Name.to_string pkgs ^
         OpamVariable.to_string var ^
         (match converter with
          | Some (it,ifu) -> "?"^it^":"^ifu
