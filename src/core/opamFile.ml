@@ -920,6 +920,7 @@ module X = struct
       depends    : ext_formula;
       depopts    : ext_formula;
       conflicts  : formula;
+      features   : (OpamVariable.t * string * filter) list;
       libraries  : (string * filter option) list;
       syntax     : (string * filter option) list;
       patches    : (basename * filter option) list;
@@ -954,6 +955,7 @@ module X = struct
       depends    = OpamFormula.Empty;
       depopts    = OpamFormula.Empty;
       conflicts  = OpamFormula.Empty;
+      features   = [];
       libraries  = [];
       syntax     = [];
       patches    = [];
@@ -992,6 +994,7 @@ module X = struct
     let s_depends     = "depends"
     let s_depopts     = "depopts"
     let s_conflicts   = "conflicts"
+    let s_features    = "features"
     let s_libraries   = "libraries"
     let s_syntax      = "syntax"
     let s_ocaml_version = "ocaml-version"
@@ -1048,13 +1051,17 @@ module X = struct
       s_messages;
       s_post_messages;
       s_bug_reports;
+    ]
+
+    let opam_1_2_fields = [
       s_flags;
       s_dev_repo;
       s_install;
+      s_features;
     ]
 
     let to_1_0_fields k v =
-      if List.mem k opam_1_1_fields then
+      if List.mem k opam_1_1_fields || List.mem k opam_1_2_fields then
         if k = s_author then Some (s_authors, v)
         else None
       else if k = s_maintainer || k = s_homepage || k = s_license then
@@ -1068,7 +1075,7 @@ module X = struct
       Syntax.to_1_0 file
 
     let valid_fields =
-      opam_1_0_fields @ opam_1_1_fields
+      opam_1_0_fields @ opam_1_1_fields @ opam_1_2_fields
 
     let check name = function
       | None    ->
@@ -1099,6 +1106,7 @@ module X = struct
     let depends t = t.depends
     let depopts t = t.depopts
     let conflicts t = t.conflicts
+    let features t = t.features
     let libraries t = t.libraries
     let syntax t = t.syntax
     let ocaml_version t = t.ocaml_version
@@ -1129,6 +1137,7 @@ module X = struct
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
     let with_conflicts t conflicts = {t with conflicts }
+    let with_features t features = {t with features }
     let with_build t build = { t with build }
     let with_install t install = { t with install }
     let with_remove t remove = { t with remove }
@@ -1202,6 +1211,7 @@ module X = struct
           @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
+          @ list    t.features      s_features      OpamFormat.make_features
           @ list    t.libraries     s_libraries     OpamFormat.make_libraries
           @ list    t.syntax        s_syntax        OpamFormat.make_libraries
           @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
@@ -1327,6 +1337,8 @@ module X = struct
       in
       let conflicts = assoc_default OpamFormula.Empty s s_conflicts
           OpamFormat.parse_formula in
+      let features = OpamFormat.assoc_default [] s s_features
+          OpamFormat.parse_features in
       let libraries = assoc_list s s_libraries OpamFormat.parse_libraries in
       let syntax = assoc_list s s_syntax OpamFormat.parse_libraries in
       let ocaml_version = assoc_option s s_ocaml_version
@@ -1393,7 +1405,7 @@ module X = struct
               "Unrecognised version-control address")
       in
       { opam_version; name; version; maintainer; substs; build; install; remove;
-        depends; depopts; conflicts; libraries; syntax;
+        depends; depopts; conflicts; features; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
@@ -1563,7 +1575,11 @@ module X = struct
           (List.exists (function
                | (CString "make", _)::_, _ -> true
                | _ -> false
-             ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc))
+             ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc));
+        cond `Warning
+          "Field 'features' is still experimental and not yet to be used on \
+           the official repo"
+          (t.features <> []);
       ]
       in
       OpamMisc.filter_map (fun x -> x) warnings

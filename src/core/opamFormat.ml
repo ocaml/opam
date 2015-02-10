@@ -596,11 +596,20 @@ let make_env_variable (ident, op, string) =
 
 (* Filters *)
 
+let parse_filter_ident = function
+  | Ident (pos, s) ->
+    (try FIdent (filter_ident_of_string s)
+     with Failure msg -> bad_format ~pos "%s" msg)
+  | x ->
+    bad_format ~pos:(value_pos x)
+      "Expected a filter ident: \
+       [pkg[+pkg...]:]varname[?str_if_true:str_if_false_or_undef]"
+
 let rec parse_filter l =
   let rec aux = function
     | Bool (_,b)         -> FBool b
     | String (_,s)       -> FString s
-    | Ident (_,s)        -> FIdent s
+    | Ident _ as id      -> parse_filter_ident id
     | Group (_,g)        -> parse_filter g
     | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
     | Pfxop (_,`Not,e) -> FNot (aux e)
@@ -624,7 +633,17 @@ let make_filter f =
   let rec aux ?paren f =
     match f with
     | FString s  -> make_string s
-    | FIdent s   -> make_ident s
+    | FIdent (pkgs,var,converter) ->
+      let s =
+        (if pkgs <> [] && pkgs <> [OpamPackage.Name.global_config] then
+           String.concat "+" (List.map OpamPackage.Name.to_string pkgs) ^ ":"
+         else "") ^
+        OpamVariable.to_string var ^
+        (match converter with
+         | Some (it,ifu) -> "?"^it^":"^ifu
+         | None -> "")
+      in
+      make_ident s
     | FBool b    -> make_bool b
     | FOp(e,s,f) ->
       let f = Relop (pos_null, s, aux e, aux f) in
@@ -640,6 +659,7 @@ let make_filter f =
     | FNot f ->
       let f = Pfxop (pos_null, `Not, aux ~paren:`Not f) in
       if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
+    | FUndef -> make_ident "#undefined"
   in
   [aux f]
 
@@ -729,3 +749,33 @@ let parse_tags v =
 let make_tags t =
   let l = OpamMisc.StringSetMap.bindings t in
   make_list make_tag_line l
+
+(* FEATURES *)
+
+let parse_features t =
+  let rec aux = function
+    | [] -> []
+    | id :: opt :: r ->
+      let id = OpamVariable.of_string (parse_ident id) in
+      (match parse_option parse_string parse_filter opt with
+       | doc, Some fil -> (id, doc, fil) :: aux r
+       | _, None ->
+         bad_format ~pos:(value_pos opt) "Expecting a filter definition, e.g. \
+                                          `var \"Enable var\" { <condition> }'")
+    | t ->
+      bad_format ?pos:(values_pos t) "Bad feature definition, expected \
+                                      `var \"Enable var\" { <condition> }'"
+  in
+  match t with
+  | List (_, l) -> aux l
+  | _ -> bad_format ~pos:(value_pos t) "Expected a list of feature definitions"
+
+let make_features feat =
+  let rec aux = function
+    | [] -> []
+    | (var,doc,fil) :: r ->
+      make_ident (OpamVariable.to_string var) ::
+      make_option make_string make_filter (doc, Some fil) ::
+      aux r
+  in
+  List (pos_null, aux feat)

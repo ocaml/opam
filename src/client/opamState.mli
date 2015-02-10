@@ -137,23 +137,6 @@ val display_setup: state -> shell -> filename -> unit
 (** Update the user configuration. *)
 val update_setup: state -> user_config option -> global_config option -> unit
 
-(** {2 Substitutions} *)
-
-(** Compute the value of a variable *)
-val contents_of_variable: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
-  full_variable -> variable_contents option
-
-(** Compute the value of a variable. Raise [Not_found] if the variable is
-    not valid. *)
-val contents_of_variable_exn: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
-  full_variable -> variable_contents
-
-(** Substitute a string *)
-val substitute_string: state -> ?opam:OpamFile.OPAM.t -> variable_map -> string -> string
-
-(** Substitute file *)
-val substitute_file: state -> ?opam:OpamFile.OPAM.t -> variable_map -> basename -> unit
-
 (** {2 Filters} *)
 
 (** Lists of available variables and their description *)
@@ -163,14 +146,11 @@ val package_variable_names: (string * string) list
 (** Check for user-defined variable overwrite. *)
 val get_env_var: full_variable -> variable_contents option
 
-(** Evaluate a filter *)
-val eval_filter: state -> ?opam:OpamFile.OPAM.t -> variable_map -> filter option -> bool
-
-(** Filter a list of commands by:
-    - evaluating the substitution strings; and
-    - removing the commands with a filter evaluating to "false" *)
-val filter_commands: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
-  command list -> string list list
+(** The main Filter.env value to be used to resolve variables in filters *)
+val filter_env:
+  ?opam:OpamFile.OPAM.t ->
+  ?local_variables:((variable_contents option) OpamVariable.Map.t) ->
+  state -> full_variable -> variable_contents option
 
 (** {2 Helpers} *)
 
@@ -263,7 +243,7 @@ val is_package_installed: state -> package -> bool
 val find_installed_package_by_name: state -> name -> package
 
 (** Return all the packages with the given name *)
-val find_packages_by_name: state -> name -> package_set option
+val find_packages_by_name: state -> name -> package_set
 
 (** Return all packages satisfying one of the given atoms from a state *)
 val packages_of_atoms: state -> atom list -> package_set

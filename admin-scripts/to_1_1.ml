@@ -41,7 +41,7 @@ let filter_string s =
   OpamFilter.replace_variables s subst
 
 let rec filter_vars = function
-  | FIdent i when List.mem i vars_new_1_2 -> None
+  | FIdent ([],i,None) when List.mem i vars_new_1_2 -> None
   | FString s -> Some (FString (filter_string s))
   | FBool _ | FIdent _ as f -> Some f
   | FOp (f1,op,f2) ->
@@ -93,6 +93,7 @@ let to_1_1 _ opam =
   let opam = OF.with_install opam [] in
   let opam = OF.with_flags opam [] in
   let opam = OF.with_dev_repo opam None in
+  let opam = OF.with_features opam [] in
   let opam = OF.with_opam_version opam (OpamVersion.of_string "1.1") in
   let remove_ext =
     OpamFormula.map (fun (n, (_,cstr)) ->

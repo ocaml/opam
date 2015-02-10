@@ -96,9 +96,7 @@ let find_installed_package_by_name t name =
   find_installed_package_by_name_aux t.installed name
 
 let find_packages_by_name t name =
-  let r = OpamPackage.packages_of_name t.packages name in
-  if OpamPackage.Set.is_empty r then None
-  else Some r
+  OpamPackage.packages_of_name t.packages name
 
 let packages_of_atoms t atoms =
   let check_atoms nv =
@@ -644,7 +642,7 @@ let get_env_var v =
   with Not_found -> None
 
 (* filter handling *)
-let resolve_variable t ?opam local_variables v =
+let rec resolve_variable t ?opam:opam_arg local_variables v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let read_var v =
     let var = OpamVariable.Full.variable v in
@@ -654,7 +652,28 @@ let resolve_variable t ?opam local_variables v =
   let get_local_var v =
     if not (is_global_conf v) then None else
     let var = OpamVariable.Full.variable v in
-    try Some (OpamVariable.Map.find var local_variables)
+    try match OpamVariable.Map.find var local_variables with
+      | None -> raise Exit (* Variable explicitely undefined *)
+      | some -> some
+    with Not_found -> None
+  in
+  let get_features_var opam v =
+    let to_str opam =
+      OpamPackage.to_string @@
+      OpamPackage.create (OpamFile.OPAM.name opam) (OpamFile.OPAM.version opam)
+    in
+    let features = OpamFile.OPAM.features opam in
+    try
+      let v, _descr, filt = List.find (fun (id,_,_) -> id = v) features in
+      let local_variables = (* Avoid recursion *)
+        OpamVariable.Map.add v None local_variables in
+      try Some (OpamFilter.eval (resolve_variable t ~opam local_variables) filt)
+      with Failure _ ->
+        OpamGlobals.warning "Feature %s of %s didn't resolve%s"
+          (OpamVariable.to_string v) (to_str opam)
+          (match opam_arg with None -> "" | Some o ->
+            Printf.sprintf " (referred to from %s)" (to_str o));
+        None
     with Not_found -> None
   in
   let get_global_var v =
@@ -697,14 +716,16 @@ let resolve_variable t ?opam local_variables v =
     let opam = (* ensure opam, if not None, corresponds to name *)
       match opam with
       | Some o when OpamFile.OPAM.name o = name -> opam
-      | _ when is_name_installed t name ->
-        opam_opt t (find_installed_package_by_name t name)
-      | _ -> None
+      | _ ->
+        try opam_opt t (find_installed_package_by_name t name)
+        with Not_found -> None
     in
+    let feat = match opam with
+      | Some o -> get_features_var o (OpamVariable.Full.variable v)
+      | None -> None in
+    if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
     match var_str, opam with
-    | "enable",    Some _    -> string "enable"
-    | "enable",    None      -> string "disable"
     | "installed", Some _    -> bool true
     | "installed", None      -> bool false
     | "pinned",    _         -> bool    (OpamPackage.Name.Map.mem name t.pinned)
@@ -756,7 +777,7 @@ let resolve_variable t ?opam local_variables v =
   in
   let make_package_local v =
     (* [var] within the opam file of [pkg] is tried as [pkg:var] *)
-    match is_global_conf v, opam with
+    match is_global_conf v, opam_arg with
     | true, Some opam ->
       OpamVariable.Full.create (OpamFile.OPAM.name opam) (OpamVariable.Full.variable v)
     | _ -> v
@@ -764,39 +785,25 @@ let resolve_variable t ?opam local_variables v =
   let skip _ = None in
   let v' = make_package_local v in
   let contents =
-    List.fold_left
-      (function None -> (fun (f,v) -> f v) | r -> (fun _ -> r))
-      None
-      [
-        get_local_var, v;
-        get_env_var, v;
-        (if v' <> v then get_env_var else skip), v';
-        read_var, v;
-        (if v' <> v then read_var else skip), v';
-        get_global_var, v;
-        get_package_var opam, v';
-      ]
+    try
+      List.fold_left
+        (function None -> (fun (f,v) -> f v) | r -> (fun _ -> r))
+        None
+        [
+          get_local_var, v;
+          get_env_var, v;
+          (if v' <> v then get_env_var else skip), v';
+          read_var, v;
+          (if v' <> v then read_var else skip), v';
+          get_global_var, v;
+          get_package_var opam_arg, v';
+        ]
+    with Exit -> None
   in
   contents
 
-let eval_filter t ?opam local_variables =
-  OpamFilter.eval_opt (resolve_variable t ?opam local_variables)
-
-let filter_commands t ?opam local_variables =
-  OpamFilter.commands (resolve_variable t ?opam local_variables)
-
-let substitute_file t ?opam local_variables =
-  OpamFilter.substitute_file (resolve_variable t ?opam local_variables)
-
-let substitute_string t ?opam local_variables =
-  OpamFilter.substitute_string (resolve_variable t ?opam local_variables)
-
-let contents_of_variable t ?opam local_variables =
-  OpamFilter.contents_of_variable (resolve_variable t ?opam local_variables)
-
-let contents_of_variable_exn t ?opam local_variables =
-  OpamFilter.contents_of_variable_exn
-    (resolve_variable t ?opam local_variables)
+let filter_env ?opam ?(local_variables=OpamVariable.Map.empty) t =
+  resolve_variable t ?opam local_variables
 
 let redirect t repo =
   if repo.repo_kind <> `http then None else
@@ -807,10 +814,9 @@ let redirect t repo =
     |> OpamFile.Repo.redirect
   in
   let redirect = List.fold_left (fun acc (redirect, filter) ->
-      if eval_filter t OpamVariable.Map.empty filter then
-        (redirect, filter) :: acc
-      else
-        acc
+      if OpamFilter.opt_eval_to_bool (filter_env t) filter
+      then (redirect, filter) :: acc
+      else acc
     ) [] redirect in
   match redirect with
   | []         -> None
@@ -859,8 +865,8 @@ let consistent_os opam =
     OpamFormula.eval atom f
 
 let consistent_available_field t opam =
-  let env opam = resolve_variable t ~opam OpamVariable.Map.empty in
-  OpamFilter.eval (env opam) (OpamFile.OPAM.available opam)
+  OpamFilter.eval_to_bool ~default:false (filter_env ~opam t)
+    (OpamFile.OPAM.available opam)
 
 (* List the packages which do fulfil the compiler and OS constraints *)
 let available_packages t =
@@ -924,7 +930,7 @@ let unavailable_reason t (name, _ as atom) =
         ]) @
       (if consistent_available_field t opam then [] else [
           Printf.sprintf "your system doesn't comply with %s"
-            (string_of_filter (OpamFile.OPAM.available opam))
+            (OpamFilter.to_string (OpamFile.OPAM.available opam))
         ]) in
     match r with
     | [] -> raise Not_found
@@ -1792,7 +1798,7 @@ let expand_env t ?opam (env: env_updates) : env =
       None
   in
   List.rev_map (fun (ident, symbol, string) ->
-    let string = OpamFilter.substitute_string fenv string in
+    let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
       try OpamMisc.reset_env_value ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
@@ -1953,7 +1959,7 @@ let string_of_env_update t shell updates =
     | `fish -> fish
     | `csh -> csh in
   let aux (ident, symbol, string) =
-    let string = OpamFilter.substitute_string fenv string in
+    let string = OpamFilter.expand_string fenv string in
     let key, value = match symbol with
       | "="  -> (ident, string)
       | "+="

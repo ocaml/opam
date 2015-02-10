@@ -217,6 +217,27 @@ let pfxop_of_string = function
   | "!" -> `Not
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
+let filter_ident_of_string s =
+  match OpamMisc.rcut_at s ':' with
+  | None -> [], OpamVariable.of_string s, None
+  | Some (p,last) ->
+    let get_names s =
+      List.map (fun n ->
+          try OpamPackage.Name.of_string n
+          with Failure _ -> failwith ("Invalid package name "^n))
+        (OpamMisc.split s '+')
+    in
+    match OpamMisc.rcut_at p '?' with
+    | None ->
+      get_names p, OpamVariable.of_string last, None
+    | Some (p,val_if_true) ->
+      let converter = Some (val_if_true, last) in
+      match OpamMisc.rcut_at p ':' with
+      | None ->
+        [], OpamVariable.of_string p, converter
+      | Some (packages,var) ->
+        get_names packages, OpamVariable.of_string var, converter
+
 let filter_deps
     ?(build=true)
     ?(test=build && !OpamGlobals.build_test)
@@ -230,17 +251,6 @@ let filter_deps
         | Depflag_Unknown _ -> true (* ignored *))
   in
   OpamFormula.formula_of_extended ~filter
-
-let rec string_of_filter = function
-  | FBool b    -> string_of_bool b
-  | FString s  -> Printf.sprintf "%S" s
-  | FIdent i   -> i
-  | FOp(e,s,f) ->
-    Printf.sprintf "%s %s %s"
-      (string_of_filter e) (string_of_relop s) (string_of_filter f)
-  | FAnd (e,f) -> Printf.sprintf "%s & %s" (string_of_filter e) (string_of_filter f)
-  | FOr (e,f)  -> Printf.sprintf "%s | %s" (string_of_filter e) (string_of_filter f)
-  | FNot e     -> Printf.sprintf "!%s" (string_of_filter e)
 
 let action_contents = function
   | To_change (_, p)

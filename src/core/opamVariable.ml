@@ -39,6 +39,8 @@ module Full = struct
   let create package variable =
     { package; variable }
 
+  let global variable = create OpamPackage.Name.global_config variable
+
   let of_string s =
     match OpamMisc.rcut_at s ':' with
     | None -> create OpamPackage.Name.global_config (of_string s)

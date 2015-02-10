@@ -141,7 +141,6 @@ lib: [
   "src/client/opamClient.cmx"
   "?src/client/opamClient.cmti"
   "src/tools/opam_admin_top.cmi"
-  "src/tools/opam_admin_top.cmx"
   "?src/tools/opam_admin_top.cmti"
 ]
 bin: [

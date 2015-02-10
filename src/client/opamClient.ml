@@ -64,12 +64,12 @@ let details_of_package t name versions =
   let tags = OpamFile.OPAM.tags opam in
   let syntax = lazy (
     OpamMisc.filter_map (fun (s,filter) ->
-        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
+        if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
         then Some s else None)
       (OpamFile.OPAM.syntax opam)) in
   let libraries = lazy (
     OpamMisc.filter_map (fun (s,filter) ->
-        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
+        if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
         then Some s else None)
       (OpamFile.OPAM.libraries opam)) in
   let others = lazy (

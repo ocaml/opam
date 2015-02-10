@@ -311,11 +311,13 @@ type pfxop = [ `Not ]
 type filter =
   | FBool of bool
   | FString of string
-  | FIdent of string
+  | FIdent of (name list * variable * (string * string) option)
+  (** packages, variable name, string converter (val_if_true, val_if_false_or_undef) *)
   | FOp of filter * relop * filter
   | FAnd of filter * filter
   | FOr of filter * filter
   | FNot of filter
+  | FUndef
 
 (** A command argument *)
 type simple_arg =

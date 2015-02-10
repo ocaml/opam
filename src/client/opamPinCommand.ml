@@ -212,7 +212,7 @@ let pin name ?version pin_option =
       false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
-  if OpamState.find_packages_by_name t name = None &&
+  if OpamPackage.Set.is_empty (OpamState.find_packages_by_name t name) &&
      not (OpamGlobals.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
