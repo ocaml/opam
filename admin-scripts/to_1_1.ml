@@ -32,16 +32,17 @@ let vars_new_1_2 = [ "compiler"; "ocaml-native"; "ocaml-native-tools";
 let filter_string s =
   let subst var =
     match OpamVariable.Full.to_string var with
-    | "compiler" -> OpamVariable.S "%{ocaml-version}%"
+    | "compiler" -> Some (OpamVariable.S "%{ocaml-version}%")
     | "ocaml-native" | "ocaml-native-tools" | "ocaml-native-dynlink" ->
-      OpamVariable.S "true"
-    | s when List.mem s vars_new_1_2 -> OpamVariable.S ""
-    | s -> OpamVariable.S (Printf.sprintf "%%{%s}%%" s)
+      Some (OpamVariable.S "true")
+    | s when List.mem s vars_new_1_2 -> Some (OpamVariable.S "")
+    | s -> Some (OpamVariable.S (Printf.sprintf "%%{%s}%%" s))
   in
-  OpamFilter.replace_variables s subst
+  OpamFilter.expand_string subst s
 
 let rec filter_vars = function
-  | FIdent ([],i,None) when List.mem i vars_new_1_2 -> None
+  | FIdent ([],i,None) when List.mem (OpamVariable.to_string i) vars_new_1_2 ->
+    None
   | FString s -> Some (FString (filter_string s))
   | FBool _ | FIdent _ as f -> Some f
   | FOp (f1,op,f2) ->
@@ -60,6 +61,7 @@ let rec filter_vars = function
      (match filter_vars f with
       | Some f -> Some (FNot f)
       | None -> None)
+  | FUndef -> None
 
 let filter_vars_optlist ol =
   List.map
