@@ -137,6 +137,7 @@ let list ~print_short ~installed ~all =
     OpamGlobals.msg "# %d more patched or experimental compilers, \
                      use '--all' to show\n"
       (List.length patches);
+  if not print_short then
   match !OpamGlobals.switch with
   | `Env s ->
     let sys = OpamSwitch.to_string (OpamFile.Config.switch t.config) in
