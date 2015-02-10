@@ -276,19 +276,22 @@ let slog to_string channel x = output_string channel (to_string x)
 let error fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]" str
+    Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]"
+      (OpamMisc.reformat ~start_column:8 ~indent:8 str)
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]" str
+    Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]"
+      (OpamMisc.reformat ~start_column:10 ~indent:10 str)
   ) fmt
 
 let note fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]" str
+    Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]"
+      (OpamMisc.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
 exception Exit of int

@@ -568,7 +568,7 @@ let terminal_columns =
     then Lazy.force !v
     else 80
 
-let reformat ?(indent=0) s =
+let reformat ?(start_column=0) ?(indent=0) s =
   let slen = String.length s in
   let buf = Buffer.create 1024 in
   let rec find_nonsp i =
@@ -598,7 +598,7 @@ let reformat ?(indent=0) s =
       (Buffer.add_substring buf s i (k - i);
        print k (col + len_visual))
   in
-  print 0 0;
+  print 0 start_column;
   Buffer.contents buf
 
 let itemize ?(bullet="  - ") f =

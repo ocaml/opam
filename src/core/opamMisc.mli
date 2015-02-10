@@ -213,7 +213,7 @@ val print_table: out_channel -> sep:string -> string list list -> unit
 val sub_at: int -> string -> string
 
 (** Cut long lines in string according to the terminal width *)
-val reformat: ?indent:int -> string -> string
+val reformat: ?start_column:int -> ?indent:int -> string -> string
 
 (** {2 Option} *)
 
