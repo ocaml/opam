@@ -1,9 +1,10 @@
 1.2.1
 * Non-system compiler definitions without source are now allowed
-* Stronger handling of compiler "base" packages, they can't be removed anymore
+* Better handling of compiler "base" packages allows to move build instructions
+  from compiler definitions to packages
 * Rewritten action resolution mechanism to be based on atomic actions.
   Actions are not aborted anymore on first failure when there is no
-  dependency.
+  inter-dependency
 * Rewritten parallel command execution engine
 * Better display of actions, lots of improved messages
 * `opam upgrade pkg` now fails if no new version of `pkg` can be installed
@@ -13,7 +14,7 @@
   is locally set in a shell (through `OPAMSWITCH`)
 * Better behaviour on failed `opam switch`
 * New pinning mode, set by default on local VC repos: use current file
-  tree, but limited to version-tracked files.
+  tree, but limited to version-tracked files
 * Faster and cleaner handling of downloads
 * Now compiles with --safe-string on OCaml 4.02, better compatibility handling
 * `opam unpin` now accepts multiple arguments
@@ -21,7 +22,18 @@
   the advertised version
 * Fixed bug leading to a bad `CAML_LD_LIBRARY_PATH` when switching from system
 * Better `opam lint`, reporting warnings and errors, including format errors
-* `opam config setup` now takes `--shell=` instead of `--sh`, `--csh`, `--fish`, `--zsh`
+* `opam config setup` now takes `--shell=` instead of `--sh`, `--csh`, `--fish`,
+  `--zsh`
+* Provisional feature: dependency flag `dev` is accepted (but does nothing)
+* Provisional feature: field `features` in opam files implemented (beta), not
+  for use in production
+* Better definition of the `filter` language within opam files: propagates
+  undefined values, bool-to-string converter syntax
+* Provisional feature: `verbose` may be specified in package flags
+* OPAM git-like plugins (commands of the form opam-xxx) are now searched in the
+  correct OPAM path
+* ~/.opam/config doesn't refer to OPAM's patch-version anymore, to allow
+  downgrading
 * Lots of bug-fixes
 
 1.2.0
