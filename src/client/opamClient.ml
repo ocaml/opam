@@ -162,9 +162,12 @@ let with_switch_backup command f =
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
     else
-     Printf.eprintf "\nThe former state can be restored with \
-                     '%s switch import %S'\n%!"
-       Sys.argv.(0) (OpamFilename.prettify file);
+      (prerr_string
+         (OpamMisc.reformat
+            (Printf.sprintf
+               "\nThe former state can be restored with:\n    \
+                %s switch import %S\n%!"
+               Sys.argv.(0) (OpamFilename.prettify file))));
     raise err
 
 module API = struct
@@ -843,21 +846,21 @@ module API = struct
       if cycles <> [] then begin
         OpamGlobals.error
           "Dependency errors in the upgrade actions. Please update, and \
-           report the\n\
-           following to the package maintainers if the error persists:\n\
-          \  - %s\n\
-           You may try upgrading packages individually to work around this."
-          (String.concat "\n  - " cycles)
+           report the following to the package maintainers if the error \
+           persists:\n%s%s"
+          (OpamMisc.itemize (fun x -> x) cycles)
+          "You may try upgrading packages individually to work around this."
       end else begin
-        OpamGlobals.warning
+        OpamGlobals.warning "%s%s"
           "Upgrade is not possible because of conflicts or packages that \
-           are no longer available:";
-        List.iter (OpamGlobals.msg "  - %s\n") reasons;
-        if chains <> [] then (
-          OpamGlobals.msg "The following dependencies are in cause:\n";
-          List.iter (OpamGlobals.msg "  - %s\n") chains);
+           are no longer available:\n"
+          (OpamMisc.itemize (fun x -> x) reasons);
+        if chains <> [] then
+          OpamGlobals.formatted_msg
+            "The following dependencies are in cause:\n%s"
+            (OpamMisc.itemize (fun x -> x) chains);
         if OpamCudf.external_solver_available () then
-          OpamGlobals.msg
+          OpamGlobals.formatted_msg
             "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
              current state.\n"
       end;
@@ -878,7 +881,7 @@ module API = struct
         if OpamPackage.Set.is_empty notuptodate then
           OpamGlobals.msg "Already up-to-date.\n"
         else
-          (OpamGlobals.msg "Everything as up-to-date as possible";
+          (let hdmsg = "Everything as up-to-date as possible" in
            let unav = notuptodate -- Lazy.force t.available_packages in
            let unopt = notuptodate %% Lazy.force t.available_packages in
            let base =
@@ -887,25 +890,24 @@ module API = struct
            in
            let unopt = unopt -- base in
            if !OpamGlobals.verbose && not (OpamPackage.Set.is_empty unav) then
-             OpamGlobals.msg
-               ".\n\
-                The following newer versions couldn't be installed:\n  - %s\n"
-               (String.concat "\n  - "
-                  (List.map (fun p ->
-                       OpamState.unavailable_reason t
-                         (OpamSolution.eq_atom
-                            (OpamPackage.name p) (OpamPackage.version p))
-                     ) (OpamPackage.Set.elements unav)))
+             OpamGlobals.formatted_msg
+               "%s.\n\
+                The following newer versions couldn't be installed:\n%s"
+               hdmsg
+               (OpamMisc.itemize (fun p ->
+                    OpamState.unavailable_reason t
+                      (OpamSolution.eq_atom
+                         (OpamPackage.name p) (OpamPackage.version p)))
+                   (OpamPackage.Set.elements unav))
            else
-             OpamGlobals.msg " (run with --verbose to show unavailable \
-                              upgrades).\n";
+             OpamGlobals.formatted_msg
+               "%s (run with --verbose to show unavailable upgrades).\n" hdmsg;
            if not (OpamPackage.Set.is_empty unopt) then
-             OpamGlobals.msg
-               "The following would require downgrades or uninstalls, but \
-                you may upgrade them explicitly:\n  - %s\n"
-               (String.concat "\n  - "
-                  (List.map OpamPackage.to_string
-                     (OpamPackage.Set.elements unopt)));
+             (OpamGlobals.formatted_msg
+                "The following would require downgrades or uninstalls, but \
+                 you may upgrade them explicitly:\n%s"
+                (OpamMisc.itemize OpamPackage.to_string
+                   (OpamPackage.Set.elements unopt)));
           )
       );
       OpamSolution.check_solution t result
@@ -919,8 +921,8 @@ module API = struct
   let fixup_t t =
     log "FIXUP";
     if not (OpamCudf.external_solver_available ()) then
-      (OpamGlobals.msg
-         "Sorry, \"--fixup\" is not available without an external solver. \n\
+      (OpamGlobals.formatted_msg
+         "Sorry, \"--fixup\" is not available without an external solver. \
           You'll have to select the packages to change or remove by hand, \
           or install aspcud or another solver on your system.\n";
        OpamGlobals.exit 1)
@@ -1138,13 +1140,13 @@ module API = struct
       in
       OpamGlobals.warning
         "A conflict was detected in your installation. \
-         This can be caused by updated\n\
-         constraints or conflicts in your installed packages:";
-      List.iter (OpamGlobals.msg "  - %s\n") reasons;
+         This can be caused by updated constraints or conflicts in your \
+         installed packages:\n%s"
+        (OpamMisc.itemize (fun x -> x) reasons);
       if chains <> [] then (
-        OpamGlobals.msg "The following dependencies are in cause:\n";
+        OpamGlobals.formatted_msg "The following dependencies are in cause:\n";
         List.iter (OpamGlobals.msg "  - %s\n") chains);
-      OpamGlobals.msg
+      OpamGlobals.formatted_msg
         "\nYou should run \"opam upgrade%s\" to resolve the situation.\n"
         (if need_fixup && OpamCudf.external_solver_available () then " --fixup"
          else "")

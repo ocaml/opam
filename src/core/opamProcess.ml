@@ -262,7 +262,7 @@ let verbose_print_cmd p =
   OpamGlobals.msg "%s %s %s\n"
     (OpamGlobals.colorise `yellow "+")
     p.p_name
-    (String.concat " " (List.map (Printf.sprintf "%S") p.p_args))
+    (OpamMisc.sconcat_map " " (Printf.sprintf "%S") p.p_args)
 
 let verbose_print_out =
   let pfx = OpamGlobals.colorise `yellow "- " in

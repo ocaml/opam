@@ -145,7 +145,7 @@ let list ~print_short ~installed ~all =
       (OpamGlobals.msg "\n";
        OpamGlobals.note
          "Current switch is set locally through the OPAMSWITCH variable.\n\
-         \       The current global system switch is %s."
+          The current global system switch is %s."
          (OpamGlobals.colorise `bold sys))
   | `Not_set ->
      if not (OpamState.up_to_date_env t) then

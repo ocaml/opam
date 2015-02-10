@@ -384,8 +384,8 @@ let mk_subdoc ?(defaults=[]) commands =
                (it arg) (bold default) (it arg))
      ) defaults) @
   List.map (fun (cs,_,args,d) ->
-      let cmds = String.concat ", " (List.map bold cs) ^ " " ^
-                 String.concat " " (List.map it args) in
+      let cmds = OpamMisc.sconcat_map ", " bold cs ^ " " ^
+                 OpamMisc.sconcat_map " " it args in
       `I (cmds, d)
     ) commands @
   [`S "OPTIONS"] (* Ensures options get after commands *)
@@ -1673,10 +1673,11 @@ let source =
         with
         | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ ->
-          OpamGlobals.msg "Successfully fetched %s development repo to ./%s/\n"
+          OpamGlobals.formatted_msg
+            "Successfully fetched %s development repo to ./%s/\n"
             (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
     ) else (
-      OpamGlobals.msg "Downloading archive of %s...\n"
+      OpamGlobals.formatted_msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
       match OpamProcess.Job.run (OpamAction.download_package t nv) with
       | `Error () -> OpamGlobals.error_and_exit "Download failed"
@@ -1685,7 +1686,7 @@ let source =
         move_dir
           ~src:(OpamPath.Switch.build t.root t.switch nv)
           ~dst:dir;
-        OpamGlobals.msg "Successfully extracted to %s\n" (Dir.to_string dir);
+        OpamGlobals.formatted_msg "Successfully extracted to %s\n" (Dir.to_string dir);
         if not (exists OP.(dir // "opam") || exists_dir OP.(dir / "opam"))
         then
           OpamFile.OPAM.write OP.(dir // "opam")
@@ -1809,7 +1810,7 @@ let default =
   in
   let usage global_options =
     apply_global_options global_options;
-    OpamGlobals.msg
+    OpamGlobals.formatted_msg
       "usage: opam [--version]\n\
       \            [--help]\n\
       \            <command> [<args>]\n\

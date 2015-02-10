@@ -16,7 +16,6 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
 open OpamPackage.Set.Op
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
@@ -414,11 +413,12 @@ let string_of_stats stats =
   in
   let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
   if utf then
-    String.concat "   " @@
-    List.map (fun (n,t) -> Printf.sprintf "%s %s" t (string_of_int n)) msgs
+    OpamMisc.sconcat_map "   "
+      (fun (n,t) -> Printf.sprintf "%s %s" t (string_of_int n))
+      msgs
   else
-    String.concat " | " @@
-    List.map (fun (n,t) ->
+    OpamMisc.sconcat_map " | "
+      (fun (n,t) ->
         Printf.sprintf "%s to %s"
           (OpamGlobals.colorise `yellow (string_of_int n)) t)
       msgs

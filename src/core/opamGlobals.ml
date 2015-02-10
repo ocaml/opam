@@ -86,7 +86,7 @@ let utf8             =
 let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
-let no_self_upgrade  = check "NOSELFUPGRADE"
+let no_self_upgrade  = check ~warn:false "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 let safe_mode        = check "SAFE"
 let all_parens       = ref false
@@ -276,19 +276,22 @@ let slog to_string channel x = output_string channel (to_string x)
 let error fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]" str
+    Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]"
+      (OpamMisc.reformat ~start_column:8 ~indent:8 str)
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]" str
+    Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]"
+      (OpamMisc.reformat ~start_column:10 ~indent:10 str)
   ) fmt
 
 let note fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
-    Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]" str
+    Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]"
+      (OpamMisc.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
 exception Exit of int
@@ -312,6 +315,17 @@ let msg fmt =
   ) else (
     Printf.ifprintf stdout fmt
   )
+
+let formatted_msg ?indent fmt =
+  if !display_messages then (
+    flush stderr;
+    Printf.ksprintf
+      (fun s -> print_string (OpamMisc.reformat ?indent s); flush stdout)
+      fmt
+  ) else (
+    Printf.ksprintf ignore fmt
+  )
+
 
 let status_line fmt =
   let carriage_delete = "\r\027[K" in

@@ -765,7 +765,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
              with Not_found -> None)
           deps
       in
-      string (String.concat " " (List.map OpamPackage.to_string installed_deps))
+      string (OpamMisc.sconcat_map " "  OpamPackage.to_string installed_deps)
     | "hash",      Some opam ->
       (try
          let nv = get_nv opam in
@@ -935,7 +935,7 @@ let unavailable_reason t (name, _ as atom) =
     match r with
     | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
-    | rs -> " because:\n" ^ String.concat "\n" (List.map ((^) "    - ") rs) in
+    | rs -> " because:\n" ^ OpamMisc.itemize ~bullet:"    - " (fun x -> x) rs in
   try
     Printf.sprintf
       "%s is not available%s"
@@ -1969,7 +1969,7 @@ let string_of_env_update t shell updates =
       | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
-  String.concat "" (List.rev_map aux updates)
+  OpamMisc.sconcat_map "" aux updates
 
 let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, complete_sh)=
   let variables =
@@ -2660,11 +2660,10 @@ let update_pinned_package t ?fixed_version name =
        install_meta srcdir user_meta new_meta)
     else if
       OpamGlobals.msg
-        "Conflicting update of the metadata of %s from %s:\n  - %s\n"
+        "Conflicting update of the metadata of %s from %s:\n%s"
         (OpamPackage.Name.to_string name)
         (string_of_address (OpamFile.URL.url url))
-        (String.concat "\n  - "
-           (List.map diff_to_string (diff user_meta new_meta)));
+        (OpamMisc.itemize diff_to_string (diff user_meta new_meta));
       OpamGlobals.confirm "\nOverride files in %s\n\
                           \  (there will be a backup) ?"
         (OpamFilename.Dir.to_string overlay)

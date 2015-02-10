@@ -258,7 +258,7 @@ let pin name ?version pin_option =
 
 let unpin ?state names =
   log "unpin %a"
-    (slog @@ String.concat " " @* List.map OpamPackage.Name.to_string) names;
+    (slog @@ OpamMisc.sconcat_map " " OpamPackage.Name.to_string) names;
   let t = match state with
     | None -> OpamState.load_state "pin"
     | Some t -> t
