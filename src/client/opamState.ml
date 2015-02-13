@@ -507,20 +507,33 @@ let remove_metadata t packages =
       OpamFilename.remove archive;
     ) packages
 
+let find_opam_file_in_source name dir =
+  List.fold_left (function
+      | None -> fun f -> if OpamFilename.exists f then Some f else None
+      | some -> fun _ -> some)
+    None
+    [ dir / (OpamPackage.Name.to_string name ^ ".opam") // "opam";
+      dir // (OpamPackage.Name.to_string name ^ ".opam");
+      dir / "opam" // "opam";
+      dir // "opam" ]
+
 (* Returns [opam, descr_file, files_dir]. We don't consider [url] since
    this is for pinned packages. if [root], don't look for a subdir [opam]
    to find [files] and [descr]. *)
 let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
   let has_dir d = if OpamFilename.exists_dir d then Some d else None in
   let has_file f = if OpamFilename.exists f then Some f else None in
-  let opam_dir, descr, files_dir =
-    if root then dir, has_file (dir // "descr"), has_dir (dir / "files") else
-    match has_dir (dir / "opam") with
-    | Some dir -> dir, has_file (dir // "descr"), has_dir (dir / "files")
-    | None -> dir, None, None
+  let metadir =
+    if root then dir else
+    match has_dir (dir / (OpamPackage.Name.to_string name ^ ".opam")) with
+    | Some d -> d
+    | None -> dir / "opam"
   in
-  let opam =
-    match has_file (opam_dir // "opam") with
+  let opam_file =
+    if root then has_file (dir // "opam")
+    else find_opam_file_in_source name dir
+  in
+  let opam = match opam_file with
     | None -> None
     | Some local_opam ->
       try
@@ -536,13 +549,14 @@ let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
         match copy_invalid_to with
         | Some dst ->
           OpamGlobals.warning
-            "Errors in opam file from %s source, \
-             ignored (fix with 'opam pin edit')"
+            "Errors in opam file from %s source, ignored (fix with 'opam pin \
+             edit')"
             (OpamPackage.Name.to_string name);
           OpamFilename.copy ~src:local_opam ~dst; None
         | None -> None
   in
-  opam, descr, files_dir
+  opam, has_file (metadir // "descr"), has_dir (metadir / "files")
+
 
 let remove_overlay t name =
   OpamFilename.rmdir (OpamPath.Switch.Overlay.package t.root t.switch name)
@@ -2609,11 +2623,12 @@ let update_pinned_package t ?fixed_version name =
       name srcdir
   in
   let user_meta, old_meta, repo_meta =
-    if OpamFilename.exists (srcdir // "opam") then
-      (* Single opam file in the project src (ie not a directory):
+    match find_opam_file_in_source name srcdir with
+    | Some f when OpamFilename.dirname f = srcdir ->
+      (* Single opam file directly at the project root:
          don't override other files, restrict to 'opam' *)
       just_opam user_meta, just_opam old_meta, just_opam repo_meta
-    else user_meta, old_meta, repo_meta
+    | _ -> user_meta, old_meta, repo_meta
   in
   let rec diff a b = match a,b with
     | (f1,h1)::r1, (f2,h2)::r2 ->
@@ -2631,8 +2646,12 @@ let update_pinned_package t ?fixed_version name =
   in
   let install_meta dir rm_hash hash =
     let root =
+      let d = dir / (OpamPackage.Name.to_string name ^ ".opam") in
+      if OpamFilename.exists_dir d then d else
       let d = dir / "opam" in
-      if OpamFilename.exists_dir d then d else dir in
+      if OpamFilename.exists_dir d then d else
+        dir
+    in
     List.iter (fun (f, _) -> OpamFilename.remove (overlay // f)) rm_hash;
     List.iter (fun (f,kind) -> match kind with
         | `Opam o ->
@@ -2652,20 +2671,20 @@ let update_pinned_package t ?fixed_version name =
        was_single_opam_file && old_meta = just_opam user_meta
     then
       (* No manual changes *)
-      (OpamGlobals.msg "Installing new package description for %s from %s\n"
+      (OpamGlobals.formatted_msg
+         "Installing new package description for %s from %s\n"
          (OpamPackage.Name.to_string name)
-         (Filename.concat (string_of_address (OpamFile.URL.url url)) "opam");
+         (string_of_address (OpamFile.URL.url url));
        OpamFilename.remove
          (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
        install_meta srcdir user_meta new_meta)
     else if
-      OpamGlobals.msg
+      OpamGlobals.formatted_msg
         "Conflicting update of the metadata of %s from %s:\n%s"
         (OpamPackage.Name.to_string name)
         (string_of_address (OpamFile.URL.url url))
         (OpamMisc.itemize diff_to_string (diff user_meta new_meta));
-      OpamGlobals.confirm "\nOverride files in %s\n\
-                          \  (there will be a backup) ?"
+      OpamGlobals.confirm "\nOverride files in %s (there will be a backup) ?"
         (OpamFilename.Dir.to_string overlay)
     then (
       let bak =
@@ -2673,7 +2692,7 @@ let update_pinned_package t ?fixed_version name =
       OpamFilename.mkdir (OpamPath.backup_dir t.root);
       OpamFilename.rmdir bak;
       OpamFilename.copy_dir ~src:overlay ~dst:bak;
-      OpamGlobals.msg "User metadata backed up in %s\n"
+      OpamGlobals.formatted_msg "User metadata backed up in %s\n"
         (OpamFilename.Dir.to_string bak);
       install_meta srcdir user_meta new_meta;
     );

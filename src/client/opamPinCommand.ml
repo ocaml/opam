@@ -133,10 +133,8 @@ let edit t name =
       match dir with
       | Some dir when OpamFilename.exists_dir dir ->
         let src_opam =
-          OpamFilename.OP.(
-            if OpamFilename.exists_dir (dir / "opam")
-            then dir / "opam" // "opam"
-            else dir // "opam")
+          OpamMisc.Option.default OpamFilename.OP.(dir // "opam")
+            (OpamState.find_opam_file_in_source name dir)
         in
         if OpamGlobals.confirm "Save the new opam file back to %S ?"
             (OpamFilename.to_string src_opam) then
@@ -187,14 +185,16 @@ let pin name ?version pin_option =
       let no_changes = pin_option = current in
       if no_changes then
         OpamGlobals.note
-          "Package %s is already pinned to %s.\n\
+          "Package %s is already %s-pinned to %s.\n\
            This will erase any previous custom definition."
           (OpamPackage.Name.to_string name)
+          (string_of_pin_kind (kind_of_pin_option current))
           (string_of_pin_option current)
       else
         OpamGlobals.note
-          "%s is already pinned to %s."
+          "%s is currently %s-pinned to %s."
           (OpamPackage.Name.to_string name)
+          (string_of_pin_kind (kind_of_pin_option current))
           (string_of_pin_option current);
       if OpamGlobals.confirm "Proceed ?" then
         (OpamFilename.remove
