@@ -1,6 +1,7 @@
 #!/usr/bin/env opam-admin.top
 
 #directory "+../opam-lib";;
+#directory "+../re";;
 
 (* Converts OPAM 1.2 packages for compat with OPAM 1.1
    * merge 'install' with 'build'
@@ -29,16 +30,24 @@ let rewrite_constraint ~conj = (* Rewrites '!=' *)
 let vars_new_1_2 = [ "compiler"; "ocaml-native"; "ocaml-native-tools";
                      "ocaml-native-dynlink"; "arch" ]
 
-let filter_string s =
-  let subst var =
-    match OpamVariable.Full.to_string var with
-    | "compiler" -> Some (OpamVariable.S "%{ocaml-version}%")
-    | "ocaml-native" | "ocaml-native-tools" | "ocaml-native-dynlink" ->
-      Some (OpamVariable.S "true")
-    | s when List.mem s vars_new_1_2 -> Some (OpamVariable.S "")
-    | s -> Some (OpamVariable.S (Printf.sprintf "%%{%s}%%" s))
+let filter_string =
+  let rex =
+    Re.(compile ( seq [
+        str "%{";
+        rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")]);
+        str "}%";
+      ]))
   in
-  OpamFilter.expand_string subst s
+  Re_pcre.substitute ~rex ~subst:(fun s ->
+      match String.sub s 2 (String.length s - 4) with
+      | "compiler" -> "ocaml-version"
+      | "ocaml-native" | "ocaml-native-tools" | "ocaml-native-dynlink" -> "true"
+      | s when List.mem s vars_new_1_2 -> ""
+      | s when String.contains s '?' -> (* new if/else printers: use default *)
+        (try let i = String.rindex s ':' + 1 in String.sub s i (String.length s - i)
+         with Not_found -> s)
+      | _ -> s
+    )
 
 let rec filter_vars = function
   | FIdent ([],i,None) when List.mem (OpamVariable.to_string i) vars_new_1_2 ->
