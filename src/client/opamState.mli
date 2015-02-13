@@ -349,6 +349,9 @@ val update_pinned_package: state -> ?fixed_version:version -> name -> bool OpamP
 (** Check whether a package is a development package *)
 val is_dev_package: state -> package -> bool
 
+(** Looks up an 'opam' file for the given named package in a source directory *)
+val find_opam_file_in_source: name -> dirname -> filename option
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)

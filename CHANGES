@@ -34,6 +34,7 @@
   correct OPAM path
 * ~/.opam/config doesn't refer to OPAM's patch-version anymore, to allow
   downgrading
+* Recognise <name>.opam files and directories when pinning a package to source
 * Lots of bug-fixes
 
 1.2.0

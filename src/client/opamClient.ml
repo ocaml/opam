@@ -446,7 +446,7 @@ module API = struct
           OpamSystem.internal_error "opam file location for %s not found"
             (OpamPackage.to_string nv)
       in
-      if where then OpamGlobals.msg "%s\n" (OpamFilename.prettify (opam_f ()));
+      if where then OpamGlobals.msg "%s\n" (OpamFilename.to_string (opam_f ()));
 
       (* where does it come from (eg. which repository) *)
       let repository =

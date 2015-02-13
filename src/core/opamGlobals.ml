@@ -475,7 +475,9 @@ let confirm ?(default=true) fmt =
   Printf.ksprintf (fun s ->
     try
       if !safe_mode then false else
-      let prompt () = msg "%s [%s] " s (if default then "Y/n" else "y/N") in
+      let prompt () =
+        formatted_msg "%s [%s] " s (if default then "Y/n" else "y/N")
+      in
       if !yes then (prompt (); msg "y\n"; true)
       else if !no then (prompt (); msg "n\n"; false)
       else if os () = Win32 then

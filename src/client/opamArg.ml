@@ -1542,7 +1542,18 @@ let pin ?(unpin_only=false) () =
         | Some name -> name
         | None -> raise Not_found
       with e -> OpamMisc.fatal e; raise Not_found
-    else raise Not_found
+    else
+    match
+      Array.fold_left (fun acc f ->
+          if OpamMisc.ends_with ~suffix:".opam" f then
+            if acc = None then
+              Some (OpamMisc.remove_suffix ~suffix:".opam" f)
+            else raise Not_found (* multiple .opam files *)
+          else acc)
+        None (Sys.readdir (OpamFilename.Dir.to_string path))
+    with
+    | Some base -> OpamPackage.Name.of_string base
+    | None -> raise Not_found
   in
   let pin global_options kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
@@ -1686,8 +1697,9 @@ let source =
         move_dir
           ~src:(OpamPath.Switch.build t.root t.switch nv)
           ~dst:dir;
-        OpamGlobals.formatted_msg "Successfully extracted to %s\n" (Dir.to_string dir);
-        if not (exists OP.(dir // "opam") || exists_dir OP.(dir / "opam"))
+        OpamGlobals.formatted_msg "Successfully extracted to %s\n"
+          (Dir.to_string dir);
+        if OpamState.find_opam_file_in_source (OpamPackage.name nv) dir = None
         then
           OpamFile.OPAM.write OP.(dir // "opam")
             (OpamFile.OPAM.with_substs
