@@ -1278,16 +1278,17 @@ type cache = {
 
 let check_marshaled_file file =
   let ic = open_in_bin (OpamFilename.to_string file) in
-  let magic_len = String.length OpamVersion.magic in
-  let magic =
+  let this_magic = OpamVersion.magic () in
+  let magic_len = String.length this_magic in
+  let file_magic =
     let b = Bytes.create magic_len in
     really_input ic b 0 magic_len;
     Bytes.to_string b in
-  if magic <> OpamVersion.magic then (
+  if file_magic <> this_magic then (
     close_in ic;
     OpamSystem.internal_error
       "Wrong magic string in the cache (actual:%s expected:%s)."
-      magic OpamVersion.magic;
+      file_magic this_magic;
   );
   let header = Bytes.create Marshal.header_size in
   really_input ic header 0 Marshal.header_size;
@@ -1311,7 +1312,7 @@ let marshal_from_file file =
     Some cache.cached_opams
   with e ->
     OpamMisc.fatal e;
-    log "Got an error while loading the cache: %a" (slog Printexc.to_string) e;
+    log "Invalid cache, removing: %a" (slog Printexc.to_string) e;
     OpamFilename.remove file;
     None
 
@@ -1328,7 +1329,7 @@ let save_state ~update t =
       "Creating a cache of metadata in %s ...\n"
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
-  output_string oc OpamVersion.magic;
+  output_string oc (OpamVersion.magic ());
   Marshal.to_channel oc { cached_opams = t.opams } [Marshal.No_sharing];
   close_out oc;
   log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
@@ -1377,7 +1378,7 @@ let load_state ?(save_cache=true) call_site =
   let config =
     let config = OpamFile.Config.read config_p in
     let config_version = OpamFile.Config.opam_version config in
-    if config_version <> OpamVersion.current then (
+    if config_version <> OpamVersion.current_nopatch then (
       if OpamVersion.(compare current config_version) < 0 &&
          not !OpamGlobals.skip_version_checks then
         OpamGlobals.error_and_exit
@@ -1414,10 +1415,9 @@ let load_state ?(save_cache=true) call_site =
 
   let opams =
     let file = OpamPath.state_cache root in
-    if OpamFilename.exists file then
-      marshal_from_file file
-    else
-      None in
+    if OpamFilename.exists file then marshal_from_file file
+    else None
+  in
   let cached = opams <> None in
   let partial = false in
 

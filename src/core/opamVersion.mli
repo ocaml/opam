@@ -39,8 +39,8 @@ val set_git: string -> unit
 (** The full version (current + git) *)
 val full: unit -> t
 
-(** Magic string *)
-val magic: string
+(** Magic string, always of length 8 *)
+val magic: unit -> string
 
 (** Display the version message *)
 val message: unit -> unit

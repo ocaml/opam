@@ -85,6 +85,6 @@ let full () =
     | Some v -> Printf.sprintf " (%s)" (to_string v) in
   Printf.sprintf "%s%s" (to_string current) git_version
 
-let magic =
+let magic () =
   let hash = Hashtbl.hash full in
-  Printf.sprintf "%08X" (hash mod (Int32.to_int Int32.max_int))
+  String.sub (Printf.sprintf "%08X" hash) 0 8
