@@ -19,7 +19,7 @@ $ opam pin remove <package>
 ```
 
 Publish to the OPAM repository:
-* Use the [opam-publish](https://github.com/AltGr/opam-publish#opam-publish)
+* Use the [opam-publish](https://github.com/OCamlPro/opam-publish#opam-publish)
   tool (`opam install opam-publish`)
 * Or by hand:
     - Fork [https://github.com/ocaml/opam-repository]()
@@ -30,7 +30,7 @@ Publish to the OPAM repository:
 
 # Creating OPAM packages
 
-An OPAM package is basically just a bunch of data on a software project:
+An OPAM package is basically a bunch of data about a software project:
 * A name, version and description
 * Some dependencies and constraints on other packages, compiler versions, etc.
 * Build, install and remove instructions
@@ -112,7 +112,8 @@ remove the others rather than leave them empty.
   containing arguments either as a string (`"./configure"`) or a variable name
   (`make`, defined by default to point at the chosen "make" command -- think
   `$(MAKE)` in Makefiles). `%{prefix}%` is another syntax to replace variables
-  within strings.
+  within strings. `opam config list` will give you the list of available
+  variables.
 * `install` is similar to `build`, but tells OPAM how to install. This is indeed
   `install: [ [make "install"] ]`, but the extra square brackets are optional
   when there is a single element, just add them if you need more than one
@@ -170,13 +171,11 @@ OPAM repository, so don't worry.
 There are still two things missing for a complete package.
 * An appealing description.
 * An URL where OPAM may download the project source for the release. If your
-  project is hosted on github, pushing `TAG` will automatically provide
-  https://github.com/me/project/archive/TAG.zip.
+  project is hosted on Github, pushing `TAG` will automatically provide
+  https://github.com/me/project/archive/TAG.tar.gz.
 
-[opam-publish](https://github.com/AltGr/opam-publish) is a tool that automates
-most of the steps to get a full package ready, reviewed and published. It's
-still to be considered beta quality, though, so you'll also find the full manual
-instructions here.
+[opam-publish](https://github.com/OCamlPro/opam-publish) is a tool that automates
+most of the steps to get a full package ready, reviewed and published.
 
 ### With opam-publish
 
@@ -217,18 +216,23 @@ mechanism. If you're not familiar with it, it is a fancy way to:
 * Propose this patch for review and integration. This will also trigger tests
   that your package installs successfully from scratch.
 
+Opam-publish will take care of this for you and, just requiring that you have an
+account on Github, direct you to the web interface where you can follow the
+process of integration and discuss issues with the maintainers.
+
 ### With opam-publish
 
-It's just:
+It's just, from the same directory as above:
 
 ```
 opam-publish submit <package>.<version>
 ```
 
-If all goes well, you'll be redirected to the github page that will track your
-pull-request (automated tests, discussion with the repository maintainers,
-etc.). You can re-run this command as needed if you want to update your package
-description.
+This will perform some checks on your package, and, if all goes well, you'll be
+redirected to the github page that will track your pull-request (automated
+tests, discussion with the repository maintainers, etc.). If any modifications
+were requested, re-running the command will automatically update the existing
+pull-request.
 
 ### By hand
 
@@ -260,6 +264,8 @@ Here is how to do it from scratch:
 
 6.  Wait for feedback !
 
+### Once you are done
+
 Don't forget to `opam pin remove <project>` once your project is on the
 repository, if you don't want to continue using your local version. Remember
 that as long as the package is pinned, OPAM will use the metadata found in its
@@ -279,6 +285,9 @@ source if any, but otherwise only what is in the OPAM repository matters. Use
   to take a peek at the internal version it's at
   `~/.opam/<switch>/overlay/<project>/`. You may also check it with `opam show
   --raw`.
+* Since 1.2.1, OPAM will also use files `<package>.opam`, or metadata found in a
+  subdirectory `opam` or `<package>.opam` in your source tree. This can be
+  useful if different OPAM packages are built from the same source.
 * You can set OPAM to use your local clone of the repository with
 
     ```

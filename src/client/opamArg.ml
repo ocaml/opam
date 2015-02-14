@@ -1465,9 +1465,9 @@ let pin ?(unpin_only=false) () =
   let commands = [
     ["list"]     , `list, [], "Lists pinned packages.";
     ["add"]      , `add  , ["PACKAGE"; "TARGET"],
-    "Pins package $(i,NAME) to $(i,TARGET), which may be a version, a path, \
+    "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a url. \
-     $(i,NAME) can be omitted if $(i,TARGET) is a local path containing a \
+     $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be replaced by \
      `--dev-repo'. \
      OPAM will attempt to guess the desired pinning kind, unless you use \
@@ -1478,8 +1478,8 @@ let pin ?(unpin_only=false) () =
      \"mixed mode\": it will only use version-controlled files, but at their \
      current version. \
      It is possible to create a new package if $(i,NAME) does not exist. \
-     Its version may then be specified in the source opam file or with \
-     $(b,edit).";
+     Its version may then be specified using $(i,NAME).$(i,VERSION), in the \
+     source opam file or with $(b,edit).";
     ["remove"]   , `remove, ["NAMES"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
      repository, if any.";
@@ -1496,9 +1496,12 @@ let pin ?(unpin_only=false) () =
     `P "This command allows local customisation of the packages in a given \
         switch. A package can be pinned to a specific upstream version, to \
         a path containing its source, to a version-controlled location or to \
-        a URL. An `opam' file found at the root of the pinned source will \
-        override the package's opam file from the repository, and an `opam' \
-        directory will override all its metadata."
+        a URL. If a file `NAME.opam' with $(i,NAME) matching the package \
+        name, or just `opam', is found at the root of the pinned source, it \
+        will be used as the package's definition, overriding its previous \
+        definition if any. If a directory by one of these names is found, \
+        its contents will be used, also overriding other package metadata \
+        (`descr', extra `files' subdirectory...)"
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params =
     if unpin_only then
