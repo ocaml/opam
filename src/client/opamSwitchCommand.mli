@@ -28,6 +28,9 @@ val install_cont:
 val install:
   quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler -> unit
 
+(** Install a compiler's base packages *)
+val install_packages: switch -> compiler -> unit
+
 (** Import a file which contains the packages to install. *)
 val import: filename option -> unit
 
