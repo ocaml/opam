@@ -1196,8 +1196,6 @@ module API = struct
 
     if OpamFilename.exists config_f then (
       OpamGlobals.msg "OPAM has already been initialized.";
-      let t = OpamState.load_state "init" in
-      update_setup t
     ) else (
       if not root_empty then (
         OpamGlobals.warning "%s exists and is not empty"
@@ -1308,28 +1306,18 @@ module API = struct
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
 
-        let t = OpamState.load_state ~save_cache:false "init-2" in
-        let t = OpamState.update_switch_config t switch in
-
         (* Finally, load the complete state and install the compiler packages *)
         log "installing compiler packages";
-        let solution =
-          OpamSolution.resolve_and_apply ~ask:false t Init
-            ~requested:(OpamState.base_package_names t)
-            ~orphans:OpamPackage.Set.empty
-            { wish_install = [];
-              wish_remove  = [];
-              wish_upgrade = [];
-              criteria = `Default; }
-        in
-        OpamSolution.check_solution t solution;
-        update_setup t
+        OpamSwitchCommand.install_packages switch compiler
 
       with e ->
         OpamGlobals.error "%s" (Printexc.to_string e);
         if not !OpamGlobals.debug && root_empty then
           OpamFilename.rmdir root;
-        raise e)
+        raise e);
+    let t = OpamState.load_state "init" in
+    update_setup t
+
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
   let check_conflicts t atoms =
