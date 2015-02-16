@@ -1,0 +1,46 @@
+opam-version: "1.2"
+name: "opam-test-beta"
+version: "1.2.1~beta2"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Thomas Gazagnaire <thomas@gazagnaire.org>"
+  "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+]
+homepage: "https://opam.ocaml.org"
+bug-reports: "https://github.com/ocaml/opam/issues"
+dev-repo: "https://github.com/ocaml/opam"
+build: [
+  ["./configure"]
+  [make "opam"]
+]
+install: [
+  ["sh" "-c" "echo \"%{version}%\" > \"%{root}%/opam.version\""]
+  ["install" "--backup" "-m" "755" "src/opam" "%{root}%/opam"]
+]
+remove: ["rm" "-f" "%{root}%/opam" "%{root}%/opam.version"]
+depends: [
+  "ocamlgraph"
+  "cmdliner"
+  "dose" {>= "3.3"}
+  "cudf"
+  "re" {>= "1.2.0"}
+  "ocamlfind"
+  "jsonm"
+]
+# Restrict self-upgrade to "official" versions, just in case
+available: [
+  opam-version >= "1.2" &
+  (compiler = "3.12.1" |
+   compiler = "4.00.0" |
+   compiler = "4.00.1" |
+   compiler = "4.01.0" |
+   compiler = "4.02.0" |
+   compiler = "4.02.1" |
+   (compiler = "system" & ocaml-version >= "3.12.1" & ocaml-version <= "4.02.0"))
+]
+post-messages: [ "
+IMPORTANT: The new version of OPAM has been installed to %{root}%, and it will \
+be used by default for ALL switches. In case of trouble, use `--no-self-upgrade' \
+to bypass, or remove `opam' and `opam-version' from %{root}% to revert.
+" {success}
+]
