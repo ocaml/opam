@@ -1218,13 +1218,13 @@ module API = struct
           (match available_repos with
            | [] -> "none"
            | r -> String.concat ", " (List.map snd r))
-          (if unavailable_repos = [] then " Perfect!" else "");
-        List.iter (fun (cmd,msg) ->
-            OpamGlobals.note
-              "%s not found, you won't be able to use %s repositories \
-               unless you install it."
-              (OpamGlobals.colorise `bold cmd) msg)
-          unavailable_repos;
+          (if unavailable_repos = [] then " Perfect!" else
+             "\n" ^ OpamMisc.itemize (fun (cmd,msg) ->
+                 Printf.sprintf
+                   "you won't be able to use %s repositories unless you \
+                    install the %s command on your system."
+                   msg (OpamGlobals.colorise `bold cmd))
+               unavailable_repos);
         if not (check_external_dep (OpamGlobals.get_external_solver())) then
           OpamGlobals.warning
             "Recommended external solver %s not found."
@@ -1235,9 +1235,8 @@ module API = struct
          | missing ->
            OpamGlobals.warning
              "Recommended dependencies -- \
-              most packages rely on these:\n  - %s"
-             (String.concat "\n  - "
-                (List.map (OpamGlobals.colorise `bold) missing)));
+              most packages rely on these:\n%s"
+             (OpamMisc.itemize (OpamGlobals.colorise `bold) missing));
         let required_deps =
           ["curl or wget",
            check_external_dep
@@ -1252,9 +1251,8 @@ module API = struct
          | missing ->
            OpamGlobals.error_and_exit
              "Missing dependencies -- \
-              the following commands are required for OPAM to operate:\n  - %s"
-             (String.concat "\n  - "
-                (List.map (OpamGlobals.colorise `bold @* fst) missing)));
+              the following commands are required for OPAM to operate:\n%s"
+             (OpamMisc.itemize (OpamGlobals.colorise `bold @* fst) missing));
 
         (* Create (possibly empty) configuration files *)
         let switch =

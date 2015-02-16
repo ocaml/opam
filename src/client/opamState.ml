@@ -1598,10 +1598,10 @@ let upgrade_to_1_1 () =
     OpamGlobals.header_msg
       "Upgrading to OPAM 1.1 %s"
       (OpamGlobals.colorise `red "[DO NOT INTERRUPT THE PROCESS]");
-    OpamGlobals.msg
+    OpamGlobals.formatted_msg
       "\n\
-      \   In case something goes wrong, you can run that upgrade\n\
-      \   process again by doing:\n\
+      \   In case something goes wrong, you can run that upgrade process again \
+       by doing:\n\
        \n\
       \       mkdir %s/opam && opam list\n\
        \n\
