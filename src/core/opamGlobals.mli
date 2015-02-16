@@ -46,6 +46,7 @@ val use_external_solver : bool ref
 val no_self_upgrade : bool ref
 val skip_version_checks : bool ref
 val safe_mode : bool ref
+val lock_retries : int ref
 
 (** Tells the printer to write parens everywhere *)
 val all_parens : bool ref

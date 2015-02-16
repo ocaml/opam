@@ -216,27 +216,39 @@ let help_sections = [
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
+  `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
+  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
+      acquiring its lock and fails. <= 0 means infinite wait.";
+  `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
+  `P "$(i,OPAMREQUIRECHECKSUMS) see option `--require-checksums'.";
+  `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
-      `opam config env --root=DIR' when DIR is non-default.";
+      `opam config env --root=DIR' when DIR is non-default or OPAMROOT is \
+      already defined.";
+  `P "$(i,OPAMSAFE) see option `--safe'";
+  `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
+      compatibility testing only.";
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
   `P "$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
       currently going on on the terminal. \
       (one of $(i,always), $(i,never) or $(i,auto))";
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam config env --switch=SWITCH'.";
-  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency solving \
-      when performing an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set.\
-      The default value is "^OpamGlobals.default_preferences `Upgrade^". \
-      See also option --criteria");
+  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
+       solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
+       upgrades if both are set.\
+       The default value is "^OpamGlobals.default_preferences `Upgrade^
+      ". See also option --criteria");
   `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
   `P "$(i,OPAMUTF8) use UTF8 characters in output \
-      (one of $(i,always), $(i,never) or $(i,auto)).";
+      (one of $(i,always), $(i,never) or $(i,auto), the default, which is \
+      determined from the locale).";
   `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in OPAM \
-      messages. Implies $(i,OPAMUTF8).";
+      messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
       substituting `%{var}%` strings in `opam` files.";
   `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
