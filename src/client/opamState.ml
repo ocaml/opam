@@ -972,30 +972,34 @@ let unavailable_reason t (name, _ as atom) =
 let static_base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
-let create_system_compiler_description root = function
+let create_system_compiler_description root =
+  match OpamCompiler.get_system () with
   | None         -> ()
-  | Some version ->
+  | Some current ->
     log "create-system-compiler-description %a"
-      (slog OpamCompiler.Version.to_string) version;
+      (slog OpamCompiler.to_string) current;
     match Lazy.force OpamSystem.system_ocamlc_where with
-    | None     -> ()
-    | Some dir ->
-      let comp = OpamPath.compiler_comp root OpamCompiler.system in
+    | None     -> log "System compiler found but didn't answer to -where ??"
+    | Some libdir ->
+      let name = OpamCompiler.system in
+      (* XXX legacy name: should be [current], but the change would have lots of
+         implications *)
+      let version = OpamCompiler.version current in
+      let comp = OpamPath.compiler_comp root name in
       OpamFilename.remove comp;
       let f =
-        OpamFile.Comp.create_preinstalled
-          OpamCompiler.system version
+        OpamFile.Comp.create_preinstalled name version
           (if !OpamGlobals.no_base_packages then []
            else static_base_packages)
           [ "CAML_LD_LIBRARY_PATH", "=",
             "%{lib}%/stublibs" ^ String.make 1 OpamSystem.path_sep ^
-            Filename.concat dir "stublibs" ] in
-    OpamFile.Comp.write comp f
+            Filename.concat libdir "stublibs" ] in
+      OpamFile.Comp.write comp f
 
 let system_needs_upgrade_displayed = ref false
 let system_needs_upgrade t =
   t.compiler = OpamCompiler.system
-  && match OpamCompiler.Version.system () with
+  && match OpamCompiler.get_system () with
   | None   ->
     if not !system_needs_upgrade_displayed then (
       system_needs_upgrade_displayed := true;
@@ -1003,14 +1007,16 @@ let system_needs_upgrade t =
         "You current switch uses the system compiler, but no OCaml compiler \
          has been found in the current path.\n\
          You should either:\n\
-        \  (i)  reinstall OCaml version %s on your system; or\n\
+        \   (i) reinstall OCaml version %s on your system; or\n\
         \  (ii) use 'opam switch <version>' to use a local OCaml compiler."
         (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
     );
     false
-  | Some v ->
+  | Some c ->
     OpamFilename.exists (OpamPath.compiler_comp t.root t.compiler)
-    && (Lazy.force t.compiler_version) <> v
+    (* XXX name of the compiler is replaced with 'system' for legacy reasons,
+       so we'll skim over differences in suffix-versions! *)
+    && Lazy.force t.compiler_version <> OpamCompiler.version c
 
 let read_repositories root config =
   let names = OpamFile.Config.repositories config in
@@ -1235,7 +1241,7 @@ let global_consistency_checks t =
     let comp_f = OpamPath.compiler_comp t.root OpamCompiler.system in
     if not (OpamFilename.exists comp_f) then (
       OpamGlobals.msg "Regenerating the system compiler description.\n";
-      create_system_compiler_description t.root (OpamCompiler.Version.system ());
+      create_system_compiler_description t.root;
     )
 
 let switch_consistency_checks t =
@@ -1342,13 +1348,14 @@ let remove_state_cache () =
 let reinstall_system_compiler t =
   log "reinstall-system-compiler";
   let continue =
-    OpamGlobals.confirm "Your system compiler has been upgraded. Do you want to upgrade \
-             your OPAM installation?" in
+    OpamGlobals.confirm
+      "Your system compiler has been changed. Do you want to upgrade \
+       your OPAM installation ?" in
 
   if continue then (
 
     (* Update system.comp *)
-    create_system_compiler_description t.root (OpamCompiler.Version.system ());
+    create_system_compiler_description t.root;
 
     (* Reinstall all system compiler switches *)
     OpamSwitch.Map.iter (fun s a ->
@@ -1464,7 +1471,7 @@ let load_state ?(save_cache=true) call_site =
     let comp_f = OpamPath.compiler_comp root compiler in
     (* XXX: useful for upgrade to 1.1 *)
     if compiler = OpamCompiler.system && not (OpamFilename.exists comp_f) then
-      create_system_compiler_description root (OpamCompiler.Version.system ());
+      create_system_compiler_description root;
     if not (OpamFilename.exists comp_f) then
       OpamCompiler.unknown compiler
     else
@@ -1530,7 +1537,10 @@ let load_state ?(save_cache=true) call_site =
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
     reinstall_system_compiler t;
-    OpamGlobals.exit 0
+    if OpamGlobals.confirm "\nSystem update successful. Go on with %S ?"
+        (String.concat " " (Array.to_list Sys.argv))
+    then t
+    else OpamGlobals.exit 0
   ) else
     t
 
@@ -1588,10 +1598,10 @@ let upgrade_to_1_1 () =
     OpamGlobals.header_msg
       "Upgrading to OPAM 1.1 %s"
       (OpamGlobals.colorise `red "[DO NOT INTERRUPT THE PROCESS]");
-    OpamGlobals.msg
+    OpamGlobals.formatted_msg
       "\n\
-      \   In case something goes wrong, you can run that upgrade\n\
-      \   process again by doing:\n\
+      \   In case something goes wrong, you can run that upgrade process again \
+       by doing:\n\
        \n\
       \       mkdir %s/opam && opam list\n\
        \n\
@@ -1648,7 +1658,7 @@ let upgrade_to_1_1 () =
             OpamFilename.move ~src:tmp_file ~dst:comp
           ) backups;
         if not (OpamFilename.exists (OpamPath.compiler_comp root OpamCompiler.system))
-        then create_system_compiler_description root (OpamCompiler.Version.system ())
+        then create_system_compiler_description root
       );
     (* Remove pinned cache *)
     OpamSwitch.Map.iter (fun switch _ ->

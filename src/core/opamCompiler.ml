@@ -30,16 +30,6 @@ module Version = struct
 
   type constr = (OpamFormula.relop * t) OpamFormula.formula
 
-  let current () =
-    match Lazy.force OpamSystem.ocaml_version with
-    | None   -> None
-    | Some o -> Some (of_string o)
-
-  let system () =
-    match Lazy.force OpamSystem.system_ocamlc_version with
-    | None   -> None
-    | Some v -> Some (of_string v)
-
   let compare v1 v2 = Debian.Version.compare (to_string v1) (to_string v2)
 
   let eval_relop relop v1 v2 = OpamFormula.check_relop relop (compare v1 v2)
@@ -70,6 +60,16 @@ end
 include O
 module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
+
+let get_current () =
+  match Lazy.force OpamSystem.ocaml_version with
+  | None   -> None
+  | Some o -> Some (of_string o)
+
+let get_system () =
+  match Lazy.force OpamSystem.system_ocamlc_version with
+  | None   -> None
+  | Some v -> Some (of_string v)
 
 let version t = t.version
 

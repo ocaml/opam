@@ -518,7 +518,7 @@ let confirm ?(default=true) fmt =
 
 let read fmt =
   Printf.ksprintf (fun s ->
-    msg "%s %!" s;
+    formatted_msg "%s %!" s;
     if not !yes || !no || !safe_mode then (
       try match read_line () with
         | "" -> None

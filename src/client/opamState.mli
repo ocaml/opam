@@ -393,9 +393,8 @@ val remove_overlay: state -> name -> unit
 
 (** {2 System compilers} *)
 
-(** Create {i $opam/compilers/system.com}. Take the global root and
-    the new system compiler version as arguments. *)
-val create_system_compiler_description: dirname -> compiler_version option -> unit
+(** Create {i $opam/compilers/system.com}. Takes the global root as argument. *)
+val create_system_compiler_description: dirname -> unit
 
 (** {2 Jobs} *)
 val jobs: state -> int
