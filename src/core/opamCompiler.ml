@@ -25,20 +25,26 @@ module Version = struct
 
   let of_string str =
     if OpamMisc.contains str '+' then
-      raise (Invalid_argument "'+' is not allowed in compiler versions");
+      raise (Invalid_argument
+               "'+' is not allowed in compiler version constraints");
     of_string str
 
   type constr = (OpamFormula.relop * t) OpamFormula.formula
 
+  let cut_version_number str =
+    match OpamMisc.cut_at str '+' with
+    | None -> str
+    | Some (s, _) -> s
+
   let current () =
     match Lazy.force OpamSystem.ocaml_version with
     | None   -> None
-    | Some o -> Some (of_string o)
+    | Some o -> Some (of_string (cut_version_number o))
 
   let system () =
     match Lazy.force OpamSystem.system_ocamlc_version with
     | None   -> None
-    | Some v -> Some (of_string v)
+    | Some v -> Some (of_string (cut_version_number v))
 
   let compare v1 v2 = Debian.Version.compare (to_string v1) (to_string v2)
 
