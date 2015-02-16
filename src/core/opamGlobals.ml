@@ -89,6 +89,9 @@ let sync_archives    = check "SYNCARCHIVES"
 let no_self_upgrade  = check ~warn:false "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 let safe_mode        = check "SAFE"
+let lock_retries     =
+  try ref (int_of_string (OpamMisc.getenv ("OPAMLOCKRETRIES")))
+  with Not_found | Failure _ -> ref 5
 let all_parens       = ref false
 
 (* Value set when opam calls itself *)

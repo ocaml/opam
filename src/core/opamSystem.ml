@@ -585,7 +585,8 @@ let link src dst =
 type lock = Unix.file_descr * string
 
 let flock ?(read=false) file =
-  let max_tries = if !OpamGlobals.safe_mode then 1 else 5 in
+  let max_tries =
+    if !OpamGlobals.safe_mode then 1 else !OpamGlobals.lock_retries in
   if not read && !OpamGlobals.safe_mode then
     OpamGlobals.error_and_exit "Write lock attempt in safe mode";
   let fd =
@@ -594,7 +595,7 @@ let flock ?(read=false) file =
   let rec loop attempt =
     try Unix.lockf fd lock_op 0
     with Unix.Unix_error (Unix.EAGAIN,_,_) ->
-      if attempt > max_tries then
+      if max_tries > 0 && attempt > max_tries then
         OpamGlobals.error_and_exit
           "Timeout trying to acquire %s lock to %S, \
            is another opam process running ?"
