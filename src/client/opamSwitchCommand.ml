@@ -64,12 +64,15 @@ let list ~print_short ~installed ~all =
 
   let officials, patches =
     OpamCompiler.Set.fold (fun comp (officials, patches) ->
-      let c = OpamFile.Comp.read (OpamPath.compiler_comp t.root comp) in
-      let version = OpamFile.Comp.version c in
-      if OpamCompiler.Version.to_string version = OpamCompiler.to_string comp then
-        comp :: officials, patches
-      else
-        officials, comp :: patches
+        try
+          let c = OpamFile.Comp.read (OpamPath.compiler_comp t.root comp) in
+          let version = OpamFile.Comp.version c in
+          if OpamCompiler.Version.to_string version =
+             OpamCompiler.to_string comp then
+            comp :: officials, patches
+          else
+            officials, comp :: patches
+        with OpamFormat.Bad_format _ -> officials, patches
     ) descrs ([],[]) in
 
   let mk l =
