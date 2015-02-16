@@ -1264,8 +1264,7 @@ module API = struct
             OpamSwitch.of_string (OpamCompiler.to_string compiler) in
 
         (* Create ~/.opam/compilers/system.comp *)
-        let system_version = OpamCompiler.Version.current () in
-        OpamState.create_system_compiler_description root system_version;
+        OpamState.create_system_compiler_description root;
 
         (* Create ~/.opam/config *)
         let config =

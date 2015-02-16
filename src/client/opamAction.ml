@@ -281,9 +281,10 @@ let compilation_env t opam =
 let get_metadata t =
   let compiler =
     if t.compiler = OpamCompiler.system then
-      let system_version = match OpamCompiler.Version.system () with
+      let system_version =
+        match OpamCompiler.get_system () with
         | None   -> "<none>"
-        | Some v -> OpamCompiler.Version.to_string v in
+        | Some c -> OpamCompiler.Version.to_string (OpamCompiler.version c) in
       Printf.sprintf "system (%s)" system_version
     else
       OpamCompiler.to_string t.compiler in

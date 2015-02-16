@@ -24,12 +24,6 @@ module Version: sig
   (** Compiler constraint *)
   type constr = (OpamFormula.relop * t) OpamFormula.formula
 
-  (** Return the version of the compiler currently installed *)
-  val current: unit -> t option
-
-  (** Returm the version of the system compiler *)
-  val system: unit -> t option
-
   (** Compare OCaml versions *)
   val compare: t -> t -> int
 
@@ -39,6 +33,16 @@ end
 
 (** Compiler names *)
 include OpamMisc.ABSTRACT
+
+(** Return the compiler version *)
+val version: t -> Version.t
+
+(** Return the current compiler at its currently installed version *)
+val get_current: unit -> t option
+
+(** Return the system compiler at is current version. Warning, this is different
+    from [system] which is a static string with version ["system"] *)
+val get_system: unit -> t option
 
 (** Convert a filename into a compiler name. This function extract
     [name] from {i /path/to/$name.comp}. *)
@@ -55,6 +59,3 @@ val system: t
 
 (** Errors *)
 val unknown: t -> 'a
-
-(** Return the compiler version *)
-val version: t -> Version.t
