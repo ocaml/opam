@@ -323,8 +323,7 @@ let exit_status p return =
   in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
-    | Unix.WSIGNALED s -> None, Some s
-    | _ -> None, None
+    | Unix.WSIGNALED s | Unix.WSTOPPED s -> None, Some s
   in
   if isset_verbose_f () then
     stop_verbose_f ()
@@ -427,9 +426,9 @@ let run command =
       raise e
     | _ -> raise e
 
-let is_success r = r.r_code = 0
+let is_failure r = r.r_code <> 0 || r.r_signal <> None
 
-let is_failure r = r.r_code <> 0
+let is_success r = not (is_failure r)
 
 let safe_unlink f =
   try Unix.unlink f with Unix.Unix_error _ -> ()
