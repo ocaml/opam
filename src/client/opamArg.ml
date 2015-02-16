@@ -1954,7 +1954,9 @@ let run default commands =
            | Not_found -> "")
           (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
-      | Sys.Break -> exit_code := 130
+      | Sys.Break
+      | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
+        exit_code := 130
       | Failure msg ->
         Printf.eprintf "Fatal error: %s\n" msg;
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);

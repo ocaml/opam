@@ -188,13 +188,15 @@ module B = struct
   let pull_archive repo filename =
     let local_dir = OpamPath.Repository.archives_dir repo in
     OpamFilename.mkdir local_dir;
-    pull_file_quiet local_dir filename @@| fun r ->
-    OpamGlobals.msg "[%s] %s %s\n"
-      (OpamGlobals.colorise `blue
-         (OpamRepositoryName.to_string repo.repo_name))
-      (OpamFilename.to_string filename)
-      (string_of_download r);
-    r
+    pull_file_quiet local_dir filename @@| function
+    | Not_available _ as r when not !OpamGlobals.verbose -> r
+    | r ->
+      OpamGlobals.msg "[%s] %s %s\n"
+        (OpamGlobals.colorise `blue
+           (OpamRepositoryName.to_string repo.repo_name))
+        (OpamFilename.to_string filename)
+        (string_of_download r);
+      r
 
   let revision _ =
     Done None

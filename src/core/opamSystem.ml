@@ -31,7 +31,8 @@ let internal_error fmt =
   ) fmt
 
 let process_error r =
-  raise (Process_error r)
+  if r.OpamProcess.r_signal = Some Sys.sigint then raise Sys.Break
+  else raise (Process_error r)
 
 let raise_on_process_error r =
   if OpamProcess.is_failure r then raise (Process_error r)
@@ -729,7 +730,7 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
       | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
       | e ->
         OpamMisc.fatal e;
-        OpamGlobals.error "Could not download file at %s." src;
+        log "Could not download file at %s." src;
         raise e)
     (with_tmp_dir_job aux)
 
