@@ -483,7 +483,7 @@ let confirm ?(default=true) fmt =
       in
       if !yes then (prompt (); msg "y\n"; true)
       else if !no then (prompt (); msg "n\n"; false)
-      else if os () = Win32 then
+      else if not OpamMisc.tty_out || os () = Win32 || os () = Cygwin then
         let rec loop () =
           prompt ();
           match String.lowercase (read_line ()) with
