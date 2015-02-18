@@ -460,7 +460,7 @@ let trim_universe universe request =
   (* We manually remove package with invalid constraints (seems that
      trim does not do it properly). *)
   let packages = List.filter (fun pkg ->
-      List.for_all (List.for_all (fun (name, constr) ->
+      List.for_all (List.exists (fun (name, constr) ->
           let filter p =
             p.Cudf.package = name
             && Cudf.version_matches p.Cudf.version constr in

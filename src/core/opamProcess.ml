@@ -451,18 +451,17 @@ let truncate_line str =
    for context, like diff) *)
 let truncate l =
   let l = List.rev l in
+  let unindented s =
+    String.length s > 0 && s.[0] <> ' ' && s.[0] <> '\t'
+  in
   let rec cut n acc = function
     | [] -> acc
     | [x] when n = 0 -> x :: acc
     | _ when n = 0 -> truncate_str :: acc
-    | x::_ as l when n = 1 ->
-      (try
-         List.find
-           (fun s -> String.length s > 0 && s.[0] <> ' ' && s.[0] <> '\t')
-           l
-         :: truncate_str :: acc
-       with Not_found ->
-         truncate_str :: x :: acc)
+    | x::l when n = 1 ->
+      (if unindented x then truncate_str :: x :: acc else
+       try List.find unindented l :: truncate_str :: acc
+       with Not_found -> truncate_str :: x :: acc)
     | x::r -> cut (n-1) (x::acc) r
   in
   cut OpamGlobals.log_limit [] l

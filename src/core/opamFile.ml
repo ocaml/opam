@@ -2316,7 +2316,7 @@ module Make (F : F) = struct
       try
         let r = F.of_channel f ic in
         close_in ic;
-        log ~level:2 "Read %s in %.3fs" filename (chrono ());
+        log ~level:3 "Read %s in %.3fs" filename (chrono ());
         r
       with e -> close_in ic; raise e
     with
@@ -2344,7 +2344,7 @@ module Make (F : F) = struct
         OpamGlobals.msg "[skipped]\n";
         F.empty
     else (
-      log "Cannot find %a" (slog OpamFilename.to_string) f;
+      log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
       F.empty
     )
 

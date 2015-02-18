@@ -985,7 +985,7 @@ module API = struct
 
   let fixup () = with_switch_backup "fixup" fixup_t
 
-  let update ~repos_only names =
+  let update ~repos_only ?(no_stats=false) names =
     let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
@@ -1151,6 +1151,7 @@ module API = struct
         (if need_fixup && OpamCudf.external_solver_available () then " --fixup"
          else "")
     in
+    if not no_stats then
     let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
     let universe = OpamState.universe t (Upgrade OpamPackage.Set.empty) in
     match OpamSolver.check_for_conflicts universe with
@@ -1167,12 +1168,11 @@ module API = struct
         if OpamSolution.sum stats > 0 then
           OpamGlobals.msg
             "\nUpdates available for %s, apply them with 'opam upgrade':\n\
-             === %s ===\n"
+             ===== %s =====\n"
             (OpamSwitch.to_string t.switch)
             (OpamSolver.string_of_stats stats)
       | _, _, Conflicts cs ->
         log "State isn't broken but upgrade fails: something might be wrong.";
-        OpamGlobals.warning "fishy!";
         broken_state_message ~need_fixup:true cs
 
   let init repo compiler ~jobs shell dot_profile update_config =
@@ -1763,8 +1763,8 @@ module SafeAPI = struct
   let remove ~autoremove ~force names =
     switch_lock (fun () -> API.remove ~autoremove ~force names)
 
-  let update ~repos_only repos =
-    global_lock (fun () -> API.update ~repos_only repos)
+  let update ~repos_only ?no_stats repos =
+    global_lock (fun () -> API.update ~repos_only ?no_stats repos)
 
   module CONFIG = struct
 

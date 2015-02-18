@@ -402,11 +402,11 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
         OpamFilename.remove dst_file
       ) files in
 
-  let remove_files_and_dir dst_fn files =
+  let remove_files_and_dir ?(quiet=false) dst_fn files =
     let dir = dst_fn t.root t.switch name in
     remove_files (fun _ _ -> dir) files;
     if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
-    else if OpamFilename.exists_dir dir then
+    else if not quiet && OpamFilename.exists_dir dir then
       OpamGlobals.warning "Directory %s is not empty, not removing"
         (OpamFilename.Dir.to_string dir) in
 
@@ -423,8 +423,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
     log "Removing files from .install";
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
     remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
+    remove_files_and_dir ~quiet:true
+      OpamPath.Switch.lib OpamFile.Dot_install.libexec;
     remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
-    remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.libexec;
     remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
     remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
     remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
