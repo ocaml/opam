@@ -1550,6 +1550,7 @@ let pin ?(unpin_only=false) () =
   in
   let guess_name path =
     let open OpamFilename.OP in
+    if not (OpamFilename.exists_dir path) then raise Not_found else
     let opamf = path / "opam" // "opam" in
     let opamf = if OpamFilename.exists opamf then opamf else path // "opam" in
     if OpamFilename.exists opamf then
