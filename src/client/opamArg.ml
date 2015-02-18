@@ -1246,8 +1246,8 @@ let update =
     json_update json;
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
-    Client.update ~repos_only names;
-    if upgrade then Client.upgrade []
+    Client.update ~repos_only ~no_stats:upgrade names;
+    if upgrade then (OpamGlobals.msg "\n"; Client.upgrade [])
   in
   Term.(pure update $global_options $jobs_flag $json_flag $name_list
         $repos_only $sync $upgrade),
