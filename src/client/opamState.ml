@@ -1970,7 +1970,7 @@ let update_ocamlinit () =
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
   let sh   (k,v) = Printf.sprintf "%s=%S; export %s;\n" k v k in
-  let csh  (k,v) = Printf.sprintf "setenv %s %S;\n" k v in
+  let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
   let fish (k,v) = match k with
     | "PATH" | "MANPATH" ->
       let to_space_sep = String.concat " " (OpamMisc.split v ':') in
@@ -1989,7 +1989,7 @@ let string_of_env_update t shell updates =
       | "+="
       | ":=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | "=:"
-      | "=+" -> (ident, Printf.sprintf "$%s:%s" ident string)
+      | "=+" -> (ident, Printf.sprintf (match shell with `csh -> "${%s}:%s" | _ -> "$%s:%s") ident string)
       | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
