@@ -529,7 +529,7 @@ let register_backtrace, get_backtrace =
 let default_columns = 100
 
 let with_process_in cmd f =
-  let ic = Unix.open_process_in cmd in
+  let ic = Unix.open_process_in (cmd ^ " 2>/dev/null") in
   try
     let r = f ic in
     ignore (Unix.close_process_in ic) ; r
