@@ -1989,7 +1989,7 @@ let string_of_env_update t shell updates =
       | "+="
       | ":=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | "=:"
-      | "=+" -> (ident, Printf.sprintf (match shell with `csh -> "${%s}:%s" | _ -> "$%s:%s") ident string)
+      | "=+" -> (ident, (match shell with `csh -> Printf.sprintf "${%s}:%s" ident string | _ -> Printf.sprintf "$%s:%s" ident string))
       | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
