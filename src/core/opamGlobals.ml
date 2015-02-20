@@ -507,10 +507,12 @@ let confirm ?(default=true) fmt =
         | '\n' -> print_endline (if default then "y" else "n"); default
         | _ -> loop ()
       in
-      let r = loop () in
-      tcsetattr stdin TCSAFLUSH attr;
-      tcflush stdin TCIFLUSH;
-      r
+      let reset () =
+        tcsetattr stdin TCSAFLUSH attr;
+        tcflush stdin TCIFLUSH;
+      in
+      (try let r = loop () in reset (); r
+       with e -> reset (); raise e)
     with
     | End_of_file -> msg "%s\n" (if default then "y" else "n"); default
     | Sys.Break as e -> msg "\n"; raise e
