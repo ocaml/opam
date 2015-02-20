@@ -242,8 +242,8 @@ let pin name ?version pin_option =
      when OpamFilename.exists_dir (OpamFilename.Dir.of_string dir) ->
      OpamGlobals.note
        "Pinning in mixed mode: OPAM will use tracked files in the current \
-        working\ntree from %s. If this is not what you want, pin to a given \
-        branch (e.g.\n%s#HEAD)"
+        working tree from %s. If this is not what you want, pin to a given \
+        branch (e.g. %s#HEAD)"
        dir dir
    | _ -> ());
 

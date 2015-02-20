@@ -528,8 +528,12 @@ let register_backtrace, get_backtrace =
 
 let default_columns = 100
 
-let with_process_in cmd f =
-  let ic = Unix.open_process_in cmd in
+let with_process_in cmd args f =
+  let path = ["/bin";"/usr/bin"] in
+  let cmd =
+    List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
+  in
+  let ic = Unix.open_process_in (cmd^" "^args) in
   try
     let r = f ic in
     ignore (Unix.close_process_in ic) ; r
@@ -537,17 +541,18 @@ let with_process_in cmd f =
     ignore (Unix.close_process_in ic) ; raise exn
 
 let get_terminal_columns () =
-  try           (* terminfo *)
-    with_process_in "tput cols"
+  try (* terminfo *)
+    with_process_in "tput" "cols"
       (fun ic -> int_of_string (input_line ic))
-  with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file ->
+  with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
     try (* GNU stty *)
-      with_process_in "stty size"
+      with_process_in "stty" "size"
         (fun ic ->
           match split (input_line ic) ' ' with
           | [_ ; v] -> int_of_string v
           | _ -> failwith "stty")
-    with Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file ->
+    with
+      Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file | Not_found ->
       try (* shell envvar *)
         int_of_string (getenv "COLUMNS")
       with Not_found | Failure _ ->
@@ -614,16 +619,16 @@ let pretty_backtrace e =
 
 let uname_s () =
   try
-    with_process_in "uname -s"
+    with_process_in "uname" "-s"
       (fun ic -> Some (strip (input_line ic)))
-  with Unix.Unix_error _ | Sys_error _ ->
+  with Unix.Unix_error _ | Sys_error _ | Not_found ->
     None
 
 let uname_m () =
   try
-    with_process_in "uname -m"
+    with_process_in "uname" "-m"
       (fun ic -> Some (strip (input_line ic)))
-  with Unix.Unix_error _ | Sys_error _ ->
+  with Unix.Unix_error _ | Sys_error _ | Not_found ->
     None
 
 let shell_of_string = function
