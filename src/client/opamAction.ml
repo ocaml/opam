@@ -331,9 +331,6 @@ let removal_needs_download t nv =
     not (List.for_all use_ocamlfind commands)
 
 (* Remove a given package *)
-(* This will be done by the parent process, so theoritically we are
-   allowed to modify the global state of OPAM here. However, for
-   consistency reasons, this is done in the main function only. *)
 let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   log "Removing %a (%b)" (slog OpamPackage.to_string) nv metadata;
   let name = OpamPackage.name nv in
