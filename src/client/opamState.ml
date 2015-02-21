@@ -1274,9 +1274,18 @@ let switch_consistency_checks t =
     (OpamPath.Switch.Overlay.dir t.root t.switch)
     (fun name ->
        not (is_pinned t name) &&
-       (not (is_name_installed t name) ||
-        (* Don't cleanup installed packages which don't have any other metadata *)
-        not (OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = name) t.package_index)))
+       try
+         let opam =
+           OpamFile.OPAM.read
+             (OpamPath.Switch.Overlay.opam t.root t.switch name)
+         in
+         let nv =
+           OpamPackage.create
+             (OpamFile.OPAM.name opam) (OpamFile.OPAM.version opam)
+         in
+         not (OpamPackage.Set.mem nv t.installed) ||
+         OpamPackage.Map.mem nv t.opams (* this package has upstream metadata *)
+       with e -> OpamMisc.fatal e; true)
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
