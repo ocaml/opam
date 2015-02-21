@@ -1478,20 +1478,23 @@ let pin ?(unpin_only=false) () =
     ["list"]     , `list, [], "Lists pinned packages.";
     ["add"]      , `add  , ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
-     or a url. \
+     or a URL. \
      $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be replaced by \
-     `--dev-repo'. \
-     OPAM will attempt to guess the desired pinning kind, unless you use \
-     URL syntax or an explicit $(b,--kind) option. \
-     Pins may target a specific branch or commit using $(b,#branch) e.g. \
-     $(b,git://host/me/pkg#testing). When they don't, in the special case \
-     of version-controlled pinning to a local path, OPAM will use \
-     \"mixed mode\": it will only use version-controlled files, but at their \
-     current version. \
-     It is possible to create a new package if $(i,NAME) does not exist. \
-     Its version may then be specified using $(i,NAME).$(i,VERSION), in the \
-     source opam file or with $(b,edit).";
+     `--dev-repo' if a package by that name is already known. \
+     OPAM will infer the kind of pinning from the format of $(i,TARGET), using \
+     $(b,path) pinning by default, unless you use an explicit $(b,--kind) \
+     option. \
+     Pins to version control systems may target a specific branch or commit \
+     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing). When they don't, \
+     in the special case of version-controlled pinning to a local path, OPAM \
+     will use \"mixed mode\": it will only use version-controlled files, but \
+     at their current, on-disk version. \
+     If $(i,PACKAGE) is not a known package name, a new package by that name \
+     will be locally created. \
+     The package version may be specified by using the format \
+     $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
+     $(b,edit).";
     ["remove"]   , `remove, ["NAMES"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
      repository, if any.";
@@ -1525,8 +1528,14 @@ let pin ?(unpin_only=false) () =
     mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
                           `opam pin edit' after pinning." in
   let kind =
-    let help = "Set the kind of pinning. Must be one of version, \
-                path, git, hg or darcs." in
+    let help =
+      "Sets the kind of pinning. Must be one of $(i,version), $(i,path), \
+       $(i,git), $(i,hg), $(i,darcs) or $(i,auto). \
+       If unset, is inferred from the format of the target, defaulting \
+       to $(i,path). If $(i,auto) or $(i,OPAMPINKINDAUTO) is set, a local \
+       path will be searched for version control and the pinning kind set \
+       accordingly. This is expected to become the default in a next version."
+    in
     let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
     let kinds = [
       "http"   , `http;
@@ -1536,7 +1545,8 @@ let pin ?(unpin_only=false) () =
       "path"   , `local;
       "local"  , `local;
       "rsync"  , `local;
-      "hg"     , `hg
+      "hg"     , `hg;
+      "auto"   , `auto;
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
@@ -1574,6 +1584,10 @@ let pin ?(unpin_only=false) () =
   let pin global_options kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
     let action = not no_act in
+    let kind, guess = match kind with
+      | Some `auto -> None, true
+      | Some (#pin_kind as k) -> Some k, false
+      | None -> None, !OpamGlobals.pin_kind_auto in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ~short:print_short ())
     | Some `remove, names ->
@@ -1598,7 +1612,7 @@ let pin ?(unpin_only=false) () =
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
-         let pin_option = pin_option_of_string ?kind path in
+         let pin_option = pin_option_of_string ?kind ~guess path in
          `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
        with Not_found ->
         `Error (false, Printf.sprintf
@@ -1609,7 +1623,7 @@ let pin ?(unpin_only=false) () =
     | Some `add, [n; target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
-         let pin_option = pin_option_of_string ?kind:kind target in
+         let pin_option = pin_option_of_string ?kind ~guess target in
          `Ok (Client.PIN.pin name ?version ~edit ~action (Some pin_option))
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand "pin" commands command params
