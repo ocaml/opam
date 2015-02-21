@@ -2682,16 +2682,16 @@ let update_pinned_package t ?fixed_version name =
     then
       (* No manual changes *)
       (OpamGlobals.formatted_msg
-         "Installing new package description for %s from %s\n"
-         (OpamPackage.Name.to_string name)
+         "[%s] Installing new package description from %s\n"
+         (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
          (string_of_address (OpamFile.URL.url url));
        OpamFilename.remove
          (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
        install_meta srcdir user_meta new_meta)
     else if
       OpamGlobals.formatted_msg
-        "Conflicting update of the metadata of %s from %s:\n%s"
-        (OpamPackage.Name.to_string name)
+        "[%s] Conflicting update of the metadata from %s:\n%s"
+        (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
         (string_of_address (OpamFile.URL.url url))
         (OpamMisc.itemize diff_to_string (diff user_meta new_meta));
       OpamGlobals.confirm "\nOverride files in %s (there will be a backup) ?"

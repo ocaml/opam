@@ -495,24 +495,34 @@ let confirm ?(default=true) fmt =
       else
       let open Unix in
       prompt ();
-      let attr = tcgetattr stdin in
-      tcsetattr stdin TCSAFLUSH {attr with c_icanon = false; c_echo = false};
-      tcflush stdin TCIFLUSH;
       let buf = Bytes.create 1 in
       let rec loop () =
-        if read stdin buf 0 1 = 0 then raise End_of_file
-        else match Bytes.get  buf 0 with
-        | 'y' | 'Y' -> print_endline (Bytes.to_string buf); true
-        | 'n' | 'N' -> print_endline (Bytes.to_string buf); false
-        | '\n' -> print_endline (if default then "y" else "n"); default
+        let ans =
+          try
+            if read stdin buf 0 1 = 0 then raise End_of_file
+            else Some (Char.lowercase (Bytes.get buf 0))
+          with
+          | Unix.Unix_error (Unix.EINTR,_,_) -> None
+          | Unix.Unix_error _ -> raise End_of_file
+        in
+        match ans with
+        | Some 'y' -> print_endline (Bytes.to_string buf); true
+        | Some 'n' -> print_endline (Bytes.to_string buf); false
+        | Some '\n' -> print_endline (if default then "y" else "n"); default
         | _ -> loop ()
       in
+      let attr = tcgetattr stdin in
       let reset () =
         tcsetattr stdin TCSAFLUSH attr;
         tcflush stdin TCIFLUSH;
       in
-      (try let r = loop () in reset (); r
-       with e -> reset (); raise e)
+      try
+        tcsetattr stdin TCSAFLUSH {attr with c_icanon = false; c_echo = false};
+        tcflush stdin TCIFLUSH;
+        let r = loop () in
+        reset ();
+        r
+      with e -> reset (); raise e
     with
     | End_of_file -> msg "%s\n" (if default then "y" else "n"); default
     | Sys.Break as e -> msg "\n"; raise e
