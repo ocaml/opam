@@ -8,8 +8,8 @@ MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
 URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.2.0.tar.gz
 MD5_re = 5cbfc137683ef2b0e91f931577f2e673
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.4.tbz
-MD5_cmdliner = 5089b4b69993ddc5ce4aac0e30d0c641
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.7.tbz
+MD5_cmdliner = 46d7553b95f623f811df2a844fb448fb
 
 URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
 MD5_graph = 75dde65bfc3f9b07e795343d369aa84d

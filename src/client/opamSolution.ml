@@ -574,7 +574,9 @@ let apply ?ask t action ~requested solution =
       OpamGlobals.msg
         "The following actions %s be %s:\n"
         (if !OpamGlobals.show then "would" else "will")
-        (if !OpamGlobals.fake then "simulated" else "performed");
+        (if !OpamGlobals.dryrun then "simulated" else
+         if !OpamGlobals.fake then "faked"
+         else "performed");
       let new_state = simulate_new_state t action_graph in
       let messages p =
         let opam = OpamState.opam new_state p in

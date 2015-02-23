@@ -76,8 +76,10 @@ val pin_kind_of_string: string -> pin_kind
 (** Parsing of pin kinds *)
 val string_of_pin_kind: pin_kind -> string
 
-(** Read pin options args *)
-val pin_option_of_string: ?kind:pin_kind -> string -> pin_option
+(** Read pin options args. If [kind] isn't specified, [guess] is set to [true]
+    and the name isn't explicit, look for VC on the filesystem to get the
+    pinning kind *)
+val pin_option_of_string: ?kind:pin_kind -> ?guess:bool -> string -> pin_option
 
 (** Convert a pin option to a string *)
 val string_of_pin_option: pin_option -> string

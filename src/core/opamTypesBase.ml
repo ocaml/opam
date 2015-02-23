@@ -135,7 +135,7 @@ let pin_of_url (url,kind) = match kind with
   | `hg -> Hg url
   | `local | `version -> failwith "Not a recognised version-control URL"
 
-let pin_option_of_string ?kind s =
+let pin_option_of_string ?kind ?(guess=false) s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
   | None | Some (`http|`git|`hg|`darcs|`local) ->
@@ -155,9 +155,10 @@ let pin_option_of_string ?kind s =
       Local (OpamFilename.Dir.of_string (fst s))
     | None, `local ->
       let dir = OpamFilename.Dir.of_string (fst s) in
-      match guess_version_control dir with
-      | Some vc -> pin_of_url (s, vc)
-      | None -> Local dir
+      if guess then match guess_version_control dir with
+        | Some vc -> pin_of_url (s, vc)
+        | None -> Local dir
+      else Local dir
 
 let string_of_pin_kind = function
   | `version -> "version"

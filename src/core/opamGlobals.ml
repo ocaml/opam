@@ -92,6 +92,7 @@ let safe_mode        = check "SAFE"
 let lock_retries     =
   try ref (int_of_string (OpamMisc.getenv ("OPAMLOCKRETRIES")))
   with Not_found | Failure _ -> ref 5
+let pin_kind_auto    = check "PINKINDAUTO"
 let all_parens       = ref false
 
 (* Value set when opam calls itself *)

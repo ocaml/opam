@@ -196,6 +196,8 @@ let apply_build_options b =
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := (fun () -> s)
 
+let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
+
 (* Help sections common to all commands *)
 let global_option_section = "COMMON OPTIONS"
 let help_sections = [
@@ -224,6 +226,8 @@ let help_sections = [
   `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
+  `P "$(i,OPAMPINKINDAUTO) if set, version control systems are detected when \
+      pinning to a local path.";
   `P "$(i,OPAMREQUIRECHECKSUMS) see option `--require-checksums'.";
   `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
@@ -233,9 +237,9 @@ let help_sections = [
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
   `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
-  `P "$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
-      currently going on on the terminal. \
-      (one of $(i,always), $(i,never) or $(i,auto))";
+  `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
+       currently going on on the terminal. \
+       (one of "^Arg.doc_alts_enum when_enum^")");
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam config env --switch=SWITCH'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
@@ -244,9 +248,9 @@ let help_sections = [
        The default value is "^OpamGlobals.default_preferences `Upgrade^
       ". See also option --criteria");
   `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
-  `P "$(i,OPAMUTF8) use UTF8 characters in output \
-      (one of $(i,always), $(i,never) or $(i,auto), the default, which is \
-      determined from the locale).";
+  `P ("$(i,OPAMUTF8) use UTF8 characters in output \
+       (one of "^Arg.doc_alts_enum when_enum^
+      "). By default `auto', which is determined from the locale).");
   `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in OPAM \
       messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
@@ -373,9 +377,7 @@ let mk_opt ?section ?vopt flags value doc conv default =
 
 let mk_tristate_opt ?section flags value doc auto default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  let choices =
-    Arg.enum [ "always", `Always; "never", `Never; "auto", `Auto ] in
-  let arg = Arg.(value & opt choices default & doc) in
+  let arg = Arg.(value & opt (enum when_enum) default & doc) in
   let to_bool = function
     | `Always -> true
     | `Never -> false
@@ -469,8 +471,7 @@ let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
 let shell_opt =
-  let enum =
-    Arg.enum [
+  let enum = [
       "bash",`bash;
       "sh",`sh;
       "csh",`csh;
@@ -478,9 +479,10 @@ let shell_opt =
       "fish",`fish;
     ] in
   mk_opt ["shell"] "SHELL"
-    "Sets the configuration mode for OPAM environment appropriate for $(docv). \
-     One of `bash', `sh', `csh', `zsh' or `fish'."
-    enum (OpamMisc.guess_shell_compat ())
+    (Printf.sprintf
+       "Sets the configuration mode for OPAM environment appropriate for \
+        $(docv). One of %s." (Arg.doc_alts_enum enum))
+    (Arg.enum enum) (OpamMisc.guess_shell_compat ())
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
@@ -489,23 +491,22 @@ let dot_profile_flag =
     (Arg.some filename) None
 
 let repo_kind_flag =
-  let kinds = [
-    (* main kinds *)
+  let main_kinds = [
     "http" , `http;
     "local", `local;
     "git"  , `git;
-    "darcs"  , `darcs;
+    "darcs", `darcs;
     "hg"   , `hg;
-
-    (* aliases *)
+  ] in
+  let aliases_kinds = [
     "wget" , `http;
     "curl" , `http;
     "rsync", `local;
   ] in
-  mk_opt ["k";"kind"]
-    "KIND" "Specify the kind of the repository to be set (the main ones \
-            are 'http', 'local', 'git', 'darcs' or 'hg')."
-    Arg.(some (enum kinds)) None
+  mk_opt ["k";"kind"] "KIND"
+    (Printf.sprintf "Specify the kind of the repository to be used (%s)."
+       (Arg.doc_alts_enum main_kinds))
+    Arg.(some (enum (main_kinds @ aliases_kinds))) None
 
 let jobs_flag =
   mk_opt ["j";"jobs"] "JOBS"
@@ -561,7 +562,8 @@ let global_options =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let color =
     mk_tristate_opt ~section ["color"] "WHEN"
-      "Colorize the output. $(docv) must be `always', `never' or `auto'."
+      (Printf.sprintf "Colorize the output. $(docv) must be %s."
+         (Arg.doc_alts_enum when_enum))
       (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_when in
   let switch =
     mk_opt ~section ["switch"]
@@ -1478,20 +1480,23 @@ let pin ?(unpin_only=false) () =
     ["list"]     , `list, [], "Lists pinned packages.";
     ["add"]      , `add  , ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
-     or a url. \
+     or a URL. \
      $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be replaced by \
-     `--dev-repo'. \
-     OPAM will attempt to guess the desired pinning kind, unless you use \
-     URL syntax or an explicit $(b,--kind) option. \
-     Pins may target a specific branch or commit using $(b,#branch) e.g. \
-     $(b,git://host/me/pkg#testing). When they don't, in the special case \
-     of version-controlled pinning to a local path, OPAM will use \
-     \"mixed mode\": it will only use version-controlled files, but at their \
-     current version. \
-     It is possible to create a new package if $(i,NAME) does not exist. \
-     Its version may then be specified using $(i,NAME).$(i,VERSION), in the \
-     source opam file or with $(b,edit).";
+     `--dev-repo' if a package by that name is already known. \
+     OPAM will infer the kind of pinning from the format of $(i,TARGET), using \
+     $(b,path) pinning by default, unless you use an explicit $(b,--kind) \
+     option. \
+     Pins to version control systems may target a specific branch or commit \
+     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing). When they don't, \
+     in the special case of version-controlled pinning to a local path, OPAM \
+     will use \"mixed mode\": it will only use version-controlled files, but \
+     at their current, on-disk version. \
+     If $(i,PACKAGE) is not a known package name, a new package by that name \
+     will be locally created. \
+     The package version may be specified by using the format \
+     $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
+     $(b,edit).";
     ["remove"]   , `remove, ["NAMES"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
      repository, if any.";
@@ -1525,19 +1530,29 @@ let pin ?(unpin_only=false) () =
     mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
                           `opam pin edit' after pinning." in
   let kind =
-    let help = "Set the kind of pinning. Must be one of version, \
-                path, git, hg or darcs." in
-    let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
-    let kinds = [
+    let main_kinds = [
+      "version", `version;
+      "path"   , `local;
       "http"   , `http;
       "git"    , `git;
       "darcs"  , `darcs;
-      "version", `version;
-      "path"   , `local;
-      "local"  , `local;
-      "rsync"  , `local;
-      "hg"     , `hg
+      "hg"     , `hg;
+      "auto"   , `auto;
     ] in
+    let help =
+      Printf.sprintf
+        "Sets the kind of pinning. Must be one of %s. \
+         If unset, is inferred from the format of the target, defaulting \
+         to $(i,path). If $(i,auto) or $(i,OPAMPINKINDAUTO) is set, a local \
+         path will be searched for version control and the pinning kind set \
+         accordingly. This is expected to become the default in a next version."
+        (Arg.doc_alts_enum main_kinds)
+    in
+    let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
+    let kinds = main_kinds @ [
+        "local"  , `local;
+        "rsync"  , `local;
+      ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
     mk_flag ["n";"no-action"]
@@ -1574,6 +1589,10 @@ let pin ?(unpin_only=false) () =
   let pin global_options kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
     let action = not no_act in
+    let kind, guess = match kind with
+      | Some `auto -> None, true
+      | Some (#pin_kind as k) -> Some k, false
+      | None -> None, !OpamGlobals.pin_kind_auto in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ~short:print_short ())
     | Some `remove, names ->
@@ -1598,7 +1617,7 @@ let pin ?(unpin_only=false) () =
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
-         let pin_option = pin_option_of_string ?kind path in
+         let pin_option = pin_option_of_string ?kind ~guess path in
          `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
        with Not_found ->
         `Error (false, Printf.sprintf
@@ -1609,7 +1628,7 @@ let pin ?(unpin_only=false) () =
     | Some `add, [n; target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
-         let pin_option = pin_option_of_string ?kind:kind target in
+         let pin_option = pin_option_of_string ?kind ~guess target in
          `Ok (Client.PIN.pin name ?version ~edit ~action (Some pin_option))
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand "pin" commands command params
