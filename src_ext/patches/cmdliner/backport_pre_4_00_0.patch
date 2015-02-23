@@ -1,0 +1,30 @@
+diff -Naur cmdliner-0.9.7/src/cmdliner.ml cmdliner-0.9.7.patched/src/cmdliner.ml
+--- cmdliner-0.9.7/src/cmdliner.ml	2015-02-06 11:33:44.000000000 +0100
++++ cmdliner-0.9.7.patched/src/cmdliner.ml	2015-02-18 23:04:04.000000000 +0100
+@@ -830,7 +830,7 @@
+     | None -> if names = [] then "ARGUMENTS" else "OPTIONS"
+     | Some s -> s
+     in
+-    { id = arg_id (); absent = Val (Lazy.from_val "");
++    { id = arg_id (); absent = Val (lazy "");
+       doc = doc; docv = docv; docs = docs;
+       p_kind = All; o_kind = Flag; o_names = List.rev_map dash names;
+       o_all = false; }
+@@ -924,7 +924,7 @@
+ 
+   let opt_all ?vopt (parse, print) v a =
+     if is_pos a then invalid_arg err_not_opt else
+-    let a = { a with absent = Val (Lazy.from_val ""); o_all = true;
++    let a = { a with absent = Val (lazy ""); o_all = true;
+                      o_kind = match vopt with
+                      | None -> Opt | Some dv -> Opt_vopt (str_of_pp print dv) }
+     in
+@@ -949,7 +949,7 @@
+   let pos ?(rev = false) k (parse, print) v a =
+     if is_opt a then invalid_arg err_not_pos else
+     let a = { a with p_kind = Nth (rev, k);
+-                     absent = Val (Lazy.from_val (str_of_pp print v)) }
++                     absent = Val (lazy (str_of_pp print v)) }
+     in
+     let convert _ cl = match Cmdline.pos_arg cl a with
+     | [] -> v
