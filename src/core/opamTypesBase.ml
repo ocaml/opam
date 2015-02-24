@@ -69,15 +69,19 @@ let parse_url (s,c) =
   in
   match suffix with
   | "git" -> (s,c), `git
-  | "hg" ->(s,c), `hg
+  | "hg" -> (s,c), `hg
   | _ ->
     match Re_str.bounded_split (Re_str.regexp_string "://") s 2 with
     | ["file"|"rsync"|"ssh"|"scp"|"sftp"; address] ->
       (* strip the leading xx:// *)
       (address,c), `local
-    | [proto; _] ->
+    | [proto; address] ->
       (* keep the leading xx:// *)
-      (s,c), url_kind_of_string proto
+      (match OpamMisc.cut_at proto '+' with
+       | Some (proto1,proto2) ->
+         (proto2^"://"^address, c), url_kind_of_string proto1
+       | None ->
+         (s,c), url_kind_of_string proto)
     | [address] -> (address,c), `local
     | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
 
