@@ -1481,7 +1481,8 @@ module X = struct
         cond `Error
           "Field 'opam-version' doesn't match the current version, \
            validation may not be accurate"
-          (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0);
+          (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0 &&
+           OpamVersion.compare t.opam_version OpamVersion.current <> 0);
 (*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
