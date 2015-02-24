@@ -234,15 +234,15 @@ The field {\tt cores} is the number of parallel process that
     ?name:          STRING
     ?version:       STRING
     maintainer:     STRING
-    ?homepage:      STRING
     ?authors:       [ STRING+ ]
-    ?doc:           STRING
-    ?dev-repo:      STRING
     ?license:       STRING
+    ?homepage:      STRING
+    ?doc:           STRING
     ?bug-reports:   STRING
+    ?dev-repo:      STRING
     ?tags:          [ STRING+ ]
-    ?subst:         [ STRING+ ]
     ?patches:       [ (STRING ?{ <filter> } )+ ]
+    ?subst:         [ STRING+ ]
     ?build:         commands
     ?install:       commands
     ?build-doc:     commands
@@ -259,6 +259,7 @@ The field {\tt cores} is the number of parallel process that
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
     ?syntax:        [ STRING+ ]
+    ?features:      [ (IDENT STRING <filter>)+ ]
 
 <argument>       := STRING
                   | IDENT
@@ -305,95 +306,119 @@ The field {\tt cores} is the number of parallel process that
 
 \begin{itemize}
 
-\item The first line specifies the \OPAM\ version.
+\item {\tt opam-version} specifies the file format version, it should be the
+  current \OPAM\ version in the format {\tt MAJOR.MINOR} (\emph{i.e.} with patch
+  version omitted)
 
-\item The content of {\tt name} is \verb+$NAME+, the content of {\tt
-  version} is \verb+$VERSION+. Both fields are optional as they can
-  be inferred from the filename.
+\item {\tt name}, {\tt version} contain resp. \verb+$NAME+ and \verb+$VERSION+,
+  specifying the package. Both fields are optional when they can be inferred
+  from the directory name (\emph{e.g.} when the file sits in the repository).
 
-\item The content of {\tt maintainer} is the contact address of the
-  package maintainer.
+\item {\tt maintainer} is a mandatory contact address for the package maintainer
+  (the format {\tt "name <email>"} is allowed).
 
-\item The {\tt license}, {\tt homepage}, {\tt doc}, {\tt bug-reports} {\tt authors} and {\tt
-    dev-repo} fields are optional. {\tt doc} should be the address of the online
-  documentation for the package. and {\tt bug-reports} the address where bugs
-  should be reported. {\tt dev-repo} should point to the source
-  repository of the package, which may be useful for developpers: not to be
-  mistaken with the URL file, which points to the specific packaged version.
+\item {\tt authors} is a list of strings listing the original authors of the
+  software.
 
-\item The {\tt tags} field is optional contains a list of tags to
-  classify the package.
+\item {\tt license} is the abbreviated name of the license under which the
+  source software is available.
 
-\item The content of {\tt subst} is the list of files to substitute
-  variables in (see \S\ref{file:subst} for the file format and
-  \S\ref{section:config} for the semantic of file substitution).
+\item {\tt homepage}, {\tt doc}, {\tt bug-reports} are URLs pointing to the
+  related pages for the package.
 
-\item The content of {\tt patches} is a list of patches to be applied.
-  Substitutions happen before patch application, so patches can
-  contain strings which will substituted.
+\item {\tt dev-repo} is the URL of the package's source repository, which may be
+  useful for developpers: not to be mistaken with the URL file, which points to
+  the specific packaged version. It is typically a version-control address, and
+  follows the format allowed for {\tt TARGET} by {\tt opam pin add}. You can use
+  an address of the form {\tt vcs+scheme://xxx} to specify the version control
+  system to use, {\em e.g.} {\tt git+ssh://address} or {\tt hg+https://address}.
+  (Note: this has been added in OPAM 1.2.1)
 
-\item The content of {\tt build} and {\tt install} are the list of commands to run in
-  order to build and install the package libraries. The build script should build
-  all the libraries and syntax extensions exported by the package and
-  it should produce the platform-specific configuration and install
-  files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
-  \S\ref{file:config} and \S\ref{file:install}).
-  You usually only need an {\tt install} field if you don't provide the
-  \verb+$NAME.install+ file, which is the preferred way.
+\item {\tt tags} contains an optional list of semantic tags used to classify the
+  packages. The {\tt "org:foo"} tag is reserved for packages officially
+  distributed by organization ``foo''.
 
-   Each command and command argument is substituted (see
-   \S\ref{file:subst} and \S\ref{section:config}, with the identifier
-   {\tt X} being equivalent to the string {\tt "\%\{X\}\%"})
-   and can be followed by an optional filter, whose evaluation will
-   result in the command (or the command argument) being executed
-   or not. Filter expressions are typed and must evaluate to a
-   boolean and binary operations apply to version strings.
+\item {\tt patches} is a list of files relative to the project source root
+  (often added through the {\tt files/} metadata subdirectory). The listed patch
+  files will be applied sequentially to the source like with the {\tt patch}
+  command, after having gone through {\em variable interpolation expansion} like
+  files listed in {\tt subst}. Patches may be applied conditionally by adding
+  {\em filters}.
 
-   A typical example is OS-related filters, where we can choose
-   to execute commands depending on the current OS:
+\item {\tt subst} contains a list of files relative to the project source root.
+  Variable interpolations will be expanded on these files before the build takes
+  place (see \S\ref{file:subst} for the file format and \S\ref{section:config}
+  for the semantic of file substitution).
 
-  \begin{Verbatim}
-    build: [
-     ["mv" "Makefile.unix" "Makefile"]  {os != "win32"}
-     ["mv" "Makefile.win32" "Makefile"] {os  = "win32"}
-     [make]
-    ]
+\item {\tt build} is the list of commands that will be run in order to compile
+  the package. Any command is allowed, but these should write exclusively to the
+  package's source directory (given as {\tt CWD} to the command), be
+  non-interactive and perform no network i/o. All libraries, syntax extensions,
+  binaries, platform-specific configuration and install files
+  (\verb+$NAME.config+ and \verb+$NAME.install+, see \S\ref{file:config} and
+  \S\ref{file:install}) should be produced within the source directory subtree
+  during this step. Each command is provided as a list of terms (a command and
+  zero or more arguments) ; individual terms as well as full commands can be
+  made conditional by adding {\em filters}: they will be ignored if the {\em
+    filter} evaluates to {\tt false} or is undefined.
+
+  Additionally, strings in each term undergo variable expansion: {\tt
+    "\%\{foo\}\%"} is replaced by the contents of variable {\tt foo}. Variable
+  {\tt foo}, if undefined globally, implicitly refers to the package being
+  defined, in the version being defined (while {\tt \$NAME:foo} refers to the
+  {\em installed} version of the package). See \S\ref{subsection:variables} and
+  the output of the command {\tt opam config list} for a list of predefined
+  variables.
+
+  Filters typically refer to the {\tt os} variable, like in the following
+  example:
+
+\begin{Verbatim}
+build: [
+  ["mv" "Makefile.unix"  "Makefile"] {os != "win32"}
+  ["mv" "Makefile.win32" "Makefile"] {os  = "win32"}
+  [make]
+]
 \end{Verbatim}
 
-\item {\tt build-doc} is optional and describes how the documentation
-  is built.
+\item {\tt install} follows the exact same format as {\tt build}, but should
+  only be used to move products of {\tt build} from the build directory to their
+  final destination under the current {\tt prefix}, and adjust some
+  configuration files there when needed. Commands in {\tt install} are executed
+  sequentially after the build is finished. These commands should only write to
+  subdirectories of {\tt prefix}, without altering the source directory itself.
 
-\item {\tt build-test} is optional and describes how the tests are
-  built and run.
+  This field contains typically just {\tt [make "install"]}. It is recommended
+  to prefer the usage of a \verb+$NAME.install+ file and omit the {\tt install}
+  field.
 
-\item The content of {\tt remove} is the command to run before deleting
-  the installed files.
+\item {\tt build-doc} and {\tt build-test} follow the same specification as the
+  {\tt build} field. They are processed after the build phase when documentation
+  or tests have been requested.
 
-\item The {\tt depends} field
-  contains formulas over package names, optionally parametrized by
-  version constraints. Some examples or package formula:
+\item {\tt remove} follows the same format as {\tt build}, and is used to
+  uninstall the package. It should be the reverse operation of {\tt install},
+  and absent when {\tt install} is.
 
-\begin{itemize}
-\item A package name: {\tt "foo"};
-\item A package name with version constraints:
-  \verb+"foo" {>= "1.2" & <= "3.4"}+
-\end{itemize}
+\item {\tt depends} describes the requirements on other packages for this
+  package to be built and installed. It contains a list of formulas over package
+  names, optionally parametrized by version constraints, e.g.:
 
-{\tt depends} is an {\em AND} formula, which means that top-level
-\verb+&+ are not mandatory. For instance,
- \verb+ "foo" {<= "1.2"} ("bar" | "gna" {= "3.14"})+ has the following
- semantic:  ``{\em both any version of package
-  {\tt "foo"} lesser or equal to $1.2$ and either any version of package
-  {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}''  \\
+  \begin{itemize}
+  \item A simple package name: {\tt "foo"};
+  \item A package name with version constraints:
+    \verb+"foo" {>= "1.2" & <= "3.4"}+
+  \end{itemize}
 
-\item The {\tt depopts} field contains a list of package names that are optional
-  dependencies: these packages are not required nor automatically installed
-  to build the current package, but they have an effect on it. When an optional
-  dependency is changed, the package is rebuilt.
+  Elements of the list are implicitely ANDed: \verb+["foo" "bar"]+ is equivalent
+  to \verb+["foo" & "bar"]+, and
+  \verb+"foo" {<= "1.2"} ("bar" | "gna" {= "3.14"})+ is to be understood as
+  ``{\em {\tt "foo"} is required, at a version lesser or equal to $1.2$, as well
+    as one of "{\tt bar}" or "{\tt gna}" version $3.14$}''
 
-\item Additionally, the package constraints of {\tt depends} and {\tt depopts}
-  may contain leading {\em flags}. These are one of \verb+build+, \verb+test+
-  and \verb+doc+ and limit the meaning of the dependency:
+  Additionally, the version constraints may be prefixed by {\em dependency
+    flags}. These are one of \verb+build+, \verb+test+ and \verb+doc+ and limit
+  the meaning of the dependency:
   \begin{itemize}
   \item \verb+build+ dependencies are no longer needed at run-time: they won't
     trigger recompilations of your package.
@@ -402,47 +427,82 @@ The field {\tt cores} is the number of parallel process that
   \item likewise, \verb+doc+ dependecies are only required when building the
     package documentation
   \end{itemize}
+  For example:
+\begin{verbatim}
+depends: [
+  "foo" {build}
+  "bar" {build & doc}
+  "baz" {build & >= "3.14"}
+]
+\end{verbatim}
 
-\item The {\tt conflicts} field contains package names and constraints
-  indicating that the current package can't coexist with some packages or some
-  specific versions. This can be useful to complete {\tt depopts} if the package
-  requires that another package, if present, respects some version constraint.
-  Note that this changed in \OPAM\ 1.2: previously these constraints could be
-  put in {\tt depopts}. You should now write \verb+depopts: "foo"+,
+\item {\tt depopts}, for ``optional dependencies'', is similar to {\tt depends}
+  in format, with some restrictions. It contains packages that are {\em used},
+  if present, by the package being defined, either during build or runtime, but
+  that are not {\em required} for its installation. The implementation uses this
+  information to define build order and trigger recompilations, but won't
+  automatically install {\em depopts} when installing your package.
+
+  The optional dependencies may have {\em dependency flags}, but they may not
+  specify version constraints nor formulas. {\tt depopts} can be combined with
+  {\tt conflicts} to add version constraints on the optional dependencies. Note
+  that this changed in \OPAM\ 1.2: previously these constraints could be put in
+  {\tt depopts}. You should now write \verb+depopts: "foo"+,
   \verb+conflicts: "foo" {< "2"}+ rather than \verb+depopts: "foo" {>= "2"}+
-  which meaning was not perfectly obvious.
+  which had a non-obvious meaning.
 
-\item The {\tt depexts} field is optional and contains tags describing the
-  external dependencies. It contains pairs of lists of the form
-  \verb+[ [predicates] [ext-packages] ]+. The predicates are tags that must be
-  specified to {\tt opam install}'s {\tt --external} flag to get the
-  corresponding external package set. Tags should normally be distribution or
-  architecture names (e.g. \verb+"debian"+, \verb+"x86"+, in which case the
-  \verb+ext-package+ list will correspond to {\tt apt-get} package names).
+\item {\tt conflicts} is a list of package names with optional version
+  constraints indicating that the current package can't coexist with some
+  packages or some specific versions.
 
-\item The {\tt messages} field (since version $1.0.1$) is used to
-  display an alternative message when prompting a solution implying
+\item {\tt depexts}, for ``external dependencies'', is a list that can be used
+  for describing the dependencies of the package towards software or packages
+  external to the OPAM ecosystem, for various system. It contains pairs of lists
+  of the form \verb+[ predicates ext-packages ]+. {\tt predicates} is used to
+  select the element of the list based on the current system: it is a list of
+  tags (strings) that can correspond to the OS, architecture or distribution.
+  The {\tt predicates} is used as a conjunction: the pair will only be selected
+  when {\em all} tags are active. The resulting {\tt ext-packages} should be
+  identifiers of packages recognised by the system's package manager.
+
+  There is currently no definite specification for the precise tags you should
+  use, but the closest thing is the {\em opam-depext} project
+  (\url{https://github.com/OCamlPro/opam-depext}). The {\tt depexts} information
+  can be retrieved through the {\tt opam list --external} command.
+
+\item {\tt messages} (since version $1.0.1$) is used to
+  display an additional (one-line) message when prompting a solution implying
   the given package. The typical use-case is to tell the user that
   some functionality will not be available as some optional
   dependencies are not installed.
 
-\item The {\tt post-messages} field (since version $1.1.0$) allows to print
+\item {\tt post-messages} (since version $1.1.0$) allows to print
   specific messages to the user after the end of installation. The special
   boolean variable \verb+failure+ is defined in the scope of the filter, and can
   be used to print messages in case there was an error (typically, a hint on how
   it can be resolved, or a link to an open issue). \verb+success+ is also
   defined as syntactic sugar for \verb+!failure+.
 
-\item The {\tt available} field (since version $1.1.0$) can be used to add
+\item {\tt available} field (since version $1.1.0$) can be used to add
   constraints on the OS and OCaml versions currently in use, using the built-in
   \verb+os+ and \verb+ocaml-version+ variables. In case the filter is not valid,
   the package is disabled. The {\tt os} and {\tt ocaml-version} fields are
   deprecated, please use {\tt available} instead in newly created packages.
 
-\item The {\tt libraries} and {\tt syntax} fields contain the
+\item {\tt libraries} and {\tt syntax} contain the
   libraries and syntax extensions defined by the package. See
   Section~\ref{section:config} for more details.
 
+\item {\tt features} is currently experimental and shouldn't be used on the main
+  package repository. It allows to define custom variables that better document
+  what {\em features} are available in a given package build. Each feature is
+  defined as an identifier, a documentation string, and a filter expression. The
+  filter expression can evaluate to either a boolean or a string, and the
+  defined identifier can be used as a variable in any filter (but recursive
+  features are not allowed and will return {\tt undefined}).
+
+  This is typically useful to pass appropriate flags to {\tt ./configure}
+  scripts, depending on what is installed.
 \end{itemize}
 
 \subsubsection{URL files: {\tt url}}
@@ -646,7 +706,7 @@ This command will:
   the optional overlay files located in
   \verb|$opam/packages/$NAME/$NAME.$VERSION/files|. Note: this files
   can be overwritten by anything present in
-  \verb|$opam/$SWITCH/overlay/$NAME.$VERSION/|.
+  \verb|$opam/$SWITCH/overlay/$NAME/|.
 
 \item Decompress the archive into \verb+$opam/$SWITCH/build/$NAME.$VERSION/+.
 
@@ -837,8 +897,8 @@ Switch-related meta-data are stored under \verb+$opam/$SWITCH/+:
 \item \verb+$opam/$SWITCH/pinned+ contains the list of pinned
   packages. The file format is described in \S\ref{file:pinned}.
 
-\item \verb+$opam/$SWITCH/overlay/$NAME.$VERSION/+ contains overlay
-  files for the version \verb+$VERSION+ of package \verb+$NAME+, for the
+\item \verb+$opam/$SWITCH/overlay/$NAME/+ contains overlay
+  files for package \verb+$NAME+, for the
   switch \verb+$SWITCH+. These possible overlay files are {\tt opam}, {\tt
     url}, {\tt descr} or the directory {\tt files/}. If one of this
   file (or directory) is present, the file (or directory) will be used
@@ -998,6 +1058,7 @@ in \S\ref{file:general} with the following restrictions:
 \begin{Verbatim}
 <file> :=
     ?lib:        [ <mv>+ ]
+    ?libexec:    [ <mv>+ ]
     ?bin:        [ <mv>+ ]
     ?sbin:       [ <mv>+ ]
     ?toplevel:   [ <mv>+ ]
@@ -1015,6 +1076,7 @@ in \S\ref{file:general} with the following restrictions:
 
 \begin{itemize}
 \item Files listed under {\tt lib} are copied into \verb+$opam/$SWITCH/lib/$NAME/+.
+\item Files listed under {\tt libexec} are copied into \verb+$opam/$SWITCH/lib/$NAME/+, but with execution permission.
 \item Files listed under {\tt bin} are copied into \verb+$opam/$SWITCH/bin/+.
 \item Files listed under {\tt sbin} are copied into \verb+$opam/$SWITCH/sbin/+.
 \item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
@@ -1046,10 +1108,16 @@ General remarks:
   fail in case a source filename is not available. To tell \OPAM\ a
   source filename might not be generated (because of byte/native
   constraints or because of optional dependencies) the source filename
-  should start with \verb+?+.
+  should be prefixed with \verb+?+.
 
 \item It is much cleaner if the underlying build-system can generate
   the right \verb+$NAME.install+ files, containing the existing files only.
+
+\item File permissions are set to $0644$, except for {\tt libexec}, {\tt bin},
+  {\tt sbin}, {\tt stublibs} for which it's $0755$. {\tt umask} may apply.
+
+\item These files can be used for installation outside of the scope of \OPAM
+  using the {\tt opam-installer} program shipped with \OPAM .
 
 \end{itemize}
 
@@ -1234,7 +1302,10 @@ An user can manage remote repositories, by writing:
 \label{subsection:variables}
 
 Variables can appear in some fields of {\tt opam} files (see \S\ref{file:opam}),
-and in substition files (see below). There are three kinds:
+and in substition files (see below). There are three kinds. Note that this list
+is often out of date, you should check \verb+opam config list+ for a complete
+overview.
+
 \begin{enumerate}
 \item Global variables, corresponding to the current configuration
   \begin{itemize}
@@ -1246,9 +1317,11 @@ and in substition files (see below). There are three kinds:
     or managed by OPAM
   \item \verb+ocaml-native+ whether native compilation is available ({\tt
       ocamlopt})
-  \item \verb+ocaml-tools-opt+ whether the {\tt .opt} variant of the
+  \item \verb+ocaml-native-tools+ whether the {\tt .opt} variant of the
     compilers are available ({\bf not} the {\tt ocamlopt} native compiler itself)
+  \item \verb+ocaml-native-dynlink+ whether native dynlink is available
   \item \verb+jobs+ the configured number of parallel jobs to run
+  \item \verb+arch+ the host architecture, as returned by \verb+uname -m+
   \end{itemize}
 \item Package-local variables. Variable \verb+$VAR+ of package \verb+$NAME+ is
   normally accessed using \verb+%{$NAME:$VAR}%+, which can be abbreviated as
@@ -1272,10 +1345,18 @@ and in substition files (see below). There are three kinds:
   \item \verb+hash+ the md5 of the opam archive of the package, if available.
     For cache mechanisms
   \end{itemize}
+  Boolean variables can also be written as \verb!foo+bar:var! as a shortcut to
+  \verb!foo:var & bar:var!.
 \item User-defined variables, as defined in {\tt *.config} files (see
   \S\ref{file:dotconfig}). This can also be used to override values of the above
   variables.
 \end{enumerate}
+
+As an experimental feature in \OPAM\ 1.2.1 ({\em i.e.} not to be used on the
+main package repository), converters of boolean variables to strings can be
+specified with the following syntax:
+\verb+"%{var?string-if-true:string-if-false-or-undefined}%"+. Either string may
+be empty.
 
 \subsection{Files}
 
