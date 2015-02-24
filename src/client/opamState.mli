@@ -88,6 +88,8 @@ type state = Types.t
     site. *)
 val load_state: ?save_cache:bool -> string -> state
 
+val dump_state: state -> out_channel -> unit
+
 (** Rebuild the state cache. *)
 val rebuild_state_cache: unit -> unit
 

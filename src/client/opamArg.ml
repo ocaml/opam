@@ -1044,8 +1044,11 @@ let config =
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
     | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe" in
+      let dump oc = OpamState.dump_state opam_state oc in 
+      (*
       let opam_univ = OpamState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
+      *)
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
