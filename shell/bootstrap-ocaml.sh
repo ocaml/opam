@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 
-V=ocaml-4.02.0
+V=ocaml-4.02.1
 URL=http://caml.inria.fr/pub/distrib/ocaml-4.02/${V}.tar.gz
 mkdir -p bootstrap
 cd bootstrap
