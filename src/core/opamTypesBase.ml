@@ -30,7 +30,7 @@ let download_file = download_map (fun f -> F f)
 let string_of_download = function
   | Up_to_date _ -> "already up-to-date"
   | Result _ -> "synchronized"
-  | Not_available _ -> "unavailable"
+  | Not_available _ -> OpamGlobals.colorise `red "unavailable"
 
 let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d

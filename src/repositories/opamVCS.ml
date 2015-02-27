@@ -103,7 +103,7 @@ module Make (VCS: VCS) = struct
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
-       | Not_available _ -> "unavailable");
+       | Not_available _ -> OpamGlobals.colorise `red "unavailable");
     Done (download_dir r)
 
   let pull_repo repo =
@@ -115,7 +115,7 @@ module Make (VCS: VCS) = struct
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
-       | Not_available _ -> "unavailable");
+       | Not_available _ -> OpamGlobals.colorise `red "unavailable");
     Done ()
 
   let pull_archive repo filename =
