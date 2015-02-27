@@ -590,9 +590,12 @@ let flock ?(read=false) file =
     if !OpamGlobals.safe_mode then 1 else !OpamGlobals.lock_retries in
   if not read && !OpamGlobals.safe_mode then
     OpamGlobals.error_and_exit "Write lock attempt in safe mode";
+  let open_flags, lock_op =
+    if read then [Unix.O_RDONLY], Unix.F_TRLOCK
+    else [Unix.O_RDWR], Unix.F_TLOCK
+  in
   let fd =
-    Unix.openfile file [Unix.O_CREAT; Unix.O_RDWR] 0o600 in
-  let lock_op = if read then Unix.F_TRLOCK else Unix.F_TLOCK in
+    Unix.openfile file (Unix.O_CREAT::open_flags) 0o666 in
   let rec loop attempt =
     try Unix.lockf fd lock_op 0
     with Unix.Unix_error (Unix.EAGAIN,_,_) ->
