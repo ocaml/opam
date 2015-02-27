@@ -2556,9 +2556,9 @@ let fetch_dev_package url srcdir nv =
   OpamProcess.Job.with_text text @@
   OpamRepository.pull_url kind nv srcdir checksum mirrors
   @@| function
-  | Not_available u ->
-    OpamGlobals.error "Upstream %s of %s is unavailable" u
-      (OpamPackage.to_string nv);
+  | Not_available _ ->
+    (* OpamGlobals.error "Upstream %s of %s is unavailable" u *)
+    (*   (OpamPackage.to_string nv); *)
     false
   | Up_to_date _    -> false
   | Result _        -> true

@@ -47,10 +47,16 @@ let call_rsync check args =
 let rsync ?(args=[]) src dst =
   log "rsync: src=%s dst=%s" src dst;
   let remote = String.contains src ':' in
+  let norm d = Filename.concat d "" in
   if not(remote || Sys.file_exists src) then
     Done (Not_available src)
   else if src = dst then
     Done (Up_to_date [])
+  else if OpamMisc.starts_with ~prefix:(norm src) (norm dst) ||
+          OpamMisc.starts_with ~prefix:(norm dst) (norm src)
+  then
+    (OpamGlobals.error "Cannot sync %s into %s: they overlap" src dst;
+     Done (Not_available src))
   else (
     OpamSystem.mkdir dst;
     call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))

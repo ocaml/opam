@@ -20,7 +20,6 @@ open OpamState.Types
 open OpamMisc.OP
 open OpamPackage.Set.Op
 open OpamFilename.OP
-open OpamProcess.Job.Op
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 let slog = OpamGlobals.slog
@@ -1653,9 +1652,13 @@ module API = struct
       let needs_reinstall = pin name ?version pin_option in
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamGlobals.msg "\n";
-      OpamProcess.Job.run
-        (OpamState.update_pinned_package t ?fixed_version:version name
-         @@| fun _ -> ());
+      let updated =
+        OpamProcess.Job.run
+          (OpamState.update_pinned_package t ?fixed_version:version name)
+      in
+      if not updated then
+        (ignore (unpin ~state:t [name]);
+         OpamGlobals.exit 1);
       OpamGlobals.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.root t.switch name in
       let empty_opam = OpamFile.OPAM.(
