@@ -25,18 +25,14 @@ module Dir = struct
   include OpamMisc.Base
 
   let of_string dirname =
-    if (String.length dirname >= 1 && dirname.[0] = '~') then
-      let home = OpamMisc.getenv "HOME" in
-      match dirname with
-      | "~" -> home
-      | _   ->
-        let prefix = Filename.concat "~" "" in
-        let suffix = OpamMisc.remove_prefix ~prefix dirname in
-        Filename.concat home suffix
-    else if Filename.is_relative dirname then
-      OpamSystem.real_path dirname
-    else
-      dirname
+    let dirname =
+      if dirname = "~" then OpamGlobals.home
+      else if OpamMisc.starts_with ~prefix:("~"^Filename.dir_sep) dirname then
+        Filename.concat OpamGlobals.home
+          (OpamMisc.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
+      else dirname
+    in
+    OpamSystem.real_path dirname
 
   let to_string dirname = dirname
 
