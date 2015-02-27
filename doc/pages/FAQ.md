@@ -204,6 +204,22 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
 
 ---
 
+#### 🐫  When trying to install a new package, OPAM wants to remove or downgrade packages that I have installed. How to know why ?
+
+There is likely a conflict between them or their dependencies and what you are
+requesting, here is how to find out. We'll suppose you were trying to install
+`foo` and `bar` got removed:
+
+* `opam install foo bar`, if not possible, will tell you why.
+* The above may find a solution by using older version of the packages, in that
+  case try and force the latest versions thusly: `opam install foo.2.0 bar.1.1`
+  (you can also use constraints like `'foo>=2.0'`).
+* Like in previous question, make sure you have
+  [aspcud](http://potassco.sourceforge.net/) installed, the proposed solutions
+  may not be as accurate without it.
+
+---
+
 #### 🐫  Where do I report Bugs, Issues and Feature Requests?
 
 - Bug reports and feature requests for the OPAM tool should be reported on
