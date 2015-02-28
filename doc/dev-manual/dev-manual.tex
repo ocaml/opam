@@ -211,12 +211,14 @@ the following restrictions:
     repositories: [ STRING+ ]
     switch: STRING
     ?jobs: INT
-    ?solver: STRING
+    ?solver: <single-command>
     ?solver-criteria: STRING
     ?solver-upgrade-criteria: STRING
     ?solver-fixup-criteria: STRING
-    ?download-command: [ STRING+ ]
+    ?download-command: <single-command>
     ?download-jobs: INT
+
+<single-command> := [ (<argument> ?{ <filter> })+ ]
 \end{Verbatim}
 
 \begin{itemize}
@@ -227,8 +229,10 @@ the following restrictions:
 \item {\tt switch} is the name of the currently active \OPAM\ switch.
 \item {\tt jobs} is the maximum number of build processes that can be run
   simultaneously.
-\item {\tt solver} is the external solver to call. \verb+aspcud+ and
-  \verb+packup+ format arguments are currently supported.
+\item {\tt solver} is the external solver to call. The value may be either the
+  single identifiers \verb+aspcud+ or \verb+packup+, which have built-in
+  support, or a command. The string variables \verb+input+, \verb+output+ and
+  \verb+criteria+ (only) are defined when evaluating this field.
 \item {\tt solver-criteria}, {\tt solver-upgrade-criteria} and {\tt
     solver-fixup-criteria} are the optimisation criteria provided to the solver
   resp. in the default case (install requested packages at their latest version,
@@ -236,7 +240,10 @@ the following restrictions:
   outdated packages) and for fixup (resolve dependencies while minimising
   changes).
 \item {\tt download-command} will be called to fetch remote files over http(s)
-  or ftp.
+  or ftp. The value may be either the single identifiers \verb+curl+ or
+  \verb+wget+, which have built-in support, or a custom command. Only the
+  special variables \verb+url+, \verb+out+, \verb+retries+ (strings) and
+  \verb+compress+ (bool) can be used in this field.
 \item {\tt download-jobs} is the maximum number of simultaneous downloads (all
   remote hosts included)
 \end{itemize}

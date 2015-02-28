@@ -221,9 +221,9 @@ let help_sections = [
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
-      a custom command where arguments $(b,$url) and $(b,$out) will be \
-      replaced. Overrides the 'download-command' value from the main config \
-      file.";
+      a custom command where variables $(b,%{url}%), $(b,%{out}%), \
+      $(b,%{retries}%) and $(b,%{compress}%) will be replaced. Overrides the \
+      'download-command' value from the main config file.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
       acquiring its lock and fails. <= 0 means infinite wait.";
@@ -601,7 +601,9 @@ let global_options =
   let external_solver =
     mk_opt ~section ["solver"] "CMD"
       ("Specify the name of the external dependency $(i,solver). \
-        The default value is "^OpamGlobals.default_external_solver)
+        The default value is "^OpamGlobals.default_external_solver^
+       ". Either 'aspcud', 'packup' or a custom command that may contain \
+        the variables %{input}%, %{output}% and %{criteria}%")
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ~section ["criteria"] "CRITERIA"
