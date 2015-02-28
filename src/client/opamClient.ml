@@ -1224,10 +1224,10 @@ module API = struct
                     install the %s command on your system."
                    msg (OpamGlobals.colorise `bold cmd))
                unavailable_repos);
-        if not (check_external_dep (OpamGlobals.get_external_solver())) then
+        if not (check_external_dep (OpamGlobals.default_external_solver)) then
           OpamGlobals.warning
             "Recommended external solver %s not found."
-            (OpamGlobals.colorise `bold (OpamGlobals.get_external_solver ()));
+            (OpamGlobals.colorise `bold (OpamGlobals.default_external_solver));
         let advised_deps = [!OpamGlobals.makecmd(); "m4"; "cc"] in
         (match List.filter (not @* check_external_dep) advised_deps with
          | [] -> ()
@@ -1241,7 +1241,10 @@ module API = struct
            check_external_dep OpamGlobals.curl_command ||
            check_external_dep "wget" ||
            (match !OpamGlobals.download_tool with
-            | Some (`Custom (cmd,_)) -> check_external_dep cmd
+            | Some (`Custom f) ->
+              (match f ~url:"" ~out:"-" ~retry:1 ~compress:false with
+               | cmd::_ -> check_external_dep cmd
+               | [] -> false)
             | _ -> false);
            "patch", check_external_dep "patch";
            "tar", check_external_dep "tar";
@@ -1268,7 +1271,7 @@ module API = struct
         (* Create ~/.opam/config *)
         let config =
           OpamFile.Config.create switch [repo.repo_name] jobs
-            None OpamGlobals.default_dl_jobs
+            OpamGlobals.default_dl_jobs
         in
         OpamFile.Config.write config_f config;
 

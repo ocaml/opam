@@ -238,6 +238,10 @@ val parse_filter: value list -> filter
 (** Creation *)
 val make_filter: filter -> value list
 
+(** Unfiltered argument list *)
+val parse_simple_command: value -> simple_arg list
+val make_simple_command: simple_arg list -> value
+
 (** Parse a command *)
 val parse_command: value -> command
 

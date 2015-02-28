@@ -716,11 +716,15 @@ let download_command =
         OpamMisc.fatal e;
         internal_error "curl: code %s while downloading %s" code src
   in
-  let custom (cmd,argsf) ~compress:_ dir src =
+  let custom dl_cmd ~compress dir src =
     let dst = Filename.basename src in
-    make_command ~dir cmd (argsf src dst) @@> fun r ->
-    raise_on_process_error r;
-    Done ()
+    match dl_cmd ~url:src ~out:dst ~retry:OpamGlobals.download_retry ~compress
+    with
+    | cmd::args ->
+      make_command ~dir cmd args @@> fun r ->
+      raise_on_process_error r;
+      Done ()
+    | [] -> internal_error "Empty custom download command"
   in
   lazy (
     match choose_download_tool () with

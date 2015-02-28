@@ -283,3 +283,10 @@ let string_of_cause to_string =
 let map_success f = function
   | Success x -> Success (f x)
   | Conflicts c -> Conflicts c
+
+let simple_command_of_string s =
+  List.map (fun arg ->
+      let len = String.length arg in
+      if len > 0 && arg.[0] = '$' then CIdent (String.sub arg 1 (len-1))
+      else CString arg)
+    (OpamMisc.split s ' ')

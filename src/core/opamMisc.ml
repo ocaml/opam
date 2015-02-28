@@ -382,10 +382,10 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Re_str.split (Re_str.regexp (Printf.sprintf "[%c]" c)) s
+  Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s
 
 let split_delim s c =
-  Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
+  Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]+" c)) s
 
 let visual_length_substring s ofs len =
   let rec aux s i =

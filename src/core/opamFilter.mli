@@ -93,3 +93,6 @@ val expand_interpolations_in_file: env -> basename -> unit
 (** Processes filters evaluation in a command list: parameter expansion and
     conditional filtering *)
 val commands: env -> command list -> string list list
+
+(** Process a simpler command, without filters *)
+val simple_command: env -> simple_arg list -> string list

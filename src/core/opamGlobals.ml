@@ -157,59 +157,36 @@ let get_solver_criteria action =
 
 let default_external_solver = "aspcud"
 
-let external_solver = ref(
-  try Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER"))
-  with Not_found -> None)
+let env_external_solver =
+  try ref (Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER")))
+  with Not_found -> ref None
+
+let external_solver_ref = ref None
 
 let use_external_solver =
   ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER") ||
-            !external_solver = Some ""))
+            !env_external_solver = Some ""))
 
-let get_external_solver () =
-  OpamMisc.Option.default default_external_solver !external_solver
+let external_solver ~input ~output ~criteria = match !external_solver_ref with
+  | Some f -> f ~input ~output ~criteria
+  | None -> raise Not_found
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
 
-type download_tool = [
-  | `Wget
-  | `Curl
-  | `Custom of string * (string -> string -> string list)
-    (** command * (fun src dst -> args list) *)
-]
-
-let download_tool_of_string = function
-  | "curl" -> Some `Curl
-  | "wget" -> Some `Wget
-  | s ->
-    match OpamMisc.split s ' ' with
-    | cmd::args when List.mem "$url" args ->
-      Some (`Custom (cmd, (fun src dst ->
-          List.map (function
-              | "$url" -> src
-              | "$out" -> dst
-              | s -> s)
-            args)))
-    | _ ->
-      prerr_endline
-        (OpamMisc.reformat ~indent:10
-           (Printf.sprintf
-              "[WARNING] Invalid download command %S, it should be a \
-               command-line containing the argument $url, and optionally \
-               $dst"
-              s));
-      None
-
-let string_of_download_tool = function
-  | `Curl -> "curl"
-  | `Wget -> "wget"
-  | `Custom (cmd, argsf) -> String.concat " " (cmd::argsf "$url" "$out")
-
-let download_tool =
-  try ref (download_tool_of_string (OpamMisc.getenv "OPAMFETCH"))
+let download_tool_env =
+  try ref (Some (OpamMisc.getenv "OPAMFETCH"))
   with Not_found -> ref None
 
 let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
+
+type download_tool = [
+  | `Wget
+  | `Curl
+  | `Custom of
+      url:string -> out:string -> retry:int -> compress:bool -> string list
+]
+let download_tool = ref None
 
 let search_files = ref ["findlib"]
 

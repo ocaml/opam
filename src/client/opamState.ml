@@ -1383,6 +1383,8 @@ let upgrade_to_1_1_hook =
 let upgrade_to_1_2_hook =
   ref (fun () -> assert false)
 
+(* Loads the global config file and update some global references in
+   OpamGlobals *)
 let load_config root =
   let config_p = OpamPath.config root in
   let config =
@@ -1406,10 +1408,35 @@ let load_config root =
       config in
 
   (* Set some globals *)
-  OpamGlobals.external_solver :=
-    OpamMisc.Option.Op.(
-      !OpamGlobals.external_solver ++
-      OpamFile.Config.solver config);
+  let external_solver_command =
+    let cmd = match !OpamGlobals.env_external_solver with
+      | Some ("apsucd" | "packup" as s) -> [CIdent s]
+      | Some s -> simple_command_of_string s
+      | None -> match OpamFile.Config.solver config with
+        | Some f -> f
+        | None -> simple_command_of_string OpamGlobals.default_external_solver
+    in
+    let cmd = match cmd with
+      | [CIdent "aspcud"] ->
+        [CString "aspcud"; CIdent "input"; CIdent "output"; CIdent "criteria"]
+      | [CIdent "packup"] ->
+        [CString "packup"; CIdent "input"; CIdent "output";
+         CString "-u"; CIdent "criteria"]
+      | cmd -> cmd
+    in
+    fun ~input ~output ~criteria ->
+      OpamFilter.simple_command (fun v ->
+          if not (is_global_conf v) then None else
+          match OpamVariable.to_string (OpamVariable.Full.variable v) with
+          | "input" -> Some (S input)
+          | "output" -> Some (S output)
+          | "criteria" -> Some (S criteria)
+          | _ -> None)
+        cmd
+  in
+
+  OpamGlobals.external_solver_ref := Some external_solver_command;
+
   let solver_prefs =
     let config_crit =
       !OpamGlobals.solver_preferences @ OpamFile.Config.criteria config in
@@ -1424,10 +1451,31 @@ let load_config root =
   in
   OpamGlobals.solver_preferences := solver_prefs;
 
-  OpamGlobals.download_tool :=
-    OpamMisc.Option.Op.(
-      !OpamGlobals.download_tool ++
-      OpamFile.Config.dl_tool config);
+  let dl_tool =
+    match !OpamGlobals.download_tool_env with
+    | Some ("curl" | "wget" as s) -> Some [CIdent s]
+    | Some s -> Some (simple_command_of_string s)
+    | None -> OpamFile.Config.dl_tool config
+  in
+  let dl_command cmd =
+    fun ~url ~out ~retry ~compress ->
+      OpamFilter.simple_command (fun v ->
+          if not (is_global_conf v) then None else
+          match OpamVariable.to_string (OpamVariable.Full.variable v) with
+          | "url" -> Some (S url)
+          | "out" -> Some (S out)
+          | "retry" -> Some (S (string_of_int retry))
+          | "compress" -> Some (B compress)
+          | _ -> None)
+        cmd
+  in
+  let download_tool = match dl_tool with
+    | Some [CIdent "curl"] -> Some `Curl
+    | Some [CIdent "wget"] -> Some `Wget
+    | Some cmd -> Some (`Custom (dl_command cmd))
+    | None -> None
+  in
+  OpamGlobals.download_tool := download_tool;
 
   config
 

@@ -665,6 +665,8 @@ let make_simple_arg = function
   | CString s -> make_string s
   | CIdent s  -> make_ident s
 
+let make_simple_command = make_list make_simple_arg
+
 let make_arg =
   make_option make_simple_arg make_filter
 
@@ -685,6 +687,8 @@ let parse_simple_arg =
     "ident" , (parse_ident  @> fun x -> CIdent x);
     "string", (parse_string @> fun x -> CString x);
   ]
+
+let parse_simple_command = parse_list parse_simple_arg
 
 let parse_arg =
   parse_option parse_simple_arg parse_filter

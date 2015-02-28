@@ -72,19 +72,22 @@ val solver_preferences : (solver_criteria * string) list ref
 (** Get the currently configured solver criteria as a string *)
 val get_solver_criteria : [ `Default | `Upgrade | `Fixup ] -> string
 
+val env_external_solver : string option ref
 val default_external_solver : string
-val external_solver : string option ref
-val get_external_solver : unit -> string
+
+val external_solver_ref :
+  (input:string -> output:string -> criteria:string -> string list) option ref
+val external_solver : input:string -> output:string -> criteria:string -> string list
 
 type download_tool = [
   | `Wget
   | `Curl
-  | `Custom of string * (string -> string -> string list)
-    (** command * (fun src dst -> args list) *)
+  | `Custom of
+      url:string -> out:string -> retry:int -> compress:bool -> string list
 ]
+
+val download_tool_env: string option ref
 val download_tool : download_tool option ref
-val string_of_download_tool: download_tool -> string
-val download_tool_of_string: string -> download_tool option
 val curl_command : string
 
 val default_repository_name : string

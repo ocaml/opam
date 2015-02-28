@@ -130,11 +130,11 @@ let apply_global_options o =
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
-  OpamGlobals.external_solver :=
-    OpamMisc.Option.Op.(o.external_solver ++ !OpamGlobals.external_solver);
+  OpamGlobals.env_external_solver :=
+    OpamMisc.Option.Op.(o.external_solver ++ !OpamGlobals.env_external_solver);
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.use_internal_solver &&
-    !OpamGlobals.external_solver <> Some "";
+    !OpamGlobals.env_external_solver <> Some "";
   OpamGlobals.cudf_file :=
     OpamMisc.Option.Op.(o.cudf_file ++ !OpamGlobals.cudf_file);
   OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
@@ -1055,7 +1055,9 @@ let config =
       print "os" "%s" (OpamGlobals.os_string ());
       print "external-solver" "%s"
         (if OpamCudf.external_solver_available () then
-           OpamGlobals.get_external_solver ()
+           String.concat " "
+             (OpamGlobals.external_solver
+                ~input:"$in" ~output:"$out" ~criteria:"$criteria")
          else "no");
       print "criteria" "%s"
         (try List.assoc `Default !OpamGlobals.solver_preferences
