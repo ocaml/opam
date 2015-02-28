@@ -27,8 +27,11 @@ let check ?(warn=true) var = ref (
       | "1" | "yes" | "true" -> true
       | v ->
         if warn then
-          Printf.eprintf "[WARNING] Invalid value %S for env variable OPAM%s, \
-                          assumed true.\n" v var;
+          prerr_endline
+            (OpamMisc.reformat ~indent:10
+               (Printf.sprintf
+                  "[WARNING] Invalid value %S for env variable OPAM%s, assumed \
+                   true." v var));
         true
     with Not_found -> false
   )
@@ -101,8 +104,6 @@ let is_self_upgrade =
   try OpamMisc.getenv "OPAMNOSELFUPGRADE" = self_upgrade_bootstrapping_value
   with Not_found -> false
 
-let curl_command = try Some (OpamMisc.getenv "OPAMCURL") with Not_found -> None
-
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
     with Not_found | Failure _ -> None
@@ -169,6 +170,46 @@ let get_external_solver () =
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
+
+type download_tool = [
+  | `Wget
+  | `Curl
+  | `Custom of string * (string -> string -> string list)
+    (** command * (fun src dst -> args list) *)
+]
+
+let download_tool_of_string = function
+  | "curl" -> Some `Curl
+  | "wget" -> Some `Wget
+  | s ->
+    match OpamMisc.split s ' ' with
+    | cmd::args when List.mem "$url" args ->
+      Some (`Custom (cmd, (fun src dst ->
+          List.map (function
+              | "$url" -> src
+              | "$out" -> dst
+              | s -> s)
+            args)))
+    | _ ->
+      prerr_endline
+        (OpamMisc.reformat ~indent:10
+           (Printf.sprintf
+              "[WARNING] Invalid download command %S, it should be a \
+               command-line containing the argument $url, and optionally \
+               $dst"
+              s));
+      None
+
+let string_of_download_tool = function
+  | `Curl -> "curl"
+  | `Wget -> "wget"
+  | `Custom (cmd, argsf) -> String.concat " " (cmd::argsf "$url" "$out")
+
+let download_tool =
+  try ref (download_tool_of_string (OpamMisc.getenv "OPAMFETCH"))
+  with Not_found -> ref None
+
+let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
 
 let search_files = ref ["findlib"]
 

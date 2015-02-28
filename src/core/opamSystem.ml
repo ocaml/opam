@@ -672,6 +672,20 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
+let choose_download_tool () =
+  match !OpamGlobals.download_tool with
+  | Some t -> t
+  | None ->
+    if OpamGlobals.os () = OpamGlobals.Darwin && command_exists "wget"
+    then `Wget
+    else if command_exists OpamGlobals.curl_command then `Curl
+    else if command_exists "wget" then `Wget
+    else
+      OpamGlobals.error_and_exit
+        "Could not find a suitable download command. Please make sure you have \
+         either \"curl\" or \"wget\" installed, or specify a custom command \
+         through variable OPAMFETCH."
+
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
   let wget ~compress:_ dir src =
@@ -702,16 +716,17 @@ let download_command =
         OpamMisc.fatal e;
         internal_error "curl: code %s while downloading %s" code src
   in
+  let custom (cmd,argsf) ~compress:_ dir src =
+    let dst = Filename.basename src in
+    make_command ~dir cmd (argsf src dst) @@> fun r ->
+    raise_on_process_error r;
+    Done ()
+  in
   lazy (
-    match OpamGlobals.curl_command with
-    | Some cmd -> curl cmd
-    | None ->
-      if command_exists "curl" then
-        curl "curl"
-      else if command_exists "wget" then
-        wget
-      else
-        OpamGlobals.error_and_exit "Cannot find curl nor wget."
+    match choose_download_tool () with
+    | `Wget -> wget
+    | `Curl -> curl OpamGlobals.curl_command
+    | `Custom cust -> custom cust
   )
 
 let really_download ~overwrite ?(compress=false) ~src ~dst =

@@ -1238,9 +1238,11 @@ module API = struct
              (OpamMisc.itemize (OpamGlobals.colorise `bold) missing));
         let required_deps =
           ["curl or wget",
-           check_external_dep
-             (OpamMisc.Option.default "curl" OpamGlobals.curl_command)
-           || check_external_dep "wget";
+           check_external_dep OpamGlobals.curl_command ||
+           check_external_dep "wget" ||
+           (match !OpamGlobals.download_tool with
+            | Some (`Custom (cmd,_)) -> check_external_dep cmd
+            | _ -> false);
            "patch", check_external_dep "patch";
            "tar", check_external_dep "tar";
            "unzip", check_external_dep "unzip" ]
@@ -1266,7 +1268,7 @@ module API = struct
         (* Create ~/.opam/config *)
         let config =
           OpamFile.Config.create switch [repo.repo_name] jobs
-            OpamGlobals.default_dl_jobs
+            None OpamGlobals.default_dl_jobs
         in
         OpamFile.Config.write config_f config;
 

@@ -1383,13 +1383,7 @@ let upgrade_to_1_1_hook =
 let upgrade_to_1_2_hook =
   ref (fun () -> assert false)
 
-let load_state ?(save_cache=true) call_site =
-  log "LOAD-STATE(%s)" call_site;
-  let chrono = OpamGlobals.timer () in
-  !upgrade_to_1_1_hook ();
-
-  let root = OpamPath.root () in
-
+let load_config root =
   let config_p = OpamPath.config root in
   let config =
     let config = OpamFile.Config.read config_p in
@@ -1411,6 +1405,7 @@ let load_state ?(save_cache=true) call_site =
     ) else
       config in
 
+  (* Set some globals *)
   OpamGlobals.external_solver :=
     OpamMisc.Option.Op.(
       !OpamGlobals.external_solver ++
@@ -1428,6 +1423,22 @@ let load_state ?(save_cache=true) call_site =
     [f `Default; f `Upgrade; f `Fixup]
   in
   OpamGlobals.solver_preferences := solver_prefs;
+
+  OpamGlobals.download_tool :=
+    OpamMisc.Option.Op.(
+      !OpamGlobals.download_tool ++
+      OpamFile.Config.dl_tool config);
+
+  config
+
+let load_state ?(save_cache=true) call_site =
+  log "LOAD-STATE(%s)" call_site;
+  let chrono = OpamGlobals.timer () in
+  !upgrade_to_1_1_hook ();
+
+  let root = OpamPath.root () in
+
+  let config = load_config root in
 
   let opams =
     let file = OpamPath.state_cache root in
@@ -1470,7 +1481,7 @@ let load_state ?(save_cache=true) call_site =
             (OpamSwitch.to_string switch)
             (OpamSwitch.to_string new_switch);
           let config = OpamFile.Config.with_switch config new_switch in
-          OpamFile.Config.write config_p config;
+          OpamFile.Config.write (OpamPath.config root) config;
           new_switch, new_compiler;
         ) else
           OpamGlobals.error_and_exit

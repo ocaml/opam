@@ -59,6 +59,7 @@ module Config: sig
     ?criteria:(OpamTypes.solver_criteria * string) list ->
     ?solver:string ->
     int ->
+    OpamGlobals.download_tool option ->
     int ->
     t
 
@@ -86,6 +87,8 @@ module Config: sig
 
   (** Return the number of jobs *)
   val jobs: t -> int
+
+  val dl_tool: t -> OpamGlobals.download_tool option
 
   (** Return the number of download jobs *)
   val dl_jobs: t -> int

@@ -215,11 +215,15 @@ let help_sections = [
   `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
       The default value is "^OpamGlobals.default_preferences `Default^". \
       See also option --criteria");
-  `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
-      command-line utility to download files.";
+  `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
+      $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
+  `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
+      a custom command where arguments $(b,$url) and $(b,$out) will be \
+      replaced. Overrides the 'download-command' value from the main config \
+      file.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
       acquiring its lock and fails. <= 0 means infinite wait.";
