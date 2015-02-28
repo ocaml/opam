@@ -95,4 +95,4 @@ val expand_interpolations_in_file: env -> basename -> unit
 val commands: env -> command list -> string list list
 
 (** Process a simpler command, without filters *)
-val simple_command: env -> simple_arg list -> string list
+val single_command: env -> arg list -> string list

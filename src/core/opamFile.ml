@@ -730,10 +730,10 @@ module X = struct
       repositories  : repository_name list ;
       switch        : switch;
       jobs          : int;
-      dl_tool       : simple_arg list option;
+      dl_tool       : arg list option;
       dl_jobs       : int;
       criteria      : (solver_criteria * string) list;
-      solver        : simple_arg list option;
+      solver        : arg list option;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -845,7 +845,7 @@ module X = struct
       let dl_tool =
         try
           OpamFormat.assoc_option s.file_contents s_dl_tool
-            OpamFormat.parse_simple_command
+            OpamFormat.parse_single_command
         with OpamFormat.Bad_format _ when permissive -> None
       in
 
@@ -875,7 +875,7 @@ module X = struct
       let solver =
         try
           OpamFormat.assoc_option s.file_contents s_solver
-            OpamFormat.parse_simple_command
+            OpamFormat.parse_single_command
         with OpamFormat.Bad_format _ when permissive -> None
       in
       { opam_version; repositories; switch; jobs; dl_tool; dl_jobs;
@@ -897,13 +897,13 @@ module X = struct
         | None -> []
         | Some s ->
           [OpamFormat.make_variable
-             (s_solver, OpamFormat.make_simple_command s)]
+             (s_solver, OpamFormat.make_single_command s)]
       in
       let download_tool = match t.dl_tool with
         | None -> []
         | Some dlt ->
           [OpamFormat.make_variable
-             (s_dl_tool, OpamFormat.make_simple_command dlt)]
+             (s_dl_tool, OpamFormat.make_single_command dlt)]
       in
       let s = {
         file_format   = OpamVersion.current;

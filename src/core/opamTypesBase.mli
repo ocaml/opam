@@ -115,7 +115,3 @@ val filter_deps: ?build:bool -> ?test:bool -> ?doc:bool -> ext_formula -> formul
 
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result
-
-(** Splits string and expands parameters written '$arg' to idents to build a
-    simple command *)
-val simple_command_of_string: string -> simple_arg list

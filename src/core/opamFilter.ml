@@ -254,8 +254,4 @@ let command env (l, f) =
 
 let commands env l = OpamMisc.filter_map (command env) l
 
-let simple_command env l =
-  List.map (function
-      | CString s -> expand_string env s
-      | CIdent i -> value_string (resolve_ident env (filter_ident_of_string i)))
-    l
+let single_command env l = OpamMisc.filter_map (arguments env) l
