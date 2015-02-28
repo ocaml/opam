@@ -210,17 +210,43 @@ the following restrictions:
     opam-version: "1.2"
     repositories: [ STRING+ ]
     switch: STRING
-    cores: INT
+    ?jobs: INT
+    ?solver: <single-command>
+    ?solver-criteria: STRING
+    ?solver-upgrade-criteria: STRING
+    ?solver-fixup-criteria: STRING
+    ?download-command: <single-command>
+    ?download-jobs: INT
+
+<single-command> := [ (<argument> ?{ <filter> })+ ]
 \end{Verbatim}
 
-The field {\tt opam-version} indicates the current \OPAM\ format.
-
-The field {\tt repositories} contains the list of \OPAM\ repositories.
-
-The field {\tt switch} corresponds to the current compiler instance.
-
-The field {\tt cores} is the number of parallel process that
-\OPAM\ will use when trying to build the packages.
+\begin{itemize}
+\item {\tt opam-version} indicates the current \OPAM\ repository format --
+  normally corresponding to the \OPAM\ minor version (\verb+MAJOR.MINOR+)
+\item {\tt repositories} contains the names of the currently configured
+  repositories.
+\item {\tt switch} is the name of the currently active \OPAM\ switch.
+\item {\tt jobs} is the maximum number of build processes that can be run
+  simultaneously.
+\item {\tt solver} is the external solver to call. The value may be either the
+  single identifiers \verb+aspcud+ or \verb+packup+, which have built-in
+  support, or a command. The string variables \verb+input+, \verb+output+ and
+  \verb+criteria+ (only) are defined when evaluating this field.
+\item {\tt solver-criteria}, {\tt solver-upgrade-criteria} and {\tt
+    solver-fixup-criteria} are the optimisation criteria provided to the solver
+  resp. in the default case (install requested packages at their latest version,
+  minimising the impact on other packages), for global upgrades (minimise
+  outdated packages) and for fixup (resolve dependencies while minimising
+  changes).
+\item {\tt download-command} will be called to fetch remote files over http(s)
+  or ftp. The value may be either the single identifiers \verb+curl+ or
+  \verb+wget+, which have built-in support, or a custom command. Only the
+  special variables \verb+url+, \verb+out+, \verb+retries+ (strings) and
+  \verb+compress+ (bool) can be used in this field.
+\item {\tt download-jobs} is the maximum number of simultaneous downloads (all
+  remote hosts included)
+\end{itemize}
 
 \subsubsection{Package Specification files: {\tt opam}}
 \label{file:opam}

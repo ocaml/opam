@@ -730,9 +730,10 @@ module X = struct
       repositories  : repository_name list ;
       switch        : switch;
       jobs          : int;
+      dl_tool       : arg list option;
       dl_jobs       : int;
       criteria      : (solver_criteria * string) list;
-      solver        : string option;
+      solver        : arg list option;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -745,13 +746,14 @@ module X = struct
     let repositories t = t.repositories
     let switch t = t.switch
     let jobs t = t.jobs
+    let dl_tool t = t.dl_tool
     let dl_jobs t = t.dl_jobs
     let criteria t = t.criteria
     let solver t = t.solver
 
-    let create switch repositories ?(criteria=[]) ?solver jobs dl_jobs =
+    let create switch repositories ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
       { opam_version = OpamVersion.current;
-        repositories ; switch ; jobs ; dl_jobs ;
+        repositories ; switch ; jobs ; dl_tool = download_tool; dl_jobs ;
         criteria ; solver }
 
     let empty = {
@@ -759,6 +761,7 @@ module X = struct
       repositories = [];
       switch = OpamSwitch.of_string "<empty>";
       jobs = OpamGlobals.default_jobs;
+      dl_tool = None;
       dl_jobs = OpamGlobals.default_dl_jobs;
       criteria = [];
       solver = None;
@@ -771,6 +774,7 @@ module X = struct
     let s_switch2 = "ocaml-version"
 
     let s_jobs = "jobs"
+    let s_dl_tool = "download-command"
     let s_dl_jobs = "download-jobs"
     let s_criteria = "solver-criteria"
     let s_upgrade_criteria = "solver-upgrade-criteria"
@@ -787,6 +791,7 @@ module X = struct
       s_repositories;
       s_switch;
       s_jobs;
+      s_dl_tool;
       s_dl_jobs;
       s_criteria;
       s_upgrade_criteria;
@@ -821,21 +826,27 @@ module X = struct
       let switch1 = mk_switch s_switch1 in
       let switch2 = mk_switch s_switch2 in
       let switch =
-        match switch, switch1, switch2 with
-        | Some v, _     , _
-        | _     , Some v, _
-        | _     , _     , Some v -> v
-        | None  , None  , None   -> OpamGlobals.error_and_exit
-                                      "No current switch defined." in
+        match OpamMisc.Option.Op.(switch ++ switch1 ++ switch2) with
+        | Some v -> v
+        | None -> OpamGlobals.error_and_exit
+                    "No current switch defined in %s."
+                    (OpamFilename.to_string filename) in
       let jobs =
         try
-        let mk str = OpamFormat.assoc_option s.file_contents str OpamFormat.parse_int in
-        match mk s_jobs, mk s_cores with
-        | Some i, _      -> i
-        | _     , Some i -> i
-        | _              -> 1
+        let mk str =
+          OpamFormat.assoc_option s.file_contents str OpamFormat.parse_int in
+        match OpamMisc.Option.Op.(mk s_jobs ++ mk s_cores) with
+        | Some i -> i
+        | None -> OpamGlobals.default_jobs
         with OpamFormat.Bad_format _ when permissive ->
           OpamGlobals.default_jobs
+      in
+
+      let dl_tool =
+        try
+          OpamFormat.assoc_option s.file_contents s_dl_tool
+            OpamFormat.parse_single_command
+        with OpamFormat.Bad_format _ when permissive -> None
       in
 
       let dl_jobs =
@@ -862,9 +873,12 @@ module X = struct
       in
 
       let solver =
-        OpamFormat.assoc_option s.file_contents s_solver OpamFormat.parse_string
+        try
+          OpamFormat.assoc_option s.file_contents s_solver
+            OpamFormat.parse_single_command
+        with OpamFormat.Bad_format _ when permissive -> None
       in
-      { opam_version; repositories; switch; jobs; dl_jobs;
+      { opam_version; repositories; switch; jobs; dl_tool; dl_jobs;
         criteria; solver }
 
     let to_string filename t =
@@ -882,7 +896,14 @@ module X = struct
       let solver = match t.solver with
         | None -> []
         | Some s ->
-          [OpamFormat.make_variable (s_solver, OpamFormat.make_string s)]
+          [OpamFormat.make_variable
+             (s_solver, OpamFormat.make_single_command s)]
+      in
+      let download_tool = match t.dl_tool with
+        | None -> []
+        | Some dlt ->
+          [OpamFormat.make_variable
+             (s_dl_tool, OpamFormat.make_single_command dlt)]
       in
       let s = {
         file_format   = OpamVersion.current;
@@ -899,6 +920,7 @@ module X = struct
           OpamFormat.make_variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
         ] @ criteria
           @ solver
+          @ download_tool
       } in
       Syntax.to_string s
   end

@@ -253,3 +253,5 @@ let command env (l, f) =
     None
 
 let commands env l = OpamMisc.filter_map (command env) l
+
+let single_command env l = OpamMisc.filter_map (arguments env) l

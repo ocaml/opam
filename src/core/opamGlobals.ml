@@ -27,8 +27,11 @@ let check ?(warn=true) var = ref (
       | "1" | "yes" | "true" -> true
       | v ->
         if warn then
-          Printf.eprintf "[WARNING] Invalid value %S for env variable OPAM%s, \
-                          assumed true.\n" v var;
+          prerr_endline
+            (OpamMisc.reformat ~indent:10
+               (Printf.sprintf
+                  "[WARNING] Invalid value %S for env variable OPAM%s, assumed \
+                   true." v var));
         true
     with Not_found -> false
   )
@@ -101,8 +104,6 @@ let is_self_upgrade =
   try OpamMisc.getenv "OPAMNOSELFUPGRADE" = self_upgrade_bootstrapping_value
   with Not_found -> false
 
-let curl_command = try Some (OpamMisc.getenv "OPAMCURL") with Not_found -> None
-
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
     with Not_found | Failure _ -> None
@@ -156,19 +157,36 @@ let get_solver_criteria action =
 
 let default_external_solver = "aspcud"
 
-let external_solver = ref(
-  try Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER"))
-  with Not_found -> None)
+let env_external_solver =
+  try ref (Some (OpamMisc.strip (OpamMisc.getenv "OPAMEXTERNALSOLVER")))
+  with Not_found -> ref None
+
+let external_solver_ref = ref None
 
 let use_external_solver =
   ref (not (!(check "NOASPCUD") || !(check "USEINTERNALSOLVER") ||
-            !external_solver = Some ""))
+            !env_external_solver = Some ""))
 
-let get_external_solver () =
-  OpamMisc.Option.default default_external_solver !external_solver
+let external_solver ~input ~output ~criteria = match !external_solver_ref with
+  | Some f -> f ~input ~output ~criteria
+  | None -> raise Not_found
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
+
+let download_tool_env =
+  try ref (Some (OpamMisc.getenv "OPAMFETCH"))
+  with Not_found -> ref None
+
+let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
+
+type download_tool = [
+  | `Wget
+  | `Curl
+  | `Custom of
+      url:string -> out:string -> retry:int -> compress:bool -> string list
+]
+let download_tool = ref None
 
 let search_files = ref ["findlib"]
 

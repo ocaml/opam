@@ -56,7 +56,6 @@ val all_parens : bool ref
 val self_upgrade_bootstrapping_value : string
 val is_self_upgrade : bool
 
-val curl_command : string option
 val jobs : int option ref
 val dl_jobs : int option ref
 val download_retry : int
@@ -73,9 +72,23 @@ val solver_preferences : (solver_criteria * string) list ref
 (** Get the currently configured solver criteria as a string *)
 val get_solver_criteria : [ `Default | `Upgrade | `Fixup ] -> string
 
+val env_external_solver : string option ref
 val default_external_solver : string
-val external_solver : string option ref
-val get_external_solver : unit -> string
+
+val external_solver_ref :
+  (input:string -> output:string -> criteria:string -> string list) option ref
+val external_solver : input:string -> output:string -> criteria:string -> string list
+
+type download_tool = [
+  | `Wget
+  | `Curl
+  | `Custom of
+      url:string -> out:string -> retry:int -> compress:bool -> string list
+]
+
+val download_tool_env: string option ref
+val download_tool : download_tool option ref
+val curl_command : string
 
 val default_repository_name : string
 val default_repository_address : string

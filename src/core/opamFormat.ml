@@ -668,6 +668,8 @@ let make_simple_arg = function
 let make_arg =
   make_option make_simple_arg make_filter
 
+let make_single_command = make_list make_arg
+
 let make_command =
   make_option (make_list make_arg) make_filter
 
@@ -688,6 +690,8 @@ let parse_simple_arg =
 
 let parse_arg =
   parse_option parse_simple_arg parse_filter
+
+let parse_single_command = parse_list parse_arg
 
 let parse_command =
   parse_option (parse_list parse_arg) parse_filter

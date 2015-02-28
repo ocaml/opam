@@ -454,35 +454,30 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
+let external_solver_name () =
+  match OpamGlobals.external_solver ~input:"" ~output:"" ~criteria:"" with
+  | cmd::_ -> cmd
+  | [] -> raise Not_found
+
 let external_solver_exists =
   lazy (
-    let ex = OpamSystem.command_exists (OpamGlobals.get_external_solver ()) in
-    if not ex && !OpamGlobals.use_external_solver &&
-       !OpamGlobals.external_solver <> None
-    then
-      OpamGlobals.error_and_exit
-        "You specified you wanted to use external solver %s, but it cannot be found.\n\
-         Fix your installation, your configuration or use '--use-internal-solver'."
-        (OpamGlobals.get_external_solver ())
-    else ex
+    try
+      let name = external_solver_name () in
+      let ex = OpamSystem.command_exists name in
+      if not ex && !OpamGlobals.use_external_solver &&
+         !OpamGlobals.env_external_solver <> None
+      then
+        OpamGlobals.error_and_exit
+          "Your configuration or environment specifies external solver %s, but \
+           it cannot be found. Fix your installation, your configuration or \
+           use '--use-internal-solver'."
+          name
+      else ex
+    with Not_found -> false
   )
 
 let external_solver_available () =
   !OpamGlobals.use_external_solver && (Lazy.force external_solver_exists)
-
-let external_solver_command ~input ~output ~criteria =
-  let s = OpamGlobals.get_external_solver () in
-  match Filename.basename s with
-  | "packup" ->
-    [s;
-     OpamFilename.to_string input;
-     OpamFilename.to_string output;
-     "-u"; criteria]
-  | "aspcud" | _ ->
-    [s;
-     OpamFilename.to_string input;
-     OpamFilename.to_string output;
-     criteria]
 
 let solver_calls = ref 0
 
@@ -500,10 +495,8 @@ let dump_cudf_request ~extern ~version_map (_, univ,_ as cudf) criteria =
     let oc = open_out filename in
     if extern then
       Printf.fprintf oc "# %s\n"
-        (String.concat " " (
-            external_solver_command
-              ~input:(OpamFilename.of_string "$in")
-              ~output:(OpamFilename.of_string "$out") ~criteria))
+        (String.concat " "
+           (OpamGlobals.external_solver ~input:"$in" ~output:"$out" ~criteria))
     else
       Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
@@ -544,7 +537,10 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     in
     OpamSystem.command
       ~verbose:(!OpamGlobals.debug_level >= 2)
-      (external_solver_command ~input:solver_in ~output:solver_out ~criteria);
+      (OpamGlobals.external_solver
+         ~input:(OpamFilename.to_string solver_in)
+         ~output:(OpamFilename.to_string solver_out)
+         ~criteria);
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
       raise (Common.CudfSolver.Error "no output")
@@ -580,7 +576,7 @@ let check_cudf_version =
         (* Run with closed stdin to workaround bug in some solver scripts *)
         match
           OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-            [OpamGlobals.get_external_solver(); "-v"]
+            [external_solver_name (); "-v"]
         with
         | [] ->
           log "No response from 'solver -v', using compat criteria";

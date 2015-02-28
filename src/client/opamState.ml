@@ -1383,13 +1383,9 @@ let upgrade_to_1_1_hook =
 let upgrade_to_1_2_hook =
   ref (fun () -> assert false)
 
-let load_state ?(save_cache=true) call_site =
-  log "LOAD-STATE(%s)" call_site;
-  let chrono = OpamGlobals.timer () in
-  !upgrade_to_1_1_hook ();
-
-  let root = OpamPath.root () in
-
+(* Loads the global config file and update some global references in
+   OpamGlobals *)
+let load_config root =
   let config_p = OpamPath.config root in
   let config =
     let config = OpamFile.Config.read config_p in
@@ -1411,10 +1407,46 @@ let load_state ?(save_cache=true) call_site =
     ) else
       config in
 
-  OpamGlobals.external_solver :=
-    OpamMisc.Option.Op.(
-      !OpamGlobals.external_solver ++
-      OpamFile.Config.solver config);
+  let command_of_string s =
+    List.map (fun s -> CString s, None) (OpamMisc.split s ' ')
+  in
+  (* Set some globals *)
+  let external_solver_command =
+    let cmd = match !OpamGlobals.env_external_solver with
+      | Some ("aspcud" | "packup" as s) -> [CIdent s, None]
+      | Some s -> command_of_string s
+      | None -> match OpamFile.Config.solver config with
+        | Some f ->
+          OpamGlobals.env_external_solver :=
+            Some (OpamMisc.sconcat_map " "
+                    (function (CIdent i,_) -> "%{"^i^"}%" | (CString s,_) -> s)
+                    f);
+          f
+        | None -> [CIdent OpamGlobals.default_external_solver, None]
+    in
+    let cmd = match cmd with
+      | [CIdent "aspcud", None] ->
+        List.map (fun s -> s, None)
+          [CString "aspcud"; CIdent "input"; CIdent "output"; CIdent "criteria"]
+      | [CIdent "packup", None] ->
+        List.map (fun s -> s, None)
+          [CString "packup"; CIdent "input"; CIdent "output";
+           CString "-u"; CIdent "criteria"]
+      | cmd -> cmd
+    in
+    fun ~input ~output ~criteria ->
+      OpamFilter.single_command (fun v ->
+          if not (is_global_conf v) then None else
+          match OpamVariable.to_string (OpamVariable.Full.variable v) with
+          | "input" -> Some (S input)
+          | "output" -> Some (S output)
+          | "criteria" -> Some (S criteria)
+          | _ -> None)
+        cmd
+  in
+
+  OpamGlobals.external_solver_ref := Some external_solver_command;
+
   let solver_prefs =
     let config_crit =
       !OpamGlobals.solver_preferences @ OpamFile.Config.criteria config in
@@ -1428,6 +1460,43 @@ let load_state ?(save_cache=true) call_site =
     [f `Default; f `Upgrade; f `Fixup]
   in
   OpamGlobals.solver_preferences := solver_prefs;
+
+  let dl_tool =
+    match !OpamGlobals.download_tool_env with
+    | Some ("curl" | "wget" as s) -> Some [CIdent s, None]
+    | Some s -> Some (command_of_string s)
+    | None -> OpamFile.Config.dl_tool config
+  in
+  let dl_command cmd =
+    fun ~url ~out ~retry ~compress ->
+      OpamFilter.single_command (fun v ->
+          if not (is_global_conf v) then None else
+          match OpamVariable.to_string (OpamVariable.Full.variable v) with
+          | "url" -> Some (S url)
+          | "out" -> Some (S out)
+          | "retry" -> Some (S (string_of_int retry))
+          | "compress" -> Some (B compress)
+          | _ -> None)
+        cmd
+  in
+  let download_tool = match dl_tool with
+    | Some [CIdent "curl", None] -> Some `Curl
+    | Some [CIdent "wget", None] -> Some `Wget
+    | Some cmd -> Some (`Custom (dl_command cmd))
+    | None -> None
+  in
+  OpamGlobals.download_tool := download_tool;
+
+  config
+
+let load_state ?(save_cache=true) call_site =
+  log "LOAD-STATE(%s)" call_site;
+  let chrono = OpamGlobals.timer () in
+  !upgrade_to_1_1_hook ();
+
+  let root = OpamPath.root () in
+
+  let config = load_config root in
 
   let opams =
     let file = OpamPath.state_cache root in
@@ -1470,7 +1539,7 @@ let load_state ?(save_cache=true) call_site =
             (OpamSwitch.to_string switch)
             (OpamSwitch.to_string new_switch);
           let config = OpamFile.Config.with_switch config new_switch in
-          OpamFile.Config.write config_p config;
+          OpamFile.Config.write (OpamPath.config root) config;
           new_switch, new_compiler;
         ) else
           OpamGlobals.error_and_exit
