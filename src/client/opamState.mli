@@ -408,4 +408,5 @@ val dl_jobs: state -> int
 val switch_reinstall_hook: (switch -> unit) ref
 
 (** Update hook *)
-val fix_descriptions_hook: (?save_cache:bool -> state -> verbose:bool -> unit) ref
+val fix_descriptions_hook:
+  (?save_cache:bool -> ?verbose:bool -> state -> unit) ref

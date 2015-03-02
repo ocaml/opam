@@ -1658,7 +1658,7 @@ let install_global_config root switch =
     config
 
 let fix_descriptions_hook =
-  ref (fun ?save_cache:_ _ ~verbose:_ -> assert false)
+  ref (fun ?save_cache:_ ?verbose:_ _ -> assert false)
 
 (* Upgrade to the new file overlay *)
 let upgrade_to_1_1 () =
@@ -1751,7 +1751,7 @@ let upgrade_to_1_1 () =
 
     (* Fix all the descriptions *)
     let t = load_state ~save_cache:false "update-to-1.1." in
-    !fix_descriptions_hook t ~verbose:false;
+    !fix_descriptions_hook ~verbose:false t;
 
     (* Fix the pinned packages *)
     OpamSwitch.Map.iter (fun switch _ ->
@@ -2577,6 +2577,7 @@ let install_compiler t ~quiet:_ switch compiler =
               Some (OpamSystem.make_command
                       ~text
                       ~dir:(OpamFilename.Dir.to_string build_dir)
+                      ~verbose:!OpamGlobals.verbose
                       cmd args))
           commands
       in

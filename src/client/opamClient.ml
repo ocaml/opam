@@ -1102,10 +1102,12 @@ module API = struct
       in
       let t, compiler_updates =
         let t = OpamRepositoryCommand.update_compiler_index t in
-        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:!OpamGlobals.verbose in
+        t, OpamRepositoryCommand.fix_compiler_descriptions t
+          ~verbose:(!OpamGlobals.verbose_level >= 2) in
       let package_updates =
         let t = OpamRepositoryCommand.update_package_index t in
-        OpamRepositoryCommand.fix_package_descriptions t ~verbose:!OpamGlobals.verbose in
+        OpamRepositoryCommand.fix_package_descriptions t
+          ~verbose:(!OpamGlobals.verbose_level >= 2) in
 
       (* If necessary, output a JSON file *)
       if OpamJson.verbose () then

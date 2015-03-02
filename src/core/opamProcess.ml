@@ -33,8 +33,9 @@ type command = {
 
 let string_of_command c = String.concat " " (c.cmd::c.args)
 let text_of_command c = c.cmd_text
+let default_verbose () = !OpamGlobals.verbose_level >= 2
 let is_verbose_command c =
-  OpamMisc.Option.default !OpamGlobals.verbose c.cmd_verbose
+  OpamMisc.Option.default (default_verbose ()) c.cmd_verbose
 
 let make_command_text ?(color=`green) str ?(args=[]) cmd =
   let summary =
@@ -232,11 +233,11 @@ let interrupt p = match OpamGlobals.os () with
 
 let run_background command =
   let { cmd; args;
-        cmd_env=env; cmd_verbose=verbose; cmd_name=name;
+        cmd_env=env; cmd_verbose=_; cmd_name=name;
         cmd_metadata=metadata; cmd_dir=dir; cmd_stdin=allow_stdin } =
     command
   in
-  let verbose = OpamMisc.Option.default !OpamGlobals.verbose verbose in
+  let verbose = is_verbose_command command in
   let allow_stdin = OpamMisc.Option.default false allow_stdin in
   let env = match env with Some e -> e | None -> Unix.environment () in
   let file ext = match name with
@@ -259,10 +260,12 @@ let run_background command =
     ~allow_stdin ?dir cmd args
 
 let verbose_print_cmd p =
-  OpamGlobals.msg "%s %s %s\n"
+  OpamGlobals.msg "%s %s %s%s\n"
     (OpamGlobals.colorise `yellow "+")
     p.p_name
     (OpamMisc.sconcat_map " " (Printf.sprintf "%S") p.p_args)
+    (if p.p_cwd = Sys.getcwd () then ""
+     else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
 let verbose_print_out =
   let pfx = OpamGlobals.colorise `yellow "- " in

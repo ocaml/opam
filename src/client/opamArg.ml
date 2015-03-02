@@ -22,7 +22,7 @@ open Cmdliner
 type global_options = {
   debug  : bool;
   debug_level: int;
-  verbose: bool;
+  verbose: int;
   quiet  : bool;
   color  : bool;
   switch : string option;
@@ -105,6 +105,7 @@ let create_global_options
     switch_to_updated_self debug root; (* do this asap, don't waste time *)
   if not safe_mode && Unix.getuid () = 0 then
     OpamGlobals.warning "Running as root is not recommended";
+  let verbose = List.length verbose in
   { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
     no_base_packages; external_solver; use_internal_solver; cudf_file; solver_preferences;
     no_self_upgrade; safe_mode; }
@@ -120,7 +121,9 @@ let apply_global_options o =
   OpamGlobals.debug    := not o.safe_mode && !OpamGlobals.debug || o.debug;
   OpamGlobals.debug_level := max !OpamGlobals.debug_level o.debug_level;
   OpamMisc.debug       := !OpamGlobals.debug;
-  OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
+  OpamGlobals.verbose  :=
+    (not o.quiet) && (!OpamGlobals.verbose || o.verbose > 0);
+  OpamGlobals.verbose_level := max !OpamGlobals.verbose_level o.verbose;
   OpamGlobals.color    := o.color;
   begin match o.switch with
     | None   -> ()
@@ -559,9 +562,10 @@ let global_options =
        integer."
       Arg.(some int) None in
   let verbose =
-    mk_flag ~section ["v";"verbose"]
-      "Be more verbose. Show output of all sub-commands. \
-       This is equivalent to setting $(b,\\$OPAMVERBOSE) to \"true\"." in
+    Arg.(value & flag_all & info ~docs:section ["v";"verbose"] ~doc:
+           "Be more verbose, show package sub-commands and their output. \
+            Repeat to see more. Repeating $(i,n) times is equivalent to \
+            setting $(b,\\$OPAMVERBOSE) to \"$(i,n)\".") in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let color =
