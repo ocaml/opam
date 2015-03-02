@@ -13,8 +13,9 @@
 * Fixed behaviour of `opam switch` and related commands when a switch
   is locally set in a shell (through `OPAMSWITCH`)
 * Better behaviour on failed `opam switch`
-* New pinning mode, set by default on local VC repos: use current file
-  tree, but limited to version-tracked files
+* New pinning mode: when pinning using version-control on a local path and
+  without a branch specified, use current file tree, but limited to
+  version-tracked files
 * Faster and cleaner handling of downloads
 * Now compiles with --safe-string on OCaml 4.02, better compatibility handling
 * `opam unpin` now accepts multiple arguments
@@ -35,6 +36,12 @@
 * ~/.opam/config doesn't refer to OPAM's patch-version anymore, to allow
   downgrading
 * Recognise <name>.opam files and directories when pinning a package to source
+* Cleaned up debug and verbose messages, allow more control (`-v` can now be
+  repeated)
+* Pinning URL can now be explicit in the form `VC+URL`, e.g. `git+ssh://`,
+  `hg+https://`...
+* New flexible way to specify download and solver commands in `~/.opam/config`
+  or in variables `OPAMFETCH` and `OPAMEXTERNALSOLVER`
 * Lots of bug-fixes
 
 1.2.0
