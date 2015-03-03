@@ -21,6 +21,7 @@
 val debug : bool ref
 val debug_level : int ref
 val verbose : bool ref
+val verbose_level : int ref
 val color_when : [> `Always | `Auto | `Never ]
 val color : bool ref
 val disp_status_line : unit -> bool

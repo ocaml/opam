@@ -59,7 +59,11 @@ let debug_level      =
   try ref (int_of_string (OpamMisc.getenv ("OPAMDEBUG")))
   with Not_found | Failure _ -> ref 1
 let _ = if !debug_level > 1 then debug := true
-let verbose          = check "VERBOSE"
+let verbose          = check ~warn:false "VERBOSE"
+let verbose_level    =
+  try ref (int_of_string (OpamMisc.getenv ("OPAMVERBOSE"))) with
+  | Not_found -> ref 0
+  | Failure _ -> ref 1
 let color_when       = when_var "COLOR"
 let color            =
   ref (color_when = `Always ||

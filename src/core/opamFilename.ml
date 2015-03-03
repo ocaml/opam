@@ -83,7 +83,8 @@ let exec dirname ?env ?name ?metadata ?keep_going cmds =
     (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
 
 let move_dir ~src ~dst =
-  OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]
+  OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
+    [ "mv"; Dir.to_string src; Dir.to_string dst ]
 
 let exists_dir dirname =
   try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
@@ -93,7 +94,8 @@ let copy_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error
       "Cannot create %s as the directory already exists." (Dir.to_string dst);
-  OpamSystem.command [ "cp"; "-PR"; Dir.to_string src; Dir.to_string dst ]
+  OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
+    [ "cp"; "-PR"; Dir.to_string src; Dir.to_string dst ]
 
 let link_dir ~src ~dst =
   if exists_dir dst then
@@ -215,7 +217,9 @@ let install ?exec ~src ~dst () =
   if src <> dst then OpamSystem.install ?exec (to_string src) (to_string dst)
 
 let move ~src ~dst =
-  if src <> dst then OpamSystem.command [ "mv"; to_string src; to_string dst ]
+  if src <> dst then
+    OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
+      [ "mv"; to_string src; to_string dst ]
 
 let link ~src ~dst =
   if src <> dst then OpamSystem.link (to_string src) (to_string dst)
@@ -362,7 +366,7 @@ let copy_files ~src ~dst =
       if not !OpamGlobals.do_not_copy_files then
         let base = remove_prefix src file in
         let dst_file = create dst (Base.of_string base) in
-        if !OpamGlobals.verbose then
+        if !OpamGlobals.verbose_level >= 2 then
         OpamGlobals.msg "Copying %s %s %s/\n"
           (prettify file)
           (if exists dst_file then "over" else "to")

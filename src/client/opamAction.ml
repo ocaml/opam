@@ -368,6 +368,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
                 (OpamSystem.make_command ?name:nameopt ~metadata ~text cmd args
                    ~env:(OpamFilename.env_of_list env)
                    ~dir:(OpamFilename.Dir.to_string exec_dir)
+                   ~verbose:!OpamGlobals.verbose
                    ~check_existence:false))
           remove
       in
@@ -531,7 +532,7 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
       let text = OpamProcess.make_command_text name ~args cmd in
       let dir = OpamFilename.Dir.to_string dir in
       OpamSystem.make_command ~env ~name ~metadata ~dir ~text
-        ~check_existence:false
+        ~verbose:!OpamGlobals.verbose ~check_existence:false
         cmd args
       @@> fun result ->
       if List.mem Pkgflag_Verbose (OpamFile.OPAM.flags opam) then

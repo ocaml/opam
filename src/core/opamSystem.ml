@@ -371,7 +371,7 @@ let make_command
     cmd args =
   let name = log_file ?dir name in
   let verbose =
-    OpamMisc.Option.default (!OpamGlobals.debug || !OpamGlobals.verbose) verbose
+    OpamMisc.Option.default (!OpamGlobals.verbose_level >= 2) verbose
   in
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
@@ -396,7 +396,7 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
     if command_exists ~env cmd then (
 
       let verbose = match verbose with
-        | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
+        | None   -> !OpamGlobals.verbose_level >= 2
         | Some b -> b in
 
       let r =
@@ -451,6 +451,9 @@ let read_command_output_opt ?verbose ?env cmd =
   try Some (read_command_output ?verbose ?env cmd)
   with Command_not_found _ -> None
 
+let verbose_for_base_commands () =
+  !OpamGlobals.verbose_level >= 3
+
 let copy src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
@@ -460,7 +463,7 @@ let copy src dst =
   if Sys.file_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ["cp"; src; dst ]
+  command ~verbose:(verbose_for_base_commands ()) ["cp"; src; dst ]
 
 let is_exec file =
   let stat = Unix.stat file in
@@ -476,8 +479,7 @@ let install ?exec src dst =
   let exec = match exec with
     | Some e -> e
     | None -> is_exec src in
-  command
-    ("install" :: "-m" :: (if exec then "0755" else "0644") ::
+  command ("install" :: "-m" :: (if exec then "0755" else "0644") ::
      [ src; dst ])
 
 module Tar = struct
@@ -744,7 +746,8 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
       if Sys.file_exists dst then
         if overwrite then remove dst
         else internal_error "The downloaded file will overwrite %s." dst;
-      OpamProcess.command ~dir "mv" [filename; dst ]
+      OpamProcess.command ~dir ~verbose:(verbose_for_base_commands ())
+        "mv" [filename; dst ]
       @@> fun r -> raise_on_process_error r; Done dst
   in
   OpamProcess.Job.catch
@@ -763,7 +766,7 @@ let download ~overwrite ?compress ~filename:src ~dst:dst =
     if Sys.file_exists dst then
       if overwrite then remove dst
       else internal_error "The downloaded file will overwrite %s." dst;
-    OpamProcess.command "cp" [src; dst]
+    OpamProcess.command ~verbose:(verbose_for_base_commands ()) "cp" [src; dst]
     @@> fun r -> raise_on_process_error r; Done dst
   ) else
     really_download ~overwrite ?compress ~src ~dst

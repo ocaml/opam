@@ -40,6 +40,10 @@ val with_tmp_dir: (string -> 'a) -> 'a
 (** Runs a job with a temp dir that is cleaned up afterwards *)
 val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
+(** Returns true if the default verbose level for base commands (cp, mv, etc.)
+    is reached *)
+val verbose_for_base_commands: unit -> bool
+
 (** [copy src dst] copies [src] to [dst]. Remove [dst] before the copy
     if it is a link. *)
 val copy: string -> string -> unit

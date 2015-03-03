@@ -195,7 +195,7 @@ module B = struct
     let local_dir = OpamPath.Repository.archives_dir repo in
     OpamFilename.mkdir local_dir;
     pull_file_quiet local_dir filename @@| function
-    | Not_available _ as r when not !OpamGlobals.verbose -> r
+    | Not_available _ as r when !OpamGlobals.verbose_level < 2 -> r
     | r ->
       OpamGlobals.msg "[%s] %s %s\n"
         (OpamGlobals.colorise `blue

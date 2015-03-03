@@ -42,7 +42,7 @@ val fix_compiler_descriptions: t -> verbose:bool -> compiler_set updates
 val fix_package_descriptions: t -> verbose:bool -> package_set updates
 
 (** Fix all the package and compiler descriptions. *)
-val fix_descriptions: ?save_cache:bool -> t -> verbose:bool -> unit
+val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> t -> unit
 
 (** List the available repositories. *)
 val list: short:bool -> unit

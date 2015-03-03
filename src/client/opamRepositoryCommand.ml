@@ -448,7 +448,8 @@ let update_config t repos =
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
-let fix_descriptions ?(save_cache=true) t ~verbose =
+let fix_descriptions
+    ?(save_cache=true) ?(verbose = !OpamGlobals.verbose_level >= 3) t =
   let t = update_compiler_index t in
   let _ = fix_compiler_descriptions t ~verbose in
   let t = update_package_index t in
@@ -464,7 +465,7 @@ let cleanup t repo =
   let repos = OpamRepositoryName.Map.keys t.repositories in
   update_config t (List.filter ((<>) repo.repo_name) repos);
   OpamFilename.rmdir repo.repo_root;
-  fix_descriptions t ~verbose:!OpamGlobals.verbose
+  fix_descriptions t
 
 let priority repo_name ~priority =
   log "repository-priority";
@@ -478,7 +479,7 @@ let priority repo_name ~priority =
     { config with repo_priority = priority } in
   OpamFile.Repo_config.write config_f config;
   (* relink the compiler and package descriptions *)
-  fix_descriptions t ~verbose:!OpamGlobals.verbose
+  fix_descriptions t
 
 let add name kind address ~priority:prio =
   log "repository-add";
@@ -523,7 +524,7 @@ let add name kind address ~priority:prio =
   OpamState.remove_state_cache ();
   try
     let t = OpamProcess.Job.run (update t repo) t in
-    fix_descriptions t ~verbose:!OpamGlobals.verbose
+    fix_descriptions t
   with
   | OpamRepository.Unknown_backend ->
     cleanup t repo;
