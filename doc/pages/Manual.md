@@ -14,6 +14,7 @@ primarily of use for packagers, package maintainers and repository maintainers.
 This version of the manual documents the version `1.2` of the file formats, with
 some `1.2.1` experimental extensions mentionned.
 
+
 ## General file format
 
 ### General syntax
@@ -31,20 +32,22 @@ three-digit decimal and two-digit hexadecimal character codes (`\NNN` and
 they contain a single element. Values can be followed by an argument in braces.
 Parentheses may be used to group sub-expressions.
 
-| type     | format                                         | example         |
-|----------|------------------------------------------------|-----------------|
-| bool     | `true|false`                                   | `true`          |
-| int      | `-?[0-9]+`                                     | `42`            |
-| string   | `"..."`                                        | `"a string"`    |
-| ident    | `[a-zA-Z_][a-zA-Z0-9:_+-]*`                    | `foo`           |
-| operator | `[!=<>|&+:]+`                                  | `>=`            |
-| list     | `<value>` or `[ <value> <value> ... ]`         | `[ foo "bar" ]` |
-| option   | `<value>` or `<value> { <value> <value> ... }` | `foo { > "0" }` |
-| parens   | `(<value>)`                                    | `(foo & bar)`   |
+<table class="table">
+<thead><tr> <th>type</th> <th>format</th> <th>example</th> </tr></thead>
+<tbody>
+  <tr> <td>bool</td> <td><code>true|false</code></td> <td><code>true</code></td> </tr>
+  <tr> <td>int</td> <td><code>-?[0-9]+</code></td> <td><code>42</code></td> </tr>
+  <tr> <td>string</td> <td><code>"..."</code></td> <td><code>"a string"</code></td> </tr>
+  <tr> <td>ident</td> <td><code>[a-zA-Z_][a-zA-Z0-9:_+-]*</code></td> <td><code>foo</code></td> </tr>
+  <tr> <td>operator</td> <td><code>[!=&lt;&gt;|&amp;+:]+</code></td> <td><code>&gt;=</code></td> </tr>
+  <tr> <td>list</td> <td> <code>&lt;value&gt;</code> or <code>[ &lt;value&gt; &lt;value&gt; ... ]</code> </td> <td><code>[ foo "bar" ]</code></td> </tr>
+  <tr> <td>option</td> <td> <code>&lt;value&gt;</code> or <code>&lt;value&gt; { &lt;value&gt; &lt;value&gt; ... }</code> </td> <td><code>foo { &gt; "0" }</code></td> </tr>
+  <tr> <td>parens</td> <td><code>(&lt;value&gt;)</code></td> <td><code>(foo &amp; bar)</code></td> </tr>
+</tbody>
+</table>
 
-
-Comments may be either enclosed in `(*` and `*)`, or `#` and newline. They will
-be ignored by OPAM.
+Comments may be either enclosed in `(*` and `*)`, or `#` and newline. They are
+ignored by OPAM.
 
 
 ### Package Formulas
@@ -103,7 +106,7 @@ when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
 empty string and `false`, unless specified otherwise).
 
-> ##### 1.2.1 experimental feature: boolean-to-string conversion specifiers
+> **1.2.1 experimental feature**: boolean-to-string conversion specifiers
 >
 > In 1.2.1, the additional syntax
 > `"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to insert
@@ -211,7 +214,7 @@ sources, they may be:
 - URLs of the form `http://`, `https://`, `ftp://`, `ssh://`, `file://`, `rsync://`
 - Version control URLs for git, mercurial and darcs: `git://`, `hg://`, `darcs://`
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g. `git://`,
-  `hg+https://`, `git+file://`, etc. [**NOTE:** this has been added in OPAM 1.2.1]
+  `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in OPAM 1.2.1)
 
 In addition, version control URLs may be suffixed with the `#` character and a
 reference name (branch, commit, HEAD...): `git://foo.com/git/bar#master`,
@@ -313,6 +316,57 @@ Furthermore, the metadata of pinned package is then stored within the switch (at
 > feature in 1.2.1. It should only be used for source repositories that may hold
 > more than one OPAM package.
 
+
+## Compiler specification
+
+Compilers are specified by
+
+- a file `compiler-name.descr`, similar to the package `descr` files: raw utf8
+  file starting with a one-line description.
+
+- a file `compiler-name.comp` specifying the source and details of the compiler.
+
+The `compiler-name.comp` file has the following fields:
+
+- `opam-version: <string>`: File format version, should be `1.2` as of writing.
+
+- `name: <string>`: the compiler name, should be of the form
+  `base-version+patch`, and the same used in the filename.
+
+- `version: <string>`: the base OCaml compiler version this is based on, e.g.
+  `4.02.1`
+
+- `src: <string>` or `archive: <string>`: as for package `url` files, the URL
+  where the compiler source can be retrieved. Older, more specific URL fields
+  are deprecated.
+
+- `patches: [ <string> ... ]`: URLs of patches that will be retrieved and
+  applied to the source from `src:` or `archive:`.
+
+- `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: commands that
+  will be run from the compiler source root to build and install the compiler.
+
+- `configure: [ <string> ... ]` and `make: [ <string> ... ]`: alternatively,
+  this will build using `./configure` and `make`, with the given flags
+  (`--prefix` is automatically appended to the configure command)
+
+- `packages: [ <package-formula> ... ]`: these packages will be installed right
+  after the `build:` or `make:` steps have been run. They must be self-contained
+  (no external dependencies), and the user won't be able to change or remove
+  them in this switch (except via explicit pinning).
+
+- `env: [ <ident> <update-op> <string> ]`: specifies environment variables
+  updates that will be performed whenever in this switch.
+
+- `preinstalled: <bool>`: should not be set by hand, specifies that the this
+  `.comp` file refers to an OCaml installation that lies outside of OPAM (files
+  using this are normally auto-generated).
+
+Note that, since OPAM `1.2.1` all build instructions can be omitted, and that it
+is therefore possible to delegate all the build process to the packages in
+`packages:`.
+
+
 ## Package specification
 
 Metadata for a single package is made of all the following files, and should be
@@ -404,226 +458,175 @@ recommended to check the validity and quality of your `opam` files.
 
 `opam` files allow the following fields:
 
-#### `opam-version: <string>` (mandatory)
-File format and repository format version, should be `1.2` as of writing.
+- `opam-version: <string>` (mandatory): the file format version, should be `1.2`
+  as of writing.
 
-#### `name: <string>`, `version: <string>`
-Name and version of the package. Both fields are optional when they can be
-inferred from the directory name (e.g. when the file sits in the repository).
+- `name: <string>`, `version: <string>`: the name and version of the package.
+  Both fields are optional when they can be inferred from the directory name
+  (e.g. when the file sits in the repository).
 
-#### `maintainer: <string>` (mandatory)
-Contact address for the package maintainer (the format `"name <email>"` is
-allowed).
+- `maintainer: <string>` (mandatory): A contact address for the package
+  maintainer (the format `"name <email>"` is allowed).
 
-#### `authors: [ <string> ... ]`
-A list of strings listing the original authors of the software.
+- `authors: [ <string> ... ]`: a list of strings listing the original authors of
+  the software.
 
-#### `license: [ <string> ... ]`
-The abbreviated name(s) of the license(s) under which the source software is
-available.
+- `license: [ <string> ... ]`: the abbreviated name(s) of the license(s) under
+  which the source software is available.
 
-#### `homepage: <string>`, `doc: <string>`, `bug-reports: <string>`
-URLs pointing to the related pages for the package, for user information
+- `homepage: <string>`, `doc: <string>`, `bug-reports: <string>`: URLs pointing
+  to the related pages for the package, for user information
 
-#### `dev-repo: <string>`
-The URL of the package's source repository, which may be useful for developpers:
-not to be mistaken with the URL file, which points to the specific packaged
-version.
+- `dev-repo: <string>`: the URL of the package's source repository, which may be
+  useful for developpers: not to be mistaken with the URL file, which points to
+  the specific packaged version.
 
-#### `tags: [ <string> ... ]`
-Is an optional list of semantic tags used to classify the packages. The
-`"org:foo"` tag is reserved for packages officially distributed by
-organization ``foo''.
+- `tags: [ <string> ... ]`: an optional list of semantic tags used to classify
+  the packages. The `"org:foo"` tag is reserved for packages officially
+  distributed by organization ``foo''.
 
-#### `patches: [ <string> { <filter> } ... ]`
+- `patches: [ <string> { <filter> } ... ]`: a list of files relative to the
+  project source root (often added through the `files/` metadata subdirectory).
+  The listed patch files will be applied sequentially to the source as with the
+  `patch` command. Variable interpolation is available, so you can specify
+  `patches: [ "file" ]` to have the patch processed from `file.in`.
 
-A list of files relative to the project source root (often added through the
-`files/` metadata subdirectory). The listed patch files will be applied
-sequentially to the source as with the `patch` command. Variable interpolation
-is available, so you can specify `patches: [ "file" ]` to have the patch
-processed from `file.in`.
+    Patches may be applied conditionally by adding _filters_.
 
-Patches may be applied conditionally by adding {\em filters}.
+- `subst: [ <string> ... ]`: a list of files relative to the project source
+  root. These files will be generated from their `.in` counterparts, with
+  variable interpolations expanded.
 
-#### `subst: [ <string> ... ]`
+- `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
+  commands that will be run in order to compile the package.
 
-Contains a list of files relative to the project source root. These files will
-be generated from their `.in` counterparts, with variable interpolations
-expanded.
+    Each command is provided as a list of terms (a command and zero or more
+    arguments) ; individual terms as well as full commands can be made
+    conditional by adding filters: they will be ignored if the filter evaluates
+    to `false` or is undefined. Variable interpolations are also evaluated.
+    These commands will be executed in sequence, from the root of the package
+    source.
 
-#### `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`
+    Any command is allowed, but these should write exclusively to the package's
+    source directory, be non-interactive and perform no network i/o. All
+    libraries, syntax extensions, binaries, platform-specific configuration and
+    `package-name.install` files should be produced within the source directory
+    subtree during this step. (**NOTE**: installation instructions used to be
+    included in this step, so you may find examples of older packages that do
+    not respect the above. This behaviour is deprecated)
 
-The list of commands that will be run in order to compile the package.
+- `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
+  commands that will be run in order to install the package.
 
-Each command is provided as a list of terms (a command and zero or more
-arguments) ; individual terms as well as full commands can be made conditional
-by adding filters: they will be ignored if the filter evaluates to `false` or is
-undefined. Variable interpolations are also evaluated. These commands will be
-executed in sequence, from the root of the package source.
+    This field follows the exact same format as `build:`, but should only be used
+    to move products of `build:` from the build directory to their final
+    destination under the current `prefix`, and adjust some configuration files
+    there when needed. Commands in `install:` are executed sequentially after the
+    build is finished. These commands should only write to subdirectories of
+    `prefix`, without altering the source directory itself.
 
-Any command is allowed, but these should write exclusively to the package's
-source directory, be non-interactive and perform no network i/o. All libraries,
-syntax extensions, binaries, platform-specific configuration and
-`package-name.install` files should be produced within the source directory
-subtree during this step.
+    This field contains typically just `[make "install"]`. It is recommended,
+    though, to prefer the usage of a static or generated `package-name.install`
+    file and omit the `install:` field.
 
-#### `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`
+- `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]` and
+  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
+  commands to build documentation and tests. They are processed after the build
+  phase when documentation or tests have been requested. These follow the same
+  specification as the `build:` field.
 
-Follows the exact same format as `build`, but should only be used to move
-products of `build` from the build directory to their final destination under
-the current `prefix`, and adjust some configuration files there when needed.
-Commands in `install` are executed sequentially after the build is finished.
-These commands should only write to subdirectories of `prefix`, without altering
-the source directory itself.
+- `remove: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the commands
+  used to uninstall the package. It should be the reverse operation of
+  `install:`, and absent when `install:` is. It follows the same format as
+  `build:`.
 
-This field contains typically just `[make "install"]`. It is recommended to
-prefer the usage of a static or generated `package-name.install` file and omit
-the `install` field.
+- `depends: [ <package-formula> ... ]`: the package dependencies. This describes
+  the requirements on other packages for this package to be built and installed.
+  It contains a list of package formulas, understood as a conjunction.
 
-#### `build-doc:` and `build-test:`
+    As an addition to the package formula format, the version constraints may be
+    prefixed by _dependency flags_. These are one of `build`, `test` and `doc`
+    and limit the meaning of the dependency:
 
-These follow the same specification as the `build` field. They are processed
-after the build phase when documentation or tests have been requested.
+    * `build` dependencies are no longer needed at run-time: they won't trigger
+      recompilations of your package.
+    * `test` dependencies are only needed when building tests (_i.e._ by
+      instructions in the `build-test` field)
+    * likewise, `doc` dependecies are only required when building the package
+      documentation
 
-#### `remove: [ [ <string> { <filter> } ... ] { <filter> } ... ]`
+    Dependency flags must be first, and linked by `&`:
 
-Follows the same format as `build`, and is used to uninstall the package. It
-should be the reverse operation of `install`, and absent when `install` is.
+        depends: [
+          "foo" {build}
+          "bar" {build & doc}
+          "baz" {build & >= "3.14"}
+        ]
 
-#### `depends: [ <package-formula> ... ]`
+- `depopts: [ <string> { <dependency-flags> } ... ]`: the package optional
+  dependencies. This flag is similar to `depends:` in format, but with some
+  restrictions. It contains packages that will be _used_, if present, by the
+  package being defined, either during build or runtime, but that are not
+  _required_ for its installation. The implementation uses this information to
+  define build order and trigger recompilations, but won't automatically install
+  _depopts_ when installing the package.
 
-Describes the requirements on other packages for this package to be built and
-installed. It contains a list of package formulas, understood as a conjunction.
+    The optional dependencies may have _dependency flags_, but they may not
+    specify version constraints nor formulas. `depopts:` can be combined with
+    `conflicts:` to add version constraints on the optional dependencies.
 
-As an addition to the package formula format, the version constraints may be
-prefixed by _dependency flags_. These are one of `build`, `test` and `doc` and
-limit the meaning of the dependency:
+- `conflicts: [ <string> { <version-constraint> } ... ]`: a list of package
+  names with optional version constraints indicating that the current package
+  can't coexist with those.
 
-* `build` dependencies are no longer needed at run-time: they won't trigger
-  recompilations of your package.
-* `test` dependencies are only needed when building tests (_i.e._ by
-  instructions in the `build-test` field)
-* likewise, `doc` dependecies are only required when building the package
-  documentation
+- `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`: the package external
+  dependencies. This field is a list that can be used for describing the
+  dependencies of the package toward software or packages external to the OPAM
+  ecosystem, for various systems. It contains pairs of lists of the form
+  `[ predicates ext-packages ]`. `predicates` is used to select the element of
+  the list based on the current system: it is a list of tags (strings) that can
+  correspond to the OS, architecture or distribution. The `predicates` is used
+  as a conjunction: the pair will only be selected when _all_ tags are active.
+  The resulting `ext-packages` should be identifiers of packages recognised by
+  the system's package manager.
 
-Dependency flags must be first, and linked by `&`:
+    There is currently no definite specification for the precise tags you should
+    use, but the closest thing is the
+    [opam-depext project](https://github.com/OCamlPro/opam-depext). The
+    `depexts` information can be retrieved through the `opam list --external`
+    command.
 
-```
-depends: [
-  "foo" {build}
-  "bar" {build & doc}
-  "baz" {build & >= "3.14"}
-]
-```
+- `messages: [ <string> { <filter> } ... ]`: used to display an additional
+  (one-line) message when prompting a solution implying the given package. The
+  typical use-case is to tell the user that some functionality will not be
+  available as some optional dependencies are not installed.
 
-#### `depopts: [ <string> { <dependency-flags> } ... ]`
+- `post-messages: [ <string> { <filter> } ... ]`: allows to print specific
+  messages to the user after the end of installation. The special boolean
+  variable `failure` is defined in the scope of the filter, and can be used to
+  print messages in case there was an error (typically, a hint on how it can be
+  resolved, or a link to an open issue). `success` is also defined as syntactic
+  sugar for `!failure`.
 
-For "optional dependencies", this flag is similar to `depends:` in format, but
-with some restrictions. It contains packages that will be _used_, if present, by
-the package being defined, either during build or runtime, but that are not
-_required_ for its installation. The implementation uses this information to
-define build order and trigger recompilations, but won't automatically install
-_depopts_ when installing the package.
+- `available: [ <filter> ]`: can be used to add constraints on the OS and OCaml
+  versions currently in use, using the built-in `os` and `ocaml-version`
+  variables. In case the filter is not valid, the package is disabled. The `os`
+  and `ocaml-version` fields are deprecated, please use `available` instead in
+  newly created packages.
 
-The optional dependencies may have _dependency flags_, but they may not specify
-version constraints nor formulas. `depopts:` can be combined with `conflicts:` to
-add version constraints on the optional dependencies.
+    This field is evaluated before request solving or any actions take place ;
+    it can only refer to global variables, since it shouldn't depend on the
+    current switch state. An unavailable package won't generally be seen on the
+    system, except with `opam list -A`.
 
-#### `conflicts: [ <string> { <version-constraint> } ... ]`
+- `features: [ <ident> <string> { <filter> } ... ]` (EXPERIMENTAL): this field
+  is currently experimental and shouldn't be used on the main package
+  repository. It allows to define custom variables that better document what
+  _features_ are available in a given package build. Each feature is defined as
+  an identifier, a documentation string, and a filter expression. The filter
+  expression can evaluate to either a boolean or a string, and the defined
+  identifier can be used as a variable in any filter (but recursive features are
+  not allowed and will be _undefined_).
 
-A list of package names with optional version constraints indicating that the
-current package can't coexist with some packages or some specific versions.
-
-#### `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`
-
-For "external dependencies", this field is a list that can be used for
-describing the dependencies of the package toward software or packages external
-to the OPAM ecosystem, for various systems. It contains pairs of lists of the
-form `[ predicates ext-packages ]`. `predicates` is used to select the element
-of the list based on the current system: it is a list of tags (strings) that can
-correspond to the OS, architecture or distribution. The `predicates` is used as
-a conjunction: the pair will only be selected when _all_ tags are active. The
-resulting `ext-packages` should be identifiers of packages recognised by the
-system's package manager.
-
-There is currently no definite specification for the precise tags you should
-use, but the closest thing is the
-[opam-depext project](https://github.com/OCamlPro/opam-depext). The `depexts`
-information can be retrieved through the `opam list --external` command.
-
-#### `messages: [ <string> { <filter> } ... ]`
-
-This field is used to display an additional (one-line) message when prompting a
-solution implying the given package. The typical use-case is to tell the user
-that some functionality will not be available as some optional dependencies are
-not installed.
-
-#### `post-messages: [ <string> { <filter> } ... ]`
-
-This field allows to print specific messages to the user after the
-end of installation. The special boolean variable `failure` is defined in the
-scope of the filter, and can be used to print messages in case there was an
-error (typically, a hint on how it can be resolved, or a link to an open issue).
-`success` is also defined as syntactic sugar for `!failure`.
-
-#### `available: [ <filter> ]`
-
-This can be used to add constraints on the OS and OCaml versions currently in
-use, using the built-in `os` and `ocaml-version` variables. In case the filter
-is not valid, the package is disabled. The `os` and `ocaml-version` fields are
-deprecated, please use `available` instead in newly created packages.
-
-This field is evaluated before request solving or any actions take place ; it
-can only refer to global variables, since it shouldn't depend on the current
-switch state.
-
-#### `features: [ <ident> <string> { <filter> } ... ]` -- EXPERIMENTAL
-
-This field is currently experimental and shouldn't be used on the main package
-repository. It allows to define custom variables that better document what
-_features_ are available in a given package build. Each feature is defined as an
-identifier, a documentation string, and a filter expression. The filter
-expression can evaluate to either a boolean or a string, and the defined
-identifier can be used as a variable in any filter (but recursive features are
-not allowed and will be _undefined_).
-
-This is typically useful to pass appropriate flags to `./configure` scripts,
-depending on what is installed.
-
-
-## Compiler specification
-
-Compilers are specified by
-- a file `compiler-name.descr`, similar to the package `descr` files: raw utf8
-  file starting with a one-line description.
-- a file `compiler-name.comp` specifying the source and details of the compiler.
-
-The `compiler-name.comp` file has the following fields:
-
-- `opam-version: <string>`: File format version, should be `1.2` as of writing.
-- `name: <string>`: the compiler name, should be of the form
-  `base-version+patch`, and the same used in the filename.
-- `version: <string>`: the base OCaml compiler version this is based on, e.g.
-  `4.02.1`
-- `src: <string>` or `archive: <string>`: as for package `url` files, the URL
-  where the compiler source can be retrieved. Older, more specific URL fields
-  are deprecated.
-- `patches: [ <string> ... ]`: URLs of patches that will be retrieved and
-  applied to the source from `src:` or `archive:`.
-- `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: commands that
-  will be run from the compiler source root to build and install the compiler.
-- `configure: [ <string> ... ]` and `make: [ <string> ... ]`: alternatively,
-  this will build using `./configure` and `make`, with the given flags
-  (`--prefix` is automatically appended to the configure command)
-- `packages: [ <package-formula> ... ]`: these packages will be installed right
-  after the `build:` or `make:` steps have been run. They must be self-contained
-  (no external dependencies), and the user won't be able to change or remove
-  them in this switch (except via explicit pinning).
-- `env: [ <ident> <update-op> <string> ]`: specifies environment variables
-  updates that will be performed whenever in this switch.
-- `preinstalled: <bool>`: should not be set by hand, specifies that the this
-  `.comp` file refers to an OCaml installation that lies outside of OPAM (files
-  using this are normally auto-generated).
-
-Note that all build instructions can be omitted, and that it is therefore
-possible to delegate all the build process to the packages in `packages:`.
+    This is typically useful to pass appropriate flags to `./configure` scripts,
+    depending on what is installed.
