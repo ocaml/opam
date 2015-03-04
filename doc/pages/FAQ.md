@@ -301,3 +301,15 @@ If for some reason you want the old behaviour, use one of:
 * an address of the form `vc-controlled-dir#branch`, typically `#master`
 * on Git you can use `#HEAD` to always get to the currently checked out branch
   (which used to be the default, and still is for remote gits)
+
+---
+
+#### 🐫  OPAM wants to do reinstallations after update. Can I skip them ?
+
+OPAM registers the need to recompile packages when they had meaningful changes
+in the repository, to guarantee consistency and allow to propagate fixes to
+already installed packages ; the official repository maintainers generally don't
+abuse this. There is no built-in command to reset them, in purpose, but removing
+the file `~/.opam/<switch>/reinstall` is enough to make OPAM forget about them.
+It's quite safe, but don't report issues if you did and your system is not up to
+date, obviously.

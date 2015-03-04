@@ -62,15 +62,19 @@ val compiler_index: repository repository_name_map -> (repository_name * string 
 
 (** {2 State} *)
 
-(** Get the meaningful checksum off an url file *)
+(** Get the package archive checksum off an url file *)
 val url_checksum: OpamFilename.t -> checksums
 
 (** Get all the package files *)
 val package_files: repository -> string option -> package -> archive:bool ->
   filename list
 
-(** Compute a package state (ie. a list of checksums). *)
-val package_state: repository -> string option -> package -> [`all|`partial of bool]
+(** Compute a package state (ie. a list of checksums). If [`partial archive],
+    only the checksum of the archive within the url file (instead of the file
+    itself), of the files/ subdirectory, and of the archive if set are
+    returned. *)
+val package_state: repository -> string option -> package ->
+  [`all|`partial of bool]
   -> checksums
 
 (** Get all the compiler files *)
