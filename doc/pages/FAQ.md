@@ -160,17 +160,31 @@ may be more greedy.
 
 #### 🐫  Some package fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
 
-They probably depend on system, non-OCaml libraries: you'll need to install them
-using your system package manager (apt-get, yum, pacman, homebrew, etc.). If you
-have no idea what the missing system package might be:
+They probably depend on system, non-OCaml libraries: they need to be installed
+using your system package manager (apt-get, yum, pacman, homebrew, etc.) since
+they are outside the scope of OPAM. These external dependencies ("depexts") are
+in the process of being documented in the package repository, and the
+`opam-depext` tool should take care of that for you:
+
+```
+opam install depext
+opam depext <packages>
+```
+
+If that doesn't work...
 * Check for hints printed by the failing package
-* Check the output of `opam list <package> --external`
+* Dependencies for your specific system may not be known, but check the output
+  of `opam list --rec --required-by <package>,<package>... --external`: it will
+  list dependencies on all known systems and may get you in the right direction.
 * Lookup the development packages corresponding to the error in your system's
-  package repositories. If you got to this point and found the appropriate
-  packages, we'd be glad if you could tell us your system details and the answer
-  in [the opam-repository
-  tracker](https://github.com/ocaml/opam-repository/issues), to save the others
-  the trouble of searching. Thanks.
+  package repositories.
+
+In any of those case, that's useful information that was missing from the OPAM
+repository: we would really appreciate that you take a minute to save others the
+trouble of looking by filling an issue in
+[the opam-repository tracker](https://github.com/ocaml/opam-repository/issues),
+with your system details, the output of `opam depext --flags`, and the solution,
+if you found it. Thanks!
 
 ---
 
