@@ -267,7 +267,12 @@ let package_state repo prefix nv all =
   let fs = match all with
     | `all       -> package_files repo prefix nv ~archive:true
     | `partial b -> package_important_files repo prefix nv ~archive:b in
-  let l = List.map OpamFilename.checksum fs in
+  let url = OpamPath.Repository.url repo prefix nv in
+  let l =
+    List.map (fun f ->
+        if all <> `all && f = url then url_checksum f
+        else OpamFilename.checksum f)
+      fs in
   List.flatten l
 
 (* Sort repositories by priority *)
