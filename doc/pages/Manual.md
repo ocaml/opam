@@ -1,4 +1,4 @@
-# The OPAM manual _(work in progress, 2015-03-03)_
+# The OPAM manual
 
 This manual gathers reference information on OPAM and its file formats. It is
 primarily of use for packagers, package maintainers and repository maintainers.
@@ -287,7 +287,8 @@ should be run at each repository update, and will generate the `urls.txt` and
 Additionally, if the `--index` option is omitted, **all** package archives
 listed in **all** packages that aren't present already will be fetched and
 repackaged inside the `archives/` directory, allowing direct download from the
-server. These will be used even for non HTTP repositories.
+server. These are used by `opam update` even when fetching from non HTTP
+repositories.
 
 ### Metadata precedence
 
