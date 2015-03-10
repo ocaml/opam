@@ -461,32 +461,23 @@ let reinstall_t t =
   let ocaml_version = t.compiler in
   let export = (t.installed, t.installed_roots, t.pinned) in
 
-  (* Remove the directory (except the overlays) *)
-  OpamFilename.with_tmp_dir (fun tmpdir ->
-      let tmp dir = OpamFilename.(OP.(tmpdir / Base.to_string (basename_dir dir))) in
-      let save dir =
-        if OpamFilename.exists_dir dir then
-          OpamFilename.move_dir ~src:dir ~dst:(tmp dir) in
-      let restore dir =
-        if OpamFilename.exists_dir (tmp dir) then (
-          OpamFilename.mkdir (OpamFilename.dirname_dir dir);
-          OpamFilename.move_dir ~src:(tmp dir) ~dst:dir
-        ) in
-      let overlays = OpamPath.Switch.Overlay.dir t.root t.switch in
-      let backups = OpamPath.Switch.backup_dir t.root t.switch in
-      save overlays;
-      save backups;
-      (try
-         OpamFilename.rmdir (OpamPath.Switch.root t.root t.switch);
-         OpamState.install_compiler t ~quiet:false t.switch ocaml_version
-       with e ->
-         restore backups;
-         restore overlays;
-         raise e);
-      restore backups;
-      restore overlays
-  );
+  (* Remove the directory (except the overlays, backups and lock) *)
+  let switch_root = OpamPath.Switch.root t.root t.switch in
+  let keep_dirs = [
+    OpamPath.Switch.Overlay.dir t.root t.switch;
+    OpamPath.Switch.backup_dir t.root t.switch;
+  ] in
+  let keep_files = [
+    OpamPath.Switch.lock t.root t.switch;
+  ] in
+  List.iter
+    (fun d -> if not (List.mem d keep_dirs) then OpamFilename.rmdir d)
+    (OpamFilename.dirs switch_root);
+  List.iter
+    (fun f -> if not (List.mem f keep_files) then OpamFilename.remove f)
+    (OpamFilename.files switch_root);
 
+  OpamState.install_compiler t ~quiet:false t.switch ocaml_version;
   let t = OpamState.load_state "switch-reinstall-2" in
   import_t export t
 
