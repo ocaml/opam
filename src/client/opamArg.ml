@@ -471,9 +471,6 @@ let print_short_flag =
   mk_flag ["s";"short"]
     "Output raw lists of names, one per line, skipping any details."
 
-let installed_flag =
-  mk_flag ["i";"installed"] "List installed packages only."
-
 let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
@@ -771,13 +768,18 @@ let list =
         installed version or -- if the package is not installed, and a short \
         description. In color mode, root packages (eg. manually installed) are \
         underlined.";
-    `P "The full description can be obtained by doing $(b,opam info <package>). \
+    `P "The full description can be obtained by doing $(b,opam show <package>). \
         You can search through the package descriptions using the $(b,opam search) \
         command."
   ] in
   let all =
     mk_flag ["a";"all"]
-      "List all the packages which can be installed on the system." in
+      "List all the packages which can be installed on the system. This is \
+       the default when a query argument is supplied." in
+  let installed =
+    mk_flag ["i";"installed"]
+      "List installed packages only. This is the the default when no argument \
+       is supplied." in
   let unavailable =
     mk_flag ["A";"unavailable"]
       "List all packages, even those which can't be installed on the system" in
@@ -841,7 +843,7 @@ let list =
   in
   Term.ret
     Term.(pure list $global_options
-          $print_short_flag $all $installed_flag $installed_roots_flag
+          $print_short_flag $all $installed $installed_roots_flag
           $unavailable $sort
           $depends_on $required_by $recursive $depopts $depexts
           $pattern_list),
@@ -860,6 +862,8 @@ let search =
         is not installed, and a short description.";
     `P "The full description can be obtained by doing $(b,opam show <package>).";
   ] in
+  let installed =
+    mk_flag ["i";"installed"] "Search among installed packages only." in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
   let search global_options print_short installed installed_roots case_sensitive pkgs =
@@ -872,7 +876,7 @@ let search =
     Client.list ~print_short ~filter ~order
       ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
-    $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
+    $print_short_flag $installed $installed_roots_flag $case_sensitive
     $pattern_list),
   term_info "search" ~doc ~man
 

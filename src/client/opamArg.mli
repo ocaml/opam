@@ -83,9 +83,6 @@ val help: command
 (** --short *)
 val print_short_flag: bool Term.t
 
-(** --installed *)
-val installed_flag: bool Term.t
-
 (** --installed-root *)
 val installed_roots_flag: bool Term.t
 
