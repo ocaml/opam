@@ -264,7 +264,7 @@ let string_of_commands commands =
   else
     "Nothing to do."
 
-let compilation_env t opam =
+let compilation_env ?(warn_overrides=false) t opam =
   let env0 = OpamState.get_full_env ~opam ~force_path:true t in
   let env1 = [
     ("MAKEFLAGS", "");
@@ -272,7 +272,21 @@ let compilation_env t opam =
     ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
     ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
   ] @ env0 in
-  OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
+  let env =
+    OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
+  in
+  if warn_overrides then
+    List.iter (fun (var,value) ->
+        try
+          let orig_val = OpamMisc.StringMap.find var (OpamMisc.env_map()) in
+          if value <> orig_val then
+            OpamGlobals.note
+              "Overriding environment variable %s to %S (was %S)"
+              var value orig_val
+        with Not_found -> ()
+      )
+      env;
+  env
 
 let get_metadata t =
   let compiler =
@@ -523,7 +537,8 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
     OpamFile.OPAM.install opam
   in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
-  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let env =
+    OpamFilename.env_of_list (compilation_env ~warn_overrides:true t opam) in
   let name = OpamPackage.name_to_string nv in
   let metadata = get_metadata t in
   let dir = OpamPath.Switch.build t.root t.switch nv in

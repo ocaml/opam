@@ -482,10 +482,13 @@ let env = lazy (
   ) (Array.to_list e)
 )
 
+let env_map = lazy (StringMap.of_list (Lazy.force env))
+
 let getenv n =
-  List.assoc n (Lazy.force env)
+  StringMap.find n (Lazy.force env_map)
 
 let env () = Lazy.force env
+let env_map () = Lazy.force env_map
 
 let indent_left s ?(visual=s) nb =
   let nb = nb - String.length visual in
