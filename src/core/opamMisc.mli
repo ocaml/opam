@@ -267,7 +267,6 @@ val getenv: string -> string
 
 (** Lazy environment *)
 val env: unit -> (string * string) list
-val env_map: unit -> string StringMap.t
 
 (** To use when catching default exceptions: ensures we don't catch fatal errors
     like C-c. try-with should _always_ (by decreasing order of preference):
