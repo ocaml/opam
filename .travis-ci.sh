@@ -8,7 +8,7 @@ install_on_linux () {
   3.12.1) ppa=avsm/ocaml312+opam12 ;;
   4.00.1) ppa=avsm/ocaml40+opam12 ;;
   4.01.0) ppa=avsm/ocaml41+opam12 ;;
-  4.02.0) ppa=avsm/ocaml42+opam12 ;;
+  4.02.1) ppa=avsm/ocaml42+opam12 ;;
   *) echo Unknown $OCAML_VERSION; exit 1 ;;
   esac
 
@@ -22,8 +22,8 @@ install_on_osx () {
   sudo hdiutil attach XQuartz-2.7.6.dmg
   sudo installer -verbose -pkg /Volumes/XQuartz-2.7.6/XQuartz.pkg -target /
   case "$OCAML_VERSION" in
-  4.01.0) brew install ocaml;;
-  4.02.0) brew update; brew install ocaml --HEAD ;;
+  4.02.1) brew update; brew install ocaml;;
+  4.03.0) brew update; brew install ocaml --HEAD ;;
   *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
   esac
   if [ -n "$EXTERNAL_SOLVER$OPAM_TEST" ]; then
@@ -36,8 +36,12 @@ osx) install_on_osx ;;
 linux) install_on_linux ;;
 esac
 
-echo OCaml version
-ocaml -version
+OCAMLV=$(ocaml -vnum)
+echo === OCaml version $OCAMLV ===
+if [ "$OCAMLV" != "$OCAML_VERSION" ]; then
+    echo "OCaml version doesn't match: travis script needs fixing"
+    exit 12
+fi
 
 export OPAMYES=1
 export OCAMLRUNPARAM=b
@@ -46,13 +50,17 @@ if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
     # ignore the warnings
 
-    # We still have OPAM 1.1 on OSX 4.01.0
+    echo "Bootstrapping for opam with:"
+    opam config report
+
+    # We still have OPAM 1.1 on Homebrew
     OPAMV=$(opam --version)
     if [ "${OPAMV%.*}" = "1.1" ]; then
         opam init https://opam.ocaml.org/1.1
     else
         opam init
     fi
+
     eval `opam config env`
     opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose cudf re jsonm
     ./configure
