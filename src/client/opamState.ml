@@ -576,8 +576,12 @@ let pinned_packages t =
        try OpamPackage.Set.add (pinned t name) acc
        with e ->
          OpamMisc.fatal e;
-         OpamGlobals.error "Ignoring invalid pinned package %s"
-           (OpamPackage.Name.to_string name);
+         if !OpamGlobals.strict then
+           OpamGlobals.error_and_exit "Invalid pinned package %s"
+             (OpamPackage.Name.to_string name)
+         else
+           OpamGlobals.error "Ignoring invalid pinned package %s"
+             (OpamPackage.Name.to_string name);
          acc)
     t.pinned OpamPackage.Set.empty
 
