@@ -1063,27 +1063,27 @@ let config =
          then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))
          else "no");
       print "os" "%s" (OpamGlobals.os_string ());
-      print "external-solver" "%s"
-        (if OpamCudf.external_solver_available () then
-           String.concat " "
-             (OpamGlobals.external_solver
-                ~input:"$in" ~output:"$out" ~criteria:"$criteria")
-         else "no");
-      print "criteria" "%s"
-        (try List.assoc `Default !OpamGlobals.solver_preferences
-         with Not_found ->
-           try
-             let cfg =
-               OpamFile.Config.read (OpamPath.config (OpamPath.root())) in
-             List.assoc `Default (OpamFile.Config.criteria cfg)
-           with
-           | e ->
-             OpamMisc.fatal e;
-             match OpamCudf.check_cudf_version () with
-              | `Latest -> OpamGlobals.default_preferences `Default ^ "*"
-              | `Compat -> OpamGlobals.compat_preferences `Default ^ "*");
       try
         let state = OpamState.load_state "config-report" in
+        print "external-solver" "%s"
+          (if OpamCudf.external_solver_available () then
+             String.concat " "
+               (OpamGlobals.external_solver
+                  ~input:"$in" ~output:"$out" ~criteria:"$criteria")
+           else "no");
+        print "criteria" "%s"
+          (try List.assoc `Default !OpamGlobals.solver_preferences
+           with Not_found ->
+             try
+               let cfg =
+                 OpamFile.Config.read (OpamPath.config (OpamPath.root())) in
+               List.assoc `Default (OpamFile.Config.criteria cfg)
+             with
+             | e ->
+               OpamMisc.fatal e;
+               match OpamCudf.check_cudf_version () with
+               | `Latest -> OpamGlobals.default_preferences `Default ^ "*"
+               | `Compat -> OpamGlobals.compat_preferences `Default ^ "*");
         let open OpamState.Types in
         let nprint label n =
           if n <> 0 then [Printf.sprintf "%d (%s)" n label]
