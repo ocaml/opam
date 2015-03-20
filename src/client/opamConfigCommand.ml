@@ -138,10 +138,11 @@ let print_fish_env env =
   List.iter (fun (k,v) ->
       match k with
       | "PATH" | "MANPATH" ->
-        let to_space_sep = String.concat " " (OpamMisc.split v ':') in
-        OpamGlobals.msg "set -gx %s %s\n" k to_space_sep
+        let v = OpamMisc.split_delim v ':' in
+        OpamGlobals.msg "set -gx %s %s;\n" k
+          (OpamMisc.sconcat_map " " (Printf.sprintf "%S") v)
       | _ ->
-        OpamGlobals.msg "set -gx %s %S\n" k v
+        OpamGlobals.msg "set -gx %s %S;\n" k v
     ) env
 
 let env ~csh ~sexp ~fish ~inplace_path =

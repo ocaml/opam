@@ -189,8 +189,13 @@ val rcut_at: string -> char -> (string * string) option
 (** Does a string contains the given chars ? *)
 val contains: string -> char -> bool
 
-(** Split a string *)
+(** Split a string at occurences of a given characters. Empty strings are
+    skipped. *)
 val split: string -> char -> string list
+
+(** The same as [split], but keep empty strings (leading, trailing or between
+    contiguous delimiters) *)
+val split_delim: string -> char -> string list
 
 (** Returns the length of the string in terminal chars, ignoring ANSI color
     sequences from OpamGlobals.colorise *)

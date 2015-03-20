@@ -2055,10 +2055,11 @@ let string_of_env_update t shell updates =
   let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
   let fish (k,v) = match k with
     | "PATH" | "MANPATH" ->
-      let to_space_sep = String.concat " " (OpamMisc.split v ':') in
-      Printf.sprintf "set -gx %s %s\n" k to_space_sep
+      let v = OpamMisc.split_delim v ':' in
+      Printf.sprintf "set -gx %s %s;\n" k
+        (OpamMisc.sconcat_map " " (Printf.sprintf "%S") v)
     | _ ->
-      Printf.sprintf "set -gx %s %S\n" k v in
+      Printf.sprintf "set -gx %s %S;\n" k v in
   let export = match shell with
     | `zsh
     | `sh  -> sh
