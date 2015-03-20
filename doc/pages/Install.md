@@ -15,17 +15,6 @@ binary installer. OPAM will automatically update its internal repository at
 `~/.opam` on first run if needed (backup that if you may want to rollback the
 upgrade without starting over).
 
-If you already have at least OPAM 1.2.0, there is also the option to locally use
-the built-in upgrade:
-
-```
-opam install opam-update
-```
-
-This will use your OPAM installation to compile the new version, and place it in
-your `~/.opam`. It will then be used transparently instead of the system
-version.
-
 ## Using your distribution's package system
 
 This is the recommended way, when available. Here is a list of supported
