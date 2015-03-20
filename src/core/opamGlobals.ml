@@ -47,9 +47,9 @@ let when_var v =
 
 let locale_utf8 () =
   let checkv v =
-    try OpamMisc.ends_with ~suffix:"UTF-8" (OpamMisc.getenv v)
-    with Not_found -> false in
-  checkv "LANG" || checkv "LC_ALL"
+    try Some (OpamMisc.ends_with ~suffix:"UTF-8" (OpamMisc.getenv v))
+    with Not_found -> None in
+  OpamMisc.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
 
 let dumb_term =
   try OpamMisc.getenv "TERM" = "dumb" with Not_found -> true
