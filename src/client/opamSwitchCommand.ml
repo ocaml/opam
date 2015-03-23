@@ -311,7 +311,8 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
        clear_switch ~keep_debug:true t switch;
        OpamFile.Config.write (OpamPath.config t.root) t.config;
        raise e);
-    if warning then OpamState.print_env_warning_at_switch {t with switch}
+    if warning && update_config then
+      OpamState.print_env_warning_at_switch {t with switch}
 
 let install ~quiet ~warning ~update_config switch compiler =
   (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
