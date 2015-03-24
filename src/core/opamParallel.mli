@@ -39,12 +39,14 @@ exception Aborted
     in the list *)
 exception Errors of int list * (int * exn) list * int list
 
-val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> 'a list -> unit
+val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> ?dry_run:bool ->
+  'a list -> unit
 
-val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> 'a list -> 'b list
+val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> ?dry_run:bool ->
+  'a list -> 'b list
 
 val reduce: jobs:int -> command:('a -> 'b OpamProcess.job) ->
-  merge:('b -> 'b -> 'b) -> nil:'b ->
+  merge:('b -> 'b -> 'b) -> nil:'b -> ?dry_run:bool ->
   'a list -> 'b
 
 (** More complex parallelism with dependency graphs *)
@@ -59,6 +61,7 @@ module type SIG = sig
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?dry_run:bool ->
     ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     unit
@@ -68,6 +71,7 @@ module type SIG = sig
   val map:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?dry_run:bool ->
     ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     (G.V.t * 'a) list

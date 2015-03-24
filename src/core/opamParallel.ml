@@ -44,6 +44,7 @@ module type SIG = sig
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?dry_run:bool ->
     ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     unit
@@ -51,6 +52,7 @@ module type SIG = sig
   val map:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    ?dry_run:bool ->
     ?mutually_exclusive:(G.V.t list list) ->
     G.t ->
     (G.V.t * 'a) list
@@ -75,7 +77,7 @@ module Make (G : G) = struct
   open S.Op
 
   (* Returns a map (node -> return value) *)
-  let aux_map ~jobs ~command ?(mutually_exclusive=[]) g =
+  let aux_map ~jobs ~command ?(dry_run=false) ?(mutually_exclusive=[]) g =
     log "Iterate over %a task(s) with %d process(es)"
       (slog @@ G.nb_vertex @> string_of_int) g jobs;
 
@@ -151,7 +153,10 @@ module Make (G : G) = struct
             OpamMisc.Option.iter
               (OpamGlobals.msg "%s Command started\n")
               (OpamProcess.text_of_command cmd);
-          let p = OpamProcess.run_background cmd in
+          let p =
+            if dry_run then OpamProcess.dry_run_background cmd
+            else OpamProcess.run_background cmd
+          in
           let running =
             M.add n (p, cont, OpamProcess.text_of_command cmd) running
           in
@@ -167,6 +172,7 @@ module Make (G : G) = struct
         let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =
+          if dry_run then [node,error],[] else
           M.fold (fun n (p,cont,_text) (errors,pend) ->
               try
                 match OpamProcess.dontwait p with
@@ -215,7 +221,9 @@ module Make (G : G) = struct
         M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
       in
       let process,result =
-        try match processes with
+        if dry_run then
+          OpamProcess.dry_wait_one (List.map fst processes)
+        else try match processes with
           | [p,_] -> p, OpamProcess.wait p
           | _ -> OpamProcess.wait_one (List.map fst processes)
         with e -> fail (fst (snd (List.hd processes))) e
@@ -237,11 +245,11 @@ module Make (G : G) = struct
     in
     loop jobs M.empty M.empty roots
 
-  let iter ~jobs ~command ?mutually_exclusive g =
-    ignore (aux_map ~jobs ~command ?mutually_exclusive g)
+  let iter ~jobs ~command ?dry_run ?mutually_exclusive g =
+    ignore (aux_map ~jobs ~command ?dry_run ?mutually_exclusive g)
 
-  let map ~jobs ~command ?mutually_exclusive g =
-    M.bindings (aux_map ~jobs ~command ?mutually_exclusive g)
+  let map ~jobs ~command ?dry_run ?mutually_exclusive g =
+    M.bindings (aux_map ~jobs ~command ?dry_run ?mutually_exclusive g)
 
   (* Only print the originally raised exception, which should come first. Ignore
      Aborted exceptions due to other commands termination, and simultaneous
@@ -311,26 +319,26 @@ let flat_graph_of_array a =
 
 exception Errors = IntGraph.Parallel.Errors
 
-let iter ~jobs ~command l =
+let iter ~jobs ~command ?dry_run l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  ignore (IntGraph.Parallel.iter ~jobs ~command g)
+  ignore (IntGraph.Parallel.iter ~jobs ~command ?dry_run g)
 
-let map ~jobs ~command l =
+let map ~jobs ~command ?dry_run l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  let r = IntGraph.Parallel.aux_map ~jobs ~command g in
+  let r = IntGraph.Parallel.aux_map ~jobs ~command ?dry_run g in
   let rec mklist acc n =
     if n < 0 then acc
     else mklist (IntGraph.Parallel.M.find n r :: acc) (n-1)
   in
   mklist [] (Array.length a - 1)
 
-let reduce ~jobs ~command ~merge ~nil l =
+let reduce ~jobs ~command ~merge ~nil ?dry_run l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  let r = IntGraph.Parallel.aux_map ~jobs ~command g in
+  let r = IntGraph.Parallel.aux_map ~jobs ~command ?dry_run g in
   IntGraph.Parallel.M.fold (fun _ -> merge) r nil

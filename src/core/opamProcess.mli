@@ -67,9 +67,10 @@ type result = {
   r_cleanup  : string list; (** List of files to clean-up *)
 }
 
-(** [run ~name cmd args] synchronously call the command [cmd] with
-    arguments [args]. It waits until the process is finished. The file
-    [name.info], [name.env], [name.out] and [name.err] are
+(** [run command] synchronously call the command [command.cmd] with
+    arguments [command.args]. It waits until the process is finished. The files
+    [name.info], [name.env], [name.out] and [name.err], with
+    [name = command.cmd_name] are
     created, and contain the process main description, the environment
     variables, the standard output and the standard error.
     Don't forget to call [cleanup result] afterwards *)
@@ -79,6 +80,10 @@ val run : command -> result
     results;
     Don't forget to call [cleanup result] afterwards *)
 val run_background: command -> t
+
+(** Similar to [run_background], except that no process is created, and a dummy
+    process (suitable for dry_wait_one) is returned. *)
+val dry_run_background: command -> t
 
 (** [wait p] waits for the processus [p] to end and returns its results. Be
     careful to handle Sys.Break *)
@@ -90,6 +95,10 @@ val dontwait: t -> result option
 (** Wait for the first of the listed processes to terminate, and return its
     termination status *)
 val wait_one: t list -> t * result
+
+(** Similar to [wait_one] for simulations, to be used with
+    [dry_run_background] *)
+val dry_wait_one: t list -> t * result
 
 (** Send SIGINT to a process (or SIGKILL on Windows) *)
 val interrupt: t -> unit

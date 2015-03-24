@@ -336,6 +336,7 @@ let parallel_apply t action action_graph =
       OpamParallel.map
         ~jobs:(OpamState.dl_jobs t)
         ~command:(OpamAction.download_package t)
+        ~dry_run:!OpamGlobals.dryrun
         sources_list
     in
     List.fold_left2 (fun (sources,failed) nv -> function
@@ -401,6 +402,7 @@ let parallel_apply t action action_graph =
         PackageActionGraph.Parallel.map
           ~jobs:(OpamState.jobs t)
           ~command:job
+          ~dry_run:!OpamGlobals.dryrun
           action_graph
       in
       let successful, failed =

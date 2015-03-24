@@ -789,7 +789,6 @@ let compute_root_causes g requested =
     | a,              To_recompile _,      `Depends  -> Use [action_contents a]
     | _,              To_recompile _,      `Provides -> Unknown
     | To_delete p,    To_delete _,         `Provides -> Use [p]
-    | To_delete p,    To_delete _,         `Depends  -> Required_by [p]
     | To_delete p,    To_change _,         `Provides -> Use [p]
     | To_recompile p, To_change _,         `Provides -> Required_by [p]
     | _,              To_change(None,_),   `Depends  -> Unknown

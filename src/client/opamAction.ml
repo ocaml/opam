@@ -357,8 +357,6 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       (* if remove <> [] || not (OpamFilename.exists dot_install) then *)
       (*   OpamGlobals.msg "%s\n" (string_of_commands remove); *)
       let metadata = get_metadata t in
-      if !OpamGlobals.dryrun then Done ()
-      else
       let commands =
         OpamMisc.filter_map (function
             | [] -> None
@@ -565,10 +563,7 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
         Done None
       with e -> OpamMisc.fatal e; Done (Some e)
   in
-  if !OpamGlobals.dryrun then
-    Done (OpamProcess.Job.dry_run (run_commands commands))
-  else
-    run_commands commands
+  run_commands commands
 
 let build_and_install_package t ~metadata source nv =
   if not !OpamGlobals.fake then

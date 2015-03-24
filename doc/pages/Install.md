@@ -1,4 +1,4 @@
-> NOTE: 1.2.1 has just being released. It may take a few days before binary
+> NOTE: 1.2.1 is just being released. It may take a few days before binary
 > distributions catch up
 
 # How to install OPAM
@@ -115,7 +115,7 @@ for OPAM usage.
 > **Warning**: although there is an OPAM package available officially in
 > "**Utopic**" (14.10), it's currently broken. Don't use it, see the
 > [bug report](https://bugs.launchpad.net/ubuntu/+source/opam/+bug/1401346).
-> The Ubuntu "Vivid" (15.04) package is working and up-to-date package.
+> The Ubuntu "Vivid" (15.04) package is fine.
 
 We provide binary package for "Precise" and "Trusty"
 
