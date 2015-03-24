@@ -305,10 +305,10 @@ until you committed them. Pinning the directory as a raw path isn't perfect
 either, because it makes OPAM register all files, including temporary files or
 build artifacts.
 
-The idea of "mixed mode", which is the default in OPAM 1.2.1, is to
-take the best of both worlds: OPAM will synchronise only files under version
-control, but at their current state on the filesystem. You may just need to
-remember to register them if you added new files (e.g. `git add`).
+The idea of "mixed mode", which is the default for version-control pins in
+OPAM 1.2.1, is to take the best of both worlds: OPAM will synchronise only files
+under version control, but at their current state on the filesystem. You may
+just need to remember to register them if you added new files (e.g. `git add`).
 
 If for some reason you want the old behaviour, use one of:
 * `--kind path` for raw filesystem pinning
@@ -327,3 +327,19 @@ abuse this. There is no built-in command to reset them, in purpose, but removing
 the file `~/.opam/<switch>/reinstall` is enough to make OPAM forget about them.
 It's quite safe, but don't report issues if you did and your system is not up to
 date, obviously.
+
+---
+
+#### 🐫  Some package installation fails with "ocamlfind: already installed"
+
+Probably the package was either installed from outside of OPAM, or uncleanly
+removed. You should try:
+
+```
+opam remove <package> --force
+opam install <package>
+```
+
+This will process the uninstall instructions, even if OPAM has no knowledge of
+the package being installed. You may also try to uninstall directly with
+ocamlfind, or just remove the problematic files.
