@@ -2864,8 +2864,8 @@ let download_archive t nv =
     OpamRepository.pull_archive repo nv
     @@+ function
     | Not_available _ ->
-      if !OpamGlobals.verbose then
-        OpamGlobals.msg "%s Repo archive not found" text;
+      if !OpamGlobals.verbose_level >= 2 then
+        OpamGlobals.msg "%s Repo archive not found\n" text;
       Done None
     | Up_to_date f ->
       OpamGlobals.msg "[%s] Archive in cache\n"

@@ -5,9 +5,9 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2015
 
-VERSION='1.2.0'
+VERSION='1.2.1'
 
-default_ocaml=4.01.0
+default_ocaml=4.02.1
 
 usage() {
 cat <<EOF
