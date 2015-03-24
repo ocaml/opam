@@ -1,13 +1,24 @@
-# Install OPAM in 2 minutes
+> NOTE: 1.2.1 has just being released. It may take a few days before binary
+> distributions catch up
+
+# How to install OPAM
 
 This page describes how to install and configure OPAM.
 For further help on how to use OPAM, either read
 `opam --help` or move on to the [Basic Usage](Usage.html) guide.
 
-## Installing OPAM with your distribution
+## Upgrading from a previous version
 
-You can use the OPAM package of your distribution if
-available. Here is a list of supported distributions:
+Generally, you should just reproduce the same installation steps as for the
+original installation: upgrade from your system's package manager, or re-run the
+binary installer. OPAM will automatically update its internal repository at
+`~/.opam` on first run if needed (backup that if you may want to rollback the
+upgrade without starting over).
+
+## Using your distribution's package system
+
+This is the recommended way, when available. Here is a list of supported
+distributions:
 
 #### Archlinux
 
@@ -31,12 +42,9 @@ repositories. You should be set with:
 apt-get install opam
 ```
 
-Wheezy users are left with the options of compiling from source, pinning the
-packages from the testing repository, or using our
-[custom-built binary packages](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam)
-from the OpenSUSE Build Service.
-
-The latter can be done by running:
+There are also unofficial packages from the
+[OpenSUSE Build Service](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam),
+for wheezy users or if the latest version isn't yet in the official repository:
 
 ```
 wget http://download.opensuse.org/repositories/home:ocaml/Debian_7.0/Release.key
@@ -45,14 +53,26 @@ echo 'deb http://download.opensuse.org/repositories/home:/ocaml/Debian_7.0/ /' >
 apt-get update
 ```
 
-
 #### [Exherbo](http://exherbo.org)
 
-Simply install the
-[`dev-ocaml/opam`](http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html)
-package: `cave resolve -x dev-ocaml/opam`. You might need to add the
-`::ocaml-unofficial` repository first: `cave resolve -x
-repository/ocaml-unofficial`.
+The
+[`dev-ocaml/opam`](http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html) package can be installed with the command:
+
+```
+cave resolve -x dev-ocaml/opam
+```
+
+You might need to add the `::ocaml-unofficial` repository first:
+
+```
+cave resolve -x repository/ocaml-unofficial
+```
+
+#### [Fedora](http://fedoraproject.org), [CentOS](http://centos.org) and RHEL
+
+RPMs for Fedora, CentOS and Red Hat Enterprise Linux are available with
+instructions on the
+[OpenSUSE Build Server](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam).
 
 #### Mageia
 
@@ -61,31 +81,6 @@ The opam package for Mageia can be installed with the command:
 ```
 urpmi opam
 ```
-
-#### [Fedora](http://fedoraproject.org) and [CentOS](http://centos.org)
-
-Prebuilt RPMs for Fedora, CentOS and Red Hat Enterprise Linux are available via
-the OpenSUSE Build Server.
-
-Navigate to the
-[OPAM download page](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam),
-click on the relevant operating system and follow the instructions there to
-install prebuilt binaries.
-
-#### OSX
-
-OPAM packages for [homebrew](http://mxcl.github.com/homebrew/) and
-[MacPorts](http://www.macports.org/) are available:
-
-```
-brew install opam                   # using Homebrew on OSX Mavericks or later
-brew install opam --without-aspcud  # using Homebrew on OSX Mountain Lion (or lower)
-port install opam                   # using MacPort
-```
-
-See also
-[howto setup Emacs.app](https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage)
-for opam usage.
 
 #### OpenBSD
 
@@ -99,6 +94,21 @@ make install
 
 Note that the `aspcud` external solver is not yet available on OpenBSD, so you
 may see some odd upgrade attempts due to the use of the internal solver.
+
+#### OSX
+
+OPAM packages for [homebrew](http://mxcl.github.com/homebrew/) and
+[MacPorts](http://www.macports.org/) are available:
+
+```
+brew install opam                   # Homebrew, OSX Mavericks or later
+brew install opam --without-aspcud  # Homebrew, OSX Mountain Lion or lower
+port install opam                   # MacPort
+```
+
+See also
+[howto setup Emacs.app](https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage)
+for OPAM usage.
 
 #### Ubuntu
 
@@ -116,8 +126,8 @@ apt-get install ocaml ocaml-native-compilers camlp4-extra opam
 ```
 
 There are also PPAs available that are
-[pinned to specific revisions](http://launchpad.net/~avsm) of OCaml and OPAM to
-help with
+[pinned to specific revisions](http://launchpad.net/~avsm) of OCaml and OPAM --
+we use them for our
 [automated testing](http://anil.recoil.org/2013/09/30/travis-and-ocaml.html).
 
 If the command `add-apt-repository` is not available, you can install the
@@ -148,6 +158,9 @@ sh ./opam_installer.sh /usr/local/bin 3.12.1 # Install the latest OPAM and OCaml
 sh ./opam_installer.sh /usr/local/bin system # Install the latest OPAM using the system compiler (if any)
 ```
 
+Note that this only gives you the basic `opam` command, not other binaries like
+`opam-admin`. You can install those through OPAM afterwards.
+
 ## From Sources
 
 #### Getting the Sources
@@ -156,8 +169,12 @@ Sources of the latest stable version of OPAM are available on Github:
 
 * [OPAM releases on Github](https://github.com/ocaml/opam/releases)
 
-You can also download the full archives, including OPAM dependencies:
+You can also download the full archives, including OPAM dependencies (these
+don't require any extra downloads, just the OCaml compiler -- 3.12.1 or later):
 
+* [1.2.1](https://github.com/ocaml/opam/releases/download/1.2.1/opam-full-1.2.1.tar.gz)
+  MD5: 04e8823a099ab631943952e4c2ab18fc
+  SHA1: 189e309ee0659723abaaad5f887f5caf89b34422
 * [1.2.0](https://github.com/ocaml/opam/releases/download/1.2.0/opam-full-1.2.0.tar.gz)
   MD5 (opam-full-1.2.0.tar.gz) = 17cc252c6c80fc503c4878eac8d123e7
 * [1.1.2](https://github.com/ocaml/opam/releases/download/1.1.2/opam-full-1.1.2.tar.gz)
@@ -167,8 +184,9 @@ You can also download the full archives, including OPAM dependencies:
 * [1.1.0](http://www.ocamlpro.com/pub/opam-full-1.1.0.tar.gz)
   MD5 (opam-full-1.1.0.tar.gz) = d6e2f56b10c0be73b5677963e6659d24
 
-Follow the instructions in [`README.md`](https://github.com/ocaml/opam#readme)
-to get OPAM built and installed from there.
+Follow the instructions in the included
+[`README.md`](https://github.com/ocaml/opam#readme) to get OPAM built and
+installed from there.
 
 
 #### Using ocamlbrew
