@@ -16,6 +16,7 @@ type 'a action = [`Update of 'a | `Remove | `Keep ]
 (** Maps on the files of every package. Only changed files are written back to
     disk. *)
 val iter_packages_gen:
+  ?quiet:bool ->
   (OpamPackage.t ->
    prefix:string option ->
    opam:OPAM.t ->
@@ -31,6 +32,7 @@ val filter_packages: string list -> (OpamPackage.t -> bool)
 
 (** Quicker interface when considering a single type of file *)
 val iter_packages:
+  ?quiet:bool ->
   ?filter:(OpamPackage.t -> bool) ->
   ?f:(OpamPackage.t -> string option -> OPAM.t -> unit) ->
   ?opam:(OpamPackage.t -> OPAM.t -> OPAM.t) ->
@@ -41,6 +43,7 @@ val iter_packages:
 
 (** Similarly for compiler descriptions *)
 val iter_compilers_gen:
+  ?quiet:bool ->
   (OpamCompiler.t ->
    prefix:string option ->
    comp:Comp.t ->
@@ -53,6 +56,7 @@ val iter_compilers_gen:
 val filter_compilers: string list -> (OpamCompiler.t -> bool)
 
 val iter_compilers:
+  ?quiet:bool ->
   ?filter:(OpamCompiler.t -> bool) ->
   ?f:(OpamCompiler.t -> string option -> Comp.t -> unit) ->
   ?comp:(OpamCompiler.t -> Comp.t -> Comp.t) ->

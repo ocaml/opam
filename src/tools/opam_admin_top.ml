@@ -47,13 +47,15 @@ let of_action o = function
   | `Update x -> Some x
   | `Remove   -> None
 
-let iter_packages_gen f =
+let iter_packages_gen ?(quiet=false) f =
   let packages = OpamRepository.packages_with_prefixes repo in
   let changed_pkgs = ref 0 in
   let changed_files = ref 0 in
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
-      OpamGlobals.msg "Processing package %s... " (OpamPackage.to_string package);
+      if not quiet then
+        OpamGlobals.msg "Processing package %s... "
+          (OpamPackage.to_string package);
       let opam_file = OpamPath.Repository.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
       let descr_file = OpamPath.Repository.descr repo prefix package in
@@ -94,17 +96,20 @@ let iter_packages_gen f =
         (upd (); wopt OpamFile.Dot_install.write dot_install_file dot_install2);
       if !changed then
         (incr changed_pkgs;
-         OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamPackage.to_string package))
-      else
+         if not quiet then
+           OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamPackage.to_string package))
+      else if not quiet then
         OpamGlobals.msg "\r\027[K";
     ) packages;
-  OpamGlobals.msg "Done. Updated %d files in %d packages.\n"
-    !changed_files !changed_pkgs
+  if not quiet then
+    OpamGlobals.msg "Done. Updated %d files in %d packages.\n"
+      !changed_files !changed_pkgs
 
-let iter_packages
+let iter_packages ?quiet
     ?(filter=true_) ?f ?(opam=identity) ?descr ?url ?dot_install
     () =
-  iter_packages_gen (fun p ~prefix ~opam:o ~descr:d ~url:u ~dot_install:i ->
+  iter_packages_gen ?quiet
+    (fun p ~prefix ~opam:o ~descr:d ~url:u ~dot_install:i ->
       if filter p then (
         apply f p prefix o;
         opam p o, to_action descr p d , to_action url p u,
@@ -112,12 +117,13 @@ let iter_packages
       ) else
         o, `Keep, `Keep, `Keep)
 
-let iter_compilers_gen f =
+let iter_compilers_gen ?(quiet=false) f =
   let compilers = OpamRepository.compilers_with_prefixes repo in
   let changed_comps = ref 0 in
   let changed_files = ref 0 in
   OpamCompiler.Map.iter (fun c prefix ->
-      OpamGlobals.msg "Processing compiler %s... " (OpamCompiler.to_string c);
+      if not quiet then
+        OpamGlobals.msg "Processing compiler %s... " (OpamCompiler.to_string c);
       let comp_file = OpamPath.Repository.compiler_comp repo prefix c in
       let comp = OpamFile.Comp.read comp_file in
       let descr_file = OpamPath.Repository.compiler_descr repo prefix c in
@@ -136,15 +142,17 @@ let iter_compilers_gen f =
         (upd (); wopt OpamFile.Descr.write descr_file descr2);
       if !changed then
         (incr changed_comps;
-         OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamCompiler.to_string c))
-      else
+         if not quiet then
+           OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamCompiler.to_string c))
+      else if not quiet then
         OpamGlobals.msg "\r\027[K";
     ) compilers;
-  OpamGlobals.msg "Done. Updated %d files in %d compiler descriptions.\n"
-    !changed_files !changed_comps
+  if not quiet then
+    OpamGlobals.msg "Done. Updated %d files in %d compiler descriptions.\n"
+      !changed_files !changed_comps
 
-let iter_compilers ?(filter=true_) ?f ?(comp=identity) ?descr () =
-  iter_compilers_gen (fun x ~prefix ~comp:c ~descr:d ->
+let iter_compilers ?quiet ?(filter=true_) ?f ?(comp=identity) ?descr () =
+  iter_compilers_gen ?quiet (fun x ~prefix ~comp:c ~descr:d ->
       if filter x then (
         apply f x prefix c;
         comp x c, to_action descr x d

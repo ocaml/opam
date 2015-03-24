@@ -1791,7 +1791,11 @@ let lint =
     mk_flag ["normalise"]
       "Output a normalised version of the opam file to stdout"
   in
-  let lint global_options file normalise =
+  let short =
+    mk_flag ["short";"s"]
+      "Only print the warning/error numbers, space-separated, if any"
+  in
+  let lint global_options file normalise short =
     apply_global_options global_options;
     let opam_f =
       if Sys.is_directory file then
@@ -1802,9 +1806,14 @@ let lint =
       try
         let warnings,opam = OpamFile.OPAM.validate_file opam_f in
         let failed =
-          List.exists (function `Error,_ -> true | _ -> false) warnings
+          List.exists (function _,`Error,_ -> true | _ -> false) warnings
         in
-        if warnings = [] then
+        if short then
+          (if warnings <> [] then
+             OpamGlobals.msg "%s\n"
+               (OpamMisc.sconcat_map " " (fun (n,_,_) -> string_of_int n)
+                  warnings))
+        else if warnings = [] then
           OpamGlobals.msg "%s: %s\n"
             (OpamFilename.prettify opam_f)
             (OpamGlobals.colorise `green "Passed.")
@@ -1826,7 +1835,7 @@ let lint =
       (OpamGlobals.error_and_exit "No opam file found at %s"
          (OpamFilename.to_string opam_f))
   in
-  Term.(pure lint $global_options $file $normalise),
+  Term.(pure lint $global_options $file $normalise $short),
   term_info "lint" ~doc ~man
 
 
