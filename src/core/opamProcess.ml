@@ -259,6 +259,20 @@ let run_background command =
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
     ~allow_stdin ?dir cmd args
 
+let dry_run_background c = {
+  p_name   = c.cmd;
+  p_args   = c.args;
+  p_pid    = -1;
+  p_cwd    = OpamMisc.Option.default (Sys.getcwd ()) c.cmd_dir;
+  p_time   = Unix.gettimeofday ();
+  p_stdout = None;
+  p_stderr = None;
+  p_env    = None;
+  p_info   = None;
+  p_metadata = OpamMisc.Option.default [] c.cmd_metadata;
+  p_verbose = is_verbose_command c;
+}
+
 let verbose_print_cmd p =
   OpamGlobals.msg "%s %s %s%s\n"
     (OpamGlobals.colorise `yellow "+")
@@ -415,6 +429,19 @@ let wait_one processes =
         aux ()
     in
     aux ()
+
+let dry_wait_one = function
+  | {p_pid = -1; _} as p :: _ ->
+    if p.p_verbose then (verbose_print_cmd p; flush stdout);
+    p,
+    { r_code = 0;
+      r_signal = None;
+      r_duration = 0.;
+      r_info = [];
+      r_stdout = [];
+      r_stderr = [];
+      r_cleanup = []; }
+  | _ -> raise (Invalid_argument "dry_wait_one")
 
 let run command =
   let command =
