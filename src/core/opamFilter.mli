@@ -44,7 +44,8 @@ val to_string: filter -> string
 (** Folds on the tree of a filter *)
 val fold_down_left: ('a -> filter -> 'a) -> 'a -> filter -> 'a
 
-(** Returns all the variables appearing in a filter *)
+(** Returns all the variables appearing in a filter (including the ones within
+    string interpolations *)
 val variables: filter -> full_variable list
 
 (** Type of filter environment. *)
@@ -96,3 +97,6 @@ val commands: env -> command list -> string list list
 
 (** Process a simpler command, without filters *)
 val single_command: env -> arg list -> string list
+
+(** Extracts variables appearing in a list of commands *)
+val commands_variables: command list -> full_variable list

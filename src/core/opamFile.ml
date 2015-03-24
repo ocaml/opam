@@ -1495,6 +1495,32 @@ module X = struct
       let cond level msg cd =
         if cd then Some (level, msg) else None
       in
+      let names_of_formula flag f =
+        OpamPackage.Name.Set.of_list @@
+        List.map fst OpamFormula.(
+            atoms @@ filter_deps ~test:flag ~doc:flag f
+          )
+      in
+      let all_commands =
+        t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
+      in
+      let all_filters =
+        OpamMisc.filter_map snd t.patches @
+        OpamMisc.filter_map snd t.messages @
+        OpamMisc.filter_map snd t.post_messages @
+        [t.available] @
+        List.map (fun (_,_,f) -> f) t.features
+      in
+      let all_variables =
+        OpamFilter.commands_variables all_commands @
+        List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
+          [] all_filters
+      in
+      let all_depends =
+        OpamPackage.Name.Set.union
+          (names_of_formula true t.depends)
+          (names_of_formula true t.depopts)
+      in
       let warnings = [
         cond `Warning
           "Field 'opam-version' refers to the patch version of opam, should \
@@ -1553,16 +1579,10 @@ module X = struct
               (OpamFormula.ors_to_list t.depopts));
         cond `Error
           "Fields 'depends' and 'depopts' refer to the same package names"
-          (let names flag f =
-             OpamPackage.Name.Set.of_list @@
-             List.map fst OpamFormula.(
-                 atoms @@ filter_deps ~test:flag ~doc:flag f
-               )
-           in
-           not OpamPackage.Name.Set.(
+          (not OpamPackage.Name.Set.(
                is_empty @@ inter
-                 (names false t.depends)
-                 (names true t.depopts)));
+                 (names_of_formula false t.depends)
+                 (names_of_formula true t.depopts)));
         cond `Error
           "Field 'ocaml-version' is deprecated, use 'available' and the \
            'ocaml-version' variable instead"
@@ -1598,11 +1618,20 @@ module X = struct
           (List.exists (function
                | (CString "make", _)::_, _ -> true
                | _ -> false
-             ) (t.build @ t.install @ t.remove @ t.build_test @ t.build_doc));
+             ) all_commands);
         cond `Warning
           "Field 'features' is still experimental and not yet to be used on \
            the official repo"
           (t.features <> []);
+        cond `Warning
+          "Some packages are mentionned in package scripts of features, but \
+           there is no dependency or depopt toward them"
+          (List.exists (fun v ->
+               let n = OpamVariable.Full.package v in
+               n <> OpamPackage.Name.global_config &&
+               Some n <> t.name &&
+               not (OpamPackage.Name.Set.mem n all_depends))
+             all_variables);
       ]
       in
       OpamMisc.filter_map (fun x -> x) warnings
@@ -1688,7 +1717,8 @@ module X = struct
              | `Warning -> OpamGlobals.colorise `yellow "warning"
              | `Error -> OpamGlobals.colorise `red "error"
            in
-           Printf.sprintf "  %15s: %s" ws s)
+           OpamMisc.reformat ~indent:11
+             (Printf.sprintf "  %15s: %s" ws s))
         ws
 
   end
