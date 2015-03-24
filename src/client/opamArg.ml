@@ -947,6 +947,8 @@ let config =
     "Prints a summary of your setup, useful for bug-reports.";
     ["cudf-universe"], `cudf, ["[FILE]"],
     "Outputs the current available package universe in CUDF format.";
+    ["pef-universe"], `pef, ["[FILE]"],
+    "Outputs the current available package universe in PEF format.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1042,13 +1044,17 @@ let config =
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
-    | Some `cudf, params ->
+    | Some `pef, params ->
       let opam_state = OpamState.load_state "config-universe" in
       let dump oc = OpamState.dump_state opam_state oc in 
-      (*
+      (match params with
+       | [] -> `Ok (dump stdout)
+       | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
+       | _ -> bad_subcommand "config" commands command params)
+    | Some `cudf, params ->
+      let opam_state = OpamState.load_state "config-universe" in
       let opam_univ = OpamState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
-      *)
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
