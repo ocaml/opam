@@ -7,8 +7,8 @@ iter_packages ~opam:(fun nv opam ->
     match OpamFile.OPAM.validate opam with
     | [] -> opam
     | w ->
-      OpamGlobals.warning "In %s:\n%s\n"
+      OpamGlobals.msg "\r\027[KIn %s:\n%s\n"
         (OpamPackage.to_string nv)
-        (OpamFile.OPAM.warns_to_string warnings);
+        (OpamFile.OPAM.warns_to_string w);
       opam
   ) ()

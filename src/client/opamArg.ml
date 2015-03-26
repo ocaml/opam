@@ -1798,7 +1798,6 @@ let lint =
         OpamFilename.OP.(OpamFilename.Dir.of_string file // "opam")
       else OpamFilename.of_string file
     in
-    let msg = Printf.eprintf in
     if OpamFilename.exists opam_f then
       try
         let warnings,opam = OpamFile.OPAM.validate_file opam_f in
@@ -1806,11 +1805,11 @@ let lint =
           List.exists (function `Error,_ -> true | _ -> false) warnings
         in
         if warnings = [] then
-          msg "%s: %s\n"
+          OpamGlobals.msg "%s: %s\n"
             (OpamFilename.prettify opam_f)
             (OpamGlobals.colorise `green "Passed.")
         else
-          msg "%s found in %s:\n%s\n"
+          OpamGlobals.msg "%s found in %s:\n%s\n"
             (if failed then "Errors" else "Warnings")
             (OpamFilename.prettify opam_f)
             (OpamFile.OPAM.warns_to_string warnings);
@@ -1821,7 +1820,7 @@ let lint =
       | Parsing.Parse_error
       | Lexer_error _
       | OpamFormat.Bad_format _ ->
-        msg "File format error\n";
+        OpamGlobals.msg "File format error\n";
         OpamGlobals.exit 1
     else
       (OpamGlobals.error_and_exit "No opam file found at %s"

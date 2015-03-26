@@ -53,12 +53,42 @@ let rec fold_down_left f acc filter = match filter with
   | FNot(x) -> fold_down_left f (f acc filter) x
   | x -> f acc x
 
+(* ["%{xxx}%"] or ["%{xxx"] if unclosed *)
+let string_interp_regex =
+  let open Re in
+  let notclose =
+    rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")])
+  in
+  compile (seq [str "%{"; group notclose; opt (group (str "}%"))])
+
+let fident_variables = function
+  | [], var, _ -> [OpamVariable.Full.global var]
+  | pkgs, var, _ -> List.map (fun n -> OpamVariable.Full.create n var) pkgs
+
+(* extracts variables appearing in interpolations in a string*)
+let string_variables s =
+  let matches =
+    let rec aux acc pos =
+      try
+        let ss = Re.exec ~pos string_interp_regex s in
+        if Re.test ss 2 then
+          aux (Re.get ss 1 :: acc)
+            (fst (Re.get_ofs ss 0) + String.length (Re.get ss 0))
+        else
+          aux acc (pos+1)
+      with Not_found -> acc
+    in
+    aux [] 0
+  in
+  List.fold_left (fun acc s ->
+      try fident_variables (filter_ident_of_string s) @ acc
+      with Failure _ -> acc)
+    [] matches
+
 let variables filter =
   fold_down_left (fun acc -> function
-      | FIdent ([],var,_) -> OpamVariable.Full.global var :: acc
-      | FIdent (pkgs,var,_) ->
-        List.fold_left (fun acc n -> OpamVariable.Full.create n var :: acc)
-          acc pkgs
+      | FString s -> string_variables s @ acc
+      | FIdent f -> fident_variables f @ acc
       | _ -> acc)
     [] filter
 
@@ -147,14 +177,7 @@ let expand_string env text =
     resolve_ident env (filter_ident_of_string str)
     |> value_string ~default:""
   in
-  let rex =
-    let open Re in
-    let notclose =
-      rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")])
-    in
-    compile (seq [str "%{"; notclose; opt (str "}%")])
-  in
-  Re_pcre.substitute ~rex ~subst text
+  Re_pcre.substitute ~rex:string_interp_regex ~subst text
 
 let logop1 op = function
   | FUndef -> FUndef
@@ -255,3 +278,20 @@ let command env (l, f) =
 let commands env l = OpamMisc.filter_map (command env) l
 
 let single_command env l = OpamMisc.filter_map (arguments env) l
+
+let simple_arg_variables = function
+  | CString s -> string_variables s
+  | CIdent i ->
+    try fident_variables (filter_ident_of_string i)
+    with Failure _ -> []
+
+let filter_opt_variables = function
+  | None -> []
+  | Some f -> variables f
+let argument_variables (a,f) =
+  simple_arg_variables a @ filter_opt_variables f
+let command_variables (l,f) =
+  List.fold_left (fun acc a -> argument_variables a @ acc)
+    (filter_opt_variables f) l
+let commands_variables l =
+  List.fold_left (fun acc c -> command_variables c @ acc) [] l
