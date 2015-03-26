@@ -1492,8 +1492,8 @@ module X = struct
       }
 
     let validate t =
-      let cond level msg cd =
-        if cd then Some (level, msg) else None
+      let cond num level msg cd =
+        if cd then Some (num, level, msg) else None
       in
       let names_of_formula flag f =
         OpamPackage.Name.Set.of_list @@
@@ -1522,11 +1522,11 @@ module X = struct
           (names_of_formula true t.depopts)
       in
       let warnings = [
-        cond `Warning
+        cond 20 `Warning
           "Field 'opam-version' refers to the patch version of opam, should \
            be of the form MAJOR.MINOR"
           (OpamVersion.nopatch t.opam_version <> t.opam_version) ;
-        cond `Error
+        cond 21 `Error
           "Field 'opam-version' doesn't match the current version, \
            validation may not be accurate"
           (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0 &&
@@ -1537,93 +1537,93 @@ module X = struct
           cond (t.version = None)
             "Missing field 'version' or directory in the form 'name.version'";
 *)
-        cond `Error
+        cond 22 `Error
           "Some fields are present but empty; remove or fill them"
           (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
            t.license = [""] || t.doc = [""] || t.tags = [""] ||
            t.bug_reports = [""]);
-        cond `Error
+        cond 23 `Error
           "Missing field 'maintainer'"
           (t.maintainer = []);
-        cond `Error
+        cond 24 `Error
           "Field 'maintainer' set to the old default value"
           (List.mem "contact@ocamlpro.com" t.maintainer &&
            not (List.mem "org:ocamlpro" t.tags));
-        cond `Error
+        cond 25 `Error
           "Missing field 'authors'"
           (t.author = []);
-        cond `Warning
+        cond 26 `Warning
           "No field 'install', but a field 'remove': install instructions \
            probably part of 'build'. Use the 'install' field or a .install \
            file"
           (t.install = [] && t.build <> [] && t.remove <> []);
-        cond `Warning
+        cond 27 `Warning
           "No field 'remove' while a field 'install' is present, uncomplete \
            uninstallation suspected"
           (t.install <> [] && t.remove = []);
-        cond `Error
+        cond 28 `Error
           "Unknown package flag found"
           (List.exists (function Pkgflag_Unknown _ -> true | _ -> false) t.flags);
-        cond `Error
+        cond 29 `Error
           "Unknown dependency flags in depends or depopts"
           (OpamFormula.fold_left (fun acc (_, (flags, _)) ->
                acc || List.exists
                  (function Depflag_Unknown _ -> true | _ -> false)
                  flags)
               false (OpamFormula.ands [t.depends;t.depopts]));
-        cond `Error
+        cond 30 `Error
           "Field 'depopts' contains formulas or version constraints"
           (List.exists (function
                | OpamFormula.Atom (_, (_,Empty)) -> false
                | _ -> true)
               (OpamFormula.ors_to_list t.depopts));
-        cond `Error
+        cond 31 `Error
           "Fields 'depends' and 'depopts' refer to the same package names"
           (not OpamPackage.Name.Set.(
                is_empty @@ inter
                  (names_of_formula false t.depends)
                  (names_of_formula true t.depopts)));
-        cond `Error
+        cond 32 `Error
           "Field 'ocaml-version' is deprecated, use 'available' and the \
            'ocaml-version' variable instead"
           (t.ocaml_version <> None);
-        cond `Error
+        cond 33 `Error
           "Field 'os' is deprecated, use 'available' and the 'os' variable \
            instead"
           (t.os <> Empty);
-        cond `Error
+        cond 34 `Error
           "Field 'available' contains references to package-local variables. \
            It should only be determined from global configuration variables"
           (List.exists (fun v -> OpamVariable.Full.package v <>
                                  OpamPackage.Name.global_config)
              (OpamFilter.variables t.available));
-        cond `Error
+        cond 35 `Error
           "Missing field 'homepage'"
           (t.homepage = []);
         (* cond (t.doc = []) *)
         (*   "Missing field 'doc'"; *)
-        cond `Warning
+        cond 36 `Warning
           "Missing field 'bug-reports'"
           (t.bug_reports = []);
-        cond `Warning
+        cond 37 `Warning
           "Missing field 'dev-repo'"
           (t.dev_repo = None);
-        cond `Warning
+        cond 38 `Warning
           "Package declares 'depexts', but has no 'post-messages' to help \
            the user out when they are missing"
           (t.depexts <> None && t.post_messages = []);
-        cond `Error
+        cond 39 `Error
           "Command 'make' called directly, use the built-in variable \
            instead"
           (List.exists (function
                | (CString "make", _)::_, _ -> true
                | _ -> false
              ) all_commands);
-        cond `Warning
+        cond 40 `Warning
           "Field 'features' is still experimental and not yet to be used on \
            the official repo"
           (t.features <> []);
-        cond `Warning
+        cond 41 `Warning
           "Some packages are mentionned in package scripts of features, but \
            there is no dependency or depopt toward them"
           (List.exists (fun v ->
@@ -1658,7 +1658,7 @@ module X = struct
             OpamFormat.invalid_fields f.file_contents valid_fields
           in
           let warnings =
-            List.map (fun f -> `Error, Printf.sprintf "Invalid field: %s" f)
+            List.map (fun f -> 3, `Error, Printf.sprintf "Invalid field: %s" f)
               invalid_fields
           in
           let t, warnings =
@@ -1668,7 +1668,7 @@ module X = struct
             with OpamFormat.Bad_format (pos,_,msg) ->
               None,
               warnings @
-              [ `Error, Printf.sprintf "File format error: %s%s"
+              [ 2, `Error, Printf.sprintf "File format error: %s%s"
                   (match pos with
                    | Some p -> Printf.sprintf "at %s, " (string_of_pos p)
                    | None -> "")
@@ -1680,7 +1680,7 @@ module X = struct
               ignore (check_name name f.file_contents);
               warnings
             with OpamFormat.Bad_format (_,_,msg) ->
-              [ `Warning,
+              [ 4, `Warning,
                 Printf.sprintf "%s, the directory name or pinning implied %s"
                   msg
                   OpamMisc.Option.Op.((name >>| OpamPackage.Name.to_string) +! "" )
@@ -1692,7 +1692,7 @@ module X = struct
               ignore (check_version version f.file_contents);
               warnings
             with OpamFormat.Bad_format (_,_,msg) ->
-              [ `Warning,
+              [ 5, `Warning,
                 Printf.sprintf "%s, the directory name or pinning implied %s"
                   msg
                   OpamMisc.Option.Op.((version >>| OpamPackage.Version.to_string) +! "" )
@@ -1703,22 +1703,22 @@ module X = struct
         with
         | OpamSystem.File_not_found _ ->
           OpamGlobals.error "%s not found" (OpamFilename.prettify filename);
-          [`Error, "File does not exist"], None
+          [0, `Error, "File does not exist"], None
         | Lexer_error _ | Parsing.Parse_error ->
-          [`Error, "File does not parse"], None
+          [1, `Error, "File does not parse"], None
       in
       warnings @ (match t with Some t -> validate t | None -> []),
       t
 
     let warns_to_string ws =
       OpamMisc.sconcat_map "\n"
-        (fun (w,s) ->
+        (fun (n, w, s) ->
            let ws = match w with
              | `Warning -> OpamGlobals.colorise `yellow "warning"
              | `Error -> OpamGlobals.colorise `red "error"
            in
-           OpamMisc.reformat ~indent:11
-             (Printf.sprintf "  %15s: %s" ws s))
+           OpamMisc.reformat ~indent:14
+             (Printf.sprintf "  %15s %2d: %s" ws n s))
         ws
 
   end

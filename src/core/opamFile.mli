@@ -112,18 +112,19 @@ module OPAM: sig
   (** Create an OPAM package template filled with common options *)
   val template: package -> t
 
-  (** Runs several sanity checks on the opam file; returns a list of
-      warnings. [`Error] level should be considered unfit for publication,
-      while [`Warning] are advisory but may be accepted *)
-  val validate: t -> ([`Warning|`Error] * string) list
+  (** Runs several sanity checks on the opam file; returns a list of warnings.
+      [`Error] level should be considered unfit for publication, while
+      [`Warning] are advisory but may be accepted. The int is an identifier for
+      this specific warning/error. *)
+  val validate: t -> (int * [`Warning|`Error] * string) list
 
   (** Same as [validate], but operates on a file, which allows catching parse
       errors too. You can specify an expected name and version *)
   val validate_file: filename ->
-    ([`Warning|`Error] * string) list * t option
+    (int * [`Warning|`Error] * string) list * t option
 
   (** Utility function to print validation results *)
-  val warns_to_string: ([`Warning|`Error] * string) list -> string
+  val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
   (** Returns true if the given OPAM file contains 'name' or 'version' fields *)
   val is_explicit: filename -> bool
