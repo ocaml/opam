@@ -587,7 +587,7 @@ let check_cudf_version =
             log "Solver is aspcud > 1.9: using latest version criteria";
             `Latest
           | _ ->
-            log "Solver is'nt aspcud > 1.9, using compat criteria";
+            log "Solver isn't aspcud > 1.9, using compat criteria";
             `Compat
       with OpamSystem.Process_error _ ->
         log "Solver doesn't know about '-v': using compat criteria";
