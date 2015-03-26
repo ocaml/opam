@@ -1149,41 +1149,47 @@ let dump_state t oc =
   let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams in
   let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer opams in
   let base = base_packages t in
+  let filter _ = true in
 
   let aux package =
     Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string package);
     Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string package);
-    begin try
+    (try
       let m = OpamPackage.Map.find package maintainers in
-      Printf.fprintf oc "maintainer: %s\n" (string_of_conjunction (fun a -> a) m);
-    with Not_found -> () end;
+      Printf.fprintf oc "maintainer: %s\n"
+        (string_of_conjunction (fun a -> a) m);
+    with Not_found -> () );
+
     if OpamPackage.Set.mem package base then
       Printf.fprintf oc "base: true\n";
 
-    begin try
+    (try
       let d = OpamPackage.Map.find package depends in
-      let formula = (OpamFormula.formula_of_extended ~filter:(fun _ -> true) d) in
+      let formula = (OpamFormula.formula_of_extended ~filter d) in
       match OpamFormula.to_cnf formula with
       |[] -> ()
       |[[]] -> ()
-      |dd -> Printf.fprintf oc "depends: %s\n" (string_of_cnf OpamFormula.string_of_atom dd)
-    with Not_found -> () end;
+      |dd -> Printf.fprintf oc "depends: %s\n" 
+              (string_of_cnf OpamFormula.string_of_atom dd)
+    with Not_found -> () );
 
-    begin try
+    (try
       let d = OpamPackage.Map.find package depopts in
-      let formula = (OpamFormula.formula_of_extended ~filter:(fun _ -> true) d) in
+      let formula = (OpamFormula.formula_of_extended ~filter d) in
       match OpamFormula.to_cnf formula with
       |[] -> ()
       |[[]] -> ()
-      |dd -> Printf.fprintf oc "reccomends: %s\n" (string_of_cnf OpamFormula.string_of_atom dd)
-    with Not_found -> () end;
+      |dd -> Printf.fprintf oc "recommends: %s\n"
+              (string_of_cnf OpamFormula.string_of_atom dd)
+    with Not_found -> () );
 
-    begin try
+    (try
       let c = OpamPackage.Map.find package conflicts in
       match OpamFormula.to_conjunction c with
       |[] -> ()
-      |cc -> Printf.fprintf oc "conflicts: %s\n" (string_of_conjunction OpamFormula.string_of_atom cc);
-    with Not_found -> () end;
+      |cc -> Printf.fprintf oc "conflicts: %s\n"
+              (string_of_conjunction OpamFormula.string_of_atom cc);
+    with Not_found -> () );
     Printf.fprintf oc "\n";
   in
   OpamPackage.Set.iter aux (Lazy.force t.available_packages)
