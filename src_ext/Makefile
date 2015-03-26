@@ -79,7 +79,7 @@ distclean:
 	rm -rf cudf extlib re graph dose cmdliner uutf jsonm
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp
-	rm -f *.cm* *.o *.a
+	rm -f *.cm* *.o *.a *.lib
 	rm -rf lib
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
@@ -91,6 +91,7 @@ copy: build
 	cp *.cma lib || true
 	cp *.cmxa lib || true
 	cp *.a lib || true
+	cp *.lib lib || true
 	$(call inst_objs,extlib)
 	$(call inst_objs,re/lib)
 	$(call inst_objs,cmdliner/src)
