@@ -1466,6 +1466,7 @@ let switch =
     | Some `current, [] ->
       Client.SWITCH.show ();
       `Ok ()
+    | Some `set, [switch]
     | Some `default switch, [] ->
       (match alias_of with
        | None ->
