@@ -59,7 +59,7 @@ let string_interp_regex =
   let notclose =
     rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")])
   in
-  compile (seq [str "%{"; notclose; opt (str "}%")])
+  compile (seq [str "%{"; group notclose; opt (group (str "}%"))])
 
 let fident_variables = function
   | [], var, _ -> [OpamVariable.Full.global var]
@@ -67,13 +67,23 @@ let fident_variables = function
 
 (* extracts variables appearing in interpolations in a string*)
 let string_variables s =
+  let matches =
+    let rec aux acc pos =
+      try
+        let ss = Re.exec ~pos string_interp_regex s in
+        if Re.test ss 2 then
+          aux (Re.get ss 1 :: acc)
+            (fst (Re.get_ofs ss 0) + String.length (Re.get ss 0))
+        else
+          aux acc (pos+1)
+      with Not_found -> acc
+    in
+    aux [] 0
+  in
   List.fold_left (fun acc s ->
-      if OpamMisc.ends_with ~suffix:"}%" s then
-        let s = String.sub s 2 (String.length s - 4) in
-        try fident_variables (filter_ident_of_string s) @ acc
-        with Failure _ -> acc
-      else acc)
-    [] (Re.matches string_interp_regex s)
+      try fident_variables (filter_ident_of_string s) @ acc
+      with Failure _ -> acc)
+    [] matches
 
 let variables filter =
   fold_down_left (fun acc -> function
