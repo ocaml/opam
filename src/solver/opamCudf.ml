@@ -269,7 +269,9 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
       missing
   | Dependency _  -> []
 
-let make_chains cudf_universe cudf2opam depends =
+
+let make_chains : Cudf.universe -> (Cudf.package -> package) -> Algo.Diagnostic.reason list -> formula list list
+  = fun cudf_universe cudf2opam depends ->
   let open Algo.Diagnostic in
   let map_addlist k v map =
     try Map.add k (v @ Map.find k map) map
@@ -312,22 +314,20 @@ let make_chains cudf_universe cudf2opam depends =
           Set.filter (fun p -> p.Cudf.package = name) direct_deps in
         let name_constrs =
           List.map (List.filter (fun (n,_) -> n = name)) constrs in
-        let name_constrs = List.filter ((<>) []) name_constrs in
-        let name_constrs =
-          List.map (fun c -> OpamMisc.remove_duplicates (List.sort compare c))
-            name_constrs in
-        let name_constrs =
-          OpamMisc.remove_duplicates (List.sort compare name_constrs) in
-        let to_opam_and_formula constrs =
-          let atoms =
-            (List.map (fun p -> Atom (vpkg2opam cudf2opam cudf_universe p))
-               (OpamMisc.remove_duplicates (List.sort compare constrs))) in
-          match atoms with _::_::_ -> Block (OpamFormula.ands atoms)
-                         | _ -> OpamFormula.ands atoms in
+        let to_opam_constr p =
+          snd (vpkg2opam cudf2opam cudf_universe p)
+        in
         let formula =
-          match name_constrs with
-          | [f] -> to_opam_and_formula f
-          | fs -> OpamFormula.ors (List.map to_opam_and_formula fs) in
+          OpamFormula.ors
+            (List.map (fun conj ->
+                 OpamFormula.ands (List.map to_opam_constr conj))
+                name_constrs)
+        in
+        let formula = OpamFormula.simplify_version_formula formula in
+        let opam_name =
+          OpamPackage.Name.of_string (Common.CudfAdd.decode name)
+        in
+        let formula = Atom (opam_name, formula) in
         let children_constrs =
           List.map (fun p -> try Map.find p vpkgs with Not_found -> [])
             (Set.elements name_deps) in

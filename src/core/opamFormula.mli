@@ -142,6 +142,10 @@ val to_atom_formula: t -> atom formula
 (** Convert an atom-formula to a t-formula *)
 val of_atom_formula: atom formula -> t
 
+(** Reduces the formula, finding a shorter description of the same version set.
+    Keeps conflicting formula, for documentation, when the set is empty. *)
+val simplify_version_formula: version_formula -> version_formula
+
 (** {2 Atoms} *)
 
 (** Return all the atoms *)
