@@ -875,9 +875,8 @@ let compute_root_causes g requested =
          (maybe these could be removed from the actions altogether since they are
          unrelated to the request ?) *)
       let roots = make_roots causes Unknown (function
-          | To_change (Some p1,p2) as act
-            when p1.Cudf.version < p2.Cudf.version &&
-                 List.for_all (function To_change _ -> false | _ -> true)
+          | To_change (Some _,_) as act
+            when List.for_all (function To_change _ -> false | _ -> true)
                    (ActionGraph.pred g act) -> true
           | _ -> false) in
       get_causes causes roots in
