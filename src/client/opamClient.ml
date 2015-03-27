@@ -846,20 +846,21 @@ module API = struct
         OpamGlobals.error
           "Dependency errors in the upgrade actions. Please update, and \
            report the following to the package maintainers if the error \
-           persists:\n%s%s"
+           persists:";
+        OpamGlobals.errmsg "%s\n%s\n"
           (OpamMisc.itemize (fun x -> x) cycles)
           "You may try upgrading packages individually to work around this."
       end else begin
-        OpamGlobals.warning "%s%s"
+        OpamGlobals.warning
           "Upgrade is not possible because of conflicts or packages that \
-           are no longer available:\n"
-          (OpamMisc.itemize (fun x -> x) reasons);
+           are no longer available:";
+        OpamGlobals.errmsg "%s" (OpamMisc.itemize (fun x -> x) reasons);
         if chains <> [] then
-          OpamGlobals.formatted_msg
+          OpamGlobals.errmsg
             "The following dependencies are in cause:\n%s"
             (OpamMisc.itemize (fun x -> x) chains);
         if OpamCudf.external_solver_available () then
-          OpamGlobals.formatted_msg
+          OpamGlobals.errmsg
             "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
              current state.\n"
       end;
@@ -1314,7 +1315,8 @@ module API = struct
         OpamSwitchCommand.install_packages switch compiler
 
       with e ->
-        OpamGlobals.error "%s" (Printexc.to_string e);
+        OpamGlobals.error "Initialisation failed";
+        OpamGlobals.errmsg "%s\n" (Printexc.to_string e);
         if not !OpamGlobals.debug && root_empty then
           OpamFilename.rmdir root;
         raise e);

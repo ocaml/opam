@@ -636,7 +636,8 @@ let call_external_solver ~version_map univ req =
         ~criteria ~explain:true cudf_request
     with e ->
       OpamMisc.fatal e;
-      OpamGlobals.warning "External solver failed:\n%s" (Printexc.to_string e);
+      OpamGlobals.warning "External solver failed:";
+      OpamGlobals.errmsg "%s\n" (Printexc.to_string e);
       failwith "opamSolver"
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])

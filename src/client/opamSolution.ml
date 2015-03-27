@@ -455,6 +455,10 @@ let parallel_apply t action action_graph =
             OpamSolver.Action.to_string)
          cycles);
     raise e
+  | `Exception (OpamSystem.Process_error _ | Unix.Unix_error _ as e) ->
+    OpamGlobals.error "Actions cancelled because of a system error:";
+    OpamGlobals.errmsg "%s\n" (Printexc.to_string e);
+    raise e
   | `Exception e ->
     OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
     raise e
