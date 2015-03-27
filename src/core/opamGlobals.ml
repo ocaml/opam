@@ -320,6 +320,10 @@ let note fmt =
       (OpamMisc.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
+let errmsg fmt =
+  flush stdout;
+  Printf.printf (fmt ^^ "%!")
+
 exception Exit of int
 
 exception Exec of string * string array * string array

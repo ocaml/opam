@@ -145,6 +145,10 @@ val error : ('a, unit, string, unit) format4 -> 'a
 val warning : ('a, unit, string, unit) format4 -> 'a
 val note : ('a, unit, string, unit) format4 -> 'a
 
+(** Message without prefix, reformat or newline, to stderr (useful to continue
+    error messages without repeating "[ERROR]") *)
+val errmsg : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
+
 (** Raised to exit the program in a clean way. Parameter is the exit code. *)
 exception Exit of int
 

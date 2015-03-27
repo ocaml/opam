@@ -37,7 +37,7 @@ let call_rsync check args =
        complete error so we do an additional check *)
     if check () then
       (OpamGlobals.warning "Rsync partially failed:\n%s"
-         (OpamMisc.itemize ~bullet:"  " (fun x -> x) r.OpamProcess.r_stderr);
+         (OpamMisc.itemize ~bullet:"" (fun x -> x) r.OpamProcess.r_stderr);
        Done (Some (OpamMisc.rsync_trim r.OpamProcess.r_stdout)))
     else Done None
   | 30 | 35 -> (* timeouts *)

@@ -202,8 +202,12 @@ let to_string t =
     Printf.sprintf "%s %s" (string_of_relop relop) (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
-    | n, c     ->
+    | n, (Atom _ as c) ->
       Printf.sprintf "%s %s"
+        (OpamPackage.Name.to_string n)
+        (string_of_formula string_of_constraint c)
+    | n, c ->
+      Printf.sprintf "%s (%s)"
         (OpamPackage.Name.to_string n)
         (string_of_formula string_of_constraint c) in
   string_of_formula string_of_pkg t
@@ -307,7 +311,7 @@ let ands l = List.fold_left make_and Empty l
 
 let rec ands_to_list = function
   | Empty -> []
-  | And (e,f) -> ands_to_list e @ ands_to_list f
+  | And (e,f) | Block (And (e,f)) -> ands_to_list e @ ands_to_list f
   | x -> [x]
 
 let of_conjunction c =
@@ -323,7 +327,7 @@ let ors l = List.fold_left make_or Empty l
 
 let rec ors_to_list = function
   | Empty -> []
-  | Or (e,f) -> ors_to_list e @ ors_to_list f
+  | Or (e,f) | Block (Or (e,f)) -> ors_to_list e @ ors_to_list f
   | x -> [x]
 
 let of_disjunction d =
@@ -331,6 +335,72 @@ let of_disjunction d =
 
 let atoms t =
   fold_left (fun accu x -> x::accu) [] (to_atom_formula t)
+
+let simplify_version_formula f =
+  (* backported from OWS/WeatherReasons *)
+  let vcomp = OpamPackage.Version.compare in
+  let vmin a b = if vcomp a b <= 0 then a else b in
+  let vmax a b = if vcomp a b >= 0 then a else b in
+  let and_cstrs c1 c2 = match c1, c2 with
+    | (`Gt, a), (`Gt, b) -> [`Gt, vmax a b]
+    | (`Geq,a), (`Geq,b) -> [`Geq, vmax a b]
+    | (`Gt, a), (`Geq,b) | (`Geq,b), (`Gt, a) ->
+        if vcomp a b >= 0 then [(`Gt, a)] else [(`Geq,b)]
+    | (`Lt, a), (`Lt, b) -> [`Lt, vmin a b]
+    | (`Leq,a), (`Leq,b) -> [`Leq, vmin a b]
+    | (`Lt, a), (`Leq,b) | (`Leq,b), (`Lt, a) ->
+        if vcomp a b <= 0 then [`Lt, a] else [`Leq,b]
+    | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Eq, b]
+    | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Eq, b]
+    | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Eq, b]
+    | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Eq, b]
+    | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Geq,a]
+    | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Gt, a]
+    | (`Leq,a), (`Neq,b) | (`Neq,b), (`Leq,a) when vcomp a b <  0 -> [`Leq,a]
+    | (`Lt, a), (`Neq,b) | (`Neq,b), (`Lt, a) when vcomp a b <= 0 -> [`Lt, a]
+    | c1, c2 -> if c1 = c2 then [c1] else [c1;c2]
+  in
+  let or_cstrs c1 c2 = match c1, c2 with
+    | (`Gt, a), (`Gt, b) -> [`Gt, vmin a b]
+    | (`Geq,a), (`Geq,b) -> [`Geq, vmin a b]
+    | (`Gt, a), (`Geq,b) | (`Geq,b), (`Gt, a) ->
+        if vcomp a b < 0 then [`Gt, a] else [`Geq,b]
+    | (`Lt, a), (`Lt, b) -> [`Lt, vmax a b]
+    | (`Leq,a), (`Leq,b) -> [`Leq,vmax a b]
+    | (`Lt, a), (`Leq,b) | (`Leq,b), (`Lt, a) ->
+        if vcomp a b > 0 then [`Lt, a] else [`Leq,b]
+    | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Geq,a]
+    | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Gt, a]
+    | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Leq,a]
+    | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Lt, a]
+    | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Neq,b]
+    | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Neq,b]
+    | (`Leq,a), (`Neq,b) | (`Neq,b), (`Leq,a) when vcomp a b <  0 -> [`Neq,b]
+    | (`Lt, a), (`Neq,b) | (`Neq,b), (`Lt, a) when vcomp a b <= 0 -> [`Neq,b]
+    | c1, c2 -> if c1 = c2 then [c1] else [c1;c2]
+  in
+  let rec add_cstr join c = function
+    | [] -> [c]
+    | c1::r -> match join c c1 with
+      | [c] -> add_cstr join c r
+      | _ -> c1 :: add_cstr join c r
+  in
+  let rec merge mk join fl =
+    let subs,cstrs =
+      List.fold_left (fun (sub,cstrs) fl ->
+          match aux fl with
+          | Atom c -> sub, add_cstr join c cstrs
+          | f -> mk sub f, cstrs)
+        (Empty,[]) fl
+    in
+    List.fold_left (fun f c -> mk f (Atom c)) subs cstrs
+  and aux = function
+    | And _ as f -> merge make_and and_cstrs (ands_to_list f)
+    | Or _ as f -> merge make_or or_cstrs (ors_to_list f)
+    | Block f -> aux f
+    | (Atom _ | Empty) as f -> f
+  in
+  aux f
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula

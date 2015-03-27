@@ -171,8 +171,12 @@ val s_pinned: string         (** true if the package is pinned to this version *
 (** Convert a package constraint to something readable. *)
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
-val make_conflicts: Cudf.universe -> Algo.Diagnostic.diagnosis -> ('a, conflict) result
-val cycle_conflict: Cudf.universe -> string list list -> ('a, conflict) result
+val make_conflicts:
+  version_map:int package_map -> Cudf.universe ->
+  Algo.Diagnostic.diagnosis -> ('a, conflict) result
+val cycle_conflict:
+  version_map:int package_map -> Cudf.universe ->
+  string list list -> ('a, conflict) result
 
 (** Convert a conflict to something readable by the user. The first argument
     should return a string like "lwt<3.2.1 is not available because..." when called

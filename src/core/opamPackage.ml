@@ -194,7 +194,7 @@ let list dir =
             let files = List.filter (OpamFilename.ends_with suffix) files in
             OpamGlobals.error_and_exit "Multiple definition of package %s in %s:\n%s"
               (to_string p) (OpamFilename.Dir.to_string dir)
-              (OpamMisc.itemize ~bullet:"  " OpamFilename.to_string files);
+              (OpamMisc.itemize ~bullet:"" OpamFilename.to_string files);
       ) Set.empty files
   ) else
     Set.empty
