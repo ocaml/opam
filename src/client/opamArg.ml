@@ -86,7 +86,7 @@ let switch_to_updated_self debug opamroot =
        with e ->
          OpamMisc.fatal e;
          OpamGlobals.error
-           "Could'nt run the upgraded opam %s found at %s. \
+           "Couldn't run the upgraded opam %s found at %s. \
             Continuing with %s from the system."
            (OpamVersion.to_string update_version)
            updated_self_str

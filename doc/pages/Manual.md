@@ -133,7 +133,7 @@ three scopes:
    package's own OPAM file (when not shadowed by another variable), in which
    case the variables will relate to the version of the package being defined.
    Otherwise, the installed version is always used, and most variables will be
-   undefined when the package is'nt installed.
+   undefined when the package isn't installed.
 3. Some fields define their own local variables, like `success` in the field
    `post-messages`
 

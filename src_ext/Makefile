@@ -65,7 +65,7 @@ archives: $(SRC_EXTS:=.download)
         fi
 	@touch $@
 
-# OCamlMakefile doesn'nt include stand-alone mlis in the packs...
+# OCamlMakefile doesn't include stand-alone mlis in the packs...
 graph-workaround:
 	cp graph/src/sig.mli graph/src/sig.ml
 	cp graph/src/sig_pack.mli graph/src/sig_pack.ml
