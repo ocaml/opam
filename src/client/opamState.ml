@@ -1436,6 +1436,10 @@ let load_config root =
         List.map (fun s -> s, None)
           [CString "packup"; CIdent "input"; CIdent "output";
            CString "-u"; CIdent "criteria"]
+      | [CString cmd, None] ->
+        (* Default args if the command is a single string *)
+        List.map (fun s -> s, None)
+          [CString cmd; CIdent "input"; CIdent "output"; CIdent "criteria"]
       | cmd -> cmd
     in
     fun ~input ~output ~criteria ->

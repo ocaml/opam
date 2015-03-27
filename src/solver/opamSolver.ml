@@ -295,7 +295,10 @@ let resolve ?(verbose=true) universe ~orphans request =
         OpamCudf.to_actions add_orphan_packages u resp
       with Failure "opamSolver" ->
         OpamGlobals.error_and_exit
-          "Please retry with option --use-internal-solver"
+          "External solver failure, please fix your installation and check \
+           %s/config and variable $OPAMEXTERNALSOLVER.\n\
+           You may also retry with option --use-internal-solver"
+          !OpamGlobals.root_dir
     else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c
