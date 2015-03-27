@@ -393,7 +393,7 @@ let simplify_version_formula f =
           | f -> mk sub f, cstrs)
         (Empty,[]) fl
     in
-    List.fold_left (fun f c -> mk (Atom c) f) subs cstrs
+    List.fold_left (fun f c -> mk f (Atom c)) subs cstrs
   and aux = function
     | And _ as f -> merge make_and and_cstrs (ands_to_list f)
     | Or _ as f -> merge make_or or_cstrs (ors_to_list f)

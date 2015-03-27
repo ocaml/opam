@@ -67,8 +67,21 @@ let is_available universe wish_remove (name, _ as c) =
   &&
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
-let cudf_versions_map _universe packages =
+let cudf_versions_map universe packages =
   log "cudf_versions_map";
+  let add_referred_to_packages filt acc refmap =
+    OpamPackage.Map.fold (fun _ deps acc ->
+        List.fold_left (fun acc -> function
+            | n, Some (_, v) -> OpamPackage.Set.add (OpamPackage.create n v) acc
+            | _, None -> acc)
+          acc (OpamFormula.atoms (filt deps)))
+      refmap acc
+  in
+  let filt = filter_deps ~build:true ~test:true ~doc:true in
+  let id = fun x -> x in
+  let packages = add_referred_to_packages filt packages universe.u_depends in
+  let packages = add_referred_to_packages filt packages universe.u_depopts in
+  let packages = add_referred_to_packages id packages universe.u_conflicts in
   let pmap = OpamPackage.to_map packages in
   OpamPackage.Name.Map.fold (fun name versions acc ->
       let _, map =
@@ -93,7 +106,10 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
       Some (op, cv)
     with Not_found ->
       (* The version for comparison doesn't exist: match to the closest
-         existing version according to the direction of the comparison *)
+         existing version according to the direction of the comparison
+         (this shouldn't happen for any constraint in the universe, now that we
+         compute a full version map, but may still happen for user-provided
+         constraints) *)
       let all_versions =
         OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
           version_map in
@@ -265,8 +281,8 @@ let cleanup_request universe (req:atom request) =
       ) req.wish_upgrade in
   { req with wish_install; wish_upgrade }
 
-let cycle_conflict univ cycles =
-  OpamCudf.cycle_conflict univ
+let cycle_conflict ~version_map univ cycles =
+  OpamCudf.cycle_conflict ~version_map univ
     (List.map
        (List.map
           (fun a -> Action.to_string (map_action OpamCudf.cudf2opam a)))
@@ -317,7 +333,7 @@ let resolve ?(verbose=true) universe ~orphans request =
           ~simple_universe ~complete_universe actions in
       Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
-      cycle_conflict complete_universe cycles
+      cycle_conflict ~version_map complete_universe cycles
 
 let get_atomic_action_graph t =
   cudf_to_opam_graph OpamCudf.cudf2opam t
@@ -375,7 +391,7 @@ let check_for_conflicts universe =
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _ } ->
     None
   | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _ } as c ->
-    match OpamCudf.make_conflicts cudf_universe c with
+    match OpamCudf.make_conflicts ~version_map cudf_universe c with
     | Conflicts cs -> Some cs
     | _ -> None
 

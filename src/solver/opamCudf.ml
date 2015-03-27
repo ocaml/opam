@@ -34,6 +34,27 @@ let cudf2opam cpkg =
   let version = OpamPackage.Version.of_string sver in
   OpamPackage.create name version
 
+let cudfnv2opam ?version_map ?cudf_universe (name,v) =
+  let nv = match cudf_universe with
+    | None -> None
+    | Some u ->
+      try Some (cudf2opam (Cudf.lookup_package u (name,v)))
+      with Not_found -> None
+  in
+  match nv with
+  | Some nv -> nv
+  | None ->
+    let name = OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
+    match version_map with
+    | Some vmap ->
+      let nvset =
+        OpamPackage.Map.filter
+          (fun nv cv -> OpamPackage.name nv = name && cv = v)
+          vmap
+      in
+      fst (OpamPackage.Map.choose nvset)
+    | None -> raise Not_found
+
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
   match a with
@@ -85,7 +106,7 @@ type conflict_case =
   | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
   | Conflict_cycle of string list list
 type conflict =
-  Cudf.universe * conflict_case
+  Cudf.universe * int package_map * conflict_case
 
 module Map = OpamMisc.Map.Make(Pkg)
 module Set = OpamMisc.Set.Make(Pkg)
@@ -164,15 +185,17 @@ let string_of_request r =
 let string_of_universe u =
   string_of_packages (List.sort Common.CudfAdd.compare (Cudf.get_packages u))
 
-let vpkg2atom cudf2opam cudf_universe (name,cstr) =
+let vpkg2atom cudfnv2opam (name,cstr) =
   match cstr with
   | None ->
     OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
   | Some (relop,v) ->
     try
-      let nv = cudf2opam (Cudf.lookup_package cudf_universe (name,v)) in
+      let nv = cudfnv2opam (name,v) in
       OpamPackage.name nv, Some (relop, OpamPackage.version nv)
-    with Not_found ->
+    with Not_found -> assert false
+(* Should be unneeded now that we pass a full version_map along
+   [{
       log "Could not find corresponding version in cudf universe: %a"
         (slog string_of_atom) (name,cstr);
       let candidates =
@@ -197,20 +220,23 @@ let vpkg2atom cudf2opam cudf_universe (name,cstr) =
         Some (`Eq, OpamPackage.Version.of_string "<unavailable version>")
       | `Neq, false, true -> None
       | `Neq, _, false -> Some (`Neq, OVS.choose others)
+   }]
+*)
 
-let vpkg2opam cudf2opam cudf_universe vpkg =
-  match vpkg2atom cudf2opam cudf_universe vpkg with
+let vpkg2opam cudfnv2opam vpkg =
+  match vpkg2atom cudfnv2opam vpkg with
   | p, None -> p, Empty
   | p, Some (relop,v) -> p, Atom (relop, v)
 
-let conflict_empty univ = Conflicts (univ, Conflict_dep (fun () -> []))
-let make_conflicts univ = function
+let conflict_empty ~version_map univ =
+  Conflicts (univ, version_map, Conflict_dep (fun () -> []))
+let make_conflicts ~version_map univ = function
   | {Algo.Diagnostic.result = Algo.Diagnostic.Failure f} ->
-    Conflicts (univ, Conflict_dep f)
+    Conflicts (univ, version_map, Conflict_dep f)
   | {Algo.Diagnostic.result = Algo.Diagnostic.Success _} ->
     raise (Invalid_argument "make_conflicts")
-let cycle_conflict univ cycle =
-  Conflicts (univ, Conflict_cycle cycle)
+let cycle_conflict ~version_map univ cycle =
+  Conflicts (univ, version_map, Conflict_cycle cycle)
 
 let arrow_concat =
   String.concat (OpamGlobals.colorise `yellow " -> ")
@@ -220,7 +246,7 @@ let print_cycles cycles =
     "The actions to process have cyclic dependencies:\n%s"
     (OpamMisc.itemize arrow_concat cycles)
 
-let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
+let strings_of_reason cudfnv2opam (unav_reasons: atom -> string) r =
   let open Algo.Diagnostic in
   let is_base cpkg = cpkg.Cudf.keep = `Keep_version in
   match r with
@@ -262,16 +288,15 @@ let strings_of_reason cudf2opam (unav_reasons: atom -> string) cudf_universe r =
     [str]
   | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
     List.map (fun p ->
-        unav_reasons (vpkg2atom cudf2opam cudf_universe p)
+        unav_reasons (vpkg2atom cudfnv2opam p)
       ) missing
   | Missing (_,missing) -> (* Dependencies missing *)
-    List.map (fun m -> unav_reasons (vpkg2atom cudf2opam cudf_universe m))
+    List.map (fun m -> unav_reasons (vpkg2atom cudfnv2opam m))
       missing
   | Dependency _  -> []
 
 
-let make_chains : Cudf.universe -> (Cudf.package -> package) -> Algo.Diagnostic.reason list -> formula list list
-  = fun cudf_universe cudf2opam depends ->
+let make_chains cudfnv2opam depends =
   let open Algo.Diagnostic in
   let map_addlist k v map =
     try Map.add k (v @ Map.find k map) map
@@ -315,7 +340,7 @@ let make_chains : Cudf.universe -> (Cudf.package -> package) -> Algo.Diagnostic.
         let name_constrs =
           List.map (List.filter (fun (n,_) -> n = name)) constrs in
         let to_opam_constr p =
-          snd (vpkg2opam cudf2opam cudf_universe p)
+          snd (vpkg2opam cudfnv2opam p)
         in
         let formula =
           OpamFormula.ors
@@ -345,16 +370,16 @@ let make_chains : Cudf.universe -> (Cudf.package -> package) -> Algo.Diagnostic.
     List.map (fun name -> [name,None]) (OpamMisc.StringSet.elements set) in
   aux start_constrs roots
 
-let strings_of_final_reasons cudf2opam unav_reasons cudf_universe reasons =
+let strings_of_final_reasons cudfnv2opam unav_reasons reasons =
   let reasons =
     List.flatten
       (List.map
-         (strings_of_reason cudf2opam unav_reasons cudf_universe)
+         (strings_of_reason cudfnv2opam unav_reasons)
          reasons) in
   OpamMisc.StringSet.(elements (of_list reasons))
 
-let strings_of_chains cudf2opam cudf_universe reasons =
-  let chains = make_chains cudf_universe cudf2opam reasons in
+let strings_of_chains cudfnv2opam reasons =
+  let chains = make_chains cudfnv2opam reasons in
   let string_of_chain c =
     arrow_concat (List.map OpamFormula.to_string c) in
   List.map string_of_chain chains
@@ -363,12 +388,13 @@ let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
 let strings_of_conflict unav_reasons = function
-  | univ, Conflict_dep reasons ->
+  | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
-    strings_of_final_reasons cudf2opam unav_reasons univ r,
-    strings_of_chains cudf2opam univ r,
+    let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
+    strings_of_final_reasons cudfnv2opam unav_reasons r,
+    strings_of_chains cudfnv2opam r,
     []
-  | _univ, Conflict_cycle cycles ->
+  | _univ, _version_map, Conflict_cycle cycles ->
     [], [], strings_of_cycles cycles
 
 let string_of_conflict unav_reasons conflict =
@@ -619,7 +645,7 @@ let check_request ?(explain=true) ~version_map univ req =
   match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
   | Algo.Depsolver.Unsat
       (Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _} as r)) ->
-    make_conflicts univ r
+    make_conflicts ~version_map univ r
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
     let f = dump_cudf_error ~extern:false ~version_map univ req in
@@ -627,7 +653,7 @@ let check_request ?(explain=true) ~version_map univ req =
       msg f;
     failwith "opamSolver"
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
-    conflict_empty univ
+    conflict_empty ~version_map univ
 
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
@@ -645,7 +671,7 @@ let get_final_universe ~version_map univ req =
   | Algo.Depsolver.Unsat r   ->
     let open Algo.Diagnostic in
     match r with
-    | Some ({result=Failure _} as r) -> make_conflicts univ r
+    | Some ({result=Failure _} as r) -> make_conflicts ~version_map univ r
     | Some {result=Success _} -> fail "inconsistent return value."
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
