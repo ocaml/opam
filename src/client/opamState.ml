@@ -1185,7 +1185,8 @@ let dump_state t oc =
 
     (try
       let c = OpamPackage.Map.find package conflicts in
-      match OpamFormula.to_conjunction c with
+      let n = OpamPackage.name package in
+      match (n,None)::(OpamFormula.to_conjunction c) with
       |[] -> ()
       |cc -> Printf.fprintf oc "conflicts: %s\n"
               (string_of_conjunction OpamFormula.string_of_atom cc);
