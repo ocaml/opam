@@ -671,7 +671,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     if not (is_global_conf v) then None else
     let var = OpamVariable.Full.variable v in
     try match OpamVariable.Map.find var local_variables with
-      | None -> raise Exit (* Variable explicitely undefined *)
+      | None -> raise Exit (* Variable explicitly undefined *)
       | some -> some
     with Not_found -> None
   in
