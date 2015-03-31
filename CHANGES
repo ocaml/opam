@@ -1,3 +1,16 @@
+1.2.2
+* Fixed wrong locks being taken during `switch reinstall` (#2051)
+* Fixed `config report` that wasn't displaying the external solver (#2059)
+* Follow glibc standard on detecting an UTF8 locale (#2065)
+* Fixed issues with fish shell init scripts (#2063)
+* Restored printing of commands with `--verbose` and `--dry-run`
+* More concise printing of conflicts, with accurate version numbers
+* Small improvements to the causes of actions
+* Fixed issue causing the state cache not to be used on some OSes (OSX) (#2077)
+* Added numbers to lint checks, and some new checks
+* Restored the handling of a simple path to an `aspcud`-compatible executable
+  in variable OPAMEXTERNALSOLVER (#2085)
+
 1.2.1
 * Non-system compiler definitions without source are now allowed
 * Better handling of compiler "base" packages allows to move build instructions
