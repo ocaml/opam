@@ -18,9 +18,9 @@ open OpamTypes
 open OpamFilename.OP
 open OpamProcess.Job.Op
 
-let log fmt = OpamGlobals.log "HG" fmt
-
 module Hg = struct
+
+  let name = `hg
 
   let exists repo =
     OpamFilename.exists_dir (repo.repo_root / ".hg")
@@ -90,6 +90,3 @@ module Hg = struct
 end
 
 module B = OpamVCS.Make(Hg)
-
-let register () =
-  OpamRepository.register_backend `hg (module B: OpamRepository.BACKEND)

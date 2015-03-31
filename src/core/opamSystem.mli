@@ -48,6 +48,8 @@ val verbose_for_base_commands: unit -> bool
     if it is a link. *)
 val copy: string -> string -> unit
 
+val mv: string -> string -> unit
+
 (** [install ?exec src dst] copies file [src] as file [dst] using [install].
     If [exec], make the resulting file executable (otherwise, look at the
     permissions of the original file to decide). *)
@@ -116,26 +118,6 @@ val rec_dirs: string -> string list
 val dirs: string -> string list
 
 val dir_is_empty: string -> bool
-
-(** Return the version of the current OCaml compiler. If no OCaml
-    compiler is present in the path, then it returns [None]. *)
-val ocaml_version: string option Lazy.t
-
-(** Returns true if the "ocamlopt" is available in the current switch *)
-val ocaml_native_available: bool Lazy.t
-
-(** Returns true if the ".opt" version of the current OCaml compiler is
-    available*)
-val ocaml_opt_available: bool Lazy.t
-
-(** Checks if native dynlink is available with the current OCaml compiler *)
-val ocaml_natdynlink_available: bool Lazy.t
-
-(** Return the path where the system ocamlc library is installed *)
-val system_ocamlc_where: string option Lazy.t
-
-(** Return the version of the system compiler *)
-val system_ocamlc_version: string option Lazy.t
 
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)
@@ -213,10 +195,6 @@ val funlock: lock -> unit
 
 (** {2 Misc} *)
 
-(** download compiler sources *)
-val download: overwrite:bool -> ?compress:bool ->
-  filename:string -> dst:string -> string OpamProcess.job
-
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit
 
@@ -226,5 +204,6 @@ val temp_file: ?dir:string -> string -> string
 (** Print stats *)
 val print_stats: unit -> unit
 
-(** The separator character for the PATH variable *)
-val path_sep: char
+(** Registers an exception printer that adds some OPAM version info, and details
+    on process and Unix errors *)
+val register_printer: unit -> unit

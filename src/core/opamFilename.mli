@@ -200,16 +200,6 @@ val remove_prefix: Dir.t -> t -> string
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
-(** download a remote file in a given directory. Return the location
-    of the downloaded file if the download is successful.
-    Compress activates http content compression if supported. May break
-    on gzipped files, only use for text files *)
-val download: overwrite:bool -> ?compress:bool -> t -> Dir.t -> t OpamProcess.job
-
-(** same as [download], but with a specified destination filename instead of a
-    directory *)
-val download_as: overwrite:bool -> ?compress:bool -> t -> t -> unit OpamProcess.job
-
 (** Apply a patch to a directory *)
 val patch: t -> Dir.t -> unit
 

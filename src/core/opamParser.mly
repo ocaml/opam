@@ -102,7 +102,7 @@ atom:
 let error lexbuf exn msg =
   let curr = lexbuf.Lexing.lex_curr_p in
   let start = lexbuf.Lexing.lex_start_p in
-  OpamGlobals.error
+  OpamConsole.error
       "File %S, line %d, character %d-%d: %s."
       curr.Lexing.pos_fname
       start.Lexing.pos_lnum

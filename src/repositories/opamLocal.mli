@@ -15,11 +15,12 @@
 (**************************************************************************)
 
 (** Rsync repository backend *)
+
+module B: OpamRepositoryBackend.S
+
 open OpamTypes
 
 val rsync_dirs: ?args:string list -> OpamFilename.Dir.t -> OpamFilename.Dir.t ->
   OpamFilename.Dir.t download OpamProcess.job
 val rsync_file: ?args:string list -> OpamFilename.t -> OpamFilename.t ->
   OpamFilename.t download OpamProcess.job
-
-val register: unit -> unit

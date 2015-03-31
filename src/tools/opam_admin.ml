@@ -63,4 +63,4 @@ let () =
     | `Error _ -> exit 2
     | _ -> exit 0
   with
-  | OpamGlobals.Exit i -> exit i
+  | OpamMisc.Sys.Exit i -> exit i

@@ -14,22 +14,23 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Base = OpamMisc.Base
-open OpamProcess.Job.Op
+module Base = OpamMisc.AbstractString
 
-let log fmt = OpamGlobals.log "FILENAME" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "FILENAME" fmt
+let slog = OpamConsole.slog
 
 module Dir = struct
 
-  include OpamMisc.Base
+  include OpamMisc.AbstractString
 
   let of_string dirname =
     let dirname =
-      if dirname = "~" then OpamGlobals.home
-      else if OpamMisc.starts_with ~prefix:("~"^Filename.dir_sep) dirname then
-        Filename.concat OpamGlobals.home
-          (OpamMisc.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
+      if dirname = "~" then OpamMisc.Sys.home ()
+      else if
+        OpamMisc.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
+      then
+        Filename.concat (OpamMisc.Sys.home ())
+          (OpamMisc.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
       else dirname
     in
     OpamSystem.real_path dirname
@@ -244,14 +245,14 @@ let is_exec file =
     OpamSystem.internal_error "%s does not exist." (to_string file)
 
 let starts_with dirname filename =
-  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+  OpamMisc.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
 let remove_prefix prefix filename =
   let prefix =
     let str = Dir.to_string prefix in
     if str = "" then "" else Filename.concat str "" in
   let filename = to_string filename in
-  OpamMisc.remove_prefix ~prefix filename
+  OpamMisc.String.remove_prefix ~prefix filename
 
 let process_in ?root fn src dst =
   let basename = match root with
@@ -293,27 +294,12 @@ let extract_generic_file filename dirname =
     )
 
 let ends_with suffix filename =
-  OpamMisc.ends_with ~suffix (to_string filename)
+  OpamMisc.String.ends_with ~suffix (to_string filename)
 
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
   let filename = to_string filename in
-  OpamMisc.remove_suffix ~suffix filename
-
-let download ~overwrite ?compress filename dirname =
-  mkdir dirname;
-  let dst = to_string (create dirname (basename filename)) in
-  OpamSystem.download ~overwrite ?compress
-    ~filename:(to_string filename) ~dst
-  @@+ fun file -> Done (of_string file)
-
-let download_as ~overwrite ?(compress=false) filename dest =
-  mkdir (dirname dest);
-  OpamSystem.download ~overwrite ~compress
-    ~filename:(to_string filename) ~dst:(to_string dest)
-  @@+ fun file ->
-  assert (file = to_string dest);
-  Done ()
+  OpamMisc.String.remove_suffix ~suffix filename
 
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
@@ -325,7 +311,7 @@ let with_flock ?read file f x =
     OpamSystem.funlock lock;
     r
   with e ->
-    OpamMisc.register_backtrace e;
+    OpamMisc.Exn.register_backtrace e;
     OpamSystem.funlock lock;
     raise e
 
@@ -341,11 +327,25 @@ let checksum_dir d =
   else
     []
 
+let prettify_path s =
+  let aux ~short ~prefix =
+    let prefix = Filename.concat prefix "" in
+    if OpamMisc.String.starts_with ~prefix s then
+      let suffix = OpamMisc.String.remove_prefix ~prefix s in
+      Some (Filename.concat short suffix)
+    else
+      None in
+  try
+    match aux ~short:"~" ~prefix:(OpamMisc.Sys.home ()) with
+    | Some p -> p
+    | None   -> s
+  with Not_found -> s
+
 let prettify_dir d =
-  OpamMisc.prettify_path (Dir.to_string d)
+  prettify_path (Dir.to_string d)
 
 let prettify s =
-  OpamMisc.prettify_path (to_string s)
+  prettify_path (to_string s)
 
 let to_json x = `String (to_string x)
 
@@ -363,15 +363,14 @@ module Set = OpamMisc.Set.Make(O)
 let copy_files ~src ~dst =
   let files = rec_files src in
   List.iter (fun file ->
-      if not !OpamGlobals.do_not_copy_files then
-        let base = remove_prefix src file in
-        let dst_file = create dst (Base.of_string base) in
-        if !OpamGlobals.verbose_level >= 2 then
-        OpamGlobals.msg "Copying %s %s %s/\n"
+      let base = remove_prefix src file in
+      let dst_file = create dst (Base.of_string base) in
+      if OpamCoreConfig.(!r.verbose_level >= 2) then
+        OpamConsole.msg "Copying %s %s %s/\n"
           (prettify file)
           (if exists dst_file then "over" else "to")
           (prettify_dir dst);
-        copy ~src:file ~dst:dst_file
+      copy ~src:file ~dst:dst_file
     ) files
 
 module OP = struct
@@ -420,7 +419,7 @@ module Attribute = struct
                             (String.concat " " k)
 
   let to_string t = String.concat " " (to_string_list t)
-  let of_string s = of_string_list (OpamMisc.split s ' ')
+  let of_string s = of_string_list (OpamMisc.String.split s ' ')
 
   let to_json x =
     `O ([ ("base" , Base.to_json x.base);

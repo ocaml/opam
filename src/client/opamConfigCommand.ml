@@ -14,11 +14,11 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let log fmt = OpamGlobals.log "CONFIG" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "CONFIG" fmt
+let slog = OpamConsole.slog
 
 open OpamTypes
-open OpamState.Types
+(* open OpamState.Types *)
 
 let need_globals ns =
   ns = []
@@ -53,28 +53,28 @@ let implicits t ns =
     [] ns
 
 let help t =
-  OpamGlobals.msg "# Global OPAM configuration variables\n\n";
+  OpamConsole.msg "# Global OPAM configuration variables\n\n";
   let global = OpamState.dot_config t OpamPackage.Name.global_config in
   List.iter (fun var ->
-      OpamGlobals.msg "%-20s %s\n"
+      OpamConsole.msg "%-20s %s\n"
         (OpamVariable.to_string var)
         (match OpamFile.Dot_config.variable global var with
          | Some c -> OpamVariable.string_of_variable_contents c
          | None -> "")
     )
     (OpamFile.Dot_config.variables global);
-  OpamGlobals.msg "\n# Global variables from the environment\n\n";
+  OpamConsole.msg "\n# Global variables from the environment\n\n";
   List.iter (fun (varname, doc) ->
       let var = OpamVariable.of_string varname in
-      OpamGlobals.msg "%-20s %-20s # %s\n"
+      OpamConsole.msg "%-20s %-20s # %s\n"
         varname
         (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
            ([],var,None))
         doc)
     OpamState.global_variable_names;
-  OpamGlobals.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
+  OpamConsole.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
   List.iter (fun (var, doc) ->
-      OpamGlobals.msg "PKG:%-37s # %s\n" var doc)
+      OpamConsole.msg "PKG:%-37s # %s\n" var doc)
     OpamState.package_variable_names
 
 (* List all the available variables *)
@@ -94,7 +94,7 @@ let list ns =
       let name = OpamPackage.name nv in
       let file = OpamState.dot_config t (OpamPackage.name nv) in
       (name, file) :: l
-    ) t.installed [] in
+    ) t.OpamState.Types.installed [] in
   let variables =
     implicits t ns @
     List.fold_left (fun accu (name, config) ->
@@ -111,7 +111,7 @@ let list ns =
             (OpamFilter.ident_of_var v)))
       variables in
   List.iter (fun (variable, descr, value) ->
-      OpamGlobals.msg "%-20s %-40s %s\n"
+      OpamConsole.msg "%-20s %-40s %s\n"
         (OpamVariable.Full.to_string variable)
         value
         (if descr <> "" then "# "^descr else "")
@@ -119,30 +119,30 @@ let list ns =
 
 let print_env env =
   List.iter (fun (k,v) ->
-    OpamGlobals.msg "%s=%S; export %s;\n" k v k;
+    OpamConsole.msg "%s=%S; export %s;\n" k v k;
   ) env
 
 let print_csh_env env =
   List.iter (fun (k,v) ->
-    OpamGlobals.msg "setenv %s %S;\n" k v;
+    OpamConsole.msg "setenv %s %S;\n" k v;
   ) env
 
 let print_sexp_env env =
-  OpamGlobals.msg "(\n";
+  OpamConsole.msg "(\n";
   List.iter (fun (k,v) ->
-    OpamGlobals.msg "  (%S %S)\n" k v;
+    OpamConsole.msg "  (%S %S)\n" k v;
   ) env;
-  OpamGlobals.msg ")\n"
+  OpamConsole.msg ")\n"
 
 let print_fish_env env =
   List.iter (fun (k,v) ->
       match k with
       | "PATH" | "MANPATH" ->
-        let v = OpamMisc.split_delim v ':' in
-        OpamGlobals.msg "set -gx %s %s;\n" k
-          (OpamMisc.sconcat_map " " (Printf.sprintf "%S") v)
+        let v = OpamMisc.String.split_delim v ':' in
+        OpamConsole.msg "set -gx %s %s;\n" k
+          (OpamMisc.List.concat_map " " (Printf.sprintf "%S") v)
       | _ ->
-        OpamGlobals.msg "set -gx %s %S;\n" k v
+        OpamConsole.msg "set -gx %s %S;\n" k v
     ) env
 
 let env ~csh ~sexp ~fish ~inplace_path =
@@ -170,7 +170,7 @@ let quick_lookup v =
   let var = OpamVariable.Full.variable v in
   if name = OpamPackage.Name.global_config then (
     let root = OpamPath.root () in
-    let switch = match !OpamGlobals.switch with
+    let switch = match OpamClientConfig.(!r.switch_set) with
       | `Command_line s
       | `Env s   -> OpamSwitch.of_string s
       | `Not_set ->
@@ -198,7 +198,7 @@ let variable v =
       OpamFilter.ident_value (OpamState.filter_env t) ~default:(S "#undefined")
         (OpamFilter.ident_of_var v)
   in
-  OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+  OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =
   log "config-setup";
@@ -221,4 +221,4 @@ let exec ~inplace_path command =
     let env = OpamState.get_full_env ~force_path:(not inplace_path) t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
-  raise (OpamGlobals.Exec (cmd, args, env))
+  raise (OpamMisc.Sys.Exec (cmd, args, env))

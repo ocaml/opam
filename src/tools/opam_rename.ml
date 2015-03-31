@@ -16,7 +16,7 @@
 (* Script to add findlib info *)
 open OpamTypes
 
-module StringSet = OpamMisc.StringSet
+module StringSet = OpamMisc.String.Set
 
 let () =
   OpamGlobals.root_dir := OpamGlobals.default_opam_dir
@@ -51,24 +51,24 @@ let process args =
           OpamPackage.create args.dst (OpamPackage.version package)
         in
         if OpamPackage.Map.mem new_pkg packages then (
-          OpamGlobals.warning
+          OpamConsole.warning
             "Cannot rename %s to %s as the package already exists, skipping."
             (OpamPackage.to_string package) (OpamPackage.to_string new_pkg);
         ) else (
-          OpamGlobals.msg "Processing %s\n" (OpamPackage.to_string package);
-          let path = OpamPath.Repository.packages repo prefix package in
+          OpamConsole.msg "Processing %s\n" (OpamPackage.to_string package);
+          let path = OpamRepositoryPath.packages repo prefix package in
           let new_path =
             let prefix = match prefix with
               | None   -> None
               | Some _ -> Some (OpamPackage.Name.to_string args.dst)
             in
-            OpamPath.Repository.packages repo prefix new_pkg
+            OpamRepositoryPath.packages repo prefix new_pkg
           in
           OpamFilename.move_dir ~src:path ~dst:new_path;
           (* XXX: do we want to rename the findlib packages as well ?? *)
         )
       ) else (
-        let opam_f = OpamPath.Repository.opam repo prefix package in
+        let opam_f = OpamRepositoryPath.opam repo prefix package in
         let opam = OpamFile.OPAM.read opam_f in
         let rename (n, c) =
           if n = args.src then Atom (args.dst, c) else Atom (n, c)
@@ -82,7 +82,7 @@ let process args =
         in
 
         if opam <> new_opam then (
-          OpamGlobals.msg "Processing %s\n" (OpamPackage.to_string package);
+          OpamConsole.msg "Processing %s\n" (OpamPackage.to_string package);
           OpamFile.OPAM.write opam_f new_opam
         );
       ))

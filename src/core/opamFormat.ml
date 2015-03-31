@@ -73,13 +73,13 @@ let sections items =
   List.rev l
 
 let names items =
-  let tbl = ref OpamMisc.StringMap.empty in
+  let tbl = ref OpamMisc.String.Map.empty in
   let add f =
-    if OpamMisc.StringMap.mem f !tbl then
-      let i = OpamMisc.StringMap.find f !tbl in
-      tbl := OpamMisc.StringMap.add f (i+1) (OpamMisc.StringMap.remove f !tbl)
+    if OpamMisc.String.Map.mem f !tbl then
+      let i = OpamMisc.String.Map.find f !tbl in
+      tbl := OpamMisc.String.Map.add f (i+1) (OpamMisc.String.Map.remove f !tbl)
     else
-      tbl := OpamMisc.StringMap.add f 1 !tbl in
+      tbl := OpamMisc.String.Map.add f 1 !tbl in
   let rec aux items =
     List.iter (function
       | Variable (_, f, _) -> add f
@@ -90,7 +90,7 @@ let names items =
 
 let invalid_fields items fields =
   let tbl = names items in
-  OpamMisc.StringMap.fold (fun f i accu ->
+  OpamMisc.String.Map.fold (fun f i accu ->
     if List.mem f fields && i = 1 then accu else f :: accu
   ) tbl []
 
@@ -183,16 +183,6 @@ let parse_string_option f =
 let parse_string_list =
   parse_list parse_string
 
-let parse_string_pair_of_list = function
-  | [String (_,x); String (_,y)] -> (x,y)
-  | x                    ->
-    bad_format ?pos:(values_pos x) "Expected a pair of strings"
-
-let parse_string_pair = function
-  | List (_,[String (_,x); String (_,y)]) -> (x,y)
-  | x                         ->
-    bad_format ~pos:(value_pos x) "Expected a pair of strings"
-
 let parse_single_string = function
   | [String (_,x)] -> x
   | x          ->
@@ -210,7 +200,7 @@ let parse_or fns v =
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expected %s" (OpamMisc.sconcat_map " or " fst fns)
+        "Expected %s" (OpamMisc.List.concat_map " or " fst fns)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
@@ -309,8 +299,6 @@ and format_items fmt is =
   List.iter (fun i -> format_item fmt i; Format.pp_print_cut fmt ()) is;
   Format.pp_close_box fmt ()
 
-let string_of_item i =
-  format_item Format.str_formatter i; Format.flush_str_formatter ()
 let string_of_items l =
   format_items Format.str_formatter l; Format.flush_str_formatter ()
 
@@ -578,7 +566,7 @@ let rec make_os_constraint l =
   | Empty -> List (pos_null, [])
   | l ->
     let l =
-      if !OpamGlobals.all_parens then [l]
+      if OpamCoreConfig.(!r.all_parens) then [l]
       else OpamFormula.ors_to_list l in
     List (pos_null, List.map aux l)
 
@@ -622,19 +610,13 @@ let rec parse_filter l =
     bad_format ?pos:(values_pos x) "Expected a single filter expression"
   | [Group(_,[f])] | [f] -> aux f
 
-let lift = function
-  | [x] -> x
-  | l   ->
-    let pos = match values_pos l with Some p -> p | None -> pos_null in
-    Group (pos, l)
-
 let make_filter f =
   let rec aux ?paren f =
     match f with
     | FString s  -> make_string s
     | FIdent (pkgs,var,converter) ->
       let s =
-        OpamMisc.sconcat_map ~nil:"" "+" ~right:":"
+        OpamMisc.List.concat_map ~nil:"" "+" ~right:":"
           OpamPackage.Name.to_string pkgs ^
         OpamVariable.to_string var ^
         (match converter with
@@ -645,18 +627,18 @@ let make_filter f =
     | FBool b    -> make_bool b
     | FOp(e,s,f) ->
       let f = Relop (pos_null, s, aux e, aux f) in
-      if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
+      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else f
     | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
       let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
-      if !OpamGlobals.all_parens then Group (pos_null, [f]) else
+      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else
         (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
     | FAnd(e,f) ->
       let f = Logop (pos_null, `And, aux e, aux ~paren:`And f) in
-      if !OpamGlobals.all_parens then Group (pos_null, [f]) else
+      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else
         (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
     | FNot f ->
       let f = Pfxop (pos_null, `Not, aux ~paren:`Not f) in
-      if !OpamGlobals.all_parens then Group (pos_null, [f]) else f
+      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else f
     | FUndef -> make_ident "#undefined"
   in
   [aux f]
@@ -703,7 +685,7 @@ let parse_commands =
   ]
 
 let parse_message =
-  parse_option (parse_string @> OpamMisc.strip) parse_filter
+  parse_option (parse_string @> OpamMisc.String.strip) parse_filter
 
 let parse_messages =
   parse_list parse_message
@@ -728,10 +710,10 @@ let parse_flag = function
 (* TAGS *)
 
 let parse_string_set =
-  parse_string_list @> OpamMisc.StringSet.of_list
+  parse_string_list @> OpamMisc.String.Set.of_list
 
 let make_string_set =
-  OpamMisc.StringSet.elements @> make_string_list
+  OpamMisc.String.Set.elements @> make_string_list
 
 let parse_tag_line =
   let fn = parse_string_set in
@@ -746,10 +728,10 @@ let parse_tags v =
       "tag" , (fun x -> [parse_tag_line x]);
       "tags", (parse_list parse_tag_line);
     ] v in
-  OpamMisc.StringSetMap.of_list l
+  OpamMisc.String.SetMap.of_list l
 
 let make_tags t =
-  let l = OpamMisc.StringSetMap.bindings t in
+  let l = OpamMisc.String.SetMap.bindings t in
   make_list make_tag_line l
 
 (* FEATURES *)

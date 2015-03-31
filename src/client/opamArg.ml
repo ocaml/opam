@@ -20,15 +20,14 @@ open Cmdliner
 
 (* Global options *)
 type global_options = {
-  debug  : bool;
-  debug_level: int;
+  debug_level: int option;
   verbose: int;
   quiet  : bool;
-  color  : bool;
+  color  : [ `Always | `Never | `Auto ] option;
   switch : string option;
   yes    : bool;
   strict : bool;
-  root   : dirname;
+  root   : dirname option;
   no_base_packages: bool;
   git_version     : bool;
   external_solver : string option;
@@ -59,33 +58,34 @@ let switch_to_updated_self debug opamroot =
           let len = String.length s in if len > 0 && s.[len-1] = '\n'
           then String.sub s 0 (len-1) else s in
         OpamVersion.of_string s
-      with e -> OpamMisc.fatal e; no_version in
+      with e -> OpamMisc.Exn.fatal e; no_version in
     if update_version = no_version then
-      OpamGlobals.error "%s exists but cannot be read, disabling self-upgrade."
+      OpamConsole.error "%s exists but cannot be read, disabling self-upgrade."
         updated_self_version_str
     else if OpamVersion.compare update_version OpamVersion.current <= 0 then
-      OpamGlobals.warning "Obsolete OPAM self-upgrade package v.%s found, \
+      OpamConsole.warning "Obsolete OPAM self-upgrade package v.%s found, \
                            not using it (current system version is %s)."
         (OpamVersion.to_string update_version)
         (OpamVersion.to_string OpamVersion.current)
     else (
       if OpamVersion.git () <> None then
-        OpamGlobals.warning "Using OPAM self-upgrade to %s while the system \
+        OpamConsole.warning "Using OPAM self-upgrade to %s while the system \
                              OPAM is a development version (%s)"
           (OpamVersion.to_string update_version)
           (OpamVersion.to_string (OpamVersion.full ()));
-      (if debug || !OpamGlobals.debug then
+      (if debug || (OpamConsole.debug ()) then
          Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
        let env =
          Array.append
-           [|"OPAMNOSELFUPGRADE="^OpamGlobals.self_upgrade_bootstrapping_value|]
+           [|"OPAMNOSELFUPGRADE="^
+             OpamClientGlobals.self_upgrade_bootstrapping_value|]
            (Unix.environment ()) in
        try
-         OpamMisc.exec_at_exit ();
+         OpamMisc.Sys.exec_at_exit ();
          Unix.execve updated_self_str Sys.argv env
        with e ->
-         OpamMisc.fatal e;
-         OpamGlobals.error
+         OpamMisc.Exn.fatal e;
+         OpamConsole.error
            "Couldn't run the upgraded opam %s found at %s. \
             Continuing with %s from the system."
            (OpamVersion.to_string update_version)
@@ -96,57 +96,93 @@ let create_global_options
     git_version debug debug_level verbose quiet color switch yes strict root
     no_base_packages external_solver use_internal_solver
     cudf_file solver_preferences no_self_upgrade safe_mode =
-  let debug, debug_level = match debug, debug_level with
-    | _, Some lvl -> true, lvl
-    | true, None -> true, 1
-    | false, None -> false, 0
-  in
-  if not (no_self_upgrade) then
-    switch_to_updated_self debug root; (* do this asap, don't waste time *)
+  let debug_level = OpamMisc.Option.Op.(
+      debug_level >>+ fun () -> if debug then Some 1 else None
+    ) in
+  if not (no_self_upgrade) then (* do this asap, don't waste time *)
+    switch_to_updated_self debug
+      OpamMisc.Option.Op.(root +! OpamClientConfig.(default.root_dir));
   if not safe_mode && Unix.getuid () = 0 then
-    OpamGlobals.warning "Running as root is not recommended";
+    OpamConsole.warning "Running as root is not recommended";
   let verbose = List.length verbose in
-  { git_version; debug; debug_level; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; external_solver; use_internal_solver; cudf_file; solver_preferences;
-    no_self_upgrade; safe_mode; }
+  { git_version; debug_level; verbose; quiet; color; switch; yes;
+    strict; root; no_base_packages; external_solver; use_internal_solver;
+    cudf_file; solver_preferences; no_self_upgrade; safe_mode; }
 
 let apply_global_options o =
   if o.git_version then (
     begin match OpamGitVersion.version with
       | None   -> ()
-      | Some v -> OpamGlobals.msg "%s\n%!" v
+      | Some v -> OpamConsole.msg "%s\n%!" v
     end;
     exit 0
   );
-  OpamGlobals.debug    := not o.safe_mode && !OpamGlobals.debug || o.debug;
-  OpamGlobals.debug_level := max !OpamGlobals.debug_level o.debug_level;
-  OpamMisc.debug       := !OpamGlobals.debug;
-  OpamGlobals.verbose  :=
-    (not o.quiet) && (!OpamGlobals.verbose || o.verbose > 0);
-  OpamGlobals.verbose_level := max !OpamGlobals.verbose_level o.verbose;
-  OpamGlobals.color    := o.color;
-  begin match o.switch with
-    | None   -> ()
-    | Some s -> OpamGlobals.switch := `Command_line s
-  end;
-  OpamGlobals.root_dir := OpamFilename.Dir.to_string o.root;
-  OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
-  OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
-  OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
-  OpamGlobals.env_external_solver :=
-    OpamMisc.Option.Op.(o.external_solver ++ !OpamGlobals.env_external_solver);
-  OpamGlobals.use_external_solver :=
-    !OpamGlobals.use_external_solver && not o.use_internal_solver &&
-    !OpamGlobals.env_external_solver <> Some "";
-  OpamGlobals.cudf_file :=
-    OpamMisc.Option.Op.(o.cudf_file ++ !OpamGlobals.cudf_file);
-  OpamGlobals.no_self_upgrade := !OpamGlobals.no_self_upgrade || o.no_self_upgrade;
-  OpamGlobals.safe_mode := o.safe_mode;
-  match o.solver_preferences with
-  | None -> ()
-  | Some prefs ->
-    OpamGlobals.solver_preferences :=
-      [`Default,prefs; `Upgrade,prefs; `Fixup,prefs]
+  let open OpamMisc.Option.Op in
+  let flag f = if f then Some true else None in
+  let some x = match x with None -> None | some -> Some some in
+  (* (i) get root dir *)
+  let root =
+    (* /!\ not handled in OpamClientGlobals.init_config like the other
+       environment variables: we need it first to find the config file.
+       Ensure it behaves consistently *)
+    (o.root >>+ fun () ->
+     OpamMisc.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string) +!
+    OpamClientConfig.(default.root_dir)
+  in
+  (* (ii) load conf file *)
+  (* XXX TODO *)
+  (* (iii) load from env and options using OpamXxxGlobals.init_config *)
+  OpamGlobals.init_config
+    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
+    ?verbose_level:(if o.quiet then Some 0 else
+                    if o.verbose = 0 then None else Some o.verbose)
+    ?color:o.color
+    (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
+    (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
+    ?answer:(some (flag o.yes))
+    ?strict:(flag o.strict)
+    (* ?skip_version_checks:bool *)
+    ?safe_mode:(flag o.safe_mode)
+    (* ?lock_retries:int *)
+    (* ?all_parens:bool *)
+    ~log_dir:OpamFilename.(Dir.to_string OP.(root / "log"))
+    (* ?keep_log_dir:bool *)
+    ();
+  OpamDownload.init_config
+    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
+    (* ?retries:int *)
+    (* ?force_checksums:bool option *)
+    ();
+  let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
+  OpamSolverGlobals.init_config
+    ?cudf_file:(some o.cudf_file)
+    (* ?solver_timeout:float *)
+    (* ?external_solver:OpamTypes.arg list option Lazy.t *)
+    ?solver_preferences_default:(some solver_prefs)
+    ?solver_preferences_upgrade:(some solver_prefs)
+    ?solver_preferences_fixup:(some solver_prefs)
+    ();
+  OpamClientGlobals.init_config
+    ~root_dir:root
+    ?switch_set:(o.switch >>| fun s -> `Command_line s)
+    (* ?jobs: int XXX should be handled here *)
+    (* ?dl_jobs: int *)
+    (* ?external_tags:string list *)
+    (* ?keep_build_dir:bool XXX should be handled here *)
+    ?no_base_packages:(flag o.no_base_packages)
+    (* ?build_test:bool XXX this too *)
+    (* ?build_doc:bool XXX this also *)
+    (* ?show:bool *)
+    (* ?dryrun:bool *)
+    (* ?fake:bool *)
+    (* ?print_stats:bool *)
+    (* ?sync_archives:bool *)
+    ?self_upgrade:(if o.no_self_upgrade then Some `Disable else None)
+    (* ?pin_kind_auto:bool *)
+    (* ?autoremove:bool *)
+    (* ?editor:string *)
+    (* ?makecmd:string Lazy.t *)
+    ()
 
 (* Build options *)
 type build_options = {
@@ -180,24 +216,34 @@ let json_update = function
     OpamJson.set_output write
 
 let apply_build_options b =
-  OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
-  OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
-  OpamGlobals.req_checksums  := !OpamGlobals.req_checksums || b.req_checksums;
-  OpamGlobals.build_test     := !OpamGlobals.build_test || b.build_test;
-  OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
-  OpamGlobals.show           := !OpamGlobals.show || b.show;
-  OpamGlobals.dryrun         := !OpamGlobals.dryrun || b.dryrun;
-  OpamGlobals.external_tags  := b.external_tags;
-  OpamGlobals.fake           := b.fake;
-  json_update b.json;
-  OpamGlobals.jobs           :=
-    begin match b.jobs with
-      | None   -> !OpamGlobals.jobs
-      | Some j -> Some j
-    end;
-  match b.make with
-  | None   -> ()
-  | Some s -> OpamGlobals.makecmd := (fun () -> s)
+  let flag f = if f then Some true else None in
+  OpamRepositoryConfig.update
+    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
+    (* ?retries:int *)
+    ?force_checksums:(if b.req_checksums then Some (Some true)
+                      else if b.no_checksums then Some (Some false)
+                      else None)
+    ();
+  OpamClientConfig.update
+    (* ?root: -- handled globally *)
+    ?jobs:b.jobs
+    (* ?dl_jobs:int *)
+    ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
+    ?keep_build_dir:(flag b.keep_build_dir)
+    (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
+    ?build_test:(flag b.build_test)
+    ?build_doc:(flag b.build_doc)
+    ?show:(flag b.show)
+    ?dryrun:(flag b.dryrun)
+    ?fake:(flag b.fake)
+    (* ?print_stats:bool *)
+    (* ?sync_archives:bool *)
+    (* ?self_upgrade: -- handled globally *)
+    (* ?pin_kind_auto:bool *)
+    (* ?autoremove:bool *)
+    (* ?editor:string *)
+    ?makecmd:OpamMisc.Option.Op.(b.make >>| fun m -> lazy m)
+    ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
 
@@ -215,9 +261,9 @@ let help_sections = [
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
-  `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency solving.\
-      The default value is "^OpamGlobals.default_preferences `Default^". \
-      See also option --criteria");
+  `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
+       solving. The default value depends on the solver version, use `config \
+       report` to know the current setting. See also option --criteria");
   `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
@@ -251,9 +297,7 @@ let help_sections = [
       `opam config env --switch=SWITCH'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
        solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
-       upgrades if both are set.\
-       The default value is "^OpamGlobals.default_preferences `Upgrade^
-      ". See also option --criteria");
+       upgrades if both are set. See also option --criteria");
   `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
   `P ("$(i,OPAMUTF8) use UTF8 characters in output \
        (one of "^Arg.doc_alts_enum when_enum^
@@ -382,15 +426,9 @@ let mk_opt ?section ?vopt flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt ?vopt conv default & doc)
 
-let mk_tristate_opt ?section flags value doc auto default =
+let mk_tristate_opt ?section flags value doc =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  let arg = Arg.(value & opt (enum when_enum) default & doc) in
-  let to_bool = function
-    | `Always -> true
-    | `Never -> false
-    | `Auto -> auto ()
-  in
-  Term.(pure to_bool $ arg)
+  Arg.(value & opt (some (enum when_enum)) None & doc)
 
 let mk_subdoc ?(defaults=[]) commands =
   let bold s = Printf.sprintf "$(b,%s)" s in
@@ -405,8 +443,8 @@ let mk_subdoc ?(defaults=[]) commands =
                (it arg) (bold default) (it arg))
      ) defaults) @
   List.map (fun (cs,_,args,d) ->
-      let cmds = OpamMisc.sconcat_map ", " bold cs ^ " " ^
-                 OpamMisc.sconcat_map " " it args in
+      let cmds = OpamMisc.List.concat_map ", " bold cs ^ " " ^
+                 OpamMisc.List.concat_map " " it args in
       `I (cmds, d)
     ) commands @
   [`S "OPTIONS"] (* Ensures options get after commands *)
@@ -434,7 +472,7 @@ let bad_subcommand command subcommands usersubcommand userparams =
   match usersubcommand with
   | None ->
     `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
-              (OpamMisc.pretty_list
+              (OpamMisc.Format.pretty_list
                  (List.flatten (List.map (fun (a,_,_,_) -> a) subcommands))))
   | Some (`default cmd) ->
     `Error (true, Printf.sprintf "Invalid %s subcommand %S" command cmd)
@@ -486,7 +524,7 @@ let shell_opt =
     (Printf.sprintf
        "Sets the configuration mode for OPAM environment appropriate for \
         $(docv). One of %s." (Arg.doc_alts_enum enum))
-    (Arg.enum enum) (OpamMisc.guess_shell_compat ())
+    (Arg.enum enum) (OpamMisc.Sys.guess_shell_compat ())
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
@@ -520,9 +558,6 @@ let jobs_flag =
 
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
-
-let nonempty_pattern_list =
-  nonempty_arg_list "PATTERNS" "List of package patterns." Arg.string
 
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
@@ -568,8 +603,7 @@ let global_options =
   let color =
     mk_tristate_opt ~section ["color"] "WHEN"
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
-         (Arg.doc_alts_enum when_enum))
-      (fun () -> Unix.isatty Unix.stdout) OpamGlobals.color_when in
+         (Arg.doc_alts_enum when_enum)) in
   let switch =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
@@ -590,7 +624,7 @@ let global_options =
     mk_opt ~section ["root"]
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
-      dirname (OpamFilename.Dir.of_string OpamGlobals.default_opam_dir) in
+      Arg.(some dirname) None in
   let no_base_packages =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
@@ -598,12 +632,13 @@ let global_options =
        string." in
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
-      "Force use of internal heuristics, even if an external solver is available." in
+      "Force use of internal heuristics, even if an external solver is \
+       available." in
   let external_solver =
     mk_opt ~section ["solver"] "CMD"
       ("Specify the name of the external dependency $(i,solver). \
-        The default value is "^OpamGlobals.default_external_solver^
-       ". Either 'aspcud', 'packup' or a custom command that may contain \
+        The default value is \"aspcud\". \
+        Either 'aspcud', 'packup' or a custom command that should contain \
         the variables %{input}%, %{output}% and %{criteria}%")
       Arg.(some string) None in
   let solver_preferences =
@@ -613,9 +648,7 @@ let global_options =
         For details on the supported language, and the external solvers available, see \
         $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
         A general guide to using solver preferences can be found at \
-        $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf). \
-        The default value is "^OpamGlobals.default_preferences `Upgrade^
-       " for upgrades, and "^OpamGlobals.default_preferences `Default^" otherwise.")
+        $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf).")
       Arg.(some string) None in
   let cudf_file =
     mk_opt ~section ["cudf"] "FILENAME"
@@ -694,7 +727,7 @@ let build_options =
 let init_dot_profile shell dot_profile =
   match dot_profile with
   | Some n -> n
-  | None   -> OpamFilename.of_string (OpamMisc.guess_dot_profile shell)
+  | None   -> OpamFilename.of_string (OpamMisc.Sys.guess_dot_profile shell)
 
 module Client = OpamClient.SafeAPI
 
@@ -719,7 +752,7 @@ let init =
     `P "The state of repositories can be synchronized by using $(b,opam update).";
     `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
-  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
+  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamClientConfig.default.OpamClientConfig.jobs in
   let compiler =
     mk_opt ["compiler"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
@@ -727,21 +760,20 @@ let init =
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
-    Arg.(value & pos ~rev:true 0 address OpamRepository.default_address & doc) in
+    Arg.(value & pos ~rev:true 0 address
+           OpamRepositoryBackend.default_address & doc) in
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
       no_setup auto_setup shell dot_profile_o =
-    (* Create the dir in current directory so that it can be made absolute *)
-    OpamFilename.mkdir global_options.root;
     apply_global_options global_options;
     apply_build_options build_options;
     let repo_priority = 0 in
     let repo_address, repo_kind2 = parse_url repo_address in
     let repo_kind = OpamMisc.Option.default repo_kind2 repo_kind in
     let repository = {
-      repo_root = OpamPath.Repository.create (OpamPath.root ()) repo_name;
+      repo_root = OpamRepositoryPath.create (OpamPath.root ()) repo_name;
       repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no
@@ -1017,7 +1049,7 @@ let config =
         let global = if global then Some { complete; switch_eval } else None in
         `Ok (Client.CONFIG.setup user global)
       else
-        `Ok (OpamGlobals.msg
+        `Ok (OpamConsole.msg
           "usage: opam config setup [options]\n\
            \n\
            Main options\n\
@@ -1050,7 +1082,7 @@ let config =
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
     | Some `pef, params ->
       let opam_state = OpamState.load_state "config-universe" in
-      let dump oc = OpamState.dump_state opam_state oc in 
+      let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
@@ -1068,31 +1100,18 @@ let config =
       Printf.printf "# OPAM status report\n";
       print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
-        (if OpamGlobals.is_self_upgrade
+        (if OpamClientConfig.(!r.self_upgrade = `Running)
          then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))
          else "no");
-      print "os" "%s" (OpamGlobals.os_string ());
+      print "os" "%s" (OpamMisc.Sys.os_string ());
       try
         let state = OpamState.load_state "config-report" in
         print "external-solver" "%s"
-          (if OpamCudf.external_solver_available () then
-             String.concat " "
-               (OpamGlobals.external_solver
-                  ~input:"$in" ~output:"$out" ~criteria:"$criteria")
-           else "no");
-        print "criteria" "%s"
-          (try List.assoc `Default !OpamGlobals.solver_preferences
-           with Not_found ->
-             try
-               let cfg =
-                 OpamFile.Config.read (OpamPath.config (OpamPath.root())) in
-               List.assoc `Default (OpamFile.Config.criteria cfg)
-             with
-             | e ->
-               OpamMisc.fatal e;
-               match OpamCudf.check_cudf_version () with
-               | `Latest -> OpamGlobals.default_preferences `Default ^ "*"
-               | `Compat -> OpamGlobals.compat_preferences `Default ^ "*");
+          (OpamMisc.Option.to_string ~none:"no"
+             (String.concat " ")
+             (OpamSolverGlobals.external_solver_command
+                   ~input:"$in" ~output:"$out" ~criteria:"$criteria"));
+        print "criteria" "%s" (OpamSolverGlobals.criteria `Default);
         let open OpamState.Types in
         let nprint label n =
           if n <> 0 then [Printf.sprintf "%d (%s)" n label]
@@ -1101,14 +1120,14 @@ let config =
         print "repositories" "%s"
           OpamRepositoryName.Map.(
             let nhttp, nlocal, nvcs =
-              fold (fun _ {repo_kind=k} (nhttp, nlocal, nvcs) -> match k with
+              fold (fun _ {repo_kind=k; _} (nhttp, nlocal, nvcs) -> match k with
                   | `http -> nhttp+1, nlocal, nvcs
                   | `local -> nhttp, nlocal+1, nvcs
                   | _ -> nhttp, nlocal, nvcs+1)
                 state.repositories (0,0,0) in
             let has_default =
-              exists (fun _ {repo_address} ->
-                  repo_address = OpamRepository.default_address)
+              exists (fun _ {repo_address; _} ->
+                  repo_address = OpamRepositoryBackend.default_address)
                 state.repositories in
             String.concat ", "
               (Printf.sprintf "%d%s (http)" nhttp
@@ -1271,10 +1290,12 @@ let update =
   let update global_options jobs json names repos_only sync upgrade =
     apply_global_options global_options;
     json_update json;
-    OpamGlobals.sync_archives := sync;
-    OpamGlobals.jobs := jobs;
+    OpamClientConfig.update
+      ?sync_archives:(if sync then Some true else None)
+      ?jobs
+      ();
     Client.update ~repos_only ~no_stats:upgrade names;
-    if upgrade then (OpamGlobals.msg "\n"; Client.upgrade [])
+    if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])
   in
   Term.(pure update $global_options $jobs_flag $json_flag $name_list
         $repos_only $sync $upgrade),
@@ -1354,7 +1375,7 @@ let repository =
       let name = OpamRepositoryName.of_string name in
       let priority =
         try int_of_string p
-        with Failure _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
+        with Failure _ -> OpamConsole.error_and_exit "%s is not an integer." p in
       `Ok (Client.REPOSITORY.priority name ~priority)
     | Some `set_url, [name; address] ->
       let name = OpamRepositoryName.of_string name in
@@ -1591,13 +1612,13 @@ let pin ?(unpin_only=false) () =
       try match OpamFile.OPAM.(name_opt (read opamf)) with
         | Some name -> name
         | None -> raise Not_found
-      with e -> OpamMisc.fatal e; raise Not_found
+      with e -> OpamMisc.Exn.fatal e; raise Not_found
     else
     match
       Array.fold_left (fun acc f ->
-          if OpamMisc.ends_with ~suffix:".opam" f then
+          if OpamMisc.String.ends_with ~suffix:".opam" f then
             if acc = None then
-              Some (OpamMisc.remove_suffix ~suffix:".opam" f)
+              Some (OpamMisc.String.remove_suffix ~suffix:".opam" f)
             else raise Not_found (* multiple .opam files *)
           else acc)
         None (Sys.readdir (OpamFilename.Dir.to_string path))
@@ -1611,7 +1632,7 @@ let pin ?(unpin_only=false) () =
     let kind, guess = match kind with
       | Some `auto -> None, true
       | Some (#pin_kind as k) -> Some k, false
-      | None -> None, !OpamGlobals.pin_kind_auto in
+      | None -> None, OpamClientConfig.(!r.pin_kind_auto) in
     match command, params with
     | Some `list, [] | None, [] -> `Ok (Client.PIN.list ~short:print_short ())
     | Some `remove, names ->
@@ -1690,7 +1711,7 @@ let source =
         OpamPackage.Set.max_elt
           (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
       with Not_found ->
-        OpamGlobals.error_and_exit "No package matching %s found."
+        OpamConsole.error_and_exit "No package matching %s found."
           (OpamFormula.short_string_of_atom atom)
     in
     let dir = match dir with
@@ -1703,14 +1724,14 @@ let source =
     in
     let open OpamFilename in
     if exists_dir dir then
-      OpamGlobals.error_and_exit
+      OpamConsole.error_and_exit
         "Directory %s already exists. Please remove it or use option `--dir'"
         (Dir.to_string dir);
     let opam = OpamState.opam t nv in
     if dev_repo then (
       match OpamFile.OPAM.dev_repo opam with
       | None ->
-        OpamGlobals.error_and_exit
+        OpamConsole.error_and_exit
           "Version-controlled repo for %s unknown \
            (\"dev-repo\" field missing from metadata)"
           (OpamPackage.to_string nv)
@@ -1718,7 +1739,7 @@ let source =
         let address = match pin with
           | Git p | Darcs p | Hg p -> p
           | _ ->
-            OpamGlobals.error_and_exit "Bad \"dev_repo\" field %S for %s"
+            OpamConsole.error_and_exit "Bad \"dev_repo\" field %S for %s"
               (string_of_pin_option pin) (OpamPackage.to_string nv)
         in
         let kind =
@@ -1736,22 +1757,22 @@ let source =
             (OpamProcess.Job.with_text text
                (OpamRepository.pull_url kind nv dir None [address]))
         with
-        | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
+        | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ ->
-          OpamGlobals.formatted_msg
+          OpamConsole.formatted_msg
             "Successfully fetched %s development repo to ./%s/\n"
             (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
     ) else (
-      OpamGlobals.formatted_msg "Downloading archive of %s...\n"
+      OpamConsole.formatted_msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
       match OpamProcess.Job.run (OpamAction.download_package t nv) with
-      | `Error () -> OpamGlobals.error_and_exit "Download failed"
+      | `Error () -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
         move_dir
           ~src:(OpamPath.Switch.build t.root t.switch nv)
           ~dst:dir;
-        OpamGlobals.formatted_msg "Successfully extracted to %s\n"
+        OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);
         if OpamState.find_opam_file_in_source (OpamPackage.name nv) dir = None
         then
@@ -1813,29 +1834,29 @@ let lint =
         in
         if short then
           (if warnings <> [] then
-             OpamGlobals.msg "%s\n"
-               (OpamMisc.sconcat_map " " (fun (n,_,_) -> string_of_int n)
+             OpamConsole.msg "%s\n"
+               (OpamMisc.List.concat_map " " (fun (n,_,_) -> string_of_int n)
                   warnings))
         else if warnings = [] then
-          OpamGlobals.msg "%s: %s\n"
+          OpamConsole.msg "%s: %s\n"
             (OpamFilename.prettify opam_f)
-            (OpamGlobals.colorise `green "Passed.")
+            (OpamConsole.colorise `green "Passed.")
         else
-          OpamGlobals.msg "%s found in %s:\n%s\n"
+          OpamConsole.msg "%s found in %s:\n%s\n"
             (if failed then "Errors" else "Warnings")
             (OpamFilename.prettify opam_f)
             (OpamFile.OPAM.warns_to_string warnings);
         if normalise then
           OpamMisc.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
-        if failed then OpamGlobals.exit 1
+        if failed then OpamMisc.Sys.exit 1
       with
       | Parsing.Parse_error
       | Lexer_error _
       | OpamFormat.Bad_format _ ->
-        OpamGlobals.msg "File format error\n";
-        OpamGlobals.exit 1
+        OpamConsole.msg "File format error\n";
+        OpamMisc.Sys.exit 1
     else
-      (OpamGlobals.error_and_exit "No opam file found at %s"
+      (OpamConsole.error_and_exit "No opam file found at %s"
          (OpamFilename.to_string opam_f))
   in
   Term.(pure lint $global_options $file $normalise $short),
@@ -1884,7 +1905,7 @@ let default =
   in
   let usage global_options =
     apply_global_options global_options;
-    OpamGlobals.formatted_msg
+    OpamConsole.formatted_msg
       "usage: opam [--version]\n\
       \            [--help]\n\
       \            <command> [<args>]\n\
@@ -1951,7 +1972,7 @@ let check_and_run_external_commands () =
   | [] | [_] -> ()
   | opam :: name :: args ->
     if
-      not (OpamMisc.starts_with ~prefix:"-" name)
+      not (OpamMisc.String.starts_with ~prefix:"-" name)
       && List.for_all (fun (_,info) -> Term.name info <> name) commands
     then
     (* No such command, check if there is a matching plugin *)
@@ -1961,11 +1982,11 @@ let check_and_run_external_commands () =
     let env = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env) in
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
-      raise (OpamGlobals.Exec (command, argv, env))
+      raise (OpamMisc.Sys.Exec (command, argv, env))
 
 let run default commands =
   OpamMisc.Option.iter OpamVersion.set_git OpamGitVersion.version;
-  OpamGlobals.root_dir := OpamGlobals.default_opam_dir;
+  OpamSystem.register_printer ();
   Sys.catch_break true;
   let () =
     try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
@@ -1977,38 +1998,38 @@ let run default commands =
     | `Error _ -> exit 1
     | _        -> exit 0
   with
-  | OpamGlobals.Exit 0 -> ()
-  | OpamGlobals.Exec (cmd,args,env) ->
-    OpamMisc.exec_at_exit ();
+  | OpamMisc.Sys.Exit 0 -> ()
+  | OpamMisc.Sys.Exec (cmd,args,env) ->
+    OpamMisc.Sys.exec_at_exit ();
     Unix.execvpe cmd args env
   | e                  ->
     flush stdout;
     flush stderr;
-    if !OpamGlobals.verbose then
+    if (OpamConsole.verbose ()) then
       Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
     begin match e with
-      | OpamGlobals.Exit i ->
+      | OpamMisc.Sys.Exit i ->
         exit_code := i;
-        if !OpamGlobals.debug && i <> 0 then
-          Printf.eprintf "%s" (OpamMisc.pretty_backtrace e)
+        if (OpamConsole.debug ()) && i <> 0 then
+          Printf.eprintf "%s" (OpamMisc.Exn.pretty_backtrace e)
       | OpamSystem.Internal_error _ ->
         Printf.eprintf "%s" (Printexc.to_string e)
       | OpamSystem.Process_error result ->
         Printf.eprintf "%s Command %S failed:\n%s\n"
-          (OpamGlobals.colorise `red "[ERROR]")
+          (OpamConsole.colorise `red "[ERROR]")
           (try List.assoc "command" result.OpamProcess.r_info with
            | Not_found -> "")
           (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
+        Printf.eprintf "%s" (OpamMisc.Exn.pretty_backtrace e);
       | Sys.Break
       | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
         exit_code := 130
       | Failure msg ->
         Printf.eprintf "Fatal error: %s\n" msg;
-        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
+        Printf.eprintf "%s" (OpamMisc.Exn.pretty_backtrace e);
       | _ ->
         Printf.eprintf "Fatal error:\n%s\n" (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
+        Printf.eprintf "%s" (OpamMisc.Exn.pretty_backtrace e);
     end;
     exit !exit_code

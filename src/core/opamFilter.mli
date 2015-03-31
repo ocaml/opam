@@ -77,6 +77,9 @@ val eval_to_string: ?default:string -> env -> filter -> string
 (** Wraps a full_variable into a fident accessor *)
 val ident_of_var: full_variable -> fident
 
+(** A fident accessor directly referring a variable with the given name *)
+val ident_of_string: string -> fident
+
 (** Resolves a filter ident. Like [eval], may raise Failure if no default is
     provided *)
 val ident_value: ?default:variable_contents -> env -> fident -> variable_contents

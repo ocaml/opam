@@ -17,8 +17,8 @@
 open OpamMisc.OP
 open OpamProcess.Job.Op
 
-let log fmt = OpamGlobals.log "PARALLEL" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "PARALLEL" fmt
+let slog = OpamConsole.slog
 
 exception Aborted
 
@@ -95,11 +95,11 @@ module Make (G : G) = struct
         (finished: int)
         (running: (OpamProcess.t * 'a * string option) M.t) =
       let texts =
-        OpamMisc.filter_map (fun (_,_,t) -> t) (M.values running) in
+        OpamMisc.List.filter_map (fun (_,_,t) -> t) (M.values running) in
       let rec limit_width acc rem_cols = function
         | [] -> List.rev acc
         | t::ts ->
-          let len = OpamMisc.visual_length t in
+          let len = OpamMisc.Format.visual_length t in
           if ts = [] && len < rem_cols then List.rev (t::acc)
           else if len > rem_cols - 5 then
             List.rev
@@ -114,9 +114,9 @@ module Make (G : G) = struct
           (finished + M.cardinal running) njobs
       in
       let texts =
-        limit_width [] (OpamMisc.terminal_columns ()) (title::texts)
+        limit_width [] (OpamMisc.Sys.terminal_columns ()) (title::texts)
       in
-      if texts <> [] then OpamGlobals.status_line "%s" (String.concat " " texts)
+      if texts <> [] then OpamConsole.status_line "%s" (String.concat " " texts)
     in
 
     (* nslots is the number of free slots *)
@@ -149,9 +149,9 @@ module Make (G : G) = struct
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
           if OpamProcess.is_verbose_command cmd ||
-             not (OpamGlobals.disp_status_line ()) then
+             not (OpamConsole.disp_status_line ()) then
             OpamMisc.Option.iter
-              (OpamGlobals.msg "%s Command started\n")
+              (OpamConsole.msg "%s Command started\n")
               (OpamProcess.text_of_command cmd);
           let p =
             if dry_run then OpamProcess.dry_run_background cmd
@@ -168,7 +168,7 @@ module Make (G : G) = struct
         log "Exception while computing job %a: %a"
           (slog (string_of_int @* V.hash)) node
           (slog V.to_string) node;
-        if error = Sys.Break then OpamGlobals.error "User interruption";
+        if error = Sys.Break then OpamConsole.error "User interruption";
         let running = M.remove node running in
         (* Cleanup *)
         let errors,pend =

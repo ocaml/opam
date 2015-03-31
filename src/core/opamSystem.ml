@@ -14,7 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamProcess.Job.Op
 open OpamCompat
 
 exception Process_error of OpamProcess.result
@@ -22,7 +21,7 @@ exception Internal_error of string
 exception Command_not_found of string
 exception File_not_found of string
 
-let log fmt = OpamGlobals.log "SYSTEM" fmt
+let log fmt = OpamConsole.log "SYSTEM" fmt
 
 let internal_error fmt =
   Printf.ksprintf (fun str ->
@@ -48,11 +47,6 @@ module Sys2 = struct
 end
 
 let (/) = Filename.concat
-
-(* Separator for the PATH variables *)
-let path_sep = match OpamGlobals.os () with
-  | OpamGlobals.Win32 -> ';'
-  | OpamGlobals.Cygwin | _ -> ':'
 
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
@@ -89,16 +83,17 @@ let remove_dir dir =
   )
 
 let temp_files = Hashtbl.create 1024
-let check_remove_temp_dir = ref true
+let logs_cleaner = lazy (
+  OpamMisc.Sys.at_exit (fun () ->
+      if not OpamCoreConfig.(!r.keep_log_dir) then
+        remove_dir OpamCoreConfig.(!r.log_dir)
+    ))
 
 let rec temp_file ?dir prefix =
   let temp_dir = match dir with
     | None   ->
-      let dir = !OpamGlobals.root_dir in
-      if !check_remove_temp_dir && dir = OpamGlobals.root_dir_tmp then (
-        OpamMisc.at_exit (fun () -> remove_dir OpamGlobals.root_dir_tmp);
-        check_remove_temp_dir := false);
-      dir / "log"
+      Lazy.force logs_cleaner;
+      OpamCoreConfig.(!r.log_dir)
     | Some d -> d in
   mkdir temp_dir;
   let file = temp_dir / temp_basename prefix in
@@ -186,9 +181,6 @@ let list kind dir =
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
 
-let files_all_not_dir =
-  list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
-
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
 
@@ -240,13 +232,14 @@ let remove file =
   else
     remove_file file
 
+(* Sets path to s and returns the old path *)
 let getchdir s =
   let p =
     try Sys.getcwd ()
     with Sys_error _ ->
-      if Sys.file_exists !OpamGlobals.root_dir
-      then !OpamGlobals.root_dir
-      else Filename.get_temp_dir_name ()
+      let p = OpamCoreConfig.(!r.log_dir) in
+      if Sys.file_exists p then p else
+        (mkdir p; Lazy.force logs_cleaner; p)
   in
   chdir s;
   p
@@ -271,21 +264,6 @@ type command = string list
 let default_env =
   Unix.environment ()
 
-let reset_env = lazy (
-  let env = OpamMisc.env () in
-  let env =
-    let path_sep_str = String.make 1 path_sep in
-    List.rev_map (fun (k,v as c) ->
-      match k with
-      | "PATH" ->
-        k, String.concat path_sep_str
-          (OpamMisc.reset_env_value path_sep ~prefix:!OpamGlobals.root_dir v)
-      | _      -> c
-    ) env in
-  let env = List.rev_map (fun (k,v) -> k^"="^v) env in
-  Array.of_list env
-)
-
 let env_var env var =
   let len = Array.length env in
   let prefix = var^"=" in
@@ -293,7 +271,7 @@ let env_var env var =
   let rec aux i =
     if i >= len then "" else
     let s = env.(i) in
-    if OpamMisc.starts_with ~prefix s then
+    if OpamMisc.String.starts_with ~prefix s then
       String.sub s pfxlen (String.length s - pfxlen)
     else aux (i+1)
   in
@@ -355,27 +333,21 @@ let print_stats () =
   match !runs with
   | [] -> ()
   | l  ->
-    OpamGlobals.msg "%d external processes called:\n%s%!"
-      (List.length l) (OpamMisc.itemize ~bullet:"  " (String.concat " ") l)
+    OpamConsole.msg "%d external processes called:\n%s%!"
+      (List.length l) (OpamMisc.Format.itemize ~bullet:"  " (String.concat " ") l)
 
-let log_file ?dir name = match name with
-  | None   -> temp_file "log"
-  | Some n ->
-    let dir =
-      OpamMisc.Option.default (Filename.concat !OpamGlobals.root_dir "log") dir
-    in
-    temp_file ~dir n
+let log_file ?dir name = temp_file ?dir (OpamMisc.Option.default "log" name)
 
 let make_command
     ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir ?(check_existence=true)
     cmd args =
   let name = log_file ?dir name in
   let verbose =
-    OpamMisc.Option.default (!OpamGlobals.verbose_level >= 2) verbose
+    OpamMisc.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
   in
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
-    OpamGlobals.warning "Command %S contains 1 space" cmd;
+    OpamConsole.warning "Command %S contains 1 space" cmd;
   if not check_existence || command_exists ~env ?dir cmd then
     OpamProcess.command ~env ~name ?text ~verbose ?metadata ?allow_stdin ?dir
       cmd args
@@ -383,7 +355,7 @@ let make_command
     command_not_found cmd
 
 let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command =
-  let chrono = OpamGlobals.timer () in
+  let chrono = OpamConsole.timer () in
   runs := command :: !runs;
   match command with
   | []          -> invalid_arg "run_process"
@@ -391,12 +363,12 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
 
     (* Check that the command doesn't contain whitespaces *)
     if None <> try Some (String.index cmd ' ') with Not_found -> None then
-      OpamGlobals.warning "Command %S contains 1 space" cmd;
+      OpamConsole.warning "Command %S contains 1 space" cmd;
 
     if command_exists ~env cmd then (
 
       let verbose = match verbose with
-        | None   -> !OpamGlobals.verbose_level >= 2
+        | None   -> OpamCoreConfig.(!r.verbose_level) >= 2
         | Some b -> b in
 
       let r =
@@ -406,7 +378,7 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
       in
       let str = String.concat " " (cmd :: args) in
       log "[%a] (in %.3fs) %s"
-        (OpamGlobals.slog Filename.basename) name
+        (OpamConsole.slog Filename.basename) name
         (chrono ()) str;
       r
     ) else
@@ -446,13 +418,8 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   raise_on_process_error r;
   r.OpamProcess.r_stdout
 
-(* Return [None] if the command does not exist *)
-let read_command_output_opt ?verbose ?env cmd =
-  try Some (read_command_output ?verbose ?env cmd)
-  with Command_not_found _ -> None
-
 let verbose_for_base_commands () =
-  !OpamGlobals.verbose_level >= 3
+  OpamCoreConfig.(!r.verbose_level) >= 3
 
 let copy src dst =
   if (try Sys.is_directory src
@@ -464,6 +431,11 @@ let copy src dst =
   then remove_file dst;
   mkdir (Filename.dirname dst);
   command ~verbose:(verbose_for_base_commands ()) ["cp"; src; dst ]
+
+let mv src dst =
+  if Sys.file_exists dst then remove_file dst;
+  mkdir (Filename.dirname dst);
+  command ~verbose:(verbose_for_base_commands ()) ["mv"; src; dst ]
 
 let is_exec file =
   let stat = Unix.stat file in
@@ -589,9 +561,9 @@ type lock = Unix.file_descr * string
 
 let flock ?(read=false) file =
   let max_tries =
-    if !OpamGlobals.safe_mode then 1 else !OpamGlobals.lock_retries in
-  if not read && !OpamGlobals.safe_mode then
-    OpamGlobals.error_and_exit "Write lock attempt in safe mode";
+    if OpamCoreConfig.(!r.safe_mode) then 1 else OpamCoreConfig.(!r.lock_retries) in
+  if not read && OpamCoreConfig.(!r.safe_mode) then
+    OpamConsole.error_and_exit "Write lock attempt in safe mode";
   let open_flags, lock_op =
     if read then [Unix.O_RDONLY], Unix.F_TRLOCK
     else [Unix.O_RDWR], Unix.F_TLOCK
@@ -602,7 +574,7 @@ let flock ?(read=false) file =
     try Unix.lockf fd lock_op 0
     with Unix.Unix_error (Unix.EAGAIN,_,_) ->
       if max_tries > 0 && attempt > max_tries then
-        OpamGlobals.error_and_exit
+        OpamConsole.error_and_exit
           "Timeout trying to acquire %s lock to %S, \
            is another opam process running ?"
           (if read then "read" else "write") file;
@@ -625,161 +597,15 @@ let funlock (fd,file) =
   Unix.close fd; (* implies Unix.lockf fd Unix.F_ULOCK 0 *)
   log "Lock released on %s" file
 
-let ocaml_version = lazy (
-  match read_command_output_opt ~verbose:false [ "ocamlc" ; "-version" ] with
-  | Some (h::_) ->
-    let version = OpamMisc.strip h in
-    log "ocamlc version: %s" version;
-    Some version
-  | Some [] -> internal_error "`ocamlc -version` is empty."
-  | None    -> None
-)
-
-let exists_alongside_ocamlc name =
-  let path = try OpamMisc.getenv "PATH" with Not_found -> "" in
-  let path = OpamMisc.split path path_sep in
-  let ocamlc_dir =
-    List.fold_left (function
-        | None -> fun d ->
-          if Sys.file_exists (d/"ocamlc") then Some d else None
-        | s -> fun _ -> s)
-      None path
-  in
-  match ocamlc_dir with
-  | Some d -> Sys.file_exists (d / name)
-  | None -> false
-
-let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
-let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
-let ocaml_natdynlink_available = lazy (
-  match
-    read_command_output_opt ~verbose:false [ "ocamlc"; "-where" ]
-  with
-  | Some (h::_) ->
-    let libdir = OpamMisc.strip h in
-    Sys.file_exists (libdir / "dynlink.cmxa")
-  | None | Some []   -> false
-)
-
-(* Reset the path to get the system compiler *)
-let system command = lazy (
-  let env = Lazy.force reset_env in
-  match read_command_output_opt ~verbose:false ~env command with
-  | None        -> None
-  | Some (h::_) -> Some (OpamMisc.strip h)
-  | Some ([])   -> internal_error "%S is empty." (String.concat " " command)
-)
-
-let system_ocamlc_where = system [ "ocamlc"; "-where" ]
-
-let system_ocamlc_version = system [ "ocamlc"; "-version" ]
-
-let choose_download_tool () =
-  match !OpamGlobals.download_tool with
-  | Some t -> t
-  | None ->
-    if OpamGlobals.os () = OpamGlobals.Darwin && command_exists "wget"
-    then `Wget
-    else if command_exists OpamGlobals.curl_command then `Curl
-    else if command_exists "wget" then `Wget
-    else
-      OpamGlobals.error_and_exit
-        "Could not find a suitable download command. Please make sure you have \
-         either \"curl\" or \"wget\" installed, or specify a custom command \
-         through variable OPAMFETCH."
-
-let download_command =
-  let retry = string_of_int OpamGlobals.download_retry in
-  let wget ~compress:_ dir src =
-    let wget_args = [
-      "--content-disposition"; "--no-check-certificate";
-      "-t"; retry;
-      src
-    ] in
-    make_command ~dir "wget" wget_args @@> fun r ->
-    raise_on_process_error r;
-    Done ()
-  in
-  let curl command ~compress dir src =
-    let curl_args = [
-      "--write-out"; "%{http_code}\\n"; "--insecure";
-      "--retry"; retry; "--retry-delay"; "2";
-    ] @ (if compress then ["--compressed"] else []) @ [
-        "-OL"; src
-    ] in
-    make_command ~dir command curl_args @@> fun r ->
-    raise_on_process_error r;
-    match r.OpamProcess.r_stdout with
-    | [] -> internal_error "curl: empty response while downloading %s" src
-    | l  ->
-      let code = List.hd (List.rev l) in
-      try if int_of_string code >= 400 then raise Exit else Done ()
-      with e ->
-        OpamMisc.fatal e;
-        internal_error "curl: code %s while downloading %s" code src
-  in
-  let custom dl_cmd ~compress dir src =
-    let dst = Filename.basename src in
-    match dl_cmd ~url:src ~out:dst ~retry:OpamGlobals.download_retry ~compress
-    with
-    | cmd::args ->
-      make_command ~dir cmd args @@> fun r ->
-      raise_on_process_error r;
-      Done ()
-    | [] -> internal_error "Empty custom download command"
-  in
-  lazy (
-    match choose_download_tool () with
-    | `Wget -> wget
-    | `Curl -> curl OpamGlobals.curl_command
-    | `Custom cust -> custom cust
-  )
-
-let really_download ~overwrite ?(compress=false) ~src ~dst =
-  let download = (Lazy.force download_command) in
-  let aux dir =
-    download ~compress dir src @@+ fun () ->
-    match list (fun _ -> true) dir with
-      ( [] | _::_::_ ) ->
-      internal_error "Too many downloaded files."
-    | [filename] ->
-      if Sys.file_exists dst then
-        if overwrite then remove dst
-        else internal_error "The downloaded file will overwrite %s." dst;
-      OpamProcess.command ~dir ~verbose:(verbose_for_base_commands ())
-        "mv" [filename; dst ]
-      @@> fun r -> raise_on_process_error r; Done dst
-  in
-  OpamProcess.Job.catch
-    (function
-      | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
-      | e ->
-        OpamMisc.fatal e;
-        log "Could not download file at %s." src;
-        raise e)
-    (with_tmp_dir_job aux)
-
-let download ~overwrite ?compress ~filename:src ~dst:dst =
-  if dst = src then
-    Done dst
-  else if Sys.file_exists src then (
-    if Sys.file_exists dst then
-      if overwrite then remove dst
-      else internal_error "The downloaded file will overwrite %s." dst;
-    OpamProcess.command ~verbose:(verbose_for_base_commands ()) "cp" [src; dst]
-    @@> fun r -> raise_on_process_error r; Done dst
-  ) else
-    really_download ~overwrite ?compress ~src ~dst
-
 let patch p =
   let max_trying = 5 in
   if not (Sys.file_exists p) then
-    (OpamGlobals.error "Patch file %S not found." p;
+    (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
   let patch ~dryrun n =
     let opts = if dryrun then
-        let open OpamGlobals in
-        match OpamGlobals.os () with
+        let open OpamMisc.Sys in
+        match os () with
         | FreeBSD | OpenBSD | NetBSD | DragonFly -> [ "-t"; "-C" ]
         | Unix | Linux | Darwin -> [ "--dry-run" ]
         | Win32 | Cygwin (* this is probably broken *)
@@ -792,20 +618,20 @@ let patch p =
       internal_error "Patch %s does not apply." p
     else if None =
             try Some (patch ~dryrun:true n)
-            with e -> OpamMisc.fatal e; None then
+            with e -> OpamMisc.Exn.fatal e; None then
       aux (succ n)
     else
       patch ~dryrun:false n in
   aux 0
 
-let () =
+let register_printer () =
   let with_opam_info m =
     let git_version = match OpamVersion.git () with
       | None   -> ""
       | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
     let opam_version =
       Printf.sprintf "%s%s" (OpamVersion.to_string OpamVersion.current) git_version in
-    let os = OpamGlobals.os_string () in
+    let os = OpamMisc.Sys.os_string () in
     Printf.sprintf
       "# %-15s %s\n\
        # %-15s %s\n\

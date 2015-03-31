@@ -19,8 +19,8 @@ open OpamMisc.OP
 open OpamFilename.OP
 open OpamProcess.Job.Op
 
-let log msg = OpamGlobals.log "CURL" msg
-let slog = OpamGlobals.slog
+let log msg = OpamConsole.log "CURL" msg
+let slog = OpamConsole.slog
 
 type state = {
   local_remote : (filename * int * string) filename_map;
@@ -37,10 +37,10 @@ let make_index_archive path = path // "index.tar.gz"
 
 let local_files repo =
   let all =
-    OpamPath.Repository.repo repo ::
-      OpamFilename.rec_files (OpamPath.Repository.packages_dir repo) @
-      OpamFilename.rec_files (OpamPath.Repository.archives_dir repo) @
-      OpamFilename.rec_files (OpamPath.Repository.compilers_dir repo) in
+    OpamRepositoryPath.repo repo ::
+      OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo) @
+      OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo) @
+      OpamFilename.rec_files (OpamRepositoryPath.compilers_dir repo) in
   List.filter OpamFilename.exists all
 
 (* Generate urls.txt (for opam-admin, or rebuilding if interrupted during
@@ -83,7 +83,7 @@ let get_state repo =
   try List.assoc repo.repo_address !state_cache with Not_found ->
     let urls =
       try OpamFile.File_attributes.read (make_index_file repo.repo_root)
-      with e -> OpamMisc.fatal e; rebuild_local_state ~write:true repo
+      with e -> OpamMisc.Exn.fatal e; rebuild_local_state ~write:true repo
     in
     let state = state_of_index_file repo urls in
     state_cache := (repo.repo_address, state) :: !state_cache;
@@ -97,7 +97,7 @@ let sync_state repo =
   let index_file = make_index_file repo.repo_root in
   let index_file_new = make_index_file_new repo.repo_root in
   let index_archive = make_index_archive repo.repo_root in
-  OpamFilename.download_as ~compress:true ~overwrite:true
+  OpamDownload.download_as ~compress:true ~overwrite:true
     remote_index_file index_file_new
   @@+ fun () ->
   let urls = OpamFile.File_attributes.read index_file_new in
@@ -121,12 +121,12 @@ let sync_state repo =
       log "-> downloading the full archive";
       OpamProcess.Job.catch
         (fun e ->
-           OpamMisc.fatal e;
-           OpamGlobals.msg
+           OpamMisc.Exn.fatal e;
+           OpamConsole.msg
              "Cannot find index.tar.gz on the OPAM repository. \
               Initialisation may take some time.\n";
            Done false) @@
-      OpamFilename.download_as ~overwrite:true
+      OpamDownload.download_as ~overwrite:true
         remote_index_archive index_archive
       @@+ fun () ->
       OpamFilename.Map.iter (fun f _ ->
@@ -144,15 +144,15 @@ let sync_state repo =
          | None -> OpamFilename.remove f; job
          | Some remote ->
            job @@+ fun () ->
-           OpamFilename.download_as ~overwrite:true remote f)
+           OpamDownload.download_as ~overwrite:true remote f)
        changed_files (Done ())
    else Done ())
   @@+ fun () ->
   OpamFilename.move ~src:index_file_new ~dst:index_file;
   state_cache := (repo.repo_address, new_state) ::
                  (List.remove_assoc repo.repo_address !state_cache);
-  OpamGlobals.msg "[%s] synchronized from %s\n"
-    (OpamGlobals.colorise `blue
+  OpamConsole.msg "[%s] synchronized from %s\n"
+    (OpamConsole.colorise `blue
        (OpamRepositoryName.to_string repo.repo_name))
     (OpamTypesBase.string_of_address repo.repo_address);
   Done ()
@@ -164,7 +164,7 @@ let is_up_to_date state local_file =
     not (Sys.is_directory (OpamFilename.to_string local_file))
     && md5 = OpamFilename.digest local_file
   with Not_found -> false
-
+(* XXX unused ?
 let get_checksum state local_file =
   try
     let _,_,expected = OpamFilename.Map.find local_file state.local_remote in
@@ -175,16 +175,18 @@ let get_checksum state local_file =
       Some (actual, expected)
     else None
   with Not_found -> None
-
+*)
 module B = struct
 
+  let name = `http
+(*
   let repo repo_root repo_address = {
     repo_name     = OpamRepositoryName.of_string "http";
     repo_priority = 0;
     repo_kind     = `http;
     repo_root; repo_address;
   }
-
+*)
   let pull_repo repo =
     log "pull-repo";
     sync_state repo
@@ -206,13 +208,14 @@ module B = struct
       let found, extra =
         List.partition (fun f -> f = local_file && check_sum f) files
       in
-      if extra <> [] &&
-         OpamMisc.starts_with (* Just a safeguard *)
-           ~prefix:(OpamFilename.Dir.to_string (OpamPath.root ()))
-           (OpamFilename.Dir.to_string dirname)
+      if extra <> [] (* && *)
+         (* OpamMisc.String.starts_with (\* Just a safeguard *\) *)
+         (*   ~prefix:(OpamFilename.Dir.to_string (OpamPath.root ())) *)
+         (*   (OpamFilename.Dir.to_string dirname) *)
       then
         (log "Removing stale files in download dir: %a"
-           (slog @@ List.map OpamFilename.to_string @> OpamMisc.pretty_list)
+           (slog @@ List.map OpamFilename.to_string @>
+                    OpamMisc.Format.pretty_list ?last:None)
            extra;
          List.iter OpamFilename.remove extra);
       found <> []
@@ -220,12 +223,12 @@ module B = struct
     if uptodate then Done (Result (F local_file))
     else
     OpamProcess.Job.catch
-      (fun e -> OpamMisc.fatal e; Done (Not_available remote_url)) @@
-    OpamFilename.download ~overwrite:true filename dirname
+      (fun e -> OpamMisc.Exn.fatal e; Done (Not_available remote_url)) @@
+    OpamDownload.download ~overwrite:true filename dirname
     @@+ fun local_file ->
-    if OpamRepository.check_digest local_file checksum then
-      (OpamGlobals.msg "[%s] %s downloaded\n"
-         (OpamGlobals.colorise `green (OpamPackage.to_string package))
+    if OpamRepositoryBackend.check_digest local_file checksum then
+      (OpamConsole.msg "[%s] %s downloaded\n"
+         (OpamConsole.colorise `green (OpamPackage.to_string package))
          (OpamFilename.to_string filename);
        Done (Result (F local_file)))
     else
@@ -244,10 +247,10 @@ module B = struct
           | Not_found ->
             Done (Not_available (OpamFilename.to_string filename))
           | e -> raise e) @@
-      OpamFilename.download_as ~overwrite:true filename local_file
+      OpamDownload.download_as ~overwrite:true filename local_file
       @@+ fun () ->
-      OpamGlobals.msg "[%s] %s downloaded\n"
-        (OpamGlobals.colorise `blue
+      OpamConsole.msg "[%s] %s downloaded\n"
+        (OpamConsole.colorise `blue
            (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.prettify filename);
       Done (Result local_file)
@@ -257,8 +260,16 @@ module B = struct
 
 end
 
+(* Helper functions used by opam-admin *)
+
 let make_urls_txt ~write repo_root =
-  rebuild_local_state ~write (OpamRepository.local repo_root)
+  rebuild_local_state ~write {
+    repo_name     = OpamRepositoryName.of_string "local";
+    repo_root;
+    repo_address  = ("<none>", None);
+    repo_kind     = `local;
+    repo_priority = 0;
+  }
 
 let make_index_tar_gz repo_root =
   OpamFilename.in_dir repo_root (fun () ->
@@ -267,6 +278,3 @@ let make_index_tar_gz repo_root =
     | [] -> ()
     | d  -> OpamSystem.command ("tar" :: "czf" :: "index.tar.gz" :: d)
   )
-
-let register () =
-  OpamRepository.register_backend `http (module B : OpamRepository.BACKEND)

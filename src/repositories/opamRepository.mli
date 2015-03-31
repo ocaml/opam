@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2013 OCamlPro                                        *)
+(*    Copyright 2012-2015 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
@@ -14,28 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Mangagement of OPAM repositories. *)
+(** Defines on-disk package repositories, synchronised with an upstream *)
 
 open OpamTypes
-
-include OpamMisc.ABSTRACT with type t := repository
-
-exception Unknown_backend
-
-(** Default repository address*)
-val default_address: address
-
-(** Pretty-print *)
-val to_string: repository -> string
-
-(** Compare repositories *)
-val compare: repository -> repository -> int
-
-(** Default repository *)
-val default: unit -> repository
-
-(** Create a local repository on a given path *)
-val local: dirname -> repository
 
 (** Get the list of packages *)
 val packages: repository -> package_set
@@ -94,27 +75,6 @@ val update: repository -> unit OpamProcess.job
 (** Error and exit on incompatible version *)
 val check_version: repository -> unit OpamProcess.job
 
-(** Backend signature *)
-module type BACKEND = sig
-
-  (** [pull_url package local_dir checksum remote_url] pull the contents of
-      [remote_url] into [local_dir]. Can return either a file or a
-      directory. [checksum] is the optional expected checksum. *)
-  val pull_url: package -> dirname -> string option -> address -> generic_file download OpamProcess.job
-
-  (** [pull_repo] pull the contents of a repository. *)
-  val pull_repo: repository -> unit OpamProcess.job
-
-  (** [pull_archive repo archive] pull [archive] in the given
-      repository. *)
-  val pull_archive: repository -> filename -> filename download OpamProcess.job
-
-  (** Return the (optional) revision of a given repository. Only useful
-      for VCS backends. *)
-  val revision: repository -> version option OpamProcess.job
-
-end
-
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)
 val pull_url: repository_kind ->
@@ -125,10 +85,6 @@ val pull_url: repository_kind ->
 val pull_url_and_fix_digest: repository_kind ->
   package -> dirname -> string -> filename -> address list ->
   generic_file download OpamProcess.job
-
-(** [check_digest file expected] check that the [file] digest is the
-    one [expected]. *)
-val check_digest: filename -> string option -> bool
 
 (** Pull an archive in a repository *)
 val pull_archive: repository -> package -> filename download OpamProcess.job
@@ -142,13 +98,6 @@ val revision: repository -> version option OpamProcess.job
     [gener_digest] is set. *)
 val make_archive: ?gener_digest:bool -> repository -> string option -> package -> unit OpamProcess.job
 
-(** Register a repository backend *)
-val register_backend: repository_kind -> (module BACKEND) -> unit
-
 (** Find a backend *)
-val find_backend: repository_kind -> (module BACKEND)
-
-(** {2 Misc} *)
-
-(** Parallel iterations *)
-module Parallel: OpamParallel.SIG with type G.V.t = repository
+val find_backend: repository -> (module OpamRepositoryBackend.S)
+val find_backend_by_kind: repository_kind -> (module OpamRepositoryBackend.S)

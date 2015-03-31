@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let log fmt = OpamGlobals.log "SOLUTION" fmt
+let log fmt = OpamConsole.log "SOLUTION" fmt
 
 open OpamTypes
 open OpamTypesBase
@@ -41,7 +41,7 @@ let post_message ?(failed=false) state action =
     in
     let messages =
       let filter_env = OpamState.filter_env ~opam ~local_variables state in
-      OpamMisc.filter_map (fun (message,filter) ->
+      OpamMisc.List.filter_map (fun (message,filter) ->
           if OpamFilter.opt_eval_to_bool filter_env filter
           then Some (OpamFilter.expand_string filter_env message)
           else None)
@@ -50,29 +50,29 @@ let post_message ?(failed=false) state action =
     if messages = [] then () else
     let mark = "=> " in
     let indent = String.make (String.length mark) ' ' in
-    let mark = OpamGlobals.colorise (if failed then `red else `green) mark in
-    OpamGlobals.header_msg "%s %s"
+    let mark = OpamConsole.colorise (if failed then `red else `green) mark in
+    OpamConsole.header_msg "%s %s"
       (OpamPackage.to_string pkg)
       (if failed then "troubleshooting" else "installed successfully");
     let rex = Re_pcre.regexp "\n" in
     List.iter (fun msg ->
-        OpamGlobals.formatted_msg ~indent:(OpamMisc.visual_length mark)
+        OpamConsole.formatted_msg ~indent:(OpamMisc.Format.visual_length mark)
           "%s%s\n" mark
           (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
       messages
 
 let check_solution state = function
   | No_solution ->
-    OpamGlobals.msg "No solution found, exiting\n";
-    OpamGlobals.exit 3
+    OpamConsole.msg "No solution found, exiting\n";
+    OpamMisc.Sys.exit 3
   | Error (success, failed, _remaining) ->
     List.iter (post_message state) success;
     List.iter (post_message ~failed:true state) failed;
-    OpamGlobals.exit 4
+    OpamMisc.Sys.exit 4
   | OK actions ->
     List.iter (post_message state) actions
   | Nothing_to_do -> ()
-  | Aborted     -> OpamGlobals.exit 0
+  | Aborted     -> OpamMisc.Sys.exit 0
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -93,8 +93,10 @@ let atoms_of_packages set =
   List.rev_map (fun n -> n, None)
     (OpamPackage.Name.Set.elements (OpamPackage.names_of_packages set))
 
+(* unused ?
 let atom_of_name name =
   name, None
+*)
 
 let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
@@ -110,10 +112,10 @@ let check_availability ?permissive t set atoms =
     else if permissive = Some true
     then Some (OpamState.unknown_package t atom)
     else Some (OpamState.unavailable_reason t atom) in
-  let errors = OpamMisc.filter_map check_atom atoms in
+  let errors = OpamMisc.List.filter_map check_atom atoms in
   if errors <> [] then
-    (List.iter (OpamGlobals.error "%s") errors;
-     OpamGlobals.exit 66)
+    (List.iter (OpamConsole.error "%s") errors;
+     OpamMisc.Sys.exit 66)
 
 let sanitize_atom_list ?(permissive=false) t atoms =
   let packages =
@@ -140,7 +142,7 @@ let sanitize_atom_list ?(permissive=false) t atoms =
 let display_error (n, error) =
   let f action nv =
     let disp =
-      OpamGlobals.header_error "while %s %s" action (OpamPackage.to_string nv) in
+      OpamConsole.header_error "while %s %s" action (OpamPackage.to_string nv) in
     match error with
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
@@ -160,6 +162,7 @@ let display_error (n, error) =
   | To_delete nv         -> f "removing" nv
 
 (* Prettify errors *)
+(* unuesed ?
 let string_of_errors errors =
   let actions = List.rev_map fst errors in
   let packages = List.rev_map action_contents actions in
@@ -167,12 +170,12 @@ let string_of_errors errors =
   | []  -> assert false
   | [h] -> OpamPackage.to_string h
   | l   -> OpamPackage.Set.to_string (OpamPackage.Set.of_list l)
-
+*)
 
 let new_variables e =
   let e = List.filter (fun (_,s,_) -> s="=") e in
   let e = List.rev_map (fun (v,_,_) -> v) e in
-  OpamMisc.StringSet.of_list e
+  OpamMisc.String.Set.of_list e
 
 let variable_warnings = ref false
 let print_variable_warnings t =
@@ -180,7 +183,7 @@ let print_variable_warnings t =
   if not !variable_warnings then (
     let warn w =
       let is_defined s =
-        try let _ = OpamMisc.getenv s in true
+        try let _ = OpamMisc.Env.get s in true
         with Not_found -> false in
       if is_defined w then
         variables := w :: !variables in
@@ -202,18 +205,18 @@ let print_variable_warnings t =
       let comp_f = OpamPath.compiler_comp t.root comp in
       let env = OpamFile.Comp.env (OpamFile.Comp.safe_read comp_f) in
       new_variables env in
-    let vars = ref OpamMisc.StringSet.empty in
+    let vars = ref OpamMisc.String.Set.empty in
     OpamSwitch.Map.iter (fun _ comp ->
-      vars := OpamMisc.StringSet.union !vars (new_variables comp)
+      vars := OpamMisc.String.Set.union !vars (new_variables comp)
     ) t.aliases;
-    vars := OpamMisc.StringSet.diff !vars (new_variables t.compiler);
-    OpamMisc.StringSet.iter warn !vars;
+    vars := OpamMisc.String.Set.diff !vars (new_variables t.compiler);
+    OpamMisc.String.Set.iter warn !vars;
     if !variables <> [] then (
-      OpamGlobals.msg "The following variables are set in your environment, it \
+      OpamConsole.msg "The following variables are set in your environment, it \
                        is advised to unset them for OPAM to work correctly.\n";
-      List.iter (OpamGlobals.msg " - %s\n") !variables;
-      if not (OpamGlobals.confirm "Do you want to continue ?") then
-        OpamGlobals.exit 1;
+      List.iter (OpamConsole.msg " - %s\n") !variables;
+      if not (OpamConsole.confirm "Do you want to continue ?") then
+        OpamMisc.Sys.exit 1;
     );
     variable_warnings := true;
   )
@@ -253,7 +256,7 @@ let output_json_solution solution =
 let output_json_actions action_errors =
   let json_error = function
     | OpamSystem.Process_error
-        {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr} ->
+        {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
       `O [ ("process-error",
             `O [ ("code", `String (string_of_int r_code));
                  ("duration", `Float r_duration);
@@ -263,8 +266,6 @@ let output_json_actions action_errors =
                ])]
     | OpamSystem.Internal_error s ->
       `O [ ("internal-error", `String s) ]
-    | OpamGlobals.Package_error s ->
-      `O [ ("package-error", `String s) ]
     | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
   in
   let json_action (a, e) =
@@ -313,7 +314,7 @@ let parallel_apply t action action_graph =
     if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
     update_state ();
-    if not !OpamGlobals.dryrun then OpamState.install_metadata !t_ref nv
+    if not OpamClientConfig.(!r.dryrun) then OpamState.install_metadata !t_ref nv
   in
 
   let remove_from_install deleted =
@@ -331,12 +332,12 @@ let parallel_apply t action action_graph =
     let sources_needed = OpamAction.sources_needed t action_graph in
     let sources_list = OpamPackage.Set.elements sources_needed in
     if sources_list <> [] then
-      OpamGlobals.header_msg "Gathering sources";
+      OpamConsole.header_msg "Gathering sources";
     let results =
       OpamParallel.map
         ~jobs:(OpamState.dl_jobs t)
         ~command:(OpamAction.download_package t)
-        ~dry_run:!OpamGlobals.dryrun
+        ~dry_run:OpamClientConfig.(!r.dryrun)
         sources_list
     in
     List.fold_left2 (fun (sources,failed) nv -> function
@@ -354,16 +355,16 @@ let parallel_apply t action action_graph =
       action_graph false
   in
   if fatal_dl_error then
-    OpamGlobals.error_and_exit
+    OpamConsole.error_and_exit
       "The sources of the following couldn't be obtained, aborting:\n%s\
        (This may be fixed by running 'opam update')"
-      (OpamMisc.itemize OpamPackage.to_string
+      (OpamMisc.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements failed_downloads))
   else if not (OpamPackage.Set.is_empty failed_downloads) then
-    OpamGlobals.warning
+    OpamConsole.warning
       "The sources of the following couldn't be obtained, they may be \
        uncleanly uninstalled:\n%s"
-      (OpamMisc.itemize OpamPackage.to_string
+      (OpamMisc.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements failed_downloads));
 
 
@@ -388,21 +389,21 @@ let parallel_apply t action action_graph =
     | To_delete nv ->
       if OpamAction.removal_needs_download t nv then
         (try OpamAction.extract_package t source nv
-         with e -> OpamMisc.fatal e);
-      OpamProcess.Job.catch (fun e -> OpamMisc.fatal e; Done ())
+         with e -> OpamMisc.Exn.fatal e);
+      OpamProcess.Job.catch (fun e -> OpamMisc.Exn.fatal e; Done ())
          (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
       remove_from_install nv;
       None
   in
 
   let action_results =
-    OpamGlobals.header_msg "Processing actions";
+    OpamConsole.header_msg "Processing actions";
     try
       let results =
         PackageActionGraph.Parallel.map
           ~jobs:(OpamState.jobs t)
           ~command:job
-          ~dry_run:!OpamGlobals.dryrun
+          ~dry_run:OpamClientConfig.(!r.dryrun)
           action_graph
       in
       let successful, failed =
@@ -443,24 +444,24 @@ let parallel_apply t action action_graph =
   match action_results with
   | `Successful () ->
     cleanup_artefacts action_graph;
-    OpamGlobals.msg "Done.\n";
+    OpamConsole.msg "Done.\n";
     OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
-  | `Exception (OpamGlobals.Exit _ | Sys.Break as e) ->
-    OpamGlobals.msg "Aborting.\n";
+  | `Exception (OpamMisc.Sys.Exit _ | Sys.Break as e) ->
+    OpamConsole.msg "Aborting.\n";
     raise e
   | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
-    OpamGlobals.error "Cycles found during dependency resolution:\n%s"
-      (OpamMisc.itemize
-         (OpamMisc.sconcat_map (OpamGlobals.colorise `yellow " -> ")
+    OpamConsole.error "Cycles found during dependency resolution:\n%s"
+      (OpamMisc.Format.itemize
+         (OpamMisc.List.concat_map (OpamConsole.colorise `yellow " -> ")
             OpamSolver.Action.to_string)
          cycles);
     raise e
   | `Exception (OpamSystem.Process_error _ | Unix.Unix_error _ as e) ->
-    OpamGlobals.error "Actions cancelled because of a system error:";
-    OpamGlobals.errmsg "%s\n" (Printexc.to_string e);
+    OpamConsole.error "Actions cancelled because of a system error:";
+    OpamConsole.errmsg "%s\n" (Printexc.to_string e);
     raise e
   | `Exception e ->
-    OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
+    OpamConsole.error "Actions cancelled because of %s" (Printexc.to_string e);
     raise e
   | `Error err ->
     match err with
@@ -485,22 +486,22 @@ let parallel_apply t action action_graph =
         in
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
-          OpamGlobals.msg "%s\n%s" header
-            (OpamMisc.itemize ~bullet:"  " (fun x -> x)
+          OpamConsole.msg "%s\n%s" header
+            (OpamMisc.Format.itemize ~bullet:"  " (fun x -> x)
                (PackageAction.to_aligned_strings actions))
         else match empty with
-          | Some s -> OpamGlobals.msg "%s\n" s
+          | Some s -> OpamConsole.msg "%s\n" s
           | None -> ()
       in
-      OpamGlobals.msg "\n";
-      OpamGlobals.header_msg "Error report";
+      OpamConsole.msg "\n";
+      OpamConsole.header_msg "Error report";
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions were %s"
-           (OpamGlobals.colorise `yellow "aborted"))
+           (OpamConsole.colorise `yellow "aborted"))
         (filter_graph action_graph remaining);
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions %s"
-           (OpamGlobals.colorise `red "failed"))
+           (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
         (function To_recompile _ -> false | _ -> true)
@@ -525,35 +526,35 @@ let simulate_new_state state t =
 
 let print_external_tags t solution =
   let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
+  let external_tags = OpamMisc.String.Set.of_list OpamClientConfig.(!r.external_tags) in
   let values =
     OpamPackage.Set.fold (fun nv accu ->
         let opam = OpamState.opam t nv in
         match OpamFile.OPAM.depexts opam with
         | None         -> accu
         | Some alltags ->
-          OpamMisc.StringSetMap.fold (fun tags values accu ->
-              if OpamMisc.StringSet.(
+          OpamMisc.String.SetMap.fold (fun tags values accu ->
+              if OpamMisc.String.Set.(
                   (* A \subseteq B <=> (A U B) / B = 0 *)
                   is_empty (diff (union external_tags tags) external_tags)
                 )
               then
-                OpamMisc.StringSet.union values accu
+                OpamMisc.String.Set.union values accu
               else
                 accu
             ) alltags accu
-      ) packages OpamMisc.StringSet.empty in
-  let values = OpamMisc.StringSet.elements values in
+      ) packages OpamMisc.String.Set.empty in
+  let values = OpamMisc.String.Set.elements values in
   if values <> [] then
-    OpamGlobals.msg "%s\n" (String.concat " " values)
+    OpamConsole.msg "%s\n" (String.concat " " values)
 
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
-  !OpamGlobals.yes ||
+  OpamCoreConfig.(!r.answer = Some true) ||
   match ask with
   | Some false -> true
-  | Some true -> OpamGlobals.confirm "Do you want to continue ?"
+  | Some true -> OpamConsole.confirm "Do you want to continue ?"
   | None ->
     let open PackageActionGraph in
     let solution_packages =
@@ -562,7 +563,7 @@ let confirmation ?ask requested solution =
         solution
         OpamPackage.Name.Set.empty in
     OpamPackage.Name.Set.equal requested solution_packages
-    || OpamGlobals.confirm "Do you want to continue ?"
+    || OpamConsole.confirm "Do you want to continue ?"
 
 (* Apply a solution *)
 let apply ?ask t action ~requested solution =
@@ -574,20 +575,20 @@ let apply ?ask t action ~requested solution =
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false &&
-                        !OpamGlobals.external_tags = [] in
+                        OpamClientConfig.(!r.external_tags) = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     if show_solution then (
-      OpamGlobals.msg
+      OpamConsole.msg
         "The following actions %s be %s:\n"
-        (if !OpamGlobals.show then "would" else "will")
-        (if !OpamGlobals.dryrun then "simulated" else
-         if !OpamGlobals.fake then "faked"
+        (if OpamClientConfig.(!r.show) then "would" else "will")
+        (if OpamClientConfig.(!r.dryrun) then "simulated" else
+         if OpamClientConfig.(!r.fake) then "faked"
          else "performed");
       let new_state = simulate_new_state t action_graph in
       let messages p =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
-        OpamMisc.filter_map (fun (s,f) ->
+        OpamMisc.List.filter_map (fun (s,f) ->
           if OpamFilter.opt_eval_to_bool
               (OpamState.filter_env ~opam new_state) f
           then Some s
@@ -605,14 +606,14 @@ let apply ?ask t action ~requested solution =
       in
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;
       if sum stats >= 2 then
-        OpamGlobals.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
+        OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
       output_json_solution action_graph;
     );
 
-    if !OpamGlobals.external_tags <> [] then (
+    if OpamClientConfig.(!r.external_tags) <> [] then (
       print_external_tags t solution;
       Aborted
-    ) else if not !OpamGlobals.show &&
+    ) else if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       print_variable_warnings t;
@@ -628,7 +629,7 @@ let resolve_and_apply ?ask t action ~requested ~orphans request =
   match resolve t action ~orphans request with
   | Conflicts cs ->
     log "conflict!";
-    OpamGlobals.msg "%s"
+    OpamConsole.msg "%s"
       (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
     No_solution
   | Success solution -> apply ?ask t action ~requested solution

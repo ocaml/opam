@@ -7,7 +7,7 @@ iter_packages ~opam:(fun _ opam ->
     let depopts =
       let formula = OpamFile.OPAM.depopts opam in
       let names =
-        OpamMisc.remove_duplicates @@
+        OpamMisc.List.remove_duplicates @@
         List.map fst @@
         OpamFormula.atoms @@
         OpamFormula.formula_of_extended ~filter:(fun _ -> true) @@
@@ -15,7 +15,7 @@ iter_packages ~opam:(fun _ opam ->
       OpamFormula.ors @@
       List.rev_map (fun n ->
           let flags =
-            OpamMisc.remove_duplicates @@
+            OpamMisc.List.remove_duplicates @@
             OpamFormula.fold_left (fun acc (name,(flags,_)) ->
                 if name = n then flags @ acc else acc)
               [] formula

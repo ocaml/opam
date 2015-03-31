@@ -381,6 +381,8 @@ module Comp: sig
       subtree *)
   val env: t -> (string * string * string) list
 
+  val tags: t -> string list
+
   val with_src: t -> address option -> t
   val with_patches: t -> filename list -> t
   val with_configure: t -> string list -> t

@@ -15,8 +15,7 @@
 (**************************************************************************)
 
 let log ?level fmt =
-  OpamGlobals.log "PROC" ?level fmt
-let slog = OpamGlobals.slog
+  OpamConsole.log "PROC" ?level fmt
 
 (** Shell commands *)
 type command = {
@@ -33,7 +32,7 @@ type command = {
 
 let string_of_command c = String.concat " " (c.cmd::c.args)
 let text_of_command c = c.cmd_text
-let default_verbose () = !OpamGlobals.verbose_level >= 2
+let default_verbose () = OpamCoreConfig.(!r.verbose_level) >= 2
 let is_verbose_command c =
   OpamMisc.Option.default (default_verbose ()) c.cmd_verbose
 
@@ -48,7 +47,7 @@ let make_command_text ?(color=`green) str ?(args=[]) cmd =
     | hd::_ -> String.concat " " [cmd; hd]
     | [] -> cmd
   in
-  Printf.sprintf "[%s: %s]" (OpamGlobals.colorise color str) summary
+  Printf.sprintf "[%s: %s]" (OpamConsole.colorise color str) summary
 
 let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?text cmd args =
   { cmd; args;
@@ -100,7 +99,7 @@ let make_info ?code ?signal
     | Some s -> print name s in
 
   print     "opam-version" (OpamVersion.to_string (OpamVersion.full ()));
-  print     "os"           (OpamGlobals.os_string ());
+  print     "os"           (OpamMisc.Sys.os_string ());
   print     "command"      (String.concat " " (cmd :: args));
   print     "path"         cwd;
   List.iter (fun (k,v) -> print k v) metadata;
@@ -116,8 +115,8 @@ let string_of_info ?(color=`yellow) info =
   let b = Buffer.create 1024 in
   List.iter
     (fun (k,v) -> Printf.bprintf b "%s %-20s %s\n"
-        (OpamGlobals.colorise color "#")
-        (OpamGlobals.colorise color k) v) info;
+        (OpamConsole.colorise color "#")
+        (OpamConsole.colorise color k) v) info;
   Buffer.contents b
 
 (** [create cmd args] create a new process to execute the command
@@ -161,7 +160,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       let chan = open_out f in
       let env = Array.to_list env in
       (* Remove dubious variables *)
-      let env = List.filter (fun line -> not (OpamMisc.contains line '$')) env in
+      let env = List.filter (fun line -> not (OpamMisc.String.contains line '$')) env in
       output_lines chan env;
       close_out chan in
 
@@ -227,13 +226,13 @@ let read_lines f =
   with Sys_error _ -> []
 
 (* Compat function (Windows) *)
-let interrupt p = match OpamGlobals.os () with
-  | OpamGlobals.Win32 -> Unix.kill p.p_pid Sys.sigkill
+let interrupt p = match OpamMisc.Sys.os () with
+  | OpamMisc.Sys.Win32 -> Unix.kill p.p_pid Sys.sigkill
   | _ -> Unix.kill p.p_pid Sys.sigint
 
 let run_background command =
   let { cmd; args;
-        cmd_env=env; cmd_verbose=_; cmd_name=name;
+        cmd_env=env; cmd_verbose=_; cmd_name=name; cmd_text=_;
         cmd_metadata=metadata; cmd_dir=dir; cmd_stdin=allow_stdin } =
     command
   in
@@ -247,7 +246,7 @@ let run_background command =
         if Filename.is_relative n then
           match dir with
             | Some d -> d
-            | None -> (Filename.concat !OpamGlobals.root_dir "log")
+            | None -> OpamCoreConfig.(!r.log_dir)
         else ""
       in
       Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
@@ -274,15 +273,15 @@ let dry_run_background c = {
 }
 
 let verbose_print_cmd p =
-  OpamGlobals.msg "%s %s %s%s\n"
-    (OpamGlobals.colorise `yellow "+")
+  OpamConsole.msg "%s %s %s%s\n"
+    (OpamConsole.colorise `yellow "+")
     p.p_name
-    (OpamMisc.sconcat_map " " (Printf.sprintf "%S") p.p_args)
+    (OpamMisc.List.concat_map " " (Printf.sprintf "%S") p.p_args)
     (if p.p_cwd = Sys.getcwd () then ""
      else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
 let verbose_print_out =
-  let pfx = OpamGlobals.colorise `yellow "- " in
+  let pfx = OpamConsole.colorise `yellow "- " in
   fun s ->
     print_string pfx;
     print_string s;
@@ -301,7 +300,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     stop ();
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
-    if OpamGlobals.os () = OpamGlobals.Win32 then () else
+    if OpamMisc.Sys.(os () = Win32) then () else
     let ics =
       List.map
         (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
@@ -325,7 +324,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
 
 let set_verbose_process p =
   if p.p_verbose then
-    let fs = OpamMisc.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
+    let fs = OpamMisc.List.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
     if fs <> [] then (
       verbose_print_cmd p;
       set_verbose_f fs
@@ -336,7 +335,7 @@ let exit_status p return =
   let stdout = option_default [] (option_map read_lines p.p_stdout) in
   let stderr = option_default [] (option_map read_lines p.p_stderr) in
   let cleanup =
-    OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
+    OpamMisc.List.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
   in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
@@ -405,7 +404,7 @@ let dontwait p =
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
   if processes = [] then raise (Invalid_argument "wait_one");
-  if OpamGlobals.os () = OpamGlobals.Win32 then
+  if OpamMisc.Sys.(os () = Win32) then
     (* No waiting for any child pid on Windows, this is highly sub-optimal
        but should at least work. Todo: C binding for better behaviour *)
     let p = List.hd processes in
@@ -464,17 +463,19 @@ let safe_unlink f =
   try Unix.unlink f with Unix.Unix_error _ -> ()
 
 let cleanup ?(force=false) r =
-  if force || (not !OpamGlobals.debug && is_success r) then
+  if force || (not (OpamConsole.debug ()) && is_success r) then
     List.iter safe_unlink r.r_cleanup
 
+let log_limit = 10
+let log_line_limit = 5 * 80
 let truncate_str = "[...]"
 
 (* Truncate long lines *)
 let truncate_line str =
-  if String.length str <= OpamGlobals.log_line_limit then
+  if String.length str <= log_line_limit then
     str
   else
-    String.sub str 0 (OpamGlobals.log_line_limit - String.length truncate_str)
+    String.sub str 0 (log_line_limit - String.length truncate_str)
     ^ truncate_str
 
 (* Take the last [n] elements of [l] (trying to keep an unindented header line
@@ -486,15 +487,15 @@ let truncate l =
   in
   let rec cut n acc = function
     | [] -> acc
-    | [x] when n = 0 -> x :: acc
+    | [x] when n = 0 -> truncate_line x :: acc
     | _ when n = 0 -> truncate_str :: acc
     | x::l when n = 1 ->
-      (if unindented x then truncate_str :: x :: acc else
-       try List.find unindented l :: truncate_str :: acc
-       with Not_found -> truncate_str :: x :: acc)
-    | x::r -> cut (n-1) (x::acc) r
+      (if unindented x then truncate_str :: truncate_line x :: acc else
+       try truncate_line (List.find unindented l) :: truncate_str :: acc
+       with Not_found -> truncate_str :: truncate_line x :: acc)
+    | x::r -> cut (n-1) (truncate_line x :: acc) r
   in
-  cut OpamGlobals.log_limit [] l
+  cut log_limit [] l
 
 let string_of_result ?(color=`yellow) r =
   let b = Buffer.create 2048 in
@@ -506,16 +507,16 @@ let string_of_result ?(color=`yellow) r =
   print (string_of_info ~color r.r_info);
 
   if r.r_stdout <> [] then
-    print (OpamGlobals.colorise color "### stdout ###\n");
+    print (OpamConsole.colorise color "### stdout ###\n");
   List.iter (fun s ->
-      print (OpamGlobals.colorise color "# ");
+      print (OpamConsole.colorise color "# ");
       println s)
     (truncate r.r_stdout);
 
   if r.r_stderr <> [] then
-    print (OpamGlobals.colorise color "### stderr ###\n");
+    print (OpamConsole.colorise color "### stderr ###\n");
   List.iter (fun s ->
-      print (OpamGlobals.colorise color "# ");
+      print (OpamConsole.colorise color "# ");
       println s)
     (truncate r.r_stderr);
 
@@ -548,9 +549,9 @@ module Job = struct
       | Done x -> x
       | Run (cmd,cont) ->
         OpamMisc.Option.iter
-          (if OpamGlobals.disp_status_line () then
-             OpamGlobals.status_line "Processing: %s"
-           else OpamGlobals.msg "%s\n")
+          (if OpamConsole.disp_status_line () then
+             OpamConsole.status_line "Processing: %s"
+           else OpamConsole.msg "%s\n")
           (text_of_command cmd);
         let r = run cmd in
         let k = try cont r with e -> cleanup r; raise e in
@@ -585,8 +586,8 @@ module Job = struct
 
   let ignore_errors ~default ?message job =
     catch (fun e ->
-        OpamMisc.fatal e;
-        OpamMisc.Option.iter (OpamGlobals.error "%s") message;
+        OpamMisc.Exn.fatal e;
+        OpamMisc.Option.iter (OpamConsole.error "%s") message;
         Done default)
       job
 

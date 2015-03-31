@@ -18,16 +18,24 @@ open OpamTypes
 open OpamTypesBase
 open OpamProcess.Job.Op
 
-let log fmt = OpamGlobals.log "RSYNC" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "RSYNC" fmt
+let slog = OpamConsole.slog
 
 let rsync_arg = "-rLptgoDrvc"
+
+(* if rsync -arv return 4 lines, this means that no files have changed *)
+let rsync_trim = function
+  | [] -> []
+  | _ :: t ->
+    match List.rev t with
+    | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
+    | _ -> []
 
 let call_rsync check args =
   OpamSystem.make_command "rsync" args
   @@> fun r ->
   match r.OpamProcess.r_code with
-  | 0 -> Done (Some (OpamMisc.rsync_trim r.OpamProcess.r_stdout))
+  | 0 -> Done (Some (rsync_trim r.OpamProcess.r_stdout))
   | 3 | 5 | 10 | 11 | 12 -> (* protocol or file errors *)
     Done None
   | 20 -> (* signal *)
@@ -36,9 +44,9 @@ let call_rsync check args =
     (* partial, mostly mode, link or perm errors. But may also be a
        complete error so we do an additional check *)
     if check () then
-      (OpamGlobals.warning "Rsync partially failed:\n%s"
-         (OpamMisc.itemize ~bullet:"" (fun x -> x) r.OpamProcess.r_stderr);
-       Done (Some (OpamMisc.rsync_trim r.OpamProcess.r_stdout)))
+      (OpamConsole.warning "Rsync partially failed:\n%s"
+         (OpamMisc.Format.itemize ~bullet:"" (fun x -> x) r.OpamProcess.r_stderr);
+       Done (Some (rsync_trim r.OpamProcess.r_stdout)))
     else Done None
   | 30 | 35 -> (* timeouts *)
     Done None
@@ -52,10 +60,10 @@ let rsync ?(args=[]) src dst =
     Done (Not_available src)
   else if src = dst then
     Done (Up_to_date [])
-  else if OpamMisc.starts_with ~prefix:(norm src) (norm dst) ||
-          OpamMisc.starts_with ~prefix:(norm dst) (norm src)
+  else if OpamMisc.String.starts_with ~prefix:(norm src) (norm dst) ||
+          OpamMisc.String.starts_with ~prefix:(norm dst) (norm src)
   then
-    (OpamGlobals.error "Cannot sync %s into %s: they overlap" src dst;
+    (OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
      Done (Not_available src))
   else (
     OpamSystem.mkdir dst;
@@ -113,6 +121,8 @@ let rsync_file ?(args=[]) src dst =
 
 module B = struct
 
+  let name = `local
+
   let pull_file_quiet local_dirname remote_filename =
     let local_filename =
       OpamFilename.create local_dirname (OpamFilename.basename remote_filename) in
@@ -123,36 +133,36 @@ module B = struct
 
   let pull_repo repo =
     log "pull-repo";
-    pull_file_quiet repo.repo_root (OpamPath.Repository.remote_repo repo)
+    pull_file_quiet repo.repo_root (OpamRepositoryPath.remote_repo repo)
     @@+ fun _ ->
     pull_dir_quiet
-      (OpamPath.Repository.packages_dir repo)
-      (OpamPath.Repository.remote_packages_dir repo)
+      (OpamRepositoryPath.packages_dir repo)
+      (OpamRepositoryPath.remote_packages_dir repo)
     @@+ fun _ ->
     pull_dir_quiet
-      (OpamPath.Repository.compilers_dir repo)
-      (OpamPath.Repository.remote_compilers_dir repo)
+      (OpamRepositoryPath.compilers_dir repo)
+      (OpamRepositoryPath.remote_compilers_dir repo)
     @@+ fun _ ->
-    let archives = OpamFilename.files (OpamPath.Repository.archives_dir repo) in
+    let archives = OpamFilename.files (OpamRepositoryPath.archives_dir repo) in
     log "archives: %a"
-      (slog (OpamMisc.string_of_list OpamFilename.to_string)) archives;
+      (slog (OpamMisc.List.to_string OpamFilename.to_string)) archives;
     let rec dl_archives = function
       | [] -> Done ()
       | archive::archives ->
         match OpamPackage.of_archive archive with
         | None ->
-          OpamGlobals.msg "Removing %s\n." (OpamFilename.to_string archive);
+          OpamConsole.msg "Removing %s\n." (OpamFilename.to_string archive);
           OpamFilename.remove archive;
           dl_archives archives
         | Some nv ->
-          let remote_filename = OpamPath.Repository.remote_archive repo nv in
+          let remote_filename = OpamRepositoryPath.remote_archive repo nv in
           rsync_file remote_filename archive @@+ function
           | Not_available _ -> OpamFilename.remove archive; dl_archives archives
           | _ -> dl_archives archives
     in
     dl_archives archives @@| fun () ->
-    OpamGlobals.msg "[%s] %s synchronized\n"
-      (OpamGlobals.colorise `blue
+    OpamConsole.msg "[%s] %s synchronized\n"
+      (OpamConsole.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address)
 
@@ -175,30 +185,30 @@ module B = struct
           | Up_to_date _ -> Up_to_date x
           | _ -> assert false
         in
-        if OpamMisc.ends_with ~suffix:"/" remote_url then
+        if OpamMisc.String.ends_with ~suffix:"/" remote_url then
           res (D local_dirname)
         else match Sys.readdir dir with
           | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
             let filename = OpamFilename.OP.(local_dirname // f) in
-            if OpamRepository.check_digest filename checksum
+            if OpamRepositoryBackend.check_digest filename checksum
             then res (F filename)
             else (OpamFilename.remove filename; Not_available remote_url)
           | _ -> res (D local_dirname)
     in
-    OpamGlobals.msg "[%s] %s %s\n"
-      (OpamGlobals.colorise `green (OpamPackage.to_string package))
+    OpamConsole.msg "[%s] %s %s\n"
+      (OpamConsole.colorise `green (OpamPackage.to_string package))
       remote_url
       (string_of_download r);
     r
 
   let pull_archive repo filename =
-    let local_dir = OpamPath.Repository.archives_dir repo in
+    let local_dir = OpamRepositoryPath.archives_dir repo in
     OpamFilename.mkdir local_dir;
     pull_file_quiet local_dir filename @@| function
-    | Not_available _ as r when !OpamGlobals.verbose_level < 2 -> r
+    | Not_available _ as r when OpamCoreConfig.(!r.verbose_level) < 2 -> r
     | r ->
-      OpamGlobals.msg "[%s] %s %s\n"
-        (OpamGlobals.colorise `blue
+      OpamConsole.msg "[%s] %s %s\n"
+        (OpamConsole.colorise `blue
            (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.to_string filename)
         (string_of_download r);
@@ -208,6 +218,3 @@ module B = struct
     Done None
 
 end
-
-let register () =
-  OpamRepository.register_backend `local (module B: OpamRepository.BACKEND)

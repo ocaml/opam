@@ -17,8 +17,8 @@
 open OpamTypes
 open OpamMisc.OP
 
-let log fmt = OpamGlobals.log "HEURISTIC" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "HEURISTIC" fmt
+let slog = OpamConsole.slog
 
 type 'a state = 'a list
 type 'a state_space = 'a array list
@@ -31,10 +31,10 @@ type 'a state_space = 'a array list
    actions are using a different code-path, they should not appear
    here. *)
 let minimize_actions interesting_names actions =
-  let interesting_names = OpamMisc.StringSet.of_list interesting_names in
+  let interesting_names = OpamMisc.String.Set.of_list interesting_names in
   List.filter (function
     | To_change (_, p)
-    | To_recompile p -> OpamMisc.StringSet.mem p.Cudf.package interesting_names
+    | To_recompile p -> OpamMisc.String.Set.mem p.Cudf.package interesting_names
     | To_delete _    -> true
   ) actions
 
@@ -126,7 +126,7 @@ let brute_force ?(verbose=true) ~dump is_consistent state_space =
   let interval = 500 in
   let flush_output () =
     if verbose && !count >= interval then
-      OpamGlobals.msg
+      OpamConsole.msg
         " an optimal solution has been found after exploring %d states.\n"
         !count in
 
@@ -143,11 +143,11 @@ let brute_force ?(verbose=true) ~dump is_consistent state_space =
       incr count;
       let t1 = Unix.time () in
       if verbose && !count mod interval = interval - 1 then
-        OpamGlobals.msg ".";
-      if t1 -. t0 > OpamGlobals.solver_timeout then (
-        OpamGlobals.msg
+        OpamConsole.msg ".";
+      if t1 -. t0 > OpamSolverConfig.(!r.solver_timeout) then (
+        OpamConsole.msg
           "The brute-force exploration algorithm timed-out [%d states, %.2gs].\n%s\n"
-          !count OpamGlobals.solver_timeout fallback_msg;
+          !count OpamSolverConfig.(!r.solver_timeout) fallback_msg;
         None
       ) else
       if is_consistent state then
@@ -160,15 +160,14 @@ let brute_force ?(verbose=true) ~dump is_consistent state_space =
 (* Call the solver to check whether a set of packages is
    installable. *)
 let consistent_packages universe packages =
-  let open Algo.Diagnostic in
   match Algo.Depsolver.edos_coinstall universe packages with
-  | { result = Success _ } -> true
-  | { result = Failure _ } -> false
+  | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } -> true
+  | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } -> false
 
 let dump_state =
-  if !OpamGlobals.debug && !OpamGlobals.debug_level > 3 then
+  if (OpamConsole.debug ()) && OpamCoreConfig.(!r.debug_level) > 3 then
     log "dump-state: %a"
-      (slog (OpamMisc.pretty_list
+      (slog (String.concat ", "
              @* (List.map (OpamPackage.to_string @* OpamCudf.cudf2opam))))
   else
       (fun _ -> ())
@@ -238,7 +237,7 @@ let actions_of_state ~version_map universe request state =
       let actions = minimize_actions (List.map fst state) actions in
       actions
     with Cudf.Constraint_violation s ->
-      OpamGlobals.error_and_exit "constraint violations: %s" s
+      OpamConsole.error_and_exit "constraint violations: %s" s
 
 (* Find dependencies and installed & reverse dependencies. *)
 let find_interesting_names universe request =
@@ -250,11 +249,11 @@ let find_interesting_names universe request =
     let revdepends = OpamCudf.reverse_dependencies universe packages in
     let filter pkg = pkg.Cudf.installed && filter pkg in
     List.filter filter revdepends in
-  let set = ref OpamMisc.StringSet.empty in
-  let add p = set := OpamMisc.StringSet.add p.Cudf.package !set in
+  let set = ref OpamMisc.String.Set.empty in
+  let add p = set := OpamMisc.String.Set.add p.Cudf.package !set in
   List.iter add depends;
   List.iter add revdepends;
-  OpamMisc.StringSet.elements !set
+  OpamMisc.String.Set.elements !set
 
 (* [state_space] returns the packages which will be tested by the
    brute-force state explorer. As we try to minimize the state to
@@ -343,6 +342,7 @@ let state_of_request ?(verbose=true) ~version_map current_universe request =
       state_space ~filters result_universe request.wish_remove names in
     explore ~verbose current_universe state_space
 
+(* Unused ?
 let same_state s1 s2 =
   let sort l =
     let name p = p.Cudf.package, p.Cudf.version in
@@ -353,6 +353,7 @@ let same_state s1 s2 =
   | Some s1 ->
     List.length s1 = List.length s2
     && sort s1 = sort s2
+*)
 
 (* Refine a request with state constraints. *)
 let refine state request =
@@ -363,16 +364,16 @@ let refine state request =
     List.rev_map (fun p -> (p.Cudf.package, Some (`Eq, p.Cudf.version))) state in
   let wish_install =
     let names =
-      OpamMisc.StringSet.(
+      OpamMisc.String.Set.(
         union
           (of_list (List.rev_map fst request.wish_install))
           (of_list (List.rev_map fst request.wish_upgrade))
       ) in
     let set =
-      OpamMisc.StringSet.filter
+      OpamMisc.String.Set.filter
         (fun n -> not (List.mem_assoc n wish_upgrade))
         names in
-    List.map (fun n -> (n, None)) (OpamMisc.StringSet.elements set) in
+    List.map (fun n -> (n, None)) (OpamMisc.String.Set.elements set) in
   { request with wish_install; wish_upgrade }
 
 (* Add a package name to the upgrade list. *)
@@ -392,19 +393,19 @@ let implicits universe request =
   let implicit_installed, implicit_not_installed =
     let implicit =
       let request_names =
-        OpamMisc.StringSet.of_list (List.map fst request.wish_upgrade) in
-      let all_names = OpamMisc.StringSet.of_list interesting_names in
-      OpamMisc.StringSet.diff all_names request_names in
+        OpamMisc.String.Set.of_list (List.map fst request.wish_upgrade) in
+      let all_names = OpamMisc.String.Set.of_list interesting_names in
+      OpamMisc.String.Set.diff all_names request_names in
     let installed =
       let filter p =
         p.Cudf.installed
-        && OpamMisc.StringSet.mem p.Cudf.package implicit in
+        && OpamMisc.String.Set.mem p.Cudf.package implicit in
       Cudf.get_packages ~filter universe in
     let not_installed =
       let filter n =
         List.for_all (fun p -> p.Cudf.package <> n) installed in
-      let set = OpamMisc.StringSet.filter filter implicit in
-      let list = OpamMisc.StringSet.elements set in
+      let set = OpamMisc.String.Set.filter filter implicit in
+      let list = OpamMisc.String.Set.elements set in
       (* Favor packages with higher version number to discard
          deprecated packages. *)
       let max_version name =
@@ -420,7 +421,7 @@ let implicits universe request =
   log "implicit-installed: %a"
     (slog OpamCudf.string_of_packages) implicit_installed;
   log "implicit-not-installed: %a"
-    (slog OpamMisc.pretty_list) implicit_not_installed;
+    (slog (String.concat ", ")) implicit_not_installed;
 
   implicit_installed, implicit_not_installed
 
@@ -502,7 +503,7 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
     Cudf.load_universe (elements pkgs)
   in
   log "universe: %a"
-    (slog (OpamMisc.pretty_list
+    (slog (String.concat ", "
            @* List.map (OpamPackage.to_string @* OpamCudf.cudf2opam)
            @* OpamCudf.packages))
     universe;

@@ -37,13 +37,6 @@ include OpamMisc.ABSTRACT
 (** Return the compiler version *)
 val version: t -> Version.t
 
-(** Return the current compiler at its currently installed version *)
-val get_current: unit -> t option
-
-(** Return the system compiler at is current version. Warning, this is different
-    from [system] which is a static string with version ["system"] *)
-val get_system: unit -> t option
-
 (** Convert a filename into a compiler name. This function extract
     [name] from {i /path/to/$name.comp}. *)
 val of_filename: OpamFilename.t -> t option
@@ -56,6 +49,3 @@ val prefixes: OpamFilename.Dir.t -> string option Map.t
 
 (** System compiler *)
 val system: t
-
-(** Errors *)
-val unknown: t -> 'a

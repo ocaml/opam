@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamMisc.Base
+include OpamMisc.AbstractString
 
 type variable = t
 
@@ -41,8 +41,10 @@ module Full = struct
 
   let global variable = create OpamPackage.Name.global_config variable
 
+  let is_global variable = variable.package = OpamPackage.Name.global_config
+
   let of_string s =
-    match OpamMisc.rcut_at s ':' with
+    match OpamMisc.String.rcut_at s ':' with
     | None -> create OpamPackage.Name.global_config (of_string s)
     | Some (p,v) ->
       let v = of_string v in
@@ -50,11 +52,9 @@ module Full = struct
 
   let to_string t =
     let prefix =
-      let n = OpamPackage.Name.to_string (package t) in
-      if n = OpamGlobals.global_config then
-        ""
-      else
-        n in
+      let n = package t in
+      if (package t) = OpamPackage.Name.global_config then ""
+      else OpamPackage.Name.to_string n in
     let prefix =
       if prefix = "" then
         ""

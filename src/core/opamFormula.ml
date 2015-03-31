@@ -66,31 +66,31 @@ let short_string_of_atom = function
       (OpamPackage.Version.to_string c)
 
 let string_of_atoms atoms =
-  OpamMisc.sconcat_map " & " short_string_of_atom atoms
+  OpamMisc.List.concat_map " & " short_string_of_atom atoms
 
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =
-  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_atom c)
+  Printf.sprintf "(%s)" (OpamMisc.List.concat_map " & " string_of_atom c)
 
 type 'a disjunction = 'a list
 
 let string_of_disjunction string_of_atom c =
-  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_atom c)
+  Printf.sprintf "(%s)" (OpamMisc.List.concat_map " | " string_of_atom c)
 
 type 'a cnf = 'a list list
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_atom c) in
-  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_clause cnf)
+    Printf.sprintf "(%s)" (OpamMisc.List.concat_map " | " string_of_atom c) in
+  Printf.sprintf "(%s)" (OpamMisc.List.concat_map " & " string_of_clause cnf)
 
 type 'a dnf = 'a list list
 
 let string_of_dnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (OpamMisc.sconcat_map " & " string_of_atom c) in
-  Printf.sprintf "(%s)" (OpamMisc.sconcat_map " | " string_of_clause cnf)
+    Printf.sprintf "(%s)" (OpamMisc.List.concat_map " & " string_of_atom c) in
+  Printf.sprintf "(%s)" (OpamMisc.List.concat_map " | " string_of_clause cnf)
 
 type 'a formula =
   | Empty
@@ -110,14 +110,14 @@ let make_or a b = match a, b with
 let string_of_formula string_of_a f =
   let rec aux ?paren f =
     let paren = match paren with
-      | Some _ when !OpamGlobals.all_parens -> Some `All
+      | Some _ when OpamCoreConfig.(!r.all_parens) -> Some `All
       | paren -> paren
     in
     match f with
     | Empty    -> "0"
     | Atom a   ->
       let s = string_of_a a in
-      if !OpamGlobals.all_parens then Printf.sprintf "(%s)" s else s
+      if OpamCoreConfig.(!r.all_parens) then Printf.sprintf "(%s)" s else s
     | Block x  -> Printf.sprintf "(%s)" (aux x)
     | And(x,y) -> (* And, Or have the same priority, left-associative *)
       let lpar, rpar = if paren = Some `Or then "(",")" else "","" in
@@ -305,7 +305,7 @@ let to_conjunction t =
   match to_dnf t with
   | []  -> []
   | [x] -> x
-  | _   -> OpamGlobals.error_and_exit "%s is not a valid conjunction" (to_string t)
+  | _   -> OpamConsole.error_and_exit "%s is not a valid conjunction" (to_string t)
 
 let ands l = List.fold_left make_and Empty l
 
@@ -321,7 +321,7 @@ let to_disjunction t =
   match to_cnf t with
   | []  -> []
   | [x] -> x
-  | _   -> OpamGlobals.error_and_exit "%s is not a valid disjunction" (to_string t)
+  | _   -> OpamConsole.error_and_exit "%s is not a valid disjunction" (to_string t)
 
 let ors l = List.fold_left make_or Empty l
 

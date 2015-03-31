@@ -14,6 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamMisc.Base
+include OpamMisc.AbstractString
 
 let default = of_string OpamGlobals.default_repository_name

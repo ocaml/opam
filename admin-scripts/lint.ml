@@ -49,7 +49,7 @@ let () =
           print_endline (OpamPackage.to_string nv)
         else if !short then
           OpamGlobals.msg "%s %s\n" (OpamPackage.to_string nv)
-            (OpamMisc.sconcat_map " " (fun (n,k,_) ->
+            (OpamMisc.List.concat_map " " (fun (n,k,_) ->
                  OpamGlobals.colorise
                    (match k with `Warning -> `yellow | `Error -> `red)
                    (string_of_int n))

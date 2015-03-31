@@ -1,12 +1,17 @@
 begin library "opam-repositories"
 
   files   = [
+    "opamRepositoryConfig.ml"
+    "opamDownload.ml"
+    "opamRepositoryBackend.ml"
+    "opamRepositoryPath.ml"
     "opamHTTP.ml"
     "opamLocal.ml"
     "opamVCS.ml"
     "opamGit.ml"
     "opamDarcs.ml"
     "opamHg.ml"
+    "opamRepository.ml"
   ]
 
   requires = [

@@ -30,7 +30,7 @@ let download_file = download_map (fun f -> F f)
 let string_of_download = function
   | Up_to_date _ -> "already up-to-date"
   | Result _ -> "synchronized"
-  | Not_available _ -> OpamGlobals.colorise `red "unavailable"
+  | Not_available _ -> OpamConsole.colorise `red "unavailable"
 
 let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d
@@ -41,7 +41,7 @@ let string_of_address = function
   | url, Some c -> Printf.sprintf "%s#%s" url c
 
 let address_of_string str =
-  match OpamMisc.cut_at str '#' with
+  match OpamMisc.String.cut_at str '#' with
   | None       -> OpamSystem.real_path str, None
   | Some (a,c) -> OpamSystem.real_path a, Some c
 
@@ -77,7 +77,7 @@ let parse_url (s,c) =
       (address,c), `local
     | [proto; address] ->
       (* keep the leading xx:// *)
-      (match OpamMisc.cut_at proto '+' with
+      (match OpamMisc.String.cut_at proto '+' with
        | Some (proto1,proto2) ->
          (proto2^"://"^address, c), url_kind_of_string proto1
        | None ->
@@ -101,7 +101,7 @@ let repository_kind_of_string = function
   | "git"   -> `git
   | "darcs" -> `darcs
   | "hg"    -> `hg
-  | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
+  | s -> OpamConsole.error_and_exit "%s is not a valid repository kind." s
 
 let string_of_shell = function
   | `fish -> "fish"
@@ -181,7 +181,7 @@ let pin_kind_of_string = function
   | "rsync"
   | "local"
   | "path"    -> `local
-  | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
+  | s -> OpamConsole.error_and_exit "%s is not a valid kind of pinning." s
 
 let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
@@ -198,10 +198,6 @@ let kind_of_pin_option = function
   | Darcs _   -> `darcs
   | Hg _      -> `hg
   | Local _   -> `local
-
-let option fn = function
-  | None   -> ""
-  | Some k -> fn k
 
 let string_of_relop = OpamFormula.string_of_relop
 let relop_of_string = OpamFormula.relop_of_string
@@ -223,30 +219,27 @@ let pfxop_of_string = function
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
 let filter_ident_of_string s =
-  match OpamMisc.rcut_at s ':' with
+  match OpamMisc.String.rcut_at s ':' with
   | None -> [], OpamVariable.of_string s, None
   | Some (p,last) ->
     let get_names s =
       List.map (fun n ->
           try OpamPackage.Name.of_string n
           with Failure _ -> failwith ("Invalid package name "^n))
-        (OpamMisc.split s '+')
+        (OpamMisc.String.split s '+')
     in
-    match OpamMisc.rcut_at p '?' with
+    match OpamMisc.String.rcut_at p '?' with
     | None ->
       get_names p, OpamVariable.of_string last, None
     | Some (p,val_if_true) ->
       let converter = Some (val_if_true, last) in
-      match OpamMisc.rcut_at p ':' with
+      match OpamMisc.String.rcut_at p ':' with
       | None ->
         [], OpamVariable.of_string p, converter
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
-let filter_deps
-    ?(build=true)
-    ?(test=build && !OpamGlobals.build_test)
-    ?(doc=build && !OpamGlobals.build_doc) =
+let filter_deps ~build ~test ~doc =
   let filter =
     List.for_all (function
         | Depflag_Build -> build

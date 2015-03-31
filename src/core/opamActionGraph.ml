@@ -24,7 +24,7 @@ module type ACTION = sig
 end
 
 let action_strings ?utf8 x =
-  if utf8 = None && !OpamGlobals.utf8 || utf8 = Some true then
+  if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true then
     List.assoc x
       [`inst,   "\xe2\x88\x97 ";
        `up,     "\xe2\x86\x97 ";
@@ -40,7 +40,7 @@ let action_strings ?utf8 x =
        `rm,     "remove"]
 
 let action_color c =
-  OpamGlobals.colorise (match c with
+  OpamConsole.colorise (match c with
       | `inst | `up -> `green
       | `rm | `down -> `red
       | `reinst -> `yellow)
@@ -88,10 +88,10 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 
   let to_aligned_strings l =
     let code c =
-      if !OpamGlobals.utf8 then action_color c (action_strings c)
+      if (OpamConsole.utf8 ()) then action_color c (action_strings c)
       else "-"
     in
-    let name p = OpamGlobals.colorise `bold (P.name_to_string p) in
+    let name p = OpamConsole.colorise `bold (P.name_to_string p) in
     let tbl =
       List.map (function
           | To_change (None, p) ->
@@ -112,7 +112,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
               name p; P.version_to_string p ])
         l
     in
-    List.map (String.concat " ") (OpamMisc.align_table tbl)
+    List.map (String.concat " ") (OpamMisc.Format.align_table tbl)
 
   let to_json = function
     | To_change (None, p)   -> `O ["install", P.to_json p]
@@ -141,16 +141,16 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     let removals =
       fold_vertex (fun v acc -> match v with
           | To_delete p ->
-            OpamMisc.StringMap.add (A.Pkg.name_to_string p) p acc
+            OpamMisc.String.Map.add (A.Pkg.name_to_string p) p acc
           | _ -> acc)
-        g OpamMisc.StringMap.empty
+        g OpamMisc.String.Map.empty
     in
     let reduced = ref Map.empty in
     let g =
       map_vertex (function
           | To_change (None, p) as act ->
             (try
-               let p0 = OpamMisc.StringMap.find (A.Pkg.name_to_string p) removals in
+               let p0 = OpamMisc.String.Map.find (A.Pkg.name_to_string p) removals in
                let act =
                  if A.Pkg.equal p0 p then To_recompile p
                  else To_change (Some p0, p)

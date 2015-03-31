@@ -34,8 +34,8 @@ module type MAP = sig
   include Map.S
   val to_string: ('a -> string) -> 'a t -> string
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
-  val values: 'a t -> 'a list
   val keys: 'a t -> key list
+  val values: 'a t -> 'a list
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
 end
@@ -54,59 +54,67 @@ module type OrderedType = sig
   val to_json: t -> OpamJson.t
 end
 
-let debug = ref false
-
-let sconcat_map ?(left="") ?(right="") ?nil sep f =
-  function
-  | [] -> (match nil with Some s -> s | None -> left^right)
-  | l ->
-    let seplen = String.length sep in
-    let strs,len =
-      List.fold_left (fun (strs,len) x ->
-          let s = f x in s::strs, String.length s + seplen + len)
-        ([],String.length left + String.length right - seplen)
-        l
-    in
-    let buf = Bytes.create len in
-    let prepend i s =
-      let slen = String.length s in
-      Bytes.blit_string s 0 buf (i - slen) slen;
-      i - slen
-    in
-    let pos = prepend len right in
-    let pos = prepend pos (List.hd strs) in
-    let pos =
-      List.fold_left (fun pos s -> prepend (prepend pos sep) s)
-        pos (List.tl strs)
-    in
-    let pos = prepend pos left in
-    assert (pos = 0);
-    Bytes.to_string buf
-
-let string_of_list f =
-  sconcat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
-
-let itemize ?(bullet="  - ") f =
-  sconcat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet) f
-
-let string_map f s =
-  let len = String.length s in
-  let b = Bytes.create len in
-  for i = 0 to len - 1 do Bytes.set b i (f s.[i]) done;
-  Bytes.to_string b
-
-let rec pretty_list ?(last="and") = function
-  | []    -> ""
-  | [a]   -> a
-  | [a;b] -> Printf.sprintf "%s %s %s" a last b
-  | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
-
-let rec remove_duplicates = function
-  | a::(b::_ as r) when a = b -> remove_duplicates r
-  | a::r -> a::remove_duplicates r
-  | [] -> []
-
 let max_print = 100
+
+module OpamList = struct
+
+  let concat_map ?(left="") ?(right="") ?nil sep f =
+    function
+    | [] -> (match nil with Some s -> s | None -> left^right)
+    | l ->
+      let seplen = String.length sep in
+      let strs,len =
+        List.fold_left (fun (strs,len) x ->
+            let s = f x in s::strs, String.length s + seplen + len)
+          ([],String.length left + String.length right - seplen)
+          l
+      in
+      let buf = Bytes.create len in
+      let prepend i s =
+        let slen = String.length s in
+        Bytes.blit_string s 0 buf (i - slen) slen;
+        i - slen
+      in
+      let pos = prepend len right in
+      let pos = prepend pos (List.hd strs) in
+      let pos =
+        List.fold_left (fun pos s -> prepend (prepend pos sep) s)
+          pos (List.tl strs)
+      in
+      let pos = prepend pos left in
+      assert (pos = 0);
+      Bytes.to_string buf
+
+  let to_string f =
+    concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
+
+  let rec remove_duplicates = function
+    | a::(b::_ as r) when a = b -> remove_duplicates r
+    | a::r -> a::remove_duplicates r
+    | [] -> []
+
+  let sort_nodup cmp l = remove_duplicates (List.sort cmp l)
+
+  let filter_map f l =
+    let rec loop accu = function
+      | []     -> List.rev accu
+      | h :: t ->
+        match f h with
+        | None   -> loop accu t
+        | Some x -> loop (x::accu) t in
+    loop [] l
+
+  let filter_some l = filter_map (fun x -> x) l
+
+  let insert comp x l =
+    let rec aux = function
+      | [] -> [x]
+      | h::t when comp h x < 0 -> h::aux t
+      | l -> x :: l in
+    aux l
+
+end
+
 
 module Set = struct
 
@@ -133,11 +141,11 @@ module Set = struct
       List.fold_left (fun set e -> add e set) empty l
 
     let to_string s =
-      if not !debug && S.cardinal s > max_print then
+      if S.cardinal s > max_print then
 	Printf.sprintf "%d elements" (S.cardinal s)
       else
 	let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
-	string_of_list (fun x -> x) (List.rev l)
+	OpamList.to_string (fun x -> x) (List.rev l)
 
     let map f t =
       S.fold (fun e set -> S.add (f e) set) t S.empty
@@ -200,12 +208,12 @@ module Map = struct
       ) m1 m2
 
     let to_string string_of_value m =
-      if not !debug && M.cardinal m > max_print then
+      if M.cardinal m > max_print then
 	Printf.sprintf "%d elements" (M.cardinal m)
       else
 	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
 	let l = fold (fun k v l -> s (k,v)::l) m [] in
-	string_of_list (fun x -> x) l
+	OpamList.to_string (fun x -> x) l
 
     let of_list l =
       List.fold_left (fun map (k,v) -> add k v map) empty l
@@ -222,7 +230,7 @@ module Map = struct
 
 end
 
-module Base = struct
+module AbstractString = struct
   type t = string
   let of_string x = x
   let to_string x = x
@@ -237,14 +245,6 @@ module Base = struct
   module Map = Map.Make(O)
 end
 
-let filter_map f l =
-  let rec loop accu = function
-    | []     -> List.rev accu
-    | h :: t ->
-      match f h with
-      | None   -> loop accu t
-      | Some x -> loop (x::accu) t in
-  loop [] l
 
 module OInt = struct
   type t = int
@@ -256,30 +256,7 @@ end
 module IntMap = Map.Make(OInt)
 module IntSet = Set.Make(OInt)
 
-module OString = struct
-  type t = string
-  let compare = compare
-  let to_string x = x
-  let to_json x = `String x
-end
 
-module StringSet = Set.Make(OString)
-module StringMap = Map.Make(OString)
-
-module StringSetSet = Set.Make(StringSet)
-module StringSetMap = Map.Make(StringSet)
-
-module OP = struct
-
-  let (@@) f x = f x
-
-  let (|>) x f = f x
-
-  let (@*) g f x = g (f x)
-
-  let (@>) f g x = g (f x)
-
-end
 
 module Option = struct
   let map f = function
@@ -313,6 +290,9 @@ module Option = struct
       | None -> fun _ -> None
       | Some x -> fun f -> f x
     let (>>|) opt f = map f opt
+    let (>>+) opt f = match opt with
+      | None -> f ()
+      | some -> some
     let (+!) opt dft = default dft opt
     let (++) = function
       | None -> fun opt -> opt
@@ -320,378 +300,503 @@ module Option = struct
   end
 end
 
-let strip str =
-  let p = ref 0 in
-  let l = String.length str in
-  let fn = function
-    | ' ' | '\t' | '\r' | '\n' -> true
-    | _ -> false in
-  while !p < l && fn (String.unsafe_get str !p) do
-    incr p;
-  done;
-  let p = !p in
-  let l = ref (l - 1) in
-  while !l >= p && fn (String.unsafe_get str !l) do
-    decr l;
-  done;
-  String.sub str p (!l - p + 1)
 
-let starts_with ~prefix s =
-  let x = String.length prefix in
-  let n = String.length s in
-  n >= x
-  && String.sub s 0 x = prefix
 
-let ends_with ~suffix s =
-  let x = String.length suffix in
-  let n = String.length s in
-  n >= x
-  && String.sub s (n - x) x = suffix
+module OpamString = struct
 
-let remove_prefix ~prefix s =
-  if starts_with ~prefix s then
+  module OString = struct
+    type t = string
+    let compare = compare
+    let to_string x = x
+    let to_json x = `String x
+  end
+
+  module StringSet = Set.Make(OString)
+  module StringMap = Map.Make(OString)
+
+  module SetSet = Set.Make(StringSet)
+  module SetMap = Map.Make(StringSet)
+
+  module Set = StringSet
+  module Map = StringMap
+
+  let starts_with ~prefix s =
     let x = String.length prefix in
     let n = String.length s in
-    String.sub s x (n - x)
-  else
-    s
+    n >= x
+    && String.sub s 0 x = prefix
 
-let remove_suffix ~suffix s =
-  if ends_with ~suffix s then
+  let ends_with ~suffix s =
     let x = String.length suffix in
     let n = String.length s in
-    String.sub s 0 (n - x)
-  else
-    s
+    n >= x
+    && String.sub s (n - x) x = suffix
 
-let cut_at_aux fn s sep =
-  try
-    let i = fn s sep in
-    let name = String.sub s 0 i in
-    let version = String.sub s (i+1) (String.length s - i - 1) in
-    Some (name, version)
-  with Invalid_argument _ | Not_found ->
-    None
+  let contains s c =
+    try let _ = String.index s c in true
+    with Not_found -> false
 
-let cut_at = cut_at_aux String.index
-
-let rcut_at = cut_at_aux String.rindex
-
-let contains s c =
-  try let _ = String.index s c in true
-  with Not_found -> false
-
-let split s c =
-  Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s
-
-let split_delim s c =
-  Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
-
-let visual_length_substring s ofs len =
-  let rec aux s i =
+  let exact_match re s =
     try
-      let i = String.index_from s i '\027' in
-      let j = String.index_from s (i+1) 'm' in
-      if j > ofs + len then 0 else
-        j - i + 1 + aux s (j+1)
-    with Not_found | Invalid_argument _ -> 0
-  in
-  len - aux s ofs
+      let subs = Re.exec re s in
+      let subs = Array.to_list (Re.get_all_ofs subs) in
+      let n = String.length s in
+      let subs = List.filter (fun (s,e) -> s=0 && e=n) subs in
+      List.length subs > 0
+    with Not_found ->
+      false
 
-let visual_length s = visual_length_substring s 0 (String.length s)
+  let map f s =
+    let len = String.length s in
+    let b = Bytes.create len in
+    for i = 0 to len - 1 do Bytes.set b i (f s.[i]) done;
+    Bytes.to_string b
 
-let align_table ll =
-  let rec transpose ll =
-    if List.for_all ((=) []) ll then [] else
-    let col, rest =
-      List.fold_left (fun (col,rest) -> function
-          | hd::tl -> hd::col, tl::rest
-          | [] -> ""::col, []::rest)
-        ([],[]) ll
-    in
-    List.rev col::transpose (List.rev rest)
-  in
-  let columns = transpose ll in
-  let pad n s =
-    let sn = visual_length s in
-    if sn >= n then s
-    else s ^ (String.make (n - sn) ' ')
-  in
-  let align sl =
-    let len = List.fold_left (fun m s -> max m (visual_length s)) 0 sl in
-    List.map (pad len) sl
-  in
-  transpose (List.map align columns)
+  let strip str =
+    let p = ref 0 in
+    let l = String.length str in
+    let fn = function
+      | ' ' | '\t' | '\r' | '\n' -> true
+      | _ -> false in
+    while !p < l && fn (String.unsafe_get str !p) do
+      incr p;
+    done;
+    let p = !p in
+    let l = ref (l - 1) in
+    while !l >= p && fn (String.unsafe_get str !l) do
+      decr l;
+    done;
+    String.sub str p (!l - p + 1)
 
-let print_table oc ~sep =
-  List.iter (fun l ->
-      let l = match l with s::l -> output_string oc s; l | [] -> [] in
-      List.iter (fun s -> output_string oc sep; output_string oc s) l;
-      output_char oc '\n')
+  let sub_at n s =
+    if String.length s <= n then
+      s
+    else
+      String.sub s 0 n
 
-(* Remove from a c-separated list of string the one with the given prefix *)
-let reset_env_value ~prefix c v =
-  let v = split_delim v c in
-  List.filter (fun v -> not (starts_with ~prefix v)) v
+  let remove_prefix ~prefix s =
+    if starts_with ~prefix s then
+      let x = String.length prefix in
+      let n = String.length s in
+      String.sub s x (n - x)
+    else
+      s
 
-(* Split the list in two according to the first occurrence of the string
-   starting with the given prefix.
-*)
-let cut_env_value ~prefix c v =
-  let v = split_delim v c in
-  let rec aux before =
-    function
+  let remove_suffix ~suffix s =
+    if ends_with ~suffix s then
+      let x = String.length suffix in
+      let n = String.length s in
+      String.sub s 0 (n - x)
+    else
+      s
+
+  let cut_at_aux fn s sep =
+    try
+      let i = fn s sep in
+      let name = String.sub s 0 i in
+      let version = String.sub s (i+1) (String.length s - i - 1) in
+      Some (name, version)
+    with Invalid_argument _ | Not_found ->
+      None
+
+  let cut_at = cut_at_aux String.index
+
+  let rcut_at = cut_at_aux String.rindex
+
+  let split s c =
+    Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s
+
+  let split_delim s c =
+    Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
+
+  let fold_left f acc s =
+    let acc = ref acc in
+    for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
+    !acc
+
+end
+
+
+
+module Env = struct
+
+  (* Remove from a c-separated list of string the one with the given prefix *)
+  let reset_value ~prefix c v =
+    let v = OpamString.split_delim v c in
+    List.filter (fun v -> not (OpamString.starts_with ~prefix v)) v
+
+  (* Split the list in two according to the first occurrence of the string
+     starting with the given prefix.
+  *)
+  let cut_value ~prefix c v =
+    let v = OpamString.split_delim v c in
+    let rec aux before =
+      function
       | [] -> [], List.rev before
-      | curr::after when starts_with ~prefix curr ->
+      | curr::after when OpamString.starts_with ~prefix curr ->
         before, after
       | curr::after -> aux (curr::before) after
-  in aux [] v
+    in aux [] v
 
-(* if rsync -arv return 4 lines, this means that no files have changed *)
-let rsync_trim = function
-  | [] -> []
-  | _ :: t ->
-    match List.rev t with
-    | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
-    | _ -> []
+  let list =
+    let lazy_env = lazy (
+      let e = Unix.environment () in
+      List.rev_map (fun s ->
+          match OpamString.cut_at s '=' with
+          | None   -> s, ""
+          | Some p -> p
+        ) (Array.to_list e)
+    ) in
+    fun () -> Lazy.force lazy_env
 
-let exact_match re s =
-  try
-    let subs = Re.exec re s in
-    let subs = Array.to_list (Re.get_all_ofs subs) in
-    let n = String.length s in
-    let subs = List.filter (fun (s,e) -> s=0 && e=n) subs in
-    List.length subs > 0
-  with Not_found ->
-    false
+  let get n =
+    List.assoc n (list ())
 
-(* XXX: not optimized *)
-let insert comp x l =
-  let rec aux = function
-    | [] -> [x]
-    | h::t when comp h x < 0 -> h::aux t
-    | l -> x :: l in
-  aux l
+  let getopt n = try Some (get n) with Not_found -> None
 
-let env = lazy (
-  let e = Unix.environment () in
-  List.rev_map (fun s ->
-    match cut_at s '=' with
-    | None   -> s, ""
-    | Some p -> p
-  ) (Array.to_list e)
-)
+end
 
-let getenv n =
-  List.assoc n (Lazy.force env)
 
-let env () = Lazy.force env
 
-let indent_left s ?(visual=s) nb =
-  let nb = nb - String.length visual in
-  if nb <= 0 then
-    s
-  else
-    s ^ String.make nb ' '
+module OpamSys = struct
 
-let indent_right s ?(visual=s) nb =
-  let nb = nb - String.length visual in
-  if nb <= 0 then
-    s
-  else
-    String.make nb ' ' ^ s
+  let with_process_in cmd args f =
+    let path = ["/bin";"/usr/bin"] in
+    let cmd =
+      List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
+    in
+    let ic = Unix.open_process_in (cmd^" "^args) in
+    try
+      let r = f ic in
+      ignore (Unix.close_process_in ic) ; r
+    with exn ->
+      ignore (Unix.close_process_in ic) ; raise exn
 
-let sub_at n s =
-  if String.length s <= n then
-    s
-  else
-    String.sub s 0 n
+  let tty_out = Unix.isatty Unix.stdout
 
-(** To use when catching default exceptions: ensures we don't catch fatal errors
-    like C-c *)
-let fatal e = match e with
-  | Sys.Break -> prerr_newline (); raise e
-  | Assert_failure _ | Match_failure _ -> raise e
-  | _ -> ()
+  let default_columns = 80
 
-let register_backtrace, get_backtrace =
-  let registered_backtrace = ref None in
-  (fun e ->
-     registered_backtrace :=
+  let get_terminal_columns () =
+    try (* terminfo *)
+      with_process_in "tput" "cols"
+        (fun ic -> int_of_string (input_line ic))
+    with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+      try (* GNU stty *)
+        with_process_in "stty" "size"
+          (fun ic ->
+             match OpamString.split (input_line ic) ' ' with
+             | [_ ; v] -> int_of_string v
+             | _ -> failwith "stty")
+      with
+        Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file | Not_found ->
+        try (* shell envvar *)
+          int_of_string (Env.get "COLUMNS")
+        with Not_found | Failure _ ->
+          default_columns
+
+  let terminal_columns =
+    let v = ref (lazy (get_terminal_columns ())) in
+    let () =
+      try Sys.set_signal 28 (* SIGWINCH *)
+            (Sys.Signal_handle
+               (fun _ -> v := lazy (get_terminal_columns ())))
+      with Invalid_argument _ -> ()
+    in
+    fun () ->
+      if tty_out
+      then Lazy.force !v
+      else default_columns
+
+  let home =
+    let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in
+    fun () -> Lazy.force home
+
+  let uname_s () =
+    try
+      with_process_in "uname" "-s"
+        (fun ic -> Some (OpamString.strip (input_line ic)))
+    with Unix.Unix_error _ | Sys_error _ | Not_found ->
+      None
+
+  let uname_m () =
+    try
+      with_process_in "uname" "-m"
+        (fun ic -> Some (OpamString.strip (input_line ic)))
+    with Unix.Unix_error _ | Sys_error _ | Not_found ->
+      None
+
+  type os =
+    | Darwin
+    | Linux
+    | FreeBSD
+    | OpenBSD
+    | NetBSD
+    | DragonFly
+    | Cygwin
+    | Win32
+    | Unix
+    | Other of string
+
+  let os =
+    let os = lazy (
+      match Sys.os_type with
+      | "Unix" -> begin
+          match uname_s () with
+          | Some "Darwin"    -> Darwin
+          | Some "Linux"     -> Linux
+          | Some "FreeBSD"   -> FreeBSD
+          | Some "OpenBSD"   -> OpenBSD
+          | Some "NetBSD"    -> NetBSD
+          | Some "DragonFly" -> DragonFly
+          | _                -> Unix
+        end
+      | "Win32"  -> Win32
+      | "Cygwin" -> Cygwin
+      | s        -> Other s
+    ) in
+    fun () -> Lazy.force os
+
+  let arch =
+    let arch =
+      lazy (Option.default "Unknown" (uname_m ()))
+    in
+    fun () -> Lazy.force arch
+
+  let string_of_os = function
+    | Darwin    -> "darwin"
+    | Linux     -> "linux"
+    | FreeBSD   -> "freebsd"
+    | OpenBSD   -> "openbsd"
+    | NetBSD    -> "netbsd"
+    | DragonFly -> "dragonfly"
+    | Cygwin    -> "cygwin"
+    | Win32     -> "win32"
+    | Unix      -> "unix"
+    | Other x   -> x
+
+  let os_string () =
+    string_of_os (os ())
+
+  let shell_of_string = function
+    | "tcsh"
+    | "csh"  -> `csh
+    | "zsh"  -> `zsh
+    | "bash" -> `bash
+    | "fish" -> `fish
+    | _      -> `sh
+
+  let guess_shell_compat () =
+    try shell_of_string (Filename.basename (Env.get "SHELL"))
+    with Not_found -> `sh
+
+  let guess_dot_profile shell =
+    let home f =
+      try Filename.concat (home ()) f
+      with Not_found -> f in
+    match shell with
+    | `fish ->
+      List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
+    | `zsh  -> home ".zshrc"
+    | `bash ->
+      (try
+         List.find Sys.file_exists [
+           (* Bash looks up these 3 files in order and only loads the first,
+              for LOGIN shells *)
+           home ".bash_profile";
+           home ".bash_login";
+           home ".profile";
+           (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
+              but it's often included from the above.
+              We may include our variables in both to be sure ; for now we rely
+              on non-login shells inheriting their env from a login shell
+              somewhere... *)
+         ]
+       with Not_found ->
+         (* iff none of the above exist, creating this should be safe *)
+         home ".bash_profile")
+    | `csh ->
+      let cshrc = home ".cshrc" in
+      let tcshrc = home ".tcshrc" in
+      if Sys.file_exists cshrc then cshrc else tcshrc
+    | _     -> home ".profile"
+
+
+  let registered_at_exit = ref []
+  let at_exit f =
+    Pervasives.at_exit f;
+    registered_at_exit := f :: !registered_at_exit
+  let exec_at_exit () =
+    List.iter
+      (fun f -> try f () with _ -> ())
+      !registered_at_exit
+
+  let path_sep =
+    let path_sep = lazy (
+      match os () with
+      | Win32 -> ';'
+      | Cygwin | _ -> ':'
+    ) in
+    fun () -> Lazy.force path_sep
+
+  exception Exit of int
+  exception Exec of string * string array * string array
+
+  let exit i = raise (Exit i)
+end
+
+
+
+module OpamFormat = struct
+
+  let visual_length_substring s ofs len =
+    let rec aux s i =
+      try
+        let i = String.index_from s i '\027' in
+        let j = String.index_from s (i+1) 'm' in
+        if j > ofs + len then 0 else
+          j - i + 1 + aux s (j+1)
+      with Not_found | Invalid_argument _ -> 0
+    in
+    len - aux s ofs
+
+  let visual_length s = visual_length_substring s 0 (String.length s)
+
+  let indent_left s ?(visual=s) nb =
+    let nb = nb - String.length visual in
+    if nb <= 0 then
+      s
+    else
+      s ^ String.make nb ' '
+
+  let indent_right s ?(visual=s) nb =
+    let nb = nb - String.length visual in
+    if nb <= 0 then
+      s
+    else
+      String.make nb ' ' ^ s
+
+  let align_table ll =
+    let rec transpose ll =
+      if List.for_all ((=) []) ll then [] else
+      let col, rest =
+        List.fold_left (fun (col,rest) -> function
+            | hd::tl -> hd::col, tl::rest
+            | [] -> ""::col, []::rest)
+          ([],[]) ll
+      in
+      List.rev col::transpose (List.rev rest)
+    in
+    let columns = transpose ll in
+    let pad n s =
+      let sn = visual_length s in
+      if sn >= n then s
+      else s ^ (String.make (n - sn) ' ')
+    in
+    let align sl =
+      let len = List.fold_left (fun m s -> max m (visual_length s)) 0 sl in
+      List.map (pad len) sl
+    in
+    transpose (List.map align columns)
+
+  let reformat ?(start_column=0) ?(indent=0) s =
+    let slen = String.length s in
+    let buf = Buffer.create 1024 in
+    let rec find_nonsp i =
+      if i >= slen then i else
+      match s.[i] with ' ' -> find_nonsp (i+1) | _ -> i
+    in
+    let rec find_split i =
+      if i >= slen then i else
+      match s.[i] with ' ' | '\n' -> i | _ -> find_split (i+1)
+    in
+    let newline i =
+      Buffer.add_char buf '\n';
+      if i+1 < slen && s.[i+1] <> '\n' then
+        for _i = 1 to indent do Buffer.add_char buf ' ' done
+    in
+    let rec print i col =
+      if i >= slen then () else
+      if s.[i] = '\n' then (newline i; print (i+1) indent) else
+      let j = find_nonsp i in
+      let k = find_split j in
+      let len_visual = visual_length_substring s i (k - i) in
+      if col + len_visual >= OpamSys.terminal_columns () && col > indent then
+        (newline i;
+         Buffer.add_substring buf s j (k - j);
+         print k (indent + len_visual - j + i))
+      else
+        (Buffer.add_substring buf s i (k - i);
+         print k (col + len_visual))
+    in
+    print 0 start_column;
+    Buffer.contents buf
+
+  let itemize ?(bullet="  - ") f =
+    OpamList.concat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet)
+      (fun s -> reformat ~indent:(String.length bullet) (f s))
+
+  let rec pretty_list ?(last="and") = function
+    | []    -> ""
+    | [a]   -> a
+    | [a;b] -> Printf.sprintf "%s %s %s" a last b
+    | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
+
+  let print_table oc ~sep =
+    List.iter (fun l ->
+        let l = match l with s::l -> output_string oc s; l | [] -> [] in
+        List.iter (fun s -> output_string oc sep; output_string oc s) l;
+        output_char oc '\n')
+
+end
+
+
+module Exn = struct
+
+  (** To use when catching default exceptions: ensures we don't catch fatal errors
+      like C-c *)
+  let fatal e = match e with
+    | Sys.Break -> prerr_newline (); raise e
+    | Assert_failure _ | Match_failure _ -> raise e
+    | _ -> ()
+
+  let register_backtrace, get_backtrace =
+    let registered_backtrace = ref None in
+    (fun e ->
+       registered_backtrace :=
+         match !registered_backtrace with
+         | Some (e1, _) as reg when e1 == e -> reg
+         | _ -> Some (e, Printexc.get_backtrace ())),
+    (fun e ->
        match !registered_backtrace with
-       | Some (e1, _) as reg when e1 == e -> reg
-       | _ -> Some (e, Printexc.get_backtrace ())),
-  (fun e ->
-     match !registered_backtrace with
-     | Some(e1,bt) when e1 == e -> bt
-     | _ -> Printexc.get_backtrace ())
+       | Some(e1,bt) when e1 == e -> bt
+       | _ -> Printexc.get_backtrace ())
 
-let default_columns = 100
+  let pretty_backtrace e =
+    match get_backtrace e with
+    | "" -> ""
+    | b  ->
+      let b =
+        OpamFormat.itemize ~bullet:"  " (fun x -> x) (OpamString.split b '\n')
+      in
+      Printf.sprintf "Backtrace:\n%s" b
 
-let with_process_in cmd args f =
-  let path = ["/bin";"/usr/bin"] in
-  let cmd =
-    List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
-  in
-  let ic = Unix.open_process_in (cmd^" "^args) in
-  try
-    let r = f ic in
-    ignore (Unix.close_process_in ic) ; r
-  with exn ->
-    ignore (Unix.close_process_in ic) ; raise exn
+end
 
-let get_terminal_columns () =
-  try (* terminfo *)
-    with_process_in "tput" "cols"
-      (fun ic -> int_of_string (input_line ic))
-  with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
-    try (* GNU stty *)
-      with_process_in "stty" "size"
-        (fun ic ->
-          match split (input_line ic) ' ' with
-          | [_ ; v] -> int_of_string v
-          | _ -> failwith "stty")
-    with
-      Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file | Not_found ->
-      try (* shell envvar *)
-        int_of_string (getenv "COLUMNS")
-      with Not_found | Failure _ ->
-        default_columns
 
-let tty_out = Unix.isatty Unix.stdout
+module OP = struct
 
-let terminal_columns =
-  let v = ref (lazy (get_terminal_columns ())) in
-  let () =
-    try Sys.set_signal 28 (* SIGWINCH *)
-          (Sys.Signal_handle
-             (fun _ -> v := lazy (get_terminal_columns ())))
-    with Invalid_argument _ -> ()
-  in
-  fun () ->
-    if tty_out
-    then Lazy.force !v
-    else 80
+  let (@@) f x = f x
 
-let reformat ?(start_column=0) ?(indent=0) s =
-  let slen = String.length s in
-  let buf = Buffer.create 1024 in
-  let rec find_nonsp i =
-    if i >= slen then i else
-    match s.[i] with ' ' -> find_nonsp (i+1) | _ -> i
-  in
-  let rec find_split i =
-    if i >= slen then i else
-    match s.[i] with ' ' | '\n' -> i | _ -> find_split (i+1)
-  in
-  let newline i =
-    Buffer.add_char buf '\n';
-    if i+1 < slen && s.[i+1] <> '\n' then
-    for _i = 1 to indent do Buffer.add_char buf ' ' done
-  in
-  let rec print i col =
-    if i >= slen then () else
-    if s.[i] = '\n' then (newline i; print (i+1) indent) else
-    let j = find_nonsp i in
-    let k = find_split j in
-    let len_visual = visual_length_substring s i (k - i) in
-    if col + len_visual >= terminal_columns () && col > indent then
-      (newline i;
-       Buffer.add_substring buf s j (k - j);
-       print k (indent + len_visual - j + i))
-    else
-      (Buffer.add_substring buf s i (k - i);
-       print k (col + len_visual))
-  in
-  print 0 start_column;
-  Buffer.contents buf
+  let (|>) x f = f x
 
-let itemize ?(bullet="  - ") f =
-  sconcat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet)
-    (fun s -> reformat ~indent:(String.length bullet) (f s))
+  let (@*) g f x = g (f x)
 
-let pretty_backtrace e =
-  match get_backtrace e with
-  | "" -> ""
-  | b  ->
-    let b = itemize ~bullet:"  " (fun x -> x) (split b '\n') in
-    Printf.sprintf "Backtrace:\n%s" b
+  let (@>) f g x = g (f x)
 
-let uname_s () =
-  try
-    with_process_in "uname" "-s"
-      (fun ic -> Some (strip (input_line ic)))
-  with Unix.Unix_error _ | Sys_error _ | Not_found ->
-    None
+end
 
-let uname_m () =
-  try
-    with_process_in "uname" "-m"
-      (fun ic -> Some (strip (input_line ic)))
-  with Unix.Unix_error _ | Sys_error _ | Not_found ->
-    None
 
-let shell_of_string = function
-  | "tcsh"
-  | "csh"  -> `csh
-  | "zsh"  -> `zsh
-  | "bash" -> `bash
-  | "fish" -> `fish
-  | _      -> `sh
-
-let guess_shell_compat () =
-  try shell_of_string (Filename.basename (getenv "SHELL"))
-  with Not_found -> `sh
-
-let guess_dot_profile shell =
-  let home f =
-    try Filename.concat (getenv "HOME") f
-    with Not_found -> f in
-  match shell with
-  | `fish -> List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
-  | `zsh  -> home ".zshrc"
-  | `bash ->
-    (try
-       List.find Sys.file_exists [
-         (* Bash looks up these 3 files in order and only loads the first,
-            for LOGIN shells *)
-         home ".bash_profile";
-         home ".bash_login";
-         home ".profile";
-         (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
-            but it's often included from the above.
-            We may include our variables in both to be sure ; for now we rely
-            on non-login shells inheriting their env from a login shell
-            somewhere... *)
-       ]
-     with Not_found ->
-       (* iff none of the above exist, creating this should be safe *)
-       home ".bash_profile")
-  | `csh ->
-    let cshrc = home ".cshrc" in
-    let tcshrc = home ".tcshrc" in
-    if Sys.file_exists cshrc then cshrc else tcshrc
-  | _     -> home ".profile"
-
-let prettify_path s =
-  let aux ~short ~prefix =
-    let prefix = Filename.concat prefix "" in
-    if starts_with ~prefix s then
-      let suffix = remove_prefix ~prefix s in
-      Some (Filename.concat short suffix)
-    else
-      None in
-  try
-    match aux ~short:"~" ~prefix:(getenv "HOME") with
-    | Some p -> p
-    | None   -> s
-  with Not_found -> s
-
-let registered_at_exit = ref []
-let at_exit f =
-  Pervasives.at_exit f;
-  registered_at_exit := f :: !registered_at_exit
-let exec_at_exit () =
-  List.iter
-    (fun f -> try f () with _ -> ())
-    !registered_at_exit
+module List = OpamList
+module String = OpamString
+module Sys = OpamSys
+module Format = OpamFormat

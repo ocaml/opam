@@ -42,6 +42,8 @@ module Full: sig
   (** Create a global variable *)
   val global: variable -> t
 
+  val is_global: t -> bool
+
   (** Return the package the variable is defined in *)
   val package: t -> OpamPackage.Name.t
 

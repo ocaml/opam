@@ -16,8 +16,8 @@
 
 open OpamMisc.OP
 
-let log fmt = OpamGlobals.log "PACKAGE" fmt
-let slog = OpamGlobals.slog
+let log fmt = OpamConsole.log "PACKAGE" fmt
+let slog = OpamConsole.slog
 
 module Version = struct
 
@@ -29,7 +29,7 @@ module Version = struct
 
   let of_string x = x
 
-  let compare = Debian.Version.compare
+  let compare = OpamVersionCompare.compare
 
   let to_json x =
     `String (to_string x)
@@ -62,7 +62,7 @@ module Name = struct
       x;
     x
 
-  let global_config = OpamGlobals.global_config
+  let global_config = "global-config"
 
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
@@ -101,9 +101,9 @@ let version t = t.version
 let sep = '.'
 
 let of_string_opt s =
-  if OpamMisc.contains s ' ' || OpamMisc.contains s '\n' then
+  if OpamMisc.String.contains s ' ' || OpamMisc.String.contains s '\n' then
     None
-  else match OpamMisc.cut_at s sep with
+  else match OpamMisc.String.cut_at s sep with
     | None        -> None
     | Some (n, v) ->
       try Some { name = Name.of_string n; version = Version.of_string v }
@@ -111,7 +111,7 @@ let of_string_opt s =
 
 let of_string s = match of_string_opt s with
   | Some x -> x
-  | None   -> OpamGlobals.error_and_exit "%s is not a valid versioned package name" s
+  | None   -> OpamConsole.error_and_exit "%s is not a valid versioned package name" s
 
 let to_string t =
   match Version.to_string t.version with
@@ -176,7 +176,7 @@ let of_filename f =
 (* $NAME.$VERSION+opam.tar.gz *)
 let of_archive f =
   let base = OpamFilename.basename f in
-  match OpamMisc.cut_at (OpamFilename.Base.to_string base) '+' with
+  match OpamMisc.String.cut_at (OpamFilename.Base.to_string base) '+' with
   | None       -> None
   | Some (s,_) -> of_string_opt s
 
@@ -192,9 +192,9 @@ let list dir =
           else
             let suffix = Filename.concat (to_string p) "opam" in
             let files = List.filter (OpamFilename.ends_with suffix) files in
-            OpamGlobals.error_and_exit "Multiple definition of package %s in %s:\n%s"
+            OpamConsole.error_and_exit "Multiple definition of package %s in %s:\n%s"
               (to_string p) (OpamFilename.Dir.to_string dir)
-              (OpamMisc.itemize ~bullet:"" OpamFilename.to_string files);
+              (OpamMisc.Format.itemize ~bullet:"" OpamFilename.to_string files);
       ) Set.empty files
   ) else
     Set.empty
@@ -211,7 +211,7 @@ let prefixes dir =
           let suffix = OpamFilename.Dir.to_string dirname in
           let prefix =
             match
-              OpamMisc.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
+              OpamMisc.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
             with
             | "" -> None
             | p  -> (* drop the leading '/' from the prefix *)
@@ -262,11 +262,11 @@ let max_version set name =
 let unknown name version =
   match version with
   | None   ->
-    OpamGlobals.error_and_exit
+    OpamConsole.error_and_exit
       "%s is not a valid package."
       (Name.to_string name)
   | Some v ->
-    OpamGlobals.error_and_exit
+    OpamConsole.error_and_exit
       "The package %s has no version %s."
       (Name.to_string name)
       (Version.to_string v)

@@ -39,7 +39,9 @@ val is_verbose_command: command -> bool
 (** Returns a label suitable for printing the summary of running commands. First
     string is the topic (e.g. package), second the action (e.g. command name).
     Optional command arguments may be used for details (e.g. make action). *)
-val make_command_text: ?color:OpamGlobals.text_style -> string -> ?args:string list -> string -> string
+val make_command_text:
+  ?color:OpamConsole.text_style -> string -> ?args:string list -> string ->
+  string
 
 (** The type for processes *)
 type t = {
@@ -118,7 +120,7 @@ val cleanup : ?force:bool -> result -> unit
 val read_lines: string -> string list
 
 (** Pretty printing of process. *)
-val string_of_result: ?color:OpamGlobals.text_style -> result -> string
+val string_of_result: ?color:OpamConsole.text_style -> result -> string
 
 (** Higher-level interface to allow parallelism *)
 module Job: sig

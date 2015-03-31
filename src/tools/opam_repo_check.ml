@@ -34,31 +34,31 @@ let process args =
   let write f_write fic st =
     if args.normalize then f_write fic st in
 
-  let repo = OpamRepository.local (OpamFilename.cwd ()) in
+  let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
-    OpamGlobals.msg "Processing package %s\n" (OpamPackage.to_string package);
+    OpamConsole.msg "Processing package %s\n" (OpamPackage.to_string package);
 
     (** OPAM *)
-    let opam = OpamPath.Repository.opam repo prefix package in
+    let opam = OpamRepositoryPath.opam repo prefix package in
     write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
 
     (** Descr *)
-    let descr = OpamPath.Repository.descr repo prefix package in
+    let descr = OpamRepositoryPath.descr repo prefix package in
     if OpamFilename.exists descr then
       write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (** URL *)
-    let url = OpamPath.Repository.url repo prefix package in
+    let url = OpamRepositoryPath.url repo prefix package in
     if OpamFilename.exists url then
       write OpamFile.URL.write url (OpamFile.URL.read url);
 
     (** Dot_install *)
     let dot_install =
-      OpamPath.Repository.files repo prefix package
+      OpamRepositoryPath.files repo prefix package
       // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
     if OpamFilename.exists dot_install then
       write
@@ -70,9 +70,9 @@ let process args =
   (** compilers *)
   let compilers = OpamRepository.compilers_with_prefixes repo in
   OpamCompiler.Map.iter (fun c prefix ->
-      let comp = OpamPath.Repository.compiler_comp repo prefix c in
-      let descr = OpamPath.Repository.compiler_descr repo prefix c in
-      OpamGlobals.msg "Processing compiler %s\n" (OpamCompiler.to_string c);
+      let comp = OpamRepositoryPath.compiler_comp repo prefix c in
+      let descr = OpamRepositoryPath.compiler_descr repo prefix c in
+      OpamConsole.msg "Processing compiler %s\n" (OpamCompiler.to_string c);
       write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
       if OpamFilename.exists descr then
         write OpamFile.Descr.write descr (OpamFile.Descr.read descr);

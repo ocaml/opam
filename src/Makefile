@@ -108,8 +108,10 @@ core/opamCompat.%: core/opamCompat.%.$(COMPATV)
 SRC_core = \
   opamCompat.ml \
   opamJson.ml \
+  opamCoreConfig.ml \
   opamLineLexer.mll \
   opamMisc.ml \
+  opamConsole.ml \
   opamScript.ml \
   opamVersion.ml \
   opamGlobals.ml \

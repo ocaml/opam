@@ -55,7 +55,7 @@ val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
 (** Creates a CUDF universe from an OPAM universe, including the given
     packages *)
 val load_cudf_universe:
-  ?depopts:bool -> ?build:bool -> ?test:bool -> ?doc:bool ->
+  ?depopts:bool -> build:bool ->
   universe -> ?version_map:int package_map -> package_set -> Cudf.universe
 
 (** Given a description of packages, return a solution preserving the
@@ -74,7 +74,7 @@ val installable: universe -> package_set
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
 val dependencies :
-  depopts:bool -> ?build:bool -> ?test:bool -> ?doc:bool ->
+  depopts:bool -> build:bool ->
   installed:bool ->
   ?unavailable:bool ->
   universe ->
@@ -83,7 +83,7 @@ val dependencies :
 
 (** Same as [dependencies] but for reverse dependencies *)
 val reverse_dependencies :
-  depopts:bool -> ?build:bool -> ?test:bool -> ?doc:bool ->
+  depopts:bool -> build:bool ->
   installed:bool ->
   ?unavailable:bool ->
   universe ->

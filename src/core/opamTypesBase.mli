@@ -111,7 +111,7 @@ val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 val filter_ident_of_string:
   string -> name list * variable * (string * string) option
 
-val filter_deps: ?build:bool -> ?test:bool -> ?doc:bool -> ext_formula -> formula
+val filter_deps: build:bool -> test:bool -> doc:bool -> ext_formula -> formula
 
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result

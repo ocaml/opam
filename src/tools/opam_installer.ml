@@ -40,38 +40,38 @@ type commands = {
 let do_commands project_root =
   let mkdir d =
     if not (OpamFilename.exists_dir d) then
-      (OpamGlobals.msg "Creating directory %s\n%!" (OpamFilename.Dir.to_string d);
+      (OpamConsole.msg "Creating directory %s\n%!" (OpamFilename.Dir.to_string d);
        OpamFilename.mkdir d)
   in
   let rec rmdir ~opt d =
     if not (OpamFilename.exists_dir d) then ()
     else if Sys.readdir (OpamFilename.Dir.to_string d) = [||] then
-      (OpamGlobals.msg "Removing empty dir %S\n" (OpamFilename.Dir.to_string d);
+      (OpamConsole.msg "Removing empty dir %S\n" (OpamFilename.Dir.to_string d);
        OpamFilename.rmdir d;
        let parent = OpamFilename.dirname_dir d in
        if parent <> d then rmdir ~opt:true parent)
     else if not opt then
-      OpamGlobals.warning "Directory %S is not empty\n" (OpamFilename.Dir.to_string d)
+      OpamConsole.warning "Directory %S is not empty\n" (OpamFilename.Dir.to_string d)
   in
   let cp ?exec ~opt ~src ~dst () =
     if OpamFilename.exists src then
       (mkdir (OpamFilename.dirname dst);
-       OpamGlobals.msg "%-32s => %s\n"
+       OpamConsole.msg "%-32s => %s\n"
          (OpamFilename.remove_prefix project_root src)
          (OpamFilename.to_string dst);
        OpamFilename.install ?exec ~src ~dst ())
     else if not opt then
-      OpamGlobals.error "Could not find %S" (OpamFilename.to_string src)
+      OpamConsole.error "Could not find %S" (OpamFilename.to_string src)
   in
   let rm ~opt f =
     if OpamFilename.exists f then
-      (OpamGlobals.msg "Removing %s\n" (OpamFilename.to_string f);
+      (OpamConsole.msg "Removing %s\n" (OpamFilename.to_string f);
        OpamFilename.remove f)
     else if not opt then
-      OpamGlobals.warning "%S doesn't exist" (OpamFilename.to_string f)
+      OpamConsole.warning "%S doesn't exist" (OpamFilename.to_string f)
   in
   let confirm s f =
-    if OpamGlobals.confirm "%s" s then f ()
+    if OpamConsole.confirm "%s" s then f ()
   in
   { mkdir; rmdir; cp; rm; confirm }
 
@@ -284,7 +284,7 @@ let options =
           let msg =
             Printf.sprintf
               "Please specify a .install file, %s found in current dir"
-              (OpamMisc.pretty_list
+              (OpamMisc.Format.pretty_list
                  (List.map
                     (fun f -> OpamFilename.(Base.to_string (basename f)))
                     files))
@@ -352,7 +352,7 @@ let () =
   with
   | Invalid_argument s ->
     prerr_string "ERROR: "; prerr_endline s; exit 2
-  | OpamGlobals.Exit i -> exit i
+  | OpamMisc.Sys.Exit i -> exit i
   | e ->
-    OpamGlobals.error "Failure during install";
+    OpamConsole.error "Failure during install";
     prerr_string (Printexc.to_string e); exit 1

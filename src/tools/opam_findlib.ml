@@ -18,7 +18,7 @@ open OpamTypes
 open OpamFilename.OP
 open OpamMisc.OP
 
-module StringSet = OpamMisc.StringSet
+module StringSet = OpamMisc.String.Set
 
 let () =
   OpamGlobals.root_dir := OpamGlobals.default_opam_dir
@@ -83,8 +83,8 @@ let installed_findlibs () =
   let libs = List.fold_left (fun acc file ->
       let raw = Filename.basename (OpamFilename.to_string file) in
       let prefix = "META." in
-      if OpamMisc.starts_with ~prefix raw then
-        let lib = OpamMisc.remove_prefix ~prefix raw in
+      if OpamMisc.String.starts_with ~prefix raw then
+        let lib = OpamMisc.String.remove_prefix ~prefix raw in
         StringSet.add lib acc
       else
         acc
@@ -96,7 +96,7 @@ let declared_findlibs repo packages =
     try
       let prefix = OpamPackage.Map.find package packages in
       let findlib_f =
-        OpamPath.Repository.packages repo prefix package // "findlib"
+        OpamRepositoryPath.packages repo prefix package // "findlib"
       in
       let findlib = OpamFile.Lines.safe_read findlib_f in
       let findlib = StringSet.of_list (List.flatten findlib) in
@@ -112,7 +112,7 @@ let infer_from_remove_command opam =
   List.fold_left (fun acc (cmd: OpamTypes.command) ->
       match fst cmd with
       | (CString "ocamlfind",_) :: l ->
-        let pkgs = OpamMisc.filter_map (function
+        let pkgs = OpamMisc.List.filter_map (function
             | CString s, _ -> Some s
             | _ -> None
           ) (List.tl l) in
@@ -135,7 +135,7 @@ let infer_from_name args package =
       well enough. *)
     begin
       try OpamClient.SafeAPI.install [atom] None false
-      with OpamGlobals.Exit _ -> ()
+      with OpamMisc.Sys.Exit _ -> ()
     end;
     OpamGlobals.yes := yes;
   );
@@ -157,7 +157,7 @@ let process args =
     in
     match StringSet.elements orphans with
     | []      -> ()
-    | orphans -> OpamGlobals.msg "%s\n" (String.concat "\n" orphans)
+    | orphans -> OpamConsole.msg "%s\n" (String.concat "\n" orphans)
   else if args.infer || args.opam_pkgs <> [] || args.findlib_pkgs <> [] then
   let regexps =
     List.map (fun pattern ->
@@ -173,16 +173,16 @@ let process args =
     | [] -> true
     | _  ->
       let str = OpamPackage.to_string package in
-      List.exists (fun re -> OpamMisc.exact_match re str) regexps
+      List.exists (fun re -> OpamMisc.String.exact_match re str) regexps
   in
   OpamPackage.Map.iter (fun package prefix ->
       if should_process package then (
-        let opam_f = OpamPath.Repository.opam repo prefix package in
+        let opam_f = OpamRepositoryPath.opam repo prefix package in
         let filename = OpamFilename.dirname opam_f // "findlib" in
         if OpamFilename.exists filename && not args.force then
           ()
         else (
-          OpamGlobals.msg "Processing %s\n" (OpamPackage.to_string package);
+          OpamConsole.msg "Processing %s\n" (OpamPackage.to_string package);
           let opam = OpamFile.OPAM.read opam_f in
           let pkgs0 =
             OpamFile.Lines.safe_read filename
@@ -202,4 +202,4 @@ let process args =
       )
     ) packages
   else
-    OpamGlobals.msg "Nothing to do.\n"
+    OpamConsole.msg "Nothing to do.\n"

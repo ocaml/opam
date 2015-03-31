@@ -55,19 +55,19 @@ let process args =
 
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
-      OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
+      OpamConsole.msg "Processing (package) %s\n" (OpamPackage.to_string package);
       (** OPAM *)
-      let opam_f = OpamPath.Repository.opam repo prefix package in
+      let opam_f = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_f in
       let pkgname = OpamFile.OPAM.name opam in
       if pkgname = args.pkg then begin
         let depexts =
-          let os = OpamMisc.StringSet.of_list args.os in
-          let deps = OpamMisc.StringSet.of_list args.deps in
+          let os = OpamMisc.String.Set.of_list args.os in
+          let deps = OpamMisc.String.Set.of_list args.deps in
           match OpamFile.OPAM.depexts opam with
-          | None -> OpamMisc.StringSetMap.of_list [ os, deps ]
+          | None -> OpamMisc.String.SetMap.of_list [ os, deps ]
           | Some depexts' -> (* TODO: Replace existing entry? *)
-            OpamMisc.StringSetMap.add os deps depexts'
+            OpamMisc.String.SetMap.add os deps depexts'
         in
         let opam = OpamFile.OPAM.with_depexts opam (Some depexts) in
         OpamFile.OPAM.write opam_f opam;

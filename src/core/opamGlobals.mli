@@ -14,191 +14,43 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Convention:
-    all the global OPAM variables can be set using environment variables
-    using OPAM<variable> *)
 
-val debug : bool ref
-val debug_level : int ref
-val verbose : bool ref
-val verbose_level : int ref
-val color_when : [> `Always | `Auto | `Never ]
-val color : bool ref
-val disp_status_line : unit -> bool
-val utf8_when : [> `Always | `Auto | `Never ]
-val utf8 : bool ref
-val keep_build_dir : bool ref
-val no_base_packages : bool ref
-val no_checksums : bool ref
-val req_checksums : bool ref
-val yes : bool ref
-val strict : bool ref
-val build_test : bool ref
-val build_doc : bool ref
-val show : bool ref
-val dryrun : bool ref
-val fake : bool ref
-val print_stats : bool ref
-val utf8_msgs : bool ref
-(* val autoremove : bool ref *)
-val do_not_copy_files : bool ref
-val sync_archives : bool ref
-val use_external_solver : bool ref
-val no_self_upgrade : bool ref
-val skip_version_checks : bool ref
-val safe_mode : bool ref
-val lock_retries : int ref
-val pin_kind_auto : bool ref
+(** {2 Helper functions to initialise config from the environment} *)
 
-(** Tells the printer to write parens everywhere *)
-val all_parens : bool ref
+module Config : sig
 
-(* Value set when opam calls itself *)
-val self_upgrade_bootstrapping_value : string
-val is_self_upgrade : bool
+  val env_bool: string -> bool option
 
-val jobs : int option ref
-val dl_jobs : int option ref
-val download_retry : int
-val cudf_file : string option ref
-val solver_timeout : float
+  val env_int: string -> int option
 
-type solver_criteria = [ `Default | `Upgrade | `Fixup ]
-val default_preferences : solver_criteria -> string
-val compat_preferences : solver_criteria -> string
+  (* Like [env_int], but accept boolean values for 0 and 1 *)
+  val env_level: string -> int option
 
-(** Solver preference bindings. Used with List.assoc: first one wins *)
-val solver_preferences : (solver_criteria * string) list ref
+  val env_string: string -> string option
 
-(** Get the currently configured solver criteria as a string *)
-val get_solver_criteria : [ `Default | `Upgrade | `Fixup ] -> string
+  val env_float: string -> float option
 
-val env_external_solver : string option ref
-val default_external_solver : string
+  val env_when: string -> [ `Always | `Never | `Auto ] option
 
-val external_solver_ref :
-  (input:string -> output:string -> criteria:string -> string list) option ref
-val external_solver : input:string -> output:string -> criteria:string -> string list
+  val env_when_ext: string -> [ `Extended | `Always | `Never | `Auto ] option
 
-type download_tool = [
-  | `Wget
-  | `Curl
-  | `Custom of
-      url:string -> out:string -> retry:int -> compress:bool -> string list
-]
+  val resolve_when: auto:(bool Lazy.t) -> [ `Always | `Never | `Auto ] -> bool
 
-val download_tool_env: string option ref
-val download_tool : download_tool option ref
-val curl_command : string
+  val command_of_string: string -> OpamTypes.arg list
 
-val default_repository_name : string
-val default_repository_address : string
+end
 
-val search_files: string list ref
+(** Sets the OpamCoreConfig options, reading the environment to get default
+    values when unspecified *)
+val init_config: unit OpamCoreConfig.options_fun
 
-(* val default_build_command : string list list *)
-val global_config : string
-val system : string
-val switch : [ `Command_line of string | `Env of string | `Not_set ] ref
-val external_tags : string list ref
-val home : string
-val default_opam_dir : string
-val root_dir : string ref
+(** {2 Some globally defined, static strings} *)
 
-(** The initial value of root_dir, set in the tmpdir before initialised *)
-val root_dir_tmp : string
-val timer : unit -> unit -> float
+(** Name and version of the system compiler *)
+val system: string
 
-(* For forked process, we want to get the time since the beginning of
-   the parent process. *)
-val global_start_time : float
+(** The configured-by-default OPAM repository name *)
+val default_repository_name: string
 
-type text_style =
-    [ `black
-    | `blue
-    | `bold
-    | `cyan
-    | `green
-    | `magenta
-    | `red
-    | `underline
-    | `white
-    | `yellow ]
-
-(** not nestable *)
-val colorise : text_style -> string -> string
-
-val acolor : text_style -> out_channel -> string -> unit
-val acolor_w : int -> text_style -> out_channel -> string -> unit
-val timestamp : unit -> string
-
-(** [log section ~level fmt args]. Used for debug messages, default
-    level is 1 *)
-val log : string -> ?level:int -> ('a, out_channel, unit) format -> 'a
-
-(** Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
-    rather than [log "%s" (to_string x)] to avoid costly unneeded
-    stringifications *)
-val slog : ('a -> string) -> out_channel -> 'a -> unit
-
-val error : ('a, unit, string, unit) format4 -> 'a
-val warning : ('a, unit, string, unit) format4 -> 'a
-val note : ('a, unit, string, unit) format4 -> 'a
-
-(** Message without prefix, reformat or newline, to stderr (useful to continue
-    error messages without repeating "[ERROR]") *)
-val errmsg : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
-
-(** Raised to exit the program in a clean way. Parameter is the exit code. *)
-exception Exit of int
-
-(** Raised to [exec()] another binary, after making sure finalisations have been
-    made properly. Parameters as per [Unix.execvpe] *)
-exception Exec of string * string array * string array
-
-exception Package_error of string
-
-val error_and_exit : ('a, unit, string, 'b) format4 -> 'a
-val msg : ('a, out_channel, unit, unit) format4 -> 'a
-val formatted_msg : ?indent:int -> ('a, unit, string, unit) format4 -> 'a
-val header_msg : ('a, unit, string, unit) format4 -> 'a
-val header_error :
-  ('a, unit, string, ('b, unit, string, unit) format4 -> 'b) format4 -> 'a
-
-(** Display a dynamic status line to stdout, that will be erased on next output.
-    The message should not be wider than screen nor contain newlines. *)
-val status_line : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
-
-(** Ask the user to press Y/y/N/n to continue (returns a boolean).
-    Defaults to true (yes) if unspecified *)
-val confirm: ?default:bool -> ('a, unit, string, bool) format4 -> 'a
-(** Read some input from the user (returns a string option) *)
-val read: ('a, unit, string, string option) format4 -> 'a
-
-val editor : string lazy_t
-
-type os =
-    Darwin
-  | Linux
-  | FreeBSD
-  | OpenBSD
-  | NetBSD
-  | DragonFly
-  | Cygwin
-  | Win32
-  | Unix
-  | Other of string
-val os : unit -> os
-val os_string : unit -> string
-
-val arch : unit -> string
-
-val makecmd : (unit -> string) ref
-
-val log_limit : int
-val log_line_limit : int
-
-val default_jobs : int
-val default_dl_jobs : int
-
-val exit : int -> 'a
+(** The configured-by-default OPAM repository URL *)
+val default_repository_address: string

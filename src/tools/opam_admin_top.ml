@@ -54,24 +54,24 @@ let iter_packages_gen ?(quiet=false) f =
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
       if not quiet then
-        OpamGlobals.msg "Processing package %s... "
+        OpamConsole.msg "Processing package %s... "
           (OpamPackage.to_string package);
-      let opam_file = OpamPath.Repository.opam repo prefix package in
+      let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
-      let descr_file = OpamPath.Repository.descr repo prefix package in
+      let descr_file = OpamRepositoryPath.descr repo prefix package in
       let descr =
         if OpamFilename.exists descr_file then
           Some (OpamFile.Descr.read descr_file)
         else None
       in
-      let url_file = OpamPath.Repository.url repo prefix package in
+      let url_file = OpamRepositoryPath.url repo prefix package in
       let url =
         if OpamFilename.exists url_file then
           Some (OpamFile.URL.read url_file)
         else None
       in
       let dot_install_file =
-        OpamPath.Repository.files repo prefix package
+        OpamRepositoryPath.files repo prefix package
         // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
       let dot_install =
         if OpamFilename.exists dot_install_file then
@@ -97,12 +97,12 @@ let iter_packages_gen ?(quiet=false) f =
       if !changed then
         (incr changed_pkgs;
          if not quiet then
-           OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamPackage.to_string package))
+           OpamConsole.msg "\r\027[KUpdated %s\n" (OpamPackage.to_string package))
       else if not quiet then
-        OpamGlobals.msg "\r\027[K";
+        OpamConsole.msg "\r\027[K";
     ) packages;
   if not quiet then
-    OpamGlobals.msg "Done. Updated %d files in %d packages.\n"
+    OpamConsole.msg "Done. Updated %d files in %d packages.\n"
       !changed_files !changed_pkgs
 
 let iter_packages ?quiet
@@ -123,10 +123,10 @@ let iter_compilers_gen ?(quiet=false) f =
   let changed_files = ref 0 in
   OpamCompiler.Map.iter (fun c prefix ->
       if not quiet then
-        OpamGlobals.msg "Processing compiler %s... " (OpamCompiler.to_string c);
-      let comp_file = OpamPath.Repository.compiler_comp repo prefix c in
+        OpamConsole.msg "Processing compiler %s... " (OpamCompiler.to_string c);
+      let comp_file = OpamRepositoryPath.compiler_comp repo prefix c in
       let comp = OpamFile.Comp.read comp_file in
-      let descr_file = OpamPath.Repository.compiler_descr repo prefix c in
+      let descr_file = OpamRepositoryPath.compiler_descr repo prefix c in
       let descr =
         if OpamFilename.exists descr_file then
           Some (OpamFile.Descr.read descr_file)
@@ -143,12 +143,12 @@ let iter_compilers_gen ?(quiet=false) f =
       if !changed then
         (incr changed_comps;
          if not quiet then
-           OpamGlobals.msg "\r\027[KUpdated %s\n" (OpamCompiler.to_string c))
+           OpamConsole.msg "\r\027[KUpdated %s\n" (OpamCompiler.to_string c))
       else if not quiet then
-        OpamGlobals.msg "\r\027[K";
+        OpamConsole.msg "\r\027[K";
     ) compilers;
   if not quiet then
-    OpamGlobals.msg "Done. Updated %d files in %d compiler descriptions.\n"
+    OpamConsole.msg "Done. Updated %d files in %d compiler descriptions.\n"
       !changed_files !changed_comps
 
 let iter_compilers ?quiet ?(filter=true_) ?f ?(comp=identity) ?descr () =
@@ -181,7 +181,7 @@ let filter fn patterns =
     | [] -> true
     | _  ->
       let str = fn t in
-      List.exists (fun re -> OpamMisc.exact_match re str) regexps
+      List.exists (fun re -> OpamMisc.String.exact_match re str) regexps
 
 let filter_packages = filter OpamPackage.to_string
 let filter_compilers = filter OpamCompiler.to_string

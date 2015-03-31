@@ -1,12 +1,17 @@
 begin library "opam-solver"
 
   files   = [
+    "opamSolverConfig.ml"
+    "opamSolverGlobals.ml"
     "opamCudf.ml"
     "opamHeuristic.ml"
     "opamSolver.ml"
   ]
 
   requires = [
+    "dose3"
+    "dose3.common"
+    "dose3.algo"
     "opam-core"
   ]
 

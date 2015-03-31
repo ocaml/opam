@@ -16,4 +16,4 @@
 
 (** Git repository backend *)
 
-val register: unit -> unit
+module B: OpamRepositoryBackend.S

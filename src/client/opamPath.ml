@@ -19,8 +19,7 @@ open OpamFilename.OP
 
 type t = dirname
 
-let root () =
-  OpamFilename.Dir.of_string !OpamGlobals.root_dir
+let root () = OpamClientConfig.(!r.root_dir)
 
 let config t = t // "config"
 
@@ -76,12 +75,13 @@ let dev_packages_dir t = t / "packages.dev"
 
 let dev_package t nv = dev_packages_dir t / OpamPackage.to_string nv
 
-let backup_file () =
-  Unix.(
-    let tm = gmtime OpamGlobals.global_start_time in
-    Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
-      (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
-  )
+let backup_file =
+  let file = lazy Unix.(
+      let tm = gmtime (Unix.gettimeofday ()) in
+      Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
+        (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+    ) in
+  fun () -> Lazy.force file
 
 let backup_dir t = t / "backup"
 
@@ -177,68 +177,4 @@ module Switch = struct
     let files t a n = package t a n / "files"
 
   end
-end
-
-module Repository = struct
-
-  let root t = t.repo_root
-
-  let update_cache t = root t // "update.cache"
-
-  let create root name = root / "repo" / OpamRepositoryName.to_string name
-
-  let repo t = root t // "repo"
-
-  let remote_repo t =
-    OpamFilename.raw_dir (fst t.repo_address) // "repo"
-
-  let raw_config root name =
-    root / "repo" / OpamRepositoryName.to_string name // "config"
-
-  let config t = root t // "config"
-
-  let packages_dir t = root t / "packages"
-
-  let remote_packages_dir t =
-    OpamFilename.raw_dir (fst t.repo_address) / "packages"
-
-  let packages t prefix nv =
-    match prefix with
-    | None   -> packages_dir t / OpamPackage.to_string nv
-    | Some p -> packages_dir t / p / OpamPackage.to_string nv
-
-  let opam t prefix nv = packages t prefix nv // "opam"
-
-  let descr t prefix nv = packages t prefix nv // "descr"
-
-  let url t prefix nv = packages t prefix nv // "url"
-
-  let files t prefix nv = packages t prefix nv / "files"
-
-  let archives_dir t = root t / "archives"
-
-  let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
-
-  let remote_archive t nv =
-    OpamFilename.raw_dir (fst t.repo_address)
-    / "archives"
-    // (OpamPackage.to_string nv ^ "+opam.tar.gz")
-
-  let upload_dir t = root t / "upload"
-
-  let compilers_dir t = root t / "compilers"
-
-  let remote_compilers_dir t =
-    OpamFilename.raw_dir (fst t.repo_address) / "compilers"
-
-  let compiler_comp t prefix c =
-    match prefix with
-    | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".comp")
-    | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".comp")
-
-  let compiler_descr t prefix c =
-    match prefix with
-    | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".descr")
-    | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".descr")
-
 end

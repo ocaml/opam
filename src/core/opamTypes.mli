@@ -262,6 +262,8 @@ type universe = {
   u_installed_roots: package_set;
   u_pinned   : package_set;
   u_base     : package_set;
+  u_test     : bool; (* Test dependencies should be honored *)
+  u_doc      : bool; (* Doc dependencies should be honored *)
 }
 
 (** {2 Command line arguments} *)
@@ -432,7 +434,7 @@ type env = (string * string) list
 type env_updates = (string * string * string) list
 
 (** Tags *)
-type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
+type tags = OpamMisc.String.Set.t OpamMisc.String.SetMap.t
 
 (** {2 Repository and global states} *)
 

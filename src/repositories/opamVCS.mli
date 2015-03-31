@@ -21,6 +21,8 @@ open OpamTypes
 (** Each backend should implement this signature. *)
 module type VCS = sig
 
+  val name: repository_kind
+
   (** Test whether the given repository is correctly initialized. *)
   val exists: repository -> bool
 
@@ -49,4 +51,4 @@ module type VCS = sig
 end
 
 (** Create a backend from a [VCS] implementation. *)
-module Make(VCS: VCS): OpamRepository.BACKEND
+module Make(VCS: VCS): OpamRepositoryBackend.S

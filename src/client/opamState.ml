@@ -21,15 +21,8 @@ open OpamProcess.Job.Op
 open OpamFilename.OP
 open OpamPackage.Set.Op
 
-let log fmt = OpamGlobals.log "STATE" fmt
-let slog = OpamGlobals.slog
-
-let () =
-  OpamHTTP.register ();
-  OpamGit.register ();
-  OpamDarcs.register();
-  OpamLocal.register ();
-  OpamHg.register ()
+let log fmt = OpamConsole.log "STATE" fmt
+let slog = OpamConsole.slog
 
 let switch_reinstall_hook = ref (fun _ -> assert false)
 
@@ -60,7 +53,7 @@ type state = Types.t
 open Types
 
 let string_of_repositories r =
-  OpamMisc.string_of_list
+  OpamMisc.List.to_string
     OpamRepositoryName.to_string
     (OpamRepositoryName.Map.keys r)
 
@@ -125,7 +118,7 @@ let dot_config t name =
     OpamFile.Dot_config.safe_read f
   else if not global then OpamFile.Dot_config.empty
   else
-    (OpamGlobals.error "No global config file found for switch %s. \
+    (OpamConsole.error "No global config file found for switch %s. \
                         Switch broken ?"
        (OpamSwitch.to_string t.switch);
      OpamFile.Dot_config.empty)
@@ -133,15 +126,9 @@ let dot_config t name =
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
 
-let jobs t =
-  match !OpamGlobals.jobs with
-  | None   -> OpamFile.Config.jobs t.config
-  | Some j -> j
+let jobs _ = OpamClientConfig.(!r.jobs)
 
-let dl_jobs t =
-  match !OpamGlobals.dl_jobs with
-  | None   -> OpamFile.Config.dl_jobs t.config
-  | Some j -> j
+let dl_jobs _ = OpamClientConfig.(!r.dl_jobs)
 
 let sorted_repositories t =
   OpamRepository.sort t.repositories
@@ -152,7 +139,7 @@ let mem_repository t repo_name =
 let find_repository_aux repo_name repositories =
   try OpamRepositoryName.Map.find repo_name repositories
   with Not_found ->
-    OpamGlobals.error_and_exit
+    OpamConsole.error_and_exit
       "%s is not a valid repository name."
       (OpamRepositoryName.to_string repo_name)
 
@@ -235,7 +222,7 @@ let package_repository_state t =
 let package_repository_partial_state t nv ~archive =
   let repo, prefix = OpamPackage.Map.find nv t.package_index in
   let repo = find_repository_exn t repo in
-  let exists_archive = OpamFilename.exists (OpamPath.Repository.archive repo nv) in
+  let exists_archive = OpamFilename.exists (OpamRepositoryPath.archive repo nv) in
   exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
 
 let repository_and_prefix_of_package t nv =
@@ -309,7 +296,7 @@ let package_repo_dir root repositories package_index nv =
   else
   let repo_name, prefix = OpamPackage.Map.find nv package_index in
   let repo = OpamRepositoryName.Map.find repo_name repositories in
-  OpamPath.Repository.packages repo prefix nv
+  OpamRepositoryPath.packages repo prefix nv
 
 (* Copies package definition from the repository to the overlay *)
 let add_pinned_overlay ?(template=false) ?version t name =
@@ -329,7 +316,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
     let files = List.filter (fun f -> f <> opam_f && f <> url_f) files in
     let opam = OPAM.read opam_f in
     let url =
-      try Some (URL.read url_f) with e -> OpamMisc.fatal e; None in
+      try Some (URL.read url_f) with e -> OpamMisc.Exn.fatal e; None in
     opam, url, orig, files
   in
   try match OpamPackage.Name.Map.find name t.pinned with
@@ -392,7 +379,7 @@ let version_of_pin t name = function
         try OpamPackage.max_version t.packages name
         with Not_found ->
           OpamPackage.create name (OpamPackage.Version.of_string "0") in
-      OpamGlobals.warning "Setting missing version in %s to %s"
+      OpamConsole.warning "Setting missing version in %s to %s"
         (OpamFilename.to_string overlay)
         (OpamPackage.Version.to_string @@ OpamPackage.version nv);
       OpamFile.OPAM.(write overlay (with_version opam (OpamPackage.version nv)));
@@ -418,7 +405,7 @@ let opam_opt t nv =
     try Some (OpamPackage.Map.find nv t.opams)
     with Not_found ->
       if OpamPackage.Set.mem nv t.installed then
-        (OpamGlobals.warning "no package description left for %s"
+        (OpamConsole.warning "no package description left for %s"
            (OpamPackage.to_string nv);
          Some (OpamFile.OPAM.create nv))
       else
@@ -465,17 +452,17 @@ let locate_meta overlay global repo exists t nv =
 
 let descr_file =
   locate_meta
-    OpamPath.Switch.Overlay.descr OpamPath.descr OpamPath.Repository.descr
+    OpamPath.Switch.Overlay.descr OpamPath.descr OpamRepositoryPath.descr
     OpamFilename.exists
 
 let url_file =
   locate_meta
-    OpamPath.Switch.Overlay.url OpamPath.url OpamPath.Repository.url
+    OpamPath.Switch.Overlay.url OpamPath.url OpamRepositoryPath.url
     OpamFilename.exists
 
 let files =
   locate_meta
-    OpamPath.Switch.Overlay.files OpamPath.files OpamPath.Repository.files
+    OpamPath.Switch.Overlay.files OpamPath.files OpamRepositoryPath.files
     OpamFilename.exists_dir
 
 let install_metadata t nv =
@@ -545,10 +532,10 @@ let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
         in
         Some opam
       with e ->
-        OpamMisc.fatal e;
+        OpamMisc.Exn.fatal e;
         match copy_invalid_to with
         | Some dst ->
-          OpamGlobals.warning
+          OpamConsole.warning
             "Errors in opam file from %s source, ignored (fix with 'opam pin \
              edit')"
             (OpamPackage.Name.to_string name);
@@ -575,12 +562,12 @@ let pinned_packages t =
     (fun name _ acc ->
        try OpamPackage.Set.add (pinned t name) acc
        with e ->
-         OpamMisc.fatal e;
-         if !OpamGlobals.strict then
-           OpamGlobals.error_and_exit "Invalid pinned package %s"
+         OpamMisc.Exn.fatal e;
+         if OpamCoreConfig.(!r.strict) then
+           OpamConsole.error_and_exit "Invalid pinned package %s"
              (OpamPackage.Name.to_string name)
          else
-           OpamGlobals.error "Ignoring invalid pinned package %s"
+           OpamConsole.error "Ignoring invalid pinned package %s"
              (OpamPackage.Name.to_string name);
          acc)
     t.pinned OpamPackage.Set.empty
@@ -639,21 +626,19 @@ let package_variable_names = [
 let string str = Some (S str)
 let bool b = Some (B b)
 let int i = string (string_of_int i)
-let is_global_conf v =
-  OpamVariable.Full.package v = OpamPackage.Name.global_config
 
 (* Read the env variables *)
 let get_env_var v =
   let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
   let var_hook =
-    if is_global_conf v then
-      OpamMisc.string_map (function '-' -> '_' | c -> c) var_str
+    if OpamVariable.Full.is_global v then
+      OpamMisc.String.map (function '-' -> '_' | c -> c) var_str
     else
       Printf.sprintf "%s_%s"
         (OpamPackage.Name.to_string (OpamVariable.Full.package v))
         var_str
   in
-  try match OpamMisc.getenv ("OPAMVAR_" ^ var_hook) with
+  try match OpamMisc.Env.get ("OPAMVAR_" ^ var_hook) with
     | "true"  | "1" -> bool true
     | "false" | "0" -> bool false
     | s             -> string s
@@ -668,7 +653,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     try OpamFile.Dot_config.variable c var
     with Not_found -> None in
   let get_local_var v =
-    if not (is_global_conf v) then None else
+    if not (OpamVariable.Full.is_global v) then None else
     let var = OpamVariable.Full.variable v in
     try match OpamVariable.Map.find var local_variables with
       | None -> raise Exit (* Variable explicitly undefined *)
@@ -687,7 +672,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
         OpamVariable.Map.add v None local_variables in
       try Some (OpamFilter.eval (resolve_variable t ~opam local_variables) filt)
       with Failure _ ->
-        OpamGlobals.warning "Feature %s of %s didn't resolve%s"
+        OpamConsole.warning "Feature %s of %s didn't resolve%s"
           (OpamVariable.to_string v) (to_str opam)
           (match opam_arg with None -> "" | Some o ->
             Printf.sprintf " (referred to from %s)" (to_str o));
@@ -695,7 +680,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     with Not_found -> None
   in
   let get_global_var v =
-    if not (is_global_conf v) then None else
+    if not (OpamVariable.Full.is_global v) then None else
     match OpamVariable.to_string (OpamVariable.Full.variable v) with
     | "ocaml-version" -> string (OpamCompiler.Version.to_string
                                    (Lazy.force t.compiler_version))
@@ -707,28 +692,28 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     | "jobs"          -> int (jobs t)
     | "ocaml-native"  ->
       if t.compiler = OpamCompiler.system then
-        bool (Lazy.force OpamSystem.ocaml_native_available)
+        bool (Lazy.force OpamClientGlobals.ocaml_native_available)
       else
         bool (OpamFilename.exists
                 (OpamPath.Switch.bin t.root t.switch//"ocamlopt"))
     | "ocaml-native-tools" ->
       if t.compiler = OpamCompiler.system then
-        bool (Lazy.force OpamSystem.ocaml_opt_available)
+        bool (Lazy.force OpamClientGlobals.ocaml_opt_available)
       else
         bool (OpamFilename.exists
                 (OpamPath.Switch.bin t.root t.switch//"ocamlc.opt"))
     | "ocaml-native-dynlink" ->
       if t.compiler = OpamCompiler.system then
-        bool (Lazy.force OpamSystem.ocaml_natdynlink_available)
+        bool (Lazy.force OpamClientGlobals.ocaml_natdynlink_available)
       else
         bool (OpamFilename.exists
                 (OpamPath.Switch.lib_dir t.root t.switch
                  /"ocaml"//"dynlink.cmxa"))
-    | "arch"          -> string (OpamGlobals.arch ())
+    | "arch"          -> string (OpamMisc.Sys.arch ())
     | _               -> None
   in
   let get_package_var opam v =
-    if is_global_conf v then None else
+    if OpamVariable.Full.is_global v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
     let name = OpamVariable.Full.package v in
     let opam = (* ensure opam, if not None, corresponds to name *)
@@ -766,11 +751,11 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
       string (OpamPackage.Version.to_string ver)
     | "depends",   Some opam ->
       let deps =
-        OpamFormula.atoms (filter_deps (OpamFile.OPAM.depends opam)) @
-        OpamFormula.atoms (filter_deps (OpamFile.OPAM.depopts opam))
+        OpamFormula.atoms (OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam)) @
+        OpamFormula.atoms (OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam))
       in
       let installed_deps =
-        OpamMisc.filter_map
+        OpamMisc.List.filter_map
           (fun (n,cstr) ->
              try
                let nv =
@@ -783,7 +768,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
              with Not_found -> None)
           deps
       in
-      string (OpamMisc.sconcat_map " "  OpamPackage.to_string installed_deps)
+      string (OpamMisc.List.concat_map " "  OpamPackage.to_string installed_deps)
     | "hash",      Some opam ->
       (try
          let nv = get_nv opam in
@@ -795,7 +780,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
   in
   let make_package_local v =
     (* [var] within the opam file of [pkg] is tried as [pkg:var] *)
-    match is_global_conf v, opam_arg with
+    match OpamVariable.Full.is_global v, opam_arg with
     | true, Some opam ->
       OpamVariable.Full.create (OpamFile.OPAM.name opam) (OpamVariable.Full.variable v)
     | _ -> v
@@ -827,7 +812,7 @@ let redirect t repo =
   if repo.repo_kind <> `http then None else
   let redirect =
     repo
-    |> OpamPath.Repository.repo
+    |> OpamRepositoryPath.repo
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.redirect
   in
@@ -839,7 +824,7 @@ let redirect t repo =
   match redirect with
   | []         -> None
   | (r,f) :: _ ->
-    let config_f = OpamPath.Repository.config repo in
+    let config_f = OpamRepositoryPath.config repo in
     let config = OpamFile.Repo_config.read config_f in
     let repo_address = address_of_string r in
     if repo_address <> config.repo_address then (
@@ -879,7 +864,7 @@ let consistent_os opam =
   | f ->
     let atom (b, os) =
       let ($) = if b then (=) else (<>) in
-      os $ OpamGlobals.os_string () in
+      os $ OpamMisc.Sys.os_string () in
     OpamFormula.eval atom f
 
 let consistent_available_field t opam =
@@ -953,7 +938,7 @@ let unavailable_reason t (name, _ as atom) =
     match r with
     | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
-    | rs -> " because:\n" ^ OpamMisc.itemize ~bullet:"    - " (fun x -> x) rs in
+    | rs -> " because:\n" ^ OpamMisc.Format.itemize ~bullet:"    - " (fun x -> x) rs in
   try
     Printf.sprintf
       "%s is not available%s"
@@ -977,12 +962,12 @@ let static_base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let create_system_compiler_description root =
-  match OpamCompiler.get_system () with
+  match Lazy.force OpamClientGlobals.system_compiler with
   | None         -> ()
   | Some current ->
     log "create-system-compiler-description %a"
       (slog OpamCompiler.to_string) current;
-    match Lazy.force OpamSystem.system_ocamlc_where with
+    match Lazy.force OpamClientGlobals.system_ocamlc_where with
     | None     -> log "System compiler found but didn't answer to -where ??"
     | Some libdir ->
       let name = OpamCompiler.system in
@@ -993,21 +978,21 @@ let create_system_compiler_description root =
       OpamFilename.remove comp;
       let f =
         OpamFile.Comp.create_preinstalled name version
-          (if !OpamGlobals.no_base_packages then []
+          (if OpamClientConfig.(!r.no_base_packages) then []
            else static_base_packages)
           [ "CAML_LD_LIBRARY_PATH", "=",
-            "%{lib}%/stublibs" ^ String.make 1 OpamSystem.path_sep ^
+            "%{lib}%/stublibs" ^ String.make 1 (OpamMisc.Sys.path_sep ()) ^
             Filename.concat libdir "stublibs" ] in
       OpamFile.Comp.write comp f
 
 let system_needs_upgrade_displayed = ref false
 let system_needs_upgrade t =
   t.compiler = OpamCompiler.system
-  && match OpamCompiler.get_system () with
+  && match Lazy.force OpamClientGlobals.system_compiler with
   | None   ->
     if not !system_needs_upgrade_displayed then (
       system_needs_upgrade_displayed := true;
-      OpamGlobals.error
+      OpamConsole.error
         "You current switch uses the system compiler, but no OCaml compiler \
          has been found in the current path.\n\
          You should either:\n\
@@ -1026,7 +1011,7 @@ let read_repositories root config =
   let names = OpamFile.Config.repositories config in
   List.fold_left (fun map repo_name ->
     let repo = OpamFile.Repo_config.read
-        (OpamPath.Repository.raw_config root repo_name) in
+        (OpamRepositoryPath.raw_config root repo_name) in
     OpamRepositoryName.Map.add repo_name repo map
   ) OpamRepositoryName.Map.empty names
 
@@ -1036,7 +1021,7 @@ let load_env_state call_site =
   let root = OpamPath.root () in
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
-  let switch = match !OpamGlobals.switch with
+  let switch = match OpamClientConfig.(!r.switch_set) with
     | `Command_line s
     | `Env s   -> OpamSwitch.of_string s
     | `Not_set -> OpamFile.Config.switch config in
@@ -1044,7 +1029,7 @@ let load_env_state call_site =
   let compiler =
     try OpamSwitch.Map.find switch aliases
     with Not_found ->
-      OpamGlobals.error_and_exit
+      OpamConsole.error_and_exit
         "The current switch (%s) is an unknown compiler switch."
         (OpamSwitch.to_string switch) in
   let partial = true in
@@ -1086,7 +1071,7 @@ let base_packages t =
       else
       let nvs = OpamPackage.packages_of_name candidates name in
       if OpamPackage.Set.is_empty nvs then
-        (OpamGlobals.error "Base package %s of compiler %s not found! Ignored."
+        (OpamConsole.error "Base package %s of compiler %s not found! Ignored."
            (OpamFormula.short_string_of_atom atom)
            (OpamCompiler.to_string t.compiler);
          acc)
@@ -1127,15 +1112,17 @@ let universe t action =
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;
     u_base      = base;
+    u_test      = OpamClientConfig.(!r.build_test);
+    u_doc       = OpamClientConfig.(!r.build_doc);
   }
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "%s" (OpamMisc.sconcat_map " | " string_of_atom (List.rev c)) in
-  Printf.sprintf "%s" (OpamMisc.sconcat_map " , " string_of_clause (List.rev cnf))
+    Printf.sprintf "%s" (OpamMisc.List.concat_map " | " string_of_atom (List.rev c)) in
+  Printf.sprintf "%s" (OpamMisc.List.concat_map " , " string_of_clause (List.rev cnf))
 
 let string_of_conjunction string_of_atom c =
-  Printf.sprintf "%s" (OpamMisc.sconcat_map " , " string_of_atom (List.rev c))
+  Printf.sprintf "%s" (OpamMisc.List.concat_map " , " string_of_atom (List.rev c))
 
 let dump_state t oc =
   let opams = (* Read overlays of pinned packages *)
@@ -1223,6 +1210,7 @@ let installed_timestamp t name =
    * correct opam version
    * only installed packages have something in $repo/tmp
    * only installed packages have something in $opam/pinned.cache *)
+(* unused ?
 let clean_dir dir nv =
   if OpamFilename.exists_dir dir then (
     log "%a exists although %a is not installed. Removing it."
@@ -1238,14 +1226,14 @@ let clean_file file nv =
       (slog OpamPackage.to_string) nv;
     OpamFilename.remove file
   )
-
+*)
 let global_dev_packages t =
   let dir = OpamPath.dev_packages_dir t.root in
   let dirs = OpamFilename.dirs dir in
   List.fold_left (fun map dir ->
       match OpamPackage.of_dirname dir with
       | None     ->
-        OpamGlobals.note "Removing %s" (OpamFilename.Dir.to_string dir);
+        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
         OpamFilename.rmdir dir;
         map
       | Some nv  ->
@@ -1260,7 +1248,7 @@ let switch_dev_packages t =
           OpamFilename.basename_dir dir in
         OpamPackage.Map.add (pinned t name) dir map
       with Failure _ | Not_found ->
-        OpamGlobals.note "Removing %s" (OpamFilename.Dir.to_string dir);
+        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
         OpamFilename.rmdir dir;
         map
     )
@@ -1314,7 +1302,7 @@ let global_consistency_checks t =
   if OpamSwitch.Map.exists (fun _ c -> c =  OpamCompiler.system) aliases then
     let comp_f = OpamPath.compiler_comp t.root OpamCompiler.system in
     if not (OpamFilename.exists comp_f) then (
-      OpamGlobals.msg "Regenerating the system compiler description.\n";
+      OpamConsole.msg "Regenerating the system compiler description.\n";
       create_system_compiler_description t.root;
     )
 
@@ -1336,7 +1324,7 @@ let switch_consistency_checks t =
         OpamFilename.rmdir d)
       stale_dirs;
     List.iter (fun f ->
-        OpamGlobals.error "Removing %s.\n" (OpamFilename.to_string f);
+        OpamConsole.error "Removing %s.\n" (OpamFilename.to_string f);
         OpamFilename.remove f)
       (OpamFilename.files dir)
   in
@@ -1359,7 +1347,7 @@ let switch_consistency_checks t =
          in
          not (OpamPackage.Set.mem nv t.installed) ||
          OpamPackage.Map.mem nv t.opams (* this package has upstream metadata *)
-       with e -> OpamMisc.fatal e; true)
+       with e -> OpamMisc.Exn.fatal e; true)
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
@@ -1385,7 +1373,7 @@ let check_marshaled_file file =
   let current_size = in_channel_length ic in
   if not (expected_size = current_size) then (
     close_in ic;
-    OpamGlobals.error "The local-state cache is corrupted, removing it.";
+    OpamConsole.error "The local-state cache is corrupted, removing it.";
     OpamSystem.internal_error "Corrupted cache";
   );
   seek_in ic magic_len;
@@ -1393,20 +1381,20 @@ let check_marshaled_file file =
 
 let marshal_from_file file =
   try
-    let chrono = OpamGlobals.timer () in
+    let chrono = OpamConsole.timer () in
     let ic = check_marshaled_file file in
     let (cache: cache) = Marshal.from_channel ic in
     close_in ic;
     log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
     Some cache.cached_opams
   with e ->
-    OpamMisc.fatal e;
+    OpamMisc.Exn.fatal e;
     log "Invalid cache, removing: %a" (slog Printexc.to_string) e;
     OpamFilename.remove file;
     None
 
 let save_state ~update t =
-  let chrono = OpamGlobals.timer () in
+  let chrono = OpamConsole.timer () in
   let file = OpamPath.state_cache t.root in
   OpamFilename.remove file;
   if update then (
@@ -1431,7 +1419,7 @@ let remove_state_cache () =
 let reinstall_system_compiler t =
   log "reinstall-system-compiler";
   let continue =
-    OpamGlobals.confirm
+    OpamConsole.confirm
       "Your system compiler has been changed. Do you want to upgrade \
        your OPAM installation ?" in
 
@@ -1443,13 +1431,13 @@ let reinstall_system_compiler t =
     (* Reinstall all system compiler switches *)
     OpamSwitch.Map.iter (fun s a ->
       if a = OpamCompiler.system then (
-        OpamGlobals.header_msg "Upgrading %s" (OpamSwitch.to_string s);
+        OpamConsole.header_msg "Upgrading %s" (OpamSwitch.to_string s);
         !switch_reinstall_hook s
       )
     ) t.aliases
 
   ) else
-    OpamGlobals.exit 1
+    OpamMisc.Sys.exit 1
 
 let upgrade_to_1_1_hook =
   ref (fun () -> assert false)
@@ -1466,8 +1454,8 @@ let load_config root =
     let config_version = OpamFile.Config.opam_version config in
     if config_version <> OpamVersion.current_nopatch then (
       if OpamVersion.(compare current config_version) < 0 &&
-         not !OpamGlobals.skip_version_checks then
-        OpamGlobals.error_and_exit
+         not OpamCoreConfig.(!r.skip_version_checks) then
+        OpamConsole.error_and_exit
           "%s reports a newer OPAM version, aborting."
           (OpamFilename.Dir.to_string (OpamPath.root ()));
       (* opam has been updated, so refresh the configuration file and
@@ -1481,10 +1469,12 @@ let load_config root =
     ) else
       config in
 
+(* XXX To be moved to Arg
   let command_of_string s =
-    List.map (fun s -> CString s, None) (OpamMisc.split s ' ')
+    List.map (fun s -> CString s, None) (OpamMisc.String.split s ' ')
   in
   (* Set some globals *)
+  
   let external_solver_command =
     let cmd = match !OpamGlobals.env_external_solver with
       | Some ("aspcud" | "packup" as s) -> [CIdent s, None]
@@ -1492,7 +1482,7 @@ let load_config root =
       | None -> match OpamFile.Config.solver config with
         | Some f ->
           OpamGlobals.env_external_solver :=
-            Some (OpamMisc.sconcat_map " "
+            Some (OpamMisc.List.concat_map " "
                     (function (CIdent i,_) -> "%{"^i^"}%" | (CString s,_) -> s)
                     f);
           f
@@ -1514,7 +1504,7 @@ let load_config root =
     in
     fun ~input ~output ~criteria ->
       OpamFilter.single_command (fun v ->
-          if not (is_global_conf v) then None else
+          if not (OpamVariable.Full.is_global v) then None else
           match OpamVariable.to_string (OpamVariable.Full.variable v) with
           | "input" -> Some (S input)
           | "output" -> Some (S output)
@@ -1548,7 +1538,7 @@ let load_config root =
   let dl_command cmd =
     fun ~url ~out ~retry ~compress ->
       OpamFilter.single_command (fun v ->
-          if not (is_global_conf v) then None else
+          if not (OpamVariable.Full.is_global v) then None else
           match OpamVariable.to_string (OpamVariable.Full.variable v) with
           | "url" -> Some (S url)
           | "out" -> Some (S out)
@@ -1564,12 +1554,12 @@ let load_config root =
     | None -> None
   in
   OpamGlobals.download_tool := download_tool;
-
+*)
   config
 
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
-  let chrono = OpamGlobals.timer () in
+  let chrono = OpamConsole.timer () in
   !upgrade_to_1_1_hook ();
 
   let root = OpamPath.root () in
@@ -1584,7 +1574,7 @@ let load_state ?(save_cache=true) call_site =
   let cached = opams <> None in
   let partial = false in
 
-  let switch = match !OpamGlobals.switch with
+  let switch = match OpamClientConfig.(!r.switch_set) with
     | `Command_line s
     | `Env s   -> OpamSwitch.of_string s
     | `Not_set -> OpamFile.Config.switch config in
@@ -1596,7 +1586,7 @@ let load_state ?(save_cache=true) call_site =
         if OpamFilename.exists file then file :: acc
         else acc
       ) [] files in
-    let comp = OpamMisc.filter_map OpamCompiler.of_filename files in
+    let comp = OpamMisc.List.filter_map OpamCompiler.of_filename files in
     OpamCompiler.Set.of_list comp in
   let switch, compiler =
     try switch, OpamSwitch.Map.find switch aliases
@@ -1604,15 +1594,15 @@ let load_state ?(save_cache=true) call_site =
       log "%a does not contain the compiler name associated to the switch %a"
         (slog @@ OpamFilename.to_string @* OpamPath.aliases) root
         (slog OpamSwitch.to_string) switch;
-      if !OpamGlobals.safe_mode then
-        OpamGlobals.error_and_exit "Safe mode: invalid switch selected";
-      match !OpamGlobals.switch with
+      if OpamCoreConfig.(!r.safe_mode) then
+        OpamConsole.error_and_exit "Safe mode: invalid switch selected";
+      match OpamClientConfig.(!r.switch_set) with
       | `Command_line s
       | `Env s   -> OpamSwitch.not_installed (OpamSwitch.of_string s)
       | `Not_set ->
         if not (OpamSwitch.Map.is_empty aliases) then (
           let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
-          OpamGlobals.error "The current switch (%s) is an unknown compiler \
+          OpamConsole.error "The current switch (%s) is an unknown compiler \
                              switch. Switching back to %s ..."
             (OpamSwitch.to_string switch)
             (OpamSwitch.to_string new_switch);
@@ -1620,18 +1610,19 @@ let load_state ?(save_cache=true) call_site =
           OpamFile.Config.write (OpamPath.config root) config;
           new_switch, new_compiler;
         ) else
-          OpamGlobals.error_and_exit
+          OpamConsole.error_and_exit
             "The current switch (%s) is an unknown compiler switch."
             (OpamSwitch.to_string switch) in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
     (* XXX: useful for upgrade to 1.1 *)
-    if compiler = OpamCompiler.system && not (OpamFilename.exists comp_f) then
-      create_system_compiler_description root;
     if not (OpamFilename.exists comp_f) then
-      OpamCompiler.unknown compiler
-    else
-      OpamFile.Comp.version (OpamFile.Comp.read comp_f)
+      if compiler = OpamCompiler.system then
+        create_system_compiler_description root
+      else
+        OpamConsole.error_and_exit "%S is not a valid compiler."
+          (OpamCompiler.to_string compiler);
+    OpamFile.Comp.version (OpamFile.Comp.read comp_f)
   ) in
   let repositories = read_repositories root config in
   let package_index =
@@ -1661,11 +1652,11 @@ let load_state ?(save_cache=true) call_site =
           with
           | Not_found ->
             if not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) then
-              OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
+              OpamConsole.warning "Cannot find an OPAM file for %s, skipping."
                 (OpamPackage.to_string nv);
             map
           | Parsing.Parse_error | OpamSystem.Internal_error _ ->
-            OpamGlobals.warning "Errors while parsing %s OPAM file, skipping."
+            OpamConsole.warning "Errors while parsing %s OPAM file, skipping."
               (OpamPackage.to_string nv);
             map
         ) packages OpamPackage.Map.empty
@@ -1693,10 +1684,10 @@ let load_state ?(save_cache=true) call_site =
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
     reinstall_system_compiler t;
-    if OpamGlobals.confirm "\nSystem update successful. Go on with %S ?"
+    if OpamConsole.confirm "\nSystem update successful. Go on with %S ?"
         (String.concat " " (Array.to_list Sys.argv))
     then t
-    else OpamGlobals.exit 0
+    else OpamMisc.Sys.exit 0
   ) else
     t
 
@@ -1726,8 +1717,8 @@ let install_global_config root switch =
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with Not_found -> "user");
       ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with Not_found -> "group");
-      ("make" , !OpamGlobals.makecmd ());
-      ("os"   , OpamGlobals.os_string ());
+      ("make" , OpamClientConfig.(Lazy.force !r.makecmd));
+      ("os"   , OpamMisc.Sys.os_string ());
     ] in
 
   let config = OpamFile.Dot_config.create vars in
@@ -1747,14 +1738,14 @@ let upgrade_to_1_1 () =
   let compilers = root / "compilers" in
   let repo_index = root / "repo" // "index" in
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
-    if !OpamGlobals.safe_mode then
-      OpamGlobals.error_and_exit "Safe mode: not upgrading from opamroot <1.1";
-    OpamSystem.in_dir OpamGlobals.home @@ fun () ->
+    if OpamCoreConfig.(!r.safe_mode) then
+      OpamConsole.error_and_exit "Safe mode: not upgrading from opamroot <1.1";
+    OpamSystem.in_dir (OpamMisc.Sys.home ()) @@ fun () ->
 
-    OpamGlobals.header_msg
+    OpamConsole.header_msg
       "Upgrading to OPAM 1.1 %s"
-      (OpamGlobals.colorise `red "[DO NOT INTERRUPT THE PROCESS]");
-    OpamGlobals.formatted_msg
+      (OpamConsole.colorise `red "[DO NOT INTERRUPT THE PROCESS]");
+    OpamConsole.formatted_msg
       "\n\
       \   In case something goes wrong, you can run that upgrade process again \
        by doing:\n\
@@ -1820,7 +1811,7 @@ let upgrade_to_1_1 () =
     OpamSwitch.Map.iter (fun switch _ ->
         let pinned_cache = OpamPath.Switch.root root switch / "pinned.cache" in
         if OpamFilename.exists_dir pinned_cache then (
-          OpamGlobals.msg
+          OpamConsole.msg
             "Removing the cache of pinned packages for the switch %s ...\n"
             (OpamSwitch.to_string switch);
           OpamFilename.rmdir pinned_cache;
@@ -1856,15 +1847,15 @@ let upgrade_to_1_1 () =
       ) (OpamFilename.files opam_tmp);
     OpamFilename.rmdir opam_tmp;
 
-    OpamGlobals.header_msg
+    OpamConsole.header_msg
       "Upgrade complete. Now continuing with \"%s\""
       (String.concat " " (Array.to_list Sys.argv));
-    OpamGlobals.msg "\n";
+    OpamConsole.msg "\n";
   )
 
 let upgrade_to_1_2 () =
-  if !OpamGlobals.safe_mode then
-    OpamGlobals.error_and_exit "Safe mode: not upgrading from opamroot <1.2";
+  if OpamCoreConfig.(!r.safe_mode) then
+    OpamConsole.error_and_exit "Safe mode: not upgrading from opamroot <1.2";
   log "Upgrade pinned packages format to 1.2";
   let root  = OpamPath.root () in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
@@ -1887,7 +1878,7 @@ let upgrade_to_1_2 () =
         | None -> raise Not_found
         | Some v -> v
       with e ->
-        OpamMisc.fatal e;
+        OpamMisc.Exn.fatal e;
         try OpamPackage.version (OpamPackage.max_version (Lazy.force packages) name)
         with Not_found -> OpamPackage.Version.of_string "0" in
     let fix_version nv =
@@ -1981,12 +1972,13 @@ let expand_env t ?opam (env: env_updates) : env =
     let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
-      try OpamMisc.reset_env_value ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
+      try OpamMisc.Env.reset_value ~prefix (OpamMisc.Sys.path_sep ())
+            (OpamMisc.Env.get ident)
       with Not_found -> [] in
     let update_env a =
       let before, after =
-        OpamMisc.cut_env_value
-          ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
+        OpamMisc.Env.cut_value
+          ~prefix (OpamMisc.Sys.path_sep ()) (OpamMisc.Env.get ident)
       in
       List.rev_append before (a::after)
     in
@@ -1999,7 +1991,7 @@ let expand_env t ?opam (env: env_updates) : env =
         match List.rev b with
         | "" :: _ -> (a :: c) @ [""]
         | _       -> a :: c in
-    let c = String.make 1 OpamSystem.path_sep in
+    let c = String.make 1 (OpamMisc.Sys.path_sep ()) in
     match symbol with
     | "="  -> (ident, string)
     | "+=" -> (ident, String.concat c (string :: read_env ()))
@@ -2030,30 +2022,30 @@ let env_updates ~opamswitch ?(force_path=false) t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    match OpamGlobals.os () with
-    | OpamGlobals.OpenBSD | OpamGlobals.NetBSD | OpamGlobals.FreeBSD ->
+    let open OpamMisc.Sys in
+    match os () with
+    | OpenBSD | NetBSD | FreeBSD ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
       ["MANPATH", "=:",
        OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch)] in
   let utf8 =
-    match OpamGlobals.os () with
-    | OpamGlobals.Darwin -> ["OPAMUTF8MSGS", "=", "1"]
-    | _ -> []
+    if OpamMisc.Sys.(os () = Darwin) then ["OPAMUTF8MSGS", "=", "1"]
+    else []
   in
   let comp_env = OpamFile.Comp.env comp in
   let switch =
     if opamswitch then [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ]
     else [] in
   let root =
-    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir ||
-       try !OpamGlobals.root_dir <> OpamMisc.getenv "OPAMROOT"
-       with Not_found -> false
-    then
-      [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
-    else
-      [] in
-
+    let current = t.root in
+    let default = OpamClientConfig.(default.root_dir) in
+    let current_string = OpamFilename.Dir.to_string current in
+    let env = OpamMisc.Env.getopt "OPAMROOT" in
+    if current <> default || Some current_string <> env
+    then [ "OPAMROOT", "=", current_string ]
+    else []
+  in
   new_path :: toplevel_dir :: new_perl5lib ::
   (man_path @ switch @ root @ utf8 @ comp_env)
 
@@ -2066,11 +2058,11 @@ let env_updates ~opamswitch ?(force_path=false) t =
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
 let get_opam_env ~force_path t =
-  let opamswitch = !OpamGlobals.switch <> `Not_set in
+  let opamswitch = OpamClientConfig.(!r.switch_set) <> `Not_set in
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
-  let env0 = OpamMisc.env () in
+  let env0 = OpamMisc.Env.list () in
   add_to_env t ?opam env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
@@ -2079,7 +2071,7 @@ let mem_pattern_in_string ~pattern ~string =
 
 let ocamlinit () =
   try
-    let file = Filename.concat (OpamMisc.getenv "HOME") ".ocamlinit" in
+    let file = Filename.concat (OpamMisc.Env.get "HOME") ".ocamlinit" in
     Some (OpamFilename.of_string file)
   with Not_found ->
     None
@@ -2104,9 +2096,9 @@ let update_ocamlinit () =
         if not (OpamFilename.exists file) then ""
         else OpamFilename.read file in
       if body = "" then
-        OpamGlobals.msg "  Generating ~/.ocamlinit.\n"
+        OpamConsole.msg "  Generating ~/.ocamlinit.\n"
       else
-        OpamGlobals.msg "  Updating ~/.ocamlinit.\n";
+        OpamConsole.msg "  Updating ~/.ocamlinit.\n";
       try
         let header =
           "(* Added by OPAM. *)\n\
@@ -2118,10 +2110,10 @@ let update_ocamlinit () =
         output_string oc (header ^ body);
         close_out oc;
       with e ->
-        OpamMisc.fatal e;
+        OpamMisc.Exn.fatal e;
         OpamSystem.internal_error "Cannot write ~/.ocamlinit."
   ) else
-    OpamGlobals.msg "  ~/.ocamlinit is already up-to-date.\n"
+    OpamConsole.msg "  ~/.ocamlinit is already up-to-date.\n"
 
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
@@ -2129,9 +2121,9 @@ let string_of_env_update t shell updates =
   let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
   let fish (k,v) = match k with
     | "PATH" | "MANPATH" ->
-      let v = OpamMisc.split_delim v ':' in
+      let v = OpamMisc.String.split_delim v ':' in
       Printf.sprintf "set -gx %s %s;\n" k
-        (OpamMisc.sconcat_map " " (Printf.sprintf "%S") v)
+        (OpamMisc.List.concat_map " " (Printf.sprintf "%S") v)
     | _ ->
       Printf.sprintf "set -gx %s %S;\n" k v in
   let export = match shell with
@@ -2150,7 +2142,7 @@ let string_of_env_update t shell updates =
       | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
-  OpamMisc.sconcat_map "" aux updates
+  OpamMisc.List.concat_map "" aux updates
 
 let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, complete_sh)=
   let variables =
@@ -2223,7 +2215,7 @@ let update_init_scripts t ~global =
     if needs_update then (
       updated := true;
       try OpamFilename.write file body
-      with e -> OpamMisc.fatal e
+      with e -> OpamMisc.Exn.fatal e
     ) in
   List.iter write scripts;
   if global <> None then
@@ -2231,8 +2223,8 @@ let update_init_scripts t ~global =
       (fun init_file ->
          let pretty_init_file =
            OpamFilename.prettify (OpamPath.init t.root // init_file) in
-         if !updated then OpamGlobals.msg "  Updating %s\n" pretty_init_file
-         else OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_file)
+         if !updated then OpamConsole.msg "  Updating %s\n" pretty_init_file
+         else OpamConsole.msg "  %s is already up-to-date.\n" pretty_init_file)
       [ init_sh; init_zsh; init_csh; init_fish ]
 
 let status_of_init_file t init_sh =
@@ -2255,7 +2247,10 @@ let dot_profile_needs_update t dot_profile =
     let body = OpamFilename.read dot_profile in
     let pattern1 = "opam config" in
     let pattern2 = OpamFilename.to_string (OpamPath.init t.root // "init") in
-    let pattern3 = OpamMisc.remove_prefix ~prefix:!OpamGlobals.root_dir pattern2 in
+    let pattern3 =
+      OpamMisc.String.remove_prefix
+        ~prefix:OpamClientConfig.(OpamFilename.Dir.to_string !r.root_dir)
+        pattern2 in
     if mem_pattern_in_string ~pattern:pattern1 ~string:body then
       `no
     else if mem_pattern_in_string ~pattern:pattern2 ~string:body then
@@ -2270,9 +2265,9 @@ let dot_profile_needs_update t dot_profile =
 let update_dot_profile t dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
   match dot_profile_needs_update t dot_profile with
-  | `no        -> OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
+  | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile
   | `otherroot ->
-    OpamGlobals.msg
+    OpamConsole.msg
       "  %s is already configured for another OPAM root.\n"
       pretty_dot_profile
   | `yes       ->
@@ -2282,21 +2277,21 @@ let update_dot_profile t dot_profile shell =
         OpamFilename.read dot_profile
       else
         "" in
-    OpamGlobals.msg "  Updating %s.\n" pretty_dot_profile;
+    OpamConsole.msg "  Updating %s.\n" pretty_dot_profile;
     let body =
       Printf.sprintf
         "%s\n\n\
          # OPAM configuration\n\
          %s"
-        (OpamMisc.strip body) (source t ~shell init_file) in
+        (OpamMisc.String.strip body) (source t ~shell init_file) in
     OpamFilename.write dot_profile body
 
 let update_setup t user global =
   begin match user with
-    | Some { ocamlinit = false; dot_profile = None }
+    | Some { ocamlinit = false; dot_profile = None; _ }
     | None   -> ()
     | Some l ->
-      OpamGlobals.msg "User configuration:\n";
+      OpamConsole.msg "User configuration:\n";
       if l.ocamlinit then update_ocamlinit ();
       match l.dot_profile with
       | None   -> ()
@@ -2305,12 +2300,12 @@ let update_setup t user global =
   begin match global with
     | None   -> ()
     | Some _ ->
-      OpamGlobals.msg "Global configuration:\n";
+      OpamConsole.msg "Global configuration:\n";
       update_init_scripts t ~global
   end
 
 let display_setup t shell dot_profile =
-  let print (k,v) = OpamGlobals.msg "  %-25s - %s\n" k v in
+  let print (k,v) = OpamConsole.msg "  %-25s - %s\n" k v in
   let not_set = "not set" in
   let ok      = "string is already present so file unchanged" in
   let error   = "error" in
@@ -2346,18 +2341,19 @@ let display_setup t shell dot_profile =
         ("opam-switch-eval", switch_eval);
       ]
   in
-  OpamGlobals.msg "User configuration:\n";
+  OpamConsole.msg "User configuration:\n";
   List.iter print user_setup;
-  OpamGlobals.msg "Global configuration:\n";
+  OpamConsole.msg "Global configuration:\n";
   List.iter print global_setup
 
 let eval_string t =
   let root =
     let opamroot_cur = OpamFilename.Dir.to_string t.root in
     let opamroot_env =
-      try OpamMisc.getenv "OPAMROOT"
-      with Not_found -> OpamGlobals.default_opam_dir
-    in
+      OpamMisc.Option.Op.(
+        OpamMisc.Env.getopt "OPAMROOT" +!
+        OpamFilename.Dir.to_string OpamClientConfig.(default.root_dir)
+      ) in
     if opamroot_cur <> opamroot_env then
       Printf.sprintf " --root=%s" opamroot_cur
     else
@@ -2365,12 +2361,12 @@ let eval_string t =
   let switch =
     try
       let sw_cur = OpamSwitch.to_string t.switch in
-      let sw_env = OpamMisc.getenv "OPAMSWITCH" in
+      let sw_env = OpamMisc.Env.get "OPAMSWITCH" in
       if sw_cur <> sw_env then Printf.sprintf " --switch=%s" sw_cur
       else ""
     with Not_found -> ""
   in
-  match OpamMisc.guess_shell_compat () with
+  match OpamMisc.Sys.guess_shell_compat () with
   | `fish ->
     Printf.sprintf "eval (opam config env%s%s)\n" root switch
   | _ ->
@@ -2379,7 +2375,7 @@ let eval_string t =
 let up_to_date_env t =
   let changes =
     List.filter
-      (fun (s, v) -> Some v <> try Some (OpamMisc.getenv s) with Not_found -> None)
+      (fun (s, v) -> Some v <> try Some (OpamMisc.Env.get s) with Not_found -> None)
       (get_opam_env ~force_path:false t) in
   changes = []
 
@@ -2394,13 +2390,13 @@ let print_env_warning_at_init t user =
           \   line to your profile file (for instance %s):\n\
            \n\
           \      %s\n"
-          (OpamGlobals.colorise `yellow "2.")
+          (OpamConsole.colorise `yellow "2.")
           (OpamFilename.prettify f)
           (source t ~shell:user.shell (init_file user.shell))
     in
     let ocamlinit_string =
       if not user.ocamlinit then "" else
-        OpamGlobals.colorise `yellow "3." ^
+        OpamConsole.colorise `yellow "3." ^
         " To avoid issues related to non-system installations of `ocamlfind`\n\
         \   add the following lines to ~/.ocamlinit (create it if necessary):\n\
          \n\
@@ -2410,23 +2406,23 @@ let print_env_warning_at_init t user =
         \      ;;\n\n"
     in
     let line =
-      OpamGlobals.colorise `cyan
+      OpamConsole.colorise `cyan
         "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
     in
-    OpamGlobals.msg
+    OpamConsole.msg
       "\n%s\n\n\
        %s To configure OPAM in the current shell session, you need to run:\n\
        \n\
       \      %s\n\
        %s%s%s\n\n"
       line
-      (OpamGlobals.colorise `yellow "1.")
+      (OpamConsole.colorise `yellow "1.")
       (eval_string t) profile_string ocamlinit_string line
 
 let print_env_warning_at_switch t =
   if up_to_date_env t then ()
   else
-    OpamGlobals.msg
+    OpamConsole.msg
       "# To setup the new switch in the current shell, you need to run:\n%s"
       (eval_string t)
 
@@ -2434,13 +2430,13 @@ let update_setup_interactive t shell dot_profile =
   let update dot_profile =
     let modify_user_conf = dot_profile <> None in
     let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
-    OpamGlobals.msg "\n";
+    OpamConsole.msg "\n";
     update_setup t user (Some {complete=true; switch_eval=true});
     modify_user_conf in
 
-  OpamGlobals.msg "\n";
+  OpamConsole.msg "\n";
 
-  match OpamGlobals.read
+  match OpamConsole.read
       "In normal operation, OPAM only alters files within ~/.opam.\n\
        \n\
        During this initialisation, you can allow OPAM to add information to two\n\
@@ -2469,18 +2465,18 @@ let update_setup_interactive t shell dot_profile =
        Do you want OPAM to modify %s and ~/.ocamlinit?\n\
        (default is 'no', use 'f' to name a file other than %s)\n\
       \    [N/y/f]"
-      (OpamGlobals.colorise `cyan @@ OpamFilename.prettify dot_profile)
-      (OpamGlobals.colorise `bold @@ string_of_shell shell)
+      (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
+      (OpamConsole.colorise `bold @@ string_of_shell shell)
       (source t ~shell (init_file shell))
-      (OpamGlobals.colorise `cyan @@ "~/.ocamlinit")
+      (OpamConsole.colorise `cyan @@ "~/.ocamlinit")
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
   | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
   | Some ("f" | "F" | "file" | "FILE") ->
-    begin match OpamGlobals.read "  Enter the name of the file to update:" with
+    begin match OpamConsole.read "  Enter the name of the file to update:" with
       | None   ->
-        OpamGlobals.msg "-- No filename: skipping the auto-configuration step --\n";
+        OpamConsole.msg "-- No filename: skipping the auto-configuration step --\n";
         false
       | Some f -> update (Some (OpamFilename.of_string f))
     end
@@ -2532,10 +2528,10 @@ let install_compiler t ~quiet:_ switch compiler =
 
   let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists comp_f) then (
-    OpamGlobals.msg "Cannot find %s: %s is not a valid compiler name.\n"
+    OpamConsole.msg "Cannot find %s: %s is not a valid compiler name.\n"
       (OpamFilename.to_string comp_f)
       (OpamCompiler.to_string compiler);
-    OpamGlobals.exit 1;
+    OpamMisc.Sys.exit 1;
   );
 
   let switch_dir = OpamPath.Switch.root t.root switch in
@@ -2573,13 +2569,13 @@ let install_compiler t ~quiet:_ switch compiler =
       let comp_src = match OpamFile.Comp.src comp with
         | Some f -> f
         | None   ->
-          OpamGlobals.error_and_exit
+          OpamConsole.error_and_exit
             "No source for compiler %s"
             (OpamCompiler.to_string compiler) in
       let build_dir = OpamPath.Switch.build_ocaml t.root switch in
       let kind = OpamFile.Comp.kind comp in
       let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
-      OpamGlobals.header_msg "Installing compiler %s" comp_name;
+      OpamConsole.header_msg "Installing compiler %s" comp_name;
       if kind = `local
       && Sys.file_exists (fst comp_src)
       && Sys.is_directory (fst comp_src)
@@ -2605,7 +2601,7 @@ let install_compiler t ~quiet:_ switch compiler =
             OpamRepository.pull_url kind fake_pkg download_dir None [comp_src]
             @@+ function
             | Not_available u ->
-              OpamGlobals.error_and_exit "%s is not available." u
+              OpamConsole.error_and_exit "%s is not available." u
             | Up_to_date r | Result r ->
               Done (OpamFilename.extract_generic_file r build_dir)
           ));
@@ -2618,7 +2614,7 @@ let install_compiler t ~quiet:_ switch compiler =
             "download"
         in
         OpamProcess.Job.with_text text @@
-        OpamFilename.download ~overwrite:true file build_dir
+        OpamDownload.download ~overwrite:true file build_dir
       in
       let patches =
         OpamParallel.map
@@ -2627,7 +2623,7 @@ let install_compiler t ~quiet:_ switch compiler =
           patches
       in
       List.iter (fun f -> OpamFilename.patch f build_dir) patches;
-      OpamGlobals.msg "Now compiling OCaml. This may take a while, \
+      OpamConsole.msg "Now compiling OCaml. This may take a while, \
                        please bear with us...\n";
       let commands =
         if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then
@@ -2637,8 +2633,8 @@ let install_compiler t ~quiet:_ switch compiler =
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
-          ; ( !OpamGlobals.makecmd () :: OpamFile.Comp.make comp )
-          ; [ !OpamGlobals.makecmd () ; "install" ]
+          ; (OpamClientConfig.(Lazy.force !r.makecmd)::OpamFile.Comp.make comp)
+          ; [OpamClientConfig.(Lazy.force !r.makecmd); "install" ]
           ]
         else
         let t = { t with switch } in
@@ -2646,7 +2642,7 @@ let install_compiler t ~quiet:_ switch compiler =
         OpamFilter.commands env (OpamFile.Comp.build comp)
       in
       let commands =
-        OpamMisc.filter_map (function
+        OpamMisc.List.filter_map (function
             | [] -> None
             | cmd::args ->
               let text =
@@ -2656,7 +2652,7 @@ let install_compiler t ~quiet:_ switch compiler =
               Some (OpamSystem.make_command
                       ~text
                       ~dir:(OpamFilename.Dir.to_string build_dir)
-                      ~verbose:!OpamGlobals.verbose
+                      ~verbose:(OpamConsole.verbose ())
                       cmd args))
           commands
       in
@@ -2664,10 +2660,10 @@ let install_compiler t ~quiet:_ switch compiler =
         OpamProcess.Job.run (OpamProcess.Job.of_list commands)
       with
       | None ->
-        OpamGlobals.msg "Done.\n";
-        if not !OpamGlobals.keep_build_dir then OpamFilename.rmdir build_dir
+        OpamConsole.msg "Done.\n";
+        if not OpamClientConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir
       | Some (cmd,err) ->
-        OpamGlobals.error_and_exit "Compiler build failed at %S:\n%s"
+        OpamConsole.error_and_exit "Compiler build failed at %S:\n%s"
           (OpamProcess.string_of_command cmd)
           (OpamProcess.string_of_result err)
     end;
@@ -2676,7 +2672,7 @@ let install_compiler t ~quiet:_ switch compiler =
     add_switch t.root switch compiler
 
   with e ->
-    if not !OpamGlobals.debug then
+    if not (OpamConsole.debug ()) then
       OpamFilename.rmdir switch_dir;
     raise e
 
@@ -2706,7 +2702,7 @@ let fetch_dev_package url srcdir nv =
   OpamRepository.pull_url kind nv srcdir checksum mirrors
   @@| function
   | Not_available _ ->
-    (* OpamGlobals.error "Upstream %s of %s is unavailable" u *)
+    (* OpamConsole.error "Upstream %s of %s is unavailable" u *)
     (*   (OpamPackage.to_string nv); *)
     false
   | Up_to_date _    -> false
@@ -2839,20 +2835,20 @@ let update_pinned_package t ?fixed_version name =
        was_single_opam_file && old_meta = just_opam user_meta
     then
       (* No manual changes *)
-      (OpamGlobals.formatted_msg
+      (OpamConsole.formatted_msg
          "[%s] Installing new package description from %s\n"
-         (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
+         (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (string_of_address (OpamFile.URL.url url));
        OpamFilename.remove
          (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
        install_meta srcdir user_meta new_meta)
     else if
-      OpamGlobals.formatted_msg
+      OpamConsole.formatted_msg
         "[%s] Conflicting update of the metadata from %s:\n%s"
-        (OpamGlobals.colorise `green (OpamPackage.Name.to_string name))
+        (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
         (string_of_address (OpamFile.URL.url url))
-        (OpamMisc.itemize diff_to_string (diff user_meta new_meta));
-      OpamGlobals.confirm "\nOverride files in %s (there will be a backup) ?"
+        (OpamMisc.Format.itemize diff_to_string (diff user_meta new_meta));
+      OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
         (OpamFilename.Dir.to_string overlay)
     then (
       let bak =
@@ -2860,7 +2856,7 @@ let update_pinned_package t ?fixed_version name =
       OpamFilename.mkdir (OpamPath.backup_dir t.root);
       OpamFilename.rmdir bak;
       OpamFilename.copy_dir ~src:overlay ~dst:bak;
-      OpamGlobals.formatted_msg "User metadata backed up in %s\n"
+      OpamConsole.formatted_msg "User metadata backed up in %s\n"
         (OpamFilename.Dir.to_string bak);
       install_meta srcdir user_meta new_meta;
     );
@@ -2938,12 +2934,12 @@ let download_archive t nv =
     OpamRepository.pull_archive repo nv
     @@+ function
     | Not_available _ ->
-      if !OpamGlobals.verbose_level >= 2 then
-        OpamGlobals.msg "%s Repo archive not found\n" text;
+      if OpamCoreConfig.(!r.verbose_level) >= 2 then
+        OpamConsole.msg "%s Repo archive not found\n" text;
       Done None
     | Up_to_date f ->
-      OpamGlobals.msg "[%s] Archive in cache\n"
-        (OpamGlobals.colorise `green (OpamPackage.name_to_string nv));
+      OpamConsole.msg "[%s] Archive in cache\n"
+        (OpamConsole.colorise `green (OpamPackage.name_to_string nv));
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
     | Result f ->
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
@@ -2973,7 +2969,7 @@ let check f =
 
   if not (OpamFilename.exists_dir root)
   || not (OpamFilename.exists (OpamPath.config root)) then
-    OpamGlobals.error_and_exit
+    OpamConsole.error_and_exit
       "No OPAM root found at %s.\n\
        Please run 'opam init' to initialize the state of OPAM, or \
        specify '--root'.\n\
@@ -3000,7 +2996,7 @@ let check f =
     | Switch_lock f ->
       (* Take a switch lock (and a global read lock). *)
       OpamFilename.with_flock ~read:true (OpamPath.lock root) (fun () ->
-          let switch = match !OpamGlobals.switch with
+          let switch = match OpamClientConfig.(!r.switch_set) with
             | `Command_line s | `Env s -> OpamSwitch.of_string s
             | `Not_set ->
               OpamFile.Config.switch

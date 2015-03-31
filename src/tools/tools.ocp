@@ -1,3 +1,5 @@
+comp += [ "-w" "-48" ]
+
 begin program "opam-check"
   files = [ "opam_check.ml" ]
   requires = [ "opam-client" ]

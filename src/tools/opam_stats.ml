@@ -45,7 +45,7 @@ module Git = struct
           exec repo [ "git"; "add"; file ];
           exec repo [ "git"; "commit"; "-m"; msg; file; "--allow-empty" ];
         else
-          OpamGlobals.error_and_exit "Cannot commit %s" (OpamFilename.to_string file);
+          OpamConsole.error_and_exit "Cannot commit %s" (OpamFilename.to_string file);
       ) fmt
 
   let revision repo =
@@ -73,7 +73,7 @@ module Git = struct
 
   let msg repo commit package fmt =
     Printf.kprintf (fun str ->
-        OpamGlobals.msg "%-25s %s     %-10s %-30s\n"
+        OpamConsole.msg "%-25s %s     %-10s %-30s\n"
           (OpamFilename.Dir.to_string repo)
           commit
           (OpamPackage.to_string package)
@@ -82,7 +82,7 @@ module Git = struct
 
   let date repo commit =
     let r = return_one_line repo [ "git"; "show"; "-s"; "--format=\"%ct\""; commit ] in
-    let r = OpamMisc.strip r in
+    let r = OpamMisc.String.strip r in
     let r = String.sub r 1 (String.length r - 2) in
     float_of_string r
 

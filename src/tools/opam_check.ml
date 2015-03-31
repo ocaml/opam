@@ -50,7 +50,7 @@ let () =
   let diff = OpamPackage.Set.union diff1 diff2 in
   let label = if !label = "" then "" else Printf.sprintf "[%s] " !label in
   if not (OpamPackage.Set.is_empty diff) then (
-    OpamGlobals.error "%swaiting for: %s" label (OpamPackage.Set.to_string diff1);
-    OpamGlobals.error "%sgot:         %s" label (OpamPackage.Set.to_string diff2);
+    OpamConsole.error "%swaiting for: %s" label (OpamPackage.Set.to_string diff1);
+    OpamConsole.error "%sgot:         %s" label (OpamPackage.Set.to_string diff2);
     exit 1
   )

@@ -18,7 +18,7 @@ open OpamTypes
 open OpamFilename.OP
 open OpamPackage.Set.Op
 
-let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
+let log fmt = OpamConsole.log "OPAM-MK-REPO" fmt
 
 type args = {
   index: bool;
@@ -119,7 +119,7 @@ let resolve_deps index names =
         | _ -> acc)
       (OpamSolver.get_atomic_action_graph solution) OpamPackage.Set.empty
   | Conflicts cs ->
-    OpamGlobals.error_and_exit "%s"
+    OpamConsole.error_and_exit "%s"
       (OpamCudf.string_of_conflict
          (fun atom ->
             Printf.sprintf "%s is unavailable"
@@ -127,19 +127,15 @@ let resolve_deps index names =
          cs)
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
-  let () =
-    OpamHTTP.register ();
-    OpamGit.register ();
-    OpamDarcs.register ();
-    OpamLocal.register ();
-    OpamHg.register () in
-  OpamGlobals.debug := !OpamGlobals.debug || debug;
+  OpamGlobals.init_config
+    ?debug:(if debug then Some true else None)
+    ();
 
   let tmp_dirs = [ "tmp"; "log" ] in
 
   List.iter (fun dir ->
       if Sys.file_exists dir then (
-        OpamGlobals.error
+        OpamConsole.error
           "The subdirectory '%s' already exists in the current directory. \n\
            Please remove or rename it or run %s in a different folder.\n"
           dir Sys.argv.(0);
@@ -150,7 +146,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let () =
     let checkdir dir = Sys.file_exists dir && Sys.is_directory dir in
     if not (checkdir "packages" || checkdir "compilers") then
-      OpamGlobals.error_and_exit
+      OpamConsole.error_and_exit
         "No repository found in current directory.\n\
          Please make sure there is a \"packages\" or \"compilers\" directory" in
 
@@ -168,7 +164,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
               (OpamPackage.versions_of_name packages n)
       with
       | []       ->
-        OpamGlobals.msg "Skipping unknown package %s.\n" str;
+        OpamConsole.msg "Skipping unknown package %s.\n" str;
         OpamPackage.Set.empty
       | versions ->
         OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
@@ -179,7 +175,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
       OpamPackage.Set.empty names in
 
   if names <> [] && OpamPackage.Set.is_empty new_packages then (
-    OpamGlobals.msg "No package to process.\n";
+    OpamConsole.msg "No package to process.\n";
     exit 0
   );
 
@@ -194,11 +190,11 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
-    let opam_f = OpamPath.Repository.opam repo prefix nv in
+    let opam_f = OpamRepositoryPath.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
-      let deps = OpamTypesBase.filter_deps (OpamFile.OPAM.depends opam) in
-      let depopts = OpamTypesBase.filter_deps (OpamFile.OPAM.depopts opam) in
+      let deps = OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam) in
+      let depopts = OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam) in
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
         ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
@@ -234,7 +230,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
     let aux r =
       OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list (OpamMisc.filter_map OpamPackage.of_filename list) in
+    OpamPackage.Set.of_list (OpamMisc.List.filter_map OpamPackage.of_filename list) in
 
   let packages_of_attrs attrs =
     OpamFilename.Attribute.Set.fold (fun attr nvs ->
@@ -256,7 +252,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
-        let archive = OpamPath.Repository.archive repo nv in
+        let archive = OpamRepositoryPath.archive repo nv in
         not (OpamFilename.exists archive)
       ) new_index in
   let to_add =
@@ -275,27 +271,27 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
 
     (* Remove the old archive files *)
     if not (OpamPackage.Set.is_empty to_remove) then
-      OpamGlobals.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
+      OpamConsole.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
     OpamPackage.Set.iter (fun nv ->
-        let archive = OpamPath.Repository.archive repo nv in
-        OpamGlobals.msg "Removing %s ...\n" (OpamFilename.to_string archive);
+        let archive = OpamRepositoryPath.archive repo nv in
+        OpamConsole.msg "Removing %s ...\n" (OpamFilename.to_string archive);
         if not dryrun then
           OpamFilename.remove archive
       ) to_remove;
 
     (* build the new archives *)
     if not (OpamPackage.Set.is_empty to_add) then
-      OpamGlobals.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
+      OpamConsole.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
     OpamPackage.Set.iter (fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
-        let local_archive = OpamPath.Repository.archive repo nv in
-        let url_file = OpamPath.Repository.url repo prefix nv in
+        let local_archive = OpamRepositoryPath.archive repo nv in
+        let url_file = OpamRepositoryPath.url repo prefix nv in
         try
           if not dryrun then OpamFilename.remove local_archive;
           if OpamFilename.exists url_file &&
              OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
           then (
-            OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
+            OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);
             let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
             if dryrun then OpamProcess.Job.dry_run job
             else OpamProcess.Job.run job
@@ -303,7 +299,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;
-          OpamMisc.fatal e
+          OpamMisc.Exn.fatal e
       ) to_add;
   );
 
@@ -311,29 +307,29 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   if not (OpamFilename.exists (repo.repo_root // "index.tar.gz"))
   || not (OpamPackage.Set.is_empty to_add)
   || not (OpamPackage.Set.is_empty to_remove) then (
-    OpamGlobals.msg "Rebuilding index.tar.gz ...\n";
+    OpamConsole.msg "Rebuilding index.tar.gz ...\n";
     if not dryrun then (
       OpamHTTP.make_index_tar_gz repo.repo_root;
     )
   ) else
-    OpamGlobals.msg "OPAM Repository already up-to-date.\n";
+    OpamConsole.msg "OPAM Repository already up-to-date.\n";
 
   if not dryrun then
     List.iter OpamSystem.remove tmp_dirs;
 
   (* Rebuild urls.txt now the archives have been updated *)
-  OpamGlobals.msg "Rebuilding urls.txt\n";
+  OpamConsole.msg "Rebuilding urls.txt\n";
   let _index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
   if !errors <> [] then (
     let display_error (nv, error) =
-      let disp = OpamGlobals.header_error "%s" (OpamPackage.to_string nv) in
+      let disp = OpamConsole.header_error "%s" (OpamPackage.to_string nv) in
       match error with
       | OpamSystem.Process_error r  ->
         disp "%s" (OpamProcess.string_of_result ~color:`red r)
-      | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
+      | OpamSystem.Internal_error s -> OpamConsole.error "  %s" s
       | _ -> disp "%s" (Printexc.to_string error) in
     let all_errors = List.map fst !errors in
-    OpamGlobals.error "Got some errors while processing: %s"
-      (OpamMisc.sconcat_map ", " OpamPackage.to_string all_errors);
+    OpamConsole.error "Got some errors while processing: %s"
+      (OpamMisc.List.concat_map ", " OpamPackage.to_string all_errors);
     List.iter display_error !errors
   )

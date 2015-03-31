@@ -14,11 +14,11 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamMisc.Base
+include OpamMisc.AbstractString
 
 let default = of_string OpamGlobals.system
 
 let not_installed s =
-  OpamGlobals.error_and_exit
+  OpamConsole.error_and_exit
     "The compiler switch %s is not installed."
     (to_string s)

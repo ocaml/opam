@@ -14,13 +14,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let log fmt = OpamGlobals.log "VCS" fmt
-
 open OpamTypes
 open OpamTypesBase
 open OpamProcess.Job.Op
 
 module type VCS = sig
+  val name: repository_kind
   val exists: repository -> bool
   val init: repository -> unit OpamProcess.job
   val fetch: repository -> unit OpamProcess.job
@@ -32,6 +31,8 @@ end
 
 
 module Make (VCS: VCS) = struct
+
+  let name = VCS.name
 
   (* Local repos without a branch set actually use the rsync backend, but
      limited to versionned files *)
@@ -63,9 +64,6 @@ module Make (VCS: VCS) = struct
     OpamSystem.remove stdout_file;
     Done dl
 
-  let init repo =
-    VCS.init repo
-
   let pull_repo repo =
     if is_synched_repo repo then
       rsync repo
@@ -83,7 +81,7 @@ module Make (VCS: VCS) = struct
        Done (Result repo.repo_root))
 
   let repo dirname address =
-    let repo = OpamRepository.default () in
+    let repo = OpamRepositoryBackend.default () in
     {
       repo with
       repo_root    = dirname;
@@ -93,38 +91,38 @@ module Make (VCS: VCS) = struct
   let pull_url package dirname checksum remote_url =
     let () = match checksum with
       | None   -> ()
-      | Some _ -> OpamGlobals.note "Skipping checksum for dev package %s"
+      | Some _ -> OpamConsole.note "Skipping checksum for dev package %s"
                     (OpamPackage.to_string package) in
     let repo = repo dirname remote_url in
     pull_repo repo @@+ fun r ->
-    OpamGlobals.msg "[%s] %s %s\n"
-      (OpamGlobals.colorise `green (OpamPackage.name_to_string package))
+    OpamConsole.msg "[%s] %s %s\n"
+      (OpamConsole.colorise `green (OpamPackage.name_to_string package))
       (string_of_address remote_url)
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
-       | Not_available _ -> OpamGlobals.colorise `red "unavailable");
+       | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done (download_dir r)
 
   let pull_repo repo =
     pull_repo repo @@+ fun r ->
-    OpamGlobals.msg "[%s] %s %s\n"
-      (OpamGlobals.colorise `blue
+    OpamConsole.msg "[%s] %s %s\n"
+      (OpamConsole.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
       (string_of_address repo.repo_address)
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
-       | Not_available _ -> OpamGlobals.colorise `red "unavailable");
+       | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done ()
 
   let pull_archive repo filename =
-    let dirname = OpamPath.Repository.archives_dir repo in
+    let dirname = OpamRepositoryPath.archives_dir repo in
     let basename = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname basename in
     if OpamFilename.exists local_file then (
-      OpamGlobals.msg "[%s] Using %s\n"
-        (OpamGlobals.colorise `blue
+      OpamConsole.msg "[%s] Using %s\n"
+        (OpamConsole.colorise `blue
            (OpamRepositoryName.to_string repo.repo_name))
         (OpamFilename.prettify local_file);
       Done (Up_to_date local_file)
