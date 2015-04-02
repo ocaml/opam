@@ -129,6 +129,9 @@ A few other fields are available, but that should be enough to get started. Like
 than a single element: `maintainer`, `author`, `homepage`, `bug-reports`,
 `license` and `depends`.
 
+For the list of available fields and specification of the format, see the
+[OPAM manual](Manual.html#opam).
+
 One you save and quit, OPAM will syntax-check and let you edit again in case of
 errors.
 
@@ -353,5 +356,4 @@ into too much details, here are some of the most useful features:
     [make "native"] { ocaml-native }
     ```
 
-For more, see the
-[OPAM Developer's Manual](http://opam.ocaml.org/doc/manual/dev-manual.html)
+For more, see the [OPAM Manual](Manual.html)
