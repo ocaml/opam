@@ -561,7 +561,9 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
           (OpamGlobals.colorise `bold name)
           (OpamPackage.version_to_string nv);
         Done None
-      with e -> OpamMisc.fatal e; Done (Some e)
+      with e ->
+        remove_package ~metadata:false t ~keep_build:true ~silent:true nv
+        @@| fun () -> OpamMisc.fatal e; Some e
   in
   run_commands commands
 
