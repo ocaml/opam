@@ -51,12 +51,13 @@ let default = {
   force_checksums = None;
 }
 
-let setk k t
+let setk k ft
     ?download_tool
     ?retries
     ?force_checksums
     ()
   =
+  let t = ft () in
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     download_tool = t.download_tool + download_tool;
@@ -64,8 +65,8 @@ let setk k t
     force_checksums = t.force_checksums + force_checksums;
   }
 
-let set = setk (fun x -> x)
+let set t = setk (fun x -> x) (fun _ -> t)
 
 let r = ref default
 
-let update = setk (fun cfg -> r := cfg) !r
+let update = setk (fun cfg -> r := cfg) (fun () -> !r)

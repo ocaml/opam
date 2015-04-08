@@ -86,7 +86,7 @@ type state = Types.t
 
 (** Load the client state. The string argument is to identify to call
     site. *)
-val load_state: ?save_cache:bool -> string -> state
+val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
 
@@ -97,7 +97,7 @@ val rebuild_state_cache: unit -> unit
 val remove_state_cache: unit -> unit
 
 (** Load state associated to env variables. All other fields are left empty. *)
-val load_env_state: string -> state
+val load_env_state: string -> switch -> state
 
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe

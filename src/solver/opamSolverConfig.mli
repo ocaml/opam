@@ -35,7 +35,7 @@ val default : t
 
 val set : t -> t options_fun
 
-val setk : (t -> 'a) -> t -> 'a options_fun
+val setk : (t -> 'a) -> (unit -> t) -> 'a options_fun
 
 val r : t ref
 

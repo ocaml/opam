@@ -451,11 +451,15 @@ let cleanup t repo =
   OpamFilename.rmdir repo.repo_root;
   fix_descriptions t
 
+(* XXX: this module uses OpamState.load_state, which loads the full switch state; 
+   actually the switch is completely unneeded *)
+
 let priority repo_name ~priority =
   log "repository-priority";
 
   (* 1/ update the config file *)
-  let t = OpamState.load_state ~save_cache:false "repository-priority" in
+  let t = OpamState.load_state ~save_cache:false "repository-priority"
+      OpamClientConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
@@ -467,7 +471,8 @@ let priority repo_name ~priority =
 
 let add name kind address ~priority:prio =
   log "repository-add";
-  let t = OpamState.load_state "repository-add" in
+  let t = OpamState.load_state "repository-add"
+      OpamClientConfig.(!r.current_switch) in
   if OpamState.mem_repository t name then
     OpamConsole.error_and_exit
       "%s is already a remote repository"
@@ -516,13 +521,15 @@ let add name kind address ~priority:prio =
 
 let remove name =
   log "repository-remove";
-  let t = OpamState.load_state "repository-remove" in
+  let t = OpamState.load_state "repository-remove"
+      OpamClientConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t name in
   cleanup t repo
 
 let set_url name url =
   log "repository-remove";
-  let t = OpamState.load_state ~save_cache:false "repository-set-url" in
+  let t = OpamState.load_state ~save_cache:false "repository-set-url"
+      OpamClientConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t name in
   let url, kind = parse_url url in
   if repo.repo_kind <> kind then
@@ -538,7 +545,8 @@ let set_url name url =
 
 let list ~short =
   log "repository-list";
-  let t = OpamState.load_state "repository-list" in
+  let t = OpamState.load_state "repository-list"
+      OpamClientConfig.(!r.current_switch) in
   if short then
     List.iter
       (fun r ->

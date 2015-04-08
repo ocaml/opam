@@ -42,7 +42,7 @@ end
 
 (** Sets the OpamCoreConfig options, reading the environment to get default
     values when unspecified *)
-val init_config: unit OpamCoreConfig.options_fun
+val init_config: unit -> unit OpamCoreConfig.options_fun
 
 (** {2 Some globally defined, static strings} *)
 

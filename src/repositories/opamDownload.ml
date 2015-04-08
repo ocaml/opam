@@ -40,7 +40,7 @@ let wget_args = [
   CIdent "src", None;
 ]
 
-let init_config =
+let init_config () =
   let open OpamGlobals.Config in
   let open OpamMisc.Option.Op in
   let download_tool =
@@ -65,7 +65,11 @@ let init_config =
     | None, None -> None
     | _ -> Some None
   in
-  OpamRepositoryConfig.(setk (setk (fun c -> r := c)) !r)
+  OpamRepositoryConfig.(
+    setk
+      (fun conf -> setk (fun c -> r := c) (fun () -> conf))
+      (fun () -> !r)
+  )
     ?download_tool
     ?retries:(env_int "RETRIES")
     ?force_checksums

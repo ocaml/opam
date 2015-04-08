@@ -88,7 +88,7 @@ let with_auto_criteria config =
       ()
   | _ -> config
 
-let init_config =
+let init_config () =
   let open OpamGlobals.Config in
   let open OpamMisc.Option.Op in
   let external_solver =
@@ -108,7 +108,11 @@ let init_config =
     (env_string "UPGRADECRITERIA" >>| fun c -> Some (lazy c)) ++ criteria in
   let fixup_criteria =
     env_string "FIXUPCRITERIA" >>| fun c -> Some (lazy c) in
-  OpamSolverConfig.(setk (setk (fun c -> r := with_auto_criteria c)) !r)
+  OpamSolverConfig.(
+    setk
+      (fun conf -> setk (fun c -> r := with_auto_criteria c) (fun () -> conf))
+      (fun () -> !r)
+  )
     ~cudf_file:(env_string "CUDFFILE")
     ?solver_timeout:(env_float "SOLVERTIMEOUT")
     ?external_solver

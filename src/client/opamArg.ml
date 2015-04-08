@@ -24,10 +24,10 @@ type global_options = {
   verbose: int;
   quiet  : bool;
   color  : [ `Always | `Never | `Auto ] option;
-  switch : string option;
+  opt_switch : string option;
   yes    : bool;
   strict : bool;
-  root   : dirname option;
+  opt_root   : dirname option;
   no_base_packages: bool;
   git_version     : bool;
   external_solver : string option;
@@ -93,20 +93,20 @@ let switch_to_updated_self debug opamroot =
            (OpamVersion.to_string OpamVersion.current)))
 
 let create_global_options
-    git_version debug debug_level verbose quiet color switch yes strict root
-    no_base_packages external_solver use_internal_solver
+    git_version debug debug_level verbose quiet color opt_switch yes strict
+    opt_root no_base_packages external_solver use_internal_solver
     cudf_file solver_preferences no_self_upgrade safe_mode =
   let debug_level = OpamMisc.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   if not (no_self_upgrade) then (* do this asap, don't waste time *)
     switch_to_updated_self debug
-      OpamMisc.Option.Op.(root +! OpamClientConfig.(default.root_dir));
+      OpamMisc.Option.Op.(opt_root +! OpamClientConfig.(default.root_dir));
   if not safe_mode && Unix.getuid () = 0 then
     OpamConsole.warning "Running as root is not recommended";
   let verbose = List.length verbose in
-  { git_version; debug_level; verbose; quiet; color; switch; yes;
-    strict; root; no_base_packages; external_solver; use_internal_solver;
+  { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
+    strict; opt_root; no_base_packages; external_solver; use_internal_solver;
     cudf_file; solver_preferences; no_self_upgrade; safe_mode; }
 
 let apply_global_options o =
@@ -125,14 +125,40 @@ let apply_global_options o =
     (* /!\ not handled in OpamClientGlobals.init_config like the other
        environment variables: we need it first to find the config file.
        Ensure it behaves consistently *)
-    (o.root >>+ fun () ->
+    (o.opt_root >>+ fun () ->
      OpamMisc.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string) +!
     OpamClientConfig.(default.root_dir)
   in
-  (* (ii) load conf file *)
-  (* XXX TODO *)
+  (* (ii) load conf file and set defaults *)
+  let () = match OpamClientGlobals.load_conf_file root with
+    | None -> ()
+    | Some conf ->
+      OpamRepositoryConfig.update
+        ?download_tool:(OpamFile.Config.dl_tool conf >>| function
+          | (CString c,None)::_ as t
+            when OpamMisc.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
+          | t -> lazy (t, `Default))
+        ();
+      let criteria kind =
+        let c = OpamFile.Config.criteria conf in
+        try Some (List.assoc kind c) with Not_found -> None
+      in
+      OpamSolverConfig.update
+        ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
+        ?solver_preferences_default:(criteria `Default >>| fun s-> Some(lazy s))
+        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
+        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
+        ();
+      OpamClientConfig.update
+        ~current_switch:(OpamFile.Config.switch conf)
+        ~switch_from:`Default
+        ~jobs:(OpamFile.Config.jobs conf)
+        ~dl_jobs:(OpamFile.Config.dl_jobs conf)
+        ()
+  in
+
   (* (iii) load from env and options using OpamXxxGlobals.init_config *)
-  OpamGlobals.init_config
+  OpamGlobals.init_config ()
     ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
     ?verbose_level:(if o.quiet then Some 0 else
                     if o.verbose = 0 then None else Some o.verbose)
@@ -148,13 +174,13 @@ let apply_global_options o =
     ~log_dir:OpamFilename.(Dir.to_string OP.(root / "log"))
     (* ?keep_log_dir:bool *)
     ();
-  OpamDownload.init_config
+  OpamDownload.init_config ()
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
     (* ?force_checksums:bool option *)
     ();
   let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
-  OpamSolverGlobals.init_config
+  OpamSolverGlobals.init_config ()
     ?cudf_file:(some o.cudf_file)
     (* ?solver_timeout:float *)
     (* ?external_solver:OpamTypes.arg list option Lazy.t *)
@@ -162,9 +188,10 @@ let apply_global_options o =
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
     ();
-  OpamClientGlobals.init_config
+  OpamClientGlobals.init_config ()
     ~root_dir:root
-    ?switch_set:(o.switch >>| fun s -> `Command_line s)
+    ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
+    ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
     (* ?jobs: int XXX should be handled here *)
     (* ?dl_jobs: int *)
     (* ?external_tags:string list *)
@@ -1081,14 +1108,16 @@ let config =
     | Some `subst, (_::_ as files) ->
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
     | Some `pef, params ->
-      let opam_state = OpamState.load_state "config-universe" in
+      let opam_state = OpamState.load_state "config-universe"
+          OpamClientConfig.(!r.current_switch) in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand "config" commands command params)
     | Some `cudf, params ->
-      let opam_state = OpamState.load_state "config-universe" in
+      let opam_state = OpamState.load_state "config-universe"
+          OpamClientConfig.(!r.current_switch) in
       let opam_univ = OpamState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -1105,7 +1134,8 @@ let config =
          else "no");
       print "os" "%s" (OpamMisc.Sys.os_string ());
       try
-        let state = OpamState.load_state "config-report" in
+        let state = OpamState.load_state "config-report"
+          OpamClientConfig.(!r.current_switch) in
         print "external-solver" "%s"
           (OpamMisc.Option.to_string ~none:"no"
              (String.concat " ")
@@ -1705,7 +1735,8 @@ let source =
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
     let open OpamState.Types in
-    let t = OpamState.load_state "source" in
+    let t = OpamState.load_state "source"
+        OpamClientConfig.(!r.current_switch) in
     let nv =
       try
         OpamPackage.Set.max_elt
@@ -1977,7 +2008,8 @@ let check_and_run_external_commands () =
     then
     (* No such command, check if there is a matching plugin *)
     let command = opam ^ "-" ^ name in
-    let t = OpamState.load_env_state "plugins" in
+    let t = OpamState.load_env_state "plugins"
+        OpamClientConfig.(!r.current_switch) in
     let env = OpamState.get_full_env ~force_path:false t in
     let env = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env) in
     if OpamSystem.command_exists ~env command then

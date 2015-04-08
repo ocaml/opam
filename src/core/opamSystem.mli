@@ -190,7 +190,7 @@ type lock
     By default, this is a write lock. *)
 val flock: ?read:bool -> string -> lock
 
-(** Releases an acquired locl *)
+(** Releases an acquired lock *)
 val funlock: lock -> unit
 
 (** {2 Misc} *)

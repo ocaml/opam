@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-val init_config: unit OpamSolverConfig.options_fun
+val init_config: unit -> unit OpamSolverConfig.options_fun
 
 val external_solver_command:
   input:string -> output:string -> criteria:string -> string list option

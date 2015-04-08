@@ -48,7 +48,7 @@ let default =
     solver_preferences_fixup = None;
   }
 
-let setk k t
+let setk k ft
     ?cudf_file
     ?solver_timeout
     ?external_solver
@@ -57,6 +57,7 @@ let setk k t
     ?solver_preferences_fixup
     ()
   =
+  let t = ft () in
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     cudf_file = t.cudf_file + cudf_file;
@@ -70,8 +71,8 @@ let setk k t
       t.solver_preferences_fixup + solver_preferences_fixup;
   }
 
-let set = setk (fun x -> x)
+let set t = setk (fun x -> x) (fun _ -> t)
 
 let r = ref default
 
-let update = setk (fun cfg -> r := cfg) !r
+let update = setk (fun cfg -> r := cfg) (fun () -> !r)

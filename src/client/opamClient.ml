@@ -145,7 +145,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
   packages_map
 
 let with_switch_backup command f =
-  let t = OpamState.load_state command in
+  let t = OpamState.load_state command OpamClientConfig.(!r.current_switch) in
   let file = OpamPath.Switch.backup t.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
   OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
@@ -156,7 +156,8 @@ let with_switch_backup command f =
   | OpamMisc.Sys.Exit 0 as e -> raise e
   | err ->
     OpamMisc.Exn.register_backtrace err;
-    let t1 = OpamState.load_state "switch-backup-err" in
+    let t1 = OpamState.load_state "switch-backup-err"
+        OpamClientConfig.(!r.current_switch) in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
@@ -250,7 +251,8 @@ module API = struct
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
       ?(depopts=false) ?depexts
       regexp =
-    let t = OpamState.load_state "list" in
+    let t = OpamState.load_state "list"
+        OpamClientConfig.(!r.current_switch) in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
@@ -410,7 +412,8 @@ module API = struct
       if OpamPackage.Name.Map.is_empty details then OpamMisc.Sys.exit 1
 
   let info ~fields ~raw_opam ~where atoms =
-    let t = OpamState.load_state "info" in
+    let t = OpamState.load_state "info"
+        OpamClientConfig.(!r.current_switch) in
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
     let details =
       let map = OpamPackage.to_map (OpamState.packages_of_atoms t atoms) in
@@ -748,6 +751,7 @@ module API = struct
         let updated = OpamState.update_dev_packages t to_update in
         if OpamPackage.Set.is_empty updated then t
         else OpamState.load_state "reload-dev-package-updated"
+            OpamClientConfig.(!r.current_switch)
       with e ->
         OpamMisc.Exn.fatal e;
         t
@@ -992,7 +996,8 @@ module API = struct
   let fixup () = with_switch_backup "fixup" fixup_t
 
   let update ~repos_only ?(no_stats=false) names =
-    let t = OpamState.load_state ~save_cache:true "update" in
+    let t = OpamState.load_state ~save_cache:true "update"
+        OpamClientConfig.(!r.current_switch) in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
       if names = [] then
@@ -1160,7 +1165,8 @@ module API = struct
          else "")
     in
     if not no_stats then
-    let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
+    let t = OpamState.load_state ~save_cache:false "dry-upgrade"
+        OpamClientConfig.(!r.current_switch) in
     let universe = OpamState.universe t (Upgrade OpamPackage.Set.empty) in
     match OpamSolver.check_for_conflicts universe with
     | Some cs ->
@@ -1311,7 +1317,7 @@ module API = struct
 
         (* Load the partial state, and update the global state *)
         log "updating repository state";
-        let t = OpamState.load_state ~save_cache:false "init-1" in
+        let t = OpamState.load_state ~save_cache:false "init-1" switch in
         OpamConsole.header_msg "Fetching repository information";
         let t = OpamProcess.Job.run (OpamRepositoryCommand.update t repo) t in
         OpamRepositoryCommand.fix_descriptions t
@@ -1333,7 +1339,8 @@ module API = struct
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root;
         raise e);
-    let t = OpamState.load_state "init" in
+    let t = OpamState.load_state "init"
+        OpamClientConfig.(!r.current_switch) in
     update_setup t
 
 
@@ -1668,7 +1675,8 @@ module API = struct
       let pin_option = match pin_option_opt with
         | Some o -> o
         | None ->
-          let t = OpamState.load_state "pin-get-upstream" in
+          let t = OpamState.load_state "pin-get-upstream"
+              OpamClientConfig.(!r.current_switch) in
           get_upstream t name
       in
       let needs_reinstall = pin name ?version pin_option in
@@ -1696,7 +1704,7 @@ module API = struct
         else None
       in
       if action then
-        let t = OpamState.load_state "pin-reinstall-2" in
+        let t = OpamState.load_state "pin-reinstall-2" t.switch in
         if not (OpamPackage.has_name t.installed name) ||
            needs_reinstall <> None ||
            needs_reinstall2 <> None
@@ -1710,7 +1718,7 @@ module API = struct
         if action then post_pin_action t name
       | Some false ->
         (* Version changed: reload the state to ensure consistency *)
-        let t = OpamState.load_state "pin-edit-2" in
+        let t = OpamState.load_state "pin-edit-2" t.switch in
         if action then post_pin_action t name
 
     let unpin ?(action=true) names =
@@ -1746,7 +1754,8 @@ let read_lock f =
   OpamState.check (Read_lock f)
 
 let switch_lock f =
-  OpamState.check (Switch_lock f)
+  OpamState.check
+    (Switch_lock ((fun () -> OpamClientConfig.(!r.current_switch)), f))
 
 let global_lock f =
   OpamState.check (Global_lock f)

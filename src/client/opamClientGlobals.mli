@@ -21,7 +21,7 @@ val self_upgrade_bootstrapping_value: string
 
 (** Sets the OpamClientConfig options, reading the environment to get default
     values when unspecified *)
-val init_config: unit OpamClientConfig.options_fun
+val init_config: unit -> unit OpamClientConfig.options_fun
 
 (* val default_repository_name: string *)
 (* val default_repository_address: string *)
@@ -37,3 +37,9 @@ val system_compiler: OpamCompiler.t option Lazy.t
 val filter_deps: ext_formula -> formula
 
 val search_files: string list
+
+(* Loads the global configuration file, protecting against concurrent writes *)
+val load_conf_file: dirname -> OpamFile.Config.t option
+
+(* Writes the global configuration file, protecting against concurrent reads *)
+val write_conf_file: dirname -> OpamFile.Config.t -> unit

@@ -1016,15 +1016,11 @@ let read_repositories root config =
   ) OpamRepositoryName.Map.empty names
 
 (* load partial state to be able to read env variables *)
-let load_env_state call_site =
+let load_env_state call_site switch =
   log "LOAD-ENV-STATE(%s)" call_site;
   let root = OpamPath.root () in
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
-  let switch = match OpamClientConfig.(!r.switch_set) with
-    | `Command_line s
-    | `Env s   -> OpamSwitch.of_string s
-    | `Not_set -> OpamFile.Config.switch config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
     try OpamSwitch.Map.find switch aliases
@@ -1279,15 +1275,12 @@ let dev_packages t =
 let global_consistency_checks t =
   let pkgdir = OpamPath.dev_packages_dir t.root in
   let pkgdirs = OpamFilename.dirs pkgdir in
+  let all_installed = all_installed t in
   let stale_pkgdirs =
     List.filter (fun dir ->
         match OpamPackage.of_dirname dir with
         | None -> true
-        | Some nv ->
-          not (OpamPackage.Set.mem nv t.installed) &&
-          try OpamPackage.Name.Map.find (OpamPackage.name nv) t.pinned <>
-              Version (OpamPackage.version nv)
-          with Not_found -> true)
+        | Some nv -> not (OpamPackage.Set.mem nv all_installed))
       pkgdirs
   in
   List.iter (fun d ->
@@ -1557,7 +1550,7 @@ let load_config root =
 *)
   config
 
-let load_state ?(save_cache=true) call_site =
+let load_state ?(save_cache=true) call_site switch =
   log "LOAD-STATE(%s)" call_site;
   let chrono = OpamConsole.timer () in
   !upgrade_to_1_1_hook ();
@@ -1574,10 +1567,6 @@ let load_state ?(save_cache=true) call_site =
   let cached = opams <> None in
   let partial = false in
 
-  let switch = match OpamClientConfig.(!r.switch_set) with
-    | `Command_line s
-    | `Env s   -> OpamSwitch.of_string s
-    | `Not_set -> OpamFile.Config.switch config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compilers =
     let files = OpamFilename.rec_files (OpamPath.compilers_dir root) in
@@ -1596,23 +1585,20 @@ let load_state ?(save_cache=true) call_site =
         (slog OpamSwitch.to_string) switch;
       if OpamCoreConfig.(!r.safe_mode) then
         OpamConsole.error_and_exit "Safe mode: invalid switch selected";
-      match OpamClientConfig.(!r.switch_set) with
-      | `Command_line s
-      | `Env s   -> OpamSwitch.not_installed (OpamSwitch.of_string s)
-      | `Not_set ->
-        if not (OpamSwitch.Map.is_empty aliases) then (
-          let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
-          OpamConsole.error "The current switch (%s) is an unknown compiler \
-                             switch. Switching back to %s ..."
-            (OpamSwitch.to_string switch)
-            (OpamSwitch.to_string new_switch);
-          let config = OpamFile.Config.with_switch config new_switch in
-          OpamFile.Config.write (OpamPath.config root) config;
-          new_switch, new_compiler;
-        ) else
-          OpamConsole.error_and_exit
-            "The current switch (%s) is an unknown compiler switch."
-            (OpamSwitch.to_string switch) in
+      match OpamClientConfig.(!r.switch_from) with
+      | `Command_line | `Env -> OpamSwitch.not_installed switch
+      | `Default ->
+        OpamConsole.error "Current switch set to %S, which is unknown."
+          (OpamSwitch.to_string switch);
+        (try
+           let new_switch, _ = OpamSwitch.Map.choose aliases in
+           let config = OpamFile.Config.with_switch config new_switch in
+           OpamFile.Config.write (OpamPath.config root) config;
+           OpamConsole.errmsg "Swiched back to %s"
+             (OpamSwitch.to_string new_switch);
+         with Not_found -> ());
+        OpamMisc.Sys.exit 10
+  in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
     (* XXX: useful for upgrade to 1.1 *)
@@ -1819,7 +1805,8 @@ let upgrade_to_1_1 () =
       ) aliases;
 
     (* Fix all the descriptions *)
-    let t = load_state ~save_cache:false "update-to-1.1." in
+    let t = load_state ~save_cache:false "update-to-1.1."
+        OpamClientConfig.(!r.current_switch)in
     !fix_descriptions_hook ~verbose:false t;
 
     (* Fix the pinned packages *)
@@ -1920,7 +1907,8 @@ let () =
 
 let rebuild_state_cache () =
   remove_state_cache ();
-  let t = load_state ~save_cache:false "rebuild-cache" in
+  let t = load_state ~save_cache:false "rebuild-cache"
+      OpamClientConfig.(!r.current_switch) in
   save_state ~update:true t
 
 let switch_eval_sh = "switch_eval.sh"
@@ -2058,7 +2046,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
 let get_opam_env ~force_path t =
-  let opamswitch = OpamClientConfig.(!r.switch_set) <> `Not_set in
+  let opamswitch = OpamClientConfig.(!r.switch_from <> `Default) in
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
@@ -2680,8 +2668,8 @@ let install_compiler t ~quiet:_ switch compiler =
 let update_switch_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
-  let t = load_state "switch-config" in
-  update_init_scripts {t with switch} ~global:None;
+  let t = load_state "switch-config" switch in
+  update_init_scripts t ~global:None;
   t
 
 (* Dev packages *)
@@ -2984,7 +2972,10 @@ let check f =
           (* clean the log directory *)
           OpamFilename.cleandir (OpamPath.log root);
           (* XXX pass t to f so that it doesn't have to reload it ? *)
-          let t = load_state "global-lock" in
+          let t = load_state "global-lock"
+              OpamClientConfig.(!r.current_switch) in
+          (* Really the switch state shouldn't be loaded here;
+             global_consistency_checks doesn't use it *)
           global_consistency_checks t;
           f ()
         ) ()
@@ -2993,16 +2984,11 @@ let check f =
       (* Global read lock *)
       OpamFilename.with_flock ~read:true (OpamPath.lock root) f ()
 
-    | Switch_lock f ->
+    | Switch_lock (switchf, f) ->
       (* Take a switch lock (and a global read lock). *)
       OpamFilename.with_flock ~read:true (OpamPath.lock root) (fun () ->
-          let switch = match OpamClientConfig.(!r.switch_set) with
-            | `Command_line s | `Env s -> OpamSwitch.of_string s
-            | `Not_set ->
-              OpamFile.Config.switch
-                (OpamFile.Config.read (OpamPath.config root))
-          in
-          let t = load_state "switch-lock" in
+          let switch = switchf () in
+          let t = load_state "switch-lock" switch in
           switch_consistency_checks t;
           OpamFilename.with_flock (OpamPath.Switch.lock root switch) f ()
         ) ()
@@ -3014,7 +3000,8 @@ let check f =
         OpamFilename.with_flock global_lock (fun () ->
             (* clean the log directory *)
             OpamFilename.cleandir (OpamPath.log root);
-            let t = load_state "global-lock" in
+            let t = load_state "global-lock"
+                OpamClientConfig.(!r.current_switch) (* same remark *) in
             global_consistency_checks t;
             f ()
           ) ()

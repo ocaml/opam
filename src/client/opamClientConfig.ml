@@ -15,7 +15,8 @@
 
 type t = {
   root_dir: OpamFilename.Dir.t;
-  switch_set: [ `Env of string | `Command_line of string | `Not_set ];
+  current_switch: OpamSwitch.t;
+  switch_from: [ `Env | `Command_line | `Default ];
   jobs: int;
   dl_jobs: int;
   external_tags: string list;
@@ -39,7 +40,8 @@ let default = {
   root_dir = OpamFilename.OP.(
       OpamFilename.Dir.of_string (OpamMisc.Sys.home ()) / ".opam"
     );
-  switch_set = `Not_set;
+  current_switch = OpamSwitch.default;
+  switch_from = `Default;
   jobs = 1;
   dl_jobs = 3;
   external_tags = [];
@@ -65,7 +67,8 @@ let default = {
 
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
-  ?switch_set:[ `Env of string | `Command_line of string | `Not_set ] ->
+  ?current_switch:OpamSwitch.t ->
+  ?switch_from:[ `Env | `Command_line | `Default ] ->
   ?jobs: int ->
   ?dl_jobs: int ->
   ?external_tags:string list ->
@@ -85,9 +88,10 @@ type 'a options_fun =
   ?makecmd:string Lazy.t ->
   unit -> 'a
 
-let setk k t
+let setk k ft
     ?root_dir
-    ?switch_set
+    ?current_switch
+    ?switch_from
     ?jobs
     ?dl_jobs
     ?external_tags
@@ -107,10 +111,12 @@ let setk k t
     ?makecmd
    ()
   =
+  let t = ft () in
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     root_dir = t.root_dir + root_dir;
-    switch_set = t.switch_set + switch_set;
+    current_switch = t.current_switch + current_switch;
+    switch_from = t.switch_from + switch_from;
     jobs = t.jobs + jobs;
     dl_jobs = t.dl_jobs + dl_jobs;
     external_tags = t.external_tags + external_tags;
@@ -130,8 +136,8 @@ let setk k t
     makecmd = t.makecmd + makecmd;
   }
 
-let set = setk (fun x -> x)
+let set t = setk (fun x -> x) (fun _ -> t)
 
 let r = ref default
 
-let update = setk (fun cfg -> r := cfg) !r
+let update = setk (fun cfg -> r := cfg) (fun () -> !r)

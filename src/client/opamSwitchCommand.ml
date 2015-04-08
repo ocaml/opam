@@ -25,7 +25,8 @@ let slog = OpamConsole.slog
 (* TODO: add repo *)
 let list ~print_short ~installed ~all =
   log "list";
-  let t = OpamState.load_state "switch-list" in
+  let t = OpamState.load_state "switch-list"
+      OpamClientConfig.(!r.current_switch) in
   let descr c =
     if c = OpamCompiler.system then
       let system_version =
@@ -141,16 +142,16 @@ let list ~print_short ~installed ~all =
                      use '--all' to show\n"
       (List.length patches);
   if not print_short then
-  match OpamClientConfig.(!r.switch_set) with
-  | `Env s ->
-    let sys = OpamSwitch.to_string (OpamFile.Config.switch t.config) in
-    if sys <> s && not print_short then
+  match OpamClientConfig.(!r.switch_from) with
+  | `Env ->
+    let sys = OpamFile.Config.switch t.config in
+    if sys <> OpamClientConfig.(!r.current_switch)  then
       (OpamConsole.msg "\n";
        OpamConsole.note
          "Current switch is set locally through the OPAMSWITCH variable.\n\
           The current global system switch is %s."
-         (OpamConsole.colorise `bold sys))
-  | `Not_set ->
+         (OpamConsole.colorise `bold (OpamSwitch.to_string sys)))
+  | `Default ->
      if not (OpamState.up_to_date_env t) then
        (OpamConsole.msg "\n";
         OpamConsole.warning
@@ -170,25 +171,28 @@ let clear_switch ?(keep_debug=false) t switch =
   try OpamFilename.rmdir comp_dir
   with OpamSystem.Internal_error _ -> ()
 
-let remove_t switch ?(confirm = true) t =
-  log "remove switch=%a" (slog OpamSwitch.to_string) switch;
-  let comp_dir = OpamPath.Switch.root t.root switch in
+let remove_t ?(confirm = true) t =
+  log "remove switch=%a" (slog OpamSwitch.to_string) t.switch;
+  let comp_dir = OpamPath.Switch.root t.root t.switch in
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
-      (OpamSwitch.to_string switch);
+      (OpamSwitch.to_string t.switch);
     OpamMisc.Sys.exit 1;
   );
-  if t.switch = switch then (
-    OpamConsole.msg "Cannot remove %s as it is the current compiler.\n"
-      (OpamSwitch.to_string switch);
-    OpamMisc.Sys.exit 1;
-  );
+  if Some t.switch =
+     OpamMisc.Option.Op.(OpamClientGlobals.load_conf_file t.root >>|
+                         OpamFile.Config.switch)
+  then
+    OpamConsole.error_and_exit
+      "Cannot remove %s as it is the currently selected switch. You should \
+       first run `opam switch <another switch>'\n"
+      (OpamSwitch.to_string t.switch);
   if not confirm ||
      OpamConsole.confirm
        "Switch %s and all its packages will be wiped. Are you sure ?"
-       (OpamSwitch.to_string switch)
+       (OpamSwitch.to_string t.switch)
   then
-    clear_switch t switch
+    clear_switch t t.switch
 
 let update_global_config t ~warning switch =
   let t = OpamState.update_switch_config t switch in
@@ -202,7 +206,8 @@ let install_compiler ~quiet switch compiler =
     (slog OpamCompiler.to_string) compiler;
 
   (* Remember the current switch to be able to roll-back *)
-  let t = OpamState.load_state "switch-install-with-packages-1" in
+  let t = OpamState.load_state "switch-install-with-packages-1"
+      OpamClientConfig.(!r.current_switch) in
 
   (* install the new OCaml version *)
   try OpamState.install_compiler t ~quiet switch compiler
@@ -215,8 +220,7 @@ let install_compiler ~quiet switch compiler =
 
 let install_packages switch compiler =
   (* install the compiler packages *)
-  (* OpamClientConfig.switch := `Command_line (OpamSwitch.to_string switch); *)
-  let t = OpamState.load_state "switch-install-with-packages-2" in
+  let t = OpamState.load_state "switch-install-with-packages-2" switch in
 
   let comp = OpamFile.Comp.read (OpamPath.compiler_comp t.root compiler) in
   let to_install = OpamFormula.atoms (OpamFile.Comp.packages comp) in
@@ -282,11 +286,14 @@ let install_packages switch compiler =
     OpamSolution.check_solution t result
 
 let install_cont ~quiet ~warning ~update_config switch compiler =
-  let t = OpamState.load_state "install" in
+  let t = OpamState.load_state "install"
+      OpamClientConfig.(!r.current_switch) in
   let comp_dir = OpamPath.Switch.root t.root switch in
-  if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
+  let already_installed = OpamState.is_switch_installed t switch in
+  if not already_installed &&
+     Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
     OpamConsole.error_and_exit
-      "%S already exists, please choose a different name"
+      "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
   let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists_dir comp_dir)
@@ -299,7 +306,6 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
       OpamConsole.error_and_exit
         "%S is not a valid compiler."
         (OpamCompiler.to_string compiler);
-  let already_installed = OpamState.is_switch_installed t switch in
   if already_installed then
     (let a = OpamSwitch.Map.find switch t.aliases in
      if a <> compiler then
@@ -326,7 +332,8 @@ let install ~quiet ~warning ~update_config switch compiler =
 
 let switch_cont ?compiler ~quiet ~warning switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
-  let t = OpamState.load_state "switch-1" in
+  let t = OpamState.load_state "switch-1"
+      OpamClientConfig.(!r.current_switch) in
   let switch, cont =
     if OpamState.is_switch_installed t switch then
       (update_global_config ~warning t switch;
@@ -422,7 +429,7 @@ let import_t importfile t =
         if OpamClientConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then t
         else
           (OpamFile.Pinned.write pin_f pinned;
-           OpamState.load_state "pin-import") in
+           OpamState.load_state "pin-import" t.switch) in
 
       let available =
         imported %% (Lazy.force t.available_packages ++ t.installed) in
@@ -453,15 +460,16 @@ let import_t importfile t =
     OpamPackage.Set.Op.(t.installed_roots ++ import_roots)
 
 let export filename =
-  let t = OpamState.load_state "switch-export" in
+  let t = OpamState.load_state "switch-export"
+      OpamClientConfig.(!r.current_switch) in
   let export = (t.installed, t.installed_roots, t.pinned) in
   match filename with
   | None   -> OpamFile.Export.write_to_channel stdout export
   | Some f -> OpamFile.Export.write f export
 
 let show () =
-  let t = OpamState.load_state "switch-show" in
-  OpamConsole.msg "%s\n" (OpamSwitch.to_string t.switch)
+  OpamConsole.msg "%s\n"
+    (OpamSwitch.to_string OpamClientConfig.(!r.current_switch))
 
 let reinstall_t t =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) t.switch;
@@ -490,11 +498,11 @@ let reinstall_t t =
     (OpamFilename.files switch_root);
 
   OpamState.install_compiler t ~quiet:false t.switch ocaml_version;
-  let t = OpamState.load_state "switch-reinstall-2" in
+  let t = OpamState.load_state "switch-reinstall-2" t.switch in
   import_t export t
 
-let with_backup command f =
-  let t = OpamState.load_state command in
+let with_backup switch command f =
+  let t = OpamState.load_state command switch in
   let file = OpamPath.backup t.root in
   OpamFilename.mkdir (OpamPath.backup_dir t.root);
   OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
@@ -504,7 +512,7 @@ let with_backup command f =
   with
   | OpamMisc.Sys.Exit 0 as e -> raise e
   | err ->
-    let t1 = OpamState.load_state "backup-err" in
+    let t1 = OpamState.load_state "backup-err" t.switch in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
@@ -512,20 +520,21 @@ let with_backup command f =
       Printf.eprintf "The former package state can be restored with \
                       %s switch import %S%s\n"
         Sys.argv.(0) (OpamFilename.to_string file)
-        (match OpamClientConfig.(!r.switch_set) with
-         | `Command_line sw -> Printf.sprintf " --switch %s" sw
-         | _ -> "");
+        (if OpamClientConfig.(!r.current_switch <> t.switch ||
+                              !r.switch_from = `Command_line)
+         then Printf.sprintf " --switch %s" (OpamSwitch.to_string t.switch)
+         else "");
     raise err
 
 let reinstall switch =
   (* OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch); *)
-  with_backup "switch-reinstall" reinstall_t
+  with_backup switch "switch-reinstall" reinstall_t
 
 let remove switch =
-  with_backup "switch-remove" (remove_t switch)
+  with_backup switch "switch-remove" remove_t
 
 let import filename =
-  with_backup "switch-import"
+  with_backup OpamClientConfig.(!r.current_switch) "switch-import"
     (fun t ->
        let importfile = match filename with
          | None   -> OpamFile.Export.read_from_channel stdin

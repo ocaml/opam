@@ -15,7 +15,8 @@
 
 type t = private {
   root_dir: OpamFilename.Dir.t;
-  switch_set: [ `Env of string | `Command_line of string | `Not_set ];
+  current_switch: OpamSwitch.t;
+  switch_from: [ `Env | `Command_line | `Default ];
   jobs: int;
   dl_jobs: int;
   external_tags: string list;
@@ -37,7 +38,8 @@ type t = private {
 
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
-  ?switch_set:[ `Env of string | `Command_line of string | `Not_set ] ->
+  ?current_switch:OpamSwitch.t ->
+  ?switch_from:[ `Env | `Command_line | `Default ] ->
   ?jobs: int ->
   ?dl_jobs: int ->
   ?external_tags:string list ->
@@ -61,7 +63,7 @@ val default : t
 
 val set : t -> t options_fun
 
-val setk : (t -> 'a) -> t -> 'a options_fun
+val setk : (t -> 'a) -> (unit -> t) -> 'a options_fun
 
 val r : t ref
 

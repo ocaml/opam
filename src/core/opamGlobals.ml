@@ -71,7 +71,7 @@ module Config = struct
 end
 
 
-let init_config =
+let init_config () =
   let open Config in
   let utf8 = OpamMisc.Option.Op.(
       env_when_ext "UTF8" ++
@@ -85,9 +85,11 @@ let init_config =
     | None, None -> None
     | _ -> Some None
   in
-  OpamCoreConfig.setk
-    (OpamCoreConfig.setk (fun c -> OpamCoreConfig.r := c))
-    !OpamCoreConfig.r
+  OpamCoreConfig.(
+    setk
+      (fun conf -> setk (fun c -> r := c) (fun () -> conf))
+      (fun () -> !r)
+  )
     ?debug_level:(env_level "DEBUG")
     ?verbose_level:(env_level "VERBOSE")
     ?color:(env_when "COLOR")

@@ -19,7 +19,7 @@ let log fmt = OpamConsole.log "CLIENTGLOBALS" fmt
 
 let self_upgrade_bootstrapping_value = "bootstrapping"
 
-let init_config =
+let init_config () =
   let open OpamGlobals.Config in
   let open OpamMisc.Option.Op in
   let self_upgrade =
@@ -30,9 +30,19 @@ let init_config =
   let editor = OpamMisc.Option.Op.(
       env_string "EDITOR" ++ OpamMisc.Env.(getopt "VISUAL" ++ getopt "EDITOR")
     ) in
-  OpamClientConfig.(setk (setk (fun c -> r := c)) !r)
+  let current_switch, switch_from =
+    match env_string "SWITCH" with
+    | Some s -> Some (OpamSwitch.of_string s), Some `Env
+    | None -> None, None
+  in
+  OpamClientConfig.(
+    setk
+      (fun conf -> setk (fun c -> r := c) (fun () -> conf))
+      (fun () -> !r)
+  )
     ?root_dir:None (* OPAMROOT is implemented in OpamArg, it's needed first *)
-    ?switch_set:(env_string "OPAMSWITCH" >>| fun s -> `Env s)
+    ?current_switch
+    ?switch_from
     ?jobs:(env_int "JOBS")
     ?dl_jobs:(env_int "DOWNLOADJOBS")
     ?keep_build_dir:(env_bool "KEEPBUILDDIR")
@@ -124,3 +134,15 @@ let filter_deps =
     ~doc:(OpamClientConfig.(!r.build_doc))
 
 let search_files = ["findlib"]
+
+let load_conf_file opamroot =
+  let f = OpamPath.config opamroot in
+  if OpamFilename.exists f then
+    OpamFilename.with_flock ~read:true f
+      (fun f -> Some (OpamFile.Config.read f)) f
+  else None
+
+let write_conf_file opamroot conf =
+  let f = OpamPath.config opamroot in
+  OpamFilename.with_flock ~read:false f
+    (OpamFile.Config.write f) conf

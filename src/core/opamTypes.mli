@@ -395,12 +395,10 @@ type lock =
       blocked. *)
   | Global_lock of (unit -> unit)
 
-  (** Take the lock only for [OpamGlobals.current_switch] if it not
-      [None], otherwise for the current lock. We do not pass the
-      switch directly as argument as we might need to read some
-      configuration file and we thus need to take the global loock for
-      a short time. *)
-  | Switch_lock of (unit -> unit)
+  (** Take a global read lock and a switch lock. The first function is
+      called with the read lock, then the second function is called with
+      the returned switch write-locked. *)
+  | Switch_lock of (unit -> switch) * (unit -> unit)
 
   (** Call the function in a global lock, then relax to a switch
       lock and call the function it returned *)

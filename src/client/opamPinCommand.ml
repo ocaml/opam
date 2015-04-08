@@ -159,7 +159,7 @@ let pin name ?version pin_option =
   log "pin %a to %a"
     (slog OpamPackage.Name.to_string) name
     (slog string_of_pin_option) pin_option;
-  let t = OpamState.load_state "pin" in
+  let t = OpamState.load_state "pin" OpamClientConfig.(!r.current_switch) in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pin_kind = kind_of_pin_option pin_option in
   let pins = OpamFile.Pinned.safe_read pin_f in
@@ -261,7 +261,7 @@ let unpin ?state names =
   log "unpin %a"
     (slog @@ OpamMisc.List.concat_map " " OpamPackage.Name.to_string) names;
   let t = match state with
-    | None -> OpamState.load_state "pin"
+    | None -> OpamState.load_state "pin" OpamClientConfig.(!r.current_switch)
     | Some t -> t
   in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
@@ -297,7 +297,8 @@ let unpin ?state names =
 
 let list ~short () =
   log "pin_list";
-  let t = OpamState.load_state "pin-list" in
+  let t = OpamState.load_state "pin-list"
+      OpamClientConfig.(!r.current_switch) in
   let pins =
     OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch)
   in
