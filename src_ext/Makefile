@@ -55,8 +55,8 @@ archives: $(SRC_EXTS:=.download)
 	mkdir -p tmp
 	cd tmp && tar xf$(if $(patsubst %.tar.gz,,$(URL_$*)),j,z) ../$(notdir $(URL_$*))
 	rm -rf $*
-	mv tmp/* $*
-	rmdir tmp
+	@for ii in tmp/*; do if [ -d $${ii} ]; then mv $${ii} $*; fi; done; \
+	rm -rf tmp
 	@if [ -d patches/$* ]; then \
           cd $* && \
 	  for p in ../patches/$*/*.patch; do \
