@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2014 OCamlPro                                        *)
+(*    Copyright 2012-2015 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
 (*  GNU Lesser General Public License version 3.0 with linking            *)
