@@ -343,6 +343,8 @@ let info =
   Term.info "opam-installer" ~version:OpamVersion.(to_string current) ~doc
 
 let () =
+  OpamSystem.init ();
+  OpamGlobals.init_config () ();
   try
     match
       Term.eval ~catch:false (command,info)
