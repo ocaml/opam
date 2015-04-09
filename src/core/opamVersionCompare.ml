@@ -21,7 +21,7 @@ let is_digit = function
 ;;
 
 (* [skip_while_from i f w m] yields the index of the leftmost character
- * in the string [s], starting from [i], end ending at  [m], that does 
+ * in the string [s], starting from [i], end ending at  [m], that does
  * not satisfy the predicate [f], or [length w] if no such index exists.  *)
 let skip_while_from i f w m =
   let rec loop i =
@@ -87,51 +87,51 @@ let compare_chunks x y =
   let rec loop_lexical xi yi =
     assert (xi <= xl && yi <= yl);
     match (xi=xl,yi=yl) with (* which of x and y is exhausted? *)
-      | true,true -> 0 
-      | true,false -> 
-	(* if y continues numerically than we have to continue by
-	 * comparing numerically. In this case the x part is
-	 * interpreted as 0 (since empty). If the y part consists
-	 * only of 0's then both parts are equal, otherwise the y
-	 * part is larger. If y continues non-numerically then y is
-	 * larger anyway, so we only have to skip 0's in the y part
-	 * and check whether this exhausts the y part.  *)
-	let ys = skip_zeros y yi yl in
-	if ys = yl then 0 else if y.[ys]='~' then 1 else -1
+      | true,true -> 0
+      | true,false ->
+        (* if y continues numerically than we have to continue by
+         * comparing numerically. In this case the x part is
+         * interpreted as 0 (since empty). If the y part consists
+         * only of 0's then both parts are equal, otherwise the y
+         * part is larger. If y continues non-numerically then y is
+         * larger anyway, so we only have to skip 0's in the y part
+         * and check whether this exhausts the y part.  *)
+        let ys = skip_zeros y yi yl in
+        if ys = yl then 0 else if y.[ys]='~' then 1 else -1
       | false,true -> (* symmetric to the preceding case *)
-	let xs = skip_zeros x xi xl in
-	if xs = xl then 0 else if x.[xs]='~' then -1 else 1
+        let xs = skip_zeros x xi xl in
+        if xs = xl then 0 else if x.[xs]='~' then -1 else 1
       | false,false -> (* which of x and y continues numerically? *)
-	match (is_digit x.[xi], is_digit y.[yi]) with 
-	  | true,true ->
-	    (* both continue numerically. Skip leading zeros in the
-	     * remaining parts, and then continue by
-	     * comparing numerically. *)
-	    compare_numerical (skip_zeros x xi xl) (skip_zeros y yi yl)
-	  | true,false -> (* '~' is smaller than any numeric part *)
-	    if y.[yi]='~' then 1 else -1
-	  | false,true -> (* '~' is smaller than any numeric part *)
-	    if x.[xi]='~' then -1 else 1
-	  | false,false -> (* continue comparing lexically *)
-	    let comp = compare_chars x.[xi] y.[yi]
-	    in if comp = 0 then loop_lexical (xi+1) (yi+1) else comp
+        match (is_digit x.[xi], is_digit y.[yi]) with
+          | true,true ->
+            (* both continue numerically. Skip leading zeros in the
+             * remaining parts, and then continue by
+             * comparing numerically. *)
+            compare_numerical (skip_zeros x xi xl) (skip_zeros y yi yl)
+          | true,false -> (* '~' is smaller than any numeric part *)
+            if y.[yi]='~' then 1 else -1
+          | false,true -> (* '~' is smaller than any numeric part *)
+            if x.[xi]='~' then -1 else 1
+          | false,false -> (* continue comparing lexically *)
+            let comp = compare_chars x.[xi] y.[yi]
+            in if comp = 0 then loop_lexical (xi+1) (yi+1) else comp
   and compare_numerical xi yi =
     assert (xi = xl || (xi < xl && x.[xi] <> '0'));
-    (* leading zeros have been stripped *) 
+    (* leading zeros have been stripped *)
     assert (yi = yl || (yi < yl && y.[yi] <> '0'));
-    (* leading zeros have been stripped *) 
+    (* leading zeros have been stripped *)
     let xn = skip_while_from xi is_digit x xl (* length of numerical part *)
     and yn = skip_while_from yi is_digit y yl (* length of numerical part *)
-    in 
+    in
     let comp = compare (xn-xi) (yn-yi)
     in if comp = 0
       then (* both numerical parts have same length: compare digit by digit *)
-	loop_numerical xi yi yn
+        loop_numerical xi yi yn
       else
-	(* if one numerical part is longer than the other we have found the
-	 * answer since leading 0 have been striped when switching
-	 * to numerical comparison.  *)
-	comp
+        (* if one numerical part is longer than the other we have found the
+         * answer since leading 0 have been striped when switching
+         * to numerical comparison.  *)
+        comp
   and loop_numerical xi yi yn =
     assert (xi <= xl && yi <= yn && yn <= yl);
     (* invariant: the two numerical parts that remain to compare are
@@ -139,12 +139,12 @@ let compare_chunks x y =
     if yi=yn
     then
       (* both numerical parts are exhausted, we switch to lexical
-	 comparison *)
+         comparison *)
       loop_lexical xi yi
     else
       (* both numerical parts are not exhausted, we continue comparing
-	 digit by digit *)
-      let comp = Char.compare x.[xi] y.[yi] 
+         digit by digit *)
+      let comp = Char.compare x.[xi] y.[yi]
       in if comp = 0 then loop_numerical (xi+1) (yi+1) yn else comp
   in loop_lexical 0 0
 ;;
@@ -154,9 +154,9 @@ let compare (x : string) (y : string) =
   in
   if x = y then 0
   else
-    let (e1,rest1) = extract_epoch x 
+    let (e1,rest1) = extract_epoch x
     and (e2,rest2) = extract_epoch y in
-    let e_comp = compare_chunks e1 e2 in 
+    let e_comp = compare_chunks e1 e2 in
     if e_comp <> 0 then normalize_comp_result e_comp
     else
       let (u1,r1) = extract_revision rest1

@@ -142,10 +142,10 @@ module Set = struct
 
     let to_string s =
       if S.cardinal s > max_print then
-	Printf.sprintf "%d elements" (S.cardinal s)
+        Printf.sprintf "%d elements" (S.cardinal s)
       else
-	let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
-	OpamList.to_string (fun x -> x) (List.rev l)
+        let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
+        OpamList.to_string (fun x -> x) (List.rev l)
 
     let map f t =
       S.fold (fun e set -> S.add (f e) set) t S.empty
@@ -209,11 +209,11 @@ module Map = struct
 
     let to_string string_of_value m =
       if M.cardinal m > max_print then
-	Printf.sprintf "%d elements" (M.cardinal m)
+        Printf.sprintf "%d elements" (M.cardinal m)
       else
-	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
-	let l = fold (fun k v l -> s (k,v)::l) m [] in
-	OpamList.to_string (fun x -> x) l
+        let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
+        let l = fold (fun k v l -> s (k,v)::l) m [] in
+        OpamList.to_string (fun x -> x) l
 
     let of_list l =
       List.fold_left (fun map (k,v) -> add k v map) empty l
