@@ -28,7 +28,7 @@ let check_cudf_version cmdname =
       log "No response from 'solver -v', using compat criteria";
       `Compat
     | s::_ ->
-      match OpamMisc.String.split s ' ' with
+      match OpamStd.String.split s ' ' with
       | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
         log "Solver is aspcud > 1.9: using latest version criteria";
         `Latest
@@ -69,7 +69,7 @@ let with_auto_criteria config =
     | `Latest -> get_crit default_criteria_latest kind
     | `Compat -> get_crit default_criteria_compat kind
   in
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   let open OpamSolverConfig in
   match Lazy.force config.external_solver with
   | None -> config
@@ -90,7 +90,7 @@ let with_auto_criteria config =
 
 let init_config () =
   let open OpamGlobals.Config in
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   let external_solver =
     let disable = function
       | true -> Some (lazy None)
@@ -129,12 +129,12 @@ let solver_args_packup =
     CString "-u", None; CIdent "criteria", None ]
 
 let external_solver_command ~input ~output ~criteria =
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   Lazy.force OpamSolverConfig.(!r.external_solver) >>| fun cmd ->
   let cmd = match cmd with
     | [CIdent "packup", None] ->
       cmd @ solver_args_packup
-    | [CString s, None] when OpamMisc.String.ends_with ~suffix:"packup" s ->
+    | [CString s, None] when OpamStd.String.ends_with ~suffix:"packup" s ->
       cmd @ solver_args_packup
     | [_] -> (* default, without args: assume aspcud compatible *)
       cmd @ solver_args_aspcud

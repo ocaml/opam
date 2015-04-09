@@ -16,7 +16,7 @@
 
 (** Repository names *)
 
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Default repository name *)
 val default: t

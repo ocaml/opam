@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 
 let root t = t.repo_root
 

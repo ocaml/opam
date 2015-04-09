@@ -24,7 +24,7 @@ let to_json x = `String x
 
 let compare v w =
   (* Ignore -xxx suffixes for version comparisons *)
-  let cut s = match OpamMisc.String.cut_at s '-' with
+  let cut s = match OpamStd.String.cut_at s '-' with
     | Some (s,_) -> s
     | None -> s in
   OpamVersionCompare.compare (cut v) (cut w)
@@ -36,9 +36,9 @@ module O = struct
   let compare = compare
 end
 
-module Set = OpamMisc.Set.Make(O)
+module Set = OpamStd.Set.Make(O)
 
-module Map = OpamMisc.Map.Make(O)
+module Map = OpamStd.Map.Make(O)
 
 let current_raw = "@PACKAGE_VERSION@"
 

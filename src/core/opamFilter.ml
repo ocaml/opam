@@ -16,7 +16,7 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
+open OpamStd.Op
 
 let log ?level fmt =
   OpamConsole.log "FILTER" ?level fmt
@@ -29,7 +29,7 @@ let rec to_string = function
   | FBool b    -> string_of_bool b
   | FString s  -> Printf.sprintf "%S" s
   | FIdent (pkgs,var,converter) ->
-    OpamMisc.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
+    OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
     (if pkgs <> [] then ":" else "") ^
     OpamVariable.to_string var ^
     (match converter with
@@ -134,7 +134,7 @@ let desugar_fident ((packages,var,converter) as fident) =
 (* Resolves [FIdent] to string or bool, using its package and converter
    specification *)
 let resolve_ident env fident =
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   let packages,var,converter = desugar_fident fident in
   let bool_of_value = function
     | B b -> Some b
@@ -168,7 +168,7 @@ let resolve_ident env fident =
 (* Resolves ["%{x}%"] string interpolations *)
 let expand_string env text =
   let subst str =
-    if not (OpamMisc.String.ends_with ~suffix:"}%" str) then
+    if not (OpamStd.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
        str)
     else
@@ -271,15 +271,15 @@ let arguments env (a,f) =
 
 let command env (l, f) =
   if opt_eval_to_bool env f then
-    match OpamMisc.List.filter_map (arguments env) l with
+    match OpamStd.List.filter_map (arguments env) l with
     | [] -> None
     | l  -> Some l
   else
     None
 
-let commands env l = OpamMisc.List.filter_map (command env) l
+let commands env l = OpamStd.List.filter_map (command env) l
 
-let single_command env l = OpamMisc.List.filter_map (arguments env) l
+let single_command env l = OpamStd.List.filter_map (arguments env) l
 
 let simple_arg_variables = function
   | CString s -> string_variables s

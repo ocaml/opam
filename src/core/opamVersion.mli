@@ -16,7 +16,7 @@
 
 (** OPAM versions *)
 
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** The current OPAM version *)
 val current: t

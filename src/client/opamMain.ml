@@ -17,7 +17,7 @@
 open OpamArg
 
 let () =
-  OpamMisc.Sys.at_exit (fun () ->
+  OpamStd.Sys.at_exit (fun () ->
       flush stderr;
       flush stdout;
       if OpamClientConfig.(!r.print_stats) then (

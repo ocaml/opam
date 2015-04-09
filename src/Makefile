@@ -63,7 +63,7 @@ endif
 
 # --
 
-SUBS = core solver repositories client
+SUBS = core solver repository client
 OPAMLIB = $(patsubst %,./opam-%,$(SUBS))
 INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
@@ -110,7 +110,7 @@ SRC_core = \
   opamJson.ml \
   opamCoreConfig.ml \
   opamLineLexer.mll \
-  opamMisc.ml \
+  opamStd.ml \
   opamConsole.ml \
   opamScript.ml \
   opamGlobals.ml \
@@ -158,11 +158,11 @@ define PROJ_solver
 endef
 export PROJ_solver
 
-# -- opam-repositories -- #
-opam-repositories.cma: opam-core.cma ALWAYS
-opam-repositories.cmxa: opam-core.cmxa ALWAYS
+# -- opam-repository -- #
+opam-repository.cma: opam-core.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa ALWAYS
 
-SRC_repositories = \
+SRC_repository = \
   opamRepositoryConfig.ml \
   opamDownload.ml \
   opamRepositoryBackend.ml \
@@ -175,15 +175,15 @@ SRC_repositories = \
   opamHg.ml \
   opamRepository.ml
 
-define PROJ_repositories
-  SOURCES = $(call addmli,repositories,$(SRC_repositories))
-  RESULT = opam-repositories
+define PROJ_repository
+  SOURCES = $(call addmli,repository,$(SRC_repository))
+  RESULT = opam-repository
 endef
-export PROJ_repositories
+export PROJ_repository
 
 # -- opam-client -- #
-opam-client.cma: opam-core.cma opam-solver.cma opam-repositories.cma ALWAYS
-opam-client.cmxa: opam-core.cmxa opam-solver.cmxa opam-repositories.cmxa ALWAYS
+opam-client.cma: opam-core.cma opam-solver.cma opam-repository.cma ALWAYS
+opam-client.cmxa: opam-core.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
 
 SRC_client = \
   opamClientConfig.ml \

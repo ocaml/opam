@@ -126,14 +126,14 @@ let list ~print_short ~installed ~all =
       let colored_descr = bold_current (OpamFile.Descr.synopsis descr) in
       let colored_body =
         if (OpamConsole.verbose ()) then
-          match OpamMisc.String.strip (OpamFile.Descr.body descr) with
+          match OpamStd.String.strip (OpamFile.Descr.body descr) with
           | "" -> ""
           | d  -> "\n"^d^"\n"
         else "" in
       OpamConsole.msg "%s %s %s  %s%s\n"
-        (OpamMisc.Format.indent_left colored_name ~visual:name max_name)
-        (OpamMisc.Format.indent_right colored_state ~visual:state max_state)
-        (OpamMisc.Format.indent_left colored_compiler ~visual:compiler max_compiler)
+        (OpamStd.Format.indent_left colored_name ~visual:name max_name)
+        (OpamStd.Format.indent_right colored_state ~visual:state max_state)
+        (OpamStd.Format.indent_left colored_compiler ~visual:compiler max_compiler)
         colored_descr colored_body in
 
   List.iter print_compiler to_show;
@@ -177,10 +177,10 @@ let remove_t ?(confirm = true) t =
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string t.switch);
-    OpamMisc.Sys.exit 1;
+    OpamStd.Sys.exit 1;
   );
   if Some t.switch =
-     OpamMisc.Option.Op.(OpamClientGlobals.load_conf_file t.root >>|
+     OpamStd.Option.Op.(OpamClientGlobals.load_conf_file t.root >>|
                          OpamFile.Config.switch)
   then
     OpamConsole.error_and_exit
@@ -227,7 +227,7 @@ let install_packages switch compiler =
   let roots = OpamPackage.Name.Set.of_list (List.map fst to_install) in
 
   let bad_packages =
-    OpamMisc.List.filter_map (fun (n, c) ->
+    OpamStd.List.filter_map (fun (n, c) ->
       if OpamState.is_name_installed t n then (
         let nv = OpamState.find_installed_package_by_name t n in
         if c = Some (`Eq, OpamPackage.version nv) then
@@ -249,7 +249,7 @@ let install_packages switch compiler =
   match bad_packages with
   | p::_ ->
     package_error p;
-    OpamMisc.Sys.exit 10
+    OpamStd.Sys.exit 10
   | [] ->
     let solution =
       OpamSolution.resolve t (Switch roots)
@@ -476,7 +476,7 @@ let reinstall_t t =
   if not (OpamState.is_switch_installed t t.switch) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string t.switch);
-    OpamMisc.Sys.exit 1;
+    OpamStd.Sys.exit 1;
   );
   let ocaml_version = t.compiler in
   let export = (t.installed, t.installed_roots, t.pinned) in
@@ -510,7 +510,7 @@ let with_backup switch command f =
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
   with
-  | OpamMisc.Sys.Exit 0 as e -> raise e
+  | OpamStd.Sys.Exit 0 as e -> raise e
   | err ->
     let t1 = OpamState.load_state "backup-err" t.switch in
     if OpamPackage.Set.equal t.installed t1.installed &&

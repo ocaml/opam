@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamMisc.AbstractString
+include OpamStd.AbstractString
 
 let default = of_string OpamGlobals.system
 

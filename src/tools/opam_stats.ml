@@ -82,7 +82,7 @@ module Git = struct
 
   let date repo commit =
     let r = return_one_line repo [ "git"; "show"; "-s"; "--format=\"%ct\""; commit ] in
-    let r = OpamMisc.String.strip r in
+    let r = OpamStd.String.strip r in
     let r = String.sub r 1 (String.length r - 2) in
     float_of_string r
 

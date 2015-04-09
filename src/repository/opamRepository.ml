@@ -16,8 +16,8 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
-open OpamFilename.OP
+open OpamStd.Op
+open OpamFilename.Op
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "REPOSITORY" fmt
@@ -119,7 +119,7 @@ let extract_prefix repo dir nv =
     let suffix = OpamPackage.to_string nv in
     Filename.dir_sep ^ suffix in
   let dir = OpamFilename.Dir.to_string dir in
-  OpamMisc.String.remove_prefix ~prefix (OpamMisc.String.remove_suffix ~suffix dir)
+  OpamStd.String.remove_prefix ~prefix (OpamStd.String.remove_suffix ~suffix dir)
 *)
 let file f =
   if OpamFilename.exists f then [f] else []

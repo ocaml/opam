@@ -127,18 +127,18 @@ let iter_install f instfile o =
   let module D = OpamPath.Switch in
   let module S = OpamFile.Dot_install in
   let dest ?fix dir =
-    let dir = OpamMisc.Option.default dir fix in
+    let dir = OpamStd.Option.default dir fix in
     fun src dst ->
       OpamFilename.create dir
-        (OpamMisc.Option.default (OpamFilename.basename src) dst)
+        (OpamStd.Option.default (OpamFilename.basename src) dst)
   in
   let dest_global ?fix instdir_f =
     dest ?fix (instdir_f o.prefix (OpamSwitch.of_string ""))
   in
   let dest_pkg ?fix instdir_f =
     let fix =
-      OpamMisc.Option.map
-        OpamFilename.OP.(fun d ->
+      OpamStd.Option.map
+        OpamFilename.Op.(fun d ->
             d / OpamPackage.Name.to_string o.pkgname)
         fix
     in
@@ -284,7 +284,7 @@ let options =
           let msg =
             Printf.sprintf
               "Please specify a .install file, %s found in current dir"
-              (OpamMisc.Format.pretty_list
+              (OpamStd.Format.pretty_list
                  (List.map
                     (fun f -> OpamFilename.(Base.to_string (basename f)))
                     files))
@@ -305,18 +305,18 @@ let options =
     let mk_dir = function
       | None -> None
       | Some d when Filename.is_relative d ->
-        Some OpamFilename.OP.(prefix / d)
+        Some OpamFilename.Op.(prefix / d)
       | Some d ->
         Some (OpamFilename.Dir.of_string d)
     in
     let mandir = mk_dir mandir in
     let libdir = mk_dir libdir in
     let stubsdir = match mk_dir stubsdir, libdir with
-      | None, Some d -> Some OpamFilename.OP.(d / "stubslibs")
+      | None, Some d -> Some OpamFilename.Op.(d / "stubslibs")
       | d, None | (Some _ as d), _ -> d
     in
     let topdir = match mk_dir topdir, libdir with
-      | None, Some d -> Some OpamFilename.OP.(d / "toplevel")
+      | None, Some d -> Some OpamFilename.Op.(d / "toplevel")
       | d, None | (Some _ as d), _ -> d
     in
     let docdir = mk_dir docdir in
@@ -352,7 +352,7 @@ let () =
   with
   | Invalid_argument s ->
     prerr_string "ERROR: "; prerr_endline s; exit 2
-  | OpamMisc.Sys.Exit i -> exit i
+  | OpamStd.Sys.Exit i -> exit i
   | e ->
     OpamConsole.error "Failure during install";
     prerr_string (Printexc.to_string e); exit 1

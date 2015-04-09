@@ -16,7 +16,7 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
+open OpamStd.Op
 
 module X = struct
 
@@ -151,12 +151,12 @@ module X = struct
           if too_many <> [] then
             OpamConsole.warning "duplicate fields in %s: %s"
               f.file_name
-              (OpamMisc.List.to_string (fun x -> x) too_many);
+              (OpamStd.List.to_string (fun x -> x) too_many);
           let is_, s_ =
             if List.length invalids <= 1 then "is an", "" else "are", "s" in
           if invalids <> [] then
             OpamConsole.warning "%s %s unknown field%s in %s."
-              (OpamMisc.Format.pretty_list invalids)
+              (OpamStd.Format.pretty_list invalids)
               is_ s_ f.file_name;
           if OpamCoreConfig.(!r.strict) then
             OpamConsole.error_and_exit "Strict mode: bad fields in %s"
@@ -215,7 +215,7 @@ module X = struct
 
     let of_channel filename ic =
       let lines = Lines.of_channel filename ic in
-      let lines = OpamMisc.List.filter_map (function
+      let lines = OpamStd.List.filter_map (function
           | []  -> None
           | [f] -> Some (OpamFilename.of_string f)
           | s   -> OpamConsole.error_and_exit "%S is not a valid filename"
@@ -242,10 +242,10 @@ module X = struct
 
     let of_channel filename ic =
       let lines = Lines.of_channel filename ic in
-      let rs = OpamMisc.List.filter_map (function
+      let rs = OpamStd.List.filter_map (function
           | [] -> None
           | [s] -> (* backwards-compat *)
-            Some (OpamFilename.Attribute.of_string_list (OpamMisc.String.split s ' '))
+            Some (OpamFilename.Attribute.of_string_list (OpamStd.String.split s ' '))
           | l  ->
             Some (OpamFilename.Attribute.of_string_list l)
         ) lines in
@@ -324,7 +324,7 @@ module X = struct
       | Some (url, kind_opt) ->
         try
           let url, kind = parse_url url in
-          Some (url, OpamMisc.Option.default kind kind_opt)
+          Some (url, OpamStd.Option.default kind kind_opt)
         with Invalid_argument s -> OpamFormat.bad_format "%s" s
 
     let of_channel filename ic =
@@ -521,7 +521,7 @@ module X = struct
 
   end
 
-  module Repo_index (A : OpamMisc.ABSTRACT) = struct
+  module Repo_index (A : OpamStd.ABSTRACT) = struct
 
     let internal = "repo-index"
 
@@ -686,7 +686,7 @@ module X = struct
 
     let of_string str =
       let head, tail =
-        match OpamMisc.String.cut_at str '\n' with
+        match OpamStd.String.cut_at str '\n' with
         | None       -> str, ""
         | Some (h,t) -> h, t in
       head, tail
@@ -826,7 +826,7 @@ module X = struct
       let switch1 = mk_switch s_switch1 in
       let switch2 = mk_switch s_switch2 in
       let switch =
-        match OpamMisc.Option.Op.(switch ++ switch1 ++ switch2) with
+        match OpamStd.Option.Op.(switch ++ switch1 ++ switch2) with
         | Some v -> v
         | None -> OpamConsole.error_and_exit
                     "No current switch defined in %s."
@@ -835,7 +835,7 @@ module X = struct
         try
         let mk str =
           OpamFormat.assoc_option s.file_contents str OpamFormat.parse_int in
-        match OpamMisc.Option.Op.(mk s_jobs ++ mk s_cores) with
+        match OpamStd.Option.Op.(mk s_jobs ++ mk s_cores) with
         | Some i -> i
         | None -> 1
         with OpamFormat.Bad_format _ when permissive -> 1
@@ -1112,7 +1112,7 @@ module X = struct
         with e ->
           close_in ic;
           raise e
-      with e -> OpamMisc.Exn.fatal e; false
+      with e -> OpamStd.Exn.fatal e; false
 
     let name t = check "name" t.name
     let name_opt t = t.name
@@ -1254,7 +1254,7 @@ module X = struct
               (OpamFormat.parse_package_name ?expected:n)
         with OpamFormat.Bad_format _ when permissive -> None
       in
-      OpamMisc.Option.Op.(name_f ++ n)
+      OpamStd.Option.Op.(name_f ++ n)
 
     let check_version ?(permissive=false) v s =
       let version_f =
@@ -1262,7 +1262,7 @@ module X = struct
               (OpamFormat.parse_package_version ?expected:v)
         with OpamFormat.Bad_format _ when permissive -> None
       in
-      OpamMisc.Option.Op.(version_f ++ v)
+      OpamStd.Option.Op.(version_f ++ v)
 
     let of_syntax ?(permissive=false) ?(conservative=false) f nv =
       let safe default f x y z =
@@ -1273,12 +1273,12 @@ module X = struct
       let assoc_default dft = safe dft (OpamFormat.assoc_default dft) in
       let s = f.file_contents in
       let name =
-        check_name ~permissive (OpamMisc.Option.map OpamPackage.name nv) s
+        check_name ~permissive (OpamStd.Option.map OpamPackage.name nv) s
       in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string @> OpamVersion.of_string) in
       let version =
-        check_version ~permissive (OpamMisc.Option.map OpamPackage.version nv) s
+        check_version ~permissive (OpamStd.Option.map OpamPackage.version nv) s
       in
       let maintainer =
         assoc_list s s_maintainer OpamFormat.parse_string_list in
@@ -1302,7 +1302,7 @@ module X = struct
                 OpamConsole.warning
                   "At %s: Unknown flags %s ignored for dependency %s"
                   (string_of_pos pos)
-                  (OpamMisc.Format.pretty_list (OpamMisc.List.filter_map (function
+                  (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
                        | Depflag_Unknown s -> Some s
                        | _ -> None)
                        flags))
@@ -1400,7 +1400,7 @@ module X = struct
             OpamConsole.warning
               "At %s: Unknown package flags %s ignored"
               (string_of_pos (OpamFormat.value_pos v))
-              (OpamMisc.Format.pretty_list (OpamMisc.List.filter_map (function
+              (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
                    | Pkgflag_Unknown s -> Some s
                    | _ -> None)
                    allflags));
@@ -1451,7 +1451,7 @@ module X = struct
             | [name], [email] ->
               Some [Printf.sprintf "%s <%s>" name email]
             | _ -> raise Not_found
-          with e -> OpamMisc.Exn.fatal e; None
+          with e -> OpamStd.Exn.fatal e; None
         in
         match from_git with
         | Some u -> u
@@ -1464,7 +1464,7 @@ module X = struct
             let email = match email with
               | Some e -> e
               | None -> pw.pw_name^"@"^gethostname () in
-            match OpamMisc.String.split pw.pw_gecos ',' with
+            match OpamStd.String.split pw.pw_gecos ',' with
             | name::_ -> [Printf.sprintf "%s <%s>" name email]
             | _ -> [email]
           with Not_found -> match email with
@@ -1503,9 +1503,9 @@ module X = struct
         t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
       in
       let all_filters =
-        OpamMisc.List.filter_map snd t.patches @
-        OpamMisc.List.filter_map snd t.messages @
-        OpamMisc.List.filter_map snd t.post_messages @
+        OpamStd.List.filter_map snd t.patches @
+        OpamStd.List.filter_map snd t.messages @
+        OpamStd.List.filter_map snd t.post_messages @
         [t.available] @
         List.map (fun (_,_,f) -> f) t.features
       in
@@ -1632,18 +1632,18 @@ module X = struct
              all_variables);
       ]
       in
-      OpamMisc.List.filter_map (fun x -> x) warnings
+      OpamStd.List.filter_map (fun x -> x) warnings
 
     let validate_file filename =
       let warnings, t =
         try
           let ic = OpamFilename.open_in filename in
           let name =
-            OpamMisc.Option.map OpamPackage.name
+            OpamStd.Option.map OpamPackage.name
               (OpamPackage.of_filename filename)
           in
           let version =
-            OpamMisc.Option.map OpamPackage.version
+            OpamStd.Option.map OpamPackage.version
               (OpamPackage.of_filename filename)
           in
           let f =
@@ -1681,7 +1681,7 @@ module X = struct
               [ 4, `Warning,
                 Printf.sprintf "%s, the directory name or pinning implied %s"
                   msg
-                  OpamMisc.Option.Op.((name >>| OpamPackage.Name.to_string) +! "" )
+                  OpamStd.Option.Op.((name >>| OpamPackage.Name.to_string) +! "" )
               ]
           in
           let warnings =
@@ -1693,7 +1693,7 @@ module X = struct
               [ 5, `Warning,
                 Printf.sprintf "%s, the directory name or pinning implied %s"
                   msg
-                  OpamMisc.Option.Op.((version >>| OpamPackage.Version.to_string) +! "" )
+                  OpamStd.Option.Op.((version >>| OpamPackage.Version.to_string) +! "" )
               ]
           in
           close_in ic;
@@ -1709,13 +1709,13 @@ module X = struct
       t
 
     let warns_to_string ws =
-      OpamMisc.List.concat_map "\n"
+      OpamStd.List.concat_map "\n"
         (fun (n, w, s) ->
            let ws = match w with
              | `Warning -> OpamConsole.colorise `yellow "warning"
              | `Error -> OpamConsole.colorise `red "error"
            in
-           OpamMisc.Format.reformat ~indent:14
+           OpamStd.Format.reformat ~indent:14
              (Printf.sprintf "  %15s %2d: %s" ws n s))
         ws
 
@@ -2354,7 +2354,7 @@ module Make (F : F) = struct
   let string_of_backtrace_list = function
     | [] | _ when not (Printexc.backtrace_status ()) -> ""
     | btl -> List.fold_left (fun s bts ->
-        let bt_lines = OpamMisc.String.split bts '\n' in
+        let bt_lines = OpamStd.String.split bts '\n' in
         "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
       ) "" btl
 
@@ -2378,7 +2378,7 @@ module Make (F : F) = struct
           OpamConsole.error_and_exit "Strict mode: aborting"
         else raise e (* Message already printed *)
       | e ->
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         let pos,msg,btl = match e with
           | OpamFormat.Bad_format (Some pos, btl, msg) -> pos, ":\n  "^msg, btl
           | OpamFormat.Bad_format (None, btl, msg) -> (f,-1,-1), ":\n  "^msg, btl
@@ -2386,7 +2386,7 @@ module Make (F : F) = struct
         let e = OpamFormat.add_pos pos e in
         OpamConsole.error "At %s%s%s"
           (string_of_pos pos) msg (string_of_backtrace_list btl);
-        if OpamCoreConfig.(!r.strict) then OpamMisc.Sys.exit 66
+        if OpamCoreConfig.(!r.strict) then OpamStd.Sys.exit 66
         else raise e
 
   let safe_read f =

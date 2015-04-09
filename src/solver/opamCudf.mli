@@ -19,10 +19,10 @@
 open OpamTypes
 
 (** Cudf sets *)
-module Set: OpamMisc.SET with type elt = Cudf.package
+module Set: OpamStd.SET with type elt = Cudf.package
 
 (** Cudf maps *)
-module Map: OpamMisc.MAP with type key = Cudf.package
+module Map: OpamStd.MAP with type key = Cudf.package
 
 (** Cudf graph *)
 module Graph: sig

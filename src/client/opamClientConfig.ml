@@ -37,8 +37,8 @@ type t = {
 }
 
 let default = {
-  root_dir = OpamFilename.OP.(
-      OpamFilename.Dir.of_string (OpamMisc.Sys.home ()) / ".opam"
+  root_dir = OpamFilename.Op.(
+      OpamFilename.Dir.of_string (OpamStd.Sys.home ()) / ".opam"
     );
   current_switch = OpamSwitch.default;
   switch_from = `Default;
@@ -58,7 +58,7 @@ let default = {
   pin_kind_auto = false;
   autoremove = false;
   editor = "nano";
-  makecmd = lazy OpamMisc.Sys.(
+  makecmd = lazy OpamStd.Sys.(
       match os () with
       | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
       | _ -> "make"

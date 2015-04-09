@@ -21,14 +21,14 @@ let self_upgrade_bootstrapping_value = "bootstrapping"
 
 let init_config () =
   let open OpamGlobals.Config in
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   let self_upgrade =
     if env_string "NOSELFUPGRADE" = Some self_upgrade_bootstrapping_value
     then Some `Running
     else env_bool "NOSELFUPGRADE" >>| function true -> `Disable | false -> `None
   in
-  let editor = OpamMisc.Option.Op.(
-      env_string "EDITOR" ++ OpamMisc.Env.(getopt "VISUAL" ++ getopt "EDITOR")
+  let editor = OpamStd.Option.Op.(
+      env_string "EDITOR" ++ OpamStd.Env.(getopt "VISUAL" ++ getopt "EDITOR")
     ) in
   let current_switch, switch_from =
     match env_string "SWITCH" with
@@ -65,15 +65,15 @@ let init_config () =
 (* Detect OCaml specifics (all done lazily) *)
 
 let reset_env = lazy (
-  let env = OpamMisc.Env.list () in
+  let env = OpamStd.Env.list () in
   let env =
-    let path_sep = OpamMisc.Sys.path_sep () in
+    let path_sep = OpamStd.Sys.path_sep () in
     let path_sep_str = String.make 1 path_sep in
     List.rev_map (fun (k,v as c) ->
       match k with
       | "PATH" ->
         k, String.concat path_sep_str
-          (OpamMisc.Env.reset_value path_sep
+          (OpamStd.Env.reset_value path_sep
              ~prefix:OpamClientConfig.(OpamFilename.Dir.to_string !r.root_dir)
              v)
       | _      -> c
@@ -88,7 +88,7 @@ let ocaml_cmd ~system cmd =
     match
       OpamSystem.read_command_output ?env ~verbose:false [ "ocamlc" ; cmd ]
     with
-    | h::_ -> Some (OpamMisc.String.strip h)
+    | h::_ -> Some (OpamStd.String.strip h)
     | [] ->
       log "ERROR: ocamlc found but `ocamlc %s` is empty." cmd;
       None
@@ -97,8 +97,8 @@ let ocaml_cmd ~system cmd =
     None
 
 let exists_alongside_ocamlc name =
-  let path = try OpamMisc.Env.get "PATH" with Not_found -> "" in
-  let path = OpamMisc.String.split path (OpamMisc.Sys.path_sep ()) in
+  let path = try OpamStd.Env.get "PATH" with Not_found -> "" in
+  let path = OpamStd.String.split path (OpamStd.Sys.path_sep ()) in
   let ocamlc_dir =
     List.fold_left (function
         | None -> fun d ->
@@ -114,7 +114,7 @@ let ocaml_version = lazy (ocaml_cmd ~system:false "-version")
 let ocaml_where = lazy (ocaml_cmd ~system:false "-where")
 let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
 let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
-let ocaml_natdynlink_available = lazy OpamMisc.Option.Op.(
+let ocaml_natdynlink_available = lazy OpamStd.Option.Op.(
     (Lazy.force ocaml_where >>| fun d ->
      Sys.file_exists (Filename.concat d "dynlink.cmxa"))
     +! false
@@ -123,7 +123,7 @@ let ocaml_natdynlink_available = lazy OpamMisc.Option.Op.(
 let system_ocamlc_version = lazy (ocaml_cmd ~system:true "-version")
 let system_ocamlc_where = lazy (ocaml_cmd ~system:true "-where")
 let system_compiler = lazy (
-  OpamMisc.Option.Op.(Lazy.force system_ocamlc_version >>|
+  OpamStd.Option.Op.(Lazy.force system_ocamlc_version >>|
                       OpamCompiler.of_string)
 )
 

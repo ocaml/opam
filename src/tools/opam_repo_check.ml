@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 (* Script to check that a given repository is well-typed (or well-parsed) *)
-open OpamFilename.OP
+open OpamFilename.Op
 
 type args = {
   normalize: bool;

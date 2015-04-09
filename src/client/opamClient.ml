@@ -17,9 +17,9 @@
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
-open OpamMisc.OP
+open OpamStd.Op
 open OpamPackage.Set.Op
-open OpamFilename.OP
+open OpamFilename.Op
 
 let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog
@@ -62,12 +62,12 @@ let details_of_package t name versions =
   let opam = OpamState.opam t nv in
   let tags = OpamFile.OPAM.tags opam in
   let syntax = lazy (
-    OpamMisc.List.filter_map (fun (s,filter) ->
+    OpamStd.List.filter_map (fun (s,filter) ->
         if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
         then Some s else None)
       (OpamFile.OPAM.syntax opam)) in
   let libraries = lazy (
-    OpamMisc.List.filter_map (fun (s,filter) ->
+    OpamStd.List.filter_map (fun (s,filter) ->
         if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
         then Some s else None)
       (OpamFile.OPAM.libraries opam)) in
@@ -87,13 +87,13 @@ let details_of_package t name versions =
 
 let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
   log "names_of_regexp regexps=%a"
-    (slog @@ OpamMisc.List.to_string (fun x -> x)) regexps;
+    (slog @@ OpamStd.List.to_string (fun x -> x)) regexps;
   (* the regexp can also simply be a package. *)
   let fix_versions =
-    let fix_packages = OpamMisc.List.filter_map OpamPackage.of_string_opt regexps in
+    let fix_packages = OpamStd.List.filter_map OpamPackage.of_string_opt regexps in
     OpamPackage.to_map (packages %% (OpamPackage.Set.of_list fix_packages)) in
   let regexps =
-    OpamMisc.List.filter_map (fun str ->
+    OpamStd.List.filter_map (fun str ->
       let re =
         match OpamPackage.of_string_opt str with
         | Some nv ->
@@ -111,7 +111,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
         None
     ) regexps in
   let exact_match str =
-    List.exists (fun re -> OpamMisc.String.exact_match re str) regexps in
+    List.exists (fun re -> OpamStd.String.exact_match re str) regexps in
   let partial_match str =
     List.exists (fun re -> Re.execp re str) regexps in
   let partial_matchs strs =
@@ -153,9 +153,9 @@ let with_switch_backup command f =
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
   with
-  | OpamMisc.Sys.Exit 0 as e -> raise e
+  | OpamStd.Sys.Exit 0 as e -> raise e
   | err ->
-    OpamMisc.Exn.register_backtrace err;
+    OpamStd.Exn.register_backtrace err;
     let t1 = OpamState.load_state "switch-backup-err"
         OpamClientConfig.(!r.current_switch) in
     if OpamPackage.Set.equal t.installed t1.installed &&
@@ -163,7 +163,7 @@ let with_switch_backup command f =
       OpamFilename.remove file
     else
       (prerr_string
-         (OpamMisc.Format.reformat
+         (OpamStd.Format.reformat
             (Printf.sprintf
                "\nThe former state can be restored with:\n    \
                 %s switch import %S\n%!"
@@ -217,7 +217,7 @@ module API = struct
           Printf.printf "%s\n" colored_name
       else
         let synop_len =
-          let col = OpamMisc.Sys.terminal_columns () in
+          let col = OpamStd.Sys.terminal_columns () in
           max 0 (col - max_n - max_v - 4) in
         fun (name, info) ->
           let version = get_version info in
@@ -241,10 +241,10 @@ module API = struct
                 vs, OpamConsole.colorise `magenta vs, ""
           in
           Printf.printf "%s  %s%s  %s\n"
-            (OpamMisc.Format.indent_left colored_name ~visual:name_str max_n)
-            (OpamMisc.Format.indent_right colored_version ~visual:sversion max_v)
+            (OpamStd.Format.indent_left colored_name ~visual:name_str max_n)
+            (OpamStd.Format.indent_right colored_version ~visual:sversion max_v)
             pinned
-            (OpamMisc.String.sub_at synop_len (Lazy.force info.synopsis))
+            (OpamStd.String.sub_at synop_len (Lazy.force info.synopsis))
     ) names
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
@@ -347,19 +347,19 @@ module API = struct
       OpamConsole.msg "No packages found.\n";
     match depexts with
     | Some tags_list ->
-      let required_tags = OpamMisc.String.Set.of_list tags_list in
+      let required_tags = OpamStd.String.Set.of_list tags_list in
       let packages =
         OpamPackage.Name.Map.fold (fun name details acc ->
             let nv =
               OpamPackage.create name @@
-              OpamMisc.Option.default details.current_version
+              OpamStd.Option.default details.current_version
                 details.installed_version in
             OpamPackage.Set.add nv acc)
           details OpamPackage.Set.empty
       in
       if not print_short then
         OpamConsole.msg "# Known external dependencies for %s %s%s\n"
-          (OpamMisc.Format.pretty_list ?last:None @@
+          (OpamStd.Format.pretty_list ?last:None @@
            List.map (OpamConsole.colorise `bold @* OpamPackage.to_string) @@
            OpamPackage.Set.elements packages)
           (if tags_list <> [] then "on " else "")
@@ -370,24 +370,24 @@ module API = struct
             match OpamFile.OPAM.depexts opam with
             | None -> acc
             | Some tags ->
-              OpamMisc.String.SetMap.fold (fun tags values acc ->
+              OpamStd.String.SetMap.fold (fun tags values acc ->
                   if tags_list = [] then
                     let line =
                       Printf.sprintf "%s: %s"
-                        (String.concat " " (OpamMisc.String.Set.elements tags))
-                        (String.concat " " (OpamMisc.String.Set.elements values))
+                        (String.concat " " (OpamStd.String.Set.elements tags))
+                        (String.concat " " (OpamStd.String.Set.elements values))
                     in
-                    OpamMisc.String.Set.add line acc
-                  else if OpamMisc.String.Set.for_all
-                      (fun tag -> OpamMisc.String.Set.mem tag required_tags)
+                    OpamStd.String.Set.add line acc
+                  else if OpamStd.String.Set.for_all
+                      (fun tag -> OpamStd.String.Set.mem tag required_tags)
                       tags
-                  then OpamMisc.String.Set.union acc values
+                  then OpamStd.String.Set.union acc values
                   else acc)
                 tags acc)
-          packages OpamMisc.String.Set.empty
+          packages OpamStd.String.Set.empty
       in
       OpamConsole.msg "%s\n" @@
-      String.concat "\n" @@ OpamMisc.String.Set.elements depexts
+      String.concat "\n" @@ OpamStd.String.Set.elements depexts
     | None ->
       let print_header () =
         let kind = match filter with
@@ -400,7 +400,7 @@ module API = struct
             Printf.sprintf " %s %s %s"
               (if recursive_depends then "recursively" else "directly")
               (if reverse_depends then "depending on" else "required by")
-              (OpamMisc.Format.pretty_list ~last:"or" @@
+              (OpamStd.Format.pretty_list ~last:"or" @@
                List.map (OpamConsole.colorise `bold @* OpamPackage.to_string) @@
                OpamPackage.Set.elements depends)
         in
@@ -409,7 +409,7 @@ module API = struct
       if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
         print_header ();
       print_list t ~uninst_versions:depends_mode ~short:print_short ~order details;
-      if OpamPackage.Name.Map.is_empty details then OpamMisc.Sys.exit 1
+      if OpamPackage.Name.Map.is_empty details then OpamStd.Sys.exit 1
 
   let info ~fields ~raw_opam ~where atoms =
     let t = OpamState.load_state "info"
@@ -489,7 +489,7 @@ module API = struct
           let kind = string_of_repository_kind (OpamFile.URL.kind u) in
           let url = string_of_address (OpamFile.URL.url u) in
           let mirrors =
-            OpamMisc.List.to_string string_of_address (OpamFile.URL.mirrors u) in
+            OpamStd.List.to_string string_of_address (OpamFile.URL.mirrors u) in
           let checksum = OpamFile.URL.checksum u in
           [ "upstream-url" , url ]
           @ (if OpamFile.URL.mirrors u = [] then []
@@ -753,7 +753,7 @@ module API = struct
         else OpamState.load_state "reload-dev-package-updated"
             OpamClientConfig.(!r.current_switch)
       with e ->
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         t
     )
 
@@ -813,7 +813,7 @@ module API = struct
         (OpamPackage.Set.empty,[]) atoms in
     if not_installed <> [] then
       OpamConsole.note "%s %s not installed, ignored.\n"
-        (OpamMisc.Format.pretty_list
+        (OpamStd.Format.pretty_list
            (List.rev_map OpamFormula.short_string_of_atom not_installed))
         (match not_installed with [_] -> "is" | _ -> "are");
     let t, full_orphans, orphan_versions = orphans ~changes:to_upgrade t in
@@ -849,7 +849,7 @@ module API = struct
       if not (OpamPackage.Name.Set.is_empty requested) then
         (OpamConsole.msg "%s"
            (OpamCudf.string_of_conflict (OpamState.unavailable_reason t) cs);
-         OpamMisc.Sys.exit 3);
+         OpamStd.Sys.exit 3);
       let reasons, chains, cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs in
       if cycles <> [] then begin
@@ -858,23 +858,23 @@ module API = struct
            report the following to the package maintainers if the error \
            persists:";
         OpamConsole.errmsg "%s\n%s\n"
-          (OpamMisc.Format.itemize (fun x -> x) cycles)
+          (OpamStd.Format.itemize (fun x -> x) cycles)
           "You may try upgrading packages individually to work around this."
       end else begin
         OpamConsole.warning
           "Upgrade is not possible because of conflicts or packages that \
            are no longer available:";
-        OpamConsole.errmsg "%s" (OpamMisc.Format.itemize (fun x -> x) reasons);
+        OpamConsole.errmsg "%s" (OpamStd.Format.itemize (fun x -> x) reasons);
         if chains <> [] then
           OpamConsole.errmsg
             "The following dependencies are in cause:\n%s"
-            (OpamMisc.Format.itemize (fun x -> x) chains);
+            (OpamStd.Format.itemize (fun x -> x) chains);
         if OpamCudf.external_solver_available () then
           OpamConsole.errmsg
             "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
              current state.\n"
       end;
-      OpamMisc.Sys.exit 3
+      OpamStd.Sys.exit 3
     | requested, action, Success solution ->
       let result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
@@ -904,7 +904,7 @@ module API = struct
                "%s.\n\
                 The following newer versions couldn't be installed:\n%s"
                hdmsg
-               (OpamMisc.Format.itemize (fun p ->
+               (OpamStd.Format.itemize (fun p ->
                     OpamState.unavailable_reason t
                       (OpamSolution.eq_atom
                          (OpamPackage.name p) (OpamPackage.version p)))
@@ -916,7 +916,7 @@ module API = struct
              (OpamConsole.formatted_msg
                 "The following would require downgrades or uninstalls, but \
                  you may upgrade them explicitly:\n%s"
-                (OpamMisc.Format.itemize OpamPackage.to_string
+                (OpamStd.Format.itemize OpamPackage.to_string
                    (OpamPackage.Set.elements unopt)));
           )
       );
@@ -935,7 +935,7 @@ module API = struct
          "Sorry, \"--fixup\" is not available without an external solver. \
           You'll have to select the packages to change or remove by hand, \
           or install aspcud or another solver on your system.\n";
-       OpamMisc.Sys.exit 1)
+       OpamStd.Sys.exit 1)
     else
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
     let action = Upgrade OpamPackage.Set.empty in
@@ -1024,44 +1024,44 @@ module API = struct
       not (OpamPackage.Set.is_empty dev_packages) in
 
     let valid_repositories =
-      OpamMisc.String.Set.of_list
+      OpamStd.String.Set.of_list
         (List.rev_map OpamRepositoryName.to_string
            (OpamRepositoryName.Map.keys repositories)) in
     let valid_pinned_packages =
-      OpamMisc.String.Set.of_list
+      OpamStd.String.Set.of_list
         (List.rev_map OpamPackage.Name.to_string
            (OpamPackage.Name.Map.keys t.pinned)) in
     let unknown_names, not_pinned =
       if names = [] then
         [], []
       else
-        let all = OpamMisc.String.Set.of_list names in
+        let all = OpamStd.String.Set.of_list names in
         let valid_names =
-          OpamMisc.String.Set.of_list
+          OpamStd.String.Set.of_list
             (List.rev_map
                (OpamPackage.name @> OpamPackage.Name.to_string)
                (OpamPackage.Set.elements t.packages)) in
-        let open OpamMisc.String.Set.Op in
+        let open OpamStd.String.Set.Op in
         let unknown_names = all -- valid_repositories -- valid_names in
         let not_pinned =
           (all %% valid_names)
           -- valid_pinned_packages
           -- valid_repositories
           -- (OpamPackage.Set.fold (fun nv acc ->
-              OpamMisc.String.Set.add (OpamPackage.name_to_string nv) acc)
-              dev_packages OpamMisc.String.Set.empty) in
-        OpamMisc.String.Set.elements unknown_names,
-        OpamMisc.String.Set.elements not_pinned in
+              OpamStd.String.Set.add (OpamPackage.name_to_string nv) acc)
+              dev_packages OpamStd.String.Set.empty) in
+        OpamStd.String.Set.elements unknown_names,
+        OpamStd.String.Set.elements not_pinned in
 
     begin
       let valid_repositories =
-        match OpamMisc.String.Set.elements valid_repositories with
+        match OpamStd.String.Set.elements valid_repositories with
         | []  -> ""
         | [s] -> Printf.sprintf " Valid repository is %s." s
         | l   ->
           Printf.sprintf
             " Valid repositories are %s."
-            (OpamMisc.Format.pretty_list l) in
+            (OpamStd.Format.pretty_list l) in
       match unknown_names with
       | []  -> ()
       | [s] ->
@@ -1071,17 +1071,17 @@ module API = struct
       | _   ->
         OpamConsole.error_and_exit
           "Cannot update the repositories %s.%s"
-          (OpamMisc.Format.pretty_list unknown_names) valid_repositories
+          (OpamStd.Format.pretty_list unknown_names) valid_repositories
     end;
     begin
       let valid_pinned_packages =
-        match OpamMisc.String.Set.elements valid_pinned_packages with
+        match OpamStd.String.Set.elements valid_pinned_packages with
         | []  -> ""
         | [s] -> Printf.sprintf "Only %s is currently pinned.\n" s
         | l   ->
           Printf.sprintf
             "The currently pinned packages are %s.\n"
-            (OpamMisc.Format.pretty_list l) in
+            (OpamStd.Format.pretty_list l) in
       match not_pinned with
       | []  -> ()
       | [s] ->
@@ -1091,7 +1091,7 @@ module API = struct
       | _   ->
         OpamConsole.msg
           "Cannot update %s because none are pinned.%s\n"
-          (OpamMisc.Format.pretty_list not_pinned) valid_pinned_packages
+          (OpamStd.Format.pretty_list not_pinned) valid_pinned_packages
     end;
 
     if repositories_need_update then (
@@ -1155,7 +1155,7 @@ module API = struct
         "A conflict was detected in your installation. \
          This can be caused by updated constraints or conflicts in your \
          installed packages:\n%s"
-        (OpamMisc.Format.itemize (fun x -> x) reasons);
+        (OpamStd.Format.itemize (fun x -> x) reasons);
       if chains <> [] then (
         OpamConsole.formatted_msg "The following dependencies are in cause:\n";
         List.iter (OpamConsole.msg "  - %s\n") chains);
@@ -1214,7 +1214,7 @@ module API = struct
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
           (OpamFilename.Dir.to_string root);
-        if not (OpamConsole.confirm "Proceed ?") then OpamMisc.Sys.exit 1);
+        if not (OpamConsole.confirm "Proceed ?") then OpamStd.Sys.exit 1);
       try
 
         (* Check for the external dependencies *)
@@ -1233,7 +1233,7 @@ module API = struct
            | [] -> "none"
            | r -> String.concat ", " (List.map snd r))
           (if unavailable_repos = [] then " Perfect!" else
-             "\n" ^ OpamMisc.Format.itemize (fun (cmd,msg) ->
+             "\n" ^ OpamStd.Format.itemize (fun (cmd,msg) ->
                  Printf.sprintf
                    "you won't be able to use %s repositories unless you \
                     install the %s command on your system."
@@ -1252,13 +1252,13 @@ module API = struct
            OpamConsole.warning
              "Recommended dependencies -- \
               most packages rely on these:\n%s"
-             (OpamMisc.Format.itemize (OpamConsole.colorise `bold) missing));
+             (OpamStd.Format.itemize (OpamConsole.colorise `bold) missing));
         let fetch_cmd_user =
-          let open OpamMisc.Option.Op in
+          let open OpamStd.Option.Op in
           match
-            OpamMisc.Env.getopt "OPAMCURL",
-            OpamMisc.Env.getopt "OPAMFETCH" >>| fun s ->
-            OpamMisc.String.split s ' '
+            OpamStd.Env.getopt "OPAMCURL",
+            OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
+            OpamStd.String.split s ' '
           with
           | Some cmd, _ | _, Some (cmd::_) -> check_external_dep cmd
           | _ -> false
@@ -1278,7 +1278,7 @@ module API = struct
            OpamConsole.error_and_exit
              "Missing dependencies -- \
               the following commands are required for OPAM to operate:\n%s"
-             (OpamMisc.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
+             (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
 
         (* Create (possibly empty) configuration files *)
         let switch =
@@ -1371,7 +1371,7 @@ module API = struct
       OpamConsole.error_and_exit
         "Sorry, these packages are no longer available \
          from the repositories: %s"
-        (OpamMisc.Format.pretty_list
+        (OpamStd.Format.pretty_list
            (List.map OpamFormula.string_of_atom conflict_atoms))
     else
       {t with available_packages = lazy
@@ -1428,14 +1428,14 @@ module API = struct
         let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
         OpamConsole.msg
           "Adding %s to the list of installed roots.\n"
-          (OpamMisc.Format.pretty_list diff)
+          (OpamStd.Format.pretty_list diff)
       else (
         let diff = current_roots -- t.installed_roots in
         let diff = OpamPackage.Set.elements diff in
         let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
         OpamConsole.msg
           "Removing %s from the list of installed roots.\n"
-          (OpamMisc.Format.pretty_list diff)
+          (OpamStd.Format.pretty_list diff)
       );
       let file = OpamPath.Switch.installed_roots t.root t.switch in
       OpamFile.Installed_roots.write file t.installed_roots;
@@ -1523,7 +1523,7 @@ module API = struct
         List.iter force_remove not_installed
       else
         OpamConsole.note "%s %s not installed.\n"
-          (OpamMisc.Format.pretty_list
+          (OpamStd.Format.pretty_list
              (List.map OpamFormula.short_string_of_atom not_installed))
           (match not_installed with [_] -> "is" | _ -> "are")
     );
@@ -1584,12 +1584,12 @@ module API = struct
         if
           force ||
           (OpamConsole.warning "%s %s not installed."
-             (OpamMisc.Format.pretty_list
+             (OpamStd.Format.pretty_list
                 (List.map OpamFormula.short_string_of_atom not_installed))
              (match not_installed with [_] -> "is" | _ -> "are");
            OpamConsole.confirm "Install ?")
         then not_installed
-        else OpamMisc.Sys.exit 1
+        else OpamStd.Sys.exit 1
       else []
     in
 
@@ -1688,7 +1688,7 @@ module API = struct
       in
       if not updated then
         (ignore (unpin ~state:t [name]);
-         OpamMisc.Sys.exit 1);
+         OpamStd.Sys.exit 1);
       OpamConsole.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.root t.switch name in
       let empty_opam = OpamFile.OPAM.(
@@ -1700,7 +1700,7 @@ module API = struct
           with Not_found ->
             (OpamConsole.error "No valid metadata available.";
              ignore (unpin ~state:t [name]);
-             OpamMisc.Sys.exit 1)
+             OpamStd.Sys.exit 1)
         else None
       in
       if action then

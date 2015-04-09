@@ -59,7 +59,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
       P.compare p q
     | To_change (po,p), To_change (qo,q) ->
       let c = P.compare p q in
-      if c <> 0 then c else OpamMisc.Option.compare P.compare po qo
+      if c <> 0 then c else OpamStd.Option.compare P.compare po qo
     | To_change _, _ | _, To_delete _ -> 1
     | _, To_change _ | To_delete _, _ -> -1
 
@@ -112,7 +112,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
               name p; P.version_to_string p ])
         l
     in
-    List.map (String.concat " ") (OpamMisc.Format.align_table tbl)
+    List.map (String.concat " ") (OpamStd.Format.align_table tbl)
 
   let to_json = function
     | To_change (None, p)   -> `O ["install", P.to_json p]
@@ -133,7 +133,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
 
   include OpamParallel.MakeGraph(A)
 
-  module Map = OpamMisc.Map.Make (A.Pkg)
+  module Map = OpamStd.Map.Make (A.Pkg)
 
   (* Turn atomic actions (only install and remove) to higher-level actions
      (install, remove, up/downgrade, recompile) *)
@@ -141,16 +141,16 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     let removals =
       fold_vertex (fun v acc -> match v with
           | To_delete p ->
-            OpamMisc.String.Map.add (A.Pkg.name_to_string p) p acc
+            OpamStd.String.Map.add (A.Pkg.name_to_string p) p acc
           | _ -> acc)
-        g OpamMisc.String.Map.empty
+        g OpamStd.String.Map.empty
     in
     let reduced = ref Map.empty in
     let g =
       map_vertex (function
           | To_change (None, p) as act ->
             (try
-               let p0 = OpamMisc.String.Map.find (A.Pkg.name_to_string p) removals in
+               let p0 = OpamStd.String.Map.find (A.Pkg.name_to_string p) removals in
                let act =
                  if A.Pkg.equal p0 p then To_recompile p
                  else To_change (Some p0, p)

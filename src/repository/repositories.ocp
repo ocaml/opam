@@ -1,4 +1,4 @@
-begin library "opam-repositories"
+begin library "opam-repository"
 
   files   = [
     "opamRepositoryConfig.ml"

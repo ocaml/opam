@@ -19,7 +19,7 @@
 (** OCaml compiler versions *)
 module Version: sig
 
-  include OpamMisc.ABSTRACT
+  include OpamStd.ABSTRACT
 
   (** Compiler constraint *)
   type constr = (OpamFormula.relop * t) OpamFormula.formula
@@ -32,7 +32,7 @@ module Version: sig
 end
 
 (** Compiler names *)
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Return the compiler version *)
 val version: t -> Version.t

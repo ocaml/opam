@@ -14,23 +14,23 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Base = OpamMisc.AbstractString
+module Base = OpamStd.AbstractString
 
 let log fmt = OpamConsole.log "FILENAME" fmt
 let slog = OpamConsole.slog
 
 module Dir = struct
 
-  include OpamMisc.AbstractString
+  include OpamStd.AbstractString
 
   let of_string dirname =
     let dirname =
-      if dirname = "~" then OpamMisc.Sys.home ()
+      if dirname = "~" then OpamStd.Sys.home ()
       else if
-        OpamMisc.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
+        OpamStd.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
       then
-        Filename.concat (OpamMisc.Sys.home ())
-          (OpamMisc.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
+        Filename.concat (OpamStd.Sys.home ())
+          (OpamStd.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
       else dirname
     in
     OpamSystem.real_path dirname
@@ -245,14 +245,14 @@ let is_exec file =
     OpamSystem.internal_error "%s does not exist." (to_string file)
 
 let starts_with dirname filename =
-  OpamMisc.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+  OpamStd.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
 let remove_prefix prefix filename =
   let prefix =
     let str = Dir.to_string prefix in
     if str = "" then "" else Filename.concat str "" in
   let filename = to_string filename in
-  OpamMisc.String.remove_prefix ~prefix filename
+  OpamStd.String.remove_prefix ~prefix filename
 
 let process_in ?root fn src dst =
   let basename = match root with
@@ -294,12 +294,12 @@ let extract_generic_file filename dirname =
     )
 
 let ends_with suffix filename =
-  OpamMisc.String.ends_with ~suffix (to_string filename)
+  OpamStd.String.ends_with ~suffix (to_string filename)
 
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
   let filename = to_string filename in
-  OpamMisc.String.remove_suffix ~suffix filename
+  OpamStd.String.remove_suffix ~suffix filename
 
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
@@ -311,7 +311,7 @@ let with_flock ?read file f x =
     OpamSystem.funlock lock;
     r
   with e ->
-    OpamMisc.Exn.register_backtrace e;
+    OpamStd.Exn.register_backtrace e;
     OpamSystem.funlock lock;
     raise e
 
@@ -330,13 +330,13 @@ let checksum_dir d =
 let prettify_path s =
   let aux ~short ~prefix =
     let prefix = Filename.concat prefix "" in
-    if OpamMisc.String.starts_with ~prefix s then
-      let suffix = OpamMisc.String.remove_prefix ~prefix s in
+    if OpamStd.String.starts_with ~prefix s then
+      let suffix = OpamStd.String.remove_prefix ~prefix s in
       Some (Filename.concat short suffix)
     else
       None in
   try
-    match aux ~short:"~" ~prefix:(OpamMisc.Sys.home ()) with
+    match aux ~short:"~" ~prefix:(OpamStd.Sys.home ()) with
     | Some p -> p
     | None   -> s
   with Not_found -> s
@@ -357,8 +357,8 @@ module O = struct
   let to_json = to_json
 end
 
-module Map = OpamMisc.Map.Make(O)
-module Set = OpamMisc.Set.Make(O)
+module Map = OpamStd.Map.Make(O)
+module Set = OpamStd.Set.Make(O)
 
 let copy_files ~src ~dst =
   let files = rec_files src in
@@ -373,7 +373,7 @@ let copy_files ~src ~dst =
       copy ~src:file ~dst:dst_file
     ) files
 
-module OP = struct
+module Op = struct
 
   let (/) = (/)
 
@@ -419,7 +419,7 @@ module Attribute = struct
                             (String.concat " " k)
 
   let to_string t = String.concat " " (to_string_list t)
-  let of_string s = of_string_list (OpamMisc.String.split s ' ')
+  let of_string s = of_string_list (OpamStd.String.split s ' ')
 
   let to_json x =
     `O ([ ("base" , Base.to_json x.base);
@@ -436,9 +436,9 @@ module Attribute = struct
     let to_json = to_json
   end
 
-  module Set = OpamMisc.Set.Make(O)
+  module Set = OpamStd.Set.Make(O)
 
-  module Map = OpamMisc.Map.Make(O)
+  module Map = OpamStd.Map.Make(O)
 
 end
 

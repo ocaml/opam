@@ -17,10 +17,10 @@
 (** Typed filename manipulation *)
 
 (** Basenames *)
-module Base: OpamMisc.ABSTRACT
+module Base: OpamStd.ABSTRACT
 
 (** Directory names *)
-module Dir: OpamMisc.ABSTRACT
+module Dir: OpamStd.ABSTRACT
 
 (** Return the current working directory *)
 val cwd: unit -> Dir.t
@@ -82,7 +82,7 @@ val with_tmp_dir: (Dir.t -> 'a) -> 'a
 (** Provide an automatically cleaned up temp directory to a job *)
 val with_tmp_dir_job: (Dir.t -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Generic filename *)
 type generic_file =
@@ -227,7 +227,7 @@ val with_flock: ?read:bool -> t -> ('a -> 'b) -> 'a -> 'b
     value. *)
 val copy_files: src:Dir.t -> dst:Dir.t -> unit
 
-module OP: sig
+module Op: sig
 
   (** Create a new directory *)
   val (/): Dir.t -> string -> Dir.t
@@ -240,7 +240,7 @@ end
 (** Simple structure to hanle file attributes *)
 module Attribute: sig
 
-  include OpamMisc.ABSTRACT
+  include OpamStd.ABSTRACT
 
   val to_string_list: t -> string list
 

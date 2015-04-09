@@ -16,7 +16,7 @@
 (* Script to add findlib info *)
 open OpamTypes
 
-module StringSet = OpamMisc.String.Set
+module StringSet = OpamStd.String.Set
 
 type args = {
   src: name;

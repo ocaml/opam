@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "GIT" fmt
@@ -62,7 +62,7 @@ module Git : OpamVCS.VCS= struct
       if current_remote <> Some (fst repo.repo_address) then (
         log "Git remote for %s needs updating (was: %s)"
           (OpamRepositoryBackend.to_string repo)
-          (OpamMisc.Option.default "<none>" current_remote);
+          (OpamStd.Option.default "<none>" current_remote);
         OpamProcess.Job.of_list [
           git repo ~verbose:false [ "remote" ; "rm" ; "origin" ];
           git repo ~verbose:false
@@ -74,7 +74,7 @@ module Git : OpamVCS.VCS= struct
         Done ()
     in
     check_and_fix_remote @@+ fun () ->
-    let branch = OpamMisc.Option.default "HEAD" (snd repo.repo_address) in
+    let branch = OpamStd.Option.default "HEAD" (snd repo.repo_address) in
     let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
     git repo [ "fetch" ; "-q"; "origin"; refspec ]
     @@> fun r ->

@@ -16,9 +16,9 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
+open OpamStd.Op
 open OpamProcess.Job.Op
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamPackage.Set.Op
 
 let log fmt = OpamConsole.log "STATE" fmt
@@ -53,7 +53,7 @@ type state = Types.t
 open Types
 
 let string_of_repositories r =
-  OpamMisc.List.to_string
+  OpamStd.List.to_string
     OpamRepositoryName.to_string
     (OpamRepositoryName.Map.keys r)
 
@@ -304,7 +304,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
   let module Ov = OpamPath.Switch.Overlay in
   log "Add pinning overlay for %a (template:%b, version:%a)"
     (slog OpamPackage.Name.to_string) name template
-    OpamMisc.Option.Op.(
+    OpamStd.Option.Op.(
       slog @@ fun v -> (v >>| OpamPackage.Version.to_string) +! "none"
     ) version;
   let pkg_overlay f = f t.root t.switch name in
@@ -316,7 +316,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
     let files = List.filter (fun f -> f <> opam_f && f <> url_f) files in
     let opam = OPAM.read opam_f in
     let url =
-      try Some (URL.read url_f) with e -> OpamMisc.Exn.fatal e; None in
+      try Some (URL.read url_f) with e -> OpamStd.Exn.fatal e; None in
     opam, url, orig, files
   in
   try match OpamPackage.Name.Map.find name t.pinned with
@@ -325,9 +325,9 @@ let add_pinned_overlay ?(template=false) ?version t name =
       List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
         files;
       OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
-      OpamMisc.Option.iter (URL.write (pkg_overlay Ov.url)) url
+      OpamStd.Option.iter (URL.write (pkg_overlay Ov.url)) url
     | _ ->
-      let nv = OpamMisc.Option.map (OpamPackage.create name) version in
+      let nv = OpamStd.Option.map (OpamPackage.create name) version in
       let rv = (* repo version *)
         match nv with
         (* Lookup in package_index to ignore pinned versions *)
@@ -342,7 +342,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
           in
           OpamPackage.max_version versions name (* raises Not_found *)
       in
-      let v = OpamMisc.Option.default (OpamPackage.version rv) version in
+      let v = OpamStd.Option.default (OpamPackage.version rv) version in
       let opam, _url, root, files = get_orig_meta rv in
       let url = url_of_locally_pinned_package t name in
       List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
@@ -352,7 +352,7 @@ let add_pinned_overlay ?(template=false) ?version t name =
   with Not_found -> (* No original meta *)
     let url = url_of_locally_pinned_package t name in
     let version =
-      OpamMisc.Option.default
+      OpamStd.Option.default
         (OpamPackage.Version.of_string
            (if template then "0.1" else "~unknown"))
         version
@@ -532,7 +532,7 @@ let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
         in
         Some opam
       with e ->
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         match copy_invalid_to with
         | Some dst ->
           OpamConsole.warning
@@ -562,7 +562,7 @@ let pinned_packages t =
     (fun name _ acc ->
        try OpamPackage.Set.add (pinned t name) acc
        with e ->
-         OpamMisc.Exn.fatal e;
+         OpamStd.Exn.fatal e;
          if OpamCoreConfig.(!r.strict) then
            OpamConsole.error_and_exit "Invalid pinned package %s"
              (OpamPackage.Name.to_string name)
@@ -573,7 +573,7 @@ let pinned_packages t =
     t.pinned OpamPackage.Set.empty
 
 let descr_opt t nv =
-  OpamMisc.Option.map OpamFile.Descr.read
+  OpamStd.Option.map OpamFile.Descr.read
     (descr_file t nv)
 
 let descr t nv =
@@ -582,7 +582,7 @@ let descr t nv =
   | Some f -> OpamFile.Descr.read f
 
 let url t nv =
-  OpamMisc.Option.map OpamFile.URL.read
+  OpamStd.Option.map OpamFile.URL.read
     (url_file t nv)
 
 (* For documentation *)
@@ -632,13 +632,13 @@ let get_env_var v =
   let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
   let var_hook =
     if OpamVariable.Full.is_global v then
-      OpamMisc.String.map (function '-' -> '_' | c -> c) var_str
+      OpamStd.String.map (function '-' -> '_' | c -> c) var_str
     else
       Printf.sprintf "%s_%s"
         (OpamPackage.Name.to_string (OpamVariable.Full.package v))
         var_str
   in
-  try match OpamMisc.Env.get ("OPAMVAR_" ^ var_hook) with
+  try match OpamStd.Env.get ("OPAMVAR_" ^ var_hook) with
     | "true"  | "1" -> bool true
     | "false" | "0" -> bool false
     | s             -> string s
@@ -709,7 +709,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
         bool (OpamFilename.exists
                 (OpamPath.Switch.lib_dir t.root t.switch
                  /"ocaml"//"dynlink.cmxa"))
-    | "arch"          -> string (OpamMisc.Sys.arch ())
+    | "arch"          -> string (OpamStd.Sys.arch ())
     | _               -> None
   in
   let get_package_var opam v =
@@ -755,7 +755,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
         OpamFormula.atoms (OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam))
       in
       let installed_deps =
-        OpamMisc.List.filter_map
+        OpamStd.List.filter_map
           (fun (n,cstr) ->
              try
                let nv =
@@ -768,7 +768,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
              with Not_found -> None)
           deps
       in
-      string (OpamMisc.List.concat_map " "  OpamPackage.to_string installed_deps)
+      string (OpamStd.List.concat_map " "  OpamPackage.to_string installed_deps)
     | "hash",      Some opam ->
       (try
          let nv = get_nv opam in
@@ -864,7 +864,7 @@ let consistent_os opam =
   | f ->
     let atom (b, os) =
       let ($) = if b then (=) else (<>) in
-      os $ OpamMisc.Sys.os_string () in
+      os $ OpamStd.Sys.os_string () in
     OpamFormula.eval atom f
 
 let consistent_available_field t opam =
@@ -938,7 +938,7 @@ let unavailable_reason t (name, _ as atom) =
     match r with
     | [] -> raise Not_found
     | [r] -> " because " ^ r ^ "."
-    | rs -> " because:\n" ^ OpamMisc.Format.itemize ~bullet:"    - " (fun x -> x) rs in
+    | rs -> " because:\n" ^ OpamStd.Format.itemize ~bullet:"    - " (fun x -> x) rs in
   try
     Printf.sprintf
       "%s is not available%s"
@@ -981,7 +981,7 @@ let create_system_compiler_description root =
           (if OpamClientConfig.(!r.no_base_packages) then []
            else static_base_packages)
           [ "CAML_LD_LIBRARY_PATH", "=",
-            "%{lib}%/stublibs" ^ String.make 1 (OpamMisc.Sys.path_sep ()) ^
+            "%{lib}%/stublibs" ^ String.make 1 (OpamStd.Sys.path_sep ()) ^
             Filename.concat libdir "stublibs" ] in
       OpamFile.Comp.write comp f
 
@@ -1114,11 +1114,11 @@ let universe t action =
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "%s" (OpamMisc.List.concat_map " | " string_of_atom (List.rev c)) in
-  Printf.sprintf "%s" (OpamMisc.List.concat_map " , " string_of_clause (List.rev cnf))
+    Printf.sprintf "%s" (OpamStd.List.concat_map " | " string_of_atom (List.rev c)) in
+  Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_clause (List.rev cnf))
 
 let string_of_conjunction string_of_atom c =
-  Printf.sprintf "%s" (OpamMisc.List.concat_map " , " string_of_atom (List.rev c))
+  Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
 
 let dump_state t oc =
   let opams = (* Read overlays of pinned packages *)
@@ -1340,7 +1340,7 @@ let switch_consistency_checks t =
          in
          not (OpamPackage.Set.mem nv t.installed) ||
          OpamPackage.Map.mem nv t.opams (* this package has upstream metadata *)
-       with e -> OpamMisc.Exn.fatal e; true)
+       with e -> OpamStd.Exn.fatal e; true)
 
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
@@ -1381,7 +1381,7 @@ let marshal_from_file file =
     log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
     Some cache.cached_opams
   with e ->
-    OpamMisc.Exn.fatal e;
+    OpamStd.Exn.fatal e;
     log "Invalid cache, removing: %a" (slog Printexc.to_string) e;
     OpamFilename.remove file;
     None
@@ -1430,7 +1430,7 @@ let reinstall_system_compiler t =
     ) t.aliases
 
   ) else
-    OpamMisc.Sys.exit 1
+    OpamStd.Sys.exit 1
 
 let upgrade_to_1_1_hook =
   ref (fun () -> assert false)
@@ -1464,7 +1464,7 @@ let load_config root =
 
 (* XXX To be moved to Arg
   let command_of_string s =
-    List.map (fun s -> CString s, None) (OpamMisc.String.split s ' ')
+    List.map (fun s -> CString s, None) (OpamStd.String.split s ' ')
   in
   (* Set some globals *)
   
@@ -1475,7 +1475,7 @@ let load_config root =
       | None -> match OpamFile.Config.solver config with
         | Some f ->
           OpamGlobals.env_external_solver :=
-            Some (OpamMisc.List.concat_map " "
+            Some (OpamStd.List.concat_map " "
                     (function (CIdent i,_) -> "%{"^i^"}%" | (CString s,_) -> s)
                     f);
           f
@@ -1575,7 +1575,7 @@ let load_state ?(save_cache=true) call_site switch =
         if OpamFilename.exists file then file :: acc
         else acc
       ) [] files in
-    let comp = OpamMisc.List.filter_map OpamCompiler.of_filename files in
+    let comp = OpamStd.List.filter_map OpamCompiler.of_filename files in
     OpamCompiler.Set.of_list comp in
   let switch, compiler =
     try switch, OpamSwitch.Map.find switch aliases
@@ -1597,7 +1597,7 @@ let load_state ?(save_cache=true) call_site switch =
            OpamConsole.errmsg "Swiched back to %s"
              (OpamSwitch.to_string new_switch);
          with Not_found -> ());
-        OpamMisc.Sys.exit 10
+        OpamStd.Sys.exit 10
   in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
@@ -1673,7 +1673,7 @@ let load_state ?(save_cache=true) call_site switch =
     if OpamConsole.confirm "\nSystem update successful. Go on with %S ?"
         (String.concat " " (Array.to_list Sys.argv))
     then t
-    else OpamMisc.Sys.exit 0
+    else OpamStd.Sys.exit 0
   ) else
     t
 
@@ -1704,7 +1704,7 @@ let install_global_config root switch =
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with Not_found -> "user");
       ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with Not_found -> "group");
       ("make" , OpamClientConfig.(Lazy.force !r.makecmd));
-      ("os"   , OpamMisc.Sys.os_string ());
+      ("os"   , OpamStd.Sys.os_string ());
     ] in
 
   let config = OpamFile.Dot_config.create vars in
@@ -1726,7 +1726,7 @@ let upgrade_to_1_1 () =
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
     if OpamCoreConfig.(!r.safe_mode) then
       OpamConsole.error_and_exit "Safe mode: not upgrading from opamroot <1.1";
-    OpamSystem.in_dir (OpamMisc.Sys.home ()) @@ fun () ->
+    OpamSystem.in_dir (OpamStd.Sys.home ()) @@ fun () ->
 
     OpamConsole.header_msg
       "Upgrading to OPAM 1.1 %s"
@@ -1865,7 +1865,7 @@ let upgrade_to_1_2 () =
         | None -> raise Not_found
         | Some v -> v
       with e ->
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         try OpamPackage.version (OpamPackage.max_version (Lazy.force packages) name)
         with Not_found -> OpamPackage.Version.of_string "0" in
     let fix_version nv =
@@ -1960,13 +1960,13 @@ let expand_env t ?opam (env: env_updates) : env =
     let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
-      try OpamMisc.Env.reset_value ~prefix (OpamMisc.Sys.path_sep ())
-            (OpamMisc.Env.get ident)
+      try OpamStd.Env.reset_value ~prefix (OpamStd.Sys.path_sep ())
+            (OpamStd.Env.get ident)
       with Not_found -> [] in
     let update_env a =
       let before, after =
-        OpamMisc.Env.cut_value
-          ~prefix (OpamMisc.Sys.path_sep ()) (OpamMisc.Env.get ident)
+        OpamStd.Env.cut_value
+          ~prefix (OpamStd.Sys.path_sep ()) (OpamStd.Env.get ident)
       in
       List.rev_append before (a::after)
     in
@@ -1979,7 +1979,7 @@ let expand_env t ?opam (env: env_updates) : env =
         match List.rev b with
         | "" :: _ -> (a :: c) @ [""]
         | _       -> a :: c in
-    let c = String.make 1 (OpamMisc.Sys.path_sep ()) in
+    let c = String.make 1 (OpamStd.Sys.path_sep ()) in
     match symbol with
     | "="  -> (ident, string)
     | "+=" -> (ident, String.concat c (string :: read_env ()))
@@ -2010,7 +2010,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    let open OpamMisc.Sys in
+    let open OpamStd.Sys in
     match os () with
     | OpenBSD | NetBSD | FreeBSD ->
       [] (* MANPATH is a global override on those, so disabled for now *)
@@ -2018,7 +2018,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
       ["MANPATH", "=:",
        OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch)] in
   let utf8 =
-    if OpamMisc.Sys.(os () = Darwin) then ["OPAMUTF8MSGS", "=", "1"]
+    if OpamStd.Sys.(os () = Darwin) then ["OPAMUTF8MSGS", "=", "1"]
     else []
   in
   let comp_env = OpamFile.Comp.env comp in
@@ -2029,7 +2029,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
     let current = t.root in
     let default = OpamClientConfig.(default.root_dir) in
     let current_string = OpamFilename.Dir.to_string current in
-    let env = OpamMisc.Env.getopt "OPAMROOT" in
+    let env = OpamStd.Env.getopt "OPAMROOT" in
     if current <> default || Some current_string <> env
     then [ "OPAMROOT", "=", current_string ]
     else []
@@ -2050,7 +2050,7 @@ let get_opam_env ~force_path t =
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
-  let env0 = OpamMisc.Env.list () in
+  let env0 = OpamStd.Env.list () in
   add_to_env t ?opam env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
@@ -2059,7 +2059,7 @@ let mem_pattern_in_string ~pattern ~string =
 
 let ocamlinit () =
   try
-    let file = Filename.concat (OpamMisc.Env.get "HOME") ".ocamlinit" in
+    let file = Filename.concat (OpamStd.Env.get "HOME") ".ocamlinit" in
     Some (OpamFilename.of_string file)
   with Not_found ->
     None
@@ -2098,7 +2098,7 @@ let update_ocamlinit () =
         output_string oc (header ^ body);
         close_out oc;
       with e ->
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         OpamSystem.internal_error "Cannot write ~/.ocamlinit."
   ) else
     OpamConsole.msg "  ~/.ocamlinit is already up-to-date.\n"
@@ -2109,9 +2109,9 @@ let string_of_env_update t shell updates =
   let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
   let fish (k,v) = match k with
     | "PATH" | "MANPATH" ->
-      let v = OpamMisc.String.split_delim v ':' in
+      let v = OpamStd.String.split_delim v ':' in
       Printf.sprintf "set -gx %s %s;\n" k
-        (OpamMisc.List.concat_map " " (Printf.sprintf "%S") v)
+        (OpamStd.List.concat_map " " (Printf.sprintf "%S") v)
     | _ ->
       Printf.sprintf "set -gx %s %S;\n" k v in
   let export = match shell with
@@ -2130,20 +2130,20 @@ let string_of_env_update t shell updates =
       | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
-  OpamMisc.List.concat_map "" aux updates
+  OpamStd.List.concat_map "" aux updates
 
 let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, complete_sh)=
   let variables =
     Some (source t ~shell variables_sh) in
   let switch_eval =
     if switch_eval then
-      OpamMisc.Option.map (source t ~shell ~interactive_only:true)
+      OpamStd.Option.map (source t ~shell ~interactive_only:true)
         switch_eval_sh
     else
       None in
   let complete =
     if complete then
-      OpamMisc.Option.map (source t ~shell ~interactive_only:true) complete_sh
+      OpamStd.Option.map (source t ~shell ~interactive_only:true) complete_sh
     else
       None in
   let buf = Buffer.create 128 in
@@ -2203,7 +2203,7 @@ let update_init_scripts t ~global =
     if needs_update then (
       updated := true;
       try OpamFilename.write file body
-      with e -> OpamMisc.Exn.fatal e
+      with e -> OpamStd.Exn.fatal e
     ) in
   List.iter write scripts;
   if global <> None then
@@ -2236,7 +2236,7 @@ let dot_profile_needs_update t dot_profile =
     let pattern1 = "opam config" in
     let pattern2 = OpamFilename.to_string (OpamPath.init t.root // "init") in
     let pattern3 =
-      OpamMisc.String.remove_prefix
+      OpamStd.String.remove_prefix
         ~prefix:OpamClientConfig.(OpamFilename.Dir.to_string !r.root_dir)
         pattern2 in
     if mem_pattern_in_string ~pattern:pattern1 ~string:body then
@@ -2271,7 +2271,7 @@ let update_dot_profile t dot_profile shell =
         "%s\n\n\
          # OPAM configuration\n\
          %s"
-        (OpamMisc.String.strip body) (source t ~shell init_file) in
+        (OpamStd.String.strip body) (source t ~shell init_file) in
     OpamFilename.write dot_profile body
 
 let update_setup t user global =
@@ -2338,8 +2338,8 @@ let eval_string t =
   let root =
     let opamroot_cur = OpamFilename.Dir.to_string t.root in
     let opamroot_env =
-      OpamMisc.Option.Op.(
-        OpamMisc.Env.getopt "OPAMROOT" +!
+      OpamStd.Option.Op.(
+        OpamStd.Env.getopt "OPAMROOT" +!
         OpamFilename.Dir.to_string OpamClientConfig.(default.root_dir)
       ) in
     if opamroot_cur <> opamroot_env then
@@ -2349,12 +2349,12 @@ let eval_string t =
   let switch =
     try
       let sw_cur = OpamSwitch.to_string t.switch in
-      let sw_env = OpamMisc.Env.get "OPAMSWITCH" in
+      let sw_env = OpamStd.Env.get "OPAMSWITCH" in
       if sw_cur <> sw_env then Printf.sprintf " --switch=%s" sw_cur
       else ""
     with Not_found -> ""
   in
-  match OpamMisc.Sys.guess_shell_compat () with
+  match OpamStd.Sys.guess_shell_compat () with
   | `fish ->
     Printf.sprintf "eval (opam config env%s%s)\n" root switch
   | _ ->
@@ -2363,7 +2363,7 @@ let eval_string t =
 let up_to_date_env t =
   let changes =
     List.filter
-      (fun (s, v) -> Some v <> try Some (OpamMisc.Env.get s) with Not_found -> None)
+      (fun (s, v) -> Some v <> try Some (OpamStd.Env.get s) with Not_found -> None)
       (get_opam_env ~force_path:false t) in
   changes = []
 
@@ -2519,7 +2519,7 @@ let install_compiler t ~quiet:_ switch compiler =
     OpamConsole.msg "Cannot find %s: %s is not a valid compiler name.\n"
       (OpamFilename.to_string comp_f)
       (OpamCompiler.to_string compiler);
-    OpamMisc.Sys.exit 1;
+    OpamStd.Sys.exit 1;
   );
 
   let switch_dir = OpamPath.Switch.root t.root switch in
@@ -2630,7 +2630,7 @@ let install_compiler t ~quiet:_ switch compiler =
         OpamFilter.commands env (OpamFile.Comp.build comp)
       in
       let commands =
-        OpamMisc.List.filter_map (function
+        OpamStd.List.filter_map (function
             | [] -> None
             | cmd::args ->
               let text =
@@ -2730,7 +2730,7 @@ let update_pinned_package t ?fixed_version name =
     hash_meta files,
     (match opam with Some o -> OpamFile.OPAM.(empty = with_name_opt (with_version_opt o None) None)
                    | None -> true),
-    OpamMisc.Option.map OpamFile.OPAM.version opam
+    OpamStd.Option.map OpamFile.OPAM.version opam
   in
   let repo_meta = (* Version from the repo *)
     let nv =
@@ -2759,7 +2759,7 @@ let update_pinned_package t ?fixed_version name =
       | Some nv ->
         let dir = package_repo_dir t.root t.repositories t.package_index nv in
         let opam, descr, files = local_opam ~root:true ?fixed_version name dir in
-        OpamMisc.Option.map
+        OpamStd.Option.map
           (fun o -> OpamFile.OPAM.with_version_opt o user_version) opam,
         descr, files
     in
@@ -2808,7 +2808,7 @@ let update_pinned_package t ?fixed_version name =
     List.iter (fun (f,kind) -> match kind with
         | `Opam o ->
           let vo =
-            OpamMisc.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
+            OpamStd.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
           in
           OpamFile.OPAM.write (overlay // f)
             (OpamFile.OPAM.with_version_opt o vo)
@@ -2835,7 +2835,7 @@ let update_pinned_package t ?fixed_version name =
         "[%s] Conflicting update of the metadata from %s:\n%s"
         (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
         (string_of_address (OpamFile.URL.url url))
-        (OpamMisc.Format.itemize diff_to_string (diff user_meta new_meta));
+        (OpamStd.Format.itemize diff_to_string (diff user_meta new_meta));
       OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
         (OpamFilename.Dir.to_string overlay)
     then (

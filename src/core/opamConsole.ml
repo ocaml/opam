@@ -21,12 +21,12 @@ let debug () = OpamCoreConfig.(!r.debug_level) > 0
 let verbose () = OpamCoreConfig.(!r.verbose_level) > 0
 
 let dumb_term = lazy (
-  try OpamMisc.Env.get "TERM" = "dumb" with Not_found -> true
+  try OpamStd.Env.get "TERM" = "dumb" with Not_found -> true
 )
 
 let color =
   let auto = lazy (
-    OpamMisc.Sys.tty_out && not (Lazy.force dumb_term)
+    OpamStd.Sys.tty_out && not (Lazy.force dumb_term)
   ) in
   fun () -> match OpamCoreConfig.(!r.color) with
     | `Always -> true
@@ -37,15 +37,15 @@ let disp_status_line () =
   match OpamCoreConfig.(!r.disp_status_line) with
   | `Always -> true
   | `Never -> false
-  | `Auto -> OpamMisc.Sys.tty_out && (color () || not (Lazy.force dumb_term))
+  | `Auto -> OpamStd.Sys.tty_out && (color () || not (Lazy.force dumb_term))
 
 let utf8, utf8_extended =
   let auto = lazy (
     let checkv v =
-      try Some (OpamMisc.String.ends_with ~suffix:"UTF-8" (OpamMisc.Env.get v))
+      try Some (OpamStd.String.ends_with ~suffix:"UTF-8" (OpamStd.Env.get v))
       with Not_found -> None
     in
-    OpamMisc.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
+    OpamStd.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
   ) in
   (fun () -> match OpamCoreConfig.(!r.utf8) with
      | `Always | `Extended -> true
@@ -54,7 +54,7 @@ let utf8, utf8_extended =
   (fun () -> match OpamCoreConfig.(!r.utf8) with
      | `Extended -> true
      | `Always | `Never -> false
-     | `Auto -> Lazy.force auto && OpamMisc.Sys.(os () = Darwin))
+     | `Auto -> Lazy.force auto && OpamStd.Sys.(os () = Darwin))
 
 let timer () =
   if debug () then
@@ -133,21 +133,21 @@ let error fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]"
-      (OpamMisc.Format.reformat ~start_column:8 ~indent:8 str)
+      (OpamStd.Format.reformat ~start_column:8 ~indent:8 str)
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]"
-      (OpamMisc.Format.reformat ~start_column:10 ~indent:10 str)
+      (OpamStd.Format.reformat ~start_column:10 ~indent:10 str)
   ) fmt
 
 let note fmt =
   Printf.ksprintf (fun str ->
     flush stdout;
     Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]"
-      (OpamMisc.Format.reformat ~start_column:7 ~indent:7 str)
+      (OpamStd.Format.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
 let errmsg fmt =
@@ -157,7 +157,7 @@ let errmsg fmt =
 let error_and_exit ?(num=66) fmt =
   Printf.ksprintf (fun str ->
     error "%s" str;
-    OpamMisc.Sys.exit num
+    OpamStd.Sys.exit num
   ) fmt
 
 let msg fmt =
@@ -167,7 +167,7 @@ let msg fmt =
 let formatted_msg ?indent fmt =
   flush stderr;
   Printf.ksprintf
-    (fun s -> print_string (OpamMisc.Format.reformat ?indent s); flush stdout)
+    (fun s -> print_string (OpamStd.Format.reformat ?indent s); flush stdout)
     fmt
 
 let status_line fmt =
@@ -182,7 +182,7 @@ let status_line fmt =
   ) else
     Printf.ifprintf stdout fmt
 
-let header_width () = min 80 (OpamMisc.Sys.terminal_columns ())
+let header_width () = min 80 (OpamStd.Sys.terminal_columns ())
 
 let header_msg fmt =
   let utf8camel = "\xF0\x9F\x90\xAB " in (* UTF-8 <U+1F42B, U+0020> *)
@@ -247,7 +247,7 @@ let confirm ?(default=true) fmt =
         (prompt (); msg "y\n"; true)
       else if OpamCoreConfig.(!r.answer) = Some false then
         (prompt (); msg "n\n"; false)
-      else if OpamMisc.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
+      else if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
         let rec loop () =
           prompt ();
           match String.lowercase (read_line ()) with

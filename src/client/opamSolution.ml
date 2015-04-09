@@ -41,7 +41,7 @@ let post_message ?(failed=false) state action =
     in
     let messages =
       let filter_env = OpamState.filter_env ~opam ~local_variables state in
-      OpamMisc.List.filter_map (fun (message,filter) ->
+      OpamStd.List.filter_map (fun (message,filter) ->
           if OpamFilter.opt_eval_to_bool filter_env filter
           then Some (OpamFilter.expand_string filter_env message)
           else None)
@@ -56,7 +56,7 @@ let post_message ?(failed=false) state action =
       (if failed then "troubleshooting" else "installed successfully");
     let rex = Re_pcre.regexp "\n" in
     List.iter (fun msg ->
-        OpamConsole.formatted_msg ~indent:(OpamMisc.Format.visual_length mark)
+        OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
           "%s%s\n" mark
           (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
       messages
@@ -64,15 +64,15 @@ let post_message ?(failed=false) state action =
 let check_solution state = function
   | No_solution ->
     OpamConsole.msg "No solution found, exiting\n";
-    OpamMisc.Sys.exit 3
+    OpamStd.Sys.exit 3
   | Error (success, failed, _remaining) ->
     List.iter (post_message state) success;
     List.iter (post_message ~failed:true state) failed;
-    OpamMisc.Sys.exit 4
+    OpamStd.Sys.exit 4
   | OK actions ->
     List.iter (post_message state) actions
   | Nothing_to_do -> ()
-  | Aborted     -> OpamMisc.Sys.exit 0
+  | Aborted     -> OpamStd.Sys.exit 0
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -112,10 +112,10 @@ let check_availability ?permissive t set atoms =
     else if permissive = Some true
     then Some (OpamState.unknown_package t atom)
     else Some (OpamState.unavailable_reason t atom) in
-  let errors = OpamMisc.List.filter_map check_atom atoms in
+  let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
-     OpamMisc.Sys.exit 66)
+     OpamStd.Sys.exit 66)
 
 let sanitize_atom_list ?(permissive=false) t atoms =
   let packages =
@@ -175,7 +175,7 @@ let string_of_errors errors =
 let new_variables e =
   let e = List.filter (fun (_,s,_) -> s="=") e in
   let e = List.rev_map (fun (v,_,_) -> v) e in
-  OpamMisc.String.Set.of_list e
+  OpamStd.String.Set.of_list e
 
 let variable_warnings = ref false
 let print_variable_warnings t =
@@ -183,7 +183,7 @@ let print_variable_warnings t =
   if not !variable_warnings then (
     let warn w =
       let is_defined s =
-        try let _ = OpamMisc.Env.get s in true
+        try let _ = OpamStd.Env.get s in true
         with Not_found -> false in
       if is_defined w then
         variables := w :: !variables in
@@ -205,18 +205,18 @@ let print_variable_warnings t =
       let comp_f = OpamPath.compiler_comp t.root comp in
       let env = OpamFile.Comp.env (OpamFile.Comp.safe_read comp_f) in
       new_variables env in
-    let vars = ref OpamMisc.String.Set.empty in
+    let vars = ref OpamStd.String.Set.empty in
     OpamSwitch.Map.iter (fun _ comp ->
-      vars := OpamMisc.String.Set.union !vars (new_variables comp)
+      vars := OpamStd.String.Set.union !vars (new_variables comp)
     ) t.aliases;
-    vars := OpamMisc.String.Set.diff !vars (new_variables t.compiler);
-    OpamMisc.String.Set.iter warn !vars;
+    vars := OpamStd.String.Set.diff !vars (new_variables t.compiler);
+    OpamStd.String.Set.iter warn !vars;
     if !variables <> [] then (
       OpamConsole.msg "The following variables are set in your environment, it \
                        is advised to unset them for OPAM to work correctly.\n";
       List.iter (OpamConsole.msg " - %s\n") !variables;
       if not (OpamConsole.confirm "Do you want to continue ?") then
-        OpamMisc.Sys.exit 1;
+        OpamStd.Sys.exit 1;
     );
     variable_warnings := true;
   )
@@ -358,13 +358,13 @@ let parallel_apply t action action_graph =
     OpamConsole.error_and_exit
       "The sources of the following couldn't be obtained, aborting:\n%s\
        (This may be fixed by running 'opam update')"
-      (OpamMisc.Format.itemize OpamPackage.to_string
+      (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements failed_downloads))
   else if not (OpamPackage.Set.is_empty failed_downloads) then
     OpamConsole.warning
       "The sources of the following couldn't be obtained, they may be \
        uncleanly uninstalled:\n%s"
-      (OpamMisc.Format.itemize OpamPackage.to_string
+      (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements failed_downloads));
 
 
@@ -389,8 +389,8 @@ let parallel_apply t action action_graph =
     | To_delete nv ->
       if OpamAction.removal_needs_download t nv then
         (try OpamAction.extract_package t source nv
-         with e -> OpamMisc.Exn.fatal e);
-      OpamProcess.Job.catch (fun e -> OpamMisc.Exn.fatal e; Done ())
+         with e -> OpamStd.Exn.fatal e);
+      OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
          (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
       remove_from_install nv;
       None
@@ -446,13 +446,13 @@ let parallel_apply t action action_graph =
     cleanup_artefacts action_graph;
     OpamConsole.msg "Done.\n";
     OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
-  | `Exception (OpamMisc.Sys.Exit _ | Sys.Break as e) ->
+  | `Exception (OpamStd.Sys.Exit _ | Sys.Break as e) ->
     OpamConsole.msg "Aborting.\n";
     raise e
   | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
     OpamConsole.error "Cycles found during dependency resolution:\n%s"
-      (OpamMisc.Format.itemize
-         (OpamMisc.List.concat_map (OpamConsole.colorise `yellow " -> ")
+      (OpamStd.Format.itemize
+         (OpamStd.List.concat_map (OpamConsole.colorise `yellow " -> ")
             OpamSolver.Action.to_string)
          cycles);
     raise e
@@ -487,7 +487,7 @@ let parallel_apply t action action_graph =
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
           OpamConsole.msg "%s\n%s" header
-            (OpamMisc.Format.itemize ~bullet:"  " (fun x -> x)
+            (OpamStd.Format.itemize ~bullet:"  " (fun x -> x)
                (PackageAction.to_aligned_strings actions))
         else match empty with
           | Some s -> OpamConsole.msg "%s\n" s
@@ -526,25 +526,25 @@ let simulate_new_state state t =
 
 let print_external_tags t solution =
   let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamMisc.String.Set.of_list OpamClientConfig.(!r.external_tags) in
+  let external_tags = OpamStd.String.Set.of_list OpamClientConfig.(!r.external_tags) in
   let values =
     OpamPackage.Set.fold (fun nv accu ->
         let opam = OpamState.opam t nv in
         match OpamFile.OPAM.depexts opam with
         | None         -> accu
         | Some alltags ->
-          OpamMisc.String.SetMap.fold (fun tags values accu ->
-              if OpamMisc.String.Set.(
+          OpamStd.String.SetMap.fold (fun tags values accu ->
+              if OpamStd.String.Set.(
                   (* A \subseteq B <=> (A U B) / B = 0 *)
                   is_empty (diff (union external_tags tags) external_tags)
                 )
               then
-                OpamMisc.String.Set.union values accu
+                OpamStd.String.Set.union values accu
               else
                 accu
             ) alltags accu
-      ) packages OpamMisc.String.Set.empty in
-  let values = OpamMisc.String.Set.elements values in
+      ) packages OpamStd.String.Set.empty in
+  let values = OpamStd.String.Set.elements values in
   if values <> [] then
     OpamConsole.msg "%s\n" (String.concat " " values)
 
@@ -588,7 +588,7 @@ let apply ?ask t action ~requested solution =
       let messages p =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
-        OpamMisc.List.filter_map (fun (s,f) ->
+        OpamStd.List.filter_map (fun (s,f) ->
           if OpamFilter.opt_eval_to_bool
               (OpamState.filter_env ~opam new_state) f
           then Some s

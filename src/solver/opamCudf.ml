@@ -70,7 +70,7 @@ let string_of_action a =
   | To_delete p           -> Printf.sprintf "delete %s" (aux p)
 
 let string_of_actions l =
-  OpamMisc.List.to_string (fun a -> " - " ^ string_of_action a) l
+  OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
 
 let string_of_package p =
   let installed = if p.Cudf.installed then "installed" else "not-installed" in
@@ -79,7 +79,7 @@ let string_of_package p =
     p.Cudf.version installed
 
 let string_of_packages l =
-  OpamMisc.List.to_string string_of_package l
+  OpamStd.List.to_string string_of_package l
 
 let to_json p =
   `O [ ("name", `String p.Cudf.package);
@@ -108,15 +108,15 @@ type conflict_case =
 type conflict =
   Cudf.universe * int package_map * conflict_case
 
-module Map = OpamMisc.Map.Make(Pkg)
-module Set = OpamMisc.Set.Make(Pkg)
+module Map = OpamStd.Map.Make(Pkg)
+module Set = OpamStd.Set.Make(Pkg)
 module Graph = struct
 
   module PG = struct
     include Algo.Defaultgraphs.PackageGraph.G
     let succ g v =
       try succ g v
-      with e -> OpamMisc.Exn.fatal e; []
+      with e -> OpamStd.Exn.fatal e; []
   end
 
   module PO = Algo.Defaultgraphs.GraphOper (PG)
@@ -320,9 +320,9 @@ let make_chains cudfnv2opam depends =
   let rec aux constrs direct_deps =
     if Set.is_empty direct_deps then [[]] else
     let depnames =
-      Set.fold (fun p set -> OpamMisc.String.Set.add p.Cudf.package set)
-        direct_deps OpamMisc.String.Set.empty in
-    OpamMisc.String.Set.fold (fun name acc ->
+      Set.fold (fun p set -> OpamStd.String.Set.add p.Cudf.package set)
+        direct_deps OpamStd.String.Set.empty in
+    OpamStd.String.Set.fold (fun name acc ->
         let name_deps = (* Gather all deps with the given name *)
           Set.filter (fun p -> p.Cudf.package = name) direct_deps in
         let name_constrs =
@@ -353,9 +353,9 @@ let make_chains cudfnv2opam depends =
   in
   let start_constrs =
     let set =
-      Set.fold (fun p acc -> OpamMisc.String.Set.add p.Cudf.package acc)
-        roots OpamMisc.String.Set.empty in
-    List.map (fun name -> [name,None]) (OpamMisc.String.Set.elements set) in
+      Set.fold (fun p acc -> OpamStd.String.Set.add p.Cudf.package acc)
+        roots OpamStd.String.Set.empty in
+    List.map (fun name -> [name,None]) (OpamStd.String.Set.elements set) in
   aux start_constrs roots
 
 let strings_of_final_reasons cudfnv2opam unav_reasons reasons =
@@ -364,7 +364,7 @@ let strings_of_final_reasons cudfnv2opam unav_reasons reasons =
       (List.map
          (strings_of_reason cudfnv2opam unav_reasons)
          reasons) in
-  OpamMisc.String.Set.(elements (of_list reasons))
+  OpamStd.String.Set.(elements (of_list reasons))
 
 let strings_of_chains cudfnv2opam reasons =
   let chains = make_chains cudfnv2opam reasons in
@@ -590,7 +590,7 @@ let call_external_solver ~version_map univ req =
         ~call_solver:(dose_solver_callback ~criteria)
         ~criteria ~explain:true cudf_request
     with e ->
-      OpamMisc.Exn.fatal e;
+      OpamStd.Exn.fatal e;
       OpamConsole.warning "External solver failed:";
       OpamConsole.errmsg "%s\n" (Printexc.to_string e);
       failwith "opamSolver"
@@ -648,11 +648,11 @@ module Diff = struct
   (* for each pkgname I've the list of all versions that were installed or removed *)
   let diff univ sol =
     let pkgnames =
-      OpamMisc.String.Set.of_list
+      OpamStd.String.Set.of_list
         (List.rev_map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
-    let h = Hashtbl.create (OpamMisc.String.Set.cardinal pkgnames) in
+    let h = Hashtbl.create (OpamStd.String.Set.cardinal pkgnames) in
     let needed_reinstall = Set.of_list (Cudf.get_packages ~filter:need_reinstall univ) in
-    OpamMisc.String.Set.iter (fun pkgname ->
+    OpamStd.String.Set.iter (fun pkgname ->
       let were_installed = Set.of_list (Cudf.get_installed univ pkgname) in
       let are_installed = Set.of_list (Cudf.get_installed sol pkgname) in
       let removed = Set.diff were_installed are_installed in
@@ -739,7 +739,7 @@ let find_cycles g =
    user requests a to be installed, we can print:
    - install a - install b [required by a] - intall c [required by b] *)
 let compute_root_causes g requested =
-  let module StringSet = OpamMisc.String.Set in
+  let module StringSet = OpamStd.String.Set in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
         StringSet.add (Common.CudfAdd.encode (OpamPackage.Name.to_string n)) s)

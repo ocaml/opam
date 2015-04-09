@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 module type VERTEX = sig
-  include OpamMisc.OrderedType
+  include OpamStd.OrderedType
   include Graph.Sig.COMPARABLE with type t := t
 end
 

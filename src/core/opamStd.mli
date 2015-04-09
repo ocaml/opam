@@ -344,7 +344,7 @@ end
 
 (** {2 General use infix function combinators} *)
 
-module OP: sig
+module Op: sig
 
   (** Function application (with lower priority) (predefined in OCaml 4.01+) *)
   val (@@): ('a -> 'b) -> 'a -> 'b

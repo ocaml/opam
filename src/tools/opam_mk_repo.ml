@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamPackage.Set.Op
 
 let log fmt = OpamConsole.log "OPAM-MK-REPO" fmt
@@ -230,7 +230,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
     let aux r =
       OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list (OpamMisc.List.filter_map OpamPackage.of_filename list) in
+    OpamPackage.Set.of_list (OpamStd.List.filter_map OpamPackage.of_filename list) in
 
   let packages_of_attrs attrs =
     OpamFilename.Attribute.Set.fold (fun attr nvs ->
@@ -299,7 +299,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;
-          OpamMisc.Exn.fatal e
+          OpamStd.Exn.fatal e
       ) to_add;
   );
 
@@ -330,6 +330,6 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
       | _ -> disp "%s" (Printexc.to_string error) in
     let all_errors = List.map fst !errors in
     OpamConsole.error "Got some errors while processing: %s"
-      (OpamMisc.List.concat_map ", " OpamPackage.to_string all_errors);
+      (OpamStd.List.concat_map ", " OpamPackage.to_string all_errors);
     List.iter display_error !errors
   )

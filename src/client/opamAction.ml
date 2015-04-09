@@ -18,7 +18,7 @@ let log fmt = OpamConsole.log "ACTION" fmt
 let slog = OpamConsole.slog
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamState.Types
 open OpamProcess.Job.Op
 
@@ -155,7 +155,7 @@ let prepare_package_build t nv =
         if OpamFilter.opt_eval_to_bool (OpamState.filter_env ~opam t) filter
         then
           try f base; acc with e ->
-            OpamMisc.Exn.fatal e; OpamFilename.Base.to_string base :: acc
+            OpamStd.Exn.fatal e; OpamFilename.Base.to_string base :: acc
         else acc
       ) [] patches in
 
@@ -171,7 +171,7 @@ let prepare_package_build t nv =
   OpamFilename.in_dir p_build (fun () ->
     let all = OpamFile.OPAM.substs opam in
     let patches =
-      OpamMisc.List.filter_map (fun (f,_) ->
+      OpamStd.List.filter_map (fun (f,_) ->
         if List.mem f all then Some f else None
       ) patches in
     List.iter
@@ -202,7 +202,7 @@ let prepare_package_build t nv =
     let msg =
       Printf.sprintf "These patches didn't apply at %s:\n%s"
         (OpamFilename.Dir.to_string (OpamPath.Switch.build t.root t.switch nv))
-        (OpamMisc.Format.itemize (fun x -> x) patching_errors)
+        (OpamStd.Format.itemize (fun x -> x) patching_errors)
     in
     failwith msg
   )
@@ -239,7 +239,7 @@ let download_package t nv =
 let extract_package t source nv =
   log "extract_package: %a from %a"
     (slog OpamPackage.to_string) nv
-    (slog (OpamMisc.Option.to_string OpamTypesBase.string_of_generic_file))
+    (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
     source;
   if OpamClientConfig.(!r.dryrun) then () else
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
@@ -360,7 +360,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       (*   OpamConsole.msg "%s\n" (string_of_commands remove); *)
       let metadata = get_metadata t in
       let commands =
-        OpamMisc.List.filter_map (function
+        OpamStd.List.filter_map (function
             | [] -> None
             | cmd::args ->
               let text = OpamProcess.make_command_text name ~args cmd in
@@ -565,7 +565,7 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
         Done None
       with e ->
         remove_package ~metadata:false t ~keep_build:true ~silent:true nv
-        @@| fun () -> OpamMisc.Exn.fatal e; Some e
+        @@| fun () -> OpamStd.Exn.fatal e; Some e
   in
   run_commands commands
 

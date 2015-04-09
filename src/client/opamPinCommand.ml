@@ -17,7 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
-open OpamMisc.OP
+open OpamStd.Op
 
 let log fmt = OpamConsole.log "COMMAND" fmt
 let slog = OpamConsole.slog
@@ -44,7 +44,7 @@ let edit t name =
   let file = OpamPath.Switch.Overlay.opam t.root t.switch name in
   let temp_file = OpamPath.Switch.Overlay.tmp_opam t.root t.switch name in
   let orig_opam =
-    try Some (OpamFile.OPAM.read file) with e -> OpamMisc.Exn.fatal e; None
+    try Some (OpamFile.OPAM.read file) with e -> OpamStd.Exn.fatal e; None
   in
   let version,empty_opam =
     match orig_opam with
@@ -107,7 +107,7 @@ let edit t name =
         then Some opam
         else edit ()
     with e ->
-      OpamMisc.Exn.fatal e;
+      OpamStd.Exn.fatal e;
       if OpamConsole.confirm "Errors in %s, retry editing ?"
           (OpamFilename.to_string file)
       then edit ()
@@ -134,7 +134,7 @@ let edit t name =
       match dir with
       | Some dir when OpamFilename.exists_dir dir ->
         let src_opam =
-          OpamMisc.Option.default OpamFilename.OP.(dir // "opam")
+          OpamStd.Option.default OpamFilename.Op.(dir // "opam")
             (OpamState.find_opam_file_in_source name dir)
         in
         if OpamConsole.confirm "Save the new opam file back to %S ?"
@@ -201,7 +201,7 @@ let pin name ?version pin_option =
         (OpamFilename.remove
            (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
          no_changes)
-      else OpamMisc.Sys.exit 0
+      else OpamStd.Sys.exit 0
     with Not_found ->
       if OpamPackage.Name.Set.mem name (OpamState.base_package_names t) then (
         OpamConsole.warning
@@ -209,7 +209,7 @@ let pin name ?version pin_option =
           (OpamPackage.Name.to_string name);
         if not @@ OpamConsole.confirm
             "Are you sure you want to override this and pin it anyway ?"
-        then OpamMisc.Sys.exit 0);
+        then OpamStd.Sys.exit 0);
       false
   in
   let pins = OpamPackage.Name.Map.remove name pins in
@@ -220,7 +220,7 @@ let pin name ?version pin_option =
             (OpamConsole.colorise `bold "NEW"))
   then
     (OpamConsole.msg "Aborting.\n";
-     OpamMisc.Sys.exit 0);
+     OpamStd.Sys.exit 0);
 
   log "Adding %a => %a"
     (slog string_of_pin_option) pin_option
@@ -259,7 +259,7 @@ let pin name ?version pin_option =
 
 let unpin ?state names =
   log "unpin %a"
-    (slog @@ OpamMisc.List.concat_map " " OpamPackage.Name.to_string) names;
+    (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   let t = match state with
     | None -> OpamState.load_state "pin" OpamClientConfig.(!r.current_switch)
     | Some t -> t
@@ -327,4 +327,4 @@ let list ~short () =
     @ extra
   in
   let table = List.map lines (OpamPackage.Name.Map.bindings pins) in
-  OpamMisc.Format.print_table stdout ~sep:"  " (OpamMisc.Format.align_table table)
+  OpamStd.Format.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)

@@ -432,7 +432,7 @@ type env = (string * string) list
 type env_updates = (string * string * string) list
 
 (** Tags *)
-type tags = OpamMisc.String.Set.t OpamMisc.String.SetMap.t
+type tags = OpamStd.String.Set.t OpamStd.String.SetMap.t
 
 (** {2 Repository and global states} *)
 

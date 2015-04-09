@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamMisc.OP
+open OpamStd.Op
 
 let log fmt = OpamConsole.log "HEURISTIC" fmt
 let slog = OpamConsole.slog
@@ -31,10 +31,10 @@ type 'a state_space = 'a array list
    actions are using a different code-path, they should not appear
    here. *)
 let minimize_actions interesting_names actions =
-  let interesting_names = OpamMisc.String.Set.of_list interesting_names in
+  let interesting_names = OpamStd.String.Set.of_list interesting_names in
   List.filter (function
     | To_change (_, p)
-    | To_recompile p -> OpamMisc.String.Set.mem p.Cudf.package interesting_names
+    | To_recompile p -> OpamStd.String.Set.mem p.Cudf.package interesting_names
     | To_delete _    -> true
   ) actions
 
@@ -249,11 +249,11 @@ let find_interesting_names universe request =
     let revdepends = OpamCudf.reverse_dependencies universe packages in
     let filter pkg = pkg.Cudf.installed && filter pkg in
     List.filter filter revdepends in
-  let set = ref OpamMisc.String.Set.empty in
-  let add p = set := OpamMisc.String.Set.add p.Cudf.package !set in
+  let set = ref OpamStd.String.Set.empty in
+  let add p = set := OpamStd.String.Set.add p.Cudf.package !set in
   List.iter add depends;
   List.iter add revdepends;
-  OpamMisc.String.Set.elements !set
+  OpamStd.String.Set.elements !set
 
 (* [state_space] returns the packages which will be tested by the
    brute-force state explorer. As we try to minimize the state to
@@ -364,16 +364,16 @@ let refine state request =
     List.rev_map (fun p -> (p.Cudf.package, Some (`Eq, p.Cudf.version))) state in
   let wish_install =
     let names =
-      OpamMisc.String.Set.(
+      OpamStd.String.Set.(
         union
           (of_list (List.rev_map fst request.wish_install))
           (of_list (List.rev_map fst request.wish_upgrade))
       ) in
     let set =
-      OpamMisc.String.Set.filter
+      OpamStd.String.Set.filter
         (fun n -> not (List.mem_assoc n wish_upgrade))
         names in
-    List.map (fun n -> (n, None)) (OpamMisc.String.Set.elements set) in
+    List.map (fun n -> (n, None)) (OpamStd.String.Set.elements set) in
   { request with wish_install; wish_upgrade }
 
 (* Add a package name to the upgrade list. *)
@@ -393,19 +393,19 @@ let implicits universe request =
   let implicit_installed, implicit_not_installed =
     let implicit =
       let request_names =
-        OpamMisc.String.Set.of_list (List.map fst request.wish_upgrade) in
-      let all_names = OpamMisc.String.Set.of_list interesting_names in
-      OpamMisc.String.Set.diff all_names request_names in
+        OpamStd.String.Set.of_list (List.map fst request.wish_upgrade) in
+      let all_names = OpamStd.String.Set.of_list interesting_names in
+      OpamStd.String.Set.diff all_names request_names in
     let installed =
       let filter p =
         p.Cudf.installed
-        && OpamMisc.String.Set.mem p.Cudf.package implicit in
+        && OpamStd.String.Set.mem p.Cudf.package implicit in
       Cudf.get_packages ~filter universe in
     let not_installed =
       let filter n =
         List.for_all (fun p -> p.Cudf.package <> n) installed in
-      let set = OpamMisc.String.Set.filter filter implicit in
-      let list = OpamMisc.String.Set.elements set in
+      let set = OpamStd.String.Set.filter filter implicit in
+      let list = OpamStd.String.Set.elements set in
       (* Favor packages with higher version number to discard
          deprecated packages. *)
       let max_version name =

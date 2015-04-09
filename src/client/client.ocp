@@ -19,7 +19,7 @@ begin library "opam-client"
   requires = [
     "opam-core"
     "opam-solver"
-    "opam-repositories"
+    "opam-repository"
     "cmdliner"
   ]
 

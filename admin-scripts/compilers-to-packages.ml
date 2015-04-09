@@ -69,7 +69,7 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
      let url = OpamFile.URL.create kind adr in
      OpamFile.URL.write (OpamPath.Repository.url repo prefix nv) url);
   OpamFile.OPAM.write (OpamPath.Repository.opam repo prefix nv) opam;
-  OpamMisc.Option.iter
+  OpamStd.Option.iter
     (OpamFile.Descr.write (OpamPath.Repository.descr repo prefix nv))
     descr;
   let comp =
@@ -109,7 +109,7 @@ iter_packages ~opam:(fun nv opam ->
         let rec aux =
           function
           | FOp (FIdent ([],"ocaml-version",None), op, FString v) -> None
-          | FNot f -> OpamMisc.Option.map (fun f -> FNot f) (aux f)
+          | FNot f -> OpamStd.Option.map (fun f -> FNot f) (aux f)
           | FAnd (f1,f2) -> (match aux f1, aux f2 with
               | Some f1, Some f2 -> Some (FAnd (f1,f2))
               | None, f | f, None -> f)
@@ -121,7 +121,7 @@ iter_packages ~opam:(fun nv opam ->
           | f -> Some f
         in
         let rem_available =
-          OpamMisc.Option.default (FBool true) (aux available)
+          OpamStd.Option.default (FBool true) (aux available)
         in
         ocaml_dep_formula, rem_available
       | Some f ->

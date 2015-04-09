@@ -139,9 +139,9 @@ let print_fish_env env =
   List.iter (fun (k,v) ->
       match k with
       | "PATH" | "MANPATH" ->
-        let v = OpamMisc.String.split_delim v ':' in
+        let v = OpamStd.String.split_delim v ':' in
         OpamConsole.msg "set -gx %s %s;\n" k
-          (OpamMisc.List.concat_map " " (Printf.sprintf "%S") v)
+          (OpamStd.List.concat_map " " (Printf.sprintf "%S") v)
       | _ ->
         OpamConsole.msg "set -gx %s %S;\n" k v
     ) env
@@ -223,4 +223,4 @@ let exec ~inplace_path command =
     let env = OpamState.get_full_env ~force_path:(not inplace_path) t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
-  raise (OpamMisc.Sys.Exec (cmd, args, env))
+  raise (OpamStd.Sys.Exec (cmd, args, env))

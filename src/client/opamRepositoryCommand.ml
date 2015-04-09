@@ -17,7 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open OpamState.Types
-open OpamMisc.OP
+open OpamStd.Op
 open OpamPackage.Set.Op
 open OpamProcess.Job.Op
 
@@ -194,7 +194,7 @@ let print_updated_packages t updates =
     | _  -> Some (
         Printf.sprintf "%s (%s)"
           (OpamPackage.Version.to_string (OpamPackage.version nv))
-          (OpamMisc.Format.pretty_list (List.map OpamSwitch.to_string installed))
+          (OpamStd.Format.pretty_list (List.map OpamSwitch.to_string installed))
       ) in
 
   let none _ = None in
@@ -389,7 +389,7 @@ let fix_package_descriptions t ~verbose =
           let installed = OpamState.installed_versions t (OpamPackage.name nv) in
           let switches = OpamPackage.Map.find nv installed in
           let switches_string =
-            OpamMisc.Format.pretty_list (List.map OpamSwitch.to_string switches) in
+            OpamStd.Format.pretty_list (List.map OpamSwitch.to_string switches) in
           OpamConsole.warning
             "%s is installed in %s but it does not have metadata."
             (OpamPackage.to_string nv) switches_string
@@ -427,7 +427,7 @@ let update_compiler_index t =
    ~/.opam/repo/<repo>/config *)
 let update_config t repos =
   log "update-config %a"
-    (slog @@ OpamMisc.List.concat_map ", " OpamRepositoryName.to_string)
+    (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
@@ -487,7 +487,7 @@ let add name kind address ~priority:prio =
               "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
                Is it really the directory of your repo ?"
               (OpamFilename.Dir.to_string repo_dir))
-    then OpamMisc.Sys.exit 1
+    then OpamStd.Sys.exit 1
   );
   let prio = match prio with
     | Some p -> p

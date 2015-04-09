@@ -84,7 +84,7 @@ let remove_dir dir =
 
 let temp_files = Hashtbl.create 1024
 let logs_cleaner = lazy (
-  OpamMisc.Sys.at_exit (fun () ->
+  OpamStd.Sys.at_exit (fun () ->
       if not OpamCoreConfig.(!r.keep_log_dir) then
         remove_dir OpamCoreConfig.(!r.log_dir)
     ))
@@ -271,7 +271,7 @@ let env_var env var =
   let rec aux i =
     if i >= len then "" else
     let s = env.(i) in
-    if OpamMisc.String.starts_with ~prefix s then
+    if OpamStd.String.starts_with ~prefix s then
       String.sub s pfxlen (String.length s - pfxlen)
     else aux (i+1)
   in
@@ -334,16 +334,16 @@ let print_stats () =
   | [] -> ()
   | l  ->
     OpamConsole.msg "%d external processes called:\n%s%!"
-      (List.length l) (OpamMisc.Format.itemize ~bullet:"  " (String.concat " ") l)
+      (List.length l) (OpamStd.Format.itemize ~bullet:"  " (String.concat " ") l)
 
-let log_file ?dir name = temp_file ?dir (OpamMisc.Option.default "log" name)
+let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
     ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir ?(check_existence=true)
     cmd args =
   let name = log_file ?dir name in
   let verbose =
-    OpamMisc.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
+    OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
   in
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
@@ -604,7 +604,7 @@ let patch p =
      raise Not_found);
   let patch ~dryrun n =
     let opts = if dryrun then
-        let open OpamMisc.Sys in
+        let open OpamStd.Sys in
         match os () with
         | FreeBSD | OpenBSD | NetBSD | DragonFly -> [ "-t"; "-C" ]
         | Unix | Linux | Darwin -> [ "--dry-run" ]
@@ -618,7 +618,7 @@ let patch p =
       internal_error "Patch %s does not apply." p
     else if None =
             try Some (patch ~dryrun:true n)
-            with e -> OpamMisc.Exn.fatal e; None then
+            with e -> OpamStd.Exn.fatal e; None then
       aux (succ n)
     else
       patch ~dryrun:false n in
@@ -631,7 +631,7 @@ let register_printer () =
       | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
     let opam_version =
       Printf.sprintf "%s%s" (OpamVersion.to_string OpamVersion.current) git_version in
-    let os = OpamMisc.Sys.os_string () in
+    let os = OpamStd.Sys.os_string () in
     Printf.sprintf
       "# %-15s %s\n\
        # %-15s %s\n\

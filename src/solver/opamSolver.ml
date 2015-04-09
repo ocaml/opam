@@ -127,17 +127,17 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
           | `Leq | `Lt -> (fun x -> -x), `Leq in
         let rev_version_map =
           OpamPackage.Map.fold (fun nv cv acc ->
-              OpamMisc.IntMap.add (sign cv) (OpamPackage.version nv) acc)
-            all_versions OpamMisc.IntMap.empty in
+              OpamStd.IntMap.add (sign cv) (OpamPackage.version nv) acc)
+            all_versions OpamStd.IntMap.empty in
         let map =
-          OpamMisc.IntMap.filter
+          OpamStd.IntMap.filter
             (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
             rev_version_map in
-        if OpamMisc.IntMap.is_empty map then
+        if OpamStd.IntMap.is_empty map then
           match result_op with
           | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
           | `Leq -> Some (`Lt, 1)
-        else Some (result_op, sign (fst (OpamMisc.IntMap.min_binding map)))
+        else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
 
 let opam2cudf universe ?(depopts=false) ~build version_map package =
   let name = OpamPackage.name package in
@@ -204,7 +204,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
 let load_cudf_universe ?depopts ~build
     opam_universe ?version_map opam_packages =
   log "Load cudf universe (depopts:%b, build:%b)"
-    (OpamMisc.Option.default false depopts)
+    (OpamStd.Option.default false depopts)
     build;
   let version_map = match version_map with
     | Some vm -> vm
@@ -372,7 +372,7 @@ let filter_dependencies
   let result = List.rev_map OpamCudf.cudf2opam topo_packages in
   log "filter_dependencies packages=%a result=%a"
     (slog OpamPackage.Set.to_string) packages
-    (slog (OpamMisc.List.to_string OpamPackage.to_string)) result;
+    (slog (OpamStd.List.to_string OpamPackage.to_string)) result;
   result
 
 let dependencies = filter_dependencies OpamCudf.dependencies
@@ -436,11 +436,11 @@ let string_of_stats stats =
   in
   let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
   if utf then
-    OpamMisc.List.concat_map "   "
+    OpamStd.List.concat_map "   "
       (fun (n,t) -> Printf.sprintf "%s %s" t (string_of_int n))
       msgs
   else
-    OpamMisc.List.concat_map " | "
+    OpamStd.List.concat_map " | "
       (fun (n,t) ->
         Printf.sprintf "%s to %s"
           (OpamConsole.colorise `yellow (string_of_int n)) t)

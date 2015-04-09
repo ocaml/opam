@@ -14,8 +14,8 @@
 (**************************************************************************)
 
 (* To be used for quick repo scripts using the toplevel *)
-open OpamFilename.OP
-open OpamMisc.OP
+open OpamFilename.Op
+open OpamStd.Op
 
 let identity _ x = x
 let true_ _ = true
@@ -181,7 +181,7 @@ let filter fn patterns =
     | [] -> true
     | _  ->
       let str = fn t in
-      List.exists (fun re -> OpamMisc.String.exact_match re str) regexps
+      List.exists (fun re -> OpamStd.String.exact_match re str) regexps
 
 let filter_packages = filter OpamPackage.to_string
 let filter_compilers = filter OpamCompiler.to_string

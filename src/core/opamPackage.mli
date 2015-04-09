@@ -19,7 +19,7 @@
 (** Versions *)
 module Version: sig
 
-  include OpamMisc.ABSTRACT
+  include OpamStd.ABSTRACT
 
   (** Compare two versions using the Debian version scheme *)
   val compare: t -> t -> int
@@ -27,7 +27,7 @@ end
 
 (** Names *)
 module Name: sig
-  include OpamMisc.ABSTRACT
+  include OpamStd.ABSTRACT
 
   (** Compare two package names *)
   val compare: t -> t -> int
@@ -37,7 +37,7 @@ module Name: sig
 end
 
 (** Package (name x version) pairs *)
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Return the package name *)
 val name: t -> Name.t

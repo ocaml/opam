@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamMisc.OP
+open OpamStd.Op
 
 let log fmt = OpamConsole.log "PACKAGE" fmt
 let slog = OpamConsole.slog
@@ -41,9 +41,9 @@ module Version = struct
     let to_json = to_json
   end
 
-  module Set = OpamMisc.Set.Make(O)
+  module Set = OpamStd.Set.Make(O)
 
-  module Map = OpamMisc.Map.Make(O)
+  module Map = OpamStd.Map.Make(O)
 
 end
 
@@ -78,9 +78,9 @@ module Name = struct
     let to_json = to_json
   end
 
-  module Set = OpamMisc.Set.Make(O)
+  module Set = OpamStd.Set.Make(O)
 
-  module Map = OpamMisc.Map.Make(O)
+  module Map = OpamStd.Map.Make(O)
 
 end
 
@@ -101,9 +101,9 @@ let version t = t.version
 let sep = '.'
 
 let of_string_opt s =
-  if OpamMisc.String.contains s ' ' || OpamMisc.String.contains s '\n' then
+  if OpamStd.String.contains s ' ' || OpamStd.String.contains s '\n' then
     None
-  else match OpamMisc.String.cut_at s sep with
+  else match OpamStd.String.cut_at s sep with
     | None        -> None
     | Some (n, v) ->
       try Some { name = Name.of_string n; version = Version.of_string v }
@@ -143,9 +143,9 @@ module O = struct
   let to_json = to_json
 end
 
-module Set = OpamMisc.Set.Make (O)
+module Set = OpamStd.Set.Make (O)
 
-module Map = OpamMisc.Map.Make (O)
+module Map = OpamStd.Map.Make (O)
 
 let to_map nv =
   Set.fold (fun nv map ->
@@ -176,7 +176,7 @@ let of_filename f =
 (* $NAME.$VERSION+opam.tar.gz *)
 let of_archive f =
   let base = OpamFilename.basename f in
-  match OpamMisc.String.cut_at (OpamFilename.Base.to_string base) '+' with
+  match OpamStd.String.cut_at (OpamFilename.Base.to_string base) '+' with
   | None       -> None
   | Some (s,_) -> of_string_opt s
 
@@ -194,7 +194,7 @@ let list dir =
             let files = List.filter (OpamFilename.ends_with suffix) files in
             OpamConsole.error_and_exit "Multiple definition of package %s in %s:\n%s"
               (to_string p) (OpamFilename.Dir.to_string dir)
-              (OpamMisc.Format.itemize ~bullet:"" OpamFilename.to_string files);
+              (OpamStd.Format.itemize ~bullet:"" OpamFilename.to_string files);
       ) Set.empty files
   ) else
     Set.empty
@@ -211,7 +211,7 @@ let prefixes dir =
           let suffix = OpamFilename.Dir.to_string dirname in
           let prefix =
             match
-              OpamMisc.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
+              OpamStd.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
             with
             | "" -> None
             | p  -> (* drop the leading '/' from the prefix *)

@@ -62,12 +62,12 @@ let process args =
       let pkgname = OpamFile.OPAM.name opam in
       if pkgname = args.pkg then begin
         let depexts =
-          let os = OpamMisc.String.Set.of_list args.os in
-          let deps = OpamMisc.String.Set.of_list args.deps in
+          let os = OpamStd.String.Set.of_list args.os in
+          let deps = OpamStd.String.Set.of_list args.deps in
           match OpamFile.OPAM.depexts opam with
-          | None -> OpamMisc.String.SetMap.of_list [ os, deps ]
+          | None -> OpamStd.String.SetMap.of_list [ os, deps ]
           | Some depexts' -> (* TODO: Replace existing entry? *)
-            OpamMisc.String.SetMap.add os deps depexts'
+            OpamStd.String.SetMap.add os deps depexts'
         in
         let opam = OpamFile.OPAM.with_depexts opam (Some depexts) in
         OpamFile.OPAM.write opam_f opam;

@@ -14,7 +14,7 @@
 *)
 
 open OpamTypes
-open OpamMisc.Option.Op
+open OpamStd.Option.Op
 ;;
 
 OpamGlobals.all_parens := true;;
@@ -78,7 +78,7 @@ let filter_vars_optlist ol =
     ol
 
 let filter_args sl =
-  OpamMisc.List.filter_map
+  OpamStd.List.filter_map
     (fun (s, filter) -> match s with
        | CString s -> Some (CString (filter_string s),filter)
        | CIdent i when List.mem i vars_new_1_2 -> None

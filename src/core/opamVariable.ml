@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamMisc.AbstractString
+include OpamStd.AbstractString
 
 type variable = t
 
@@ -44,7 +44,7 @@ module Full = struct
   let is_global variable = variable.package = OpamPackage.Name.global_config
 
   let of_string s =
-    match OpamMisc.String.rcut_at s ':' with
+    match OpamStd.String.rcut_at s ':' with
     | None -> create OpamPackage.Name.global_config (of_string s)
     | Some (p,v) ->
       let v = of_string v in
@@ -73,8 +73,8 @@ module Full = struct
     let to_json = to_json
   end
 
-  module Set = OpamMisc.Set.Make(O)
+  module Set = OpamStd.Set.Make(O)
 
-  module Map = OpamMisc.Map.Make(O)
+  module Map = OpamStd.Map.Make(O)
 
 end

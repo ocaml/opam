@@ -14,17 +14,17 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamMisc.OP
+open OpamStd.Op
 
 let log fmt = OpamConsole.log "COMPILER" fmt
 let slog = OpamConsole.slog
 
 module Version = struct
 
-  include OpamMisc.AbstractString
+  include OpamStd.AbstractString
 
   let of_string str =
-    if OpamMisc.String.contains str '+' then
+    if OpamStd.String.contains str '+' then
       raise (Invalid_argument "'+' is not allowed in compiler versions");
     of_string str
 
@@ -49,7 +49,7 @@ module O = struct
   let to_string t = t.name
 
   let of_string str =
-    match OpamMisc.String.cut_at str '+' with
+    match OpamStd.String.cut_at str '+' with
     | Some (v,_) -> { name = str; version = Version.of_string v }
     | None -> { name = str; version = Version.of_string str }
 
@@ -58,8 +58,8 @@ module O = struct
 end
 
 include O
-module Set = OpamMisc.Set.Make(O)
-module Map = OpamMisc.Map.Make(O)
+module Set = OpamStd.Set.Make(O)
+module Map = OpamStd.Map.Make(O)
 
 let version t = t.version
 
@@ -98,7 +98,7 @@ let prefixes dir =
           let suffix = OpamFilename.Dir.to_string (OpamFilename.dirname f) in
           let prefix =
             match
-              OpamMisc.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
+              OpamStd.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
             with
             | "" -> None
             | p  -> Some p in

@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamProcess.Job.Op
 
 module Darcs = struct

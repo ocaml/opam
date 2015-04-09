@@ -783,7 +783,7 @@ module Exn = struct
 end
 
 
-module OP = struct
+module Op = struct
 
   let (@@) f x = f x
 

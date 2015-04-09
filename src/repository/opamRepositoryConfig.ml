@@ -33,7 +33,7 @@ let default = {
   download_tool = lazy (
     try
       let tools =
-        if OpamMisc.Sys.(os () = Darwin)
+        if OpamStd.Sys.(os () = Darwin)
         then ["wget", `Default; "curl", `Curl]
         else ["curl", `Curl; "wget", `Default]
       in

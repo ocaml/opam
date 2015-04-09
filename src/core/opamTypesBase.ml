@@ -41,13 +41,13 @@ let string_of_address = function
   | url, Some c -> Printf.sprintf "%s#%s" url c
 
 let address_of_string str =
-  match OpamMisc.String.cut_at str '#' with
+  match OpamStd.String.cut_at str '#' with
   | None       -> OpamSystem.real_path str, None
   | Some (a,c) -> OpamSystem.real_path a, Some c
 
 let guess_version_control dir =
   let open OpamFilename in
-  let open OP in
+  let open Op in
   if exists_dir (dir / ".git") then Some`git else
   if exists_dir (dir / ".hg") then Some `hg else
   if exists_dir (dir / "_darcs") then Some `darcs else
@@ -77,7 +77,7 @@ let parse_url (s,c) =
       (address,c), `local
     | [proto; address] ->
       (* keep the leading xx:// *)
-      (match OpamMisc.String.cut_at proto '+' with
+      (match OpamStd.String.cut_at proto '+' with
        | Some (proto1,proto2) ->
          (proto2^"://"^address, c), url_kind_of_string proto1
        | None ->
@@ -219,21 +219,21 @@ let pfxop_of_string = function
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
 let filter_ident_of_string s =
-  match OpamMisc.String.rcut_at s ':' with
+  match OpamStd.String.rcut_at s ':' with
   | None -> [], OpamVariable.of_string s, None
   | Some (p,last) ->
     let get_names s =
       List.map (fun n ->
           try OpamPackage.Name.of_string n
           with Failure _ -> failwith ("Invalid package name "^n))
-        (OpamMisc.String.split s '+')
+        (OpamStd.String.split s '+')
     in
-    match OpamMisc.String.rcut_at p '?' with
+    match OpamStd.String.rcut_at p '?' with
     | None ->
       get_names p, OpamVariable.of_string last, None
     | Some (p,val_if_true) ->
       let converter = Some (val_if_true, last) in
-      match OpamMisc.String.rcut_at p ':' with
+      match OpamStd.String.rcut_at p ':' with
       | None ->
         [], OpamVariable.of_string p, converter
       | Some (packages,var) ->

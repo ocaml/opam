@@ -16,7 +16,7 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamMisc.OP
+open OpamStd.Op
 
 let empty = {
   file_contents = [];
@@ -73,13 +73,13 @@ let sections items =
   List.rev l
 
 let names items =
-  let tbl = ref OpamMisc.String.Map.empty in
+  let tbl = ref OpamStd.String.Map.empty in
   let add f =
-    if OpamMisc.String.Map.mem f !tbl then
-      let i = OpamMisc.String.Map.find f !tbl in
-      tbl := OpamMisc.String.Map.add f (i+1) (OpamMisc.String.Map.remove f !tbl)
+    if OpamStd.String.Map.mem f !tbl then
+      let i = OpamStd.String.Map.find f !tbl in
+      tbl := OpamStd.String.Map.add f (i+1) (OpamStd.String.Map.remove f !tbl)
     else
-      tbl := OpamMisc.String.Map.add f 1 !tbl in
+      tbl := OpamStd.String.Map.add f 1 !tbl in
   let rec aux items =
     List.iter (function
       | Variable (_, f, _) -> add f
@@ -90,7 +90,7 @@ let names items =
 
 let invalid_fields items fields =
   let tbl = names items in
-  OpamMisc.String.Map.fold (fun f i accu ->
+  OpamStd.String.Map.fold (fun f i accu ->
     if List.mem f fields && i = 1 then accu else f :: accu
   ) tbl []
 
@@ -200,7 +200,7 @@ let parse_or fns v =
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expected %s" (OpamMisc.List.concat_map " or " fst fns)
+        "Expected %s" (OpamStd.List.concat_map " or " fst fns)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
@@ -616,7 +616,7 @@ let make_filter f =
     | FString s  -> make_string s
     | FIdent (pkgs,var,converter) ->
       let s =
-        OpamMisc.List.concat_map ~nil:"" "+" ~right:":"
+        OpamStd.List.concat_map ~nil:"" "+" ~right:":"
           OpamPackage.Name.to_string pkgs ^
         OpamVariable.to_string var ^
         (match converter with
@@ -685,7 +685,7 @@ let parse_commands =
   ]
 
 let parse_message =
-  parse_option (parse_string @> OpamMisc.String.strip) parse_filter
+  parse_option (parse_string @> OpamStd.String.strip) parse_filter
 
 let parse_messages =
   parse_list parse_message
@@ -710,10 +710,10 @@ let parse_flag = function
 (* TAGS *)
 
 let parse_string_set =
-  parse_string_list @> OpamMisc.String.Set.of_list
+  parse_string_list @> OpamStd.String.Set.of_list
 
 let make_string_set =
-  OpamMisc.String.Set.elements @> make_string_list
+  OpamStd.String.Set.elements @> make_string_list
 
 let parse_tag_line =
   let fn = parse_string_set in
@@ -728,10 +728,10 @@ let parse_tags v =
       "tag" , (fun x -> [parse_tag_line x]);
       "tags", (parse_list parse_tag_line);
     ] v in
-  OpamMisc.String.SetMap.of_list l
+  OpamStd.String.SetMap.of_list l
 
 let make_tags t =
-  let l = OpamMisc.String.SetMap.bindings t in
+  let l = OpamStd.String.SetMap.bindings t in
   make_list make_tag_line l
 
 (* FEATURES *)

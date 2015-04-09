@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 
 type t = dirname
 

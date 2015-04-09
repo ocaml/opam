@@ -16,7 +16,7 @@
 
 (** {2 Variable names} *)
 
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Shortcut to variables *)
 type variable = t
@@ -34,7 +34,7 @@ module Full: sig
 
   (** Fully qualified variable. *)
 
-  include OpamMisc.ABSTRACT
+  include OpamStd.ABSTRACT
 
   (** Create a variable local for a given library/syntax extension *)
   val create: OpamPackage.Name.t -> variable -> t

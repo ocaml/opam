@@ -42,14 +42,14 @@ let wget_args = [
 
 let init_config () =
   let open OpamGlobals.Config in
-  let open OpamMisc.Option.Op in
+  let open OpamStd.Option.Op in
   let download_tool =
     env_string "FETCH" >>| (fun s ->
         let c = command_of_string s in
         let kind = match c with
           | (CIdent "curl", None)::_ -> `Curl
           | (CString s, None)::_
-            when OpamMisc.String.ends_with ~suffix:"curl" s -> `Curl
+            when OpamStd.String.ends_with ~suffix:"curl" s -> `Curl
           | _ -> `Default
         in
         lazy (c, kind)
@@ -135,7 +135,7 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
         raise e
       | e ->
         OpamSystem.remove tmp_dst;
-        OpamMisc.Exn.fatal e;
+        OpamStd.Exn.fatal e;
         log "Could not download file at %s." src;
         raise e)
     (download_command ~compress ~src ~dst:tmp_dst

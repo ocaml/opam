@@ -45,7 +45,7 @@ let call_rsync check args =
        complete error so we do an additional check *)
     if check () then
       (OpamConsole.warning "Rsync partially failed:\n%s"
-         (OpamMisc.Format.itemize ~bullet:"" (fun x -> x) r.OpamProcess.r_stderr);
+         (OpamStd.Format.itemize ~bullet:"" (fun x -> x) r.OpamProcess.r_stderr);
        Done (Some (rsync_trim r.OpamProcess.r_stdout)))
     else Done None
   | 30 | 35 -> (* timeouts *)
@@ -60,8 +60,8 @@ let rsync ?(args=[]) src dst =
     Done (Not_available src)
   else if src = dst then
     Done (Up_to_date [])
-  else if OpamMisc.String.starts_with ~prefix:(norm src) (norm dst) ||
-          OpamMisc.String.starts_with ~prefix:(norm dst) (norm src)
+  else if OpamStd.String.starts_with ~prefix:(norm src) (norm dst) ||
+          OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
   then
     (OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
      Done (Not_available src))
@@ -145,7 +145,7 @@ module B = struct
     @@+ fun _ ->
     let archives = OpamFilename.files (OpamRepositoryPath.archives_dir repo) in
     log "archives: %a"
-      (slog (OpamMisc.List.to_string OpamFilename.to_string)) archives;
+      (slog (OpamStd.List.to_string OpamFilename.to_string)) archives;
     let rec dl_archives = function
       | [] -> Done ()
       | archive::archives ->
@@ -185,11 +185,11 @@ module B = struct
           | Up_to_date _ -> Up_to_date x
           | _ -> assert false
         in
-        if OpamMisc.String.ends_with ~suffix:"/" remote_url then
+        if OpamStd.String.ends_with ~suffix:"/" remote_url then
           res (D local_dirname)
         else match Sys.readdir dir with
           | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
-            let filename = OpamFilename.OP.(local_dirname // f) in
+            let filename = OpamFilename.Op.(local_dirname // f) in
             if OpamRepositoryBackend.check_digest filename checksum
             then res (F filename)
             else (OpamFilename.remove filename; Not_available remote_url)

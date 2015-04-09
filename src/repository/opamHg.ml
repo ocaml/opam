@@ -15,7 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
+open OpamFilename.Op
 open OpamProcess.Job.Op
 
 module Hg = struct
@@ -34,7 +34,7 @@ module Hg = struct
     hg repo [ "init" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     OpamFilename.write
-      OpamFilename.OP.(repo.repo_root / ".hg" // "hgrc")
+      OpamFilename.Op.(repo.repo_root / ".hg" // "hgrc")
       (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address));
     Done ()
 
@@ -44,7 +44,7 @@ module Hg = struct
       @@> fun r ->
       OpamSystem.raise_on_process_error r;
       if r.OpamProcess.r_stdout <> [fst repo.repo_address] then (
-        OpamFilename.rmdir OpamFilename.OP.(repo.repo_root / ".hg");
+        OpamFilename.rmdir OpamFilename.Op.(repo.repo_root / ".hg");
         init repo
       ) else Done ()
     in

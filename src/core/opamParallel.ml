@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamMisc.OP
+open OpamStd.Op
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "PARALLEL" fmt
@@ -23,7 +23,7 @@ let slog = OpamConsole.slog
 exception Aborted
 
 module type VERTEX = sig
-  include OpamMisc.OrderedType
+  include OpamStd.OrderedType
   include Graph.Sig.COMPARABLE with type t := t
 end
 
@@ -66,8 +66,8 @@ module Make (G : G) = struct
   module G = G
 
   module V = G.Vertex
-  module M = OpamMisc.Map.Make (V)
-  module S = OpamMisc.Set.Make (V)
+  module M = OpamStd.Map.Make (V)
+  module S = OpamStd.Set.Make (V)
 
   let map_keys m = M.fold (fun k _ s -> S.add k s) m S.empty
 
@@ -95,11 +95,11 @@ module Make (G : G) = struct
         (finished: int)
         (running: (OpamProcess.t * 'a * string option) M.t) =
       let texts =
-        OpamMisc.List.filter_map (fun (_,_,t) -> t) (M.values running) in
+        OpamStd.List.filter_map (fun (_,_,t) -> t) (M.values running) in
       let rec limit_width acc rem_cols = function
         | [] -> List.rev acc
         | t::ts ->
-          let len = OpamMisc.Format.visual_length t in
+          let len = OpamStd.Format.visual_length t in
           if ts = [] && len < rem_cols then List.rev (t::acc)
           else if len > rem_cols - 5 then
             List.rev
@@ -114,7 +114,7 @@ module Make (G : G) = struct
           (finished + M.cardinal running) njobs
       in
       let texts =
-        limit_width [] (OpamMisc.Sys.terminal_columns ()) (title::texts)
+        limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
       in
       if texts <> [] then OpamConsole.status_line "%s" (String.concat " " texts)
     in
@@ -150,7 +150,7 @@ module Make (G : G) = struct
             (slog OpamProcess.string_of_command) cmd;
           if OpamProcess.is_verbose_command cmd ||
              not (OpamConsole.disp_status_line ()) then
-            OpamMisc.Option.iter
+            OpamStd.Option.iter
               (OpamConsole.msg "%s Command started\n")
               (OpamProcess.text_of_command cmd);
           let p =

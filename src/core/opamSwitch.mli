@@ -16,7 +16,7 @@
 
 (** Compiler switches *)
 
-include OpamMisc.ABSTRACT
+include OpamStd.ABSTRACT
 
 (** Default switch *)
 val default: t

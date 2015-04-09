@@ -34,7 +34,7 @@ let string_of_command c = String.concat " " (c.cmd::c.args)
 let text_of_command c = c.cmd_text
 let default_verbose () = OpamCoreConfig.(!r.verbose_level) >= 2
 let is_verbose_command c =
-  OpamMisc.Option.default (default_verbose ()) c.cmd_verbose
+  OpamStd.Option.default (default_verbose ()) c.cmd_verbose
 
 let make_command_text ?(color=`green) str ?(args=[]) cmd =
   let summary =
@@ -99,7 +99,7 @@ let make_info ?code ?signal
     | Some s -> print name s in
 
   print     "opam-version" (OpamVersion.to_string (OpamVersion.full ()));
-  print     "os"           (OpamMisc.Sys.os_string ());
+  print     "os"           (OpamStd.Sys.os_string ());
   print     "command"      (String.concat " " (cmd :: args));
   print     "path"         cwd;
   List.iter (fun (k,v) -> print k v) metadata;
@@ -134,8 +134,8 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     let close_fd () = Unix.close fd in
     fd, close_fd in
   let oldcwd = Sys.getcwd () in
-  let cwd = OpamMisc.Option.default oldcwd dir in
-  OpamMisc.Option.iter Unix.chdir dir;
+  let cwd = OpamStd.Option.default oldcwd dir in
+  OpamStd.Option.iter Unix.chdir dir;
   let stdin_fd =
     if allow_stdin then Unix.stdin else
     let fd,outfd = Unix.pipe () in
@@ -160,7 +160,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       let chan = open_out f in
       let env = Array.to_list env in
       (* Remove dubious variables *)
-      let env = List.filter (fun line -> not (OpamMisc.String.contains line '$')) env in
+      let env = List.filter (fun line -> not (OpamStd.String.contains line '$')) env in
       output_lines chan env;
       close_out chan in
 
@@ -226,8 +226,8 @@ let read_lines f =
   with Sys_error _ -> []
 
 (* Compat function (Windows) *)
-let interrupt p = match OpamMisc.Sys.os () with
-  | OpamMisc.Sys.Win32 -> Unix.kill p.p_pid Sys.sigkill
+let interrupt p = match OpamStd.Sys.os () with
+  | OpamStd.Sys.Win32 -> Unix.kill p.p_pid Sys.sigkill
   | _ -> Unix.kill p.p_pid Sys.sigint
 
 let run_background command =
@@ -237,7 +237,7 @@ let run_background command =
     command
   in
   let verbose = is_verbose_command command in
-  let allow_stdin = OpamMisc.Option.default false allow_stdin in
+  let allow_stdin = OpamStd.Option.default false allow_stdin in
   let env = match env with Some e -> e | None -> Unix.environment () in
   let file ext = match name with
     | None -> None
@@ -262,13 +262,13 @@ let dry_run_background c = {
   p_name   = c.cmd;
   p_args   = c.args;
   p_pid    = -1;
-  p_cwd    = OpamMisc.Option.default (Sys.getcwd ()) c.cmd_dir;
+  p_cwd    = OpamStd.Option.default (Sys.getcwd ()) c.cmd_dir;
   p_time   = Unix.gettimeofday ();
   p_stdout = None;
   p_stderr = None;
   p_env    = None;
   p_info   = None;
-  p_metadata = OpamMisc.Option.default [] c.cmd_metadata;
+  p_metadata = OpamStd.Option.default [] c.cmd_metadata;
   p_verbose = is_verbose_command c;
 }
 
@@ -276,7 +276,7 @@ let verbose_print_cmd p =
   OpamConsole.msg "%s %s %s%s\n"
     (OpamConsole.colorise `yellow "+")
     p.p_name
-    (OpamMisc.List.concat_map " " (Printf.sprintf "%S") p.p_args)
+    (OpamStd.List.concat_map " " (Printf.sprintf "%S") p.p_args)
     (if p.p_cwd = Sys.getcwd () then ""
      else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
@@ -300,7 +300,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     stop ();
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
-    if OpamMisc.Sys.(os () = Win32) then () else
+    if OpamStd.Sys.(os () = Win32) then () else
     let ics =
       List.map
         (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
@@ -324,7 +324,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
 
 let set_verbose_process p =
   if p.p_verbose then
-    let fs = OpamMisc.List.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
+    let fs = OpamStd.List.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
     if fs <> [] then (
       verbose_print_cmd p;
       set_verbose_f fs
@@ -335,7 +335,7 @@ let exit_status p return =
   let stdout = option_default [] (option_map read_lines p.p_stdout) in
   let stderr = option_default [] (option_map read_lines p.p_stderr) in
   let cleanup =
-    OpamMisc.List.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
+    OpamStd.List.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
   in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
@@ -353,7 +353,7 @@ let exit_status p return =
       ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
       ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
   {
-    r_code     = OpamMisc.Option.default 256 code;
+    r_code     = OpamStd.Option.default 256 code;
     r_signal   = signal;
     r_duration = duration;
     r_info     = info;
@@ -404,7 +404,7 @@ let dontwait p =
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
   if processes = [] then raise (Invalid_argument "wait_one");
-  if OpamMisc.Sys.(os () = Win32) then
+  if OpamStd.Sys.(os () = Win32) then
     (* No waiting for any child pid on Windows, this is highly sub-optimal
        but should at least work. Todo: C binding for better behaviour *)
     let p = List.hd processes in
@@ -445,7 +445,7 @@ let dry_wait_one = function
 let run command =
   let command =
     { command with
-      cmd_stdin = OpamMisc.Option.Op.(command.cmd_stdin ++ Some true) }
+      cmd_stdin = OpamStd.Option.Op.(command.cmd_stdin ++ Some true) }
   in
   let p = run_background command in
   try wait p with e ->
@@ -548,7 +548,7 @@ module Job = struct
     let rec aux = function
       | Done x -> x
       | Run (cmd,cont) ->
-        OpamMisc.Option.iter
+        OpamStd.Option.iter
           (if OpamConsole.disp_status_line () then
              OpamConsole.status_line "Processing: %s"
            else OpamConsole.msg "%s\n")
@@ -586,8 +586,8 @@ module Job = struct
 
   let ignore_errors ~default ?message job =
     catch (fun e ->
-        OpamMisc.Exn.fatal e;
-        OpamMisc.Option.iter (OpamConsole.error "%s") message;
+        OpamStd.Exn.fatal e;
+        OpamStd.Option.iter (OpamConsole.error "%s") message;
         Done default)
       job
 
@@ -603,7 +603,7 @@ module Job = struct
         let cont = fun r ->
           if is_success r then aux err commands
           else if keep_going then
-            aux OpamMisc.Option.Op.(err ++ Some (cmd,r)) commands
+            aux OpamStd.Option.Op.(err ++ Some (cmd,r)) commands
           else Done (Some (cmd,r))
         in
         Run (cmd,cont)

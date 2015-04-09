@@ -15,8 +15,8 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamMisc.OP
-open OpamFilename.OP
+open OpamStd.Op
+open OpamFilename.Op
 open OpamProcess.Job.Op
 
 let log msg = OpamConsole.log "CURL" msg
@@ -83,7 +83,7 @@ let get_state repo =
   try List.assoc repo.repo_address !state_cache with Not_found ->
     let urls =
       try OpamFile.File_attributes.read (make_index_file repo.repo_root)
-      with e -> OpamMisc.Exn.fatal e; rebuild_local_state ~write:true repo
+      with e -> OpamStd.Exn.fatal e; rebuild_local_state ~write:true repo
     in
     let state = state_of_index_file repo urls in
     state_cache := (repo.repo_address, state) :: !state_cache;
@@ -121,7 +121,7 @@ let sync_state repo =
       log "-> downloading the full archive";
       OpamProcess.Job.catch
         (fun e ->
-           OpamMisc.Exn.fatal e;
+           OpamStd.Exn.fatal e;
            OpamConsole.msg
              "Cannot find index.tar.gz on the OPAM repository. \
               Initialisation may take some time.\n";
@@ -209,13 +209,13 @@ module B = struct
         List.partition (fun f -> f = local_file && check_sum f) files
       in
       if extra <> [] (* && *)
-         (* OpamMisc.String.starts_with (\* Just a safeguard *\) *)
+         (* OpamStd.String.starts_with (\* Just a safeguard *\) *)
          (*   ~prefix:(OpamFilename.Dir.to_string (OpamPath.root ())) *)
          (*   (OpamFilename.Dir.to_string dirname) *)
       then
         (log "Removing stale files in download dir: %a"
            (slog @@ List.map OpamFilename.to_string @>
-                    OpamMisc.Format.pretty_list ?last:None)
+                    OpamStd.Format.pretty_list ?last:None)
            extra;
          List.iter OpamFilename.remove extra);
       found <> []
@@ -223,7 +223,7 @@ module B = struct
     if uptodate then Done (Result (F local_file))
     else
     OpamProcess.Job.catch
-      (fun e -> OpamMisc.Exn.fatal e; Done (Not_available remote_url)) @@
+      (fun e -> OpamStd.Exn.fatal e; Done (Not_available remote_url)) @@
     OpamDownload.download ~overwrite:true filename dirname
     @@+ fun local_file ->
     if OpamRepositoryBackend.check_digest local_file checksum then

@@ -17,7 +17,7 @@
 module Config = struct
 
   let env conv var =
-    try OpamMisc.Option.map conv (OpamMisc.Env.getopt ("OPAM"^var))
+    try OpamStd.Option.map conv (OpamStd.Env.getopt ("OPAM"^var))
     with Failure _ ->
       OpamConsole.warning
         "Invalid value for environment variable OPAM%s, ignored." var;
@@ -67,13 +67,13 @@ module Config = struct
     | `Auto -> Lazy.force auto
 
   let command_of_string s =
-    List.map (fun s -> OpamTypes.CString s, None) (OpamMisc.String.split s ' ')
+    List.map (fun s -> OpamTypes.CString s, None) (OpamStd.String.split s ' ')
 end
 
 
 let init_config () =
   let open Config in
-  let utf8 = OpamMisc.Option.Op.(
+  let utf8 = OpamStd.Option.Op.(
       env_when_ext "UTF8" ++
       (env_bool "UTF8MSGS" >>= function
         | true -> Some `Extended
@@ -188,13 +188,13 @@ let default_config = {
 (*
 let check ?(warn=true) var = ref (
     try
-      match String.lowercase (OpamMisc.Env.get ("OPAM"^var)) with
+      match String.lowercase (OpamStd.Env.get ("OPAM"^var)) with
       | "" | "0" | "no" | "false" -> false
       | "1" | "yes" | "true" -> true
       | v ->
         if warn then
           prerr_endline
-            (OpamMisc.Format.reformat ~indent:10
+            (OpamStd.Format.reformat ~indent:10
                (Printf.sprintf
                   "[WARNING] Invalid value %S for env variable OPAM%s, assumed \
                    true." v var));
@@ -203,7 +203,7 @@ let check ?(warn=true) var = ref (
   )
 
 let when_var v =
-    try (match OpamMisc.Env.get ("OPAM"^v) with
+    try (match OpamStd.Env.get ("OPAM"^v) with
       | "always" -> `Always
       | "never" -> `Never
       | _ -> `Auto
@@ -212,27 +212,27 @@ let when_var v =
       | Not_found -> `Auto
 
 let dumb_term =
-  try OpamMisc.Env.get "TERM" = "dumb" with Not_found -> true
+  try OpamStd.Env.get "TERM" = "dumb" with Not_found -> true
 
 let debug            = check ~warn:false "DEBUG"
 let debug_level      =
-  try ref (int_of_string (OpamMisc.Env.get ("OPAMDEBUG")))
+  try ref (int_of_string (OpamStd.Env.get ("OPAMDEBUG")))
   with Not_found | Failure _ -> ref 1
 let _ = if !debug_level > 1 then debug := true
 let verbose          = check ~warn:false "VERBOSE"
 let verbose_level    =
-  try ref (int_of_string (OpamMisc.Env.get ("OPAMVERBOSE"))) with
+  try ref (int_of_string (OpamStd.Env.get ("OPAMVERBOSE"))) with
   | Not_found -> ref 0
   | Failure _ -> ref 1
 let color_when       = when_var "COLOR"
 let color            =
   ref (color_when = `Always ||
-       color_when = `Auto && OpamMisc.Sys.tty_out && not dumb_term)
+       color_when = `Auto && OpamStd.Sys.tty_out && not dumb_term)
 let disp_status_line_when = when_var "STATUSLINE"
 let disp_status_line () =
   disp_status_line_when = `Always ||
   disp_status_line_when = `Auto &&
-  OpamMisc.Sys.tty_out && (!color || not dumb_term)
+  OpamStd.Sys.tty_out && (!color || not dumb_term)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -257,7 +257,7 @@ let no_self_upgrade  = check ~warn:false "NOSELFUPGRADE"
 let skip_version_checks = check "SKIPVERSIONCHECKS"
 let safe_mode        = check "SAFE"
 let lock_retries     =
-  try ref (int_of_string (OpamMisc.Env.get ("OPAMLOCKRETRIES")))
+  try ref (int_of_string (OpamStd.Env.get ("OPAMLOCKRETRIES")))
   with Not_found | Failure _ -> ref 5
 let pin_kind_auto    = check "PINKINDAUTO"
 let all_parens       = ref false
@@ -265,26 +265,26 @@ let all_parens       = ref false
 
 (*
 let jobs = ref (
-    try Some (int_of_string (OpamMisc.Env.get "OPAMJOBS"))
+    try Some (int_of_string (OpamStd.Env.get "OPAMJOBS"))
     with Not_found | Failure _ -> None
   )
 
 let dl_jobs = ref (
-    try Some (int_of_string (OpamMisc.Env.get "OPAMDOWNLOADJOBS"))
+    try Some (int_of_string (OpamStd.Env.get "OPAMDOWNLOADJOBS"))
     with Not_found | Failure _ -> None
   )
 
 let download_retry =
-  try max 1 (int_of_string (OpamMisc.Env.get "OPAMRETRY"))
+  try max 1 (int_of_string (OpamStd.Env.get "OPAMRETRY"))
   with Not_found | Failure _ -> 3
 
 let cudf_file = ref (
-    try Some (OpamMisc.Env.get "OPAMCUDFFILE")
+    try Some (OpamStd.Env.get "OPAMCUDFFILE")
     with Not_found -> None
   )
 
 let solver_timeout =
-  try float_of_string (OpamMisc.Env.get "OPAMSOLVERTIMEOUT")
+  try float_of_string (OpamStd.Env.get "OPAMSOLVERTIMEOUT")
   with Not_found | Failure _ -> 5.
 *)
 
@@ -293,10 +293,10 @@ let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
 
 let download_tool_env =
-  try ref (Some (OpamMisc.Env.get "OPAMFETCH"))
+  try ref (Some (OpamStd.Env.get "OPAMFETCH"))
   with Not_found -> ref None
 
-let curl_command = try OpamMisc.Env.get "OPAMCURL" with Not_found -> "curl"
+let curl_command = try OpamStd.Env.get "OPAMCURL" with Not_found -> "curl"
 
 type download_tool = [
   | `Wget
@@ -318,18 +318,18 @@ let switch: [`Env of string
             | `Command_line of string
             | `Not_set ] ref
   = ref (
-    try `Env (OpamMisc.Env.get "OPAMSWITCH")
+    try `Env (OpamStd.Env.get "OPAMSWITCH")
     with Not_found -> `Not_set
   )
 
 let external_tags = ref ([] : string list)
 
 let home =
-  try OpamMisc.Env.get "HOME"
+  try OpamStd.Env.get "HOME"
   with Not_found -> Sys.getcwd ()
 
 let default_opam_dir =
-  try OpamMisc.Env.get "OPAMROOT"
+  try OpamStd.Env.get "OPAMROOT"
   with Not_found -> Filename.concat home ".opam"
 
 let root_dir_tmp =
@@ -339,13 +339,13 @@ let root_dir_tmp =
 let root_dir = ref root_dir_tmp
 
 let editor = lazy (
-  try OpamMisc.Env.get "OPAM_EDITOR" with Not_found ->
-  try OpamMisc.Env.get "VISUAL" with Not_found ->
-  try OpamMisc.Env.get "EDITOR" with Not_found ->
+  try OpamStd.Env.get "OPAM_EDITOR" with Not_found ->
+  try OpamStd.Env.get "VISUAL" with Not_found ->
+  try OpamStd.Env.get "EDITOR" with Not_found ->
     "nano"
 )
 
-let makecmd = ref OpamMisc.Sys.(fun () ->
+let makecmd = ref OpamStd.Sys.(fun () ->
     match os () with
     | FreeBSD
     | OpenBSD
