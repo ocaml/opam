@@ -101,8 +101,14 @@ The release cycle respects [Semantic Versioning](http://semver.org/).
 
 ## Copyright and license
 
-Copyright 2012-2014 OCamlPro
+The version comparison function in `src/core/opamVersionCompare.ml` is part of
+the Dose library and Copyright 2011 Ralf Treinen.
+
+All other code is:
+
+Copyright 2012-2015 OCamlPro
 Copyright 2012 INRIA
+
 
 All rights reserved. OPAM is distributed under the terms of
 the GNU Lesser General Public License version 3.0.
