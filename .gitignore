@@ -35,6 +35,7 @@ ocp-build.root.old.old
 *.a
 *.o
 META
+opam-lib.install
 Makefile.config
 config.log
 config.status

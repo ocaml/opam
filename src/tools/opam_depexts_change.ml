@@ -49,7 +49,7 @@ let args =
 
 let process args =
 
-  let repo = OpamRepository.local (OpamFilename.cwd ()) in
+  let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
 
   let packages = OpamRepository.packages_with_prefixes repo in
 

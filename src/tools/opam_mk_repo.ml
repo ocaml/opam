@@ -127,8 +127,8 @@ let resolve_deps index names =
          cs)
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
-  OpamGlobals.init_config
-    ?debug:(if debug then Some true else None)
+  OpamGlobals.init_config ()
+    ?debug_level:(if debug then Some 1 else None)
     ();
 
   let tmp_dirs = [ "tmp"; "log" ] in
@@ -150,7 +150,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         "No repository found in current directory.\n\
          Please make sure there is a \"packages\" or \"compilers\" directory" in
 
-  let repo = OpamRepository.local (OpamFilename.cwd ()) in
+  let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
 
   let prefixes = OpamRepository.packages_with_prefixes repo in
   let packages = OpamRepository.packages repo in

@@ -15,8 +15,8 @@ all:
 
 # --
 
-OCAMLFLAGS = -g -w +a-4-9-32-41-44-45-48
-OCAMLLDFLAGS = -g -w +a-4-9-32-41-44-45-48
+OCAMLFLAGS = -g -w +a-4-44-48
+OCAMLLDFLAGS = -g -w +a-4-44-48
 ifeq ($(OCAML_4),true)
   OCAMLFLAGS += -bin-annot
   OCAMLLDFLAGS += -bin-annot
@@ -113,8 +113,9 @@ SRC_core = \
   opamMisc.ml \
   opamConsole.ml \
   opamScript.ml \
-  opamVersion.ml \
   opamGlobals.ml \
+  opamVersionCompare.ml \
+  opamVersion.ml \
   opamProcess.ml \
   opamRepositoryName.ml \
   opamSwitch.ml \
@@ -127,14 +128,12 @@ SRC_core = \
   opamCompiler.ml \
   opamTypes.mli \
   opamTypesBase.ml \
-  opamPath.ml \
   opamParser.mly \
   opamLexer.mll \
   opamFormat.ml \
   opamFilter.ml \
   opamFile.ml \
-  opamActionGraph.ml \
-  opamRepository.ml
+  opamActionGraph.ml
 
 define PROJ_core
   SOURCES = $(call addmli,core,$(SRC_core))
@@ -147,6 +146,8 @@ opam-solver.cma: opam-core.cma
 opam-solver.cmxa: opam-core.cmxa
 
 SRC_solver = \
+  opamSolverConfig.ml \
+  opamSolverGlobals.ml \
   opamCudf.ml \
   opamHeuristic.ml \
   opamSolver.ml
@@ -162,12 +163,17 @@ opam-repositories.cma: opam-core.cma ALWAYS
 opam-repositories.cmxa: opam-core.cmxa ALWAYS
 
 SRC_repositories = \
+  opamRepositoryConfig.ml \
+  opamDownload.ml \
+  opamRepositoryBackend.ml \
+  opamRepositoryPath.ml \
   opamHTTP.ml \
   opamLocal.ml \
   opamVCS.ml \
   opamGit.ml \
   opamDarcs.ml \
-  opamHg.ml
+  opamHg.ml \
+  opamRepository.ml
 
 define PROJ_repositories
   SOURCES = $(call addmli,repositories,$(SRC_repositories))
@@ -180,6 +186,9 @@ opam-client.cma: opam-core.cma opam-solver.cma opam-repositories.cma ALWAYS
 opam-client.cmxa: opam-core.cmxa opam-solver.cmxa opam-repositories.cmxa ALWAYS
 
 SRC_client = \
+  opamClientConfig.ml \
+  opamPath.ml \
+  opamClientGlobals.ml \
   opamState.ml \
   opamAction.ml \
   opamSolution.ml \
@@ -230,9 +239,10 @@ SRC_opam-admin = \
   opam_repo_check.ml \
   opam_stats.ml \
   opam_depexts_change.ml \
-  opam_findlib.ml \
   opam_rename.ml \
   opam_admin.ml
+
+# opam_findlib.ml
 
 define PROJ_opam-admin
   SOURCES = $(call addmli,tools,$(SRC_opam-admin))
@@ -266,6 +276,26 @@ endef
 export PROJ_opam-admin-top
 
 # --
+
+define lib_inst_files =
+  $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
+  $(foreach f,$(basename $(SRC_$(1))),\
+    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmx .cmxs .cmti)))
+endef
+
+../opam-lib.install: $(OPAMLIB:=.cma)
+	@echo 'lib: [' >$@
+	@echo '  "META"' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,\
+	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
+	} >>$@
+	@echo ']' >>$@
+	@echo 'bin: [' >>$@
+	@echo '  "src/opam-admin.top"' >>$@
+	@echo ']' >>$@
+
+
+addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 
 ifndef SUBPROJS
   export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind opam-admin-top

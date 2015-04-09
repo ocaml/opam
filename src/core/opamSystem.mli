@@ -207,3 +207,8 @@ val print_stats: unit -> unit
 (** Registers an exception printer that adds some OPAM version info, and details
     on process and Unix errors *)
 val register_printer: unit -> unit
+
+(** Initialises signal handlers, catch_break and some exception printers. The
+    lib may not perform properly without this if [Sys.catch_break] isn't set
+    and SIGPIPE isn't handled (with a no-op) *)
+val init: unit -> unit

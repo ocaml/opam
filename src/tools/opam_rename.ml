@@ -18,9 +18,6 @@ open OpamTypes
 
 module StringSet = OpamMisc.String.Set
 
-let () =
-  OpamGlobals.root_dir := OpamGlobals.default_opam_dir
-
 type args = {
   src: name;
   dst: name;
@@ -40,10 +37,8 @@ let args =
       { src; dst }
     ) $ src $ dst)
 
-let state = lazy (OpamState.load_state "opam-admin-findlib")
-
 let process args =
-  let repo = OpamRepository.local (OpamFilename.cwd ()) in
+  let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
   let packages = OpamRepository.packages_with_prefixes repo in
   OpamPackage.Map.iter (fun package prefix ->
       if OpamPackage.name package = args.src then (

@@ -20,7 +20,7 @@ open OpamMisc.OP
 let identity _ x = x
 let true_ _ = true
 
-let repo = OpamRepository.local (OpamFilename.cwd ())
+let repo = OpamRepositoryBackend.local (OpamFilename.cwd ())
 let packages = OpamRepository.packages repo
 let compilers = OpamRepository.compilers repo
 

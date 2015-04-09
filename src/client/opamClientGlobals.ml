@@ -40,7 +40,7 @@ let init_config () =
       (fun conf -> setk (fun c -> r := c) (fun () -> conf))
       (fun () -> !r)
   )
-    ?root_dir:None (* OPAMROOT is implemented in OpamArg, it's needed first *)
+    ?root_dir:(env_string "ROOT" >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
     ?jobs:(env_int "JOBS")

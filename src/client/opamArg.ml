@@ -2018,12 +2018,7 @@ let check_and_run_external_commands () =
 
 let run default commands =
   OpamMisc.Option.iter OpamVersion.set_git OpamGitVersion.version;
-  OpamSystem.register_printer ();
-  Sys.catch_break true;
-  let () =
-    try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
-    with Invalid_argument _ -> ()
-  in
+  OpamSystem.init ();
   try
     check_and_run_external_commands ();
     match Term.eval_choice ~catch:false default commands with

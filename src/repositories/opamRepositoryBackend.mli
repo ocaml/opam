@@ -53,6 +53,9 @@ val default_address: address
     [default_address]) *)
 val default: unit -> repository
 
+(** Create a local repository on a given path *)
+val local: dirname -> repository
+
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
 val check_digest: filename -> string option -> bool

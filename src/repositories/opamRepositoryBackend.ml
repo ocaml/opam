@@ -49,6 +49,14 @@ let default () = {
     OpamFilename.Dir.of_string OpamRepositoryName.(to_string default);
 }
 
+let local dirname = {
+  repo_name     = OpamRepositoryName.of_string "local";
+  repo_root     = dirname;
+  repo_address  = ("<none>", None);
+  repo_kind     = `local;
+  repo_priority = 0;
+}
+
 let to_json r =
   `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
         ("kind", `String (string_of_repository_kind r.repo_kind));

@@ -19,8 +19,9 @@
 let usage = "opam-check [--root root] [-l label] <package>+"
 
 let label = ref ""
+let root_dir_ref = ref ""
 let spec = Arg.align [
-    ("--root", Arg.Set_string OpamGlobals.root_dir, " Set opam path");
+    ("--root", Arg.Set_string root_dir_ref, " Set opam path");
     ("-l"    , Arg.Set_string label            , " Set a test label");
     ("--version", Arg.Unit OpamVersion.message , " Display version information");
   ]
@@ -28,8 +29,25 @@ let spec = Arg.align [
 let packages = ref []
 let ano x = packages := x :: !packages
 
-let () = OpamGlobals.root_dir := OpamGlobals.default_opam_dir
-let () = Arg.parse spec ano usage
+let () =
+  Arg.parse spec ano usage;
+  let root_dir = match !root_dir_ref with
+    | "" -> prerr_endline "NOROOT"; None
+    | d -> prerr_endline ("ROOT="^d); Some (OpamFilename.Dir.of_string d)
+  in
+  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
+  OpamSystem.init();
+  OpamGlobals.init_config()();
+  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
+  OpamDownload.init_config()();
+  OpamSolverGlobals.init_config()();
+  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
+  OpamClientGlobals.init_config()
+    ?root_dir
+    ();
+  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()))
+
+
 
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
 

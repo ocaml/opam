@@ -651,3 +651,9 @@ let register_printer () =
       Some (with_opam_info error)
     | _ -> None
   )
+
+let init () =
+  register_printer ();
+  Sys.catch_break true;
+  try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
+  with Invalid_argument _ -> ()
