@@ -52,13 +52,19 @@ let rec fold_down_left f acc filter = match filter with
   | FNot(x) -> fold_down_left f (f acc filter) x
   | x -> f acc x
 
-(* ["%{xxx}%"] or ["%{xxx"] if unclosed *)
+(* ["%%"], ["%{xxx}%"], or ["%{xxx"] if unclosed *)
 let string_interp_regex =
   let open Re in
   let notclose =
-    rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")])
+    rep (alt [
+        diff notnl (set "}");
+        seq [char '}'; alt [diff notnl (set "%"); stop] ]
+      ])
   in
-  compile (seq [str "%{"; group notclose; opt (group (str "}%"))])
+  compile (alt [
+      str "%%";
+      seq [str "%{"; group (greedy notclose); opt (group (str "}%"))];
+    ])
 
 let fident_variables = function
   | [], var, _ -> [OpamVariable.Full.global var]
@@ -168,7 +174,8 @@ let resolve_ident env fident =
 (* Resolves ["%{x}%"] string interpolations *)
 let expand_string env text =
   let subst str =
-    if not (OpamStd.String.ends_with ~suffix:"}%" str) then
+    if str = "%%" then "%"
+    else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
        str)
     else
