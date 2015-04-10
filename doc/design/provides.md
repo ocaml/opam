@@ -39,7 +39,7 @@ with a dependency towards either of those. However, on a repository maintainance
 point of view, having to list all the alternatives adds much more burden.
 
 Besides, it's not possible, using pinning or an additional repository, to
-provide a replacement for a base-repo package without redefining it explicitely:
+provide a replacement for a base-repo package without redefining it explicitly:
 that's sometimes very useful to extend the OCaml versions where some package is
 available, for example.
 
@@ -64,7 +64,7 @@ In both cases, great care should be taken in the user interface. For example:
   virtual packages.
 
 The case of replacement packages is a bit more tricky, because it may easily get
-confusing if the dependencies aren't explicitely traced. The format of the
+confusing if the dependencies aren't explicitly traced. The format of the
 package index will have to be extended to allow for virtual packages, which may
 not have a definite version.
 

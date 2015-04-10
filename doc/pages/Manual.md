@@ -187,7 +187,7 @@ for `file` when this is available, if `file.in` is found, any `%{var}%`
 interpolations found in it are replaced by the contents of `var` and the results
 are written back to `file`.
 
-This can also be done explicitely using the command `opam config subst "file"`.
+This can also be done explicitly using the command `opam config subst "file"`.
 
 ### Environment updates
 
