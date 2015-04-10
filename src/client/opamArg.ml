@@ -158,6 +158,10 @@ let apply_global_options o =
   in
 
   (* (iii) load from env and options using OpamXxxGlobals.init_config *)
+  let log_dir = OpamFilename.(
+      if exists_dir root then Some (Dir.to_string Op.(root / "log"))
+      else None
+    ) in
   OpamGlobals.init_config ()
     ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
     ?verbose_level:(if o.quiet then Some 0 else
@@ -171,7 +175,7 @@ let apply_global_options o =
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
     (* ?all_parens:bool *)
-    ~log_dir:OpamFilename.(Dir.to_string Op.(root / "log"))
+    ?log_dir
     (* ?keep_log_dir:bool *)
     ();
   OpamDownload.init_config ()
