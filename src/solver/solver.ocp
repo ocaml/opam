@@ -2,7 +2,6 @@ begin library "opam-solver"
 
   files   = [
     "opamSolverConfig.ml"
-    "opamSolverGlobals.ml"
     "opamCudf.ml"
     "opamHeuristic.ml"
     "opamSolver.ml"

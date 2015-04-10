@@ -751,8 +751,8 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
       string (OpamPackage.Version.to_string ver)
     | "depends",   Some opam ->
       let deps =
-        OpamFormula.atoms (OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam)) @
-        OpamFormula.atoms (OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam))
+        OpamFormula.atoms (OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam)) @
+        OpamFormula.atoms (OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam))
       in
       let installed_deps =
         OpamStd.List.filter_map
@@ -1018,9 +1018,11 @@ let read_repositories root config =
 (* load partial state to be able to read env variables *)
 let load_env_state call_site switch =
   log "LOAD-ENV-STATE(%s)" call_site;
-  let root = OpamPath.root () in
-  let config_p = OpamPath.config root in
-  let config = OpamFile.Config.read config_p in
+  let root = OpamClientConfig.(!r.root_dir) in
+  let config = match OpamClientConfig.load root with
+    | Some c -> c
+    | _ -> OpamFile.Config.empty
+  in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
     try OpamSwitch.Map.find switch aliases
@@ -1405,7 +1407,7 @@ let save_state ~update t =
   log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
 
 let remove_state_cache () =
-  let root = OpamPath.root () in
+  let root = OpamClientConfig.(!r.root_dir) in
   let file = OpamPath.state_cache root in
   OpamFilename.remove file
 
@@ -1441,22 +1443,24 @@ let upgrade_to_1_2_hook =
 (* Loads the global config file and update some global references in
    OpamGlobals *)
 let load_config root =
-  let config_p = OpamPath.config root in
   let config =
-    let config = OpamFile.Config.read config_p in
+    let config = match OpamClientConfig.load root with
+      | Some c -> c
+      | None -> OpamFile.Config.empty
+    in
     let config_version = OpamFile.Config.opam_version config in
     if config_version <> OpamVersion.current_nopatch then (
       if OpamVersion.(compare current config_version) < 0 &&
          not OpamCoreConfig.(!r.skip_version_checks) then
         OpamConsole.error_and_exit
           "%s reports a newer OPAM version, aborting."
-          (OpamFilename.Dir.to_string (OpamPath.root ()));
+          (OpamFilename.Dir.to_string (OpamClientConfig.(!r.root_dir)));
       (* opam has been updated, so refresh the configuration file and
          clean-up the cache. *)
       if OpamVersion.compare config_version (OpamVersion.of_string "1.2") < 0 then
         !upgrade_to_1_2_hook ();
       let config = OpamFile.Config.with_current_opam_version config in
-      OpamFile.Config.write config_p config;
+      OpamClientConfig.write root config;
       remove_state_cache ();
       config
     ) else
@@ -1555,7 +1559,7 @@ let load_state ?(save_cache=true) call_site switch =
   let chrono = OpamConsole.timer () in
   !upgrade_to_1_1_hook ();
 
-  let root = OpamPath.root () in
+  let root = OpamClientConfig.(!r.root_dir) in
 
   let config = load_config root in
 
@@ -1593,7 +1597,7 @@ let load_state ?(save_cache=true) call_site switch =
         (try
            let new_switch, _ = OpamSwitch.Map.choose aliases in
            let config = OpamFile.Config.with_switch config new_switch in
-           OpamFile.Config.write (OpamPath.config root) config;
+           OpamClientConfig.write root config;
            OpamConsole.errmsg "Swiched back to %s"
              (OpamSwitch.to_string new_switch);
          with Not_found -> ());
@@ -1717,7 +1721,7 @@ let fix_descriptions_hook =
 
 (* Upgrade to the new file overlay *)
 let upgrade_to_1_1 () =
-  let root  = OpamPath.root () in
+  let root  = OpamClientConfig.(!r.root_dir) in
   let opam  = root / "opam" in
   let opam_tmp = root / "opam_tmp" in
   let descr = root / "descr" in
@@ -1739,7 +1743,7 @@ let upgrade_to_1_1 () =
       \       mkdir %s/opam && opam list\n\
        \n\
        ** Processing **\n"
-      (OpamFilename.prettify_dir (OpamPath.root ()));
+      (OpamFilename.prettify_dir (OpamClientConfig.(!r.root_dir)));
 
     if OpamFilename.exists_dir opam then
       OpamFilename.move_dir ~src:opam ~dst:opam_tmp;
@@ -1752,9 +1756,9 @@ let upgrade_to_1_1 () =
       OpamFilename.remove (OpamPath.state_cache root);
 
     (* Remove the index files *)
-    OpamFilename.remove (OpamPath.root () / "repo" // "index");
-    OpamFilename.remove (OpamPath.root () / "repo" // "index.packages");
-    OpamFilename.remove (OpamPath.root () / "repo" // "index.compilers");
+    OpamFilename.remove (OpamClientConfig.(!r.root_dir) / "repo" // "index");
+    OpamFilename.remove (OpamClientConfig.(!r.root_dir) / "repo" // "index.packages");
+    OpamFilename.remove (OpamClientConfig.(!r.root_dir) / "repo" // "index.compilers");
 
     (* fix the base config files *)
     let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
@@ -1844,7 +1848,7 @@ let upgrade_to_1_2 () =
   if OpamCoreConfig.(!r.safe_mode) then
     OpamConsole.error_and_exit "Safe mode: not upgrading from opamroot <1.2";
   log "Upgrade pinned packages format to 1.2";
-  let root  = OpamPath.root () in
+  let root  = OpamClientConfig.(!r.root_dir) in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let remove_pinned_suffix d =
     let s = OpamFilename.Dir.to_string d in
@@ -2667,7 +2671,7 @@ let install_compiler t ~quiet:_ switch compiler =
 (* write the new version in the configuration file *)
 let update_switch_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
-  OpamFile.Config.write (OpamPath.config t.root) config;
+  OpamClientConfig.write t.root config;
   let t = load_state "switch-config" switch in
   update_init_scripts t ~global:None;
   t
@@ -2953,7 +2957,7 @@ let download_upstream t nv dirname =
     @@| fun x -> Some x
 
 let check f =
-  let root = OpamPath.root () in
+  let root = OpamClientConfig.(!r.root_dir) in
 
   if not (OpamFilename.exists_dir root)
   || not (OpamFilename.exists (OpamPath.config root)) then

@@ -430,7 +430,7 @@ let update_config t repos =
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
   let new_config = OpamFile.Config.with_repositories t.config repos in
-  OpamFile.Config.write (OpamPath.config t.root) new_config
+  OpamClientConfig.write t.root new_config
 
 let fix_descriptions
     ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =

@@ -13,18 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-
-(** OPAMNOSELFUPGRADE is set to this value when the current opam process has
-    been called by an older opam process using the self-upgrade mechanism *)
-val self_upgrade_bootstrapping_value: string
-
-(** Sets the OpamClientConfig options, reading the environment to get default
-    values when unspecified *)
-val init_config: unit -> unit OpamClientConfig.options_fun
-
-(* val default_repository_name: string *)
-(* val default_repository_address: string *)
+(** Some detection of OCaml version and installation specifics. Base functions
+    lookup in the PATH, [system_*] functions extract the OPAMROOT paths before
+    looking up*)
 
 val ocaml_version: string option Lazy.t
 val ocaml_opt_available: bool Lazy.t
@@ -34,12 +25,6 @@ val system_ocamlc_version: string option Lazy.t
 val system_ocamlc_where: string option Lazy.t
 val system_compiler: OpamCompiler.t option Lazy.t
 
-val filter_deps: ext_formula -> formula
+(** Extra files included in `opam search\ *)
 
 val search_files: string list
-
-(* Loads the global configuration file, protecting against concurrent writes *)
-val load_conf_file: dirname -> OpamFile.Config.t option
-
-(* Writes the global configuration file, protecting against concurrent reads *)
-val write_conf_file: dirname -> OpamFile.Config.t -> unit

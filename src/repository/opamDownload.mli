@@ -14,9 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Initialises download tool and parameters *)
-val init_config: unit -> unit OpamRepositoryConfig.options_fun
-
 (** downloads a file from an URL, using Curl, Wget, or a custom configured
     tool, to the given directory. Returns the downloaded filename.
     FIXME: The source OpamFilename.t is indeed a URL. *)

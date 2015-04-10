@@ -51,13 +51,12 @@ let default = {
   force_checksums = None;
 }
 
-let setk k ft
+let setk k t
     ?download_tool
     ?retries
     ?force_checksums
     ()
   =
-  let t = ft () in
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     download_tool = t.download_tool + download_tool;
@@ -65,8 +64,40 @@ let setk k ft
     force_checksums = t.force_checksums + force_checksums;
   }
 
-let set t = setk (fun x -> x) (fun _ -> t)
+let set t = setk (fun x -> x) t
 
 let r = ref default
 
-let update = setk (fun cfg -> r := cfg) (fun () -> !r)
+let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+
+let init ?noop:_ =
+  let open OpamStd.Config in
+  let open OpamStd.Option.Op in
+  let download_tool =
+    env_string "FETCH" >>| (fun s ->
+        let args = OpamStd.String.split s ' ' in
+        let c = List.map (fun a -> OpamTypes.CString a, None) args in
+        let kind = match c with
+          | (CIdent "curl", None)::_ -> `Curl
+          | (CString s, None)::_
+            when OpamStd.String.ends_with ~suffix:"curl" s -> `Curl
+          | _ -> `Default
+        in
+        lazy (c, kind)
+      )
+    >>+ fun () ->
+    env_string "CURL" >>| (fun s ->
+        lazy ([CString s, None], `Curl))
+  in
+  let force_checksums =
+    match env_bool "REQUIRECHECKSUMS", env_bool "NOCHECKSUMS" with
+    | Some true, _ -> Some (Some true)
+    | _, Some true -> Some (Some false)
+    | None, None -> None
+    | _ -> Some None
+  in
+  setk (setk (fun c -> r := c)) !r
+    ?download_tool
+    ?retries:(env_int "RETRIES")
+    ?force_checksums
+    ()

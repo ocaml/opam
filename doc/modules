@@ -11,7 +11,6 @@ src
 │   ├── opamTypes.mli                   Definitions of many types used throughout
 │   ├── opamTypesBase.ml                Helper functions on the base types. Often opened
 │   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
-│   ├── opamGlobals.ml                  Configuration initialisation helpers (using the environment)
 │   │   # basic types, used as keys
 │   ├── opamCompiler.ml                 The compiler type (string, version pairs)
 │   ├── opamPackage.ml                  The package type, and package name type (name+version, values often called "nv" in the code)
@@ -37,7 +36,7 @@ src
 │
 ├── repository                          Handling of remote sources
 │   │   [ opam-repository lib ]
-│   ├── opamRepositoryConfig.ml         Configuration options for this lib (record, global reference and setter)
+│   ├── opamRepositoryConfig.ml         Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamRepositoryBackend.ml        Signature for repository handlers and some helpers for the repository type
 │   ├── opamRepositoryPath.ml           Defines the file hierarchy in repositories
 │   ├── opamDownload.ml                 Configuration init and handling of downloading commands
@@ -51,7 +50,7 @@ src
 │
 ├── solver                              Solver and Cudf interaction
 │   │   [ opam-solver lib ]
-│   ├── opamSolverConfig.ml             Configuration options for this lib (record, global reference and setter)
+│   ├── opamSolverConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamSolverGlobals.ml            Configuration initialisation and accessors
 │   ├── opamCudf.ml                     Solver interaction, conversion of answer to solution
 │   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker
@@ -60,8 +59,8 @@ src
 ├── client                              Everything related to the OPAM state, installation and front-end
 │   │   [ opam-client lib ]
 │   │   # Setup
-│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference and setter)
-│   ├── opamClientGlobals.ml            Configuration initialisation and file loading, OCaml specifics detection
+│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
+│   ├── opamClientGlobals.ml            OCaml specifics detection and some global strings
 │   │   # State and actions
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions

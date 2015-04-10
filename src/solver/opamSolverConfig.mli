@@ -35,8 +35,15 @@ val default : t
 
 val set : t -> t options_fun
 
-val setk : (t -> 'a) -> (unit -> t) -> 'a options_fun
+val setk : (t -> 'a) -> t -> 'a options_fun
 
 val r : t ref
 
-val update : unit options_fun
+val update : ?noop:unit -> unit options_fun
+
+val init: ?noop:unit -> unit options_fun
+
+val external_solver_command:
+  input:string -> output:string -> criteria:string -> string list option
+
+val criteria: OpamTypes.solver_criteria -> string

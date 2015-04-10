@@ -78,7 +78,7 @@ let switch_to_updated_self debug opamroot =
        let env =
          Array.append
            [|"OPAMNOSELFUPGRADE="^
-             OpamClientGlobals.self_upgrade_bootstrapping_value|]
+             OpamClientConfig.self_upgrade_bootstrapping_value|]
            (Unix.environment ()) in
        try
          OpamStd.Sys.exec_at_exit ();
@@ -130,7 +130,7 @@ let apply_global_options o =
     OpamClientConfig.(default.root_dir)
   in
   (* (ii) load conf file and set defaults *)
-  let () = match OpamClientGlobals.load_conf_file root with
+  let () = match OpamClientConfig.load root with
     | None -> ()
     | Some conf ->
       OpamRepositoryConfig.update
@@ -162,7 +162,7 @@ let apply_global_options o =
       if exists_dir root then Some (Dir.to_string Op.(root / "log"))
       else None
     ) in
-  OpamGlobals.init_config ()
+  OpamStd.Config.init
     ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
     ?verbose_level:(if o.quiet then Some 0 else
                     if o.verbose = 0 then None else Some o.verbose)
@@ -178,13 +178,13 @@ let apply_global_options o =
     ?log_dir
     (* ?keep_log_dir:bool *)
     ();
-  OpamDownload.init_config ()
+  OpamRepositoryConfig.init
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
     (* ?force_checksums:bool option *)
     ();
   let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
-  OpamSolverGlobals.init_config ()
+  OpamSolverConfig.init
     ?cudf_file:(some o.cudf_file)
     (* ?solver_timeout:float *)
     (* ?external_solver:OpamTypes.arg list option Lazy.t *)
@@ -192,7 +192,7 @@ let apply_global_options o =
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
     ();
-  OpamClientGlobals.init_config ()
+  OpamClientConfig.init
     ~root_dir:root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
@@ -804,7 +804,7 @@ let init =
     let repo_address, repo_kind2 = parse_url repo_address in
     let repo_kind = OpamStd.Option.default repo_kind2 repo_kind in
     let repository = {
-      repo_root = OpamRepositoryPath.create (OpamPath.root ()) repo_name;
+      repo_root = OpamRepositoryPath.create (OpamClientConfig.(!r.root_dir)) repo_name;
       repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no
@@ -1134,7 +1134,7 @@ let config =
       print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
         (if OpamClientConfig.(!r.self_upgrade = `Running)
-         then OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root())))
+         then OpamFilename.prettify (fst (self_upgrade_exe (OpamClientConfig.(!r.root_dir))))
          else "no");
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
@@ -1143,9 +1143,9 @@ let config =
         print "external-solver" "%s"
           (OpamStd.Option.to_string ~none:"no"
              (String.concat " ")
-             (OpamSolverGlobals.external_solver_command
+             (OpamSolverConfig.external_solver_command
                    ~input:"$in" ~output:"$out" ~criteria:"$criteria"));
-        print "criteria" "%s" (OpamSolverGlobals.criteria `Default);
+        print "criteria" "%s" (OpamSolverConfig.criteria `Default);
         let open OpamState.Types in
         let nprint label n =
           if n <> 0 then [Printf.sprintf "%d (%s)" n label]

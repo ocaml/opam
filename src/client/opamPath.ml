@@ -19,8 +19,6 @@ open OpamFilename.Op
 
 type t = dirname
 
-let root () = OpamClientConfig.(!r.root_dir)
-
 let config t = t // "config"
 
 let state_cache t = t // "state.cache"

@@ -35,24 +35,19 @@ let () =
     | "" -> prerr_endline "NOROOT"; None
     | d -> prerr_endline ("ROOT="^d); Some (OpamFilename.Dir.of_string d)
   in
-  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
   OpamSystem.init();
-  OpamGlobals.init_config()();
-  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
-  OpamDownload.init_config()();
-  OpamSolverGlobals.init_config()();
-  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()));
-  OpamClientGlobals.init_config()
+  OpamStd.Config.init();
+  OpamRepositoryConfig.init();
+  OpamSolverConfig.init();
+  OpamClientConfig.init
     ?root_dir
-    ();
-  prerr_endline (OpamFilename.Dir.to_string (OpamPath.root()))
-
+    ()
 
 
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
 
 let installed () =
-  let root = OpamPath.root () in
+  let root = OpamClientConfig.(!r.root_dir) in
   let config = OpamFile.Config.read (OpamPath.config root) in
   let version = OpamFile.Config.switch config in
   let installed =

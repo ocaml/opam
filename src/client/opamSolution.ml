@@ -357,7 +357,8 @@ let parallel_apply t action action_graph =
   if fatal_dl_error then
     OpamConsole.error_and_exit
       "The sources of the following couldn't be obtained, aborting:\n%s\
-       (This may be fixed by running 'opam update')"
+       (This might be due to outdated metadata, in this case run \
+       'opam update')"
       (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements failed_downloads))
   else if not (OpamPackage.Set.is_empty failed_downloads) then

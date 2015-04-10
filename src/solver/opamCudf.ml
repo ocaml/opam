@@ -477,7 +477,7 @@ let string_of_request r =
     (string_of_vpkgs r.wish_install)
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
-    (OpamSolverGlobals.criteria r.criteria)
+    (OpamSolverConfig.criteria r.criteria)
 
 let external_solver_available () =
   Lazy.force OpamSolverConfig.(!r.external_solver) <> None
@@ -496,7 +496,7 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    (match OpamSolverGlobals.external_solver_command
+    (match OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria
      with
      | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
@@ -520,7 +520,7 @@ let dump_cudf_error ~version_map univ req =
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
-      (OpamSolverGlobals.criteria req.criteria)
+      (OpamSolverConfig.criteria req.criteria)
       (Some cudf_file)
   with
   | Some f -> f
@@ -539,7 +539,7 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     in
     let solver_command =
       match
-        OpamSolverGlobals.external_solver_command
+        OpamSolverConfig.external_solver_command
           ~input:(OpamFilename.to_string solver_in)
           ~output:(OpamFilename.to_string solver_out)
           ~criteria
@@ -582,7 +582,7 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
-    let criteria = OpamSolverGlobals.criteria req.criteria in
+    let criteria = OpamSolverConfig.criteria req.criteria in
     ignore (dump_cudf_request ~version_map cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try

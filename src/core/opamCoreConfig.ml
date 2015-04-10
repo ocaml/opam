@@ -63,7 +63,7 @@ let default = {
   keep_log_dir = false;
 }
 
-let setk k ft
+let setk k t
     ?debug_level
     ?verbose_level
     ?color
@@ -79,7 +79,6 @@ let setk k ft
     ?keep_log_dir
     ()
   =
-  let t = ft () in
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     debug_level = t.debug_level + debug_level;
@@ -97,10 +96,10 @@ let setk k ft
     keep_log_dir = t.keep_log_dir + keep_log_dir;
   }
 
-let set t = setk (fun x -> x) (fun () -> t)
+let set t = setk (fun x -> x) t
 
 (* Global configuration reference *)
 
 let r = ref default
 
-let update = setk (fun cfg -> r := cfg) (fun () -> !r)
+let update ?noop:_ = setk (fun cfg -> r := cfg) !r

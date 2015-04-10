@@ -40,41 +40,6 @@ let wget_args = [
   CIdent "url", None;
 ]
 
-let init_config () =
-  let open OpamGlobals.Config in
-  let open OpamStd.Option.Op in
-  let download_tool =
-    env_string "FETCH" >>| (fun s ->
-        let c = command_of_string s in
-        let kind = match c with
-          | (CIdent "curl", None)::_ -> `Curl
-          | (CString s, None)::_
-            when OpamStd.String.ends_with ~suffix:"curl" s -> `Curl
-          | _ -> `Default
-        in
-        lazy (c, kind)
-      )
-    >>+ fun () ->
-    env_string "CURL" >>| (fun s ->
-        lazy ([CString s, None], `Curl))
-  in
-  let force_checksums =
-    match env_bool "REQUIRECHECKSUMS", env_bool "NOCHECKSUMS" with
-    | Some true, _ -> Some (Some true)
-    | _, Some true -> Some (Some false)
-    | None, None -> None
-    | _ -> Some None
-  in
-  OpamRepositoryConfig.(
-    setk
-      (fun conf -> setk (fun c -> r := c) (fun () -> conf))
-      (fun () -> !r)
-  )
-    ?download_tool
-    ?retries:(env_int "RETRIES")
-    ?force_checksums
-    ()
-
 let download_args ~url ~out ~retry ~compress =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =

@@ -15,18 +15,35 @@
 
 type t = private {
   debug_level : int;
+  (** Controls debug messages, 0 to disable *)
   verbose_level : int;
+  (** Controls printing of external commands and output, 0 to disable, more
+      means print more low-level commands *)
   color : [ `Always | `Never | `Auto ];
+  (** Console ANSI color control *)
   utf8 : [ `Extended | `Always | `Never | `Auto ];
+  (** Controls usage of UTF8 in OPAM-generated messages. Extended adds camel
+      emojis *)
   disp_status_line: [ `Always | `Never | `Auto ];
+  (** Controls on-line display of parallel commands being run, using ANSI
+      escapes *)
   answer : bool option;
+  (** Affects interactive questions in OpamConsole: auto-answer with the given
+      bool if Some *)
   strict : bool;
+  (** Fail early with errors in OPAM files *)
   skip_version_checks : bool;
+  (** Ignore mismatching OPAM versions in files *)
   safe_mode : bool;
+  (** Fail on writes or delays, don't ask questions (for quick queries, e.g.
+      for shell completion) *)
   lock_retries : int;
   all_parens : bool;
+  (** Affects the OPAM format printer; for backwards-compatibility *)
   log_dir : string;
+  (** Where to store log and temporary files (output from commands...) *)
   keep_log_dir : bool;
+  (** Whether to cleanup temporary and log files on exit *)
 }
 
 type 'a options_fun =
@@ -49,8 +66,8 @@ val default : t
 
 val set : t -> t options_fun
 
-val setk : (t -> 'a) -> (unit -> t) -> 'a options_fun
+val setk : (t -> 'a) -> t -> 'a options_fun
 
 val r : t ref
 
-val update : unit options_fun
+val update : ?noop:unit -> unit options_fun

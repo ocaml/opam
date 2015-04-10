@@ -71,7 +71,7 @@ let check_digest filename = function
          "Bad checksum for %s:\n\
          \  - %s [expected result]\n\
          \  - %s [actual result]\n\
-          This may be fixed by running `opam update`.\n"
+          Metadata might be out of date, in this case run `opam update`.\n"
          (OpamFilename.to_string filename) expected actual;
        false)
   | _ -> true

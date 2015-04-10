@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 type t = private {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t;
@@ -63,8 +65,26 @@ val default : t
 
 val set : t -> t options_fun
 
-val setk : (t -> 'a) -> (unit -> t) -> 'a options_fun
+val setk : (t -> 'a) -> t -> 'a options_fun
 
 val r : t ref
 
-val update : unit options_fun
+val update : ?noop:_ -> unit options_fun
+
+(** Sets the options, reading the environment to get default
+    values when unspecified *)
+val init: ?noop:_ -> unit options_fun
+
+(** OPAMNOSELFUPGRADE is set to this value when the current opam process has
+    been called by an older opam process using the self-upgrade mechanism *)
+val self_upgrade_bootstrapping_value: string
+
+(** Loads the global configuration file, protecting against concurrent writes *)
+val load: dirname -> OpamFile.Config.t option
+
+(** Writes the global configuration file, protecting against concurrent reads *)
+val write: dirname -> OpamFile.Config.t -> unit
+
+(** Filters flagged dependencies in an ext_formula using the currently set
+    options (doc, test). Build dependencies are included *)
+val filter_deps: ext_formula -> formula

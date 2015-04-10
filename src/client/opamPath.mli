@@ -23,9 +23,6 @@ open OpamTypes
 (** Type of path root *)
 type t = dirname
 
-(** Default root path *)
-val root: unit -> t
-
 (** State cache *)
 val state_cache: t -> filename
 

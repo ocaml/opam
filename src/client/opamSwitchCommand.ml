@@ -180,7 +180,7 @@ let remove_t ?(confirm = true) t =
     OpamStd.Sys.exit 1;
   );
   if Some t.switch =
-     OpamStd.Option.Op.(OpamClientGlobals.load_conf_file t.root >>|
+     OpamStd.Option.Op.(OpamClientConfig.load t.root >>|
                          OpamFile.Config.switch)
   then
     OpamConsole.error_and_exit
@@ -214,7 +214,7 @@ let install_compiler ~quiet switch compiler =
   with e ->
     (* OpamConsole.error "%s" (Printexc.to_string e); *)
     clear_switch ~keep_debug:true t switch;
-    OpamFile.Config.write (OpamPath.config t.root) t.config;
+    OpamClientConfig.write t.root t.config;
     raise e
 
 
@@ -322,7 +322,7 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
     (try install_packages switch compiler
      with e ->
        clear_switch ~keep_debug:true t switch;
-       OpamFile.Config.write (OpamPath.config t.root) t.config;
+       OpamClientConfig.write t.root t.config;
        raise e);
     if warning && update_config then
       OpamState.print_env_warning_at_switch {t with switch}

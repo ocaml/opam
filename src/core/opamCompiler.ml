@@ -107,4 +107,4 @@ let prefixes dir =
   ) else
     Map.empty
 
-let system = of_string OpamGlobals.system
+let system = of_string "system"

@@ -3,8 +3,8 @@ comp += [ "-w" "-48" ]
 begin library "opam-client"
 
   files   = [
-    "opamClientConfig.ml"
     "opamPath.ml"
+    "opamClientConfig.ml"
     "opamClientGlobals.ml"
     "opamState.ml"
     "opamAction.ml"

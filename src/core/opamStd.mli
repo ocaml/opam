@@ -359,3 +359,32 @@ module Op: sig
   val (@>): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
 
 end
+
+(** {2 Helper functions to initialise configuration from the environment} *)
+
+module Config : sig
+
+  type env_var = string
+
+  val env_bool: env_var -> bool option
+
+  val env_int: env_var -> int option
+
+  (* Like [env_int], but accept boolean values for 0 and 1 *)
+  val env_level: env_var -> int option
+
+  val env_string: env_var -> string option
+
+  val env_float: env_var -> float option
+
+  val env_when: env_var -> [ `Always | `Never | `Auto ] option
+
+  val env_when_ext: env_var -> [ `Extended | `Always | `Never | `Auto ] option
+
+  val resolve_when: auto:(bool Lazy.t) -> [ `Always | `Never | `Auto ] -> bool
+
+  (** Sets the OpamCoreConfig options, reading the environment to get default
+      values when unspecified *)
+  val init: ?noop:unit -> unit OpamCoreConfig.options_fun
+
+end

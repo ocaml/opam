@@ -127,7 +127,7 @@ let resolve_deps index names =
          cs)
 
 let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
-  OpamGlobals.init_config ()
+  OpamStd.Config.init
     ?debug_level:(if debug then Some 1 else None)
     ();
 
@@ -193,8 +193,8 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
-      let deps = OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam) in
-      let depopts = OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam) in
+      let deps = OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam) in
+      let depopts = OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam) in
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
         ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])

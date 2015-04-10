@@ -117,6 +117,8 @@ val is_failure : result -> bool
 val cleanup : ?force:bool -> result -> unit
 
 (** {2 Misc} *)
+
+(** Reads a text file and returns a list of lines *)
 val read_lines: string -> string list
 
 (** Pretty printing of process. *)

@@ -113,7 +113,6 @@ SRC_core = \
   opamStd.ml \
   opamConsole.ml \
   opamScript.ml \
-  opamGlobals.ml \
   opamVersionCompare.ml \
   opamVersion.ml \
   opamProcess.ml \
@@ -147,7 +146,6 @@ opam-solver.cmxa: opam-core.cmxa
 
 SRC_solver = \
   opamSolverConfig.ml \
-  opamSolverGlobals.ml \
   opamCudf.ml \
   opamHeuristic.ml \
   opamSolver.ml
@@ -186,8 +184,8 @@ opam-client.cma: opam-core.cma opam-solver.cma opam-repository.cma ALWAYS
 opam-client.cmxa: opam-core.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
 
 SRC_client = \
-  opamClientConfig.ml \
   opamPath.ml \
+  opamClientConfig.ml \
   opamClientGlobals.ml \
   opamState.ml \
   opamAction.ml \

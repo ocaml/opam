@@ -293,10 +293,10 @@ module API = struct
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamState.opam t nv in
-          let formula = OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam) in
+          let formula = OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam) in
           let formula =
             if depopts
-            then OpamFormula.ands [formula; OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam)]
+            then OpamFormula.ands [formula; OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam)]
             else formula in
           let depends_on nv =
             let name = OpamPackage.name nv in
@@ -317,10 +317,10 @@ module API = struct
         let opam = OpamState.opam t nv in
         let deps =
           OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-          OpamClientGlobals.filter_deps (OpamFile.OPAM.depends opam) in
+          OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam) in
         if depopts then
           deps ++ (OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-                   OpamClientGlobals.filter_deps (OpamFile.OPAM.depopts opam))
+                   OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam))
         else deps
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)
@@ -531,8 +531,8 @@ module API = struct
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     (fun _ -> tags) in
-      let depends  = formula "depends"  (OpamClientGlobals.filter_deps @* OpamFile.OPAM.depends) in
-      let depopts  = formula "depopts"  (OpamClientGlobals.filter_deps @* OpamFile.OPAM.depopts) in
+      let depends  = formula "depends"  (OpamClientConfig.filter_deps @* OpamFile.OPAM.depends) in
+      let depopts  = formula "depopts"  (OpamClientConfig.filter_deps @* OpamFile.OPAM.depopts) in
 
       let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
       let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
@@ -1191,7 +1191,7 @@ module API = struct
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
-    let root = OpamPath.root () in
+    let root = OpamClientConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
@@ -1283,7 +1283,7 @@ module API = struct
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
-            OpamSwitch.default
+            OpamSwitch.system
           else
             OpamSwitch.of_string (OpamCompiler.to_string compiler) in
 
@@ -1295,7 +1295,7 @@ module API = struct
           OpamFile.Config.create switch [repo.repo_name] jobs
             OpamClientConfig.(default.dl_jobs)
         in
-        OpamFile.Config.write config_f config;
+        OpamClientConfig.write root config;
 
         (* Create ~/.opam/aliases *)
         OpamFile.Aliases.write
@@ -1325,7 +1325,6 @@ module API = struct
 
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";
-        let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
 
