@@ -43,14 +43,3 @@ end
 (** Sets the OpamCoreConfig options, reading the environment to get default
     values when unspecified *)
 val init_config: unit -> unit OpamCoreConfig.options_fun
-
-(** {2 Some globally defined, static strings} *)
-
-(** Name and version of the system compiler *)
-val system: string
-
-(** The configured-by-default OPAM repository name *)
-val default_repository_name: string
-
-(** The configured-by-default OPAM repository URL *)
-val default_repository_address: string

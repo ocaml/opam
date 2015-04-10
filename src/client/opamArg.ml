@@ -340,7 +340,7 @@ let help_sections = [
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";
-  `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
+  `P (Printf.sprintf "See https://opam.ocaml.org.");
 
   `S "AUTHORS";
   `P "Thomas Gazagnaire   <thomas@gazagnaire.org>"; `Noblank;

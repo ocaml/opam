@@ -14,12 +14,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compiler switches *)
+(** Compiler switch names *)
 
 include OpamStd.ABSTRACT
 
-(** Default switch *)
-val default: t
+(** System switch name *)
+val system: t
 
-(** Display a nice error message when a switch is not installed. *)
+(** Display an error message when a switch is not installed. *)
 val not_installed: t -> 'a

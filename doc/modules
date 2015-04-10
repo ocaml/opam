@@ -11,7 +11,7 @@ src
 │   ├── opamTypes.mli                   Definitions of many types used throughout
 │   ├── opamTypesBase.ml                Helper functions on the base types. Often opened
 │   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
-│   ├── opamGlobals.ml                  Configuration initialisation helpers (using the environment), and a few global static strings
+│   ├── opamGlobals.ml                  Configuration initialisation helpers (using the environment)
 │   │   # basic types, used as keys
 │   ├── opamCompiler.ml                 The compiler type (string, version pairs)
 │   ├── opamPackage.ml                  The package type, and package name type (name+version, values often called "nv" in the code)

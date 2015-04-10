@@ -37,8 +37,7 @@ let to_string r =
     (string_of_repository_kind r.repo_kind)
     (string_of_address r.repo_address)
 
-let default_address =
-  OpamGlobals.default_repository_address, None
+let default_address = "https://opam.ocaml.org", None
 
 let default () = {
   repo_name     = OpamRepositoryName.default;

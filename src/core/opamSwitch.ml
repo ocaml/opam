@@ -16,7 +16,7 @@
 
 include OpamStd.AbstractString
 
-let default = of_string OpamGlobals.system
+let system = of_string "system"
 
 let not_installed s =
   OpamConsole.error_and_exit

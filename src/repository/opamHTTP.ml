@@ -208,11 +208,7 @@ module B = struct
       let found, extra =
         List.partition (fun f -> f = local_file && check_sum f) files
       in
-      if extra <> [] (* && *)
-         (* OpamStd.String.starts_with (\* Just a safeguard *\) *)
-         (*   ~prefix:(OpamFilename.Dir.to_string (OpamPath.root ())) *)
-         (*   (OpamFilename.Dir.to_string dirname) *)
-      then
+      if extra <> [] then
         (log "Removing stale files in download dir: %a"
            (slog @@ List.map OpamFilename.to_string @>
                     OpamStd.Format.pretty_list ?last:None)
