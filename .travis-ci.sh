@@ -70,9 +70,9 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo make install
     make libinstall prefix=$(opam config var prefix)
     # Compile and run opam-rt
-    wget https://github.com/ocaml/opam-rt/archive/master.tar.gz
-    tar xvfz master.tar.gz
-    cd opam-rt-master
+    wget https://github.com/ocaml/opam-rt/archive/1.3.tar.gz -O opam-rt.tar.gz
+    tar xvfz opam-rt.tar.gz
+    cd opam-rt-*
     make
     OPAMEXTERNALSOLVER=$EXTERNAL_SOLVER make KINDS="local git" run
 else
