@@ -1129,6 +1129,76 @@ let universe t action =
     u_base      = base;
   }
 
+let string_of_cnf string_of_atom cnf =
+  let string_of_clause c =
+    Printf.sprintf "%s" (OpamMisc.sconcat_map " | " string_of_atom (List.rev c)) in
+  Printf.sprintf "%s" (OpamMisc.sconcat_map " , " string_of_clause (List.rev cnf))
+
+let string_of_conjunction string_of_atom c =
+  Printf.sprintf "%s" (OpamMisc.sconcat_map " , " string_of_atom (List.rev c))
+
+let dump_state t oc =
+  let opams = (* Read overlays of pinned packages *)
+    OpamPackage.Name.Map.fold (fun name pin map ->
+        let v = version_of_pin t name pin in
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+        if OpamFilename.exists overlay then
+          OpamPackage.Map.add
+            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
+        else map)
+      t.pinned t.opams
+  in
+  let depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams in
+  let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams in
+  let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams in
+  let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer opams in
+  let base = base_packages t in
+  let filter _ = true in
+
+  let aux package =
+    Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string package);
+    Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string package);
+    (try
+      let m = OpamPackage.Map.find package maintainers in
+      Printf.fprintf oc "maintainer: %s\n"
+        (string_of_conjunction (fun a -> a) m);
+    with Not_found -> () );
+
+    if OpamPackage.Set.mem package base then
+      Printf.fprintf oc "base: true\n";
+
+    (try
+      let d = OpamPackage.Map.find package depends in
+      let formula = (OpamFormula.formula_of_extended ~filter d) in
+      match OpamFormula.to_cnf formula with
+      |[] -> ()
+      |[[]] -> ()
+      |dd -> Printf.fprintf oc "depends: %s\n" 
+              (string_of_cnf OpamFormula.string_of_atom dd)
+    with Not_found -> () );
+
+    (try
+      let d = OpamPackage.Map.find package depopts in
+      let formula = (OpamFormula.formula_of_extended ~filter d) in
+      match OpamFormula.to_cnf formula with
+      |[] -> ()
+      |[[]] -> ()
+      |dd -> Printf.fprintf oc "recommends: %s\n"
+              (string_of_cnf OpamFormula.string_of_atom dd)
+    with Not_found -> () );
+
+    (try
+      let c = OpamPackage.Map.find package conflicts in
+      let n = OpamPackage.name package in
+      match (n,None)::(OpamFormula.to_conjunction c) with
+      |[] -> ()
+      |cc -> Printf.fprintf oc "conflicts: %s\n"
+              (string_of_conjunction OpamFormula.string_of_atom cc);
+    with Not_found -> () );
+    Printf.fprintf oc "\n";
+  in
+  OpamPackage.Set.iter aux (Lazy.force t.available_packages)
+
 let installed_versions t name =
   OpamSwitch.Map.fold (fun switch _ map ->
     let installed =
