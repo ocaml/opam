@@ -1466,20 +1466,14 @@ let switch =
     | Some `current, [] ->
       Client.SWITCH.show ();
       `Ok ()
+    | Some `set, [switch]
     | Some `default switch, [] ->
-      (match alias_of with
-       | None ->
-         Client.SWITCH.switch ~quiet:global_options.quiet ~warning
-           (OpamSwitch.of_string switch);
-         `Ok ()
-       | _    ->
-         Client.SWITCH.install
-           ~quiet:global_options.quiet
-           ~warning
-           ~update_config:(not no_switch)
-           (OpamSwitch.of_string switch)
-           (mk_comp switch);
-         `Ok ())
+      Client.SWITCH.switch
+        ?compiler:(if alias_of = None then None else Some (mk_comp switch))
+        ~quiet:global_options.quiet
+        ~warning
+        (OpamSwitch.of_string switch);
+      `Ok ()
     | command, params -> bad_subcommand "switch" commands command params
   in
   Term.(ret (pure switch

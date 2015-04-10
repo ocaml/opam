@@ -1824,8 +1824,9 @@ module SafeAPI = struct
 
   module SWITCH = struct
 
-    let switch ~quiet ~warning name =
-      global_then_switch_lock (fun () -> API.SWITCH.switch_cont ~quiet ~warning name)
+    let switch ?compiler ~quiet ~warning name =
+      global_then_switch_lock (fun () ->
+        API.SWITCH.switch_cont ?compiler ~quiet ~warning name)
 
     let install ~quiet ~warning ~update_config switch ocaml_version =
       global_then_switch_lock (fun () ->

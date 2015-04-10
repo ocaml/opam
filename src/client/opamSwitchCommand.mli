@@ -41,10 +41,12 @@ val export: filename option -> unit
 val remove: switch -> unit
 
 (** Switch to the given compiler switch. Returns a continuation like [install] *)
-val switch_cont: quiet:bool -> warning:bool -> switch -> switch * (unit -> unit)
+val switch_cont:
+  ?compiler:compiler -> quiet:bool -> warning:bool -> switch ->
+  switch * (unit -> unit)
 
 (** Like [switch_cont] but runs the continuation already. *)
-val switch: quiet:bool -> warning:bool -> switch -> unit
+val switch: ?compiler:compiler -> quiet:bool -> warning:bool -> switch -> unit
 
 (** Reinstall the given compiler switch. *)
 val reinstall: switch -> unit
