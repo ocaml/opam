@@ -21,7 +21,7 @@ let log fmt = OpamConsole.log "CURL" fmt
 
 let curl_args = [
   CString "--write-out", None;
-  CString "%{http_code}\\n", None;
+  CString "%%{http_code}\\n", None;
   CString "--insecure", None;
   CString "--retry", None; CIdent "retry", None;
   CString "--retry-delay", None; CString "2", None;
@@ -29,7 +29,7 @@ let curl_args = [
   Some (FIdent (OpamFilter.ident_of_string "compressed"));
   CString "-L", None;
   CString "-o", None; CIdent "out", None;
-  CIdent "src", None;
+  CIdent "url", None;
 ]
 
 let wget_args = [
@@ -37,7 +37,7 @@ let wget_args = [
   CString "--no-check-certificate", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
-  CIdent "src", None;
+  CIdent "url", None;
 ]
 
 let init_config () =
