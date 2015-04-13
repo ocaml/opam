@@ -28,6 +28,10 @@ type args = {
   recurse: bool;
   resolve: bool;
   debug: bool;
+  (* option for resolve *)
+  compiler_version: OpamCompiler.Version.t option;
+  switch: OpamSwitch.t option;
+  os_string: string;
 }
 
 let args =
@@ -63,6 +67,16 @@ let args =
                to download all the archives." in
     Arg.(value & flag & info ["resolve"] ~doc)
   in
+  let compiler_version =
+    let doc = "Specify the variable 'ocaml_version' to be used to filter \
+               packages when using '--resolve'." in
+    Arg.(value & opt (some string) None & info ~doc ["compiler"])
+  in
+  let switch =
+    let doc = "Specify the variable switch' to be used to filter \
+               packages when using '--resolve'. (Default: 'compiler_version')" in
+    Arg.(value & opt (some string) None & info ~doc ["switch"])
+  in
   let names =
     let doc = "Names of the packages to include in the repo." in
     Arg.(value & pos_all string [] & info [] ~docv:"PKG" ~doc)
@@ -73,12 +87,95 @@ let args =
   in
   Term.(
     pure
-      (fun index gener_digest dryrun recurse names debug resolve ->
-         {index; gener_digest; dryrun; recurse; names; debug; resolve})
-      $index $gener_digest $dryrun $recurse $names $debug $resolve
+      (fun index gener_digest dryrun recurse names debug resolve
+        compiler_version switch ->
+        let compiler_version =
+          Option.map OpamCompiler.Version.of_string compiler_version in
+        let switch =
+          match switch with
+          | None -> Option.map (fun cv -> OpamSwitch.of_string (OpamCompiler.Version.to_string cv)) compiler_version
+          | Some switch -> Some (OpamSwitch.of_string switch) in
+         {index; gener_digest; dryrun; recurse; names; debug; resolve;
+          compiler_version; switch; os_string = OpamGlobals.os_string ()})
+    $index $gener_digest $dryrun $recurse $names $debug $resolve
+    $compiler_version $switch
   )
 
-let resolve_deps index names =
+let consistent_ocaml_version args opam =
+  match args.compiler_version with
+  | None -> true
+  | Some cv ->
+    let system = OpamCompiler.Version.of_string "system" in
+    let atom (r,v) =
+      match OpamCompiler.Version.to_string v with
+      | "system" ->
+        begin match r with
+          | `Eq  -> OpamCompiler.Version.compare cv system = 0
+          | `Neq -> OpamCompiler.Version.compare cv system <> 0
+          | _    -> OpamSystem.internal_error
+                      "%s is not a valid constraint for the system compiler \
+                       (only '=' and '!=' are valid)."
+                      (OpamFormula.string_of_relop r)
+        end
+      | _ -> OpamCompiler.Version.eval_relop r cv v
+    in
+    match OpamFile.OPAM.ocaml_version opam with
+    | None   -> true
+    | Some c -> OpamFormula.eval atom c
+
+let consistent_os args opam =
+  match OpamFile.OPAM.os opam with
+  | Empty -> true
+  | f ->
+    let atom (b, os) =
+      let ($) = if b then (=) else (<>) in
+      os $ args.os_string in
+    OpamFormula.eval atom f
+
+let string str = Some (S str)
+let bool b = Some (B b)
+let is_global_conf v =
+  OpamVariable.Full.package v = OpamPackage.Name.global_config
+
+let faked_var_resolve args v =
+  let get_global_var v =
+    if not (is_global_conf v) then None else
+    match OpamVariable.to_string (OpamVariable.Full.variable v) with
+    | "ocaml-version" -> begin
+        match args.compiler_version with
+        | None -> None
+        | Some cv -> string (OpamCompiler.Version.to_string cv)
+      end
+    | "opam-version"  -> string (OpamVersion.to_string OpamVersion.current)
+    | "preinstalled"  -> begin
+        match args.compiler_version with
+        | None -> None
+        | Some cv -> bool (OpamCompiler.Version.to_string cv = "system")
+      end
+    | "switch"        -> begin
+        match args.switch with
+        | None -> None
+        | Some s -> string (OpamSwitch.to_string s)
+      end
+    | "arch"          -> string (OpamGlobals.arch ())
+    | _               -> None
+  in
+    try
+      List.fold_left
+        (function None -> (fun (f,v) -> f v) | r -> (fun _ -> r))
+        None
+        [
+          OpamState.get_env_var, v;
+          get_global_var, v;
+        ]
+    with Exit -> None
+
+
+let consistent_available_field args opam =
+  OpamFilter.eval_to_bool ~default:false (faked_var_resolve args)
+    (OpamFile.OPAM.available opam)
+
+let resolve_deps args index names =
   let atoms =
     List.map (fun str ->
         match OpamPackage.of_string_opt str with
@@ -86,6 +183,11 @@ let resolve_deps index names =
           OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
         | None -> OpamPackage.Name.of_string str, None)
       names in
+  let consistent opam =
+    consistent_ocaml_version args opam
+    && consistent_os args opam
+    && consistent_available_field args opam
+  in
   let opams =
     List.fold_left
       (fun opams r ->
@@ -93,7 +195,9 @@ let resolve_deps index names =
            OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
          if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
            match OpamPackage.of_dirname (OpamFilename.dirname f) with
-           | Some nv -> OpamPackage.Map.add nv (OpamFile.OPAM.read f) opams
+           | Some nv ->
+             let opam = OpamFile.OPAM.read f in
+             if consistent opam then OpamPackage.Map.add nv opam opams else opams
            | None -> opams
          else opams)
       OpamPackage.Map.empty
@@ -126,7 +230,8 @@ let resolve_deps index names =
               (OpamFormula.string_of_atom atom))
          cs)
 
-let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
+let process
+    ({index; gener_digest; dryrun; recurse; names; debug; resolve} as args) =
   let () =
     OpamHTTP.register ();
     OpamGit.register ();
@@ -224,7 +329,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
     if resolve then
-      resolve_deps new_index names
+      resolve_deps args new_index names
     else if recurse then
       get_transitive_dependencies new_packages
     else
