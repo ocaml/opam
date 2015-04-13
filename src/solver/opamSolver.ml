@@ -150,13 +150,8 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     if depopts then
       let opts = List.rev_map OpamFormula.of_conjunction opts in
       And (depends, Or(depends, OpamFormula.ors opts))
-    else if universe.u_action = Remove || universe.u_action = Depends
-    then depends
-    else (* depopts become hard deps when they are installed *)
-    let mem_installed conj = List.exists (is_installed universe) conj in
-    let opts = List.filter mem_installed opts in
-    let opts = List.rev_map OpamFormula.of_conjunction opts in
-    And (depends, OpamFormula.ands opts) in
+    else depends
+  in
   let conflicts =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in
