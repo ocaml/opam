@@ -96,7 +96,8 @@ iter_packages ~opam:(fun nv opam ->
       | None ->
         let available = OpamFile.OPAM.available opam in
         let rec aux = function
-          | FOp (FIdent ([],"ocaml-version",None), op, FString v) ->
+          | FOp (FIdent ([],var,None), op, FString v)
+            when OpamVariable.to_string var = "ocaml-version" ->
             Atom (op, OpamPackage.Version.of_string v)
           | FNot f ->
             OpamFormula.neg (fun (op,v) -> OpamFormula.neg_relop op, v)
@@ -108,13 +109,16 @@ iter_packages ~opam:(fun nv opam ->
         let ocaml_dep_formula = aux available in
         let rec aux =
           function
-          | FOp (FIdent ([],"ocaml-version",None), op, FString v) -> None
+          | FOp (FIdent ([],var,None), op, FString v)
+            when OpamVariable.to_string var = "ocaml-version" ->
+              None
           | FNot f -> OpamStd.Option.map (fun f -> FNot f) (aux f)
           | FAnd (f1,f2) -> (match aux f1, aux f2 with
               | Some f1, Some f2 -> Some (FAnd (f1,f2))
               | None, f | f, None -> f)
           | FOr (f1,f2) -> (match aux f1, aux f2 with
               | Some f1, Some f2 -> Some (FOr (f1,f2))
+              | None, None -> None
               | None, f | f, None ->
                 OpamGlobals.error_and_exit "Unconvertible 'available' field in %s"
                   (OpamPackage.to_string nv))
