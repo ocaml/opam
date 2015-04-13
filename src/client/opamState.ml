@@ -1440,8 +1440,7 @@ let upgrade_to_1_1_hook =
 let upgrade_to_1_2_hook =
   ref (fun () -> assert false)
 
-(* Loads the global config file and update some global references in
-   OpamGlobals *)
+(* Loads the global config file *)
 let load_config root =
   let config =
     let config = match OpamClientConfig.load root with
