@@ -1140,12 +1140,14 @@ let config =
       try
         let state = OpamState.load_state "config-report"
           OpamClientConfig.(!r.current_switch) in
+        let external_solver =
+          OpamSolverConfig.external_solver_command
+            ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
         print "external-solver" "%s"
-          (OpamStd.Option.to_string ~none:"no"
-             (String.concat " ")
-             (OpamSolverConfig.external_solver_command
-                   ~input:"$in" ~output:"$out" ~criteria:"$criteria"));
-        print "criteria" "%s" (OpamSolverConfig.criteria `Default);
+          (OpamStd.Option.to_string ~none:"no" (String.concat " ")
+             external_solver);
+        if external_solver <> None then
+          print "criteria" "%s" (OpamSolverConfig.criteria `Default);
         let open OpamState.Types in
         let nprint label n =
           if n <> 0 then [Printf.sprintf "%d (%s)" n label]

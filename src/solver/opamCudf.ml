@@ -473,11 +473,10 @@ let to_cudf univ req = (
 
 
 let string_of_request r =
-  Printf.sprintf "install:%s remove:%s upgrade:%s criteria:%S"
+  Printf.sprintf "install:%s remove:%s upgrade:%s"
     (string_of_vpkgs r.wish_install)
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
-    (OpamSolverConfig.criteria r.criteria)
 
 let external_solver_available () =
   Lazy.force OpamSolverConfig.(!r.external_solver) <> None
@@ -520,7 +519,9 @@ let dump_cudf_error ~version_map univ req =
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
-      (OpamSolverConfig.criteria req.criteria)
+      (if external_solver_available ()
+       then OpamSolverConfig.criteria req.criteria
+       else "")
       (Some cudf_file)
   with
   | Some f -> f
@@ -583,6 +584,7 @@ let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
+    log "Calling external solver with criteria %s" criteria;
     ignore (dump_cudf_request ~version_map cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try
