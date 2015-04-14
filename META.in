@@ -4,23 +4,30 @@ requires = "dose3, cudf, ocamlgraph, unix, re, re.str, re.glob, jsonm"
 archive(byte) = "opam-core.cma"
 archive(native) = "opam-core.cmxa"
 
+package "format" (
+  version = "@PACKAGE_VERSION@"
+  archive(byte) = "opam-format.cma"
+  archive(native) = "opam-format.cmxa"
+  requires = "opam-lib"
+)
+
 package "repository" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-repository.cma"
   archive(native) = "opam-repository.cmxa"
-  requires = "opam-lib"
+  requires = "opam-lib, opam-lib.format"
 )
 
 package "solver" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-solver.cma"
   archive(native) = "opam-solver.cmxa"
-  requires = "opam-lib"
+  requires = "opam-lib, opam-lib.format"
 )
 
 package "client" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-client.cma"
   archive(native) = "opam-client.cmxa"
-  requires = "opam-lib, opam-lib.solver, opam-lib.repository, cmdliner"
+  requires = "opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, cmdliner"
 )

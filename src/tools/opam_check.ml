@@ -37,6 +37,7 @@ let () =
   in
   OpamSystem.init();
   OpamStd.Config.init();
+  OpamFormatConfig.init();
   OpamRepositoryConfig.init();
   OpamSolverConfig.init();
   OpamClientConfig.init

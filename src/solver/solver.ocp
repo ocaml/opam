@@ -2,6 +2,7 @@ begin library "opam-solver"
 
   files   = [
     "opamSolverConfig.ml"
+    "opamActionGraph.ml"
     "opamCudf.ml"
     "opamHeuristic.ml"
     "opamSolver.ml"
@@ -12,6 +13,7 @@ begin library "opam-solver"
     "dose3.common"
     "dose3.algo"
     "opam-core"
+    "opam-format"
   ]
 
 end

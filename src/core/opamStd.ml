@@ -872,11 +872,8 @@ module Config = struct
       ?utf8
       ?disp_status_line:(env_when "STATUSLINE")
       ?answer
-      ?strict:(env_bool "STRICT")
-      ?skip_version_checks:(env_bool "SKIPVERSIONCHECKS")
       ?safe_mode:(env_bool "SAFE")
       ?lock_retries:(env_int "LOCKRETRIES")
-      ?all_parens:(env_bool "ALLPARENS")
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")
       ()

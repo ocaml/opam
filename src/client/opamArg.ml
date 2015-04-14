@@ -170,13 +170,15 @@ let apply_global_options o =
     (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
     (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
     ?answer:(some (flag o.yes))
-    ?strict:(flag o.strict)
-    (* ?skip_version_checks:bool *)
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
-    (* ?all_parens:bool *)
     ?log_dir
     (* ?keep_log_dir:bool *)
+    ();
+  OpamFormatConfig.init
+    ?strict:(flag o.strict)
+    (* ?skip_version_checks:bool *)
+    (* ?all_parens:bool *)
     ();
   OpamRepositoryConfig.init
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)

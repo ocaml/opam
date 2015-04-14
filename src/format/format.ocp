@@ -1,0 +1,28 @@
+begin library "opam-format"
+  sort = false
+  files   = [
+    "opamFormatConfig.ml"
+    "opamSwitch.ml"
+    "opamPackage.ml"
+    "opamFormula.ml"
+    "opamCompiler.ml"
+    "opamVariable.ml"
+    "opamRepositoryName.ml"
+    "opamTypes.mli"
+    "opamTypesBase.ml"
+    "opamFormat.ml"
+    "opamParser.mly"
+    "opamLexer.mll"
+    "opamLineLexer.mll"
+    "opamFilter.ml"
+    "opamFile.ml"
+  ]
+
+  requires = [
+    "opam-core"
+    "unix"
+    "re.glob"
+    "re.str"
+  ]
+
+end

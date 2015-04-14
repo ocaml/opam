@@ -566,7 +566,7 @@ let pinned_packages t =
        try OpamPackage.Set.add (pinned t name) acc
        with e ->
          OpamStd.Exn.fatal e;
-         if OpamCoreConfig.(!r.strict) then
+         if OpamFormatConfig.(!r.strict) then
            OpamConsole.error_and_exit "Invalid pinned package %s"
              (OpamPackage.Name.to_string name)
          else
@@ -1127,7 +1127,7 @@ let load_config root =
   let config_version = OpamFile.Config.opam_version config in
   if config_version <> OpamVersion.current_nopatch then (
     if OpamVersion.(compare current config_version) < 0 &&
-       not OpamCoreConfig.(!r.skip_version_checks) then
+       not OpamFormatConfig.(!r.skip_version_checks) then
       OpamConsole.error_and_exit
         "%s reports a newer OPAM version, aborting."
         (OpamFilename.Dir.to_string (OpamClientConfig.(!r.root_dir)));

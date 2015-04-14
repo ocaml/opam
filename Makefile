@@ -104,7 +104,7 @@ $(OPAM_FULL).tar.gz:
 fastlink:
 	@$(foreach b,opam opam-admin opam-installer opam-check,\
 	   ln -sf ../_obuild/$b/$b.asm src/$b;)
-	@$(foreach l,core solver repository client,\
+	@$(foreach l,core format solver repository client,\
 	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
 	   ln -sf $(addprefix ../../,\
 	        $(foreach e,o cmo cmx cmi cmt cmti,$(wildcard _obuild/opam-$l/*.$e)))\
@@ -112,7 +112,7 @@ fastlink:
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
-	@$(foreach l,core solver repository client,\
+	@$(foreach l,core format solver repository client,\
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
 

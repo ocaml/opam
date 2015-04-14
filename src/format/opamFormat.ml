@@ -566,7 +566,7 @@ let rec make_os_constraint l =
   | Empty -> List (pos_null, [])
   | l ->
     let l =
-      if OpamCoreConfig.(!r.all_parens) then [l]
+      if OpamFormatConfig.(!r.all_parens) then [l]
       else OpamFormula.ors_to_list l in
     List (pos_null, List.map aux l)
 
@@ -627,18 +627,18 @@ let make_filter f =
     | FBool b    -> make_bool b
     | FOp(e,s,f) ->
       let f = Relop (pos_null, s, aux e, aux f) in
-      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else f
+      if OpamFormatConfig.(!r.all_parens) then Group (pos_null, [f]) else f
     | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
       let f = Logop (pos_null, `Or, aux e, aux ~paren:`Or f) in
-      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else
+      if OpamFormatConfig.(!r.all_parens) then Group (pos_null, [f]) else
         (match paren with None | Some `Or -> f | _ -> Group (pos_null, [f]))
     | FAnd(e,f) ->
       let f = Logop (pos_null, `And, aux e, aux ~paren:`And f) in
-      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else
+      if OpamFormatConfig.(!r.all_parens) then Group (pos_null, [f]) else
         (match paren with None | Some `And -> f | _ -> Group (pos_null, [f]))
     | FNot f ->
       let f = Pfxop (pos_null, `Not, aux ~paren:`Not f) in
-      if OpamCoreConfig.(!r.all_parens) then Group (pos_null, [f]) else f
+      if OpamFormatConfig.(!r.all_parens) then Group (pos_null, [f]) else f
     | FUndef -> make_ident "#undefined"
   in
   [aux f]

@@ -16,6 +16,7 @@ begin library "opam-repository"
 
   requires = [
     "opam-core"
+    "opam-format"
   ]
 
 end

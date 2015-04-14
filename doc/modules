@@ -1,32 +1,34 @@
 src
 │
-├── core                                Library of functions needed by OPAM, system and file support, OPAM file-format
+├── core                                Generic standard and system library
 │   │   [ opam-core lib ]
 │   ├── opamVersion.ml                  (generated) Current OPAM version
 │   ├── opamCoreConfig.ml               Configuration options for this lib (record, global reference and setter)
 │   ├── opamVersionCompare.ml           Version comparison function used throughout. From the Dose suite.
+│   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some (as of now) unused debug options
 │   ├── opamStd.ml                      Generic stdlib functions (String, List, Option, Sys submodules...)
 │   ├── opamConsole.ml                  Console output, ANSI color, logging and user querying
+│   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
+│   │   # system handling
+│   ├── opamProcess.ml                  Process and job handling, with logs, termination status, etc.
+│   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations
+│   ├── opamFilename.ml                 Higher level file and directory name manipulation AND file operations, wrappers on OpamSystem using the filename type
+│   └── opamParallel.ml                 Parallel execution of jobs following a directed graph
+│
+├── format                              Definition of OPAM datastructures and its file interface
+│   │   [ opam-format lib ]
 │   ├── opamTypes.mli                   Definitions of many types used throughout
 │   ├── opamTypesBase.ml                Helper functions on the base types. Often opened
-│   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
 │   │   # basic types, used as keys
 │   ├── opamCompiler.ml                 The compiler type (string, version pairs)
 │   ├── opamPackage.ml                  The package type, and package name type (name+version, values often called "nv" in the code)
 │   ├── opamRepositoryName.ml           The repository type
 │   ├── opamSwitch.ml                   The switch type
 │   ├── opamVariable.ml                 OPAM variables with scope (global or module)
-│   │   # system handling
-│   ├── opamProcess.ml                  Process and job handling, with logs, termination status, etc.
-│   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations
-│   ├── opamFilename.ml                 Higher level file and directory name manipulation AND file operations, wrappers on OpamSystem using the filename type
-│   ├── opamParallel.ml                 Parallel execution of jobs following a directed graph
-│   ├── opamActionGraph.ml              Handles graphs of actions (package changes), based on ocamlgraph
 │   │   # more advanced types
 │   ├── opamFilter.ml                   Formulas on variables, as used in opam files build scripts
 │   ├── opamFormula.ml                  Formulas on packages, opt. with sub-formulas on versions, and conversion functions
 │   │   # file format
-│   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some (as of now) unused debug options
 │   ├── opamLineLexer.mll               A simple lexer to list of lines, which are lists of words
 │   ├── opamLexer.mll                   OPAM config file lexer
 │   ├── opamParser.mly                  OPAM config file generic type parser
@@ -50,6 +52,7 @@ src
 ├── solver                              Solver and Cudf interaction
 │   │   [ opam-solver lib ]
 │   ├── opamSolverConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
+│   ├── opamActionGraph.ml              Handles graphs of actions (package changes), based on ocamlgraph
 │   ├── opamSolverGlobals.ml            Configuration initialisation and accessors
 │   ├── opamCudf.ml                     Solver interaction, conversion of answer to solution
 │   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker

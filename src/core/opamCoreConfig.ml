@@ -20,11 +20,8 @@ type t = {
   utf8: [ `Extended | `Always | `Never | `Auto ];
   disp_status_line: [ `Always | `Never | `Auto ];
   answer: bool option;
-  strict: bool;
-  skip_version_checks: bool;
   safe_mode: bool;
   lock_retries: int;
-  all_parens: bool;
   log_dir: string;
   keep_log_dir: bool;
 }
@@ -36,11 +33,8 @@ type 'a options_fun =
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
-  ?strict:bool ->
-  ?skip_version_checks:bool ->
   ?safe_mode:bool ->
   ?lock_retries:int ->
-  ?all_parens:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   unit -> 'a
@@ -52,11 +46,8 @@ let default = {
   utf8 = `Auto;
   disp_status_line = `Auto;
   answer = None;
-  strict = false;
-  skip_version_checks = false;
   safe_mode = false;
   lock_retries = 5;
-  all_parens = false;
   log_dir =
     (let base = Printf.sprintf "opam-%s-%d" (Unix.getlogin()) (Unix.getpid()) in
      Filename.(concat (get_temp_dir_name ()) base));
@@ -70,11 +61,8 @@ let setk k t
     ?utf8
     ?disp_status_line
     ?answer
-    ?strict
-    ?skip_version_checks
     ?safe_mode
     ?lock_retries
-    ?all_parens
     ?log_dir
     ?keep_log_dir
     ()
@@ -87,11 +75,8 @@ let setk k t
     utf8 = t.utf8 + utf8;
     disp_status_line = t.disp_status_line + disp_status_line;
     answer = t.answer + answer;
-    strict = t.strict + strict;
-    skip_version_checks = t.skip_version_checks + skip_version_checks;
     safe_mode = t.safe_mode + safe_mode;
     lock_retries = t.lock_retries + lock_retries;
-    all_parens = t.all_parens + all_parens;
     log_dir = t.log_dir + log_dir;
     keep_log_dir = t.keep_log_dir + keep_log_dir;
   }

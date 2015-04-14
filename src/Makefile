@@ -63,7 +63,7 @@ endif
 
 # --
 
-SUBS = core solver repository client
+SUBS = core format solver repository client
 OPAMLIB = $(patsubst %,./opam-%,$(SUBS))
 INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
@@ -109,17 +109,32 @@ SRC_core = \
   opamCompat.ml \
   opamJson.ml \
   opamCoreConfig.ml \
-  opamLineLexer.mll \
   opamStd.ml \
   opamConsole.ml \
   opamVersionCompare.ml \
   opamVersion.ml \
   opamProcess.ml \
-  opamRepositoryName.ml \
-  opamSwitch.ml \
   opamSystem.ml \
   opamParallel.ml \
-  opamFilename.ml \
+  opamFilename.ml
+
+define PROJ_core
+  SOURCES = $(call addmli,core,$(SRC_core))
+  RESULT = opam-core
+endef
+export PROJ_core
+
+
+# -- opam-format -- #
+
+opam-repository.cma: opam-core.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa ALWAYS
+
+SRC_format = \
+  opamFormatConfig.ml \
+  opamLineLexer.mll \
+  opamRepositoryName.ml \
+  opamSwitch.ml \
   opamPackage.ml \
   opamVariable.ml \
   opamFormula.ml \
@@ -130,21 +145,21 @@ SRC_core = \
   opamLexer.mll \
   opamFormat.ml \
   opamFilter.ml \
-  opamFile.ml \
-  opamActionGraph.ml
+  opamFile.ml
 
-define PROJ_core
-  SOURCES = $(call addmli,core,$(SRC_core))
-  RESULT = opam-core
+define PROJ_format
+  SOURCES = $(call addmli,format,$(SRC_format))
+  RESULT = opam-format
 endef
-export PROJ_core
+export PROJ_format
 
 # -- opam-solver -- #
-opam-solver.cma: opam-core.cma
-opam-solver.cmxa: opam-core.cmxa
+opam-solver.cma: opam-core.cma opam-format.cma ALWAYS
+opam-solver.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_solver = \
   opamSolverConfig.ml \
+  opamActionGraph.ml \
   opamCudf.ml \
   opamHeuristic.ml \
   opamSolver.ml
@@ -156,8 +171,8 @@ endef
 export PROJ_solver
 
 # -- opam-repository -- #
-opam-repository.cma: opam-core.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa ALWAYS
+opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_repository = \
   opamRepositoryConfig.ml \

@@ -101,7 +101,7 @@ module X = struct
         let diff_full = OpamVersion.(compare current v) in
         if diff_full >= 0 then true else
         let diff_major = OpamVersion.(compare (major current) (major v)) in
-        if OpamCoreConfig.(!r.strict) then
+        if OpamFormatConfig.(!r.strict) then
           OpamConsole.error_and_exit
             "Strict mode: %s refers to OPAM %s, this is %s."
             f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
@@ -132,7 +132,7 @@ module X = struct
           | Some v -> not (check_opam_version ?allow_major f v)
           | None ->
             if versioned then (
-              if OpamCoreConfig.(!r.strict) then
+              if OpamFormatConfig.(!r.strict) then
                 OpamConsole.error_and_exit
                   "Strict mode: %s missing the opam-version field"
                   OpamFilename.(prettify (of_string f.file_name));
@@ -158,7 +158,7 @@ module X = struct
             OpamConsole.warning "%s %s unknown field%s in %s."
               (OpamStd.Format.pretty_list invalids)
               is_ s_ f.file_name;
-          if OpamCoreConfig.(!r.strict) then
+          if OpamFormatConfig.(!r.strict) then
             OpamConsole.error_and_exit "Strict mode: bad fields in %s"
               f.file_name;
           false
@@ -1346,7 +1346,7 @@ module X = struct
           OpamFormat.parse_opt_formula value |>
           check_depflags ~pos:(OpamFormat.value_pos value) in
         if not conservative &&
-           not OpamCoreConfig.(!r.skip_version_checks) &&
+           not OpamFormatConfig.(!r.skip_version_checks) &&
            OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
         then
             OpamFormula.ors_to_list f
@@ -2097,7 +2097,7 @@ module X = struct
           (OpamFilename.to_string filename)
           (OpamCompiler.to_string name)
           (OpamCompiler.to_string name_d);
-        if OpamCoreConfig.(!r.strict) then
+        if OpamFormatConfig.(!r.strict) then
           OpamConsole.error_and_exit "Strict mode: bad compiler name"
       );
       let version =
@@ -2111,7 +2111,7 @@ module X = struct
           (OpamFilename.to_string filename)
           (OpamCompiler.Version.to_string version)
           (OpamCompiler.Version.to_string version_d);
-        if OpamCoreConfig.(!r.strict) then
+        if OpamFormatConfig.(!r.strict) then
           OpamConsole.error_and_exit "Strict mode: bad compiler version"
       );
       let address field =
@@ -2374,7 +2374,7 @@ module Make (F : F) = struct
       | OpamSystem.File_not_found s ->
         OpamSystem.internal_error "File %s does not exist" s
       | Lexer_error _ | Parsing.Parse_error as e ->
-        if OpamCoreConfig.(!r.strict) then
+        if OpamFormatConfig.(!r.strict) then
           OpamConsole.error_and_exit "Strict mode: aborting"
         else raise e (* Message already printed *)
       | e ->
@@ -2386,7 +2386,7 @@ module Make (F : F) = struct
         let e = OpamFormat.add_pos pos e in
         OpamConsole.error "At %s%s%s"
           (string_of_pos pos) msg (string_of_backtrace_list btl);
-        if OpamCoreConfig.(!r.strict) then OpamStd.Sys.exit 66
+        if OpamFormatConfig.(!r.strict) then OpamStd.Sys.exit 66
         else raise e
 
   let safe_read f =
@@ -2406,12 +2406,12 @@ module Make (F : F) = struct
     | OpamFormat.Bad_format (Some pos, btl, msg) as e ->
       OpamConsole.error "At %s: %s%s"
         (string_of_pos pos) msg (string_of_backtrace_list btl);
-      if OpamCoreConfig.(!r.strict) then
+      if OpamFormatConfig.(!r.strict) then
         OpamConsole.error_and_exit "Strict mode: aborting"
       else raise e
     | OpamFormat.Bad_format (None, btl, msg) as e ->
       OpamConsole.error "Input error: %s%s" msg (string_of_backtrace_list btl);
-      if OpamCoreConfig.(!r.strict) then
+      if OpamFormatConfig.(!r.strict) then
         OpamConsole.error_and_exit "Strict mode: aborting"
       else raise e
 

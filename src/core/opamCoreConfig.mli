@@ -30,16 +30,10 @@ type t = private {
   answer : bool option;
   (** Affects interactive questions in OpamConsole: auto-answer with the given
       bool if Some *)
-  strict : bool;
-  (** Fail early with errors in OPAM files *)
-  skip_version_checks : bool;
-  (** Ignore mismatching OPAM versions in files *)
   safe_mode : bool;
   (** Fail on writes or delays, don't ask questions (for quick queries, e.g.
       for shell completion) *)
   lock_retries : int;
-  all_parens : bool;
-  (** Affects the OPAM format printer; for backwards-compatibility *)
   log_dir : string;
   (** Where to store log and temporary files (output from commands...) *)
   keep_log_dir : bool;
@@ -53,11 +47,8 @@ type 'a options_fun =
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
-  ?strict:bool ->
-  ?skip_version_checks:bool ->
   ?safe_mode:bool ->
   ?lock_retries:int ->
-  ?all_parens:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   unit -> 'a
