@@ -89,9 +89,9 @@ ALWAYS:
 	@
 
 # -- opam-core -- #
-opam-core.cma opam-core.cmxa: core/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
+opam-core.cma opam-core.cmxa: client/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
 
-core/opamScript.ml: ../shell core/opamVersion.ml
+client/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
 	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
 	ocaml ../shell/crunch.ml "switch_eval"  < ../shell/opam_switch_eval.sh >> $@
@@ -112,7 +112,6 @@ SRC_core = \
   opamLineLexer.mll \
   opamStd.ml \
   opamConsole.ml \
-  opamScript.ml \
   opamVersionCompare.ml \
   opamVersion.ml \
   opamProcess.ml \
@@ -187,6 +186,7 @@ SRC_client = \
   opamPath.ml \
   opamClientConfig.ml \
   opamClientGlobals.ml \
+  opamScript.ml \
   opamState.ml \
   opamAction.ml \
   opamSolution.ml \
@@ -304,7 +304,7 @@ export OCAMLMAKEFILE
 
 clean-aux:
 	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
-	rm -f client/opamGitVersion.ml core/opamScript.ml core/opamCompat.ml core/opamCompat.mli
+	rm -f client/opamGitVersion.ml client/opamScript.ml core/opamCompat.ml core/opamCompat.mli
 
 clean: clean-aux
 

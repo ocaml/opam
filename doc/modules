@@ -3,7 +3,6 @@ src
 ├── core                                Library of functions needed by OPAM, system and file support, OPAM file-format
 │   │   [ opam-core lib ]
 │   ├── opamVersion.ml                  (generated) Current OPAM version
-│   ├── opamScript.mli                  (generated) Shell config scripts as OCaml strings
 │   ├── opamCoreConfig.ml               Configuration options for this lib (record, global reference and setter)
 │   ├── opamVersionCompare.ml           Version comparison function used throughout. From the Dose suite.
 │   ├── opamStd.ml                      Generic stdlib functions (String, List, Option, Sys submodules...)
@@ -65,6 +64,7 @@ src
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
 │   ├── opamAction.ml                   Handles concrete actions on packages, like installations and removals
+│   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
 │   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
 │   │   # User command handling
 │   ├── opamConfigCommand.ml            Functions for the "opam config" subcommand

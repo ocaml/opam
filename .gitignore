@@ -40,7 +40,7 @@ Makefile.config
 config.log
 config.status
 src/client/opamGitVersion.ml
-src/core/opamScript.ml
+src/client/opamScript.ml
 src/core/opamVersion.ml
 src/core/opamLexer.ml
 src/core/opamLineLexer.ml
