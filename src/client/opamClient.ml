@@ -1144,7 +1144,11 @@ module API = struct
       OpamJson.add json
     );
 
-    OpamState.rebuild_state_cache ();
+    OpamState.Cache.remove ();
+    let t =
+      OpamState.load_state "dry-upgrade" OpamClientConfig.(!r.current_switch)
+    in
+    OpamState.Cache.save t;
 
     log "dry-upgrade";
     let broken_state_message ~need_fixup conflicts =
@@ -1165,8 +1169,6 @@ module API = struct
          else "")
     in
     if not no_stats then
-    let t = OpamState.load_state ~save_cache:false "dry-upgrade"
-        OpamClientConfig.(!r.current_switch) in
     let universe = OpamState.universe t (Upgrade OpamPackage.Set.empty) in
     match OpamSolver.check_for_conflicts universe with
     | Some cs ->
@@ -1333,6 +1335,7 @@ module API = struct
         OpamSwitchCommand.install_packages switch compiler
 
       with e ->
+        OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         if not (OpamConsole.debug ()) && root_empty then

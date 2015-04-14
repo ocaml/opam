@@ -145,7 +145,7 @@ let list ~print_short ~installed ~all =
   match OpamClientConfig.(!r.switch_from) with
   | `Env ->
     let sys = OpamFile.Config.switch t.config in
-    if sys <> OpamClientConfig.(!r.current_switch)  then
+    if sys <> OpamClientConfig.(!r.current_switch) then
       (OpamConsole.msg "\n";
        OpamConsole.note
          "Current switch is set locally through the OPAMSWITCH variable.\n\

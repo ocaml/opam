@@ -231,7 +231,7 @@ let resolve_deps args index names =
          cs)
 
 let process
-    ({index; gener_digest; dryrun; recurse; names; debug; resolve} as args) =
+    ({index; gener_digest; dryrun; recurse; names; debug; resolve; _} as args) =
   OpamStd.Config.init
     ?debug_level:(if debug then Some 1 else None)
     ();

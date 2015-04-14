@@ -20,16 +20,34 @@ open OpamTypes
 
 (** Client state *)
 module Types: sig
-
   type t = {
-
-    (** Is the state partial ?
-        TODO: split-up global vs. repository state *)
     partial: bool;
-
+  (* type global = { *)
     (** The global OPAM root path *)
     root: OpamPath.t;
 
+    (** The main configuration file *)
+    config: OpamFile.Config.t;
+
+    (** The association list between switch and compiler *)
+    aliases: OpamFile.Aliases.t;
+  (* } *)
+
+  (* type repos = { *)
+    (** The list of repositories *)
+    repositories: OpamFile.Repo_config.t repository_name_map;
+
+    (** The list of compiler available to install *)
+    compilers: compiler_set;
+
+    (** Package index *)
+    package_index: OpamFile.Package_index.t;
+
+    (** Compiler index *)
+    compiler_index: OpamFile.Compiler_index.t;
+  (* } *)
+
+  (* type switch = { *)
     (** The current active switch *)
     switch: switch;
 
@@ -37,13 +55,10 @@ module Types: sig
     compiler: compiler;
 
     (** The current version of the compiler *)
-    compiler_version: compiler_version lazy_t;
+    compiler_version: compiler_version Lazy.t;
 
     (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
     opams: OpamFile.OPAM.t package_map;
-
-    (** The list of repositories *)
-    repositories: OpamFile.Repo_config.t repository_name_map;
 
     (** The list of packages *)
     packages: package_set;
@@ -51,12 +66,6 @@ module Types: sig
     (** The list of packages, keeping the one available for the current
         compiler version *)
     available_packages: package_set Lazy.t;
-
-    (** The association list between switch and compiler *)
-    aliases: OpamFile.Aliases.t;
-
-    (** The list of compiler available to install *)
-    compilers: compiler_set;
 
     (** The list of pinned packages *)
     pinned: OpamFile.Pinned.t;
@@ -69,32 +78,24 @@ module Types: sig
 
     (** The list of packages which needs to be reinsalled *)
     reinstall: OpamFile.Reinstall.t;
-
-    (** The main configuration file *)
-    config: OpamFile.Config.t;
-
-    (** Package index *)
-    package_index: OpamFile.Package_index.t;
-
-    (** Compiler index *)
-    compiler_index: OpamFile.Compiler_index.t;
   }
 
 end
 
 type state = Types.t
 
+(** Caching of repository loading (marshall of all parsed opam files) *)
+module Cache: sig
+  val save: state -> unit
+  val load: dirname -> OpamFile.OPAM.t package_map option
+  val remove: unit -> unit
+end
+
 (** Load the client state. The string argument is to identify to call
     site. *)
 val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
-
-(** Rebuild the state cache. *)
-val rebuild_state_cache: unit -> unit
-
-(** Remove the state cache *)
-val remove_state_cache: unit -> unit
 
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> switch -> state

@@ -32,8 +32,8 @@ let ano x = packages := x :: !packages
 let () =
   Arg.parse spec ano usage;
   let root_dir = match !root_dir_ref with
-    | "" -> prerr_endline "NOROOT"; None
-    | d -> prerr_endline ("ROOT="^d); Some (OpamFilename.Dir.of_string d)
+    | "" -> None
+    | d -> Some (OpamFilename.Dir.of_string d)
   in
   OpamSystem.init();
   OpamStd.Config.init();

@@ -438,7 +438,7 @@ let fix_descriptions
   let _ = fix_compiler_descriptions t ~verbose in
   let t = update_package_index t in
   let _ = fix_package_descriptions t ~verbose in
-  if save_cache then OpamState.rebuild_state_cache ()
+  if save_cache then OpamState.Cache.save t
 
 let () =
   OpamState.fix_descriptions_hook := fix_descriptions
@@ -510,7 +510,7 @@ let add name kind address ~priority:prio =
   let repositories = OpamRepositoryName.Map.add name repo t.repositories in
   update_config t (OpamRepositoryName.Map.keys repositories);
   let t = { t with repositories } in
-  OpamState.remove_state_cache ();
+  OpamState.Cache.remove ();
   try
     let t = OpamProcess.Job.run (update t repo) t in
     fix_descriptions t
