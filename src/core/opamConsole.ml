@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 (* Global configuration *)
 
 let debug () = OpamCoreConfig.(!r.debug_level) > 0

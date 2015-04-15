@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 type t = {
   debug_level: int;
   verbose_level: int;
