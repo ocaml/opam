@@ -3,13 +3,7 @@ comp += [ "-w" "-48" ]
 begin library "opam-client"
 
   files   = [
-    "opamPath.ml"
     "opamClientConfig.ml"
-    "opamClientGlobals.ml"
-    "opamScript.ml"
-    "opamState.ml"
-    "opamAction.ml"
-    "opamSolution.ml"
     "opamSwitchCommand.ml"
     "opamConfigCommand.ml"
     "opamRepositoryCommand.ml"
@@ -21,7 +15,7 @@ begin library "opam-client"
     "opam-core"
     "opam-solver"
     "opam-repository"
-    "cmdliner"
+    "opam-state"
   ]
 
 end
@@ -34,6 +28,7 @@ begin program "opam"
     "opamMain.ml"
   ]
   requires = [
+    "cmdliner"
     "opam-client"
  ]
 

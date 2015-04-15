@@ -40,7 +40,7 @@ let () =
   OpamFormatConfig.init();
   OpamRepositoryConfig.init();
   OpamSolverConfig.init();
-  OpamClientConfig.init
+  OpamStateConfig.init
     ?root_dir
     ()
 
@@ -48,7 +48,7 @@ let () =
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
 
 let installed () =
-  let root = OpamClientConfig.(!r.root_dir) in
+  let root = OpamStateConfig.(!r.root_dir) in
   let config = OpamFile.Config.read (OpamPath.config root) in
   let version = OpamFile.Config.switch config in
   let installed =

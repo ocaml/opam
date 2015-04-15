@@ -58,18 +58,19 @@ src
 │   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker
 │   └── opamSolver.ml                   Entry point, conversion of universe to cudf, dependencies computation
 │
+├── state                               Handling of the ~/.opam hierarchy and actions on it
+│   │   [ opam-state lib ]
+│   ├── opamStateConfig.ml              Configuration options for this lib (record, global reference, setter, initialisation)
+│   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
+│   ├── opamOCaml.ml                    OCaml installation version and specifics detection
+│   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
+│   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
+│   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
+│
 ├── client                              Everything related to the OPAM state, installation and front-end
 │   │   [ opam-client lib ]
-│   │   # Setup
-│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
-│   ├── opamClientGlobals.ml            OCaml specifics detection and some global strings
-│   │   # State and actions
-│   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
-│   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
-│   ├── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
-│   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
-│   │   # User command handling
+│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamConfigCommand.ml            Functions for the "opam config" subcommand
 │   ├── opamPinCommand.ml               Functions for the "opam pin" subcommand
 │   ├── opamRepositoryCommand.ml        Functions for the "opam repository" subcommand

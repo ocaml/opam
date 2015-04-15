@@ -13,22 +13,40 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 type t = private {
-  print_stats: bool;
-  sync_archives: bool;
-  self_upgrade: [ `Disable | `Running | `None ];
-  pin_kind_auto: bool;
-  autoremove: bool;
-  editor: string;
+  root_dir: OpamFilename.Dir.t;
+  current_switch: OpamSwitch.t;
+  switch_from: [ `Env | `Command_line | `Default ];
+  jobs: int;
+  dl_jobs: int;
+  external_tags: string list;
+  keep_build_dir: bool;
+  no_base_packages: bool;
+  build_test: bool;
+  build_doc: bool;
+  show: bool;
+  dryrun: bool;
+  fake: bool;
+  makecmd: string Lazy.t;
 }
 
 type 'a options_fun =
-  ?print_stats:bool ->
-  ?sync_archives:bool ->
-  ?self_upgrade:[ `Disable | `Running | `None ] ->
-  ?pin_kind_auto:bool ->
-  ?autoremove:bool ->
-  ?editor:string ->
+  ?root_dir:OpamFilename.Dir.t ->
+  ?current_switch:OpamSwitch.t ->
+  ?switch_from:[ `Env | `Command_line | `Default ] ->
+  ?jobs: int ->
+  ?dl_jobs: int ->
+  ?external_tags:string list ->
+  ?keep_build_dir:bool ->
+  ?no_base_packages:bool ->
+  ?build_test:bool ->
+  ?build_doc:bool ->
+  ?show:bool ->
+  ?dryrun:bool ->
+  ?fake:bool ->
+  ?makecmd:string Lazy.t ->
   unit -> 'a
 
 val default : t
@@ -45,9 +63,17 @@ val update : ?noop:_ -> unit options_fun
     values when unspecified *)
 val init: ?noop:_ -> unit options_fun
 
-(** OPAMNOSELFUPGRADE is set to this value when the current opam process has
-    been called by an older opam process using the self-upgrade mechanism *)
-val self_upgrade_bootstrapping_value: string
+(** Get the initial opam root value (from default, env or optional argument).
+    This allows to get it before doing the init, which is useful to get the
+    configuration file used to fill some options to init() *)
+val opamroot: ?root_dir:dirname -> unit -> dirname
 
-(** Extra files included in [opam search] *)
-val search_files: string list
+(** Loads the global configuration file, protecting against concurrent writes *)
+val load: dirname -> OpamFile.Config.t option
+
+(** Writes the global configuration file, protecting against concurrent reads *)
+val write: dirname -> OpamFile.Config.t -> unit
+
+(** Filters flagged dependencies in an ext_formula using the currently set
+    options (doc, test). Build dependencies are included *)
+val filter_deps: ext_formula -> formula

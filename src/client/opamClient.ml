@@ -79,7 +79,7 @@ let details_of_package t name versions =
           let file = OpamRepositoryPath.packages repo prefix nv // filename in
           let file = OpamFile.Lines.safe_read file in
           List.flatten file @ acc
-        ) [] OpamClientGlobals.search_files
+        ) [] OpamClientConfig.search_files
   ) in
   { name; current_version; installed_version;
     synopsis; descr; tags;
@@ -145,7 +145,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
   packages_map
 
 let with_switch_backup command f =
-  let t = OpamState.load_state command OpamClientConfig.(!r.current_switch) in
+  let t = OpamState.load_state command OpamStateConfig.(!r.current_switch) in
   let file = OpamPath.Switch.backup t.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
   OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
@@ -157,7 +157,7 @@ let with_switch_backup command f =
   | err ->
     OpamStd.Exn.register_backtrace err;
     let t1 = OpamState.load_state "switch-backup-err"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
@@ -252,7 +252,7 @@ module API = struct
       ?(depopts=false) ?depexts
       regexp =
     let t = OpamState.load_state "list"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
@@ -293,10 +293,10 @@ module API = struct
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamState.opam t nv in
-          let formula = OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam) in
+          let formula = OpamStateConfig.filter_deps (OpamFile.OPAM.depends opam) in
           let formula =
             if depopts
-            then OpamFormula.ands [formula; OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam)]
+            then OpamFormula.ands [formula; OpamStateConfig.filter_deps (OpamFile.OPAM.depopts opam)]
             else formula in
           let depends_on nv =
             let name = OpamPackage.name nv in
@@ -317,10 +317,10 @@ module API = struct
         let opam = OpamState.opam t nv in
         let deps =
           OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-          OpamClientConfig.filter_deps (OpamFile.OPAM.depends opam) in
+          OpamStateConfig.filter_deps (OpamFile.OPAM.depends opam) in
         if depopts then
           deps ++ (OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-                   OpamClientConfig.filter_deps (OpamFile.OPAM.depopts opam))
+                   OpamStateConfig.filter_deps (OpamFile.OPAM.depopts opam))
         else deps
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)
@@ -413,7 +413,7 @@ module API = struct
 
   let info ~fields ~raw_opam ~where atoms =
     let t = OpamState.load_state "info"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
     let details =
       let map = OpamPackage.to_map (OpamState.packages_of_atoms t atoms) in
@@ -531,8 +531,8 @@ module API = struct
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     (fun _ -> tags) in
-      let depends  = formula "depends"  (OpamClientConfig.filter_deps @* OpamFile.OPAM.depends) in
-      let depopts  = formula "depopts"  (OpamClientConfig.filter_deps @* OpamFile.OPAM.depopts) in
+      let depends  = formula "depends"  (OpamStateConfig.filter_deps @* OpamFile.OPAM.depends) in
+      let depopts  = formula "depopts"  (OpamStateConfig.filter_deps @* OpamFile.OPAM.depopts) in
 
       let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
       let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
@@ -751,7 +751,7 @@ module API = struct
         let updated = OpamState.update_dev_packages t to_update in
         if OpamPackage.Set.is_empty updated then t
         else OpamState.load_state "reload-dev-package-updated"
-            OpamClientConfig.(!r.current_switch)
+            OpamStateConfig.(!r.current_switch)
       with e ->
         OpamStd.Exn.fatal e;
         t
@@ -997,7 +997,7 @@ module API = struct
 
   let update ~repos_only ?(no_stats=false) names =
     let t = OpamState.load_state ~save_cache:true "update"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
       if names = [] then
@@ -1146,7 +1146,7 @@ module API = struct
 
     OpamState.Cache.remove ();
     let t =
-      OpamState.load_state "dry-upgrade" OpamClientConfig.(!r.current_switch)
+      OpamState.load_state "dry-upgrade" OpamStateConfig.(!r.current_switch)
     in
     OpamState.Cache.save t;
 
@@ -1193,7 +1193,7 @@ module API = struct
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
-    let root = OpamClientConfig.(!r.root_dir) in
+    let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
@@ -1246,7 +1246,7 @@ module API = struct
             "Recommended external solver %s not found."
             (OpamConsole.colorise `bold "aspcud");
         let advised_deps =
-          [OpamClientConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
+          [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
         in
         (match List.filter (not @* check_external_dep) advised_deps with
          | [] -> ()
@@ -1295,9 +1295,9 @@ module API = struct
         (* Create ~/.opam/config *)
         let config =
           OpamFile.Config.create switch [repo.repo_name] jobs
-            OpamClientConfig.(default.dl_jobs)
+            OpamStateConfig.(default.dl_jobs)
         in
-        OpamClientConfig.write root config;
+        OpamStateConfig.write root config;
 
         (* Create ~/.opam/aliases *)
         OpamFile.Aliases.write
@@ -1342,7 +1342,7 @@ module API = struct
           OpamFilename.rmdir root;
         raise e);
     let t = OpamState.load_state "init"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     update_setup t
 
 
@@ -1678,7 +1678,7 @@ module API = struct
         | Some o -> o
         | None ->
           let t = OpamState.load_state "pin-get-upstream"
-              OpamClientConfig.(!r.current_switch) in
+              OpamStateConfig.(!r.current_switch) in
           get_upstream t name
       in
       let needs_reinstall = pin name ?version pin_option in
@@ -1757,7 +1757,7 @@ let read_lock f =
 
 let switch_lock f =
   OpamState.check
-    (Switch_lock ((fun () -> OpamClientConfig.(!r.current_switch)), f))
+    (Switch_lock ((fun () -> OpamStateConfig.(!r.current_switch)), f))
 
 let global_lock f =
   OpamState.check (Global_lock f)

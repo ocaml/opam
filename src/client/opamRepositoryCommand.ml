@@ -430,7 +430,7 @@ let update_config t repos =
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
   let new_config = OpamFile.Config.with_repositories t.config repos in
-  OpamClientConfig.write t.root new_config
+  OpamStateConfig.write t.root new_config
 
 let fix_descriptions
     ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =
@@ -459,7 +459,7 @@ let priority repo_name ~priority =
 
   (* 1/ update the config file *)
   let t = OpamState.load_state ~save_cache:false "repository-priority"
-      OpamClientConfig.(!r.current_switch) in
+      OpamStateConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
@@ -472,7 +472,7 @@ let priority repo_name ~priority =
 let add name kind address ~priority:prio =
   log "repository-add";
   let t = OpamState.load_state "repository-add"
-      OpamClientConfig.(!r.current_switch) in
+      OpamStateConfig.(!r.current_switch) in
   if OpamState.mem_repository t name then
     OpamConsole.error_and_exit
       "%s is already a remote repository"
@@ -522,14 +522,14 @@ let add name kind address ~priority:prio =
 let remove name =
   log "repository-remove";
   let t = OpamState.load_state "repository-remove"
-      OpamClientConfig.(!r.current_switch) in
+      OpamStateConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t name in
   cleanup t repo
 
 let set_url name url =
   log "repository-remove";
   let t = OpamState.load_state ~save_cache:false "repository-set-url"
-      OpamClientConfig.(!r.current_switch) in
+      OpamStateConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t name in
   let url, kind = parse_url url in
   if repo.repo_kind <> kind then
@@ -546,7 +546,7 @@ let set_url name url =
 let list ~short =
   log "repository-list";
   let t = OpamState.load_state "repository-list"
-      OpamClientConfig.(!r.current_switch) in
+      OpamStateConfig.(!r.current_switch) in
   if short then
     List.iter
       (fun r ->

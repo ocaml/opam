@@ -314,7 +314,7 @@ let parallel_apply t action action_graph =
     if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
     update_state ();
-    if not OpamClientConfig.(!r.dryrun) then OpamState.install_metadata !t_ref nv
+    if not OpamStateConfig.(!r.dryrun) then OpamState.install_metadata !t_ref nv
   in
 
   let remove_from_install deleted =
@@ -337,7 +337,7 @@ let parallel_apply t action action_graph =
       OpamParallel.map
         ~jobs:(OpamState.dl_jobs t)
         ~command:(OpamAction.download_package t)
-        ~dry_run:OpamClientConfig.(!r.dryrun)
+        ~dry_run:OpamStateConfig.(!r.dryrun)
         sources_list
     in
     List.fold_left2 (fun (sources,failed) nv -> function
@@ -404,7 +404,7 @@ let parallel_apply t action action_graph =
         PackageActionGraph.Parallel.map
           ~jobs:(OpamState.jobs t)
           ~command:job
-          ~dry_run:OpamClientConfig.(!r.dryrun)
+          ~dry_run:OpamStateConfig.(!r.dryrun)
           action_graph
       in
       let successful, failed =
@@ -527,7 +527,7 @@ let simulate_new_state state t =
 
 let print_external_tags t solution =
   let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamStd.String.Set.of_list OpamClientConfig.(!r.external_tags) in
+  let external_tags = OpamStd.String.Set.of_list OpamStateConfig.(!r.external_tags) in
   let values =
     OpamPackage.Set.fold (fun nv accu ->
         let opam = OpamState.opam t nv in
@@ -576,14 +576,14 @@ let apply ?ask t action ~requested solution =
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false &&
-                        OpamClientConfig.(!r.external_tags) = [] in
+                        OpamStateConfig.(!r.external_tags) = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     if show_solution then (
       OpamConsole.msg
         "The following actions %s be %s:\n"
-        (if OpamClientConfig.(!r.show) then "would" else "will")
-        (if OpamClientConfig.(!r.dryrun) then "simulated" else
-         if OpamClientConfig.(!r.fake) then "faked"
+        (if OpamStateConfig.(!r.show) then "would" else "will")
+        (if OpamStateConfig.(!r.dryrun) then "simulated" else
+         if OpamStateConfig.(!r.fake) then "faked"
          else "performed");
       let new_state = simulate_new_state t action_graph in
       let messages p =
@@ -611,10 +611,10 @@ let apply ?ask t action ~requested solution =
       output_json_solution action_graph;
     );
 
-    if OpamClientConfig.(!r.external_tags) <> [] then (
+    if OpamStateConfig.(!r.external_tags) <> [] then (
       print_external_tags t solution;
       Aborted
-    ) else if not OpamClientConfig.(!r.show) &&
+    ) else if not OpamStateConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       print_variable_warnings t;

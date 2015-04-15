@@ -101,7 +101,7 @@ let create_global_options
     ) in
   if not (no_self_upgrade) then (* do this asap, don't waste time *)
     switch_to_updated_self debug
-      OpamStd.Option.Op.(opt_root +! OpamClientConfig.(default.root_dir));
+      OpamStd.Option.Op.(opt_root +! OpamStateConfig.(default.root_dir));
   if not safe_mode && Unix.getuid () = 0 then
     OpamConsole.warning "Running as root is not recommended";
   let verbose = List.length verbose in
@@ -121,9 +121,9 @@ let apply_global_options o =
   let flag f = if f then Some true else None in
   let some x = match x with None -> None | some -> Some some in
   (* (i) get root dir *)
-  let root = OpamClientConfig.opamroot ?root_dir:o.opt_root () in
+  let root = OpamStateConfig.opamroot ?root_dir:o.opt_root () in
   (* (ii) load conf file and set defaults *)
-  let () = match OpamClientConfig.load root with
+  let () = match OpamStateConfig.load root with
     | None -> ()
     | Some conf ->
       OpamRepositoryConfig.update
@@ -142,7 +142,7 @@ let apply_global_options o =
         ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
         ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
         ();
-      OpamClientConfig.update
+      OpamStateConfig.update
         ~current_switch:(OpamFile.Config.switch conf)
         ~switch_from:`Default
         ~jobs:(OpamFile.Config.jobs conf)
@@ -194,27 +194,29 @@ let apply_global_options o =
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
     ();
-  OpamClientConfig.init
+  OpamStateConfig.init
     ~root_dir:root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
-    (* ?jobs: int XXX should be handled here *)
+    (* ?jobs: int *)
     (* ?dl_jobs: int *)
     (* ?external_tags:string list *)
-    (* ?keep_build_dir:bool XXX should be handled here *)
+    (* ?keep_build_dir:bool *)
     ?no_base_packages:(flag o.no_base_packages)
-    (* ?build_test:bool XXX this too *)
-    (* ?build_doc:bool XXX this also *)
+    (* ?build_test:bool *)
+    (* ?build_doc:bool *)
     (* ?show:bool *)
     (* ?dryrun:bool *)
     (* ?fake:bool *)
+    (* ?makecmd:string Lazy.t *)
+    ();
+  OpamClientConfig.init
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
     ?self_upgrade:(if o.no_self_upgrade then Some `Disable else None)
     (* ?pin_kind_auto:bool *)
     (* ?autoremove:bool *)
     (* ?editor:string *)
-    (* ?makecmd:string Lazy.t *)
     ()
 
 (* Build options *)
@@ -257,7 +259,7 @@ let apply_build_options b =
                       else if b.no_checksums then Some (Some false)
                       else None)
     ();
-  OpamClientConfig.update
+  OpamStateConfig.update
     (* ?root: -- handled globally *)
     ?jobs:b.jobs
     (* ?dl_jobs:int *)
@@ -269,12 +271,6 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?dryrun:(flag b.dryrun)
     ?fake:(flag b.fake)
-    (* ?print_stats:bool *)
-    (* ?sync_archives:bool *)
-    (* ?self_upgrade: -- handled globally *)
-    (* ?pin_kind_auto:bool *)
-    (* ?autoremove:bool *)
-    (* ?editor:string *)
     ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
     ()
 
@@ -785,7 +781,7 @@ let init =
     `P "The state of repositories can be synchronized by using $(b,opam update).";
     `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
-  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamClientConfig.default.OpamClientConfig.jobs in
+  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamStateConfig.default.OpamStateConfig.jobs in
   let compiler =
     mk_opt ["compiler"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
@@ -806,7 +802,7 @@ let init =
     let repo_address, repo_kind2 = parse_url repo_address in
     let repo_kind = OpamStd.Option.default repo_kind2 repo_kind in
     let repository = {
-      repo_root = OpamRepositoryPath.create (OpamClientConfig.(!r.root_dir)) repo_name;
+      repo_root = OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir)) repo_name;
       repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no
@@ -1115,7 +1111,7 @@ let config =
       `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
     | Some `pef, params ->
       let opam_state = OpamState.load_state "config-universe"
-          OpamClientConfig.(!r.current_switch) in
+          OpamStateConfig.(!r.current_switch) in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
@@ -1123,7 +1119,7 @@ let config =
        | _ -> bad_subcommand "config" commands command params)
     | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe"
-          OpamClientConfig.(!r.current_switch) in
+          OpamStateConfig.(!r.current_switch) in
       let opam_univ = OpamState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -1136,12 +1132,12 @@ let config =
       print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
         (if OpamClientConfig.(!r.self_upgrade = `Running)
-         then OpamFilename.prettify (fst (self_upgrade_exe (OpamClientConfig.(!r.root_dir))))
+         then OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
          else "no");
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
         let state = OpamState.load_state "config-report"
-          OpamClientConfig.(!r.current_switch) in
+          OpamStateConfig.(!r.current_switch) in
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -1328,10 +1324,9 @@ let update =
   let update global_options jobs json names repos_only sync upgrade =
     apply_global_options global_options;
     json_update json;
-    OpamClientConfig.update
-      ?sync_archives:(if sync then Some true else None)
-      ?jobs
-      ();
+    let sync_archives = if sync then Some true else None in
+    OpamStateConfig.update ?jobs ();
+    OpamClientConfig.update ?sync_archives ();
     Client.update ~repos_only ~no_stats:upgrade names;
     if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])
   in
@@ -1744,7 +1739,7 @@ let source =
     apply_global_options global_options;
     let open OpamState.Types in
     let t = OpamState.load_state "source"
-        OpamClientConfig.(!r.current_switch) in
+        OpamStateConfig.(!r.current_switch) in
     let nv =
       try
         OpamPackage.Set.max_elt
@@ -2018,14 +2013,14 @@ let check_and_run_external_commands () =
     let command = opam ^ "-" ^ name in
     OpamStd.Config.init ();
     let env =
-      let root_dir = OpamClientConfig.opamroot () in
-      match OpamClientConfig.load root_dir with
+      let root_dir = OpamStateConfig.opamroot () in
+      match OpamStateConfig.load root_dir with
       | None -> Unix.environment ()
       | Some c ->
         let current_switch = OpamFile.Config.switch c in
-        OpamClientConfig.init ~root_dir ~current_switch ();
+        OpamStateConfig.init ~root_dir ~current_switch ();
         let t = OpamState.load_env_state "plugins"
-            OpamClientConfig.(!r.current_switch) in
+            OpamStateConfig.(!r.current_switch) in
         let env = OpamState.get_full_env ~force_path:false t in
         Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env)
     in

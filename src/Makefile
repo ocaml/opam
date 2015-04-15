@@ -63,7 +63,7 @@ endif
 
 # --
 
-SUBS = core format solver repository client
+SUBS = core format solver repository state client
 OPAMLIB = $(patsubst %,./opam-%,$(SUBS))
 INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
@@ -89,9 +89,9 @@ ALWAYS:
 	@
 
 # -- opam-core -- #
-opam-core.cma opam-core.cmxa: client/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
+opam-core.cma opam-core.cmxa: state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
 
-client/opamScript.ml: ../shell core/opamVersion.ml
+state/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
 	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
 	ocaml ../shell/crunch.ml "switch_eval"  < ../shell/opam_switch_eval.sh >> $@
@@ -193,18 +193,31 @@ define PROJ_repository
 endef
 export PROJ_repository
 
-# -- opam-client -- #
-opam-client.cma: opam-core.cma opam-solver.cma opam-repository.cma ALWAYS
-opam-client.cmxa: opam-core.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
+# -- opam-state -- #
+opam-state.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.cma ALWAYS
+opam-state.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
 
-SRC_client = \
+SRC_state = \
   opamPath.ml \
-  opamClientConfig.ml \
-  opamClientGlobals.ml \
+  opamStateConfig.ml \
+  opamOCaml.ml \
   opamScript.ml \
   opamState.ml \
   opamAction.ml \
-  opamSolution.ml \
+  opamSolution.ml
+
+define PROJ_state
+  SOURCES = $(call addmli,state,$(SRC_state))
+  RESULT = opam-state
+endef
+export PROJ_state
+
+# -- opam-client -- #
+opam-client.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.cma opam-state.cma ALWAYS
+opam-client.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa opam-state.cmxa ALWAYS
+
+SRC_client = \
+  opamClientConfig.ml \
   opamSwitchCommand.ml \
   opamConfigCommand.ml \
   opamRepositoryCommand.ml \
@@ -319,7 +332,7 @@ export OCAMLMAKEFILE
 
 clean-aux:
 	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
-	rm -f client/opamGitVersion.ml client/opamScript.ml core/opamCompat.ml core/opamCompat.mli
+	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli
 
 clean: clean-aux
 

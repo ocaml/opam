@@ -1,0 +1,22 @@
+comp += [ "-w" "-48" ]
+
+begin library "opam-state"
+
+  files   = [
+    "opamPath.ml"
+    "opamStateConfig.ml"
+    "opamOCaml.ml"
+    "opamScript.ml"
+    "opamState.ml"
+    "opamAction.ml"
+    "opamSolution.ml"
+  ]
+
+  requires = [
+    "opam-core"
+    "opam-solver"
+    "opam-repository"
+    "cmdliner"
+  ]
+
+end

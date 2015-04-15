@@ -13,41 +13,14 @@
 (*                                                                        *)
 (**************************************************************************)
 
-type t = private {
-  print_stats: bool;
-  sync_archives: bool;
-  self_upgrade: [ `Disable | `Running | `None ];
-  pin_kind_auto: bool;
-  autoremove: bool;
-  editor: string;
-}
+(** Some detection of OCaml version and installation specifics. Base functions
+    lookup in the PATH, [system_*] functions extract the OPAMROOT paths before
+    looking up*)
 
-type 'a options_fun =
-  ?print_stats:bool ->
-  ?sync_archives:bool ->
-  ?self_upgrade:[ `Disable | `Running | `None ] ->
-  ?pin_kind_auto:bool ->
-  ?autoremove:bool ->
-  ?editor:string ->
-  unit -> 'a
-
-val default : t
-
-val set : t -> t options_fun
-
-val setk : (t -> 'a) -> t -> 'a options_fun
-
-val r : t ref
-
-val update : ?noop:_ -> unit options_fun
-
-(** Sets the options, reading the environment to get default
-    values when unspecified *)
-val init: ?noop:_ -> unit options_fun
-
-(** OPAMNOSELFUPGRADE is set to this value when the current opam process has
-    been called by an older opam process using the self-upgrade mechanism *)
-val self_upgrade_bootstrapping_value: string
-
-(** Extra files included in [opam search] *)
-val search_files: string list
+val ocaml_version: string option Lazy.t
+val ocaml_opt_available: bool Lazy.t
+val ocaml_native_available: bool Lazy.t
+val ocaml_natdynlink_available: bool Lazy.t
+val system_ocamlc_version: string option Lazy.t
+val system_ocamlc_where: string option Lazy.t
+val system_compiler: OpamCompiler.t option Lazy.t
