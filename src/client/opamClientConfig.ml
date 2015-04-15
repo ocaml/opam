@@ -181,6 +181,12 @@ let init ?noop:_ =
     ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
     ()
 
+let opamroot ?root_dir () =
+  let open OpamStd.Option.Op in
+  (root_dir >>+ fun () ->
+   OpamStd.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string)
+  +! default.root_dir
+
 let load opamroot =
   let f = OpamPath.config opamroot in
   if OpamFilename.exists f then

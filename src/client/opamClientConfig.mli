@@ -75,6 +75,11 @@ val update : ?noop:_ -> unit options_fun
     values when unspecified *)
 val init: ?noop:_ -> unit options_fun
 
+(** Get the initial opam root value (from default, env or optional argument).
+    This allows to get it before doing the init, which is useful to get the
+    configuration file used to fill some options to init() *)
+val opamroot: ?root_dir:dirname -> unit -> dirname
+
 (** OPAMNOSELFUPGRADE is set to this value when the current opam process has
     been called by an older opam process using the self-upgrade mechanism *)
 val self_upgrade_bootstrapping_value: string

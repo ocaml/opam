@@ -121,14 +121,7 @@ let apply_global_options o =
   let flag f = if f then Some true else None in
   let some x = match x with None -> None | some -> Some some in
   (* (i) get root dir *)
-  let root =
-    (* /!\ not handled in OpamClientConfig.init like the other
-       environment variables: we need it first to find the config file.
-       Ensure it behaves consistently *)
-    (o.opt_root >>+ fun () ->
-     OpamStd.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string) +!
-    OpamClientConfig.(default.root_dir)
-  in
+  let root = OpamClientConfig.opamroot ?root_dir:o.opt_root () in
   (* (ii) load conf file and set defaults *)
   let () = match OpamClientConfig.load root with
     | None -> ()
@@ -2023,13 +2016,19 @@ let check_and_run_external_commands () =
     then
     (* No such command, check if there is a matching plugin *)
     let command = opam ^ "-" ^ name in
-    (* Required to initialise OPAMROOT from the env *)
     OpamStd.Config.init ();
-    OpamClientConfig.init ();
-    let t = OpamState.load_env_state "plugins"
-        OpamClientConfig.(!r.current_switch) in
-    let env = OpamState.get_full_env ~force_path:false t in
-    let env = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env) in
+    let env =
+      let root_dir = OpamClientConfig.opamroot () in
+      match OpamClientConfig.load root_dir with
+      | None -> Unix.environment ()
+      | Some c ->
+        let current_switch = OpamFile.Config.switch c in
+        OpamClientConfig.init ~root_dir ~current_switch ();
+        let t = OpamState.load_env_state "plugins"
+            OpamClientConfig.(!r.current_switch) in
+        let env = OpamState.get_full_env ~force_path:false t in
+        Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env)
+    in
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
