@@ -121,10 +121,12 @@ let download_as ~overwrite ?compress src dst =
           (OpamFilename.to_string dst);
     OpamFilename.copy ~src ~dst;
     Done ()
-  ) else
+  ) else (
+    OpamFilename.(mkdir (dirname dst));
     really_download ~overwrite ?compress
       ~src:(OpamFilename.to_string src)
       ~dst:(OpamFilename.to_string dst)
+  )
 
 let download ~overwrite ?compress src dstdir =
   let dst = OpamFilename.(create dstdir (basename src)) in
