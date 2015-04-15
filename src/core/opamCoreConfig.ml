@@ -51,7 +51,8 @@ let default = {
   safe_mode = false;
   lock_retries = 5;
   log_dir =
-    (let base = Printf.sprintf "opam-%s-%d" (Unix.getlogin()) (Unix.getpid()) in
+    (let user = try Unix.getlogin() with Unix.Unix_error _ -> "xxx" in
+     let base = Printf.sprintf "opam-%s-%d" user (Unix.getpid()) in
      Filename.(concat (get_temp_dir_name ()) base));
   keep_log_dir = false;
 }
