@@ -17,12 +17,12 @@
 open OpamTypes
 
 module Git = struct
-
+(*
   let exec repo command =
     OpamFilename.in_dir repo (fun () ->
         OpamSystem.command command
       )
-
+*)
   let return_one_line repo command =
     OpamFilename.in_dir repo (fun () ->
         List.hd (OpamSystem.read_command_output command)
@@ -32,7 +32,7 @@ module Git = struct
     OpamFilename.in_dir repo (fun () ->
         (OpamSystem.read_command_output command)
       )
-
+(*
   let commit repo fmt =
     Printf.kprintf (fun msg ->
         exec repo [ "git"; "commit"; "-a"; "-m"; msg; "--allow-empty" ]
@@ -50,10 +50,10 @@ module Git = struct
 
   let revision repo =
     return_one_line repo [ "git"; "rev-parse"; "HEAD" ]
-
+*)
   let commits repo =
     return repo ["git"; "log"; "master"; "--pretty=format:%H"]
-
+(*
   let init repo =
     exec repo ["git"; "init"]
 
@@ -79,7 +79,7 @@ module Git = struct
           (OpamPackage.to_string package)
           str
       ) fmt
-
+*)
   let date repo commit =
     let r = return_one_line repo [ "git"; "show"; "-s"; "--format=\"%ct\""; commit ] in
     let r = OpamStd.String.strip r in
