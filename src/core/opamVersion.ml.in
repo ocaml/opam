@@ -22,12 +22,7 @@ let of_string x = x
 
 let to_json x = `String x
 
-let compare v w =
-  (* Ignore -xxx suffixes for version comparisons *)
-  let cut s = match OpamStd.String.cut_at s '-' with
-    | Some (s,_) -> s
-    | None -> s in
-  OpamVersionCompare.compare (cut v) (cut w)
+let compare v w = OpamVersionCompare.compare v w
 
 module O = struct
   type t = string
@@ -55,7 +50,14 @@ let nopatch v =
     let i = String.index v '.' in
     let i = String.index_from v (i+1) '.' in
     (String.sub v 0 i)
-  with Not_found -> v
+  with Not_found ->
+    let rec f i =
+      if i >= String.length v then v
+      else match String.get v i with
+        | '0'..'9' | '.' -> f (i+1)
+        | _ -> String.sub v 0 i
+    in
+    f 0
 
 let current_nopatch = nopatch current_raw
 
