@@ -26,6 +26,7 @@ let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 let s_pinned = "pinned"
+let s_version_lag = "version-lag"
 
 let cudf2opam cpkg =
   let sname = Cudf.lookup_package_property cpkg s_source in
@@ -427,6 +428,7 @@ let default_preamble =
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
     (s_pinned,         `Bool (Some false));
+    (s_version_lag,    `Nat (Some 0));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 

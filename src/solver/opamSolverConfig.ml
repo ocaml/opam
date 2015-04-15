@@ -113,11 +113,17 @@ let default_criteria_compat = {
 }
 
 let default_criteria_latest = {
-  crit_default = "-count(removed),-notuptodate(request),-count(down),\
-                  -notuptodate(changed),-count(changed),-notuptodate(solution)";
-  crit_upgrade = "-count(down),-count(removed),-notuptodate(solution),\
+  crit_default = "-count(removed),\
+                  -notuptodate(request),-sum(request,version-lag),\
+                  -count(down),\
+                  -notuptodate(changed),-count(changed),\
+                  -notuptodate(solution),-sum(solution,version-lag)";
+  crit_upgrade = "-count(down),\
+                  -count(removed),\
+                  -notuptodate(solution),-sum(solution,version-lag),\
                   -count(new)";
-  crit_fixup = "-count(changed),-notuptodate(solution)";
+  crit_fixup = "-count(changed),\
+                -notuptodate(solution),-sum(solution,version-lag)";
 }
 
 let get_crit c = function
