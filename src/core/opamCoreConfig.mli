@@ -38,6 +38,8 @@ type t = private {
   (** Where to store log and temporary files (output from commands...) *)
   keep_log_dir : bool;
   (** Whether to cleanup temporary and log files on exit *)
+  errlog_length : int;
+  (** The number of log lines displayed on process error. 0 for all *)
 }
 
 type 'a options_fun =
@@ -51,6 +53,7 @@ type 'a options_fun =
   ?lock_retries:int ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
+  ?errlog_length:int ->
   unit -> 'a
 
 val default : t

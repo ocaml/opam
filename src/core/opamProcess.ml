@@ -466,7 +466,6 @@ let cleanup ?(force=false) r =
   if force || (not (OpamConsole.debug ()) && is_success r) then
     List.iter safe_unlink r.r_cleanup
 
-let log_limit = 10
 let log_line_limit = 5 * 80
 let truncate_str = "[...]"
 
@@ -481,7 +480,6 @@ let truncate_line str =
 (* Take the last [n] elements of [l] (trying to keep an unindented header line
    for context, like diff) *)
 let truncate l =
-  let l = List.rev l in
   let unindented s =
     String.length s > 0 && s.[0] <> ' ' && s.[0] <> '\t'
   in
@@ -495,7 +493,9 @@ let truncate l =
        with Not_found -> truncate_str :: truncate_line x :: acc)
     | x::r -> cut (n-1) (truncate_line x :: acc) r
   in
-  cut log_limit [] l
+  let len = OpamCoreConfig.(!r.errlog_length) in
+  if len <= 0 then l
+  else cut len [] (List.rev l)
 
 let string_of_result ?(color=`yellow) r =
   let b = Buffer.create 2048 in

@@ -876,6 +876,7 @@ module Config = struct
       ?lock_retries:(env_int "LOCKRETRIES")
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")
+      ?errlog_length:(env_int "ERRLOGLEN")
       ()
 end
 

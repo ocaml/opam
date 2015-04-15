@@ -26,6 +26,7 @@ type t = {
   lock_retries: int;
   log_dir: string;
   keep_log_dir: bool;
+  errlog_length: int;
 }
 
 type 'a options_fun =
@@ -39,6 +40,7 @@ type 'a options_fun =
   ?lock_retries:int ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
+  ?errlog_length:int ->
   unit -> 'a
 
 let default = {
@@ -55,6 +57,7 @@ let default = {
      let base = Printf.sprintf "opam-%s-%d" user (Unix.getpid()) in
      Filename.(concat (get_temp_dir_name ()) base));
   keep_log_dir = false;
+  errlog_length = 12;
 }
 
 let setk k t
@@ -68,6 +71,7 @@ let setk k t
     ?lock_retries
     ?log_dir
     ?keep_log_dir
+    ?errlog_length
     ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
@@ -82,6 +86,7 @@ let setk k t
     lock_retries = t.lock_retries + lock_retries;
     log_dir = t.log_dir + log_dir;
     keep_log_dir = t.keep_log_dir + keep_log_dir;
+    errlog_length = t.errlog_length + errlog_length;
   }
 
 let set t = setk (fun x -> x) t
