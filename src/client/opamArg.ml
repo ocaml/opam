@@ -122,7 +122,7 @@ let apply_global_options o =
   let some x = match x with None -> None | some -> Some some in
   (* (i) get root dir *)
   let root =
-    (* /!\ not handled in OpamClientGlobals.init_config like the other
+    (* /!\ not handled in OpamClientConfig.init like the other
        environment variables: we need it first to find the config file.
        Ensure it behaves consistently *)
     (o.opt_root >>+ fun () ->
@@ -2016,6 +2016,9 @@ let check_and_run_external_commands () =
     then
     (* No such command, check if there is a matching plugin *)
     let command = opam ^ "-" ^ name in
+    (* Required to initialise OPAMROOT from the env *)
+    OpamStd.Config.init ();
+    OpamClientConfig.init ();
     let t = OpamState.load_env_state "plugins"
         OpamClientConfig.(!r.current_switch) in
     let env = OpamState.get_full_env ~force_path:false t in
