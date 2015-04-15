@@ -185,11 +185,18 @@ let apply_global_options o =
     (* ?retries:int *)
     (* ?force_checksums:bool option *)
     ();
+  let external_solver =
+    o.external_solver >>| fun s ->
+    lazy (
+      let args = OpamStd.String.split s ' ' in
+      Some (List.map (fun a -> OpamTypes.CString a, None) args)
+    )
+  in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
   OpamSolverConfig.init
     ?cudf_file:(some o.cudf_file)
     (* ?solver_timeout:float *)
-    (* ?external_solver:OpamTypes.arg list option Lazy.t *)
+    ?external_solver
     ?solver_preferences_default:(some solver_prefs)
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
