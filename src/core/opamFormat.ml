@@ -712,17 +712,19 @@ let make_flag = function
   | Pkgflag_LightUninstall -> make_ident "light-uninstall"
   | Pkgflag_AllSwitches -> make_ident "all-switches"
   | Pkgflag_Verbose -> make_ident "verbose"
+  | Pkgflag_Plugin -> make_ident "plugin"
   | Pkgflag_Unknown s -> make_ident s
 
 let parse_flag = function
   | Ident (_,"light-uninstall") -> Pkgflag_LightUninstall
   | Ident (_,"all-switches") -> Pkgflag_AllSwitches
   | Ident (_,"verbose") -> Pkgflag_Verbose
+  | Ident (_,"plugin") -> Pkgflag_Plugin
   | Ident (_,s) -> Pkgflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
-      "Unknown package flag %S. Expected one of \"light-uninstall\", \
-       \"all-switches\" or \"verbose\""
+      "Unknown package flag %s. Expected one of `light-uninstall', \
+       `all-switches', `verbose' or `plugin'"
       (string_of_value x)
 
 (* TAGS *)

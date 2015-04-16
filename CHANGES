@@ -12,6 +12,7 @@
   in variable OPAMEXTERNALSOLVER (#2085)
 * Added package universe output to new PEF format for diagnostics
 * Prioritise newer versions even when the latest can't be installed (#2109)
+* Automatically install plugins on `opam plugin` (#2092)
 
 1.2.1
 * Non-system compiler definitions without source are now allowed
