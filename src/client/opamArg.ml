@@ -1962,6 +1962,28 @@ let check_and_run_external_commands () =
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
       raise (OpamGlobals.Exec (command, argv, env))
+    else if OpamFilename.exists (OpamPath.config (OpamPath.root())) then
+      (* Look for a corresponding package *)
+      let t = OpamState.load_state "plugins-inst" in
+      let open OpamState.Types in
+      try
+        let pkgname = OpamPackage.Name.of_string name in
+        let candidates = Lazy.force t.available_packages in
+        let nv = OpamPackage.max_version candidates pkgname in
+        let flags = OpamFile.OPAM.flags (OpamPackage.Map.find nv t.opams) in
+        if List.mem Pkgflag_Plugin flags &&
+           not (OpamState.is_name_installed t pkgname) &&
+           OpamGlobals.confirm "OPAM plugin %s is not installed. \
+                                Install it on the current switch?"
+             name
+        then
+          (Client.install [pkgname,None] None false;
+           OpamGlobals.header_msg "Carrying on to \"%s\""
+             (String.concat " " (Array.to_list Sys.argv));
+           OpamGlobals.msg "\n";
+           let argv = Array.of_list (command :: args) in
+           raise (OpamGlobals.Exec (command, argv, env)))
+      with Not_found -> ()
 
 let run default commands =
   OpamMisc.Option.iter OpamVersion.set_git OpamGitVersion.version;
