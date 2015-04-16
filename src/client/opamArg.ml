@@ -297,6 +297,8 @@ let help_sections = [
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
+  `P "$(i,OPAMERRLOGLEN) sets the number of log lines printed when a \
+      sub-process fails. 0 to print all.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
       a custom command where variables $(b,%{url}%), $(b,%{out}%), \
