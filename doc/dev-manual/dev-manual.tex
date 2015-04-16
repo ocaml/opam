@@ -285,6 +285,7 @@ the following restrictions:
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
     ?syntax:        [ STRING+ ]
+    ?flags:         [ IDENT+ ]
     ?features:      [ (IDENT STRING <filter>)+ ]
 
 <argument>       := STRING
@@ -518,6 +519,20 @@ depends: [
 \item {\tt libraries} and {\tt syntax} contain the
   libraries and syntax extensions defined by the package. See
   Section~\ref{section:config} for more details.
+
+\item {\tt flags} allow a limited set of idents that give special handling
+  instructions for the package:
+  \begin{description}
+  \item{\tt light-uninstall} the package's uninstall instructions don't require the
+    package source. This is currently inferred when the only uninstall
+    instructions have the form `ocamlfind remove...`, but making it explicit is
+    preferred (since OPAM 1.2.0).
+  \item{\tt verbose} when this is present, the stdout of the package's build and
+    install instructions will be printed to the user (since \OPAM\ 1.2.1).
+  \item{\tt plugin} the package installs a program named \verb+opam-$NAME+. OPAM
+    will hand over to it when run with subcommand \verb+$NAME+, automatically
+    installing it if necessary.
+  \end{description}
 
 \item {\tt features} is currently experimental and shouldn't be used on the main
   package repository. It allows to define custom variables that better document

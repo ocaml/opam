@@ -620,6 +620,18 @@ recommended to check the validity and quality of your `opam` files.
     current switch state. An unavailable package won't generally be seen on the
     system, except with `opam list -A`.
 
+- `flags: [ <ident> ... ]`: specify package flags that may alter package
+  behaviour. Currently available flags are:
+
+    - `light-uninstall`: the package's uninstall instructions don't require
+      the package source. This is currently inferred when the only uninstall
+      instructions have the form `ocamlfind remove...`, but making it explicit
+      is preferred (since OPAM 1.2.0).
+    - `verbose`: when this is present, the stdout of the package's build and
+      install instructions will be printed to the user (since OPAM 1.2.1).
+    - `plugin`: the package installs a program named `opam-<name>` and may be
+      auto-installed and run with `opam <name>` (since OPAM 1.2.2)
+
 - `features: [ <ident> <string> { <filter> } ... ]` (EXPERIMENTAL): this field
   is currently experimental and shouldn't be used on the main package
   repository. It allows to define custom variables that better document what
