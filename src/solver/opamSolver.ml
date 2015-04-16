@@ -138,6 +138,7 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
 let opam2cudf universe ?(depopts=false) ?build ?test ?doc
     version_map package =
   let name = OpamPackage.name package in
+  let version = OpamPackage.version package in
   let depends =
     try filter_deps ?build ?test ?doc
           (OpamPackage.Map.find package universe.u_depends)
@@ -168,19 +169,29 @@ let opam2cudf universe ?(depopts=false) ?build ?test ?doc
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let pinned_to_current_version =
     OpamPackage.Set.mem package universe.u_pinned in
+  let version_lag =
+    let all_versions = OpamPackage.versions_of_name universe.u_available name in
+    let count,i =
+      OpamPackage.Version.Set.fold
+        (fun v (i,r) -> if v = version then i,i else i+1, r)
+        all_versions (0,0)
+    in
+    count - i
+  in
   let extras =
     let e = [
-      OpamCudf.s_source,
-      `String (OpamPackage.Name.to_string (OpamPackage.name package));
-      OpamCudf.s_source_number,
-      `String (OpamPackage.Version.to_string (OpamPackage.version package));
+      OpamCudf.s_source, `String (OpamPackage.Name.to_string name);
+      OpamCudf.s_source_number, `String (OpamPackage.Version.to_string version);
     ] in
     let e = if installed && reinstall
       then (OpamCudf.s_reinstall, `Bool true)::e else e in
     let e = if installed_root
       then (OpamCudf.s_installed_root, `Bool true)::e else e in
-    let e = if pinned_to_current_version
-      then (OpamCudf.s_pinned, `Bool true)::e else e in
+    let e =
+      if pinned_to_current_version then (OpamCudf.s_pinned, `Bool true)::e
+      else if version_lag = 0 then e
+      else (OpamCudf.s_version_lag, `Int version_lag)::e
+    in
     e
   in
   { Cudf.default_package with

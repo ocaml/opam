@@ -135,9 +135,17 @@ let solver_timeout =
 type solver_criteria = [ `Default | `Upgrade | `Fixup ]
 
 let default_preferences = function
-  | `Default -> "-count(removed),-notuptodate(request),-count(down),-notuptodate(changed),-count(changed),-notuptodate(solution)"
-  | `Upgrade -> "-count(down),-count(removed),-notuptodate(solution),-count(new)"
-  | `Fixup -> "-count(changed),-notuptodate(solution)"
+  | `Default -> "-count(removed),\
+                 -notuptodate(request),-sum(request,version-lag),\
+                 -count(down),\
+                 -notuptodate(changed),-count(changed),\
+                 -notuptodate(solution),-sum(solution,version-lag)"
+  | `Upgrade -> "-count(down),\
+                 -count(removed),\
+                 -notuptodate(solution),-sum(solution,version-lag),\
+                 -count(new)"
+  | `Fixup -> "-count(changed),\
+               -notuptodate(solution),-sum(solution,version-lag)"
 
 let compat_preferences = function (* Not as good, but for older solver versions *)
   | `Default -> "-removed,-notuptodate,-changed"
