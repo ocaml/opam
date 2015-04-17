@@ -678,7 +678,8 @@ let build_options =
       "Simulate the command, but don't actually perform any changes." in
   let external_tags =
     mk_opt ["e";"external"] "TAGS"
-      "Display the external packages associated to the given tags."
+      "Display the external packages associated to the given tags. \
+       This is deprecated, use `opam list --external' instead"
       Arg.(list string) [] in
   let fake =
     mk_flag ["fake"]
@@ -779,7 +780,8 @@ let list =
   let installed =
     mk_flag ["i";"installed"]
       "List installed packages only. This is the the default when no argument \
-       is supplied." in
+       is supplied. With `--resolve', means \"compute a solution from the \
+       currently installed packages\" instead." in
   let unavailable =
     mk_flag ["A";"unavailable"]
       "List all packages, even those which can't be installed on the system" in
@@ -792,12 +794,29 @@ let list =
     let doc = "List only the dependencies of (comma-separated) $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["required-by"])
   in
+  let resolve =
+    let doc =
+      "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
+       a consistent set of packages including those. This is subtly different \
+       from `--required-by --recursive`, which is more predictable and can't \
+       fail, but lists all dependencies independently without ensuring \
+       consistency. \
+       Without `--installed`, the answer is self-contained and independent of \
+       the current installation. With `--installed', it's computed from the \
+       set of currently installed packages. \
+       `--unavailable` further makes the solution independent from the \
+       currently pinned packages, architecture, and compiler version. \
+       The combination with `--depopts' is not supported."
+    in
+    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["resolve"])
+  in
   let recursive =
     mk_flag ["recursive"]
       "With `--depends-on' and `--required-by', display all transitive \
        dependencies rather than just direct dependencies." in
   let depopts =
-    mk_flag ["depopts"] "Include optional dependencies in dependency requests." in
+    mk_flag ["depopts"] "Include optional dependencies in dependency requests."
+  in
   let depexts =
     mk_opt ["e";"external"] "TAGS" ~vopt:(Some [])
       "Instead of displaying the packages, display their external dependencies \
@@ -812,7 +831,7 @@ let list =
       Arg.(some & list string) None in
   let list global_options print_short all installed
       installed_roots unavailable sort
-      depends_on required_by recursive depopts depexts
+      depends_on required_by resolve recursive depopts depexts
       packages =
     apply_global_options global_options;
     let filter =
@@ -822,33 +841,35 @@ let list =
       | false, false, true,  false -> Some `installed
       | false, false, _,     true  -> Some `roots
       | false, false, false, false ->
-        if depends_on = [] && required_by = [] && packages = []
+        if depends_on = [] && required_by = [] && resolve = [] && packages = []
         then Some `installed else Some `installable
       | _ -> None
     in
     let order = if sort then `depends else `normal in
-    match filter, depends_on, required_by with
-    | Some filter, [], depends | Some filter, depends, [] ->
+    match filter, (depends_on, required_by, resolve) with
+    | Some filter, (depends, [], [] | [], depends, [] | [], [], depends) ->
       Client.list
         ~print_short ~filter ~order
         ~exact_name:true ~case_sensitive:false
         ~depends ~reverse_depends:(depends_on <> [])
+        ~resolve_depends:(resolve <> [])
         ~recursive_depends:recursive
         ~depopts ?depexts
         packages;
       `Ok ()
-    | None, _, _ ->
+    | None, _ ->
       `Error (true, "Conflicting filters: only one of --all, --installed and \
                      --installed-roots may be given at a time")
     | _ ->
-      `Error (true, "Only one of --depends-on and --required-by \
-                      may be given at a time")
+      (* That would be fairly doable with a change of interface if needed *)
+      `Error (true, "Sorry, only one of --depends-on, --required-by and \
+                     --resolve are allowed at a time")
   in
   Term.ret
     Term.(pure list $global_options
           $print_short_flag $all $installed $installed_roots_flag
           $unavailable $sort
-          $depends_on $required_by $recursive $depopts $depexts
+          $depends_on $required_by $resolve $recursive $depopts $depexts
           $pattern_list),
   term_info "list" ~doc ~man
 
