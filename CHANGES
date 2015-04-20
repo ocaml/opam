@@ -141,6 +141,7 @@
 * New shell completion scripts
 * Added 'opam lint' to perform checks on opam files
 * Use the published version of jsonm rather than include it (#1574)
+* Changed findlib package name from 'opam' to 'opam-lib'
 * Hundreds of smaller fixes and UI improvements
 
 1.1.2
