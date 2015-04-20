@@ -38,6 +38,26 @@ let add_pos pos = function
     Bad_format (Some pos, backtrace::btl, msg)
   | e -> e
 
+let string_of_backtrace_list = function
+  | [] | _ when not (Printexc.backtrace_status ()) -> ""
+  | btl -> List.fold_left (fun s bts ->
+      let bt_lines = OpamMisc.split bts '\n' in
+      "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
+    ) "" btl
+
+let string_of_bad_format ?file e =
+  match e, file with
+  | Bad_format (Some pos, btl, msg), _ ->
+    Printf.sprintf "At %s:\n  %s%s"
+      (string_of_pos pos) msg (string_of_backtrace_list btl)
+  | Bad_format (None, btl, msg), Some f ->
+    Printf.sprintf "In %s:\n  %s%s"
+      (OpamFilename.to_string f) msg (string_of_backtrace_list btl)
+  | Bad_format (None, btl, msg), None ->
+    Printf.sprintf "Input error:\n  %s%s"
+      msg (string_of_backtrace_list btl)
+  | _ -> ""
+
 let item_pos = function
   | Section (pos,_) | Variable (pos,_,_) -> pos
 
@@ -409,8 +429,7 @@ let parse_dep_flag = function
   | Ident (_, s) -> Depflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
-      "Unknown dependency flag %S. Expected one of \"build\", \"test\" or \
-       a version constraint operator"
+      "Invalid dependency flag %s, must be an ident"
       (string_of_value x)
 
 let make_dep_flag = function
@@ -723,8 +742,7 @@ let parse_flag = function
   | Ident (_,s) -> Pkgflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
-      "Unknown package flag %s. Expected one of `light-uninstall', \
-       `all-switches', `verbose' or `plugin'"
+      "Invalid package flag %s, must be an ident"
       (string_of_value x)
 
 (* TAGS *)
