@@ -36,8 +36,8 @@ lib-ext: clone build copy
 	@
 
 build: clone
-	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=bcl
-	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=ncl
+	[ $(OCAMLC) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=bcl
+	[ $(OCAMLOPT) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=ncl
 
 all: bcl ncl
 
