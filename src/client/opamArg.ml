@@ -1065,7 +1065,7 @@ let config =
        | _ -> bad_subcommand "config" commands command params)
     | Some `report, [] -> (
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
-      Printf.printf "# OPAM status report\n";
+      Printf.printf "# OPAM config report\n";
       print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
         (if OpamGlobals.is_self_upgrade
