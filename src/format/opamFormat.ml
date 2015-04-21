@@ -38,6 +38,26 @@ let add_pos pos = function
     Bad_format (Some pos, backtrace::btl, msg)
   | e -> e
 
+let string_of_backtrace_list = function
+  | [] | _ when not (Printexc.backtrace_status ()) -> ""
+  | btl -> List.fold_left (fun s bts ->
+      let bt_lines = OpamStd.String.split bts '\n' in
+      "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
+    ) "" btl
+
+let string_of_bad_format ?file e =
+  match e, file with
+  | Bad_format (Some pos, btl, msg), _ ->
+    Printf.sprintf "At %s:\n  %s%s"
+      (string_of_pos pos) msg (string_of_backtrace_list btl)
+  | Bad_format (None, btl, msg), Some f ->
+    Printf.sprintf "In %s:\n  %s%s"
+      (OpamFilename.to_string f) msg (string_of_backtrace_list btl)
+  | Bad_format (None, btl, msg), None ->
+    Printf.sprintf "Input error:\n  %s%s"
+      msg (string_of_backtrace_list btl)
+  | _ -> ""
+
 let item_pos = function
   | Section (pos,_) | Variable (pos,_,_) -> pos
 
@@ -397,8 +417,7 @@ let parse_dep_flag = function
   | Ident (_, s) -> Depflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
-      "Unknown dependency flag %S. Expected one of \"build\", \"test\" or \
-       a version constraint operator"
+      "Invalid dependency flag %s, must be an ident"
       (string_of_value x)
 
 let make_dep_flag = function
@@ -694,17 +713,18 @@ let make_flag = function
   | Pkgflag_LightUninstall -> make_ident "light-uninstall"
   | Pkgflag_AllSwitches -> make_ident "all-switches"
   | Pkgflag_Verbose -> make_ident "verbose"
+  | Pkgflag_Plugin -> make_ident "plugin"
   | Pkgflag_Unknown s -> make_ident s
 
 let parse_flag = function
   | Ident (_,"light-uninstall") -> Pkgflag_LightUninstall
   | Ident (_,"all-switches") -> Pkgflag_AllSwitches
   | Ident (_,"verbose") -> Pkgflag_Verbose
+  | Ident (_,"plugin") -> Pkgflag_Plugin
   | Ident (_,s) -> Pkgflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
-      "Unknown package flag %S. Expected one of \"light-uninstall\", \
-       \"all-switches\" or \"verbose\""
+      "Invalid package flag %s, must be an ident"
       (string_of_value x)
 
 (* TAGS *)

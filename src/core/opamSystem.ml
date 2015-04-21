@@ -516,13 +516,15 @@ end
 let is_tar_archive = Tar.is_archive
 
 let extract file dst =
-  let kind, extract_function =
+  let _, extract_function =
     if Zip.is_archive file then "zip", Zip.extract_function
     else "tar", Tar.extract_function
   in
   with_tmp_dir (fun tmp_dir ->
     match extract_function file with
-    | None   -> internal_error "%s is not a valid %s archive." file kind
+    | None   ->
+      mkdir dst;
+      copy file (dst/Filename.basename file)
     | Some f ->
       f tmp_dir;
       if Sys.file_exists dst then

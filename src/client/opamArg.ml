@@ -2014,9 +2014,11 @@ let check_and_run_external_commands () =
     (* No such command, check if there is a matching plugin *)
     let command = opam ^ "-" ^ name in
     OpamStd.Config.init ();
+    OpamFormatConfig.init ();
+    let root_dir = OpamStateConfig.opamroot () in
+    let conf_file = OpamStateConfig.load root_dir in
     let env =
-      let root_dir = OpamStateConfig.opamroot () in
-      match OpamStateConfig.load root_dir with
+      match conf_file with
       | None -> Unix.environment ()
       | Some c ->
         let current_switch = OpamFile.Config.switch c in
@@ -2029,6 +2031,30 @@ let check_and_run_external_commands () =
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
+    else if conf_file <> None then
+      (* Look for a corresponding package *)
+      let t =
+        OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
+      in
+      let open OpamState.Types in
+      try
+        let pkgname = OpamPackage.Name.of_string name in
+        let candidates = Lazy.force t.available_packages in
+        let nv = OpamPackage.max_version candidates pkgname in
+        let flags = OpamFile.OPAM.flags (OpamPackage.Map.find nv t.opams) in
+        if List.mem Pkgflag_Plugin flags &&
+           not (OpamState.is_name_installed t pkgname) &&
+           OpamConsole.confirm "OPAM plugin %s is not installed. \
+                                Install it on the current switch?"
+             name
+        then
+          (Client.install [pkgname,None] None false;
+           OpamConsole.header_msg "Carrying on to \"%s\""
+             (String.concat " " (Array.to_list Sys.argv));
+           OpamConsole.msg "\n";
+           let argv = Array.of_list (command :: args) in
+           raise (OpamStd.Sys.Exec (command, argv, env)))
+      with Not_found -> ()
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;

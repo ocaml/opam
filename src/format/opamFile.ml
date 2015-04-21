@@ -118,8 +118,13 @@ module X = struct
         already_warned := true;
         false
 
+    (* Prints warnings or fails in strict mode; returns true if permissive mode
+       is enabled *)
     let check ?allow_major ?(versioned=true) =
       fun f fields ->
+        if not OpamFormatConfig.(!r.strict) && not (OpamConsole.debug ())
+        then true
+        else
         let f_opam_version =
           if List.mem s_opam_version fields then
             OpamFormat.assoc_option f.file_contents s_opam_version
@@ -149,15 +154,16 @@ module X = struct
             List.partition (fun x -> List.mem x fields) invalids
           in
           if too_many <> [] then
-            OpamConsole.warning "duplicate fields in %s: %s"
+            OpamConsole.warning "In %s:\n  duplicate fields %s"
               f.file_name
               (OpamStd.List.to_string (fun x -> x) too_many);
           let is_, s_ =
             if List.length invalids <= 1 then "is an", "" else "are", "s" in
           if invalids <> [] then
-            OpamConsole.warning "%s %s unknown field%s in %s."
+            OpamConsole.warning "In %s:\n  %s %s unknown field%s."
+              f.file_name
               (OpamStd.Format.pretty_list invalids)
-              is_ s_ f.file_name;
+              is_ s_;
           if OpamFormatConfig.(!r.strict) then
             OpamConsole.error_and_exit "Strict mode: bad fields in %s"
               f.file_name;
@@ -486,7 +492,7 @@ module X = struct
                 map,
               i+1
             | s ->
-              OpamConsole.error "At %s:%d: skipped invalid line %S"
+              OpamConsole.error "At %s:%d:\n  skipped invalid line %S"
                 (OpamFilename.prettify filename) i (String.concat " " s);
               map, i+1
           ) (empty,1) lines in
@@ -1266,7 +1272,12 @@ module X = struct
 
     let of_syntax ?(permissive=false) ?(conservative=false) f nv =
       let safe default f x y z =
-        try f x y z with OpamFormat.Bad_format _ when permissive -> default
+        try f x y z with
+        | OpamFormat.Bad_format _ as bf
+          when not conservative && not OpamFormatConfig.(!r.strict) ->
+          if not permissive then
+            OpamConsole.warning "%s" (OpamFormat.string_of_bad_format bf);
+          default
       in
       let assoc_option x y z = safe None OpamFormat.assoc_option x y z in
       let assoc_list x y z = safe [] OpamFormat.assoc_list x y z in
@@ -1300,7 +1311,7 @@ module X = struct
                   (function Depflag_Unknown _ -> false | _ -> true) flags in
               if not permissive && known_flags <> flags then
                 OpamConsole.warning
-                  "At %s: Unknown flags %s ignored for dependency %s"
+                  "At %s:\n  Unknown flags %s ignored for dependency %s"
                   (string_of_pos pos)
                   (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
                        | Depflag_Unknown s -> Some s
@@ -1398,7 +1409,7 @@ module X = struct
               allflags in
           if not permissive && known_flags <> allflags then
             OpamConsole.warning
-              "At %s: Unknown package flags %s ignored"
+              "At %s:\n  Unknown package flags %s ignored"
               (string_of_pos (OpamFormat.value_pos v))
               (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
                    | Pkgflag_Unknown s -> Some s
@@ -2351,13 +2362,6 @@ module Make (F : F) = struct
     write_files := filename :: !write_files;
     log "Wrote %s in %.3fs" filename (chrono ())
 
-  let string_of_backtrace_list = function
-    | [] | _ when not (Printexc.backtrace_status ()) -> ""
-    | btl -> List.fold_left (fun s bts ->
-        let bt_lines = OpamStd.String.split bts '\n' in
-        "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
-      ) "" btl
-
   let read f =
     let filename = OpamFilename.prettify f in
     read_files := filename :: !read_files;
@@ -2379,13 +2383,7 @@ module Make (F : F) = struct
         else raise e (* Message already printed *)
       | e ->
         OpamStd.Exn.fatal e;
-        let pos,msg,btl = match e with
-          | OpamFormat.Bad_format (Some pos, btl, msg) -> pos, ":\n  "^msg, btl
-          | OpamFormat.Bad_format (None, btl, msg) -> (f,-1,-1), ":\n  "^msg, btl
-          | _ -> (f,-1,-1),"",[] in
-        let e = OpamFormat.add_pos pos e in
-        OpamConsole.error "At %s%s%s"
-          (string_of_pos pos) msg (string_of_backtrace_list btl);
+        OpamConsole.error "%s" (OpamFormat.string_of_bad_format ~file:f e);
         if OpamFormatConfig.(!r.strict) then OpamStd.Sys.exit 66
         else raise e
 
@@ -2403,14 +2401,8 @@ module Make (F : F) = struct
 
   let read_from_channel ic =
     try F.of_channel dummy_file ic with
-    | OpamFormat.Bad_format (Some pos, btl, msg) as e ->
-      OpamConsole.error "At %s: %s%s"
-        (string_of_pos pos) msg (string_of_backtrace_list btl);
-      if OpamFormatConfig.(!r.strict) then
-        OpamConsole.error_and_exit "Strict mode: aborting"
-      else raise e
-    | OpamFormat.Bad_format (None, btl, msg) as e ->
-      OpamConsole.error "Input error: %s%s" msg (string_of_backtrace_list btl);
+    | OpamFormat.Bad_format _ as e ->
+      OpamConsole.error "%s" (OpamFormat.string_of_bad_format e);
       if OpamFormatConfig.(!r.strict) then
         OpamConsole.error_and_exit "Strict mode: aborting"
       else raise e

@@ -45,6 +45,8 @@ exception Bad_format of pos option * string list * string
 (** Raise [Bad_format]. *)
 val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
 
+val string_of_bad_format: ?file:filename -> exn -> string
+
 (** Adds a position to a Bad_format exception if it doesn't have one yet *)
 val add_pos: pos -> exn -> exn
 
