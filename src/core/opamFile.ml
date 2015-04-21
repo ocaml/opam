@@ -1618,10 +1618,12 @@ module X = struct
         cond 37 `Warning
           "Missing field 'dev-repo'"
           (t.dev_repo = None);
+(*
         cond 38 `Warning
           "Package declares 'depexts', but has no 'post-messages' to help \
            the user out when they are missing"
           (t.depexts <> None && t.post_messages = []);
+*)
         cond 39 `Error
           "Command 'make' called directly, use the built-in variable \
            instead"
