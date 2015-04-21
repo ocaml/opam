@@ -45,6 +45,15 @@ val update : ?noop:_ -> unit options_fun
     values when unspecified *)
 val init: ?noop:_ -> unit options_fun
 
+(** Loads the config file from the OPAM root and updates default values for all
+    related OpamXxxConfig modules. Doesn't read the env yet, the [init]
+    functions should still be called afterwards. OpamFormat should be
+    initialised beforehand, as it may impact the config file loading.
+
+    Returns true if a config file was found and could be read, false
+    otherwise *)
+val load_defaults: OpamFilename.Dir.t -> bool
+
 (** OPAMNOSELFUPGRADE is set to this value when the current opam process has
     been called by an older opam process using the self-upgrade mechanism *)
 val self_upgrade_bootstrapping_value: string

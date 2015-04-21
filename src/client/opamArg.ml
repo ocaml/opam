@@ -123,46 +123,22 @@ let apply_global_options o =
   (* (i) get root dir *)
   let root = OpamStateConfig.opamroot ?root_dir:o.opt_root () in
   (* (ii) load conf file and set defaults *)
-  (* the init for OpamFormat is done in advance of step (iii) since (a) it has
-     an effect on loading the global config (b) the global config has no effect
-     on it *)
+  (* the init for OpamFormat is done in advance since (a) it has an effect on
+     loading the global config (b) the global config has no effect on it *)
   OpamFormatConfig.init
     ?strict:(flag o.strict)
     (* ?skip_version_checks:bool *)
     (* ?all_parens:bool *)
     ();
-  let () = match OpamStateConfig.load root with
-    | None -> ()
-    | Some conf ->
-      OpamRepositoryConfig.update
-        ?download_tool:(OpamFile.Config.dl_tool conf >>| function
-          | (CString c,None)::_ as t
-            when OpamStd.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
-          | t -> lazy (t, `Default))
-        ();
-      let criteria kind =
-        let c = OpamFile.Config.criteria conf in
-        try Some (List.assoc kind c) with Not_found -> None
-      in
-      OpamSolverConfig.update
-        ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
-        ?solver_preferences_default:(criteria `Default >>| fun s-> Some(lazy s))
-        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
-        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
-        ();
-      OpamStateConfig.update
-        ~current_switch:(OpamFile.Config.switch conf)
-        ~switch_from:`Default
-        ~jobs:(OpamFile.Config.jobs conf)
-        ~dl_jobs:(OpamFile.Config.dl_jobs conf)
-        ()
+  let initialised =
+    OpamClientConfig.load_defaults root
   in
-
   (* (iii) load from env and options using OpamXxxGlobals.init_config *)
-  let log_dir = OpamFilename.(
-      if exists_dir root then Some (Dir.to_string Op.(root / "log"))
+  let log_dir =
+      if initialised then
+        Some OpamFilename.(Dir.to_string Op.(root / "log"))
       else None
-    ) in
+  in
   OpamStd.Config.init
     ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
     ?verbose_level:(if o.quiet then Some 0 else
@@ -2022,22 +1998,23 @@ let check_and_run_external_commands () =
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let conf_file = OpamStateConfig.load root_dir in
+    let initialised = OpamClientConfig.load_defaults root_dir in
     let env =
-      match conf_file with
-      | None -> Unix.environment ()
-      | Some c ->
-        let current_switch = OpamFile.Config.switch c in
-        OpamStateConfig.init ~root_dir ~current_switch ();
-        let t = OpamState.load_env_state "plugins"
-            OpamStateConfig.(!r.current_switch) in
-        let env = OpamState.get_full_env ~force_path:false t in
-        Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env)
+      if initialised then
+        (OpamStateConfig.init ~root_dir ();
+         let t =
+           OpamState.load_env_state "plugins"
+             OpamStateConfig.(!r.current_switch)
+         in
+         let env = OpamState.get_full_env ~force_path:false t in
+         Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env))
+      else
+        Unix.environment ()
     in
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
-    else if conf_file <> None then
+    else if initialised then
       (* Look for a corresponding package *)
       let t =
         OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
@@ -2054,12 +2031,17 @@ let check_and_run_external_commands () =
                                 Install it on the current switch?"
              name
         then
-          (Client.install [pkgname,None] None false;
+          (OpamRepositoryConfig.init ();
+           OpamSolverConfig.init ();
+           OpamClientConfig.init ();
+           Client.install [pkgname,None] None false;
            OpamConsole.header_msg "Carrying on to \"%s\""
              (String.concat " " (Array.to_list Sys.argv));
            OpamConsole.msg "\n";
            let argv = Array.of_list (command :: args) in
            raise (OpamStd.Sys.Exec (command, argv, env)))
+        else
+          OpamStd.Sys.exit 1
       with Not_found -> ()
 
 let run default commands =
