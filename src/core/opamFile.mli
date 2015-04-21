@@ -228,6 +228,10 @@ module OPAM: sig
   (** The package flags that are present for this package. *)
   val flags: t -> package_flag list
 
+  (** Check the package for the given flag. Allows flags specified through tags
+      for compatibility *)
+  val has_flag: package_flag -> t -> bool
+
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
 

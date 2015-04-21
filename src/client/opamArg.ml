@@ -805,7 +805,10 @@ let list =
        distribution, etc.). \
        Common tags include `debian', `x86', `osx', `homebrew', `source'... \
        Without $(i,TAGS), display the tags and all associated external \
-       dependencies."
+       dependencies. \
+       Rather than using this directly, you should probably head for the \
+       `depext' plugin, that can infer your system's tags and handle \
+       the system installations. Run `opam depext'."
       Arg.(some & list string) None in
   let list global_options print_short all installed
       installed_roots unavailable sort
@@ -1971,8 +1974,7 @@ let check_and_run_external_commands () =
         let candidates = Lazy.force t.available_packages in
         let nv = OpamPackage.max_version candidates pkgname in
         let opam = OpamPackage.Map.find nv t.opams in
-        if (List.mem Pkgflag_Plugin (OpamFile.OPAM.flags opam) ||
-            List.mem "flags:plugin" (OpamFile.OPAM.tags opam)) &&
+        if OpamFile.OPAM.has_flag Pkgflag_Plugin opam &&
            not (OpamState.is_name_installed t pkgname) &&
            OpamGlobals.confirm "OPAM plugin %s is not installed. \
                                 Install it on the current switch?"
