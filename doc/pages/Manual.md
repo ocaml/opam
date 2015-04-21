@@ -486,6 +486,11 @@ recommended to check the validity and quality of your `opam` files.
   the packages. The `"org:foo"` tag is reserved for packages officially
   distributed by organization ``foo''.
 
+  Tags in the form `"flags:<ident>"` can be used to pass meaningful `flags` to
+  OPAM: see the `flags:` field below. This is mostly intended for compatibility
+  with earlier releases in the 1.2 branch, which will complain about unknown
+  values in the `flags:` field.
+
 - `patches: [ <string> { <filter> } ... ]`: a list of files relative to the
   project source root (often added through the `files/` metadata subdirectory).
   The listed patch files will be applied sequentially to the source as with the
@@ -630,7 +635,9 @@ recommended to check the validity and quality of your `opam` files.
     - `verbose`: when this is present, the stdout of the package's build and
       install instructions will be printed to the user (since OPAM 1.2.1).
     - `plugin`: the package installs a program named `opam-<name>` and may be
-      auto-installed and run with `opam <name>` (since OPAM 1.2.2)
+      auto-installed and run with `opam <name>` (since OPAM 1.2.2 ; the use is
+      discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
+      instead)
 
 - `features: [ <ident> <string> { <filter> } ... ]` (EXPERIMENTAL): this field
   is currently experimental and shouldn't be used on the main package

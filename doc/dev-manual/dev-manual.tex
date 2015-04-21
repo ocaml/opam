@@ -526,13 +526,17 @@ depends: [
   \item{\tt light-uninstall} the package's uninstall instructions don't require the
     package source. This is currently inferred when the only uninstall
     instructions have the form `ocamlfind remove...`, but making it explicit is
-    preferred (since OPAM 1.2.0).
+    preferred (since \OPAM\ 1.2.0).
   \item{\tt verbose} when this is present, the stdout of the package's build and
     install instructions will be printed to the user (since \OPAM\ 1.2.1).
   \item{\tt plugin} the package installs a program named \verb+opam-$NAME+. OPAM
     will hand over to it when run with subcommand \verb+$NAME+, automatically
-    installing it if necessary.
+    installing it if necessary (since \OPAM\ 1.2.2).
   \end{description}
+  Since some of those wheren't known in \OPAM\ 1.2.0, which will complain about
+  them, they shouldn't be used in the 1.2 branch. Using a {\tt flags:foo} {\em
+    tag} instead is thus allowed as a compatible way to activate flag {\tt foo}
+  on 1.2.x versions.
 
 \item {\tt features} is currently experimental and shouldn't be used on the main
   package repository. It allows to define custom variables that better document
