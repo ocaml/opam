@@ -17,7 +17,7 @@ open OpamTypes
 open OpamStd.Option.Op
 ;;
 
-OpamGlobals.all_parens := true;;
+OpamFormatConfig.update ~all_parens:true;;
 
 let rewrite_constraint ~conj = (* Rewrites '!=' *)
   OpamFormula.map OpamFormula.(function

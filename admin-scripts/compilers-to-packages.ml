@@ -28,7 +28,7 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
       (OpamCompiler.to_string (OpamFile.Comp.name comp))
   in
   let nv = OpamPackage.create (OpamPackage.Name.of_string "ocaml") version in
-  (* OpamGlobals.msg "Processing compiler %s => package %s\n" *)
+  (* OpamConsole.msg "Processing compiler %s => package %s\n" *)
   (*   (OpamCompiler.to_string (OpamFile.Comp.name comp)) *)
   (*   (OpamPackage.to_string nv); *)
   let nofilter x = x, (None: filter option) in
@@ -49,8 +49,8 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
     OpamParallel.map
       ~jobs:3
       ~command:(fun f ->
-        OpamFilename.download ~overwrite:true f
-          (OpamPath.Repository.files repo prefix nv)
+        OpamDownload.download ~overwrite:true f
+          (OpamRepositoryPath.files repo prefix nv)
         @@| OpamFilename.basename)
       (OpamFile.Comp.patches comp)
   in
@@ -67,10 +67,10 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
    | Some address ->
      let adr,kind = OpamTypesBase.parse_url address in
      let url = OpamFile.URL.create kind adr in
-     OpamFile.URL.write (OpamPath.Repository.url repo prefix nv) url);
-  OpamFile.OPAM.write (OpamPath.Repository.opam repo prefix nv) opam;
+     OpamFile.URL.write (OpamRepositoryPath.url repo prefix nv) url);
+  OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
   OpamStd.Option.iter
-    (OpamFile.Descr.write (OpamPath.Repository.descr repo prefix nv))
+    (OpamFile.Descr.write (OpamRepositoryPath.descr repo prefix nv))
     descr;
   let comp =
     let module C = OpamFile.Comp in
@@ -120,7 +120,7 @@ iter_packages ~opam:(fun nv opam ->
               | Some f1, Some f2 -> Some (FOr (f1,f2))
               | None, None -> None
               | None, f | f, None ->
-                OpamGlobals.error_and_exit "Unconvertible 'available' field in %s"
+                OpamConsole.error_and_exit "Unconvertible 'available' field in %s"
                   (OpamPackage.to_string nv))
           | f -> Some f
         in

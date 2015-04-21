@@ -31,8 +31,8 @@ let () =
           else
             includes := int_of_string a :: !includes
         with Failure _ ->
-          OpamGlobals.msg "%s" usage;
-          OpamGlobals.exit 2)
+          OpamConsole.msg "%s" usage;
+          OpamStd.Sys.exit 2)
     args
 
 let () =
@@ -48,14 +48,14 @@ let () =
         if !list then
           print_endline (OpamPackage.to_string nv)
         else if !short then
-          OpamGlobals.msg "%s %s\n" (OpamPackage.to_string nv)
+          OpamConsole.msg "%s %s\n" (OpamPackage.to_string nv)
             (OpamStd.List.concat_map " " (fun (n,k,_) ->
-                 OpamGlobals.colorise
+                 OpamConsole.colorise
                    (match k with `Warning -> `yellow | `Error -> `red)
                    (string_of_int n))
                 w)
         else
-          OpamGlobals.msg "\r\027[KIn %s:\n%s\n"
+          OpamConsole.msg "\r\027[KIn %s:\n%s\n"
             (OpamPackage.to_string nv)
             (OpamFile.OPAM.warns_to_string w);
       opam
