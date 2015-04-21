@@ -123,6 +123,14 @@ let apply_global_options o =
   (* (i) get root dir *)
   let root = OpamStateConfig.opamroot ?root_dir:o.opt_root () in
   (* (ii) load conf file and set defaults *)
+  (* the init for OpamFormat is done in advance of step (iii) since (a) it has
+     an effect on loading the global config (b) the global config has no effect
+     on it *)
+  OpamFormatConfig.init
+    ?strict:(flag o.strict)
+    (* ?skip_version_checks:bool *)
+    (* ?all_parens:bool *)
+    ();
   let () = match OpamStateConfig.load root with
     | None -> ()
     | Some conf ->
@@ -167,11 +175,6 @@ let apply_global_options o =
     (* ?lock_retries:int *)
     ?log_dir
     (* ?keep_log_dir:bool *)
-    ();
-  OpamFormatConfig.init
-    ?strict:(flag o.strict)
-    (* ?skip_version_checks:bool *)
-    (* ?all_parens:bool *)
     ();
   OpamRepositoryConfig.init
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
