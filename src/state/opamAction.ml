@@ -300,7 +300,7 @@ let removal_needs_download t nv =
       (OpamPackage.to_string nv);
     false
   | Some opam ->
-    if List.mem Pkgflag_LightUninstall (OpamFile.OPAM.flags opam) then true
+    if OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam then true
     else
     let commands =
       OpamFilter.commands (OpamState.filter_env ~opam t)
@@ -519,7 +519,7 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
         ~verbose:(OpamConsole.verbose ()) ~check_existence:false
         cmd args
       @@> fun result ->
-      if List.mem Pkgflag_Verbose (OpamFile.OPAM.flags opam) then
+      if OpamFile.OPAM.has_flag Pkgflag_Verbose opam then
         List.iter (OpamConsole.msg "%s\n") result.OpamProcess.r_stdout;
       if OpamProcess.is_success result then
         run_commands commands

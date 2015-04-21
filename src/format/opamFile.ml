@@ -1153,6 +1153,10 @@ module X = struct
     let opam_version t = t.opam_version
     let bug_reports t = t.bug_reports
     let flags t = t.flags
+    let has_flag f t =
+      List.mem f t.flags ||
+      (* Allow in tags for compatibility *)
+      List.mem ("flags:"^OpamFormat.(parse_ident (make_flag f))) t.tags
     let dev_repo t = t.dev_repo
 
     let with_opam_version t opam_version = { t with opam_version }
@@ -1617,10 +1621,12 @@ module X = struct
         cond 37 `Warning
           "Missing field 'dev-repo'"
           (t.dev_repo = None);
+(*
         cond 38 `Warning
           "Package declares 'depexts', but has no 'post-messages' to help \
            the user out when they are missing"
           (t.depexts <> None && t.post_messages = []);
+*)
         cond 39 `Error
           "Command 'make' called directly, use the built-in variable \
            instead"
@@ -1632,6 +1638,14 @@ module X = struct
           "Field 'features' is still experimental and not yet to be used on \
            the official repo"
           (t.features <> []);
+        cond 40 `Warning
+          "Package uses flags that aren't recognised by earlier versions in \
+           the 1.2 branch. At the moment, you should use a tag \"flags:foo\" \
+           instead for compatibility."
+          (List.exists (function
+               | Pkgflag_LightUninstall | Pkgflag_Unknown _ -> false
+               | _ -> true)
+              t.flags);
         cond 41 `Warning
           "Some packages are mentionned in package scripts of features, but \
            there is no dependency or depopt toward them"

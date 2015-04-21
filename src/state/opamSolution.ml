@@ -47,19 +47,24 @@ let post_message ?(failed=false) state action =
           else None)
         messages
     in
-    if messages = [] then () else
-    let mark = "=> " in
-    let indent = String.make (String.length mark) ' ' in
-    let mark = OpamConsole.colorise (if failed then `red else `green) mark in
-    OpamConsole.header_msg "%s %s"
-      (OpamPackage.to_string pkg)
-      (if failed then "troubleshooting" else "installed successfully");
-    let rex = Re_pcre.regexp "\n" in
-    List.iter (fun msg ->
-        OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
-          "%s%s\n" mark
-          (Re_pcre.substitute ~rex ~subst:(fun s -> s^indent) msg))
-      messages
+    let mark = OpamConsole.colorise (if failed then `red else `green) "=> " in
+    if messages <> [] then (
+      OpamConsole.header_msg "%s %s"
+        (OpamPackage.to_string pkg)
+        (if failed then "troubleshooting" else "installed successfully");
+      List.iter (fun msg ->
+          OpamConsole.formatted_msg
+            ~indent:(OpamStd.Format.visual_length mark)
+            "%s%s\n" mark msg)
+        messages
+    ) else if failed && OpamFile.OPAM.depexts opam <> None then (
+      OpamConsole.header_msg "%s troobleshooting" (OpamPackage.to_string pkg);
+      OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
+        "%sThis package relies on external (system) dependencies that may \
+         be missing. `opam depext %s' may help you find the correct \
+         installation for your system.\n"
+        mark (OpamPackage.to_string pkg)
+    )
 
 let check_solution state = function
   | No_solution ->
