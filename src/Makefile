@@ -294,8 +294,10 @@ export PROJ_opamlfind
 opam-admin.top: opam-lib.byte ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam-admin-top SUBTARGET=top
 
+SRC_opam_admin_top = opam_admin_top.ml
+
 define PROJ_opam-admin-top
-  SOURCES = tools/opam_admin_top.ml
+  SOURCES = $(call addmli,tools,$(SRC_opam_admin_top))
   RESULT = opam-admin
   LIBS = $(LIBS) $(OPAMLIB)
 endef
@@ -315,6 +317,10 @@ endef
 	{ $(patsubst %,echo '  "src/'%'"';,\
 	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
 	} >>$@
+	{ $(patsubst %,echo '  "src/'%'"';,\
+	    $(wildcard \
+	      $(addprefix tools/opam_admin_top.,mli cmi cmx cmxs cmti)))\
+	} >>$@
 	@echo ']' >>$@
 	@echo 'bin: [' >>$@
 	@echo '  "src/opam-admin.top"' >>$@
@@ -331,8 +337,10 @@ OCAMLMAKEFILE = ../OCamlMakefile
 export OCAMLMAKEFILE
 
 clean-aux:
-	rm -f $(OPAMLIB:=.cma) $(OPAMLIB:=.cmxa) $(OPAMLIB:=.a) $(TOOLS) opam-admin.top opam_admin_top.*
-	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli
+	rm -f $(foreach e,a cma cmxa,$(wildcard *.$e))
+	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
+	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
+	rm -f $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
 
 clean: clean-aux
 

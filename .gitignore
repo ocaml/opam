@@ -42,10 +42,10 @@ config.status
 src/client/opamGitVersion.ml
 src/client/opamScript.ml
 src/core/opamVersion.ml
-src/core/opamLexer.ml
-src/core/opamLineLexer.ml
-src/core/opamParser.ml
-src/core/opamParser.mli
+src/format/opamLexer.ml
+src/format/opamLineLexer.ml
+src/format/opamParser.ml
+src/format/opamParser.mli
 src/core/opamCompat.ml
 src/core/opamCompat.mli
 src/opam
