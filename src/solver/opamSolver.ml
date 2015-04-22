@@ -408,7 +408,9 @@ let check_for_conflicts universe =
 
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
-    OpamPackage.Set.add (OpamCudf.cudf2opam (action_contents action)) packages
+      match action with
+      | To_change (_,p) -> OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
+      | To_recompile _ | To_delete _ -> packages
   ) sol OpamPackage.Set.empty
 
 let stats sol =

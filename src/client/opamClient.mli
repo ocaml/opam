@@ -36,7 +36,7 @@ module API: sig
     exact_name:bool ->
     case_sensitive:bool ->
     ?depends:(atom list) ->
-    ?reverse_depends:bool -> ?recursive_depends:bool ->
+    ?reverse_depends:bool -> ?recursive_depends:bool -> ?resolve_depends:bool ->
     ?depopts:bool -> ?depexts:string list ->
     string list ->
     unit
