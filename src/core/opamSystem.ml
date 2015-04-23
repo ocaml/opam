@@ -692,7 +692,7 @@ let choose_download_tool () =
 
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
-  let wget ~compress:_ dir src =
+  let wget ~compress:_ ?checksum dir src =
     let wget_args = [
       "--content-disposition"; "--no-check-certificate";
       "-t"; retry;
@@ -702,7 +702,7 @@ let download_command =
     raise_on_process_error r;
     Done ()
   in
-  let curl command ~compress dir src =
+  let curl command ~compress ?checksum dir src =
     let curl_args = [
       "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
@@ -720,9 +720,10 @@ let download_command =
         OpamMisc.fatal e;
         internal_error "curl: code %s while downloading %s" code src
   in
-  let custom dl_cmd ~compress dir src =
+  let custom dl_cmd ~compress ?checksum dir src =
     let dst = Filename.basename src in
-    match dl_cmd ~url:src ~out:dst ~retry:OpamGlobals.download_retry ~compress
+    match dl_cmd ~url:src ~out:dst ~retry:OpamGlobals.download_retry ?checksum
+            ~compress
     with
     | cmd::args ->
       make_command ~dir cmd args @@> fun r ->
@@ -737,10 +738,10 @@ let download_command =
     | `Custom cust -> custom cust
   )
 
-let really_download ~overwrite ?(compress=false) ~src ~dst =
+let really_download ~overwrite ?(compress=false) ?checksum ~src ~dst =
   let download = (Lazy.force download_command) in
   let aux dir =
-    download ~compress dir src @@+ fun () ->
+    download ~compress ?checksum dir src @@+ fun () ->
     match list (fun _ -> true) dir with
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
@@ -761,7 +762,7 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
         raise e)
     (with_tmp_dir_job aux)
 
-let download ~overwrite ?compress ~filename:src ~dst:dst =
+let download ~overwrite ?compress ?checksum ~filename:src ~dst:dst =
   if dst = src then
     Done dst
   else if Sys.file_exists src then (
@@ -771,7 +772,7 @@ let download ~overwrite ?compress ~filename:src ~dst:dst =
     OpamProcess.command ~verbose:(verbose_for_base_commands ()) "cp" [src; dst]
     @@> fun r -> raise_on_process_error r; Done dst
   ) else
-    really_download ~overwrite ?compress ~src ~dst
+    really_download ~overwrite ?compress ?checksum ~src ~dst
 
 let patch p =
   let max_trying = 5 in

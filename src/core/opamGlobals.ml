@@ -196,7 +196,8 @@ type download_tool = [
   | `Wget
   | `Curl
   | `Custom of
-      url:string -> out:string -> retry:int -> compress:bool -> string list
+      url:string -> out:string -> retry:int -> ?checksum:string ->
+      compress:bool -> string list
 ]
 let download_tool = ref None
 
