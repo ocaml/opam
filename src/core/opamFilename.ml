@@ -300,16 +300,16 @@ let remove_suffix suffix filename =
   let filename = to_string filename in
   OpamMisc.remove_suffix ~suffix filename
 
-let download ~overwrite ?compress filename dirname =
+let download ~overwrite ?compress ?checksum filename dirname =
   mkdir dirname;
   let dst = to_string (create dirname (basename filename)) in
-  OpamSystem.download ~overwrite ?compress
+  OpamSystem.download ~overwrite ?compress ?checksum
     ~filename:(to_string filename) ~dst
   @@+ fun file -> Done (of_string file)
 
-let download_as ~overwrite ?(compress=false) filename dest =
+let download_as ~overwrite ?(compress=false) ?checksum filename dest =
   mkdir (dirname dest);
-  OpamSystem.download ~overwrite ~compress
+  OpamSystem.download ~overwrite ~compress ?checksum
     ~filename:(to_string filename) ~dst:(to_string dest)
   @@+ fun file ->
   assert (file = to_string dest);

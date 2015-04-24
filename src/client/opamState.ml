@@ -1546,7 +1546,7 @@ let load_config root =
     | None -> OpamFile.Config.dl_tool config
   in
   let dl_command cmd =
-    fun ~url ~out ~retry ~compress ->
+    fun ~url ~out ~retry ?(checksum="") ~compress ->
       OpamFilter.single_command (fun v ->
           if not (is_global_conf v) then None else
           match OpamVariable.to_string (OpamVariable.Full.variable v) with
@@ -1554,6 +1554,7 @@ let load_config root =
           | "out" -> Some (S out)
           | "retry" -> Some (S (string_of_int retry))
           | "compress" -> Some (B compress)
+          | "checksum" -> Some (S checksum)
           | _ -> None)
         cmd
   in

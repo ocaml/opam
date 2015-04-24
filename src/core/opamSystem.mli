@@ -214,7 +214,7 @@ val funlock: lock -> unit
 (** {2 Misc} *)
 
 (** download compiler sources *)
-val download: overwrite:bool -> ?compress:bool ->
+val download: overwrite:bool -> ?compress:bool -> ?checksum:string ->
   filename:string -> dst:string -> string OpamProcess.job
 
 (** Apply a patch file in the current directory. *)

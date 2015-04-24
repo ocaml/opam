@@ -1287,7 +1287,8 @@ module API = struct
            check_external_dep "wget" ||
            (match !OpamGlobals.download_tool with
             | Some (`Custom f) ->
-              (match f ~url:"" ~out:"-" ~retry:1 ~compress:false with
+              (match f ~url:"" ~out:"-" ~retry:1 ~checksum:"" ~compress:false
+               with
                | cmd::_ -> check_external_dep cmd
                | [] -> false)
             | _ -> false);
