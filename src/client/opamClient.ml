@@ -446,7 +446,9 @@ module API = struct
         print_header ();
       print_list t ~uninst_versions:depends_mode ~short:print_short
         ~shortv:resolve_depends ~order details;
-      if OpamPackage.Name.Map.is_empty details then OpamGlobals.exit 1
+      if regexp <> [] &&
+         OpamPackage.Name.Map.is_empty details
+      then OpamGlobals.exit 1
 
   let info ~fields ~raw_opam ~where atoms =
     let t = OpamState.load_state "info" in
