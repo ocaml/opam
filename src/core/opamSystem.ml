@@ -692,7 +692,7 @@ let choose_download_tool () =
 
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
-  let wget ~compress:_ ?checksum dir src =
+  let wget ~compress:_ ?checksum:_ dir src =
     let wget_args = [
       "--content-disposition"; "--no-check-certificate";
       "-t"; retry;
@@ -702,7 +702,7 @@ let download_command =
     raise_on_process_error r;
     Done ()
   in
-  let curl command ~compress ?checksum dir src =
+  let curl command ~compress ?checksum:_ dir src =
     let curl_args = [
       "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
