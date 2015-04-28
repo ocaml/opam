@@ -136,10 +136,11 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
   let oldcwd = Sys.getcwd () in
   let cwd = OpamStd.Option.default oldcwd dir in
   OpamStd.Option.iter Unix.chdir dir;
-  let stdin_fd =
-    if allow_stdin then Unix.stdin else
+  let stdin_fd,close_stdin =
+    if allow_stdin then Unix.stdin, nothing else
     let fd,outfd = Unix.pipe () in
-    Unix.close outfd; fd
+    let close_stdin () = Unix.close fd in
+    Unix.close outfd; fd, close_stdin
   in
   let stdout_fd, close_stdout = match stdout_file with
     | None   -> Unix.stdout, nothing
@@ -181,6 +182,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       (Array.of_list (cmd :: args))
       env
       stdin_fd stdout_fd stderr_fd in
+  close_stdin  ();
   close_stdout ();
   close_stderr ();
   Unix.chdir oldcwd;

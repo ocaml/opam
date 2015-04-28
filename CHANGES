@@ -13,6 +13,13 @@
 * Added package universe output to new PEF format for diagnostics
 * Prioritise newer versions even when the latest can't be installed (#2109)
 * Automatically install plugins on `opam plugin-name` (#2092)
+* Fixed a fd leak on solver calls (#2134)
+* Accept opam files with errors when no debug or strict options are set, for
+  easier format updates
+* Add `opam list --resolve` to get dependencies as a consistent set of packages
+* Provide the expected checksum to download commands
+* Changed return code of `opam list` when no patterns are supplied and the list
+  is empty
 
 1.2.1
 * Non-system compiler definitions without source are now allowed

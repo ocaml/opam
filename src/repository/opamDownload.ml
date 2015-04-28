@@ -40,7 +40,7 @@ let wget_args = [
   CIdent "url", None;
 ]
 
-let download_args ~url ~out ~retry ~compress =
+let download_args ~url ~out ~retry ?checksum ~compress =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
@@ -57,6 +57,7 @@ let download_args ~url ~out ~retry ~compress =
       | "out" -> Some (S out)
       | "retry" -> Some (S (string_of_int retry))
       | "compress" -> Some (B compress)
+      | "checksum" -> OpamStd.Option.map (fun c -> S c) checksum
       | _ -> None)
     cmd
 
@@ -75,13 +76,14 @@ let tool_return src ret =
         OpamSystem.internal_error "curl: code %s while downloading %s" code src
       else Done ()
 
-let download_command ~compress ~src ~dst =
+let download_command ~compress ?checksum ~src ~dst =
   let cmd, args =
     match
       download_args
         ~url:src
         ~out:dst
         ~retry:OpamRepositoryConfig.(!r.retries)
+        ?checksum
         ~compress
     with
     | cmd::args -> cmd, args
@@ -89,7 +91,7 @@ let download_command ~compress ~src ~dst =
   in
   OpamSystem.make_command cmd args @@> tool_return src
 
-let really_download ~overwrite ?(compress=false) ~src ~dst =
+let really_download ~overwrite ?(compress=false) ?checksum ~src ~dst =
   let tmp_dst = dst ^ ".part" in
   if Sys.file_exists tmp_dst then OpamSystem.remove tmp_dst;
   OpamProcess.Job.catch
@@ -103,7 +105,7 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
         OpamStd.Exn.fatal e;
         log "Could not download file at %s." src;
         raise e)
-    (download_command ~compress ~src ~dst:tmp_dst
+    (download_command ~compress ?checksum ~src ~dst:tmp_dst
      @@+ fun () ->
      if not (Sys.file_exists tmp_dst) then
        OpamSystem.internal_error "Downloaded file not found"
@@ -112,7 +114,7 @@ let really_download ~overwrite ?(compress=false) ~src ~dst =
      OpamSystem.mv tmp_dst dst;
      Done ())
 
-let download_as ~overwrite ?compress src dst =
+let download_as ~overwrite ?compress ?checksum src dst =
   if dst = src then Done () else
   if OpamFilename.exists src then (
     if OpamFilename.exists dst then
@@ -123,11 +125,11 @@ let download_as ~overwrite ?compress src dst =
     Done ()
   ) else (
     OpamFilename.(mkdir (dirname dst));
-    really_download ~overwrite ?compress
+    really_download ~overwrite ?compress ?checksum
       ~src:(OpamFilename.to_string src)
       ~dst:(OpamFilename.to_string dst)
   )
 
-let download ~overwrite ?compress src dstdir =
+let download ~overwrite ?compress ?checksum src dstdir =
   let dst = OpamFilename.(create dstdir (basename src)) in
-  download_as ~overwrite ?compress src dst @@| fun () -> dst
+  download_as ~overwrite ?compress ?checksum src dst @@| fun () -> dst

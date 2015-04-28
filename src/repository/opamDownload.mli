@@ -18,10 +18,12 @@
     tool, to the given directory. Returns the downloaded filename.
     FIXME: The source OpamFilename.t is indeed a URL. *)
 val download:
-  overwrite:bool -> ?compress:bool -> OpamFilename.t -> OpamFilename.Dir.t ->
+  overwrite:bool -> ?compress:bool -> ?checksum:string ->
+  OpamFilename.t -> OpamFilename.Dir.t ->
   OpamFilename.t OpamProcess.job
 
 (** As [download], but with a specified output filename. *)
 val download_as:
-  overwrite:bool -> ?compress:bool -> OpamFilename.t -> OpamFilename.t ->
+  overwrite:bool -> ?compress:bool -> ?checksum:string ->
+  OpamFilename.t -> OpamFilename.t ->
   unit OpamProcess.job

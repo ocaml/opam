@@ -281,7 +281,8 @@ let help_sections = [
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
       a custom command where variables $(b,%{url}%), $(b,%{out}%), \
-      $(b,%{retries}%) and $(b,%{compress}%) will be replaced. Overrides the \
+      $(b,%{retries}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
+      be replaced. Overrides the \
       'download-command' value from the main config file.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \

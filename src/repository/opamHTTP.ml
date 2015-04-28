@@ -220,7 +220,7 @@ module B = struct
     else
     OpamProcess.Job.catch
       (fun e -> OpamStd.Exn.fatal e; Done (Not_available remote_url)) @@
-    OpamDownload.download ~overwrite:true filename dirname
+    OpamDownload.download ~overwrite:true ?checksum filename dirname
     @@+ fun local_file ->
     if OpamRepositoryBackend.check_digest local_file checksum then
       (OpamConsole.msg "[%s] %s downloaded\n"
