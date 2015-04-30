@@ -1961,7 +1961,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
     let default = OpamStateConfig.(default.root_dir) in
     let current_string = OpamFilename.Dir.to_string current in
     let env = OpamStd.Env.getopt "OPAMROOT" in
-    if current <> default || Some current_string <> env
+    if current <> default || (env <> None && env <> Some current_string)
     then [ "OPAMROOT", "=", current_string ]
     else []
   in
