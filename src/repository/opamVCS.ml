@@ -27,6 +27,7 @@ module type VCS = sig
   val diff: repository -> bool OpamProcess.job
   val revision: repository -> string OpamProcess.job
   val versionned_files: repository -> string list OpamProcess.job
+  val vc_dir: repository -> dirname
 end
 
 
@@ -50,6 +51,11 @@ module Make (VCS: VCS) = struct
     in
     VCS.versionned_files source_repo
     @@+ fun files ->
+    let files =
+      List.map OpamFilename.(remove_prefix source_repo.repo_root)
+        (OpamFilename.rec_files (VCS.vc_dir source_repo))
+      @ files
+    in
     let stdout_file =
       let f = OpamSystem.temp_file "rsync-files" in
       let fd = open_out f in
@@ -58,6 +64,7 @@ module Make (VCS: VCS) = struct
       f
     in
     OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
+      ~exclude_vcdirs:false
       (OpamFilename.Dir.of_string (fst repo.repo_address))
       repo.repo_root
     @@+ fun dl ->

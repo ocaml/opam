@@ -52,10 +52,21 @@ let call_rsync check args =
     Done None
   | _ -> OpamSystem.process_error r
 
-let rsync ?(args=[]) src dst =
+let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
   log "rsync: src=%s dst=%s" src dst;
   let remote = String.contains src ':' in
   let norm d = Filename.concat d "" in
+  let exclude_args =
+    if exclude_vcdirs then [
+      "--exclude"; ".git";
+      "--exclude"; "_darcs";
+      "--exclude"; ".hg";
+      "--exclude"; ".#*";
+    ]
+    else [
+      "--exclude"; ".#*";
+    ]
+  in
   if not(remote || Sys.file_exists src) then
     Done (Not_available src)
   else if src = dst then
@@ -68,20 +79,15 @@ let rsync ?(args=[]) src dst =
   else (
     OpamSystem.mkdir dst;
     call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
-      ( rsync_arg :: args @ [
-            "--exclude"; ".git";
-            "--exclude"; "_darcs";
-            "--exclude"; ".hg";
-            "--exclude"; ".#*";
-            "--delete";
-            src; dst; ])
+      ( rsync_arg :: args @ exclude_args @
+        [ "--delete"; src; dst; ])
     @@| function
     | None -> Not_available src
     | Some [] -> Up_to_date []
     | Some lines -> Result lines
   )
 
-let rsync_dirs ?args src dst =
+let rsync_dirs ?args ?exclude_vcdirs src dst =
   let src_s =
     (* ensure trailing '/' *)
     Filename.concat (OpamFilename.Dir.to_string src) ""
@@ -89,7 +95,7 @@ let rsync_dirs ?args src dst =
   let dst_s = OpamFilename.Dir.to_string dst in
   let remote = String.contains src_s ':' in
   if not remote then OpamFilename.mkdir src;
-  rsync ?args src_s dst_s @@| function
+  rsync ?args ?exclude_vcdirs src_s dst_s @@| function
   | Not_available s -> Not_available s
   | Result _        ->
     if OpamFilename.exists_dir dst then Result dst

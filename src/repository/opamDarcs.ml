@@ -67,6 +67,8 @@ module Darcs = struct
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout
 
+  let vc_dir repo = OpamFilename.Op.(repo.repo_root / "_darcs")
+
 end
 
 module B = OpamVCS.Make(Darcs)

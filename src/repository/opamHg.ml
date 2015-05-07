@@ -87,6 +87,9 @@ module Hg = struct
     hg repo [ "locate" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout
+
+  let vc_dir repo = OpamFilename.Op.(repo.repo_root / ".hg")
+
 end
 
 module B = OpamVCS.Make(Hg)

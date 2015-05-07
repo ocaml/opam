@@ -48,6 +48,10 @@ module type VCS = sig
 
   (** Returns the list of files under version control *)
   val versionned_files: repository -> string list OpamProcess.job
+
+  (** Returns the absolute directory name for vc data (e.g.
+      [.../project/.git]) *)
+  val vc_dir: repository -> dirname
 end
 
 (** Create a backend from a [VCS] implementation. *)
