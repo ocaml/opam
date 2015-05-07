@@ -1,4 +1,4 @@
-> NOTE: 1.2.1 is just being released. It may take a few days before binary
+> NOTE: 1.2.2 is just being released. It may take a few days before binary
 > distributions catch up
 
 # How to install OPAM
@@ -172,6 +172,9 @@ Sources of the latest stable version of OPAM are available on Github:
 You can also download the full archives, including OPAM dependencies (these
 don't require any extra downloads, just the OCaml compiler -- 3.12.1 or later):
 
+* [1.2.2](https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz)
+  MD5: 150a4f29999ad2987594f5eae8c93992
+  SHA1: f2a8530d330fb244103fd4f0bda8f3d43c33c89d
 * [1.2.1](https://github.com/ocaml/opam/releases/download/1.2.1/opam-full-1.2.1.tar.gz)
   MD5: 04e8823a099ab631943952e4c2ab18fc
   SHA1: 189e309ee0659723abaaad5f887f5caf89b34422
