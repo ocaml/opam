@@ -1505,8 +1505,15 @@ module X = struct
       }
 
     let validate t =
-      let cond num level msg cd =
-        if cd then Some (num, level, msg) else None
+      let cond num level msg ?detail cd =
+        if cd then
+          let msg = match detail with
+            | Some d ->
+              Printf.sprintf "%s: \"%s\"" msg (String.concat "\", \"" d)
+            | None -> msg
+          in
+          Some (num, level, msg)
+        else None
       in
       let names_of_formula flag f =
         OpamPackage.Name.Set.of_list @@
@@ -1536,30 +1543,36 @@ module X = struct
       in
       let warnings = [
         cond 20 `Warning
-          "Field 'opam-version' refers to the patch version of opam, should \
-           be of the form MAJOR.MINOR"
-          (OpamVersion.nopatch t.opam_version <> t.opam_version) ;
+          "Field 'opam-version' refers to the patch version of opam, it \
+           should be of the form MAJOR.MINOR"
+          ~detail:[OpamVersion.to_string t.opam_version]
+          (OpamVersion.nopatch t.opam_version <> t.opam_version);
         cond 21 `Error
           "Field 'opam-version' doesn't match the current version, \
            validation may not be accurate"
-          (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0 &&
-           OpamVersion.compare t.opam_version OpamVersion.current <> 0);
+          ~detail:[OpamVersion.to_string t.opam_version]
+          (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0);
 (*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
           cond (t.version = None)
             "Missing field 'version' or directory in the form 'name.version'";
 *)
-        cond 22 `Error
+        (let empty_fields =
+           OpamStd.List.filter_map (function n,[""] -> Some n | _ -> None)
+             [s_maintainer, t.maintainer; s_homepage, t.homepage;
+              s_author, t.author; s_license, t.license; s_doc, t.doc;
+              s_tags, t.tags; s_bug_reports, t.bug_reports]
+         in
+         cond 22 `Error
           "Some fields are present but empty; remove or fill them"
-          (t.maintainer = [""] || t.homepage = [""] || t.author = [""] ||
-           t.license = [""] || t.doc = [""] || t.tags = [""] ||
-           t.bug_reports = [""]);
+          ~detail:empty_fields
+          (empty_fields <> []));
         cond 23 `Error
           "Missing field 'maintainer'"
           (t.maintainer = []);
         cond 24 `Error
-          "Field 'maintainer' set to the old default value"
+          "Field 'maintainer' has the old default value"
           (List.mem "contact@ocamlpro.com" t.maintainer &&
            not (List.mem "org:ocamlpro" t.tags));
         cond 25 `Error
@@ -1574,28 +1587,44 @@ module X = struct
           "No field 'remove' while a field 'install' is present, uncomplete \
            uninstallation suspected"
           (t.install <> [] && t.remove = []);
-        cond 28 `Error
-          "Unknown package flag found"
-          (List.exists (function Pkgflag_Unknown _ -> true | _ -> false) t.flags);
-        cond 29 `Error
-          "Unknown dependency flags in depends or depopts"
-          (OpamFormula.fold_left (fun acc (_, (flags, _)) ->
-               acc || List.exists
-                 (function Depflag_Unknown _ -> true | _ -> false)
-                 flags)
-              false (OpamFormula.ands [t.depends;t.depopts]));
+        (let unk_flags =
+           OpamStd.List.filter_map (function
+               | Pkgflag_Unknown s -> Some s
+               | _ -> None)
+             t.flags
+         in
+         cond 28 `Error
+           "Unknown package flags found"
+           ~detail:unk_flags
+           (unk_flags <> []));
+        (let unk_depflags =
+           OpamFormula.fold_left (fun acc (_, (flags, _)) ->
+               OpamStd.List.filter_map
+                 (function Depflag_Unknown s -> Some s | _ -> None)
+                 flags
+               @ acc)
+             [] (OpamFormula.ands [t.depends;t.depopts])
+         in
+         cond 29 `Error
+           "Unknown dependency flags in depends or depopts"
+           ~detail:unk_depflags
+           (unk_depflags <> []));
         cond 30 `Error
           "Field 'depopts' contains formulas or version constraints"
           (List.exists (function
                | OpamFormula.Atom (_, (_,Empty)) -> false
                | _ -> true)
               (OpamFormula.ors_to_list t.depopts));
-        cond 31 `Error
-          "Fields 'depends' and 'depopts' refer to the same package names"
-          (not OpamPackage.Name.Set.(
-               is_empty @@ inter
-                 (names_of_formula false t.depends)
-                 (names_of_formula true t.depopts)));
+        (let dup_depends =
+           OpamPackage.Name.Set.inter
+             (names_of_formula false t.depends)
+             (names_of_formula true t.depopts)
+         in
+         cond 31 `Error
+           "Fields 'depends' and 'depopts' refer to the same package names"
+           ~detail:OpamPackage.Name.
+                     (List.map to_string (Set.elements dup_depends))
+           (not (OpamPackage.Name.Set.is_empty dup_depends)));
         cond 32 `Error
           "Field 'ocaml-version' is deprecated, use 'available' and the \
            'ocaml-version' variable instead"
@@ -1604,12 +1633,16 @@ module X = struct
           "Field 'os' is deprecated, use 'available' and the 'os' variable \
            instead"
           (t.os <> Empty);
-        cond 34 `Error
-          "Field 'available' contains references to package-local variables. \
-           It should only be determined from global configuration variables"
-          (List.exists (fun v -> OpamVariable.Full.package v <>
+        (let pkg_vars =
+           List.filter (fun v -> OpamVariable.Full.package v <>
                                  OpamPackage.Name.global_config)
-             (OpamFilter.variables t.available));
+             (OpamFilter.variables t.available)
+         in
+         cond 34 `Error
+           "Field 'available' contains references to package-local variables. \
+            It should only be determined from global configuration variables"
+           ~detail:(List.map OpamVariable.Full.to_string pkg_vars)
+           (pkg_vars <> []));
         cond 35 `Error
           "Missing field 'homepage'"
           (t.homepage = []);
@@ -1638,23 +1671,34 @@ module X = struct
           "Field 'features' is still experimental and not yet to be used on \
            the official repo"
           (t.features <> []);
-        cond 40 `Warning
-          "Package uses flags that aren't recognised by earlier versions in \
-           the 1.2 branch. At the moment, you should use a tag \"flags:foo\" \
-           instead for compatibility."
-          (List.exists (function
-               | Pkgflag_LightUninstall | Pkgflag_Unknown _ -> false
-               | _ -> true)
-              t.flags);
-        cond 41 `Warning
-          "Some packages are mentionned in package scripts of features, but \
-           there is no dependency or depopt toward them"
-          (List.exists (fun v ->
-               let n = OpamVariable.Full.package v in
-               n <> OpamPackage.Name.global_config &&
-               Some n <> t.name &&
-               not (OpamPackage.Name.Set.mem n all_depends))
-             all_variables);
+        (let alpha_flags =
+           OpamStd.List.filter_map (function
+               | Pkgflag_LightUninstall | Pkgflag_Unknown _ -> None
+               | f -> Some OpamFormat.(string_of_value (make_flag f)))
+             t.flags
+         in
+         cond 40 `Warning
+           "Package uses flags that aren't recognised by earlier versions in \
+            OPAM 1.2 branch. At the moment, you should use a tag \"flags:foo\" \
+            instead for compatibility"
+           ~detail:alpha_flags
+           (alpha_flags <> []));
+        (let undep_pkgs =
+           List.fold_left
+             (fun acc v ->
+                let n = OpamVariable.Full.package v in
+                if n <> OpamPackage.Name.global_config &&
+                   Some n <> t.name &&
+                   not (OpamPackage.Name.Set.mem n all_depends)
+                then OpamPackage.Name.Set.add n acc else acc)
+             OpamPackage.Name.Set.empty all_variables
+         in
+         cond 41 `Warning
+           "Some packages are mentionned in package scripts of features, but \
+            there is no dependency or depopt toward them"
+           ~detail:OpamPackage.Name.
+                     (List.map to_string (Set.elements undep_pkgs))
+           (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
       ]
       in
       OpamStd.List.filter_map (fun x -> x) warnings
