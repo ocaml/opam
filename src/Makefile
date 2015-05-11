@@ -308,7 +308,7 @@ export PROJ_opam-admin-top
 define lib_inst_files
   $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
   $(foreach f,$(basename $(SRC_$(1))),\
-    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmx .cmxs .cmti)))
+    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti)))
 endef
 
 ../opam-lib.install: $(OPAMLIB:=.cma)
