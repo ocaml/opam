@@ -28,7 +28,7 @@ let default = {
   print_stats = false;
   sync_archives = false;
   self_upgrade = `None;
-  pin_kind_auto = false;
+  pin_kind_auto = true;
   autoremove = false;
   editor = "nano";
 }

@@ -263,8 +263,8 @@ let help_sections = [
 
   `S "ENVIRONMENT VARIABLES";
   `P "OPAM makes use of the environment variables listed here. Boolean \
-      variables should be set to \"0\", \"no\" of \"false\" to disable, \
-      \"1\", \"yes\" or \"true\" to enable.";
+      variables should be set to \"0\", \"no\", \"false\" or the empty  string \
+      to disable, \"1\", \"yes\" or \"true\" to enable.";
 
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
@@ -290,8 +290,8 @@ let help_sections = [
   `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
-  `P "$(i,OPAMPINKINDAUTO) if set, version control systems are detected when \
-      pinning to a local path.";
+  `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
+      detected when pinning to a local path. Enabled by default since 1.3.0.";
   `P "$(i,OPAMREQUIRECHECKSUMS) see option `--require-checksums'.";
   `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
@@ -1621,10 +1621,10 @@ let pin ?(unpin_only=false) () =
     let help =
       Printf.sprintf
         "Sets the kind of pinning. Must be one of %s. \
-         If unset, is inferred from the format of the target, defaulting \
-         to $(i,path). If $(i,auto) or $(i,OPAMPINKINDAUTO) is set, a local \
-         path will be searched for version control and the pinning kind set \
-         accordingly. This is expected to become the default in a next version."
+         If unset or $(i,auto), is inferred from the format of the target, \
+         defaulting to the appropriate version control if one is detected in \
+         the given directory, or to $(i,path) otherwise. $(i,OPAMPINKINDAUTO) \
+         can be set to \"0\" to disable automatic detection of version control."
         (Arg.doc_alts_enum main_kinds)
     in
     let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
