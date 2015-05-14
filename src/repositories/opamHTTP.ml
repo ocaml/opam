@@ -265,7 +265,7 @@ let make_index_tar_gz repo_root =
     let dirs = [ "version"; "compilers"; "packages"; "repo" ] in
     match List.filter Sys.file_exists dirs with
     | [] -> ()
-    | d  -> OpamSystem.command ("tar" :: "czf" :: "index.tar.gz" :: d)
+    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: d)
   )
 
 let register () =
