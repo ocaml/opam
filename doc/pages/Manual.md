@@ -433,12 +433,12 @@ continue silently when the file is not found.
 
 - `lib:` installs to `<prefix>/lib/package-name`
 - `libexec:` installs to `<prefix>/lib/package-name`, but the `exec` bit is
-  set.
+  set (since OPAM 1.2.1)
 - `bin:` installs to `<prefix>/bin`, with the `exec` bit set
 - `sbin:` installs to `<prefix>/sbin`, with the `exec` bit set
 - `toplevel:` installs to `<prefix>/lib/toplevel`
 - `share:` installs to `<prefix>/share/package-name`
-- `share_root:` installs relative to `<prefix>/share`
+- `share_root:` installs relative to `<prefix>/share` (since OPAM 1.2.0)
 - `etc:` installs to `<prefix>/etc/package-name`
 - `doc:` installs to `<prefix>/doc/package-name`
 - `stublibs:` installs to `<prefix>/lib/stublibs`, with the `exec` bit set
