@@ -58,7 +58,7 @@ let post_message ?(failed=false) state action =
             "%s%s\n" mark msg)
         messages
     ) else if failed && OpamFile.OPAM.depexts opam <> None then (
-      OpamConsole.header_msg "%s troobleshooting" (OpamPackage.to_string pkg);
+      OpamConsole.header_msg "%s troubleshooting" (OpamPackage.to_string pkg);
       OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
         "%sThis package relies on external (system) dependencies that may \
          be missing. `opam depext %s' may help you find the correct \
