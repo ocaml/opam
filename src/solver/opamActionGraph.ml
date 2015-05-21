@@ -38,7 +38,7 @@ let symbol_of_action = function
   | `Upgrade _ -> "\xe2\x86\x97 "
   | `Downgrade _ -> "\xe2\x86\x98 "
   | `Reinstall _ -> "\xe2\x86\xbb "
-  | `Build _ -> "\xe2\x96\xb3 "
+  | `Build _ -> "\xe2\x88\x97 "
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
@@ -126,6 +126,7 @@ module type SIG = sig
   type package
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
+  val explicit: t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package = struct
@@ -168,5 +169,18 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         iter_pred (fun v -> add_edge g v act) g rm_act;
         remove_vertex g rm_act
       ) !reduced;
+    g
+
+  let explicit g0 =
+    let g = copy g0 in
+    iter_vertex (fun a ->
+        match a with
+        | `Install p | `Reinstall p | `Upgrade (_, p) | `Downgrade (_, p) ->
+          let b = `Build p in
+          iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
+          add_edge g b a
+        | `Remove _ -> ()
+        | `Build _ -> assert false)
+      g0;
     g
 end

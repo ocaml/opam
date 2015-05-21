@@ -38,6 +38,9 @@ module type SIG = sig
 
       There is no guarantee however that the resulting graph is acyclic. *)
   val reduce: t -> t
+
+  (** Expand install actions, adding a build action preceding them. *)
+  val explicit: t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package
