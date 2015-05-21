@@ -26,8 +26,8 @@ module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
   match action with
-  | To_delete _ | To_recompile _ -> ()
-  | To_change (_,pkg) ->
+  | `Remove _ | `Reinstall _ | `Build _ -> ()
+  | `Install pkg | `Upgrade (_,pkg) | `Downgrade (_,pkg) ->
     let opam = OpamState.opam state pkg in
     let messages = OpamFile.OPAM.post_messages opam in
     let local_variables = OpamVariable.Map.empty in
@@ -154,17 +154,12 @@ let display_error (n, error) =
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
-  | To_change (Some o, nv) ->
-    if
-      OpamPackage.Version.compare
-        (OpamPackage.version o) (OpamPackage.version nv) < 0
-    then
-      f "upgrading to" nv
-    else
-      f "downgrading to" nv
-  | To_change (None, nv) -> f "installing" nv
-  | To_recompile nv      -> f "recompiling" nv
-  | To_delete nv         -> f "removing" nv
+  | `Upgrade (_, nv)   -> f "upgrading to" nv
+  | `Downgrade (_, nv) -> f "downgrading to" nv
+  | `Install nv        -> f "installing" nv
+  | `Reinstall nv      -> f "recompiling" nv
+  | `Remove nv         -> f "removing" nv
+  | `Build nv          -> f "compiling" nv
 
 (* Prettify errors *)
 (* unuesed ?
@@ -235,25 +230,8 @@ type state = {
 
 let output_json_solution solution =
   let to_proceed =
-    PackageActionGraph.Topological.fold (fun a to_proceed ->
-        match a with
-        | To_change(o,p)  ->
-          let json = match o with
-            | None   -> `O ["install", OpamPackage.to_json p]
-            | Some o ->
-              if OpamPackage.Version.compare
-                  (OpamPackage.version o) (OpamPackage.version p) < 0
-              then
-                `O ["upgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]]
-              else
-                `O ["downgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]] in
-          json :: to_proceed
-        | To_recompile p ->
-          let json = `O ["recompile", OpamPackage.to_json p] in
-          json :: to_proceed
-        | To_delete p    ->
-          let json = `O ["delete", OpamPackage.to_json p] in
-          json :: to_proceed
+    PackageActionGraph.Topological.fold (fun a acc ->
+        PackageAction.to_json a :: acc
       ) solution []
   in
   OpamJson.add (`A to_proceed)
@@ -355,7 +333,7 @@ let parallel_apply t action action_graph =
   let fatal_dl_error =
     PackageActionGraph.fold_vertex
       (fun a acc -> acc || match a with
-         | To_delete _ -> false
+         | `Remove _ -> false
          | _ -> OpamPackage.Set.mem (action_contents a) failed_downloads)
       action_graph false
   in
@@ -387,12 +365,13 @@ let parallel_apply t action action_graph =
       try Some (OpamPackage.Map.find nv package_sources)
       with Not_found -> None in
     match action with
-    | To_change (_, nv) | To_recompile nv ->
+    | `Install nv | `Upgrade (_,nv) | `Downgrade (_,nv) | `Reinstall nv ->
       (OpamAction.build_and_install_package ~metadata:false t source nv
        @@+ function
        | None ->  add_to_install nv; Done None
        | Some exn -> Done (Some exn))
-    | To_delete nv ->
+    | `Build _ -> assert false (* TODO *)
+    | `Remove nv ->
       if OpamAction.removal_needs_download t nv then
         (try OpamAction.extract_package t source nv
          with e -> OpamStd.Exn.fatal e);
@@ -441,7 +420,7 @@ let parallel_apply t action action_graph =
 
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
-        | To_delete nv | To_change (Some nv, _)
+        | `Remove nv | `Upgrade (nv, _) | `Downgrade (nv, _)
           when not (OpamState.is_pinned t (OpamPackage.name nv)) ->
           OpamAction.cleanup_package_artefacts t nv (* no-op if reinstalled *)
         | _ -> ())
@@ -510,7 +489,7 @@ let parallel_apply t action action_graph =
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function To_recompile _ -> false | _ -> true)
+        (function `Reinstall _ -> false | _ -> true)
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;
@@ -522,10 +501,11 @@ let simulate_new_state state t =
     OpamSolver.ActionGraph.Topological.fold
       (fun action installed ->
         match action with
-        | To_change(_,p) | To_recompile p ->
+        | `Install p | `Upgrade (_,p) | `Downgrade (_,p) | `Reinstall p ->
           OpamPackage.Set.add p installed
-        | To_delete p ->
+        | `Remove p ->
           OpamPackage.Set.remove p installed
+        | `Build _ -> installed
       )
       t state.installed in
   { state with installed }

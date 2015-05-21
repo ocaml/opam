@@ -56,23 +56,6 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
       fst (OpamPackage.Map.choose nvset)
     | None -> raise Not_found
 
-let string_of_action a =
-  let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
-  match a with
-  | To_change (None, p)   -> Printf.sprintf "install %s" (aux p)
-  | To_change (Some o, p) ->
-    let f action =
-      Printf.sprintf "%s %s to %d" action (aux o) p.Cudf.version in
-    if compare o.Cudf.version p.Cudf.version < 0 then
-      f "upgrade"
-    else
-      f "downgrade"
-  | To_recompile p        -> Printf.sprintf "recompile %s" (aux p)
-  | To_delete p           -> Printf.sprintf "delete %s" (aux p)
-
-let string_of_actions l =
-  OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
-
 let string_of_package p =
   let installed = if p.Cudf.installed then "installed" else "not-installed" in
   Printf.sprintf "%s.%d(%s)"
@@ -100,6 +83,11 @@ end
 
 module Action = OpamActionGraph.MakeAction(Pkg)
 module ActionGraph = OpamActionGraph.Make(Action)
+
+let string_of_action = Action.to_string
+
+let string_of_actions l =
+  OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
 
 exception Cyclic_actions of Action.t list list
 
@@ -638,59 +626,29 @@ let get_final_universe ~version_map univ req =
       (* External solver did not provide explanations, hopefully this will *)
       check_request ~version_map univ req
 
-(* A modified version of CudfDiff to handle reinstallations *)
-module Diff = struct
-
-  type package = {
-    installed  : Set.t;
-    removed    : Set.t;
-    reinstalled: Set.t;
-  }
-
-  type universe = (string, package) Hashtbl.t
-
-  (* for each pkgname I've the list of all versions that were installed or removed *)
-  let diff univ sol =
-    let pkgnames =
-      OpamStd.String.Set.of_list
-        (List.rev_map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
-    let h = Hashtbl.create (OpamStd.String.Set.cardinal pkgnames) in
-    let needed_reinstall = Set.of_list (Cudf.get_packages ~filter:need_reinstall univ) in
-    OpamStd.String.Set.iter (fun pkgname ->
-      let were_installed = Set.of_list (Cudf.get_installed univ pkgname) in
-      let are_installed = Set.of_list (Cudf.get_installed sol pkgname) in
-      let removed = Set.diff were_installed are_installed in
-      let installed = Set.diff are_installed were_installed in
-      let reinstalled = Set.inter are_installed needed_reinstall in
-      let s = { removed; installed; reinstalled } in
-      Hashtbl.add h pkgname s
-    ) pkgnames ;
-    h
-
-end
+let diff univ sol =
+  let before =
+    Set.of_list
+      (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
+  in
+  let after =
+    Set.of_list
+      (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) sol)
+  in
+  let open Set.Op in
+  let reinstall = Set.filter need_reinstall after in
+  let install = after -- before ++ reinstall in
+  let remove = before -- after ++ reinstall in
+  install, remove
 
 (* Transform a diff from current to final state into a list of
    actions. At this point, we don't know about the root causes of the
    actions, they will be computed later. *)
-let actions_of_diff diff =
-  Hashtbl.fold (fun _ s acc ->
-    let add x = x :: acc in
-    let removed =
-      try Some (Set.choose_one s.Diff.removed)
-      with Not_found -> None in
-    let installed =
-      try Some (Set.choose_one s.Diff.installed)
-      with Not_found -> None in
-    let reinstalled =
-      try Some (Set.choose_one s.Diff.reinstalled)
-      with Not_found -> None in
-    match removed, installed, reinstalled with
-    | None      , Some p     , _      -> add (To_change (None, p))
-    | Some p    , None       , _      -> add (To_delete p)
-    | Some p_old, Some p_new , _      -> add (To_change (Some p_old, p_new))
-    | None      , None       , Some p -> add (To_recompile p)
-    | None      , None       , None   -> acc
-  ) diff []
+let actions_of_diff (install, remove) =
+  let actions = [] in
+  let actions = Set.fold (fun p acc -> `Install p :: acc) install actions in
+  let actions = Set.fold (fun p acc -> `Remove p :: acc) remove actions in
+  actions
 
 let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
@@ -699,7 +657,7 @@ let resolve ~extern ~version_map universe request =
 
 let to_actions f universe result =
   let aux u1 u2 =
-    let diff = Diff.diff (f u1) u2 in
+    let diff = diff (f u1) u2 in
     actions_of_diff diff
   in
   map_success (aux universe) result
@@ -770,18 +728,36 @@ let compute_root_causes g requested =
         | _, c -> c, depth1 in
   let direct_cause cause consequence dep =
     match (cause, consequence, dep) with
-    | To_change(_,p), To_change(_,_),      `Provides -> Required_by [p]
-    | To_change(_,p), To_change(Some _,_), `Depends  -> Use [p]
-    | a,              To_recompile _,      `Depends  -> Use [action_contents a]
-    | _,              To_recompile _,      `Provides -> Unknown
-    | To_delete p,    To_delete _,         `Provides -> Use [p]
-    | To_delete p,    To_change _,         `Provides -> Use [p]
-    | To_recompile p, To_change _,         `Provides -> Required_by [p]
-    | _,              To_change(None,_),   `Depends  -> Unknown
-    | _,              To_change _,         _         -> Upstream_changes
-    | To_change _,    To_delete _,         `Provides -> Conflicts_with
-                                                          [action_contents cause]
-    | To_recompile p, To_delete _,         `Provides -> Conflicts_with [p]
+    (* | To_change(_,p), To_change(_,_),      `Provides -> Required_by [p] *)
+    | (`Upgrade(_,p) | `Downgrade(_,p) | `Install p),
+      (`Upgrade _ | `Downgrade _ | `Install _),
+      `Provides
+      -> Required_by [p]
+    (* | To_change(_,p), To_change(Some _,_), `Depends  -> Use [p] *)
+    | (`Upgrade(_,p) | `Downgrade(_,p) | `Install p),
+      (`Upgrade _ | `Downgrade _),
+      `Depends
+      -> Use [p]
+    | a,            `Reinstall _,  `Depends  -> Use [action_contents a]
+    | _,            `Reinstall _,  `Provides -> Unknown
+    | `Remove p,    `Remove _,     `Provides -> Use [p]
+    (* | `Remove p,    To_change _,   `Provides -> Use [p] *)
+    | `Remove p,
+      (`Upgrade _ | `Downgrade _ | `Install _),
+      `Provides
+      -> Use [p]
+    (* | `Reinstall p, To_change _,   `Provides -> Required_by [p] *)
+    | `Reinstall p,
+      (`Upgrade _ | `Downgrade _ | `Install _),
+      `Provides
+      -> Required_by [p]
+    | _,              `Install(_), `Depends  -> Unknown
+    (* | _,              To_change _,         _         -> Upstream_changes *)
+    | _, (`Upgrade _ | `Downgrade _), _ -> Upstream_changes
+    (* | To_change _,    `Remove _,         `Provides -> Conflicts_with *)
+    (*                                                       [action_contents cause] *)
+    | (`Upgrade _ | `Downgrade _ | `Install _), `Remove _, `Provides -> Conflicts_with [action_contents cause]
+    | `Reinstall p, `Remove _,         `Provides -> Conflicts_with [p]
     | _,              _,                   _         -> Unknown
   in
   let get_causes acc roots =
@@ -824,8 +800,7 @@ let compute_root_causes g requested =
       let roots =
         if Map.is_empty requested_actions then (* Assume a global upgrade *)
           make_roots causes Requested (function
-              | To_change (Some p1,p2) when p1.Cudf.version < p2.Cudf.version ->
-                true
+              | `Upgrade _ -> true
               | _ -> false)
         else (Map.map (fun _ -> Requested, 0) requested_actions) in
       get_causes causes roots in
@@ -834,16 +809,17 @@ let compute_root_causes g requested =
          (maybe these could be removed from the actions altogether since they are
          unrelated to the request ?) *)
       let roots = make_roots causes Unknown (function
-          | To_change (Some _,_) as act
-            when List.for_all (function To_change _ -> false | _ -> true)
-                   (ActionGraph.pred g act) -> true
+          | `Upgrade _ | `Downgrade _ as act
+            when List.for_all
+                (function `Upgrade _ | `Downgrade _ -> false | _ -> true)
+                (ActionGraph.pred g act) -> true
           | _ -> false) in
       get_causes causes roots in
     let causes =
       (* Compute causes for packages marked to reinstall *)
       let roots =
         make_roots causes Upstream_changes
-          (function To_recompile p -> need_reinstall p
+          (function `Reinstall p -> need_reinstall p
                   | _ -> false) in
       get_causes causes roots in
   Map.map fst causes
@@ -857,10 +833,11 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
 
   let to_remove, to_install =
     List.fold_left (fun (rm,inst) a -> match a with
-        | To_change (Some p1,p2) -> Set.add p1 rm, Set.add p2 inst
-        | To_change (None,p) -> rm, Set.add p inst
-        | To_recompile p -> Set.add p rm, Set.add p inst
-        | To_delete p -> Set.add p rm, inst)
+        | `Upgrade (p1,p2) | `Downgrade (p1,p2) ->
+          Set.add p1 rm, Set.add p2 inst
+        | `Install p -> rm, Set.add p inst
+        | `Reinstall p -> Set.add p rm, Set.add p inst
+        | `Remove p -> Set.add p rm, inst)
       (Set.empty, Set.empty) root_actions in
 
   (* transitively add recompilations *)
@@ -882,8 +859,8 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
 
   (* Build the graph of atomic actions: Removals or installs *)
   let g = ActionGraph.create () in
-  Set.iter (fun p -> ActionGraph.add_vertex g (To_delete p)) to_remove;
-  Set.iter (fun p -> ActionGraph.add_vertex g (To_change (None,p))) to_install;
+  Set.iter (fun p -> ActionGraph.add_vertex g (`Remove p)) to_remove;
+  Set.iter (fun p -> ActionGraph.add_vertex g (`Install (p))) to_install;
   (* reinstalls and upgrades: remove first *)
   Set.iter
     (fun p1 ->
@@ -891,20 +868,20 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
          let p2 =
            Set.find (fun p2 -> p1.Cudf.package = p2.Cudf.package) to_install
          in
-         ActionGraph.add_edge g (To_delete p1) (To_change (None,p2))
+         ActionGraph.add_edge g (`Remove p1) (`Install (p2))
        with Not_found -> ())
     to_remove;
   (* uninstall order *)
   Graph.iter_edges (fun p1 p2 ->
-      ActionGraph.add_edge g (To_delete p1) (To_delete p2)
+      ActionGraph.add_edge g (`Remove p1) (`Remove p2)
     ) (pkggraph to_remove);
   (* install order *)
   Graph.iter_edges (fun p1 p2 ->
       if Set.mem p1 to_install then
         let cause =
-          if Set.mem p2 to_install then To_change (None, p2) else To_delete p2
+          if Set.mem p2 to_install then `Install ( p2) else `Remove p2
         in
-        ActionGraph.add_edge g cause (To_change (None, p1))
+        ActionGraph.add_edge g cause (`Install ( p1))
     ) (pkggraph (Set.union to_install to_remove));
   (* conflicts *)
   let conflicts_graph =
@@ -914,9 +891,9 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   in
   Algo.Defaultgraphs.PackageGraph.UG.iter_edges (fun p1 p2 ->
       if Set.mem p1 to_remove && Set.mem p2 to_install then
-        ActionGraph.add_edge g (To_delete p1) (To_change (None, p2))
+        ActionGraph.add_edge g (`Remove p1) (`Install ( p2))
       else if Set.mem p2 to_remove && Set.mem p1 to_install then
-        ActionGraph.add_edge g (To_delete p2) (To_change (None, p1)))
+        ActionGraph.add_edge g (`Remove p2) (`Install ( p1)))
     conflicts_graph;
   (* check for cycles *)
   match find_cycles g with

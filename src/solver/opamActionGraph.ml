@@ -20,30 +20,36 @@ module type ACTION = sig
   type package
   module Pkg : GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
-  val to_aligned_strings: t list -> string list
+  val to_string: [< t ] -> string
+  val to_aligned_strings: [< t ] list -> string list
 end
 
-let action_strings ?utf8 x =
-  if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true then
-    List.assoc x
-      [`inst,   "\xe2\x88\x97 ";
-       `up,     "\xe2\x86\x97 ";
-       `down,   "\xe2\x86\x98 ";
-       `reinst, "\xe2\x86\xbb ";
-       `rm,     "\xe2\x8a\x98 "]
-  else
-    List.assoc x
-      [`inst,   "install";
-       `up,     "upgrade";
-       `down,   "downgrade";
-       `reinst, "recompile";
-       `rm,     "remove"]
+let name_of_action = function
+  | `Remove _ -> "remove"
+  | `Install _ -> "install"
+  | `Upgrade _ -> "upgrade"
+  | `Downgrade _ -> "downgrade"
+  | `Reinstall _ -> "recompile"
+  | `Build _ -> "build"
+
+let symbol_of_action = function
+  | `Remove _ -> "\xe2\x8a\x98 "
+  | `Install _ -> "\xe2\x88\x97 "
+  | `Upgrade _ -> "\xe2\x86\x97 "
+  | `Downgrade _ -> "\xe2\x86\x98 "
+  | `Reinstall _ -> "\xe2\x86\xbb "
+  | `Build _ -> "\xe2\x96\xb3 "
+
+let action_strings ?utf8 a =
+  if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
+  then symbol_of_action a
+  else name_of_action a
 
 let action_color c =
   OpamConsole.colorise (match c with
-      | `inst | `up -> `green
-      | `rm | `down -> `red
-      | `reinst -> `yellow)
+      | `Install _ | `Upgrade _ -> `green
+      | `Remove _ | `Downgrade _ -> `red
+      | `Reinstall _ | `Build _ -> `yellow)
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 = struct
@@ -52,73 +58,67 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   type t = package action
 
   let compare t1 t2 =
-    (* To_change > To_recompile > To_delete *)
+    (* `Install > `Build > `Upgrade > `Reinstall > `Downgrade > `Remove *)
     match t1,t2 with
-    | To_delete p, To_delete q
-    | To_recompile p, To_recompile q ->
-      P.compare p q
-    | To_change (po,p), To_change (qo,q) ->
+    | `Remove p, `Remove q
+    | `Install p, `Install q
+    | `Reinstall p, `Reinstall q
+    | `Build p, `Build q
+      -> P.compare p q
+    | `Upgrade (p0,p), `Upgrade (q0,q)
+    | `Downgrade (p0,p), `Downgrade (q0,q)
+      ->
       let c = P.compare p q in
-      if c <> 0 then c else OpamStd.Option.compare P.compare po qo
-    | To_change _, _ | _, To_delete _ -> 1
-    | _, To_change _ | To_delete _, _ -> -1
+      if c <> 0 then c else P.compare p0 q0
+    | `Install _, _ | _, `Remove _ -> 1
+    | _, `Install _ | `Remove _, _ -> -1
+    | `Build _, _ | _, `Downgrade _ -> 1
+    | `Downgrade _, _ | _, `Build _ -> -1
+    | `Upgrade _, `Reinstall _ -> 1
+    | `Reinstall _, `Upgrade _ -> -1
 
-  let hash = function
-    | To_change (None, p) -> Hashtbl.hash (`C, P.hash p)
-    | To_change (Some p1, p2) -> Hashtbl.hash (`C, P.hash p1, P.hash p2)
-    | To_delete p -> Hashtbl.hash (`D, P.hash p)
-    | To_recompile p -> Hashtbl.hash (`R, P.hash p)
+  let hash a = Hashtbl.hash (OpamTypesBase.map_action P.hash a)
 
   let equal t1 t2 = compare t1 t2 = 0
 
-  let to_string =
-    function
-    | To_change (None, p)   ->
-      Printf.sprintf "%s %s" (action_strings `inst) (P.to_string p)
-    | To_change (Some o, p) ->
+  let to_string a = match a with
+    | `Remove p | `Install p | `Reinstall p | `Build p ->
+      Printf.sprintf "%s %s" (action_strings a) (P.to_string p)
+    | `Upgrade (p0,p) | `Downgrade (p0,p) ->
       Printf.sprintf "%s.%s %s %s"
-        (P.name_to_string o)
-        (P.version_to_string o)
-        (action_strings (if P.compare o p < 0 then `up else `down))
+        (P.name_to_string p0)
+        (P.version_to_string p0)
+        (action_strings a)
         (P.version_to_string p)
-    | To_recompile p ->
-      Printf.sprintf "%s %s" (action_strings `reinst) (P.to_string p)
-    | To_delete p    ->
-      Printf.sprintf "%s %s" (action_strings `rm) (P.to_string p)
 
   let to_aligned_strings l =
-    let code c =
-      if (OpamConsole.utf8 ()) then action_color c (action_strings c)
-      else "-"
-    in
-    let name p = OpamConsole.colorise `bold (P.name_to_string p) in
     let tbl =
-      List.map (function
-          | To_change (None, p) ->
-            [ code `inst; "install";
-              name p; P.version_to_string p ]
-          | To_change (Some o, p) ->
-            let up = P.compare o p < 0 in
-            [ code (if up then `up else `down);
-              if up then "upgrade" else "downgrade";
-              name p;
-              Printf.sprintf "%s to %s"
-                (P.version_to_string o) (P.version_to_string p) ]
-          | To_recompile p ->
-            [ code `reinst; "recompile";
-              name p; P.version_to_string p ]
-          | To_delete p ->
-            [ code `rm; "remove";
-              name p; P.version_to_string p ])
+      List.map (fun a ->
+          let a = (a :> package action) in
+          (if OpamConsole.utf8 ()
+           then action_color a (symbol_of_action a)
+           else "-")
+          :: name_of_action a
+          :: OpamConsole.colorise `bold
+            (P.name_to_string (OpamTypesBase.action_contents a))
+          :: match a with
+          | `Remove p | `Install p | `Reinstall p | `Build p ->
+            P.version_to_string p :: []
+          | `Upgrade (p0,p) | `Downgrade (p0,p) ->
+            Printf.sprintf "%s to %s"
+              (P.version_to_string p0) (P.version_to_string p)
+            :: [])
         l
     in
     List.map (String.concat " ") (OpamStd.Format.align_table tbl)
 
   let to_json = function
-    | To_change (None, p)   -> `O ["install", P.to_json p]
-    | To_change (Some o, p) -> `O ["change", `A [P.to_json o;P.to_json p]]
-    | To_recompile p -> `O ["recompile", P.to_json p]
-    | To_delete p    -> `O ["remove", P.to_json p]
+    | `Remove p -> `O ["remove", P.to_json p]
+    | `Install p -> `O ["install", P.to_json p]
+    | `Upgrade (o, p) | `Downgrade (o, p) ->
+      `O ["change", `A [P.to_json o;P.to_json p]]
+    | `Reinstall p -> `O ["recompile", P.to_json p]
+    | `Build p -> `O ["build", P.to_json p]
 
 end
 
@@ -140,7 +140,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
   let reduce g =
     let removals =
       fold_vertex (fun v acc -> match v with
-          | To_delete p ->
+          | `Remove p ->
             OpamStd.String.Map.add (A.Pkg.name_to_string p) p acc
           | _ -> acc)
         g OpamStd.String.Map.empty
@@ -148,12 +148,14 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     let reduced = ref Map.empty in
     let g =
       map_vertex (function
-          | To_change (None, p) as act ->
+          | `Install p as act ->
             (try
                let p0 = OpamStd.String.Map.find (A.Pkg.name_to_string p) removals in
                let act =
-                 if A.Pkg.equal p0 p then To_recompile p
-                 else To_change (Some p0, p)
+                 match A.Pkg.compare p0 p with
+                 | 0 -> `Reinstall p
+                 | c when c > 0 -> `Downgrade (p0, p)
+                 | _ -> `Upgrade (p0, p)
                in
                reduced := Map.add p0 act !reduced;
                act
@@ -162,7 +164,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         g
     in
     Map.iter (fun p act ->
-        let rm_act = To_delete p in
+        let rm_act = `Remove p in
         iter_pred (fun v -> add_edge g v act) g rm_act;
         remove_vertex g rm_act
       ) !reduced;

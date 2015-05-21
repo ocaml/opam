@@ -251,13 +251,30 @@ let filter_deps ~build ~test ~doc =
   OpamFormula.formula_of_extended ~filter
 
 let action_contents = function
-  | To_change (_, p)
-  | To_recompile p
-  | To_delete p -> p
+  | `Remove p | `Install p | `Reinstall p | `Build p -> p
+  | `Upgrade (_,p) | `Downgrade (_,p) -> p
 
 let full_action_contents = function
-  | To_change (Some p1, p2) -> [p1; p2]
-  | To_change (None, p) | To_recompile p | To_delete p -> [p]
+  | `Remove p | `Install p | `Reinstall p | `Build p -> [p]
+  | `Upgrade (p1,p2) | `Downgrade (p1,p2) -> [p1; p2]
+
+let map_atomic_action f = function
+  | `Remove p -> `Remove (f p)
+  | `Install p -> `Install (f p)
+
+let map_highlevel_action f = function
+  | #atomic_action as a -> map_atomic_action f a
+  | `Upgrade (p1, p2) -> `Upgrade (f p1, f p2)
+  | `Downgrade (p1,p2) -> `Downgrade (f p1, f p2)
+  | `Reinstall p -> `Reinstall (f p)
+
+let map_concrete_action f = function
+  | #atomic_action as a -> map_atomic_action f a
+  | `Build p -> `Build (f p)
+
+let map_action f = function
+  | #highlevel_action as a -> map_highlevel_action f a
+  | #concrete_action as a -> map_concrete_action f a
 
 let string_of_cause to_string =
   let list_to_string l = match List.map to_string l with

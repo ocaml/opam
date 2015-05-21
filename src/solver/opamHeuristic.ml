@@ -33,9 +33,9 @@ type 'a state_space = 'a array list
 let minimize_actions interesting_names actions =
   let interesting_names = OpamStd.String.Set.of_list interesting_names in
   List.filter (function
-    | To_change (_, p)
-    | To_recompile p -> OpamStd.String.Set.mem p.Cudf.package interesting_names
-    | To_delete _    -> true
+    | `Install p | `Upgrade (_, p) | `Downgrade (_, p) | `Recompile p ->
+      OpamStd.String.Set.mem p.Cudf.package interesting_names
+    | `Remove _ -> true
   ) actions
 
 (* A list of [n] zero. *)
@@ -232,7 +232,7 @@ let actions_of_state ~version_map universe request state =
     raise (Not_reachable c)
   | Success u   ->
     try
-      let diff = OpamCudf.Diff.diff universe u in
+      let diff = OpamCudf.diff universe u in
       let actions = OpamCudf.actions_of_diff diff in
       let actions = minimize_actions (List.map fst state) actions in
       actions

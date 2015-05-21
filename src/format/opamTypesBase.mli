@@ -57,6 +57,11 @@ val repository_kind_of_string: string -> repository_kind
 (** Extract a package from a package action. *)
 val action_contents: 'a action -> 'a
 
+val map_atomic_action: ('a -> 'b) -> 'a atomic_action -> 'b atomic_action
+val map_highlevel_action: ('a -> 'b) -> 'a highlevel_action -> 'b highlevel_action
+val map_concrete_action: ('a -> 'b) -> 'a concrete_action -> 'b concrete_action
+val map_action: ('a -> 'b) -> 'a action -> 'b action
+
 (** Extract a packages from a package action. This returns all concerned
     packages, including the old version for an up/down-grade. *)
 val full_action_contents: 'a action -> 'a list

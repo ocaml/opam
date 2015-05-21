@@ -440,8 +440,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   if metadata then cleanup_meta ();
   if not silent then
     OpamConsole.msg "%s removed   %s.%s\n"
-      (if not (OpamConsole.utf8 ()) then "->"
-       else OpamActionGraph.(action_color `rm (action_strings `rm)))
+      (if not (OpamConsole.utf8 ()) then "->" else
+         OpamActionGraph.(action_color (`Remove ())
+                            (action_strings (`Remove ()))))
       (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
       (OpamPackage.version_to_string nv);
   Done ()
@@ -475,12 +476,12 @@ let cleanup_package_artefacts t nv =
 let sources_needed t g =
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
-      | To_delete nv ->
+      | `Remove nv ->
         if removal_needs_download t nv
         then OpamPackage.Set.add nv acc else acc
-      | To_change (None,nv) | To_recompile nv ->
+      | `Install nv | `Reinstall nv | `Build nv ->
         OpamPackage.Set.add nv acc
-      | To_change (Some nv1, nv2) ->
+      | `Upgrade (nv1, nv2) | `Downgrade (nv1, nv2) ->
         let acc = OpamPackage.Set.add nv2 acc in
         if removal_needs_download t nv1
         then OpamPackage.Set.add nv1 acc else acc)
@@ -543,7 +544,8 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
         );
         OpamConsole.msg "%s installed %s.%s\n"
           (if not (OpamConsole.utf8 ()) then "->"
-           else OpamActionGraph.(action_color `inst (action_strings `inst)))
+           else OpamActionGraph.
+                  (action_color (`Install ()) (action_strings (`Install ()))))
           (OpamConsole.colorise `bold name)
           (OpamPackage.version_to_string nv);
         Done None

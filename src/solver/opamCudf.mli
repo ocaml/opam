@@ -40,23 +40,9 @@ module Graph: sig
   val close_and_linearize: t -> Set.t -> Cudf.package list
 end
 
-(** Difference between universes *)
-module Diff: sig
-
-  (** Differences between the versions of a given package *)
-  type package = {
-    installed  : Set.t;
-    removed    : Set.t;
-    reinstalled: Set.t;
-  }
-
-  (** Difference between universe *)
-  type universe = (Cudf_types.pkgname, package) Hashtbl.t
-
-  (** Computation of differences between universe *)
-  val diff: Cudf.universe -> Cudf.universe -> universe
-
-end
+(** Computation of differences between universe. Returns the sets of packages to
+    install and remove respectively. *)
+val diff: Cudf.universe -> Cudf.universe -> (Set.t * Set.t)
 
 (** Cudf action graph *)
 module ActionGraph: OpamActionGraph.SIG with type package = Cudf.package
@@ -92,7 +78,8 @@ val get_final_universe:
     universe. Remark: the result order is unspecified, ie. need to use
     [atomic_actions] to get a solution which respects the
     topological order induced by dependencies. *)
-val actions_of_diff: Diff.universe -> Cudf.package action list
+val actions_of_diff:
+  (Set.t * Set.t) -> Cudf.package atomic_action list
 
 exception Cyclic_actions of Cudf.package action list list
 
@@ -110,7 +97,7 @@ exception Cyclic_actions of Cudf.package action list list
 val atomic_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->
-  Cudf.package action list ->
+  [< Cudf.package highlevel_action ] list ->
   ActionGraph.t
 
 (** Heuristic to compute the likely cause of all actions in a graph from the set
@@ -138,7 +125,7 @@ val to_actions:
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   (Cudf.universe, conflict) result ->
-  (Cudf.package action list, conflict) result
+  (Cudf.package atomic_action list, conflict) result
 
 (** [remove universe name constr] Remove all the packages called
     [name] satisfying the constraints [constr] in the universe
