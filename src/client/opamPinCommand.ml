@@ -101,8 +101,8 @@ let edit t name =
       match warnings with
       | [] -> Some opam
       | ws ->
-        OpamConsole.warning "The opam file didn't pass validation:\n%s\n"
-          (OpamFile.OPAM.warns_to_string ws);
+        OpamConsole.warning "The opam file didn't pass validation:";
+        OpamConsole.errmsg "%s\n" (OpamFile.OPAM.warns_to_string ws);
         if OpamConsole.confirm "Continue anyway ('no' will reedit) ?"
         then Some opam
         else edit ()
