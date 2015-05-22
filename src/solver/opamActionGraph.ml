@@ -27,16 +27,16 @@ end
 let name_of_action = function
   | `Remove _ -> "remove"
   | `Install _ -> "install"
-  | `Upgrade _ -> "upgrade"
-  | `Downgrade _ -> "downgrade"
+  | `Change (`Up,_,_) -> "upgrade"
+  | `Change (`Down,_,_) -> "downgrade"
   | `Reinstall _ -> "recompile"
   | `Build _ -> "build"
 
 let symbol_of_action = function
   | `Remove _ -> "\xe2\x8a\x98 "
   | `Install _ -> "\xe2\x88\x97 "
-  | `Upgrade _ -> "\xe2\x86\x97 "
-  | `Downgrade _ -> "\xe2\x86\x98 "
+  | `Change (`Up,_,_) -> "\xe2\x86\x97 "
+  | `Change (`Down,_,_) -> "\xe2\x86\x98 "
   | `Reinstall _ -> "\xe2\x86\xbb "
   | `Build _ -> "\xe2\x88\x97 "
 
@@ -47,8 +47,8 @@ let action_strings ?utf8 a =
 
 let action_color c =
   OpamConsole.colorise (match c with
-      | `Install _ | `Upgrade _ -> `green
-      | `Remove _ | `Downgrade _ -> `red
+      | `Install _ | `Change (`Up,_,_) -> `green
+      | `Remove _ | `Change (`Down,_,_) -> `red
       | `Reinstall _ | `Build _ -> `yellow)
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t
@@ -65,17 +65,17 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
     | `Reinstall p, `Reinstall q
     | `Build p, `Build q
       -> P.compare p q
-    | `Upgrade (p0,p), `Upgrade (q0,q)
-    | `Downgrade (p0,p), `Downgrade (q0,q)
+    | `Change (`Up,p0,p), `Change (`Up,q0,q)
+    | `Change (`Down,p0,p), `Change (`Down,q0,q)
       ->
       let c = P.compare p q in
       if c <> 0 then c else P.compare p0 q0
     | `Install _, _ | _, `Remove _ -> 1
     | _, `Install _ | `Remove _, _ -> -1
-    | `Build _, _ | _, `Downgrade _ -> 1
-    | `Downgrade _, _ | _, `Build _ -> -1
-    | `Upgrade _, `Reinstall _ -> 1
-    | `Reinstall _, `Upgrade _ -> -1
+    | `Build _, _ | _, `Change (`Down,_,_) -> 1
+    | `Change (`Down,_,_), _ | _, `Build _ -> -1
+    | `Change (`Up,_,_), `Reinstall _ -> 1
+    | `Reinstall _, `Change(`Up,_,_) -> -1
 
   let hash a = Hashtbl.hash (OpamTypesBase.map_action P.hash a)
 
@@ -84,7 +84,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   let to_string a = match a with
     | `Remove p | `Install p | `Reinstall p | `Build p ->
       Printf.sprintf "%s %s" (action_strings a) (P.to_string p)
-    | `Upgrade (p0,p) | `Downgrade (p0,p) ->
+    | `Change (_,p0,p) ->
       Printf.sprintf "%s.%s %s %s"
         (P.name_to_string p0)
         (P.version_to_string p0)
@@ -104,7 +104,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
           :: match a with
           | `Remove p | `Install p | `Reinstall p | `Build p ->
             P.version_to_string p :: []
-          | `Upgrade (p0,p) | `Downgrade (p0,p) ->
+          | `Change (_,p0,p) ->
             Printf.sprintf "%s to %s"
               (P.version_to_string p0) (P.version_to_string p)
             :: [])
@@ -115,7 +115,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   let to_json = function
     | `Remove p -> `O ["remove", P.to_json p]
     | `Install p -> `O ["install", P.to_json p]
-    | `Upgrade (o, p) | `Downgrade (o, p) ->
+    | `Change (_, o, p) ->
       `O ["change", `A [P.to_json o;P.to_json p]]
     | `Reinstall p -> `O ["recompile", P.to_json p]
     | `Build p -> `O ["build", P.to_json p]
@@ -155,8 +155,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
                let act =
                  match A.Pkg.compare p0 p with
                  | 0 -> `Reinstall p
-                 | c when c > 0 -> `Downgrade (p0, p)
-                 | _ -> `Upgrade (p0, p)
+                 | c -> `Change ((if c < 0 then `Up else `Down), p0, p)
                in
                reduced := Map.add p0 act !reduced;
                act
@@ -175,7 +174,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     let g = copy g0 in
     iter_vertex (fun a ->
         match a with
-        | `Install p | `Reinstall p | `Upgrade (_, p) | `Downgrade (_, p) ->
+        | `Install p | `Reinstall p | `Change (_,_,p) ->
           let b = `Build p in
           iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
           add_edge g b a

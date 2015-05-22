@@ -33,7 +33,7 @@ type 'a state_space = 'a array list
 let minimize_actions interesting_names actions =
   let interesting_names = OpamStd.String.Set.of_list interesting_names in
   List.filter (function
-    | `Install p | `Upgrade (_, p) | `Downgrade (_, p) | `Recompile p ->
+    | `Install p | `Change (_, _, p) | `Recompile p ->
       OpamStd.String.Set.mem p.Cudf.package interesting_names
     | `Remove _ -> true
   ) actions

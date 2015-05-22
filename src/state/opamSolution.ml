@@ -27,7 +27,7 @@ module PackageActionGraph = OpamSolver.ActionGraph
 let post_message ?(failed=false) state action =
   match action with
   | `Remove _ | `Reinstall _ | `Build _ -> ()
-  | `Install pkg | `Upgrade (_,pkg) | `Downgrade (_,pkg) ->
+  | `Install pkg | `Change (_,_,pkg) ->
     let opam = OpamState.opam state pkg in
     let messages = OpamFile.OPAM.post_messages opam in
     let local_variables = OpamVariable.Map.empty in
@@ -154,8 +154,8 @@ let display_error (n, error) =
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
-  | `Upgrade (_, nv)   -> f "upgrading to" nv
-  | `Downgrade (_, nv) -> f "downgrading to" nv
+  | `Change (`Up, _, nv)   -> f "upgrading to" nv
+  | `Change (`Down, _, nv) -> f "downgrading to" nv
   | `Install nv        -> f "installing" nv
   | `Reinstall nv      -> f "recompiling" nv
   | `Remove nv         -> f "removing" nv
@@ -525,7 +525,7 @@ let simulate_new_state state t =
     OpamSolver.ActionGraph.Topological.fold
       (fun action installed ->
         match action with
-        | `Install p | `Upgrade (_,p) | `Downgrade (_,p) | `Reinstall p ->
+        | `Install p | `Change (_,_,p) | `Reinstall p ->
           OpamPackage.Set.add p installed
         | `Remove p ->
           OpamPackage.Set.remove p installed

@@ -252,11 +252,11 @@ let filter_deps ~build ~test ~doc =
 
 let action_contents = function
   | `Remove p | `Install p | `Reinstall p | `Build p -> p
-  | `Upgrade (_,p) | `Downgrade (_,p) -> p
+  | `Change (_,_,p) -> p
 
 let full_action_contents = function
   | `Remove p | `Install p | `Reinstall p | `Build p -> [p]
-  | `Upgrade (p1,p2) | `Downgrade (p1,p2) -> [p1; p2]
+  | `Change (_,p1,p2) -> [p1; p2]
 
 let map_atomic_action f = function
   | `Remove p -> `Remove (f p)
@@ -264,8 +264,7 @@ let map_atomic_action f = function
 
 let map_highlevel_action f = function
   | #atomic_action as a -> map_atomic_action f a
-  | `Upgrade (p1, p2) -> `Upgrade (f p1, f p2)
-  | `Downgrade (p1,p2) -> `Downgrade (f p1, f p2)
+  | `Change (direction, p1, p2) -> `Change (direction, f p1, f p2)
   | `Reinstall p -> `Reinstall (f p)
 
 let map_concrete_action f = function

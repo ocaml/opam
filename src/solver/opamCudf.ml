@@ -714,51 +714,56 @@ let compute_root_causes g requested =
         StringSet.mem pkg.Cudf.package requested_pkgnames)
       actions in
   let merge_causes (c1,depth1) (c2,depth2) =
-      if c2 = Unknown || depth1 < depth2 then c1, depth1 else
-      if c1 = Unknown || depth2 < depth1 then c2, depth2 else
-        let (@) =
-          List.fold_left (fun l a -> if List.mem a l then l else a::l) in
-        match c1, c2 with
-        | Required_by a, Required_by b -> Required_by (a @ b), depth1
-        | Use a, Use b -> Use (a @ b), depth1
-        | Conflicts_with a, Conflicts_with b -> Conflicts_with (a @ b), depth1
-        | Requested, a | a, Requested
-        | Unknown, a | a, Unknown
-        | Upstream_changes , a | a, Upstream_changes -> a, depth1
-        | _, c -> c, depth1 in
-  let direct_cause cause consequence dep =
-    match (cause, consequence, dep) with
-    (* | To_change(_,p), To_change(_,_),      `Provides -> Required_by [p] *)
-    | (`Upgrade(_,p) | `Downgrade(_,p) | `Install p),
-      (`Upgrade _ | `Downgrade _ | `Install _),
-      `Provides
-      -> Required_by [p]
-    (* | To_change(_,p), To_change(Some _,_), `Depends  -> Use [p] *)
-    | (`Upgrade(_,p) | `Downgrade(_,p) | `Install p),
-      (`Upgrade _ | `Downgrade _),
-      `Depends
-      -> Use [p]
-    | a,            `Reinstall _,  `Depends  -> Use [action_contents a]
-    | _,            `Reinstall _,  `Provides -> Unknown
-    | `Remove p,    `Remove _,     `Provides -> Use [p]
-    (* | `Remove p,    To_change _,   `Provides -> Use [p] *)
-    | `Remove p,
-      (`Upgrade _ | `Downgrade _ | `Install _),
-      `Provides
-      -> Use [p]
-    (* | `Reinstall p, To_change _,   `Provides -> Required_by [p] *)
-    | `Reinstall p,
-      (`Upgrade _ | `Downgrade _ | `Install _),
-      `Provides
-      -> Required_by [p]
-    | _,              `Install(_), `Depends  -> Unknown
-    (* | _,              To_change _,         _         -> Upstream_changes *)
-    | _, (`Upgrade _ | `Downgrade _), _ -> Upstream_changes
-    (* | To_change _,    `Remove _,         `Provides -> Conflicts_with *)
-    (*                                                       [action_contents cause] *)
-    | (`Upgrade _ | `Downgrade _ | `Install _), `Remove _, `Provides -> Conflicts_with [action_contents cause]
-    | `Reinstall p, `Remove _,         `Provides -> Conflicts_with [p]
-    | _,              _,                   _         -> Unknown
+    (* When we found several causes explaining the same action, only keep the
+       most likely one *)
+    if c2 = Unknown || depth1 < depth2 then c1, depth1 else
+    if c1 = Unknown || depth2 < depth1 then c2, depth2 else
+    let (@) =
+      List.fold_left (fun l a -> if List.mem a l then l else a::l)
+    in
+    match c1, c2 with
+    | Required_by a, Required_by b -> Required_by (a @ b), depth1
+    | Use a, Use b -> Use (a @ b), depth1
+    | Conflicts_with a, Conflicts_with b -> Conflicts_with (a @ b), depth1
+    | Requested, a | a, Requested
+    | Unknown, a | a, Unknown
+    | Upstream_changes , a | a, Upstream_changes -> a, depth1
+    | _, c -> c, depth1
+  in
+  let direct_cause consequence order cause =
+    (* Investigate the reason of action [consequence], that was possibly
+       triggered by [cause], where the actions are ordered as [consequence]
+       [order] [cause]. *)
+    match consequence, order, cause with
+    | (`Install _ | `Change _), `Before, (`Install p | `Change (_,_,p)) ->
+      (* Prerequisite *)
+      Required_by [p]
+    | `Change _, `After, (`Install p | `Change (_,_,p)) ->
+      (* Change caused by change in dependencies *)
+      Use [p]
+    | `Reinstall _, `After, a ->
+      (* Reinstall caused by action on deps *)
+      Use [action_contents a]
+    | (`Remove _ | `Change _ ), `Before, `Remove p ->
+      (* Removal or change caused by the removal of a dependency *)
+      Use [p]
+    | `Remove _, `Before, (`Install p | `Change (_,_,p) | `Reinstall p) ->
+      (* Removal caused by conflict *)
+      Conflicts_with [p]
+    | (`Install _ | `Change _), `Before, `Reinstall p ->
+      (* New dependency of p ? *)
+      Required_by [p]
+    | `Change _, _, _ ->
+      (* The only remaining cause for changes is upstream *)
+      Upstream_changes
+    | (`Install _ | `Remove _), `After, _  ->
+      (* Nothing can cause these actions after itself *)
+      Unknown
+    | (`Install _ | `Reinstall _), `Before, _ ->
+      (* An install or reinstall doesn't cause any oter actions on its
+         dependendants *)
+      Unknown
+    | `Build _, _, _ | _, _, `Build _ -> assert false
   in
   let get_causes acc roots =
     let rec aux seen depth pkgname causes =
@@ -773,15 +778,15 @@ let compute_root_causes g requested =
         List.fold_left (fun causes act ->
             let p = action_contents act in
             if Set.mem p seen then causes else
-            let cause = direct_cause action act direction in
+            let cause = direct_cause act direction action in
             if cause = Unknown then causes else
             try
               Map.add p (merge_causes (cause,depth) (Map.find p causes)) causes
             with Not_found ->
               aux seen (depth + 1) p (Map.add p (cause,depth) causes)
           ) causes actions in
-      let causes = propagate causes (ActionGraph.pred g action) `Provides in
-      let causes = propagate causes (ActionGraph.succ g action) `Depends in
+      let causes = propagate causes (ActionGraph.pred g action) `Before in
+      let causes = propagate causes (ActionGraph.succ g action) `After in
       causes
     in
     let start = Map.fold (fun k _ acc -> Set.add k acc) roots Set.empty in
@@ -800,7 +805,7 @@ let compute_root_causes g requested =
       let roots =
         if Map.is_empty requested_actions then (* Assume a global upgrade *)
           make_roots causes Requested (function
-              | `Upgrade _ -> true
+              | `Change (`Up,_,_) -> true
               | _ -> false)
         else (Map.map (fun _ -> Requested, 0) requested_actions) in
       get_causes causes roots in
@@ -809,9 +814,9 @@ let compute_root_causes g requested =
          (maybe these could be removed from the actions altogether since they are
          unrelated to the request ?) *)
       let roots = make_roots causes Unknown (function
-          | `Upgrade _ | `Downgrade _ as act
+          | `Change _ as act
             when List.for_all
-                (function `Upgrade _ | `Downgrade _ -> false | _ -> true)
+                (function `Change _ -> false | _ -> true)
                 (ActionGraph.pred g act) -> true
           | _ -> false) in
       get_causes causes roots in
@@ -833,7 +838,7 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
 
   let to_remove, to_install =
     List.fold_left (fun (rm,inst) a -> match a with
-        | `Upgrade (p1,p2) | `Downgrade (p1,p2) ->
+        | `Change (_,p1,p2) ->
           Set.add p1 rm, Set.add p2 inst
         | `Install p -> rm, Set.add p inst
         | `Reinstall p -> Set.add p rm, Set.add p inst

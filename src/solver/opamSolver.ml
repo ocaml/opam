@@ -403,7 +403,7 @@ let check_for_conflicts universe =
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
       match action with
-      | `Install p | `Upgrade (_,p) | `Downgrade (_,p) ->
+      | `Install p | `Change (_,_,p) ->
         OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
       | `Reinstall _ | `Remove _ | `Build _ -> packages
   ) sol OpamPackage.Set.empty
@@ -412,8 +412,8 @@ let stats sol =
   OpamCudf.ActionGraph.fold_vertex (fun action stats ->
       match action with
       | `Install _ -> {stats with s_install = stats.s_install+1}
-      | `Upgrade _ -> {stats with s_upgrade = stats.s_upgrade+1}
-      | `Downgrade _ -> {stats with s_downgrade = stats.s_downgrade+1}
+      | `Change (`Up,_,_) -> {stats with s_upgrade = stats.s_upgrade+1}
+      | `Change (`Down,_,_) -> {stats with s_downgrade = stats.s_downgrade+1}
       | `Reinstall _ -> {stats with s_reinstall = stats.s_reinstall+1}
       | `Remove _ -> {stats with s_remove = stats.s_remove+1}
       | `Build _ -> stats)
@@ -434,7 +434,11 @@ let string_of_stats stats =
       (fun a ->
          let s = OpamActionGraph.action_strings a in
          if utf then OpamActionGraph.action_color a s else s)
-      [`Install ();`Reinstall ();`Upgrade ((),());`Downgrade ((),());`Remove ()]
+      [`Install ();
+       `Reinstall ();
+       `Change (`Up,(),());
+       `Change (`Down,(),());
+       `Remove ()]
   in
   let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
   if utf then
@@ -476,7 +480,7 @@ let print_solution ~messages ~rewrite ~requested t =
         let cause = string_of_cause cudf_name cause in
         let messages =
           match a with
-          | `Install p | `Upgrade (_,p) | `Downgrade (_,p) | `Reinstall p ->
+          | `Install p | `Change (_,_,p) | `Reinstall p ->
             messages (OpamCudf.cudf2opam p)
           | `Remove _ | `Build _ -> []
         in
@@ -516,7 +520,7 @@ let filter_solution filter t =
     (function
       | `Remove nv as a when not (filter (OpamCudf.cudf2opam nv)) ->
         rm OpamCudf.ActionGraph.iter_pred a
-      | (`Install nv | `Upgrade (_,nv) | `Downgrade (_,nv)) as a
+      | (`Install nv | `Change (_,_,nv)) as a
         when not (filter (OpamCudf.cudf2opam nv)) ->
         rm OpamCudf.ActionGraph.iter_succ a
       | _ -> ())

@@ -204,17 +204,15 @@ type 'a atomic_action = [
     meaningful way *)
 type 'a highlevel_action = [
   | 'a atomic_action
-  | `Upgrade of 'a * 'a
-  | `Downgrade of 'a * 'a
+  | `Change of [ `Up | `Down ] * 'a * 'a
   | `Reinstall of 'a
 ]
 
 (** Sub-type of [highlevel_action] corresponding to an installed package that
     changed state or version *)
-type 'a change_action = [
+type 'a inst_action = [
   | `Install of 'a
-  | `Upgrade of 'a * 'a
-  | `Downgrade of 'a * 'a
+  | `Change of 'a * 'a * [ `Up | `Down ]
 ]
 
 (** Used when applying solutions, separates build from install *)
