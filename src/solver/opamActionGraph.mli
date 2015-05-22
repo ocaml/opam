@@ -30,11 +30,11 @@ module type SIG = sig
   type package
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
 
-  (** Reduces a graph of atomic actions (only removals and installs) by turning
-      removal+install to reinstalls or up/down-grades, best for display.
-      Dependency ordering won't be as accurate though, as there is no proper
-      ordering of (reinstall a, reinstall b) if b depends on a. The resulting
-      graph contains at most one action per package name.
+  (** Reduces a graph of atomic or concrete actions (only removals, installs and
+      builds) by turning removal+install to reinstalls or up/down-grades, best
+      for display. Dependency ordering won't be as accurate though, as there is
+      no proper ordering of (reinstall a, reinstall b) if b depends on a. The
+      resulting graph contains at most one action per package name.
 
       There is no guarantee however that the resulting graph is acyclic. *)
   val reduce: t -> t

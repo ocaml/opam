@@ -136,9 +136,12 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
 
   module Map = OpamStd.Map.Make (A.Pkg)
 
-  (* Turn atomic actions (only install and remove) to higher-level actions
-     (install, remove, up/downgrade, recompile) *)
+  (* Turn concrete actions (only install, remove and build) to higher-level
+     actions (install, remove, up/downgrade, recompile). Builds are removed when
+     they directly precede an install, which should be the case when [explicit]
+     is used. *)
   let reduce g =
+    let g = copy g in
     let removals =
       fold_vertex (fun v acc -> match v with
           | `Remove p ->
@@ -146,6 +149,18 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
           | _ -> acc)
         g OpamStd.String.Map.empty
     in
+    iter_vertex (function
+        | `Build p as build ->
+          (match
+             fold_succ (fun v _ -> if v = `Install p then Some v else None)
+               g build None
+           with
+           | None -> ()
+           | Some inst ->
+             iter_pred (fun pred -> add_edge g pred inst) g build;
+             remove_vertex g build)
+        | _ -> ())
+      g;
     let reduced = ref Map.empty in
     let g =
       map_vertex (function
