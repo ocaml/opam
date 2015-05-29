@@ -2038,13 +2038,35 @@ let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
   let sh   (k,v) = Printf.sprintf "%s=%S; export %s;\n" k v k in
   let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
-  let fish (k,v) = match k with
-    | "PATH" | "MANPATH" ->
-      let v = OpamStd.String.split_delim v ':' in
-      Printf.sprintf "set -gx %s %s;\n" k
-        (OpamStd.List.concat_map " " (Printf.sprintf "%S") v)
-    | _ ->
-      Printf.sprintf "set -gx %s %S;\n" k v in
+  let fish (k,v) =
+    (* Fish converts some colon-separated vars to arrays, which have to be treated differently.
+     * Opam only changes PATH and MANPATH but we handle CDPATH for completeness. *)
+    let fish_array_vars = ["PATH"; "MANPATH"; "CDPATH"] in
+    let fish_array_derefs = List.map (fun s -> "$" ^ s) fish_array_vars in
+    if not (List.mem k fish_array_vars) then
+      (* Regular string variables *)
+      Printf.sprintf "set -gx %s %S;\n" k v
+    else
+      (* The MANPATH and CDPATH have default "values" if they are unset and we
+       * must be sure that we preserve these defaults when "appending" to them.
+       * This because Fish has trouble dealing with the case where we want to
+       * have a colon at the start or at the end of the string that gets exported.
+       *  - MANPATH: ""  (default system manpages)
+       *  - CDPATH:  "." (current directory) *)
+      let init_array = match k with
+        | "PATH"    -> "" (* PATH is always set *)
+        | "MANPATH" -> "if [ 0 -eq (count $MANPATH) ]; set -gx MANPATH \"\"; end;\n"
+        | "CDPATH"  -> "if [ 0 -eq (count $CDPATH) ]; set -gx CDPATH \".\"; end;\n"
+        | _         -> assert false in
+      (* Opam assumes that `v` is a string with colons in the middle so we have
+       * to convert that to an array assignment that fish understands.
+       * We also have to pay attention so we don't quote array expansions - that
+       * would replace some colons by spaces in the exported string *)
+      let vs = OpamStd.String.split_delim v ':' in
+      let to_arr_element v =
+        if List.mem v fish_array_derefs then v else Printf.sprintf "%S" v in
+      let set_array = Printf.sprintf "set -gx %s %s;\n" k (OpamStd.List.concat_map " " to_arr_element vs) in
+      (init_array ^ set_array) in
   let export = match shell with
     | `zsh
     | `sh  -> sh
