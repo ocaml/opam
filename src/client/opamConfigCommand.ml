@@ -138,7 +138,9 @@ let print_sexp_env env =
 let print_fish_env env =
   List.iter (fun (k,v) ->
       match k with
-      | "PATH" | "MANPATH" ->
+      | "PATH" | "MANPATH" | "CDPATH" ->
+        (* This function assumes that `v` does not include any variable expansions
+         * and that the directory names are written in full. See the opamState.ml for details *)
         let v = OpamStd.String.split_delim v ':' in
         OpamConsole.msg "set -gx %s %s;\n" k
           (OpamStd.List.concat_map " " (Printf.sprintf "%S") v)
