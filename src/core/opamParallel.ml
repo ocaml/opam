@@ -141,6 +141,7 @@ module Make (G : G) = struct
             S.filter
               (fun n ->
                  List.for_all (fun n -> M.mem n results) (G.pred g n) &&
+                 not (M.mem n results) &&
                  S.is_empty (mutual_exclusion_set n %% map_keys running))
               (S.of_list (G.succ g n) ++ mutual_exclusion_set n)
           in

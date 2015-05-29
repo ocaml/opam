@@ -239,12 +239,6 @@ let string_of_request r =
     (to_string r.wish_remove)
     (to_string r.wish_upgrade)
 
-let map_action f = function
-  | To_change (Some x, y) -> To_change (Some (f x), f y)
-  | To_change (None, y)   -> To_change (None, f y)
-  | To_delete y           -> To_delete (f y)
-  | To_recompile y        -> To_recompile (f y)
-
 (* Unused ?
 let map_cause f = function
   | Upstream_changes -> Upstream_changes
@@ -296,7 +290,8 @@ let cycle_conflict ~version_map univ cycles =
   OpamCudf.cycle_conflict ~version_map univ
     (List.map
        (List.map
-          (fun a -> Action.to_string (map_action OpamCudf.cudf2opam a)))
+          (fun a ->
+             Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
 let resolve ?(verbose=true) universe ~orphans request =
@@ -408,21 +403,20 @@ let check_for_conflicts universe =
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
       match action with
-      | To_change (_,p) -> OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
-      | To_recompile _ | To_delete _ -> packages
+      | `Install p | `Change (_,_,p) ->
+        OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
+      | `Reinstall _ | `Remove _ | `Build _ -> packages
   ) sol OpamPackage.Set.empty
 
 let stats sol =
   OpamCudf.ActionGraph.fold_vertex (fun action stats ->
       match action with
-      | To_change (None, _) -> {stats with s_install = stats.s_install+1}
-      | To_change (Some x, y) ->
-        let c = Common.CudfAdd.compare x y in
-        if c < 0 then {stats with s_upgrade = stats.s_upgrade+1} else
-        if c > 0 then {stats with s_downgrade = stats.s_downgrade+1} else
-          {stats with s_reinstall = stats.s_reinstall+1}
-      | To_recompile _ -> {stats with s_reinstall = stats.s_reinstall+1}
-      | To_delete _ -> {stats with s_remove = stats.s_remove+1})
+      | `Install _ -> {stats with s_install = stats.s_install+1}
+      | `Change (`Up,_,_) -> {stats with s_upgrade = stats.s_upgrade+1}
+      | `Change (`Down,_,_) -> {stats with s_downgrade = stats.s_downgrade+1}
+      | `Reinstall _ -> {stats with s_reinstall = stats.s_reinstall+1}
+      | `Remove _ -> {stats with s_remove = stats.s_remove+1}
+      | `Build _ -> stats)
     (OpamCudf.ActionGraph.reduce sol)
     { s_install=0; s_reinstall=0; s_upgrade=0; s_downgrade=0; s_remove=0 }
 
@@ -440,7 +434,11 @@ let string_of_stats stats =
       (fun a ->
          let s = OpamActionGraph.action_strings a in
          if utf then OpamActionGraph.action_color a s else s)
-      [`inst;`reinst;`up;`down;`rm]
+      [`Install ();
+       `Reinstall ();
+       `Change (`Up,(),());
+       `Change (`Down,(),());
+       `Remove ()]
   in
   let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
   if utf then
@@ -482,8 +480,9 @@ let print_solution ~messages ~rewrite ~requested t =
         let cause = string_of_cause cudf_name cause in
         let messages =
           match a with
-          | To_change(_,p) | To_recompile p -> messages (OpamCudf.cudf2opam p)
-          | To_delete _ -> []
+          | `Install p | `Change (_,_,p) | `Reinstall p ->
+            messages (OpamCudf.cudf2opam p)
+          | `Remove _ | `Build _ -> []
         in
         action :: actions, (cause, messages) :: details
       ) t ([],[])
@@ -519,9 +518,10 @@ let filter_solution filter t =
     ) in
   OpamCudf.ActionGraph.iter_vertex
     (function
-      | To_delete nv as a when not (filter (OpamCudf.cudf2opam nv)) ->
+      | `Remove nv as a when not (filter (OpamCudf.cudf2opam nv)) ->
         rm OpamCudf.ActionGraph.iter_pred a
-      | To_change (_, nv) as a when not (filter (OpamCudf.cudf2opam nv)) ->
+      | (`Install nv | `Change (_,_,nv)) as a
+        when not (filter (OpamCudf.cudf2opam nv)) ->
         rm OpamCudf.ActionGraph.iter_succ a
       | _ -> ())
     t;

@@ -55,7 +55,7 @@ val resolve:
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
-  (Cudf.package action list, OpamCudf.conflict) result
+  (Cudf.package atomic_action list, OpamCudf.conflict) result
 
 (** {2 Internal API} *)
 
@@ -151,4 +151,4 @@ val state_of_request: ?verbose:bool  ->
 val actions_of_state:
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
-  Cudf_types.vpkg request -> Cudf.package state -> Cudf.package action list
+  Cudf_types.vpkg request -> Cudf.package state -> Cudf.package atomic_action list

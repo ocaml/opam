@@ -26,8 +26,8 @@ module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
   match action with
-  | To_delete _ | To_recompile _ -> ()
-  | To_change (_,pkg) ->
+  | `Remove _ | `Reinstall _ | `Build _ -> ()
+  | `Install pkg | `Change (_,_,pkg) ->
     let opam = OpamState.opam state pkg in
     let messages = OpamFile.OPAM.post_messages opam in
     let local_variables = OpamVariable.Map.empty in
@@ -154,17 +154,12 @@ let display_error (n, error) =
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
-  | To_change (Some o, nv) ->
-    if
-      OpamPackage.Version.compare
-        (OpamPackage.version o) (OpamPackage.version nv) < 0
-    then
-      f "upgrading to" nv
-    else
-      f "downgrading to" nv
-  | To_change (None, nv) -> f "installing" nv
-  | To_recompile nv      -> f "recompiling" nv
-  | To_delete nv         -> f "removing" nv
+  | `Change (`Up, _, nv)   -> f "upgrading to" nv
+  | `Change (`Down, _, nv) -> f "downgrading to" nv
+  | `Install nv        -> f "installing" nv
+  | `Reinstall nv      -> f "recompiling" nv
+  | `Remove nv         -> f "removing" nv
+  | `Build nv          -> f "compiling" nv
 
 (* Prettify errors *)
 (* unuesed ?
@@ -226,34 +221,10 @@ let print_variable_warnings t =
     variable_warnings := true;
   )
 
-(* Transient state (not flushed to disk) *)
-type state = {
-  mutable s_installed      : package_set;
-  mutable s_installed_roots: package_set;
-  mutable s_reinstall      : package_set;
-}
-
 let output_json_solution solution =
   let to_proceed =
-    PackageActionGraph.Topological.fold (fun a to_proceed ->
-        match a with
-        | To_change(o,p)  ->
-          let json = match o with
-            | None   -> `O ["install", OpamPackage.to_json p]
-            | Some o ->
-              if OpamPackage.Version.compare
-                  (OpamPackage.version o) (OpamPackage.version p) < 0
-              then
-                `O ["upgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]]
-              else
-                `O ["downgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]] in
-          json :: to_proceed
-        | To_recompile p ->
-          let json = `O ["recompile", OpamPackage.to_json p] in
-          json :: to_proceed
-        | To_delete p    ->
-          let json = `O ["delete", OpamPackage.to_json p] in
-          json :: to_proceed
+    PackageActionGraph.Topological.fold (fun a acc ->
+        PackageAction.to_json a :: acc
       ) solution []
   in
   OpamJson.add (`A to_proceed)
@@ -282,25 +253,13 @@ let output_json_actions action_errors =
     ) action_errors
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
-   and report to user *)
+   and report to user. Takes a graph of atomic actions *)
 let parallel_apply t action action_graph =
   log "parallel_apply";
 
   (* We keep an imperative state up-to-date and flush it to disk as soon
      as an operation terminates *)
-  let state = {
-    s_installed       = t.installed;
-    s_installed_roots = t.installed_roots;
-    s_reinstall       = t.reinstall;
-  } in
   let t_ref = ref t in
-  let update_state () =
-    let installed       = state.s_installed in
-    let installed_roots = state.s_installed_roots in
-    let reinstall       = state.s_reinstall in
-    t_ref :=
-      OpamAction.update_metadata t ~installed ~installed_roots ~reinstall
-  in
 
   let root_installs =
     let names = OpamPackage.names_of_packages t.installed_roots in
@@ -314,22 +273,26 @@ let parallel_apply t action action_graph =
   in
 
   let add_to_install nv =
-    state.s_installed <- OpamPackage.Set.add nv state.s_installed;
-    state.s_reinstall <- OpamPackage.Set.remove nv state.s_reinstall;
-    if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
-      state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
-    update_state ();
-    if not OpamStateConfig.(!r.dryrun) then OpamState.install_metadata !t_ref nv
+    t_ref :=
+      OpamAction.update_metadata t
+        ~installed:(OpamPackage.Set.add nv !t_ref.installed)
+        ~reinstall:(OpamPackage.Set.remove nv !t_ref.reinstall)
+        ~installed_roots:
+          (if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs
+           then OpamPackage.Set.add nv !t_ref.installed_roots
+           else !t_ref.installed_roots);
+    if not OpamStateConfig.(!r.dryrun) then
+      OpamState.install_metadata !t_ref nv
   in
 
-  let remove_from_install deleted =
-    let rm = OpamPackage.Set.remove deleted in
-    state.s_installed       <- rm state.s_installed;
-    state.s_installed_roots <- rm state.s_installed_roots;
-    state.s_reinstall       <- rm state.s_reinstall;
-    update_state () in
-
-  let cancelled_exn = Failure "cancelled" in
+  let remove_from_install nv =
+    let rm = OpamPackage.Set.remove nv in
+    t_ref :=
+      OpamAction.update_metadata t
+        ~installed:(rm !t_ref.installed)
+        ~installed_roots:(rm !t_ref.installed_roots)
+        ~reinstall:(rm !t_ref.reinstall);
+  in
 
   (* 1/ fetch needed package archives *)
 
@@ -355,7 +318,7 @@ let parallel_apply t action action_graph =
   let fatal_dl_error =
     PackageActionGraph.fold_vertex
       (fun a acc -> acc || match a with
-         | To_delete _ -> false
+         | `Remove _ -> false
          | _ -> OpamPackage.Set.mem (action_contents a) failed_downloads)
       action_graph false
   in
@@ -376,63 +339,104 @@ let parallel_apply t action action_graph =
 
   (* 2/ process the package actions (installations and removals) *)
 
+  let action_graph = (* Add build actions *)
+    PackageActionGraph.explicit action_graph
+  in
+
   (* the child job to run on each action *)
   let job ~pred action =
-    if not (List.for_all (fun (_,r) -> r = None) pred) then
-      Done (Some cancelled_exn)
-    else
-    let t = !t_ref in
-    let nv = action_contents action in
-    let source =
-      try Some (OpamPackage.Map.find nv package_sources)
-      with Not_found -> None in
-    match action with
-    | To_change (_, nv) | To_recompile nv ->
-      (OpamAction.build_and_install_package ~metadata:false t source nv
-       @@+ function
-       | None ->  add_to_install nv; Done None
-       | Some exn -> Done (Some exn))
-    | To_delete nv ->
-      if OpamAction.removal_needs_download t nv then
-        (try OpamAction.extract_package t source nv
-         with e -> OpamStd.Exn.fatal e);
-      OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
-         (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
-      remove_from_install nv;
-      None
+    let installed_removed =
+      try
+        Some
+          (List.fold_left (fun (inst,rem) -> function
+               | _, `Successful (inst1, rem1) ->
+                 OpamPackage.Set.Op.(inst ++ inst1, rem ++ rem1)
+               | _, (`Exception _ | `Error _) ->
+                 raise Exit)
+              (OpamPackage.Set.empty, OpamPackage.Set.empty) pred)
+      with Exit -> None
+    in
+    match installed_removed with
+    | None -> Done (`Error `Aborted) (* prerequisite failed *)
+    | Some (installed, removed) ->
+      let t = (* Local state for this process, only prerequisites are visible *)
+        { t with installed =
+                   OpamPackage.Set.Op.(t.installed -- removed ++ installed) }
+      in
+      let nv = action_contents action in
+      let source =
+        try Some (OpamPackage.Map.find nv package_sources)
+        with Not_found -> None in
+      if OpamStateConfig.(!r.fake) then
+        match action with
+        | `Build _ -> Done (`Successful (installed, removed))
+        | `Install nv ->
+          OpamConsole.msg "Faking installation of %s"
+            (OpamPackage.to_string nv);
+          add_to_install nv;
+          Done (`Successful (OpamPackage.Set.add nv installed , removed))
+        | `Remove nv ->
+          remove_from_install nv;
+          Done (`Successful (installed, OpamPackage.Set.add nv removed))
+        | _ -> assert false
+      else
+      match action with
+      | `Build nv ->
+          (OpamAction.build_package t source nv @@+ function
+            | None -> Done (`Successful (installed, removed))
+            | Some exn -> Done (`Exception exn))
+      | `Install nv ->
+        (OpamAction.install_package t nv @@+ function
+          | None ->
+            add_to_install nv;
+            Done (`Successful (OpamPackage.Set.add nv installed, removed))
+          | Some exn ->
+            Done (`Exception exn))
+      | `Remove nv ->
+        if OpamAction.removal_needs_download t nv then
+          (try OpamAction.extract_package t source nv
+           with e -> OpamStd.Exn.fatal e);
+        OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
+          (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
+        remove_from_install nv;
+        `Successful (installed, OpamPackage.Set.add nv removed)
+      | _ -> assert false
   in
 
   let action_results =
     OpamConsole.header_msg "Processing actions";
     try
+      let _installs =
+        PackageActionGraph.fold_vertex
+          (fun a acc -> match a with `Install _ as i -> i::acc | _ -> acc)
+          action_graph []
+      in
       let results =
         PackageActionGraph.Parallel.map
           ~jobs:(OpamState.jobs t)
           ~command:job
           ~dry_run:OpamStateConfig.(!r.dryrun)
+          (* ~mutually_exclusive:[_installs] *)
           action_graph
       in
-      let successful, failed =
-        List.partition (fun (_,r) -> r = None) results
+      let success, failure, aborted =
+        List.fold_left (fun (success, failure, aborted) -> function
+            | a, `Successful _ -> a::success, failure, aborted
+            | a, `Exception e -> success, (a,e)::failure, aborted
+            | a, `Error `Aborted -> success, failure, a::aborted
+          ) ([], [], []) results
       in
-      match failed with
-      | [] -> `Successful ()
-      | _::_ ->
-        let failed =
-          List.map (function (act,Some e) -> act, e | _ -> assert false) failed
-        in
-        let cancelled, failed =
-          List.partition (fun (_,e) -> e = cancelled_exn) failed
-        in
-        let act r = List.map fst r in
-        List.iter display_error failed;
-        output_json_actions failed;
-        `Error (Error (act successful, act failed, act cancelled))
+      if failure = [] && aborted = [] then `Successful ()
+      else (
+        List.iter display_error failure;
+        output_json_actions failure;
+        `Error (Error (success, List.map fst failure, aborted))
+      )
     with
-    | PackageActionGraph.Parallel.Errors (successful, errors, remaining) ->
+    | PackageActionGraph.Parallel.Errors (success, errors, remaining) ->
       List.iter display_error errors;
       output_json_actions errors;
-      `Error (Error (successful, List.map fst errors, remaining))
+      `Error (Error (success, List.map fst errors, remaining))
     | e -> `Exception e
   in
   let t = !t_ref in
@@ -441,10 +445,10 @@ let parallel_apply t action action_graph =
 
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
-        | To_delete nv | To_change (Some nv, _)
-          when not (OpamState.is_pinned t (OpamPackage.name nv)) ->
+        | `Remove nv when not (OpamState.is_pinned t (OpamPackage.name nv)) ->
           OpamAction.cleanup_package_artefacts t nv (* no-op if reinstalled *)
-        | _ -> ())
+        | `Remove _ | `Install _ | `Build _ -> ()
+        | _ -> assert false)
       graph
   in
   match action_results with
@@ -473,17 +477,31 @@ let parallel_apply t action action_graph =
     match err with
     | Aborted -> err
     | Error (successful, failed, remaining) ->
-      let filter_graph g l =
+      (* Cleanup build/install actions when one of them failed, it's verbose and
+         doesn't add information *)
+      let successful =
+        List.filter (function
+            | `Build p when List.mem (`Install p) failed -> false
+            | _ -> true)
+          successful
+      in
+      let remaining =
+        List.filter (function
+            | `Install p when List.mem (`Build p) failed -> false
+            | _ -> true)
+          remaining
+      in
+      let filter_graph l =
         if l = [] then PackageActionGraph.create () else
-        let g = PackageActionGraph.copy g in
+        let g = PackageActionGraph.copy action_graph in
         PackageActionGraph.iter_vertex (fun v ->
             if not (List.mem v l) then PackageActionGraph.remove_vertex g v)
           g;
         PackageActionGraph.reduce g
       in
-      let successful = filter_graph action_graph successful in
+      let successful = filter_graph successful in
       cleanup_artefacts successful;
-      let failed = filter_graph action_graph failed in
+      let failed = filter_graph failed in
       let print_actions filter header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
@@ -504,13 +522,13 @@ let parallel_apply t action action_graph =
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions were %s"
            (OpamConsole.colorise `yellow "aborted"))
-        (filter_graph action_graph remaining);
+        (filter_graph remaining);
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions %s"
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function To_recompile _ -> false | _ -> true)
+        (function `Reinstall _ -> false | _ -> true)
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;
@@ -522,10 +540,11 @@ let simulate_new_state state t =
     OpamSolver.ActionGraph.Topological.fold
       (fun action installed ->
         match action with
-        | To_change(_,p) | To_recompile p ->
+        | `Install p | `Change (_,_,p) | `Reinstall p ->
           OpamPackage.Set.add p installed
-        | To_delete p ->
+        | `Remove p ->
           OpamPackage.Set.remove p installed
+        | `Build _ -> installed
       )
       t state.installed in
   { state with installed }

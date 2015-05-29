@@ -194,19 +194,38 @@ type repository = {
 
 (** {2 Solver} *)
 
-(** The solver answers a list of actions to perform *)
-type 'a action =
+(** Used internally when computing sequences of actions *)
+type 'a atomic_action = [
+  | `Remove of 'a
+  | `Install of 'a
+]
 
-  (** The package must be installed. The package could have been
-      present or not, but if present, it is another version than the
-      proposed solution. *)
-  | To_change of 'a option * 'a
+(** Used to compact the atomic actions and display to the user in a more
+    meaningful way *)
+type 'a highlevel_action = [
+  | 'a atomic_action
+  | `Change of [ `Up | `Down ] * 'a * 'a
+  | `Reinstall of 'a
+]
 
-  (** The package must be deleted. *)
-  | To_delete of 'a
+(** Sub-type of [highlevel_action] corresponding to an installed package that
+    changed state or version *)
+type 'a inst_action = [
+  | `Install of 'a
+  | `Change of 'a * 'a * [ `Up | `Down ]
+]
 
-  (** The package is already installed, but it must be recompiled. *)
-  | To_recompile of 'a
+(** Used when applying solutions, separates build from install *)
+type 'a concrete_action = [
+  | 'a atomic_action
+  | `Build of 'a
+]
+
+type 'a action = [
+  | 'a atomic_action
+  | 'a highlevel_action
+  | 'a concrete_action
+]
 
 (** The possible causes of an action. *)
 type 'a cause =

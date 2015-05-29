@@ -440,8 +440,9 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
   if metadata then cleanup_meta ();
   if not silent then
     OpamConsole.msg "%s removed   %s.%s\n"
-      (if not (OpamConsole.utf8 ()) then "->"
-       else OpamActionGraph.(action_color `rm (action_strings `rm)))
+      (if not (OpamConsole.utf8 ()) then "->" else
+         OpamActionGraph.(action_color (`Remove ())
+                            (action_strings (`Remove ()))))
       (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
       (OpamPackage.version_to_string nv);
   Done ()
@@ -475,15 +476,11 @@ let cleanup_package_artefacts t nv =
 let sources_needed t g =
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
-      | To_delete nv ->
+      | `Remove nv ->
         if removal_needs_download t nv
         then OpamPackage.Set.add nv acc else acc
-      | To_change (None,nv) | To_recompile nv ->
-        OpamPackage.Set.add nv acc
-      | To_change (Some nv1, nv2) ->
-        let acc = OpamPackage.Set.add nv2 acc in
-        if removal_needs_download t nv1
-        then OpamPackage.Set.add nv1 acc else acc)
+      | `Install nv -> OpamPackage.Set.add nv acc
+      | _ -> assert false)
     g OpamPackage.Set.empty
 
 let remove_package t ~metadata ?keep_build ?silent nv =
@@ -492,21 +489,48 @@ let remove_package t ~metadata ?keep_build ?silent nv =
   else
     remove_package_aux t ~metadata ?keep_build ?silent nv
 
-(* Build and install a package.
-   Assumes the package has already been downloaded to its build dir.
+(* Compiles a package.
+   Assumes the package has already been downloaded to [source].
 *)
-let build_and_install_package_aux t ~metadata:save_meta source nv =
-  (* OpamConsole.header_msg "Installing %s" (OpamPackage.to_string nv); *)
-
+let build_package t source nv =
   extract_package t source nv;
-
   let opam = OpamState.opam t nv in
   let commands =
     OpamFile.OPAM.build opam @
-    (if OpamStateConfig.(!r.build_test) then OpamFile.OPAM.build_test opam else []) @
-    (if OpamStateConfig.(!r.build_doc) then OpamFile.OPAM.build_doc opam else []) @
-    OpamFile.OPAM.install opam
+    (if OpamStateConfig.(!r.build_test)
+     then OpamFile.OPAM.build_test opam else []) @
+    (if OpamStateConfig.(!r.build_doc)
+     then OpamFile.OPAM.build_doc opam else [])
   in
+  let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
+  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let name = OpamPackage.name_to_string nv in
+  let dir = OpamPath.Switch.build t.root t.switch nv in
+  let rec run_commands = function
+    | (cmd::args)::commands ->
+      let text = OpamProcess.make_command_text name ~args cmd in
+      let dir = OpamFilename.Dir.to_string dir in
+      OpamSystem.make_command ~env ~name ~dir ~text
+        ~verbose:(OpamConsole.verbose ()) ~check_existence:false
+        cmd args
+      @@> fun result ->
+      if OpamProcess.is_success result then
+        run_commands commands
+      else
+        (OpamConsole.error
+           "The compilation of %s failed at %S."
+           name (String.concat " " (cmd::args));
+         Done (Some (OpamSystem.Process_error result)))
+    | []::commands -> run_commands commands
+    | [] -> Done None
+  in
+  run_commands commands
+
+(* Assumes the package has already been compiled in its build dir.
+   Does not register the installation in the metadata ! *)
+let install_package t nv =
+  let opam = OpamState.opam t nv in
+  let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
   let env = OpamFilename.env_of_list (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
@@ -525,38 +549,26 @@ let build_and_install_package_aux t ~metadata:save_meta source nv =
         run_commands commands
       else (
         OpamConsole.error
-          "The compilation of %s failed at %S."
+          "The installation of %s failed at %S."
           name (String.concat " " (cmd::args));
         remove_package ~metadata:false t ~keep_build:true ~silent:true nv
         @@| fun () -> Some (OpamSystem.Process_error result)
       )
     | []::commands -> run_commands commands
-    | [] ->
-      try
-        install_package t nv;
-        if save_meta then (
-          let installed = OpamPackage.Set.add nv t.installed in
-          let installed_roots = OpamPackage.Set.add nv t.installed_roots in
-          let reinstall = OpamPackage.Set.remove nv t.reinstall in
-          let t = update_metadata t ~installed ~installed_roots ~reinstall in
-          OpamState.install_metadata t nv;
-        );
-        OpamConsole.msg "%s installed %s.%s\n"
-          (if not (OpamConsole.utf8 ()) then "->"
-           else OpamActionGraph.(action_color `inst (action_strings `inst)))
-          (OpamConsole.colorise `bold name)
-          (OpamPackage.version_to_string nv);
-        Done None
-      with e ->
-        remove_package ~metadata:false t ~keep_build:true ~silent:true nv
-        @@| fun () -> OpamStd.Exn.fatal e; Some e
+    | [] -> Done None
   in
-  run_commands commands
-
-let build_and_install_package t ~metadata source nv =
-  if not OpamStateConfig.(!r.fake) then
-    build_and_install_package_aux t ~metadata source nv
-  else
-    (OpamConsole.msg "(simulation) Building and installing %s.\n"
-       (OpamPackage.to_string nv);
-     Done None)
+  run_commands commands @@+ function
+  | Some _ as err -> Done err
+  | None ->
+    try
+      install_package t nv;
+      OpamConsole.msg "%s installed %s.%s\n"
+        (if not (OpamConsole.utf8 ()) then "->"
+         else OpamActionGraph.
+                (action_color (`Install ()) (action_strings (`Install ()))))
+        (OpamConsole.colorise `bold name)
+        (OpamPackage.version_to_string nv);
+      Done None
+    with e ->
+      remove_package ~metadata:false t ~keep_build:true ~silent:true nv
+      @@| fun () -> OpamStd.Exn.fatal e; Some e
