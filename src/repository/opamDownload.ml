@@ -44,7 +44,7 @@ let download_args ~url ~out ~retry ?checksum ~compress =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
-    | [CIdent "wget", _] -> cmd @ wget_args
+    | [(CIdent "wget"|CString "wget"), _] -> cmd @ wget_args
     | [_] -> cmd @ curl_args (* Assume curl if the command is a single arg *)
     | _ -> cmd
   in
