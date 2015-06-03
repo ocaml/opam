@@ -281,7 +281,7 @@ let help_sections = [
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
   `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
       a custom command where variables $(b,%{url}%), $(b,%{out}%), \
-      $(b,%{retries}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
+      $(b,%{retry}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
       be replaced. Overrides the \
       'download-command' value from the main config file.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
@@ -1314,6 +1314,9 @@ let update =
   let repos_only =
     mk_flag ["R"; "repositories"]
       "Only update repositories, not development packages." in
+  let dev_only =
+    mk_flag ["development"]
+      "Only update development packages, not repositories." in
   let sync =
     mk_flag ["sync-archives"]
       "Always sync the remote archives files. This is not \
@@ -1327,17 +1330,17 @@ let update =
   let name_list =
     arg_list "NAMES" "List of repository or development package names."
       Arg.string in
-  let update global_options jobs json names repos_only sync upgrade =
+  let update global_options jobs json names repos_only dev_only sync upgrade =
     apply_global_options global_options;
     json_update json;
     let sync_archives = if sync then Some true else None in
     OpamStateConfig.update ?jobs ();
     OpamClientConfig.update ?sync_archives ();
-    Client.update ~repos_only ~no_stats:upgrade names;
+    Client.update ~repos_only ~dev_only ~no_stats:upgrade names;
     if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])
   in
   Term.(pure update $global_options $jobs_flag $json_flag $name_list
-        $repos_only $sync $upgrade),
+        $repos_only $dev_only $sync $upgrade),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
