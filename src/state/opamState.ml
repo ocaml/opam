@@ -510,7 +510,8 @@ let find_opam_file_in_source name dir =
 (* Returns [opam, descr_file, files_dir]. We don't consider [url] since
    this is for pinned packages. if [root], don't look for a subdir [opam]
    to find [files] and [descr]. *)
-let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
+let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
+    name dir =
   let has_dir d = if OpamFilename.exists_dir d then Some d else None in
   let has_file f = if OpamFilename.exists f then Some f else None in
   let metadir =
@@ -523,29 +524,38 @@ let local_opam ?(root=false) ?fixed_version ?copy_invalid_to name dir =
     if root then has_file (dir // "opam")
     else find_opam_file_in_source name dir
   in
-  let opam = match opam_file with
+  let opam_opt = match opam_file with
     | None -> None
     | Some local_opam ->
-      try
-        let opam = OpamFile.OPAM.read local_opam in
-        let opam = OpamFile.OPAM.with_name opam name in
-        let opam = match fixed_version with
-          | None -> opam
-          | Some v -> OpamFile.OPAM.with_version opam v
-        in
-        Some opam
-      with e ->
-        OpamStd.Exn.fatal e;
-        match copy_invalid_to with
-        | Some dst ->
-          OpamConsole.warning
-            "Errors in opam file from %s source, ignored (fix with 'opam pin \
-             edit')"
-            (OpamPackage.Name.to_string name);
-          OpamFilename.copy ~src:local_opam ~dst; None
-        | None -> None
+      let warns, opam_opt = OpamFile.OPAM.validate_file local_opam in
+      if check && warns <> [] then
+        (OpamConsole.warning
+           "%s opam file from upstream of %s (fix with 'opam pin edit'):"
+           (if opam_opt = None then "Fatal errors, not using"
+            else "Failed checks in")
+           (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
+         OpamConsole.errmsg "%s\n"
+           (OpamFile.OPAM.warns_to_string warns));
+      (match opam_opt, copy_invalid_to with
+       | None, Some dst ->
+         if not check then
+           OpamConsole.warning
+             "Errors in opam file from %s upstream, ignored (fix with \
+              'opam pin edit')"
+             (OpamPackage.Name.to_string name);
+         OpamFilename.copy ~src:local_opam ~dst:dst
+       | _ -> ());
+      OpamStd.Option.map
+        (fun opam ->
+           let opam = OpamFile.OPAM.with_name opam name in
+           let opam = match fixed_version with
+             | None -> opam
+             | Some v -> OpamFile.OPAM.with_version opam v
+           in
+           opam)
+        opam_opt
   in
-  opam, has_file (metadir // "descr"), has_dir (metadir / "files")
+  opam_opt, has_file (metadir // "descr"), has_dir (metadir / "files")
 
 
 let remove_overlay t name =
@@ -2653,7 +2663,15 @@ let update_pinned_package t ?fixed_version name =
     if pinning_kind = `version then [] else
       hash_meta @@ local_opam ?fixed_version name srcdir
   in
-  let was_single_opam_file = OpamFilename.exists (srcdir // "opam") in
+  let old_opam_file =
+    try Some (List.find OpamFilename.exists
+                [srcdir // "opam"; srcdir / "opam" // "opam"])
+    with Not_found -> None
+  in
+  let was_single_opam_file = (old_opam_file = Some (srcdir // "opam")) in
+  let old_opam_digest =
+    OpamStd.Option.map OpamFilename.digest old_opam_file
+  in
   let just_opam = List.filter (function (_, `Opam _) -> true | _ -> false) in
   let user_meta, empty_user_meta, user_version =
     (* Installed version (overlay) *)
@@ -2699,9 +2717,18 @@ let update_pinned_package t ?fixed_version name =
   let fake_nv = OpamPackage.create name (OpamPackage.Version.of_string "") in
   (* Do the update *)
   fetch_dev_package url srcdir fake_nv @@+ fun result ->
+  let check = (* only on upstream changes *)
+    try
+      old_opam_digest <> Some (
+        OpamFilename.digest
+          (List.find OpamFilename.exists
+             [srcdir // "opam"; srcdir / "opam" // "opam"]))
+    with Not_found -> false
+  in
   let new_meta = (* New version from the source *)
     hash_meta @@
     local_opam ?fixed_version
+      ~check
       ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam t.root t.switch name)
       name srcdir
   in
