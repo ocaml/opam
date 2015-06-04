@@ -1039,12 +1039,13 @@ module API = struct
 
   let fixup () = with_switch_backup "fixup" fixup_t
 
-  let update ~repos_only ?(no_stats=false) names =
+  let update ~repos_only ~dev_only ?(no_stats=false) names =
     let t = OpamState.load_state ~save_cache:true "update"
         OpamStateConfig.(!r.current_switch) in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
-      if names = [] then
+      if dev_only then OpamRepositoryName.Map.empty
+      else if names = [] then
         t.repositories
       else
         let aux r _ =
@@ -1845,8 +1846,8 @@ module SafeAPI = struct
   let remove ~autoremove ~force names =
     switch_lock (fun () -> API.remove ~autoremove ~force names)
 
-  let update ~repos_only ?no_stats repos =
-    global_lock (fun () -> API.update ~repos_only ?no_stats repos)
+  let update ~repos_only ~dev_only ?no_stats repos =
+    global_lock (fun () -> API.update ~repos_only ~dev_only ?no_stats repos)
 
   module CONFIG = struct
 
