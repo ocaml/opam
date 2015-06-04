@@ -158,11 +158,12 @@ let apply_global_options o =
     (* ?force_checksums:bool option *)
     ();
   let external_solver =
-    o.external_solver >>| fun s ->
-    lazy (
-      let args = OpamStd.String.split s ' ' in
-      Some (List.map (fun a -> OpamTypes.CString a, None) args)
-    )
+    if o.use_internal_solver then Some (lazy None) else
+      o.external_solver >>| fun s ->
+      lazy (
+        let args = OpamStd.String.split s ' ' in
+        Some (List.map (fun a -> OpamTypes.CString a, None) args)
+      )
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
   OpamSolverConfig.init
