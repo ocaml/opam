@@ -19,7 +19,7 @@ type t = private {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t;
   switch_from: [ `Env | `Command_line | `Default ];
-  jobs: int;
+  jobs: int Lazy.t;
   dl_jobs: int;
   external_tags: string list;
   keep_build_dir: bool;
@@ -36,8 +36,8 @@ type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Env | `Command_line | `Default ] ->
-  ?jobs: int ->
-  ?dl_jobs: int ->
+  ?jobs:(int Lazy.t) ->
+  ?dl_jobs:int ->
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?no_base_packages:bool ->

@@ -129,7 +129,7 @@ let dot_config t name =
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
 
-let jobs _ = OpamStateConfig.(!r.jobs)
+let jobs _ = Lazy.force OpamStateConfig.(!r.jobs)
 
 let dl_jobs _ = OpamStateConfig.(!r.dl_jobs)
 

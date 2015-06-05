@@ -113,7 +113,7 @@ let load_defaults root_dir =
     OpamStateConfig.update
       ~current_switch:(OpamFile.Config.switch conf)
       ~switch_from:`Default
-      ~jobs:(OpamFile.Config.jobs conf)
+      ~jobs:(lazy (OpamFile.Config.jobs conf))
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
     true

@@ -17,7 +17,7 @@ type t = {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t;
   switch_from: [ `Env | `Command_line | `Default ];
-  jobs: int;
+  jobs: int Lazy.t;
   dl_jobs: int;
   external_tags: string list;
   keep_build_dir: bool;
@@ -36,7 +36,7 @@ let default = {
     );
   current_switch = OpamSwitch.system;
   switch_from = `Default;
-  jobs = 1;
+  jobs = lazy (OpamSystem.cpu_count ());
   dl_jobs = 3;
   external_tags = [];
   keep_build_dir = false;
@@ -57,8 +57,8 @@ type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Env | `Command_line | `Default ] ->
-  ?jobs: int ->
-  ?dl_jobs: int ->
+  ?jobs:(int Lazy.t) ->
+  ?dl_jobs:int ->
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?no_base_packages:bool ->
@@ -123,7 +123,7 @@ let init ?noop:_ =
     ?root_dir:(env_string "ROOT" >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
-    ?jobs:(env_int "JOBS")
+    ?jobs:(env_int "JOBS" >>| fun s -> lazy s)
     ?dl_jobs:(env_int "DOWNLOADJOBS")
     ?keep_build_dir:(env_bool "KEEPBUILDDIR")
     ?no_base_packages:(env_bool "NOBASEPACKAGES")

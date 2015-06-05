@@ -182,6 +182,9 @@ val extract_in: string -> string -> unit
     exist. *)
 val mkdir: string -> unit
 
+(** Get the number of active processors on the system *)
+val cpu_count: unit -> int
+
 (** {2 File locking function} *)
 
 type lock
