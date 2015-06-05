@@ -159,10 +159,17 @@ let prepare_package_build t nv =
         else acc
       ) [] patches in
 
+  let print_apply basename =
+    log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
+      (OpamFilename.Base.to_string basename);
+    if OpamConsole.verbose () then
+      OpamConsole.msg "[%s: patch] applying %s\n"
+        (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
+        (OpamFilename.Base.to_string basename)
+  in
+
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
-    ignore (iter_patches (fun base ->
-        log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
-          (OpamFilename.Base.to_string base)))
+    ignore (iter_patches print_apply)
   else
 
   let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -184,8 +191,7 @@ let prepare_package_build t nv =
     iter_patches (fun base ->
       let root = OpamPath.Switch.build t.root t.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
-      log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
-        (OpamFilename.Base.to_string base);
+      print_apply base;
       OpamFilename.patch patch p_build)
   in
 
