@@ -499,7 +499,7 @@ recommended to check the validity and quality of your `opam` files.
 
     Patches may be applied conditionally by adding _filters_.
 
-- `subst: [ <string> ... ]`: a list of files relative to the project source
+- `substs: [ <string> ... ]`: a list of files relative to the project source
   root. These files will be generated from their `.in` counterparts, with
   variable interpolations expanded.
 

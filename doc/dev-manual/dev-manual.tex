@@ -268,7 +268,7 @@ the following restrictions:
     ?dev-repo:      STRING
     ?tags:          [ STRING+ ]
     ?patches:       [ (STRING ?{ <filter> } )+ ]
-    ?subst:         [ STRING+ ]
+    ?substs:        [ STRING+ ]
     ?build:         commands
     ?install:       commands
     ?build-doc:     commands
@@ -369,10 +369,10 @@ the following restrictions:
   (often added through the {\tt files/} metadata subdirectory). The listed patch
   files will be applied sequentially to the source like with the {\tt patch}
   command, after having gone through {\em variable interpolation expansion} like
-  files listed in {\tt subst}. Patches may be applied conditionally by adding
+  files listed in {\tt substs}. Patches may be applied conditionally by adding
   {\em filters}.
 
-\item {\tt subst} contains a list of files relative to the project source root.
+\item {\tt substs} contains a list of files relative to the project source root.
   Variable interpolations will be expanded on these files before the build takes
   place (see \S\ref{file:subst} for the file format and \S\ref{section:config}
   for the semantic of file substitution).
