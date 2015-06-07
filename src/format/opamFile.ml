@@ -2493,6 +2493,8 @@ end
 
 open X
 
+module Syntax = Syntax
+
 module type IO_FILE = sig
   type t
   val empty: t
