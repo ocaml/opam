@@ -28,38 +28,52 @@ let string_of_variable_contents = function
 
 module Full = struct
 
+  type scope =
+    | Global
+    | Self
+    | Package of OpamPackage.Name.t
+
   type t = {
-    package : OpamPackage.Name.t;
+    scope: scope;
     variable: variable;
   }
 
   let variable t = t.variable
-  let package t = t.package
+  let scope t = t.scope
+  let package ?self t = match t.scope with
+    | Package p -> Some p
+    | Self -> self
+    | Global -> None
 
   let create package variable =
-    { package; variable }
+    let scope =
+      if OpamPackage.Name.to_string package = "_" then Self
+      else Package package
+    in
+    { scope; variable }
 
-  let global variable = create OpamPackage.Name.global_config variable
+  let global variable =
+    { scope = Global; variable }
 
-  let is_global variable = variable.package = OpamPackage.Name.global_config
+  let is_global variable = match variable.scope with
+    | Global -> true
+    | Self | Package _ -> false
 
   let of_string s =
     match OpamStd.String.rcut_at s ':' with
-    | None -> create OpamPackage.Name.global_config (of_string s)
+    | None -> global (of_string s)
+    | Some ("_",v) ->
+      { scope = Self; variable = of_string v }
     | Some (p,v) ->
-      let v = of_string v in
-      create (OpamPackage.Name.of_string p) v
+      create (OpamPackage.Name.of_string p) (of_string v)
 
   let to_string t =
     let prefix =
-      let n = package t in
-      if (package t) = OpamPackage.Name.global_config then ""
-      else OpamPackage.Name.to_string n in
-    let prefix =
-      if prefix = "" then
-        ""
-      else
-        prefix ^ ":" in
+      match t.scope with
+      | Global -> ""
+      | Self -> "_:"
+      | Package p -> OpamPackage.Name.to_string p ^ ":"
+    in
     prefix ^ to_string t.variable
 
   let to_json x =

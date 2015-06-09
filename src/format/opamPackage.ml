@@ -62,9 +62,6 @@ module Name = struct
       x;
     x
 
-  let global_config = "global-config"
-  let this = "-"
-
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
     | 0 -> compare n1 n2

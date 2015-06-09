@@ -135,7 +135,7 @@ let consistent_os args opam =
 let string str = Some (S str)
 let bool b = Some (B b)
 let is_global_conf v =
-  OpamVariable.Full.package v = OpamPackage.Name.global_config
+  OpamVariable.Full.is_global v
 
 let faked_var_resolve args v =
   let get_global_var v =

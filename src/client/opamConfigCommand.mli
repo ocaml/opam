@@ -24,7 +24,8 @@ open OpamTypes
     an opam entry: either at the same rank, or pushed in front. *)
 val env: csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool -> unit
 
-(** Display the content of all available variables *)
+(** Display the content of all available variables; global summary if the list
+    is empty, package name "-" is understood as global configuration *)
 val list: name list -> unit
 
 (** Display the content of a given variable *)

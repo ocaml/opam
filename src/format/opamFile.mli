@@ -458,6 +458,9 @@ module Dot_config: sig
   (** The list of top-level variables *)
   val variables: t -> variable list
 
+  (** Lists all the bindings in the file *)
+  val bindings: t -> (variable * variable_contents) list
+
 end
 
 (** {2 Repository files} *)

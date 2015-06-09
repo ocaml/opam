@@ -107,24 +107,18 @@ let installed_map t =
   OpamPackage.Name.Map.map OpamPackage.Version.Set.choose_one
     (OpamPackage.to_map t.installed)
 
-let dot_config t name =
-  let global =
-    name = OpamPackage.Name.global_config
-  in
-  let f =
-    if global then
-      OpamPath.Switch.global_config t.root t.switch
-    else
-      OpamPath.Switch.config t.root t.switch name
-  in
+let global_config t =
+  let f = OpamPath.Switch.global_config t.root t.switch in
   if OpamFilename.exists f then
     OpamFile.Dot_config.safe_read f
-  else if not global then OpamFile.Dot_config.empty
   else
     (OpamConsole.error "No global config file found for switch %s. \
                         Switch broken ?"
        (OpamSwitch.to_string t.switch);
      OpamFile.Dot_config.empty)
+
+let dot_config t name =
+  OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch name)
 
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
@@ -396,6 +390,13 @@ let pinned t name =
 
 let pinned_opt t name = try Some (pinned t name) with Not_found -> None
 
+let get_package t name =
+  try pinned t name with Not_found ->
+  try find_installed_package_by_name t name with Not_found ->
+  try OpamPackage.max_version (Lazy.force t.available_packages) name
+  with Not_found ->
+    OpamPackage.max_version t.packages name
+
 let is_locally_pinned t name =
   try match OpamPackage.Name.Map.find name t.pinned with
     | Version _ -> false
@@ -643,13 +644,12 @@ let int i = string (string_of_int i)
 (* Read the env variables *)
 let get_env_var v =
   let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
+  let var_str = OpamStd.String.map (function '-' -> '_' | c -> c) var_str in
   let var_hook =
-    if OpamVariable.Full.is_global v then
-      OpamStd.String.map (function '-' -> '_' | c -> c) var_str
-    else
-      Printf.sprintf "%s_%s"
-        (OpamPackage.Name.to_string (OpamVariable.Full.package v))
-        var_str
+    match OpamVariable.Full.package v with
+    | Some n ->
+      Printf.sprintf "%s_%s" (OpamPackage.Name.to_string n) var_str
+    | None -> var_str
   in
   try match OpamStd.Env.get ("OPAMVAR_" ^ var_hook) with
     | "true"  | "1" -> bool true
@@ -660,18 +660,27 @@ let get_env_var v =
 (* filter handling *)
 let rec resolve_variable t ?opam:opam_arg local_variables v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
+  let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_var v =
-    let var = OpamVariable.Full.variable v in
-    let c = dot_config t (OpamVariable.Full.package v) in
-    try OpamFile.Dot_config.variable c var
-    with Not_found -> None in
+    let get c =
+      try OpamFile.Dot_config.variable c (OpamVariable.Full.variable v)
+      with Not_found -> None
+    in
+    match OpamVariable.Full.scope v with
+    | OpamVariable.Full.Global -> get (global_config t)
+    | OpamVariable.Full.Package n -> get (dot_config t n)
+    | OpamVariable.Full.Self ->
+      OpamStd.Option.Op.(pkgname >>| dot_config t >>= get)
+  in
   let get_local_var v =
-    if not (OpamVariable.Full.is_global v) then None else
-    let var = OpamVariable.Full.variable v in
-    try match OpamVariable.Map.find var local_variables with
-      | None -> raise Exit (* Variable explicitly undefined *)
-      | some -> some
-    with Not_found -> None
+    match OpamVariable.Full.package v with
+    | Some _ -> None
+    | None ->
+      let var = OpamVariable.Full.variable v in
+      try match OpamVariable.Map.find var local_variables with
+        | None -> raise Exit (* Variable explicitly undefined *)
+        | some -> some
+      with Not_found -> None
   in
   let get_features_var opam v =
     let to_str opam =
@@ -725,13 +734,19 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     | "arch"          -> string (OpamStd.Sys.arch ())
     | _               -> None
   in
-  let get_package_var opam v =
+  let get_package_var v =
     if OpamVariable.Full.is_global v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
-    let name = OpamVariable.Full.package v in
+    let name =
+      match OpamVariable.Full.scope v with
+      | OpamVariable.Full.Global -> assert false
+      | OpamVariable.Full.Package n -> n
+      | OpamVariable.Full.Self ->
+        match pkgname with Some n -> n | None -> raise Exit
+    in
     let opam = (* ensure opam, if not None, corresponds to name *)
-      match opam with
-      | Some o when OpamFile.OPAM.name o = name -> opam
+      match opam_arg with
+      | Some o when OpamFile.OPAM.name o = name -> opam_arg
       | _ ->
         try opam_opt t (find_installed_package_by_name t name)
         with Not_found -> None
@@ -742,7 +757,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
     match var_str, opam with
-    | "installed", Some _    -> bool true
+    | "installed", Some _    -> bool (is_name_installed t name)
     | "installed", None      -> bool false
     | "pinned",    _         -> bool    (OpamPackage.Name.Map.mem name t.pinned)
     | "name",      _         ->
@@ -793,18 +808,12 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
   in
   let make_package_local v =
     (* [var] within the opam file of [pkg] is tried as [pkg:var] *)
-    match OpamVariable.Full.is_global v, opam_arg with
-    | true, Some opam ->
-      OpamVariable.Full.create (OpamFile.OPAM.name opam) (OpamVariable.Full.variable v)
+    match OpamVariable.Full.is_global v, pkgname with
+    | true, Some name ->
+      OpamVariable.Full.create name (OpamVariable.Full.variable v)
     | _ -> v
   in
   let skip _ = None in
-  let v =
-    match opam_arg with
-    | Some opam when OpamVariable.Full.package v = OpamPackage.Name.this ->
-      OpamVariable.Full.(create (OpamFile.OPAM.name opam) (variable v))
-    | _ -> v
-  in
   let v' = make_package_local v in
   let contents =
     try
@@ -818,7 +827,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
           read_var, v;
           (if v' <> v then read_var else skip), v';
           get_global_var, v;
-          get_package_var opam_arg, v';
+          get_package_var, v';
         ]
     with Exit -> None
   in
@@ -1842,12 +1851,13 @@ let upgrade_to_1_2 () =
     (* Move .config files *)
     List.iter (fun f ->
         let name =
-          OpamPackage.Name.of_string @@
           OpamFilename.Base.to_string @@
           OpamFilename.basename @@
           OpamFilename.chop_extension f in
-        if name <> OpamPackage.Name.global_config then
-          let dst = OpamPath.Switch.config root switch name in
+        if name <> "global-config" then
+          let dst =
+            OpamPath.Switch.config root switch (OpamPackage.Name.of_string name)
+          in
           OpamFilename.mkdir (OpamFilename.dirname dst);
           OpamFilename.move ~src:f ~dst
       )

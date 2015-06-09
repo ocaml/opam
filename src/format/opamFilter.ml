@@ -230,10 +230,10 @@ let opt_eval_to_bool env opt =
 let eval_to_string ?default env e = value_string ?default (reduce env e)
 
 let ident_of_var v =
-  let p = OpamVariable.Full.package v in
-  let var = OpamVariable.Full.variable v in
-  if p = OpamPackage.Name.global_config then [], var, None
-  else [p], var, None
+  (match OpamVariable.Full.package v with
+   | Some p -> [p]
+   | None -> []),
+  OpamVariable.Full.variable v, None
 
 let ident_of_string s =
   ident_of_var (OpamVariable.Full.of_string s)
