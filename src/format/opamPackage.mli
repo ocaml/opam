@@ -34,6 +34,9 @@ module Name: sig
 
   (** global configuration package *)
   val global_config: t
+
+  (** name used within package files for self-reference ("-") *)
+  val this: t
 end
 
 (** Package (name x version) pairs *)

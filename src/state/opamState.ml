@@ -799,6 +799,12 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     | _ -> v
   in
   let skip _ = None in
+  let v =
+    match opam_arg with
+    | Some opam when OpamVariable.Full.package v = OpamPackage.Name.this ->
+      OpamVariable.Full.(create (OpamFile.OPAM.name opam) (variable v))
+    | _ -> v
+  in
   let v' = make_package_local v in
   let contents =
     try
