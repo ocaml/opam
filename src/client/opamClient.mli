@@ -23,7 +23,7 @@ module API: sig
 
   (** Initialize the client a consistent state. *)
   val init:
-    repository -> compiler -> jobs:int ->
+    repository -> compiler ->
     shell -> filename -> [`ask|`yes|`no] ->
     unit
 

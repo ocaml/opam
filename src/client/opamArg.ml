@@ -241,7 +241,7 @@ let apply_build_options b =
     ();
   OpamStateConfig.update
     (* ?root: -- handled globally *)
-    ?jobs:b.jobs
+    ?jobs:OpamStd.Option.Op.(b.jobs >>| fun j -> lazy j)
     (* ?dl_jobs:int *)
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -765,7 +765,6 @@ let init =
     `P "The state of repositories can be synchronized by using $(b,opam update).";
     `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
-  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamStateConfig.default.OpamStateConfig.jobs in
   let compiler =
     mk_opt ["compiler"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
@@ -778,7 +777,7 @@ let init =
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
-      build_options repo_kind repo_name repo_address compiler jobs
+      build_options repo_kind repo_name repo_address compiler
       no_setup auto_setup shell dot_profile_o =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -793,9 +792,9 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    Client.init repository compiler ~jobs shell dot_profile update_config in
+    Client.init repository compiler shell dot_profile update_config in
   Term.(pure init
-    $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
+    $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler
     $no_setup $auto_setup $shell_opt $dot_profile_flag),
   term_info "init" ~doc ~man
 
@@ -1335,7 +1334,9 @@ let update =
     apply_global_options global_options;
     json_update json;
     let sync_archives = if sync then Some true else None in
-    OpamStateConfig.update ?jobs ();
+    OpamStateConfig.update
+      ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
+      ();
     OpamClientConfig.update ?sync_archives ();
     Client.update ~repos_only ~dev_only ~no_stats:upgrade names;
     if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])

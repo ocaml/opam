@@ -1236,7 +1236,7 @@ module API = struct
         log "State isn't broken but upgrade fails: something might be wrong.";
         broken_state_message ~need_fixup:true cs
 
-  let init repo compiler ~jobs shell dot_profile update_config =
+  let init repo compiler shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
@@ -1339,7 +1339,8 @@ module API = struct
 
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create switch [repo.repo_name] jobs
+          OpamFile.Config.create switch [repo.repo_name]
+            OpamStateConfig.(Lazy.force default.jobs)
             OpamStateConfig.(default.dl_jobs)
         in
         OpamStateConfig.write root config;
