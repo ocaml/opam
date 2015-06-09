@@ -101,6 +101,8 @@ val backup: t -> filename
 (** Switch related paths *)
 module Switch: sig
 
+  (** Locations of opam internal dirs and files *)
+
   (** Root dir: {i $opam/$switch} *)
   val root: t -> switch -> dirname
 
@@ -112,50 +114,6 @@ module Switch: sig
 
   (** Backup file for state export *)
   val backup: t -> switch -> filename
-
-  (** Library path for a given package:
-      {i $opam/$switch/lib/$name} *)
-  val lib: t -> switch -> name -> dirname
-
-  (** Library path: {i $opam/$switch/lib} *)
-  val lib_dir: t -> switch -> dirname
-
-  (** DLL paths *)
-  val stublibs: t -> switch -> dirname
-
-  (** toplevel path: {i $opam/$switch/lib/toplevel} *)
-  val toplevel: t -> switch -> dirname
-
-  (** Documentation path for a given package:
-      {i $opam/$switch/doc/$name} *)
-  val doc: t -> switch -> name -> dirname
-
-  (** Documentation path: {i $opam/$switch/doc/} *)
-  val doc_dir: t -> switch -> dirname
-
-  (** Shared directory: {i $opam/$switch/share} *)
-  val share_dir: t -> switch -> dirname
-
-  (** Share directory for a given package: {i
-      $opam/$switch/share/$package} *)
-  val share: t -> switch -> name -> dirname
-
-  (** Etc directory: {i $opam/$switch/etc} *)
-  val etc_dir: t -> switch -> dirname
-
-  (** Etc directory for a given package: {i
-      $opam/$switch/etc/$package} *)
-  val etc: t -> switch -> name -> dirname
-
-  (** Man pages path: {i $opam/$switch/man/}. The optional
-      [num] argument will add a {i manN } suffix if specified *)
-  val man_dir: ?num:string -> t -> switch -> dirname
-
-  (** Installed binaries: {i $opam/$switch/bin} *)
-  val bin: t -> switch -> dirname
-
-  (** Installed system binaries: {i $opam/$switch/sbin} *)
-  val sbin: t -> switch -> dirname
 
   (** List of installed packages with their version:
       {i $opam/$switch/installed} *)
@@ -196,10 +154,6 @@ module Switch: sig
       $opam/$switch/reinstall} *)
   val reinstall: t -> switch -> filename
 
-  (** Compile and link flags for a given package: {i
-      $opam/$switch/lib/$name/opam.config} *)
-  val config: t -> switch -> name -> filename
-
   (** Configuration folder: {i $opam/$switch/config} *)
   val config_dir: t -> switch -> dirname
 
@@ -217,6 +171,113 @@ module Switch: sig
   (** Build dir for a given pinned package: {i
       $opam/$switch/packages.dev/$name.$version/} *)
   val dev_package: t -> switch -> name -> dirname
+
+  (** Locations for the visible part of the installation *)
+
+  (** Default config *)
+  module Default : sig
+    (** Library path for a given package:
+        {i $opam/$switch/lib/$name} *)
+    val lib: t -> switch -> name -> dirname
+
+    (** Compile and link flags for a given package: {i
+        $opam/$switch/lib/$name/opam.config} *)
+    val config: t -> switch -> name -> filename
+
+    (** Library path: {i $opam/$switch/lib} *)
+    val lib_dir: t -> switch -> dirname
+
+    (** DLL paths *)
+    val stublibs: t -> switch -> dirname
+
+    (** toplevel path: {i $opam/$switch/lib/toplevel} *)
+    val toplevel: t -> switch -> dirname
+
+    (** Documentation path for a given package:
+        {i $opam/$switch/doc/$name} *)
+    val doc: t -> switch -> name -> dirname
+
+    (** Documentation path: {i $opam/$switch/doc/} *)
+    val doc_dir: t -> switch -> dirname
+
+    (** Shared directory: {i $opam/$switch/share} *)
+    val share_dir: t -> switch -> dirname
+
+    (** Share directory for a given package: {i
+        $opam/$switch/share/$package} *)
+    val share: t -> switch -> name -> dirname
+
+    (** Etc directory: {i $opam/$switch/etc} *)
+    val etc_dir: t -> switch -> dirname
+
+    (** Etc directory for a given package: {i
+        $opam/$switch/etc/$package} *)
+    val etc: t -> switch -> name -> dirname
+
+    (** Man pages path: {i $opam/$switch/man/}. The optional
+        [num] argument will add a {i manN } suffix if specified *)
+    val man_dir: ?num:string -> t -> switch -> dirname
+
+    (** Installed binaries: {i $opam/$switch/bin} *)
+    val bin: t -> switch -> dirname
+
+    (** Installed system binaries: {i $opam/$switch/sbin} *)
+    val sbin: t -> switch -> dirname
+  end
+
+  (** Actual config handling the global-config.config indirections *)
+
+  (** Package-independent dirs *)
+
+  (** Library path: {i $opam/$switch/lib} *)
+  val lib_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** DLL paths *)
+  val stublibs: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** toplevel path: {i $opam/$switch/lib/toplevel} *)
+  val toplevel: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Documentation path: {i $opam/$switch/doc/} *)
+  val doc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Shared directory: {i $opam/$switch/share} *)
+  val share_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Etc directory: {i $opam/$switch/etc} *)
+  val etc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Man pages path: {i $opam/$switch/man/}. The optional
+      [num] argument will add a {i manN } suffix if specified *)
+  val man_dir: ?num:string -> t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Installed binaries: {i $opam/$switch/bin} *)
+  val bin: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Installed system binaries: {i $opam/$switch/sbin} *)
+  val sbin: t -> switch -> OpamFile.Dot_config.t -> dirname
+
+  (** Package dependent dirs *)
+
+  (** Library path for a given package:
+      {i $opam/$switch/lib/$name} *)
+  val lib: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+
+  (** Documentation path for a given package:
+      {i $opam/$switch/doc/$name} *)
+  val doc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+
+  (** Share directory for a given package: {i
+      $opam/$switch/share/$package} *)
+  val share: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+
+  (** Etc directory for a given package: {i
+      $opam/$switch/etc/$package} *)
+  val etc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+
+  (** Compile and link flags for a given package: {i
+      $opam/$switch/lib/$name/opam.config} *)
+  val config: t -> switch -> OpamFile.Dot_config.t -> name -> filename
 
   module Overlay: sig
     (** Switch metadata overlay (over the global metadata): {i

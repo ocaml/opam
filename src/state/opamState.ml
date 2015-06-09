@@ -112,7 +112,8 @@ let global_config t =
   t.switch_config
 
 let dot_config t name =
-  OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch name)
+  OpamFile.Dot_config.safe_read
+    (OpamPath.Switch.config t.root t.switch t.switch_config name)
 
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
@@ -711,20 +712,22 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
         bool (Lazy.force OpamOCaml.ocaml_native_available)
       else
         bool (OpamFilename.exists
-                (OpamPath.Switch.bin t.root t.switch//"ocamlopt"))
+                (OpamPath.Switch.bin t.root t.switch t.switch_config
+                 // "ocamlopt"))
     | "ocaml-native-tools" ->
       if t.compiler = OpamCompiler.system then
         bool (Lazy.force OpamOCaml.ocaml_opt_available)
       else
         bool (OpamFilename.exists
-                (OpamPath.Switch.bin t.root t.switch//"ocamlc.opt"))
+                (OpamPath.Switch.bin t.root t.switch t.switch_config
+                 // "ocamlc.opt"))
     | "ocaml-native-dynlink" ->
       if t.compiler = OpamCompiler.system then
         bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
       else
         bool (OpamFilename.exists
-                (OpamPath.Switch.lib_dir t.root t.switch
-                 /"ocaml"//"dynlink.cmxa"))
+                (OpamPath.Switch.lib_dir t.root t.switch t.switch_config
+                 / "ocaml" // "dynlink.cmxa"))
     | "arch"          -> string (OpamStd.Sys.arch ())
     | _               -> None
   in
@@ -759,13 +762,13 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
       then string (OpamPackage.Name.to_string name)
       else None
     | _,           None      -> None
-    | "bin",       _         -> dirname (OpamPath.Switch.bin     t.root t.switch)
-    | "sbin",      _         -> dirname (OpamPath.Switch.sbin    t.root t.switch)
-    | "lib",       _         -> dirname (OpamPath.Switch.lib     t.root t.switch name)
-    | "man",       _         -> dirname (OpamPath.Switch.man_dir t.root t.switch)
-    | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root t.switch name)
-    | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch name)
-    | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch name)
+    | "bin",       _         -> dirname (OpamPath.Switch.bin     t.root t.switch t.switch_config)
+    | "sbin",      _         -> dirname (OpamPath.Switch.sbin    t.root t.switch t.switch_config)
+    | "lib",       _         -> dirname (OpamPath.Switch.lib     t.root t.switch t.switch_config name)
+    | "man",       _         -> dirname (OpamPath.Switch.man_dir t.root t.switch t.switch_config)
+    | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root t.switch t.switch_config name)
+    | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch t.switch_config name)
+    | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch t.switch_config name)
     | "build",     Some opam ->
       dirname (OpamPath.Switch.build t.root t.switch (get_nv opam))
     | "version",   Some opam ->
@@ -1656,19 +1659,23 @@ let install_global_config root switch =
       [
         ("root", root);
         ("prefix", OpamPath.Switch.root root switch);
-        ("lib", OpamPath.Switch.lib_dir root switch);
-        ("bin", OpamPath.Switch.bin root switch);
-        ("sbin", OpamPath.Switch.sbin root switch);
-        ("doc", OpamPath.Switch.doc_dir root switch);
-        ("stublibs", OpamPath.Switch.stublibs root switch);
-        ("toplevel", OpamPath.Switch.toplevel root switch);
-        ("man", OpamPath.Switch.man_dir root switch);
-        ("share", OpamPath.Switch.share_dir root switch);
-        ("etc", OpamPath.Switch.etc_dir root switch);
+        ("lib", OpamPath.Switch.Default.lib_dir root switch);
+        ("bin", OpamPath.Switch.Default.bin root switch);
+        ("sbin", OpamPath.Switch.Default.sbin root switch);
+        ("doc", OpamPath.Switch.Default.doc_dir root switch);
+        ("stublibs", OpamPath.Switch.Default.stublibs root switch);
+        ("toplevel", OpamPath.Switch.Default.toplevel root switch);
+        ("man", OpamPath.Switch.Default.man_dir root switch);
+        ("share", OpamPath.Switch.Default.share_dir root switch);
+        ("etc", OpamPath.Switch.Default.etc_dir root switch);
       ]
     @ map id [
-      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with Not_found -> "user");
-      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with Not_found -> "group");
+      ("user" ,
+       try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name
+       with Not_found -> "user");
+      ("group",
+       try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name
+       with Not_found -> "group");
       ("make" , OpamStateConfig.(Lazy.force !r.makecmd));
       ("os"   , OpamStd.Sys.os_string ());
     ] in
@@ -1860,7 +1867,7 @@ let upgrade_to_1_2 () =
           OpamFilename.chop_extension f in
         if name <> "global-config" then
           let dst =
-            OpamPath.Switch.config root switch (OpamPackage.Name.of_string name)
+            OpamPath.Switch.Default.config root switch (OpamPackage.Name.of_string name)
           in
           OpamFilename.mkdir (OpamFilename.dirname dst);
           OpamFilename.move ~src:f ~dst
@@ -1959,17 +1966,17 @@ let add_to_env t ?opam (env: env) (updates: env_updates) =
 let env_updates ~opamswitch ?(force_path=false) t =
   let comp = compiler_comp t t.compiler in
 
-  let add_to_path = OpamPath.Switch.bin t.root t.switch in
+  let add_to_path = OpamPath.Switch.bin t.root t.switch t.switch_config in
   let new_path =
     "PATH",
     (if force_path then "+=" else "=+="),
     OpamFilename.Dir.to_string add_to_path in
   let perl5 = OpamPackage.Name.of_string "perl5" in
-  let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch perl5 in
+  let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
-    OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
+    OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
   let man_path =
     let open OpamStd.Sys in
     match os () with
@@ -1977,7 +1984,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
       ["MANPATH", "=:",
-       OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch)] in
+       OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch t.switch_config)] in
   let utf8 =
     if OpamStd.Sys.(os () = Darwin) then ["OPAMUTF8MSGS", "=", "1"]
     else []
@@ -2515,18 +2522,18 @@ let install_compiler t ~quiet:_ switch compiler =
   try
     (* Create base directories *)
     OpamFilename.mkdir switch_dir;
-    OpamFilename.mkdir (OpamPath.Switch.lib_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.stublibs t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.toplevel t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.lib_dir t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.stublibs t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.toplevel t.root switch);
     OpamFilename.mkdir (OpamPath.Switch.build_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.bin t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.sbin t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.doc_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.man_dir t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.bin t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.sbin t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.doc_dir t.root switch);
+    OpamFilename.mkdir (OpamPath.Switch.Default.man_dir t.root switch);
     OpamFilename.mkdir (OpamPath.Switch.install_dir t.root switch);
     OpamFilename.mkdir (OpamPath.Switch.config_dir t.root switch);
     List.iter (fun num ->
-        OpamFilename.mkdir (OpamPath.Switch.man_dir ~num t.root switch)
+        OpamFilename.mkdir (OpamPath.Switch.Default.man_dir ~num t.root switch)
       ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
     install_global_config t.root switch;
