@@ -156,8 +156,8 @@ let quick_lookup v =
     let var = OpamVariable.Full.variable v in
     let root = OpamStateConfig.(!r.root_dir) in
     let switch = OpamStateConfig.(!r.current_switch) in
-    let config = OpamPath.Switch.global_config root switch in
-    let config = OpamFile.Dot_config.read config in
+    let config_f = OpamPath.Switch.global_config root switch in
+    let config = OpamFile.Dot_config.read config_f in
     match OpamState.get_env_var v with
     | Some _ as c -> c
     | None ->

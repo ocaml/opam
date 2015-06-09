@@ -42,6 +42,7 @@ module Types = struct
     switch: switch;
     compiler: compiler;
     compiler_version: compiler_version lazy_t;
+    switch_config: OpamFile.Dot_config.t;
     opams: OpamFile.OPAM.t package_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
@@ -108,14 +109,7 @@ let installed_map t =
     (OpamPackage.to_map t.installed)
 
 let global_config t =
-  let f = OpamPath.Switch.global_config t.root t.switch in
-  if OpamFilename.exists f then
-    OpamFile.Dot_config.safe_read f
-  else
-    (OpamConsole.error "No global config file found for switch %s. \
-                        Switch broken ?"
-       (OpamSwitch.to_string t.switch);
-     OpamFile.Dot_config.empty)
+  t.switch_config
 
 let dot_config t name =
   OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch name)
@@ -1122,6 +1116,7 @@ let empty = {
   switch = OpamSwitch.system;
   compiler = OpamCompiler.system;
   compiler_version = lazy (OpamCompiler.Version.of_string "none");
+  switch_config = OpamFile.Dot_config.empty;
   opams = OpamPackage.Map.empty;
   repositories = OpamRepositoryName.Map.empty;
   packages = OpamPackage.Set.empty;
@@ -1581,6 +1576,15 @@ let load_state ?save_cache call_site switch =
          with Not_found -> ());
         OpamStd.Sys.exit 10
   in
+  let switch_config =
+    let f = OpamPath.Switch.global_config t.root switch in
+    if OpamFilename.exists f then OpamFile.Dot_config.read f
+    else
+      (OpamConsole.error "No global config file found for switch %s. \
+                          Switch broken ?"
+         (OpamSwitch.to_string t.switch);
+       OpamFile.Dot_config.empty)
+  in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp t.root compiler in
     (* XXX: useful for upgrade to 1.1 *)
@@ -1621,8 +1625,8 @@ let load_state ?save_cache call_site switch =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch)
   in
   let t = {
-    t with partial; switch; compiler; compiler_version; installed; pinned;
-           installed_roots; opams; packages; reinstall
+    t with partial; switch; compiler; compiler_version; switch_config;
+           installed; pinned; installed_roots; opams; packages; reinstall
   } in
   let t = { t with packages = pinned_packages t ++ packages } in
   let t = { t with available_packages = lazy (available_packages t) } in
