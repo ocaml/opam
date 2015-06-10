@@ -995,7 +995,7 @@ let config =
     "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
      to display more options. Use $(b,--list) to display the current configuration \
      options. You can use this command to automatically update: (i) user-configuration \
-     files such as ~/.profile and ~/.ocamlinit; and (ii) global-configaration files \
+     files such as ~/.profile and ~/.ocamlinit; and (ii) global-configuration files \
      controlling which shell scripts are loaded on startup, such as auto-completion. \
      These configuration options can be updated using: $(b,opam config setup --global) \
      to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
@@ -1010,7 +1010,8 @@ let config =
      be accessed with the syntax $(i,pkg:var).";
     ["list"]    , `list    , ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. With \
-     $(i,PACKAGE), lists all the variables available for these packages.";
+     $(i,PACKAGE), lists all the variables available for these packages. Use \
+     $(i,-) to include global configuration variables for this switch.";
     ["subst"]   , `subst   , ["FILE..."],
     "Substitute variables in the given files. The strings $(i,%{var}%) are \
      replaced by the value of variable $(i,var) (see $(b,var)).";

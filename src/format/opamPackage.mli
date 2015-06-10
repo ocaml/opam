@@ -32,8 +32,6 @@ module Name: sig
   (** Compare two package names *)
   val compare: t -> t -> int
 
-  (** global configuration package *)
-  val global_config: t
 end
 
 (** Package (name x version) pairs *)

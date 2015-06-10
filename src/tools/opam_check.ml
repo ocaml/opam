@@ -51,11 +51,7 @@ let installed () =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = OpamFile.Config.read (OpamPath.config root) in
   let version = OpamFile.Config.switch config in
-  let installed =
-    OpamFile.Installed.safe_read (OpamPath.Switch.installed root version) in
-  OpamPackage.Set.filter (fun nv ->
-      OpamPackage.name nv <> OpamPackage.Name.global_config
-    ) installed
+  OpamFile.Installed.safe_read (OpamPath.Switch.installed root version)
 
 let () =
   let installed = installed () in

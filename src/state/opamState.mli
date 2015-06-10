@@ -251,6 +251,11 @@ val find_packages_by_name: state -> name -> package_set
 (** Return all packages satisfying one of the given atoms from a state *)
 val packages_of_atoms: state -> atom list -> package_set
 
+(** Gets the current version of package [name]: pinned version, installed
+    version, max available version or max existing version, tried in this order.
+    Raises [Not_found] only if there is no package by this name. *)
+val get_package: state -> name -> package
+
 (** Return a map from package names to package installed version *)
 val installed_map: state -> version name_map
 
@@ -356,6 +361,9 @@ val is_dev_package: state -> package -> bool
 val find_opam_file_in_source: name -> dirname -> filename option
 
 (** {2 Configuration files} *)
+
+(** Return the global .config file for the current switch *)
+val global_config: state -> OpamFile.Dot_config.t
 
 (** Return the .config file for the given package *)
 val dot_config: state -> name -> OpamFile.Dot_config.t

@@ -263,11 +263,7 @@ module API = struct
       (* We're generally not interested in the aggregated deps for all versions
          of the package. Take installed or max version only when there is no
          version constraint *)
-      try OpamState.find_installed_package_by_name t name
-      with Not_found ->
-        try OpamPackage.max_version (Lazy.force t.available_packages) name
-        with Not_found ->
-          OpamPackage.max_version t.packages name
+      OpamState.get_package t name
     in
     let depends_atoms =
       let atoms = OpamSolution.sanitize_atom_list ~permissive:true t depends in
@@ -1543,15 +1539,6 @@ module API = struct
     in
 
     let nothing_to_do = ref true in
-    let atoms =
-      List.filter (fun (n,_) ->
-        if n = OpamPackage.Name.global_config then (
-          OpamConsole.msg "Package %s can not be removed.\n"
-            (OpamPackage.Name.to_string OpamPackage.Name.global_config);
-          false
-        ) else
-          true
-      ) atoms in
     let packages, not_installed =
       get_installed_atoms t atoms in
     if not_installed <> [] then (

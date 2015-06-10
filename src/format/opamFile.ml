@@ -1634,8 +1634,7 @@ module X = struct
            instead"
           (t.os <> Empty);
         (let pkg_vars =
-           List.filter (fun v -> OpamVariable.Full.package v <>
-                                 OpamPackage.Name.global_config)
+           List.filter (fun v -> not (OpamVariable.Full.is_global v))
              (OpamFilter.variables t.available)
          in
          cond 34 `Error
@@ -1686,11 +1685,12 @@ module X = struct
         (let undep_pkgs =
            List.fold_left
              (fun acc v ->
-                let n = OpamVariable.Full.package v in
-                if n <> OpamPackage.Name.global_config &&
-                   Some n <> t.name &&
-                   not (OpamPackage.Name.Set.mem n all_depends)
-                then OpamPackage.Name.Set.add n acc else acc)
+                match OpamVariable.Full.package v with
+                | Some n when
+                    t.name = Some n &&
+                    not (OpamPackage.Name.Set.mem n all_depends) ->
+                  OpamPackage.Name.Set.add n acc
+                | _ -> acc)
              OpamPackage.Name.Set.empty all_variables
          in
          cond 41 `Warning
@@ -2014,6 +2014,8 @@ module X = struct
       }
 
     let variables t = List.rev_map fst t
+
+    let bindings t = t
 
     let variable t s =
       try Some (List.assoc s t)

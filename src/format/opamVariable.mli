@@ -36,18 +36,28 @@ module Full: sig
 
   include OpamStd.ABSTRACT
 
+  type scope =
+    | Global (** Note: this is attributed to unqualified variables, and may
+                 also design self-referring ones *)
+    | Self (** Variable in a package-specific file referring to that
+               package [_:varname] *)
+    | Package of OpamPackage.Name.t (** [pkgname:varname] *)
+
+  (** Returns the scope of the variable *)
+  val scope: t -> scope
+
+  (** Returns the unqualified variable name *)
+  val variable: t -> variable
+
+  val is_global: t -> bool
+
+  (** Return the package corresponding to the scope of the variable *)
+  val package: ?self:OpamPackage.Name.t -> t -> OpamPackage.Name.t option
+
   (** Create a variable local for a given library/syntax extension *)
   val create: OpamPackage.Name.t -> variable -> t
 
   (** Create a global variable *)
   val global: variable -> t
-
-  val is_global: t -> bool
-
-  (** Return the package the variable is defined in *)
-  val package: t -> OpamPackage.Name.t
-
-  (** Return the variable name *)
-  val variable: t -> variable
 
 end
