@@ -542,3 +542,32 @@ module Prefix: IO_FILE with type t = string name_map
 
 (** Display statistics about file access. *)
 val print_stats: unit -> unit
+
+
+(**/**)
+
+module type F = sig
+  val internal : string
+  type t
+  val empty : t
+  val of_channel : filename -> in_channel  -> t
+  val to_string : filename -> t -> string
+end
+
+module Make (F : F) : sig
+  val write: filename -> F.t -> unit
+  val read: filename -> F.t
+  val safe_read: filename -> F.t
+  val read_from_channel: in_channel -> F.t
+  val write_to_channel: out_channel -> F.t -> unit
+end
+
+module Syntax : sig
+  type t = file
+  val of_channel: filename -> in_channel -> t
+  val to_string: t -> string
+  val of_string: filename -> string -> t
+  val check:
+    ?allow_major:bool -> ?versioned:bool ->
+    t -> string list -> bool
+end
