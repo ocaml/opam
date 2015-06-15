@@ -584,6 +584,7 @@ let flock ?(read=false) file =
     if read then [Unix.O_RDONLY], Unix.F_TRLOCK
     else [Unix.O_RDWR], Unix.F_TLOCK
   in
+  mkdir (Filename.dirname file);
   let fd =
     Unix.openfile file (Unix.O_CREAT::open_flags) 0o666 in
   let rec loop attempt =
