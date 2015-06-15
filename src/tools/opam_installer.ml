@@ -124,7 +124,7 @@ let script_commands project_root ochan =
    where [dest src dst] returns the destination of a file with a
   ["src" {"dst"}] line in the .install *)
 let iter_install f instfile o =
-  let module D = OpamPath.Switch in
+  let module D = OpamPath.Switch.Default in
   let module S = OpamFile.Dot_install in
   let dest ?fix dir =
     let dir = OpamStd.Option.default dir fix in
@@ -206,7 +206,7 @@ let uninstall options =
   List.iter (fun df ->
       cmd.rmdir ~opt:false
         (df options.prefix (OpamSwitch.of_string "") options.pkgname))
-    OpamPath.Switch.([ lib; share; etc; doc ]);
+    OpamPath.Switch.Default.([ lib; share; etc; doc ]);
   List.iter
     (fun (_src, dst) ->
        cmd.confirm

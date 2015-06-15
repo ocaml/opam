@@ -57,6 +57,9 @@ module Types: sig
     (** The current version of the compiler *)
     compiler_version: compiler_version Lazy.t;
 
+    (** The contents of the global configuration file for this switch *)
+    switch_config: OpamFile.Dot_config.t;
+
     (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
     opams: OpamFile.OPAM.t package_map;
 

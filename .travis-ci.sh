@@ -70,7 +70,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo make install
     make libinstall prefix=$(opam config var prefix)
     # Compile and run opam-rt
-    wget https://github.com/ocaml/opam-rt/archive/1.3.tar.gz -O opam-rt.tar.gz
+    wget https://github.com/ocaml/opam-rt/archive/master.tar.gz -O opam-rt.tar.gz
     tar xvfz opam-rt.tar.gz
     cd opam-rt-*
     make

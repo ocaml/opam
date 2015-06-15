@@ -89,40 +89,13 @@ module Switch = struct
 
   let root t a = t / OpamSwitch.to_string a
 
+  (** Internal files and dirs with static location *)
+
   let lock t a = root t a // "lock"
 
   let backup_dir t a = root t a / "backup"
 
   let backup t a = backup_dir t a // backup_file ()
-
-  let lib_dir t a = root t a / "lib"
-
-  let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
-
-  let stublibs t a = lib_dir t a / "stublibs"
-
-  let toplevel t a = lib_dir t a / "toplevel"
-
-  let doc_dir t a = root t a / "doc"
-
-  let man_dir ?num t a =
-    match num with
-    | None -> root t a / "man"
-    | Some n -> root t a / "man" / ("man" ^ n)
-
-  let share_dir t a = root t a / "share"
-
-  let share t a n = share_dir t a / OpamPackage.Name.to_string n
-
-  let etc_dir t a = root t a / "etc"
-
-  let etc t a n = etc_dir t a / OpamPackage.Name.to_string n
-
-  let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
-
-  let bin t a = root t a / "bin"
-
-  let sbin t a = root t a / "sbin"
 
   let installed t a = root t a // "installed"
 
@@ -148,8 +121,6 @@ module Switch = struct
 
   let config_dir t a = root t a / "config"
 
-  let config t a n = lib t a n // "opam.config"
-
   let global_config t a = config_dir t a // "global-config.config"
 
   let pinned t a = root t a // "pinned"
@@ -157,6 +128,97 @@ module Switch = struct
   let dev_packages_dir t a = root t a / "packages.dev"
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
+
+  module Default = struct
+
+    (** Visible files that can be redirected using
+        [config/global-config.config] *)
+
+    let lib_dir t a = root t a / "lib"
+
+    let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
+
+    let config t a n = lib t a n // "opam.config"
+
+    let stublibs t a = lib_dir t a / "stublibs"
+
+    let toplevel t a = lib_dir t a / "toplevel"
+
+    let doc_dir t a = root t a / "doc"
+
+    let man_dir ?num t a =
+      match num with
+      | None -> root t a / "man"
+      | Some n -> root t a / "man" / ("man" ^ n)
+
+    let share_dir t a = root t a / "share"
+
+    let share t a n = share_dir t a / OpamPackage.Name.to_string n
+
+    let etc_dir t a = root t a / "etc"
+
+    let etc t a n = etc_dir t a / OpamPackage.Name.to_string n
+
+    let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
+
+    let bin t a = root t a / "bin"
+
+    let sbin t a = root t a / "sbin"
+
+  end
+
+  let lookup c var dft =
+    match OpamFile.Dot_config.variable c (OpamVariable.of_string var) with
+    | Some (S f) -> OpamFilename.Dir.of_string f
+    | None | Some (B _) -> dft
+
+  let prefix t a c =
+    lookup c "prefix" (root t a)
+
+  let lib_dir t a c =
+    lookup c "lib" (prefix t a c / "lib")
+
+  let lib t a c n =
+    lib_dir t a c / OpamPackage.Name.to_string n
+
+  let config t a c n =
+    lib t a c n // "opam.config"
+
+  let stublibs t a c =
+    lookup c "stublibs" (lib_dir t a c / "stublibs")
+
+  let toplevel t a c =
+    lookup c "toplevel" (lib_dir t a c / "toplevel")
+
+  let doc_dir t a c =
+    lookup c "doc" (prefix t a c / "doc")
+
+  let man_dir ?num t a c =
+    let base = lookup c "man" (prefix t a c / "man") in
+    match num with
+    | None -> base
+    | Some n -> base / ("man" ^ n)
+
+  let share_dir t a c =
+    lookup c "share" (prefix t a c / "share")
+
+  let share t a c n =
+    share_dir t a c / OpamPackage.Name.to_string n
+
+  let etc_dir t a c =
+    lookup c "etc" (prefix t a c / "etc")
+
+  let etc t a c n =
+    etc_dir t a c / OpamPackage.Name.to_string n
+
+  let doc t a c n =
+    doc_dir t a c / OpamPackage.Name.to_string n
+
+  let bin t a c =
+    lookup c "bin" (prefix t a c / "bin")
+
+  let sbin t a c =
+    lookup c "sbin" (prefix t a c / "sbin")
 
   module Overlay = struct
 

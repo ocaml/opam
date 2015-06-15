@@ -44,7 +44,7 @@ let install_package t nv =
       OpamFile.Dot_install.write install_f install;
 
       (* .config *)
-      let dot_config = OpamPath.Switch.config t.root t.switch name in
+      let dot_config = OpamPath.Switch.Default.config t.root t.switch name in
       OpamFilename.mkdir (OpamFilename.dirname dot_config);
       OpamFile.Dot_config.write dot_config config;
 
@@ -76,36 +76,38 @@ let install_package t nv =
               OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
           ) files in
 
+      let module P = OpamPath.Switch in
+      let module I = OpamFile.Dot_install in
+      let instdir_gen fpath r s _ = fpath r s t.switch_config in
+      let instdir_pkg fpath r s n = fpath r s t.switch_config n in
+
       (* bin *)
-      install_files true (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
+      install_files true (instdir_gen P.bin) I.bin;
 
       (* sbin *)
-      install_files true (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
+      install_files true (instdir_gen P.sbin) I.sbin;
 
       (* lib *)
-      install_files false OpamPath.Switch.lib OpamFile.Dot_install.lib;
-      install_files true OpamPath.Switch.lib OpamFile.Dot_install.libexec;
+      install_files false (instdir_pkg P.lib) I.lib;
+      install_files true (instdir_pkg P.lib) I.libexec;
 
       (* toplevel *)
-      install_files false (fun r s _ -> OpamPath.Switch.toplevel r s)
-        OpamFile.Dot_install.toplevel;
+      install_files false (instdir_gen P.toplevel) I.toplevel;
 
-      install_files true (fun r s _ -> OpamPath.Switch.stublibs r s)
-        OpamFile.Dot_install.stublibs;
+      install_files true (instdir_gen P.stublibs) I.stublibs;
 
       (* Man pages *)
-      install_files false (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
+      install_files false (instdir_gen P.man_dir) I.man;
 
       (* Shared files *)
-      install_files false OpamPath.Switch.share OpamFile.Dot_install.share;
-      install_files false (fun r s _ -> OpamPath.Switch.share_dir r s)
-        OpamFile.Dot_install.share_root;
+      install_files false (instdir_pkg P.share) I.share;
+      install_files false (instdir_gen P.share_dir) I.share_root;
 
       (* Etc files *)
-      install_files false OpamPath.Switch.etc OpamFile.Dot_install.etc;
+      install_files false (instdir_pkg P.etc) I.etc;
 
       (* Documentation files *)
-      install_files false OpamPath.Switch.doc OpamFile.Dot_install.doc;
+      install_files false (instdir_pkg P.doc) I.doc;
 
       (* misc *)
       List.iter
@@ -120,7 +122,7 @@ let install_package t nv =
             if OpamConsole.confirm "Continue ?" then
               OpamFilename.install ~src:src_file ~dst ()
           end
-        ) (OpamFile.Dot_install.misc install);
+        ) (I.misc install);
 
       if !warnings <> [] then (
         let print (dir, base) =
@@ -379,7 +381,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
 
   let remove_files dst_fn files =
     let files = files install in
-    let dst_dir = dst_fn t.root t.switch in
+    let dst_dir = dst_fn t.root t.switch t.switch_config in
     List.iter (fun (base, dst) ->
         let dst_file = match dst with
           | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
@@ -388,8 +390,8 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       ) files in
 
   let remove_files_and_dir ?(quiet=false) dst_fn files =
-    let dir = dst_fn t.root t.switch name in
-    remove_files (fun _ _ -> dir) files;
+    let dir = dst_fn t.root t.switch t.switch_config name in
+    remove_files (fun _ _ _ -> dir) files;
     if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
     else if not quiet && OpamFilename.exists_dir dir then
       OpamConsole.warning "Directory %s is not empty, not removing"
@@ -403,7 +405,8 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
     (* Remove .config and .install *)
     log "Removing config and install files";
     OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
-    OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
+    OpamFilename.remove
+      (OpamPath.Switch.config t.root t.switch t.switch_config name);
 
     log "Removing files from .install";
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
