@@ -90,6 +90,13 @@ module X = struct
                                     Lexing.pos_fname = filename };
       OpamParser.main OpamLexer.token lexbuf filename
 
+    let of_string (filename:filename) str =
+      let lexbuf = Lexing.from_string str in
+      let filename = OpamFilename.to_string filename in
+      lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
+                                    Lexing.pos_fname = filename };
+      OpamParser.main OpamLexer.token lexbuf filename
+
     let to_string (t: t) =
       OpamFormat.string_of_file ~simplify:true t
 
@@ -1703,24 +1710,10 @@ module X = struct
       in
       OpamStd.List.filter_map (fun x -> x) warnings
 
-    let validate_file filename =
+    let validate_gen reader filename =
       let warnings, t =
         try
-          let ic = OpamFilename.open_in filename in
-          let name =
-            OpamStd.Option.map OpamPackage.name
-              (OpamPackage.of_filename filename)
-          in
-          let version =
-            OpamStd.Option.map OpamPackage.version
-              (OpamPackage.of_filename filename)
-          in
-          let f =
-            try
-              let f = Syntax.of_channel filename ic in
-              close_in ic; f
-            with e -> close_in ic; raise e
-          in
+          let f, name, version = reader filename in
           let invalid_fields =
             OpamFormat.invalid_fields f.file_contents valid_fields
           in
@@ -1765,7 +1758,6 @@ module X = struct
                   OpamStd.Option.Op.((version >>| OpamPackage.Version.to_string) +! "" )
               ]
           in
-          close_in ic;
           warnings, t
         with
         | OpamSystem.File_not_found _ ->
@@ -1776,6 +1768,31 @@ module X = struct
       in
       warnings @ (match t with Some t -> validate t | None -> []),
       t
+
+    let validate_file filename =
+      let reader filename =
+        let nv = OpamPackage.of_filename filename in
+        let name = OpamStd.Option.map OpamPackage.name nv in
+        let version = OpamStd.Option.map OpamPackage.version nv in
+        let f =
+          let ic = OpamFilename.open_in filename in
+          try
+            let f = Syntax.of_channel filename ic in
+            close_in ic; f
+          with e -> close_in ic; raise e
+        in
+        f, name, version
+      in
+      validate_gen reader filename
+
+    let validate_string filename string =
+      let reader filename =
+        let nv = OpamPackage.of_filename filename in
+        let name = OpamStd.Option.map OpamPackage.name nv in
+        let version = OpamStd.Option.map OpamPackage.version nv in
+        Syntax.of_string filename string, name, version
+      in
+      validate_gen reader filename
 
     let warns_to_string ws =
       OpamStd.List.concat_map "\n"

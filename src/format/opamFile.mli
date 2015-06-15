@@ -123,6 +123,10 @@ module OPAM: sig
   val validate_file: filename ->
     (int * [`Warning|`Error] * string) list * t option
 
+  (** Like [validate_file], but takes the file contents as a string *)
+  val validate_string: filename -> string ->
+    (int * [`Warning|`Error] * string) list * t option
+
   (** Utility function to print validation results *)
   val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
