@@ -12,6 +12,7 @@ dev-repo: "https://github.com/ocaml/opam"
 build: [
   ["./configure"]
   [make]
+  [make "-C" "src" "../opam-lib.install"]
 ]
 depends: [
   "ocamlgraph"
