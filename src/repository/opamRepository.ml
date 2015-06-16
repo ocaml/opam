@@ -192,10 +192,14 @@ let package_state repo prefix nv all =
       fs in
   List.flatten l
 
+let compare_repo r1 r2 =
+  let r = compare r1.repo_priority r2.repo_priority in
+  if r = 0 then compare r1 r2 else ~- r
+
 (* Sort repositories by priority *)
 let sort repositories =
   let repositories = OpamRepositoryName.Map.values repositories in
-  List.sort compare repositories
+  List.sort compare_repo repositories
 
 let package_index repositories =
   log "package-index";
