@@ -37,7 +37,9 @@ module type IO_FILE = sig
   val safe_read: filename -> t
 
   (** Read from channel. *)
-  val read_from_channel: in_channel -> t
+  val read_from_channel: ?filename:filename -> in_channel -> t
+
+  val read_from_string: ?filename:filename -> string -> t
 
   (** Write to channel. *)
   val write_to_channel: out_channel -> t -> unit
@@ -310,8 +312,10 @@ module Descr: sig
 
   include IO_FILE
 
+  val create: string -> t
+
   (** Create an abstract description file from a string *)
-  val of_string: string -> t
+  val of_string: filename -> string -> t
 
   (** Return the first line *)
   val synopsis: t -> string
@@ -551,6 +555,7 @@ module type F = sig
   type t
   val empty : t
   val of_channel : filename -> in_channel  -> t
+  val of_string : filename -> string -> t
   val to_string : filename -> t -> string
 end
 
@@ -558,7 +563,8 @@ module Make (F : F) : sig
   val write: filename -> F.t -> unit
   val read: filename -> F.t
   val safe_read: filename -> F.t
-  val read_from_channel: in_channel -> F.t
+  val read_from_channel: ?filename:filename -> in_channel -> F.t
+  val read_from_string: ?filename:filename -> string -> F.t
   val write_to_channel: out_channel -> F.t -> unit
 end
 

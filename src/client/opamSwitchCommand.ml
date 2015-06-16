@@ -33,7 +33,7 @@ let list ~print_short ~installed ~all =
         match Lazy.force OpamOCaml.system_ocamlc_version with
         | None   -> "<none>"
         | Some v -> v in
-      OpamFile.Descr.of_string (Printf.sprintf "System compiler (%s)" system_version)
+      OpamFile.Descr.create (Printf.sprintf "System compiler (%s)" system_version)
     else
       OpamFile.Descr.safe_read (OpamPath.compiler_descr t.root c) in
 
