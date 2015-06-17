@@ -1172,6 +1172,15 @@ let load_global_state () =
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   { empty with root; config; aliases }
 
+let load_switch_config t switch =
+  let f = OpamPath.Switch.global_config t.root switch in
+  if OpamFilename.exists f then OpamFile.Dot_config.read f
+  else
+    (OpamConsole.error "No global config file found for switch %s. \
+                        Switch broken ?"
+       (OpamSwitch.to_string t.switch);
+     OpamFile.Dot_config.empty)
+
 (* load partial state to be able to read env variables *)
 let load_env_state call_site switch =
   let t = load_global_state () in
@@ -1182,7 +1191,8 @@ let load_env_state call_site switch =
       OpamConsole.error_and_exit
         "The current switch (%s) is an unknown compiler switch."
         (OpamSwitch.to_string switch) in
-  { t with switch; compiler }
+  let switch_config = load_switch_config t switch in
+  { t with switch; compiler; switch_config; }
 
 
 let base_package_names t =
@@ -1580,13 +1590,7 @@ let load_state ?save_cache call_site switch =
         OpamStd.Sys.exit 10
   in
   let switch_config =
-    let f = OpamPath.Switch.global_config t.root switch in
-    if OpamFilename.exists f then OpamFile.Dot_config.read f
-    else
-      (OpamConsole.error "No global config file found for switch %s. \
-                          Switch broken ?"
-         (OpamSwitch.to_string t.switch);
-       OpamFile.Dot_config.empty)
+    load_switch_config t switch
   in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp t.root compiler in
