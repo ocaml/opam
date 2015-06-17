@@ -14,11 +14,11 @@ MD5_cmdliner = 46d7553b95f623f811df2a844fb448fb
 URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
 MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/file/33593/cudf-0.7.tar.gz
-MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
+URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
+MD5_cudf = b12d933a96bd326e2443241faca7aa8c
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/34277/dose3-3.3.tar.gz
-MD5_dose = ea947804c636059bb8b64dbda5c1df08
+URL_dose = http://opam.ocaml.org/archives/dose.3.3+opam.tar.gz
+MD5_dose = 558ab0e2129ce18adb4a2bfdaacf85cb
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
