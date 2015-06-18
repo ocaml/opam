@@ -155,10 +155,10 @@ let write opamroot conf =
     (OpamFilename.add_extension f "lock")
     (OpamFile.Config.write f) conf
 
-let filter_deps f =
+let filter_deps ?(dev=true) f =
   OpamTypesBase.filter_deps
     ~build:true
     ~test:(!r.build_test)
     ~doc:(!r.build_doc)
-    ~dev:false (* GRGR FIXME *)
+    ~dev
     f
