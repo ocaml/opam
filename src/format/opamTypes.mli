@@ -283,6 +283,7 @@ type universe = {
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
+  u_dev      : package_set;
   u_base     : package_set;
   u_test     : bool; (* Test dependencies should be honored *)
   u_doc      : bool; (* Doc dependencies should be honored *)

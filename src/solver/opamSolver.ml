@@ -36,6 +36,7 @@ let empty_universe =
     u_action = Install OpamPackage.Name.Set.empty;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
+    u_dev = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
     u_test = false;
     u_doc = false;
@@ -45,7 +46,8 @@ let empty_universe =
 let depopts_of_package universe ~build package =
   let opts =
     try
-      filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc
+      let dev = OpamPackage.Set.mem package universe.u_dev in
+      filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
         (OpamPackage.Map.find package universe.u_depopts)
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
@@ -72,17 +74,18 @@ let is_available universe wish_remove (name, _ as c) =
 let cudf_versions_map universe packages =
   log "cudf_versions_map";
   let add_referred_to_packages filt acc refmap =
-    OpamPackage.Map.fold (fun _ deps acc ->
+    OpamPackage.Map.fold (fun package deps acc ->
+        let dev = OpamPackage.Set.mem package universe.u_dev in
         List.fold_left (fun acc -> function
             | n, Some (_, v) -> OpamPackage.Set.add (OpamPackage.create n v) acc
             | _, None -> acc)
-          acc (OpamFormula.atoms (filt deps)))
+          acc (OpamFormula.atoms (filt ~dev deps)))
       refmap acc
   in
   (* include test and doc dependencies even if they aren't required in the
      universe, for consistency of version numbers *)
   let filt = filter_deps ~build:true ~test:true ~doc:true in
-  let id = fun x -> x in
+  let id = fun ~dev:_ x -> x in
   let packages = add_referred_to_packages filt packages universe.u_depends in
   let packages = add_referred_to_packages filt packages universe.u_depopts in
   let packages = add_referred_to_packages id packages universe.u_conflicts in
@@ -142,8 +145,9 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
 let opam2cudf universe ?(depopts=false) ~build version_map package =
   let name = OpamPackage.name package in
   let version = OpamPackage.version package in
+  let dev = OpamPackage.Set.mem package universe.u_dev in
   let depends =
-    try filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc
+    try filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
           (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
   let depends =

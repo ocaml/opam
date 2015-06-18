@@ -594,6 +594,53 @@ let url t nv =
   OpamStd.Option.map OpamFile.URL.read
     (url_file t nv)
 
+let global_dev_packages t =
+  let dir = OpamPath.dev_packages_dir t.root in
+  let dirs = OpamFilename.dirs dir in
+  List.fold_left (fun map dir ->
+      match OpamPackage.of_dirname dir with
+      | None     ->
+        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
+        OpamFilename.rmdir dir;
+        map
+      | Some nv  ->
+        OpamPackage.Map.add nv dir map
+    ) OpamPackage.Map.empty dirs
+
+let switch_dev_packages t =
+  List.fold_left (fun map dir ->
+      try
+        let name =
+          OpamPackage.Name.of_string @@ OpamFilename.Base.to_string @@
+          OpamFilename.basename_dir dir in
+        OpamPackage.Map.add (pinned t name) dir map
+      with Failure _ | Not_found ->
+        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
+        OpamFilename.rmdir dir;
+        map
+    )
+    OpamPackage.Map.empty
+    (OpamFilename.dirs (OpamPath.Switch.dev_packages_dir t.root t.switch))
+
+let keys map =
+  OpamPackage.Map.fold (fun nv _ set ->
+      OpamPackage.Set.add nv set
+    ) map OpamPackage.Set.empty
+
+let is_dev_package t nv =
+  match url t nv with
+  | None     -> false
+  | Some url ->
+    match OpamFile.URL.kind url with
+    | `http  -> false
+    | _      -> true
+
+let dev_packages t =
+  let global = global_dev_packages t in
+  let switch = switch_dev_packages t in
+  let all = keys global ++ keys switch in
+  OpamPackage.Set.filter (is_dev_package t) all
+
 (* For documentation *)
 let global_variable_names = [
   "ocaml-version",        "The version of the currently used OCaml compiler";
@@ -1252,6 +1299,7 @@ let universe t action =
     u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = t.installed_roots;
     u_pinned    = pinned_packages t;
+    u_dev       = dev_packages t;
     u_base      = base;
     u_test      = OpamStateConfig.(!r.build_test);
     u_doc       = OpamStateConfig.(!r.build_doc);
@@ -1368,52 +1416,6 @@ let clean_file file nv =
     OpamFilename.remove file
   )
 *)
-let global_dev_packages t =
-  let dir = OpamPath.dev_packages_dir t.root in
-  let dirs = OpamFilename.dirs dir in
-  List.fold_left (fun map dir ->
-      match OpamPackage.of_dirname dir with
-      | None     ->
-        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
-        OpamFilename.rmdir dir;
-        map
-      | Some nv  ->
-        OpamPackage.Map.add nv dir map
-    ) OpamPackage.Map.empty dirs
-
-let switch_dev_packages t =
-  List.fold_left (fun map dir ->
-      try
-        let name =
-          OpamPackage.Name.of_string @@ OpamFilename.Base.to_string @@
-          OpamFilename.basename_dir dir in
-        OpamPackage.Map.add (pinned t name) dir map
-      with Failure _ | Not_found ->
-        OpamConsole.note "Removing %s" (OpamFilename.Dir.to_string dir);
-        OpamFilename.rmdir dir;
-        map
-    )
-    OpamPackage.Map.empty
-    (OpamFilename.dirs (OpamPath.Switch.dev_packages_dir t.root t.switch))
-
-let keys map =
-  OpamPackage.Map.fold (fun nv _ set ->
-      OpamPackage.Set.add nv set
-    ) map OpamPackage.Set.empty
-
-let is_dev_package t nv =
-  match url t nv with
-  | None     -> false
-  | Some url ->
-    match OpamFile.URL.kind url with
-    | `http  -> false
-    | _      -> true
-
-let dev_packages t =
-  let global = global_dev_packages t in
-  let switch = switch_dev_packages t in
-  let all = keys global ++ keys switch in
-  OpamPackage.Set.filter (is_dev_package t) all
 
 (* Check that the dev packages are installed -- if not, just remove
    the temporary files. *)

@@ -160,4 +160,5 @@ let filter_deps f =
     ~build:true
     ~test:(!r.build_test)
     ~doc:(!r.build_doc)
+    ~dev:false (* GRGR FIXME *)
     f
