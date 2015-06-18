@@ -26,6 +26,7 @@ type args = {
   gener_digest: bool;
   dryrun: bool;
   recurse: bool;
+  dev: bool;
   resolve: bool;
   debug: bool;
   (* option for resolve *)
@@ -59,6 +60,11 @@ let args =
                download all available versions of the dependencies." in
     Arg.(value & flag & info ["r";"recursive"] ~doc)
   in
+  let dev =
+    let doc = "Include development dependencies while recursing among the \
+               transitive dependencies of the packages." in
+    Arg.(value & flag & info ["dev"] ~doc)
+  in
   let resolve =
     let doc = "A more advanced version of `--recursive' that calculates \
                a single usable snapshot of the package universe, resulting \
@@ -87,7 +93,7 @@ let args =
   in
   Term.(
     pure
-      (fun index gener_digest dryrun recurse names debug resolve
+      (fun index gener_digest dryrun recurse dev names debug resolve
         compiler_version switch ->
         let compiler_version =
           Option.map OpamCompiler.Version.of_string compiler_version in
@@ -95,9 +101,9 @@ let args =
           match switch with
           | None -> Option.map (fun cv -> OpamSwitch.of_string (OpamCompiler.Version.to_string cv)) compiler_version
           | Some switch -> Some (OpamSwitch.of_string switch) in
-         {index; gener_digest; dryrun; recurse; names; debug; resolve;
+         {index; gener_digest; dryrun; recurse; dev; names; debug; resolve;
           compiler_version; switch; os_string = OpamStd.Sys.os_string ()})
-    $index $gener_digest $dryrun $recurse $names $debug $resolve
+    $index $gener_digest $dryrun $recurse $dev $names $debug $resolve
     $compiler_version $switch
   )
 
@@ -232,7 +238,8 @@ let resolve_deps args index names =
          cs)
 
 let process
-    ({index; gener_digest; dryrun; recurse; names; debug; resolve; _} as args) =
+    ({index; gener_digest; dryrun; recurse;
+      names; debug; resolve; dev;_} as args) =
   OpamStd.Config.init
     ?debug_level:(if debug then Some 1 else None)
     ();
@@ -299,8 +306,10 @@ let process
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
-      let deps = OpamStateConfig.filter_deps (OpamFile.OPAM.depends opam) in
-      let depopts = OpamStateConfig.filter_deps (OpamFile.OPAM.depopts opam) in
+      let deps =
+        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam) in
+      let depopts =
+        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depopts opam) in
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
         ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
@@ -322,8 +331,8 @@ let process
                   (List.rev_append deps tl)
             end
     in
-      get_transitive_dependencies_aux
-        OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
+    get_transitive_dependencies_aux
+      OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
     if resolve then
       resolve_deps args new_index names
