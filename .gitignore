@@ -32,6 +32,7 @@ ocp-build.root.old.old
 *.cmti
 *.cma
 *.cmxa
+*.cmxs
 *.a
 *.o
 META
@@ -40,7 +41,7 @@ Makefile.config
 config.log
 config.status
 src/client/opamGitVersion.ml
-src/client/opamScript.ml
+src/state/opamScript.ml
 src/core/opamVersion.ml
 src/format/opamLexer.ml
 src/format/opamLineLexer.ml
