@@ -76,4 +76,4 @@ val write: dirname -> OpamFile.Config.t -> unit
 
 (** Filters flagged dependencies in an ext_formula using the currently set
     options (doc, test). Build dependencies are included *)
-val filter_deps: ext_formula -> formula
+val filter_deps: ?dev:bool -> ext_formula -> formula

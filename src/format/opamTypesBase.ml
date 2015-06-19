@@ -239,13 +239,13 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
-let filter_deps ~build ~test ~doc =
+let filter_deps ~build ~test ~doc ~dev =
   let filter =
     List.for_all (function
         | Depflag_Build -> build
         | Depflag_Test -> test
         | Depflag_Doc -> doc
-        | Depflag_Dev -> true (* unimplemented *)
+        | Depflag_Dev -> dev
         | Depflag_Unknown _ -> true (* ignored *))
   in
   OpamFormula.formula_of_extended ~filter

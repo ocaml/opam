@@ -254,7 +254,7 @@ module API = struct
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
-      ?(resolve_depends=false) ?(depopts=false) ?depexts
+      ?(resolve_depends=false) ?(depopts=false) ?depexts ?dev
       regexp =
     let t = OpamState.load_state "list"
         OpamStateConfig.(!r.current_switch) in
@@ -316,10 +316,13 @@ module API = struct
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamState.opam t nv in
-          let formula = OpamStateConfig.filter_deps (OpamFile.OPAM.depends opam) in
           let formula =
-            if depopts
-            then OpamFormula.ands [formula; OpamStateConfig.filter_deps (OpamFile.OPAM.depopts opam)]
+            OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
+          let formula =
+            if depopts then
+              OpamFormula.ands
+                [formula;
+                 OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam)]
             else formula in
           let depends_on nv =
             let name = OpamPackage.name nv in
@@ -340,10 +343,10 @@ module API = struct
         let opam = OpamState.opam t nv in
         let deps =
           OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-          OpamStateConfig.filter_deps (OpamFile.OPAM.depends opam) in
+          OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
         if depopts then
           deps ++ (OpamState.packages_of_atoms t @@ OpamFormula.atoms @@
-                   OpamStateConfig.filter_deps (OpamFile.OPAM.depopts opam))
+                   OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam))
         else deps
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)
@@ -1807,12 +1810,12 @@ module SafeAPI = struct
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?depends ?reverse_depends ?recursive_depends ?resolve_depends
-      ?depopts ?depexts
+      ?depopts ?depexts ?dev
       pkg_str =
     read_lock (fun () ->
       API.list ~print_short ~filter ~order ~exact_name ~case_sensitive
         ?depends ?reverse_depends ?recursive_depends ?resolve_depends
-        ?depopts ?depexts
+        ?depopts ?depexts ?dev
         pkg_str
     )
 

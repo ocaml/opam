@@ -1591,7 +1591,7 @@ module X = struct
       let names_of_formula flag f =
         OpamPackage.Name.Set.of_list @@
         List.map fst OpamFormula.(
-            atoms @@ filter_deps ~build:true ~test:flag ~doc:flag f
+            atoms @@ filter_deps ~dev:true ~build:true ~test:flag ~doc:flag f
           )
       in
       let all_commands =

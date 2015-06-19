@@ -63,13 +63,13 @@ src
 │   ├── opamStateConfig.ml              Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
 │   ├── opamOCaml.ml                    OCaml installation version and specifics detection
+│   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
 │   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
 │   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │
 ├── client                              Everything related to the OPAM state, installation and front-end
 │   │   [ opam-client lib ]
-│   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
 │   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamConfigCommand.ml            Functions for the "opam config" subcommand
 │   ├── opamPinCommand.ml               Functions for the "opam pin" subcommand

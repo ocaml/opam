@@ -860,6 +860,9 @@ let list =
   let depopts =
     mk_flag ["depopts"] "Include optional dependencies in dependency requests."
   in
+  let dev =
+    mk_flag ["dev"] "Include development packages in dependencies."
+  in
   let depexts =
     mk_opt ["e";"external"] "TAGS" ~vopt:(Some [])
       "Instead of displaying the packages, display their external dependencies \
@@ -874,7 +877,7 @@ let list =
       Arg.(some & list string) None in
   let list global_options print_short all installed
       installed_roots unavailable sort
-      depends_on required_by resolve recursive depopts depexts
+      depends_on required_by resolve recursive depopts depexts dev
       packages =
     apply_global_options global_options;
     let filter =
@@ -897,7 +900,7 @@ let list =
         ~depends ~reverse_depends:(depends_on <> [])
         ~resolve_depends:(resolve <> [])
         ~recursive_depends:recursive
-        ~depopts ?depexts
+        ~depopts ?depexts ~dev
         packages;
       `Ok ()
     | None, _ ->
@@ -912,7 +915,7 @@ let list =
     Term.(pure list $global_options
           $print_short_flag $all $installed $installed_roots_flag
           $unavailable $sort
-          $depends_on $required_by $resolve $recursive $depopts $depexts
+          $depends_on $required_by $resolve $recursive $depopts $depexts $dev
           $pattern_list),
   term_info "list" ~doc ~man
 
