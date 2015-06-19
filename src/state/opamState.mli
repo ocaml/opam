@@ -101,7 +101,7 @@ val load_state: ?save_cache:bool -> string -> switch -> state
 val dump_state: state -> out_channel -> unit
 
 (** Load state associated to env variables. All other fields are left empty. *)
-val load_env_state: string -> switch -> state
+val load_env_state: string -> ?t:state -> switch -> state
 
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe

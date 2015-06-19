@@ -1230,8 +1230,11 @@ let load_switch_config t switch =
      OpamFile.Dot_config.empty)
 
 (* load partial state to be able to read env variables *)
-let load_env_state call_site switch =
-  let t = load_global_state () in
+let load_env_state call_site ?t switch =
+  let t =
+    match t with
+    | None -> load_global_state ()
+    | Some t -> t in
   log "LOAD-ENV-STATE(%s)" call_site;
   let compiler =
     try OpamSwitch.Map.find switch t.aliases
