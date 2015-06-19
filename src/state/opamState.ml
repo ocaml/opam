@@ -1229,10 +1229,7 @@ let load_switch_config t switch =
        (OpamSwitch.to_string t.switch);
      OpamFile.Dot_config.empty)
 
-(* load partial state to be able to read env variables *)
-let load_env_state call_site switch =
-  let t = load_global_state () in
-  log "LOAD-ENV-STATE(%s)" call_site;
+let with_switch switch t =
   let compiler =
     try OpamSwitch.Map.find switch t.aliases
     with Not_found ->
@@ -1242,6 +1239,11 @@ let load_env_state call_site switch =
   let switch_config = load_switch_config t switch in
   { t with switch; compiler; switch_config; }
 
+(* load partial state to be able to read env variables *)
+let load_env_state call_site switch =
+  let t = load_global_state () in
+  log "LOAD-ENV-STATE(%s)" call_site;
+  with_switch switch t
 
 let base_package_names t =
   let comp = compiler_comp t t.compiler in
@@ -1793,7 +1795,7 @@ let upgrade_to_1_1 () =
     OpamSwitch.Map.iter (fun switch _ ->
         let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
         OpamPackage.Name.Map.iter (fun name _ ->
-            let t = { t with switch } in
+            let t = with_switch switch t in
             if is_pinned t name then (
               OpamFilename.rmdir (OpamPath.Switch.Overlay.package root switch name);
               add_pinned_overlay t name;
@@ -2622,7 +2624,7 @@ let install_compiler t ~quiet:_ switch compiler =
           ; [OpamStateConfig.(Lazy.force !r.makecmd); "install" ]
           ]
         else
-        let t = { t with switch } in
+        let t = with_switch switch t in
         let env = resolve_variable t OpamVariable.Map.empty in
         OpamFilter.commands env (OpamFile.Comp.build comp)
       in

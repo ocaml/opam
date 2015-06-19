@@ -100,6 +100,9 @@ val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
 
+(** Adjust the switch, compiler and switch_config in a partial state *)
+val with_switch: switch -> state -> state
+
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> switch -> state
 

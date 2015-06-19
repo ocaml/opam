@@ -197,7 +197,7 @@ let remove_t ?(confirm = true) t =
 let update_global_config t ~warning switch =
   let t = OpamState.update_switch_config t switch in
   if warning then
-    OpamState.print_env_warning_at_switch {t with switch}
+    OpamState.print_env_warning_at_switch (OpamState.with_switch switch t)
 
 
 let install_compiler ~quiet switch compiler =
@@ -325,7 +325,7 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
        OpamStateConfig.write t.root t.config;
        raise e);
     if warning && update_config then
-      OpamState.print_env_warning_at_switch {t with switch}
+      OpamState.print_env_warning_at_switch (OpamState.with_switch switch t)
 
 let install ~quiet ~warning ~update_config switch compiler =
   (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
