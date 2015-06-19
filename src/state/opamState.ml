@@ -1692,7 +1692,8 @@ let install_global_config root switch =
   let config = OpamFile.Dot_config.create vars in
   OpamFile.Dot_config.write
     (OpamPath.Switch.global_config root switch)
-    config
+    config;
+  config
 
 let fix_descriptions_hook =
   ref (fun ?save_cache:_ ?verbose:_ _ -> assert false)
@@ -1741,7 +1742,7 @@ let upgrade_to_1_1 () =
     (* fix the base config files *)
     let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
     OpamSwitch.Map.iter (fun switch _ ->
-        install_global_config root switch
+        ignore (install_global_config root switch)
       ) aliases;
 
     OpamFilename.with_tmp_dir (fun tmp_dir ->
@@ -2545,7 +2546,7 @@ let install_compiler t ~quiet:_ switch compiler =
         OpamFilename.mkdir (OpamPath.Switch.Default.man_dir ~num t.root switch)
       ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
-    install_global_config t.root switch;
+    let switch_config = install_global_config t.root switch in
 
     let comp = OpamFile.Comp.read comp_f in
     if not (OpamFile.Comp.preinstalled comp) &&
@@ -2624,7 +2625,7 @@ let install_compiler t ~quiet:_ switch compiler =
           ; [OpamStateConfig.(Lazy.force !r.makecmd); "install" ]
           ]
         else
-        let t = with_switch switch t in
+        let t = { t with switch; compiler; switch_config } in
         let env = resolve_variable t OpamVariable.Map.empty in
         OpamFilter.commands env (OpamFile.Comp.build comp)
       in
