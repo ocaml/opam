@@ -216,7 +216,7 @@ val redirect: state -> repository -> (repository * filter option) option
 (** {2 Compilers} *)
 
 (** (Re-)install the configuration for a given root and switch *)
-val install_global_config: dirname -> switch -> unit
+val install_global_config: dirname -> switch -> OpamFile.Dot_config.t
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
