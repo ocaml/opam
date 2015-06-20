@@ -1825,7 +1825,12 @@ let source =
           (Dir.to_string dir);
         if OpamState.find_opam_file_in_source (OpamPackage.name nv) dir = None
         then
-          OpamFile.OPAM.write Op.(dir // "opam")
+          let f =
+            if OpamFilename.exists_dir Op.(dir / "opam")
+            then Op.(dir / "opam" // "opam")
+            else Op.(dir // "opam")
+          in
+          OpamFile.OPAM.write f
             (OpamFile.OPAM.with_substs
                (OpamFile.OPAM.with_patches opam [])
                [])
