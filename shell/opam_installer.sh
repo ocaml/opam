@@ -69,7 +69,8 @@ file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 echo Downloading OPAM...
 getopam "https://github.com/ocaml/opam/releases/download/$VERSION" $file
 
-if [ ! -w "$BINDIR" ] || ! mkdir -p "$BINDIR" 2>/dev/null; then
+mkdir -p "$BINDIR" 2>/dev/null || true
+if [ ! -w "$BINDIR" ]; then
     echo "You don't have write access to $BINDIR: sudo may ask for your password"
     if [ ! -d "$BINDIR" ]; then sudo mkdir -p "$BINDIR"; fi
     sudo install -g root -o root -m 755 $TMP/$file $BINDIR/opam
