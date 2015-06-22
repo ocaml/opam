@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 type t = {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t;
@@ -162,3 +164,32 @@ let filter_deps ?(dev=true) f =
     ~doc:(!r.build_doc)
     ~dev
     f
+
+let load_defaults root_dir =
+  match load root_dir with
+  | None -> false
+  | Some conf ->
+    let open OpamStd.Option.Op in
+    OpamRepositoryConfig.update
+      ?download_tool:(OpamFile.Config.dl_tool conf >>| function
+        | (CString c,None)::_ as t
+          when OpamStd.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
+        | t -> lazy (t, `Default))
+      ();
+    let criteria kind =
+      let c = OpamFile.Config.criteria conf in
+      try Some (List.assoc kind c) with Not_found -> None
+    in
+    OpamSolverConfig.update
+      ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
+      ?solver_preferences_default:(criteria `Default >>| fun s-> Some(lazy s))
+      ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
+      ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
+      ();
+    update
+      ~current_switch:(OpamFile.Config.switch conf)
+      ~switch_from:`Default
+      ~jobs:(lazy (OpamFile.Config.jobs conf))
+      ~dl_jobs:(OpamFile.Config.dl_jobs conf)
+      ();
+    true

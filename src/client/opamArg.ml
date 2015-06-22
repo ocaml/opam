@@ -131,7 +131,7 @@ let apply_global_options o =
     (* ?all_parens:bool *)
     ();
   let initialised =
-    OpamClientConfig.load_defaults root
+    OpamStateConfig.load_defaults root
   in
   (* (iii) load from env and options using OpamXxxGlobals.init_config *)
   let log_dir =
@@ -2035,7 +2035,7 @@ let check_and_run_external_commands () =
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let initialised = OpamClientConfig.load_defaults root_dir in
+    let initialised = OpamStateConfig.load_defaults root_dir in
     let env =
       if initialised then
         (OpamStateConfig.init ~root_dir ();
