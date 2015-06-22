@@ -38,7 +38,7 @@ let default = {
     );
   current_switch = OpamSwitch.system;
   switch_from = `Default;
-  jobs = lazy (OpamSystem.cpu_count ());
+  jobs = lazy (max 1 (OpamSystem.cpu_count () - 1));
   dl_jobs = 3;
   external_tags = [];
   keep_build_dir = false;
