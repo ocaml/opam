@@ -131,7 +131,7 @@ let apply_global_options o =
     (* ?all_parens:bool *)
     ();
   let initialised =
-    OpamClientConfig.load_defaults root
+    OpamStateConfig.load_defaults root
   in
   (* (iii) load from env and options using OpamXxxGlobals.init_config *)
   let log_dir =
@@ -1825,7 +1825,12 @@ let source =
           (Dir.to_string dir);
         if OpamState.find_opam_file_in_source (OpamPackage.name nv) dir = None
         then
-          OpamFile.OPAM.write Op.(dir // "opam")
+          let f =
+            if OpamFilename.exists_dir Op.(dir / "opam")
+            then Op.(dir / "opam" // "opam")
+            else Op.(dir // "opam")
+          in
+          OpamFile.OPAM.write f
             (OpamFile.OPAM.with_substs
                (OpamFile.OPAM.with_patches opam [])
                [])
@@ -2030,7 +2035,7 @@ let check_and_run_external_commands () =
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let initialised = OpamClientConfig.load_defaults root_dir in
+    let initialised = OpamStateConfig.load_defaults root_dir in
     let env =
       if initialised then
         (OpamStateConfig.init ~root_dir ();
