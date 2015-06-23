@@ -219,7 +219,7 @@ let resolve_deps args index names =
     u_action = Install requested;
   } in
   let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [];
-                  criteria = `Default; } in
+                  criteria = `Default; extra_attributes = []; } in
   match OpamSolver.resolve ~verbose:true universe
           ~orphans:OpamPackage.Set.empty request
   with

@@ -38,6 +38,10 @@ type package_details = {
   others: string list Lazy.t; (* words in lines in files *)
 }
 
+let request ?(criteria=`Default) ?(extra_attributes=[])
+    ?(wish_install=[]) ?(wish_upgrade=[]) ?(wish_remove=[]) () =
+  { wish_install; wish_upgrade; wish_remove; criteria; extra_attributes; }
+
 let details_of_package t name versions =
   let installed_version =
     try Some
@@ -287,10 +291,7 @@ module API = struct
           | _ ->  { u with u_installed = OpamPackage.Set.empty;
                            u_installed_roots = OpamPackage.Set.empty }
         in
-        let req =
-          { wish_install = depends_atoms; wish_upgrade = []; wish_remove = [];
-            criteria = `Default }
-        in
+        let req = request ~wish_install:depends_atoms () in
         match
           OpamSolver.resolve universe ~orphans:OpamPackage.Set.empty req
         with
@@ -707,9 +708,13 @@ module API = struct
 
   (* The internal "solver" needs some rewrites of the requests, to make them
      more explicit. This has no effect when using the external solver. *)
-  let preprocess_request t full_orphans orphan_versions request =
+  let preprocessed_request t full_orphans orphan_versions
+    ?wish_install ?wish_remove ?wish_upgrade ?criteria () =
+    let request =
+      request ?wish_install ?wish_remove ?wish_upgrade ?criteria ()
+    in
     if OpamCudf.external_solver_available () then request else
-    let { wish_install; wish_remove; wish_upgrade; criteria } = request in
+    let { wish_install; wish_remove; wish_upgrade; criteria; _ } = request in
     (* Convert install to upgrade when necessary, request roots installed *)
     let eqnames, neqnames =
       List.partition (function (_,Some(`Eq,_)) -> true | _ -> false)
@@ -760,7 +765,8 @@ module API = struct
         (non_upgradeable @ wish_install) in
     let wish_upgrade =
       List.filter (still_available ~up:true) upgradeable in
-    let nrequest = { wish_install; wish_remove; wish_upgrade; criteria } in
+    let nrequest = { wish_install; wish_remove; wish_upgrade;
+                     criteria; extra_attributes = [] } in
     log "Preprocess request: %a => %a"
       (slog OpamSolver.string_of_request) request
       (slog OpamSolver.string_of_request) nrequest;
@@ -813,11 +819,10 @@ module API = struct
       action,
       OpamSolution.resolve t action
         ~orphans:(full_orphans ++ orphan_versions)
-        (preprocess_request t full_orphans orphan_versions
-           { wish_install = OpamSolution.atoms_of_packages to_install;
-             wish_remove  = [];
-             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade;
-             criteria = `Upgrade; })
+        (preprocessed_request t full_orphans orphan_versions
+           ~wish_install:(OpamSolution.atoms_of_packages to_install)
+           ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
+           ~criteria:`Upgrade ())
     else
     let atoms =
       List.map (function
@@ -876,11 +881,10 @@ module API = struct
     action,
     OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
-      (preprocess_request t full_orphans orphan_versions
-         { wish_install = [];
-           wish_remove  = OpamSolution.atoms_of_packages to_remove;
-           wish_upgrade = upgrade_atoms;
-           criteria = `Default; })
+      (preprocessed_request t full_orphans orphan_versions
+         ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
+         ~wish_upgrade:upgrade_atoms
+         ())
 
   let upgrade_t ?ask atoms t =
     log "UPGRADE %a"
@@ -986,10 +990,10 @@ module API = struct
     let resolve pkgs =
       pkgs,
       OpamSolution.resolve t action ~orphans:all_orphans
-        { wish_install = OpamSolution.atoms_of_packages pkgs;
-          wish_remove  = [];
-          wish_upgrade = [];
-          criteria = `Fixup; }
+        (request
+           ~wish_install:(OpamSolution.atoms_of_packages pkgs)
+           ~criteria:`Fixup
+           ())
     in
     let is_success = function
       | _, Success _ -> true
@@ -1493,11 +1497,8 @@ module API = struct
     if pkg_new <> [] then (
 
       let request =
-        preprocess_request t full_orphans orphan_versions
-          { wish_install = atoms;
-            wish_remove  = [];
-            wish_upgrade = [];
-            criteria = `Default; }
+        preprocessed_request t full_orphans orphan_versions
+          ~wish_install:atoms ();
       in
       let action =
         if add_to_roots = Some false || deps_only then
@@ -1599,10 +1600,11 @@ module API = struct
       let solution =
         OpamSolution.resolve_and_apply ?ask t Remove ~requested
           ~orphans:(full_orphans ++ orphan_versions)
-          { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
-            wish_remove  = OpamSolution.atoms_of_packages to_remove;
-            wish_upgrade = [];
-            criteria = `Default; } in
+          (request
+             ~wish_install:(OpamSolution.eq_atoms_of_packages to_keep)
+             ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
+             ())
+      in
       OpamSolution.check_solution t solution
     ) else if !nothing_to_do then
       OpamConsole.msg "Nothing to do.\n"
@@ -1642,11 +1644,11 @@ module API = struct
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let request =
-      preprocess_request t full_orphans orphan_versions
-        { wish_install = atoms;
-          wish_remove  = [];
-          wish_upgrade = [];
-          criteria = `Fixup; } in
+      preprocessed_request t full_orphans orphan_versions
+        ~wish_install:atoms
+        ~criteria:`Fixup
+        ()
+    in
 
     let solution =
       OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested
