@@ -38,6 +38,7 @@ let empty_universe =
     u_pinned = OpamPackage.Set.empty;
     u_dev = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
+    u_attrs = [];
     u_test = false;
     u_doc = false;
   }
@@ -196,6 +197,12 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     in
     e
   in
+  let extras =
+    List.fold_left (fun extras (label,set) ->
+        if OpamPackage.Set.mem package set then (label, `Int 1)::extras
+        else extras)
+      extras universe.u_attrs
+  in
   { Cudf.default_package with
     Cudf.
     package = name_to_cudf (OpamPackage.name package);
@@ -271,7 +278,8 @@ let map_request f r =
   { wish_install = f r.wish_install;
     wish_remove  = f r.wish_remove;
     wish_upgrade = f r.wish_upgrade;
-    criteria = r.criteria }
+    criteria = r.criteria;
+    extra_attributes = r.extra_attributes; }
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)

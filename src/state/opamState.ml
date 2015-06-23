@@ -1304,6 +1304,7 @@ let universe t action =
     u_pinned    = pinned_packages t;
     u_dev       = dev_packages t;
     u_base      = base;
+    u_attrs     = [];
     u_test      = OpamStateConfig.(!r.build_test);
     u_doc       = OpamStateConfig.(!r.build_doc);
   }

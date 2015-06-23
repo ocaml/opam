@@ -259,6 +259,7 @@ type 'a request = {
   wish_install: 'a conjunction;
   wish_remove : 'a conjunction;
   wish_upgrade: 'a conjunction;
+  extra_attributes: string list;
 }
 
 (** user request action *)
@@ -283,10 +284,12 @@ type universe = {
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
-  u_dev      : package_set;
+  u_dev      : package_set; (** packages with a version-controlled upstream *)
   u_base     : package_set;
-  u_test     : bool; (* Test dependencies should be honored *)
-  u_doc      : bool; (* Doc dependencies should be honored *)
+  u_attrs    : (string * package_set) list;
+  (** extra CUDF attributes for the given packages *)
+  u_test     : bool; (** Test dependencies should be honored *)
+  u_doc      : bool; (** Doc dependencies should be honored *)
 }
 
 (** {2 Command line arguments} *)

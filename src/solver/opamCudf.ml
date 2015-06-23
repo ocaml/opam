@@ -451,7 +451,8 @@ let remove_all_uninstalled_versions_but universe name constr =
   Cudf.load_universe packages
 
 let to_cudf univ req = (
-  default_preamble,
+  Common.CudfAdd.add_properties default_preamble
+    (List.map (fun s -> s, `Int (Some 0)) req.extra_attributes),
   univ,
   { Cudf.request_id = "opam";
     install         = req.wish_install;

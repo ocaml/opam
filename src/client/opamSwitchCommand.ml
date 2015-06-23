@@ -258,7 +258,8 @@ let install_packages switch compiler =
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = to_install;
-          criteria = `Default; } in
+          criteria = `Default;
+          extra_attributes = []; } in
     let solution = match solution with
       | Success s -> s
       | _ ->
@@ -449,7 +450,8 @@ let import_t importfile t =
         { wish_install = to_import;
           wish_remove  = [];
           wish_upgrade = [];
-          criteria = `Default; }
+          criteria = `Default;
+          extra_attributes = []; }
     with e ->
       revert_pins ();
       raise e

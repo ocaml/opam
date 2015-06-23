@@ -38,9 +38,9 @@ type package_details = {
   others: string list Lazy.t; (* words in lines in files *)
 }
 
-let request ?(criteria=`Default)
+let request ?(criteria=`Default) ?(extra_attributes=[])
     ?(wish_install=[]) ?(wish_upgrade=[]) ?(wish_remove=[]) () =
-  { wish_install; wish_upgrade; wish_remove; criteria; }
+  { wish_install; wish_upgrade; wish_remove; criteria; extra_attributes; }
 
 let details_of_package t name versions =
   let installed_version =
@@ -714,7 +714,7 @@ module API = struct
       request ?wish_install ?wish_remove ?wish_upgrade ?criteria ()
     in
     if OpamCudf.external_solver_available () then request else
-    let { wish_install; wish_remove; wish_upgrade; criteria } = request in
+    let { wish_install; wish_remove; wish_upgrade; criteria; _ } = request in
     (* Convert install to upgrade when necessary, request roots installed *)
     let eqnames, neqnames =
       List.partition (function (_,Some(`Eq,_)) -> true | _ -> false)
@@ -765,7 +765,8 @@ module API = struct
         (non_upgradeable @ wish_install) in
     let wish_upgrade =
       List.filter (still_available ~up:true) upgradeable in
-    let nrequest = { wish_install; wish_remove; wish_upgrade; criteria } in
+    let nrequest = { wish_install; wish_remove; wish_upgrade;
+                     criteria; extra_attributes = [] } in
     log "Preprocess request: %a => %a"
       (slog OpamSolver.string_of_request) request
       (slog OpamSolver.string_of_request) nrequest;
