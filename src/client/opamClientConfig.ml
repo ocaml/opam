@@ -13,8 +13,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-
 type t = {
   print_stats: bool;
   sync_archives: bool;
