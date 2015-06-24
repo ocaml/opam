@@ -11,6 +11,8 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
 src_ext/graph/
+src_ext/jsonm/
+src_ext/uutf/
 src_ext/opam-file-format/
 src_ext/*.stamp
 src_ext/*.tbz
