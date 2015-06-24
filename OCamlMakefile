@@ -124,27 +124,13 @@ SYSTEM := $(shell ocamlc -config 2>/dev/null | grep system | sed 's/system: //')
 ifeq ($(SYSTEM),$(filter $(SYSTEM),mingw mingw64))
   MINGW=1
 endif
-ifeq ($(SYSTEM),win32)
+ifeq ($(SYSTEM),$(filter $(SYSTEM),win32 win64))
   MSVC=1
 endif
 
 ifdef MINGW
   export MINGW
   WIN32 := 1
-  # The default value 'cc' makes 'ocamlc -cc "cc"' raises the error 'The
-  # NTVDM CPU has encountered an illegal instruction'.
-  ifndef CC
-    MNO_CYGWIN := $(shell gcc -Wextra -v --help 2>/dev/null | grep -q '\-mno-cygwin'; echo $$?)
-    CC := gcc
-  else
-    MNO_CYGWIN := $(shell $$CC -Wextra -v --help 2>/dev/null | grep -q '\-mno-cygwin'; echo $$?)
-  endif
-  # We are compiling with cygwin tools:
-  ifeq ($(MNO_CYGWIN),0)
-	CFLAGS_WIN32 := -mno-cygwin
-  endif
-  # The OCaml C header files use this flag:
-  CFLAGS += -D__MINGW32__
 endif
 ifdef MSVC
   export MSVC
@@ -205,15 +191,6 @@ ifndef RPATH_FLAG
   endif
 endif
 export RPATH_FLAG
-
-ifndef MSVC
-ifndef PIC_CFLAGS
-  PIC_CFLAGS := -fPIC
-endif
-ifndef PIC_CPPFLAGS
-  PIC_CPPFLAGS := -DPIC
-endif
-endif
 
 export PIC_CFLAGS
 export PIC_CPPFLAGS
@@ -973,38 +950,16 @@ endif
                         .rep .zog .glade
 
 ifndef STATIC
-ifdef MINGW
-# From OCaml 3.11.0, ocamlmklib is available on windows
-OCAMLMLIB_EXISTS = $(shell which $(OCAMLMKLIB))
-ifeq ($(strip $(OCAMLMLIB_EXISTS)),)
-$(DLLSONAME):		$(OBJ_LINK)
-			$(CC) $(CFLAGS) $(CFLAGS_WIN32) $(OBJ_LINK) -shared -o $@ \
-			$(wildcard $(foreach dir,$(LIBDIRS),$(CLIBS:%=$(dir)/lib%.a))) \
-			 '$(OCAMLLIBPATH)/ocamlrun.a' \
-			-Wl,--whole-archive \
-			-Wl,--export-all-symbols \
-			-Wl,--allow-multiple-definition \
-			-Wl,--enable-auto-import
-else
-$(DLLSONAME):		$(OBJ_LINK)
-			$(OCAMLMKLIB) $(INCFLAGS) $(CLIBFLAGS) \
-				-o $(CLIB_BASE) $(OBJ_LINK) $(CLIBS:%=-l%) \
-				$(CFRAMEWORKS:%=-framework %) \
-				$(OCAMLMKLIB_FLAGS)
-endif
-else
 ifdef MSVC
 $(DLLSONAME):		$(OBJ_LINK)
-			link /NOLOGO /DLL /OUT:$@ $(OBJ_LINK) \
-			 $(wildcard $(foreach dir,$(LIBDIRS),$(CLIBS:%=$(dir)/%.lib))) \
-			 '$(OCAMLLIBPATH)/ocamlrun.lib'
-
+			$(OCAMLMKLIB) $(INCFLAGS) $(CLIBFLAGS) \
+				-o $(CLIB_BASE) $(OBJ_LINK) $(CLIBS:%=%.lib) $(CFRAMEWORKS:%=-framework %) \
+				$(OCAMLMKLIB_FLAGS)
 else
 $(DLLSONAME):		$(OBJ_LINK)
 			$(OCAMLMKLIB) $(INCFLAGS) $(CLIBFLAGS) \
 				-o $(CLIB_BASE) $(OBJ_LINK) $(CLIBS:%=-l%) $(CFRAMEWORKS:%=-framework %) \
 				$(OCAMLMKLIB_FLAGS)
-endif
 endif
 endif
 
