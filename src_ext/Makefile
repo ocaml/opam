@@ -92,7 +92,7 @@ CPPO = cppo/cppo
 addcppo = for ml in $1/*.ml $1/*.mli; do echo '(*pp $(CPPO) *)' | cat - $$ml > temp && mv temp $$ml; done
 
 addcppo:
-	$(MAKE) -C cppo
+	$(MAKE) -C cppo all
 	$(call addcppo,dose/common)
 	$(call addcppo,dose/deb)
 	$(call addcppo,dose/algo)
