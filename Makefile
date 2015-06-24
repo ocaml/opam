@@ -1,4 +1,6 @@
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include Makefile.config
+endif
 
 all: opam-lib opam opam-installer
 	@
@@ -22,8 +24,12 @@ byte:
 src/%:
 	$(MAKE) -C src $*
 
+# Disable this rule if the only build targets are cold, download-ext or configure
+# to suppress error messages trying to build Makefile.config
+ifneq ($(or $(filter-out cold download-ext configure,$(MAKECMDGOALS)),$(filter own-goal,own-$(MAKECMDGOALS)goal)),)
 %:
 	$(MAKE) -C src $@
+endif
 
 lib-ext:
 	$(MAKE) -C src_ext lib-ext
@@ -34,13 +40,14 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
-clean: fastclean
+clean:
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
 
-distclean: clean
-	rm -f .merlin Makefile.config
+distclean: clean clean-ext
+	rm -rf autom4te.cache bootstrap
+	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml aclocal.m4
 	rm -f src/*.META
 	rm -f src/core/opamVersion.ml
 
@@ -49,9 +56,11 @@ OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
 
 # With ocamlfind, prefer to install to the standard directory rather
 # than $(prefix) if there are no overrides
+ifdef OCAMLFIND
 ifndef DESTDIR
 ifneq ($(OCAMLFIND),no)
     LIBINSTALL_DIR ?= $(shell $(OCAMLFIND) printconf destdir)
+endif
 endif
 endif
 

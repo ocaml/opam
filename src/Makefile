@@ -1,9 +1,11 @@
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 
 .NOTPARALLEL:
 
 ifndef version
   $(error Please run ./configure)
+endif
 endif
 
 all:
@@ -38,7 +40,9 @@ ifneq ($(HAS_LIBEXT),)
   LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm opam-file-format
 else
   ifeq ($(HAS_PACKAGES),)
-    $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
+    ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+      $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
+    endif
   endif
   export PACKS
   # Reset command name for ocamlfind
