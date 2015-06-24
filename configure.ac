@@ -2,7 +2,6 @@ AC_INIT(opam,2.0.0~beta3)
 AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_CC
 
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
@@ -31,10 +30,23 @@ OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot fin
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$OS_TYPE])
 
+# Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
+AS_IF([test "$OCAMLBEST" = "opt"],[OCAMLBESTCC=$OCAMLOPT],[OCAMLBESTCC=$OCAMLC])
+AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc])
+
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
 AC_SUBST(ocaml_4_03,"$ax_compare_version")
+
+AC_CHECK_TOOL([CYGPATH],[cygpath],[no])
+
+if test x"$CYGPATH" = x"no" ; then
+  AR=ar
+else
+  printf "include %s/Makefile.config\nall:\n\t@echo \$(ARCMD)" `$OCAMLC -where | cygpath -f -` > conftestMakefile
+  AR=`make --no-print-directory -f conftestMakefile`
+fi
 
 AS_IF([ test "${OS_TYPE}" = "Win32"],[
   WIN32=1
@@ -46,6 +58,8 @@ AS_IF([ test "${OS_TYPE}" = "Win32"],[
 
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
+
+AS_IF([ test "x$AR" != "x" ],[AC_CHECK_TOOL(AR,$AR)],[AC_SUBST(AR,"no")])
 
 AC_PROG_OCAMLLEX
 AC_PROG_OCAMLYACC
