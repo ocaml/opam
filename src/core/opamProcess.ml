@@ -183,11 +183,17 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       close_out chan in
 
   let pid =
-    Unix.create_process_env
-      cmd
-      (Array.of_list (cmd :: args))
-      env
-      stdin_fd stdout_fd stderr_fd in
+    try
+      Unix.create_process_env
+        cmd
+        (Array.of_list (cmd :: args))
+        env
+        stdin_fd stdout_fd stderr_fd
+    with e ->
+      close_stdin  ();
+      close_stdout ();
+      close_stderr ();
+      raise e in
   close_stdin  ();
   close_stdout ();
   close_stderr ();
