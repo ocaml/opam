@@ -604,6 +604,8 @@ OCAMLFIND
 OCAMLYACC
 OCAMLLEXDOTOPT
 OCAMLLEX
+EXE
+WIN32
 ocaml_4_03
 ocaml_4_02
 AWK
@@ -3892,6 +3894,17 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler os_type" >&5
+$as_echo_n "checking for compiler os_type... " >&6; }
+OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | fgrep os_type | sed -e "s/.*: //"`
+if  test "$?" -eq 0 ; then :
+
+else
+  as_fn_error $? "failed" "$LINENO" 5
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $OS_TYPE" >&5
+$as_echo "$OS_TYPE" >&6; }
+
 
 
 
@@ -3965,6 +3978,21 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
       fi
 
 ocaml_4_03="$ax_compare_version"
+
+
+if  test "${OS_TYPE}" = "Win32"; then :
+
+  WIN32=1
+  EXE=.exe
+
+else
+
+  EXE=
+  WIN32=0
+
+fi
+
+
 
 
   # checking for ocamllex

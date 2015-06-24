@@ -26,10 +26,26 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
+AC_MSG_CHECKING([for compiler os_type])
+OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | fgrep os_type | sed -e "s/.*: //"`
+AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
+AC_MSG_RESULT([$OS_TYPE])
+
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
 AC_SUBST(ocaml_4_03,"$ax_compare_version")
+
+AS_IF([ test "${OS_TYPE}" = "Win32"],[
+  WIN32=1
+  EXE=.exe
+],[
+  EXE=
+  WIN32=0
+])
+
+AC_SUBST(WIN32)
+AC_SUBST(EXE)
 
 AC_PROG_OCAMLLEX
 AC_PROG_OCAMLYACC
