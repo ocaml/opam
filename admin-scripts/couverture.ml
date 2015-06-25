@@ -68,22 +68,34 @@ let max_install t inst_packages =
          (List.map OpamCudf.cudf2opam (OpamCudf.packages u)))
       base
 
-let rec couverture acc t pkgs =
-  Printf.eprintf "# -> Step %d, %d packages remaining.\n%!"
-    (List.length acc + 1)
-    (OpamPackage.(Name.Set.cardinal (names_of_packages pkgs)));
-  let step = max_install t pkgs in
-  if OpamPackage.Set.is_empty step then
-    List.rev acc, pkgs
-  else
-  let pkgs =
-    OpamPackage.Set.filter
-      (fun nv -> not (OpamPackage.has_name step (OpamPackage.name nv))) pkgs
-  in
-  couverture (step::acc) t pkgs
-
 module P = OpamPackage
 open P.Set.Op
+
+let rec couverture acc t pkgs =
+  Printf.eprintf "# %d packages remaining...\n%!"
+    (P.Name.Set.cardinal (P.names_of_packages pkgs));
+  let step = max_install t pkgs in
+  let added =
+    P.Name.Set.inter (P.names_of_packages step) (P.names_of_packages pkgs)
+  in
+  if P.Name.Set.is_empty added then
+    let () =
+      Printf.eprintf "# -> %d uninstallable packages remaining.\n%!"
+        (P.Name.Set.cardinal (P.names_of_packages pkgs))
+    in
+    List.rev acc, pkgs
+  else
+  let n = P.Name.Set.cardinal added in
+  Printf.eprintf "# -> Step %d: covering %d/%d packages%s.\n%!"
+    (List.length acc + 1) n (P.Name.Set.cardinal (P.names_of_packages pkgs))
+    (if n > 5 then "" else
+       OpamStd.List.concat_map ~left:" (" ~right:")" " " P.Name.to_string
+         (OpamPackage.Name.Set.elements added));
+  let pkgs =
+    P.Set.filter
+      (fun nv -> not (P.has_name step (P.name nv))) pkgs
+  in
+  couverture (step::acc) t pkgs
 
 let () =
   let root = OpamStateConfig.opamroot () in
