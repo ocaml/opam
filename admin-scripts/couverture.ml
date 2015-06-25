@@ -33,9 +33,10 @@ open OpamTypes
 let max_install t inst_packages =
   let universe = OpamState.universe t Depends in
   let wish_field = "wished" in
+  let base = OpamState.base_packages t in
   let universe =
-    { universe with u_installed = OpamPackage.Set.empty;
-                    u_installed_roots = OpamPackage.Set.empty;
+    { universe with u_installed = base;
+                    u_installed_roots = base;
                     u_attrs = [wish_field, inst_packages]; }
   in
   if not (OpamCudf.external_solver_available ()) then
@@ -62,7 +63,10 @@ let max_install t inst_packages =
   match OpamCudf.resolve ~extern:true ~version_map cudf_universe request with
   | Conflicts _ -> failwith "Solver error (unexpected conflicts)"
   | Success u ->
-    OpamPackage.Set.of_list (List.map OpamCudf.cudf2opam (OpamCudf.packages u))
+    OpamPackage.Set.diff
+      (OpamPackage.Set.of_list
+         (List.map OpamCudf.cudf2opam (OpamCudf.packages u)))
+      base
 
 let rec couverture acc t pkgs =
   Printf.eprintf "# -> Step %d, %d packages remaining.\n%!"
@@ -95,7 +99,8 @@ let () =
   in
   let avail = Lazy.force t.OpamState.Types.available_packages in
   let wanted = match Array.to_list Sys.argv with
-    | [] | _::[] -> avail
+    | [] | _::[] ->
+      avail -- P.packages_of_names avail (OpamState.base_package_names t)
     | _::l ->
       List.fold_left (fun wanted name ->
           let nvs =
