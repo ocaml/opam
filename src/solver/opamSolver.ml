@@ -183,7 +183,6 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
   in
   let extras =
     let e = [
-      OpamCudf.s_source, `String (OpamPackage.Name.to_string name);
       OpamCudf.s_source_number, `String (OpamPackage.Version.to_string version);
     ] in
     let e = if installed && reinstall

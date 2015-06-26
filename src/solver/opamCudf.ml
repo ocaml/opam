@@ -21,7 +21,6 @@ let log fmt = OpamConsole.log "CUDF" fmt
 let slog = OpamConsole.slog
 
 (* custom cudf field labels *)
-let s_source = "opam-name"
 let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
@@ -29,7 +28,7 @@ let s_pinned = "pinned"
 let s_version_lag = "version-lag"
 
 let cudf2opam cpkg =
-  let sname = Cudf.lookup_package_property cpkg s_source in
+  let sname = Common.CudfAdd.decode cpkg.Cudf.package in
   let name = OpamPackage.Name.of_string sname in
   let sver = Cudf.lookup_package_property cpkg s_source_number in
   let version = OpamPackage.Version.of_string sver in
@@ -411,7 +410,6 @@ let is_pinned = check s_pinned
 
 let default_preamble =
   let l = [
-    (s_source,         `String None) ;
     (s_source_number,  `String None);
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
