@@ -35,10 +35,10 @@ lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),
 # Portable md5check
 MD5CHECK = $(OCAML) ../shell/md5check.ml
 
-lib-ext: clone addcppo build copy
+lib-ext: clone build copy
 	@
 
-build: clone
+build: clone addcppo
 	[ $(OCAMLC) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=bcl
 	[ $(OCAMLOPT) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=ncl
 
@@ -89,7 +89,7 @@ LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf 
 
 # add the preprocessor directive for OCamlMakefile
 CPPO = cppo/cppo
-addcppo = for ml in $1/*.ml $1/*.mli; do echo '(*pp $(CPPO) *)' | cat - $$ml > temp && mv temp $$ml; done
+addcppo = for ml in $1/*.ml $1/*.mli; do sed -i "1i(*pp $(CPPO) *)" $$ml; done
 
 addcppo:
 	$(MAKE) -C cppo all
