@@ -1309,20 +1309,21 @@ let universe t action =
     u_doc       = OpamStateConfig.(!r.build_doc);
   }
 
-let string_of_cnf string_of_atom cnf =
-  let string_of_clause c =
-    Printf.sprintf "%s" (OpamStd.List.concat_map " | " string_of_atom (List.rev c)) in
-  Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_clause (List.rev cnf))
-
-let string_of_conjunction string_of_atom c =
-  Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
-
-let string_of_stringlist l =
-  let rex = Re_pcre.regexp "\n" in
-  let filter =  Re_pcre.substitute ~rex ~subst:(fun _ -> "") in
-  (OpamStd.List.concat_map " " filter (List.rev l))
-
 let dump_state t oc =
+  let string_of_cnf string_of_atom cnf =
+    let string_of_clause c =
+      Printf.sprintf "%s" (OpamStd.List.concat_map " | " string_of_atom (List.rev c)) in
+    Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_clause (List.rev cnf))
+  in
+
+  let string_of_conjunction string_of_atom c =
+    Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
+  in
+  let string_of_stringlist l =
+    let rex = Re_pcre.regexp "\n" in
+    let filter =  Re_pcre.substitute ~rex ~subst:(fun _ -> "") in
+    (OpamStd.List.concat_map " " filter (List.rev l))
+  in
   let opams = (* Read overlays of pinned packages *)
     OpamPackage.Name.Map.fold (fun name pin map ->
         let v = version_of_pin t name pin in
@@ -1349,23 +1350,18 @@ let dump_state t oc =
         (string_of_conjunction (fun a -> a) m);
     with Not_found -> () );
 
-    (match repository_and_prefix_of_package t package with
-    |None -> ()
-    |Some(repo,prefix) -> (
-      let opam_file = OpamRepositoryPath.opam repo prefix package in
-      let t = OpamFile.OPAM.read opam_file in
-
-      if (OpamFile.OPAM.author t) <> [] then
-        Printf.fprintf oc "authors: %s\n" (string_of_stringlist (OpamFile.OPAM.author t));
-      if (OpamFile.OPAM.homepage t) <> [] then
-        Printf.fprintf oc "homepage: %s\n" (string_of_stringlist (OpamFile.OPAM.homepage t));
-      if (OpamFile.OPAM.license t) <> [] then
-        Printf.fprintf oc "license: %s\n" (string_of_stringlist (OpamFile.OPAM.license t));
-      if (OpamFile.OPAM.tags t) <> [] then
-        Printf.fprintf oc "tags: %s\n" (string_of_stringlist (OpamFile.OPAM.tags t));
-      if (OpamFile.OPAM.bug_reports t) <> [] then
-        Printf.fprintf oc "bug-reports: %s\n" (string_of_stringlist (OpamFile.OPAM.bug_reports t));
-    ));
+    (let tp = opam t package in
+    if (OpamFile.OPAM.author tp) <> [] then
+      Printf.fprintf oc "authors: %s\n" (string_of_stringlist (OpamFile.OPAM.author tp));
+    if (OpamFile.OPAM.homepage tp) <> [] then
+      Printf.fprintf oc "homepage: %s\n" (string_of_stringlist (OpamFile.OPAM.homepage tp));
+    if (OpamFile.OPAM.license tp) <> [] then
+      Printf.fprintf oc "license: %s\n" (string_of_stringlist (OpamFile.OPAM.license tp));
+    if (OpamFile.OPAM.tags tp) <> [] then
+      Printf.fprintf oc "tags: %s\n" (string_of_stringlist (OpamFile.OPAM.tags tp));
+    if (OpamFile.OPAM.bug_reports tp) <> [] then
+      Printf.fprintf oc "bug-reports: %s\n" (string_of_stringlist (OpamFile.OPAM.bug_reports tp));
+    );
 
     if OpamPackage.Set.mem package base then
       Printf.fprintf oc "base: true\n";
