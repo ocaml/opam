@@ -472,8 +472,8 @@ recommended to check the validity and quality of your `opam` files.
 - `authors: [ <string> ... ]`: a list of strings listing the original authors of
   the software.
 
-- `license: [ <string> ... ]`: the abbreviated name(s) of the license(s) under
-  which the source software is available.
+- `license: [ <string> ... ]`: The SPDX ID or SPDX Expression of the license(s) under
+  which the source software is available (see http://spdx.org/licenses/).
 
 - `homepage: <string>`, `doc: <string>`, `bug-reports: <string>`: URLs pointing
   to the related pages for the package, for user information
