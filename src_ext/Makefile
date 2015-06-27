@@ -82,7 +82,7 @@ distclean:
 	rm -f *.cm* *.o *.a *.lib
 	rm -rf lib
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm
 
 inst_objs = cp $(1)/*.cm*i lib
 
@@ -98,7 +98,6 @@ copy: build
 	$(call inst_objs,graph/src)
 	$(call inst_objs,cudf)
 	$(call inst_objs,dose/common)
-	$(call inst_objs,dose/deb)
 	$(call inst_objs,dose/algo)
 	$(call inst_objs,uutf/src)
 	$(call inst_objs,jsonm/src)
@@ -178,19 +177,6 @@ define PROJ_dose_common
 endef
 export PROJ_dose_common
 
-SRC_dose_debian = architecture.ml format822.ml format822_parser.mly		\
-packages_parser.mly version.ml packages_lexer.mll format822_lexer.mll		\
-packages.ml release.ml sources.ml printer.ml evolution.ml debutil.ml debcudf.ml \
-apt.ml edsp.ml
-
-define PROJ_dose_debian
-  SOURCES = $(call addmli,dose/deb,$(SRC_dose_debian))
-  RESULT = dose_debian
-  LIB_PACK_NAME = debian
-  INCDIRS = extlib cudf re/lib
-endef
-export PROJ_dose_debian
-
 SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml		\
 dominators.ml flatten.ml statistics.ml depsolver_int.ml depsolver.ml		\
 strongconflicts_int.ml strongconflicts.ml strongdeps_int.ml strongdeps.ml
@@ -199,7 +185,7 @@ define PROJ_dose_algo
   SOURCES = $(call addmli,dose/algo,$(SRC_dose_algo))
   RESULT = dose_algo
   LIB_PACK_NAME = algo
-  INCDIRS = extlib graph/src dose/common dose/deb cudf
+  INCDIRS = extlib graph/src dose/common cudf
 endef
 export PROJ_dose_algo
 
