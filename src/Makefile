@@ -43,7 +43,7 @@ endif
 
 ifneq ($(HAS_LIBEXT),)
   EXT_INCDIRS = ../src_ext/lib
-  LIBS = unix extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
+  LIBS = unix extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm
 else
   ifeq ($(HAS_PACKAGES),)
     $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
