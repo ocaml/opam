@@ -17,8 +17,8 @@ MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
 MD5_cudf = b12d933a96bd326e2443241faca7aa8c
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/34889/dose3-4.0-rc1.tar.gz
-MD5_dose = 3693af45b6bcd3a686936d057f79e192
+URL_dose = https://gforge.inria.fr/frs/download.php/file/34896/dose3-4.0-rc2.tar.gz
+MD5_dose = 1914cee1962f313f127589558c73c3df
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
@@ -85,7 +85,7 @@ distclean:
 	rm -f *.cm* *.o *.a *.lib
 	rm -rf lib
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_algo uutf jsonm
 
 # add the preprocessor directive for OCamlMakefile
 CPPO = cppo/cppo
@@ -94,7 +94,7 @@ addcppo = for ml in $1/*.ml $1/*.mli; do sed -i "1i(*pp $(CPPO) *)" $$ml; done
 addcppo:
 	$(MAKE) -C cppo all
 	$(call addcppo,dose/common)
-	$(call addcppo,dose/deb)
+	$(call addcppo,dose/versioning)
 	$(call addcppo,dose/algo)
 
 inst_objs = cp $(1)/*.cm*i lib
@@ -111,6 +111,7 @@ copy: build
 	$(call inst_objs,graph/src)
 	$(call inst_objs,cudf)
 	$(call inst_objs,dose/common)
+	$(call inst_objs,dose/versioning)
 	$(call inst_objs,dose/algo)
 	$(call inst_objs,uutf/src)
 	$(call inst_objs,jsonm/src)
@@ -189,6 +190,16 @@ define PROJ_dose_common
   INCDIRS = extlib cudf re/lib
 endef
 export PROJ_dose_common
+
+SRC_dose_versioning = versioning.ml debian_version.ml semantic_version.ml
+
+define PROJ_dose_versioning
+  SOURCES = $(call addmli,dose/versioning,$(SRC_dose_versioning))
+  RESULT = dose_versioning
+  LIB_PACK_NAME =
+  INCDIRS = extlib re/lib dose/common
+endef
+export PROJ_dose_versioning
 
 SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml		\
 dominators.ml flatten.ml statistics.ml depsolver_int.ml depsolver.ml		\
