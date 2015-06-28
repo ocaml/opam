@@ -93,8 +93,8 @@ let copy_files st opam =
      | Some [] | None -> ()
      | Some files ->
        OpamConsole.warning
-         "Ignoring overlay files of %s (files/*) that were not found: %s"
-         (OpamPackage.Name.to_string name)
+         "Ignoring overlay files of %s (files%s*) that were not found: %s"
+         (OpamPackage.Name.to_string name) Filename.dir_sep
          (OpamStd.List.to_string (fun (b,_) -> OpamFilename.Base.to_string b)
             files));
   let destdir =

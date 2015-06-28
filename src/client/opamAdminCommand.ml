@@ -20,7 +20,7 @@ let checked_repo_root () =
   then
     OpamConsole.error_and_exit `Bad_arguments
       "No repository found in current directory.\n\
-       Please make sure there is a \"packages/\" directory";
+       Please make sure there is a \"packages%s\" directory" Filename.dir_sep;
   repo_root
 
 
@@ -29,12 +29,14 @@ let admin_command_doc =
 
 let admin_command_man = [
   `S "DESCRIPTION";
-  `P "This command can perform various actions on repositories in the opam \
-      format. It is expected to be run from the root of a repository, i.e. a \
-      directory containing a 'repo' file and a subdirectory 'packages/' \
-      holding package definition within subdirectories. A 'compilers/' \
-      subdirectory (opam repository format version < 2) will also be used by \
-      the $(b,upgrade-format) subcommand."
+  `P (Printf.sprintf
+       "This command can perform various actions on repositories in the opam \
+        format. It is expected to be run from the root of a repository, i.e. a \
+        directory containing a 'repo' file and a subdirectory 'packages%s' \
+        holding package definition within subdirectories. A 'compilers%s' \
+        subdirectory (opam repository format version < 2) will also be used by \
+        the $(b,upgrade-format) subcommand."
+       Filename.dir_sep Filename.dir_sep)
 ]
 
 let index_command_doc =
@@ -194,8 +196,9 @@ let cache_command =
   let link_arg =
     Arg.(value & opt (some OpamArg.dirname) None &
          info ["link"] ~docv:"DIR" ~doc:
-           "Create reverse symbolic links to the archives within $(i,DIR), in \
-            the form $(b,DIR/PKG.VERSION/FILENAME).")
+           (Printf.sprintf
+             "Create reverse symbolic links to the archives within $(i,DIR), in \
+              the form $(b,DIR%sPKG.VERSION%sFILENAME)." Filename.dir_sep Filename.dir_sep))
   in
   let jobs_arg =
     Arg.(value & opt OpamArg.positive_integer 8 &
@@ -486,18 +489,20 @@ let upgrade_command =
   let doc = upgrade_command_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command reads repositories from earlier opam versions, and \
-        converts them to repositories suitable for the current opam version. \
-        Packages might be created or renamed, and any compilers defined in the \
-        old format ('compilers/' directory) will be turned into packages, \
-        using a pre-defined hierarchy that assumes OCaml compilers."
+    `P (Printf.sprintf
+         "This command reads repositories from earlier opam versions, and \
+          converts them to repositories suitable for the current opam version. \
+          Packages might be created or renamed, and any compilers defined in the \
+          old format ('compilers%s' directory) will be turned into packages, \
+          using a pre-defined hierarchy that assumes OCaml compilers." Filename.dir_sep)
   ]
   in
   let clear_cache_arg =
     let doc =
-      "Instead of running the upgrade, clear the cache of archive hashes (held \
-       in ~/.cache), that is used to avoid re-downloading files to obtain \
-       their hashes at every run."
+      Printf.sprintf
+       "Instead of running the upgrade, clear the cache of archive hashes (held \
+        in ~%s.cache), that is used to avoid re-downloading files to obtain \
+        their hashes at every run." Filename.dir_sep
     in
     Arg.(value & flag & info ["clear-cache"] ~doc)
   in
@@ -704,15 +709,16 @@ let pattern_list_arg =
     Arg.string
 
 let env_arg =
-  Arg.(value & opt (list string) [] & info ["environment"] ~doc:
-         "Use the given opam environment, in the form of a list \
-          comma-separated 'var=value' bindings, when resolving variables. This \
-          is used e.g. when computing available packages: if undefined, \
-          availability of packages will be assumed as soon as it can not be \
-          resolved purely from globally defined variables. Note that, unless \
-          overridden, variables like 'root' or 'opam-version' may be taken \
-          from the current opam installation. What is defined in \
-          $(i,~/.opam/config) is always ignored.")
+  Arg.(value & opt (list string) [] & info ["environment"] ~doc:(
+         Printf.sprintf
+          "Use the given opam environment, in the form of a list of \
+           comma-separated 'var=value' bindings, when resolving variables. This \
+           is used e.g. when computing available packages: if undefined, \
+           availability of packages will be assumed as soon as it can not be \
+           resolved purely from globally defined variables. Note that, unless \
+           overridden, variables like 'root' or 'opam-version' may be taken \
+           from the current opam installation. What is defined in \
+           $(i,~%s.opam%sconfig) is always ignored." Filename.dir_sep Filename.dir_sep))
 
 let state_selection_arg =
   let docs = OpamArg.package_selection_section in

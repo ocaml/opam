@@ -260,8 +260,8 @@ let help_sections = [
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
   `P "$(i,OPAMLOCKED) combination of `--locked` and `--lock-suffix` options";
-  `P "$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
-      in /tmp";
+  `P ("$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
+       in " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
   `P "$(i,OPAMMAKECMD) set the system make command to use";
   `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
       repositories in an earlier format to the current one, on 'update' or \
@@ -836,8 +836,11 @@ let shell_opt =
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
-    "FILENAME" "Name of the configuration file to update instead of \
-                $(i,~/.profile) or $(i,~/.zshrc) based on shell detection."
+    "FILENAME"
+    (Printf.sprintf
+      "Name of the configuration file to update instead of \
+       $(i,~%s.profile) or $(i,~%s.zshrc) based on shell detection."
+      Filename.dir_sep Filename.dir_sep)
     (Arg.some filename) None
 
 let repo_kind_flag =
@@ -876,16 +879,18 @@ let atom_list =
 
 let atom_or_local_list =
   arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, e.g `pkg', \
-     `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
-     description, with explicit directory (e.g. `./foo.opam' or `.')"
+    (Printf.sprintf
+      "List of package names, with an optional version or constraint, e.g `pkg', \
+       `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
+       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" Filename.dir_sep)
     atom_or_local
 
 let atom_or_dir_list =
   arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, e.g `pkg', \
-     `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
-     description, with explicit directory (e.g. `./srcdir' or `.')"
+    (Printf.sprintf
+      "List of package names, with an optional version or constraint, e.g `pkg', \
+       `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
+       description, with explicit directory (e.g. `.%ssrcdir' or `.')" Filename.dir_sep)
     atom_or_dir
 
 let nonempty_atom_list =
