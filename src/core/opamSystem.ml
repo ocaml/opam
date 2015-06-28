@@ -297,12 +297,13 @@ let default_env =
 
 let env_var env var =
   let len = Array.length env in
-  let prefix = var^"=" in
+  let f = if OpamStd.(Sys.os () = Sys.Win32) then String.uppercase_ascii else fun x -> x in
+  let prefix = f var^"=" in
   let pfxlen = String.length prefix in
   let rec aux i =
     if i >= len then "" else
     let s = env.(i) in
-    if OpamStd.String.starts_with ~prefix s then
+    if OpamStd.String.starts_with ~prefix (f s) then
       String.sub s pfxlen (String.length s - pfxlen)
     else aux (i+1)
   in

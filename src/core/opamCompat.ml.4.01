@@ -22,6 +22,7 @@ end
 module String = struct
   include String
   let lowercase_ascii = lowercase
+  let uppercase_ascii = uppercase
   let capitalize_ascii = capitalize
 end
 
