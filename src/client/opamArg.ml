@@ -1874,6 +1874,14 @@ let lint =
     mk_flag ["short";"s"]
       "Only print the warning/error numbers, space-separated, if any"
   in
+  let opam_state =
+    OpamState.load_state "config-universe" OpamStateConfig.(!r.current_switch) in
+  let opam_univ = OpamState.universe opam_state Depends in
+  let version_map = OpamSolver.cudf_versions_map opam_univ opam_univ.u_packages in
+  let cudf_univ =
+    OpamSolver.load_cudf_universe ~depopts:false ~build:true opam_univ ~version_map
+      opam_univ.u_available 
+  in
   let lint global_options file normalise short =
     apply_global_options global_options;
     let opam_f =
@@ -1886,6 +1894,19 @@ let lint =
         let warnings,opam = OpamFile.OPAM.validate_file opam_f in
         let failed =
           List.exists (function _,`Error,_ -> true | _ -> false) warnings
+        in
+        let warnings = 
+          let nv = OpamPackage.of_filename opam_f in
+          let name = Option.get (OpamStd.Option.map OpamPackage.name nv) in
+          let version = Option.get (OpamStd.Option.map OpamPackage.version nv) in
+          let filter p =
+            (Common.CudfAdd.decode p.Cudf.package) = (OpamPackage.Name.to_string name) &&
+            (Cudf.lookup_package_property p "opam-version") = (OpamPackage.Version.to_string version)
+          in
+          let pkg = Cudf.get_packages ~filter cudf_univ in
+          match OpamCudf.depclean cudf_univ version_map pkg with
+          |[],_ -> warnings
+          |_,msg -> (6, `Warning, msg)::warnings
         in
         if short then
           (if warnings <> [] then
