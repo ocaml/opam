@@ -17,8 +17,8 @@ MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
 MD5_cudf = b12d933a96bd326e2443241faca7aa8c
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/34896/dose3-4.0-rc2.tar.gz
-MD5_dose = 1914cee1962f313f127589558c73c3df
+URL_dose = https://gforge.inria.fr/frs/download.php/file/34909/dose3-4.0-rc3.tar.gz
+MD5_dose = f29c5cf826696a02c42105c56bbfef13
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
@@ -52,7 +52,7 @@ archives: $(SRC_EXTS:=.download)
 
 %.download:
 	[ -e  $(notdir $(URL_$*)) ] || $(FETCH) $(URL_$*)
-	$(MD5CHECK) $(notdir $(URL_$*)) $(MD5_$*)
+	$(MD5CHECK) "$(notdir $(URL_$*))" $(MD5_$*)
 
 %.stamp: %.download
 	mkdir -p tmp
