@@ -1845,7 +1845,8 @@ let source =
       in
       let pin_option =
         pin_option_of_string ~kind (OpamFilename.Dir.to_string dir) in
-      Client.PIN.pin (OpamPackage.name nv) (Some pin_option)
+      Client.PIN.pin (OpamPackage.name nv) ~version:(OpamPackage.version nv)
+        (Some pin_option)
   in
   Term.(pure source
         $global_options $atom $dev_repo $pin $dir),

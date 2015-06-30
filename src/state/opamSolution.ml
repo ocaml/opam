@@ -497,11 +497,12 @@ let parallel_apply t action action_graph =
         PackageActionGraph.iter_vertex (fun v ->
             if not (List.mem v l) then PackageActionGraph.remove_vertex g v)
           g;
-        PackageActionGraph.reduce g
+        g
       in
       let successful = filter_graph successful in
       cleanup_artefacts successful;
-      let failed = filter_graph failed in
+      let successful = PackageActionGraph.reduce successful in
+      let failed = PackageActionGraph.reduce (filter_graph failed) in
       let print_actions filter header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
@@ -522,7 +523,7 @@ let parallel_apply t action action_graph =
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions were %s"
            (OpamConsole.colorise `yellow "aborted"))
-        (filter_graph remaining);
+        (PackageActionGraph.reduce (filter_graph remaining));
       print_actions (fun _ -> true)
         (Printf.sprintf "The following actions %s"
            (OpamConsole.colorise `red "failed"))
