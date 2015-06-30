@@ -529,6 +529,9 @@ let build_package t source nv =
         (OpamConsole.error
            "The compilation of %s failed at %S."
            name (String.concat " " (cmd::args));
+         (* FIXME: this shouldn't be needed, but lots of packages still install
+            during this step, so make sure to cleanup *)
+         remove_package ~metadata:false t ~keep_build:true ~silent:true nv @@+ fun () ->
          Done (Some (OpamSystem.Process_error result)))
     | []::commands -> run_commands commands
     | [] -> Done None

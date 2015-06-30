@@ -33,9 +33,10 @@ open OpamTypes
 let max_install t inst_packages =
   let universe = OpamState.universe t Depends in
   let wish_field = "wished" in
+  let base = OpamState.base_packages t in
   let universe =
-    { universe with u_installed = OpamPackage.Set.empty;
-                    u_installed_roots = OpamPackage.Set.empty;
+    { universe with u_installed = base;
+                    u_installed_roots = base;
                     u_attrs = [wish_field, inst_packages]; }
   in
   if not (OpamCudf.external_solver_available ()) then
@@ -62,24 +63,39 @@ let max_install t inst_packages =
   match OpamCudf.resolve ~extern:true ~version_map cudf_universe request with
   | Conflicts _ -> failwith "Solver error (unexpected conflicts)"
   | Success u ->
-    OpamPackage.Set.of_list (List.map OpamCudf.cudf2opam (OpamCudf.packages u))
-
-let rec couverture acc t pkgs =
-  Printf.eprintf "# -> Step %d, %d packages remaining.\n%!"
-    (List.length acc + 1)
-    (OpamPackage.(Name.Set.cardinal (names_of_packages pkgs)));
-  let step = max_install t pkgs in
-  if OpamPackage.Set.is_empty step then
-    List.rev acc, pkgs
-  else
-  let pkgs =
-    OpamPackage.Set.filter
-      (fun nv -> not (OpamPackage.has_name step (OpamPackage.name nv))) pkgs
-  in
-  couverture (step::acc) t pkgs
+    OpamPackage.Set.diff
+      (OpamPackage.Set.of_list
+         (List.map OpamCudf.cudf2opam (OpamCudf.packages u)))
+      base
 
 module P = OpamPackage
 open P.Set.Op
+
+let rec couverture acc t pkgs =
+  Printf.eprintf "# %d packages remaining...\n%!"
+    (P.Name.Set.cardinal (P.names_of_packages pkgs));
+  let step = max_install t pkgs in
+  let added =
+    P.Name.Set.inter (P.names_of_packages step) (P.names_of_packages pkgs)
+  in
+  if P.Name.Set.is_empty added then
+    let () =
+      Printf.eprintf "# -> %d uninstallable packages remaining.\n%!"
+        (P.Name.Set.cardinal (P.names_of_packages pkgs))
+    in
+    List.rev acc, pkgs
+  else
+  let n = P.Name.Set.cardinal added in
+  Printf.eprintf "# -> Step %d: covering %d/%d packages%s.\n%!"
+    (List.length acc + 1) n (P.Name.Set.cardinal (P.names_of_packages pkgs))
+    (if n > 5 then "" else
+       OpamStd.List.concat_map ~left:" (" ~right:")" " " P.Name.to_string
+         (OpamPackage.Name.Set.elements added));
+  let pkgs =
+    P.Set.filter
+      (fun nv -> not (P.has_name step (P.name nv))) pkgs
+  in
+  couverture (step::acc) t pkgs
 
 let () =
   let root = OpamStateConfig.opamroot () in
@@ -95,7 +111,8 @@ let () =
   in
   let avail = Lazy.force t.OpamState.Types.available_packages in
   let wanted = match Array.to_list Sys.argv with
-    | [] | _::[] -> avail
+    | [] | _::[] ->
+      avail -- P.packages_of_names avail (OpamState.base_package_names t)
     | _::l ->
       List.fold_left (fun wanted name ->
           let nvs =

@@ -1,6 +1,6 @@
 version = "@PACKAGE_VERSION@"
 description = "OCaml Package Manager base API"
-requires = "dose3, cudf, ocamlgraph, unix, re, re.str, re.glob, jsonm"
+requires = "ocamlgraph, unix, re, re.str, jsonm"
 archive(byte) = "opam-core.cma"
 archive(native) = "opam-core.cmxa"
 
@@ -8,7 +8,7 @@ package "format" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-format.cma"
   archive(native) = "opam-format.cmxa"
-  requires = "opam-lib"
+  requires = "re.pcre, opam-lib"
 )
 
 package "repository" (
@@ -22,7 +22,7 @@ package "solver" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-solver.cma"
   archive(native) = "opam-solver.cmxa"
-  requires = "opam-lib, opam-lib.format"
+  requires = "cudf, dose3, opam-lib, opam-lib.format"
 )
 
 package "state" (
@@ -36,5 +36,5 @@ package "client" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-client.cma"
   archive(native) = "opam-client.cmxa"
-  requires = "opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, opam-lib.state, cmdliner"
+  requires = "cmdliner, re.glob, opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, opam-lib.state"
 )
