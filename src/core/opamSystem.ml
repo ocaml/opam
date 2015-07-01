@@ -650,18 +650,21 @@ module Tar = struct
         Some (Printf.sprintf "Tar needs %s to extract the archive" cmd)
       else None)
 
-  let extract_command file =
-    OpamStd.Option.Op.(
-      get_type file >>| fun typ ->
-      let tar_cmd =
-        match OpamStd.Sys.os () with
-        | OpamStd.Sys.OpenBSD -> "gtar"
-        | _ -> "tar"
-      in
-      let command c dir =
-        make_command tar_cmd [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
-      in
-      command (extract_option typ))
+  let extract_command =
+    let tar_cmd =
+      match OpamStd.Sys.os () with
+      | OpamStd.Sys.OpenBSD -> "gtar"
+      | _ -> "tar"
+    in
+    let f = get_cygpath_function ~command:tar_cmd in
+    fun file ->
+      OpamStd.Option.Op.(
+        get_type file >>| fun typ ->
+        let f = Lazy.force f in
+        let command c dir =
+          make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
+        in
+        command (extract_option typ))
 end
 
 module Zip = struct
