@@ -157,6 +157,11 @@ type command = string list
     if found in PATH) *)
 val resolve_command: ?env:string array -> ?dir:string -> string -> string option
 
+(** Returns a function which should be applied to arguments for a given command
+    by determining if the command is the Cygwin variant of the command. Returns
+    the identity function otherwise. *)
+val get_cygpath_function: command:string -> (string -> string) lazy_t
+
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
 val command: ?verbose:bool -> ?env:string array -> ?name:string ->

@@ -384,6 +384,28 @@ let resolve_command =
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
 
+let apply_cygpath name =
+  let r =
+    OpamProcess.run
+      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" [name])
+  in
+  OpamProcess.cleanup ~force:true r;
+  if OpamProcess.is_success r then
+    List.hd r.OpamProcess.r_stdout
+  else
+    OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
+
+let get_cygpath_function =
+  if Sys.win32 then
+    fun ~command ->
+      lazy (if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native (resolve_command command)) = `Cygwin then
+              apply_cygpath
+            else
+              fun x -> x)
+  else
+    let f = Lazy.from_val (fun x -> x) in
+    fun ~command:_ -> f
+
 let runs = ref []
 let print_stats () =
   match !runs with

@@ -845,6 +845,44 @@ module OpamSys = struct
       (fun f -> try f () with _ -> ())
       !registered_at_exit
 
+  let is_cygwin_variant =
+    if Sys.win32 then
+      let results = Hashtbl.create 17 in
+      let requires_cygwin name =
+        let cmd = Printf.sprintf "cygcheck \"%s\"" name in
+        let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
+        let rec f a =
+          match input_line c with
+          | x ->
+              if OpamString.ends_with ~suffix:"cygwin1.dll" (String.trim x) then
+                if OpamString.starts_with ~prefix:"  " x then
+                  f `Cygwin
+                else if a <> `Cygwin then
+                  f `CygLinked
+                else
+                  f a
+              else
+                f a
+          | exception _ ->
+              Unix.close_process_full process |> ignore;
+              a
+        in
+        f `Native
+      in
+      fun name ->
+        if Filename.is_relative name then
+          requires_cygwin name
+        else
+          try
+            Hashtbl.find results name
+          with Not_found ->
+            let result = requires_cygwin name
+            in
+              Hashtbl.add results name result;
+              result
+    else
+      fun _ -> `Native
+
   exception Exit of int
   exception Exec of string * string array * string array
 
