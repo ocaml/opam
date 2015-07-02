@@ -1816,7 +1816,7 @@ let source =
       OpamConsole.formatted_msg "Downloading archive of %s...\n"
         (OpamPackage.to_string nv);
       match OpamProcess.Job.run (OpamAction.download_package t nv) with
-      | `Error () -> OpamConsole.error_and_exit "Download failed"
+      | `Error _ -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
         move_dir

@@ -223,6 +223,7 @@ let print_variable_warnings t =
 
 module Json = struct
   let output_request request action =
+    if not (OpamJson.verbose ()) then () else
     let atoms =
       List.map (fun a -> `String (OpamFormula.short_string_of_atom a))
     in
@@ -245,6 +246,7 @@ module Json = struct
     OpamJson.add "request" j
 
   let output_solution t solution =
+    if not (OpamJson.verbose ()) then () else
     match solution with
     | Success solution ->
       let action_graph = OpamSolver.get_atomic_action_graph solution in
@@ -255,37 +257,37 @@ module Json = struct
       in
       OpamJson.add "solution" (`A (List.rev to_proceed))
     | Conflicts cs ->
-      let causes,chains,cycles =
+      let causes,_,cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs
+      in
+      let chains = OpamCudf.conflict_chains cs in
+      let jchains =
+        `A (List.map (fun c ->
+            `A ((List.map (fun f -> `String (OpamFormula.to_string f)) c)))
+            chains)
       in
       let toj l = `A (List.map (fun s -> `String s) l) in
       OpamJson.add "conflicts"
         (`O ((if cycles <> [] then ["cycles", toj cycles] else []) @
              (if causes <> [] then ["causes", toj causes] else []) @
-             (if chains <> [] then ["broken-deps", toj chains] else [])))
+             (if chains <> [] then ["broken-deps", jchains] else [])))
 
-  let output_actions_errs action_errors =
-    let json_error = function
-      | OpamSystem.Process_error
-          {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
-        `O [ ("process-error",
-              `O [ ("code", `String (string_of_int r_code));
-                   ("duration", `Float r_duration);
-                   ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
-                   ("stdout", `A (List.map (fun s -> `String s) r_stdout));
-                   ("stderr", `A (List.map (fun s -> `String s) r_stderr));
-                 ])]
-      | OpamSystem.Internal_error s ->
-        `O [ ("internal-error", `String s) ]
-      | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
-    in
-    let json_action (a, e) =
-      `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
-           ("error"  ,  json_error e) ] in
-    List.iter (fun a ->
-        let json = json_action a in
-        OpamJson.add "results" json
-      ) action_errors
+  let exc e =
+    if not (OpamJson.verbose ()) then `O [] else
+    match e with
+    | OpamSystem.Process_error
+        {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
+      `O [ ("process-error",
+            `O [ ("code", `String (string_of_int r_code));
+                 ("duration", `Float r_duration);
+                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
+                 ("stdout", `A (List.map (fun s -> `String s) r_stdout));
+                 ("stderr", `A (List.map (fun s -> `String s) r_stderr));
+               ])]
+    | OpamSystem.Internal_error s ->
+      `O [ ("internal-error", `String s) ]
+    | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
+
 end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
@@ -347,15 +349,21 @@ let parallel_apply t action action_graph =
     List.fold_left2 (fun (sources,failed) nv -> function
         | `Successful None -> sources, failed
         | `Successful (Some dl) -> OpamPackage.Map.add nv dl sources, failed
-        | _ -> sources, OpamPackage.Set.add nv failed)
-      (OpamPackage.Map.empty,OpamPackage.Set.empty) sources_list results
+        | `Error e -> sources, OpamPackage.Map.add nv e failed)
+      (OpamPackage.Map.empty,OpamPackage.Map.empty) sources_list results
   in
+
+  if OpamJson.verbose () &&
+     not (OpamPackage.Map.is_empty failed_downloads) then
+    OpamJson.add "download-failures"
+      (`O (List.map (fun (nv,err) -> OpamPackage.to_string nv, `String err)
+             (OpamPackage.Map.bindings failed_downloads)));
 
   let fatal_dl_error =
     PackageActionGraph.fold_vertex
       (fun a acc -> acc || match a with
          | `Remove _ -> false
-         | _ -> OpamPackage.Set.mem (action_contents a) failed_downloads)
+         | _ -> OpamPackage.Map.mem (action_contents a) failed_downloads)
       action_graph false
   in
   if fatal_dl_error then
@@ -364,13 +372,13 @@ let parallel_apply t action action_graph =
        (This might be due to outdated metadata, in this case run \
        'opam update')"
       (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Set.elements failed_downloads))
-  else if not (OpamPackage.Set.is_empty failed_downloads) then
+         (OpamPackage.Map.keys failed_downloads))
+  else if not (OpamPackage.Map.is_empty failed_downloads) then
     OpamConsole.warning
       "The sources of the following couldn't be obtained, they may be \
        uncleanly uninstalled:\n%s"
       (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Set.elements failed_downloads));
+         (OpamPackage.Map.keys failed_downloads));
 
 
   (* 2/ process the package actions (installations and removals) *)
@@ -379,6 +387,7 @@ let parallel_apply t action action_graph =
     PackageActionGraph.explicit action_graph
   in
 
+  let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
   let job ~pred action =
     let installed_removed =
@@ -395,6 +404,10 @@ let parallel_apply t action action_graph =
     match installed_removed with
     | None -> Done (`Error `Aborted) (* prerequisite failed *)
     | Some (installed, removed) ->
+      let store_time =
+        let t0 = Unix.gettimeofday () in
+        fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
+      in
       let t = (* Local state for this process, only prerequisites are visible *)
         { t with installed =
                    OpamPackage.Set.Op.(t.installed -- removed ++ installed) }
@@ -419,14 +432,16 @@ let parallel_apply t action action_graph =
       match action with
       | `Build nv ->
           (OpamAction.build_package t source nv @@+ function
-            | None -> Done (`Successful (installed, removed))
-            | Some exn -> Done (`Exception exn))
+            | None -> store_time (); Done (`Successful (installed, removed))
+            | Some exn -> store_time (); Done (`Exception exn))
       | `Install nv ->
         (OpamAction.install_package t nv @@+ function
           | None ->
             add_to_install nv;
+            store_time ();
             Done (`Successful (OpamPackage.Set.add nv installed, removed))
           | Some exn ->
+            store_time ();
             Done (`Exception exn))
       | `Remove nv ->
         if OpamAction.removal_needs_download t nv then
@@ -435,6 +450,7 @@ let parallel_apply t action action_graph =
         OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
           (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
         remove_from_install nv;
+        store_time ();
         `Successful (installed, OpamPackage.Set.add nv removed)
       | _ -> assert false
   in
@@ -465,13 +481,11 @@ let parallel_apply t action action_graph =
       if failure = [] && aborted = [] then `Successful ()
       else (
         List.iter display_error failure;
-        Json.output_actions_errs failure;
         `Error (Error (success, List.map fst failure, aborted))
       )
     with
     | PackageActionGraph.Parallel.Errors (success, errors, remaining) ->
       List.iter display_error errors;
-      Json.output_actions_errs errors;
       `Error (Error (success, List.map fst errors, remaining))
     | e -> `Exception e
   in

@@ -227,7 +227,7 @@ let download_package t nv =
   in
   let of_dl = function
     | Some (Up_to_date f | Result f) -> `Successful (Some f)
-    | Some (Not_available _) -> `Error ()
+    | Some (Not_available s) -> `Error s
     | None -> `Successful None
   in
   let job = match dir with
@@ -242,7 +242,7 @@ let download_package t nv =
         let dir = OpamPath.dev_package t.root nv in
         OpamState.download_upstream t nv dir @@| of_dl
   in
-  OpamProcess.Job.ignore_errors ~default:(`Error ()) job
+  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
 
 let extract_package t source nv =
   log "extract_package: %a from %a"

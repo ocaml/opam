@@ -374,6 +374,11 @@ let strings_of_conflict unav_reasons = function
   | _univ, _version_map, Conflict_cycle cycles ->
     [], [], strings_of_cycles cycles
 
+let conflict_chains = function
+  | cudf_universe, version_map, Conflict_dep r ->
+    make_chains (cudfnv2opam ~cudf_universe ~version_map) (r ())
+  | _ -> []
+
 let string_of_conflict unav_reasons conflict =
   let final, chains, cycles = strings_of_conflict unav_reasons conflict in
   let b = Buffer.create 1024 in

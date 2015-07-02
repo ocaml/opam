@@ -179,6 +179,8 @@ val string_of_conflict: (atom -> string) -> conflict -> string
 val strings_of_conflict:
   (atom -> string) -> conflict -> string list * string list * string list
 
+val conflict_chains: conflict -> OpamFormula.t list list
+
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
 
