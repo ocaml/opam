@@ -78,8 +78,8 @@ let json_output = ref None
 
 let json_buffer = ref []
 
-let add json =
-  json_buffer := json :: !json_buffer
+let add key json =
+  json_buffer := (key,json) :: !json_buffer
 
 let set_output write =
   json_output := Some write
@@ -91,7 +91,7 @@ let output () =
   match !json_output with
   | None      -> ()
   | Some write ->
-    let json = `A (List.rev !json_buffer) in
+    let json = `O (List.rev !json_buffer) in
     write (to_string json)
 
 (*---------------------------------------------------------------------------

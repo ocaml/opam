@@ -221,36 +221,72 @@ let print_variable_warnings t =
     variable_warnings := true;
   )
 
-let output_json_solution solution =
-  let to_proceed =
-    PackageActionGraph.Topological.fold (fun a acc ->
-        PackageAction.to_json a :: acc
-      ) solution []
-  in
-  OpamJson.add (`A to_proceed)
+module Json = struct
+  let output_request request action =
+    let atoms =
+      List.map (fun a -> `String (OpamFormula.short_string_of_atom a))
+    in
+    let j = `O [
+        ("action", match action with
+          | Install ns -> `O [ "install", OpamPackage.Name.Set.to_json ns ]
+          | Upgrade ps -> `O [ "upgrade", OpamPackage.Set.to_json ps ]
+          | Reinstall ps -> `O [ "reinstall", OpamPackage.Set.to_json ps ]
+          | Depends -> `String "depends"
+          | Init -> `String "init"
+          | Remove -> `String "remove"
+          | Switch ns -> `O [ "switch", OpamPackage.Name.Set.to_json ns ]
+          | Import  ns -> `O [ "import", OpamPackage.Name.Set.to_json ns ]);
+        "install", `A (atoms request.wish_install);
+        "remove", `A (atoms request.wish_remove);
+        "upgrade", `A (atoms request.wish_upgrade);
+        "criteria", `String (OpamSolverConfig.criteria request.criteria);
+      ]
+    in
+    OpamJson.add "request" j
 
-let output_json_actions action_errors =
-  let json_error = function
-    | OpamSystem.Process_error
-        {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
-      `O [ ("process-error",
-            `O [ ("code", `String (string_of_int r_code));
-                 ("duration", `Float r_duration);
-                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
-                 ("stdout", `A (List.map (fun s -> `String s) r_stdout));
-                 ("stderr", `A (List.map (fun s -> `String s) r_stderr));
-               ])]
-    | OpamSystem.Internal_error s ->
-      `O [ ("internal-error", `String s) ]
-    | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
-  in
-  let json_action (a, e) =
-    `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
-         ("error"  ,  json_error e) ] in
-  List.iter (fun a ->
-      let json = json_action a in
-      OpamJson.add json
-    ) action_errors
+  let output_solution t solution =
+    match solution with
+    | Success solution ->
+      let action_graph = OpamSolver.get_atomic_action_graph solution in
+      let to_proceed =
+        PackageActionGraph.Topological.fold (fun a acc ->
+            PackageAction.to_json a :: acc
+          ) action_graph []
+      in
+      OpamJson.add "solution" (`A (List.rev to_proceed))
+    | Conflicts cs ->
+      let causes,chains,cycles =
+        OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs
+      in
+      let toj l = `A (List.map (fun s -> `String s) l) in
+      OpamJson.add "conflicts"
+        (`O ((if cycles <> [] then ["cycles", toj cycles] else []) @
+             (if causes <> [] then ["causes", toj causes] else []) @
+             (if chains <> [] then ["broken-deps", toj chains] else [])))
+
+  let output_actions_errs action_errors =
+    let json_error = function
+      | OpamSystem.Process_error
+          {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
+        `O [ ("process-error",
+              `O [ ("code", `String (string_of_int r_code));
+                   ("duration", `Float r_duration);
+                   ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
+                   ("stdout", `A (List.map (fun s -> `String s) r_stdout));
+                   ("stderr", `A (List.map (fun s -> `String s) r_stderr));
+                 ])]
+      | OpamSystem.Internal_error s ->
+        `O [ ("internal-error", `String s) ]
+      | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
+    in
+    let json_action (a, e) =
+      `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
+           ("error"  ,  json_error e) ] in
+    List.iter (fun a ->
+        let json = json_action a in
+        OpamJson.add "results" json
+      ) action_errors
+end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
@@ -429,13 +465,13 @@ let parallel_apply t action action_graph =
       if failure = [] && aborted = [] then `Successful ()
       else (
         List.iter display_error failure;
-        output_json_actions failure;
+        Json.output_actions_errs failure;
         `Error (Error (success, List.map fst failure, aborted))
       )
     with
     | PackageActionGraph.Parallel.Errors (success, errors, remaining) ->
       List.iter display_error errors;
-      output_json_actions errors;
+      Json.output_actions_errs errors;
       `Error (Error (success, List.map fst errors, remaining))
     | e -> `Exception e
   in
@@ -633,7 +669,6 @@ let apply ?ask t action ~requested solution =
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;
       if sum stats >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
-      output_json_solution action_graph;
     );
 
     if OpamStateConfig.(!r.external_tags) <> [] then (
@@ -649,7 +684,12 @@ let apply ?ask t action ~requested solution =
   )
 
 let resolve ?(verbose=true) t action ~orphans request =
-  OpamSolver.resolve ~verbose (OpamState.universe t action) ~orphans request
+  Json.output_request request action;
+  let r =
+    OpamSolver.resolve ~verbose (OpamState.universe t action) ~orphans request
+  in
+  Json.output_solution t r;
+  r
 
 let resolve_and_apply ?ask t action ~requested ~orphans request =
   match resolve t action ~orphans request with

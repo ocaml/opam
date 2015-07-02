@@ -252,7 +252,8 @@ let apply_build_options b =
     ?dryrun:(flag b.dryrun)
     ?fake:(flag b.fake)
     ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
-    ()
+    ();
+  json_update b.json
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
 
