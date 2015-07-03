@@ -1204,12 +1204,15 @@ let load_config root =
         (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)));
     (* opam has been updated, so refresh the configuration file and
        clean-up the cache. *)
-    if OpamVersion.compare config_version (OpamVersion.of_string "1.2") < 0 then
+    let v1_2 = OpamVersion.of_string "1.2" in
+    if OpamVersion.compare config_version v1_2 < 0 then
+      let config = OpamFile.Config.with_opam_version config v1_2 in
       !upgrade_to_1_2_hook ();
-    let config = OpamFile.Config.with_current_opam_version config in
-    OpamStateConfig.write root config;
-    Cache.remove ();
-    config
+      OpamStateConfig.write root config;
+      Cache.remove ();
+      config
+    else
+      config
   ) else
     config
 

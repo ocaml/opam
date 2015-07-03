@@ -71,8 +71,8 @@ module Config: sig
   (** Repository updates *)
   val with_repositories: t -> repository_name list -> t
 
-  (** Update opam-version to the current one *)
-  val with_current_opam_version: t -> t
+  (** Update opam-version *)
+  val with_opam_version: t -> OpamVersion.t -> t
 
   val with_criteria: t -> (solver_criteria * string) list -> t
 

@@ -5,5 +5,5 @@
 
 couverture: couverture.ml
 	sed 's/^#.*//' $< >couverture-tmp.ml
-	ocamlfind ocamlopt -package opam-lib.state -linkpkg ../src/tools/opam_admin_top.ml couverture-tmp.ml -o $@
+	ocamlfind ocamlopt -package re.glob,opam-lib.state -linkpkg ../src/tools/opam_admin_top.ml couverture-tmp.ml -o $@
 	rm couverture-tmp.ml
