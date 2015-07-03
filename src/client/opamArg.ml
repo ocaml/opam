@@ -36,6 +36,7 @@ type global_options = {
   solver_preferences : string option;
   no_self_upgrade : bool;
   safe_mode : bool;
+  json   : string option;
 }
 
 let self_upgrade_exe opamroot =
@@ -95,7 +96,7 @@ let switch_to_updated_self debug opamroot =
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root no_base_packages external_solver use_internal_solver
-    cudf_file solver_preferences no_self_upgrade safe_mode =
+    cudf_file solver_preferences no_self_upgrade safe_mode json =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -107,7 +108,7 @@ let create_global_options
   let verbose = List.length verbose in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; no_base_packages; external_solver; use_internal_solver;
-    cudf_file; solver_preferences; no_self_upgrade; safe_mode; }
+    cudf_file; solver_preferences; no_self_upgrade; safe_mode; json; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -189,6 +190,7 @@ let apply_global_options o =
     (* ?dryrun:bool *)
     (* ?fake:bool *)
     (* ?makecmd:string Lazy.t *)
+    ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
     ();
   OpamClientConfig.init
     (* ?print_stats:bool *)
@@ -197,7 +199,12 @@ let apply_global_options o =
     (* ?pin_kind_auto:bool *)
     (* ?autoremove:bool *)
     (* ?editor:string *)
-    ()
+    ();
+  if OpamStateConfig.(!r.json_out <> None) then (
+    OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
+    OpamJson.append "command-line"
+      (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
+  )
 
 (* Build options *)
 type build_options = {
@@ -212,23 +219,16 @@ type build_options = {
   fake          : bool;
   external_tags : string list;
   jobs          : int option;
-  json          : string option;
 }
 
 let create_build_options
     keep_build_dir make no_checksums req_checksums build_test
     build_doc show dryrun external_tags fake
-    jobs json = {
+    jobs = {
   keep_build_dir; make; no_checksums; req_checksums;
   build_test; build_doc; show; dryrun; external_tags;
-  fake; jobs; json
+  fake; jobs;
 }
-
-let json_update = function
-  | None   -> ()
-  | Some f ->
-    let write str = OpamFilename.write (OpamFilename.of_string f) str in
-    OpamJson.set_output write
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
@@ -252,8 +252,7 @@ let apply_build_options b =
     ?dryrun:(flag b.dryrun)
     ?fake:(flag b.fake)
     ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
-    ();
-  json_update b.json
+    ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
 
@@ -287,6 +286,8 @@ let help_sections = [
       be replaced. Overrides the \
       'download-command' value from the main config file.";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
+  `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
+      index the files)";
   `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
       acquiring its lock and fails. <= 0 means infinite wait.";
   `P "$(i,OPAMNO) answer no to any question asked.";
@@ -677,18 +678,21 @@ let global_options =
       "Make sure nothing will be automatically updated or rewritten. Useful \
        for calling from completion scripts, for example. Will fail whenever \
        such an operation is needed ; also avoids waiting for locks, skips \
-       interactive questions and overrides the OPAMDEBUG variable."
+       interactive questions and overrides the $(b,\\$OPAMDEBUG) variable."
+  in
+  let json_flag =
+    mk_opt ["json"] "FILENAME"
+      "Save the results of the OPAM run in a computer-readable file. If the \
+       filename contains the character `%', it will be replaced by an index \
+       that doesn't overwrite an existing file. Similar to setting the \
+       $(b,\\OPAMJSON) variable."
+      Arg.(some string) None
   in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $no_base_packages $external_solver
         $use_internal_solver $cudf_file $solver_preferences $no_self_upgrade
-        $safe_mode)
-
-let json_flag =
-  mk_opt ["json"] "FILENAME"
-    "Save the result output of an OPAM run in a computer-readable file"
-    Arg.(some string) None
+        $safe_mode $json_flag)
 
 (* Options common to all build commands *)
 let build_options =
@@ -736,7 +740,7 @@ let build_options =
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $req_checksums $build_test
     $build_doc $show $dryrun $external_tags $fake
-    $jobs_flag $json_flag)
+    $jobs_flag)
 
 let init_dot_profile shell dot_profile =
   match dot_profile with
@@ -1335,9 +1339,8 @@ let update =
   let name_list =
     arg_list "NAMES" "List of repository or development package names."
       Arg.string in
-  let update global_options jobs json names repos_only dev_only sync upgrade =
+  let update global_options jobs names repos_only dev_only sync upgrade =
     apply_global_options global_options;
-    json_update json;
     let sync_archives = if sync then Some true else None in
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
@@ -1346,7 +1349,7 @@ let update =
     Client.update ~repos_only ~dev_only ~no_stats:upgrade names;
     if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])
   in
-  Term.(pure update $global_options $jobs_flag $json_flag $name_list
+  Term.(pure update $global_options $jobs_flag $name_list
         $repos_only $dev_only $sync $upgrade),
   term_info "update" ~doc ~man
 

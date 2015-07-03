@@ -223,7 +223,7 @@ let print_variable_warnings t =
 
 module Json = struct
   let output_request request action =
-    if not (OpamJson.verbose ()) then () else
+    if OpamStateConfig.(!r.json_out = None) then () else
     let atoms =
       List.map (fun a -> `String (OpamFormula.short_string_of_atom a))
     in
@@ -243,10 +243,10 @@ module Json = struct
         "criteria", `String (OpamSolverConfig.criteria request.criteria);
       ]
     in
-    OpamJson.add "request" j
+    OpamJson.append "request" j
 
   let output_solution t solution =
-    if not (OpamJson.verbose ()) then () else
+    if OpamStateConfig.(!r.json_out = None) then () else
     match solution with
     | Success solution ->
       let action_graph = OpamSolver.get_atomic_action_graph solution in
@@ -255,7 +255,7 @@ module Json = struct
             PackageAction.to_json a :: acc
           ) action_graph []
       in
-      OpamJson.add "solution" (`A (List.rev to_proceed))
+      OpamJson.append "solution" (`A (List.rev to_proceed))
     | Conflicts cs ->
       let causes,_,cycles =
         OpamCudf.strings_of_conflict (OpamState.unavailable_reason t) cs
@@ -267,13 +267,13 @@ module Json = struct
             chains)
       in
       let toj l = `A (List.map (fun s -> `String s) l) in
-      OpamJson.add "conflicts"
+      OpamJson.append "conflicts"
         (`O ((if cycles <> [] then ["cycles", toj cycles] else []) @
              (if causes <> [] then ["causes", toj causes] else []) @
              (if chains <> [] then ["broken-deps", jchains] else [])))
 
   let exc e =
-    if not (OpamJson.verbose ()) then `O [] else
+    if OpamStateConfig.(!r.json_out = None) then `O [] else
     match e with
     | OpamSystem.Process_error
         {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
@@ -353,9 +353,9 @@ let parallel_apply t action action_graph =
       (OpamPackage.Map.empty,OpamPackage.Map.empty) sources_list results
   in
 
-  if OpamJson.verbose () &&
+  if OpamStateConfig.(!r.json_out <> None) &&
      not (OpamPackage.Map.is_empty failed_downloads) then
-    OpamJson.add "download-failures"
+    OpamJson.append "download-failures"
       (`O (List.map (fun (nv,err) -> OpamPackage.to_string nv, `String err)
              (OpamPackage.Map.bindings failed_downloads)));
 
@@ -471,6 +471,25 @@ let parallel_apply t action action_graph =
           (* ~mutually_exclusive:[_installs] *)
           action_graph
       in
+      if OpamStateConfig.(!r.json_out <> None) then
+        (let j =
+           PackageActionGraph.Topological.fold (fun a acc ->
+               let r = match List.assoc a results with
+                 | `Successful _ -> `String "OK"
+                 | `Exception e -> Json.exc e
+                 | `Error `Aborted -> `String "aborted"
+               in
+               let duration =
+                 try [ "duration", `Float (Hashtbl.find timings a) ]
+                 with Not_found -> []
+               in
+               `O ([ "action", PackageAction.to_json a;
+                     "result", r ] @
+                   duration)
+               :: acc
+             ) action_graph []
+         in
+         OpamJson.append "results" (`A (List.rev j)));
       let success, failure, aborted =
         List.fold_left (fun (success, failure, aborted) -> function
             | a, `Successful _ -> a::success, failure, aborted
@@ -698,6 +717,12 @@ let apply ?ask t action ~requested solution =
   )
 
 let resolve ?(verbose=true) t action ~orphans request =
+  if OpamStateConfig.(!r.json_out <> None) then (
+    OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
+    OpamJson.append "command-line"
+      (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
+    OpamJson.append "switch" (OpamSwitch.to_json t.switch)
+  );
   Json.output_request request action;
   let r =
     OpamSolver.resolve ~verbose (OpamState.universe t action) ~orphans request

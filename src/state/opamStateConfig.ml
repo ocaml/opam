@@ -30,6 +30,7 @@ type t = {
   dryrun: bool;
   fake: bool;
   makecmd: string Lazy.t;
+  json_out: string option;
 }
 
 let default = {
@@ -53,6 +54,7 @@ let default = {
       | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
       | _ -> "make"
     );
+  json_out = None;
 }
 
 type 'a options_fun =
@@ -70,6 +72,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?fake:bool ->
   ?makecmd:string Lazy.t ->
+  ?json_out:string option ->
   unit -> 'a
 
 let setk k t
@@ -87,6 +90,7 @@ let setk k t
     ?dryrun
     ?fake
     ?makecmd
+    ?json_out
    ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
@@ -105,6 +109,7 @@ let setk k t
     dryrun = t.dryrun + dryrun;
     fake = t.fake + fake;
     makecmd = t.makecmd + makecmd;
+    json_out = t.json_out + json_out;
   }
 
 let set t = setk (fun x -> x) t
@@ -135,6 +140,7 @@ let init ?noop:_ =
     ?dryrun:(env_bool "DRYRUN")
     ?fake:(env_bool "FAKE")
     ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
+    ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
     ()
 
 let opamroot ?root_dir () =

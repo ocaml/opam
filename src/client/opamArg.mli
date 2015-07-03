@@ -98,9 +98,6 @@ val repo_kind_flag: repository_kind option Term.t
 (** --jobs *)
 val jobs_flag: int option Term.t
 
-(** --json *)
-val json_flag: string option Term.t
-
 (** patterns *)
 val pattern_list: string list Term.t
 

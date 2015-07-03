@@ -1170,15 +1170,15 @@ module API = struct
           ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in
 
       (* If necessary, output a JSON file *)
-      if OpamJson.verbose () then
+      if OpamStateConfig.(!r.json_out <> None) then
         let json to_json update =
           `O [ ("created", to_json update.created);
                ("updated", to_json update.updated);
                ("deleted", to_json update.deleted);
                ("changed", to_json update.changed); ] in
-        OpamJson.add "package-updates"
+        OpamJson.append "package-updates"
           (json OpamPackage.Set.to_json package_updates);
-        OpamJson.add "compiler-updates"
+        OpamJson.append "compiler-updates"
           (json OpamCompiler.Set.to_json compiler_updates);
     );
 
@@ -1187,7 +1187,7 @@ module API = struct
       let updates =
         OpamRepositoryCommand.update_dev_packages ~verbose:(OpamConsole.verbose ())
           t dev_packages in
-      OpamJson.add "dev-packages-updates" (OpamPackage.Set.to_json updates)
+      OpamJson.append "dev-packages-updates" (OpamPackage.Set.to_json updates)
     );
 
     OpamState.Cache.remove ();

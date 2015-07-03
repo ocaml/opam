@@ -21,13 +21,9 @@ val to_string: t -> string
 
 val of_string: string -> t
 
-val add: string -> t -> unit
+val append: string -> t -> unit
 
-val output: unit -> unit
-
-val set_output: (string -> unit) -> unit
-
-val verbose: unit -> bool
+val flush: out_channel -> unit
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2012 Daniel C. Bünzli
