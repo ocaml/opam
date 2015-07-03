@@ -806,7 +806,7 @@ module X = struct
 
     let with_repositories t repositories = { t with repositories }
     let with_switch t switch = { t with switch }
-    let with_current_opam_version t = { t with opam_version = OpamVersion.current_nopatch }
+    let with_opam_version t opam_version = { t with opam_version }
     let with_criteria t solver_criteria = { t with solver_criteria }
     let with_solver t solver = { t with solver }
 
