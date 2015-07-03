@@ -22,7 +22,7 @@ open OpamState.Types
 (** Downloads the source for a package to the local cache. Returns the file or
     dir downloaded, or None if the download failed. *)
 val download_package: t -> package ->
-  [ `Error of unit | `Successful of generic_file option ] OpamProcess.job
+  [ `Error of string | `Successful of generic_file option ] OpamProcess.job
 
 (** Extracts and patches the source of a package *)
 val extract_package: t -> generic_file option -> package -> unit

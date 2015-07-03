@@ -74,25 +74,14 @@ let to_string (json:t) =
   json_to_dst ~minify:false (`Buffer buf) json;
   Buffer.contents buf
 
-let json_output = ref None
-
 let json_buffer = ref []
 
-let add json =
-  json_buffer := json :: !json_buffer
+let append key json =
+  json_buffer := (key,json) :: !json_buffer
 
-let set_output write =
-  json_output := Some write
-
-let verbose () =
-  !json_output <> None
-
-let output () =
-  match !json_output with
-  | None      -> ()
-  | Some write ->
-    let json = `A (List.rev !json_buffer) in
-    write (to_string json)
+let flush oc =
+  json_to_dst ~minify:false (`Channel oc)
+    (`O (List.rev !json_buffer))
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2012 Daniel C. Bünzli

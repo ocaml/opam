@@ -30,6 +30,7 @@ type t = private {
   dryrun: bool;
   fake: bool;
   makecmd: string Lazy.t;
+  json_out: string option;
 }
 
 type 'a options_fun =
@@ -47,6 +48,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?fake:bool ->
   ?makecmd:string Lazy.t ->
+  ?json_out:string option ->
   unit -> 'a
 
 val default : t
