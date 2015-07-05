@@ -10,12 +10,15 @@
 
 #define CAML_NAME_SPACE
 #include <stdio.h>
+#include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include <caml/alloc.h>
 #include <caml/custom.h>
 #include <caml/version.h>
 #include <caml/osdeps.h>
+#include <caml/signals.h>
+#include <caml/unixsupport.h>
 
 /* In a previous incarnation, dummy C stubs were generated for non-Windows
  * builds. Although this is no longer used, the C sources retain the ability to
@@ -59,6 +62,24 @@ static BOOL CurrentProcessIsWoW64(void)
   }
 
   return FALSE;
+}
+
+/*
+ * Taken from otherlibs/win32unix/winwait.c (sadly declared static)
+ * Altered only for CAML_NAME_SPACE
+ */
+static value alloc_process_status(HANDLE pid, int status)
+{
+  value res, st;
+
+  st = caml_alloc(1, 0);
+  Field(st, 0) = Val_int(status);
+  Begin_root (st);
+    res = caml_alloc_small(2, 0);
+    Field(res, 0) = Val_long((intnat) pid);
+    Field(res, 1) = st;
+  End_roots();
+  return res;
 }
 
 #define OPAMreturn CAMLreturn
@@ -234,4 +255,51 @@ CAMLprim value OPAMW_IsWoW64(value unit)
   CAMLparam1(unit);
 
   OPAMreturn(Val_bool(CurrentProcessIsWoW64()));
+}
+
+/*
+ * Adapted from otherlibs/win32unix/winwait.c win_waitpid
+ */
+CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
+{
+#ifdef _WIN32
+  int i;
+  DWORD status, retcode;
+  HANDLE pid_req;
+  DWORD err = 0;
+  int len = Int_val(vpid_len);
+  HANDLE *lpHandles = (HANDLE*)malloc(sizeof(HANDLE) * len);
+  value ptr = vpid_reqs;
+
+  if (lpHandles == NULL)
+    caml_raise_out_of_memory();
+
+  for (i = 0; i < len; i++) {
+    lpHandles[i] = (HANDLE)Long_val(Field(ptr, 0));
+    ptr = Field(ptr, 1);
+  }
+
+  caml_enter_blocking_section();
+  retcode = WaitForMultipleObjects(len, lpHandles, FALSE, INFINITE);
+  if (retcode == WAIT_FAILED) err = GetLastError();
+  caml_leave_blocking_section();
+  if (err) {
+    win32_maperr(err);
+    uerror("waitpids", Nothing);
+  }
+  pid_req = lpHandles[retcode - WAIT_OBJECT_0];
+  free(lpHandles);
+  if (! GetExitCodeProcess(pid_req, &status)) {
+    win32_maperr(GetLastError());
+    uerror("waitpids", Nothing);
+  }
+
+  /*
+   * NB Unlike in win_waitpid, it's not possible to have status == STILL_ACTIVE
+   */
+  CloseHandle(pid_req);
+  return alloc_process_status(pid_req, status);
+#else
+  return Val_unit;
+#endif
 }

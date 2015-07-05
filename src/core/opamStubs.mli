@@ -54,3 +54,8 @@ val getWindowsVersion : unit -> int * int * int * int
 val isWoW64 : unit -> bool
   (** Returns [false] unless this process is a 32-bit Windows process running
       in the WoW64 sub-system (i.e. is being run on 64-bit Windows). *)
+
+val waitpids : int list -> int -> int * Unix.process_status
+  (** Windows only. Given a list [pids] with [length] elements,
+      [waitpids pids length] behaves like [Unix.wait], returning the pid and
+      exit status of the first process to terminate. *)
