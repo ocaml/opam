@@ -432,6 +432,15 @@ module Sys : sig
   val set_warning_printer : warning_printer -> unit
 end
 
+(** {2 Windows-specific functions} *)
+module Win32 : sig
+  (** Win32 Registry Hives and Values *)
+  module RegistryHive : sig
+    val to_string : OpamStubs.registry_root -> string
+    val of_string : string -> OpamStubs.registry_root
+  end
+end
+
 (** {2 General use infix function combinators} *)
 
 module Op: sig

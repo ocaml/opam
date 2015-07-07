@@ -8,6 +8,11 @@ let _ocaml_minor = String.sub Sys.ocaml_version p (String.index_from Sys.ocaml_v
 match Sys.argv.(1) with
 | "flags" ->
   Printf.printf "()"
+| "clibs" ->
+    if Sys.win32 then
+      Printf.printf "(-ladvapi32)"
+    else
+      Printf.printf "()"
 | _ ->
     Printf.eprintf "Unrecognised context instruction: %s\n" Sys.argv.(1);
     exit 1

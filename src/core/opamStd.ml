@@ -558,7 +558,6 @@ module Env = struct
 end
 
 
-
 module OpamSys = struct
 
   let path_sep = if Sys.win32 then ';' else ':'
@@ -821,6 +820,30 @@ module OpamSys = struct
       console := printer
 end
 
+
+module Win32 = struct
+  module RegistryHive = struct
+    let to_string = function
+    | OpamStubs.HKEY_CLASSES_ROOT   -> "HKEY_CLASSES_ROOT"
+    | OpamStubs.HKEY_CURRENT_CONFIG -> "HKEY_CURRENT_CONFIG"
+    | OpamStubs.HKEY_CURRENT_USER   -> "HKEY_CURRENT_USER"
+    | OpamStubs.HKEY_LOCAL_MACHINE  -> "HKEY_LOCAL_MACHINE"
+    | OpamStubs.HKEY_USERS          -> "HKEY_USERS"
+
+    let of_string = function
+    | "HKCR"
+    | "HKEY_CLASSES_ROOT"   -> OpamStubs.HKEY_CLASSES_ROOT
+    | "HKCC"
+    | "HKEY_CURRENT_CONFIG" -> OpamStubs.HKEY_CURRENT_CONFIG
+    | "HKCU"
+    | "HKEY_CURRENT_USER"   -> OpamStubs.HKEY_CURRENT_USER
+    | "HKLM"
+    | "HKEY_LOCAL_MACHINE"  -> OpamStubs.HKEY_LOCAL_MACHINE
+    | "HKU"
+    | "HKEY_USERS"          -> OpamStubs.HKEY_USERS
+    | _                     -> failwith "RegistryHive.of_string"
+  end
+end
 
 
 module OpamFormat = struct

@@ -33,3 +33,18 @@ type handle
 (** Standard handle constants
     (see https://docs.microsoft.com/en-us/windows/console/getstdhandle) *)
 type stdhandle = STD_INPUT_HANDLE | STD_OUTPUT_HANDLE | STD_ERROR_HANDLE
+
+
+(** Win32 Root Registry Hives (see
+    https://msdn.microsoft.com/en-us/library/windows/desktop/ms724836.aspx) *)
+type registry_root =
+| HKEY_CLASSES_ROOT
+| HKEY_CURRENT_CONFIG
+| HKEY_CURRENT_USER
+| HKEY_LOCAL_MACHINE
+| HKEY_USERS
+
+(** Win32 Registry Value Types (see
+    https://msdn.microsoft.com/en-us/library/windows/desktop/ms724884.aspx *)
+type _ registry_value =
+| REG_SZ : string registry_value

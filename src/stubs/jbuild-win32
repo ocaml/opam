@@ -9,7 +9,11 @@
                      (:include ../ocaml-context-flags.sexp)))
    (c_names (opamWindows))
    (c_flags (:standard (:include c-flags.sexp)))
+   (c_library_flags (:standard (:include c-libraries.sexp)))
    (wrapped false)))
 
 (rule
   (with-stdout-to c-flags.sexp (run ocaml ${path:../../shell/subst_var.ml} CONF_CFLAGS "" ${path:c-flags.sexp.in})))
+
+(rule
+  (with-stdout-to c-libraries.sexp (run ocaml ${path:../../shell/context_flags.ml} clibs)))

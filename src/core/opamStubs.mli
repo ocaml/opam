@@ -59,3 +59,12 @@ val waitpids : int list -> int -> int * Unix.process_status
   (** Windows only. Given a list [pids] with [length] elements,
       [waitpids pids length] behaves like [Unix.wait], returning the pid and
       exit status of the first process to terminate. *)
+
+val writeRegistry :
+  registry_root -> string -> string -> 'a registry_value -> 'a -> unit
+  (** Windows only. [writeRegistry root key name value_type value] sets the
+      value [name] of type [value_type] in registry key [key] of [root] to
+      [value].
+ 
+      @raise Failure If the value could not be set.
+      @raise Not_found If [key] does not exist. *)
