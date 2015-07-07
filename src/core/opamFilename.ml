@@ -152,6 +152,9 @@ let to_string t =
 let digest t =
   Digest.to_hex (Digest.file (to_string t))
 
+let valid_digest t =
+  try Digest.from_hex t; true with Invalid_argument _ -> false
+
 let touch t =
   OpamSystem.write (to_string t) ""
 

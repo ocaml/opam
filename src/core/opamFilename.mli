@@ -206,6 +206,9 @@ val patch: t -> Dir.t -> unit
 (** Compute the MD5 digest of a file *)
 val digest: t -> string
 
+(** Check whether an MD5 digest is correctly formatted *)
+val valid_digest: string -> bool
+
 (** Compute the MD5 digest a file. Return the empty list if the file
     does not exist. *)
 val checksum: t -> string list
