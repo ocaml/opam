@@ -377,7 +377,11 @@ module X = struct
         OpamFormat.assoc_list s.file_contents s_mirrors
           (OpamFormat.parse_list (OpamFormat.parse_string @> address_of_string)) in
       let checksum =
-        OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
+        match OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string
+        with Some s when not (OpamFilename.valid_digest s) ->
+          OpamFormat.bad_format "%s is not a valid checksum" s
+           | s -> s
+      in
       let url, kind =
         match url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
         with Some x -> x | None -> OpamFormat.bad_format "URL is missing" in

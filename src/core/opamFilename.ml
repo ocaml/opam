@@ -152,6 +152,11 @@ let to_string t =
 let digest t =
   Digest.to_hex (Digest.file (to_string t))
 
+let digest_regex = Re.(compile (repn xdigit 32 (Some 32)))
+
+let valid_digest s =
+  OpamStd.String.exact_match digest_regex s
+
 let touch t =
   OpamSystem.write (to_string t) ""
 
