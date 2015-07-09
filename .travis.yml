@@ -1,23 +1,23 @@
 language: c
 script: bash -ex .travis-ci.sh
-os:
-- linux
-- osx
-env:
-  - OCAML_VERSION=4.02.1 OPAM_TEST=1 EXTERNAL_SOLVER=
-  - OCAML_VERSION=4.02.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
-  - OCAML_VERSION=4.02.1 OPAM_TEST=
-  - OCAML_VERSION=4.01.0 OPAM_TEST=
-  - OCAML_VERSION=4.00.1 OPAM_TEST=
-  - OCAML_VERSION=3.12.1 OPAM_TEST=
 matrix:
-  exclude:
-    - os: osx
+  include:
+    - os: linux
+      env: OCAML_VERSION=4.02.1 OPAM_TEST=1 EXTERNAL_SOLVER=
+    - os: linux
+      env: OCAML_VERSION=4.02.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+    - os: linux
+      env: OCAML_VERSION=4.02.1 OPAM_TEST=
+    - os: linux
       env: OCAML_VERSION=4.01.0 OPAM_TEST=
-    - os: osx
+    - os: linux
       env: OCAML_VERSION=4.00.1 OPAM_TEST=
-    - os: osx
+    - os: linux
       env: OCAML_VERSION=3.12.1 OPAM_TEST=
+    - os: osx
+      env: OCAML_VERSION=4.02.2 OPAM_TEST=1 EXTERNAL_SOLVER=
+    - os: osx
+      env: OCAML_VERSION=4.02.2 OPAM_TEST=
 notifications:
   email:
     - opam-commits@lists.ocaml.org
