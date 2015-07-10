@@ -390,20 +390,19 @@ let parallel_apply t action action_graph =
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
   let job ~pred action =
-    let installed_removed =
-      try
-        Some
-          (List.fold_left (fun (inst,rem) -> function
-               | _, `Successful (inst1, rem1) ->
-                 OpamPackage.Set.Op.(inst ++ inst1, rem ++ rem1)
-               | _, (`Exception _ | `Error _) ->
-                 raise Exit)
-              (OpamPackage.Set.empty, OpamPackage.Set.empty) pred)
-      with Exit -> None
+    let installed, removed, failed =
+      List.fold_left (fun (inst,rem,fail) -> function
+          | _, `Successful (inst1, rem1) ->
+            OpamPackage.Set.Op.(inst ++ inst1, rem ++ rem1, fail)
+          | _, `Error (`Aborted a) ->
+            inst, rem, a @ fail
+          | a, (`Exception _ | `Error _) ->
+            inst, rem, a :: fail)
+        OpamPackage.Set.(empty, empty, []) pred
     in
-    match installed_removed with
-    | None -> Done (`Error `Aborted) (* prerequisite failed *)
-    | Some (installed, removed) ->
+    match failed with
+    | _::_ -> Done (`Error (`Aborted failed)) (* prerequisite failed *)
+    | [] ->
       let store_time =
         let t0 = Unix.gettimeofday () in
         fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
@@ -477,7 +476,11 @@ let parallel_apply t action action_graph =
                let r = match List.assoc a results with
                  | `Successful _ -> `String "OK"
                  | `Exception e -> Json.exc e
-                 | `Error `Aborted -> `String "aborted"
+                 | `Error (`Aborted deps) ->
+                   let deps =
+                     OpamStd.List.sort_nodup OpamSolver.Action.compare deps
+                   in
+                   `O ["aborted", `A (List.map OpamSolver.Action.to_json deps)]
                in
                let duration =
                  try [ "duration", `Float (Hashtbl.find timings a) ]
@@ -494,7 +497,7 @@ let parallel_apply t action action_graph =
         List.fold_left (fun (success, failure, aborted) -> function
             | a, `Successful _ -> a::success, failure, aborted
             | a, `Exception e -> success, (a,e)::failure, aborted
-            | a, `Error `Aborted -> success, failure, a::aborted
+            | a, `Error (`Aborted _) -> success, failure, a::aborted
           ) ([], [], []) results
       in
       if failure = [] && aborted = [] then `Successful ()
