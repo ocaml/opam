@@ -41,6 +41,13 @@ it as a second step.
 If you are developing OPAM, you may enable developer features by including the
 `--enable-developer-mode` parameter with `./configure`.
 
+Developer features are controlled by setting additional environment variables:
+
+* `DEVELOPER_CACHE` - specifies the location of a directory to use for storing all
+  downloaded files. This directory must exist or OPAM will ignore the setting. See
+  the code for really_download in src/repository/opamDownload.ml for more details on
+  how this feature operates.
+
 ## Compiling without OCaml
 
 `make cold` is provided as a facility to compile OCaml, then bootstrap opam.

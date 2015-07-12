@@ -75,3 +75,10 @@ val update : ?noop:_ -> (unit -> unit) options_fun
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool
+
+type devopts = {
+  cache: string (** File cache - see code for OpamDownload.really_download *)
+}
+
+(** Developer options passed to configure *)
+val devopts : devopts

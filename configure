@@ -608,6 +608,7 @@ EXE
 WIN32
 CONF_OCAMLFLAGS
 MCCS_DISABLED
+DEVELOPER_CACHE
 DEVELOPER
 OBJEXT
 EXEEXT
@@ -688,7 +689,8 @@ CC
 CFLAGS
 LDFLAGS
 LIBS
-CPPFLAGS'
+CPPFLAGS
+DEVELOPER_CACHE'
 
 
 # Initialize some variables set by options.
@@ -1335,6 +1337,8 @@ Some influential environment variables:
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  DEVELOPER_CACHE
+              Developer file cache location
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -3759,6 +3763,36 @@ else
   DEVELOPER=false
 
 fi
+
+
+
+if test "x${DEVELOPER_CACHE}" != "x"; then :
+
+  if test "${enable_developer_mode+set}" = "set"; then :
+
+    if test "x${enable_developer_mode}" = "xno"; then :
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --disable-developer-mode given; DEVELOPER_CACHE ignored" >&5
+$as_echo "$as_me: WARNING: --disable-developer-mode given; DEVELOPER_CACHE ignored" >&2;}
+
+fi
+else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ============================================================================" >&5
+$as_echo "$as_me: WARNING: ============================================================================" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: DEVELOPER_CACHE specified: developer mode has been automatically enabled" >&5
+$as_echo "$as_me: WARNING: DEVELOPER_CACHE specified: developer mode has been automatically enabled" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ============================================================================" >&5
+$as_echo "$as_me: WARNING: ============================================================================" >&2;}
+    DEVELOPER=true
+
+fi
+else
+  DEVELOPER_CACHE="~/.opam-cache"
+
+fi
+DEVELOPER_CACHE=$(echo ${DEVELOPER_CACHE} | sed -e "s/\\\\/\\\\\\\\/g")
+
 
 if test "x${with_mccs}" = "xno"; then :
   MCCS_DISABLED=true

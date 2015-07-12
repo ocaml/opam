@@ -101,4 +101,10 @@ let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
+type devopts = {
+  cache: string
+}
+
 let developer = @DEVELOPER@
+
+let devopts = {cache = "@DEVELOPER_CACHE@"}
