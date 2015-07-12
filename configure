@@ -614,6 +614,7 @@ CYGPATH
 ocaml_4_03
 ocaml_4_02
 CONF_OCAMLFLAGS
+DEVELOPER
 OBJEXT
 EXEEXT
 ac_ct_CC
@@ -681,6 +682,7 @@ ac_user_opts='
 enable_option_checking
 enable_version_check
 enable_checks
+enable_developer_mode
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1314,6 +1316,8 @@ Optional Features:
   --disable-version-check Do not check OCaml version
 
   --disable-checks        Assume OCaml dependencies are OK without checking
+
+  --enable-developer-mode Enable developer features
 
   --disable-certificate-check
                           Do not check the certificate of opam's dependency
@@ -3030,6 +3034,12 @@ if test "${enable_checks+set}" = set; then :
 fi
 
 
+# Check whether --enable-developer_mode was given.
+if test "${enable_developer_mode+set}" = set; then :
+  enableval=$enable_developer_mode;
+fi
+
+
 # Check that OCaml version is greater or equal to 4.01.0
 for ac_prog in gawk mawk nawk awk
 do
@@ -3727,6 +3737,14 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+if test "x${enable_developer_mode}" = "xyes"; then :
+  DEVELOPER=true
+
+else
+  DEVELOPER=false
+
+fi
 
 if test "x${CI}" != "x"; then :
 
@@ -4838,7 +4856,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core/opamCoreConfig.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5548,6 +5566,7 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
+    "src/core/opamCoreConfig.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamCoreConfig.ml" ;;
     "src/core.META") CONFIG_FILES="$CONFIG_FILES src/core.META" ;;
     "src/format.META") CONFIG_FILES="$CONFIG_FILES src/format.META" ;;
     "src/repository.META") CONFIG_FILES="$CONFIG_FILES src/repository.META" ;;

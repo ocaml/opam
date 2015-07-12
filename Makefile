@@ -47,7 +47,7 @@ clean:
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
-	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml aclocal.m4
+	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml src/core/opamCoreConfig.ml aclocal.m4
 	rm -f src/*.META
 	rm -f src/core/opamVersion.ml
 
