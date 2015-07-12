@@ -605,6 +605,7 @@ OCAMLYACC
 OCAMLLEXDOTOPT
 OCAMLLEX
 AR
+OCAMLDEPARGS
 EXE
 WIN32
 CYGPATH
@@ -3910,6 +3911,25 @@ else
 fi
 
 
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for invocation options for $OCAMLDEP" >&5
+$as_echo_n "checking for invocation options for $OCAMLDEP... " >&6; }
+if  test ${WIN32} -eq 1 ; then :
+
+  OCAMLDEPARGS=-slash
+  OCAMLDEP="$OCAMLDEP -slash"
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $OCAMLDEPARGS" >&5
+$as_echo "$OCAMLDEPARGS" >&6; }
+
+else
+
+  OCAMLDEPARGS=
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: none required" >&5
+$as_echo "none required" >&6; }
+
+fi
 
 
 if  test "x$AR" != "x" ; then :

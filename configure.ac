@@ -59,6 +59,17 @@ AS_IF([ test "${OS_TYPE}" = "Win32"],[
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
 
+AC_MSG_CHECKING([for invocation options for $OCAMLDEP])
+AS_IF([ test ${WIN32} -eq 1 ],[
+  OCAMLDEPARGS=-slash
+  AC_SUBST(OCAMLDEP,"$OCAMLDEP -slash")
+  AC_MSG_RESULT([$OCAMLDEPARGS])
+],[
+  OCAMLDEPARGS=
+  AC_MSG_RESULT([none required])
+])
+AC_SUBST(OCAMLDEPARGS)
+
 AS_IF([ test "x$AR" != "x" ],[AC_CHECK_TOOL(AR,$AR)],[AC_SUBST(AR,"no")])
 
 AC_PROG_OCAMLLEX
