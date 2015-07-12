@@ -76,3 +76,4 @@ doc/tutorials/opam.wiki
 doc/dev-manual/*.out
 doc/man
 src/x_build_libs.ocp
+.merlin

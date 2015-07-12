@@ -40,7 +40,7 @@ clean: fastclean
 	rm -f *.install *.env *.err *.info *.out
 
 distclean: clean
-	rm -f Makefile.config
+	rm -f .merlin Makefile.config
 	rm -f src/*.META
 	rm -f src/core/opamVersion.ml
 
