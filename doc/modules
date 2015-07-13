@@ -84,6 +84,7 @@ src
 │   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │
 ├── stubs                               C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
+│   ├── opamInject.c                    Code for process injection shared between opamWindows.c and opam-putenv.c
 │   ├── opamWindows.c                   C stubs themselves
 │   └── opamWin32Stubs.ml               OCaml external declarations for the stubs
 │
@@ -112,6 +113,7 @@ src
     ├── opam_admin.ml                   Source of the opam-admin tool, main
     │   [ other stand-alone tools ]
     ├── opam_admin_top.ml               Tiny library for admin-scripts, included in opam-admin.top
+    ├── opam-putenv.c                   Tiny C tool used on Windows for cross-architecture process injection
     ├── opam_check.ml                   Tiny tool used in internal checks ("make tests")
     ├── opam_installer.ml               Handles OPAM's ".install" files
     └── opamlfind.ml                    Experimental ocamlfind wrapper tool

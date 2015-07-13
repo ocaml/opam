@@ -28,3 +28,5 @@ let getCurrentConsoleFontEx _ = that's_a_no_no
 let create_glyph_checker = that's_a_no_no
 let delete_glyph_checker = that's_a_no_no
 let has_glyph _ = that's_a_no_no
+let get_mismatched_WoW64_pid = that's_a_no_no
+let parent_putenv _ = that's_a_no_no

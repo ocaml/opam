@@ -609,9 +609,11 @@ JBUILDER
 FETCH
 OCAMLFIND
 OCAMLOBJINFO
+CC64_JBUILD
 INC_PREPEND
 LIB_PREPEND
 PATH_PREPEND
+CC64
 CONF_CFLAGS
 CONF_OCAMLFLAGS
 MCCS_ENABLED
@@ -3979,27 +3981,181 @@ if  test ${WIN32} -eq 1 -a "$GCC" = "yes"; then :
 
 fi
 
-if  test ${WIN32} -eq 1 -a "$GCC" != "yes" ; then :
+if  test ${WIN32} -eq 1 ; then :
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Microsoft Linker needs a PATH shim" >&5
+  if  test "$GCC" = "yes"; then :
+
+    if  test "x${CC64}" = "x" ; then :
+
+      if  test "$ARCH" = "i386" ; then :
+  T_CC64=x86_64-w64-mingw32-gcc
+else
+  T_CC64=i686-w64-mingw32-gcc
+fi
+fi
+    if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}${T_CC64}", so it can be a program name with args.
+set dummy ${ac_tool_prefix}${T_CC64}; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_CC64+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$CC64"; then
+  ac_cv_prog_CC64="$CC64" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_CC64="${ac_tool_prefix}${T_CC64}"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+CC64=$ac_cv_prog_CC64
+if test -n "$CC64"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CC64" >&5
+$as_echo "$CC64" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CC64"; then
+  ac_ct_CC64=$CC64
+  # Extract the first word of "${T_CC64}", so it can be a program name with args.
+set dummy ${T_CC64}; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_CC64+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_CC64"; then
+  ac_cv_prog_ac_ct_CC64="$ac_ct_CC64" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_CC64="${T_CC64}"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CC64=$ac_cv_prog_ac_ct_CC64
+if test -n "$ac_ct_CC64"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC64" >&5
+$as_echo "$ac_ct_CC64" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_CC64" = x; then
+    CC64="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    CC64=$ac_ct_CC64
+  fi
+else
+  CC64="$ac_cv_prog_CC64"
+fi
+
+    if  test "x${CC64}" != "xno" ; then :
+
+      CC64_JBUILD="(run ${CC64} -o \"\${@}\" -I ../core -Wdeclaration-after-statement \${<})"
+
+fi
+
+else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Microsoft Linker needs a PATH shim" >&5
 $as_echo_n "checking whether Microsoft Linker needs a PATH shim... " >&6; }
-  PREV_PREPEND="$PATH_PREPEND"
-  PATH_PREPEND=$(bash ./shell/check_linker)
-  if test "x${PATH_PREPEND}" = "x${PREV_PREPEND}" ; then :
+    PREV_PREPEND="$PATH_PREPEND"
+    PATH_PREPEND=$(bash ./shell/check_linker)
+    if test "x${PATH_PREPEND}" = "x${PREV_PREPEND}" ; then :
   PATH_PREPEND_RESULT=no
 else
   PATH_PREPEND_RESULT=yes
 fi
-  PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
-  LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
-  INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PATH_PREPEND_RESULT" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PATH_PREPEND_RESULT" >&5
 $as_echo "$PATH_PREPEND_RESULT" >&6; }
+    if  test "$ARCH" = "i386" ; then :
+  COMP_ARCH=x64
+else
+  COMP_ARCH=x86
+fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a way to invoke an $COMP_ARCH C compiler" >&5
+$as_echo_n "checking for a way to invoke an $COMP_ARCH C compiler... " >&6; }
+    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$COMP_ARCH`
+    if  test "x$MSVS_NAME" = "x" ; then :
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      CC64=no
+
+else
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: from $MSVS_NAME" >&5
+$as_echo "from $MSVS_NAME" >&6; }
+      CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
+      MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
+      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe\${@}\" /I../core \${<}))))"
+      CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
 
 fi
+
+fi
+  if  test "x${CC64}" = "xno" ; then :
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&5
+$as_echo "$as_me: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&2;}
+    BUILD_PUTENV=0
+    CC64_JBUILD=
+
+else
+
+    BUILD_PUTENV=1
+
+fi
+
+else
+
+  BUILD_PUTENV=0
+  CC64_JBUILD=
+
+fi
+
 
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlobjinfo", so it can be a program name with args.
@@ -5022,6 +5178,16 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
+if  test ${BUILD_PUTENV} -eq 1; then :
+
+  ac_config_files="$ac_config_files src/tools/opam-putenv.inc"
+
+
+else
+
+  > src/tools/opam-putenv.inc
+
+fi
 ac_config_files="$ac_config_files Makefile.config"
 
 cat >confcache <<\_ACEOF
@@ -5730,6 +5896,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
+    "src/tools/opam-putenv.inc") CONFIG_FILES="$CONFIG_FILES src/tools/opam-putenv.inc" ;;
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -90,3 +90,16 @@ val has_glyph : handle * handle -> OpamCompat.Uchar.t -> bool
     contains a glyph for [scalar].
 
     @raise Failure If the call to [GetGlyphIndicesW] fails. *)
+
+val get_mismatched_WoW64_ppid : unit -> int
+(** Windows only. If the parent and current processes are 32-bit or both 64-bit,
+    returns [0], otherwise it returns the ID of the parent process.
+
+    @raise Failure If walking the process tree fails to find the process. *)
+
+val parent_putenv : string -> string -> bool
+(** Windows only. [parent_putenv name value] sets the environment variable
+    [name] to [value] in the parent of the current process ([Unix.putenv] must
+    also be called to update the value in the current process). This function
+    must not be called if the parent process is 32-bit and the current process
+    is 64-bit or vice versa (outcomes vary from a no-op to a segfault). *)

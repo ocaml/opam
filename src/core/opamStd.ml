@@ -843,6 +843,57 @@ module Win32 = struct
     | "HKEY_USERS"          -> OpamStubs.HKEY_USERS
     | _                     -> failwith "RegistryHive.of_string"
   end
+
+  let parent_putenv =
+    let ppid =
+      if Sys.win32 then
+        OpamStubs.get_mismatched_WoW64_ppid ()
+      else
+        0 in
+    if ppid > 0 then
+      (*
+       * Expect to see opam-putenv.exe in the same directory as opam.exe, rather
+       * than PATH (allow for crazy users like developers who may have both
+       * builds of opam)
+       *)
+      let putenv_exe =
+        Filename.concat (Filename.dirname Sys.executable_name) "opam-putenv.exe"
+      in
+      let ppid = string_of_int ppid in
+      let ctrl = ref stdout in
+      let quit_putenv () =
+        if !ctrl <> stdout then
+          let () = Printf.fprintf !ctrl "::QUIT\n%!" in
+          ctrl := stdout
+      in
+      at_exit quit_putenv;
+      if Sys.file_exists putenv_exe then
+        fun key value ->
+          if !ctrl = stdout then begin
+            let (inCh, outCh) = Unix.pipe () in
+            let _ =
+              Unix.create_process putenv_exe [| putenv_exe; ppid |]
+                                  inCh Unix.stdout Unix.stderr
+            in
+            ctrl := (Unix.out_channel_of_descr outCh);
+            set_binary_mode_out !ctrl true;
+          end;
+          Printf.fprintf !ctrl "%s\n%s\n%!" key value;
+          if key = "::QUIT" then ctrl := stdout;
+          true
+      else
+        let shownWarning = ref false in
+        fun _ _ ->
+          if not !shownWarning then begin
+            shownWarning := true;
+            !console.warning "opam-putenv was not found - \
+                              OPAM is unable to alter environment variables";
+            false
+          end else
+            false
+    else
+      function "::QUIT" -> fun _ -> true
+        | key -> OpamStubs.parent_putenv key
 end
 
 

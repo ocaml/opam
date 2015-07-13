@@ -439,6 +439,10 @@ module Win32 : sig
     val to_string : OpamStubs.registry_root -> string
     val of_string : string -> OpamStubs.registry_root
   end
+
+  val parent_putenv : string -> string -> bool
+  (** Update an environment variable in the parent (i.e. shell) process's
+      environment. *)
 end
 
 (** {2 General use infix function combinators} *)
