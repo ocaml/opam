@@ -114,6 +114,7 @@ unrequired_version() {
             for version in archives/*
             do
                 if [ "${version}" = "archives/$1+opam.tar.gz" ]; then return 1; fi
+                if [ "${version}" = "archives/$1+opam.tar.gz.virtual" ]; then return 1; fi
             done
     esac
     return 0
