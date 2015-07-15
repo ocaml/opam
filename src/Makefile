@@ -362,10 +362,10 @@ OCAMLMAKEFILE = ../OCamlMakefile
 export OCAMLMAKEFILE
 
 clean-aux:
-	rm -f $(foreach e,a cma cmxa,$(wildcard *.$e))
+	rm -f $(foreach e,lib a cma cmxa,$(wildcard *.$e))
 	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
 	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
-	rm -f $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
+	rm -f $(foreach e,obj o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
 
 clean: clean-aux
 
