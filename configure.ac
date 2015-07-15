@@ -70,6 +70,14 @@ AS_IF([ test ${WIN32} -eq 1 ],[
 ])
 AC_SUBST(OCAMLDEPARGS)
 
+AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
+  AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
+  PATH_PREPEND=$(bash ./shell/check_linker)
+  AS_IF([test "x${PATH_PREPEND}" = "x" ],[PATH_PREPEND_RESULT=no],[PATH_PREPEND_RESULT=yes])
+  AC_SUBST(PATH_PREPEND)
+  AC_MSG_RESULT([$PATH_PREPEND_RESULT])
+])
+
 AS_IF([ test "x$AR" != "x" ],[AC_CHECK_TOOL(AR,$AR)],[AC_SUBST(AR,"no")])
 
 AC_PROG_OCAMLLEX

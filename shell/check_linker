@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Ensure that the Microsoft Linker isn't being messed up by /usr/bin/link
+FIRST=1
+FAULT=0
+PREPEND=
+while IFS= read -r line; do
+  OUTPUT=$("$line" --version | head -1 | fgrep "Microsoft (R) Incremental Linker")
+  if [ "x$OUTPUT" = "x" -a $FIRST -eq 1 ] ; then
+    FAULT=1
+  elif [ $FAULT -eq 1 ] ; then
+    PREPEND=$(dirname "$line"):
+    FAULT=0
+  fi
+done < <(which --all link)
+
+echo $PATH_PREPEND$PREPEND

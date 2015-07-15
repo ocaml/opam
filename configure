@@ -605,6 +605,7 @@ OCAMLYACC
 OCAMLLEXDOTOPT
 OCAMLLEX
 AR
+PATH_PREPEND
 OCAMLDEPARGS
 EXE
 WIN32
@@ -3931,6 +3932,22 @@ $as_echo "none required" >&6; }
 
 fi
 
+
+if  test ${WIN32} -eq 1 -a "$GCC" != "yes" ; then :
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Microsoft Linker needs a PATH shim" >&5
+$as_echo_n "checking whether Microsoft Linker needs a PATH shim... " >&6; }
+  PATH_PREPEND=$(bash ./shell/check_linker)
+  if test "x${PATH_PREPEND}" = "x" ; then :
+  PATH_PREPEND_RESULT=no
+else
+  PATH_PREPEND_RESULT=yes
+fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PATH_PREPEND_RESULT" >&5
+$as_echo "$PATH_PREPEND_RESULT" >&6; }
+
+fi
 
 if  test "x$AR" != "x" ; then :
   if test -n "$ac_tool_prefix"; then
