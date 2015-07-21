@@ -261,14 +261,17 @@ For the official OCaml releases, the `+patch` suffix is omitted.
 The `repo` file, placed at the root of a repository, has the following optional
 fields:
 
-* `opam-version: <string>`: File format and repository format version, should be `1.2` as
-  of writing.
-* `browse: <string>`: An URL where the users may browse available packages online
-* `upstream: <string>`: The source that this repo is generated and maintained
-  from. Typically, a version-control system address.
-* `redirect: [ <string> { <filter> } ... ]`: List of URLs to (permanently)
-  redirect to if their filters evaluate to `true`. Can be used to serve
-  different repositories for different OSes or different versions of OPAM.
+* <a id="repofield-opam-version">`opam-version: <string>`</a>:
+  File format and repository format version, should be `1.2` as of writing.
+* <a id="repofield-browse">`browse: <string>`</a>:
+  An URL where the users may browse available packages online
+* <a id="repofield-upstream">`upstream: <string>`</a>:
+  The source that this repo is generated and maintained from. Typically, a
+  version-control system address.
+* <a id="repofield-redirect">`redirect: [ <string> { <filter> } ... ]`</a>:
+  List of URLs to (permanently) redirect to if their filters evaluate to `true`.
+  Can be used to serve different repositories for different OSes or different
+  versions of OPAM.
 
 ### Indexes and serving over HTTP(S)
 
@@ -329,39 +332,49 @@ Compilers are specified by
 
 The `compiler-name.comp` file has the following fields:
 
-- `opam-version: <string>`: File format version, should be `1.2` as of writing.
+- <a id="compfield-opam-version">`opam-version: <string>`</a>:
+  File format version, should be `1.2` as of writing.
 
-- `name: <string>`: the compiler name, should be of the form
-  `base-version+patch`, and the same used in the filename.
+- <a id="compfield-name">`name: <string>`</a>:
+  the compiler name, should be of the form `base-version+patch`, and the same
+  used in the filename.
 
-- `version: <string>`: the base OCaml compiler version this is based on, e.g.
-  `4.02.1`
+- <a id="compfield-version">`version: <string>`</a>:
+  the base OCaml compiler version this is based on, e.g. `4.02.1`
 
-- `src: <string>` or `archive: <string>`: as for package `url` files, the URL
-  where the compiler source can be retrieved. Older, more specific URL fields
-  are deprecated.
+- <a id="compfield-src">`src: <string>`</a> or
+  <a id="compfield-archive">`archive: <string>`</a>:
+  as for package `url` files, the URL where the compiler source can be
+  retrieved. Older, more specific URL fields are deprecated.
 
-- `patches: [ <string> ... ]`: URLs of patches that will be retrieved and
-  applied to the source from `src:` or `archive:`.
+- <a id="compfield-patches">`patches: [ <string> ... ]`</a>:
+  URLs of patches that will be retrieved and applied to the source from `src:`
+  or `archive:`.
 
-- `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: commands that
-  will be run from the compiler source root to build and install the compiler.
+- <a id="compfield-build">
+  `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  commands that will be run from the compiler source root to build and install
+  the compiler.
 
-- `configure: [ <string> ... ]` and `make: [ <string> ... ]`: alternatively,
-  this will build using `./configure` and `make`, with the given flags
-  (`--prefix` is automatically appended to the configure command)
+- <a id="compfield-configure">`configure: [ <string> ... ]`</a> and
+  <a id="compfield-make">`make: [ <string> ... ]`</a>:
+  alternatively, this will build using `./configure` and `make`, with the given
+  flags (`--prefix` is automatically appended to the configure command)
 
-- `packages: [ <package-formula> ... ]`: these packages will be installed right
-  after the `build:` or `make:` steps have been run. They must be self-contained
-  (no external dependencies), and the user won't be able to change or remove
-  them in this switch (except via explicit pinning).
+- <a id="compfield-packages">`packages: [ <package-formula> ... ]`</a>:
+  these packages will be installed right after the `build:` or `make:` steps
+  have been run. They must be self-contained (no external dependencies), and the
+  user won't be able to change or remove them in this switch (except via
+  explicit pinning).
 
-- `env: [ <ident> <update-op> <string> ]`: specifies environment variables
-  updates that will be performed whenever in this switch.
+- <a id="compfield-env">`env: [ <ident> <update-op> <string> ]`</a>:
+  specifies environment variables updates that will be performed whenever in
+  this switch.
 
-- `preinstalled: <bool>`: should not be set by hand, specifies that the this
-  `.comp` file refers to an OCaml installation that lies outside of OPAM (files
-  using this are normally auto-generated).
+- <a id="compfield-preinstalled">`preinstalled: <bool>`</a>:
+  should not be set by hand, specifies that the this `.comp` file refers to an
+  OCaml installation that lies outside of OPAM (files using this are normally
+  auto-generated).
 
 Note that, since OPAM `1.2.1` all build instructions can be omitted, and that it
 is therefore possible to delegate all the build process to the packages in
@@ -386,17 +399,21 @@ on next lines.
 The `url` file describes the source of the package and how it may be obtained.
 It has the following fields:
 
-- One of `src: <string>` or `archive: <string>`, specifying the URL where the
-  package can be downloaded from. When using HTTP or FTP, this should be an
-  archive. The older alternative field names `http:`, `local:`, `git:`, `hg:`
-  and `darcs:` are deprecated, prefer explicit URLs.
+- One of <a id="urlfield-src">`src: <string>`</a> or
+  <a id="urlfield-archive">`archive: <string>`</a>,
+  specifying the URL where the package can be downloaded from. When using HTTP
+  or FTP, this should be an archive. The older alternative field names <a
+  id="urlfield-http">`http:`</a>, <a id="urlfield-local">`local:`</a>, <a
+  id="urlfield-git">`git:`</a>, <a id="urlfield-hg">`hg:`</a> and <a
+  id="urlfield-darcs">`darcs:`</a> are deprecated, prefer explicit URLs.
 
-  On the official repository, this should always point to a stable archive over
-  HTTP or FTP.
-- `checksum: <string>`: the MD5 of the referred-to archive, to warrant
-  integrity. Mandatory on the official repository.
-- `mirrors: [ <string> ... ]`: an optional list of mirrors. They must use the
-  same protocol as the main URL.
+    On the official repository, this should always point to a stable archive
+    over HTTP or FTP.
+- <a id="urlfield-checksum">`checksum: <string>`</a>:
+  the MD5 of the referred-to archive, to warrant integrity. Mandatory on the
+  official repository.
+- <a id="urlfield-mirrors">`mirrors: [ <string> ... ]`</a>:
+  an optional list of mirrors. They must use the same protocol as the main URL.
 
 ### files/
 
@@ -431,26 +448,38 @@ relative path and destination filename can be given using the postfix braces
 syntax. A leading `?` in the origin filename is stripped and informs OPAM to
 continue silently when the file is not found.
 
-- `lib:` installs to `<prefix>/lib/package-name`
-- `libexec:` installs to `<prefix>/lib/package-name`, but the `exec` bit is
-  set (since OPAM 1.2.1)
-- `bin:` installs to `<prefix>/bin`, with the `exec` bit set
-- `sbin:` installs to `<prefix>/sbin`, with the `exec` bit set
-- `toplevel:` installs to `<prefix>/lib/toplevel`
-- `share:` installs to `<prefix>/share/package-name`
-- `share_root:` installs relative to `<prefix>/share` (since OPAM 1.2.0)
-- `etc:` installs to `<prefix>/etc/package-name`
-- `doc:` installs to `<prefix>/doc/package-name`
-- `stublibs:` installs to `<prefix>/lib/stublibs`, with the `exec` bit set
+- <a id="installfield-lib">`lib:`</a>
+  installs to `<prefix>/lib/package-name`
+- <a id="installfield-libexec">`libexec:`</a>
+  installs to `<prefix>/lib/package-name`, but the `exec` bit is set (since
+  OPAM 1.2.1)
+- <a id="installfield-bin">`bin:`</a>
+  installs to `<prefix>/bin`, with the `exec` bit set
+- <a id="installfield-sbin">`sbin:`</a>
+  installs to `<prefix>/sbin`, with the `exec` bit set
+- <a id="installfield-toplevel">`toplevel:`</a>
+  installs to `<prefix>/lib/toplevel`
+- <a id="installfield-share">`share:`</a>
+  installs to `<prefix>/share/package-name`
+- <a id="installfield-share_root">`share_root:`</a>
+  installs relative to `<prefix>/share` (since OPAM 1.2.0)
+- <a id="installfield-etc">`etc:`</a>
+  installs to `<prefix>/etc/package-name`
+- <a id="installfield-doc">`doc:`</a>
+  installs to `<prefix>/doc/package-name`
+- <a id="installfield-stublibs">`stublibs:`</a>
+  installs to `<prefix>/lib/stublibs`, with the `exec` bit set
 
 The following are treated slightly differently:
 
-- `man:` installs relative to `<prefix>/man`, with the exception that when the
+- <a id="installfield-man">`man:`</a>
+  installs relative to `<prefix>/man`, with the exception that when the
   destination is unspecified, the proper destination directory is extracted from
   the extension of the source file (so that `man: [ "foo.1" ]` is equivalent to
   `man: [ "foo.1" {"man1/foo.1"} ]`
-- `misc:` requires files to specify an absolute destination, and the user will
-  be prompted before the installation is done.
+- <a id="installfield-misc">`misc:`</a>
+  requires files to specify an absolute destination, and the user will be
+  prompted before the installation is done.
 
 ### opam
 
@@ -459,52 +488,62 @@ recommended to check the validity and quality of your `opam` files.
 
 `opam` files allow the following fields:
 
-- `opam-version: <string>` (mandatory): the file format version, should be `1.2`
-  as of writing.
+- <a id="opamfield-opam-version">`opam-version: <string>`</a> (mandatory):
+  the file format version, should be `1.2` as of writing.
 
-- `name: <string>`, `version: <string>`: the name and version of the package.
-  Both fields are optional when they can be inferred from the directory name
-  (e.g. when the file sits in the repository).
+- <a id="opamfield-name">`name: <string>`</a>,
+  <a id="opamfield-version">`version: <string>`</a>:
+  the name and version of the package. Both fields are optional when they can be
+  inferred from the directory name (e.g. when the file sits in the repository).
 
-- `maintainer: <string>` (mandatory): A contact address for the package
-  maintainer (the format `"name <email>"` is allowed).
+- <a id="opamfield-maintainer">`maintainer: <string>`</a> (mandatory):
+  A contact address for the package maintainer (the format `"name <email>"` is
+  allowed).
 
-- `authors: [ <string> ... ]`: a list of strings listing the original authors of
-  the software.
+- <a id="opamfield-authors">`authors: [ <string> ... ]`</a>:
+  a list of strings listing the original authors of the software.
 
-- `license: [ <string> ... ]`: the abbreviated name(s) of the license(s) under
-  which the source software is available.
+- <a id="opamfield-license">`license: [ <string> ... ]`</a>:
+  the abbreviated name(s) of the license(s) under which the source software is
+  available.
 
-- `homepage: <string>`, `doc: <string>`, `bug-reports: <string>`: URLs pointing
-  to the related pages for the package, for user information
+- <a id="opamfield-homepage">`homepage: <string>`</a>,
+  <a id="opamfield-doc">`doc: <string>`</a>,
+  <a id="opamfield-bug-reports">`bug-reports: <string>`</a>:
+  URLs pointing to the related pages for the package, for user information
 
-- `dev-repo: <string>`: the URL of the package's source repository, which may be
-  useful for developpers: not to be mistaken with the URL file, which points to
-  the specific packaged version.
+- <a id="opamfield-dev-repo">`dev-repo: <string>`</a>:
+  the URL of the package's source repository, which may be useful for
+  developpers: not to be mistaken with the URL file, which points to the
+  specific packaged version.
 
-- `tags: [ <string> ... ]`: an optional list of semantic tags used to classify
-  the packages. The `"org:foo"` tag is reserved for packages officially
-  distributed by organization ``foo''.
+- <a id="opamfield-tags">`tags: [ <string> ... ]`</a>:
+  an optional list of semantic tags used to classify the packages. The
+  `"org:foo"` tag is reserved for packages officially distributed by
+  organization ``foo''.
 
-  Tags in the form `"flags:<ident>"` can be used to pass meaningful `flags` to
-  OPAM: see the `flags:` field below. This is mostly intended for compatibility
-  with earlier releases in the 1.2 branch, which will complain about unknown
-  values in the `flags:` field.
+    Tags in the form `"flags:<ident>"` can be used to pass meaningful `flags` to
+    OPAM: see the `flags:` field below. This is mostly intended for
+    compatibility with earlier releases in the 1.2 branch, which will complain
+    about unknown values in the `flags:` field.
 
-- `patches: [ <string> { <filter> } ... ]`: a list of files relative to the
-  project source root (often added through the `files/` metadata subdirectory).
-  The listed patch files will be applied sequentially to the source as with the
-  `patch` command. Variable interpolation is available, so you can specify
-  `patches: [ "file" ]` to have the patch processed from `file.in`.
+- <a id="opamfield-patches">`patches: [ <string> { <filter> } ... ]`</a>:
+  a list of files relative to the project source root (often added through the
+  `files/` metadata subdirectory). The listed patch files will be applied
+  sequentially to the source as with the `patch` command. Variable interpolation
+  is available, so you can specify `patches: [ "file" ]` to have the patch
+  processed from `file.in`.
 
     Patches may be applied conditionally by adding _filters_.
 
-- `substs: [ <string> ... ]`: a list of files relative to the project source
-  root. These files will be generated from their `.in` counterparts, with
-  variable interpolations expanded.
+- <a id="opamfield-substs">`substs: [ <string> ... ]`</a>:
+  a list of files relative to the project source root. These files will be
+  generated from their `.in` counterparts, with variable interpolations
+  expanded.
 
-- `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
-  commands that will be run in order to compile the package.
+- <a id="opamfield-build">
+  `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  the list of commands that will be run in order to compile the package.
 
     Each command is provided as a list of terms (a command and zero or more
     arguments) ; individual terms as well as full commands can be made
@@ -521,8 +560,9 @@ recommended to check the validity and quality of your `opam` files.
     included in this step, so you may find examples of older packages that do
     not respect the above. This behaviour is deprecated)
 
-- `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
-  commands that will be run in order to install the package.
+- <a id="opamfield-install">
+  `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  the list of commands that will be run in order to install the package.
 
     This field follows the exact same format as `build:`, but should only be used
     to move products of `build:` from the build directory to their final
@@ -535,20 +575,24 @@ recommended to check the validity and quality of your `opam` files.
     though, to prefer the usage of a static or generated `package-name.install`
     file and omit the `install:` field.
 
-- `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]` and
-  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the list of
-  commands to build documentation and tests. They are processed after the build
-  phase when documentation or tests have been requested. These follow the same
-  specification as the `build:` field.
+- <a id="opamfield-build-doc">
+  `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="opamfield-build-test">
+  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  the list of commands to build documentation and tests. They are processed
+  after the build phase when documentation or tests have been requested. These
+  follow the same specification as the `build:` field.
 
-- `remove: [ [ <string> { <filter> } ... ] { <filter> } ... ]`: the commands
-  used to uninstall the package. It should be the reverse operation of
-  `install:`, and absent when `install:` is. It follows the same format as
+- <a id="opamfield-remove">
+  `remove: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  the commands used to uninstall the package. It should be the reverse operation
+  of `install:`, and absent when `install:` is. It follows the same format as
   `build:`.
 
-- `depends: [ <package-formula> ... ]`: the package dependencies. This describes
-  the requirements on other packages for this package to be built and installed.
-  It contains a list of package formulas, understood as a conjunction.
+- <a id="opamfield-depends">`depends: [ <package-formula> ... ]`</a>:
+  the package dependencies. This describes the requirements on other packages
+  for this package to be built and installed. It contains a list of package
+  formulas, understood as a conjunction.
 
     As an addition to the package formula format, the version constraints may be
     prefixed by _dependency flags_. These are one of `build`, `test` and `doc`
@@ -569,32 +613,35 @@ recommended to check the validity and quality of your `opam` files.
           "baz" {build & >= "3.14"}
         ]
 
-- `depopts: [ <string> { <dependency-flags> } ... ]`: the package optional
-  dependencies. This flag is similar to `depends:` in format, but with some
-  restrictions. It contains packages that will be _used_, if present, by the
-  package being defined, either during build or runtime, but that are not
-  _required_ for its installation. The implementation uses this information to
-  define build order and trigger recompilations, but won't automatically install
-  _depopts_ when installing the package.
+- <a id="opamfield-depopts">
+  `depopts: [ <string> { <dependency-flags> } ... ]`</a>:
+  the package optional dependencies. This flag is similar to `depends:` in
+  format, but with some restrictions. It contains packages that will be _used_,
+  if present, by the package being defined, either during build or runtime, but
+  that are not _required_ for its installation. The implementation uses this
+  information to define build order and trigger recompilations, but won't
+  automatically install _depopts_ when installing the package.
 
     The optional dependencies may have _dependency flags_, but they may not
     specify version constraints nor formulas. `depopts:` can be combined with
     `conflicts:` to add version constraints on the optional dependencies.
 
-- `conflicts: [ <string> { <version-constraint> } ... ]`: a list of package
-  names with optional version constraints indicating that the current package
-  can't coexist with those.
+- <a id="opamfield-conflicts">
+  `conflicts: [ <string> { <version-constraint> } ... ]`</a>:
+  a list of package names with optional version constraints indicating that the
+  current package can't coexist with those.
 
-- `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`: the package external
-  dependencies. This field is a list that can be used for describing the
-  dependencies of the package toward software or packages external to the OPAM
-  ecosystem, for various systems. It contains pairs of lists of the form
-  `[ predicates ext-packages ]`. `predicates` is used to select the element of
-  the list based on the current system: it is a list of tags (strings) that can
-  correspond to the OS, architecture or distribution. The `predicates` is used
-  as a conjunction: the pair will only be selected when _all_ tags are active.
-  The resulting `ext-packages` should be identifiers of packages recognised by
-  the system's package manager.
+- <a id="opamfield-depexts">
+  `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`</a>:
+  the package external dependencies. This field is a list that can be used for
+  describing the dependencies of the package toward software or packages
+  external to the OPAM ecosystem, for various systems. It contains pairs of
+  lists of the form `[ predicates ext-packages ]`. `predicates` is used to
+  select the element of the list based on the current system: it is a list of
+  tags (strings) that can correspond to the OS, architecture or distribution.
+  The `predicates` is used as a conjunction: the pair will only be selected when
+  _all_ tags are active. The resulting `ext-packages` should be identifiers of
+  packages recognised by the system's package manager.
 
     There is currently no definite specification for the precise tags you should
     use, but the closest thing is the
@@ -602,31 +649,34 @@ recommended to check the validity and quality of your `opam` files.
     `depexts` information can be retrieved through the `opam list --external`
     command.
 
-- `messages: [ <string> { <filter> } ... ]`: used to display an additional
-  (one-line) message when prompting a solution implying the given package. The
-  typical use-case is to tell the user that some functionality will not be
-  available as some optional dependencies are not installed.
+- <a id="opamfield-messages">`messages: [ <string> { <filter> } ... ]`</a>:
+  used to display an additional (one-line) message when prompting a solution
+  implying the given package. The typical use-case is to tell the user that some
+  functionality will not be available as some optional dependencies are not
+  installed.
 
-- `post-messages: [ <string> { <filter> } ... ]`: allows to print specific
-  messages to the user after the end of installation. The special boolean
-  variable `failure` is defined in the scope of the filter, and can be used to
-  print messages in case there was an error (typically, a hint on how it can be
-  resolved, or a link to an open issue). `success` is also defined as syntactic
-  sugar for `!failure`.
+- <a id="opamfield-post-messages">
+  `post-messages: [ <string> { <filter> } ... ]`</a>:
+  allows to print specific messages to the user after the end of installation.
+  The special boolean variable `failure` is defined in the scope of the filter,
+  and can be used to print messages in case there was an error (typically, a
+  hint on how it can be resolved, or a link to an open issue). `success` is also
+  defined as syntactic sugar for `!failure`.
 
-- `available: [ <filter> ]`: can be used to add constraints on the OS and OCaml
-  versions currently in use, using the built-in `os` and `ocaml-version`
-  variables. In case the filter is not valid, the package is disabled. The `os`
-  and `ocaml-version` fields are deprecated, please use `available` instead in
-  newly created packages.
+- <a id="opamfield-available">`available: [ <filter> ]`</a>:
+  can be used to add constraints on the OS and OCaml versions currently in use,
+  using the built-in `os` and `ocaml-version` variables. In case the filter is
+  not valid, the package is disabled. The `os` and `ocaml-version` fields are
+  deprecated, please use `available` instead in newly created packages.
 
     This field is evaluated before request solving or any actions take place ;
     it can only refer to global variables, since it shouldn't depend on the
     current switch state. An unavailable package won't generally be seen on the
     system, except with `opam list -A`.
 
-- `flags: [ <ident> ... ]`: specify package flags that may alter package
-  behaviour. Currently available flags are:
+- <a id="opamfield-flags">`flags: [ <ident> ... ]`</a>:
+  specify package flags that may alter package behaviour. Currently available
+  flags are:
 
     - `light-uninstall`: the package's uninstall instructions don't require
       the package source. This is currently inferred when the only uninstall
@@ -639,8 +689,9 @@ recommended to check the validity and quality of your `opam` files.
       discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
       instead)
 
-- `features: [ <ident> <string> { <filter> } ... ]` (EXPERIMENTAL): this field
-  is currently experimental and shouldn't be used on the main package
+- <a id="opamfield-features">
+  `features: [ <ident> <string> { <filter> } ... ]`</a> (EXPERIMENTAL):
+  this field is currently experimental and shouldn't be used on the main package
   repository. It allows to define custom variables that better document what
   _features_ are available in a given package build. Each feature is defined as
   an identifier, a documentation string, and a filter expression. The filter
