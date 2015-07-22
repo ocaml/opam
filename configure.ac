@@ -3,6 +3,16 @@ AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
 
+# If a bootstrap compiler has been built, always use it
+PATH_PREPEND=
+PRE_BOOTSTRAP_PATH="$PATH"
+AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],[
+  echo Bootstrap compiler found -- activating
+  unset OCAMLLIB
+  export PATH_PREPEND=`pwd`/bootstrap/ocaml/bin:
+  export PATH="$PATH_PREPEND:$PATH"
+])
+
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
@@ -69,7 +79,7 @@ AS_IF([test ! -x ${OCAML_TEST_CC}],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
     AS_IF([test "${ARCH}" = "i386"],[SDK_ARCH=x86],[SDK_ARCH=x64])
     AC_MSG_CHECKING([for an installed Microsoft C Compiler for ${SDK_ARCH}])
-    eval `./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
     AS_IF([ test "x$MSVS_NAME" = "x" ], [
       AS_IF([ test ${RESULT} -eq 0 ], [
         AC_MSG_RESULT([from PATH])
@@ -79,7 +89,8 @@ AS_IF([test ! -x ${OCAML_TEST_CC}],[
     ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       export PATH_PREPEND="${MSVS_PATH}:${PATH_PREPEND}"
-      export PATH="${PATH_PREPEND}$PATH"
+      # Note that we put ${MSVS_PATH} here NOT ${PATH_PREPEND} so that the bootstrap path isn't repeated
+      export PATH="${MSVS_PATH}:$PATH"
       LIB_PREPEND="${MSVS_LIB};"
       INC_PREPEND="${MSVS_INC};"
       export Lib="${MSVS_LIB};$LIB"

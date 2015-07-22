@@ -1817,6 +1817,18 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+# If a bootstrap compiler has been built, always use it
+PATH_PREPEND=
+PRE_BOOTSTRAP_PATH="$PATH"
+if  test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ; then :
+
+  echo Bootstrap compiler found -- activating
+  unset OCAMLLIB
+  export PATH_PREPEND=`pwd`/bootstrap/ocaml/bin:
+  export PATH="$PATH_PREPEND:$PATH"
+
+fi
+
   # checking for ocamlc
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlc", so it can be a program name with args.
@@ -1917,7 +1929,7 @@ fi
 $as_echo "OCaml version is $OCAMLVERSION" >&6; }
      # If OCAMLLIB is set, use it
      if test "$OCAMLLIB" = ""; then
-        OCAMLLIB=`$OCAMLC -where 2>/dev/null || $OCAMLC -v|tail -1|cut -d ' ' -f 4`
+        OCAMLLIB=`$OCAMLC -where 2>/dev/null | tr -d '\015' || $OCAMLC -v|tail -1|cut -d ' ' -f 4`
      else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: OCAMLLIB previously set; preserving it." >&5
 $as_echo "OCAMLLIB previously set; preserving it." >&6; }
@@ -3213,7 +3225,7 @@ else
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for an installed Microsoft C Compiler for ${SDK_ARCH}" >&5
 $as_echo_n "checking for an installed Microsoft C Compiler for ${SDK_ARCH}... " >&6; }
-    eval `./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
     if  test "x$MSVS_NAME" = "x" ; then :
 
       if  test ${RESULT} -eq 0 ; then :
@@ -3232,7 +3244,8 @@ else
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: from $MSVS_NAME" >&5
 $as_echo "from $MSVS_NAME" >&6; }
       export PATH_PREPEND="${MSVS_PATH}:${PATH_PREPEND}"
-      export PATH="${PATH_PREPEND}$PATH"
+      # Note that we put ${MSVS_PATH} here NOT ${PATH_PREPEND} so that the bootstrap path isn't repeated
+      export PATH="${MSVS_PATH}:$PATH"
       LIB_PREPEND="${MSVS_LIB};"
       INC_PREPEND="${MSVS_INC};"
       export Lib="${MSVS_LIB};$LIB"

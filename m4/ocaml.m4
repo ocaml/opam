@@ -18,7 +18,7 @@ AC_DEFUN([AC_PROG_OCAML],
      AC_MSG_RESULT([OCaml version is $OCAMLVERSION])
      # If OCAMLLIB is set, use it
      if test "$OCAMLLIB" = ""; then
-        OCAMLLIB=`$OCAMLC -where 2>/dev/null || $OCAMLC -v|tail -1|cut -d ' ' -f 4`
+        OCAMLLIB=`$OCAMLC -where 2>/dev/null | tr -d '\015' || $OCAMLC -v|tail -1|cut -d ' ' -f 4`
      else
         AC_MSG_RESULT([OCAMLLIB previously set; preserving it.])
      fi
