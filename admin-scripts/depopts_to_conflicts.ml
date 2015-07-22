@@ -60,9 +60,9 @@ iter_packages ~opam:(fun _ opam ->
           depopts [] in
       let conflicts = OpamFile.OPAM.conflicts opam in
       let add_conflicts =
-        let c = OpamFormula.to_conjunction conflicts in
+        let c = OpamFormula.to_disjunction conflicts in
         List.filter (fun f -> not (List.mem f c)) neg_depopts in
-      OpamFormula.ands (conflicts :: [OpamFormula.of_conjunction add_conflicts])
+      OpamFormula.ands (conflicts :: [OpamFormula.of_disjunction add_conflicts])
     in
     let opam = OpamFile.OPAM.with_depopts opam depopts in
     let opam = OpamFile.OPAM.with_conflicts opam conflicts in

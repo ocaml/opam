@@ -115,7 +115,7 @@ let to_1_1 _ opam =
   let opam =
     OF.with_conflicts opam
       (OpamFormula.map (fun (n, cstr) ->
-           OpamFormula.Atom (n, rewrite_constraint ~conj:true cstr))
+           OpamFormula.Atom (n, rewrite_constraint ~conj:false cstr))
           (OF.conflicts opam))
   in
   let opam = OF.with_available opam (filter_vars (OF.available opam) +! FBool true) in

@@ -1331,10 +1331,10 @@ module X = struct
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ listm   t.remove        s_remove        OpamFormat.make_command
-          @ formula t.depends       s_depends       OpamFormat.make_ext_formula
-          @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
+          @ formula t.depends       s_depends       OpamFormat.(make_formula `Conj make_ext_constraints)
+          @ formula t.depopts       s_depopts       OpamFormat.(make_formula `Disj make_ext_constraints)
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
-          @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
+          @ formula t.conflicts     s_conflicts     OpamFormat.(make_formula `Disj make_constraints)
           @ list    t.features      s_features      OpamFormat.make_features
           @ list    t.libraries     s_libraries     OpamFormat.make_libraries
           @ list    t.syntax        s_syntax        OpamFormat.make_libraries
@@ -1424,7 +1424,7 @@ module X = struct
       let depends =
         assoc_default OpamFormula.Empty s s_depends
           (fun v ->
-             OpamFormat.parse_ext_formula v |>
+             OpamFormat.(parse_formula `Conj parse_ext_constraints v) |>
              check_depflags ~pos:(OpamFormat.value_pos v)) in
       let depopts =
         let rec cleanup ~pos acc disjunction =
@@ -1454,7 +1454,7 @@ module X = struct
         in
         assoc_default OpamFormula.Empty s s_depopts @@ fun value ->
         let f =
-          OpamFormat.parse_opt_formula value |>
+          OpamFormat.(parse_formula `Disj parse_ext_constraints) value |>
           check_depflags ~pos:(OpamFormat.value_pos value) in
         if not conservative &&
            not OpamFormatConfig.(!r.skip_version_checks) &&
@@ -1466,8 +1466,35 @@ module X = struct
             |> OpamFormula.ors
         else f
       in
-      let conflicts = assoc_default OpamFormula.Empty s s_conflicts
-          OpamFormat.parse_formula in
+      let conflicts =
+        let is_disjunction f =
+          List.for_all (function Atom _ -> true | _ -> false)
+            OpamFormula.(ors_to_list (to_atom_formula f))
+        in
+        let force_disjunction f =
+          OpamFormula.map_formula (function
+              | And (a, b) -> Or (a, b)
+              | f -> f)
+            f
+        in
+        let cleanup ~pos f =
+          if is_disjunction f then f else
+          (if OpamVersion.compare opam_version (OpamVersion.of_string "1.3") >= 0
+           then
+             OpamConsole.warning
+               "At %s:\n\
+                Conflicts must be a disjunction, '&' is not supported \
+                (treated as '|')."
+               (string_of_pos pos);
+           f
+           |> OpamFormula.map (fun (n,cs) -> Atom (n, force_disjunction cs))
+           |> force_disjunction)
+        in
+        assoc_default OpamFormula.Empty s s_conflicts @@ fun value ->
+        OpamFormat.(parse_formula `Disj parse_constraints value) |> fun f ->
+        if conservative then f
+        else cleanup ~pos:(OpamFormat.value_pos value) f
+      in
       let features = OpamFormat.assoc_default [] s s_features
           OpamFormat.parse_features in
       let libraries = assoc_list s s_libraries OpamFormat.parse_libraries in
@@ -1813,10 +1840,15 @@ module X = struct
            (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
         cond 42 `Error
           "The 'dev-repo' field doesn't specify an explicit VCS. You may use \
-           URLs of the form \"git+https://\""
+           URLs of the form \"git+https://\" or a \".hg\" or \".git\" suffix"
           (match t.dev_repo with
            | None | Some (Git _ | Darcs _ | Hg _) -> false
-           | Some (Version _ | Local _ | Http _) -> true)
+           | Some (Version _ | Local _ | Http _) -> true);
+        cond 43 `Error
+          "Conjunction used in 'conflicts:' field. Only '|' is allowed"
+          (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
+           List.exists (function Atom _ -> false | _ -> true) @@
+           OpamFormula.(ors_to_list (to_atom_formula t.conflicts)));
       ]
       in
       OpamStd.List.filter_map (fun x -> x) warnings
@@ -2356,9 +2388,9 @@ module X = struct
       let build = safe [] OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
       let env = safe [] OpamFormat.assoc_list s s_env
           (OpamFormat.parse_list_list OpamFormat.parse_env_variable) in
-      let packages = safe OpamFormula.Empty 
+      let packages = safe OpamFormula.Empty
           (OpamFormat.assoc_default OpamFormula.Empty)
-          s s_packages OpamFormat.parse_formula in
+          s s_packages OpamFormat.(parse_formula `Conj parse_constraints) in
       let preinstalled = safe false
           (OpamFormat.assoc_default false) s s_preinstalled OpamFormat.parse_bool in
       let tags = assoc_string_list s s_tags in
@@ -2412,7 +2444,7 @@ module X = struct
             make_variable (s_configure, make_string_list s.configure);
             make_variable (s_make, make_string_list s.make);
             make_variable (s_build, make_commands s.build);
-            make_variable (s_packages, make_formula s.packages);
+            make_variable (s_packages, make_formula `Conj make_constraints s.packages);
             make_variable (s_env, make_list make_env_variable s.env);
             make_variable (s_tags, make_string_list s.tags);
           ] @ (
