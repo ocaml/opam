@@ -182,6 +182,12 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
+  (** All extended "x-" fields as a map *)
+  val extension: t -> value OpamStd.String.Map.t
+
+  (** Parse a single extended field (reports proper file position) *)
+  val extended: t -> string -> (value -> 'a) -> 'a option
+
   val with_messages: t -> (string * filter option) list -> t
 
   val with_post_messages: t -> (string * filter option) list -> t
@@ -301,6 +307,10 @@ module OPAM: sig
   val with_flags: t -> package_flag list -> t
 
   val with_dev_repo: t -> pin_option option -> t
+
+  val with_extension: t -> value OpamStd.String.Map.t -> t
+
+  val add_extension: t -> string -> value -> t
 
   (** Convert to OPAM 1.0 *)
   val to_1_0: file -> file
@@ -574,6 +584,6 @@ module Syntax : sig
   val to_string: t -> string
   val of_string: filename -> string -> t
   val check:
-    ?allow_major:bool -> ?versioned:bool ->
+    ?allow_major:bool -> ?versioned:bool -> ?allow_extended:bool ->
     t -> string list -> bool
 end
