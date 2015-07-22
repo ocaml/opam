@@ -156,8 +156,16 @@ configure: configure.ac m4/*.m4
 release-%:
 	$(MAKE) -C release TAG="$*"
 
+ifeq ($(OCAML_PORT),)
+ifneq ($(COMSPEC),)
+ifeq ($(shell which gcc 2>/dev/null),)
+OCAML_PORT=auto
+endif
+endif
+endif
+
 cold:
-	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh
+	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
