@@ -108,14 +108,18 @@ let names items =
   aux items;
   !tbl
 
-let invalid_fields items fields =
+let invalid_fields ?(allow_extended=false) items fields =
   let tbl = names items in
   OpamStd.String.Map.fold (fun f i accu ->
-    if List.mem f fields && i = 1 then accu else f :: accu
+    if (List.mem f fields ||
+        allow_extended && OpamStd.String.starts_with ~prefix:"x-" f)
+       && i = 1
+    then accu
+    else f :: accu
   ) tbl []
 
-let is_valid items fields =
-  invalid_fields items fields = []
+let is_valid ?allow_extended items fields =
+  invalid_fields ?allow_extended items fields = []
 
 let is_list = function
   | List _ -> true
