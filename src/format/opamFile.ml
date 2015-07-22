@@ -1505,7 +1505,7 @@ module X = struct
              OpamFormat.bad_format ~pos:(OpamFormat.value_pos v) "%s" msg) |>
         (function
           | Git _ | Darcs _ | Hg _ as pin -> pin
-          | Http u -> Git u
+          | Http u -> if conservative then Http u else Git u
           | _ ->
             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v)
               "Unrecognised version-control address")
@@ -1778,6 +1778,12 @@ module X = struct
            ~detail:OpamPackage.Name.
                      (List.map to_string (Set.elements undep_pkgs))
            (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
+        cond 42 `Error
+          "The 'dev-repo' field doesn't specify an explicit VCS. You may use \
+           URLs of the form \"git+https://\""
+          (match t.dev_repo with
+           | None | Some (Git _ | Darcs _ | Hg _) -> false
+           | Some (Version _ | Local _ | Http _) -> true)
       ]
       in
       OpamStd.List.filter_map (fun x -> x) warnings
