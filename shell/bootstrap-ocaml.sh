@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 
 V=ocaml-4.04.0
 URL=http://caml.inria.fr/pub/distrib/ocaml-4.04/${V}.tar.gz
@@ -14,7 +14,7 @@ if [ ! -e ${V}.tar.gz ]; then
     exit 1
   fi
 fi
-tar -zxvf ${V}.tar.gz
+tar -zxf ${V}.tar.gz
 cd ${V}
 ./configure -prefix "`pwd`/../ocaml"
 ${MAKE:-make} world opt.opt
