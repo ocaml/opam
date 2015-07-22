@@ -605,6 +605,8 @@ JBUILDER
 FETCH
 OCAMLFIND
 OCAMLOBJINFO
+INC_PREPEND
+LIB_PREPEND
 PATH_PREPEND
 EXE
 WIN32
@@ -3169,11 +3171,77 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler type" >&5
+$as_echo_n "checking for compiler type... " >&6; }
+CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
+if  test "$?" -eq 0 ; then :
+
+else
+  as_fn_error $? "failed" "$LINENO" 5
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $CCOMP_TYPE" >&5
+$as_echo "$CCOMP_TYPE" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler architecture" >&5
+$as_echo_n "checking for compiler architecture... " >&6; }
+ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
+if  test "$?" -eq 0 ; then :
+
+else
+  as_fn_error $? "failed" "$LINENO" 5
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ARCH" >&5
+$as_echo "$ARCH" >&6; }
+
+LIB_PREPEND=
+INC_PREPEND=
 # Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
 if test "$OCAMLBEST" = "opt"; then :
   OCAMLBESTCC=$OCAMLOPT
 else
   OCAMLBESTCC=$OCAMLC
+fi
+OCAML_CC="$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p")"
+set dummy ${OCAML_CC}; OCAML_TEST_CC=$2
+if test ! -x ${OCAML_TEST_CC}; then :
+
+  if test "x${CCOMP_TYPE}" = "xmsvc"; then :
+
+    if test "${ARCH}" = "i386"; then :
+  SDK_ARCH=x86
+else
+  SDK_ARCH=x64
+fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for an installed Microsoft C Compiler for ${SDK_ARCH}" >&5
+$as_echo_n "checking for an installed Microsoft C Compiler for ${SDK_ARCH}... " >&6; }
+    eval `./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
+    if  test "x$MSVS_NAME" = "x" ; then :
+
+      if  test ${RESULT} -eq 0 ; then :
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: from PATH" >&5
+$as_echo "from PATH" >&6; }
+
+else
+
+        as_fn_error $? "no" "$LINENO" 5
+
+fi
+
+else
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: from $MSVS_NAME" >&5
+$as_echo "from $MSVS_NAME" >&6; }
+      export PATH_PREPEND="${MSVS_PATH}:${PATH_PREPEND}"
+      export PATH="${PATH_PREPEND}$PATH"
+      LIB_PREPEND="${MSVS_LIB};"
+      INC_PREPEND="${MSVS_INC};"
+      export Lib="${MSVS_LIB};$LIB"
+      export Include="${MSVS_INC};$INCLUDE"
+
+fi
+
+fi
+
 fi
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3181,7 +3249,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in $($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc
+  for ac_prog in "${OCAML_CC}" gcc cc
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -3225,7 +3293,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in $($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc
+  for ac_prog in "${OCAML_CC}" gcc cc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3819,12 +3887,18 @@ if  test ${WIN32} -eq 1 -a "$GCC" != "yes" ; then :
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Microsoft Linker needs a PATH shim" >&5
 $as_echo_n "checking whether Microsoft Linker needs a PATH shim... " >&6; }
+  PREV_PREPEND="$PATH_PREPEND"
   PATH_PREPEND=$(bash ./shell/check_linker)
-  if test "x${PATH_PREPEND}" = "x" ; then :
+  if test "x${PATH_PREPEND}" = "x${PREV_PREPEND}" ; then :
   PATH_PREPEND_RESULT=no
 else
   PATH_PREPEND_RESULT=yes
 fi
+  PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PATH_PREPEND_RESULT" >&5
 $as_echo "$PATH_PREPEND_RESULT" >&6; }
