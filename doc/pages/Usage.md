@@ -41,10 +41,39 @@ opam upgrade         # Bring everything to the latest version possible
 opam CMD --help      # Command-specific manpage
 ```
 
-You may prefer to [browse packages online](https://opam.ocaml.org/packages). If you
-find a package there but not on your computer, either it has been recently added
-and you should simply run `opam update`, or it's not available on your system or
-OCaml version -- `opam install PACKAGE` will give you the reason.
+You may prefer to [browse packages online](https://opam.ocaml.org/packages). If
+you find a package there but not on your computer, either it has been recently
+added and you should simply run `opam update`, or it's not available on your
+system or OCaml version -- `opam install PACKAGE` will give you the reason.
+
+
+## Before you get started: "external solvers"
+
+Resolving package installations in the presence of dependencies and conflicts is
+known to be an
+[NP-complete problem](https://hal.archives-ouvertes.fr/file/index/docid/149566/filename/ase.pdf).
+Thankfully, a big effort has already been put into solving it very efficiently:
+OPAM relies on this effort and delegates the solving process to _external
+solvers_. Make sure you have one of those installed on your system for best
+results:
+
+- aspcud (recommended)
+- packup
+- mccs (no built-in support at the moment, but may be used with the following
+  solver configuration string: `mccs -i %{input}% -o %{output}%
+  -lexagregate[%{criteria}%]`.)
+
+We recommend installing one through your packaging system whenever possible:
+this should already have been taken care of if you installed OPAM through there.
+Without one of those, OPAM will fall back to some internal heuristics, but they
+may not give the best results, in particular for complex upgrades.
+
+As one of them may not always be available, for those with reliable
+connectivity, the [Irill](http://www.irill.org/) kindly provides a
+["Solver farm"](http://cudf-solvers.irill.org/) which can be used as a remote solver by OPAM.
+
+External solvers also allow
+[fine-grained preferences](Specifying_Solver_Preferences.html).
 
 
 ## Details on commands
