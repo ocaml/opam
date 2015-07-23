@@ -1,7 +1,5 @@
 #!/bin/sh -e
 
-V=ocaml-4.06.0
-URL=http://caml.inria.fr/pub/distrib/ocaml-4.06/${V}.tar.gz
 if command -v curl > /dev/null; then
   CURL="curl -OLSs"
 elif command -v wget > /dev/null; then
@@ -12,8 +10,12 @@ else
 fi
 mkdir -p bootstrap
 cd bootstrap
+URL=`sed -ne 's/URL_ocaml *= *//p' ../src_ext/Makefile | tr -d '\r'`
+V=`echo ${URL}| sed -e 's/.*\/\([^\/]\+\)\.tar\.gz/\1/'`
+FV_URL=`sed -ne 's/URL_flexdll *= *//p' ../src_ext/Makefile | tr -d '\r'`
+FLEXDLL=`echo ${FV_URL}| sed -e 's/.*\/\([^\/]*\)/\1/'`
 if [ ! -e ${V}.tar.gz ]; then
-  ${CURL} ${URL}
+  cp ../src_ext/archives/${V}.tar.gz . 2>/dev/null || ${CURL} ${URL}
 fi
 tar -zxf ${V}.tar.gz
 cd ${V}
@@ -95,15 +97,14 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   sed -e "s|^PREFIX=.*|PREFIX=${PREFIX}|" config/Makefile.${BUILD} > config/Makefile
   cp config/s-nt.h byterun/caml/s.h
   cp config/m-nt.h byterun/caml/m.h
-  FV=0.37
   cd ..
-  if [ ! -e ${FV}.zip ]; then
-    ${CURL} https://github.com/alainfrisch/flexdll/archive/${FV}.tar.gz
+  if [ ! -e ${FLEXDLL} ]; then
+    cp ../src_ext/archives/${FLEXDLL} . 2>/dev/null || ${CURL} ${FV_URL}
   fi
   cd ${V}
-  tar -xzf ../${FV}.tar.gz
+  tar -xzf ../${FLEXDLL}
   rm -rf flexdll
-  mv flexdll-${FV} flexdll
+  mv flexdll-* flexdll
   PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make flexdll world.opt install
 else
   ./configure -prefix "`pwd`/../ocaml"

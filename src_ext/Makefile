@@ -40,6 +40,12 @@ MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 URL_jbuilder = https://github.com/janestreet/jbuilder/archive/08050696fb701dafcd1372aadfaa800a50bc01ca.tar.gz
 MD5_jbuilder = 53b65232ebb5fd319acf90922342615d
 
+URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz
+MD5_ocaml = 66e5439eb63dbb8b8224cba5d1b20947
+
+URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
+MD5_flexdll = cc456a89382e60d84130cddd53977486
+
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
     FETCH = curl -OLSs
@@ -89,7 +95,7 @@ clone: $(JBUILDER_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
 archives: $(SRC_EXTS:=.download)
 	@
 
-cache-archives: $(SRC_EXTS:=.cache) jbuilder.cache
+cache-archives: $(SRC_EXTS:=.cache) jbuilder.cache ocaml.cache flexdll.cache
 	@
 
 %.cache:
