@@ -1012,7 +1012,8 @@ let config =
     ["exec"]    , `exec    , ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. \
      This command can be used to cross-compile between switches using \
-     $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn)";
+     $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). \
+     Opam expansion takes place in command and args.";
     ["var"]     , `var     , ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
      be accessed with the syntax $(i,pkg:var).";
@@ -1020,6 +1021,15 @@ let config =
     "Without argument, prints a documented list of all available variables. With \
      $(i,PACKAGE), lists all the variables available for these packages. Use \
      $(i,-) to include global configuration variables for this switch.";
+    ["set"]     , `set     , ["VAR";"VALUE"],
+    "Set the given global opam variable for the current switch. Warning: \
+     changing a configured path will not move any files! This command does \
+     not perform any variable expansion.";
+    ["unset"]   , `unset     , ["VAR"],
+    "Unset the given global opam variable for the current switch. Warning: \
+     unsetting built-in configuration variables can cause problems!";
+    ["expand"]  , `expand  , ["STRING"],
+    "Expand variable interpolations in the given string";
     ["subst"]   , `subst   , ["FILE..."],
     "Substitute variables in the given files. The strings $(i,%{var}%) are \
      replaced by the value of variable $(i,var) (see $(b,var)).";
@@ -1119,6 +1129,12 @@ let config =
     | Some `list, params ->
       (try `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
+    | Some `set, [var; value] ->
+      `Ok (Client.CONFIG.set (OpamVariable.Full.of_string var) (Some value))
+    | Some `unset, [var] ->
+      `Ok (Client.CONFIG.set (OpamVariable.Full.of_string var) None)
+    | Some `expand, [str] ->
+      `Ok (Client.CONFIG.expand str)
     | Some `var, [var] ->
       (try `Ok (Client.CONFIG.variable (OpamVariable.Full.of_string var))
        with Failure msg -> `Error (false, msg))

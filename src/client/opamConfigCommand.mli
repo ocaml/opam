@@ -34,11 +34,17 @@ val variable:  full_variable -> unit
 (** Substitute files *)
 val subst: basename list -> unit
 
+(** Prints expansion of variables in string *)
+val expand: string -> unit
+
+(** Sets or unsets switch config variables *)
+val set: full_variable -> string option -> unit
+
 (** Update the global and user configuration to use OPAM. *)
 val setup: user_config option -> global_config option -> unit
 
 (** Display the global and user configuration for OPAM. *)
 val setup_list: shell -> filename -> unit
 
-(** Execute a command in a subshell *)
+(** Execute a command in a subshell, after variable expansion *)
 val exec: inplace_path:bool -> string list -> unit
