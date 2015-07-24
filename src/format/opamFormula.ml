@@ -305,7 +305,8 @@ let to_conjunction t =
   match to_dnf t with
   | []  -> []
   | [x] -> x
-  | _   -> OpamConsole.error_and_exit "%s is not a valid conjunction" (to_string t)
+  | _   ->
+    failwith (Printf.sprintf "%s is not a valid conjunction" (to_string t))
 
 let ands l = List.fold_left make_and Empty l
 
@@ -321,7 +322,8 @@ let to_disjunction t =
   match to_cnf t with
   | []  -> []
   | [x] -> x
-  | _   -> OpamConsole.error_and_exit "%s is not a valid disjunction" (to_string t)
+  | _   ->
+    failwith (Printf.sprintf "%s is not a valid disjunction" (to_string t))
 
 let ors l = List.fold_left make_or Empty l
 

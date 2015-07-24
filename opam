@@ -8,7 +8,7 @@ authors: [
 ]
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
-dev-repo: "https://github.com/ocaml/opam"
+dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure"]
   [make]

@@ -478,25 +478,24 @@ let parse_package_version ?expected = function
   | x -> bad_format ~pos:(value_pos x) "Expected a package version"
 
 (* parse a list of formulas *)
-let rec parse_formulas opt ~constraints t =
+let rec parse_formulas join ~constraints t =
   let rec aux = function
     | String _ as t -> Atom (parse_package_name t, constraints [])
     | Option (_, t, g) -> Atom (parse_package_name t, constraints g)
-    | Group (_,g) -> Block (parse_formulas opt ~constraints (List (pos_null, g)))
+    | Group (_,g) -> Block (parse_formulas join ~constraints (List (pos_null, g)))
     | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
     | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
     | x ->
       bad_format ~pos:(value_pos x)
         "Expected a formula list of the form [ \"item\" {condition}... ]"
   in
-  OpamFormula.(if opt then ors else ands)
-    (List.map aux (lift_list t))
+  join (List.map aux (lift_list t))
 
-let rec make_formulas opt ~constraints t =
+let rec make_formulas split ~constraints t =
   let name = OpamPackage.Name.to_string in
   let rec aux = function
     | Empty             -> assert false
-    | Block f           -> Group (pos_null, lift_list (make_formulas opt ~constraints f))
+    | Block f           -> Group (pos_null, lift_list (make_formulas split ~constraints f))
     | And(e,f)          -> Logop (pos_null, `And, aux e, aux f)
     | Or(e,f)           -> Logop (pos_null, `Or, aux e, aux f)
     | Atom (n, cs)      ->
@@ -504,27 +503,22 @@ let rec make_formulas opt ~constraints t =
       | [] -> make_string (name n)
       | cs -> Option (pos_null, make_string (name n), cs)
   in
-  let to_list =
-    OpamFormula.(if opt then ors_to_list else ands_to_list) in
-  List (pos_null, List.map aux (to_list t))
+  List (pos_null, List.map aux (split t))
 
-let make_formula =
-  make_formulas false ~constraints:make_constraints
 
-let make_ext_formula =
-  make_formulas false ~constraints:make_ext_constraints
+let make_formula kind constraints t =
+  let split = match kind with
+    | `Conj -> OpamFormula.ands_to_list
+    | `Disj -> OpamFormula.ors_to_list
+  in
+  make_formulas split ~constraints t
 
-let parse_formula =
-  parse_formulas false ~constraints:parse_constraints
-
-let parse_ext_formula =
-  parse_formulas false ~constraints:parse_ext_constraints
-
-let parse_opt_formula =
-  parse_formulas true ~constraints:parse_ext_constraints
-
-let make_opt_formula =
-  make_formulas true ~constraints:make_ext_constraints
+let parse_formula kind constraints t =
+  let join = match kind with
+    | `Conj -> OpamFormula.ands
+    | `Disj -> OpamFormula.ors
+  in
+  parse_formulas join ~constraints t
 
 let parse_compiler_version = function
   | Ident (_,v)

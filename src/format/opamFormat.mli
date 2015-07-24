@@ -193,23 +193,29 @@ val parse_package_name : ?expected:name -> value -> name
 
 val parse_package_version : ?expected:version -> value -> version
 
-(** Parse package formula where AND are implicit: [x y -> x & y] *)
-val parse_formula : value -> formula
+(** Parser for version constraints in formulas *)
+val parse_constraints: value list -> OpamFormula.version_formula
 
-(** Build a formula where AND are implicit. *)
-val make_formula : formula -> value
+(** Parser for version constraints in formula with dependency flags *)
+val parse_ext_constraints:
+  value list -> package_dep_flag list * OpamFormula.version_formula
 
-(** Parse an AND formula where constraints are extended with leading keywords *)
-val parse_ext_formula : value -> ext_formula
+(** Builder for version constraints in formulas *)
+val make_constraints: OpamFormula.version_formula -> value list
 
-(** Make an AND formula where constraints are extended with leading keywords *)
-val make_ext_formula : ext_formula -> value
+(** Builder for version constraints in formula with dependency flags *)
+val make_ext_constraints:
+  package_dep_flag list * OpamFormula.version_formula -> value list
 
-(** Parse optional package formula where OR are implicit: [x y -> x | y] *)
-val parse_opt_formula : value -> ext_formula
+(** Parse package formula as a [`Conj]unction or [`Disj]unction, using the given
+    parser for constraints *)
+val parse_formula :
+  [`Conj | `Disj] -> (value list -> 'a) -> value -> (name * 'a) generic_formula
 
-(** Build a formula where OR are implicit. *)
-val make_opt_formula : ext_formula -> value
+(** Build a formula as a [`Conj]unction or [`Disj]unction, building constraints
+    with the given function *)
+val make_formula :
+  [`Conj | `Disj] -> ('a -> value list) -> (name * 'a) generic_formula -> value
 
 (** Parse compiler versions *)
 val parse_compiler_version: value -> compiler_version
