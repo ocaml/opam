@@ -71,17 +71,24 @@ let parse_url (s,c) =
   | "git" -> (s,c), `git
   | "hg" -> (s,c), `hg
   | _ ->
-    match Re_str.bounded_split (Re_str.regexp_string "://") s 2 with
+    let urlsplit = "://" in
+    match Re_str.bounded_split (Re_str.regexp_string urlsplit) s 2 with
     | ["file"|"rsync"|"ssh"|"scp"|"sftp"; address] ->
       (* strip the leading xx:// *)
       (address,c), `local
     | [proto; address] ->
-      (* keep the leading xx:// *)
       (match OpamStd.String.cut_at proto '+' with
        | Some (proto1,proto2) ->
-         (proto2^"://"^address, c), url_kind_of_string proto1
+         (proto2^urlsplit^address, c), url_kind_of_string proto1
        | None ->
-         (s,c), url_kind_of_string proto)
+         let addr = match proto with
+           | "git" -> s (* git:// urls legit *)
+           | _ ->
+             if Re_str.string_match (Re_str.regexp (".*"^urlsplit)) address 0
+             then address
+             else "http://" ^ address (* assume http transport by default *)
+         in
+         (addr,c), url_kind_of_string proto)
     | [address] -> (address,c), `local
     | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
 
