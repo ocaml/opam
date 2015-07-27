@@ -85,6 +85,12 @@ module API: sig
     (** Display variables and their contents. *)
     val list: name list -> unit
 
+    (** Sets or unsets a global switch variable *)
+    val set: full_variable -> string option -> unit
+
+    (** Prints the variable expansion of the given string *)
+    val expand: string -> unit
+
     (** Display a given variable content. *)
     val variable: full_variable -> unit
 

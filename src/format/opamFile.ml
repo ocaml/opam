@@ -2192,6 +2192,12 @@ module X = struct
       try Some (List.assoc s t)
       with Not_found -> None
 
+    let set t k v =
+      let t = List.remove_assoc k t in
+      match v with
+      | Some v -> (k,v) :: t
+      | None -> t
+
   end
 
   module Comp = struct

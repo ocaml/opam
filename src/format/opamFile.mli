@@ -479,6 +479,10 @@ module Dot_config: sig
   (** Lists all the bindings in the file *)
   val bindings: t -> (variable * variable_contents) list
 
+  (** Sets the given variable, overriding any previous definition.
+      With [None], unsets the variable*)
+  val set: t -> variable -> variable_contents option -> t
+
 end
 
 (** {2 Repository files} *)

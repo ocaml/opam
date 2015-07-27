@@ -1867,6 +1867,12 @@ module SafeAPI = struct
     let list names =
       read_lock (fun () -> API.CONFIG.list names)
 
+    let set var value =
+      switch_lock (fun () -> API.CONFIG.set var value)
+
+    let expand str =
+      read_lock (fun () -> API.CONFIG.expand str)
+
     let variable var =
       read_lock (fun () -> API.CONFIG.variable var)
 

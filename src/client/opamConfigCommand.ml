@@ -151,6 +151,38 @@ let subst fs =
     (OpamFilter.expand_interpolations_in_file (OpamState.filter_env t))
     fs
 
+let expand str =
+  log "config-expand";
+  let t = OpamState.load_state "config-expand"
+      OpamStateConfig.(!r.current_switch) in
+  OpamConsole.msg "%s\n"
+    (OpamFilter.expand_string (OpamState.filter_env t) str)
+
+let set var value =
+  if not (OpamVariable.Full.is_global var) then
+    OpamConsole.error_and_exit
+      "Only global variables may be set using this command";
+  let var = OpamVariable.Full.variable var in
+  let config_f =
+    OpamPath.Switch.global_config
+      OpamStateConfig.(!r.root_dir) OpamStateConfig.(!r.current_switch)
+  in
+  let config = OpamFile.Dot_config.read config_f in
+  let oldval = OpamFile.Dot_config.variable config var in
+  let newval = OpamStd.Option.map (fun s -> S s) value in
+  if oldval = newval then
+    OpamConsole.note "No change for \"%s\"" (OpamVariable.to_string var)
+  else
+    let () = match oldval, newval with
+      | Some old, Some _ ->
+        OpamConsole.note "Overriding value of \"%s\": was \"%s\""
+          (OpamVariable.to_string var)
+          (OpamVariable.string_of_variable_contents old)
+      | _ -> ()
+    in
+    OpamFile.Dot_config.write config_f
+      (OpamFile.Dot_config.set config var newval)
+
 let quick_lookup v =
   if OpamVariable.Full.is_global v then (
     let var = OpamVariable.Full.variable v in
@@ -198,7 +230,8 @@ let exec ~inplace_path command =
   let t = OpamState.load_state "config-exec"
       OpamStateConfig.(!r.current_switch) in
   let cmd, args =
-    match command with
+    match List.map (OpamFilter.expand_string (OpamState.filter_env t)) command
+    with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let env =
