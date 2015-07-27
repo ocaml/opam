@@ -49,13 +49,14 @@ system or OCaml version -- `opam install PACKAGE` will give you the reason.
 
 ## Before you get started: "external solvers"
 
-Resolving package installations in the presence of dependencies and conflicts is
-known to be an
-[NP-complete problem](https://hal.archives-ouvertes.fr/file/index/docid/149566/filename/ase.pdf).
-Thankfully, a big effort has already been put into solving it very efficiently:
-OPAM relies on this effort and delegates the solving process to _external
-solvers_. Make sure you have one of those installed on your system for best
-results:
+Resolving package installations in the presence of dependencies and
+conflicts is known to be an [NP-complete
+problem](https://hal.archives-ouvertes.fr/file/index/docid/149566/filename/ase.pdf).
+Thankfully, a big effort has already been put into solving it very
+efficiently: OPAM relies on this effort and delegates the solving
+process to _external solvers_. OPAM integrates a simple solver, so it
+can used without any extra dependencies, but for best results you
+should have one of those solvers on your system:
 
 - aspcud (recommended)
 - packup
@@ -63,17 +64,20 @@ results:
   solver configuration string: `mccs -i %{input}% -o %{output}%
   -lexagregate[%{criteria}%]`.)
 
-We recommend installing one through your packaging system whenever possible:
-this should already have been taken care of if you installed OPAM through there.
-Without one of those, OPAM will fall back to some internal heuristics, but they
-may not give the best results, in particular for complex upgrades.
+We recommend installing one through your packaging system whenever
+possible: this should already have been taken care of if you installed
+OPAM through your packaging system. If you have trouble installing an
+external solver and have reliable network connectivity,
+[Irill](http://www.irill.org/) kindly provides a ["Solver
+farm"](http://cudf-solvers.irill.org/) which can be used as a remote
+solver by OPAM.
 
-As one of them may not always be available, for those with reliable
-connectivity, the [Irill](http://www.irill.org/) kindly provides a
-["Solver farm"](http://cudf-solvers.irill.org/) which can be used as a remote solver by OPAM.
+If you use the internal solver only, the following symptoms may be
+sign that you need an external solver: very bad upgrade proposals, or
+dependency solving becoming very slow.
 
-External solvers also allow
-[fine-grained preferences](Specifying_Solver_Preferences.html).
+External solvers also allow to specify [fine-grained
+preferences](Specifying_Solver_Preferences.html).
 
 
 ## Details on commands
