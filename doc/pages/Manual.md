@@ -66,20 +66,25 @@ can be combined with binary AND `&` and OR `|`, and prefix NOT `!`. The allowed
 relational operators are `=`, `!=`, `<`, `<=`, `>` and `>=`, and their meaning
 is defined by Version Ordering.
 
-> **Version Ordering** follows the basics of the
-> [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version):
+> <a id="version-ordering">**Version Ordering**</a> follows the basics of the
+> [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version).
+>
+> It is basically "lexicographical order, with numbers handled properly". In
+> more detail:
 >
 > - version strings are sliced into alternate, possibly empty non-digit / digit
->   sequences, always starting with a non-digit sequence.
+>   sequences, always starting with a non-digit sequence. `1.0~beta2` is thus
+>   `["";1;".";0;"~beta";2]`.
 > - those are sorted lexicographically, using resp. ASCII (with symbol > letter)
 >   and number order. For example `a` gives `["a"]`, and `1` gives `["";1]`, so
 >  `a` is latest (`"" < "a"`).
-> - the `~` character is special as it sorts even before the end of sequence.
+> - the `~` character is special as it sorts even before the end of sequence
+>   (_i.e._ before anything shorter: "~" sorts before "", "a~b" before "a").
 >   It's most convenient for pre-releases, allowing `1.0~beta` to be before
 >   `1.0`.
 >
 > Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`,
-> `0.1`, `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`
+> `0.1`, `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`.
 
 Here is a full example:
 
