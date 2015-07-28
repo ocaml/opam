@@ -242,6 +242,9 @@ let download_package t nv =
         let dir = OpamPath.dev_package t.root nv in
         OpamState.download_upstream t nv dir @@| of_dl
   in
+  (* let extras = *)
+  (*   List.map (fun (url,checksum,fname) -> *)
+  (*       OpamDownload.download_as ~checksum  *)
   OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
 
 let extract_package t source nv =
