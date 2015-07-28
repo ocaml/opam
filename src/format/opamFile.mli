@@ -182,6 +182,8 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
+  val extra_sources: t -> (address * string * basename option) list
+
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
 
@@ -307,6 +309,8 @@ module OPAM: sig
   val with_flags: t -> package_flag list -> t
 
   val with_dev_repo: t -> pin_option option -> t
+
+  val with_extra_sources: t -> (address * string * basename option) list -> t
 
   val with_extensions: t -> value OpamStd.String.Map.t -> t
 
