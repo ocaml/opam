@@ -76,7 +76,7 @@ module Config: sig
 
   val with_criteria: t -> (solver_criteria * string) list -> t
 
-  val with_solver: t -> arg list option -> t
+  val with_solver: t -> arg list -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -131,9 +131,6 @@ module OPAM: sig
 
   (** Utility function to print validation results *)
   val warns_to_string: (int * [`Warning|`Error] * string) list -> string
-
-  (** Returns true if the given OPAM file contains 'name' or 'version' fields *)
-  val is_explicit: filename -> bool
 
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
@@ -288,7 +285,9 @@ module OPAM: sig
   val with_substs : t -> basename list -> t
 
   (** Construct as [compiler_version] *)
-  val with_ocaml_version: t -> compiler_constraint option -> t
+  val with_ocaml_version: t -> compiler_constraint -> t
+
+  val with_ocaml_version_opt: t -> compiler_constraint option -> t
 
   val with_os: t -> (bool * string) generic_formula -> t
 
@@ -304,20 +303,17 @@ module OPAM: sig
   val with_bug_reports: t -> string list -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: t -> tags option -> t
+  val with_depexts: t -> tags -> t
 
   val with_flags: t -> package_flag list -> t
 
-  val with_dev_repo: t -> pin_option option -> t
+  val with_dev_repo: t -> pin_option -> t
 
   val with_extra_sources: t -> (address * string * basename option) list -> t
 
   val with_extensions: t -> value OpamStd.String.Map.t -> t
 
   val add_extension: t -> string -> value -> t
-
-  (** Convert to OPAM 1.0 *)
-  val to_1_0: file -> file
 
 end
 
@@ -511,7 +507,7 @@ module Repo: sig
   include IO_FILE
 
   val create:
-    ?browse:string -> ?upstream:string -> ?opam_version:string ->
+    ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
     ?redirect:(string * filter option) list -> unit -> t
 
   (** The minimum OPAM version required for this repository *)
@@ -555,12 +551,6 @@ end
 
 (** {2 urls.txt file *} *)
 module File_attributes: IO_FILE with type t = file_attribute_set
-
-(** List of filenames *)
-module Filenames: IO_FILE with type t = filename_set
-
-(** Prefix of package directories *)
-module Prefix: IO_FILE with type t = string name_map
 
 (** Display statistics about file access. *)
 val print_stats: unit -> unit

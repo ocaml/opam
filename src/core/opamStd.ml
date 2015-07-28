@@ -24,6 +24,8 @@ module type SET = sig
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  val safe_add: elt -> t -> t
+
   module Op : sig
     val (++): t -> t -> t
     val (--): t -> t -> t
@@ -38,6 +40,7 @@ module type MAP = sig
   val values: 'a t -> 'a list
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
+  val safe_add: key -> 'a -> 'a t -> 'a t
 end
 module type ABSTRACT = sig
   type t
@@ -164,6 +167,10 @@ module Set = struct
       let (%%) = inter
     end
 
+    let safe_add elt t =
+      if mem elt t
+      then failwith (Printf.sprintf "duplicate entry %s" (O.to_string elt))
+      else add elt t
   end
 
 end
@@ -226,6 +233,11 @@ module Map = struct
         ) bindings in
       `A jsons
 
+    let safe_add k v map =
+      if mem k map
+      then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
+      else add k v map
+
   end
 
 end
@@ -284,6 +296,12 @@ module Option = struct
   let to_string ?(none="") f = function
     | Some x -> f x
     | None -> none
+
+  let some x = Some x
+  let none _ = None
+
+  let of_Not_found f x =
+    try Some (f x) with Not_found -> None
 
   module Op = struct
     let (>>=) = function

@@ -415,10 +415,13 @@ It has the following fields:
 - One of <a id="urlfield-src">`src: <string>`</a> or
   <a id="urlfield-archive">`archive: <string>`</a>,
   specifying the URL where the package can be downloaded from. When using HTTP
-  or FTP, this should be an archive. The older alternative field names <a
-  id="urlfield-http">`http:`</a>, <a id="urlfield-local">`local:`</a>, <a
-  id="urlfield-git">`git:`</a>, <a id="urlfield-hg">`hg:`</a> and <a
-  id="urlfield-darcs">`darcs:`</a> are deprecated, prefer explicit URLs.
+  or FTP, this should be an archive. The older alternative field names
+  <a id="urlfield-http">`http:`</a>,
+  <a id="urlfield-local">`local:`</a>,
+  <a id="urlfield-git">`git:`</a>,
+  <a id="urlfield-hg">`hg:`</a> and
+  <a id="urlfield-darcs">`darcs:`</a>
+  are deprecated, prefer explicit URLs.
 
     On the official repository, this should always point to a stable archive
     over HTTP or FTP.
@@ -704,6 +707,13 @@ recommended to check the validity and quality of your `opam` files.
       auto-installed and run with `opam <name>` (since OPAM 1.2.2 ; the use is
       discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
       instead)
+    - <a id="opamflag-compiler">`compiler`</a>:
+      the package is to be treated as a compiler, and available through the
+      `opam switch` command. This as several consequences:
+      - when installed this way, the package and all its dependencies will be
+        immutable and excluded from `opam switch rebuild`
+      - the package _must_ include or generate a `global-config.config` file at its root
+      - 
 
 - <a id="opamfield-features">
   `features: [ <ident> <string> { <filter> } ... ]`</a> (EXPERIMENTAL):

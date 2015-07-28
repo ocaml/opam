@@ -259,7 +259,7 @@ module Attribute: sig
   val perm: t -> int option
 
   (** Constructor*)
-  val create: Base.t -> string -> int -> t
+  val create: Base.t -> string -> int option -> t
 
 end
 
