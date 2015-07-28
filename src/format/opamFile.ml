@@ -1039,6 +1039,7 @@ module X = struct
       post_messages: (string * filter option) list;
       flags      : package_flag list;
       dev_repo   : pin_option option;
+      extra_sources: (address * string * basename option) list;
       extensions  : (pos * value) OpamStd.String.Map.t;
     }
 
@@ -1075,6 +1076,7 @@ module X = struct
       bug_reports = [];
       flags      = [];
       dev_repo   = None;
+      extra_sources = [];
       extensions  = OpamStd.String.Map.empty;
     }
 
@@ -1117,6 +1119,7 @@ module X = struct
     let s_bug_reports = "bug-reports"
     let s_flags       = "flags"
     let s_dev_repo    = "dev-repo"
+    let s_extra_sources = "extra-sources"
     let ext_field_prefix = "x-"
     let is_ext_field = OpamStd.String.starts_with ~prefix:ext_field_prefix
 
@@ -1163,8 +1166,13 @@ module X = struct
       s_features;
     ]
 
+    let opam_1_3_fields = [
+      s_extra_sources;
+    ]
+
     let to_1_0_fields k v =
-      if List.mem k opam_1_1_fields || List.mem k opam_1_2_fields then
+      if List.mem k opam_1_1_fields || List.mem k opam_1_2_fields
+         || List.mem k opam_1_3_fields then
         if k = s_author then Some (s_authors, v)
         else None
       else if k = s_maintainer || k = s_homepage || k = s_license then
@@ -1178,7 +1186,7 @@ module X = struct
       Syntax.to_1_0 file
 
     let valid_fields =
-      opam_1_0_fields @ opam_1_1_fields @ opam_1_2_fields
+      opam_1_0_fields @ opam_1_1_fields @ opam_1_2_fields @ opam_1_3_fields
 
     let check name = function
       | None    ->
@@ -1235,6 +1243,7 @@ module X = struct
       (* Allow in tags for compatibility *)
       List.mem ("flags:"^OpamFormat.(parse_ident (make_flag f))) t.tags
     let dev_repo t = t.dev_repo
+    let extra_sources t = t.extra_sources
     let extensions t = OpamStd.String.Map.map snd t.extensions
     let extended t fld parse =
       if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.extended";
@@ -1270,6 +1279,7 @@ module X = struct
     let with_post_messages t post_messages = { t with post_messages }
     let with_flags t flags = { t with flags }
     let with_dev_repo t dev_repo = {t with dev_repo }
+    let with_extra_sources t extra_sources = {t with extra_sources }
     let with_extensions t extensions =
       if not (OpamStd.String.Map.for_all (fun k _ -> is_ext_field k) extensions)
       then invalid_arg "OpamFile.OPAM.with_extensions";
@@ -1307,6 +1317,13 @@ module X = struct
           option t.version s_version
             (OpamPackage.Version.to_string @> OpamFormat.make_string)
       in
+      let extra_source (url,hash,fname) = OpamFormat.(
+          make_pair
+            (make_option (string_of_address @> make_string)
+               (OpamFilename.Base.to_string @> (fun x -> [make_string x])))
+            make_string
+            ((url,fname),hash)
+        ) in
       let s = {
         file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
@@ -1349,6 +1366,7 @@ module X = struct
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
+          @ listm   t.extra_sources s_extra_sources extra_source
           @ OpamStd.String.Map.fold (fun fld (_,syn) acc ->
               OpamFormat.make_variable (fld, syn) :: acc) t.extensions []
       } in
@@ -1562,6 +1580,17 @@ module X = struct
             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v)
               "Unrecognised version-control address")
       in
+      let extra_sources =
+        assoc_list s s_extra_sources OpamFormat.(
+            parse_list
+              (parse_pair
+                 (parse_single_option
+                    (parse_string @> address_of_string)
+                    (parse_string @> OpamFilename.Base.of_string))
+                 parse_string
+               @> fun ((url,fname),hash) -> url, hash, fname)
+          )
+      in
       let extensions =
         List.fold_left (fun acc -> function
             | Variable (pos,fld,v)
@@ -1575,7 +1604,7 @@ module X = struct
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
-        bug_reports; flags; dev_repo; extensions;
+        bug_reports; flags; dev_repo; extra_sources; extensions;
       }
 
     let of_channel filename ic =
