@@ -130,7 +130,7 @@ module X = struct
 
     (* Prints warnings or fails in strict mode; returns true if permissive mode
        is enabled *)
-    let check ?allow_major ?(versioned=true) ?allow_extended =
+    let check ?allow_major ?(versioned=true) ?allow_extensions =
       fun f fields ->
         if not OpamFormatConfig.(!r.strict) && not (OpamConsole.debug ())
         then true
@@ -160,7 +160,7 @@ module X = struct
         if not permissive_mode &&
            not (OpamFormat.is_valid f.file_contents fields) then
           let invalids =
-            OpamFormat.invalid_fields ?allow_extended f.file_contents fields
+            OpamFormat.invalid_fields ?allow_extensions f.file_contents fields
           in
           let too_many, invalids =
             List.partition (fun x -> List.mem x fields) invalids
@@ -1039,7 +1039,7 @@ module X = struct
       post_messages: (string * filter option) list;
       flags      : package_flag list;
       dev_repo   : pin_option option;
-      extension  : (pos * value) OpamStd.String.Map.t;
+      extensions  : (pos * value) OpamStd.String.Map.t;
     }
 
     let empty = {
@@ -1075,7 +1075,7 @@ module X = struct
       bug_reports = [];
       flags      = [];
       dev_repo   = None;
-      extension  = OpamStd.String.Map.empty;
+      extensions  = OpamStd.String.Map.empty;
     }
 
     let create nv =
@@ -1235,11 +1235,11 @@ module X = struct
       (* Allow in tags for compatibility *)
       List.mem ("flags:"^OpamFormat.(parse_ident (make_flag f))) t.tags
     let dev_repo t = t.dev_repo
-    let extension t = OpamStd.String.Map.map snd t.extension
+    let extensions t = OpamStd.String.Map.map snd t.extensions
     let extended t fld parse =
-      if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
+      if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.extended";
       try
-        let pos, s = OpamStd.String.Map.find fld t.extension in
+        let pos, s = OpamStd.String.Map.find fld t.extensions in
         (try Some (parse s) with
          | OpamFormat.Bad_format _ as e -> raise (OpamFormat.add_pos pos e))
       with Not_found -> None
@@ -1270,15 +1270,15 @@ module X = struct
     let with_post_messages t post_messages = { t with post_messages }
     let with_flags t flags = { t with flags }
     let with_dev_repo t dev_repo = {t with dev_repo }
-    let with_extension t extension =
-      if not (OpamStd.String.Map.for_all (fun k _ -> is_ext_field k) extension)
-      then invalid_arg "OpamFile.OPAM.with_extension";
+    let with_extensions t extensions =
+      if not (OpamStd.String.Map.for_all (fun k _ -> is_ext_field k) extensions)
+      then invalid_arg "OpamFile.OPAM.with_extensions";
       {t with
-       extension = OpamStd.String.Map.map (fun s -> pos_null, s) extension }
+       extensions = OpamStd.String.Map.map (fun s -> pos_null, s) extensions }
     let add_extension t fld syn =
       if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
       {t with
-       extension = OpamStd.String.Map.add fld (pos_null,syn) t.extension }
+       extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
 
     let to_string filename t =
       let make_file =
@@ -1350,7 +1350,7 @@ module X = struct
           @ list    t.flags         s_flags
               OpamFormat.(make_list make_flag)
           @ OpamStd.String.Map.fold (fun fld (_,syn) acc ->
-              OpamFormat.make_variable (fld, syn) :: acc) t.extension []
+              OpamFormat.make_variable (fld, syn) :: acc) t.extensions []
       } in
       Syntax.to_string s
 
@@ -1562,7 +1562,7 @@ module X = struct
             OpamFormat.bad_format ~pos:(OpamFormat.value_pos v)
               "Unrecognised version-control address")
       in
-      let extension =
+      let extensions =
         List.fold_left (fun acc -> function
             | Variable (pos,fld,v)
               when OpamStd.String.starts_with ~prefix:"x-" fld ->
@@ -1575,19 +1575,19 @@ module X = struct
         patches; ocaml_version; os; available; build_env;
         homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
-        bug_reports; flags; dev_repo; extension;
+        bug_reports; flags; dev_repo; extensions;
       }
 
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
       let f = Syntax.of_channel filename ic in
-      let permissive = Syntax.check ~allow_extended:true f valid_fields in
+      let permissive = Syntax.check ~allow_extensions:true f valid_fields in
       of_syntax ~permissive f nv
 
     let of_string filename str =
       let nv = OpamPackage.of_filename filename in
       let f = Syntax.of_string filename str in
-      let permissive = Syntax.check ~allow_extended:true f valid_fields in
+      let permissive = Syntax.check ~allow_extensions:true f valid_fields in
       of_syntax ~permissive f nv
 
     let template nv =
@@ -1858,7 +1858,7 @@ module X = struct
         try
           let f, name, version = reader filename in
           let invalid_fields =
-            OpamFormat.invalid_fields ~allow_extended:true
+            OpamFormat.invalid_fields ~allow_extensions:true
               f.file_contents valid_fields
           in
           let warnings =

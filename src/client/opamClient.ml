@@ -79,7 +79,7 @@ let details_of_package t name versions =
   let extension = lazy (
     OpamStd.String.Map.fold (fun fld v acc ->
         (fld, OpamFormat.string_of_value v) :: acc)
-      (OpamFile.OPAM.extension opam) []
+      (OpamFile.OPAM.extensions opam) []
     |> List.rev) in
   let others = lazy (
     match OpamState.repository_and_prefix_of_package t nv with
