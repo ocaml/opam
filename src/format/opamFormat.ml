@@ -712,6 +712,7 @@ let make_flag = function
   | Pkgflag_AllSwitches -> make_ident "all-switches"
   | Pkgflag_Verbose -> make_ident "verbose"
   | Pkgflag_Plugin -> make_ident "plugin"
+  | Pkgflag_Compiler -> make_ident "compiler"
   | Pkgflag_Unknown s -> make_ident s
 
 let parse_flag = function
@@ -719,6 +720,7 @@ let parse_flag = function
   | Ident (_,"all-switches") -> Pkgflag_AllSwitches
   | Ident (_,"verbose") -> Pkgflag_Verbose
   | Ident (_,"plugin") -> Pkgflag_Plugin
+  | Ident (_,"compiler") -> Pkgflag_Compiler
   | Ident (_,s) -> Pkgflag_Unknown s
   | x ->
     bad_format ~pos:(value_pos x)
