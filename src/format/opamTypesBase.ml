@@ -36,15 +36,6 @@ let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d
   | F f -> OpamFilename.to_string f
 
-let string_of_address = function
-  | url, None   -> url
-  | url, Some c -> Printf.sprintf "%s#%s" url c
-
-let address_of_string str =
-  match OpamStd.String.cut_at str '#' with
-  | None       -> OpamSystem.real_path str, None
-  | Some (a,c) -> OpamSystem.real_path a, Some c
-
 let guess_version_control dir =
   let open OpamFilename in
   let open Op in
@@ -53,62 +44,96 @@ let guess_version_control dir =
   if exists_dir (dir / "_darcs") then Some `darcs else
     None
 
-let parse_url (s,c) =
-  let url_kind_of_string = function
-    | "http" | "https" | "ftp" -> `http
-    | "file" -> `local
-    | "git" -> `git
-    | "darcs" -> `darcs
-    | "hg" -> `hg
-    | "rsync" | "ssh" | "scp" | "sftp" -> `local
-    | p -> raise (Invalid_argument (Printf.sprintf "Unsupported protocol %s" p))
-  in
-  let suffix =
-    try let n = String.rindex s '.' in String.sub s (n+1) (String.length s-n-1)
-    with Not_found -> ""
-  in
-  match suffix with
-  | "git" -> (s,c), `git
-  | "hg" -> (s,c), `hg
-  | _ ->
-    let urlsplit = "://" in
-    match Re_str.bounded_split (Re_str.regexp_string urlsplit) s 2 with
-    | ["file"|"rsync"|"ssh"|"scp"|"sftp"; address] ->
-      (* strip the leading xx:// *)
-      (address,c), `local
-    | [proto; address] ->
-      (match OpamStd.String.cut_at proto '+' with
-       | Some (proto1,proto2) ->
-         (proto2^urlsplit^address, c), url_kind_of_string proto1
-       | None ->
-         let addr = match proto with
-           | "git" -> s (* git:// urls legit *)
-           | _ ->
-             if Re_str.string_match (Re_str.regexp (".*"^urlsplit)) address 0
-             then address
-             else "http://" ^ address (* assume http transport by default *)
-         in
-         (addr,c), url_kind_of_string proto)
-    | [address] -> (address,c), `local
-    | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
+let url_kind_of_string = function
+  | "http" | "https" | "ftp" | "wget" | "curl" -> `http
+  | "file" -> `local
+  | "git" -> `git
+  | "darcs" -> `darcs
+  | "hg" -> `hg
+  | "local" | "rsync" | "ssh" | "scp" | "sftp" -> `local
+  | p -> failwith (Printf.sprintf "Unsupported protocol %s" p)
 
-let string_of_repository_kind = function
+let string_of_url_kind = function
   | `http  -> "http"
-  | `local -> "local"
+  | `local -> "file"
   | `git   -> "git"
   | `darcs -> "darcs"
   | `hg    -> "hg"
 
-let repository_kind_of_string = function
-  | "wget"
-  | "curl"
-  | "http"  -> `http
-  | "rsync"
-  | "local" -> `local
-  | "git"   -> `git
-  | "darcs" -> `darcs
-  | "hg"    -> `hg
-  | s -> OpamConsole.error_and_exit "%s is not a valid repository kind." s
+let split_url =
+  let re =
+    let (@@) f x = f x in
+    Re.(compile @@ seq [
+        opt @@ seq [
+          opt @@ seq [group @@ rep1 @@ diff any (set "+:"); char '+'];
+          group @@ rep1 @@ diff any (char ':');
+          str "://"
+        ];
+        group @@ seq [
+          non_greedy @@ rep1 any;
+          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (char '.')]
+        ];
+        eos;
+      ])
+  in
+  fun u ->
+    match Re.get_all (Re.exec re u) with
+    | [|_;vc;transport;path;suffix|] ->
+      let opt = function "" -> None | s -> Some s in
+      opt vc, opt transport, path, opt suffix
+    | _ -> assert false
+
+let string_of_address ?kind (url,hash) =
+  let url =
+    match kind with
+    | None -> url
+    | Some k ->
+      match split_url url with
+      | Some v, _, _, _ | None, Some v, _, _ when url_kind_of_string v = k ->
+        url
+      | _, Some t, path, _ ->
+        Printf.sprintf "%s+%s://%s" (string_of_url_kind k) t path
+      | _, None, _, _ ->
+        Printf.sprintf "%s://%s" (string_of_url_kind k) url
+  in
+  match hash with
+  | None -> url
+  | Some c -> Printf.sprintf "%s#%s" url c
+
+let address_of_string str =
+  let addr, hash =
+    match OpamStd.String.cut_at str '#' with
+    | None -> str, None
+    | Some (addr,hash) -> addr, Some hash
+  in
+  match split_url addr with
+  | _, Some vc, _, _ when url_kind_of_string vc <> `local -> addr, hash
+  | _, Some local, path, _ ->
+    Printf.sprintf "%s://%s" local (OpamSystem.real_path path), hash
+  | _, None, path, _ -> OpamSystem.real_path path, hash
+
+let parse_url (s,c) =
+  match split_url s with
+  | Some vc, Some transport, path, _ ->
+    (Printf.sprintf "%s://%s" transport path, c), url_kind_of_string vc
+  | None, Some "git", _, _ ->
+    (s,c), `git
+  | None, _, _, Some ("git"|"hg"|"darcs" as suffix) ->
+    (s,c), url_kind_of_string suffix
+  | None, Some("file"|"rsync"|"ssh"|"scp"|"sftp"), path, _ ->
+    (path, c), `local (* strip the leading xx:// *)
+  | None, Some t, path, _ ->
+    let kind = url_kind_of_string t in
+    (match split_url path with
+     | _, Some _, _, _ -> (path,c), kind
+     | _, None, _, _ -> ("http://" ^ path, c), kind) (* assume http transport *)
+  | None, None, _, _ ->
+    (s, c), `local
+  | Some _, None, _, _ -> assert false
+
+let string_of_repository_kind = string_of_url_kind
+
+let repository_kind_of_string = url_kind_of_string
 
 let string_of_shell = function
   | `fish -> "fish"

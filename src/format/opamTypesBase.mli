@@ -34,8 +34,9 @@ val string_of_download: _ download -> string
 
 val string_of_generic_file: generic_file -> string
 
-(** Print an address *)
-val string_of_address: address -> string
+(** Print an address. With [~kind], makes the kind of address unambiguous
+    (suitable for re-parsing, but not for passing to some external commands) *)
+val string_of_address: ?kind:repository_kind -> address -> string
 
 (** Parse an address *)
 val address_of_string: string -> address
@@ -46,7 +47,7 @@ val address_of_string: string -> address
 val parse_url: address -> address * repository_kind
 
 (** Scan the given directory for version control *)
-val guess_version_control: dirname -> [`git|`hg|`darcs] option
+val guess_version_control: dirname -> version_control option
 
 (** Pretty-print repository kinds. *)
 val string_of_repository_kind: repository_kind -> string
