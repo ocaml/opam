@@ -175,8 +175,11 @@ type repository_name = OpamRepositoryName.t
 (** Maps of repository names *)
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-(** Repository kind *)
-type repository_kind = [`http|`local|`git|`darcs|`hg]
+type version_control = [ `git | `darcs | `hg ]
+
+type url_kind = [ `http | `local | version_control ]
+
+type repository_kind = url_kind
 
 (** Repository address *)
 type address = string * string option
@@ -312,7 +315,7 @@ type pin_option =
   | Http of address
 
 (** Pin kind *)
-type pin_kind = [`version|`http|`git|`darcs|`hg|`local]
+type pin_kind = [ `version | url_kind ]
 
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]

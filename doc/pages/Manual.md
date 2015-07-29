@@ -217,9 +217,17 @@ sources, they may be:
 - raw local filesystem paths
 - ssh addresses `user@host:path`
 - URLs of the form `http://`, `https://`, `ftp://`, `ssh://`, `file://`, `rsync://`
-- Version control URLs for git, mercurial and darcs: `git://`, `hg://`, `darcs://`
+- Version control URLs for git, mercurial and darcs: `git://`, `hg://`,
+  `darcs://`. This assumes http transport for `hg` and `darcs`, _i.e._
+  `hg://` is short for `hg+http://`
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g. `git://`,
   `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in OPAM 1.2.1)
+
+> Backwards-compatibility note: to allow unambiguous urls, e.g. for the
+> `dev-repo` field, without triggering a failure on OPAM 1.2.0, you should use
+> the compatible syntax `<vc>://<scheme>://`, e.g. `hg://https://` at the
+> moment. This will get rewritten to the nicer `<vc>+<scheme>://` in the next
+> repository format upgrade.
 
 In addition, version control URLs may be suffixed with the `#` character and a
 reference name (branch, commit, HEAD...): `git://foo.com/git/bar#master`,
