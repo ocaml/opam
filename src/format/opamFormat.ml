@@ -33,7 +33,7 @@ let bad_format ?pos fmt =
     fmt
 
 let add_pos pos = function
-  | Bad_format (p,btl,msg) ->
+  | Bad_format (None,btl,msg) ->
     let backtrace = Printexc.get_backtrace () in
     Bad_format (Some pos, backtrace::btl, msg)
   | e -> e
@@ -60,6 +60,11 @@ let string_of_bad_format ?file e =
 
 let item_pos = function
   | Section (pos,_) | Variable (pos,_,_) -> pos
+
+
+let items_pos = function
+  | i::_ -> Some (item_pos i)
+  | [] -> None
 
 let protect_item f item =
   try f item with e ->

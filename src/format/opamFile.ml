@@ -283,11 +283,11 @@ module X = struct
 
     let pp =
       Pp.check_fields fields ++
-      Pp.fields ~empty fields ++
+      Pp.fields ~name:"url-file" ~empty fields ++
       Pp.check (fun t -> t.url <> empty_url) "Missing URL"
 
     let of_syntax _ s =
-      pp.Pp.parse s.file_contents
+      Pp.parse pp s.file_contents
 
     let of_channel filename ic =
       of_syntax filename (Syntax.of_channel filename ic)
@@ -299,7 +299,7 @@ module X = struct
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
-        file_contents = pp.Pp.print t;
+        file_contents = Pp.print pp t;
       } in
       Syntax.to_string s
 
@@ -563,7 +563,8 @@ module X = struct
       Pp.ppacc
         (fun r repo_name -> {r with repo_name})
         (fun r -> r.repo_name)
-      @@ Pp.string ++ OpamRepositoryName.(Pp.pp of_string to_string);
+      @@ Pp.string ++
+         OpamRepositoryName.(Pp.pp ~name:"repository-name" of_string to_string);
       "address",
       Pp.ppacc
         (fun r (repo_address,_kind) -> {r with repo_address})
@@ -573,37 +574,34 @@ module X = struct
       Pp.ppacc
         (fun r repo_kind -> {r with repo_kind})
         (fun r -> r.repo_kind)
-      @@ Pp.string ++ Pp.pp repository_kind_of_string string_of_repository_kind;
+      @@ Pp.string ++
+         Pp.pp ~name:"repository-kind"
+           repository_kind_of_string string_of_repository_kind;
       "priority",
       Pp.ppacc
-        (fun r priority -> {r with priority})
-        (fun r -> r.priority)
+        (fun r repo_priority -> {r with repo_priority})
+        (fun r -> r.repo_priority)
       @@ Pp.int;
       "root",
       Pp.ppacc
-        (fun r root -> {r with root})
-        (fun r -> r.root)
-      @@ Pp.string ++ OpamFilename.(Pp.pp raw_dir Dir.to_string)
+        (fun r repo_root -> {r with repo_root})
+        (fun r -> r.repo_root)
+      @@ Pp.string ++
+         OpamFilename.(Pp.pp ~name:"directory" raw_dir Dir.to_string)
     ]
 
+    let pp =
+      Pp.check_fields fields ++
+      Pp.fields ~name:"repo-file" ~empty fields ++
+      Pp.check (fun r -> r.repo_root <> empty.repo_root)
+        "Missing 'root:'" ++
+      Pp.check (fun r -> r.repo_address <> empty.repo_address)
+        "Missing 'address:'" ++
+      Pp.check (fun r -> r.repo_name <> empty.repo_name)
+        "Missing 'name:'"
+
     let of_syntax _ s =
-      let repo_name =
-        OpamFormat.assoc s.file_contents s_name
-          (OpamFormat.parse_string @> OpamRepositoryName.of_string) in
-      let repo_address =
-        OpamFormat.assoc s.file_contents s_address
-          (OpamFormat.parse_string @> address_of_string) in
-      let repo_kind =
-        OpamFormat.assoc s.file_contents s_kind
-          (OpamFormat.parse_string @> repository_kind_of_string) in
-      let repo_priority =
-        OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
-      let repo_root =
-        match OpamFormat.assoc_option s.file_contents s_root
-                (OpamFormat.parse_string @> OpamFilename.raw_dir)
-        with None   -> assert false
-           | Some f -> f in
-      { repo_name; repo_address; repo_kind; repo_priority; repo_root }
+      Pp.parse pp s.file_contents
 
     let of_channel filename ic =
       of_syntax filename (Syntax.of_channel filename ic)
@@ -615,18 +613,8 @@ module X = struct
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
-        file_contents = [
-          OpamFormat.make_variable (s_name    ,
-                    OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
-          OpamFormat.make_variable (s_address ,
-                    OpamFormat.make_string (string_of_address t.repo_address));
-          OpamFormat.make_variable (s_kind    ,
-                    OpamFormat.make_string (string_of_repository_kind t.repo_kind));
-          OpamFormat.make_variable (s_priority,
-                    OpamFormat.make_int t.repo_priority);
-          OpamFormat.make_variable (s_root,
-                    OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_root));
-        ] } in
+        file_contents = Pp.print pp t;
+      } in
       Syntax.to_string s
 
   end
