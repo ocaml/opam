@@ -240,4 +240,7 @@ explicitly specify which external solver to use by using the `--solver
 `$OPAMEXTERNALSOLVER` environment variable.
 
 External solvers also allow to specify [fine-grained
-preferences](Specifying_Solver_Preferences.html).
+preferences](Specifying_Solver_Preferences.html). `aspcud`
+is currently recommended because it supports a richer language of
+[solver preferences](Specifying_Solver_Preferences.html#Yestherearedifferentversionsoftheuserpreferencelanguage)
+giving OPAM more control over the requested solution.
