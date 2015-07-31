@@ -46,40 +46,6 @@ you find a package there but not on your computer, either it has been recently
 added and you should simply run `opam update`, or it's not available on your
 system or OCaml version -- `opam install PACKAGE` will give you the reason.
 
-
-## Before you get started: "external solvers"
-
-Resolving package installations in the presence of dependencies and
-conflicts is known to be an [NP-complete
-problem](https://hal.archives-ouvertes.fr/file/index/docid/149566/filename/ase.pdf).
-Thankfully, a big effort has already been put into solving it very
-efficiently: OPAM relies on this effort and delegates the solving
-process to _external solvers_. OPAM integrates a simple solver, so it
-can used without any extra dependencies, but for best results you
-should have one of those solvers on your system:
-
-- aspcud (recommended)
-- packup
-- mccs (no built-in support at the moment, but may be used with the following
-  solver configuration string: `mccs -i %{input}% -o %{output}%
-  -lexagregate[%{criteria}%]`.)
-
-We recommend installing one through your packaging system whenever
-possible: this should already have been taken care of if you installed
-OPAM through your packaging system. If you have trouble installing an
-external solver and have reliable network connectivity,
-[Irill](http://www.irill.org/) kindly provides a ["Solver
-farm"](http://cudf-solvers.irill.org/) which can be used as a remote
-solver by OPAM.
-
-If you use the internal solver only, the following symptoms may be
-sign that you need an external solver: very bad upgrade proposals, or
-dependency solving becoming very slow.
-
-External solvers also allow to specify [fine-grained
-preferences](Specifying_Solver_Preferences.html).
-
-
 ## Details on commands
 
 ### opam init
@@ -117,11 +83,22 @@ opam install ocp-indent ocp-index.1.0.2
 opam install "ocamlfind>=1.4.0"
 ```
 
+If OPAM seems unable to fulfill very simple installation requests or
+propose non-sensical install plans, it may be due to limitations of
+its internal dependency solver; you should check that you have an
+[External dependency solver](Install.html#Externalsolvers) on your
+system.
+
 ### opam upgrade
 
 Will attempt to upgrade the installed packages to their newest versions. You
 should run it after `opam update`, and may use `opam pin` to prevent specific
 packages from being upgraded.
+
+If OPAM proposes non-sensical upgrade plans, it may be due to
+limitations of its internal dependency solver; you should check that
+you have an [External dependency solver](Install.html#Externalsolvers)
+on your system.
 
 ### opam switch
 

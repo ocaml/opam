@@ -3,9 +3,9 @@
 
 # How to install OPAM
 
-This page describes how to install and configure OPAM.
-For further help on how to use OPAM, either read
-`opam --help` or move on to the [Usage](Usage.html) guide.
+This page describes how to install and configure OPAM and [external
+solvers](#Externalsolvers). For further help on how to use OPAM,
+either read `opam --help` or move on to the [Usage](Usage.html) guide.
 
 ## Upgrading from a previous version
 
@@ -203,3 +203,44 @@ necessary pre-requisites installed to run ocamlbrew, and then run:
 ```
 curl -kL https://raw.github.com/hcarty/ocamlbrew/master/ocamlbrew-install | env OCAMLBREW_FLAGS="-r" bash
 ```
+
+# External Solvers
+
+Resolving package installations in the presence of dependencies and
+conflicts is known to be an [NP-complete
+problem](https://hal.archives-ouvertes.fr/file/index/docid/149566/filename/ase.pdf).
+Thankfully, a big effort has already been put into solving it very
+efficiently: OPAM relies on this effort and delegates the solving
+process to _external solvers_. OPAM integrates a simple solver, so it
+can used without any extra dependencies, but for best results you
+should have one of those solvers on your system:
+
+- aspcud (recommended)
+- packup
+- mccs (no built-in support at the moment, but may be used with the following
+  solver configuration string: `mccs -i %{input}% -o %{output}%
+  -lexagregate[%{criteria}%]`.)
+
+We recommend installing one through your packaging system whenever
+possible: this should already have been taken care of if you installed
+OPAM through your packaging system. If you have trouble installing an
+external solver and have reliable network connectivity,
+[Irill](http://www.irill.org/) kindly provides a ["Solver
+farm"](http://cudf-solvers.irill.org/) which can be used as a remote
+solver by OPAM.
+
+If you use the internal solver only, the following symptoms may be
+sign that you need an external solver: very bad upgrade proposals, or
+dependency solving becoming very slow.
+
+OPAM will detect the availability of `aspcud` or `packup` commands on
+your system and should switch to using them directly. You can
+explicitly specify which external solver to use by using the `--solver
+<foo>` command-line argument, or
+`$OPAMEXTERNALSOLVER` environment variable.
+
+External solvers also allow to specify [fine-grained
+preferences](Specifying_Solver_Preferences.html). `aspcud`
+is currently recommended because it supports a richer language of
+[solver preferences](Specifying_Solver_Preferences.html#Yestherearedifferentversionsoftheuserpreferencelanguage)
+giving OPAM more control over the requested solution.
