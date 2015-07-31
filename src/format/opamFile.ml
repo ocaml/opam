@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
+open Pp.Op
 
 module X = struct
 
@@ -194,72 +195,6 @@ module X = struct
 
   end
 
-  module Prefix = struct
-
-    let internal = "prefix"
-
-    type t = string name_map
-
-    let empty = OpamPackage.Name.Map.empty
-
-    let of_lines _ lines =
-      List.fold_left (fun map -> function
-        | []          -> map
-        | [nv;prefix] -> OpamPackage.Name.Map.add (OpamPackage.Name.of_string nv)
-                           prefix map
-        | s ->
-          OpamConsole.error_and_exit
-            "%S is not a valid prefix line"
-            (String.concat " " s)
-      ) OpamPackage.Name.Map.empty lines
-
-    let of_channel filename ic =
-      of_lines filename (Lines.of_channel filename ic)
-
-    let of_string filename str =
-      of_lines filename (Lines.of_string filename str)
-
-    let to_string filename s =
-      let lines =
-        OpamPackage.Name.Map.fold (fun nv prefix l ->
-          [OpamPackage.Name.to_string nv; prefix] :: l
-        ) s [] in
-      Lines.to_string filename lines
-
-  end
-
-  module Filenames = struct
-
-    let internal = "filenames"
-
-    type t = filename_set
-
-    let empty = OpamFilename.Set.empty
-
-    let of_lines _ lines =
-      let lines = OpamStd.List.filter_map (function
-          | []  -> None
-          | [f] -> Some (OpamFilename.of_string f)
-          | s   -> OpamConsole.error_and_exit "%S is not a valid filename"
-                     (String.concat " " s)
-        ) lines in
-      OpamFilename.Set.of_list lines
-
-    let of_channel filename ic =
-      of_lines filename (Lines.of_channel filename ic)
-
-    let of_string filename str =
-      of_lines filename (Lines.of_string filename str)
-
-    let to_string filename s =
-      let lines =
-        List.rev_map
-          (fun f -> [OpamFilename.to_string f])
-          (OpamFilename.Set.elements s) in
-      Lines.to_string filename lines
-
-  end
-
   module File_attributes = struct
 
     let internal = "file_attributes"
@@ -309,85 +244,50 @@ module X = struct
         url; mirrors; kind; checksum = None;
       }
 
+    let empty_url = "", None
+
     let empty = {
-      url     = "<none>", None;
+      url     = empty_url;
       mirrors = [];
       kind    = `local;
       checksum= None;
     }
 
-    let s_archive = "archive"
-    let s_src = "src"
-    let s_http = "http"
-    let s_checksum = "checksum"
-    let s_git = "git"
-    let s_darcs = "darcs"
-    let s_hg = "hg"
-    let s_local = "local"
-    let s_mirrors = "mirrors"
+    let url t = t.url
+    let mirrors t = t.mirrors
+    let kind t = t.kind
+    let checksum t = t.checksum
 
-    let valid_fields = [
-      Syntax.s_opam_version;
-      s_archive;
-      s_src;
-      s_http;
-      s_git;
-      s_darcs;
-      s_hg;
-      s_local;
-      s_checksum;
-      s_mirrors;
-    ]
+    let with_url t (url,kind) = { t with url; kind }
+    let with_mirrors t mirrors = { t with mirrors }
+    let with_checksum t checksum = { t with checksum = Some checksum }
 
-    let url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local =
-      let extract =
-        match src, archive, http, git, darcs, hg, local with
-        | None  , None  , None  , None  , None  , None  , None   -> None
-        | Some x, None  , None  , None  , None  , None  , None
-        | None  , Some x, None  , None  , None  , None  , None   -> Some (x, None)
-        | None  , None  , Some x, None  , None  , None  , None   -> Some (x, Some `http)
-        | None  , None  , None  , Some x, None  , None  , None   -> Some (x, Some `git)
-        | None  , None  , None  , None  , Some x, None  , None   -> Some (x, Some `darcs)
-        | None  , None  , None  , None  , None  , Some x, None   -> Some (x, Some `hg)
-        | None  , None  , None  , None  , None  , None  , Some x -> Some (x, Some `local)
-        | _ -> OpamFormat.bad_format "Too many URLS"
-      in
-      match extract with
-      | None -> None
-      | Some (url, kind_opt) ->
-        try
-          let url, kind = parse_url url in
-          Some (url, OpamStd.Option.default kind kind_opt)
-        with Invalid_argument s -> OpamFormat.bad_format "%s" s
+    let fields =
+      let with_url ?kind () t (url,autokind) =
+        if t.url <> empty_url then OpamFormat.bad_format "Too many URLS"
+        else with_url t (url, OpamStd.Option.default autokind kind)
+      and url t = (t.url,t.kind) in
+      let none _ = None in
+      [
+        "archive", Pp.ppacc_opt (with_url ()) none Pp.url;
+        "src", Pp.ppacc (with_url ()) url Pp.url;
+        "http", Pp.ppacc_opt (with_url ~kind:`http ()) none Pp.url;
+        "git", Pp.ppacc_opt (with_url ~kind:`git ()) none Pp.url;
+        "darcs", Pp.ppacc_opt (with_url ~kind:`darcs ()) none Pp.url;
+        "hg", Pp.ppacc_opt (with_url ~kind:`hg ()) none Pp.url;
+        "local", Pp.ppacc_opt (with_url ~kind:`local ()) none Pp.url;
+        "checksum", Pp.ppacc_opt with_checksum checksum
+          (Pp.string ++ Pp.check OpamFilename.valid_digest "Invalid checksum");
+        "mirrors", Pp.ppacc with_mirrors mirrors (Pp.list Pp.address);
+      ]
+
+    let pp =
+      Pp.check_fields fields ++
+      Pp.fields ~empty fields ++
+      Pp.check (fun t -> t.url <> empty_url) "Missing URL"
 
     let of_syntax _ s =
-      let permissive = Syntax.check ~versioned:false s valid_fields in
-      let get f =
-        try
-          OpamFormat.assoc_option s.file_contents f
-            (OpamFormat.parse_string @> address_of_string)
-        with OpamFormat.Bad_format _ when permissive -> None
-      in
-      let archive  = get s_archive in
-      let http     = get s_http in
-      let src      = get s_src in
-      let git      = get s_git in
-      let darcs    = get s_darcs in
-      let hg       = get s_hg in
-      let local    = get s_local in
-      let mirrors =
-        OpamFormat.assoc_list s.file_contents s_mirrors
-          (OpamFormat.parse_list (OpamFormat.parse_string @> address_of_string)) in
-      let checksum =
-        match OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string
-        with Some s when not (OpamFilename.valid_digest s) ->
-          OpamFormat.bad_format "%s is not a valid checksum" s
-           | s -> s
-      in
-      let url, kind =
-        match url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
-        with Some x -> x | None -> OpamFormat.bad_format "URL is missing" in
-      { url; mirrors; kind; checksum }
+      pp.Pp.parse s.file_contents
 
     let of_channel filename ic =
       of_syntax filename (Syntax.of_channel filename ic)
@@ -396,32 +296,13 @@ module X = struct
       of_syntax filename (Syntax.of_string filename str)
 
     let to_string filename t =
-      let url_name = string_of_repository_kind t.kind in
       let s = {
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
-        file_contents = [
-          OpamFormat.make_variable (
-                    url_name ,
-                    OpamFormat.make_string (string_of_address t.url));
-        ] @ (
-            if t.mirrors = [] then [] else
-              [OpamFormat.make_variable (s_mirrors ,
-                         OpamFormat.make_list
-                           (string_of_address @> OpamFormat.make_string)
-                           t.mirrors)]
-        ) @ match t.checksum with
-            | None   -> []
-            | Some c -> [OpamFormat.make_variable (s_checksum, OpamFormat.make_string c)]
+        file_contents = pp.Pp.print t;
       } in
       Syntax.to_string s
 
-    let url t = t.url
-    let mirrors t = t.mirrors
-    let kind t = t.kind
-    let checksum t = t.checksum
-
-    let with_checksum t checksum = { t with checksum = Some checksum }
 
   end
 
@@ -677,11 +558,33 @@ module X = struct
       repo_priority = 0;
     }
 
-    let s_name = "name"
-    let s_kind = "kind"
-    let s_address = "address"
-    let s_priority = "priority"
-    let s_root = "root"
+    let fields = [
+      "name",
+      Pp.ppacc
+        (fun r repo_name -> {r with repo_name})
+        (fun r -> r.repo_name)
+      @@ Pp.string ++ OpamRepositoryName.(Pp.pp of_string to_string);
+      "address",
+      Pp.ppacc
+        (fun r (repo_address,_kind) -> {r with repo_address})
+        (fun r -> r.repo_address, r.repo_kind)
+      @@ Pp.url;
+      "kind",
+      Pp.ppacc
+        (fun r repo_kind -> {r with repo_kind})
+        (fun r -> r.repo_kind)
+      @@ Pp.string ++ Pp.pp repository_kind_of_string string_of_repository_kind;
+      "priority",
+      Pp.ppacc
+        (fun r priority -> {r with priority})
+        (fun r -> r.priority)
+      @@ Pp.int;
+      "root",
+      Pp.ppacc
+        (fun r root -> {r with root})
+        (fun r -> r.root)
+      @@ Pp.string ++ OpamFilename.(Pp.pp raw_dir Dir.to_string)
+    ]
 
     let of_syntax _ s =
       let repo_name =
@@ -2353,6 +2256,27 @@ module X = struct
     let with_build t build = {t with build}
     let with_packages t packages = {t with packages}
 
+    let url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local =
+      let extract =
+        match src, archive, http, git, darcs, hg, local with
+        | None  , None  , None  , None  , None  , None  , None   -> None
+        | Some x, None  , None  , None  , None  , None  , None
+        | None  , Some x, None  , None  , None  , None  , None   -> Some (x, None)
+        | None  , None  , Some x, None  , None  , None  , None   -> Some (x, Some `http)
+        | None  , None  , None  , Some x, None  , None  , None   -> Some (x, Some `git)
+        | None  , None  , None  , None  , Some x, None  , None   -> Some (x, Some `darcs)
+        | None  , None  , None  , None  , None  , Some x, None   -> Some (x, Some `hg)
+        | None  , None  , None  , None  , None  , None  , Some x -> Some (x, Some `local)
+        | _ -> OpamFormat.bad_format "Too many URLS"
+      in
+      match extract with
+      | None -> None
+      | Some (url, kind_opt) ->
+        try
+          let url, kind = parse_url url in
+          Some (url, OpamStd.Option.default kind kind_opt)
+        with Invalid_argument s -> OpamFormat.bad_format "%s" s
+
     let of_syntax filename file =
       let permissive = Syntax.check file valid_fields in
       let s = file.file_contents in
@@ -2403,7 +2327,7 @@ module X = struct
       let hg = address s_hg in
       let local = address s_local in
       let src, kind =
-        try match URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
+        try match url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local
           with Some (u,k) -> Some u, k | None -> None, `http
         with OpamFormat.Bad_format _ when permissive -> None, `http
       in
@@ -2810,14 +2734,4 @@ end
 module File_attributes = struct
   include File_attributes
   include Make(File_attributes)
-end
-
-module Filenames = struct
-  include Filenames
-  include Make(Filenames)
-end
-
-module Prefix = struct
-  include Prefix
-  include Make(Prefix)
 end

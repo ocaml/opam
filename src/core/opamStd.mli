@@ -118,6 +118,10 @@ module Option: sig
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
 
+  val some: 'a -> 'a option
+
+  val none: 'a -> 'b option
+
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option
     val (>>|): 'a option -> ('a -> 'b) -> 'b option

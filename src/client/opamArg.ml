@@ -334,7 +334,7 @@ let atom =
         bos;
         group @@ rep1 @@ diff any (set ">=<.!");
         group @@ alt [ seq [ alt [char '<'; char '>']; opt @@ char '=' ];
-                       char '='; char '.'; string "!="; ];
+                       char '='; char '.'; str "!="; ];
         group @@ rep1 any;
         eos;
       ]) in

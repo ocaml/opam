@@ -415,10 +415,13 @@ It has the following fields:
 - One of <a id="urlfield-src">`src: <string>`</a> or
   <a id="urlfield-archive">`archive: <string>`</a>,
   specifying the URL where the package can be downloaded from. When using HTTP
-  or FTP, this should be an archive. The older alternative field names <a
-  id="urlfield-http">`http:`</a>, <a id="urlfield-local">`local:`</a>, <a
-  id="urlfield-git">`git:`</a>, <a id="urlfield-hg">`hg:`</a> and <a
-  id="urlfield-darcs">`darcs:`</a> are deprecated, prefer explicit URLs.
+  or FTP, this should be an archive. The older alternative field names
+  <a id="urlfield-http">`http:`</a>,
+  <a id="urlfield-local">`local:`</a>,
+  <a id="urlfield-git">`git:`</a>,
+  <a id="urlfield-hg">`hg:`</a> and
+  <a id="urlfield-darcs">`darcs:`</a>
+  are deprecated, prefer explicit URLs.
 
     On the official repository, this should always point to a stable archive
     over HTTP or FTP.

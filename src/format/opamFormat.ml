@@ -18,8 +18,6 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 
-(* File and position handling *)
-
 let empty = {
   file_contents = [];
   file_name     = "<none>";
@@ -35,7 +33,7 @@ let bad_format ?pos fmt =
     fmt
 
 let add_pos pos = function
-  | Bad_format (None,btl,msg) ->
+  | Bad_format (p,btl,msg) ->
     let backtrace = Printexc.get_backtrace () in
     Bad_format (Some pos, backtrace::btl, msg)
   | e -> e
@@ -79,13 +77,6 @@ let map fn f =
           )) [] f.file_contents in
   let file_contents = List.rev file_contents in
   { f with file_contents }
-
-(* Parsers and printers (from/to type [OpamTypes.value]) *)
-
-type ('a,'b) pp = { parse: 'a -> 'b; print: 'b -> 'a }
-
-let (++) pp1 pp2 = { parse = pp2.parse @* pp1.parse;
-                     print = pp1.print @* pp2.print; }
 
 let variables items =
   let l = List.fold_left (fun accu -> function
@@ -146,9 +137,6 @@ let protect_value f value =
   try f value with e ->
     raise (add_pos (value_pos value) e)
 
-let protect_value_pp pp =
-  { pp with parse = protect_value pp.parse }
-
 let values_pos = function
   | [] -> None
   | x::_ -> Some (value_pos x)
@@ -159,123 +147,110 @@ let protect_values f values =
     | None -> raise e
     | Some pos -> raise (add_pos pos e)
 
-let protect_values_pp pp =
-  { pp with parse = protect_values pp.parse }
-
 (* Base parsing functions *)
-let bool =
-  let parse = function
-    | Bool (_,b) -> b
-    | x -> bad_format ~pos:(value_pos x) "Expected a bool"
-  and print b = Bool (pos_null,b)
-  in { parse; print }
+let parse_bool = function
+  | Bool (_,b) -> b
+  | x      -> bad_format ~pos:(value_pos x) "Expected a bool"
 
-let int =
-  let parse = function
-    | Int (_,i) -> i
-    | x -> bad_format ~pos:(value_pos x) "Expected an int"
-  and print i = Int (pos_null,i)
-  in { parse; print }
+let parse_int = function
+  | Int (_,i) -> i
+  | x     -> bad_format ~pos:(value_pos x) "Expected an int"
 
-let ident =
-  let parse = function
-    | Ident (_,i) -> i
-    | x -> bad_format ~pos:(value_pos x) "Expected an ident"
-  and make_ident str = Ident (pos_null,str)
-  in { parse; print }
+let parse_ident = function
+  | Ident (_,i) -> i
+  | x       -> bad_format ~pos:(value_pos x) "Expected an ident"
 
-let string =
-  let parse = function
-    | String (_,s) -> s
-    | x -> bad_format ~pos:(value_pos x) "Expected a string"
-  and make_string str = String (pos_null,str)
-  in { parse; print }
+let parse_string = function
+  | String (_,s) -> s
+  | x        -> bad_format ~pos:(value_pos x) "Expected a string"
 
-let list pp =
-  let pp = protect_value_pp pp in
-  let parse =
-    function
-    | List (_,s) -> List.rev (List.rev_map pp.parse s)
-    | x -> [pp.parse x]
-  and print l = List (pos_null, List.rev (List.rev_map pp.print l))
-  in { parse; print }
+let parse_list fn =
+  let fn = protect_value fn in
+  function
+  | List (_,s) -> List.rev (List.rev_map fn s)
+  | x      -> [fn x]
 
-let group pp =
-  let pp = protect_value_pp pp in
-  let parse = function
-    | Group (_,g) -> List.rev (List.rev_map pp.parse g)
-    | x -> bad_format ~pos:(value_pos x) "Expected a group"
-  and print g = Group (pos_null, List.rev (List.rev_map pp.print g))
-  in { parse; print }
+let parse_list_list fn ll =
+  let fn = protect_value fn in
+  match ll with
+  | List (_,l) ->
+    if List.for_all is_list l then List.rev (List.rev_map fn l)
+    else [fn ll]
+  | _      -> [fn ll]
 
-let option ppval ppopt =
-  let ppval = protect_value_pp ppval in
-  let ppopt = protect_values_pp ppopt in
-  let parse = function
-    | Option (_,k,l) -> ppval.parse k, Some (ppopt.parse l)
-    | k -> ppval.parse k, None
-  and print = function
-    | (v, None)   -> ppval.print v
-    | (v, Some o) -> Option (pos_null, ppval.print v, ppopt.print o)
-  in { parse; print }
+let parse_group fn =
+  let fn = protect_value fn in
+  function
+  | Group (_,g) -> List.rev (List.rev_map fn g)
+  | x       -> bad_format ~pos:(value_pos x) "Expected a group"
 
-let pair pp1 pp2 =
-  let pp1 = protect_value_pp pp1 in
-  let pp2 = protect_value_pp pp2 in
-  let parse = function
-    | List (_,[a; b]) -> (pp1.parse a, pp2.parse b)
-    | x ->
-      bad_format ~pos:(value_pos x) "Expected a pair"
-  and print (a, b) = List (pos_null, [pp1.print a; pp2.print b])
-  in { parse; print }
+let parse_option f g =
+  let f = protect_value f in
+  let g = protect_values g in
+  function
+  | Option (_,k,l) -> f k, Some (g l)
+  | k            -> f k, None
 
-let singleton pp =
-  let parse v = match pp.parse v with
-    | [x] -> Some x
-    | [] -> None
-    | v -> bad_format ~pos:(values_pos v) "Expected a single element"
-  and print x = [x]
-  in { parse; print }
-
-let string_list = list string
-
-let alternatives pps v =
-  let parse v =
-    let rec aux = function
-      | [] ->
-        bad_format ~pos:(value_pos v)
-          "Expected %s" (OpamStd.List.concat_map " or " fst fns)
-      | (label, pp)::t ->
-        try label, pp.parse v with Bad_format _ -> aux t
-    in
-    aux pps
-  and print (label, x) = (List.find label pps).print x
-  in { parse; print }
-
-
-(*
-let parse_single_option ppval ppopt =
-  let pp = parse_option ppval ppopt in
-  { pp
+let parse_single_option f g =
   let f = protect_value f in
   let g = protect_value g in
   function
   | Option (_,k,[v]) -> f k, Some (g v)
   | k              -> f k, None
-*)
-(*
+
 let parse_string_option f =
   let f = protect_values f in
   function
   | Option (_,k,l) -> parse_string k, Some (f l)
   | k            -> parse_string k, None
-*)
 
-(* let parse_single_string = function *)
-(*   | [String (_,x)] -> x *)
-(*   | x          -> *)
-(*     bad_format ?pos:(values_pos x) "Expected a single string" *)
+let parse_string_list =
+  parse_list parse_string
 
+let parse_single_string = function
+  | [String (_,x)] -> x
+  | x          ->
+    bad_format ?pos:(values_pos x) "Expected a single string"
+
+let parse_pair fa fb =
+  let fa = protect_value fa in
+  let fb = protect_value fb in
+  function
+  | List (_,[a; b]) -> (fa a, fb b)
+  | x           ->
+    bad_format ~pos:(value_pos x) "Expected a pair"
+
+let parse_or fns v =
+  let rec aux = function
+    | []   ->
+      bad_format ~pos:(value_pos v)
+        "Expected %s" (OpamStd.List.concat_map " or " fst fns)
+    | (_,h)::t ->
+      try h v
+      with Bad_format _ -> aux t in
+  aux fns
+
+let make_string str = String (pos_null,str)
+
+let make_ident str = Ident (pos_null,str)
+
+let make_bool b = Bool (pos_null,b)
+
+let make_int i = Int (pos_null,i)
+
+let make_list fn l = List (pos_null, List.rev (List.rev_map fn l))
+
+let make_string_list = make_list make_string
+
+let make_group fn g = Group (pos_null, List.rev (List.rev_map fn g))
+
+let make_option f g = function
+  | (v, None)   -> f v
+  | (v, Some o) -> Option (pos_null, f v, g o)
+
+let make_pair fa fb (k,v) = List (pos_null, [fa k; fb v])
+
+let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 
@@ -369,17 +344,6 @@ let string_of_file ~simplify f =
   string_of_items items
 
 (* Reading section contents *)
-
-let fields ppassoc =
-  let parse items =
-    List.map
-      (fun (field,v) -> field, (List.assoc field ppassoc).parse v)
-      (variables items)
-  and print fields =
-    List.map
-      (fun (field,x) ->
-         Variable (pos_null, field, (List.assoc field ppassoc).print x))
-      fields
 
 let assoc items n parse =
   try parse (List.assoc n (variables items))

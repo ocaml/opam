@@ -285,6 +285,9 @@ module Option = struct
     | Some x -> f x
     | None -> none
 
+  let some x = Some x
+  let none _ = None
+
   module Op = struct
     let (>>=) = function
       | None -> fun _ -> None
