@@ -1,0 +1,61 @@
+--- ./configure.ac
++++ ./configure.ac
+@@ -104,7 +104,7 @@
+  AC_MSG_ERROR([Please install OCaml findlib module 'ocamlgraph'.])
+ fi
+ TMPVERSION=`$OCAMLFIND query -format %v ocamlgraph | sed 's/\.//g'`
+-CONFIG_OCAMLGRAPH="-D 'OCAMLGRAPHVERSION $TMPVERSION'"
++CONFIG_OCAMLGRAPH="-D \"OCAMLGRAPHVERSION $TMPVERSION\""
+ 
+ AC_ARG_WITH(parmap,
+         [ --with-parmap ],
+@@ -260,7 +260,7 @@
+ AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
+   AC_MSG_CHECKING([for a workable solution for ln -s])
+   ln -s configure conftestLink
+-  AS_IF([test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""],[LN=cp],[LN="ln -s"])
++  AS_IF([test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""],[LN="cp -a"],[LN="ln -s"])
+   AC_MSG_RESULT([$LN])
+ ],[
+   LN="ln -s"
+--- ./configure
++++ ./configure
+@@ -3907,7 +3907,7 @@
+  as_fn_error $? "Please install OCaml findlib module 'ocamlgraph'." "$LINENO" 5
+ fi
+ TMPVERSION=`$OCAMLFIND query -format %v ocamlgraph | sed 's/\.//g'`
+-CONFIG_OCAMLGRAPH="-D 'OCAMLGRAPHVERSION $TMPVERSION'"
++CONFIG_OCAMLGRAPH="-D \"OCAMLGRAPHVERSION $TMPVERSION\""
+ 
+ 
+ # Check whether --with-parmap was given.
+@@ -5324,7 +5324,7 @@
+ $as_echo_n "checking for a workable solution for ln -s... " >&6; }
+   ln -s configure conftestLink
+   if test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""; then :
+-  LN=cp
++  LN="cp -a"
+ else
+   LN="ln -s"
+ fi
+--- ./Makefile
++++ ./Makefile
+@@ -1,5 +1,6 @@
+ #this is a forward reference to the target all below
+-all: all
++.PHONY: default
++default: all
+ 
+ #SHELL=/bin/bash
+ include Makefile.config
+@@ -14,8 +15,8 @@
+ #OBFLAGS := $(OBFLAGS) -classic-display
+ 
+ addnotrpm:
+-	@if [ ! -s doseparseNoRpm ]; then $(LN) doseparse doseparseNoRpm ; fi
+-	@cd doseparse ; \
++	@if [ ! -e doseparseNoRpm ]; then $(LN) doseparse doseparseNoRpm ; fi
++	@cd doseparseNoRpm ; \
+ 		if [ ! -s doseparseNoRpm.mlpack ]; then \
+ 			$(LN) doseparse.mlpack doseparseNoRpm.mlpack ; \
+ 		fi ; \

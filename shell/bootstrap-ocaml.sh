@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+GEN_CONFIG_ONLY=${GEN_CONFIG_ONLY:-0}
+
 if command -v curl > /dev/null; then
   CURL="curl -OLSs"
 elif command -v wget > /dev/null; then
@@ -17,13 +19,14 @@ FLEXDLL=`echo ${FV_URL}| sed -e 's/.*\/\([^\/]*\)/\1/'`
 if [ ! -e ${V}.tar.gz ]; then
   cp ../src_ext/archives/${V}.tar.gz . 2>/dev/null || ${CURL} ${URL}
 fi
-tar -zxf ${V}.tar.gz
+if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+  tar -zxf ${V}.tar.gz
+fi
 cd ${V}
 PATH_PREPEND=
+LIB_PREPEND=
+INC_PREPEND=
 if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
-  LIB_PREPEND=
-  INC_PREPEND=
-
   case "$1" in
     "mingw"|"mingw64")
       BUILD=$1
@@ -93,22 +96,46 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   if [ -n "${PATH_PREPEND}" ] ; then
     PATH_PREPEND="${PATH_PREPEND}:"
   fi
-  PREFIX=`cd .. ; pwd | cygpath -f - -m`/ocaml
-  sed -e "s|^PREFIX=.*|PREFIX=${PREFIX}|" config/Makefile.${BUILD} > config/Makefile
-  cp config/s-nt.h byterun/caml/s.h
-  cp config/m-nt.h byterun/caml/m.h
+  PREFIX=`cd .. ; pwd`/ocaml
+  WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
+  if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+    sed -e "s|^PREFIX=.*|PREFIX=${WINPREFIX}|" config/Makefile.${BUILD} > config/Makefile
+    cp config/s-nt.h byterun/caml/s.h
+    cp config/m-nt.h byterun/caml/m.h
+  fi
   cd ..
   if [ ! -e ${FLEXDLL} ]; then
     cp ../src_ext/archives/${FLEXDLL} . 2>/dev/null || ${CURL} ${FV_URL}
   fi
   cd ${V}
-  tar -xzf ../${FLEXDLL}
-  rm -rf flexdll
-  mv flexdll-* flexdll
-  PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make flexdll world.opt install
+  if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+    tar -xzf ../${FLEXDLL}
+    rm -rf flexdll
+    mv flexdll-* flexdll
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make flexdll world.opt install
+  fi
+  OCAMLLIB=${WINPREFIX}/lib
 else
-  ./configure -prefix "`pwd`/../ocaml"
-  ${MAKE:-make} world opt.opt
-  ${MAKE:-make} install
+  PREFIX=`cd .. ; pwd`/ocaml
+  if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+    ./configure -prefix "${PREFIX}"
+    ${MAKE:-make} world opt.opt
+    ${MAKE:-make} install
+  fi
+  OCAMLLIB=${PREFIX}/lib/ocaml
 fi
+
 echo "${URL} ${FV_URL}" > ../installed-tarball
+
+# Generate src_ext/Makefile.config
+PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+echo "export PATH:=${PATH_PREPEND}${PREFIX}/bin:\$(PATH)" > ../../src_ext/Makefile.config
+if [ -n "${LIB_PREPEND}" ] ; then
+  LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  echo "export Lib:=${LIB_PREPEND}\$(Lib)" >> ../../src_ext/Makefile.config
+fi
+if [ -n "${INC_PREPEND}" ] ; then
+  INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  echo "export Include:=${INC_PREPEND}\$(Include)" >> ../../src_ext/Makefile.config
+fi
+echo "export OCAMLLIB=${OCAMLLIB}" >> ../../src_ext/Makefile.config

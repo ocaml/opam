@@ -1,0 +1,133 @@
+From 22643ffd33afc8bbf69ab9c9cdbdda98d674f773 Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Sat, 20 May 2017 16:45:08 +0100
+Subject: [PATCH] Install .cmx files for packs
+
+Enables cross-module inlining and eliminates Warning 58 on OCaml 4.04.0+
+---
+ Makefile | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 09464ff..751fe26 100644
+--- a/Makefile
++++ b/Makefile
+@@ -56,7 +56,7 @@ $(DOSELIBS)/cudf.%:
+ 	@for i in _build/cudf/cudf.*; do \
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -67,7 +67,7 @@ $(DOSELIBS)/common.%: common/*.ml common/*.mli
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -78,7 +78,7 @@ $(DOSELIBS)/versioning.%: versioning/*.ml versioning/*.mli
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -88,7 +88,7 @@ $(DOSELIBS)/algo.%: algo/*.ml algo/*.mli $(DOSELIBS)/common.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -98,7 +98,7 @@ $(DOSELIBS)/debian.%: deb/*.ml deb/*.mli $(DOSELIBS)/pef.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -108,7 +108,7 @@ $(DOSELIBS)/opam.%: opam/*.ml opam/*.mli $(DOSELIBS)/pef.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -118,7 +118,7 @@ $(DOSELIBS)/npm.%: npm/*.ml npm/*.mli $(DOSELIBS)/versioning.% $(DOSELIBS)/pef.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -128,7 +128,7 @@ $(DOSELIBS)/rpm.%: rpm/*.ml $(DOSELIBS)/algo.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -138,7 +138,7 @@ $(DOSELIBS)/pef.%: pef/*.ml pef/*.mli
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -148,7 +148,7 @@ $(DOSELIBS)/csw.%: opencsw/*.ml $(DOSELIBS)/versioning.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ; \
++	  rm -f $(DOSELIBS)/*.mlpack ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -158,7 +158,7 @@ $(DOSELIBS)/doseparse.%: $(DOSELIBS)/pef.% $(DOSELIBS)/debian.%
+ 	  if [ -e $$i ]; then \
+ 	  cp $$i $(DOSELIBS) ; \
+ 		rm $$i ;\
+-	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx $(DOSELIBS)/*.ml ; \
++	  rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.ml ; \
+ 	  fi ; \
+ 	done
+ 
+@@ -168,7 +168,7 @@ $(DOSELIBS)/doseparseNoRpm.%: $(DOSELIBS)/pef.% $(DOSELIBS)/debian.%
+ 	  if [ -e $$i ]; then \
+ 			cp $$i $(DOSELIBS) ;\
+ 			rm $$i ;\
+-			rm -f $(DOSELIBS)/*.mlpack $(DOSELIBS)/*.cmx ;\
++			rm -f $(DOSELIBS)/*.mlpack ;\
+ 	  fi ; \
+ 	done
+ 
+@@ -222,6 +222,7 @@ DIST_EXCLUDE = cudf tests $(wildcard */tests) experimental doc/webpages
+ INSTALL_STUFF_ = META
+ INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cma _build/doselibs/*.cmi)
+ INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cmxa _build/doselibs/*.cmxs)
++INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cmx)
+ INSTALL_STUFF_ += $(wildcard _build/doselibs/*.$(EXT_LIB))
+ #INSTALL_STUFF_ += $(wildcard _build/*/*.mli)
+ INSTALL_STUFF_ += $(wildcard _build/rpm/*.so)
+-- 
+2.12.0.windows.1
+

@@ -1,0 +1,85 @@
+From 0cb15311dee5101729918bc93dbb586577fb0e7d Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Thu, 23 Jul 2015 16:45:59 +0100
+Subject: [PATCH 2/2] Fix compilation using Microsoft C Compiler
+
+Assumption that libraries have a .a extension replaced with a test for
+ext_lib from the compiler.
+---
+ Makefile           | 2 +-
+ Makefile.config.in | 6 ++++--
+ configure          | 3 +++
+ configure.ac       | 2 ++
+ 4 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 09464ff..226590a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -222,7 +222,7 @@ DIST_EXCLUDE = cudf tests $(wildcard */tests) experimental doc/webpages
+ INSTALL_STUFF_ = META
+ INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cma _build/doselibs/*.cmi)
+ INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cmxa _build/doselibs/*.cmxs)
+-INSTALL_STUFF_ += $(wildcard _build/doselibs/*.a)
++INSTALL_STUFF_ += $(wildcard _build/doselibs/*.$(EXT_LIB))
+ #INSTALL_STUFF_ += $(wildcard _build/*/*.mli)
+ INSTALL_STUFF_ += $(wildcard _build/rpm/*.so)
+ 
+diff --git a/Makefile.config.in b/Makefile.config.in
+index f9f1e6f..c401df4 100644
+--- a/Makefile.config.in
++++ b/Makefile.config.in
+@@ -134,12 +134,14 @@ uninstallcudf:
+ endif
+ 
+ ifeq ("@OCAMLEXT@","native")
+-  SUFFIX += cmxa cmxs a
++  SUFFIX += cmxa cmxs @EXT_LIB@
+   OPTLIBS += $(BYTELIBS:%.cma=%.cmxa) 
+   CMXSLIBS += $(BYTELIBS:%.cma=%.cmxs)
+-  ALIBS = $(BYTELIBS:%.cma=%.a)
++  ALIBS = $(BYTELIBS:%.cma=%.@EXT_LIB@)
+ endif
+ 
++EXT_LIB=@EXT_LIB@
++
+ ifeq ("@HAS_XML@","yes")
+ ifeq ("@HAS_CURL@","yes")
+   EXPERIMENTAL += experimental/dudftocudf/deb-dudftocudf.@OCAMLEXT@
+diff --git a/configure b/configure
+index 49c02df..26bdfa8 100755
+--- a/configure
++++ b/configure
+@@ -648,6 +648,7 @@ PKG_ZIP
+ CONFIG_ZIP
+ CPPOFLAGS
+ LN
++EXT_LIB
+ OCAML_SYSTEM
+ EGREP
+ GREP
+@@ -5317,6 +5318,8 @@ fi
+ 
+ OCAML_SYSTEM="$($OCAMLBESTCC -config | fgrep system | sed -e "s/system: \(.*\)/\1/")"
+ 
++EXT_LIB="$($OCAMLBESTCC -config | fgrep ext_lib | sed -e "s/ext_lib: \.//")"
++
+ 
+ if test "${OCAML_OS_TYPE}" = "Win32"; then :
+ 
+diff --git a/configure.ac b/configure.ac
+index d73d724..6935fa6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -256,6 +256,8 @@ fi
+ 
+ OCAML_SYSTEM="$($OCAMLBESTCC -config | fgrep system | sed -e "s/system: \(.*\)/\1/")"
+ AC_SUBST(OCAML_SYSTEM)
++EXT_LIB="$($OCAMLBESTCC -config | fgrep ext_lib | sed -e "s/ext_lib: \.//")"
++AC_SUBST(EXT_LIB)
+ 
+ AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
+   AC_MSG_CHECKING([for a workable solution for ln -s])
+-- 
+2.12.0.windows.1
+

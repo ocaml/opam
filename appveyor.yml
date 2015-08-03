@@ -10,15 +10,19 @@ environment:
     OCAML_PORT:
     CYG_CACHE: C:/cygwin/var/cache/setup
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
+    DEP_MODE: lib-ext
   matrix:
     - CYG_ROOT: cygwin
       CYG_ARCH: x86
     - CYG_ROOT: cygwin64
       CYG_ARCH: x86_64
+      DEP_MODE: lib-pkg
     - OCAML_PORT: msvc
+      DEP_MODE: lib-pkg
     - OCAML_PORT: msvc64
     - OCAML_PORT: mingw
     - OCAML_PORT: mingw64
+      DEP_MODE: lib-pkg
 
 cache:
   - C:\projects\opam\bootstrap
