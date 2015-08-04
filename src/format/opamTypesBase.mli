@@ -117,6 +117,9 @@ val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 val filter_ident_of_string:
   string -> name list * variable * (string * string) option
 
+val string_of_filter_ident:
+  name list * variable * (string * string) option -> string
+
 val filter_deps:
   build:bool -> test:bool -> doc:bool -> dev:bool ->
   ext_formula -> formula

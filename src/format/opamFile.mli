@@ -76,7 +76,7 @@ module Config: sig
 
   val with_criteria: t -> (solver_criteria * string) list -> t
 
-  val with_solver: t -> arg list option -> t
+  val with_solver: t -> arg list -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version

@@ -407,7 +407,7 @@ module Attribute = struct
   let perm t = t.perm
 
   let create base md5 perm =
-    { base; md5; perm=Some perm }
+    { base; md5; perm=perm }
 
   let to_string_list t =
     let perm = match t.perm with
@@ -453,4 +453,4 @@ let to_attribute root file =
     let s = Unix.stat (to_string file) in
     s.Unix.st_perm in
   let digest = digest file in
-  Attribute.create basename digest perm
+  Attribute.create basename digest (Some perm)

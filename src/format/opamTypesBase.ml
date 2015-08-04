@@ -250,6 +250,14 @@ let pfxop_of_string = function
   | "!" -> `Not
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
+let string_of_filter_ident (pkgs,var,converter) =
+  OpamStd.List.concat_map ~nil:"" "+" ~right:":"
+    OpamPackage.Name.to_string pkgs ^
+  OpamVariable.to_string var ^
+  (match converter with
+   | Some (it,ifu) -> "?"^it^":"^ifu
+   | None -> "")
+
 let filter_ident_of_string s =
   match OpamStd.String.rcut_at s ':' with
   | None -> [], OpamVariable.of_string s, None

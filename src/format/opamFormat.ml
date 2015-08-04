@@ -636,16 +636,7 @@ let make_filter f =
   let rec aux ?paren f =
     match f with
     | FString s  -> make_string s
-    | FIdent (pkgs,var,converter) ->
-      let s =
-        OpamStd.List.concat_map ~nil:"" "+" ~right:":"
-          OpamPackage.Name.to_string pkgs ^
-        OpamVariable.to_string var ^
-        (match converter with
-         | Some (it,ifu) -> "?"^it^":"^ifu
-         | None -> "")
-      in
-      make_ident s
+    | FIdent fid -> make_ident (string_of_filter_ident fid)
     | FBool b    -> make_bool b
     | FOp(e,s,f) ->
       let f = Relop (pos_null, s, aux e, aux f) in
