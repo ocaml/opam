@@ -912,3 +912,60 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   | cycles -> raise (Cyclic_actions cycles)
 
 let packages u = Cudf.get_packages u
+
+let depclean universe version_map pkgl =
+  let pp pkg = 
+    let name = Common.CudfAdd.decode pkg.Cudf.package in
+    let version = 
+      let nvset =
+        OpamPackage.Map.filter
+          (fun nv cv ->
+            (OpamPackage.Name.to_string (OpamPackage.name nv)) = name &&
+            cv = pkg.Cudf.version)
+        version_map 
+      in
+      (OpamPackage.version_to_string (fst (OpamPackage.Map.choose nvset)))
+    in (name,version,[])
+  in
+  let res_to_string (_,deps,conf) =
+    let rec aux f fmt = function
+      |[] -> ()
+      |[h] -> Format.fprintf fmt "%a" f h
+      |h::t -> Format.fprintf fmt "%a@,%a" f h (aux f) t
+    in 
+    let fmt = Format.str_formatter in
+    if deps <> [] then (
+      Format.fprintf fmt "In the current switch, some dependencies of this package are redundant:@,";
+      let f fmt = function
+        |(vpkglist,vpkg,[]) ->
+          Format.fprintf fmt "The dependency %a from (%a) refers to a missing package"
+          (Common.CudfAdd.pp_vpkg pp) vpkg (Common.CudfAdd.pp_vpkglist pp) vpkglist
+        |(vpkglist,vpkg,l) ->
+            List.iter (fun bpkg ->
+              Format.fprintf fmt "The dependency %a from (%a) refers to a broken package (%a)" 
+              (Common.CudfAdd.pp_vpkg pp) vpkg
+              (Common.CudfAdd.pp_vpkglist pp) vpkglist 
+              Common.CudfAdd.pp_package bpkg
+            ) l
+      in
+      aux f fmt deps
+    );
+    if conf <> [] then (
+      Format.fprintf fmt "In the current switch, some conflicts of this package are redundant:@,";
+      let f fmt = function
+        |(vpkg,[]) ->
+          Format.fprintf fmt "The conflict %a refers to a missing package" 
+          (Common.CudfAdd.pp_vpkg pp) vpkg
+        |(vpkg,l) ->
+            List.iter (fun bpkg ->
+              Format.fprintf fmt "The conflict %a refers to a broken package (%a)" 
+              (Common.CudfAdd.pp_vpkg pp) vpkg
+              Common.CudfAdd.pp_package bpkg
+            ) l
+      in
+      aux f fmt conf
+    );
+    Buffer.contents Format.stdbuf
+  in
+  let r = Algo.Depsolver.depclean universe pkgl in
+  (r,String.concat "\n" (List.map res_to_string r))

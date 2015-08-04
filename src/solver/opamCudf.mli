@@ -208,3 +208,7 @@ val external_solver_available: unit -> bool
 (** Converts an OPAM request to a Cudf request *)
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
+
+val depclean: Cudf.universe -> (int package_map) -> Cudf.package list ->
+    Algo.Depsolver.depclean_result list * string
+
