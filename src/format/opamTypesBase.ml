@@ -169,7 +169,15 @@ let pin_of_url (url,kind) = match kind with
   | `git -> Git url
   | `darcs -> Darcs url
   | `hg -> Hg url
-  | `local | `version -> failwith "Not a recognised version-control URL"
+  | `local -> Local (OpamFilename.Dir.of_string (fst url))
+
+let url_of_pin = function
+  | Http u -> u, `http
+  | Git u -> u, `git
+  | Darcs u -> u, `darcs
+  | Hg u -> u, `hg
+  | Local d -> (OpamFilename.Dir.to_string d, None), `local
+  | Version _ -> failwith "Not a source pin"
 
 let pin_option_of_string ?kind ?(guess=false) s =
   match kind with
@@ -279,6 +287,20 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
+let dep_flag_of_string = function
+  | "build" -> Depflag_Build
+  | "test" -> Depflag_Test
+  | "doc" -> Depflag_Doc
+  | "dev" -> Depflag_Dev
+  | s -> Depflag_Unknown s
+
+let string_of_dep_flag = function
+  | Depflag_Build -> "build"
+  | Depflag_Test -> "test"
+  | Depflag_Doc -> "doc"
+  | Depflag_Dev -> "dev"
+  | Depflag_Unknown s -> s
+
 let filter_deps ~build ~test ~doc ~dev =
   let filter =
     List.for_all (function
@@ -289,6 +311,22 @@ let filter_deps ~build ~test ~doc ~dev =
         | Depflag_Unknown _ -> true (* ignored *))
   in
   OpamFormula.formula_of_extended ~filter
+
+let string_of_pkg_flag = function
+  | Pkgflag_LightUninstall -> "light-uninstall"
+  | Pkgflag_AllSwitches -> "all-switches"
+  | Pkgflag_Verbose -> "verbose"
+  | Pkgflag_Plugin -> "plugin"
+  | Pkgflag_Compiler -> "compiler"
+  | Pkgflag_Unknown s -> s
+
+let pkg_flag_of_string = function
+  | "light-uninstall" -> Pkgflag_LightUninstall
+  | "all-switches" -> Pkgflag_AllSwitches
+  | "verbose" -> Pkgflag_Verbose
+  | "plugin" -> Pkgflag_Plugin
+  | "compiler" -> Pkgflag_Compiler
+  | s -> Pkgflag_Unknown s
 
 let action_contents = function
   | `Remove p | `Install p | `Reinstall p | `Build p -> p

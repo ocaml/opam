@@ -25,7 +25,7 @@ module Version = struct
 
   let of_string str =
     if OpamStd.String.contains str '+' then
-      raise (Invalid_argument "'+' is not allowed in compiler versions");
+      failwith "'+' is not allowed in compiler versions";
     of_string str
 
   type constr = (OpamFormula.relop * t) OpamFormula.formula

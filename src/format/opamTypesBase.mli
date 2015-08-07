@@ -96,6 +96,8 @@ val kind_of_pin_option: pin_option -> pin_kind
 (** Get a pin_option from address and kind *)
 val pin_of_url: address * repository_kind -> pin_option
 
+val url_of_pin: pin_option -> address * repository_kind
+
 (** Pretty-print *)
 val string_of_shell: shell -> string
 
@@ -120,9 +122,17 @@ val filter_ident_of_string:
 val string_of_filter_ident:
   name list * variable * (string * string) option -> string
 
+val dep_flag_of_string: string -> package_dep_flag
+
+val string_of_dep_flag: package_dep_flag -> string
+
 val filter_deps:
   build:bool -> test:bool -> doc:bool -> dev:bool ->
   ext_formula -> formula
+
+val pkg_flag_of_string: string -> package_flag
+
+val string_of_pkg_flag: package_flag -> string
 
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result

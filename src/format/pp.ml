@@ -84,11 +84,13 @@ module Pp = struct
     print: 'b -> 'a;
     name: string;
     pos: 'a -> pos option;
+    name_constr: string -> string;
   }
 
-  let pp ?(name="") ?(pos=fun _ -> None) parse print = {
-    parse; print; name; pos;
-  }
+  let pp ?(name="") ?(pos=fun _ -> None) ?(name_constr=fun x -> x) parse print =
+    {
+      parse; print; name; pos; name_constr;
+    }
 
   (** Utility functions *)
 
@@ -124,22 +126,25 @@ module Pp = struct
         try parse pp2 y with e -> raise_with_pos (pp1.pos x) e
       );
     print = pp1.print @* pp2.print;
-    name = (match pp2.name with "" -> pp1.name | name -> name);
+    name = (match pp2.name with "" -> pp1.name | name -> pp1.name_constr name);
     pos = pp1.pos;
+    name_constr = pp1.name_constr @* pp2.name_constr;
   }
 
   let identity = {
-    name = "";
-    pos = OpamStd.Option.none;
     parse = (fun x -> x);
     print = (fun x -> x);
+    name = "";
+    pos = OpamStd.Option.none;
+    name_constr = (fun x -> x);
   }
 
   let ignore = {
+    parse = OpamStd.Option.none;
+    print = (fun _ -> assert false);
     name = "ignored";
     pos = OpamStd.Option.none;
-    parse = OpamStd.Option.none;
-    print = Pervasives.ignore;
+    name_constr = (fun _ -> "<ignored>");
   }
 
   let check ?name ?errmsg f =
@@ -171,11 +176,21 @@ module Pp = struct
       (List.rev @* List.rev_map (parse pp1))
       (List.rev @* List.rev_map (print pp1))
 
+  let map_option ?name pp1 =
+    let name = match name with
+      | None -> pp1.name ^ "?"
+      | Some n -> n
+    in
+    pp ~name
+      (OpamStd.Option.map (parse pp1))
+      (OpamStd.Option.map (print pp1))
+
   let singleton = {
-    name = "";
-    pos = OpamStd.Option.none;
     parse = (function [x] -> x | _ -> unexpected ());
     print = (fun x -> [x]);
+    name = "";
+    pos = OpamStd.Option.none;
+    name_constr = (fun x -> x);
   }
 
   (** Pps from strings *)
@@ -237,8 +252,8 @@ module Pp = struct
       (fun x -> Some x)
 
   module Op = struct
-    let (-|) = (-|)
-    let (^+) = (^+)
+    let ( -| ) = ( -| )
+    let ( ^+ ) = ( ^+ )
   end
 
 (*
@@ -299,14 +314,14 @@ module Pp = struct
           | B b -> Bool (pos_null, b))
 
     let list =
-      pp ~name:"list" ~pos
+      pp ~name:"list" ~name_constr:(Printf.sprintf "[%s]") ~pos
         (function
           | List (_,l) -> l
           | x -> [x])
         (fun l -> List (pos_null, l))
 
     let group =
-      pp ~name:"group" ~pos
+      pp ~name:"group" ~name_constr:(Printf.sprintf "(%s)") ~pos
         (function
           | Group (_,l) -> l
           | x -> [x])
@@ -318,36 +333,24 @@ module Pp = struct
           | Option (_,k,l) -> k, l
           | k -> k, [])
         (function
-          | (v, [])   -> v
+          | (v, []) -> v
           | (v, l) -> Option (pos_null, v, l))
 
-    let map_group pp1 =
-      group -| map_list ~name:(Printf.sprintf "(%s*)" pp1.name) pp1
+    let map_group pp1 = group -| map_list pp1
 
-    let map_list pp1 =
-      list -| map_list ~name:(Printf.sprintf "[%s*]" pp1.name) pp1
+    let map_list pp1 = list -| map_list pp1
 
     let map_option pp1 pp2 =
       option -|
-      map_pair ~name:(Printf.sprintf "%s {%s}" pp1.name pp2.name) pp1 pp2
+      map_pair ~name:(Printf.sprintf "%s ?{%s}" pp1.name pp2.name) pp1 pp2
 
-    let ignore = {
-      name = "ignored";
-      pos = OpamStd.Option.none;
-      parse = OpamStd.Option.none;
-      print = fun _ -> Group (pos_null, []);
-    }
-
+    let map_pair pp1 pp2 =
+      pp ~name:(Printf.sprintf "[%s %s]" pp1.name pp2.name) ~pos
+        (function
+          | List (_,[a; b]) -> (parse pp1 a, parse pp2 b)
+          | _ -> unexpected ())
+        (fun (a, b) -> List (pos_null, [pp1.print a; pp2.print b]))
 (*
-  let pair pp1 pp2 =
-    pp
-      ~name:(Printf.sprintf "[%s %s]" pp1.name pp2.name)
-      ~pos:value_pos_opt
-      (function
-        | List (_,[a; b]) -> (parse pp1 a, parse pp2 b)
-        | _ -> unexpected ())
-      (fun (a, b) -> List (pos_null, [pp1.print a; pp2.print b]))
-
   let triplet pp1 pp2 pp3 =
     pp
       ~name:(Printf.sprintf "[%s %s %s]" pp1.name pp2.name pp3.name)
@@ -378,6 +381,23 @@ module Pp = struct
     let filter_ident =
       ident -|
       pp ~name:"filter-ident" filter_ident_of_string string_of_filter_ident
+
+    (* a hack to allow "system" compiler as ident rather than string. For
+       backwards-compat. *)
+    let compiler_version =
+      let str_system = OpamCompiler.(to_string system) in
+      let comp = of_module "compiler-version" (module OpamCompiler.Version) in
+      let parse = function
+        | Ident (_, v) when v = str_system -> parse comp v
+        | String (_, v) -> parse comp v
+        | _ -> unexpected ()
+      in
+      let print v =
+        let v = print comp v in
+        if v = str_system then print ident v
+        else print string v
+      in
+      pp ~name:"compiler-version" parse print
 
     let filter =
       let rec parse_filter l =
@@ -415,13 +435,166 @@ module Pp = struct
           | FAnd(e,f) ->
             group ~kind:`And (Logop (pos_null, `And, aux e, aux ~paren:`And f))
           | FNot f -> group (Pfxop (pos_null, `Not, aux ~paren:`Not f))
-          | FUndef -> make_ident "#undefined"
+          | FUndef -> assert false
         in
         [aux f]
       in
-      pp ~name:"filter-expression" parse_filter print_filter
+      pp ~name:"filter-expression" ~pos:values_pos parse_filter print_filter
 
     let arg = map_option simple_arg (opt filter)
+
+    let command = map_option (map_list arg) (opt filter)
+
+    let constraints version =
+      let rec parse_constraints l =
+        let rec aux = function
+          | Prefix_relop (_, op, v) ->
+            Atom (op, parse version v)
+          | Logop (_, `And, l, r) ->
+            And (aux l, aux r)
+          | Logop (_, `Or, l, r) ->
+            Or (aux l, aux r)
+          | Pfxop (_,`Not,v) ->
+            OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
+          | Group (_, g) ->
+            Block (parse_constraints g)
+          | _ -> unexpected ()
+        in
+        OpamFormula.ands (List.map aux l)
+      in
+      let rec print_constraints cs =
+        let rec aux = function
+          | Empty       -> assert false
+          | Atom (r, v) -> Prefix_relop (pos_null, r, print version v)
+          | And (x, y)  -> Logop (pos_null, `And, aux x, aux y)
+          | Or (x, y)   -> Logop (pos_null, `Or, aux x, aux y)
+          | Block g     -> Group (pos_null, print_constraints g)
+        in
+        match cs with
+        | Empty -> []
+        | cs -> [aux cs]
+      in
+      pp ~name:(version.name ^ "-constraints") ~pos:values_pos
+        parse_constraints print_constraints
+
+    let dep_flag =
+      string -| pp ~name:"dependency-flag" dep_flag_of_string string_of_dep_flag
+
+    (* Version constraints with additional leading keywords
+       ("build","test"...), used for dependency flags *)
+    let ext_constraints version =
+      let rec parse_ext_constraints = function
+        | Ident (_, _) as kw :: r ->
+          let kws, f = parse_ext_constraints r in
+          parse_dep_flag kw :: kws, f
+        | Logop (_, `And, t1, t2) :: r -> parse_ext_constraints (t1::t2::r)
+        | t -> [], parse (constraints version) t
+      in
+      let print (kws, cs) =
+        (* The kws must be aggregated with an '&' to the first constraint, if
+           any *)
+        match print (constraints version) cs, kws with
+        | [], [] -> []
+        | [], kw::kws ->
+          [List.fold_left (fun acc kw ->
+               Logop (pos_null, `And, make_dep_flag kw, acc))
+              (make_dep_flag kw) kws]
+        | c::cs, kws ->
+          List.fold_left (fun acc kw ->
+              Logop (pos_null, `And, make_dep_flag kw, acc))
+            c kws
+          :: cs
+      in
+      pp ~name:"ext-constraints" ~pos:values_pos parse_ext_constraints print
+
+    let package_atom constraints =
+      map_option
+        (string -| of_module "pkg-name" (module OpamPackage.Name))
+        (constraints
+           (string -| of_module "pkg-version" (module OpamPackage.Version)))
+
+    let package_formula kind constraints =
+      let split, join = match kind with
+        | `Conj -> OpamFormula.(ands_to_list, ands)
+        | `Disj -> OpamFormula.(ors_to_list, ors)
+      in
+      let rec parse_formula l =
+        let rec aux = function
+          | String _ | Option _ as at ->
+            Atom (parse (package_atom constraints) at)
+          | Group (_,g) -> Block (parse_formula g)
+          | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
+          | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
+          | _ -> unexpected ()
+        in
+        join (List.map aux l)
+      in
+      let rec print_formula f =
+        let rec aux = function
+          | Empty -> assert false
+          | Block f -> Group (pos_null, print_formula f)
+          | And (e,f) -> Logop (pos_null, `And, aux e, aux f)
+          | Or (e,f) -> Logop (pos_null, `Or, aux e, aux f)
+          | Atom at -> print (package_atom constraints) at
+        in
+        List.map aux (split f)
+      in
+      list -| pp ~name:"pkg-formula" ~pos:values_pos parse_formula print_formula
+
+    let env_binding =
+      let parse = function
+        | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, "=", s
+        | Env_binding (_, op, Ident (_,i), String (_,s)) -> i, op, s
+        | _ -> unexpected ()
+      in
+      let print (id, op, str) =
+        Env_binding (pos_null, op, print ident id, print string str)
+      in
+      list -| singleton -| pp ~name:"env-binding" parse print
+
+    let features =
+      let var = ident -| of_module "variable" (module OpamVariable) in
+      let doc_filt = map_option string filter in
+      let rec parse_features = function
+        | [] -> []
+        | [_] -> unexpected ()
+        | id :: opt :: r ->
+          let doc, filt = parse doc_filt opt in
+          (parse var id, doc, filt) :: parse_features r
+      in
+      let print ft =
+        List.fold_right (fun (id, doc, filt) acc ->
+            print var id :: print doc_filt (doc, filt) :: acc)
+          ft []
+      in
+      list -| pp ~name:"(variable \"doc\" {filter})*" parse_features print
+
+    (* Only used by the deprecated "os" field *)
+    let os_constraint =
+      let rec parse_osc l =
+        let rec aux = function
+          | Group (_,g) -> Block (parse_osc g)
+          | String (_,os) -> Atom (true, os)
+          | Logop (_,`And,l,r) -> And (aux l, aux r)
+          | Logop (_,`Or,l,r) -> Or (aux l, aux r)
+          | Pfxop (_,`Not,v) ->
+            OpamFormula.neg (fun (b, s) -> (not b, s)) (aux v)
+          | _ -> unexpected ()
+        in
+        OpamFormula.ors (List.map aux l)
+      in
+      let print_osc f =
+        let rec aux = function
+          | Empty -> assert false
+          | Atom (true , os) -> print string os
+          | Atom (false, os) -> Pfxop (pos_null, `Not, print string os)
+          | Block g -> Group (pos_null, [aux g])
+          | And(e,f) -> Logop (pos_null, `And, aux e, aux f)
+          | Or(e,f) -> Logop (pos_null, `Or, aux e, aux f)
+        in
+        [aux f]
+      in
+      list -| pp ~name:"os-constraint" parse_osc print_osc
 
   end
 
@@ -439,10 +612,18 @@ module Pp = struct
         pos = (function _, Some v -> pp1.pos v | _, None -> None);
         parse = (function acc, Some s -> set acc (pp1.parse s) | acc, None -> acc);
         print = (fun s -> s, OpamStd.Option.map pp1.print (get s));
+        name_constr = (fun x -> x);
       }
 
   let ppacc set get pp = ppacc_opt set (fun x -> Some (get x)) pp
 
+  let ppacc_ignore = {
+    parse = (fun (acc,_) -> acc);
+    print = (fun s -> s, None);
+    name = "<ignored>";
+    pos = OpamStd.Option.none;
+    name_constr = (fun _ -> "<ignored>");
+  }
 
   (** Parsers for item lists (standard opam file contents: list of field
       bindings). *)
@@ -535,60 +716,54 @@ module Pp = struct
       in
       pp ?name ~pos:items_pos parse print
 
-    let extract_field name items =
-      List.fold_left (fun (found, others) -> function
-          | Variable (pos, k, v) when k = name ->
-            if found = None then Some (pos,v), others
-            else bad_format ~pos "Duplicate '%s:' field" name
-          | x -> found, x::others)
-        (None,[]) items
+    let partition_fields filter =
+      pp
+        (List.partition (function Variable (_,k,_) -> filter k | _ -> false))
+        (fun (a,b) -> a @ b)
+
+    let extract_field name =
+      partition_fields ((=) name) -|
+      map_pair
+        (opt (singleton -| item -| pp ~name:(Printf.sprintf "'%s:' field" name)
+                (fun (_,v) -> v) (fun v -> name,v)))
+        identity
 
     let opam_version
         ?(v=OpamVersion.current_nopatch)
         ?(f=fun v -> OpamVersion.(compare current_nopatch (nopatch v) >= 0))
         ()
       =
-      let parse items =
-        match extract_field "opam-version" items with
-        | Some (pos,v), items ->
-          let v = OpamVersion.of_string (V.string.parse v) in
-          if not OpamFormatConfig.(!r.skip_version_checks) && not (f v) then
-            bad_format ~pos "Unsupported opam file format version %S"
-              (OpamVersion.to_string v);
-          items
-        | None, items ->
-          let pos = match items with i::_ -> item_pos i | [] -> pos_null in
-          log "Error: missing 'opam-version:' field at %s" (string_of_pos pos);
-          if OpamFormatConfig.(!r.strict) then
-            bad_format ~pos "Missing 'opam-version:' field";
-          items
+      let opam_v = V.string -| of_module "opam-version" (module OpamVersion) in
+      let check_v v = OpamFormatConfig.(!r.skip_version_checks) ||
+                      OpamStd.Option.Op.((v >>| f) +! false)
       in
-      let print items =
-        let v = V.string.print OpamVersion.(to_string v) in
-        Variable (pos_null, "opam-version", v) :: items
-      in
-      pp ~name:"opam-version:" ~pos:items_pos parse print
+      extract_field "opam-version" -|
+      map_pair
+        (map_option opam_v -| check check_v)
+        identity -|
+      pp (fun (v,items) -> items) (fun items -> Some v,items)
 
     let signature =
-      V.list -| (V.string ^+ V.string ^+ (last -| V.string))
+      V.list -| (V.string ^+ V.string ^+ last -| V.string)
 
-    exception Invalid_signature of pos
-
+    exception Invalid_signature of pos * (string*string*string) option
+(*
     let signed check =
-      let parse items =
-        match extract_field "signature" items with
-        | Some (pos,sgs), items ->
-          let sgs = parse (V.map_list signature) sgs in
-          let str = Normalise.items items in
-          if not (check sgs str) then
-            raise (Invalid_signature pos)
-          else items
-        | None, _ ->
-          raise (Invalid_signature
-                   (OpamStd.Option.default pos_null (items_pos items)))
-      in
-      let print _ = assert false in
-      pp ~name:"signature:" parse print
+      extract_field "signature" -|
+      pp ~name:"signed-file"
+        (function
+          | Some (pos,sgs), items ->
+            let sgs = parse (V.map_list signature) sgs in
+            let str = Normalise.items items in
+            if not (check sgs str) then
+              raise (Invalid_signature (pos, Some sgs))
+            else items
+          | None, _ ->
+            raise (Invalid_signature
+                     (OpamStd.Option.default pos_null (items_pos items),
+                      None)))
+        (fun _ -> assert false)
+*)
   end
 
 
