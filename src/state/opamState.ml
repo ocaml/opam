@@ -1931,9 +1931,9 @@ let source t ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let expand_env t ?opam (env: env_updates) : env =
+let expand_env t ?opam (env: env_updates) variables : env =
   let fenv v =
-    try resolve_variable t ?opam OpamVariable.Map.empty v
+    try resolve_variable t ?opam variables v
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
@@ -1972,10 +1972,10 @@ let expand_env t ?opam (env: env_updates) : env =
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
-let add_to_env t ?opam (env: env) (updates: env_updates) =
+let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty) (updates: env_updates) =
   let env =
     List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
-  env @ expand_env t ?opam updates
+  env @ expand_env t ?opam updates variables
 
 let env_updates ~opamswitch ?(force_path=false) t =
   let comp = compiler_comp t t.compiler in
