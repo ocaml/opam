@@ -181,6 +181,9 @@ let list kind dir =
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
 
+let files_all_not_dir =
+    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
+
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
 
