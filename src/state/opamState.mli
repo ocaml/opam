@@ -165,6 +165,12 @@ val filter_env:
   ?local_variables:((variable_contents option) OpamVariable.Map.t) ->
   state -> full_variable -> variable_contents option
 
+(** [contents_of_variable t v] resolves the variable [v] using the
+    (lazy) state [t]. First check in the environment for overwrites,
+    then use an heuristic to avoid read the global state and then use
+    {!filter_env}. Return ["#undefined"] if [v] is not defined.*)
+val contents_of_variable: state Lazy.t -> full_variable -> variable_contents
+
 (** {2 Helpers} *)
 
 (** Return the OPAM file for the given package *)

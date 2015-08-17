@@ -185,34 +185,11 @@ let set var value =
     OpamFile.Dot_config.write config_f
       (OpamFile.Dot_config.set config var newval)
 
-let quick_lookup v =
-  if OpamVariable.Full.is_global v then (
-    let var = OpamVariable.Full.variable v in
-    let root = OpamStateConfig.(!r.root_dir) in
-    let switch = OpamStateConfig.(!r.current_switch) in
-    let config_f = OpamPath.Switch.global_config root switch in
-    let config = OpamFile.Dot_config.read config_f in
-    match OpamState.get_env_var v with
-    | Some _ as c -> c
-    | None ->
-      if OpamVariable.to_string var = "switch" then
-        Some (S (OpamSwitch.to_string switch))
-      else
-        OpamFile.Dot_config.variable config var
-  ) else
-    None
-
 let variable v =
-  log "config-variable";
-  let contents =
-    match quick_lookup v with
-    | Some c -> c
-    | None   ->
-      let t = OpamState.load_state "config-variable"
-          OpamStateConfig.(!r.current_switch) in
-      OpamFilter.ident_value (OpamState.filter_env t) ~default:(S "#undefined")
-        (OpamFilter.ident_of_var v)
-  in
+  let t = lazy (
+    OpamState.load_state "config-variable" OpamStateConfig.(!r.current_switch)
+  ) in
+  let contents = OpamState.contents_of_variable t v in
   OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =
