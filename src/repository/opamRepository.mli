@@ -21,13 +21,13 @@ open OpamTypes
 (** Get the list of packages *)
 val packages: repository -> package_set
 
-(** Get the list of packages (and their eventual prefixes) *)
+(** Get the list of packages (and their possible prefix) *)
 val packages_with_prefixes: repository -> string option package_map
 
 (** Get the list of all compiler *)
 val compilers: repository -> compiler_set
 
-(** Get the list of compilers (and their eventual prefixes) *)
+(** Get the list of compilers (and their possible prefix) *)
 val compilers_with_prefixes: repository -> string option compiler_map
 
 (** {2 Repository Collection Operations } *)
