@@ -23,64 +23,67 @@ module Types: sig
   type t = {
     partial: bool;
   (* type global = { *)
-    (** The global OPAM root path *)
     root: OpamPath.t;
+    (** The global OPAM root path *)
 
-    (** The main configuration file *)
     config: OpamFile.Config.t;
+    (** The main configuration file *)
 
-    (** The association list between switch and compiler *)
     aliases: OpamFile.Aliases.t;
+    (** The association list between switch and compiler *)
+
   (* } *)
 
   (* type repos = { *)
-    (** The list of repositories *)
     repositories: OpamFile.Repo_config.t repository_name_map;
+    (** The list of repositories *)
 
-    (** The list of compiler available to install *)
     compilers: compiler_set;
+    (** The list of compiler available to install *)
 
-    (** Package index *)
     package_index: OpamFile.Package_index.t;
+    (** Package index *)
 
-    (** Compiler index *)
     compiler_index: OpamFile.Compiler_index.t;
+    (** Compiler index *)
   (* } *)
 
   (* type switch = { *)
-    (** The current active switch *)
     switch: switch;
+    (** The current active switch *)
 
-    (** The current compiler name (corresponding to a .comp file) *)
     compiler: compiler;
+    (** The current compiler name (corresponding to a .comp file) *)
 
-    (** The current version of the compiler *)
     compiler_version: compiler_version Lazy.t;
+    (** The current version of the compiler *)
 
-    (** The contents of the global configuration file for this switch *)
     switch_config: OpamFile.Dot_config.t;
+    (** The contents of the global configuration file for this
+        switch *)
 
-    (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
     opams: OpamFile.OPAM.t package_map;
+    (** The list of OPAM files (excluding the ones that exist purely
+        as overlays) *)
 
-    (** The list of packages *)
     packages: package_set;
+    (** The list of packages *)
 
-    (** The list of packages, keeping the one available for the current
-        compiler version *)
     available_packages: package_set Lazy.t;
+    (** The list of packages, keeping the one available for the
+        current compiler version *)
 
-    (** The list of pinned packages *)
     pinned: OpamFile.Pinned.t;
+    (** The list of pinned packages *)
 
-    (** The list of installed packages *)
     installed: OpamFile.Installed.t;
+    (** The list of installed packages *)
 
-    (** The list of packages explicitly installed by the user *)
     installed_roots: OpamFile.Installed_roots.t;
+    (** The list of packages explicitly installed by the user *)
 
-    (** The list of packages which needs to be reinsalled *)
     reinstall: OpamFile.Reinstall.t;
+    (** The list of packages which needs to be reinsalled *)
   }
 
 end
