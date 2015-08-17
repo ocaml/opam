@@ -222,7 +222,9 @@ SRC_client = \
   opamConfigCommand.ml \
   opamRepositoryCommand.ml \
   opamPinCommand.ml \
-  opamClient.ml
+  opamClient.ml \
+  opamGitVersion.ml \
+  opamArg.ml
 
 define PROJ_client
   SOURCES = $(call addmli,client,$(SRC_client))
