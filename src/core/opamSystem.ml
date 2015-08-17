@@ -546,13 +546,19 @@ let extract file dst =
       f tmp_dir;
       if Sys.file_exists dst then
         internal_error "Extracting the archive will overwrite %s." dst;
-      match directories_strict tmp_dir with
-      | [x] ->
-        mkdir (Filename.dirname dst);
-        command [ "mv"; x; dst]
+      match files_all_not_dir tmp_dir with
+      | [] ->
+        begin match directories_strict tmp_dir with
+        | [x] ->
+          mkdir (Filename.dirname dst);
+          command [ "mv"; x; dst]
+        | _ ->
+          internal_error "The archive %S contains multiple root directories."
+            file
+        end
       | _   ->
-        internal_error "The archive %S contains multiple root directories."
-          file
+        mkdir (Filename.dirname dst);
+        command [ "mv"; tmp_dir; dst]
   )
 
 let extract_in file dst =
