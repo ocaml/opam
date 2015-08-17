@@ -39,10 +39,6 @@ type package_details = {
   others: string list Lazy.t; (* words in lines in files *)
 }
 
-let request ?(criteria=`Default) ?(extra_attributes=[])
-    ?(wish_install=[]) ?(wish_upgrade=[]) ?(wish_remove=[]) () =
-  { wish_install; wish_upgrade; wish_remove; criteria; extra_attributes; }
-
 let details_of_package t name versions =
   let installed_version =
     try Some
@@ -299,7 +295,7 @@ module API = struct
           | _ ->  { u with u_installed = OpamPackage.Set.empty;
                            u_installed_roots = OpamPackage.Set.empty }
         in
-        let req = request ~wish_install:depends_atoms () in
+        let req = OpamSolver.request ~install:depends_atoms () in
         match
           OpamSolver.resolve universe ~orphans:OpamPackage.Set.empty req
         with
@@ -721,7 +717,8 @@ module API = struct
   let preprocessed_request t full_orphans orphan_versions
     ?wish_install ?wish_remove ?wish_upgrade ?criteria () =
     let request =
-      request ?wish_install ?wish_remove ?wish_upgrade ?criteria ()
+      OpamSolver.request ?install:wish_install ?remove:wish_remove
+        ?upgrade:wish_upgrade ?criteria ()
     in
     if OpamCudf.external_solver_available () then request else
     let { wish_install; wish_remove; wish_upgrade; criteria; _ } = request in
@@ -1000,8 +997,8 @@ module API = struct
     let resolve pkgs =
       pkgs,
       OpamSolution.resolve t action ~orphans:all_orphans
-        (request
-           ~wish_install:(OpamSolution.atoms_of_packages pkgs)
+        (OpamSolver.request
+           ~install:(OpamSolution.atoms_of_packages pkgs)
            ~criteria:`Fixup
            ())
     in
@@ -1608,9 +1605,9 @@ module API = struct
       let solution =
         OpamSolution.resolve_and_apply ?ask t Remove ~requested
           ~orphans:(full_orphans ++ orphan_versions)
-          (request
-             ~wish_install:(OpamSolution.eq_atoms_of_packages to_keep)
-             ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
+          (OpamSolver.request
+             ~install:(OpamSolution.eq_atoms_of_packages to_keep)
+             ~remove:(OpamSolution.atoms_of_packages to_remove)
              ())
       in
       OpamSolution.check_solution t solution
