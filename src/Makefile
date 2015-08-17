@@ -69,10 +69,10 @@ INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
 export INCDIRS
 
-opam-lib.byte:
+opam-lib.byte: client/opamGitVersion.ml
 	$(MAKE) $(OPAMLIB:=.cma)
 
-opam-lib.native:
+opam-lib.native: client/opamGitVersion.ml
 	$(MAKE) $(OPAMLIB:=.cmxa)
 
 opam-lib: opam-lib.byte $(if $(USE_BYTE),,opam-lib.native) opam-admin.top
