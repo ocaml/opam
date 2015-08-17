@@ -25,7 +25,7 @@ open OpamProcess.Job.Op
 module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
-let install_package t nv =
+let process_dot_install t nv =
   if OpamStateConfig.(!r.dryrun) then
       OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
   else
@@ -573,7 +573,7 @@ let install_package t nv =
   | Some _ as err -> Done err
   | None ->
     try
-      install_package t nv;
+      process_dot_install t nv;
       OpamConsole.msg "%s installed %s.%s\n"
         (if not (OpamConsole.utf8 ()) then "->"
          else OpamActionGraph.
