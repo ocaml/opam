@@ -5,6 +5,13 @@ open OpamFormat
 
 let log f = OpamConsole.log "FORMAT" f
 
+let warn ?pos ?exc fmt =
+  if OpamFormatConfig.(!r.strict) then bad_format ?pos fmt
+  else
+    Printf.ksprintf
+      (fun s -> log "%s" (string_of_bad_format (Bad_format (pos, [], s))))
+      fmt
+
 module Normalise = struct
   (** OPAM normalised file format, for signatures:
       - each top-level field on a single line
@@ -663,15 +670,11 @@ module Pp = struct
         match extra_fields with
         | [] -> items
         | (pos,_) :: _  ->
-          let msg =
-            Printf.sprintf "Unexpected or duplicate fields%s:%s" in_name
-              (OpamStd.Format.itemize
-                 (fun (pos,k) ->
-                    Printf.sprintf "'%s:' at %s" k (string_of_pos pos))
-                 extra_fields)
-          in
-          if OpamFormatConfig.(!r.strict) then bad_format ~pos "%s" msg
-          else log "Warning: %s" msg;
+          warn ~pos "Unexpected or duplicate fields%s:%s" in_name
+            (OpamStd.Format.itemize
+               (fun (pos,k) ->
+                  Printf.sprintf "'%s:' at %s" k (string_of_pos pos))
+               extra_fields);
           valid_fields
       in
       let print items =
@@ -692,13 +695,11 @@ module Pp = struct
              | Variable (pos, k, v) ->
                try (List.assoc k ppas).parse (acc, Some v) with
                | Not_found ->
-                 if OpamFormatConfig.(!r.strict) then
-                   bad_format ~pos "Field '%s:' unrecognised%s" k in_name;
-                 log "Field '%s:' ignored: unknown%s" k in_name;
+                 warn ~pos "Field '%s:' unrecognised%s" k in_name;
                  acc
                | e when OpamFormatConfig.(!r.strict) -> raise (add_pos pos e)
                | Bad_format _ as e ->
-                 log "Field '%s:' ignored%s: %s"
+                 warn ~pos "Field '%s:' ignored%s: %s"
                    k in_name (string_of_bad_format (add_pos pos e));
                  acc
                | e ->

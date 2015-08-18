@@ -2391,6 +2391,7 @@ let up_to_date_env t =
     List.filter
       (fun (s, v) -> Some v <> try Some (OpamStd.Env.get s) with Not_found -> None)
       (get_opam_env ~force_path:false t) in
+  log "Not up-to-date env variables: [%s]" (String.concat changes);
   changes = []
 
 let print_env_warning_at_init t user =

@@ -1179,18 +1179,71 @@ module X = struct
       "configure-style", Pp.ppacc_ignore; (* deprecated *)
     ]
 
-    let pp =
+    let cleanup t =
+      let name = t.name in (* todo: add check *)
+      let version = t.version in
+      let clean_depflags  ~pos ext_formula =
+        OpamFormula.map (fun (name, (flags, cstr)) ->
+            let known_flags, unknown_flags =
+              List.partition
+                (function Depflag_Unknown _ -> false | _ -> true) flags in
+            if unknown_flags <> [] then
+              Pp.warn ~pos "Unknown flags %s ignored for dependency %s"
+                (OpamStd.Format.pretty_list unknown_flags)
+                (OpamPackage.Name.to_string name);
+            Atom (name, (known_flags, cstr)))
+          ext_formula
+      in
+      let depends = clean_depflags t.depends in
+      let depopts =
+        let rec cleanup ~pos acc disjunction =
+          List.fold_left (fun acc -> function
+              | OpamFormula.Atom (_, (_,Empty)) as atom -> atom :: acc
+              | OpamFormula.Atom (name, (flags, cstr)) ->
+                Pp.warn ~pos
+                  "Version constraint (%s) no longer allowed in optional \
+                   dependency (ignored).\n\
+                   Use the 'conflicts' field instead."
+                  (OpamFormula.string_of_formula (fun (r,v) ->
+                       OpamFormula.string_of_relop r ^" "^
+                       OpamPackage.Version.to_string v)
+                      cstr);
+                OpamFormula.Atom (name, (flags, Empty)) :: acc
+              | f ->
+                Pp.warn "Optional dependencies must be a disjunction. \
+                         Treated as such.";
+                cleanup ~pos acc
+                  (OpamFormula.fold_left (fun acc a -> OpamFormula.Atom a::acc) [] f)
+            )
+            acc disjunction
+        in
+        t.depopts |>
+        check_depflags ~pos:(OpamFormat.value_pos value) in
+      if not conservative &&
+         not OpamFormatConfig.(!r.skip_version_checks) &&
+         OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
+      then
+        OpamFormula.ors_to_list f
+        |> cleanup ~pos:(OpamFormat.value_pos value) []
+        |> List.rev
+        |> OpamFormula.ors
+      else f
+    in
+    let depopts = clean_depflags depopts in
+    (* TODO - WIP *)
+    { t with
+      name; version; depends; depopts }
+
+    let pp ?filename =
       Pp.I.opam_version () -|
       Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true fields -|
       Pp.I.partition_fields is_ext_field -|
       Pp.map_pair
         (Pp.I.items -| OpamStd.String.Map.(Pp.pp of_list bindings))
-        (Pp.I.fields ~empty fields)
+        (Pp.I.fields ~name:"opam-file" ~empty fields)
       -| Pp.pp
         (fun (extensions, t) -> with_extensions t extensions)
         (fun t -> extensions t, t)
-
-    (*"x-"*)
 
     let opam_1_0_fields = [
       s_opam_version;
