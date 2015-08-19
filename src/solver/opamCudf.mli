@@ -146,7 +146,6 @@ val remove_all_uninstalled_versions_but: Cudf.universe ->
 
 (** Cudf labels for package fields in the cudf format
     (use for the field Cudf.pkg_extra and with Cudf.lookup_package_property) *)
-val s_source: string         (** the original OPAM package name (as string) *)
 val s_source_number: string  (** the original OPAM package version (as string) *)
 val s_reinstall: string      (** a package to be reinstalled (a bool) *)
 val s_installed_root: string (** true if this package belongs to the roots
