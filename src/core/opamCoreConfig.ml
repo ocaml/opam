@@ -41,7 +41,7 @@ type 'a options_fun =
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
-  unit -> 'a
+  'a
 
 let default = {
   debug_level = 0;
@@ -72,7 +72,6 @@ let setk k t
     ?log_dir
     ?keep_log_dir
     ?errlog_length
-    ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -89,10 +88,10 @@ let setk k t
     errlog_length = t.errlog_length + errlog_length;
   }
 
-let set t = setk (fun x -> x) t
+let set t = setk (fun x () -> x) t
 
 (* Global configuration reference *)
 
 let r = ref default
 
-let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+let update ?noop:_ = setk (fun cfg () -> r := cfg) !r

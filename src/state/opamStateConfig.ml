@@ -73,7 +73,7 @@ type 'a options_fun =
   ?fake:bool ->
   ?makecmd:string Lazy.t ->
   ?json_out:string option ->
-  unit -> 'a
+  'a
 
 let setk k t
     ?root_dir
@@ -91,7 +91,6 @@ let setk k t
     ?fake
     ?makecmd
     ?json_out
-   ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -112,13 +111,13 @@ let setk k t
     json_out = t.json_out + json_out;
   }
 
-let set t = setk (fun x -> x) t
+let set t = setk (fun x () -> x) t
 
 let r = ref default
 
-let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
-let init ?noop:_ =
+let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let current_switch, switch_from =
@@ -126,12 +125,13 @@ let init ?noop:_ =
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
     | None -> None, None
   in
-  setk (setk (fun c -> r := c)) !r
+  setk (setk (fun c -> r := c; k)) !r
     ?root_dir:(env_string "ROOT" >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
     ?jobs:(env_int "JOBS" >>| fun s -> lazy s)
     ?dl_jobs:(env_int "DOWNLOADJOBS")
+    ?external_tags:None
     ?keep_build_dir:(env_bool "KEEPBUILDDIR")
     ?no_base_packages:(env_bool "NOBASEPACKAGES")
     ?build_test:(env_bool "BUILDTEST")
@@ -141,7 +141,8 @@ let init ?noop:_ =
     ?fake:(env_bool "FAKE")
     ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
-    ()
+
+let init ?noop:_ = initk (fun () -> ())
 
 let opamroot ?root_dir () =
   let open OpamStd.Option.Op in

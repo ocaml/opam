@@ -27,7 +27,7 @@ type 'a options_fun =
   ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
   ?retries:int ->
   ?force_checksums:bool option ->
-  unit -> 'a
+  'a
 
 let default = {
   download_tool = lazy (
@@ -55,7 +55,6 @@ let setk k t
     ?download_tool
     ?retries
     ?force_checksums
-    ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -64,13 +63,13 @@ let setk k t
     force_checksums = t.force_checksums + force_checksums;
   }
 
-let set t = setk (fun x -> x) t
+let set t = setk (fun x () -> x) t
 
 let r = ref default
 
-let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
-let init ?noop:_ =
+let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let download_tool =
@@ -96,8 +95,9 @@ let init ?noop:_ =
     | None, None -> None
     | _ -> Some None
   in
-  setk (setk (fun c -> r := c)) !r
+  setk (setk (fun c -> r := c; k)) !r
     ?download_tool
     ?retries:(env_int "RETRIES")
     ?force_checksums
-    ()
+
+let init ?noop:_ = initk (fun () -> ())

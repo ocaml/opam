@@ -27,17 +27,8 @@ type 'a options_fun =
   ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
   ?retries:int ->
   ?force_checksums:bool option ->
-  unit -> 'a
+  'a
 
-val default : t
-
-val set : t -> t options_fun
-
-val setk : (t -> 'a) -> t -> 'a options_fun
-
-val r : t ref
-
-val update : ?noop:unit -> unit options_fun
-
-(** Initialises download tool and parameters *)
-val init: ?noop:unit -> unit options_fun
+include OpamStd.Config.Sig
+  with type t := t
+   and type 'a options_fun := 'a options_fun

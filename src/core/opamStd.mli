@@ -33,7 +33,9 @@ module type SET = sig
 
   module Op : sig
     val (++): t -> t -> t (** Infix set union *)
+
     val (--): t -> t -> t (** Infix set difference *)
+
     val (%%): t -> t -> t (** Infix set intersection *)
   end
 
@@ -385,6 +387,48 @@ module Config : sig
 
   (** Sets the OpamCoreConfig options, reading the environment to get default
       values when unspecified *)
-  val init: ?noop:unit -> unit OpamCoreConfig.options_fun
+  val init: ?noop:_ -> (unit -> unit) OpamCoreConfig.options_fun
+
+  (** Like [init], but returns the given value. For optional argument
+      stacking *)
+  val initk: 'a -> 'a OpamCoreConfig.options_fun
+
+  module type Sig = sig
+
+    (** Read-only record type containing the lib's configuration options *)
+    type t
+
+    (** Type of functions with optional arguments for setting each of [t]'s
+        fields, similarly named, and returning ['a] *)
+    type 'a options_fun
+
+    (** The default values of the options to use at startup *)
+    val default: t
+
+    (** Use to update any option in a [t], using the optional arguments of
+        [options_fun]. E.g. [set opts ?option1:1 ?option4:"x" ()] *)
+    val set: t -> (unit -> t) options_fun
+
+    (** Same as [set], but passes the result to a continuation, allowing
+        argument stacking *)
+    val setk: (t -> 'a) -> t -> 'a options_fun
+
+    (** The global reference containing the currently set library options.
+        Access using [OpamXxxConfig.(!r.field)]. *)
+    val r: t ref
+
+    (** Updates the currently set options in [r] according to the optional
+        arguments *)
+    val update: ?noop:_ -> (unit -> unit) options_fun
+
+    (** Sets the options, reading the environment to get default values when
+        unspecified *)
+    val init: ?noop:_ -> (unit -> unit) options_fun
+
+    (** Sets the options like [init], but returns the given value (for arguments
+        stacking) *)
+    val initk: 'a -> 'a options_fun
+
+  end
 
 end

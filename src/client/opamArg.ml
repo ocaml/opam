@@ -61,43 +61,6 @@ let apply_global_options o =
   let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
   let some x = match x with None -> None | some -> Some some in
-  (* (i) get root dir *)
-  let root = OpamStateConfig.opamroot ?root_dir:o.opt_root () in
-  (* (ii) load conf file and set defaults *)
-  (* the init for OpamFormat is done in advance since (a) it has an effect on
-     loading the global config (b) the global config has no effect on it *)
-  OpamFormatConfig.init
-    ?strict:(flag o.strict)
-    (* ?skip_version_checks:bool *)
-    (* ?all_parens:bool *)
-    ();
-  let initialised =
-    OpamStateConfig.load_defaults root
-  in
-  (* (iii) load from env and options using OpamXxxGlobals.init_config *)
-  let log_dir =
-      if initialised then
-        Some OpamFilename.(Dir.to_string Op.(root / "log"))
-      else None
-  in
-  OpamStd.Config.init
-    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
-    ?verbose_level:(if o.quiet then Some 0 else
-                    if o.verbose = 0 then None else Some o.verbose)
-    ?color:o.color
-    (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
-    (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
-    ?answer:(some (flag o.yes))
-    ?safe_mode:(flag o.safe_mode)
-    (* ?lock_retries:int *)
-    ?log_dir
-    (* ?keep_log_dir:bool *)
-    ();
-  OpamRepositoryConfig.init
-    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
-    (* ?retries:int *)
-    (* ?force_checksums:bool option *)
-    ();
   let external_solver =
     if o.use_internal_solver then Some (lazy None) else
       o.external_solver >>| fun s ->
@@ -107,16 +70,36 @@ let apply_global_options o =
       )
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
-  OpamSolverConfig.init
+  OpamClientConfig.opam_init
+    (* - format options - *)
+    ?strict:(flag o.strict)
+    (* ?skip_version_checks:bool *)
+    (* ?all_parens:bool *)
+    (* - core options - *)
+    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
+    ?verbose_level:(if o.quiet then Some 0 else
+                    if o.verbose = 0 then None else Some o.verbose)
+    ?color:o.color
+    (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
+    (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
+    ?answer:(some (flag o.yes))
+    ?safe_mode:(flag o.safe_mode)
+    (* ?lock_retries:int *)
+    (* ?log_dir:OpamTypes.dirname *)
+    (* ?keep_log_dir:bool *)
+    (* - repository options - *)
+    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
+    (* ?retries:int *)
+    (* ?force_checksums:bool option *)
+    (* - solver options *)
     ?cudf_file:(some o.cudf_file)
     (* ?solver_timeout:float *)
     ?external_solver
     ?solver_preferences_default:(some solver_prefs)
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
-    ();
-  OpamStateConfig.init
-    ~root_dir:root
+    (* - state options - *)
+    ?root_dir:o.opt_root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
     (* ?jobs: int *)
@@ -131,8 +114,7 @@ let apply_global_options o =
     (* ?fake:bool *)
     (* ?makecmd:string Lazy.t *)
     ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
-    ();
-  OpamClientConfig.init
+    (* - client options - *)
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
     (* ?pin_kind_auto:bool *)

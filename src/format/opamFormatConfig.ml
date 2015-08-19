@@ -23,7 +23,7 @@ type 'a options_fun =
   ?strict:bool ->
   ?skip_version_checks:bool ->
   ?all_parens:bool ->
-  unit -> 'a
+  'a
 
 let default = {
   strict = false;
@@ -35,7 +35,6 @@ let setk k t
     ?strict
     ?skip_version_checks
     ?all_parens
-    ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -44,18 +43,19 @@ let setk k t
     all_parens = t.all_parens + all_parens;
   }
 
-let set t = setk (fun x -> x) t
+let set t = setk (fun x () -> x) t
 
 (* Global configuration reference *)
 
 let r = ref default
 
-let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
-let init ?noop:_ =
+let initk k =
   let open OpamStd.Config in
-  setk (setk (fun c -> r := c)) !r
+  setk (setk (fun c -> r := c; k)) !r
     ?strict:(env_bool "STRICT")
     ?skip_version_checks:(env_bool "SKIPVERSIONCHECKS")
     ?all_parens:(env_bool "ALLPARENS")
-    ()
+
+let init ?noop:_ = initk (fun () -> ())

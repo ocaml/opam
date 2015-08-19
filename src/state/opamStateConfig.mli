@@ -49,21 +49,11 @@ type 'a options_fun =
   ?fake:bool ->
   ?makecmd:string Lazy.t ->
   ?json_out:string option ->
-  unit -> 'a
+  'a
 
-val default : t
-
-val set : t -> t options_fun
-
-val setk : (t -> 'a) -> t -> 'a options_fun
-
-val r : t ref
-
-val update : ?noop:_ -> unit options_fun
-
-(** Sets the options, reading the environment to get default
-    values when unspecified *)
-val init: ?noop:_ -> unit options_fun
+include OpamStd.Config.Sig
+  with type t := t
+   and type 'a options_fun := 'a options_fun
 
 (** Get the initial opam root value (from default, env or optional argument).
     This allows to get it before doing the init, which is useful to get the
