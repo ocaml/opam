@@ -377,7 +377,7 @@ The `compiler-name.comp` file has the following fields:
   this switch.
 
 - <a id="compfield-preinstalled">`preinstalled: <bool>`</a>:
-  should not be set by hand, specifies that the this `.comp` file refers to an
+  should not be set by hand, specifies that the `.comp` file refers to an
   OCaml installation that lies outside of OPAM (files using this are normally
   auto-generated).
 
@@ -683,13 +683,16 @@ recommended to check the validity and quality of your `opam` files.
   specify package flags that may alter package behaviour. Currently available
   flags are:
 
-    - `light-uninstall`: the package's uninstall instructions don't require
+    - <a id="opamflag-light-uninstall">`light-uninstall`</a>:
+      the package's uninstall instructions don't require
       the package source. This is currently inferred when the only uninstall
       instructions have the form `ocamlfind remove...`, but making it explicit
       is preferred (since OPAM 1.2.0).
-    - `verbose`: when this is present, the stdout of the package's build and
+    - <a id="opamflag-verbose">`verbose`</a>:
+      when this is present, the stdout of the package's build and
       install instructions will be printed to the user (since OPAM 1.2.1).
-    - `plugin`: the package installs a program named `opam-<name>` and may be
+    - <a id="opamflag-plugin">`plugin`</a>:
+      the package installs a program named `opam-<name>` and may be
       auto-installed and run with `opam <name>` (since OPAM 1.2.2 ; the use is
       discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
       instead)

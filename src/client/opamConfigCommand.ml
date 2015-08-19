@@ -23,6 +23,7 @@ open OpamTypes
 let help t =
   OpamConsole.msg "# Global OPAM configuration variables\n\n";
   let global = OpamState.global_config t in
+  let global_vars = OpamFile.Dot_config.variables global in
   List.iter (fun var ->
       OpamConsole.msg "%-20s %s\n"
         (OpamVariable.to_string var)
@@ -30,15 +31,16 @@ let help t =
          | Some c -> OpamVariable.string_of_variable_contents c
          | None -> "")
     )
-    (OpamFile.Dot_config.variables global);
+    global_vars;
   OpamConsole.msg "\n# Global variables from the environment\n\n";
   List.iter (fun (varname, doc) ->
       let var = OpamVariable.of_string varname in
-      OpamConsole.msg "%-20s %-20s # %s\n"
-        varname
-        (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
-           ([],var,None))
-        doc)
+      if not (List.mem var global_vars) then
+        OpamConsole.msg "%-20s %-20s # %s\n"
+          varname
+          (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
+             ([],var,None))
+          doc)
     OpamState.global_variable_names;
   OpamConsole.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
   List.iter (fun (var, doc) ->

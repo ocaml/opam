@@ -31,12 +31,12 @@ val variables : file_item list -> (string * value) list
 val sections : file_item list -> (string * file_section) list
 
 (** Check whether a list of items contains only valid variable definitions. *)
-val is_valid : ?allow_extended:bool -> file_item list -> string list -> bool
+val is_valid : ?allow_extensions:bool -> file_item list -> string list -> bool
 
-(** Find all the invalid fields. If [allow_extended] is specified and true,
+(** Find all the invalid fields. If [allow_extensions] is specified and true,
     fields starting with ["x-"] are not reported *)
 val invalid_fields :
-  ?allow_extended:bool -> file_item list -> string list -> string list
+  ?allow_extensions:bool -> file_item list -> string list -> string list
 
 (** {2 Parsing functions} *)
 

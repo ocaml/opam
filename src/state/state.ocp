@@ -16,7 +16,6 @@ begin library "opam-state"
     "opam-core"
     "opam-solver"
     "opam-repository"
-    "cmdliner"
   ]
 
 end

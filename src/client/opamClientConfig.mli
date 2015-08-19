@@ -16,7 +16,6 @@
 type t = private {
   print_stats: bool;
   sync_archives: bool;
-  self_upgrade: [ `Disable | `Running | `None ];
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -25,7 +24,6 @@ type t = private {
 type 'a options_fun =
   ?print_stats:bool ->
   ?sync_archives:bool ->
-  ?self_upgrade:[ `Disable | `Running | `None ] ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -44,10 +42,6 @@ val update : ?noop:_ -> unit options_fun
 (** Sets the options, reading the environment to get default
     values when unspecified *)
 val init: ?noop:_ -> unit options_fun
-
-(** OPAMNOSELFUPGRADE is set to this value when the current opam process has
-    been called by an older opam process using the self-upgrade mechanism *)
-val self_upgrade_bootstrapping_value: string
 
 (** Extra files included in [opam search] *)
 val search_files: string list

@@ -9,7 +9,6 @@ begin library "opam-solver"
   ]
 
   requires = [
-    "dose3"
     "dose3.common"
     "dose3.algo"
     "opam-core"
