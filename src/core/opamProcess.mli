@@ -19,17 +19,26 @@
 (** The type of shell commands *)
 type command
 
+(** Builds a shell command for later execution.
+    @param ?env         environment for the command
+    @param ?verbose     force verbosity
+    @param ?name        title, used to name log files, etc.
+    @param ?metadata    additional info to log
+    @param ?dir         CWD for the command
+    @param ?allow_stdin whether to forward stdin
+    @param ?text        Short text that may be displayed in the status-line
+    @param command      The command itself
+    @param args         Command-line arguments *)
 val command:
-  ?env:string array ->              (** env for the comman d*)
-  ?verbose:bool ->                  (** force verbosity *)
-  ?name:string ->                   (** title, used to name log files, etc. *)
-  ?metadata:(string*string) list -> (** additional info to log *)
-  ?dir:string ->                    (** CWD for the command *)
-  ?allow_stdin:bool ->              (** whether to forward stdin *)
-  ?text:string ->                   (** Short text that may be displayed in
-                                        status *)
-  string ->                         (** The command itself *)
-  string list ->                    (** Command-line arguments *)
+  ?env:string array ->
+  ?verbose:bool ->
+  ?name:string ->
+  ?metadata:(string*string) list ->
+  ?dir:string ->
+  ?allow_stdin:bool ->
+  ?text:string ->
+  string ->
+  string list ->
   command
 
 val string_of_command: command -> string

@@ -53,10 +53,10 @@ let process args =
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
-  (** packages *)
+  (* packages *)
   OpamPackage.Map.iter (fun package prefix ->
       OpamConsole.msg "Processing (package) %s\n" (OpamPackage.to_string package);
-      (** OPAM *)
+      (* OPAM *)
       let opam_f = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_f in
       let pkgname = OpamFile.OPAM.name opam in

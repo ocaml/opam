@@ -38,25 +38,25 @@ let process args =
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
-  (** packages *)
+  (* packages *)
   OpamPackage.Map.iter (fun package prefix ->
     OpamConsole.msg "Processing package %s\n" (OpamPackage.to_string package);
 
-    (** OPAM *)
+    (* OPAM *)
     let opam = OpamRepositoryPath.opam repo prefix package in
     write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
 
-    (** Descr *)
+    (* Descr *)
     let descr = OpamRepositoryPath.descr repo prefix package in
     if OpamFilename.exists descr then
       write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
-    (** URL *)
+    (* URL *)
     let url = OpamRepositoryPath.url repo prefix package in
     if OpamFilename.exists url then
       write OpamFile.URL.write url (OpamFile.URL.read url);
 
-    (** Dot_install *)
+    (* Dot_install *)
     let dot_install =
       OpamRepositoryPath.files repo prefix package
       // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
@@ -67,7 +67,7 @@ let process args =
 
   ) packages;
 
-  (** compilers *)
+  (* compilers *)
   let compilers = OpamRepository.compilers_with_prefixes repo in
   OpamCompiler.Map.iter (fun c prefix ->
       let comp = OpamRepositoryPath.compiler_comp repo prefix c in
