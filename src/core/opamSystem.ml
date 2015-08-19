@@ -524,7 +524,16 @@ module Tar = struct
 end
 
 module Zip = struct
-  let is_archive f = Filename.check_suffix f "zip"
+  let is_archive f =
+    let ic = open_in f in
+    let c1 = input_char ic in
+    let c2 = input_char ic in
+    let c3 = input_char ic in
+    let c4 = input_char ic in
+    close_in ic;
+    match c1, c2, c3, c4 with
+    | '\x50', '\x4b', '\x03', '\x04' -> true
+    | _ -> false
 
   let extract_function file =
     Some (fun dir -> command [ "unzip" ; file; "-d"; dir ])
