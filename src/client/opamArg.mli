@@ -19,64 +19,13 @@
 open OpamTypes
 open Cmdliner
 
-(** {2 Commands} *)
+(** {2 Helpers and argument constructors} *)
 
-(** Type of commands *)
-type command = unit Term.t * Term.info
+val mk_flag: ?section:string -> string list -> string -> bool Cmdliner.Term.t
 
-(** [run default commdands at_exit] build a binary which takes
-    [commands] as subcommand and [default] as default argument
-    (ie. which will be executed when no subcommand is
-    given). [at_exit] is executed before the program exits. *)
-val run:command -> command list -> unit
-
-(** The default list of commands *)
-val commands: command list
-
-(** opam *)
-val default: command
-
-(** opam init *)
-val init: command
-
-(** opam list *)
-val list: command
-
-(** opam show *)
-val show: command
-
-(** opam search *)
-val search: command
-
-(** opam install *)
-val install: command
-
-(** opam remove *)
-val remove: command
-
-(** opam reinstall *)
-val reinstall: command
-
-(** opam update *)
-val update: command
-
-(** opam upgrade *)
-val upgrade: command
-
-(** opam config *)
-val config: command
-
-(** opam repository *)
-val repository: command
-
-(** opam switch *)
-val switch: command
-
-(** opam pin *)
-val pin: ?unpin_only:bool -> unit -> command
-
-(** opam help *)
-val help: command
+val mk_opt:
+  ?section:string -> ?vopt:'a -> string list -> string -> string ->
+  'a Cmdliner.Arg.converter -> 'a -> 'a Cmdliner.Term.t
 
 (** {2 Flags} *)
 
@@ -107,13 +56,50 @@ val name_list: name list Term.t
 (** parameters *)
 val param_list: string list Term.t
 
+(** package list with optional constraints *)
+val atom_list: OpamFormula.atom list Cmdliner.Term.t
+
+(** package list with optional constraints *)
+val nonempty_atom_list: OpamFormula.atom list Cmdliner.Term.t
+
+(** Generic argument list builder *)
+val arg_list:
+  string -> string -> 'a Cmdliner.Arg.converter -> 'a list Cmdliner.Term.t
+
+(** Generic argument list builder *)
+val nonempty_arg_list:
+  string -> string -> 'a Cmdliner.Arg.converter -> 'a list Cmdliner.Term.t
+
 (** {3 Global options} *)
 
-(** Abstract type for global options *)
-type global_options
+(** Type for global options *)
+type global_options = {
+  debug_level: int option;
+  verbose: int;
+  quiet : bool;
+  color : [ `Always | `Never | `Auto ] option;
+  opt_switch : string option;
+  yes : bool;
+  strict : bool;
+  opt_root : dirname option;
+  no_base_packages: bool;
+  git_version : bool;
+  external_solver : string option;
+  use_internal_solver : bool;
+  cudf_file : string option;
+  solver_preferences : string option;
+  safe_mode : bool;
+  json : string option;
+}
 
 (** Global options *)
 val global_options: global_options Term.t
+
+val create_global_options:
+  bool -> bool -> int option -> 'a list -> bool -> [ `Always | `Auto | `Never ] option ->
+  string option -> bool -> bool -> OpamTypes.dirname option -> bool -> string option ->
+  bool -> string option -> string option -> bool -> string option
+  -> global_options
 
 (** Apply global options *)
 val apply_global_options: global_options -> unit
@@ -149,13 +135,47 @@ val compiler: compiler Arg.converter
 (** Package name converter *)
 val package_name: name Arg.converter
 
-(** {2 Misc} *)
+(** [name{.version}] *)
+val package: (name * version option) Cmdliner.Arg.converter
+
+(** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
+val atom: atom Cmdliner.Arg.converter
+
+type 'a default = [> `default of string] as 'a
 
 (** Enumeration with a default command *)
 val enum_with_default:
-  (string * ([> `default of string] as 'a)) list -> 'a Arg.converter
+  (string * 'a default) list -> 'a Arg.converter
 
-(** Create an alias for an existing command. [options] can be used to
-    add extra options after the original command in the doc. *)
-val make_command_alias:
-  unit Term.t * Term.info -> ?options:string -> string -> unit Term.t * Term.info
+(** {2 Subcommands} *)
+
+val mk_subcommands:
+  (string list * 'a * 'b * 'c) list ->
+  'a option Cmdliner.Term.t * string list Cmdliner.Term.t
+
+val mk_subcommands_with_default:
+  (string list * 'a default * 'b * 'c) list ->
+  'a option Cmdliner.Term.t * string list Cmdliner.Term.t
+
+val bad_subcommand:
+  string ->
+  (string list * 'a default * string list * 'b) list ->
+  'a option ->
+  'c list ->
+  [> `Error of bool * string ]
+
+(** {2 Misc} *)
+
+
+(** {2 Documentation} *)
+
+val global_option_section: string
+val help_sections: Manpage.block list
+val term_info:
+  string -> doc:string -> man:Cmdliner.Manpage.block list ->
+  Cmdliner.Term.info
+
+val mk_subdoc :
+  ?defaults:(string * string) list ->
+  (string list * 'a * string list * string) list ->
+  Manpage.block list
