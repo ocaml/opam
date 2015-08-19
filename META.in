@@ -22,19 +22,19 @@ package "solver" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-solver.cma"
   archive(native) = "opam-solver.cmxa"
-  requires = "cudf, dose3, opam-lib, opam-lib.format"
+  requires = "cudf, dose3.common, dose3.algo, opam-lib, opam-lib.format"
 )
 
 package "state" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-state.cma"
   archive(native) = "opam-state.cmxa"
-  requires = "re.glob, opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, cmdliner"
+  requires = "opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository"
 )
 
 package "client" (
   version = "@PACKAGE_VERSION@"
   archive(byte) = "opam-client.cma"
   archive(native) = "opam-client.cmxa"
-  requires = "cmdliner, opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, opam-lib.state"
+  requires = "cmdliner, re.glob, opam-lib, opam-lib.format, opam-lib.solver, opam-lib.repository, opam-lib.state"
 )

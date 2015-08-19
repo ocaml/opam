@@ -20,9 +20,7 @@ begin library "opam-format"
 
   requires = [
     "opam-core"
-    "unix"
-    "re.glob"
-    "re.str"
+    "re.pcre"
   ]
 
 end
