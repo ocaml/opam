@@ -1382,7 +1382,7 @@ let dump_state t oc =
       match OpamFormula.to_cnf formula with
       |[] -> ()
       |[[]] -> ()
-      |dd -> Printf.fprintf oc "depends: %s\n" 
+      |dd -> Printf.fprintf oc "depends: %s\n"
               (string_of_cnf OpamFormula.string_of_atom dd)
     with Not_found -> () );
 
