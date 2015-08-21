@@ -21,11 +21,11 @@ open Cmdliner
 
 (** {2 Helpers and argument constructors} *)
 
-val mk_flag: ?section:string -> string list -> string -> bool Cmdliner.Term.t
+val mk_flag: ?section:string -> string list -> string -> bool Term.t
 
 val mk_opt:
   ?section:string -> ?vopt:'a -> string list -> string -> string ->
-  'a Cmdliner.Arg.converter -> 'a -> 'a Cmdliner.Term.t
+  'a Arg.converter -> 'a -> 'a Term.t
 
 (** {2 Flags} *)
 
@@ -57,18 +57,16 @@ val name_list: name list Term.t
 val param_list: string list Term.t
 
 (** package list with optional constraints *)
-val atom_list: OpamFormula.atom list Cmdliner.Term.t
+val atom_list: OpamFormula.atom list Term.t
 
 (** package list with optional constraints *)
-val nonempty_atom_list: OpamFormula.atom list Cmdliner.Term.t
+val nonempty_atom_list: OpamFormula.atom list Term.t
 
 (** Generic argument list builder *)
-val arg_list:
-  string -> string -> 'a Cmdliner.Arg.converter -> 'a list Cmdliner.Term.t
+val arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 
 (** Generic argument list builder *)
-val nonempty_arg_list:
-  string -> string -> 'a Cmdliner.Arg.converter -> 'a list Cmdliner.Term.t
+val nonempty_arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 
 (** {3 Global options} *)
 
@@ -136,33 +134,43 @@ val compiler: compiler Arg.converter
 val package_name: name Arg.converter
 
 (** [name{.version}] *)
-val package: (name * version option) Cmdliner.Arg.converter
+val package: (name * version option) Arg.converter
 
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
-val atom: atom Cmdliner.Arg.converter
+val atom: atom Arg.converter
 
 type 'a default = [> `default of string] as 'a
 
 (** Enumeration with a default command *)
-val enum_with_default:
-  (string * 'a default) list -> 'a Arg.converter
+val enum_with_default: (string * 'a default) list -> 'a Arg.converter
 
 (** {2 Subcommands} *)
 
-val mk_subcommands:
-  (string list * 'a * 'b * 'c) list ->
-  'a option Cmdliner.Term.t * string list Cmdliner.Term.t
+type 'a subcommand = string * 'a * string list * string
+(** A subcommand [cmds, v, args, doc] is the subcommand [cmd], using
+    the documentation [doc] and the list of documentation parameters
+    [args]. If the subcommand is selected, return [v]. *)
+
+type 'a subcommands = 'a subcommand list
+
+val mk_subcommands: 'a subcommands -> 'a option Term.t * string list Term.t
+(** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
+    which sub-commands in [cmds] is selected and [params] parses the
+    remaining of the command-line parameters as a list of strings. *)
 
 val mk_subcommands_with_default:
-  (string list * 'a default * 'b * 'c) list ->
-  'a option Cmdliner.Term.t * string list Cmdliner.Term.t
+  'a default subcommands -> 'a option Term.t * string list Term.t
+(** Same as {!mk_subcommand} but use the default value if no
+    sub-command is selected. *)
 
 val bad_subcommand:
-  string ->
-  (string list * 'a default * string list * 'b) list ->
-  'a option ->
-  'c list ->
-  [> `Error of bool * string ]
+  'a default subcommands -> (string * 'a option * string list) -> 'b Term.ret
+(** [bad_subcommand cmds cmd] is a command return value
+    denoting a parsing error of sub-commands. *)
+
+val mk_subdoc :
+  ?defaults:(string * string) list -> 'a subcommands -> Manpage.block list
+(** [mk_subdoc cmds] is the documentation block for [cmds]. *)
 
 (** {2 Misc} *)
 
@@ -171,11 +179,4 @@ val bad_subcommand:
 
 val global_option_section: string
 val help_sections: Manpage.block list
-val term_info:
-  string -> doc:string -> man:Cmdliner.Manpage.block list ->
-  Cmdliner.Term.info
-
-val mk_subdoc :
-  ?defaults:(string * string) list ->
-  (string list * 'a * string list * string) list ->
-  Manpage.block list
+val term_info: string -> doc:string -> man:Manpage.block list -> Term.info

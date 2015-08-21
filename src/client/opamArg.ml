@@ -385,6 +385,10 @@ let mk_tristate_opt ?section flags value doc =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt (some (enum when_enum)) None & doc)
 
+type 'a subcommand = string * 'a * string list * string
+
+type 'a subcommands = 'a subcommand list
+
 let mk_subdoc ?(defaults=[]) commands =
   let bold s = Printf.sprintf "$(b,%s)" s in
   let it s = Printf.sprintf "$(i,%s)" s in
@@ -397,9 +401,8 @@ let mk_subdoc ?(defaults=[]) commands =
          `I (it arg, Printf.sprintf "With a %s argument, defaults to %s %s."
                (it arg) (bold default) (it arg))
      ) defaults) @
-  List.map (fun (cs,_,args,d) ->
-      let cmds = OpamStd.List.concat_map ", " bold cs ^ " " ^
-                 OpamStd.List.concat_map " " it args in
+  List.map (fun (c,_,args,d) ->
+      let cmds = bold c ^ " " ^ OpamStd.List.concat_map " " it args in
       `I (cmds, d)
     ) commands @
   [`S "OPTIONS"] (* Ensures options get after commands *)
@@ -409,7 +412,7 @@ let mk_subcommands_aux my_enum commands =
     let doc = Arg.info ~docv:"COMMAND" [] in
     let commands =
       List.fold_left
-        (fun acc (cs,f,_,_) -> List.map (fun c -> c,f) cs @ acc)
+        (fun acc (c,f,_,_) -> (c,f) :: acc)
         [] commands in
     Arg.(value & pos 0 (some & my_enum commands) None & doc) in
   let params =
@@ -423,18 +426,18 @@ let mk_subcommands commands =
 let mk_subcommands_with_default commands =
   mk_subcommands_aux enum_with_default commands
 
-let bad_subcommand command subcommands usersubcommand userparams =
+let bad_subcommand subcommands (command, usersubcommand, userparams) =
   match usersubcommand with
   | None ->
     `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
               (OpamStd.Format.pretty_list
-                 (List.flatten (List.map (fun (a,_,_,_) -> a) subcommands))))
+                 (List.map (fun (a,_,_,_) -> a) subcommands)))
   | Some (`default cmd) ->
     `Error (true, Printf.sprintf "Invalid %s subcommand %S" command cmd)
   | Some usersubcommand ->
     let exe = Filename.basename Sys.executable_name in
     match List.find_all (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
-    | [name::_, _, args, _doc] ->
+    | [name, _, args, _doc] ->
       let usage =
         Printf.sprintf "%s %s [OPTION]... %s %s"
           exe command name (String.concat " " args) in
