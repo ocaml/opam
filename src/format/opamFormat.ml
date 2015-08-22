@@ -33,9 +33,11 @@ let bad_format ?pos fmt =
     fmt
 
 let add_pos pos = function
-  | Bad_format (None,btl,msg) ->
-    let backtrace = Printexc.get_backtrace () in
-    Bad_format (Some pos, backtrace::btl, msg)
+  | Bad_format (pos_opt,btl,msg) as e ->
+    if pos_opt = None || pos_opt = Some pos_null then
+      let backtrace = Printexc.get_backtrace () in
+      Bad_format (Some pos, backtrace::btl, msg)
+    else e
   | e -> e
 
 let string_of_backtrace_list = function

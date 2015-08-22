@@ -142,7 +142,14 @@ let string_of_shell = function
   | `sh   -> "sh"
   | `bash -> "bash"
 
-let pos_null = OpamFilename.of_string "",-1,-1
+let file_null = OpamFilename.of_string ""
+let pos_null = file_null,-1,-1
+
+let pos_best (f1,li1,col1 as pos1) (f2,li2,col2 as pos2) =
+  if f1 = file_null then pos2
+  else if f2 = file_null then pos1
+  else if col1 = -1 then pos2
+  else pos1
 
 let string_of_pos (file,line,col) =
   OpamFilename.prettify file ^

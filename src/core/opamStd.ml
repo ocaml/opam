@@ -300,6 +300,9 @@ module Option = struct
   let some x = Some x
   let none _ = None
 
+  let of_Not_found f x =
+    try Some (f x) with Not_found -> None
+
   module Op = struct
     let (>>=) = function
       | None -> fun _ -> None

@@ -128,6 +128,9 @@ module Option: sig
 
   val none: 'a -> 'b option
 
+  (** [of_Not_found f x] calls [f x], catches [Not_found] and returns [None] *)
+  val of_Not_found: ('a -> 'b) -> 'a -> 'b option
+
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option
     val (>>|): 'a option -> ('a -> 'b) -> 'b option

@@ -104,6 +104,10 @@ val string_of_shell: shell -> string
 (** The empty file position *)
 val pos_null: pos
 
+(** [pos_best pos1 pos2] returns the most detailed position between [pos1] and
+    [pos2] (defaulting to [pos1]) *)
+val pos_best: pos -> pos -> pos
+
 (** Prints a file position *)
 val string_of_pos: pos -> string
 
