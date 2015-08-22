@@ -539,3 +539,8 @@ let filter_solution filter t =
       | _ -> ())
     t;
   t
+
+let request ?(criteria=`Default) ?(extra_attributes=[])
+    ?(install=[]) ?(upgrade=[]) ?(remove=[]) () =
+  { wish_install = install; wish_upgrade = upgrade; wish_remove = remove;
+    criteria; extra_attributes; }

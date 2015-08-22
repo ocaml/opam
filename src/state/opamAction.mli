@@ -19,21 +19,25 @@
 open OpamTypes
 open OpamState.Types
 
-(** Downloads the source for a package to the local cache. Returns the file or
-    dir downloaded, or None if the download failed. *)
+(** [download t pkg] downloads the source of the package [pkg] into
+    the local cache. Returns the downloaded file or directory. *)
 val download_package: t -> package ->
   [ `Error of string | `Successful of generic_file option ] OpamProcess.job
 
-(** Extracts and patches the source of a package *)
+(** [extract_package t source pkg] extracts and patches the already
+    downloaded [source] of the package [pkg]. See {!download_package}
+    to download the sources. *)
 val extract_package: t -> generic_file option -> package -> unit
 
-(** Build a package from its downloaded source. Returns [None] on success, [Some
-    exn] on error. *)
+(** [build_package t source pkg] builds the package [pkg] from its
+    already downloaded [source]. Returns [None] on success, [Some exn]
+    on error. See {!download_package} to download the source. *)
 val build_package:
   t -> generic_file option -> package -> exn option OpamProcess.job
 
-(** Installs a compiled package from its build dir. Returns [None] on success,
-    [Some exn] on error. *)
+(** [install_package t pkg] installs an already built package. Returns
+    [None] on success, [Some exn] on error. Do not update OPAM's
+    metadata. See {!build_package} to build the package. *)
 val install_package:
   t -> package -> exn option OpamProcess.job
 

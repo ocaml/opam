@@ -944,6 +944,32 @@ let consistent_available_field t opam =
   OpamFilter.eval_to_bool ~default:false (filter_env ~opam t)
     (OpamFile.OPAM.available opam)
 
+let quick_var_lookup v =
+  if OpamVariable.Full.is_global v then (
+    let var = OpamVariable.Full.variable v in
+    let root = OpamStateConfig.(!r.root_dir) in
+    let switch = OpamStateConfig.(!r.current_switch) in
+    let config_f = OpamPath.Switch.global_config root switch in
+    let config = OpamFile.Dot_config.read config_f in
+    match get_env_var v with
+    | Some _ as c -> c
+    | None ->
+      if OpamVariable.to_string var = "switch" then
+        Some (S (OpamSwitch.to_string switch))
+      else
+        OpamFile.Dot_config.variable config var
+  ) else
+    None
+
+let contents_of_variable t v =
+  log "config-variable";
+  match quick_var_lookup v with
+  | Some c -> c
+  | None   ->
+    let env = filter_env (Lazy.force t) in
+    let default = S "#undefined" in
+    OpamFilter.ident_value env ~default (OpamFilter.ident_of_var v)
+
 (* List the packages which do fulfil the compiler and OS constraints *)
 let available_packages t =
   let filter nv =
@@ -1356,7 +1382,7 @@ let dump_state t oc =
       match OpamFormula.to_cnf formula with
       |[] -> ()
       |[[]] -> ()
-      |dd -> Printf.fprintf oc "depends: %s\n" 
+      |dd -> Printf.fprintf oc "depends: %s\n"
               (string_of_cnf OpamFormula.string_of_atom dd)
     with Not_found -> () );
 

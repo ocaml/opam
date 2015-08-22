@@ -354,12 +354,12 @@ let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
   let commands = [
-    ["env"]     , `env     , [],
+    "env", `env, [],
     "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
      and CAML_LD_LIBRARY_PATH according to the currently selected \
      compiler. The output of this command is meant to be evaluated by a \
      shell, for example by doing $(b,eval `opam config env`).";
-    ["setup"]   , `setup   , [],
+    "setup", `setup, [],
     "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
      to display more options. Use $(b,--list) to display the current configuration \
      options. You can use this command to automatically update: (i) user-configuration \
@@ -369,35 +369,35 @@ let config =
      to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
      $(b,opam config setup --user) to setup the user ones. \
      To modify both the global and user configuration, use $(b,opam config setup --all).";
-    ["exec"]    , `exec    , ["[--] COMMAND"; "[ARG]..."],
+    "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. \
      This command can be used to cross-compile between switches using \
      $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). \
      Opam expansion takes place in command and args.";
-    ["var"]     , `var     , ["VAR"],
+    "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
      be accessed with the syntax $(i,pkg:var).";
-    ["list"]    , `list    , ["[PACKAGE]..."],
+    "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. With \
      $(i,PACKAGE), lists all the variables available for these packages. Use \
      $(i,-) to include global configuration variables for this switch.";
-    ["set"]     , `set     , ["VAR";"VALUE"],
+    "set", `set, ["VAR";"VALUE"],
     "Set the given global opam variable for the current switch. Warning: \
      changing a configured path will not move any files! This command does \
      not perform any variable expansion.";
-    ["unset"]   , `unset     , ["VAR"],
+    "unset", `unset, ["VAR"],
     "Unset the given global opam variable for the current switch. Warning: \
      unsetting built-in configuration variables can cause problems!";
-    ["expand"]  , `expand  , ["STRING"],
+    "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
-    ["subst"]   , `subst   , ["FILE..."],
+    "subst", `subst, ["FILE..."],
     "Substitute variables in the given files. The strings $(i,%{var}%) are \
      replaced by the value of variable $(i,var) (see $(b,var)).";
-    ["report"]  , `report  , [],
+    "report", `report, [],
     "Prints a summary of your setup, useful for bug-reports.";
-    ["cudf-universe"], `cudf, ["[FILE]"],
+    "cudf-universe",`cudf, ["[FILE]"],
     "Outputs the current available package universe in CUDF format.";
-    ["pef-universe"], `pef, ["[FILE]"],
+    "pef-universe", `pef, ["[FILE]"],
     "Outputs the current available package universe in PEF format.";
   ] in
   let man = [
@@ -507,7 +507,7 @@ let config =
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
-       | _ -> bad_subcommand "config" commands command params)
+       | _ -> bad_subcommand commands ("config", command, params))
     | Some `cudf, params ->
       let opam_state = OpamState.load_state "config-universe"
           OpamStateConfig.(!r.current_switch) in
@@ -516,7 +516,7 @@ let config =
       (match params with
        | [] -> `Ok (dump stdout)
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
-       | _ -> bad_subcommand "config" commands command params)
+       | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
       let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
       Printf.printf "# OPAM config report\n";
@@ -587,7 +587,7 @@ let config =
               u.tm_hour u.tm_min);
         `Ok ()
       with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
-    | command, params -> bad_subcommand "config" commands command params
+    | command, params -> bad_subcommand commands ("config", command, params)
   in
 
   Term.ret (
@@ -762,17 +762,17 @@ let repository_doc = "Manage OPAM repositories."
 let repository =
   let doc = repository_doc in
   let commands = [
-    ["add"]        , `add     , ["NAME"; "ADDRESS"],
+    "add", `add, ["NAME"; "ADDRESS"],
     "Add the repository at address $(i,ADDRESS) to the list of repositories \
      used by OPAM, under $(i,NAME). It will have highest priority unless \
      $(b,--priority) is specified.";
-    ["remove"]     , `remove  , ["NAME"],
+    "remove", `remove, ["NAME"],
     "Remove the repository $(i,NAME) from the list of repositories used by OPAM.";
-    ["list"]       , `list    , [],
+    "list", `list, [],
     "List all repositories used by OPAM.";
-    ["priority"]   , `priority, ["NAME"; "PRIORITY"],
+    "priority", `priority, ["NAME"; "PRIORITY"],
     "Change the priority of repository named $(i,NAME) to $(i,PRIORITY).";
-    ["set-url"]    , `set_url, ["NAME"; "ADDRESS"],
+    "set-url", `set_url, ["NAME"; "ADDRESS"],
     "Change the URL associated with $(i,NAME)";
   ] in
   let man = [
@@ -812,7 +812,7 @@ let repository =
     | Some `remove, [name] ->
       let name = OpamRepositoryName.of_string name in
       `Ok (Client.REPOSITORY.remove name)
-    | command, params -> bad_subcommand "repository" commands command params
+    | command, params -> bad_subcommand commands ("repository", command, params)
   in
   Term.ret
     Term.(pure repository $global_options $command $repo_kind_flag $priority
@@ -824,20 +824,20 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    ["install"]      , `install  , ["SWITCH"],
+    "install", `install, ["SWITCH"],
     "Install the given compiler. The command fails if the switch is \
      already installed (e.g. it will not transparently switch to the \
      installed compiler switch, as with $(b,set)).";
-    ["set"]          , `set      , ["SWITCH"],
+    "set", `set, ["SWITCH"],
       "Set the currently active switch, installing it if needed.";
-    ["remove"]       , `remove   , ["SWITCH"], "Remove the given compiler.";
-    ["export"]       , `export   , ["FILE"],
+    "remove", `remove, ["SWITCH"], "Remove the given compiler.";
+    "export", `export, ["FILE"],
     "Save the current switch state to a file.";
-    ["import"]       , `import   , ["FILE"], "Import a saved switch state.";
-    ["reinstall"]    , `reinstall, ["SWITCH"],
+    "import", `import, ["FILE"], "Import a saved switch state.";
+    "reinstall", `reinstall, ["SWITCH"],
     "Reinstall the given compiler switch. This will also reinstall all \
      packages.";
-    ["list"]         , `list     , [],
+    "list", `list, [],
     "List compilers. \
      By default, lists installed and `standard' compilers. Use `--all' to get \
      the list of all installable compilers.\n\
@@ -852,7 +852,7 @@ let switch =
      (for instance because you already have this compiler version installed), \
      use $(b,opam switch <name> --alias-of <comp>). In case \
      <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
-    ["show"]          , `current  , [], "Show the current compiler.";
+    "show", `current, [], "Show the current compiler.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -933,7 +933,7 @@ let switch =
         ~warning
         (OpamSwitch.of_string switch);
       `Ok ()
-    | command, params -> bad_subcommand "switch" commands command params
+    | command, params -> bad_subcommand commands ("switch", command, params)
   in
   Term.(ret (pure switch
              $global_options $build_options $command
@@ -946,8 +946,8 @@ let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let commands = [
-    ["list"]     , `list, [], "Lists pinned packages.";
-    ["add"]      , `add  , ["PACKAGE"; "TARGET"],
+    "list", `list, [], "Lists pinned packages.";
+    "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL. \
      $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
@@ -966,10 +966,10 @@ let pin ?(unpin_only=false) () =
      The package version may be specified by using the format \
      $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
      $(b,edit).";
-    ["remove"]   , `remove, ["NAMES"],
+    "remove", `remove, ["NAMES"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
      repository, if any.";
-    ["edit"]     , `edit, ["NAME"],
+    "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the opam file that OPAM will locally use for pinned package \
      $(b,NAME), including its version. \
@@ -1100,7 +1100,7 @@ let pin ?(unpin_only=false) () =
          let pin_option = pin_option_of_string ?kind ~guess target in
          `Ok (Client.PIN.pin name ?version ~edit ~action (Some pin_option))
        | `Error e -> `Error (false, e))
-    | command, params -> bad_subcommand "pin" commands command params
+    | command, params -> bad_subcommand commands ("pin", command, params)
   in
   Term.ret
     Term.(pure pin

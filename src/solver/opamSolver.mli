@@ -58,6 +58,14 @@ val load_cudf_universe:
   ?depopts:bool -> build:bool ->
   universe -> ?version_map:int package_map -> package_set -> Cudf.universe
 
+(**  Build a request *)
+val request:
+  ?criteria:solver_criteria -> ?extra_attributes:string list ->
+  ?install:atom list ->
+  ?upgrade:atom list ->
+  ?remove:atom list ->
+  unit -> atom request
+
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description. *)
 val resolve :
