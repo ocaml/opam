@@ -26,16 +26,8 @@ type 'a options_fun =
   ?strict:bool ->
   ?skip_version_checks:bool ->
   ?all_parens:bool ->
-  unit -> 'a
+  'a
 
-val default: t
-
-val set: t -> t options_fun
-
-val setk: (t -> 'a) -> t -> 'a options_fun
-
-val r: t ref
-
-val update: ?noop:unit -> unit options_fun
-
-val init: ?noop:unit -> unit options_fun
+include OpamStd.Config.Sig
+  with type t := t
+   and type 'a options_fun := 'a options_fun

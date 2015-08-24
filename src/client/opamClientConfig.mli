@@ -27,21 +27,61 @@ type 'a options_fun =
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
-  unit -> 'a
+  'a
+  (* constraint 'a = 'b -> 'c *)
 
-val default : t
-
-val set : t -> t options_fun
-
-val setk : (t -> 'a) -> t -> 'a options_fun
-
-val r : t ref
-
-val update : ?noop:_ -> unit options_fun
-
-(** Sets the options, reading the environment to get default
-    values when unspecified *)
-val init: ?noop:_ -> unit options_fun
+include OpamStd.Config.Sig
+  with type t := t
+   and type 'a options_fun := 'a options_fun
 
 (** Extra files included in [opam search] *)
 val search_files: string list
+
+(** Load the global configuration file (opamroot/config) and initialise all opam
+    sub-libraries, overriding the given arguments *)
+
+val opam_init:
+  ?root_dir:OpamTypes.dirname ->
+  ?strict:bool ->
+  ?skip_version_checks:bool ->
+  ?all_parens:bool ->
+  ?log_dir:OpamTypes.dirname ->
+  ?print_stats:bool ->
+  ?sync_archives:bool ->
+  ?pin_kind_auto:bool ->
+  ?autoremove:bool ->
+  ?editor:string ->
+  ?current_switch:OpamSwitch.t ->
+  ?switch_from:[ `Command_line | `Default | `Env ] ->
+  ?jobs:int Lazy.t ->
+  ?dl_jobs:int ->
+  ?external_tags:string list ->
+  ?keep_build_dir:bool ->
+  ?no_base_packages:bool ->
+  ?build_test:bool ->
+  ?build_doc:bool ->
+  ?show:bool ->
+  ?dryrun:bool ->
+  ?fake:bool ->
+  ?makecmd:string Lazy.t ->
+  ?json_out:string option ->
+  ?cudf_file:string option ->
+  ?solver_timeout:float ->
+  ?external_solver:OpamTypes.arg list option Lazy.t ->
+  ?solver_preferences_default:string Lazy.t option ->
+  ?solver_preferences_upgrade:string Lazy.t option ->
+  ?solver_preferences_fixup:string Lazy.t option ->
+  ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
+  ?retries:int ->
+  ?force_checksums:bool option ->
+  ?debug_level:int ->
+  ?verbose_level:int ->
+  ?color:[ `Always | `Auto | `Never ] ->
+  ?utf8:[ `Always | `Auto | `Extended | `Never ] ->
+  ?disp_status_line:[ `Always | `Auto | `Never ] ->
+  ?answer:bool option ->
+  ?safe_mode:bool ->
+  ?lock_retries:int ->
+  ?keep_log_dir:bool ->
+  ?errlog_length:int ->
+  unit -> unit

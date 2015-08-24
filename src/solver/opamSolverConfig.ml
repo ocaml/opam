@@ -31,7 +31,7 @@ type 'a options_fun =
   ?solver_preferences_default:string Lazy.t option ->
   ?solver_preferences_upgrade:string Lazy.t option ->
   ?solver_preferences_fixup:string Lazy.t option ->
-  unit -> 'a
+  'a
 
 let default =
   let external_solver = lazy (
@@ -55,7 +55,6 @@ let setk k t
     ?solver_preferences_default
     ?solver_preferences_upgrade
     ?solver_preferences_fixup
-    ()
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -70,11 +69,11 @@ let setk k t
       t.solver_preferences_fixup + solver_preferences_fixup;
   }
 
-let set t = setk (fun x -> x) t
+let set t = setk (fun x () -> x) t
 
 let r = ref default
 
-let update ?noop:_ = setk (fun cfg -> r := cfg) !r
+let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let check_cudf_version cmdname =
   let log fmt = OpamConsole.log "SOLVER" fmt in
@@ -154,7 +153,7 @@ let with_auto_criteria config =
       ()
   | _ -> config
 
-let init ?noop:_ =
+let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let external_solver =
@@ -178,14 +177,15 @@ let init ?noop:_ =
     (env_string "UPGRADECRITERIA" >>| fun c -> Some (lazy c)) ++ criteria in
   let fixup_criteria =
     env_string "FIXUPCRITERIA" >>| fun c -> Some (lazy c) in
-  setk (setk (fun c -> r := with_auto_criteria c)) !r
+  setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(env_string "CUDFFILE")
     ?solver_timeout:(env_float "SOLVERTIMEOUT")
     ?external_solver
     ?solver_preferences_default:criteria
     ?solver_preferences_upgrade:upgrade_criteria
     ?solver_preferences_fixup:fixup_criteria
-    ()
+
+let init ?noop:_ = initk (fun () -> ())
 
 let solver_args_aspcud =
   [ CIdent "input", None; CIdent "output", None; CIdent "criteria", None ]

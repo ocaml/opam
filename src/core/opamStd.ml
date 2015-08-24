@@ -798,6 +798,21 @@ end
 
 module Config = struct
 
+  module type Sig = sig
+
+    type t
+    type 'a options_fun
+
+    val default: t
+    val set: t -> (unit -> t) options_fun
+    val setk: (t -> 'a) -> t -> 'a options_fun
+    val r: t ref
+    val update: ?noop:_ -> (unit -> unit) options_fun
+    val init: ?noop:_ -> (unit -> unit)  options_fun
+    val initk: 'a -> 'a options_fun
+
+  end
+
   type env_var = string
 
   let env conv var =
@@ -852,7 +867,7 @@ module Config = struct
     | `Never -> false
     | `Auto -> Lazy.force auto
 
-  let init ?noop:_ =
+  let initk k =
     let utf8 = Option.Op.(
         env_when_ext "UTF8" ++
         (env_bool "UTF8MSGS" >>= function
@@ -865,7 +880,7 @@ module Config = struct
       | None, None -> None
       | _ -> Some None
     in
-    OpamCoreConfig.(setk (setk (fun c -> r := c)) !r)
+    OpamCoreConfig.(setk (setk (fun c -> r := c; k)) !r)
       ?debug_level:(env_level "DEBUG")
       ?verbose_level:(env_level "VERBOSE")
       ?color:(env_when "COLOR")
@@ -877,7 +892,8 @@ module Config = struct
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")
       ?errlog_length:(env_int "ERRLOGLEN")
-      ()
+
+  let init ?noop:_ = initk (fun () -> ())
 end
 
 module List = OpamList

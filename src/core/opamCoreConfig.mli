@@ -54,14 +54,14 @@ type 'a options_fun =
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
-  unit -> 'a
+  'a
 
 val default : t
 
-val set : t -> t options_fun
+val set : t -> (unit -> t) options_fun
 
 val setk : (t -> 'a) -> t -> 'a options_fun
 
 val r : t ref
 
-val update : ?noop:unit -> unit options_fun
+val update : ?noop:_ -> (unit -> unit) options_fun
