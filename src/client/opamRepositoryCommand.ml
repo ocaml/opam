@@ -515,9 +515,10 @@ let add name kind address ~priority:prio =
     let t = OpamProcess.Job.run (update t repo) t in
     fix_descriptions t
   with
-  | _ ->
+  | e ->
     cleanup t repo;
-    OpamConsole.error_and_exit "Could not fetch repo"
+    OpamConsole.error_and_exit "Could not fetch repo: %s"
+      (Printexc.to_string e)
 
 let remove name =
   log "repository-remove";
