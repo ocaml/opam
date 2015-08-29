@@ -583,6 +583,7 @@ PACKAGE_STRING='opam 2.0.0~beta3'
 PACKAGE_BUGREPORT=''
 PACKAGE_URL=''
 
+ac_default_prefix=`ocamlc -config 2>/dev/null | tr -d '\r' | sed -n -e "s;^os_type: Win32;C:/OPAM;p" -e "s;^os_type:.*;/usr/local;p"`
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
@@ -1796,6 +1797,8 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
 
 
 
