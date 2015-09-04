@@ -1,6 +1,3 @@
-> NOTE: 1.2.2 is just being released. It may take a few days before binary
-> distributions catch up
-
 # How to install OPAM
 
 This page describes how to install and configure OPAM and [external
@@ -215,11 +212,16 @@ process to _external solvers_. OPAM integrates a simple solver, so it
 can used without any extra dependencies, but for best results you
 should have one of those solvers on your system:
 
-- aspcud (recommended)
-- packup
-- mccs (no built-in support at the moment, but may be used with the following
-  solver configuration string: `mccs -i %{input}% -o %{output}%
-  -lexagregate[%{criteria}%]`.)
+- [aspcud](http://www.cs.uni-potsdam.de/wv/aspcud/) (recommended)
+- [packup](http://sat.inesc-id.pt/~mikolas/sw/packup/)
+- [mccs](http://www.i3s.unice.fr/~cpjm/misc/mccs.html) (no built-in support at
+  the moment, but may be used with the following solver configuration string:
+  `mccs -i %{input}% -o %{output}% -lexagregate[%{criteria}%]`.)
+- [p2Cudf](https://wiki.eclipse.org/Equinox/p2/CUDFResolver), which may be the
+  easiest if dependencies are a problem, as it comes as a single jar file.
+  [Dowload it](http://eclipse.org/equinox/p2/p2CUDF/org.eclipse.equinox.p2.cudf-1.14.jar)
+  and set the solver configuration string to
+  `java -jar <jarfile-location> -obj %{criteria}% %{input}% %{output}%`.
 
 We recommend installing one through your packaging system whenever
 possible: this should already have been taken care of if you installed
@@ -233,11 +235,11 @@ If you use the internal solver only, the following symptoms may be
 sign that you need an external solver: very bad upgrade proposals, or
 dependency solving becoming very slow.
 
-OPAM will detect the availability of `aspcud` or `packup` commands on
-your system and should switch to using them directly. You can
-explicitly specify which external solver to use by using the `--solver
-<foo>` command-line argument, or
-`$OPAMEXTERNALSOLVER` environment variable.
+OPAM will detect the availability of `aspcud` or `packup` commands on your
+system and should switch to using them directly. You can explicitly specify
+which external solver to use by using the `--solver` command-line argument, the
+`$OPAMEXTERNALSOLVER` environment variable, or the `solver:` field in the
+`~/.opam/config` file.
 
 External solvers also allow to specify [fine-grained
 preferences](Specifying_Solver_Preferences.html). `aspcud`
