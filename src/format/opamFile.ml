@@ -962,7 +962,7 @@ module X = struct
     let name_opt t = t.name
     let version t = check "version" t.version
     let version_opt t = t.version
-    let package t = OpamPackage.create t.name t.version
+    let package t = OpamPackage.create (name t) (version t)
 
     let depends t = t.depends
     let depopts t = t.depopts
@@ -1078,61 +1078,188 @@ module X = struct
       {t with
        extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
 
+    (* Post-processing functions used for some fields (optional, because we
+       don't want them when validating) *)
+
+    let cleanup_name _opam_version ~pos:(file,_,_ as pos) name =
+      match OpamPackage.of_filename file with
+      | Some nv when OpamPackage.name nv <> name ->
+        Pp.warn ~pos "This file is for package '%s' but its 'name:' field \
+                      advertises '%s'."
+          (OpamPackage.name_to_string nv) (OpamPackage.Name.to_string name);
+        OpamPackage.name nv
+      | _ -> name
+
+    let cleanup_version _opam_version ~pos:(file,_,_ as pos) version =
+      match OpamPackage.of_filename file with
+      | Some nv when OpamPackage.version nv <> version ->
+        Pp.warn ~pos "This file is for version '%s' but its 'version:' field \
+                      advertises '%s'."
+          (OpamPackage.version_to_string nv) (OpamPackage.Version.to_string version);
+        OpamPackage.version nv
+      | _ -> version
+
+    let cleanup_depflags _opam_version ~pos ext_formula =
+      (* remove unknown dependency flags *)
+      OpamFormula.map (fun (name, (flags, cstr)) ->
+          let unknown_flags =
+            OpamStd.List.filter_map (function
+                | Depflag_Unknown n -> Some n
+                | _ -> None)
+              flags in
+          if unknown_flags <> [] then
+            Pp.warn ~pos "Unknown flags %s ignored for dependency %s"
+              (OpamStd.Format.pretty_list unknown_flags)
+              (OpamPackage.Name.to_string name);
+          let known_flags = List.filter (function
+              | Depflag_Unknown _ -> false
+              | _ -> true)
+              flags in
+          Atom (name, (known_flags, cstr)))
+        ext_formula
+
+    let cleanup_depopts opam_version ~pos depopts =
+      let depopts = cleanup_depflags opam_version ~pos depopts in
+      if OpamFormatConfig.(!r.skip_version_checks) ||
+         OpamVersion.compare opam_version (OpamVersion.of_string "1.2") < 0
+      then depopts
+      else
+      (* Make sure depopts are a pure disjunction, without constraints *)
+      let rec aux acc disjunction =
+        List.fold_left (fun acc -> function
+            | OpamFormula.Atom (_, (_,Empty)) as atom -> atom :: acc
+            | OpamFormula.Atom (name, (flags, cstr)) ->
+              Pp.warn ~pos
+                "Version constraint (%s) no longer allowed in optional \
+                 dependency (ignored).\n\
+                 Use the 'conflicts' field instead."
+                (OpamFormula.string_of_formula (fun (r,v) ->
+                     OpamFormula.string_of_relop r ^" "^
+                     OpamPackage.Version.to_string v)
+                    cstr);
+              OpamFormula.Atom (name, (flags, Empty)) :: acc
+            | f ->
+              Pp.warn "Optional dependencies must be a disjunction. \
+                       Treated as such.";
+              aux acc
+                (OpamFormula.fold_left (fun acc a -> OpamFormula.Atom a::acc)
+                   [] f)
+          )
+          acc disjunction
+      in
+      OpamFormula.ors_to_list depopts
+      |> aux []
+      |> List.rev
+      |> OpamFormula.ors
+
+    let cleanup_conflicts opam_version ~pos conflicts =
+      (* Conflicts were encoded as a conjunction before 1.3, which didn't match
+         the semantics. The rewrite is done for all versions, but on 1.3+ it
+         should be an error. *)
+      let is_disjunction f =
+        List.for_all (function Atom _ -> true | _ -> false)
+          OpamFormula.(ors_to_list (to_atom_formula f))
+      in
+      if is_disjunction conflicts then conflicts else
+      let force_disjunction f =
+        OpamFormula.map_formula (function
+            | And (a, b) -> Or (a, b)
+            | f -> f)
+          f
+      in
+      if OpamVersion.(compare opam_version (of_string "1.3") >= 0) then
+        Pp.warn ~pos "Conflicts must be a disjunction, '&' is not \
+                      supported (treated as '|').";
+      OpamFormula.map (fun (n,cs) -> Atom (n, force_disjunction cs)) conflicts
+      |> force_disjunction
+
+    let cleanup_flags _opam_version ~pos flags =
+      let known_flags =
+        List.filter (function Pkgflag_Unknown _ -> false | _ -> true)
+          flags in
+      if known_flags <> flags then
+        Pp.warn ~pos
+          "Unknown package flags %s ignored"
+          (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
+               | Pkgflag_Unknown s -> Some s
+               | _ -> None)
+               flags));
+      known_flags
+
+    let cleanup_none _ ~pos:_ x = x
+
     let pp_basename =
       Pp.V.string -|
       Pp.of_module "file" (module OpamFilename.Base)
 
-    let cleanup_
-
     (* Field parser-printers *)
 
-    (* [field name, pp, cleanup/check] *)
-    let fields = [
+    (* [field name, pp, cleanup/check function] *)
+    let fields_gen =
+      let (++) cleanup pp = 
+      [
       "opam-version", Pp.ppacc with_opam_version opam_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion)),
-      None;
+      cleanup_none;
       "name", Pp.ppacc_opt with_name name_opt
         (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name)),
-      Some c;
+      cleanup_name;
       "version", Pp.ppacc_opt with_version version_opt
-        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version));
+        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version)),
+      cleanup_version;
 
       "depends", Pp.ppacc with_depends depends
-        (Pp.V.package_formula `Conj Pp.V.ext_constraints);
+        (Pp.V.package_formula `Conj Pp.V.ext_constraints),
+      cleanup_depflags;
       "depopts", Pp.ppacc with_depopts depopts
-        (Pp.V.package_formula `Disj Pp.V.ext_constraints);
+        (Pp.V.package_formula `Disj Pp.V.ext_constraints),
+      cleanup_depopts;
       "conflicts", Pp.ppacc with_conflicts conflicts
-        (Pp.V.package_formula `Disj Pp.V.constraints);
+        (Pp.V.package_formula `Disj Pp.V.constraints),
+      cleanup_conflicts;
       "available", Pp.ppacc with_available available
-        (Pp.V.list -| Pp.V.filter);
+        (Pp.V.list -| Pp.V.filter),
+      cleanup_none;
       "ocaml-version", Pp.ppacc_opt with_ocaml_version ocaml_version
-        (Pp.V.list -| Pp.V.constraints Pp.V.compiler_version);
+        (Pp.V.list -| Pp.V.constraints Pp.V.compiler_version),
+      cleanup_none;
       "os", Pp.ppacc with_os os
-        Pp.V.os_constraint;
+        Pp.V.os_constraint,
+      cleanup_none;
       "flags", Pp.ppacc add_flags flags
         (Pp.V.map_list @@
          Pp.V.ident -|
-         Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
+         Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag)),
+      cleanup_flags;
 
       "build", Pp.ppacc with_build build
-        (Pp.V.map_list Pp.V.command);
+        (Pp.V.map_list Pp.V.command),
+      cleanup_none;
       "build-test", Pp.ppacc with_build_test build_test
-        (Pp.V.map_list Pp.V.command);
+        (Pp.V.map_list Pp.V.command),
+      cleanup_none;
       "build-doc", Pp.ppacc with_build_doc build_doc
-        (Pp.V.map_list Pp.V.command);
+        (Pp.V.map_list Pp.V.command),
+      cleanup_none;
       "install", Pp.ppacc with_install install
-        (Pp.V.map_list Pp.V.command);
+        (Pp.V.map_list Pp.V.command),
+      cleanup_none;
       "remove", Pp.ppacc with_remove remove
-        (Pp.V.map_list Pp.V.command);
+        (Pp.V.map_list Pp.V.command),
+      cleanup_none;
 
       "substs", Pp.ppacc with_substs substs
-        (Pp.V.map_list pp_basename);
+        (Pp.V.map_list pp_basename),
+      cleanup_none;
       "patches", Pp.ppacc with_patches patches
-        (Pp.V.map_list @@ Pp.V.map_option pp_basename (Pp.opt Pp.V.filter));
+        (Pp.V.map_list @@ Pp.V.map_option pp_basename (Pp.opt Pp.V.filter)),
+      cleanup_none;
       "build-env", Pp.ppacc with_build_env build_env
-        (Pp.V.map_list Pp.V.env_binding);
+        (Pp.V.map_list Pp.V.env_binding),
+      cleanup_none;
       "features", Pp.ppacc with_features features
-        Pp.V.features;
+        Pp.V.features,
+      cleanup_none;
       "extra-sources", Pp.ppacc with_extra_sources extra_sources
         (Pp.V.map_list @@
          Pp.V.map_pair
@@ -1142,12 +1269,15 @@ module X = struct
            (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest)
          -| Pp.pp
            (fun ~pos:_ ((u,md5),f) -> u,f,md5)
-           (fun (u,f,md5) -> (u,md5),f));
+           (fun (u,f,md5) -> (u,md5),f)),
+      cleanup_none;
 
       "messages", Pp.ppacc with_messages messages
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
+      cleanup_none;
       "post-messages", Pp.ppacc with_post_messages post_messages
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
+      cleanup_none;
       "depexts", Pp.ppacc_opt with_depexts depexts
         (let string_set name =
            Pp.V.map_list Pp.V.string -|
@@ -1157,156 +1287,77 @@ module X = struct
            (Pp.V.map_pair
               (string_set "system-id") (string_set "system-package")) -|
          Pp.of_pair "depext-bindings"
-           OpamStd.String.SetMap.(of_list, bindings));
+           OpamStd.String.SetMap.(of_list, bindings)),
+      cleanup_none;
       "libraries", Pp.ppacc with_libraries libraries
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
+      cleanup_none;
       "syntax", Pp.ppacc with_syntax syntax
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
+      cleanup_none;
       "dev-repo", Pp.ppacc_opt with_dev_repo dev_repo
         (Pp.V.url -|
          Pp.check ~errmsg:"Not a version-control or http url"
            (function _, (`http | #version_control) -> true | _ -> false) -|
-         Pp.of_pair "pin-address" (pin_of_url, url_of_pin));
+         Pp.of_pair "pin-address" (pin_of_url, url_of_pin)),
+      cleanup_none;
 
       "maintainer", Pp.ppacc with_maintainer maintainer
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "author", Pp.ppacc
         (fun t a -> if t.author = [] then with_author t a else
             OpamFormat.bad_format "multiple \"author:\" fields" author)
         author
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "authors", Pp.ppacc
         (fun t a -> if t.author = [] then with_author t a else
             OpamFormat.bad_format "multiple \"author:\" fields" author)
         author
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "license", Pp.ppacc with_license license
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "tags", Pp.ppacc with_tags tags
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "homepage", Pp.ppacc with_homepage homepage
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "doc", Pp.ppacc with_doc doc
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
       "bug-reports", Pp.ppacc with_bug_reports bug_reports
-        (Pp.V.map_list Pp.V.string);
+        (Pp.V.map_list Pp.V.string),
+      cleanup_none;
 
-      "configure-style", Pp.ppacc_ignore; (* deprecated *)
+      "configure-style", Pp.ppacc_ignore, (* deprecated *)
+      cleanup_none;
     ]
 
-    let cleanup_name = 
-    let cleanup ~pos:(file,_,_ as pos) t =
-      let name, version =
-        match OpamPackage.of_filename file with
-        | Some nv when nv <> package t ->
-          Pp.warn ~pos "This file is for package '%s' but its name/version \
-                        fields advertise '%s.%s'."
-            (OpamPackage.to_string nv) (OpamPackage.to_string (package t));
-          OpamPackage.name nv, OpamPackage.version nv
-        | _ -> t.name, t.version
-      in
-      let clean_depflags ext_formula =
-        (* remove unknown dependency flags *)
-        OpamFormula.map (fun (name, (flags, cstr)) ->
-            let unknown_flags =
-              OpamStd.List.filter_map (function
-                  | Depflag_Unknown n -> Some n
-                  | _ -> None)
-                flags in
-            if unknown_flags <> [] then
-              Pp.warn "Unknown flags %s ignored for dependency %s"
-                (OpamStd.Format.pretty_list unknown_flags)
-                (OpamPackage.Name.to_string name);
-            let known_flags = List.filter (function
-                | Depflag_Unknown _ -> false
-                | _ -> true)
-                flags in
-            Atom (name, (known_flags, cstr)))
-          ext_formula
-      in
-      let depends = clean_depflags t.depends in
-      let depopts =
-        (* Make sure depopts are a pure disjunction, without constraints *)
-        let rec cleanup ~pos acc disjunction =
-          List.fold_left (fun acc -> function
-              | OpamFormula.Atom (_, (_,Empty)) as atom -> atom :: acc
-              | OpamFormula.Atom (name, (flags, cstr)) ->
-                Pp.warn ~pos
-                  "Version constraint (%s) no longer allowed in optional \
-                   dependency (ignored).\n\
-                   Use the 'conflicts' field instead."
-                  (OpamFormula.string_of_formula (fun (r,v) ->
-                       OpamFormula.string_of_relop r ^" "^
-                       OpamPackage.Version.to_string v)
-                      cstr);
-                OpamFormula.Atom (name, (flags, Empty)) :: acc
-              | f ->
-                Pp.warn "Optional dependencies must be a disjunction. \
-                         Treated as such.";
-                cleanup ~pos acc
-                  (OpamFormula.fold_left (fun acc a -> OpamFormula.Atom a::acc)
-                     [] f)
-            )
-            acc disjunction
-        in
-        t.depopts |>
-        check_depflags ~pos
-      in
-      if not OpamFormatConfig.(!r.skip_version_checks) &&
-         OpamVersion.compare opam_version (OpamVersion.of_string "1.2") >= 0
-      then
-        OpamFormula.ors_to_list f
-        |> cleanup ~pos:(OpamFormat.value_pos value) []
-        |> List.rev
-        |> OpamFormula.ors
-      else f
-    in
-    let depopts = clean_depflags t.depopts in
-    let conflicts =
-      let is_disjunction f =
-        List.for_all (function Atom _ -> true | _ -> false)
-          OpamFormula.(ors_to_list (to_atom_formula f))
-      in
-      let force_disjunction f =
-        OpamFormula.map_formula (function
-            | And (a, b) -> Or (a, b)
-            | f -> f)
-          f
-      in
-      let cleanup ~pos f =
-        if is_disjunction f then f else
-          (if OpamVersion.compare opam_version (OpamVersion.of_string "1.3") >= 0
-           then
-             OpamConsole.warning
-               "At %s:\n\
-                Conflicts must be a disjunction, '&' is not supported \
-                (treated as '|')."
-               (string_of_pos pos);
-           f
-           |> OpamFormula.map (fun (n,cs) -> Atom (n, force_disjunction cs))
-           |> force_disjunction)
-      in
-      assoc_default OpamFormula.Empty s s_conflicts @@ fun value ->
-      OpamFormat.(parse_formula `Disj parse_constraints value) |> fun f ->
-      if conservative then f
-      else cleanup ~pos:(OpamFormat.value_pos value) f
-    in
-    (* TODO - WIP *)
-    let flags, tags = (* Allow 'flag:xxx' tags as flags, for compat *)
+    let fields =
+      List.map (fun (name, pp, cleanup) ->
+          name,
+          Pp.pp (fun ~pos (opam_version, items) ->
+              items |> Pp.parse pp |> cleanup opam_version ~pos)
+            (Pp.print pp))
+        fields_gen
+
+    let handle_flags_in_tags t =
+      (* Allow 'flag:xxx' tags as flags, for compat *)
       let prefix = "flag:" in
-      let flags, tags =
-        List.partition (OpamStd.String.starts_with ~prefix) tags
+      let tflags, tags =
+        List.partition (OpamStd.String.starts_with ~prefix) t.tags
       in
       let flags =
         OpamStd.List.sort_nodup compare @@
         List.map (pkg_flag_of_string @* OpamStd.String.remove_prefix ~prefix)
-          flags
+          tflags
         @ t.flags
       in
       flags, tags
-    in
-    { t with
-      name; version; depends; depopts; conflicts; flags; tags; }
 
     let pp =
       Pp.I.check_opam_version () -|
@@ -1314,7 +1365,9 @@ module X = struct
       Pp.I.partition_fields is_ext_field -| Pp.map_pair
         (Pp.I.items -|
          OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
-        (Pp.I.fields ~name:"opam-file" ~empty fields) -|
+        (Pp.I.field "opam-version"
+           (Pp.parse @@ Pp.of_module "opam-version" (module OpamVersion)) -|
+         Pp.I.fields ~name:"opam-file" ~empty fields) -|
       Pp.pp
         (fun ~pos (extensions, t) -> with_extensions t extensions)
         (fun t -> extensions t, t) -|

@@ -167,7 +167,7 @@ module Pp = struct
     pp
       ?name
       (fun ~pos x ->
-         if not (f ~pos x) then
+         if not (f x) then
            match errmsg with
            | Some m -> bad_format ~pos "%s" m
            | None -> unexpected ()
@@ -308,7 +308,7 @@ module Pp = struct
         (fun ~pos:_ -> function Int (_,i) -> i | _ -> unexpected ())
         (fun i -> Int (pos_null,i))
 
-    let pos_int = int -| check ~name:"positive-int" (fun ~pos:_ i -> i >= 0)
+    let pos_int = int -| check ~name:"positive-int" (fun i -> i >= 0)
 
     let ident =
       pp ~name:"ident"
@@ -680,10 +680,10 @@ module Pp = struct
 
     let items = map_list ~posf:item_pos item
 
-    let good_fields ?(allow_extensions=false) fields =
+    let good_fields ?name ?(allow_extensions=false) fields =
       let parse ~pos:_ items =
         List.fold_left (fun (fields,ok,extra) -> function
-            | Section _ as s -> s::extra
+            | Section _ as s -> fields, ok, s::extra
             | Variable (pos,k,_) as v ->
               if List.mem_assoc k fields
               then List.remove_assoc k fields, v::ok, extra
@@ -773,6 +773,21 @@ module Pp = struct
              | _ -> false))
         (fun (a,b) -> a @ b)
 
+    let field name parse =
+      pp
+        (fun ~pos items ->
+           match
+             OpamStd.List.filter_map (function
+                 | Variable (_,k,v) when k = name -> Some v
+                 | _ -> None)
+               items
+           with
+           | [] -> bad_format ~pos "Missing '%s:' field" name
+           | _::_::_ -> bad_format ~pos "Duplicate '%s:' field" name
+           | [v] -> parse ~pos v, items)
+        (fun (_,x) -> x)
+
+
     let extract_field name =
       partition_fields ((=) name) -|
       map_pair
@@ -787,21 +802,12 @@ module Pp = struct
         ?(f=fun v -> OpamVersion.(compare current_nopatch (nopatch v) >= 0))
         ()
       =
+      let name = "opam-version" in
       let opam_v = V.string -| of_module "opam-version" (module OpamVersion) in
-      let check_v v = OpamFormatConfig.(!r.skip_version_checks) ||
-                      OpamStd.Option.Op.((v >>| f) +! false)
-      in
-      check ~name:"opam-version"
-        (fun ~pos items ->
-           match
-             OpamStd.List.filter_map (function
-                 | Variable (_,"opam-version",v) -> Some v
-                 | _ -> None)
-               items
-           with
-           | [v] -> OpamFormat.(!r.skip_version_checks) || f v
-           | [] -> bad_format ~pos "Missing 'opam-version:' field"
-           | _::_::_ -> bad_format ~pos "Too many 'opam-version:' fields")
+      let f v = OpamFormatConfig.(!r.skip_version_checks) || f v in
+      field name (parse opam_v) -|
+      map_pair (check ~name ~errmsg:"Unsupported opam version" f) identity -|
+      pp (fun ~pos:_ (_,x) -> x) (fun x -> v,x)
 
     let signature =
       V.list -| (V.string ^+ V.string ^+ last -| V.string)
