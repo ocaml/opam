@@ -67,6 +67,9 @@ AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG([cudf])
 AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
+AC_CHECK_OCAML_PKG(dose3.opam,dose3.opam)
+AC_CHECK_OCAML_PKG(dose3.pef,dose3.pef)
+AC_CHECK_OCAML_PKG(dose3.versioning,dose3.versioning)
 AC_CHECK_OCAML_PKG([jsonm])
 
 dnl echo

@@ -102,6 +102,7 @@ end
 val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
+val pef_state : OpamFormula.atom OpamTypes.request -> state -> Opam.Packages.request * Opam.Packages.package list
 
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state

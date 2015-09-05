@@ -1391,17 +1391,94 @@ let dump_state t oc =
               (string_of_cnf OpamFormula.string_of_atom dd)
     with Not_found -> () );
 
-    (try
-      let c = OpamPackage.Map.find package conflicts in
+    ( let c = 
+        try OpamPackage.Map.find package conflicts 
+        with Not_found -> Empty
+      in
       let n = OpamPackage.name package in
-      match (n,None)::(OpamFormula.to_conjunction c) with
+      match (n,None)::(OpamFormula.to_disjunction c) with
       |[] -> ()
-      |cc -> Printf.fprintf oc "conflicts: %s\n"
-              (string_of_conjunction OpamFormula.string_of_atom cc);
-    with Not_found -> () );
+      |cc ->  Printf.fprintf oc "conflicts: %s\n"
+              (string_of_conjunction OpamFormula.string_of_atom cc));
+
     Printf.fprintf oc "\n";
   in
   OpamPackage.Set.iter aux (Lazy.force t.available_packages)
+
+let pef_state request t =
+  let opams = (* Read overlays of pinned packages *)
+    OpamPackage.Name.Map.fold (fun name pin map ->
+        let v = version_of_pin t name pin in
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+        if OpamFilename.exists overlay then
+          OpamPackage.Map.add
+            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
+        else map)
+      t.pinned t.opams
+  in
+  let depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams in
+  let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams in
+  let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams in
+  let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer opams in
+  let base = base_packages t in
+  let filter _ = true in
+
+  let aux package =
+    let name = ("package",(OpamPackage.name_to_string package)) in
+    let version = ("version",(OpamPackage.version_to_string package)) in
+
+    let base = if OpamPackage.Set.mem package base then ("base","1") else ("base","0") in
+
+    let depends = 
+      try
+        let d = OpamPackage.Map.find package depends in
+        let formula = (OpamFormula.formula_of_extended ~filter d) in
+        let dd = OpamFormula.to_cnf formula in
+        ("depends", string_of_cnf OpamFormula.string_of_atom dd)
+      with Not_found -> ("depends","a")
+    in
+
+    let recommends = 
+      try
+        let d = OpamPackage.Map.find package depopts in
+        let formula = (OpamFormula.formula_of_extended ~filter d) in
+        let dd = OpamFormula.to_cnf formula in 
+        ("recommends", string_of_cnf OpamFormula.string_of_atom dd)
+      with Not_found -> ("recommends","a") 
+    in
+
+    let conflicts = 
+      let c =
+        try OpamPackage.Map.find package conflicts 
+        with Not_found -> Empty
+      in
+      let n = OpamPackage.name package in
+      let cc = (n,None)::(OpamFormula.to_disjunction c) in
+      ("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
+    in
+    List.map (fun (k,v) -> (k,(Common.Format822.dummy_loc,v))) [name;version;base;depends;recommends;conflicts]
+  in
+  let l = OpamPackage.Set.fold (fun p l -> (aux p)::l) (Lazy.force t.available_packages) [] in
+  let request =
+    let to_string =
+      let string_of_conjunction string_of_atom c =
+          Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom c)
+      in
+      string_of_conjunction OpamFormula.string_of_atom
+    in
+    let par = [
+      ("install",(Common.Format822.dummy_loc,(to_string request.wish_install)));
+      ("remove",(Common.Format822.dummy_loc,(to_string request.wish_remove)));
+      ("upgrade",(Common.Format822.dummy_loc,(to_string request.wish_upgrade)));
+      ("switch",(Common.Format822.dummy_loc,OpamSwitch.to_string t.switch));
+      ("switches",(Common.Format822.dummy_loc,"")); 
+      ("profiles",(Common.Format822.dummy_loc,"")); 
+      ("preferences",(Common.Format822.dummy_loc,OpamSolverConfig.criteria request.criteria)) 
+    ]
+    in
+    Opam.Packages.parse_request_stanza par
+  in
+  request,List.map (fun par -> new Opam.Packages.package par) l
 
 let installed_versions t name =
   OpamSwitch.Map.fold (fun switch _ map ->
