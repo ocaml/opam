@@ -1420,65 +1420,124 @@ let pef_state request t =
   let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams in
   let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams in
   let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer opams in
+  let devs = dev_packages t in
   let base = base_packages t in
+  let to_atom_ext_formula t =
+    let atom (r,v) = Atom (r, v) in
+    let atoms (x, c, k) =
+      match OpamFormula.cnf_of_formula (OpamFormula.map atom c) with
+      | Empty -> Atom (x, None, k)
+      | cs    -> OpamFormula.map (fun c -> Atom (x, Some c, k)) cs in
+    OpamFormula.map atoms t
+  in
+  let to_cnf t =
+    let rec or_formula = function
+      | Atom (x,None,k)      -> [k, x, None]
+      | Atom (x,Some(r,v),k) -> [k, x, Some(r,v)]
+      | Or(x,y)            -> or_formula x @ or_formula y
+      | Empty
+      | Block _
+      | And _      -> assert false in
+    let rec aux t = match t with
+      | Empty    -> []
+      | Block _  -> assert false
+      | Atom _
+      | Or _     -> [or_formula t]
+      | And(x,y) -> aux x @ aux y in
+    aux (OpamFormula.cnf_of_formula (to_atom_ext_formula t))
+  in
+  let formula_of_extended f =
+    to_cnf ( OpamFormula.(map (fun (n, (kws,formula)) -> OpamFormula.Atom (n, formula, kws))) f)
+  in
+  let string_of_flags l = 
+    let aux = function
+      | Depflag_Build -> "build"
+      | Depflag_Test -> "test"
+      | Depflag_Doc -> "doc"
+      | Depflag_Dev -> "dev"
+      | Depflag_Unknown s -> s
+    in match l with
+    |[] -> ""
+    |l -> Printf.sprintf " <%s>" (String.concat " " (List.map aux l))
+  in
+  let string_of_atom = function
+    | fl , n, None ->
+        Printf.sprintf "%s%s" (OpamPackage.Name.to_string n) (string_of_flags fl)
+    | fl, n, Some (r,c) ->
+      Printf.sprintf "%s (%s %s)%s"
+        (OpamPackage.Name.to_string n)
+        (string_of_relop r)
+        (OpamPackage.Version.to_string c)
+        (string_of_flags fl)
+  in
   let filter _ = true in
-
   let aux package =
-    let name = ("package",(OpamPackage.name_to_string package)) in
-    let version = ("version",(OpamPackage.version_to_string package)) in
+    let name = Some("package",(OpamPackage.name_to_string package)) in
+    let version = Some("version",(OpamPackage.version_to_string package)) in
 
-    let base = if OpamPackage.Set.mem package base then ("base","1") else ("base","0") in
+    let base = if OpamPackage.Set.mem package base then Some("base","1") else None in
 
     let depends = 
       try
         let d = OpamPackage.Map.find package depends in
-        let formula = (OpamFormula.formula_of_extended ~filter d) in
-        let dd = OpamFormula.to_cnf formula in
-        ("depends", string_of_cnf OpamFormula.string_of_atom dd)
-      with Not_found -> ("depends","a")
+        let dd = formula_of_extended d in 
+        Some ("depends", string_of_cnf string_of_atom dd)
+      with Not_found -> None
     in
 
     let recommends = 
       try
         let d = OpamPackage.Map.find package depopts in
-        let formula = (OpamFormula.formula_of_extended ~filter d) in
-        let dd = OpamFormula.to_cnf formula in 
-        ("recommends", string_of_cnf OpamFormula.string_of_atom dd)
-      with Not_found -> ("recommends","a") 
+        let dd = formula_of_extended d in 
+        Some ("recommends", string_of_cnf string_of_atom dd)
+      with Not_found -> None
     in
 
     let conflicts = 
-      let c =
-        try OpamPackage.Map.find package conflicts 
-        with Not_found -> Empty
-      in
-      let n = OpamPackage.name package in
-      let cc = (n,None)::(OpamFormula.to_disjunction c) in
-      ("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
+      try 
+        let c = OpamPackage.Map.find package conflicts in
+        let n = OpamPackage.name package in
+        let cc = (n,None)::(OpamFormula.to_disjunction c) in
+        Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
+      with Not_found -> None
     in
-    List.map (fun (k,v) -> (k,(Common.Format822.dummy_loc,v))) [name;version;base;depends;recommends;conflicts]
+    List.fold_left (fun acc -> function
+      |None -> acc
+      |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
+    ) [] [name;version;base;depends;recommends;conflicts]
   in
   let l = OpamPackage.Set.fold (fun p l -> (aux p)::l) (Lazy.force t.available_packages) [] in
-  let request =
+  let options,request =
     let to_string =
       let string_of_conjunction string_of_atom c =
           Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom c)
       in
       string_of_conjunction OpamFormula.string_of_atom
     in
+    let profiles =
+      if OpamStateConfig.(!r.build_test) then "test"
+      else if OpamStateConfig.(!r.build_doc) then "doc"
+      else ""
+    in
+    let options = OpamSwitch.to_string t.switch,[],[profiles] in
     let par = [
       ("install",(Common.Format822.dummy_loc,(to_string request.wish_install)));
       ("remove",(Common.Format822.dummy_loc,(to_string request.wish_remove)));
       ("upgrade",(Common.Format822.dummy_loc,(to_string request.wish_upgrade)));
       ("switch",(Common.Format822.dummy_loc,OpamSwitch.to_string t.switch));
       ("switches",(Common.Format822.dummy_loc,"")); 
-      ("profiles",(Common.Format822.dummy_loc,"")); 
+      ("profiles",(Common.Format822.dummy_loc,profiles)); 
       ("preferences",(Common.Format822.dummy_loc,OpamSolverConfig.criteria request.criteria)) 
     ]
     in
-    Opam.Packages.parse_request_stanza par
+    options,Opam.Packages.parse_request_stanza par
   in
-  request,List.map (fun par -> new Opam.Packages.package par) l
+  request,
+  List.fold_left (fun acc par -> 
+    match Opam.Packages.parse_package_stanza options par with
+    |Some pkg -> pkg::acc 
+    |None -> acc
+    ) [] l
 
 let installed_versions t name =
   OpamSwitch.Map.fold (fun switch _ map ->
