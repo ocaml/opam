@@ -1,0 +1,170 @@
+
+# OPDP = Opam Package Description Protocol
+
+This document describes the communication protocol between OPAM the
+dose3 library. The protocol is called OPDP, for "Opam Package 
+Description Protocol".
+
+### Scenario
+
+A scenario is a text file encoded in a format very similar to the 822 Mail
+format.  A scenario consists of two distinct parts: a **request** and a
+**package universe**, occurring in that order. The request consists of a single
+stanza, while the package universe consists of several such stanzas. All
+stanzas occurring in a scenario are separated by an empty line.
+
+#### Request
+Within a dependency solving scenario, a request represents the action on
+installed packages requested by the user.
+
+A request is a single 822 stanza opened by a mandatory Request field
+and followed by a mixture of action, preference, and global
+configuration fields.
+
+The value of the **Request:** field is a string describing the OPDP
+protocol which will be used to communicate. At present, the string must
+be `OPDP 0.1`. Request fields are mainly used to identify the beginning
+of a request stanza; their actual values are otherwise not used by the
+OPDP protocol.
+
+The following **configuration fields** are supported in request stanzas:
+
+- **Switch:** (mandatory) The name of the *current* opam switch as selected
+  by the user (see also: `opam switch`)
+
+- **Switches:** (optional, defaults to the current switch) A
+  space separated list of *all* switches installed on the system by Opam (
+  see: `opam switch -i`)
+
+- **Profiles:** (optional, default empty list) A space separated list of
+  labels used to filter dependencies
+
+The following **action fields** are supported in request stanzas:
+
+- **Install:** (optional, defaults to the empty string) A comma separated list
+  of switch-qualified package names possibly associate with a version
+  constraint. This field denotes a list of packages that the user wants to
+  install, usually via an opam `install` request.
+
+- **Remove:** (optional, defaults to the empty string) Same syntax of
+  Install. This field denotes a list of packages that the user wants to
+  remove, usually via opam `remove` or `purge` requests.
+
+- **Upgrade:** (optional, defaults to the empty string) A comma
+  separated list of package names, optionally qualified by a switch.
+  This field denotes the list of packages to be upgraded, on one, or all
+  switches, usually requested via an opam `upgrade` request.
+
+The following **preference fields** are supported in request stanzas:
+
+- **Preferences:** a solver-specific optimization string. Ex "-removed,-new"
+
+#### Package universe
+
+A package universe is a list of 822 stanzas, one per package, called
+**package stanzas**. Each package stanzas starts with a Package
+field. The following fields are supported in package stanzas:
+
+- **Package:** (mandatory) The package name
+
+- **Version:** (mandatory) The package version
+
+- **Switch:** (optional, default to all available switches "all") A comma
+  separated list of switches for which this package will be considered. The
+  special value "all" means "on all available switches".
+
+- **Depends:** (optional, default to the empty string) A list of dependencies
+  in CNF format ( commas denotes ANDs and bars denotes ORs ) of package names
+  optionally switch-qualified or optionally decorated with a version constraint.
+  A special decoration `:any` can be attached to a package name to denote that
+  the constraint on this package can be satisfied by any packages with that
+  package name installed on any installed switches. A dependency can be also
+  decorated by two types of annotations : switch annotations and profile
+  annotations. The switch annotations is a list of switches using [ as the
+  opening and ] as the closing bracket. The dependency will be considered if one
+  of the specified switches are active.
+
+  Depends: foo (>= 1.0) [4.02 3.11] <!windows> <!multithread>, bar
+
+  This specification uses a pair of brackets (using < as the opening and > as
+  the closing bracket) after the switch qualification list. The < and > brackets
+  enclose a white space separated list of terms called a restriction list. But in
+  contrast to the switch qualification there can be multiple < and > enclosed
+  restriction lists. The list of restriction lists is called a restriction
+  formula and individual restriction lists are separated by white space.
+
+  Every term in a restriction list refers to the name of a profile. Terms can be
+  negated by using an exclamation mark as a prefix. Positive and negative terms
+  are allowed to be mixed.
+
+  The terms arranged as a restriction formula form a disjunctive normal form
+  expression. This is, each term within a restriction list is AND-ed together
+  while the restriction lists in a restriction formula are OR-ed together (the
+  order does not matter). A term evaluates to "true" if the profile with the same
+  name was set by the user. It defaults to false if the profile was not set. In
+  the example above, the package would depend on foo for 4.02 or 3.11 and if
+  neither the profile windows nor the profile multithread are active. 
+
+  Depends: foo <linux ssl>
+
+  In this example the dependency foo would be considered if only both linux and ssl
+  profiles are set.
+
+  Depends: foo <linux ssl> <!windows>
+
+  In this example the dependency foo would be considered if only both linux and ssl
+  profiles are set or the windows profile is not set.
+
+  If a build dependency is annotated with a restriction formula, then that
+  dependency is included if and only if the condition expressed by the
+  conjunctive normal form expression evaluates to true.
+
+- **Conflicts:** (optional, default to the empty string) A list of conflicts in
+  conjunctive format ( commas denotes ANDs ). Annotations as in Depends.
+
+- **Build-Depends:** (optional, default to the empty string) A list of
+  dependencies in CNF format ( commas denotes ANDs and bars denotes ORs ) of names.
+  These packages will not be considered by the dependency solver and refer to
+  system packages.
+
+- **Installed:** (optional, default to the empty string) A comma
+  separated list of switches denoting the installed switches where this package is
+  currently installed.
+
+- **Holds:** (optional, defaults to empty list). A comma separated list of hold
+  statements. Allowed values: `<switch>:yes`, `<switch>:no`. When set to
+  `<switch>:yes`, the corresponding package is marked as "on hold" by opam on
+  the specified switch.
+
+#### Solution
+
+A solution is a list of 822 stanzas. Each of them could be an
+install stanza (telling Opam to install a specific package), a remove
+stanza (telling Opam to remove one).
+
+An **install stanza** starts with an Install field and supports the
+following fields:
+
+- **Install:** (mandatory). The value is a triplet, a package name, 
+  followed by a package version, followed by a switch identifier.
+
+- All fields supported by package stanzas.
+
+**Remove stanzas** are similar to install stanzas, but have **Remove**
+fields instead of Install fields. 
+
+## Example
+
+Request:
+Install: a:4.01 ( = 1 ) | a (<= 2)
+Upgrade: b
+Switch: 3.12
+Switches: 4.01
+
+Package: a
+Version: 1
+Switches: 4.01 , 3.12
+Depends: b ( <= 2), c:4.02 | d, e:any
+Build-Depends: sed, tar
+
+[...]
