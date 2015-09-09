@@ -1194,156 +1194,163 @@ module X = struct
 
     (* Field parser-printers *)
 
-    (* [field name, pp, cleanup/check function] *)
+    (* [field name, (pure pp, pp including cleanup/check function)] *)
     let fields_gen =
-      let (++) cleanup pp = 
+      let with_check check ppacc set get pp =
+        ppacc set get pp,
+        ppacc set get pp
+      in
+      let (>|) pp cleanup =
+        pp,
+        Pp.pp (fun ~pos (opam_version, (acc,item)) ->
+            item |> Pp.parse ~pos pp |> cleanup opam_version ~pos)
+          (fun t -> OpamVersion.current, Pp.print pp t)
+      in
       [
-      "opam-version", Pp.ppacc with_opam_version opam_version
-        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion)),
-      cleanup_none;
-      "name", Pp.ppacc_opt with_name name_opt
-        (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name)),
-      cleanup_name;
-      "version", Pp.ppacc_opt with_version version_opt
-        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version)),
-      cleanup_version;
+        "opam-version", Pp.ppacc with_opam_version opam_version
+          (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion))
+        >| cleanup_none;
+        "name", Pp.ppacc_opt with_name name_opt
+          (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name))
+        >| cleanup_name;
+        "version", Pp.ppacc_opt with_version version_opt
+          (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version))
+        >| cleanup_version;
 
-      "depends", Pp.ppacc with_depends depends
-        (Pp.V.package_formula `Conj Pp.V.ext_constraints),
-      cleanup_depflags;
-      "depopts", Pp.ppacc with_depopts depopts
-        (Pp.V.package_formula `Disj Pp.V.ext_constraints),
-      cleanup_depopts;
-      "conflicts", Pp.ppacc with_conflicts conflicts
-        (Pp.V.package_formula `Disj Pp.V.constraints),
-      cleanup_conflicts;
-      "available", Pp.ppacc with_available available
-        (Pp.V.list -| Pp.V.filter),
-      cleanup_none;
-      "ocaml-version", Pp.ppacc_opt with_ocaml_version ocaml_version
-        (Pp.V.list -| Pp.V.constraints Pp.V.compiler_version),
-      cleanup_none;
-      "os", Pp.ppacc with_os os
-        Pp.V.os_constraint,
-      cleanup_none;
-      "flags", Pp.ppacc add_flags flags
-        (Pp.V.map_list @@
-         Pp.V.ident -|
-         Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag)),
-      cleanup_flags;
+        "depends", Pp.ppacc with_depends depends
+          (Pp.V.package_formula `Conj Pp.V.ext_constraints)
+        >| cleanup_depflags;
+        "depopts", Pp.ppacc with_depopts depopts
+          (Pp.V.package_formula `Disj Pp.V.ext_constraints)
+        >| cleanup_depopts;
+        "conflicts", Pp.ppacc with_conflicts conflicts
+          (Pp.V.package_formula `Disj Pp.V.constraints)
+        >| cleanup_conflicts;
+        "available", Pp.ppacc with_available available
+          (Pp.V.list -| Pp.V.filter)
+        >| cleanup_none;
+        "ocaml-version", Pp.ppacc_opt with_ocaml_version ocaml_version
+          (Pp.V.list -| Pp.V.constraints Pp.V.compiler_version)
+        >| cleanup_none;
+        "os", Pp.ppacc with_os os
+          Pp.V.os_constraint
+        >| cleanup_none;
+        "flags", Pp.ppacc add_flags flags
+          (Pp.V.map_list @@
+           Pp.V.ident -|
+           Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag))
+        >| cleanup_flags;
 
-      "build", Pp.ppacc with_build build
-        (Pp.V.map_list Pp.V.command),
-      cleanup_none;
-      "build-test", Pp.ppacc with_build_test build_test
-        (Pp.V.map_list Pp.V.command),
-      cleanup_none;
-      "build-doc", Pp.ppacc with_build_doc build_doc
-        (Pp.V.map_list Pp.V.command),
-      cleanup_none;
-      "install", Pp.ppacc with_install install
-        (Pp.V.map_list Pp.V.command),
-      cleanup_none;
-      "remove", Pp.ppacc with_remove remove
-        (Pp.V.map_list Pp.V.command),
-      cleanup_none;
+        "build", Pp.ppacc with_build build
+          (Pp.V.map_list Pp.V.command)
+        >| cleanup_none;
+        "build-test", Pp.ppacc with_build_test build_test
+          (Pp.V.map_list Pp.V.command)
+        >| cleanup_none;
+        "build-doc", Pp.ppacc with_build_doc build_doc
+          (Pp.V.map_list Pp.V.command)
+        >| cleanup_none;
+        "install", Pp.ppacc with_install install
+          (Pp.V.map_list Pp.V.command)
+        >| cleanup_none;
+        "remove", Pp.ppacc with_remove remove
+          (Pp.V.map_list Pp.V.command)
+        >| cleanup_none;
 
-      "substs", Pp.ppacc with_substs substs
-        (Pp.V.map_list pp_basename),
-      cleanup_none;
-      "patches", Pp.ppacc with_patches patches
-        (Pp.V.map_list @@ Pp.V.map_option pp_basename (Pp.opt Pp.V.filter)),
-      cleanup_none;
-      "build-env", Pp.ppacc with_build_env build_env
-        (Pp.V.map_list Pp.V.env_binding),
-      cleanup_none;
-      "features", Pp.ppacc with_features features
-        Pp.V.features,
-      cleanup_none;
-      "extra-sources", Pp.ppacc with_extra_sources extra_sources
-        (Pp.V.map_list @@
-         Pp.V.map_pair
-           (Pp.V.map_option
-              Pp.V.address
-              (Pp.opt @@ Pp.singleton -| pp_basename))
-           (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest)
-         -| Pp.pp
-           (fun ~pos:_ ((u,md5),f) -> u,f,md5)
-           (fun (u,f,md5) -> (u,md5),f)),
-      cleanup_none;
+        "substs", Pp.ppacc with_substs substs
+          (Pp.V.map_list pp_basename)
+        >| cleanup_none;
+        "patches", Pp.ppacc with_patches patches
+          (Pp.V.map_list @@ Pp.V.map_option pp_basename (Pp.opt Pp.V.filter))
+        >| cleanup_none;
+        "build-env", Pp.ppacc with_build_env build_env
+          (Pp.V.map_list Pp.V.env_binding)
+        >| cleanup_none;
+        "features", Pp.ppacc with_features features
+          Pp.V.features
+        >| cleanup_none;
+        "extra-sources", Pp.ppacc with_extra_sources extra_sources
+          (Pp.V.map_list @@
+           Pp.V.map_pair
+             (Pp.V.map_option
+                Pp.V.address
+                (Pp.opt @@ Pp.singleton -| pp_basename))
+             (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest)
+           -| Pp.pp
+             (fun ~pos:_ ((u,md5),f) -> u,f,md5)
+             (fun (u,f,md5) -> (u,md5),f))
+        >| cleanup_none;
 
-      "messages", Pp.ppacc with_messages messages
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
-      cleanup_none;
-      "post-messages", Pp.ppacc with_post_messages post_messages
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
-      cleanup_none;
-      "depexts", Pp.ppacc_opt with_depexts depexts
-        (let string_set name =
-           Pp.V.map_list Pp.V.string -|
-           Pp.of_pair name OpamStd.String.Set.(of_list, elements)
-         in
-         Pp.V.map_list
-           (Pp.V.map_pair
-              (string_set "system-id") (string_set "system-package")) -|
-         Pp.of_pair "depext-bindings"
-           OpamStd.String.SetMap.(of_list, bindings)),
-      cleanup_none;
-      "libraries", Pp.ppacc with_libraries libraries
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
-      cleanup_none;
-      "syntax", Pp.ppacc with_syntax syntax
-        (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter))),
-      cleanup_none;
-      "dev-repo", Pp.ppacc_opt with_dev_repo dev_repo
-        (Pp.V.url -|
-         Pp.check ~errmsg:"Not a version-control or http url"
-           (function _, (`http | #version_control) -> true | _ -> false) -|
-         Pp.of_pair "pin-address" (pin_of_url, url_of_pin)),
-      cleanup_none;
+        "messages", Pp.ppacc with_messages messages
+          (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)))
+        >| cleanup_none;
+        "post-messages", Pp.ppacc with_post_messages post_messages
+          (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)))
+        >| cleanup_none;
+        "depexts", Pp.ppacc_opt with_depexts depexts
+          (let string_set name =
+             Pp.V.map_list Pp.V.string -|
+             Pp.of_pair name OpamStd.String.Set.(of_list, elements)
+           in
+           Pp.V.map_list
+             (Pp.V.map_pair
+                (string_set "system-id") (string_set "system-package")) -|
+           Pp.of_pair "depext-bindings"
+             OpamStd.String.SetMap.(of_list, bindings))
+        >| cleanup_none;
+        "libraries", Pp.ppacc with_libraries libraries
+          (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)))
+        >| cleanup_none;
+        "syntax", Pp.ppacc with_syntax syntax
+          (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)))
+        >| cleanup_none;
+        "dev-repo", Pp.ppacc_opt with_dev_repo dev_repo
+          (Pp.V.url -|
+           Pp.check ~errmsg:"Not a version-control or http url"
+             (function _, (`http | #version_control) -> true | _ -> false) -|
+           Pp.of_pair "pin-address" (pin_of_url, url_of_pin))
+        >| cleanup_none;
 
-      "maintainer", Pp.ppacc with_maintainer maintainer
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "author", Pp.ppacc
-        (fun t a -> if t.author = [] then with_author t a else
-            OpamFormat.bad_format "multiple \"author:\" fields" author)
-        author
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "authors", Pp.ppacc
-        (fun t a -> if t.author = [] then with_author t a else
-            OpamFormat.bad_format "multiple \"author:\" fields" author)
-        author
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "license", Pp.ppacc with_license license
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "tags", Pp.ppacc with_tags tags
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "homepage", Pp.ppacc with_homepage homepage
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "doc", Pp.ppacc with_doc doc
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
-      "bug-reports", Pp.ppacc with_bug_reports bug_reports
-        (Pp.V.map_list Pp.V.string),
-      cleanup_none;
+        "maintainer", Pp.ppacc with_maintainer maintainer
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "author", Pp.ppacc
+          (fun t a -> if t.author = [] then with_author t a else
+              OpamFormat.bad_format "multiple \"author:\" fields" author)
+          author
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "authors", Pp.ppacc
+          (fun t a -> if t.author = [] then with_author t a else
+              OpamFormat.bad_format "multiple \"author:\" fields" author)
+          author
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "license", Pp.ppacc with_license license
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "tags", Pp.ppacc with_tags tags
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "homepage", Pp.ppacc with_homepage homepage
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "doc", Pp.ppacc with_doc doc
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
+        "bug-reports", Pp.ppacc with_bug_reports bug_reports
+          (Pp.V.map_list Pp.V.string)
+        >| cleanup_none;
 
-      "configure-style", Pp.ppacc_ignore, (* deprecated *)
-      cleanup_none;
-    ]
+        "configure-style", Pp.ppacc_ignore (* deprecated *)
+        >| cleanup_none;
+      ]
 
     let fields =
-      List.map (fun (name, pp, cleanup) ->
-          name,
-          Pp.pp (fun ~pos (opam_version, items) ->
-              items |> Pp.parse pp |> cleanup opam_version ~pos)
-            (Pp.print pp))
-        fields_gen
+      List.map (fun (name, (_, pp)) -> name, pp) fields_gen
+
+    let raw_fields =
+      List.map (fun (name, (pp, _)) -> name, pp) fields_gen
 
     let handle_flags_in_tags t =
       (* Allow 'flag:xxx' tags as flags, for compat *)
