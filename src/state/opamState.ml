@@ -1341,7 +1341,6 @@ let string_of_cnf string_of_atom cnf =
 let string_of_conjunction string_of_atom c =
   Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
 
-
 let pef_package t =
   let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
   let depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams in
@@ -1399,10 +1398,26 @@ let pef_package t =
         (string_of_flags fl)
   in
   let aux package =
-    let opam = OpamPackage.Map.find package t.opams in
+    let opam = opam t package in
+    let installed =
+      (* version base > version legacy *)
+      let l =
+        OpamSwitch.Map.fold (fun switch _ acc ->
+          let installed = 
+            let f = OpamPath.Switch.installed t.root switch in
+            OpamFile.Installed.safe_read f
+          in
+          if OpamPackage.Set.mem package installed then
+            (OpamSwitch.to_string switch) :: acc
+          else acc
+        ) (OpamSwitch.Map.add t.switch t.compiler t.aliases) []
+      in
+      match l with
+      |[] -> None
+      |l -> Some("installed",String.concat ", " l)
+    in
     let available =
       let atom sw (r,v) =
-        if sw = "system" then false else
         match OpamCompiler.Version.to_string v with
         |"system" ->
           begin match r with
@@ -1460,7 +1475,7 @@ let pef_package t =
         List.fold_left (fun acc -> function
           |None -> acc
           |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
-        ) [] [name;version;available;base;depends;recommends;conflicts]
+        ) [] [name;version;available;installed;base;depends;conflicts;recommends]
       )
   in
   OpamPackage.Set.fold (fun p l -> match aux p with None -> l | Some par -> par::l) t.packages []
@@ -1468,7 +1483,7 @@ let pef_package t =
 
 let dump_state t oc =
   List.iter (fun par ->
-    List.iter (fun (k,(_,v)) -> Printf.fprintf oc "%s: %s\n" k v) par;
+    List.iter (fun (k,(_,v)) -> Printf.fprintf oc "%s: %s\n" k v) (List.rev par);
     Printf.fprintf oc "\n"
   ) (pef_package t)
 
@@ -1485,8 +1500,8 @@ let pef_state request t =
       else if OpamStateConfig.(!r.build_doc) then "doc"
       else "build"
     in
-    let options = OpamSwitch.to_string t.switch,[],[profiles] in
     let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
+    let options = OpamSwitch.to_string t.switch,switches,[profiles] in
     let par = [
       ("install",(Common.Format822.dummy_loc,(to_string request.wish_install)));
       ("remove",(Common.Format822.dummy_loc,(to_string request.wish_remove)));
