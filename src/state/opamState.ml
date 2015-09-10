@@ -1343,21 +1343,11 @@ let string_of_conjunction string_of_atom c =
 
 
 let pef_package t =
-  let opams = t.opams (* (* Read overlays of pinned packages *)
-    OpamPackage.Name.Map.fold (fun name pin map ->
-        let v = version_of_pin t name pin in
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
-        if OpamFilename.exists overlay then
-          OpamPackage.Map.add
-            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
-        else map)
-      t.pinned t.opams
-      *)
-  in
-  let depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams in
-  let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams in
-  let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams in
-  let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer opams in
+  let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
+  let depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams in
+  let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams in
+  let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams in
+  let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer t.opams in
   let devs = dev_packages t in
   let base = base_packages t in
   let to_atom_ext_formula t =
@@ -1409,6 +1399,31 @@ let pef_package t =
         (string_of_flags fl)
   in
   let aux package =
+    let opam = OpamPackage.Map.find package t.opams in
+    let available =
+      let atom sw (r,v) =
+        if sw = "system" then false else
+        match OpamCompiler.Version.to_string v with
+        |"system" ->
+          begin match r with
+            |`Eq  -> t.compiler = OpamCompiler.system
+            |`Neq -> t.compiler <> OpamCompiler.system
+            |_    -> OpamSystem.internal_error
+                        "%s is not a valid constraint for the system compiler \
+                         (only '=' and '!=' are valid)."
+                        (OpamFormula.string_of_relop r)
+          end
+        |_ ->
+            OpamCompiler.Version.eval_relop r 
+            (OpamCompiler.Version.of_string sw) v
+        in
+      match OpamFile.OPAM.ocaml_version opam with
+      |None -> Some("switch","all")
+      |Some c ->
+          (match List.filter (fun sw -> (OpamFormula.eval (atom sw) c) ) switches with
+          |[] -> None (* this package is not available at all *)
+          |l -> Some("switch",String.concat ", " l))
+    in
     let name = Some("package",(OpamPackage.name_to_string package)) in
     let version = Some("version",(OpamPackage.version_to_string package)) in
 
@@ -1438,12 +1453,17 @@ let pef_package t =
         Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
       with Not_found -> None
     in
-    List.fold_left (fun acc -> function
-      |None -> acc
-      |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
-    ) [] [name;version;base;depends;recommends;conflicts]
+    match available with
+    |None -> None
+    |Some _ -> 
+      Some (
+        List.fold_left (fun acc -> function
+          |None -> acc
+          |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
+        ) [] [name;version;available;base;depends;recommends;conflicts]
+      )
   in
-  OpamPackage.Set.fold (fun p l -> (aux p)::l) (Lazy.force t.available_packages) []
+  OpamPackage.Set.fold (fun p l -> match aux p with None -> l | Some par -> par::l) t.packages []
 ;;
 
 let dump_state t oc =
@@ -1466,12 +1486,13 @@ let pef_state request t =
       else "build"
     in
     let options = OpamSwitch.to_string t.switch,[],[profiles] in
+    let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
     let par = [
       ("install",(Common.Format822.dummy_loc,(to_string request.wish_install)));
       ("remove",(Common.Format822.dummy_loc,(to_string request.wish_remove)));
       ("upgrade",(Common.Format822.dummy_loc,(to_string request.wish_upgrade)));
       ("switch",(Common.Format822.dummy_loc,OpamSwitch.to_string t.switch));
-      ("switches",(Common.Format822.dummy_loc,"")); 
+      ("switches",(Common.Format822.dummy_loc,String.concat ", " switches)); 
       ("profiles",(Common.Format822.dummy_loc,profiles)); 
       ("preferences",(Common.Format822.dummy_loc,OpamSolverConfig.criteria request.criteria)) 
     ]

@@ -126,11 +126,11 @@ let call_external_solver request opampkglist =
     |false,_ -> begin
       empty := false;
       List.iter (fun pkg -> Common.CudfAdd.Cudf_hashtbl.add cache pkg ()) (Common.CudfAdd.Cudf_set.elements inst);
-      Printf.printf "Install: %a\n" pp_pkg (inst,univ)
+      Printf.printf "Install:\n%a\n" pp_pkg (inst,univ)
     end
     |true,false -> begin
       empty := false;
-      Printf.printf "Remove: %a\n" pp_pkg (rem,univ)
+      Printf.printf "Remove:\n%a\n" pp_pkg (rem,univ)
     end
     |true,true -> ()
   ) diff;
@@ -146,11 +146,12 @@ let call_external_solver request opampkglist =
           if Common.CudfAdd.Cudf_hashtbl.mem cache pkg then ()
           else begin
             Common.CudfAdd.Cudf_hashtbl.add cache pkg ();
-            Printf.printf "Install: %a@." pp_pkg ((Common.CudfAdd.Cudf_set.singleton pkg),univ);
+            Printf.printf "Install:\n%a" pp_pkg ((Common.CudfAdd.Cudf_set.singleton pkg),univ);
           end
         ) (Common.CudfAdd.who_provides soluniv (n,c))
       end
     with Not_found -> ()
-  ) cudf_request.Cudf.install
+  ) cudf_request.Cudf.install;
+
+  Printf.printf "%!"
 ;;
-  
