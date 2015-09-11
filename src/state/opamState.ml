@@ -1443,7 +1443,13 @@ let pef_package t =
     let version = Some("version",(OpamPackage.version_to_string package)) in
 
     let base = if OpamPackage.Set.mem package base then Some("base","1") else None in
-
+    let hold =
+      try
+        match OpamPackage.Name.Map.find (OpamPackage.name package) t.pinned with
+        |Version v when v = (OpamPackage.version package) -> Some("hold","yes")
+        |_ -> None
+      with Not_found -> None
+    in
     let depends =
       try
         let d = OpamPackage.Map.find package depends in
@@ -1475,7 +1481,7 @@ let pef_package t =
         List.fold_left (fun acc -> function
           |None -> acc
           |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
-        ) [] [name;version;available;installed;base;depends;conflicts;recommends]
+        ) [] [name;version;available;installed;hold;base;depends;conflicts;recommends]
       )
   in
   OpamPackage.Set.fold (fun p l -> match aux p with None -> l | Some par -> par::l) t.packages []
@@ -1512,6 +1518,7 @@ let pef_state request t =
       ("preferences",(Common.Format822.dummy_loc,OpamSolverConfig.criteria request.criteria)) 
     ]
     in
+    (*Printf.eprintf "Preferences: %s\n" (OpamSolverConfig.criteria request.criteria);*)
     options,Opam.Packages.parse_request_stanza par
   in
   let l = 
