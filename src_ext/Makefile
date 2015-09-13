@@ -1,6 +1,6 @@
 -include ../Makefile.config
 
-SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm
+SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm cppo
 
 URL_extlib = http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
 MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
@@ -17,14 +17,17 @@ MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
 MD5_cudf = b12d933a96bd326e2443241faca7aa8c
 
-URL_dose = http://opam.ocaml.org/archives/dose.3.3+opam.tar.gz
-MD5_dose = 558ab0e2129ce18adb4a2bfdaacf85cb
+URL_dose = https://gforge.inria.fr/frs/download.php/file/34889/dose3-4.0-rc1.tar.gz
+MD5_dose = 3693af45b6bcd3a686936d057f79e192
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
 
 URL_jsonm = http://erratique.ch/software/jsonm/releases/jsonm-0.9.1.tbz
 MD5_jsonm = 631a5dabdada83236c83056f60e42685
+
+URL_cppo = http://mjambon.com/releases/cppo/cppo-1.1.2.tar.gz
+MD5_cppo = f1a551639c0c667ee8840d95ea5b2ab7
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
@@ -35,7 +38,7 @@ MD5CHECK = $(OCAML) ../shell/md5check.ml
 lib-ext: clone build copy
 	@
 
-build: clone
+build: clone addcppo
 	[ $(OCAMLC) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=bcl
 	[ $(OCAMLOPT) = no ] || $(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=ncl
 
@@ -83,6 +86,16 @@ distclean:
 	rm -rf lib
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
+
+# add the preprocessor directive for OCamlMakefile
+CPPO = cppo/cppo
+addcppo = for ml in $1/*.ml $1/*.mli; do sed -i "1i(*pp $(CPPO) *)" $$ml; done
+
+addcppo:
+	$(MAKE) -C cppo all
+	$(call addcppo,dose/common)
+	$(call addcppo,dose/deb)
+	$(call addcppo,dose/algo)
 
 inst_objs = cp $(1)/*.cm*i lib
 
@@ -168,7 +181,7 @@ endef
 export PROJ_cudf
 
 SRC_dose_common = util.ml url.ml input.ml edosSolver.ml cudfSolver.ml	\
-cudfAdd.ml cudfDiff.ml
+cudfAdd.ml cudfDiff.ml format822.ml format822_parser.mly format822_lexer.mll
 
 define PROJ_dose_common
   SOURCES = $(call addmli,dose/common,$(SRC_dose_common))
@@ -178,8 +191,7 @@ define PROJ_dose_common
 endef
 export PROJ_dose_common
 
-SRC_dose_debian = architecture.ml format822.ml format822_parser.mly		\
-packages_parser.mly version.ml packages_lexer.mll format822_lexer.mll		\
+SRC_dose_debian = architecture.ml packages_parser.mly version.ml packages_lexer.mll \
 packages.ml release.ml sources.ml printer.ml evolution.ml debutil.ml debcudf.ml \
 apt.ml edsp.ml
 
