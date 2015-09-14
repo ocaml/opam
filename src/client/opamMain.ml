@@ -1443,7 +1443,7 @@ let check_and_run_external_commands () =
         let pkgname = OpamPackage.Name.of_string name in
         let candidates = Lazy.force t.available_packages in
         let nv = OpamPackage.max_version candidates pkgname in
-        let opam = OpamPackage.Map.find nv t.opams in
+        let opam = OpamState.opam t nv in
         if OpamFile.OPAM.has_flag Pkgflag_Plugin opam &&
            not (OpamState.is_name_installed t pkgname) &&
            OpamConsole.confirm "OPAM plugin %s is not installed. \
