@@ -18,7 +18,7 @@ URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
 MD5_cudf = b12d933a96bd326e2443241faca7aa8c
 
 URL_dose = http://opam.ocaml.org/archives/dose.3.3+opam.tar.gz
-MD5_dose = 558ab0e2129ce18adb4a2bfdaacf85cb
+MD5_dose = 6c14696d8ab24fb88c1e592b8518c48a
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
