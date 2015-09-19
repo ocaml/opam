@@ -273,6 +273,7 @@ module Json = struct
              (if chains <> [] then ["broken-deps", jchains] else [])))
 
   let exc e =
+    let lmap f l = List.rev (List.rev_map f l) in
     if OpamStateConfig.(!r.json_out = None) then `O [] else
     match e with
     | OpamSystem.Process_error
@@ -280,9 +281,9 @@ module Json = struct
       `O [ ("process-error",
             `O [ ("code", `String (string_of_int r_code));
                  ("duration", `Float r_duration);
-                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r_info));
-                 ("stdout", `A (List.map (fun s -> `String s) r_stdout));
-                 ("stderr", `A (List.map (fun s -> `String s) r_stderr));
+                 ("info", `O (lmap (fun (k,v) -> (k, `String v)) r_info));
+                 ("stdout", `A (lmap (fun s -> `String s) r_stdout));
+                 ("stderr", `A (lmap (fun s -> `String s) r_stderr));
                ])]
     | OpamSystem.Internal_error s ->
       `O [ ("internal-error", `String s) ]
