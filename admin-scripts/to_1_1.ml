@@ -57,11 +57,11 @@ let rec filter_vars = function
   | FOp (f1,op,f2) ->
      (match filter_vars f1, filter_vars f2 with
       | Some f1, Some f2 -> Some (FOp (f1, op, f2))
-      | _ -> None)
+      | _ -> Some (FBool false))
   | FAnd (f1,f2) ->
      (match filter_vars f1, filter_vars f2 with
       | Some f1, Some f2 -> Some (FAnd (f1, f2))
-      | opt, None | None, opt -> opt)
+      | opt, None | None, opt -> Some (FBool false))
   | FOr (f1,f2) ->
      (match filter_vars f1, filter_vars f2 with
       | Some f1, Some f2 -> Some (FOr (f1, f2))

@@ -86,7 +86,7 @@ opam install "ocamlfind>=1.4.0"
 If OPAM seems unable to fulfill very simple installation requests or
 propose non-sensical install plans, it may be due to limitations of
 its internal dependency solver; you should check that you have an
-[External dependency solver](Install.html#Externalsolvers) on your
+[External dependency solver](Install.html#ExternalSolvers) on your
 system.
 
 ### opam upgrade
@@ -97,7 +97,7 @@ packages from being upgraded.
 
 If OPAM proposes non-sensical upgrade plans, it may be due to
 limitations of its internal dependency solver; you should check that
-you have an [External dependency solver](Install.html#Externalsolvers)
+you have an [External dependency solver](Install.html#ExternalSolvers)
 on your system.
 
 ### opam switch

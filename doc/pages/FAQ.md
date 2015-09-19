@@ -211,8 +211,7 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
   install 'PACKAGE>=VERSION' PACKAGE...`, etc.)
 * Action resolution in a package set is known to be a NP-complete problem; OPAM
   uses state-of-the-art algorithms through an external, dedicated solver: make
-  sure you have the latest version of [aspcud](http://potassco.sourceforge.net/)
-  installed.
+  sure you have [an external solver installed](Install.html#ExternalSolvers)
 * Another benefit of the external solvers is that they allow to be [quite
   expressive](Specifying_Solver_Preferences.html) on your expectations.
 
