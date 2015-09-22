@@ -76,7 +76,7 @@ let check_solution state = function
     OpamStd.Sys.exit 4
   | OK actions ->
     List.iter (post_message state) actions
-  | Nothing_to_do -> ()
+  | Nothing_to_do -> OpamConsole.msg "Nothing to do.\n"
   | Aborted     -> OpamStd.Sys.exit 0
 
 let sum stats =
