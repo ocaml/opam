@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 open Cmdliner
+open OpamStd.Op
 
 (* Global options *)
 type global_options = {
@@ -303,16 +304,20 @@ let package_name =
 (* name * version option *)
 let package =
   let parse str =
-    let re = Re_str.regexp "\\([^>=<.!]+\\)\\(\\.\\(.+\\)\\)?" in
+    let re = Re.(compile @@ seq [
+        bos;
+        group @@ rep1 @@ diff any (set ">=<.!");
+        opt @@ seq [ char '.'; group @@ rep1 any ];
+        eos;
+      ]) in
     try
-      if not (Re_str.string_match re str 0) then failwith "bad_format";
-      let name =
-        OpamPackage.Name.of_string (Re_str.matched_group 1 str) in
+      let sub = Re.exec re str in
+      let name = OpamPackage.Name.of_string (Re.get sub 1) in
       let version_opt =
-        try Some (OpamPackage.Version.of_string (Re_str.matched_group 3 str))
+        try Some (OpamPackage.Version.of_string (Re.get sub 2))
         with Not_found -> None in
       `Ok (name, version_opt)
-    with Failure _ -> `Error "bad package format"
+    with Not_found | Failure _ -> `Error "bad package format"
   in
   let print ppf (name, version_opt) =
     match version_opt with
@@ -325,18 +330,25 @@ let package =
 (* name * version constraint *)
 let atom =
   let parse str =
-    let re = Re_str.regexp "\\([^>=<.!]+\\)\\(>=?\\|<=?\\|=\\|\\.\\|!=\\)\\(.*\\)" in
+    let re = Re.(compile @@ seq [
+        bos;
+        group @@ rep1 @@ diff any (set ">=<.!");
+        group @@ alt [ seq [ alt [char '<'; char '>']; opt @@ char '=' ];
+                       char '='; char '.'; str "!="; ];
+        group @@ rep1 any;
+        eos;
+      ]) in
     try
-      if not (Re_str.string_match re str 0) then failwith "no_version";
-      let sname = Re_str.matched_group 1 str in
-      let sop = Re_str.matched_group 2 str in
-      let sversion = Re_str.matched_group 3 str in
+      let sub = Re.exec re str in
+      let sname = Re.get sub 1 in
+      let sop = Re.get sub 2 in
+      let sversion = Re.get sub 3 in
       let name = OpamPackage.Name.of_string sname in
       let sop = if sop = "." then "=" else sop in
       let op = OpamFormula.relop_of_string sop in (* may raise Invalid_argument *)
       let version = OpamPackage.Version.of_string sversion in
       `Ok (name, Some (op, version))
-    with Failure _ | Invalid_argument _ ->
+    with Not_found | Failure _ | Invalid_argument _ ->
       try `Ok (OpamPackage.Name.of_string str, None)
       with Failure msg -> `Error msg
   in
