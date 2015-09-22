@@ -632,13 +632,18 @@ let install =
     Arg.(value & flag & info ["deps-only"]
            ~doc:"Install all its dependencies, but don't actually install the \
                  package.") in
-  let install global_options build_options add_to_roots deps_only atoms =
+  let upgrade =
+    Arg.(value & flag & info ["u";"upgrade"]
+           ~doc:"Upgrade the packages if already installed, rather than \
+                 ignoring them") in
+  let install
+      global_options build_options add_to_roots deps_only upgrade atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    Client.install atoms add_to_roots deps_only
+    Client.install atoms add_to_roots ~deps_only ~upgrade
   in
   Term.(pure install $global_options $build_options
-        $add_to_roots $deps_only $nonempty_atom_list),
+        $add_to_roots $deps_only $upgrade $nonempty_atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1453,7 +1458,7 @@ let check_and_run_external_commands () =
           (OpamRepositoryConfig.init ();
            OpamSolverConfig.init ();
            OpamClientConfig.init ();
-           Client.install [pkgname,None] None false;
+           Client.install [pkgname,None] None ~deps_only:false ~upgrade:false;
            OpamConsole.header_msg "Carrying on to \"%s\""
              (String.concat " " (Array.to_list Sys.argv));
            OpamConsole.msg "\n";

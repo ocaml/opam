@@ -1437,7 +1437,7 @@ module API = struct
       full_orphans,
       orphan_versions
 
-  let install_t ?ask atoms add_to_roots deps_only t =
+  let install_t ?ask atoms add_to_roots ~deps_only ~upgrade t =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -1454,10 +1454,11 @@ module API = struct
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              OpamConsole.note
-                "Package %s is already installed (current version is %s)."
-                (OpamPackage.Name.to_string (OpamPackage.name nv))
-                (OpamPackage.Version.to_string (OpamPackage.version nv));
+              if not upgrade then
+                OpamConsole.note
+                  "Package %s is already installed (current version is %s)."
+                  (OpamPackage.Name.to_string (OpamPackage.name nv))
+                  (OpamPackage.Version.to_string (OpamPackage.version nv));
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
@@ -1499,16 +1500,23 @@ module API = struct
 
     OpamSolution.check_availability t (Lazy.force t.available_packages) atoms;
 
-    if pkg_new <> [] then (
+    let wish_upgrade =
+      if upgrade then List.filter (fun at -> not (List.mem at pkg_new)) atoms
+      else [] in
+
+    if pkg_new <> [] || wish_upgrade <> [] then (
 
       let request =
         preprocessed_request t full_orphans orphan_versions
-          ~wish_install:atoms ();
+          ~wish_install:atoms ~wish_upgrade ();
       in
       let action =
-        if add_to_roots = Some false || deps_only then
-          Install OpamPackage.Name.Set.empty
-        else Install names in
+        if wish_upgrade <> [] then Upgrade (OpamPackage.Set.of_list pkg_skip)
+        (* Fixme: the above won't properly handle setting as a root *)
+        else match add_to_roots, deps_only with
+          | Some false, _ | None, true ->
+            Install OpamPackage.Name.Set.empty
+          | _ -> Install names in
       let solution =
         OpamSolution.resolve t action
           ~orphans:(full_orphans ++ orphan_versions)
@@ -1530,11 +1538,11 @@ module API = struct
       OpamSolution.check_solution t solution
     )
 
-  let install names add_to_roots deps_only =
+  let install names add_to_roots ~deps_only ~upgrade =
     with_switch_backup "install" @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
-    install_t atoms add_to_roots deps_only t
+    install_t atoms add_to_roots ~deps_only ~upgrade t
 
   let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove
@@ -1679,9 +1687,12 @@ module API = struct
         OpamConsole.msg "%s needs to be %sinstalled.\n"
           (OpamPackage.Name.to_string name)
           (if OpamPackage.has_name t.installed name then "re" else "");
-        if OpamPackage.Set.mem nv t.installed
-        then reinstall_t ~ask:true [name, Some (`Eq,v)] t (* same version *)
-        else install_t ~ask:true [name, Some (`Eq,v)] None false t (* != version or new *)
+        if OpamPackage.Set.mem nv t.installed then
+          reinstall_t ~ask:true [name, Some (`Eq,v)] t (* same version *)
+        else
+          install_t ~ask:true [name, Some (`Eq,v)] None
+            ~deps_only:false ~upgrade:false t
+          (* != version or new *)
       | None ->
         try
           let nv = OpamPackage.max_version t.installed name in
@@ -1829,8 +1840,8 @@ module SafeAPI = struct
   let info ~fields ~raw_opam ~where regexps =
     read_lock (fun () -> API.info ~fields ~raw_opam ~where regexps)
 
-  let install names add_to_roots deps_only =
-    switch_lock (fun () -> API.install names add_to_roots deps_only)
+  let install names add_to_roots ~deps_only ~upgrade =
+    switch_lock (fun () -> API.install names add_to_roots ~deps_only ~upgrade)
 
   let reinstall names =
     switch_lock (fun () -> API.reinstall names)
