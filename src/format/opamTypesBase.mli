@@ -105,10 +105,15 @@ val pos_null: pos
 val string_of_pos: pos -> string
 
 val string_of_relop: relop -> string
+
 val relop_of_string: string -> relop (** Raises Invalid_argument*)
+
 val string_of_logop: logop -> string
+
 val logop_of_string: string -> logop (** Raises Invalid_argument*)
+
 val string_of_pfxop: pfxop -> string
+
 val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 
 (** Parses the data suitable for a filter.FIdent from a string. May
