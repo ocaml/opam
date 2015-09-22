@@ -181,6 +181,9 @@ let list kind dir =
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
 
+let files_all_not_dir =
+    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
+
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
 
@@ -521,7 +524,16 @@ module Tar = struct
 end
 
 module Zip = struct
-  let is_archive f = Filename.check_suffix f "zip"
+  let is_archive f =
+    let ic = open_in f in
+    let c1 = input_char ic in
+    let c2 = input_char ic in
+    let c3 = input_char ic in
+    let c4 = input_char ic in
+    close_in ic;
+    match c1, c2, c3, c4 with
+    | '\x50', '\x4b', '\x03', '\x04' -> true
+    | _ -> false
 
   let extract_function file =
     Some (fun dir -> command [ "unzip" ; file; "-d"; dir ])
@@ -543,13 +555,19 @@ let extract file dst =
       f tmp_dir;
       if Sys.file_exists dst then
         internal_error "Extracting the archive will overwrite %s." dst;
-      match directories_strict tmp_dir with
-      | [x] ->
-        mkdir (Filename.dirname dst);
-        command [ "mv"; x; dst]
+      match files_all_not_dir tmp_dir with
+      | [] ->
+        begin match directories_strict tmp_dir with
+        | [x] ->
+          mkdir (Filename.dirname dst);
+          command [ "mv"; x; dst]
+        | _ ->
+          internal_error "The archive %S contains multiple root directories."
+            file
+        end
       | _   ->
-        internal_error "The archive %S contains multiple root directories."
-          file
+        mkdir (Filename.dirname dst);
+        command [ "mv"; tmp_dir; dst]
   )
 
 let extract_in file dst =
