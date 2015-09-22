@@ -1498,7 +1498,18 @@ module API = struct
       OpamFile.Installed_roots.write file t.installed_roots;
     );
 
-    OpamSolution.check_availability t (Lazy.force t.available_packages) atoms;
+    let available_packages = Lazy.force t.available_packages in
+    let available_packages =
+      if deps_only then
+        (* Assume the named packages are available *)
+        OpamPackage.Name.Set.fold (fun name avail ->
+            if OpamPackage.has_name available_packages name then avail
+            else avail ++ OpamPackage.packages_of_name t.packages name)
+          names available_packages
+      else
+        (OpamSolution.check_availability t available_packages atoms;
+         available_packages) in
+    let t = {t with available_packages = lazy available_packages} in
 
     let wish_upgrade =
       if upgrade then List.filter (fun at -> not (List.mem at pkg_new)) atoms
