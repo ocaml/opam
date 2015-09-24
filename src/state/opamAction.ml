@@ -286,7 +286,7 @@ let compilation_env t opam =
 
 let update_metadata t ~installed ~installed_roots ~reinstall =
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
-  let reinstall = OpamPackage.Set.inter installed_roots reinstall in (* XXX why _roots ? *)
+  let reinstall = OpamPackage.Set.inter installed reinstall in
   if not OpamStateConfig.(!r.dryrun) then (
   OpamFile.Installed.write
     (OpamPath.Switch.installed t.root t.switch)
