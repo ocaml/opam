@@ -413,22 +413,22 @@ type 'a switch_map = 'a OpamSwitch.Map.t
 (** The different kinds of locks *)
 type lock =
 
+  | Read_lock of (unit -> unit)
   (** The function does not modify anything, but it needs the state
       not to change while it is running. *)
-  | Read_lock of (unit -> unit)
 
+  | Global_lock of (unit -> unit)
   (** Take the global lock, all subsequent calls to OPAM are
       blocked. *)
-  | Global_lock of (unit -> unit)
 
+  | Switch_lock of (unit -> switch) * (unit -> unit)
   (** Take a global read lock and a switch lock. The first function is
       called with the read lock, then the second function is called with
       the returned switch write-locked. *)
-  | Switch_lock of (unit -> switch) * (unit -> unit)
 
+  | Global_with_switch_cont_lock of (unit -> switch * (unit -> unit))
   (** Call the function in a global lock, then relax to a switch
       lock and call the function it returned *)
-  | Global_with_switch_cont_lock of (unit -> switch * (unit -> unit))
 
 (** A line in {i urls.tx} *)
 type file_attribute = OpamFilename.Attribute.t

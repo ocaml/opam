@@ -47,7 +47,8 @@ module API: sig
   (** Install the given list of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots.
       Third argument installs all dependencies but not the packages themselves *)
-  val install: atom list -> bool option -> bool -> unit
+  val install:
+    atom list -> bool option -> deps_only:bool -> upgrade:bool -> unit
 
   (** Reinstall the given set of packages. *)
   val reinstall: atom list -> unit
