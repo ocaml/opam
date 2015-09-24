@@ -51,7 +51,7 @@ let iter_packages_gen ?(quiet=false) f =
   let packages = OpamRepository.packages_with_prefixes repo in
   let changed_pkgs = ref 0 in
   let changed_files = ref 0 in
-  (** packages *)
+  (* packages *)
   OpamPackage.Map.iter (fun package prefix ->
       if not quiet then
         OpamConsole.msg "Processing package %s... "
