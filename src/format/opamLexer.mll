@@ -79,6 +79,7 @@ rule token = parse
 | "("    { LPAR }
 | ")"    { RPAR }
 | '\"'   { STRING (buffer_rule string lexbuf) }
+| "\"\"\"" { STRING (buffer_rule string_triple lexbuf) }
 | "(*"   { comment 1 lexbuf; token lexbuf }
 | "#"    { comment_line lexbuf; token lexbuf }
 | "true" { BOOL true }
@@ -102,6 +103,17 @@ and string b = parse
             | None -> ());
             string b lexbuf }
 | _ as c  { Buffer.add_char b c               ; string b lexbuf }
+| eof     { error "unterminated string" }
+
+and string_triple b = parse
+| "\"\"\""    { () }
+| '\n'    { newline lexbuf ;
+            Buffer.add_char b '\n'            ; string_triple b lexbuf }
+| '\\'    { (match escape lexbuf with
+            | Some c -> Buffer.add_char b c
+            | None -> ());
+            string_triple b lexbuf }
+| _ as c  { Buffer.add_char b c               ; string_triple b lexbuf }
 | eof     { error "unterminated string" }
 
 and escape = parse
