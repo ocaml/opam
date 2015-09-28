@@ -1465,7 +1465,11 @@ let check_and_run_external_commands () =
            let argv = Array.of_list (command :: args) in
            raise (OpamStd.Sys.Exec (command, argv, env)))
         else
-          OpamStd.Sys.exit 1
+          (OpamConsole.error
+             "%s is not a known command or plugin (package %s does \
+              not have the 'plugin' flag set)."
+             name (OpamPackage.to_string nv);
+           OpamStd.Sys.exit 1)
       with Not_found -> ()
 
 let run default commands =
