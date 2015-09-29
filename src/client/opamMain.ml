@@ -1444,10 +1444,16 @@ let check_and_run_external_commands () =
         OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
       in
       let open OpamState.Types in
-      try
-        let pkgname = OpamPackage.Name.of_string name in
-        let candidates = Lazy.force t.available_packages in
-        let nv = OpamPackage.max_version candidates pkgname in
+      let find_pkg name =
+        try
+          let pkgname = OpamPackage.Name.of_string name in
+          let candidates = Lazy.force t.available_packages in
+          Some (pkgname, OpamPackage.max_version candidates pkgname)
+        with Not_found -> None
+      in
+      match OpamStd.Option.Op.(find_pkg ("opam-"^name) ++ find_pkg name) with
+      | None -> ()
+      | Some (pkgname, nv) ->
         let opam = OpamState.opam t nv in
         if OpamFile.OPAM.has_flag Pkgflag_Plugin opam &&
            not (OpamState.is_name_installed t pkgname) &&
@@ -1470,7 +1476,6 @@ let check_and_run_external_commands () =
               not have the 'plugin' flag set)."
              name (OpamPackage.to_string nv);
            OpamStd.Sys.exit 1)
-      with Not_found -> ()
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
