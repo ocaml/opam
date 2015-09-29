@@ -24,7 +24,10 @@ let empty = {
   file_format   = OpamVersion.current;
 }
 
-exception Bad_format of pos option * string list * string
+type bad_format = pos option * string list * string
+
+exception Bad_format of bad_format
+exception Bad_format_list of bad_format list
 
 let bad_format ?pos fmt =
   Printf.ksprintf
@@ -47,7 +50,7 @@ let string_of_backtrace_list = function
       "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
     ) "" btl
 
-let string_of_bad_format ?file e =
+let rec string_of_bad_format ?file e =
   match e, file with
   | Bad_format (Some pos, btl, msg), _ ->
     Printf.sprintf "At %s:\n  %s%s"
@@ -58,16 +61,19 @@ let string_of_bad_format ?file e =
   | Bad_format (None, btl, msg), None ->
     Printf.sprintf "Input error:\n  %s%s"
       msg (string_of_backtrace_list btl)
-  | _ -> ""
+  | Bad_format_list bfl, _ ->
+    OpamStd.List.concat_map "\n"
+      (fun bf -> string_of_bad_format ?file (Bad_format bf)) bfl
+  | _ -> Printexc.to_string e
 
 let item_pos = function
   | Section (pos,_) | Variable (pos,_,_) -> pos
 
-
+(*
 let items_pos = function
   | i::_ -> Some (item_pos i)
   | [] -> None
-
+*)
 let protect_item f item =
   try f item with e ->
     raise (add_pos (item_pos item) e)
@@ -157,19 +163,19 @@ let protect_values f values =
 (* Base parsing functions *)
 let parse_bool = function
   | Bool (_,b) -> b
-  | x      -> bad_format ~pos:(value_pos x) "Expected a bool"
+  | x      -> bad_format ~pos:(value_pos x) "expected a bool"
 
 let parse_int = function
   | Int (_,i) -> i
-  | x     -> bad_format ~pos:(value_pos x) "Expected an int"
+  | x     -> bad_format ~pos:(value_pos x) "expected an int"
 
 let parse_ident = function
   | Ident (_,i) -> i
-  | x       -> bad_format ~pos:(value_pos x) "Expected an ident"
+  | x       -> bad_format ~pos:(value_pos x) "expected an ident"
 
 let parse_string = function
   | String (_,s) -> s
-  | x        -> bad_format ~pos:(value_pos x) "Expected a string"
+  | x        -> bad_format ~pos:(value_pos x) "expected a string"
 
 let parse_list fn =
   let fn = protect_value fn in
@@ -189,7 +195,7 @@ let parse_group fn =
   let fn = protect_value fn in
   function
   | Group (_,g) -> List.rev (List.rev_map fn g)
-  | x       -> bad_format ~pos:(value_pos x) "Expected a group"
+  | x       -> bad_format ~pos:(value_pos x) "expected a group"
 
 let parse_option f g =
   let f = protect_value f in
@@ -217,7 +223,7 @@ let parse_string_list =
 let parse_single_string = function
   | [String (_,x)] -> x
   | x          ->
-    bad_format ?pos:(values_pos x) "Expected a single string"
+    bad_format ?pos:(values_pos x) "expected a single string"
 
 let parse_pair fa fb =
   let fa = protect_value fa in
@@ -225,13 +231,13 @@ let parse_pair fa fb =
   function
   | List (_,[a; b]) -> (fa a, fb b)
   | x           ->
-    bad_format ~pos:(value_pos x) "Expected a pair"
+    bad_format ~pos:(value_pos x) "expected a pair"
 
 let parse_or fns v =
   let rec aux = function
     | []   ->
       bad_format ~pos:(value_pos v)
-        "Expected %s" (OpamStd.List.concat_map " or " fst fns)
+        "expected %s" (OpamStd.List.concat_map " or " fst fns)
     | (_,h)::t ->
       try h v
       with Bad_format _ -> aux t in
@@ -399,7 +405,7 @@ let rec parse_constraints t =
       OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
     | Group (_, g) ->
       Block (parse_constraints g)
-    | x -> bad_format ~pos:(value_pos x) "Expected a list of constraints"
+    | x -> bad_format ~pos:(value_pos x) "expected a list of constraints"
   in
   OpamFormula.ands (List.map aux t)
 
@@ -472,7 +478,7 @@ let parse_package_name ?expected = function
        bad_format ~pos "Unexpected name %s"
          (OpamPackage.Name.to_string name)
      | _ -> name)
-  | x -> bad_format ~pos:(value_pos x) "Expected a package name"
+  | x -> bad_format ~pos:(value_pos x) "expected a package name"
 
 let parse_package_version ?expected = function
   | String (pos,n) ->
@@ -482,7 +488,7 @@ let parse_package_version ?expected = function
        bad_format ~pos "Unexpected version %s"
          (OpamPackage.Version.to_string version)
      | _ -> version)
-  | x -> bad_format ~pos:(value_pos x) "Expected a package version"
+  | x -> bad_format ~pos:(value_pos x) "expected a package version"
 
 (* parse a list of formulas *)
 let rec parse_formulas join ~constraints t =
@@ -494,7 +500,7 @@ let rec parse_formulas join ~constraints t =
     | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
     | x ->
       bad_format ~pos:(value_pos x)
-        "Expected a formula list of the form [ \"item\" {condition}... ]"
+        "expected a formula list of the form [ \"item\" {condition}... ]"
   in
   join (List.map aux (lift_list t))
 
@@ -535,7 +541,7 @@ let parse_compiler_version = function
     (try OpamCompiler.Version.of_string v
      with Invalid_argument msg -> bad_format ~pos "%s" msg)
   | x -> bad_format ~pos:(value_pos x)
-           "Expected a compiler version"
+           "expected a compiler version"
 
 
 let rec parse_compiler_constraint t =
@@ -548,7 +554,7 @@ let rec parse_compiler_constraint t =
     | Pfxop (_,`Not,v) ->
       OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
     | x -> bad_format ~pos:(value_pos x)
-             "Expected a compiler constraint" in
+             "expected a compiler constraint" in
   OpamFormula.ors (List.map aux (lift_list t))
 
 let rec make_compiler_constraint t =
@@ -575,7 +581,7 @@ let rec parse_os_constraint l =
     | Logop (_,`Or,l,r) -> Or (aux l, aux r)
     | Pfxop (_,`Not,v) ->
       OpamFormula.neg (fun (b, s) -> (not b, s)) (aux v)
-    | x -> bad_format ~pos:(value_pos x) "Expected an OS constraint" in
+    | x -> bad_format ~pos:(value_pos x) "expected an OS constraint" in
   OpamFormula.ors (List.map aux (lift_list l))
 
 let rec make_os_constraint l =
@@ -598,7 +604,7 @@ let parse_env_variable l =
   let aux = function
     | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, "=", s
     | Env_binding (_, op, Ident (_,i), String (_,s)) -> i, op, s
-    | x -> bad_format ~pos:(value_pos x) "Expected an \"ident = string\" binding"
+    | x -> bad_format ~pos:(value_pos x) "expected an \"ident = string\" binding"
   in
   match l with List (_,[x]) | x -> aux x
 
@@ -613,7 +619,7 @@ let parse_filter_ident = function
      with Failure msg -> bad_format ~pos "%s" msg)
   | x ->
     bad_format ~pos:(value_pos x)
-      "Expected a filter ident: \
+      "expected a filter ident: \
        [pkg[+pkg...]:]varname[?str_if_true:str_if_false_or_undef]"
 
 let rec parse_filter l =
@@ -626,12 +632,12 @@ let rec parse_filter l =
     | Pfxop (_,`Not,e) -> FNot (aux e)
     | Logop(_,`And,e,f)-> FAnd (aux e, aux f)
     | Logop(_,`Or, e,f)-> FOr (aux e, aux f)
-    | x -> bad_format ~pos:(value_pos x) "Expected a filter expression"
+    | x -> bad_format ~pos:(value_pos x) "expected a filter expression"
   in
   match l with
   | [] -> FBool true
   | [Group (_, ([] | _::_::_))] | _::_::_ as x ->
-    bad_format ?pos:(values_pos x) "Expected a single filter expression"
+    bad_format ?pos:(values_pos x) "expected a single filter expression"
   | [Group(_,[f])] | [f] -> aux f
 
 let make_filter f =
@@ -770,7 +776,7 @@ let parse_features t =
   in
   match t with
   | List (_, l) -> aux l
-  | _ -> bad_format ~pos:(value_pos t) "Expected a list of feature definitions"
+  | _ -> bad_format ~pos:(value_pos t) "expected a list of feature definitions"
 
 let make_features feat =
   let rec aux = function
@@ -888,7 +894,7 @@ module Pp = struct
 
   let try_with_pos ~pos ?msg f x =
     try f x with
-    | Bad_format _ as e -> add_pos pos e
+    | Bad_format _ | Bad_format_list _ as e -> add_pos pos e
     | e ->
       OpamStd.Exn.fatal e;
       bad_format ~pos "%s%s"
@@ -897,8 +903,11 @@ module Pp = struct
          | Failure m -> m
          | e -> Printexc.to_string e)
 
-  let warn ?pos fmt =
-    if OpamFormatConfig.(!r.strict) then bad_format ?pos fmt
+  let warn ?pos ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
+    if strict then
+      match exn with
+      | Some e -> raise e
+      | None -> bad_format ?pos fmt
     else
       Printf.ksprintf
         (fun s -> log "%s" (string_of_bad_format (Bad_format (pos, [], s))))
@@ -907,9 +916,9 @@ module Pp = struct
   (** Basic pp usage *)
 
   let parse pp ~pos x = try pp.parse ~pos x with
-    | Bad_format _ as e -> raise (add_pos pos e)
-    | Unexpected (Some pos) -> bad_format ~pos "Expected %s" pp.name
-    | Unexpected None -> bad_format ~pos "Expected %s" pp.name
+    | Bad_format _ | Bad_format_list _ as e -> raise (add_pos pos e)
+    | Unexpected (Some pos) -> bad_format ~pos "expected %s" pp.name
+    | Unexpected None -> bad_format ~pos "expected %s" pp.name
     | Failure msg ->
       bad_format ~pos "while expecting %s: %s" pp.name msg
     | e ->
@@ -1154,15 +1163,15 @@ module Pp = struct
       pp ~name:(Printf.sprintf "[%s]" pp1.name)
         (fun ~pos v ->
          try [pp1.parse ~pos v] with
-         | Bad_format _ | Unexpected _ as err ->
-	   match v with
-	   | List (_, l) ->
-	     List.rev @@
-	     List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l
+         | Bad_format _ | Bad_format_list _ | Unexpected _ as err ->
+           match v with
+           | List (_, l) ->
+             List.rev @@
+             List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l
            | _ -> raise err)
         (function
-	 | [x] -> pp1.print x
-	 | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
+         | [x] -> pp1.print x
+         | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
 
     let map_option pp1 pp2 =
       option -|
@@ -1246,7 +1255,7 @@ module Pp = struct
         match l with
         | [] -> FBool true
         | [Group (_, ([] | _::_::_))] | _::_::_ ->
-          bad_format ~pos "Expected a single filter expression"
+          bad_format ~pos "expected a single filter expression"
         | [Group(_,[f])] | [f] -> aux f
       in
       let print_filter f =
@@ -1309,7 +1318,7 @@ module Pp = struct
         parse_constraints print_constraints
 
     let dep_flag =
-      string -| pp ~name:"dependency-flag"
+      ident -| pp ~name:"dependency-flag"
         (fun ~pos:_ -> dep_flag_of_string)
         string_of_dep_flag
 
@@ -1427,7 +1436,7 @@ module Pp = struct
           | And(e,f) -> Logop (pos_null, `And, aux e, aux f)
           | Or(e,f) -> Logop (pos_null, `Or, aux e, aux f)
         in
-	match f with
+        match f with
         | Empty -> []
         | f -> [aux f]
       in
@@ -1504,7 +1513,7 @@ module Pp = struct
       let print (_, valid_items, _invalid) = valid_items in
       pp ?name parse print
 
-    let check_fields ?name ?(allow_extensions=false) fields =
+    let check_fields ?name ?(allow_extensions=false) ?strict fields =
       let in_name = OpamStd.Option.Op.((name >>| fun n -> " in "^n) +! "") in
       let parse ~pos:_ items =
         let _, valid_fields, extra_fields =
@@ -1528,7 +1537,7 @@ module Pp = struct
         match extra_fields with
         | [] -> items
         | (pos,_) :: _  ->
-          warn ~pos "Unexpected or duplicate fields%s:%s" in_name
+          warn ~pos ?strict "Unexpected or duplicate fields%s:%s" in_name
             (OpamStd.Format.itemize
                (fun (pos,k) ->
                   Printf.sprintf "'%s:' at %s" k (string_of_pos pos))
@@ -1544,9 +1553,11 @@ module Pp = struct
       in
       pp ?name parse print
 
-    let fields ?name ~empty ppas =
-      let in_name = OpamStd.Option.Op.((name >>| fun n -> " in "^n) +! "") in
-      let parse ~pos:_ items =
+    let fields ?name ?strict ~empty ppas =
+      let in_name =
+        OpamStd.Option.Op.((name >>| Printf.sprintf "In %s, ") +! "")
+      in
+      let parse ~pos items =
         (* For consistency, always read fields in ppa order, ignoring file
            order. Some parsers may depend on it. *)
         let field_map =
@@ -1556,24 +1567,33 @@ module Pp = struct
                | Variable (pos, k, v) -> OpamStd.String.Map.add k (pos,v) map)
             OpamStd.String.Map.empty items
         in
-        List.fold_left
-          (fun acc (field,ppa) ->
-             try
-               let pos, v = OpamStd.String.Map.find field field_map in
-               try parse ppa ~pos (acc, Some v) with
-               | Bad_format _ as e ->
-                 warn ~pos "Field '%s:'%s: %s" field in_name
-                   (string_of_bad_format e);
-                 acc
-             with
-             | Not_found -> acc)
-          empty ppas
+        let errs, r =
+          List.fold_left
+            (fun (errs,acc) (field,ppa) ->
+               try
+                 let pos, v = OpamStd.String.Map.find field field_map in
+                 try errs, parse ppa ~pos (acc, Some v) with
+                 | Bad_format (pos,btl,msg) ->
+                   let msg =
+                     Printf.sprintf "%sfield '%s:' %s" in_name field msg
+                   in
+                   (field,(pos, Printexc.get_backtrace()::btl, msg)) :: errs,
+                   acc
+               with
+               | Not_found -> errs, acc)
+            ([],empty) ppas
+        in
+        if errs <> [] then
+          warn ~pos ?strict ~exn:(Bad_format_list (List.map snd errs))
+            "Errors in fields: %s" (OpamStd.List.concat_map ", " fst errs);
+        r
       in
       let print acc =
         OpamStd.List.filter_map
-          OpamStd.Option.Op.(fun (field,ppa) ->
-              snd (ppa.print acc) >>| fun value ->
-              Variable (pos_null, field, value))
+          (fun (field,ppa) ->
+             match snd (ppa.print acc) with
+             | None | Some (List (_,[]) | Group (_,[])) -> None
+             | Some value -> Some (Variable (pos_null, field, value)))
           ppas
       in
       pp ?name parse print
@@ -1646,5 +1666,3 @@ module Pp = struct
 
 
 end
-
-

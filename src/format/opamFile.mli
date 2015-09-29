@@ -143,6 +143,9 @@ module OPAM: sig
   val version: t -> version
   val version_opt: t -> version option
 
+  (** The informations in both the name and version fields, as a package *)
+  val package: t -> package
+
   (** Compiler constraint *)
   val ocaml_version: t -> compiler_constraint option
 
@@ -405,15 +408,12 @@ module Comp: sig
 
   val tags: t -> string list
 
-  val with_src: t -> address option -> t
+  val with_src: t -> address option * repository_kind -> t
   val with_patches: t -> filename list -> t
   val with_configure: t -> string list -> t
   val with_make: t -> string list -> t
   val with_build: t -> command list -> t
   val with_packages: t -> formula -> t
-
-  (** Convert to OPAM 1.0 *)
-  val to_1_0: file -> file
 
 end
 
