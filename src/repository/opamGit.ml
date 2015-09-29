@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
@@ -42,7 +43,8 @@ module Git : OpamVCS.VCS= struct
       |] in
     OpamProcess.Job.of_list [
       git repo ~env [ "init" ];
-      git repo ~env [ "remote" ; "add" ; "origin" ; fst repo.repo_address ];
+      git repo ~env [ "remote" ; "add" ; "origin" ;
+                      path_of_address repo.repo_address ];
       git repo ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
     ] @@+ function
     | None -> Done ()
@@ -59,14 +61,14 @@ module Git : OpamVCS.VCS= struct
         | [url] -> Some url
         | _ -> None
       in
-      if current_remote <> Some (fst repo.repo_address) then (
+      if current_remote <> Some (path_of_address repo.repo_address) then (
         log "Git remote for %s needs updating (was: %s)"
           (OpamRepositoryBackend.to_string repo)
           (OpamStd.Option.default "<none>" current_remote);
         OpamProcess.Job.of_list [
           git repo ~verbose:false [ "remote" ; "rm" ; "origin" ];
           git repo ~verbose:false
-            [ "remote" ; "add" ; "origin"; fst repo.repo_address ]
+            [ "remote" ; "add" ; "origin"; path_of_address repo.repo_address ]
         ] @@+ function
         | None -> Done ()
         | Some (_,err) -> OpamSystem.process_error err

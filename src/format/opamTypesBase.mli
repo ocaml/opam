@@ -41,6 +41,12 @@ val string_of_address: ?kind:repository_kind -> address -> string
 (** Parse an address *)
 val address_of_string: string -> address
 
+(** The base path part of an address; note that this keeps the transport part
+    when it is one of http, https or ftp (i.e. "file:///foo.bar/baz" returns
+    "/foo.bar/baz", but "git+https://foo.bar/baz" returns
+    "https://foo.bar/baz") *)
+val path_of_address: address -> string
+
 (** Guess an address kind using url suffixes ([.git], etc.) and prefixes
     ([http://], etc.). Defaults to `local. The returned address is a correct
     path in case of [file://] *)

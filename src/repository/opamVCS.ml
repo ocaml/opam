@@ -46,8 +46,10 @@ module Make (VCS: VCS) = struct
 
   let rsync repo =
     let source_repo =
-      { repo with repo_root =
-                    OpamFilename.Dir.of_string (fst repo.repo_address) }
+      let repo_root =
+        OpamFilename.Dir.of_string (path_of_address repo.repo_address)
+      in
+      { repo with repo_root }
     in
     VCS.versionned_files source_repo
     @@+ fun files ->
@@ -65,7 +67,7 @@ module Make (VCS: VCS) = struct
     in
     OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
       ~exclude_vcdirs:false
-      (OpamFilename.Dir.of_string (fst repo.repo_address))
+      (OpamFilename.Dir.of_string (path_of_address repo.repo_address))
       repo.repo_root
     @@+ fun dl ->
     OpamSystem.remove stdout_file;
@@ -140,8 +142,10 @@ module Make (VCS: VCS) = struct
     let repo =
       if is_synched_repo repo then
         (* Actually get the revision at the source *)
-        { repo with repo_root =
-                      OpamFilename.Dir.of_string (fst repo.repo_address) }
+        let repo_root =
+          OpamFilename.Dir.of_string (path_of_address repo.repo_address)
+        in
+        { repo with repo_root }
       else repo
     in
     VCS.revision repo

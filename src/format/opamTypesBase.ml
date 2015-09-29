@@ -83,6 +83,17 @@ let split_url =
       opt vc, opt transport, path, opt suffix
     | _ -> assert false
 
+let unsplit_url (vc, transport, path, _suffix) =
+  String.concat "" [
+    (match vc with
+     | Some vc -> vc ^ "+"
+     | None -> "");
+    (match transport with
+     | Some t -> t ^ "://"
+     | _ -> "");
+    path
+  ]
+
 let string_of_address ?kind (url,hash) =
   let url =
     match kind with
@@ -92,13 +103,22 @@ let string_of_address ?kind (url,hash) =
       | Some v, _, _, _ | None, Some v, _, _ when url_kind_of_string v = k ->
         url
       | _, Some t, path, _ ->
-        Printf.sprintf "%s+%s://%s" (string_of_url_kind k) t path
+        unsplit_url (Some (string_of_url_kind k), Some t, path, None)
       | _, None, _, _ ->
-        Printf.sprintf "%s://%s" (string_of_url_kind k) url
+        unsplit_url (None, Some (string_of_url_kind k), url, None)
   in
   match hash with
   | None -> url
   | Some c -> Printf.sprintf "%s#%s" url c
+
+let path_of_address (url,_) =
+  let _vc, transport, path, suffix = split_url url in
+  let transport =
+    match transport with
+    | Some ("https"|"http"|"ftp" as t) -> Some t
+    | _ -> None
+  in
+  unsplit_url (None, transport, path, suffix)
 
 let address_of_string str =
   let addr, hash =
@@ -106,11 +126,13 @@ let address_of_string str =
     | None -> str, None
     | Some (addr,hash) -> addr, Some hash
   in
-  match split_url addr with
-  | _, Some vc, _, _ when url_kind_of_string vc <> `local -> addr, hash
-  | _, Some local, path, _ ->
-    Printf.sprintf "%s://%s" local (OpamSystem.real_path path), hash
-  | _, None, path, _ -> OpamSystem.real_path path, hash
+  let vc, transport, path, suffix = split_url addr in
+  let path =
+    match transport with
+    | Some tr when url_kind_of_string tr = `local -> OpamSystem.real_path path
+    | _ -> path
+  in
+  unsplit_url (vc, transport, path, suffix), hash
 
 let parse_url (s,c) =
   match split_url s with
