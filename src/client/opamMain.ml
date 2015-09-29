@@ -1409,16 +1409,16 @@ let commands = [
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
+  let plugin_prefix = "opam-" in
   match Array.to_list Sys.argv with
   | [] | [_] -> ()
-  | opam :: name :: args ->
+  | _ :: name :: args ->
     if
       not (OpamStd.String.starts_with ~prefix:"-" name)
       && List.for_all (fun (_,info) -> Term.name info <> name) commands
     then
     (* No such command, check if there is a matching plugin *)
-    let opam = Filename.basename opam in
-    let command = opam ^ "-" ^ name in
+    let command = plugin_prefix ^ name in
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
