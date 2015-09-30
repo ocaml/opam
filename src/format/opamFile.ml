@@ -2046,6 +2046,16 @@ module X = struct
           (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
            List.exists (function Atom _ -> false | _ -> true) @@
            OpamFormula.(ors_to_list (to_atom_formula t.conflicts)));
+        cond 44 `Warning
+          "The 'plugin' package flag is set but the package name doesn't \
+           begin with 'opam-'"
+          (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
+           List.mem Pkgflag_Plugin t.flags &&
+           match t.name with
+           | None -> false
+           | Some name ->
+             OpamStd.String.starts_with ~prefix:"opam-"
+               (OpamPackage.Name.to_string name));
       ]
       in
       OpamStd.List.filter_map (fun x -> x) warnings
