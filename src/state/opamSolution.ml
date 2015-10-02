@@ -25,9 +25,9 @@ module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
-  match action with
-  | `Remove _ | `Reinstall _ | `Build _ -> ()
-  | `Install pkg | `Change (_,_,pkg) ->
+  match action, failed with
+  | `Remove _, _ | `Reinstall _, _ | `Build _, false -> ()
+  | `Build pkg, true | `Install pkg, _ | `Change (_,_,pkg), _ ->
     let opam = OpamState.opam state pkg in
     let messages = OpamFile.OPAM.post_messages opam in
     let local_variables = OpamVariable.Map.empty in
