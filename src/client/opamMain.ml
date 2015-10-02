@@ -1444,38 +1444,59 @@ let check_and_run_external_commands () =
         OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
       in
       let open OpamState.Types in
-      let find_pkg name =
-        try
-          let pkgname = OpamPackage.Name.of_string name in
-          let candidates = Lazy.force t.available_packages in
-          Some (pkgname, OpamPackage.max_version candidates pkgname)
-        with Not_found -> None
+      let prefixed_name = plugin_prefix ^ name in
+      let candidates =
+        OpamPackage.packages_of_names
+          (Lazy.force t.available_packages)
+          (OpamPackage.Name.Set.of_list @@
+           List.map OpamPackage.Name.of_string [ prefixed_name; name ])
       in
-      match OpamStd.Option.Op.(find_pkg ("opam-"^name) ++ find_pkg name) with
-      | None -> ()
-      | Some (pkgname, nv) ->
-        let opam = OpamState.opam t nv in
-        if OpamFile.OPAM.has_flag Pkgflag_Plugin opam &&
-           not (OpamState.is_name_installed t pkgname) &&
-           OpamConsole.confirm "OPAM plugin %s is not installed. \
-                                Install it on the current switch?"
-             name
-        then
-          (OpamRepositoryConfig.init ();
-           OpamSolverConfig.init ();
-           OpamClientConfig.init ();
-           Client.install [pkgname,None] None ~deps_only:false ~upgrade:false;
-           OpamConsole.header_msg "Carrying on to \"%s\""
-             (String.concat " " (Array.to_list Sys.argv));
-           OpamConsole.msg "\n";
-           let argv = Array.of_list (command :: args) in
-           raise (OpamStd.Sys.Exec (command, argv, env)))
-        else
-          (OpamConsole.error
-             "%s is not a known command or plugin (package %s does \
-              not have the 'plugin' flag set)."
-             name (OpamPackage.to_string nv);
-           OpamStd.Sys.exit 1)
+      let plugins =
+        OpamPackage.Set.filter (fun nv ->
+            OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamState.opam t nv))
+          candidates
+      in
+      let installed = OpamPackage.Set.inter plugins t.installed in
+      if OpamPackage.Set.is_empty candidates then
+        ()
+      else if not OpamPackage.Set.(is_empty installed) then
+        (OpamConsole.error
+           "Plugin %s is already installed, but no %s command was found.\n\
+            Try upgrading, and report to the package maintainer if \
+            the problem persists."
+           (OpamPackage.to_string (OpamPackage.Set.choose installed))
+           command;
+         exit 1)
+      else if OpamPackage.Set.is_empty plugins then
+        (OpamConsole.error
+           "%s is not a known command or plugin (package %s does \
+            not have the 'plugin' flag set)."
+           name
+           (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
+         exit 1)
+      else if
+        OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
+                             Install it on the current switch?"
+          name
+      then
+        let nv =
+          try
+            OpamPackage.max_version plugins
+              (OpamPackage.Name.of_string prefixed_name)
+          with Not_found ->
+            OpamPackage.max_version plugins
+              (OpamPackage.Name.of_string name)
+        in
+        OpamRepositoryConfig.init ();
+        OpamSolverConfig.init ();
+        OpamClientConfig.init ();
+        Client.install [OpamSolution.eq_atom_of_package nv]
+          None ~deps_only:false ~upgrade:false;
+        OpamConsole.header_msg "Carrying on to \"%s\""
+          (String.concat " " (Array.to_list Sys.argv));
+        OpamConsole.msg "\n";
+        let argv = Array.of_list (command :: args) in
+        raise (OpamStd.Sys.Exec (command, argv, env))
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
