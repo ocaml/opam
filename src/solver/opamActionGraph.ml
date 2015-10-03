@@ -187,11 +187,15 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
 
   let explicit g0 =
     let g = copy g0 in
+    let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
           let b = `Build p in
-          iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
+          iter_pred (function
+              | `Remove p1 when same_name p p1 -> ()
+              | pred -> remove_edge g pred a; add_edge g pred b)
+            g0 a;
           add_edge g b a
         | `Remove _ -> ()
         | `Build _ -> assert false)
