@@ -216,7 +216,7 @@ type 'a highlevel_action = [
     changed state or version *)
 type 'a inst_action = [
   | `Install of 'a
-  | `Change of 'a * 'a * [ `Up | `Down ]
+  | `Change of [ `Up | `Down ] * 'a * 'a
 ]
 
 (** Used when applying solutions, separates build from install *)

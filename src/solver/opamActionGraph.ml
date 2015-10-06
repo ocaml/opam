@@ -33,12 +33,12 @@ let name_of_action = function
   | `Build _ -> "build"
 
 let symbol_of_action = function
-  | `Remove _ -> "\xe2\x8a\x98 "
-  | `Install _ -> "\xe2\x88\x97 "
-  | `Change (`Up,_,_) -> "\xe2\x86\x97 "
-  | `Change (`Down,_,_) -> "\xe2\x86\x98 "
-  | `Reinstall _ -> "\xe2\x86\xbb "
-  | `Build _ -> "\xe2\x88\x97 "
+  | `Remove _ -> "\xe2\x8a\x98 " (* U+2298 *)
+  | `Install _ -> "\xe2\x88\x97 " (* U+2217 *)
+  | `Change (`Up,_,_) -> "\xe2\x86\x97 " (* U+2197 *)
+  | `Change (`Down,_,_) -> "\xe2\x86\x98 " (* U+2198 *)
+  | `Reinstall _ -> "\xe2\x86\xbb " (* U+21BB *)
+  | `Build _ -> "\xce\xbb " (* U+039B *)
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
