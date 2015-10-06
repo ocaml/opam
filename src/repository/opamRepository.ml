@@ -245,7 +245,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
       let kind = OpamFile.URL.kind url in
       log "downloading %a:%a"
-        (slog string_of_address) remote_url
+        (slog (string_of_address ~kind)) remote_url
         (slog string_of_repository_kind) kind;
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;

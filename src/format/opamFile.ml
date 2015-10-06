@@ -419,85 +419,6 @@ module X = struct
     let to_string (t: t) =
       OpamFormat.string_of_file ~simplify:true t
 
-    let s_opam_version = "opam-version"
-
-    let check_opam_version =
-      let already_warned = ref false in
-      fun ?(allow_major=false) f v ->
-        let diff_full = OpamVersion.(compare current v) in
-        if diff_full >= 0 then true else
-        let diff_major = OpamVersion.(compare (major current) (major v)) in
-        if OpamFormatConfig.(!r.strict) then
-          OpamConsole.error_and_exit
-            "Strict mode: %s refers to OPAM %s, this is %s."
-            f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
-        if diff_major < 0 && not allow_major then
-          OpamFormat.bad_format
-            ~pos:OpamFormat.(assoc f.file_contents s_opam_version value_pos)
-            "Can't read OPAM %s files yet, this is OPAM %s."
-            (OpamVersion.to_string v) OpamVersion.(to_string current);
-        if not (!already_warned) then
-          OpamConsole.note
-            "File %s is written for OPAM %s, and this is %s.\n\
-             It may depend on new features, consider upgrading."
-            f.file_name (OpamVersion.to_string v) OpamVersion.(to_string current);
-        already_warned := true;
-        false
-
-    (* Prints warnings or fails in strict mode; returns true if permissive mode
-       is enabled *)
-    let check ?allow_major ?(versioned=true) ?allow_extensions =
-      fun f fields ->
-        if not OpamFormatConfig.(!r.strict) && not (OpamConsole.debug ())
-        then true
-        else
-        let f_opam_version =
-          if List.mem s_opam_version fields then
-            OpamFormat.assoc_option f.file_contents s_opam_version
-              (OpamFormat.parse_string @> OpamVersion.of_string)
-          else None
-        in
-        (* Reading a file with a newer minor version triggers permissive
-           mode: silently ignore new fields and try to be more tolerant *)
-        let permissive_mode = match f_opam_version with
-          | Some v -> not (check_opam_version ?allow_major f v)
-          | None ->
-            if versioned then (
-              if OpamFormatConfig.(!r.strict) then
-                OpamConsole.error_and_exit
-                  "Strict mode: %s missing the opam-version field"
-                  OpamFilename.(prettify (of_string f.file_name));
-              OpamConsole.warning
-                "%s is missing the 'opam-version:' field."
-                OpamFilename.(prettify (of_string f.file_name));
-              true
-            ) else false
-        in
-        if not permissive_mode &&
-           not (OpamFormat.is_valid f.file_contents fields) then
-          let invalids =
-            OpamFormat.invalid_fields ?allow_extensions f.file_contents fields
-          in
-          let too_many, invalids =
-            List.partition (fun x -> List.mem x fields) invalids
-          in
-          if too_many <> [] then
-            OpamConsole.warning "In %s:\n  duplicate fields %s"
-              f.file_name
-              (OpamStd.List.to_string (fun x -> x) too_many);
-          let is_, s_ =
-            if List.length invalids <= 1 then "is an", "" else "are", "s" in
-          if invalids <> [] then
-            OpamConsole.warning "In %s:\n  %s %s unknown field%s."
-              f.file_name
-              (OpamStd.Format.pretty_list invalids)
-              is_ s_;
-          if OpamFormatConfig.(!r.strict) then
-            OpamConsole.error_and_exit "Strict mode: bad fields in %s"
-              f.file_name;
-          false
-        else permissive_mode
-
   end
 
   (** (1) Internal files *)
@@ -1613,7 +1534,7 @@ module X = struct
                | f ->
                  if List.exists (fun tag -> flag_of_tag tag = Some f) t.tags
                  then None
-                 else Some OpamFormat.(string_of_value (make_flag f)))
+                 else Some (string_of_pkg_flag f))
              t.flags
          in
          cond 40 `Warning
@@ -1988,7 +1909,7 @@ module X = struct
 
     let pp =
       let name = internal in
-      Pp.I.check_opam_version () -|
+      Pp.I.check_opam_version ~optional:true () -|
       Pp.I.check_fields ~name fields -|
       Pp.I.fields ~name ~empty fields -|
       Pp.check ~errmsg:"Man file without destination or recognised suffix"

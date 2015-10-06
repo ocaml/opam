@@ -581,7 +581,4 @@ module Syntax : sig
   val of_channel: filename -> in_channel -> t
   val to_string: t -> string
   val of_string: filename -> string -> t
-  val check:
-    ?allow_major:bool -> ?versioned:bool -> ?allow_extensions:bool ->
-    t -> string list -> bool
 end
