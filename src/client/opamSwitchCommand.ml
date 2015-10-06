@@ -301,9 +301,7 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
     if compiler = OpamCompiler.system then (
-      OpamConsole.error_and_exit
-        "No OCaml compiler found in path. You should use the option \
-         `--compiler=VERSION'."
+      OpamConsole.error_and_exit "No OCaml compiler found in path."
     ) else
       OpamConsole.error_and_exit
         "%S is not a valid compiler."
