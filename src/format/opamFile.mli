@@ -36,13 +36,13 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
-  (** Read from channel. *)
   val read_from_channel: ?filename:filename -> in_channel -> t
 
   val read_from_string: ?filename:filename -> string -> t
 
-  (** Write to channel. *)
-  val write_to_channel: out_channel -> t -> unit
+  val write_to_channel: ?filename:filename -> out_channel -> t -> unit
+
+  val write_to_string: ?filename:filename -> t -> string
 
 end
 
@@ -552,33 +552,9 @@ end
 (** {2 urls.txt file *} *)
 module File_attributes: IO_FILE with type t = file_attribute_set
 
-(** Display statistics about file access. *)
-val print_stats: unit -> unit
+module Stats: sig
 
+  (** Display statistics about file access. *)
+  val print: unit -> unit
 
-(**/**)
-
-module type F = sig
-  val internal : string
-  type t
-  val empty : t
-  val of_channel : filename -> in_channel  -> t
-  val of_string : filename -> string -> t
-  val to_string : filename -> t -> string
-end
-
-module Make (F : F) : sig
-  val write: filename -> F.t -> unit
-  val read: filename -> F.t
-  val safe_read: filename -> F.t
-  val read_from_channel: ?filename:filename -> in_channel -> F.t
-  val read_from_string: ?filename:filename -> string -> F.t
-  val write_to_channel: out_channel -> F.t -> unit
-end
-
-module Syntax : sig
-  type t = file
-  val of_channel: filename -> in_channel -> t
-  val to_string: t -> string
-  val of_string: filename -> string -> t
 end

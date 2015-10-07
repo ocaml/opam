@@ -1570,7 +1570,7 @@ let () =
       flush stderr;
       flush stdout;
       if OpamClientConfig.(!r.print_stats) then (
-        OpamFile.print_stats ();
+        OpamFile.Stats.print ();
         OpamSystem.print_stats ();
       );
       json_out ()

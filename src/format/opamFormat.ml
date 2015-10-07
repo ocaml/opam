@@ -144,25 +144,15 @@ and format_items fmt is =
   List.iter (fun i -> format_item fmt i; Format.pp_print_cut fmt ()) is;
   Format.pp_close_box fmt ()
 
+let format_file fmt f =
+  format_items fmt f.file_contents;
+  Format.pp_print_flush fmt ()
+
 let string_of_items l =
   format_items Format.str_formatter l; Format.flush_str_formatter ()
 
-let rec simplify_items items =
-  List.map (function
-      | Variable
-          (pos, name, List
-             (_, [(String _ | List _) as v])) -> Variable (pos, name, v)
-      | Section (pos, s) ->
-        Section (pos, {s with section_items = simplify_items s.section_items})
-      | i -> i)
-    items
-
-let string_of_file ~simplify f =
-  let items =
-    if simplify then simplify_items f.file_contents
-    else f.file_contents
-  in
-  string_of_items items
+let string_of_file f =
+  string_of_items f.file_contents
 
 (* Reading section contents *)
 

@@ -382,23 +382,22 @@ type value =
   | Option of pos * value * value list
   | Env_binding of pos * string * value * value
 
-(** A file section *)
-type file_section = {
+(** An opamfile section *)
+type opamfile_section = {
   section_kind  : string;
   section_name  : string;
-  section_items : file_item list;
+  section_items : opamfile_item list;
 }
 
-(** A file is composed of sections and variable definitions *)
-and file_item =
-  | Section of pos * file_section
+(** An opamfile is composed of sections and variable definitions *)
+and opamfile_item =
+  | Section of pos * opamfile_section
   | Variable of pos * string * value
 
 (** A file is a list of items and the filename *)
-type file = {
-  file_contents: file_item list;
+type opamfile = {
+  file_contents: opamfile_item list;
   file_name    : string;
-  file_format  : opam_version;
 }
 
 (** {2 Switches} *)

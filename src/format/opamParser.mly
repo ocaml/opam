@@ -50,14 +50,14 @@ let get_pos n =
 %nonassoc URELOP
 
 %start main value
-%type <string -> OpamTypes.file> main
+%type <string -> OpamTypes.opamfile> main
 %type <OpamTypes.value> value
 
 %%
 
 main:
 | items EOF { fun file_name ->
-        { file_contents = $1; file_name; file_format = OpamVersion.current } }
+        { file_contents = $1; file_name } }
 ;
 
 items:
