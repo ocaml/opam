@@ -359,7 +359,7 @@ module Aliases = LineFile(struct
     let empty = OpamSwitch.Map.empty
 
     let pp =
-      OpamSwitch.Map.(Pp.lines_map empty add fold) @@
+      OpamSwitch.Map.(Pp.lines_map ~empty ~add ~fold) @@
       Pp.of_module "switch-name" (module OpamSwitch) ^+
       (Pp.last -| Pp.of_module "compiler" (module OpamCompiler))
 
@@ -377,7 +377,7 @@ module Repo_index (A : OpamStd.ABSTRACT) = LineFile(struct
     let empty = A.Map.empty
 
     let pp =
-      Pp.lines_map empty A.Map.safe_add A.Map.fold @@
+      Pp.lines_map ~empty ~add:A.Map.safe_add ~fold:A.Map.fold @@
       Pp.of_module "name" (module A) ^+
       Pp.of_module "repository" (module OpamRepositoryName) ^+
       Pp.opt Pp.last
@@ -398,7 +398,7 @@ module PkgList = struct
   let empty = OpamPackage.Set.empty
 
   let pp =
-    Pp.lines_set empty OpamPackage.Set.add OpamPackage.Set.fold @@
+    OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
     (Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
      Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version))
     -| Pp.pp
@@ -444,7 +444,7 @@ module Pinned = LineFile(struct
     let empty = OpamPackage.Name.Map.empty
 
     let pp =
-      OpamPackage.Name.Map.(Pp.lines_map empty safe_add fold) @@
+      OpamPackage.Name.Map.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
       Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
       pp_pin
 
@@ -464,7 +464,7 @@ module File_attributes = LineFile(struct
     let empty = OpamFilename.Attribute.Set.empty
 
     let pp =
-      OpamFilename.Attribute.Set.(Pp.lines_set empty add fold) @@
+      OpamFilename.Attribute.Set.(Pp.lines_set ~empty ~add ~fold) @@
       (Pp.of_module "file" (module OpamFilename.Base) ^+
        Pp.check ~name:"md5" OpamFilename.valid_digest ^+
        Pp.opt (Pp.last -| Pp.of_pair "perm" (int_of_string, string_of_int))
@@ -504,7 +504,7 @@ module Export = LineFile(struct
           | `Uninstalled -> "uninstalled")
 
     let pp_lines =
-      Pp.lines_map M.empty M.safe_add M.fold @@
+      M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
       Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
       Pp.of_module "pkg-version" (module OpamPackage.Version) ^+
       (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
@@ -569,7 +569,7 @@ module Syntax = struct
          OpamParser.main OpamLexer.token lexbuf filename)
       (fun file ->
          let fmt = Format.formatter_of_out_channel oc in
-         OpamFormat.format_file fmt file)
+         OpamFormat.Print.format_opamfile fmt file)
 
   let of_channel (filename:filename) (ic:in_channel) =
     Pp.parse ~pos:(pos_file filename) (pp_channel filename ic stdout) ()
@@ -585,7 +585,7 @@ module Syntax = struct
     OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string _file_name t =
-    OpamFormat.string_of_file t
+    OpamFormat.Print.opamfile t
 
 end
 
@@ -2212,7 +2212,7 @@ module CompSyntax = struct
     Pp.I.fields ~name ~empty fields -|
     Pp.check ~errmsg:"Fields 'build:' and 'configure:'+'make:' are mutually \
                       exclusive "
-      (fun t -> t.build <> [] && (t.configure <> [] ||  t.make <> []))
+      (fun t -> t.build = [] || t.configure = [] && t.make = [])
 
   let of_syntax s =
     let filename = OpamFilename.of_string s.file_name in
@@ -2231,7 +2231,10 @@ module CompSyntax = struct
           ".comp file name not in the form <name>.<version>";
       t
     | Some name ->
-      let version = OpamCompiler.version name in
+      let version =
+        if name = OpamCompiler.system then t.version
+        else OpamCompiler.version name
+      in
       if t.name <> empty.name && t.name <> name then
         Pp.warn ~pos "Mismatching file name and 'name:' field";
       if name <> OpamCompiler.system &&
