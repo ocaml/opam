@@ -276,7 +276,7 @@ module LinesBase = struct
         | w::r ->
           output_string oc (escape_spaces w);
           List.iter (fun w ->
-              output_char oc ' ';
+              output_char oc '\t';
               output_string oc (escape_spaces w))
             r;
           output_char oc '\n')
@@ -293,7 +293,7 @@ module LinesBase = struct
          | w::r ->
            Buffer.add_string buf (escape_spaces w);
            List.iter (fun w ->
-               Buffer.add_char buf ' ';
+               Buffer.add_char buf '\t';
                Buffer.add_string buf (escape_spaces w))
              r);
         Buffer.add_string buf "\n"
