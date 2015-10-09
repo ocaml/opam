@@ -27,6 +27,9 @@ type solution = OpamCudf.ActionGraph.t
 
 let empty_universe =
   {
+    u_pefuniv = Hashtbl.create 0;
+    u_options = ("",[],[]);
+    u_tables = Pef.Pefcudf.create 0;
     u_packages = OpamPackage.Set.empty;
     u_installed = OpamPackage.Set.empty;
     u_available = OpamPackage.Set.empty;
@@ -73,7 +76,6 @@ let is_available universe wish_remove (name, _ as c) =
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
 let cudf_versions_map universe packages =
-  log "cudf_versions_map";
   let add_referred_to_packages filt acc refmap =
     OpamPackage.Map.fold (fun package deps acc ->
         let dev = OpamPackage.Set.mem package universe.u_dev in
@@ -101,48 +103,61 @@ let cudf_versions_map universe packages =
       map)
     pmap OpamPackage.Map.empty
 
-let name_to_cudf name =
-  Common.CudfAdd.encode (OpamPackage.Name.to_string name)
+let name_to_cudf switch name =
+  Common.CudfAdd.encode ((OpamPackage.Name.to_string name)^":"^switch)
 
-let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
-  name_to_cudf name, match cstr with
-  | None -> None
-  | Some (op,v) ->
-    let nv = OpamPackage.create name v in
-    try
-      let cv = OpamPackage.Map.find nv version_map in
-      Some (op, cv)
-    with Not_found ->
-      (* The version for comparison doesn't exist: match to the closest
-         existing version according to the direction of the comparison
-         (this shouldn't happen for any constraint in the universe, now that we
-         compute a full version map, but may still happen for user-provided
-         constraints) *)
-      let all_versions =
-        OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
-          version_map in
-      match op with
-      | `Neq -> None (* Always true *)
-      | `Eq -> (* Always false *)
-        Some (`Eq, OpamPackage.Map.cardinal all_versions + 1)
-      | (`Geq | `Gt | `Leq | `Lt) as op ->
-        let sign, result_op =  match op with
-          | `Geq | `Gt -> (fun x -> x), `Geq
-          | `Leq | `Lt -> (fun x -> -x), `Leq in
-        let rev_version_map =
-          OpamPackage.Map.fold (fun nv cv acc ->
-              OpamStd.IntMap.add (sign cv) (OpamPackage.version nv) acc)
-            all_versions OpamStd.IntMap.empty in
-        let map =
-          OpamStd.IntMap.filter
-            (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
-            rev_version_map in
-        if OpamStd.IntMap.is_empty map then
-          match result_op with
-          | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
-          | `Leq -> Some (`Lt, 1)
-        else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
+(* The version for comparison doesn't exist: match to the closest
+   existing version according to the direction of the comparison
+   (this shouldn't happen for any constraint in the universe, now that we
+   compute a full version map, but may still happen for user-provided
+   constraints) *)
+let atom2cudf universe version_map (name,cstr) =
+  let tables = universe.u_tables in
+  let (switch,_,_) = universe.u_options in
+  let cudfname = name_to_cudf switch name in
+  let cudfconstr =
+    match cstr with
+    | None -> None
+    | Some (op,v) ->
+      try
+        let nv = (OpamPackage.Name.to_string name,OpamPackage.Version.to_string v) in
+        let cv = Pef.Pefcudf.get_cudf_version tables nv in
+        Some (op, cv)
+      with Not_found ->
+        let all_versions =
+          try
+            let l = Hashtbl.find version_map.Pef.Pefcudf.versions_table (OpamPackage.Name.to_string name) in
+            List.fold_left (fun acc v ->
+              let nv = OpamPackage.create name (OpamPackage.Version.of_string v) in
+              OpamPackage.Map.add nv (Pef.Pefcudf.get_cudf_version tables ("",v)) acc
+            ) OpamPackage.Map.empty l
+          with Not_found -> OpamPackage.Map.empty
+        in
+        match op with
+        | `Neq -> None (* Always true *)
+        | `Eq -> (* Always false *)
+          Some (`Eq, OpamPackage.Map.cardinal all_versions + 1)
+        | (`Geq | `Gt | `Leq | `Lt) as op ->
+          let sign, result_op =  match op with
+            | `Geq | `Gt -> (fun x -> x), `Geq
+            | `Leq | `Lt -> (fun x -> -x), `Leq in
+          let rev_version_map =
+            OpamPackage.Map.fold (fun nv cv acc ->
+                OpamStd.IntMap.add (sign cv) (OpamPackage.version nv) acc)
+              all_versions OpamStd.IntMap.empty in
+          let map =
+            OpamStd.IntMap.filter
+              (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
+              rev_version_map in
+          if OpamStd.IntMap.is_empty map then
+            match result_op with
+            | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
+            | `Leq -> Some (`Lt, 1)
+          else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
+  in
+  (cudfname,cudfconstr)
 
+(*
 let opam2cudf universe ?(depopts=false) ~build version_map package =
   let name = OpamPackage.name package in
   let version = OpamPackage.version package in
@@ -224,32 +239,62 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     (* provides: unused atm *)
     pkg_extra = extras;
   }
+*)
 
-(* load a cudf universe from an opam one *)
-let load_cudf_universe ?depopts ~build
-    opam_universe ?version_map opam_packages =
-  log "Load cudf universe (depopts:%b, build:%b)"
-    (OpamStd.Option.default false depopts)
-    build;
-  let version_map = match version_map with
-    | Some vm -> vm
-    | None -> cudf_versions_map opam_universe opam_packages in
-  let cudf_universe =
-    let cudf_packages =
-      (* Doing opam2cudf for every package is inefficient (lots of Set.mem to
-         check if it is installed, etc. Optimise by gathering all info first *)
-      OpamPackage.Set.fold
-        (fun nv list ->
-           opam2cudf opam_universe ?depopts ~build version_map nv :: list)
-        opam_packages [] in
-    try Cudf.load_universe cudf_packages
-    with Cudf.Constraint_violation s ->
-      OpamConsole.error_and_exit "Malformed CUDF universe (%s)" s
+let pefcudf_aux (switch,switches,profiles,depopts,installed) tables pefpkglist =
+  let options = { Opam.Opamcudf.switch = switch; switches; profiles; depopts} in
+  let extras = [ ("reinstall",("reinstall", `Bool (Some false))); ] in
+  let cudfpkglist =
+    List.map (fun pkg ->
+      if (installed && (List.mem switch pkg#installedlist)) || not installed then
+        let pl = Opam.Opamcudf.tocudf tables ~options ~extras pkg in
+        List.fold_left (fun acc1 p -> p :: acc1) [] pl
+      else []
+    ) pefpkglist
   in
-  (* We can trim the universe here to get faster results, but we
-     choose to keep it bigger to get more precise conflict messages. *)
-  (* let universe = Algo.Depsolver.trim universe in *)
-  cudf_universe
+  List.flatten cudfpkglist
+
+let pefcudflist universe ?(depopts=false) ~build opam_packages =
+  log "Pef -> Cudflist (depopts:%b, build:%b)" depopts build;
+  let options = 
+    let (switch,switches,profiles) = universe.u_options in
+    let l = ref profiles in
+    if build then l := "build"::!l;
+    (switch,switches,!l,depopts,false)
+  in
+  let pefuniv = universe.u_pefuniv in
+  let tables = universe.u_tables in
+  let reinstall = match universe.u_action with
+    | Upgrade reinstall 
+    | Reinstall reinstall -> reinstall
+    | _ -> OpamPackage.Set.empty
+  in
+  OpamPackage.Set.iter (fun p ->
+    let name = OpamPackage.name p in
+    let version = OpamPackage.version p in
+    let n = OpamPackage.Name.to_string name in
+    let v = OpamPackage.Version.to_string version in
+    try
+      let pkg = Hashtbl.find pefuniv (n,v) in
+      Hashtbl.replace pefuniv (n,v) (pkg#add_extra "reinstall" "true")
+    with Not_found -> ()
+  ) reinstall;
+  let pefpkglist =
+    OpamPackage.Set.fold (fun p acc -> 
+      let name = OpamPackage.name p in
+      let version = OpamPackage.version p in
+      let n = OpamPackage.Name.to_string name in
+      let v = OpamPackage.Version.to_string version in
+      try (Hashtbl.find pefuniv (n,v))::acc
+      with Not_found -> acc
+    ) opam_packages []
+  in
+  pefcudf_aux options tables pefpkglist
+
+let load_cudf_universe ?depopts ~build universe opam_packages =
+  log "Load cudf universe (depopts:%b, build:%b)"
+    (OpamStd.Option.default false depopts) build;
+  Cudf.load_universe (pefcudflist universe ?depopts ~build opam_packages)
 
 let string_of_request r =
   let to_string = OpamFormula.string_of_conjunction OpamFormula.string_of_atom in
@@ -257,16 +302,6 @@ let string_of_request r =
     (to_string r.wish_install)
     (to_string r.wish_remove)
     (to_string r.wish_upgrade)
-
-(* Unused ?
-let map_cause f = function
-  | Upstream_changes -> Upstream_changes
-  | Use l            -> Use (List.rev_map f l)
-  | Required_by l    -> Required_by (List.rev_map f l)
-  | Conflicts_with l -> Conflicts_with (List.rev_map f l)
-  | Requested        -> Requested
-  | Unknown          -> Unknown
-*)
 
 let cudf_to_opam_graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in
@@ -316,19 +351,18 @@ let cycle_conflict ~version_map univ cycles =
 
 let resolve ?(verbose=true) universe ~orphans request =
   log "resolve request=%a" (slog string_of_request) request;
-  let version_map =
-    cudf_versions_map universe
-      (universe.u_available ++ universe.u_installed ++ orphans) in
+  let version_map = universe.u_tables in
   let simple_universe =
-    load_cudf_universe universe ~version_map ~build:true
-      (universe.u_available ++ universe.u_installed -- orphans) in
+    load_cudf_universe universe ~build:true
+      (universe.u_packages ++ universe.u_installed -- orphans) in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let add_orphan_packages u =
-    load_cudf_universe universe ~version_map ~build:true
+    load_cudf_universe universe ~build:true
       (orphans ++
          (OpamPackage.Set.of_list
             (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
+  let version_map = universe.u_tables in
   let resolve u req =
     if OpamCudf.external_solver_available ()
     then
@@ -344,14 +378,11 @@ let resolve ?(verbose=true) universe ~orphans request =
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c
   | Success actions ->
-    let all_packages =
-      universe.u_available ++ orphans in
+    let all_packages = universe.u_packages ++ orphans in
     let simple_universe =
-      load_cudf_universe universe ~depopts:true ~build:false
-        ~version_map all_packages in
+      load_cudf_universe universe ~depopts:true ~build:false all_packages in
     let complete_universe =
-      load_cudf_universe universe ~depopts:true ~build:true
-        ~version_map all_packages in
+      load_cudf_universe universe ~depopts:true ~build:true all_packages in
     try
       let atomic_actions =
         OpamCudf.atomic_actions
@@ -366,7 +397,7 @@ let get_atomic_action_graph t =
 let installable universe =
   log "trim";
   let simple_universe =
-    load_cudf_universe universe universe.u_available ~build:true in
+    load_cudf_universe universe universe.u_packages ~build:true in
   let trimed_universe = Algo.Depsolver.trim simple_universe in
   Cudf.fold_packages
     (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
@@ -377,40 +408,37 @@ let filter_dependencies
     f_direction ~depopts ~build ~installed
     ?(unavailable=false) universe packages =
   if OpamPackage.Set.is_empty packages then [] else
-  let u_packages =
-    packages ++
-    if installed then universe.u_installed else
-    if unavailable then universe.u_packages else
-      universe.u_available in
-  let version_map = cudf_versions_map universe u_packages in
-  let cudf_universe =
-    load_cudf_universe ~depopts ~build universe ~version_map
-      u_packages in
-  let cudf_packages =
-    List.rev_map (opam2cudf universe ~depopts ~build version_map)
-      (OpamPackage.Set.elements packages) in
-  let topo_packages = f_direction cudf_universe cudf_packages in
-  let result = List.rev_map OpamCudf.cudf2opam topo_packages in
-  log "filter_dependencies packages=%a result=%a"
-    (slog OpamPackage.Set.to_string) packages
-    (slog (OpamStd.List.to_string OpamPackage.to_string)) result;
-  result
+    let version_map = universe.u_tables in
+    let u_packages =
+      packages ++
+      if installed then universe.u_installed else
+      if unavailable then universe.u_packages else
+        universe.u_packages in
+    let cudf_universe =
+      load_cudf_universe ~depopts ~build universe u_packages in
+    let cudf_packages =
+      Cudf.get_packages (load_cudf_universe ~depopts ~build universe packages) in
+    let topo_packages = f_direction cudf_universe cudf_packages in
+    let result = List.rev_map OpamCudf.cudf2opam topo_packages in
+    log "filter_dependencies packages=%a result=%a"
+      (slog OpamPackage.Set.to_string) packages
+      (slog (OpamStd.List.to_string OpamPackage.to_string)) result;
+    result
+;;
 
 let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
 let check_for_conflicts universe =
-  let version_map = cudf_versions_map universe universe.u_packages in
+  let version_map = universe.u_tables in
   let cudf_universe =
-    load_cudf_universe ~depopts:false ~build:true
-      ~version_map universe  universe.u_packages
+    load_cudf_universe ~depopts:false ~build:true universe universe.u_packages
   in
   let installed =
-    List.rev_map
-      (opam2cudf universe ~depopts:false ~build:true
-         version_map)
-      (OpamPackage.Set.elements universe.u_installed)
+    Cudf.get_packages (
+      load_cudf_universe ~depopts:false ~build:true universe universe.u_installed
+    )
   in
   match Algo.Depsolver.edos_coinstall cudf_universe installed with
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
@@ -516,18 +544,18 @@ let print_solution ~messages ~rewrite ~requested t =
     ) actions_str details
 
 let dump_universe universe oc =
-  let version_map = cudf_versions_map universe universe.u_packages in
   let cudf_univ =
-    load_cudf_universe ~depopts:false ~build:true universe ~version_map
-      universe.u_available in
-  OpamCudf.dump_universe oc cudf_univ;
+    load_cudf_universe ~depopts:false ~build:true universe universe.u_packages in
+  OpamCudf.dump_universe oc cudf_univ
   (* Add explicit bindings to retrieve original versions of non-available and
      non-existing (but referred to) packages *)
+  (*
   OpamPackage.Map.iter (fun nv i ->
       if not (OpamPackage.Set.mem nv universe.u_available) then
         Printf.fprintf oc "#v2v:%s:%d=%s\n"
           (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
     ) version_map
+    *)
 
 let filter_solution filter t =
   let t = OpamCudf.ActionGraph.copy t in

@@ -1304,34 +1304,6 @@ let is_compiler_installed t comp =
 let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
 
-let universe t action =
-  let opams = (* Read overlays of pinned packages *)
-    OpamPackage.Name.Map.fold (fun name pin map ->
-        let v = version_of_pin t name pin in
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
-        if OpamFilename.exists overlay then
-          OpamPackage.Map.add
-            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
-        else map)
-      t.pinned t.opams
-  in
-  let base = base_packages t in
-  {
-    u_packages  = t.installed ++ t.packages;
-    u_action    = action;
-    u_installed = t.installed;
-    u_available = Lazy.force t.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-    u_installed_roots = t.installed_roots;
-    u_pinned    = pinned_packages t;
-    u_dev       = dev_packages t;
-    u_base      = base;
-    u_attrs     = [];
-    u_test      = OpamStateConfig.(!r.build_test);
-    u_doc       = OpamStateConfig.(!r.build_doc);
-  }
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
@@ -1341,13 +1313,13 @@ let string_of_cnf string_of_atom cnf =
 let string_of_conjunction string_of_atom c =
   Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
 
-let pef_package t =
+let pef_package ?(orphans=OpamPackage.Set.empty) t =
   let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
   let depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams in
   let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams in
   let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams in
   let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer t.opams in
-  let devs = dev_packages t in
+  (* let devs = dev_packages t in *)
   let base = base_packages t in
   let to_atom_ext_formula t =
     let atom (r,v) = Atom (r, v) in
@@ -1399,92 +1371,121 @@ let pef_package t =
   in
   let aux package =
     let opam = opam t package in
-    let installed =
-      (* version base > version legacy *)
-      let l =
-        OpamSwitch.Map.fold (fun switch _ acc ->
-          let installed = 
-            let f = OpamPath.Switch.installed t.root switch in
-            OpamFile.Installed.safe_read f
-          in
-          if OpamPackage.Set.mem package installed then
-            (OpamSwitch.to_string switch) :: acc
-          else acc
-        ) (OpamSwitch.Map.add t.switch t.compiler t.aliases) []
-      in
-      match l with
-      |[] -> None
-      |l -> Some("installed",String.concat ", " l)
-    in
     let available =
-      let atom sw (r,v) =
-        match OpamCompiler.Version.to_string v with
-        |"system" ->
-          begin match r with
-            |`Eq  -> t.compiler = OpamCompiler.system
-            |`Neq -> t.compiler <> OpamCompiler.system
-            |_    -> OpamSystem.internal_error
-                        "%s is not a valid constraint for the system compiler \
-                         (only '=' and '!=' are valid)."
-                        (OpamFormula.string_of_relop r)
-          end
-        |_ ->
-            OpamCompiler.Version.eval_relop r 
-            (OpamCompiler.Version.of_string sw) v
+      let available_filter t switch =
+        let t = with_switch switch t in
+        let env v = 
+          if not (OpamVariable.Full.is_global v) then None else
+          match OpamVariable.to_string (OpamVariable.Full.variable v) with
+          | "ocaml-version" -> string (OpamCompiler.Version.to_string
+                                         (Lazy.force t.compiler_version))
+          | "opam-version"  -> string (OpamVersion.to_string OpamVersion.current)
+          | "compiler" -> string (OpamCompiler.to_string t.compiler)
+          | "preinstalled"  -> bool (OpamFile.Comp.preinstalled
+                                       (compiler_comp t t.compiler))
+          | "switch"        -> string (OpamSwitch.to_string t.switch)
+          | "ocaml-native"  ->
+            if t.compiler = OpamCompiler.system then
+              bool (Lazy.force OpamOCaml.ocaml_native_available)
+            else
+              bool (OpamFilename.exists
+                      (OpamPath.Switch.bin t.root t.switch t.switch_config
+                       // "ocamlopt"))
+          | "ocaml-native-tools" ->
+            if t.compiler = OpamCompiler.system then
+              bool (Lazy.force OpamOCaml.ocaml_opt_available)
+            else
+              bool (OpamFilename.exists
+                      (OpamPath.Switch.bin t.root t.switch t.switch_config
+                       // "ocamlc.opt"))
+          | "ocaml-native-dynlink" ->
+            if t.compiler = OpamCompiler.system then
+              bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
+            else
+              bool (OpamFilename.exists
+                      (OpamPath.Switch.lib_dir t.root t.switch t.switch_config
+                       / "ocaml" // "dynlink.cmxa"))
+          | "arch"          -> string (OpamStd.Sys.arch ())
+          | _               -> None
         in
-      match OpamFile.OPAM.ocaml_version opam with
-      |None -> Some("switch","all")
-      |Some c ->
-          (match List.filter (fun sw -> (OpamFormula.eval (atom sw) c) ) switches with
-          |[] -> None (* this package is not available at all *)
-          |l -> Some("switch",String.concat ", " l))
-    in
-    let name = Some("package",(OpamPackage.name_to_string package)) in
-    let version = Some("version",(OpamPackage.version_to_string package)) in
-
-    let base = if OpamPackage.Set.mem package base then Some("base","1") else None in
-    let hold =
-      try
-        match OpamPackage.Name.Map.find (OpamPackage.name package) t.pinned with
-        |Version v when v = (OpamPackage.version package) -> Some("hold","yes")
-        |_ -> None
-      with Not_found -> None
-    in
-    let depends =
-      try
-        let d = OpamPackage.Map.find package depends in
-        let dd = formula_of_extended d in
-        Some ("depends", string_of_cnf string_of_atom dd)
-      with Not_found -> None
-    in
-
-    let recommends =
-      try
-        let d = OpamPackage.Map.find package depopts in
-        let dd = formula_of_extended d in
-        Some ("recommends", string_of_cnf string_of_atom dd)
-      with Not_found -> None
-    in
-
-    let conflicts =
-      try
-        let c = OpamPackage.Map.find package conflicts in
-        let n = OpamPackage.name package in
-        let cc = (n,None)::(OpamFormula.to_disjunction c) in
-        Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
-      with Not_found -> None
+        OpamFilter.eval_to_bool ~default:true env (OpamFile.OPAM.available opam)
+        && consistent_ocaml_version t opam
+      in
+      match List.filter (available_filter t) (OpamSwitch.Map.keys t.aliases) with
+      |[] -> None
+      |l -> Some("switch",(String.concat ", " (List.map OpamSwitch.to_string l)))
     in
     match available with
     |None -> None
     |Some _ -> 
+      let installed =
+        let l =
+          OpamSwitch.Map.fold (fun switch _ acc ->
+            let installed = 
+              let f = OpamPath.Switch.installed t.root switch in
+              OpamFile.Installed.safe_read f
+            in
+            if OpamPackage.Set.mem package installed then
+              (OpamSwitch.to_string switch) :: acc
+            else acc
+          ) (OpamSwitch.Map.add t.switch t.compiler t.aliases) []
+        in
+        match l with
+        |[] -> None
+        |l -> Some("installed",String.concat ", " l)
+      in
+      let name = Some("package",(OpamPackage.name_to_string package)) in
+      let version = Some("version",(OpamPackage.version_to_string package)) in
+      let maintainer =
+        try
+          let m = OpamPackage.Map.find package maintainers in
+          Some("maintainer",(string_of_conjunction (fun a -> a) m))
+        with Not_found -> None
+      in
+      let base = if OpamPackage.Set.mem package base then Some("base","yes") else None in
+      let hold =
+        try
+          match OpamPackage.Name.Map.find (OpamPackage.name package) t.pinned with
+          |Version v when v = (OpamPackage.version package) -> Some("hold","yes")
+          |_ -> None
+        with Not_found -> None
+      in
+      let depends =
+        try
+          let d = OpamPackage.Map.find package depends in
+          let dd = formula_of_extended d in
+          Some ("depends", string_of_cnf string_of_atom dd)
+        with Not_found -> None
+      in
+      let depopts =
+        try
+          let d = OpamPackage.Map.find package depopts in
+          let dd = formula_of_extended d in
+          Some ("depopts", string_of_cnf string_of_atom dd)
+        with Not_found -> None
+      in
+      let conflicts =
+        try
+          let c = OpamPackage.Map.find package conflicts in
+          let n = OpamPackage.name package in
+          let cc = (n,None)::(OpamFormula.to_disjunction c) in
+          Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
+        with Not_found -> None
+      in
+      let reinstall =
+        if OpamPackage.Set.mem package t.reinstall then
+          Some("reinstall","yes") 
+        else None 
+      in
       Some (
         List.fold_left (fun acc -> function
           |None -> acc
           |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
-        ) [] [name;version;available;installed;hold;base;depends;conflicts;recommends]
+        ) [] [name;version;maintainer;installed;hold;base;depends;conflicts;depopts;reinstall]
       )
   in
-  OpamPackage.Set.fold (fun p l -> match aux p with None -> l | Some par -> par::l) t.packages []
+  let s = t.packages ++ t.installed ++ orphans in
+  OpamPackage.Set.fold (fun p l -> match aux p with None -> l | Some par -> par::l) s []
 ;;
 
 let dump_state t oc =
@@ -1493,8 +1494,32 @@ let dump_state t oc =
     Printf.fprintf oc "\n"
   ) (pef_package t)
 
+let pef_packagelist ?(profiles=[]) t =
+  let switch = OpamSwitch.to_string t.switch in
+  let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
+  let options = (switch,switches,profiles) in
+  let extras = [("reinstall",Some (Pef.Packages.parse_s Pef.Packages.parse_bool_s))] in 
+  List.fold_left (fun acc par ->
+    match Opam.Packages.parse_package_stanza options ~extras par with
+    |Some pkg -> pkg::acc
+    |None -> acc
+  ) [] (pef_package t)
+
+let pef_packageuniv ?(orphans=OpamPackage.Set.empty) ?(profiles=[]) t =
+  let switch = OpamSwitch.to_string t.switch in
+  let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
+  let options = (switch,switches,profiles) in
+  let extras = [("reinstall",Some (Pef.Packages.parse_s Pef.Packages.parse_bool_s))] in 
+  let h = Hashtbl.create 1024 in
+  List.iter (fun par ->
+    match Opam.Packages.parse_package_stanza options ~extras par with
+    |Some pkg -> Hashtbl.add h (pkg#name,pkg#version) pkg
+    |None -> ()
+  ) (pef_package ~orphans t);
+  h
+
 let pef_state request t =
-  let options,request =
+  let profiles,request =
     let to_string =
       let string_of_conjunction string_of_atom c =
           Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom c)
@@ -1507,7 +1532,6 @@ let pef_state request t =
       else "build"
     in
     let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
-    let options = OpamSwitch.to_string t.switch,switches,[profiles] in
     let par = [
       ("install",(Common.Format822.dummy_loc,(to_string request.wish_install)));
       ("remove",(Common.Format822.dummy_loc,(to_string request.wish_remove)));
@@ -1518,16 +1542,9 @@ let pef_state request t =
       ("preferences",(Common.Format822.dummy_loc,OpamSolverConfig.criteria request.criteria)) 
     ]
     in
-    (*Printf.eprintf "Preferences: %s\n" (OpamSolverConfig.criteria request.criteria);*)
-    options,Opam.Packages.parse_request_stanza par
+    [profiles],Opam.Packages.parse_request_stanza par
   in
-  let l = 
-    List.fold_left (fun acc par -> 
-      match Opam.Packages.parse_package_stanza options par with
-      |Some pkg -> pkg::acc 
-      |None -> acc
-    ) [] (pef_package t)
-  in
+  let l = pef_packagelist ~profiles t in
   (request,l)
 
 let installed_versions t name =
@@ -1545,6 +1562,50 @@ let installed_versions t name =
     else
       map
   ) t.aliases OpamPackage.Map.empty
+
+let universe ?(orphans=OpamPackage.Set.empty) t action =
+  let opams = (* Read overlays of pinned packages *)
+    OpamPackage.Name.Map.fold (fun name pin map ->
+        let v = version_of_pin t name pin in
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+        if OpamFilename.exists overlay then
+          OpamPackage.Map.add
+            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
+        else map)
+      t.pinned t.opams
+  in
+  let switch = OpamSwitch.to_string t.switch in
+  let switches = OpamSwitch.Map.fold (fun s _ acc -> (OpamSwitch.to_string s)::acc) t.aliases [] in
+  let profiles = 
+    let l = ref [] in
+    if OpamStateConfig.(!r.build_test) then l := "test"::!l;
+    if OpamStateConfig.(!r.build_doc); then l := "doc"::!l;
+    !l
+  in
+  (* !!! Here is where we create the PEF universe and pass the comparison function *)
+  let options = (switch,switches,profiles) in
+  let pefuniv = pef_packageuniv ~orphans t in
+  let pefpkglist = Hashtbl.fold (fun _ v acc -> v::acc) pefuniv [] in 
+  let tables = Pef.Pefcudf.init_tables Versioning.Debian.compare pefpkglist in
+  {
+    u_pefuniv   = pefuniv;
+    u_options   = options;
+    u_tables    = tables;
+    u_packages  = t.installed ++ t.packages;
+    u_action    = action;
+    u_installed = t.installed;
+    u_available = Lazy.force t.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+    u_installed_roots = t.installed_roots;
+    u_pinned    = pinned_packages t;
+    u_dev       = dev_packages t;
+    u_base      = base_packages t;
+    u_attrs     = [];
+    u_test      = OpamStateConfig.(!r.build_test);
+    u_doc       = OpamStateConfig.(!r.build_doc);
+  }
 
 let installed_timestamp t name =
   let instfile = OpamPath.Switch.install t.root t.switch name in

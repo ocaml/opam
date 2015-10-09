@@ -740,10 +740,8 @@ let resolve ?(verbose=true) t action ~orphans request =
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
   Json.output_request request action;
-  let options,pkglist = OpamState.pef_state request t in
-  PefSolver.call_external_solver options pkglist;
   let r =
-    OpamSolver.resolve ~verbose (OpamState.universe t action) ~orphans request
+    OpamSolver.resolve ~verbose (OpamState.universe ~orphans t action) ~orphans request
   in
   Json.output_solution t r;
   r

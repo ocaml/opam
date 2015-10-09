@@ -62,7 +62,7 @@ let call_external_solver request opampkglist =
   let from_cudf (p,i) = (p, Pef.Pefcudf.get_real_version tables (p,i)) in
   let to_cudf (p,v) = (p, Pef.Pefcudf.get_cudf_version tables (p,v)) in
   let univ = Hashtbl.create (2*(List.length opampkglist)-1) in
-  let options = { Opam.Opamcudf.switch = request.Opam.Packages.switch; switches = []; profiles = [] } in
+  let options = { Opam.Opamcudf.switch = request.Opam.Packages.switch; switches = []; profiles = []; depopts = false} in
 
   let cudfpkglist =
       List.map (fun pkg ->

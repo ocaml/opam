@@ -111,7 +111,7 @@ val with_switch: switch -> state -> state
 val load_env_state: string -> switch -> state
 
 (** Create a universe from the current state *)
-val universe: state -> user_action -> universe
+val universe: ?orphans:package_set -> state -> user_action -> universe
 
 (** {2 Environment} *)
 

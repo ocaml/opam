@@ -51,7 +51,7 @@ open OpamTypes
 (** Optimized resolution *)
 val resolve:
   ?verbose:bool ->
-  version_map:int OpamPackage.Map.t ->
+  version_map: OpamCudf.version_map ->
   (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
@@ -140,7 +140,7 @@ val explore: ?verbose:bool ->
     [state_space], it calls [explore] (which will use [brute_force])
     to get an approximate solution to the request. *)
 val state_of_request: ?verbose:bool  ->
-  version_map:int OpamPackage.Map.t ->
+  version_map: OpamCudf.version_map ->
   Cudf.universe ->
   Cudf_types.vpkg request -> Cudf.package state option
 
@@ -149,6 +149,6 @@ val state_of_request: ?verbose:bool  ->
     reachable. This function is called once we get a consistent state
     to build a solution than we can propose to the user. *)
 val actions_of_state:
-  version_map:int OpamPackage.Map.t ->
+  version_map: OpamCudf.version_map ->
   Cudf.universe ->
   Cudf_types.vpkg request -> Cudf.package state -> Cudf.package atomic_action list

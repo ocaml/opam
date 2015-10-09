@@ -273,6 +273,9 @@ type user_action =
 
 (** Solver universe *)
 type universe = {
+  u_pefuniv  : ((string * string), Opam.Packages.package) Hashtbl.t;
+  u_options  : (string * string list * string list);
+  u_tables   : Pef.Pefcudf.tables;
   u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;

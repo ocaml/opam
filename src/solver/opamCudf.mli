@@ -49,6 +49,7 @@ module ActionGraph: OpamActionGraph.SIG with type package = Cudf.package
 
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
+type version_map = Pef.Pefcudf.tables
 
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
@@ -62,14 +63,14 @@ val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package lis
     [explain] is set to [false] *)
 val check_request:
   ?explain:bool ->
-  version_map:int OpamPackage.Map.t ->
+  version_map: version_map ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
-  version_map:int OpamPackage.Map.t ->
+  version_map: version_map ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
@@ -110,7 +111,7 @@ val compute_root_causes: ActionGraph.t -> OpamPackage.Name.Set.t ->
     [~extern] specifies whether the external solver should be used *)
 val resolve:
   extern:bool ->
-  version_map:int OpamPackage.Map.t ->
+  version_map: version_map ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
@@ -172,10 +173,10 @@ val s_version_lag: string
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 val make_conflicts:
-  version_map:int package_map -> Cudf.universe ->
+  version_map: version_map -> Cudf.universe ->
   Algo.Diagnostic.diagnosis -> ('a, conflict) result
 val cycle_conflict:
-  version_map:int package_map -> Cudf.universe ->
+  version_map: version_map-> Cudf.universe ->
   string list list -> ('a, conflict) result
 
 (** Convert a conflict to something readable by the user. The first argument
@@ -216,6 +217,6 @@ val packages: Cudf.universe -> Cudf.package list
 (** {2 External solver} *)
 val external_solver_available: unit -> bool
 
-(** Converts an OPAM request to a Cudf request *)
+(** Converts an OPAM request to a Cudf_types.vpkg request *)
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
