@@ -387,6 +387,9 @@ let parallel_apply t action action_graph =
   let action_graph = (* Add build actions *)
     PackageActionGraph.explicit action_graph
   in
+  let action_graph = (* Delay removals to minimise consequences of failures *)
+    PackageActionGraph.removals_last action_graph
+  in
 
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
@@ -420,7 +423,7 @@ let parallel_apply t action action_graph =
         match action with
         | `Build _ -> Done (`Successful (installed, removed))
         | `Install nv ->
-          OpamConsole.msg "Faking installation of %s"
+          OpamConsole.msg "Faking installation of %s... "
             (OpamPackage.to_string nv);
           add_to_install nv;
           Done (`Successful (OpamPackage.Set.add nv installed , removed))
