@@ -1678,6 +1678,7 @@ module X = struct
           (names_of_formula true t.depends)
           (names_of_formula true t.depopts)
       in
+      let emailrex = Re_pcre.regexp "<?[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?>?" in
       let warnings = [
         cond 20 `Warning
           "Field 'opam-version' refers to the patch version of opam, it \
@@ -1708,8 +1709,9 @@ module X = struct
           ~detail:empty_fields
           (empty_fields <> []));
         cond 23 `Error
-          "Missing field 'maintainer'"
-          (t.maintainer = []);
+          "Missing or invalid field 'maintainer'"
+          ((t.maintainer = []) || 
+          not(List.exists (Re_pcre.pmatch ~rex:emailrex) t.maintainer));
         cond 24 `Error
           "Field 'maintainer' has the old default value"
           (List.mem "contact@ocamlpro.com" t.maintainer &&
