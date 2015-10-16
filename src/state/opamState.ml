@@ -745,6 +745,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
   in
   let get_global_var v =
     if not (OpamVariable.Full.is_global v) then None else
+    let preinstalled_comp = OpamFile.Comp.preinstalled (compiler_comp t t.compiler) in
     match OpamVariable.to_string (OpamVariable.Full.variable v) with
     | "ocaml-version" -> string (OpamCompiler.Version.to_string
                                    (Lazy.force t.compiler_version))
@@ -755,21 +756,21 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     | "switch"        -> string (OpamSwitch.to_string t.switch)
     | "jobs"          -> int (jobs t)
     | "ocaml-native"  ->
-      if t.compiler = OpamCompiler.system then
+      if preinstalled_comp then
         bool (Lazy.force OpamOCaml.ocaml_native_available)
       else
         bool (OpamFilename.exists
                 (OpamPath.Switch.bin t.root t.switch t.switch_config
                  // "ocamlopt"))
     | "ocaml-native-tools" ->
-      if t.compiler = OpamCompiler.system then
+      if preinstalled_comp then
         bool (Lazy.force OpamOCaml.ocaml_opt_available)
       else
         bool (OpamFilename.exists
                 (OpamPath.Switch.bin t.root t.switch t.switch_config
                  // "ocamlc.opt"))
     | "ocaml-native-dynlink" ->
-      if t.compiler = OpamCompiler.system then
+      if preinstalled_comp then
         bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
       else
         bool (OpamFilename.exists
