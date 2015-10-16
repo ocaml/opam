@@ -273,9 +273,9 @@ let repository_name =
   let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
   parse, print
 
-let address =
-  let parse str = `Ok (address_of_string str) in
-  let print ppf address = pr_str ppf (string_of_address address) in
+let url =
+  let parse str = `Ok (OpamUrl.of_string str) in
+  let print ppf url = pr_str ppf (OpamUrl.to_string url) in
   parse, print
 
 let filename =
@@ -487,7 +487,7 @@ let dot_profile_flag =
 let repo_kind_flag =
   let main_kinds = [
     "http" , `http;
-    "local", `local;
+    "local", `rsync;
     "git"  , `git;
     "darcs", `darcs;
     "hg"   , `hg;
@@ -495,7 +495,7 @@ let repo_kind_flag =
   let aliases_kinds = [
     "wget" , `http;
     "curl" , `http;
-    "rsync", `local;
+    "rsync", `rsync;
   ] in
   mk_opt ["k";"kind"] "KIND"
     (Printf.sprintf "Specify the kind of the repository to be used (%s)."

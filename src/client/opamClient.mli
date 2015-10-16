@@ -107,7 +107,7 @@ module API: sig
     val list: short:bool -> unit
 
     (** Add a new repository. *)
-    val add: repository_name -> repository_kind -> address -> priority:int option -> unit
+    val add: repository_name -> url -> priority:int option -> unit
 
     (** Remove a repository. *)
     val remove: repository_name -> unit
@@ -116,7 +116,7 @@ module API: sig
     val priority: repository_name -> priority:int -> unit
 
     (** Set-up repository url. *)
-    val set_url: repository_name -> address -> unit
+    val set_url: repository_name -> url -> unit
   end
 
   (** Switch API *)

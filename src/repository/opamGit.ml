@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
@@ -44,7 +43,7 @@ module Git : OpamVCS.VCS= struct
     OpamProcess.Job.of_list [
       git repo ~env [ "init" ];
       git repo ~env [ "remote" ; "add" ; "origin" ;
-                      path_of_address repo.repo_address ];
+                      OpamUrl.base_url repo.repo_url ];
       git repo ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
     ] @@+ function
     | None -> Done ()
@@ -61,14 +60,14 @@ module Git : OpamVCS.VCS= struct
         | [url] -> Some url
         | _ -> None
       in
-      if current_remote <> Some (path_of_address repo.repo_address) then (
+      if current_remote <> Some (OpamUrl.base_url repo.repo_url) then (
         log "Git remote for %s needs updating (was: %s)"
           (OpamRepositoryBackend.to_string repo)
           (OpamStd.Option.default "<none>" current_remote);
         OpamProcess.Job.of_list [
           git repo ~verbose:false [ "remote" ; "rm" ; "origin" ];
           git repo ~verbose:false
-            [ "remote" ; "add" ; "origin"; path_of_address repo.repo_address ]
+            [ "remote" ; "add" ; "origin"; OpamUrl.base_url repo.repo_url ]
         ] @@+ function
         | None -> Done ()
         | Some (_,err) -> OpamSystem.process_error err
@@ -76,7 +75,7 @@ module Git : OpamVCS.VCS= struct
         Done ()
     in
     check_and_fix_remote @@+ fun () ->
-    let branch = OpamStd.Option.default "HEAD" (snd repo.repo_address) in
+    let branch = OpamStd.Option.default "HEAD" repo.repo_url.OpamUrl.hash in
     let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
     git repo [ "fetch" ; "-q"; "origin"; refspec ]
     @@> fun r ->

@@ -34,33 +34,6 @@ val string_of_download: _ download -> string
 
 val string_of_generic_file: generic_file -> string
 
-(** Print an address. With [~kind], makes the kind of address unambiguous
-    (suitable for re-parsing, but not for passing to some external commands) *)
-val string_of_address: ?kind:repository_kind -> address -> string
-
-(** Parse an address *)
-val address_of_string: string -> address
-
-(** The base path part of an address; note that this keeps the transport part
-    when it is one of http, https or ftp (i.e. "file:///foo.bar/baz" returns
-    "/foo.bar/baz", but "git+https://foo.bar/baz" returns
-    "https://foo.bar/baz") *)
-val path_of_address: address -> string
-
-(** Guess an address kind using url suffixes ([.git], etc.) and prefixes
-    ([http://], etc.). Defaults to `local. The returned address is a correct
-    path in case of [file://] *)
-val parse_url: address -> address * repository_kind
-
-(** Scan the given directory for version control *)
-val guess_version_control: dirname -> version_control option
-
-(** Pretty-print repository kinds. *)
-val string_of_repository_kind: repository_kind -> string
-
-(** Parser of repository kinds. Raise an error if the kind is not valid. *)
-val repository_kind_of_string: string -> repository_kind
-
 (** Extract a package from a package action. *)
 val action_contents: [< 'a action ] -> 'a
 
@@ -75,12 +48,6 @@ val full_action_contents: 'a action -> 'a list
 
 (** Pretty-prints the cause of an action *)
 val string_of_cause: ('pkg -> string) -> 'pkg cause -> string
-
-(** Pretty-print *)
-val string_of_upload: upload -> string
-
-(** Convert a pin kind to a repository kind *)
-val repository_kind_of_pin_kind: pin_kind -> repository_kind option
 
 (** Pretty-printing of pin kinds. *)
 val pin_kind_of_string: string -> pin_kind
@@ -99,10 +66,7 @@ val string_of_pin_option: pin_option -> string
 (** Get the pin kind from a pin option *)
 val kind_of_pin_option: pin_option -> pin_kind
 
-(** Get a pin_option from address and kind *)
-val pin_of_url: address * repository_kind -> pin_option
-
-val url_of_pin: pin_option -> address * repository_kind
+val url_backend_of_pin_kind: pin_kind -> OpamUrl.backend option
 
 (** Pretty-print *)
 val string_of_shell: shell -> string

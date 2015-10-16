@@ -12,11 +12,13 @@ begin library "opam-core"
     "opamParallel.ml"
     "opamSystem.ml"
     "opamFilename.ml"
+    "opamUrl.ml"
   ]
 
   requires = [
     "unix"
     "ocamlgraph"
+    "re"
     "re.str"
     "jsonm"
   ]

@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamState.Types
 open OpamStd.Op
 open OpamPackage.Set.Op
@@ -37,7 +36,7 @@ let update t repo =
       let text =
         OpamProcess.make_command_text ~color:`blue
           (OpamRepositoryName.to_string repo.repo_name)
-          (string_of_repository_kind repo.repo_kind)
+          OpamUrl.(string_of_backend repo.repo_url.backend)
       in
       OpamProcess.Job.with_text text @@
       OpamRepository.update r @@+ fun () ->
@@ -57,7 +56,7 @@ let update t repo =
             "The repository '%s' will be *%s* redirected to %s%s"
             (OpamRepositoryName.to_string repo.repo_name)
             (OpamConsole.colorise `bold "permanently")
-            (string_of_address new_repo.repo_address)
+            (OpamUrl.to_string new_repo.repo_url)
             reason;
           job new_repo (n-1)
   in
@@ -469,42 +468,35 @@ let priority repo_name ~priority =
   (* relink the compiler and package descriptions *)
   fix_descriptions t
 
-let add name kind address ~priority:prio =
+let add name url ~priority:prio =
   log "repository-add";
-  let t = OpamState.load_state "repository-add"
-      OpamStateConfig.(!r.current_switch) in
+  let t =
+    OpamState.load_state "repository-add" OpamStateConfig.(!r.current_switch)
+  in
   if OpamState.mem_repository t name then
-    OpamConsole.error_and_exit
-      "%s is already a remote repository"
+    OpamConsole.error_and_exit "%s is already a remote repository"
       (OpamRepositoryName.to_string name);
-  if kind = `local then (
-    let repo_dir = OpamFilename.Dir.of_string (string_of_address address) in
-    let pkgdir = OpamPath.packages_dir repo_dir in
-    let compdir = OpamPath.compilers_dir repo_dir in
-    if not (OpamFilename.exists_dir pkgdir) &&
-       not (OpamFilename.exists_dir compdir) &&
-       not (OpamConsole.confirm
-              "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
-               Is it really the directory of your repo ?"
-              (OpamFilename.Dir.to_string repo_dir))
-    then OpamStd.Sys.exit 1
-  );
   let prio = match prio with
     | Some p -> p
     | None ->
-      if OpamRepositoryName.Map.is_empty t.repositories then 0 else
-      let max_prio =
-        OpamRepositoryName.Map.fold
-          (fun _ { repo_priority; _ } m -> max repo_priority m)
-          t.repositories min_int in
-      10 + max_prio in
+      OpamRepositoryName.Map.fold
+        (fun _ { repo_priority; _ } m -> max (repo_priority + 10) m)
+        t.repositories 0
+  in
   let repo = {
     repo_name     = name;
-    repo_kind     = kind;
-    repo_address  = address;
+    repo_url      = url;
     repo_priority = prio;
     repo_root     = OpamRepositoryPath.create t.root name;
   } in
+  if OpamUrl.local_dir url <> None &&
+     OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo) = None &&
+     OpamUrl.local_dir (OpamRepositoryPath.Remote.compilers_url repo) = None &&
+     not (OpamConsole.confirm
+            "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
+             Is it really the directory of your repo ?"
+            (OpamUrl.to_string url))
+    then OpamStd.Sys.exit 1;
   OpamProcess.Job.run (OpamRepository.init repo);
   log "Adding %a" (slog OpamRepositoryBackend.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo t.repositories in
@@ -517,6 +509,7 @@ let add name kind address ~priority:prio =
   with
   | e ->
     cleanup t repo;
+    OpamStd.Exn.fatal e;
     OpamConsole.error_and_exit "Could not fetch repo: %s"
       (Printexc.to_string e)
 
@@ -532,16 +525,14 @@ let set_url name url =
   let t = OpamState.load_state ~save_cache:false "repository-set-url"
       OpamStateConfig.(!r.current_switch) in
   let repo = OpamState.find_repository t name in
-  let url, kind = parse_url url in
-  if repo.repo_kind <> kind then
+  if repo.repo_url.OpamUrl.backend <> url.OpamUrl.backend then
     (remove name;
-     add name kind url ~priority:(Some repo.repo_priority))
+     add name url ~priority:(Some repo.repo_priority))
   else
-  (* 1/ update the config file *)
   let config_f = OpamRepositoryPath.config repo in
   let config =
     let config = OpamFile.Repo_config.read config_f in
-    { config with repo_address = url } in
+    { config with repo_url = url } in
   OpamFile.Repo_config.write config_f config
 
 let list ~short =
@@ -557,8 +548,9 @@ let list ~short =
     let pretty_print r =
       OpamConsole.msg "%4d %-7s %10s     %s\n"
         r.repo_priority
-        (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
+        (Printf.sprintf "[%s]"
+           (OpamUrl.string_of_backend r.repo_url.OpamUrl.backend))
         (OpamRepositoryName.to_string r.repo_name)
-        (string_of_address r.repo_address) in
+        (OpamUrl.to_string r.repo_url) in
     let repos = OpamState.sorted_repositories t in
     List.iter pretty_print repos

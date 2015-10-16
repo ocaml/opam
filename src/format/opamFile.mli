@@ -182,7 +182,7 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
-  val extra_sources: t -> (address * string * basename option) list
+  val extra_sources: t -> (url * string * basename option) list
 
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
@@ -250,7 +250,7 @@ module OPAM: sig
   val with_opam_version: t -> opam_version -> t
 
   (** The package source repository address *)
-  val dev_repo: t -> pin_option option
+  val dev_repo: t -> url option
 
   (** construct as [name] *)
   val with_name: t -> name -> t
@@ -310,9 +310,9 @@ module OPAM: sig
 
   val with_flags: t -> package_flag list -> t
 
-  val with_dev_repo: t -> pin_option -> t
+  val with_dev_repo: t -> url -> t
 
-  val with_extra_sources: t -> (address * string * basename option) list -> t
+  val with_extra_sources: t -> (url * string * basename option) list -> t
 
   val with_extensions: t -> value OpamStd.String.Map.t -> t
 
@@ -381,13 +381,10 @@ module Comp: sig
   val version: t -> compiler_version
 
   (** Return the url of the compiler *)
-  val src: t -> address option
-
-  (** Return the url kind *)
-  val kind: t -> repository_kind
+  val src: t -> url option
 
   (** Return the list of patches to apply *)
-  val patches: t -> filename list
+  val patches: t -> url list
 
   (** Options to give to the "./configure" command *)
   val configure: t -> string list
@@ -408,8 +405,8 @@ module Comp: sig
 
   val tags: t -> string list
 
-  val with_src: t -> address option * repository_kind -> t
-  val with_patches: t -> filename list -> t
+  val with_src: t -> url option -> t
+  val with_patches: t -> url list -> t
   val with_configure: t -> string list -> t
   val with_make: t -> string list -> t
   val with_build: t -> command list -> t
@@ -531,15 +528,12 @@ module URL: sig
 
   include IO_FILE
 
-  val create: repository_kind -> ?mirrors:address list -> address -> t
+  val create: ?mirrors:url list -> url -> t
 
   (** URL address *)
-  val url: t -> address
+  val url: t -> url
 
-  val mirrors: t -> address list
-
-  (** Backend kind (could be curl/rsync/git/darcs/hg at the moment) *)
-  val kind: t -> repository_kind
+  val mirrors: t -> url list
 
   (** Archive checksum *)
   val checksum: t -> string option

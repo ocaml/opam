@@ -765,10 +765,9 @@ module Repo_configSyntax = struct
   type t = repository
 
   let empty = {
-    repo_name     = OpamRepositoryName.of_string "<none>";
-    repo_address  = ("<none>", None);
-    repo_root     = OpamFilename.raw_dir "<none>";
-    repo_kind     = `local;
+    repo_name = OpamRepositoryName.of_string "<none>";
+    repo_url = OpamUrl.empty;
+    repo_root = OpamFilename.raw_dir "<none>";
     repo_priority = 0;
   }
 
@@ -779,15 +778,16 @@ module Repo_configSyntax = struct
       (Pp.V.string -|
        Pp.of_module "repository-name" (module OpamRepositoryName));
     "address", Pp.ppacc
-      (fun r (repo_address,_kind) -> {r with repo_address})
-      (fun r -> r.repo_address, r.repo_kind)
+      (fun r repo_url -> {r with repo_url})
+      (fun r -> r.repo_url)
       Pp.V.url;
-    "kind", Pp.ppacc
-      (fun r repo_kind -> {r with repo_kind})
-      (fun r -> r.repo_kind)
+    "kind", Pp.ppacc_opt (* deprecated *)
+      (fun r backend ->
+         {r with repo_url = {r.repo_url with OpamUrl.backend}})
+      OpamStd.Option.none
       (Pp.V.string -|
        Pp.of_pair "repository-kind"
-         (repository_kind_of_string, string_of_repository_kind));
+         OpamUrl.(backend_of_string, string_of_backend));
     "priority", Pp.ppacc
       (fun r repo_priority -> {r with repo_priority})
       (fun r -> r.repo_priority)
@@ -805,7 +805,7 @@ module Repo_configSyntax = struct
     Pp.I.fields ~name:"repo-file" ~empty fields -|
     Pp.check ~name (fun r -> r.repo_root <> empty.repo_root)
       ~errmsg:"Missing 'root:'" -|
-    Pp.check ~name (fun r -> r.repo_address <> empty.repo_address)
+    Pp.check ~name (fun r -> r.repo_url <> OpamUrl.empty)
       ~errmsg:"Missing 'address:'" -|
     Pp.check ~name (fun r -> r.repo_name <> empty.repo_name)
       ~errmsg:"Missing 'name:'"
@@ -959,7 +959,7 @@ module OPAMSyntax = struct
     patches    : (basename * filter option) list;
     build_env  : (string * string * string) list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (address * string * basename option) list;
+    extra_sources: (url * string * basename option) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -967,7 +967,7 @@ module OPAMSyntax = struct
     depexts    : tags option;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
-    dev_repo   : pin_option option;
+    dev_repo   : url option;
 
     (* Package database details *)
     maintainer : string list;
@@ -1342,7 +1342,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list @@
          Pp.V.map_pair
            (Pp.V.map_option
-              Pp.V.address
+              Pp.V.url
               (Pp.opt @@ Pp.singleton -| pp_basename))
            (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest)
          -| Pp.pp
@@ -1370,8 +1370,9 @@ module OPAMSyntax = struct
       "dev-repo", no_cleanup Pp.ppacc_opt with_dev_repo dev_repo
         (Pp.V.url -|
          Pp.check ~errmsg:"Not a version-control or http url"
-           (function _, (`http | #version_control) -> true | _ -> false) -|
-         Pp.of_pair "pin-address" (pin_of_url, url_of_pin));
+           (fun url -> match url.OpamUrl.backend with
+              | `http | #OpamUrl.version_control -> true
+              | _ -> false));
 
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list Pp.V.string);
@@ -1521,7 +1522,7 @@ module OPAM = struct
       author     = maintainer;
       homepage   = [""];
       license    = [""];
-      dev_repo   = Some (Local (OpamFilename.Dir.of_string ""));
+      dev_repo   = Some (OpamUrl.of_string "git+https://");
       bug_reports= [""];
     }
 
@@ -1726,11 +1727,11 @@ module OPAM = struct
                    (List.map to_string (Set.elements undep_pkgs))
          (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
       cond 42 `Error
-        "The 'dev-repo' field doesn't specify an explicit VCS. You may use \
+        "The 'dev-repo' field doesn't use version control. You may use \
          URLs of the form \"git+https://\" or a \".hg\" or \".git\" suffix"
         (match t.dev_repo with
-         | None | Some (Git _ | Darcs _ | Hg _) -> false
-         | Some (Version _ | Local _ | Http _) -> true);
+         | Some { OpamUrl.backend = #OpamUrl.version_control; _ } -> false
+         | _ -> true);
       cond 43 `Error
         "Conjunction used in 'conflicts:' field. Only '|' is allowed"
         (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
@@ -1858,59 +1859,60 @@ module URLSyntax = struct
   let internal = "url-file"
 
   type t = {
-    url     : address;
-    mirrors : address list;
-    kind    : repository_kind;
+    url     : url;
+    mirrors : url list;
     checksum: string option;
   }
 
-  let create kind ?(mirrors=[]) url =
+  let create ?(mirrors=[]) url =
     {
-      url; mirrors; kind; checksum = None;
+      url; mirrors; checksum = None;
     }
 
-  let empty_url = "", None
-
   let empty = {
-    url     = empty_url;
+    url     = OpamUrl.empty;
     mirrors = [];
-    kind    = `local;
     checksum= None;
   }
 
   let url t = t.url
   let mirrors t = t.mirrors
-  let kind t = t.kind
   let checksum t = t.checksum
 
-  let with_url t (url,kind) = { t with url; kind }
+  let with_url t url = { t with url }
   let with_mirrors t mirrors = { t with mirrors }
   let with_checksum t checksum = { t with checksum = Some checksum }
 
   let fields =
-    let with_url ?kind () t (url,autokind) =
-      if t.url <> empty_url then OpamFormat.bad_format "Too many URLS"
-      else with_url t (url, OpamStd.Option.default autokind kind)
-    and url t = (t.url,t.kind) in
-    let none _ = None in
+    let with_url t url =
+      if t.url <> OpamUrl.empty then OpamFormat.bad_format "Too many URLS"
+      else with_url t url
+    in
     [
-      "archive", Pp.ppacc_opt (with_url ()) none Pp.V.url;
-      "src", Pp.ppacc (with_url ()) url Pp.V.url;
-      "http", Pp.ppacc_opt (with_url ~kind:`http ()) none Pp.V.url;
-      "git", Pp.ppacc_opt (with_url ~kind:`git ()) none Pp.V.url;
-      "darcs", Pp.ppacc_opt (with_url ~kind:`darcs ()) none Pp.V.url;
-      "hg", Pp.ppacc_opt (with_url ~kind:`hg ()) none Pp.V.url;
-      "local", Pp.ppacc_opt (with_url ~kind:`local ()) none Pp.V.url;
+      "src", Pp.ppacc with_url url
+        Pp.V.url;
+      "archive", Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "http", Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "git",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `git);
+      "darcs",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `darcs);
+      "hg",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `hg);
+      "local",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `rsync);
       "checksum", Pp.ppacc_opt with_checksum checksum
         (Pp.V.string -| Pp.check ~name:"checksum" OpamFilename.valid_digest);
-      "mirrors", Pp.ppacc with_mirrors mirrors (Pp.V.map_list Pp.V.address);
+      "mirrors", Pp.ppacc with_mirrors mirrors (Pp.V.map_list Pp.V.url);
     ]
 
   let pp =
     let name = internal in
     Pp.I.check_fields ~name fields -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.check ~name (fun t -> t.url <> empty_url) ~errmsg:"Missing URL"
+    Pp.check ~name (fun t -> t.url <> OpamUrl.empty) ~errmsg:"Missing URL"
 
   let of_syntax s =
     let pos = pos_file (OpamFilename.of_string s.file_name) in
@@ -2093,9 +2095,8 @@ module CompSyntax = struct
     name         : compiler ;
     version      : compiler_version ;
     preinstalled : bool;
-    src          : address option ;
-    kind         : repository_kind ;
-    patches      : filename list ;
+    src          : url option ;
+    patches      : url list ;
     configure    : string list ;
     make         : string list ;
     build        : command list ;
@@ -2109,7 +2110,6 @@ module CompSyntax = struct
     name         = OpamCompiler.of_string "<none>";
     version      = OpamCompiler.Version.of_string "<none>";
     src          = None;
-    kind         = `local;
     preinstalled = false;
     patches   = [];
     configure = [];
@@ -2132,7 +2132,6 @@ module CompSyntax = struct
   let make t = t.make
   let build t = t.build
   let src t = t.src
-  let kind t = t.kind
   let opam_version t = t.opam_version
 
   let packages t = t.packages
@@ -2143,7 +2142,7 @@ module CompSyntax = struct
   let with_opam_version t opam_version = {t with opam_version}
   let with_name t name = {t with name}
   let with_version t version = {t with version}
-  let with_src t (src,kind) = { t with src; kind }
+  let with_src t src = { t with src }
   let with_patches t patches = {t with patches}
   let with_configure t configure = {t with configure}
   let with_make t make = {t with make}
@@ -2154,12 +2153,9 @@ module CompSyntax = struct
   let with_tags t tags = {t with tags}
 
   let fields =
-    let with_src ?kind () t (url,autokind) =
+    let with_src t url =
       if t.src <> None then OpamFormat.bad_format "Too many URLS"
-      else with_src t (Some url, OpamStd.Option.default autokind kind)
-    and src t = match t.src with
-      | Some src -> Some (src, t.kind)
-      | None -> None
+      else with_src t (Some url)
     in
     [
       "opam-version", Pp.ppacc with_opam_version opam_version
@@ -2170,9 +2166,7 @@ module CompSyntax = struct
         (Pp.V.string -| Pp.of_module "version" (module OpamCompiler.Version));
 
       "patches", Pp.ppacc with_patches patches
-        (Pp.V.map_list @@
-         Pp.V.string -|
-         Pp.pp (fun ~pos:_ -> OpamFilename.raw) OpamFilename.to_string);
+        (Pp.V.map_list @@ Pp.V.url);
 
       "configure", Pp.ppacc with_configure configure
         (Pp.V.map_list Pp.V.string);
@@ -2189,20 +2183,20 @@ module CompSyntax = struct
         Pp.V.bool;
       "tags", Pp.ppacc with_tags tags
         (Pp.V.map_list Pp.V.string);
-      "src", Pp.ppacc_opt (with_src ()) src
+      "src", Pp.ppacc_opt with_src src
         Pp.V.url;
-      "http", Pp.ppacc_opt (with_src ~kind:`http ()) (fun _ -> None)
-        Pp.V.url;
-      "archive", Pp.ppacc_opt (with_src ~kind:`http ()) (fun _ -> None)
-        Pp.V.url;
-      "git", Pp.ppacc_opt (with_src ~kind:`git ()) (fun _ -> None)
-        Pp.V.url;
-      "darcs", Pp.ppacc_opt (with_src ~kind:`darcs ()) (fun _ -> None)
-        Pp.V.url;
-      "hg", Pp.ppacc_opt (with_src ~kind:`hg ()) (fun _ -> None)
-        Pp.V.url;
-      "local", Pp.ppacc_opt (with_src ~kind:`local ()) (fun _ -> None)
-        Pp.V.url;
+      "http", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "archive", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "git", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `git);
+      "darcs", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `darcs);
+      "hg", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `hg);
+      "local", Pp.ppacc_opt with_src OpamStd.Option.none
+        (Pp.V.url_with_backend `rsync);
     ]
 
   let pp =

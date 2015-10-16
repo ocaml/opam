@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamStd.Op
 open OpamFilename.Op
 open OpamProcess.Job.Op
@@ -26,12 +25,14 @@ let slog = OpamConsole.slog
 
 let find_backend_by_kind = function
   | `http -> (module OpamHTTP.B: OpamRepositoryBackend.S)
-  | `local -> (module OpamLocal.B: OpamRepositoryBackend.S)
+  | `rsync -> (module OpamLocal.B: OpamRepositoryBackend.S)
   | `git -> (module OpamGit.B: OpamRepositoryBackend.S)
   | `hg -> (module OpamHg.B: OpamRepositoryBackend.S)
   | `darcs -> (module OpamDarcs.B: OpamRepositoryBackend.S)
 
-let find_backend r = find_backend_by_kind r.repo_kind
+let url_backend url = find_backend_by_kind url.OpamUrl.backend
+
+let find_backend r = find_backend_by_kind r.repo_url.OpamUrl.backend
 
 (* initialize the current directory *)
 let init repo =
@@ -45,7 +46,7 @@ let init repo =
   OpamFilename.mkdir (OpamRepositoryPath.compilers_dir repo);
   Done ()
 
-let pull_url kind package local_dirname checksum remote_url =
+let pull_url package local_dirname checksum remote_url =
   if OpamRepositoryConfig.(!r.force_checksums = Some true) && checksum = None
   then
     OpamConsole.error_and_exit
@@ -55,7 +56,7 @@ let pull_url kind package local_dirname checksum remote_url =
        passing the `--require-checksums` command line option."
       (OpamPackage.to_string package);
   let pull url =
-    let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
+    let module B = (val url_backend url: OpamRepositoryBackend.S) in
     B.pull_url package local_dirname checksum url in
   let rec attempt = function
     | [] -> assert false
@@ -70,12 +71,12 @@ let pull_url kind package local_dirname checksum remote_url =
   attempt remote_url
 
 let revision repo =
-  let kind = repo.repo_kind in
+  let kind = repo.repo_url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
   B.revision repo
 
-let pull_url_and_fix_digest kind package dirname checksum file url =
-  pull_url kind package dirname None url @@+ function
+let pull_url_and_fix_digest package dirname checksum file url =
+  pull_url package dirname None url @@+ function
   | Not_available _
   | Up_to_date _
   | Result (D _) as r -> Done r
@@ -91,9 +92,12 @@ let pull_url_and_fix_digest kind package dirname checksum file url =
     Done r
 
 let pull_archive repo nv =
-  let module B = (val find_backend_by_kind repo.repo_kind: OpamRepositoryBackend.S) in
-  let filename = OpamRepositoryPath.remote_archive repo nv in
-  B.pull_archive repo filename
+  let module B =
+    (val find_backend_by_kind repo.repo_url.OpamUrl.backend:
+      OpamRepositoryBackend.S)
+  in
+  let url = OpamRepositoryPath.Remote.archive repo nv in
+  B.pull_archive repo url
 
 let check_version repo =
   let repo_version =
@@ -159,7 +163,7 @@ let url_checksum url =
   else match OpamFile.URL.checksum u with
     | Some cksum -> [cksum]
     | None ->
-      [Digest.string (string_of_address (OpamFile.URL.url u))]
+      [Digest.string (OpamUrl.to_string (OpamFile.URL.url u))]
 
 let package_files repo prefix nv ~archive =
   let opam = OpamRepositoryPath.opam repo prefix nv in
@@ -243,18 +247,15 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
-      let kind = OpamFile.URL.kind url in
-      log "downloading %a:%a"
-        (slog (string_of_address ~kind)) remote_url
-        (slog string_of_repository_kind) kind;
+      log "downloading %a" (slog OpamUrl.to_string) remote_url;
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;
       match checksum with
       | Some c when gener_digest ->
-        pull_url_and_fix_digest kind nv download_dir c url_file mirrors
+        pull_url_and_fix_digest nv download_dir c url_file mirrors
         @@+ fun f -> Done (Some f)
       | _ ->
-        pull_url kind nv download_dir checksum mirrors
+        pull_url nv download_dir checksum mirrors
         @@+ fun f -> Done (Some f)
     ) else
       Done None

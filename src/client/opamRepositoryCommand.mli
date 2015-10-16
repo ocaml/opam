@@ -48,7 +48,7 @@ val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> t -> unit
 val list: short:bool -> unit
 
 (** Add a new repository. *)
-val add: repository_name -> repository_kind -> address -> priority:int option -> unit
+val add: repository_name -> url -> priority:int option -> unit
 
 (** Remove a repository. *)
 val remove: repository_name -> unit
@@ -57,4 +57,4 @@ val remove: repository_name -> unit
 val priority: repository_name -> priority:int -> unit
 
 (** Change the registered address of a repo *)
-val set_url: repository_name -> address -> unit
+val set_url: repository_name -> url -> unit

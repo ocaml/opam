@@ -175,24 +175,18 @@ type repository_name = OpamRepositoryName.t
 (** Maps of repository names *)
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-type version_control = [ `git | `darcs | `hg ]
-
-type url_kind = [ `http | `local | version_control ]
-
-type repository_kind = url_kind
-
-(** Repository address *)
-type address = string * string option
-
-(** Repository root *)
-type repository_root = dirname
+type url = OpamUrl.t (*= {
+  transport: string;
+  path: string;
+  hash: string option;
+  backend: OpamUrl.backend;
+} *)
 
 (** Repositories *)
 type repository = {
-  repo_root    : repository_root;
+  repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_name    : repository_name;
-  repo_kind    : repository_kind;
-  repo_address : address;
+  repo_url     : url;
   repo_priority: int;
 }
 
@@ -298,24 +292,13 @@ type universe = {
 
 (** {2 Command line arguments} *)
 
-(** Upload arguments *)
-type upload = {
-  upl_opam   : filename;
-  upl_descr  : filename;
-  upl_archive: filename;
-}
-
 (** Pinned packages options *)
 type pin_option =
   | Version of version
-  | Local of dirname
-  | Git of address
-  | Darcs of address
-  | Hg of address
-  | Http of address
+  | Source of url
 
 (** Pin kind *)
-type pin_kind = [ `version | url_kind ]
+type pin_kind = [ `version | OpamUrl.backend ]
 
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]

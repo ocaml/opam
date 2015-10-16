@@ -36,52 +36,24 @@ let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d
   | F f -> OpamFilename.to_string f
 
-let guess_version_control dir =
-  let open OpamFilename in
-  let open Op in
-  if exists_dir (dir / ".git") then Some`git else
-  if exists_dir (dir / ".hg") then Some `hg else
-  if exists_dir (dir / "_darcs") then Some `darcs else
-    None
 
+
+(*
 let url_kind_of_string = function
   | "http" | "https" | "ftp" | "wget" | "curl" -> `http
-  | "file" -> `local
+  | "file" -> `rsync
   | "git" -> `git
   | "darcs" -> `darcs
   | "hg" -> `hg
-  | "local" | "rsync" | "ssh" | "scp" | "sftp" -> `local
+  | "local" | "rsync" | "ssh" | "scp" | "sftp" -> `rsync
   | p -> failwith (Printf.sprintf "Unsupported protocol %s" p)
 
 let string_of_url_kind = function
   | `http  -> "http"
-  | `local -> "file"
+  | `rsync -> "file"
   | `git   -> "git"
   | `darcs -> "darcs"
   | `hg    -> "hg"
-
-let split_url =
-  let re =
-    let (@@) f x = f x in
-    Re.(compile @@ seq [
-        opt @@ seq [
-          opt @@ seq [group @@ rep1 @@ diff any (set "+:"); char '+'];
-          group @@ rep1 @@ diff any (char ':');
-          str "://"
-        ];
-        group @@ seq [
-          non_greedy @@ rep1 any;
-          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (char '.')]
-        ];
-        eos;
-      ])
-  in
-  fun u ->
-    match Re.get_all (Re.exec re u) with
-    | [|_;vc;transport;path;suffix|] ->
-      let opt = function "" -> None | s -> Some s in
-      opt vc, opt transport, path, opt suffix
-    | _ -> assert false
 
 let unsplit_url (vc, transport, path, _suffix) =
   String.concat "" [
@@ -113,11 +85,11 @@ let string_of_address ?kind (url,hash) =
 
 let path_of_address (url,_) =
   let _vc, transport, path, suffix = split_url url in
-  let transport =
-    match transport with
-    | Some ("https"|"http"|"ftp" as t) -> Some t
-    | _ -> None
-  in
+  (* let transport = *)
+  (*   match transport with *)
+  (*   | Some ("https"|"http"|"ftp" as t) -> Some t *)
+  (*   | _ -> None *)
+  (* in *)
   unsplit_url (None, transport, path, suffix)
 
 let address_of_string str =
@@ -129,8 +101,9 @@ let address_of_string str =
   let vc, transport, path, suffix = split_url addr in
   let path =
     match transport with
-    | Some tr when url_kind_of_string tr = `local -> OpamSystem.real_path path
-    | _ -> path
+    | Some tr when url_kind_of_string tr = `rsync -> OpamSystem.real_path path
+    | Some _ -> path
+    | None -> OpamSystem.real_path path
   in
   unsplit_url (vc, transport, path, suffix), hash
 
@@ -138,24 +111,36 @@ let parse_url (s,c) =
   match split_url s with
   | Some vc, Some transport, path, _ ->
     (Printf.sprintf "%s://%s" transport path, c), url_kind_of_string vc
-  | None, Some "git", _, _ ->
-    (s,c), `git
+  | None, Some ("git"|"hg"|"darcs" as t), path, _ ->
+    (* VC without specified transport *)
+    let kind = url_kind_of_string t in
+    (if Re.(execp (compile @@ seq [rep1 any; str "://"])) path then
+       (path, c), kind
+     else if
+       Re.(execp (compile @@ seq [repn (diff any (char '/')) 2 None; char ':']))
+         path
+     then
+       (* Assume ssh for "host:..." (like git does) *)
+       ("ssh://" ^ path, c), kind
+     else
+       ("file://" ^ OpamSystem.real_path path, c), `rsync)
   | None, _, _, Some ("git"|"hg"|"darcs" as suffix) ->
     (s,c), url_kind_of_string suffix
   | None, Some("file"|"rsync"|"ssh"|"scp"|"sftp"), path, _ ->
-    (path, c), `local (* strip the leading xx:// *)
+    (path, c), `rsync (* strip the leading xx:// *)
   | None, Some t, path, _ ->
     let kind = url_kind_of_string t in
     (match split_url path with
      | _, Some _, _, _ -> (path,c), kind
      | _, None, _, _ -> ("http://" ^ path, c), kind) (* assume http transport *)
   | None, None, _, _ ->
-    (s, c), `local
+    (s, c), `rsync
   | Some _, None, _, _ -> assert false
 
 let string_of_repository_kind = string_of_url_kind
 
 let repository_kind_of_string = url_kind_of_string
+*)
 
 let string_of_shell = function
   | `fish -> "fish"
@@ -184,90 +169,46 @@ let string_of_pos (file,line,col) =
 
 (* Command line arguments *)
 
-let string_of_upload u =
-  Printf.sprintf "opam=%s descr=%s archive=%s"
-    (OpamFilename.to_string u.upl_opam)
-    (OpamFilename.to_string u.upl_descr)
-    (OpamFilename.to_string u.upl_archive)
-
-let repository_kind_of_pin_kind = function
+let url_backend_of_pin_kind = function
   | `version -> None
-  | (`http|`git|`darcs|`hg|`local as k) -> Some k
+  | #OpamUrl.backend as k -> Some k
 
-let pin_of_url (url,kind) = match kind with
-  | `http -> Http url
-  | `git -> Git url
-  | `darcs -> Darcs url
-  | `hg -> Hg url
-  | `local -> Local (OpamFilename.Dir.of_string (fst url))
-
-let url_of_pin = function
-  | Http u -> u, `http
-  | Git u -> u, `git
-  | Darcs u -> u, `darcs
-  | Hg u -> u, `hg
-  | Local d -> (OpamFilename.Dir.to_string d, None), `local
-  | Version _ -> failwith "Not a source pin"
+let looks_like_version_re =
+  Re.(compile @@
+      seq [digit; rep @@ diff any (set "/\\"); eos])
 
 let pin_option_of_string ?kind ?(guess=false) s =
   match kind with
-  | Some `version -> Version (OpamPackage.Version.of_string s)
-  | None | Some (`http|`git|`hg|`darcs|`local) ->
-    if kind = None &&
-       not (String.contains s (Filename.dir_sep.[0])) &&
-       String.length s > 0 && '0' <= s.[0] && s.[0] <= '9' then
-      Version (OpamPackage.Version.of_string s)
-    else
-    let s, k = parse_url (address_of_string s) in
-    match kind, k with
-    | Some `version, _ | None, `version -> assert false
-    | Some `http, _ | None, `http -> Http s
-    | Some `git, _ | None, `git -> Git s
-    | Some `hg, _ | None, `hg   -> Hg s
-    | Some `darcs, _ | None, `darcs -> Darcs s
-    | Some `local, _ ->
-      Local (OpamFilename.Dir.of_string (fst s))
-    | None, `local ->
-      let dir = OpamFilename.Dir.of_string (fst s) in
-      if guess then match guess_version_control dir with
-        | Some vc -> pin_of_url (s, vc)
-        | None -> Local dir
-      else Local dir
+  | Some `version ->
+    Version (OpamPackage.Version.of_string s)
+  | None when Re.execp looks_like_version_re s ->
+    Version (OpamPackage.Version.of_string s)
+  | Some (#OpamUrl.backend as backend) ->
+    Source (OpamUrl.parse ~backend s)
+  | None ->
+    let backend =
+      if guess then OpamUrl.guess_version_control s
+      else None
+    in
+    Source (OpamUrl.parse ?backend s)
 
 let string_of_pin_kind = function
   | `version -> "version"
-  | `git     -> "git"
-  | `darcs   -> "darcs"
-  | `hg      -> "hg"
-  | `http    -> "http"
-  | `local   -> "path"
+  | `rsync   -> "path"
+  | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
 
 let pin_kind_of_string = function
   | "version" -> `version
-  | "http"    -> `http
-  | "git"     -> `git
-  | "darcs"   -> `darcs
-  | "hg"      -> `hg
-  | "rsync"
-  | "local"
-  | "path"    -> `local
-  | s -> OpamConsole.error_and_exit "%s is not a valid kind of pinning." s
+  | "path"    -> `rsync
+  | s -> OpamUrl.backend_of_string s
 
 let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
-  | Http p
-  | Git p
-  | Darcs p
-  | Hg p      -> string_of_address p
-  | Local p   -> OpamFilename.Dir.to_string p
+  | Source url -> OpamUrl.to_string url
 
 let kind_of_pin_option = function
   | Version _ -> `version
-  | Http _    -> `http
-  | Git _     -> `git
-  | Darcs _   -> `darcs
-  | Hg _      -> `hg
-  | Local _   -> `local
+  | Source url -> (url.OpamUrl.backend :> pin_kind)
 
 let string_of_relop = OpamFormula.string_of_relop
 let relop_of_string = OpamFormula.relop_of_string

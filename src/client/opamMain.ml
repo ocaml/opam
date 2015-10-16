@@ -135,23 +135,22 @@ let init =
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
-  let repo_address =
+  let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
-    Arg.(value & pos ~rev:true 0 address
-           OpamRepositoryBackend.default_address & doc) in
+    Arg.(value & pos ~rev:true 0 string
+           (OpamUrl.to_string OpamRepositoryBackend.default_url) & doc) in
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
-      build_options repo_kind repo_name repo_address compiler
+      build_options repo_kind repo_name repo_url compiler
       no_setup auto_setup shell dot_profile_o =
     apply_global_options global_options;
     apply_build_options build_options;
     let repo_priority = 0 in
-    let repo_address, repo_kind2 = parse_url repo_address in
-    let repo_kind = OpamStd.Option.default repo_kind2 repo_kind in
+    let repo_url = OpamUrl.parse ?backend:repo_kind repo_url in
     let repository = {
       repo_root = OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir)) repo_name;
-      repo_name; repo_kind; repo_address; repo_priority } in
+      repo_name; repo_url; repo_priority } in
     let update_config =
       if no_setup then `no
       else if auto_setup then `yes
@@ -159,7 +158,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     Client.init repository compiler shell dot_profile update_config in
   Term.(pure init
-    $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler
+    $global_options $build_options $repo_kind_flag $repo_name $repo_url $compiler
     $no_setup $auto_setup $shell_opt $dot_profile_flag),
   term_info "init" ~doc ~man
 
@@ -545,14 +544,16 @@ let config =
         print "repositories" "%s"
           OpamRepositoryName.Map.(
             let nhttp, nlocal, nvcs =
-              fold (fun _ {repo_kind=k; _} (nhttp, nlocal, nvcs) -> match k with
+              fold (fun _ {repo_url = {OpamUrl.backend = k; _}; _}
+                     (nhttp, nlocal, nvcs) ->
+                  match k with
                   | `http -> nhttp+1, nlocal, nvcs
-                  | `local -> nhttp, nlocal+1, nvcs
+                  | `rsync -> nhttp, nlocal+1, nvcs
                   | _ -> nhttp, nlocal, nvcs+1)
                 state.repositories (0,0,0) in
             let has_default =
-              exists (fun _ {repo_address; _} ->
-                  repo_address = OpamRepositoryBackend.default_address)
+              exists (fun _ {repo_url; _} ->
+                  repo_url = OpamRepositoryBackend.default_url)
                 state.repositories in
             String.concat ", "
               (Printf.sprintf "%d%s (http)" nhttp
@@ -566,8 +567,9 @@ let config =
             let nver, nlocal, nvc =
               fold (fun _ p (nver, nlocal, nvc) -> match p with
                   | Version _ -> nver+1, nlocal, nvc
-                  | Local _ -> nver, nlocal+1, nvc
-                  | _ -> nver, nlocal, nvc+1)
+                  | Source {OpamUrl.backend = #OpamUrl.version_control; _} ->
+                    nver, nlocal, nvc+1
+                  | Source _ -> nver, nlocal+1, nvc)
                 state.pinned (0,0,0) in
             String.concat ", "
               (nprint "version" nver @
@@ -796,12 +798,10 @@ let repository =
   let repository global_options command kind priority short params =
     apply_global_options global_options;
     match command, params with
-    | Some `add, [name;address] ->
+    | Some `add, [name;url] ->
       let name = OpamRepositoryName.of_string name in
-      let address = address_of_string address in
-      let address, kind2 = parse_url address in
-      let kind = OpamStd.Option.default kind2 kind in
-      `Ok (Client.REPOSITORY.add name kind address ~priority)
+      let url = OpamUrl.parse ?backend:kind url in
+      `Ok (Client.REPOSITORY.add name url ~priority)
     | (None | Some `list), [] ->
       `Ok (Client.REPOSITORY.list ~short)
     | Some `priority, [name; p] ->
@@ -810,9 +810,9 @@ let repository =
         try int_of_string p
         with Failure _ -> OpamConsole.error_and_exit "%s is not an integer." p in
       `Ok (Client.REPOSITORY.priority name ~priority)
-    | Some `set_url, [name; address] ->
+    | Some `set_url, [name; url] ->
       let name = OpamRepositoryName.of_string name in
-      let url = address_of_string address in
+      let url = OpamUrl.parse ?backend:kind url in
       `Ok (Client.REPOSITORY.set_url name url)
     | Some `remove, [name] ->
       let name = OpamRepositoryName.of_string name in
@@ -1006,7 +1006,7 @@ let pin ?(unpin_only=false) () =
   let kind =
     let main_kinds = [
       "version", `version;
-      "path"   , `local;
+      "path"   , `rsync;
       "http"   , `http;
       "git"    , `git;
       "darcs"  , `darcs;
@@ -1024,8 +1024,8 @@ let pin ?(unpin_only=false) () =
     in
     let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
     let kinds = main_kinds @ [
-        "local"  , `local;
-        "rsync"  , `local;
+        "local"  , `rsync;
+        "rsync"  , `rsync;
       ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
@@ -1170,27 +1170,16 @@ let source =
           "Version-controlled repo for %s unknown \
            (\"dev-repo\" field missing from metadata)"
           (OpamPackage.to_string nv)
-      | Some pin ->
-        let address = match pin with
-          | Git p | Darcs p | Hg p -> p
-          | _ ->
-            OpamConsole.error_and_exit "Bad \"dev_repo\" field %S for %s"
-              (string_of_pin_option pin) (OpamPackage.to_string nv)
-        in
-        let kind =
-          match repository_kind_of_pin_kind (kind_of_pin_option pin) with
-          | Some k -> k
-          | None -> assert false
-        in
+      | Some url ->
         mkdir dir;
         let text =
           OpamProcess.make_command_text (OpamPackage.name_to_string nv)
-            (string_of_repository_kind kind)
+            (OpamUrl.string_of_backend (url.OpamUrl.backend))
         in
         match
           OpamProcess.Job.run
             (OpamProcess.Job.with_text text
-               (OpamRepository.pull_url kind nv dir None [address]))
+               (OpamRepository.pull_url nv dir None [url]))
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ ->
@@ -1223,14 +1212,16 @@ let source =
     );
 
     if pin then
-      let kind =
+      let backend =
         if dev_repo then match OpamFile.OPAM.dev_repo opam with
-          | Some pin -> kind_of_pin_option pin
-          | None -> `local
-        else `local
+          | Some {OpamUrl.backend = #OpamUrl.version_control as kind; _} -> kind
+          | _ -> `rsync
+        else `rsync
       in
       let pin_option =
-        pin_option_of_string ~kind (OpamFilename.Dir.to_string dir) in
+        Source (OpamUrl.parse ~backend
+                  ("file://"^OpamFilename.Dir.to_string dir))
+      in
       Client.PIN.pin (OpamPackage.name nv) ~version:(OpamPackage.version nv)
         (Some pin_option)
   in

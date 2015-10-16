@@ -268,16 +268,12 @@ let is_pinned t n =
   OpamPackage.Name.Map.mem n t.pinned
 
 let locally_pinned_package t n =
-  let option = OpamPackage.Name.Map.find n t.pinned in
-  let path = string_of_pin_option option in
-  let kind = kind_of_pin_option option in
-  match repository_kind_of_pin_kind kind with
-  | None    -> OpamSystem.internal_error "locally pinned"
-  | Some kind -> (address_of_string path, kind)
+  match OpamPackage.Name.Map.find n t.pinned with
+  | Version _ -> OpamSystem.internal_error "locally pinned"
+  | Source url -> url
 
 let url_of_locally_pinned_package t n =
-  let path, kind = locally_pinned_package t n in
-  OpamFile.URL.create kind path
+  OpamFile.URL.create (locally_pinned_package t n)
 
 (* Returns the directory holding the original metadata of the package.
    This is a low-level function, you generally want to handle different
@@ -630,10 +626,7 @@ let keys map =
 let is_dev_package t nv =
   match url t nv with
   | None     -> false
-  | Some url ->
-    match OpamFile.URL.kind url with
-    | `http  -> false
-    | _      -> true
+  | Some url -> (OpamFile.URL.url url).OpamUrl.backend <> `http
 
 let dev_packages t =
   let global = global_dev_packages t in
@@ -883,7 +876,7 @@ let filter_env ?opam ?(local_variables=OpamVariable.Map.empty) t =
   resolve_variable t ?opam local_variables
 
 let redirect t repo =
-  if repo.repo_kind <> `http then None else
+  if repo.repo_url.OpamUrl.backend <> `http then None else
   let redirect =
     repo
     |> OpamRepositoryPath.repo
@@ -900,9 +893,9 @@ let redirect t repo =
   | (r,f) :: _ ->
     let config_f = OpamRepositoryPath.config repo in
     let config = OpamFile.Repo_config.read config_f in
-    let repo_address = address_of_string r in
-    if repo_address <> config.repo_address then (
-      let config = { config with repo_address } in
+    let repo_url = OpamUrl.of_string r in
+    if repo_url <> config.repo_url then (
+      let config = { config with repo_url } in
       OpamFile.Repo_config.write config_f config;
       Some (config, f)
     ) else
@@ -2584,55 +2577,47 @@ let install_compiler t ~quiet:_ switch compiler =
     then begin
 
       (* Install the compiler *)
-      let comp_src = match OpamFile.Comp.src comp with
+      let comp_url = match OpamFile.Comp.src comp with
         | Some f -> f
         | None   ->
           OpamConsole.error_and_exit
             "No source for compiler %s"
             (OpamCompiler.to_string compiler) in
       let build_dir = OpamPath.Switch.build_ocaml t.root switch in
-      let kind = OpamFile.Comp.kind comp in
       let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
       OpamConsole.header_msg "Installing compiler %s" comp_name;
-      if kind = `local
-      && Sys.file_exists (fst comp_src)
-      && Sys.is_directory (fst comp_src)
-      then
-        OpamFilename.link_dir
-          ~src:(OpamFilename.Dir.of_string (fst comp_src))
-          ~dst:build_dir
-      else (
-        OpamProcess.Job.run @@
-        OpamFilename.with_tmp_dir_job (fun download_dir ->
-            let fake_pkg =
-              match repository_and_prefix_of_compiler t compiler with
-              | None -> OpamPackage.of_string "compiler.get"
-              | Some (repo,_) ->
-                OpamPackage.of_string (OpamRepositoryName.to_string
-                                         repo.repo_name ^ ".comp")
-            in
-            let text =
-              OpamProcess.make_command_text ~color:`magenta
-                comp_name (string_of_repository_kind kind)
-            in
-            OpamProcess.Job.with_text text @@
-            OpamRepository.pull_url kind fake_pkg download_dir None [comp_src]
-            @@+ function
-            | Not_available u ->
-              OpamConsole.error_and_exit "%s is not available." u
-            | Up_to_date r | Result r ->
-              Done (OpamFilename.extract_generic_file r build_dir)
-          ));
+      (match comp_url.OpamUrl.backend, OpamUrl.local_dir comp_url with
+       | `rsync, Some dir -> OpamFilename.link_dir ~src:dir ~dst:build_dir
+       | _ ->
+         OpamProcess.Job.run @@
+         OpamFilename.with_tmp_dir_job (fun download_dir ->
+             let fake_pkg =
+               match repository_and_prefix_of_compiler t compiler with
+               | None -> OpamPackage.of_string "compiler.get"
+               | Some (repo,_) ->
+                 OpamPackage.of_string (OpamRepositoryName.to_string
+                                          repo.repo_name ^ ".comp")
+             in
+             let text =
+               OpamProcess.make_command_text ~color:`magenta
+                 comp_name (OpamUrl.string_of_backend comp_url.OpamUrl.backend)
+             in
+             OpamProcess.Job.with_text text @@
+             OpamRepository.pull_url fake_pkg download_dir None [comp_url]
+             @@+ function
+             | Not_available u ->
+               OpamConsole.error_and_exit "%s is not available." u
+             | Up_to_date r | Result r ->
+               Done (OpamFilename.extract_generic_file r build_dir)
+           ));
       let patches = OpamFile.Comp.patches comp in
-      let patch_command file =
-        let text = OpamProcess.make_command_text ~color:`magenta
-            comp_name
-            ~args:[OpamFilename.Base.to_string
-                     (OpamFilename.basename file)]
-            "download"
+      let patch_command url =
+        let text =
+          OpamProcess.make_command_text ~color:`magenta
+            comp_name ~args:[OpamUrl.basename url] "download"
         in
         OpamProcess.Job.with_text text @@
-        OpamDownload.download ~overwrite:true file build_dir
+        OpamDownload.download ~overwrite:true url build_dir
       in
       let patches =
         OpamParallel.map
@@ -2707,17 +2692,14 @@ let update_switch_config t switch =
 let fetch_dev_package url srcdir nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
-  let kind = OpamFile.URL.kind url in
   let checksum = OpamFile.URL.checksum url in
-  log "updating %a:%a"
-    (slog string_of_address) remote_url
-    (slog string_of_repository_kind) kind;
+  log "updating %a" (slog OpamUrl.to_string) remote_url;
   let text =
     OpamProcess.make_command_text
       (OpamPackage.Name.to_string (OpamPackage.name nv))
-      (string_of_repository_kind kind) in
+      (OpamUrl.string_of_backend remote_url.OpamUrl.backend) in
   OpamProcess.Job.with_text text @@
-  OpamRepository.pull_url kind nv srcdir checksum mirrors
+  OpamRepository.pull_url nv srcdir checksum mirrors
   @@| function
   | Not_available _ ->
     (* OpamConsole.error "Upstream %s of %s is unavailable" u *)
@@ -2873,7 +2855,7 @@ let update_pinned_package t ?fixed_version name =
       (OpamConsole.formatted_msg
          "[%s] Installing new package description from %s\n"
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-         (string_of_address (OpamFile.URL.url url));
+         (OpamUrl.to_string (OpamFile.URL.url url));
        OpamFilename.remove
          (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
        install_meta srcdir user_meta new_meta)
@@ -2881,7 +2863,7 @@ let update_pinned_package t ?fixed_version name =
       OpamConsole.formatted_msg
         "[%s] Conflicting update of the metadata from %s:\n%s"
         (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-        (string_of_address (OpamFile.URL.url url))
+        (OpamUrl.to_string (OpamFile.URL.url url))
         (OpamStd.Format.itemize diff_to_string (diff user_meta new_meta));
       OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
         (OpamFilename.Dir.to_string overlay)
@@ -2905,8 +2887,9 @@ let update_dev_package t nv =
   | None     -> Done false
   | Some url ->
     let srcdir = dev_package t nv in
-    if OpamFile.URL.kind url = `http then Done false else
-      fetch_dev_package url srcdir nv
+    if (OpamFile.URL.url url).OpamUrl.backend = `http
+    then Done false
+    else fetch_dev_package url srcdir nv
 
 let update_dev_packages t packages =
   log "update-dev-packages";
@@ -2989,14 +2972,13 @@ let download_upstream t nv dirname =
   | Some u ->
     let remote_url = OpamFile.URL.url u in
     let mirrors = remote_url :: OpamFile.URL.mirrors u in
-    let kind = OpamFile.URL.kind u in
     let checksum = OpamFile.URL.checksum u in
     let text =
       OpamProcess.make_command_text (OpamPackage.name_to_string nv)
-        (string_of_repository_kind kind)
+        (OpamUrl.string_of_backend remote_url.OpamUrl.backend)
     in
     OpamProcess.Job.with_text text @@
-    OpamRepository.pull_url kind nv dirname checksum mirrors
+    OpamRepository.pull_url nv dirname checksum mirrors
     @@| fun x -> Some x
 
 let check f =

@@ -42,7 +42,7 @@ val shell_opt: shell Term.t
 val dot_profile_flag: filename option Term.t
 
 (** --http/ --git/ --local *)
-val repo_kind_flag: repository_kind option Term.t
+val repo_kind_flag: OpamUrl.backend option Term.t
 
 (** --jobs *)
 val jobs_flag: int option Term.t
@@ -118,8 +118,8 @@ val apply_build_options: build_options -> unit
 (** Repository name converter *)
 val repository_name: repository_name Arg.converter
 
-(** Repository address converter *)
-val address: address Arg.converter
+(** URL converter *)
+val url: url Arg.converter
 
 (** Filename converter *)
 val filename: filename Arg.converter

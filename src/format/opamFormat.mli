@@ -238,9 +238,10 @@ module Pp : sig
       (value, 'a) t ->
       (value, 'b) t -> (value, 'a * 'b) t
 
-    val address : (value, address) t
+    val url : (value, url) t
 
-    val url : (value, address * url_kind) t
+    (** Specialised url parser when the backend is already known *)
+    val url_with_backend : OpamUrl.backend -> (value, url) t
 
     val compiler_version : (value, compiler_version) t
 
