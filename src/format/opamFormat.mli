@@ -18,31 +18,16 @@
 
 open OpamTypes
 
-(** The empty file *)
-val empty : file
-
-(** map a file *)
-val map: (string -> value -> (string * value) option) -> file -> file
-
-(** Get all the variable definitions from a list of items *)
-val variables : file_item list -> (string * value) list
-
-(** Get all the sections from a list of items *)
-val sections : file_item list -> (string * file_section) list
-
-(** Check whether a list of items contains only valid variable definitions. *)
-val is_valid : ?allow_extensions:bool -> file_item list -> string list -> bool
-
-(** Find all the invalid fields. If [allow_extensions] is specified and true,
-    fields starting with ["x-"] are not reported *)
-val invalid_fields :
-  ?allow_extensions:bool -> file_item list -> string list -> string list
-
 (** {2 Parsing functions} *)
+
+(** Format error reporting: position, possible backtrace list (since the
+    exception may be modified and re-raised), and message *)
+type bad_format = pos option * string list * string
 
 (** All the following parsing function raise [Bad_format] in case the
     input does not have the right format. *)
-exception Bad_format of pos option * string list * string
+exception Bad_format of bad_format
+exception Bad_format_list of bad_format list
 
 (** Raise [Bad_format]. *)
 val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
@@ -55,242 +40,364 @@ val add_pos: pos -> exn -> exn
 (** Get the position out of a value *)
 val value_pos: value -> pos
 
-(** Get the position of the first element out of a value list *)
-val values_pos: value list -> pos option
+(** Printers *)
 
-(** Parse a boolean *)
-val parse_bool : value -> bool
+module Print : sig
 
-(** Parse an integer *)
-val parse_int: value -> int
+  val value : value -> string
 
-(** Parse an ident *)
-val parse_ident : value -> string
+  val items: opamfile_item list -> string
 
-(** Parse a string *)
-val parse_string : value -> string
+  val opamfile: opamfile -> string
 
-(** Parse a list of 'things' *)
-val parse_list : (value -> 'a) -> value -> 'a list
+  val format_opamfile: Format.formatter -> opamfile -> unit
 
-(** Parse a list of list of 'things' *)
-val parse_list_list: (value -> 'a) -> value -> 'a list
+end
 
-(** Parse a group of 'things' *)
-val parse_group : (value -> 'a) -> value -> 'a list
+(** Normalised output for opam syntax files *)
 
-(** Parse a value and its option of 'things' *)
-val parse_option : (value -> 'a) -> (value list -> 'b) -> value -> 'a * 'b option
+module Normalise : sig
+  val escape_string : string -> string
+  val value : OpamTypes.value -> string
+  val item : OpamTypes.opamfile_item -> string
+  val item_order : OpamTypes.opamfile_item -> OpamTypes.opamfile_item -> int
+  val items : OpamTypes.opamfile_item list -> string
+end
 
-(** Parse a value and a single optional value *)
-val parse_single_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b option
+(** Structures for bidirectional parsing/printing, combiners and converters *)
 
-(** Parse a string with an optional argument *)
-val parse_string_option : (value list -> 'a) -> value -> string * 'a option
+module Pp : sig
 
-(** Parse a list of strings *)
-val parse_string_list : value -> string list
+  (** The type of bidirectional parsers from ['a] to ['b]. We abuse the terms
+      and describe going from ['a] to ['b] as "parsing", and going from ['b] to
+      ['a] as "printing". Parsing is generally error-prone, while printing is
+      not expected to fail, so the handling isn't really symmetrical.
 
-(** Parse a single string *)
-val parse_single_string: value list -> string
+      [parse (print x)] should always be the identity, while no guarantee is
+      given regarding [print (parse x)] *)
+  type ('a, 'b) t
 
-(** Parse a pair of strings *)
-val parse_pair: (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b
+  (** Base constructor for Pp.t, from a parser function and a printer function.
+      [name_constr] is used to construct the resulting name when on the left of
+      a pipe. Names are for tracing errors. *)
+  val pp :
+    ?name:string -> ?name_constr:(string -> string) ->
+    (pos:pos -> 'a -> 'b) ->
+    ('b -> 'a) ->
+    ('a, 'b) t
 
-(** Try to parse the value using function from the list. All the
-    parsing functions are tried until one succeeds. The first argument
-    is a debug message. *)
-val parse_or: (string * (value -> 'a)) list -> value -> 'a
+  (** Constructor fof Pp.t from a name and a pair *)
+  val of_pair :
+    string ->
+    ('a -> 'b) * ('b -> 'a) ->
+    ('a, 'b) t
 
-(** {2 Creation functions} *)
+  (** Base call for parsing with a pp *)
+  val parse : ('a, 'b) t -> pos:pos -> 'a -> 'b
 
-(** Create a boolean *)
-val make_bool : bool -> value
+  (** Base call for printing with a pp *)
+  val print : ('a, 'b) t -> 'b -> 'a
 
-(** Create an integer *)
-val make_int: int -> value
+  (** Error handling *)
 
-(** Create an ident *)
-val make_ident : string -> value
+  (** Raises an exception handled by parser calls *)
+  val unexpected : ?pos:pos -> unit -> 'a
 
-(** Create a string *)
-val make_string : string -> value
+  (** Warns in debug, fails with strict_mode or when [strict] is set to true *)
+  val warn :
+    ?pos:pos -> ?strict:bool -> ?exn:exn ->
+    ('a, unit, string, unit) format4 -> 'a
 
-(** Create a list of 'things' *)
-val make_list : ('a -> value) -> 'a list -> value
+  (** Various pp constructors *)
 
-(** Create a list of strings *)
-val make_string_list: string list -> value
+  module Op : sig
 
-(** Create a group of 'things' *)
-val make_group : ('a -> value) -> 'a list -> value
+    (** Piping pps together: the left-hand pp is called first when parsing, last
+        when printing *)
+    val ( -| ) : ('a, 'b) t -> ('b, 'c) t -> ('a, 'c) t
 
-(** Create a value and its optional arguments *)
-val make_option : ('a -> value) -> ('b -> value list) -> ('a * 'b option) -> value
+    (** Combinator to parse lists to different types using nested pairs *)
+    val ( ^+ ) : ('a, 'b) t -> ('a list, 'c) t -> ('a list, 'b * 'c) t
 
-(** Create a pair *)
-val make_pair: ('a -> value) -> ('b -> value) -> ('a * 'b) -> value
+  end
 
-(** Create a pair of strings *)
-val make_string_pair: string * string -> value
+  val identity : ('a, 'a) t
 
-(** Create a file section *)
-val make_section: file_section -> file_item
+  (** Always parses to [None] *)
+  val ignore : ('a, 'b option) t
 
-(** Create a variable *)
-val make_variable: (string * value) -> file_item
+  (** Identity pp, unless the check fails. The check is turned into an assertion
+      when printing *)
+  val check : ?name:string -> ?errmsg:string -> ('a -> bool) -> ('a, 'a) t
 
-(** {2 Printing functions} *)
+  val map_pair :
+    ?name:string ->
+    ?posf1:('a -> pos) ->
+    ?posf2:('b -> pos) ->
+    ('a, 'c) t -> ('b, 'd) t -> ('a * 'b, 'c * 'd) t
 
-(** Print a value *)
-val string_of_value : value -> string
+  val map_list :
+    ?name:string ->
+    ?posf:('a -> pos) -> ('a, 'b) t -> ('a list, 'b list) t
 
-(** Print a list of values *)
-val string_of_values : value list -> string
+  val map_option : ?name:string -> ('a, 'b) t -> ('a option, 'b option) t
 
-(** Print a file *)
-val string_of_file: simplify:bool -> file -> string
+  (** Parsing fails on non-singleton lists *)
+  val singleton : ('a list, 'a) t
 
-(** {2 Finding functions} *)
+  (** Use for the rightmost element to close a [^+] sequence, e.g.
+      [pp1 ^+ pp2 ^+ last -| pp3] *)
+  val last : ('a list, 'a) t
 
-(** Get the value of a field *)
-val assoc : file_item list -> string -> (value -> 'a) -> 'a
 
-(** Get the value of a field. If the field does not exist, return
-    None *)
-val assoc_option : file_item list -> string -> (value -> 'a) -> 'a option
+  module type STR = sig
+    type t
+    val of_string : string -> t
+    val to_string : t -> string
+  end
 
-(** Get the value of a field. If the variable does not exist, return a
-    default value *)
-val assoc_default : 'a -> file_item list -> string -> (value -> 'a) -> 'a
+  (** Generates a string pp from a module with of/to string functions *)
+  val of_module :
+    string -> (module STR with type t = 'a) -> (string, 'a) t
 
-(** Get the value associated to a variable. If the variable does not
-    exists, return [] *)
-val assoc_list : file_item list -> string -> (value -> 'a list) -> 'a list
+  (** Parses to None on the empty list. Often combined with singleton
+      ([opt -| singleton]) *)
+  val opt : ('a list, 'b) t -> ('a list, 'b option) t
 
-(** Get the string list associated to a variable. If the variable does
-    not exist, return [] *)
-val assoc_string_list : file_item list -> string -> string list
+  val default : 'a -> ('a option, 'a) t
 
-(** Get one section of a certain kind *)
-val get_section_by_kind : file_item list -> string -> file_section
 
-(** Get all the sections of a certain kind *)
-val get_all_section_by_kind : file_item list -> string -> file_section list
+  (** low-level Pps for the Lines parser ([string list list]) *)
 
-(** Get sections *)
-val assoc_sections: file_item list -> string -> (file_section -> 'a) -> 'a list
+  type lines = string list list
 
-(** {2 Formula} *)
+  (** Provided an empty element, addition and fold operations with signatures as
+      per Set.S, and a pp from lines to elements, returns a pp parsing from
+      lines *)
+  val lines_set:
+    empty:'set ->
+    add:('elt -> 'set -> 'set) ->
+    fold:(('elt -> lines -> lines) -> 'set -> lines -> lines) ->
+    (string list, 'elt) t ->
+    (lines, 'set) t
 
-(** This section is dedicated to the parsing and creatin of dependency
-    and conflict formaulas. It's maybe easier to do that directly in
-    the parser ... *)
+  (** Provided an empty element, addition and fold operations with signatures as
+      per Map.S, and a pp from lines to key, value pairs, returns a pp parsing
+      from lines *)
+  val lines_map :
+    empty:'map ->
+    add:('k -> 'v -> 'map -> 'map) ->
+    fold:(('k -> 'v -> lines -> lines) -> 'map -> lines -> lines) ->
+    (string list, 'k * 'v) t ->
+    (lines, 'map) t
 
-open OpamTypes
+  (** Pps  for the type [value], used by opam-syntax files ([opamfile]) *)
 
-val parse_package_name : ?expected:name -> value -> name
+  module V : sig
+    (** These base converters raise [Unexpected] when not run on the right input
+        (which is then converted to [Bad_format] by the parser. *)
 
-val parse_package_version : ?expected:version -> value -> version
+    val bool : (value, bool) t
+    val int : (value, int) t
 
-(** Parser for version constraints in formulas *)
-val parse_constraints: value list -> OpamFormula.version_formula
+    (** positive or null integer *)
+    val pos_int : (value, int) t
 
-(** Parser for version constraints in formula with dependency flags *)
-val parse_ext_constraints:
-  value list -> package_dep_flag list * OpamFormula.version_formula
+    val ident : (value, string) t
+    val string : (value, string) t
 
-(** Builder for version constraints in formulas *)
-val make_constraints: OpamFormula.version_formula -> value list
+    (** Trimmed string *)
+    val string_tr : (value, string) t
 
-(** Builder for version constraints in formula with dependency flags *)
-val make_ext_constraints:
-  package_dep_flag list * OpamFormula.version_formula -> value list
+    (** Command arguments, i.e. strings or idents *)
+    val simple_arg : (value, simple_arg) t
 
-(** Parse package formula as a [`Conj]unction or [`Disj]unction, using the given
-    parser for constraints *)
-val parse_formula :
-  [`Conj | `Disj] -> (value list -> 'a) -> value -> (name * 'a) generic_formula
+    (** Strings or bools *)
+    val variable_contents : (value, variable_contents) t
 
-(** Build a formula as a [`Conj]unction or [`Disj]unction, building constraints
-    with the given function *)
-val make_formula :
-  [`Conj | `Disj] -> ('a -> value list) -> (name * 'a) generic_formula -> value
+    (** "[a b c]" *)
+    val list : (value, value list) t
 
-(** Parse compiler versions *)
-val parse_compiler_version: value -> compiler_version
+    (** "(a b c)" *)
+    val group : (value, value list) t
 
-(** Parse compiler constraints *)
-val parse_compiler_constraint: value -> compiler_constraint
+    (** Options in the [value] type sense, i.e. a value with an optional list
+        of parameters in braces:
+        "value {op1 op2}" *)
+    val option :
+      (value, value * value list) t
 
-(** Build a compiler constraint *)
-val make_compiler_constraint: compiler_constraint -> value
+    val map_group : (value, 'a) t -> (value, 'a list) t
 
-(** Parse an OS constraint *)
-val parse_os_constraint: value -> (bool * string) generic_formula
+    val map_list : (value, 'a) t -> (value, 'a list) t
 
-(** Build an OS constraint *)
-val make_os_constraint: (bool * string) generic_formula -> value
+    val map_option : (value, 'a) t -> (value list, 'b) t -> (value, 'a * 'b) t
 
-(** {2 Environment variables} *)
+    (** A pair is simply a list with two elements in the [value] type *)
+    val map_pair :
+      (value, 'a) t ->
+      (value, 'b) t -> (value, 'a * 'b) t
 
-(** Parsing *)
-val parse_env_variable: value -> (string * string * string)
+    val url : (value, url) t
 
-(** Making *)
-val make_env_variable: (string * string * string) -> value
+    (** Specialised url parser when the backend is already known *)
+    val url_with_backend : OpamUrl.backend -> (value, url) t
 
-(** {2 filter expressions} *)
+    val compiler_version : (value, compiler_version) t
 
-(** Parsing *)
-val parse_filter: value list -> filter
+    val filter_ident :
+      (value,
+       name list * variable *
+       (string * string) option)
+        t
 
-(** Creation *)
-val make_filter: filter -> value list
+    val filter : (value list, filter) t
 
-(** Unfiltered argument list *)
-val parse_single_command: value -> arg list
-val make_single_command: arg list -> value
+    (** Arguments in commands (term + optional filter) *)
+    val arg : (value, simple_arg * filter option) t
 
-(** Parse a command *)
-val parse_command: value -> command
-
-(** Create a command *)
-val make_command: command -> value
-
-(** Parse a list of commands *)
-val parse_commands: value -> command list
-
-(** Create a list of commands *)
-val make_commands: command list -> value
-
-(** Parse a list of commands *)
-val parse_messages: value -> (string * filter option) list
-
-(** Create a list of libraries/syntax *)
-val make_libraries: (string * filter option) list -> value
-
-(** Parse a list of libraries/syntax *)
-val parse_libraries: value -> (string * filter option) list
-
-(** Create a package flag *)
-val make_flag: package_flag -> value
-
-(** Parse a package flag *)
-val parse_flag: value -> package_flag
-
-(** {2 Tags} *)
-
-(** Parse tags *)
-val parse_tags: value -> tags
-
-(** Make tags *)
-val make_tags: tags -> value
-
-(** {2 Features} *)
-
-(** Parse features list *)
-val parse_features: value -> (OpamVariable.t * string * filter) list
-
-(** Make features list *)
-val make_features: (OpamVariable.t * string * filter) list -> value
+    val command : (value, (simple_arg * filter option) list * filter option) t
+
+    (** Simple dependency constraints *)
+    val constraints :
+      (value, 'a) t ->
+      (value list, (OpamFormula.relop * 'a) OpamFormula.formula) t
+
+    (** Dependency flags *)
+    val dep_flag : (value, package_dep_flag) t
+
+    (** Extended dependency constraints (with dependency flags) *)
+    val ext_constraints :
+      (value, 'a) t ->
+      (value list,
+       package_dep_flag list * (OpamFormula.relop * 'a) OpamFormula.formula) t
+
+    val package_atom :
+      ((value, version) t -> (value list, 'a) t) -> (value, name * 'a) t
+
+    (** Takes a parser for constraints. Lists without operator will be
+        understood as conjunctions or disjunctions depending on the first
+        argument. *)
+    val package_formula :
+      [< `Conj | `Disj ] ->
+      ((value, version) t -> (value list, 'a) t) ->
+      (value, (name * 'a) OpamFormula.formula) t
+
+    (** Environment variable updates syntax *)
+    val env_binding : (value, string * string * string) t
+
+    (** For the "features" field, e.g. a list of [(variable "doc" {filter})] *)
+    val features : (value, (variable * string * filter) list) t
+
+    val os_constraint : (value, (bool * string) OpamFormula.formula) t
+  end
+
+  (** Combinators to parse to a record from a list of (field name, field setter,
+      field getter) *)
+
+  (** Used to parse a single field of a record: ['a] on the left is the
+      accumulator, or value of the record parsed so far. *)
+  type 'a field_parser = ('a * value option, 'a) t
+
+  (** Make a field parser from setter, getter and base pp. [cleanup] is an
+      optional sanitisation function that is called on parsed elements
+      before calling the setter. *)
+  val ppacc :
+    ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
+    ('acc -> 'a -> 'acc) ->
+    ('acc -> 'a) ->
+    (value, 'a) t ->
+    'acc field_parser
+
+  (** Same as [ppacc], but when the field may be unset in the record, i.e. the
+      getter returns an option *)
+  val ppacc_opt :
+    ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
+    ('acc -> 'a -> 'acc) ->
+    ('acc -> 'a option) ->
+    (value, 'a) t ->
+    'acc field_parser
+
+  (** A field parser that ignores its argument *)
+  val ppacc_ignore : 'a field_parser
+
+  (** Specific Pps for items lists and fields (opamfile) *)
+
+  module I :
+  sig
+    val item : (opamfile_item, string * value) t
+
+    val items : (opamfile_item list, (string * value) list) t
+
+    type 'a fields_def = (string * 'a field_parser) list
+
+    (** Parses an item list into a record using a fields_def*)
+    val fields :
+      ?name:string ->
+      ?strict:bool ->
+      empty:'a ->
+      'a fields_def ->
+      (opamfile_item list, 'a) t
+
+    (** Partitions a file's items into the ones that are known but not defined
+        in the file, the ones that are defined, and the ones that are in the
+        file but unknown. All but the well-defined ones are ignored when
+        printing back. *)
+    val good_fields :
+      ?name:string ->
+      ?allow_extensions:bool ->
+      'a fields_def ->
+      (opamfile_item list,
+       'a fields_def * opamfile_item list * opamfile_item list) t
+
+    (** Filters out any unrecognised items from the file during parsing, warning
+        in debug and failing in strict mode in case of mismatches *)
+    val check_fields :
+      ?name:string ->
+      ?allow_extensions:bool ->
+      ?strict:bool ->
+      (string * 'a) list ->
+      (opamfile_item list, opamfile_item list) t
+
+    (** Partitions items in an opamfile base on a condition on the variable
+        names *)
+    val partition_fields :
+      (string -> bool) ->
+      (opamfile_item list, opamfile_item list * opamfile_item list) t
+
+    (** Parse a single field from a file, return the result and the unchanged
+        item list. The single field is ignored when printing back. *)
+    val field :
+      string ->
+      (pos:pos -> value -> 'a) ->
+      (opamfile_item list, 'a option * opamfile_item list) t
+
+    (** Extracts a single item with the given variable name from an item list.
+        The item is removed from the returned item list, and the two are
+        re-combined when printing *)
+    val extract_field :
+      string ->
+      (opamfile_item list, value option * opamfile_item list) t
+
+    (** Checks the [opam_version] field; otherwise the identity *)
+    val check_opam_version :
+      ?optional:bool -> ?f:(opam_version -> bool) -> unit ->
+      (opamfile_item list, opamfile_item list) t
+
+    (** Signature handling (wip) *)
+
+    (** A signature is a keyid, an algorithm and the signature proper *)
+    type signature = string * string * string
+
+    val signature : (value, signature) t
+
+    exception Invalid_signature of
+        pos * (string * string * string) list option
+
+    (** Pp for signed files. Will assert fail if attempting to write a file with
+        an invalid signature. *)
+    val signed:
+      check:(signature list -> string -> bool) ->
+      (opamfile_item list, signature list * opamfile_item list) t
+  end
+end

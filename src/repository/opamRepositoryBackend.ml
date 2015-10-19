@@ -14,14 +14,13 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 
 module type S = sig
-  val name: repository_kind
-  val pull_url: package -> dirname -> string option -> address ->
+  val name: OpamUrl.backend
+  val pull_url: package -> dirname -> string option -> url ->
     generic_file download OpamProcess.job
   val pull_repo: repository -> unit OpamProcess.job
-  val pull_archive: repository -> filename -> filename download OpamProcess.job
+  val pull_archive: repository -> url -> filename download OpamProcess.job
   val revision: repository -> version option OpamProcess.job
 end
 
@@ -31,34 +30,37 @@ let compare r1 r2 =
   | x -> x
 
 let to_string r =
-  Printf.sprintf "%s(%d %s %s)"
+  Printf.sprintf "%s(%d %s)"
     (OpamRepositoryName.to_string r.repo_name)
     r.repo_priority
-    (string_of_repository_kind r.repo_kind)
-    (string_of_address r.repo_address)
+    (OpamUrl.to_string r.repo_url)
 
-let default_address = "https://opam.ocaml.org", None
+let default_url = {
+  OpamUrl.
+  transport = "https";
+  path = "opam.ocaml.org";
+  hash = None;
+  backend = `http;
+}
 
 let default () = {
-  repo_name     = OpamRepositoryName.default;
-  repo_kind     = `http;
-  repo_address  = default_address;
+  repo_name = OpamRepositoryName.default;
+  repo_url = default_url;
   repo_priority = 0;
-  repo_root     =
+  repo_root =
     OpamFilename.Dir.of_string OpamRepositoryName.(to_string default);
 }
 
 let local dirname = {
   repo_name     = OpamRepositoryName.of_string "local";
   repo_root     = dirname;
-  repo_address  = ("<none>", None);
-  repo_kind     = `local;
+  repo_url      = OpamUrl.empty;
   repo_priority = 0;
 }
 
 let to_json r =
   `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
-        ("kind", `String (string_of_repository_kind r.repo_kind));
+        ("kind", `String (OpamUrl.string_of_backend r.repo_url.OpamUrl.backend));
       ]
 
 let check_digest filename = function

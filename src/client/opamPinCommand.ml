@@ -125,14 +125,11 @@ let edit t name =
     ) else
     let () =
       let dir = match pin with
-        | Local dir -> Some dir
-        | Git (a,None) | Darcs (a,None) | Hg (a,None) ->
-          Some (OpamFilename.Dir.of_string a)
-        | Version _ | Git _ | Darcs _ | Hg _ | Http _ ->
-          None
+        | Source url -> OpamUrl.local_dir url
+        | Version _ -> None
       in
       match dir with
-      | Some dir when OpamFilename.exists_dir dir ->
+      | Some dir ->
         let src_opam =
           OpamStd.Option.default OpamFilename.Op.(dir // "opam")
             (OpamState.find_opam_file_in_source name dir)
@@ -239,13 +236,18 @@ let pin name ?version pin_option =
       (string_of_pin_option pin_option);
 
   (match pin_option with
-   | Git (dir, None) | Hg (dir, None) | Darcs (dir, None)
-     when OpamFilename.exists_dir (OpamFilename.Dir.of_string dir) ->
-     OpamConsole.note
-       "Pinning in mixed mode: OPAM will use tracked files in the current \
-        working tree from %s. If this is not what you want, pin to a given \
-        branch (e.g. %s#HEAD)"
-       dir dir
+   | Source ({ OpamUrl.backend = #OpamUrl.version_control;
+               transport = "file";
+               hash = None;
+               path = _; } as url) ->
+     (match OpamUrl.local_dir url with
+      | Some dir ->
+        OpamConsole.note
+          "Pinning in mixed mode: OPAM will use tracked files in the current \
+           working tree from %s. If this is not what you want, pin to a given \
+           branch (e.g. %s#HEAD)"
+          (OpamFilename.Dir.to_string dir) (OpamUrl.to_string url)
+      | None -> ())
    | _ -> ());
 
   if not no_changes && installed_version <> None then

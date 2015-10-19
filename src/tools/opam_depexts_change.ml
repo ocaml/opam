@@ -69,7 +69,7 @@ let process args =
           | Some depexts' -> (* TODO: Replace existing entry? *)
             OpamStd.String.SetMap.add os deps depexts'
         in
-        let opam = OpamFile.OPAM.with_depexts opam (Some depexts) in
+        let opam = OpamFile.OPAM.with_depexts opam depexts in
         OpamFile.OPAM.write opam_f opam;
       end;
     ) packages

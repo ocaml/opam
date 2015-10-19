@@ -36,13 +36,13 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
-  (** Read from channel. *)
   val read_from_channel: ?filename:filename -> in_channel -> t
 
   val read_from_string: ?filename:filename -> string -> t
 
-  (** Write to channel. *)
-  val write_to_channel: out_channel -> t -> unit
+  val write_to_channel: ?filename:filename -> out_channel -> t -> unit
+
+  val write_to_string: ?filename:filename -> t -> string
 
 end
 
@@ -76,7 +76,7 @@ module Config: sig
 
   val with_criteria: t -> (solver_criteria * string) list -> t
 
-  val with_solver: t -> arg list option -> t
+  val with_solver: t -> arg list -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -132,9 +132,6 @@ module OPAM: sig
   (** Utility function to print validation results *)
   val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
-  (** Returns true if the given OPAM file contains 'name' or 'version' fields *)
-  val is_explicit: filename -> bool
-
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
@@ -145,6 +142,9 @@ module OPAM: sig
   (** Package version *)
   val version: t -> version
   val version_opt: t -> version option
+
+  (** The informations in both the name and version fields, as a package *)
+  val package: t -> package
 
   (** Compiler constraint *)
   val ocaml_version: t -> compiler_constraint option
@@ -181,6 +181,8 @@ module OPAM: sig
 
   (** External dependencies *)
   val depexts: t -> tags option
+
+  val extra_sources: t -> (url * string * basename option) list
 
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
@@ -248,7 +250,7 @@ module OPAM: sig
   val with_opam_version: t -> opam_version -> t
 
   (** The package source repository address *)
-  val dev_repo: t -> pin_option option
+  val dev_repo: t -> url option
 
   (** construct as [name] *)
   val with_name: t -> name -> t
@@ -286,7 +288,9 @@ module OPAM: sig
   val with_substs : t -> basename list -> t
 
   (** Construct as [compiler_version] *)
-  val with_ocaml_version: t -> compiler_constraint option -> t
+  val with_ocaml_version: t -> compiler_constraint -> t
+
+  val with_ocaml_version_opt: t -> compiler_constraint option -> t
 
   val with_os: t -> (bool * string) generic_formula -> t
 
@@ -302,18 +306,17 @@ module OPAM: sig
   val with_bug_reports: t -> string list -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: t -> tags option -> t
+  val with_depexts: t -> tags -> t
 
   val with_flags: t -> package_flag list -> t
 
-  val with_dev_repo: t -> pin_option option -> t
+  val with_dev_repo: t -> url -> t
+
+  val with_extra_sources: t -> (url * string * basename option) list -> t
 
   val with_extensions: t -> value OpamStd.String.Map.t -> t
 
   val add_extension: t -> string -> value -> t
-
-  (** Convert to OPAM 1.0 *)
-  val to_1_0: file -> file
 
 end
 
@@ -378,13 +381,10 @@ module Comp: sig
   val version: t -> compiler_version
 
   (** Return the url of the compiler *)
-  val src: t -> address option
-
-  (** Return the url kind *)
-  val kind: t -> repository_kind
+  val src: t -> url option
 
   (** Return the list of patches to apply *)
-  val patches: t -> filename list
+  val patches: t -> url list
 
   (** Options to give to the "./configure" command *)
   val configure: t -> string list
@@ -405,15 +405,12 @@ module Comp: sig
 
   val tags: t -> string list
 
-  val with_src: t -> address option -> t
-  val with_patches: t -> filename list -> t
+  val with_src: t -> url option -> t
+  val with_patches: t -> url list -> t
   val with_configure: t -> string list -> t
   val with_make: t -> string list -> t
   val with_build: t -> command list -> t
   val with_packages: t -> formula -> t
-
-  (** Convert to OPAM 1.0 *)
-  val to_1_0: file -> file
 
 end
 
@@ -507,7 +504,7 @@ module Repo: sig
   include IO_FILE
 
   val create:
-    ?browse:string -> ?upstream:string -> ?opam_version:string ->
+    ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
     ?redirect:(string * filter option) list -> unit -> t
 
   (** The minimum OPAM version required for this repository *)
@@ -531,15 +528,12 @@ module URL: sig
 
   include IO_FILE
 
-  val create: repository_kind -> ?mirrors:address list -> address -> t
+  val create: ?mirrors:url list -> url -> t
 
   (** URL address *)
-  val url: t -> address
+  val url: t -> url
 
-  val mirrors: t -> address list
-
-  (** Backend kind (could be curl/rsync/git/darcs/hg at the moment) *)
-  val kind: t -> repository_kind
+  val mirrors: t -> url list
 
   (** Archive checksum *)
   val checksum: t -> string option
@@ -552,42 +546,9 @@ end
 (** {2 urls.txt file *} *)
 module File_attributes: IO_FILE with type t = file_attribute_set
 
-(** List of filenames *)
-module Filenames: IO_FILE with type t = filename_set
+module Stats: sig
 
-(** Prefix of package directories *)
-module Prefix: IO_FILE with type t = string name_map
+  (** Display statistics about file access. *)
+  val print: unit -> unit
 
-(** Display statistics about file access. *)
-val print_stats: unit -> unit
-
-
-(**/**)
-
-module type F = sig
-  val internal : string
-  type t
-  val empty : t
-  val of_channel : filename -> in_channel  -> t
-  val of_string : filename -> string -> t
-  val to_string : filename -> t -> string
-end
-
-module Make (F : F) : sig
-  val write: filename -> F.t -> unit
-  val read: filename -> F.t
-  val safe_read: filename -> F.t
-  val read_from_channel: ?filename:filename -> in_channel -> F.t
-  val read_from_string: ?filename:filename -> string -> F.t
-  val write_to_channel: out_channel -> F.t -> unit
-end
-
-module Syntax : sig
-  type t = file
-  val of_channel: filename -> in_channel -> t
-  val to_string: t -> string
-  val of_string: filename -> string -> t
-  val check:
-    ?allow_major:bool -> ?versioned:bool -> ?allow_extensions:bool ->
-    t -> string list -> bool
 end

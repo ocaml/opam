@@ -1,4 +1,5 @@
 PKG ocamlgraph cmdliner dose cudf re jsonm
 
 S src/*
+B _obuild/*
 B src/*

@@ -118,11 +118,12 @@ type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
 (** Opam package flags *)
 type package_flag =
   | Pkgflag_LightUninstall (** The package doesn't require downloading to uninstall *)
-  | Pkgflag_AllSwitches (** The package is pervasive on all switches *)
+  | Pkgflag_AllSwitches (** The package is pervasive on all switches (unimplemented) *)
   | Pkgflag_Verbose (** The package's scripts output is to be displayed to the user *)
   | Pkgflag_Plugin (** The package is an opam plugin that will install a
                        [opam-<name>] exec, and may be auto-installed when doing
                        [opam <name>] *)
+  | Pkgflag_Compiler (** Package may be used for 'opam switch' *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** Flags on dependencies *)
@@ -174,21 +175,18 @@ type repository_name = OpamRepositoryName.t
 (** Maps of repository names *)
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-(** Repository kind *)
-type repository_kind = [`http|`local|`git|`darcs|`hg]
-
-(** Repository address *)
-type address = string * string option
-
-(** Repository root *)
-type repository_root = dirname
+type url = OpamUrl.t (*= {
+  transport: string;
+  path: string;
+  hash: string option;
+  backend: OpamUrl.backend;
+} *)
 
 (** Repositories *)
 type repository = {
-  repo_root    : repository_root;
+  repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_name    : repository_name;
-  repo_kind    : repository_kind;
-  repo_address : address;
+  repo_url     : url;
   repo_priority: int;
 }
 
@@ -212,7 +210,7 @@ type 'a highlevel_action = [
     changed state or version *)
 type 'a inst_action = [
   | `Install of 'a
-  | `Change of 'a * 'a * [ `Up | `Down ]
+  | `Change of [ `Up | `Down ] * 'a * 'a
 ]
 
 (** Used when applying solutions, separates build from install *)
@@ -294,24 +292,13 @@ type universe = {
 
 (** {2 Command line arguments} *)
 
-(** Upload arguments *)
-type upload = {
-  upl_opam   : filename;
-  upl_descr  : filename;
-  upl_archive: filename;
-}
-
 (** Pinned packages options *)
 type pin_option =
   | Version of version
-  | Local of dirname
-  | Git of address
-  | Darcs of address
-  | Hg of address
-  | Http of address
+  | Source of url
 
 (** Pin kind *)
-type pin_kind = [`version|`http|`git|`darcs|`hg|`local]
+type pin_kind = [ `version | OpamUrl.backend ]
 
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]
@@ -378,23 +365,22 @@ type value =
   | Option of pos * value * value list
   | Env_binding of pos * string * value * value
 
-(** A file section *)
-type file_section = {
+(** An opamfile section *)
+type opamfile_section = {
   section_kind  : string;
   section_name  : string;
-  section_items : file_item list;
+  section_items : opamfile_item list;
 }
 
-(** A file is composed of sections and variable definitions *)
-and file_item =
-  | Section of pos * file_section
+(** An opamfile is composed of sections and variable definitions *)
+and opamfile_item =
+  | Section of pos * opamfile_section
   | Variable of pos * string * value
 
 (** A file is a list of items and the filename *)
-type file = {
-  file_contents: file_item list;
+type opamfile = {
+  file_contents: opamfile_item list;
   file_name    : string;
-  file_format  : opam_version;
 }
 
 (** {2 Switches} *)

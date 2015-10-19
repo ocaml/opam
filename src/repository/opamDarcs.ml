@@ -33,7 +33,7 @@ module Darcs = struct
   let init repo =
     OpamProcess.Job.of_list
       [ darcs repo [ "init" ];
-        darcs repo [ "get" ; fst repo.repo_address; "--lazy" ] ]
+        darcs repo [ "get" ; OpamUrl.base_url repo.repo_url; "--lazy" ] ]
     @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
@@ -46,14 +46,14 @@ module Darcs = struct
 
   (* Merge is actually a full pull *)
   let reset repo =
-    darcs repo [ "pull"; fst repo.repo_address; "--all"; "--quiet" ]
+    darcs repo [ "pull"; OpamUrl.base_url repo.repo_url; "--all"; "--quiet" ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done ()
 
   (* Difference between remote and local is a 'pull --dry-run' *)
   let diff repo =
-    darcs repo [ "pull" ; fst repo.repo_address; "--dry-run" ; "--quiet" ]
+    darcs repo [ "pull" ; OpamUrl.base_url repo.repo_url; "--dry-run" ; "--quiet" ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout <> [])

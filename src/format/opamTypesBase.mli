@@ -34,26 +34,6 @@ val string_of_download: _ download -> string
 
 val string_of_generic_file: generic_file -> string
 
-(** Print an address *)
-val string_of_address: address -> string
-
-(** Parse an address *)
-val address_of_string: string -> address
-
-(** Guess an address kind using url suffixes ([.git], etc.) and prefixes
-    ([http://], etc.). Defaults to `local. The returned address is a correct
-    path in case of [file://] *)
-val parse_url: address -> address * repository_kind
-
-(** Scan the given directory for version control *)
-val guess_version_control: dirname -> [`git|`hg|`darcs] option
-
-(** Pretty-print repository kinds. *)
-val string_of_repository_kind: repository_kind -> string
-
-(** Parser of repository kinds. Raise an error if the kind is not valid. *)
-val repository_kind_of_string: string -> repository_kind
-
 (** Extract a package from a package action. *)
 val action_contents: [< 'a action ] -> 'a
 
@@ -68,12 +48,6 @@ val full_action_contents: 'a action -> 'a list
 
 (** Pretty-prints the cause of an action *)
 val string_of_cause: ('pkg -> string) -> 'pkg cause -> string
-
-(** Pretty-print *)
-val string_of_upload: upload -> string
-
-(** Convert a pin kind to a repository kind *)
-val repository_kind_of_pin_kind: pin_kind -> repository_kind option
 
 (** Pretty-printing of pin kinds. *)
 val pin_kind_of_string: string -> pin_kind
@@ -92,14 +66,20 @@ val string_of_pin_option: pin_option -> string
 (** Get the pin kind from a pin option *)
 val kind_of_pin_option: pin_option -> pin_kind
 
-(** Get a pin_option from address and kind *)
-val pin_of_url: address * repository_kind -> pin_option
+val url_backend_of_pin_kind: pin_kind -> OpamUrl.backend option
 
 (** Pretty-print *)
 val string_of_shell: shell -> string
 
 (** The empty file position *)
 val pos_null: pos
+
+(** [pos_best pos1 pos2] returns the most detailed position between [pos1] and
+    [pos2] (defaulting to [pos1]) *)
+val pos_best: pos -> pos -> pos
+
+(** Position in the given file, with unspecified line and column *)
+val pos_file: filename -> pos
 
 (** Prints a file position *)
 val string_of_pos: pos -> string
@@ -121,9 +101,20 @@ val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 val filter_ident_of_string:
   string -> name list * variable * (string * string) option
 
+val string_of_filter_ident:
+  name list * variable * (string * string) option -> string
+
+val dep_flag_of_string: string -> package_dep_flag
+
+val string_of_dep_flag: package_dep_flag -> string
+
 val filter_deps:
   build:bool -> test:bool -> doc:bool -> dev:bool ->
   ext_formula -> formula
+
+val pkg_flag_of_string: string -> package_flag
+
+val string_of_pkg_flag: package_flag -> string
 
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result

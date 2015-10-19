@@ -31,6 +31,9 @@ module type SET = sig
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
 
+  (** Raises Failure in case the element is already present *)
+  val safe_add: elt -> t -> t
+
   module Op : sig
     val (++): t -> t -> t (** Infix set union *)
 
@@ -58,6 +61,9 @@ module type MAP = sig
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
 
   val of_list: (key * 'a) list -> 'a t
+
+  (** Raises Failure in case the element is already present *)
+  val safe_add: key -> 'a -> 'a t -> 'a t
 
 end
 
@@ -117,6 +123,13 @@ module Option: sig
   val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
+
+  val some: 'a -> 'a option
+
+  val none: 'a -> 'b option
+
+  (** [of_Not_found f x] calls [f x], catches [Not_found] and returns [None] *)
+  val of_Not_found: ('a -> 'b) -> 'a -> 'b option
 
   module Op: sig
     val (>>=): 'a option -> ('a -> 'b option) -> 'b option

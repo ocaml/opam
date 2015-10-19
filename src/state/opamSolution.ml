@@ -25,9 +25,9 @@ module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) state action =
-  match action with
-  | `Remove _ | `Reinstall _ | `Build _ -> ()
-  | `Install pkg | `Change (_,_,pkg) ->
+  match action, failed with
+  | `Remove _, _ | `Reinstall _, _ | `Build _, false -> ()
+  | `Build pkg, true | `Install pkg, _ | `Change (_,_,pkg), _ ->
     let opam = OpamState.opam state pkg in
     let messages = OpamFile.OPAM.post_messages opam in
     let local_variables = OpamVariable.Map.empty in
@@ -704,8 +704,19 @@ let apply ?ask t action ~requested solution =
         else nv
       in
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;
-      if sum stats >= 2 then
+      let total_actions = sum stats in
+      if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
+      match action with
+      | Install _ | Upgrade _ | Reinstall _
+        when not (OpamCudf.external_solver_available ()) &&
+             stats.s_remove + stats.s_downgrade >= max 2 (total_actions / 2)
+        ->
+        OpamConsole.note
+          "This solution may not be optimal. You should probably install an \
+           external solver (see \
+           http://opam.ocaml.org/doc/Install.html#ExternalSolvers for details)"
+      | _ -> ()
     );
 
     if OpamStateConfig.(!r.external_tags) <> [] then (

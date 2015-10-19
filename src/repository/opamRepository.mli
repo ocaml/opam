@@ -77,13 +77,13 @@ val check_version: repository -> unit OpamProcess.job
 
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)
-val pull_url: repository_kind ->
-  package -> dirname -> string option -> address list ->
+val pull_url:
+  package -> dirname -> string option -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull and fix the resulting digest *)
-val pull_url_and_fix_digest: repository_kind ->
-  package -> dirname -> string -> filename -> address list ->
+val pull_url_and_fix_digest:
+  package -> dirname -> string -> filename -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull an archive in a repository *)
@@ -100,4 +100,4 @@ val make_archive: ?gener_digest:bool -> repository -> string option -> package -
 
 (** Find a backend *)
 val find_backend: repository -> (module OpamRepositoryBackend.S)
-val find_backend_by_kind: repository_kind -> (module OpamRepositoryBackend.S)
+val find_backend_by_kind: OpamUrl.backend -> (module OpamRepositoryBackend.S)

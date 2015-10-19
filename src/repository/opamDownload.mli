@@ -19,11 +19,11 @@
     FIXME: The source OpamFilename.t is indeed a URL. *)
 val download:
   overwrite:bool -> ?compress:bool -> ?checksum:string ->
-  OpamFilename.t -> OpamFilename.Dir.t ->
+  OpamUrl.t -> OpamFilename.Dir.t ->
   OpamFilename.t OpamProcess.job
 
 (** As [download], but with a specified output filename. *)
 val download_as:
   overwrite:bool -> ?compress:bool -> ?checksum:string ->
-  OpamFilename.t -> OpamFilename.t ->
+  OpamUrl.t -> OpamFilename.t ->
   unit OpamProcess.job

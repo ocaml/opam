@@ -404,7 +404,7 @@ let process
         try
           if not dryrun then OpamFilename.remove local_archive;
           if OpamFilename.exists url_file &&
-             OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
+             OpamFile.URL.(url (read url_file)).OpamUrl.backend = `http
           then (
             OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);
             let job = OpamRepository.make_archive ~gener_digest repo prefix nv in

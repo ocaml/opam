@@ -16,10 +16,11 @@
 
 open OpamTypes
 open OpamTypesBase
+open OpamStd.Op
 open OpamProcess.Job.Op
 
 module type VCS = sig
-  val name: repository_kind
+  val name: OpamUrl.backend
   val exists: repository -> bool
   val init: repository -> unit OpamProcess.job
   val fetch: repository -> unit OpamProcess.job
@@ -37,18 +38,13 @@ module Make (VCS: VCS) = struct
 
   (* Local repos without a branch set actually use the rsync backend, but
      limited to versionned files *)
-  let is_synched_repo repo =
-    match repo.repo_address with
-    | _, Some _ -> false
-    | addr, None ->
-      not (Re_str.string_match (Re_str.regexp_string "://") addr 0) &&
-      OpamFilename.exists_dir (OpamFilename.Dir.of_string addr)
+  let synched_repo repo = match repo.repo_url with
+    | { OpamUrl.transport = "file"; hash = None; path = _; backend = _ } as url ->
+      OpamUrl.local_dir url
+    | _ -> None
 
-  let rsync repo =
-    let source_repo =
-      { repo with repo_root =
-                    OpamFilename.Dir.of_string (fst repo.repo_address) }
-    in
+  let rsync repo dir =
+    let source_repo = { repo with repo_root = dir } in
     VCS.versionned_files source_repo
     @@+ fun files ->
     let files =
@@ -65,34 +61,42 @@ module Make (VCS: VCS) = struct
     in
     OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
       ~exclude_vcdirs:false
-      (OpamFilename.Dir.of_string (fst repo.repo_address))
-      repo.repo_root
+      repo.repo_url repo.repo_root
     @@+ fun dl ->
     OpamSystem.remove stdout_file;
     Done dl
 
   let pull_repo repo =
-    if is_synched_repo repo then
-      rsync repo
-    else if VCS.exists repo then
-      VCS.fetch repo @@+ fun () ->
-      VCS.diff repo @@+ fun diff ->
-      VCS.reset repo @@+ fun () ->
-      if diff then Done (Result repo.repo_root)
-      else Done (Up_to_date repo.repo_root)
-    else
-      (OpamFilename.mkdir repo.repo_root;
-       VCS.init repo @@+ fun () ->
-       VCS.fetch repo @@+ fun () ->
-       VCS.reset repo @@+ fun () ->
-       Done (Result repo.repo_root))
+    match synched_repo repo with
+    | Some dir -> rsync repo dir
+    | None ->
+      OpamProcess.Job.catch
+        (fun e ->
+           OpamConsole.error "Could not synchronize %s from %S:\n%s"
+             (OpamRepositoryName.to_string repo.repo_name)
+             (OpamUrl.to_string repo.repo_url)
+             (Printexc.to_string e);
+           Done (Not_available (Printexc.to_string e)))
+      @@
+      if VCS.exists repo then
+        VCS.fetch repo @@+ fun () ->
+        VCS.diff repo @@+ fun diff ->
+        VCS.reset repo @@+ fun () ->
+        if diff then Done (Result repo.repo_root)
+        else Done (Up_to_date repo.repo_root)
+      else
+        (OpamFilename.mkdir repo.repo_root;
+         VCS.init repo @@+ fun () ->
+         VCS.fetch repo @@+ fun () ->
+         VCS.reset repo @@+ fun () ->
+         Done (Result repo.repo_root))
 
-  let repo dirname address =
+  let repo dirname url =
     let repo = OpamRepositoryBackend.default () in
     {
       repo with
-      repo_root    = dirname;
-      repo_address = address;
+      repo_root = dirname;
+      repo_url = url;
     }
 
   let pull_url package dirname checksum remote_url =
@@ -104,7 +108,7 @@ module Make (VCS: VCS) = struct
     pull_repo repo @@+ fun r ->
     OpamConsole.msg "[%s] %s %s\n"
       (OpamConsole.colorise `green (OpamPackage.name_to_string package))
-      (string_of_address remote_url)
+      (OpamUrl.to_string remote_url)
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
@@ -116,17 +120,19 @@ module Make (VCS: VCS) = struct
     OpamConsole.msg "[%s] %s %s\n"
       (OpamConsole.colorise `blue
          (OpamRepositoryName.to_string repo.repo_name))
-      (string_of_address repo.repo_address)
+      (OpamUrl.to_string repo.repo_url)
       (match r with
        | Result _ -> "updated"
        | Up_to_date _ -> "already up-to-date"
        | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done ()
 
-  let pull_archive repo filename =
+  let pull_archive repo url =
     let dirname = OpamRepositoryPath.archives_dir repo in
-    let basename = OpamFilename.basename filename in
-    let local_file = OpamFilename.create dirname basename in
+    let local_file =
+      OpamFilename.create dirname
+        (OpamFilename.Base.of_string (OpamUrl.basename url))
+    in
     if OpamFilename.exists local_file then (
       OpamConsole.msg "[%s] Using %s\n"
         (OpamConsole.colorise `blue
@@ -134,15 +140,14 @@ module Make (VCS: VCS) = struct
         (OpamFilename.prettify local_file);
       Done (Up_to_date local_file)
     ) else
-      Done (Not_available (OpamFilename.to_string filename))
+      Done (Not_available (OpamUrl.to_string url))
 
   let revision repo =
     let repo =
-      if is_synched_repo repo then
-        (* Actually get the revision at the source *)
-        { repo with repo_root =
-                      OpamFilename.Dir.of_string (fst repo.repo_address) }
-      else repo
+      match synched_repo repo with
+      | Some repo_root -> (* Actually get the revision at the source *)
+        { repo with repo_root }
+      | None -> repo
     in
     VCS.revision repo
     @@+ fun r ->

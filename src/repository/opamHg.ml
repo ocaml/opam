@@ -35,7 +35,8 @@ module Hg = struct
     OpamSystem.raise_on_process_error r;
     OpamFilename.write
       OpamFilename.Op.(repo.repo_root / ".hg" // "hgrc")
-      (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address));
+      (Printf.sprintf "[paths]\ndefault = %s\n"
+         (OpamUrl.base_url repo.repo_url));
     Done ()
 
   let fetch repo =
@@ -43,7 +44,7 @@ module Hg = struct
       hg repo [ "showconfig" ; "paths.default" ]
       @@> fun r ->
       OpamSystem.raise_on_process_error r;
-      if r.OpamProcess.r_stdout <> [fst repo.repo_address] then (
+      if r.OpamProcess.r_stdout <> [OpamUrl.base_url repo.repo_url] then (
         OpamFilename.rmdir OpamFilename.Op.(repo.repo_root / ".hg");
         init repo
       ) else Done ()
@@ -67,7 +68,7 @@ module Hg = struct
       commit
 
   let reset repo =
-    let commit = match snd repo.repo_address with
+    let commit = match repo.repo_url.OpamUrl.hash with
       | None   -> "tip"
       | Some c -> c
     in
@@ -76,7 +77,7 @@ module Hg = struct
       Done ()
 
   let diff repo =
-    let commit = match snd repo.repo_address with
+    let commit = match repo.repo_url.OpamUrl.hash with
       | None   -> "tip"
       | Some c -> c in
     hg repo [ "diff" ; "--stat" ; "-r" ; commit ] @@> fun r ->

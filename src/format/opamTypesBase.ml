@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamStd.Op
+
 open OpamTypes
 
 include OpamCompat
@@ -36,80 +38,6 @@ let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d
   | F f -> OpamFilename.to_string f
 
-let string_of_address = function
-  | url, None   -> url
-  | url, Some c -> Printf.sprintf "%s#%s" url c
-
-let address_of_string str =
-  match OpamStd.String.cut_at str '#' with
-  | None       -> OpamSystem.real_path str, None
-  | Some (a,c) -> OpamSystem.real_path a, Some c
-
-let guess_version_control dir =
-  let open OpamFilename in
-  let open Op in
-  if exists_dir (dir / ".git") then Some`git else
-  if exists_dir (dir / ".hg") then Some `hg else
-  if exists_dir (dir / "_darcs") then Some `darcs else
-    None
-
-let parse_url (s,c) =
-  let url_kind_of_string = function
-    | "http" | "https" | "ftp" -> `http
-    | "file" -> `local
-    | "git" -> `git
-    | "darcs" -> `darcs
-    | "hg" -> `hg
-    | "rsync" | "ssh" | "scp" | "sftp" -> `local
-    | p -> raise (Invalid_argument (Printf.sprintf "Unsupported protocol %s" p))
-  in
-  let suffix =
-    try let n = String.rindex s '.' in String.sub s (n+1) (String.length s-n-1)
-    with Not_found -> ""
-  in
-  match suffix with
-  | "git" -> (s,c), `git
-  | "hg" -> (s,c), `hg
-  | _ ->
-    let urlsplit = "://" in
-    match Re_str.bounded_split (Re_str.regexp_string urlsplit) s 2 with
-    | ["file"|"rsync"|"ssh"|"scp"|"sftp"; address] ->
-      (* strip the leading xx:// *)
-      (address,c), `local
-    | [proto; address] ->
-      (match OpamStd.String.cut_at proto '+' with
-       | Some (proto1,proto2) ->
-         (proto2^urlsplit^address, c), url_kind_of_string proto1
-       | None ->
-         let addr = match proto with
-           | "git" -> s (* git:// urls legit *)
-           | _ ->
-             if Re_str.string_match (Re_str.regexp (".*"^urlsplit)) address 0
-             then address
-             else "http://" ^ address (* assume http transport by default *)
-         in
-         (addr,c), url_kind_of_string proto)
-    | [address] -> (address,c), `local
-    | _ -> raise (Invalid_argument (Printf.sprintf "Bad url format %S" s))
-
-let string_of_repository_kind = function
-  | `http  -> "http"
-  | `local -> "local"
-  | `git   -> "git"
-  | `darcs -> "darcs"
-  | `hg    -> "hg"
-
-let repository_kind_of_string = function
-  | "wget"
-  | "curl"
-  | "http"  -> `http
-  | "rsync"
-  | "local" -> `local
-  | "git"   -> `git
-  | "darcs" -> `darcs
-  | "hg"    -> `hg
-  | s -> OpamConsole.error_and_exit "%s is not a valid repository kind." s
-
 let string_of_shell = function
   | `fish -> "fish"
   | `csh  -> "csh"
@@ -117,7 +45,15 @@ let string_of_shell = function
   | `sh   -> "sh"
   | `bash -> "bash"
 
-let pos_null = OpamFilename.of_string "",-1,-1
+let file_null = OpamFilename.of_string ""
+let pos_file filename = filename, -1, -1
+let pos_null = pos_file file_null
+
+let pos_best (f1,_li1,col1 as pos1) (f2,_li2,_col2 as pos2) =
+  if f1 = file_null then pos2
+  else if f2 = file_null then pos1
+  else if col1 = -1 then pos2
+  else pos1
 
 let string_of_pos (file,line,col) =
   OpamFilename.prettify file ^
@@ -129,82 +65,46 @@ let string_of_pos (file,line,col) =
 
 (* Command line arguments *)
 
-let string_of_upload u =
-  Printf.sprintf "opam=%s descr=%s archive=%s"
-    (OpamFilename.to_string u.upl_opam)
-    (OpamFilename.to_string u.upl_descr)
-    (OpamFilename.to_string u.upl_archive)
-
-let repository_kind_of_pin_kind = function
+let url_backend_of_pin_kind = function
   | `version -> None
-  | (`http|`git|`darcs|`hg|`local as k) -> Some k
+  | #OpamUrl.backend as k -> Some k
 
-let pin_of_url (url,kind) = match kind with
-  | `http -> Http url
-  | `git -> Git url
-  | `darcs -> Darcs url
-  | `hg -> Hg url
-  | `local | `version -> failwith "Not a recognised version-control URL"
+let looks_like_version_re =
+  Re.(compile @@
+      seq [digit; rep @@ diff any (set "/\\"); eos])
 
 let pin_option_of_string ?kind ?(guess=false) s =
   match kind with
-  | Some `version -> Version (OpamPackage.Version.of_string s)
-  | None | Some (`http|`git|`hg|`darcs|`local) ->
-    if kind = None &&
-       not (String.contains s (Filename.dir_sep.[0])) &&
-       String.length s > 0 && '0' <= s.[0] && s.[0] <= '9' then
-      Version (OpamPackage.Version.of_string s)
-    else
-    let s, k = parse_url (address_of_string s) in
-    match kind, k with
-    | Some `version, _ | None, `version -> assert false
-    | Some `http, _ | None, `http -> Http s
-    | Some `git, _ | None, `git -> Git s
-    | Some `hg, _ | None, `hg   -> Hg s
-    | Some `darcs, _ | None, `darcs -> Darcs s
-    | Some `local, _ ->
-      Local (OpamFilename.Dir.of_string (fst s))
-    | None, `local ->
-      let dir = OpamFilename.Dir.of_string (fst s) in
-      if guess then match guess_version_control dir with
-        | Some vc -> pin_of_url (s, vc)
-        | None -> Local dir
-      else Local dir
+  | Some `version ->
+    Version (OpamPackage.Version.of_string s)
+  | None when Re.execp looks_like_version_re s ->
+    Version (OpamPackage.Version.of_string s)
+  | Some (#OpamUrl.backend as backend) ->
+    Source (OpamUrl.parse ~backend s)
+  | None ->
+    let backend =
+      if guess then OpamUrl.guess_version_control s
+      else None
+    in
+    Source (OpamUrl.parse ?backend s)
 
 let string_of_pin_kind = function
   | `version -> "version"
-  | `git     -> "git"
-  | `darcs   -> "darcs"
-  | `hg      -> "hg"
-  | `http    -> "http"
-  | `local   -> "path"
+  | `rsync   -> "path"
+  | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
 
 let pin_kind_of_string = function
   | "version" -> `version
-  | "http"    -> `http
-  | "git"     -> `git
-  | "darcs"   -> `darcs
-  | "hg"      -> `hg
-  | "rsync"
-  | "local"
-  | "path"    -> `local
-  | s -> OpamConsole.error_and_exit "%s is not a valid kind of pinning." s
+  | "path"    -> `rsync
+  | s -> OpamUrl.backend_of_string s
 
 let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
-  | Http p
-  | Git p
-  | Darcs p
-  | Hg p      -> string_of_address p
-  | Local p   -> OpamFilename.Dir.to_string p
+  | Source url -> OpamUrl.to_string url
 
 let kind_of_pin_option = function
   | Version _ -> `version
-  | Http _    -> `http
-  | Git _     -> `git
-  | Darcs _   -> `darcs
-  | Hg _      -> `hg
-  | Local _   -> `local
+  | Source url -> (url.OpamUrl.backend :> pin_kind)
 
 let string_of_relop = OpamFormula.string_of_relop
 let relop_of_string = OpamFormula.relop_of_string
@@ -224,6 +124,14 @@ let string_of_pfxop = function
 let pfxop_of_string = function
   | "!" -> `Not
   | _ -> raise (Invalid_argument "pfxop_of_string")
+
+let string_of_filter_ident (pkgs,var,converter) =
+  OpamStd.List.concat_map ~nil:"" "+" ~right:":"
+    OpamPackage.Name.to_string pkgs ^
+  OpamVariable.to_string var ^
+  (match converter with
+   | Some (it,ifu) -> "?"^it^":"^ifu
+   | None -> "")
 
 let filter_ident_of_string s =
   match OpamStd.String.rcut_at s ':' with
@@ -246,6 +154,20 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
+let dep_flag_of_string = function
+  | "build" -> Depflag_Build
+  | "test" -> Depflag_Test
+  | "doc" -> Depflag_Doc
+  | "dev" -> Depflag_Dev
+  | s -> Depflag_Unknown s
+
+let string_of_dep_flag = function
+  | Depflag_Build -> "build"
+  | Depflag_Test -> "test"
+  | Depflag_Doc -> "doc"
+  | Depflag_Dev -> "dev"
+  | Depflag_Unknown s -> s
+
 let filter_deps ~build ~test ~doc ~dev =
   let filter =
     List.for_all (function
@@ -256,6 +178,22 @@ let filter_deps ~build ~test ~doc ~dev =
         | Depflag_Unknown _ -> true (* ignored *))
   in
   OpamFormula.formula_of_extended ~filter
+
+let string_of_pkg_flag = function
+  | Pkgflag_LightUninstall -> "light-uninstall"
+  | Pkgflag_AllSwitches -> "all-switches"
+  | Pkgflag_Verbose -> "verbose"
+  | Pkgflag_Plugin -> "plugin"
+  | Pkgflag_Compiler -> "compiler"
+  | Pkgflag_Unknown s -> s
+
+let pkg_flag_of_string = function
+  | "light-uninstall" -> Pkgflag_LightUninstall
+  | "all-switches" -> Pkgflag_AllSwitches
+  | "verbose" -> Pkgflag_Verbose
+  | "plugin" -> Pkgflag_Plugin
+  | "compiler" -> Pkgflag_Compiler
+  | s -> Pkgflag_Unknown s
 
 let action_contents = function
   | `Remove p | `Install p | `Reinstall p | `Build p -> p

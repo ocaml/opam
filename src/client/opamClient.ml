@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamState.Types
 open OpamStd.Op
 open OpamPackage.Set.Op
@@ -74,7 +73,7 @@ let details_of_package t name versions =
       (OpamFile.OPAM.libraries opam)) in
   let extension = lazy (
     OpamStd.String.Map.fold (fun fld v acc ->
-        (fld, OpamFormat.string_of_value v) :: acc)
+        (fld, OpamFormat.Print.value v) :: acc)
       (OpamFile.OPAM.extensions opam) []
     |> List.rev) in
   let others = lazy (
@@ -510,24 +509,21 @@ module API = struct
           | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ]
         in
         try
-          let pin = OpamPackage.Name.Map.find name t.pinned in
-          let kind = kind_of_pin_option pin in
-          let revision =
-            match repository_kind_of_pin_kind kind with
-            | Some kind ->
-              let repo = OpamRepositoryBackend.default () in
+          match OpamPackage.Name.Map.find name t.pinned with
+          | Version v -> repo @ ["pinned", OpamPackage.Version.to_string v]
+          | Source url ->
+            let revision =
               let repo =
-                {repo with
-                 repo_kind = kind;
-                 repo_root = OpamPath.Switch.dev_package t.root t.switch name;
-                 repo_address = address_of_string @@ string_of_pin_option pin} in
+                { repo_name = OpamRepositoryName.of_string "tmp";
+                  repo_url = url;
+                  repo_priority = 0;
+                  repo_root = OpamPath.Switch.dev_package t.root t.switch name; }
+              in
               (match OpamProcess.Job.run (OpamRepository.revision repo) with
                | Some v -> Printf.sprintf " (%s)" (OpamPackage.Version.to_string v)
                | None -> "")
-            | None -> ""
-          in
-          (if kind = `version then repo else []) @
-          ["pinned", (string_of_pin_kind kind) ^ revision]
+            in
+            ["pinned", OpamUrl.string_of_backend url.OpamUrl.backend ^ revision]
         with Not_found ->
           repo
       in
@@ -535,15 +531,15 @@ module API = struct
       let url = match OpamState.url t nv with
         | None   -> []
         | Some u ->
-          let kind = string_of_repository_kind (OpamFile.URL.kind u) in
-          let url = string_of_address (OpamFile.URL.url u) in
+          let url = OpamFile.URL.url u in
           let mirrors =
-            OpamStd.List.to_string string_of_address (OpamFile.URL.mirrors u) in
+            OpamStd.List.to_string OpamUrl.to_string (OpamFile.URL.mirrors u)
+          in
           let checksum = OpamFile.URL.checksum u in
-          [ "upstream-url" , url ]
+          [ "upstream-url" , OpamUrl.to_string url ]
           @ (if OpamFile.URL.mirrors u = [] then []
              else [ "upstream-mirrors" , mirrors ])
-          @ [ "upstream-kind", kind ]
+          @ [ "upstream-kind", OpamUrl.string_of_backend url.OpamUrl.backend ]
           @ match checksum with
             | None   -> []
             | Some c -> [ "upstream-checksum", c ] in
@@ -576,7 +572,7 @@ module API = struct
       let author   = strings "authors"  OpamFile.OPAM.author in
       let homepage = strings "homepage" OpamFile.OPAM.homepage in
       let bug_reports = strings "bug-reports" OpamFile.OPAM.bug_reports in
-      let dev_repo = option string_of_pin_option "dev-repo" OpamFile.OPAM.dev_repo in
+      let dev_repo = option OpamUrl.to_string "dev-repo" OpamFile.OPAM.dev_repo in
       let license  = strings "license"  OpamFile.OPAM.license in
       let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     (fun _ -> tags) in
@@ -1726,12 +1722,12 @@ module API = struct
 
     let get_upstream t name =
       try
-        let nv = OpamPackage.max_version t.packages name in
+        let nv = OpamState.get_package t name in
         match OpamState.opam_opt t nv with
         | None -> raise Not_found
         | Some o -> match OpamFile.OPAM.dev_repo o with
           | None -> raise Not_found
-          | Some pin -> pin
+          | Some pin -> Source pin
       with Not_found ->
         OpamConsole.error_and_exit
           "\"dev-repo\" field missing in %s metadata, you'll need to specify \
@@ -1905,8 +1901,8 @@ module SafeAPI = struct
     let list ~short =
       read_lock (fun () -> API.REPOSITORY.list ~short)
 
-    let add name kind address ~priority =
-      global_lock (fun () -> API.REPOSITORY.add name kind address ~priority)
+    let add name address ~priority =
+      global_lock (fun () -> API.REPOSITORY.add name address ~priority)
 
     let remove name =
       global_lock (fun () -> API.REPOSITORY.remove name)

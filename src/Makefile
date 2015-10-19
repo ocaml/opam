@@ -116,7 +116,8 @@ SRC_core = \
   opamProcess.ml \
   opamSystem.ml \
   opamParallel.ml \
-  opamFilename.ml
+  opamFilename.ml \
+  opamUrl.ml
 
 define PROJ_core
   SOURCES = $(call addmli,core,$(SRC_core))
@@ -127,8 +128,8 @@ export PROJ_core
 
 # -- opam-format -- #
 
-opam-repository.cma: opam-core.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa ALWAYS
+opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_format = \
   opamFormatConfig.ml \
@@ -171,8 +172,8 @@ endef
 export PROJ_solver
 
 # -- opam-repository -- #
-opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
+opam-repository.cma: opam-core.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa ALWAYS
 
 SRC_repository = \
   opamRepositoryConfig.ml \
