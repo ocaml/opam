@@ -141,15 +141,27 @@ module B = struct
     log "pull-repo";
     pull_file_quiet repo.repo_root
       (OpamRepositoryPath.Remote.repo repo)
-    @@+ fun _ ->
+    @@+ fun res_repo ->
     pull_dir_quiet
       (OpamRepositoryPath.packages_dir repo)
       (OpamRepositoryPath.Remote.packages_url repo)
-    @@+ fun _ ->
+    @@+ fun res_pkgs ->
     pull_dir_quiet
       (OpamRepositoryPath.compilers_dir repo)
       (OpamRepositoryPath.Remote.compilers_url repo)
-    @@+ fun _ ->
+    @@+ fun res_comps ->
+    match res_repo, res_pkgs, res_comps with
+    | Not_available _, Not_available _, Not_available _ ->
+      OpamConsole.error "Could not synchronize %s from %S"
+        (OpamRepositoryName.to_string repo.repo_name)
+        (OpamUrl.to_string repo.repo_url);
+      OpamConsole.msg "[%s] %s %s\n"
+        (OpamConsole.colorise `blue
+           (OpamRepositoryName.to_string repo.repo_name))
+        (OpamUrl.to_string repo.repo_url)
+        (OpamConsole.colorise `red "unavailable");
+      Done ()
+    | _ ->
     let archives = OpamFilename.files (OpamRepositoryPath.archives_dir repo) in
     log "archives: %a"
       (slog (OpamStd.List.to_string OpamFilename.to_string)) archives;

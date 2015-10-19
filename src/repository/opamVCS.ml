@@ -69,6 +69,14 @@ module Make (VCS: VCS) = struct
     match synched_repo repo with
     | Some dir -> rsync repo dir
     | None ->
+      OpamProcess.Job.catch
+        (fun e ->
+           OpamConsole.error "Could not synchronize %s from %S:\n%s"
+             (OpamRepositoryName.to_string repo.repo_name)
+             (OpamUrl.to_string repo.repo_url)
+             (Printexc.to_string e);
+           Done (Not_available (Printexc.to_string e)))
+      @@
       if VCS.exists repo then
         VCS.fetch repo @@+ fun () ->
         VCS.diff repo @@+ fun diff ->

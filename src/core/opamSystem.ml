@@ -675,7 +675,7 @@ let register_printer () =
       "os" os
       m in
   Printexc.register_printer (function
-    | Process_error r     -> Some (OpamProcess.string_of_result r)
+    | Process_error r     -> Some (OpamProcess.result_summary r)
     | Internal_error m    -> Some (with_opam_info m)
     | Command_not_found c -> Some (Printf.sprintf "%S: command not found." c)
     | Sys.Break           -> Some "User interruption"

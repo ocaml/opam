@@ -130,8 +130,11 @@ val cleanup : ?force:bool -> result -> unit
 (** Reads a text file and returns a list of lines *)
 val read_lines: string -> string list
 
-(** Pretty printing of process. *)
+(** Detailed report on process outcome *)
 val string_of_result: ?color:OpamConsole.text_style -> result -> string
+
+(** Short report on process outcome *)
+val result_summary: result -> string
 
 (** Higher-level interface to allow parallelism *)
 module Job: sig
