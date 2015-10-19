@@ -127,8 +127,11 @@ let to_string url =
   let hash = match url.hash with Some h -> "#" ^ h | None -> "" in
   match url.backend with
   | #version_control as vc ->
-    Printf.sprintf "%s+%s://%s%s"
-      (string_of_backend vc) url.transport url.path hash
+    let vc = string_of_backend vc in
+    if url.transport = vc then (* Don't be redundant on e.g git:// protocols *)
+      Printf.sprintf "%s://%s%s" vc url.path hash
+    else
+      Printf.sprintf "%s+%s://%s%s" vc url.transport url.path hash
   | `rsync | `http ->
     Printf.sprintf "%s://%s%s" url.transport url.path hash
 
