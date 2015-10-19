@@ -31,6 +31,14 @@ install_on_osx () {
   fi
 }
 
+source_branch_name () {
+    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        echo $TRAVIS_BRANCH
+    else
+        curl -s https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST | sed -n '/^ *"head":/ { :loop; s/^ *"ref": "\(.*\)",/\1/p; t quit; n; b loop; :quit }'
+    fi
+}
+
 case $TRAVIS_OS_NAME in
 osx) install_on_osx ;;
 linux) install_on_linux ;;
@@ -70,6 +78,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     sudo make install
     make libinstall prefix=$(opam config var prefix)
     # Compile and run opam-rt
+    wget https://github.com/ocaml/opam-rt/archive/$(source_branch_name).tar.gz -O opam-rt.tar.gz || \
     wget https://github.com/ocaml/opam-rt/archive/master.tar.gz -O opam-rt.tar.gz
     tar xvfz opam-rt.tar.gz
     cd opam-rt-*
