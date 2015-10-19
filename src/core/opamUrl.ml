@@ -37,7 +37,8 @@ let split_url =
     let (@@) f x = f x in
     Re.(compile @@ seq [
         opt @@ seq [
-          opt @@ seq [group @@ rep @@ diff any (set "+:"); char '+'];
+          opt @@ seq [ group @@ rep @@ diff any (set "+:");
+                       alt [ char '+'; str "://"] ];
           group @@ rep @@ diff any (char ':');
           str "://"
         ];
