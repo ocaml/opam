@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamStd.Op
+
 type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]

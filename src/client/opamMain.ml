@@ -18,6 +18,7 @@ open Cmdliner
 open OpamArg
 open OpamTypes
 open OpamTypesBase
+open OpamStd.Op
 
 let self_upgrade_exe opamroot =
   OpamFilename.Op.(opamroot // "opam", opamroot // "opam.version")

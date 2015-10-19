@@ -476,7 +476,7 @@ module Pp = struct
         (fun ~pos:_ -> function String (_,s) -> s | _ -> unexpected ())
         (fun str -> String (pos_null,str))
 
-    let string_tr = string -| pp (fun ~pos:_ -> String.trim) (fun x -> x)
+    let string_tr = string -| pp (fun ~pos:_ -> OpamStd.String.strip) (fun x -> x)
 
     let simple_arg =
       pp ~name:"ident-or-string"
