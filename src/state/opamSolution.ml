@@ -602,7 +602,7 @@ let parallel_apply t action action_graph =
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function `Reinstall _ -> false | _ -> true)
+        (function _ -> true)
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;
