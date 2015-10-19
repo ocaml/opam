@@ -90,24 +90,30 @@ let looks_like_ssh_re =
 
 let parse ?backend s =
   let vc, transport, path, suffix, hash = split_url s in
-  let backend, transport =
+  let backend =
     match backend with
-    | Some b -> b, transport
+    | Some b -> b
     | None ->
       match vc with
-      | Some vc -> vc_of_string vc, transport
+      | Some vc -> vc_of_string vc
       | None -> match transport with
         | Some tr ->
-          (try vc_of_string tr, None with Failure _ ->
+          (try vc_of_string tr with Failure _ ->
            match suffix with
            | Some sf ->
-             (try vc_of_string sf, transport with Failure _ ->
-                backend_of_string tr, transport)
-           | None -> backend_of_string tr, transport)
-        | None -> `rsync, None
+             (try vc_of_string sf with Failure _ ->
+                backend_of_string tr)
+           | None -> backend_of_string tr)
+        | None -> `rsync
+  in
+  let ssh_or_file path =
+    if Re.execp looks_like_ssh_re path then "ssh", path
+    else "file", OpamSystem.real_path path
   in
   let transport, path =
     match backend, transport with
+    | `hg, Some "hg" | `darcs, Some "darcs" -> (* Unspecified transport *)
+      ssh_or_file path
     | _, Some tr -> tr, path
     | `http, None -> "http", path
     | _, None ->

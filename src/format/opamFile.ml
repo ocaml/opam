@@ -1369,10 +1369,9 @@ module OPAMSyntax = struct
         (Pp.V.map_list (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
       "dev-repo", no_cleanup Pp.ppacc_opt with_dev_repo dev_repo
         (Pp.V.url -|
-         Pp.check ~errmsg:"Not a version-control or http url"
-           (fun url -> match url.OpamUrl.backend with
-              | `http | #OpamUrl.version_control -> true
-              | _ -> false));
+         Pp.check ~errmsg:"Not a remote url"
+           (function {OpamUrl.transport = "file" | "local" | "path"; _} -> false
+                   | _ -> true));
 
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list Pp.V.string);
