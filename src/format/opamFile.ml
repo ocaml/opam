@@ -360,8 +360,8 @@ module Aliases = LineFile(struct
 
     let pp =
       OpamSwitch.Map.(Pp.lines_map ~empty ~add ~fold) @@
-      Pp.of_module "switch-name" (module OpamSwitch) ^+
-      (Pp.last -| Pp.of_module "compiler" (module OpamCompiler))
+      Pp.of_module "switch-name" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t) ^+
+      (Pp.last -| Pp.of_module "compiler" (module OpamCompiler: Pp.STR with type t = OpamCompiler.t))
 
   end)
 
@@ -378,8 +378,8 @@ module Repo_index (A : OpamStd.ABSTRACT) = LineFile(struct
 
     let pp =
       Pp.lines_map ~empty ~add:A.Map.safe_add ~fold:A.Map.fold @@
-      Pp.of_module "name" (module A) ^+
-      Pp.of_module "repository" (module OpamRepositoryName) ^+
+      Pp.of_module "name" (module A: Pp.STR with type t = A.t) ^+
+      Pp.of_module "repository" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t) ^+
       Pp.opt Pp.last
   end)
 
@@ -399,8 +399,8 @@ module PkgList = struct
 
   let pp =
     OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
-    (Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
-     Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version))
+    (Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+     Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
     -| Pp.pp
       (fun ~pos:_ (n,v) -> OpamPackage.create n v)
       (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
@@ -445,7 +445,7 @@ module Pinned = LineFile(struct
 
     let pp =
       OpamPackage.Name.Map.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
-      Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
+      Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
       pp_pin
 
   end)
@@ -465,7 +465,7 @@ module File_attributes = LineFile(struct
 
     let pp =
       OpamFilename.Attribute.Set.(Pp.lines_set ~empty ~add ~fold) @@
-      (Pp.of_module "file" (module OpamFilename.Base) ^+
+      (Pp.of_module "file" (module OpamFilename.Base: Pp.STR with type t = OpamFilename.Base.t) ^+
        Pp.check ~name:"md5" OpamFilename.valid_digest ^+
        Pp.opt (Pp.last -| Pp.of_pair "perm" (int_of_string, string_of_int))
       ) -|
@@ -505,8 +505,8 @@ module Export = LineFile(struct
 
     let pp_lines =
       M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
-      Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
-      Pp.of_module "pkg-version" (module OpamPackage.Version) ^+
+      Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+      Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t) ^+
       (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
 
     (* Convert from one name-map to set * set * map *)
@@ -694,15 +694,15 @@ module ConfigSyntax = struct
     [
       "opam-version", Pp.ppacc
         with_opam_version opam_version
-        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
       "repositories", Pp.ppacc
         with_repositories repositories
         (Pp.V.map_list
            (Pp.V.string -|
-            Pp.of_module "repository" (module OpamRepositoryName)));
+            Pp.of_module "repository" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t)));
       "switch", Pp.ppacc
         with_switch switch
-        (Pp.V.string -| Pp.of_module "switch" (module OpamSwitch));
+        (Pp.V.string -| Pp.of_module "switch" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t));
       "jobs", Pp.ppacc
         with_jobs jobs
         Pp.V.pos_int;
@@ -728,10 +728,10 @@ module ConfigSyntax = struct
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
         with_switch OpamStd.Option.none
-        (Pp.V.string -| Pp.of_module "switch-name" (module OpamSwitch));
+        (Pp.V.string -| Pp.of_module "switch-name" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t));
       "ocaml-version", Pp.ppacc_opt
         with_switch OpamStd.Option.none
-        (Pp.V.string -| Pp.of_module "switch-name" (module OpamSwitch));
+        (Pp.V.string -| Pp.of_module "switch-name" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t));
       "cores", Pp.ppacc_opt
         with_jobs OpamStd.Option.none
         Pp.V.pos_int;
@@ -776,7 +776,7 @@ module Repo_configSyntax = struct
       (fun r repo_name -> {r with repo_name})
       (fun r -> r.repo_name)
       (Pp.V.string -|
-       Pp.of_module "repository-name" (module OpamRepositoryName));
+       Pp.of_module "repository-name" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t));
     "address", Pp.ppacc
       (fun r repo_url -> {r with repo_url})
       (fun r -> r.repo_url)
@@ -796,7 +796,7 @@ module Repo_configSyntax = struct
       (fun r repo_root -> {r with repo_root})
       (fun r -> r.repo_root)
       (Pp.V.string -|
-       Pp.of_module "directory" (module OpamFilename.Dir));
+       Pp.of_module "directory" (module OpamFilename.Dir: Pp.STR with type t = OpamFilename.Dir.t));
   ]
 
   let pp =
@@ -839,7 +839,7 @@ module Dot_configSyntax = struct
     Pp.I.items -|
     Pp.map_list
       (Pp.map_pair
-         (Pp.of_module "variable" (module OpamVariable))
+         (Pp.of_module "variable" (module OpamVariable: Pp.STR with type t = OpamVariable.t))
          Pp.V.variable_contents)
 
   let of_syntax s =
@@ -901,7 +901,7 @@ module RepoSyntax = struct
   let fields = [
     "opam-version", Pp.ppacc
       with_opam_version opam_version
-      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
     "browse", Pp.ppacc_opt with_browse browse Pp.V.string;
     "upstream", Pp.ppacc_opt with_upstream upstream Pp.V.string;
     "redirect", Pp.ppacc
@@ -1277,7 +1277,7 @@ module OPAMSyntax = struct
 
   let pp_basename =
     Pp.V.string -|
-    Pp.of_module "file" (module OpamFilename.Base)
+    Pp.of_module "file" (module OpamFilename.Base: Pp.STR with type t = OpamFilename.Base.t)
 
   (* Field parser-printers *)
 
@@ -1293,12 +1293,12 @@ module OPAMSyntax = struct
     in
     [
       "opam-version", no_cleanup Pp.ppacc with_opam_version opam_version
-        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
       "name", with_cleanup cleanup_name Pp.ppacc_opt with_name name_opt
-        (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name));
+        (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t));
       "version", with_cleanup cleanup_version
         Pp.ppacc_opt with_version version_opt
-        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version));
+        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t));
 
       "depends", with_cleanup cleanup_depflags Pp.ppacc with_depends depends
         (Pp.V.package_formula `Conj Pp.V.ext_constraints);
@@ -2036,7 +2036,7 @@ module Dot_installSyntax = struct
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
          Pp.singleton -| Pp.V.string -|
-         Pp.of_module "rel-filename" (module OpamFilename.Base))
+         Pp.of_module "rel-filename" (module OpamFilename.Base: Pp.STR with type t = OpamFilename.Base.t))
     in
     let pp_misc =
       Pp.V.map_list @@ Pp.V.map_option
@@ -2158,11 +2158,11 @@ module CompSyntax = struct
     in
     [
       "opam-version", Pp.ppacc with_opam_version opam_version
-        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
       "name", Pp.ppacc with_name name
-        (Pp.V.string -| Pp.of_module "name" (module OpamCompiler));
+        (Pp.V.string -| Pp.of_module "name" (module OpamCompiler: Pp.STR with type t = OpamCompiler.t));
       "version", Pp.ppacc with_version version
-        (Pp.V.string -| Pp.of_module "version" (module OpamCompiler.Version));
+        (Pp.V.string -| Pp.of_module "version" (module OpamCompiler.Version: Pp.STR with type t = OpamCompiler.Version.t));
 
       "patches", Pp.ppacc with_patches patches
         (Pp.V.map_list @@ Pp.V.url);

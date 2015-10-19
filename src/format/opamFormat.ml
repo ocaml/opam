@@ -370,16 +370,14 @@ module Pp = struct
 
   (** Pps from strings *)
 
-  module type STRINGABLE = sig
+  module type STR = sig
     type t
     val of_string: string -> t
     val to_string: t -> string
   end
 
-  let of_module :
-    type a. string -> (module STRINGABLE with type t = a) -> (string, a) t
-    =
-    fun name (module X: STRINGABLE with type t = a) ->
+  let of_module (type a) name m =
+    let module X = (val m: STR with type t = a) in
     pp ~name
       (fun ~pos:_ -> X.of_string)
       X.to_string
@@ -554,7 +552,7 @@ module Pp = struct
 
     (** Pps for the [value] type to higher level types *)
 
-    let url = string -| of_module "url" (module OpamUrl)
+    let url = string -| of_module "url" (module OpamUrl: STR with type t = OpamUrl.t)
 
     let url_with_backend backend =
       string -|
@@ -566,7 +564,7 @@ module Pp = struct
        backwards-compat. *)
     let compiler_version =
       let str_system = OpamCompiler.(to_string system) in
-      let comp = of_module "compiler-version" (module OpamCompiler.Version) in
+      let comp = of_module "compiler-version" (module OpamCompiler.Version: STR with type t = OpamCompiler.Version.t) in
       let parse ~pos = function
         | Ident (_, v) when v = str_system -> parse comp ~pos v
         | String (_, v) -> parse comp ~pos v
@@ -698,9 +696,9 @@ module Pp = struct
 
     let package_atom constraints =
       map_option
-        (string -| of_module "pkg-name" (module OpamPackage.Name))
+        (string -| of_module "pkg-name" (module OpamPackage.Name: STR with type t = OpamPackage.Name.t))
         (constraints
-           (string -| of_module "pkg-version" (module OpamPackage.Version)))
+           (string -| of_module "pkg-version" (module OpamPackage.Version: STR with type t = OpamPackage.Version.t)))
 
     let package_formula kind constraints =
       let split, join = match kind with
@@ -742,7 +740,7 @@ module Pp = struct
       list -| singleton -| pp ~name:"env-binding" parse print
 
     let features =
-      let var = ident -| of_module "variable" (module OpamVariable) in
+      let var = ident -| of_module "variable" (module OpamVariable: STR with type t = OpamVariable.t) in
       let doc_filt = map_option string filter in
       let rec parse_features ~pos = function
         | [] -> []
@@ -983,7 +981,7 @@ module Pp = struct
         ()
       =
       let name = "opam-version" in
-      let opam_v = V.string -| of_module "opam-version" (module OpamVersion) in
+      let opam_v = V.string -| of_module "opam-version" (module OpamVersion: STR with type t = OpamVersion.t) in
       let f v =
         OpamFormatConfig.(!r.skip_version_checks) || match v with
         | Some v -> f v

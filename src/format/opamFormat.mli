@@ -150,7 +150,7 @@ module Pp : sig
   val last : ('a list, 'a) t
 
 
-  module type STRINGABLE = sig
+  module type STR = sig
     type t
     val of_string : string -> t
     val to_string : t -> string
@@ -158,7 +158,7 @@ module Pp : sig
 
   (** Generates a string pp from a module with of/to string functions *)
   val of_module :
-    string -> (module STRINGABLE with type t = 'a) -> (string, 'a) t
+    string -> (module STR with type t = 'a) -> (string, 'a) t
 
   (** Parses to None on the empty list. Often combined with singleton
       ([opt -| singleton]) *)
