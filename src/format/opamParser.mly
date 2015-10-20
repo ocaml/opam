@@ -67,9 +67,13 @@ items:
 
 item:
 | IDENT COLON value                { Variable (get_pos 1, $1, $3) }
+| IDENT LBRACE items RBRACE {
+  Section (get_pos 1,
+           {section_kind=$1; section_name=None; section_items= $3})
+}
 | IDENT STRING LBRACE items RBRACE {
   Section (get_pos 1,
-           {section_kind=$1; section_name=$2; section_items= $4})
+           {section_kind=$1; section_name=Some $2; section_items= $4})
 }
 ;
 
