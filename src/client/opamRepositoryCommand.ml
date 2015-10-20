@@ -448,7 +448,8 @@ let cleanup t repo =
   let repos = OpamRepositoryName.Map.keys t.repositories in
   update_config t (List.filter ((<>) repo.repo_name) repos);
   OpamFilename.rmdir repo.repo_root;
-  fix_descriptions t
+  OpamState.Cache.remove ();
+  fix_descriptions ~save_cache:false t
 
 (* XXX: this module uses OpamState.load_state, which loads the full switch state; 
    actually the switch is completely unneeded *)
@@ -505,7 +506,7 @@ let add name url ~priority:prio =
   OpamState.Cache.remove ();
   try
     let t = OpamProcess.Job.run (update t repo) t in
-    fix_descriptions t
+    fix_descriptions ~save_cache:false t
   with
   | e ->
     cleanup t repo;
@@ -533,7 +534,8 @@ let set_url name url =
   let config =
     let config = OpamFile.Repo_config.read config_f in
     { config with repo_url = url } in
-  OpamFile.Repo_config.write config_f config
+  OpamFile.Repo_config.write config_f config;
+  OpamState.Cache.remove ()
 
 let list ~short =
   log "repository-list";
