@@ -69,16 +69,27 @@ is defined by Version Ordering.
 > <a id="version-ordering">**Version Ordering**</a> follows the basics of the
 > [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version).
 >
-> It is basically "lexicographical order, with numbers handled properly". In
-> more detail:
+> It is basically "lexicographical order, with numbers handled
+> properly". In more detail (see the [Debian
+> page](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version)
+> for full details):
 >
-> - version strings are sliced into alternate, possibly empty non-digit / digit
+> - Version strings are sliced into alternate, possibly empty non-digit / digit
 >   sequences, always starting with a non-digit sequence. `1.0~beta2` is thus
 >   `["";1;".";0;"~beta";2]`.
-> - those are sorted lexicographically, using resp. ASCII (with symbol > letter)
->   and number order. For example `a` gives `["a"]`, and `1` gives `["";1]`, so
->  `a` is latest (`"" < "a"`).
-> - the `~` character is special as it sorts even before the end of sequence
+>
+> - Those sequences are sorted lexicographically. Because of the split
+>   as `non-digit; digit; non-digit; ...`, non-digit sequences are
+>   always compared to non-digit sequences (and conversely). For
+>   example, the versions `a` and `1` are sliced into `["a"]` and
+>   `[""; 1]`, so we have `1 < a` because the non-digit component of
+>   1, which is the empty string `""`, is smaller than `"a"`.
+>
+> - For non-digit components, the ordering used is that letters are
+>   always smaller than non-letters (for example `z` < `"#"`), while
+>   non-letters are compared by ASCII order.
+>
+> - The `~` character is special as it sorts even before the end of sequence
 >   (_i.e._ before anything shorter: "~" sorts before "", "a~b" before "a").
 >   It's most convenient for pre-releases, allowing `1.0~beta` to be before
 >   `1.0`.
