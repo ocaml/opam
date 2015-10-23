@@ -848,10 +848,6 @@ module API = struct
              with Not_found -> (n,None))
           | atom -> atom
         ) atoms in
-    let to_reinstall =
-      OpamPackage.Set.filter
-        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
-        t.reinstall in
     let to_upgrade, not_installed =
       List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
           try
@@ -873,6 +869,19 @@ module API = struct
       else []
     in
     let changes = to_upgrade ++ OpamState.packages_of_atoms t to_install in
+    let to_reinstall =
+      (* Only treat related reinstalls (i.e. the ones belonging to the
+         dependency cone of packages specified to update) *)
+      let universe = OpamState.universe t (Upgrade OpamPackage.Set.empty) in
+      let all_deps =
+        OpamPackage.names_of_packages @@ OpamPackage.Set.of_list @@
+        OpamSolver.dependencies ~depopts:true ~build:false ~installed:true
+          universe changes
+      in
+      OpamPackage.Set.filter
+        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) all_deps)
+        t.reinstall
+    in
     let t, full_orphans, orphan_versions = orphans ~changes t in
     let to_remove = to_upgrade %% full_orphans in
     let to_upgrade = to_upgrade -- full_orphans in
