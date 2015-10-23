@@ -151,6 +151,7 @@ let display_error (n, error) =
     match error with
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
+    | OpamSystem.Process_error e -> disp "%s" (OpamProcess.string_of_result e)
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
