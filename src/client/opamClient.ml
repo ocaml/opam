@@ -862,12 +862,18 @@ module API = struct
           with Not_found ->
             packages, atom :: not_installed)
         (OpamPackage.Set.empty,[]) atoms in
-    if not_installed <> [] then
-      OpamConsole.note "%s %s not installed, ignored.\n"
-        (OpamStd.Format.pretty_list
-           (List.rev_map OpamFormula.short_string_of_atom not_installed))
-        (match not_installed with [_] -> "is" | _ -> "are");
-    let t, full_orphans, orphan_versions = orphans ~changes:to_upgrade t in
+    let to_install =
+      if not_installed = [] then [] else
+      if OpamConsole.confirm "%s %s not installed. Install %s ?"
+          (OpamStd.Format.pretty_list
+             (List.rev_map OpamFormula.short_string_of_atom not_installed))
+          (match not_installed with [_] -> "is" | _ -> "are")
+          (match not_installed with [_] -> "it" | _ -> "them")
+      then not_installed
+      else []
+    in
+    let changes = to_upgrade ++ OpamState.packages_of_atoms t to_install in
+    let t, full_orphans, orphan_versions = orphans ~changes t in
     let to_remove = to_upgrade %% full_orphans in
     let to_upgrade = to_upgrade -- full_orphans in
     let requested = names in
@@ -885,6 +891,7 @@ module API = struct
     OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
       (preprocessed_request t full_orphans orphan_versions
+         ~wish_install:to_install
          ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
          ~wish_upgrade:upgrade_atoms
          ())
