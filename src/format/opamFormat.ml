@@ -341,6 +341,16 @@ module Pp = struct
          parse pp2 ~pos:(posf2 b) b)
       (fun (a,b) -> print pp1 a, print pp2 b)
 
+  let map_fst pp1 =
+    pp
+      (fun ~pos (a,b) -> pp1.parse ~pos a, b)
+      (fun (a, b) -> pp1.print a, b)
+
+  let map_snd pp1 =
+    pp
+      (fun ~pos (a,b) -> a, pp1.parse ~pos b)
+      (fun (a, b) -> a, pp1.print b)
+
   let map_list ?name ?posf pp1 =
     let name = match name with
       | None -> pp1.name ^ "*"
@@ -824,6 +834,17 @@ module Pp = struct
       bindings). *)
   module I = struct
 
+    let file =
+      pp ~name:"opam-file"
+        (fun ~pos:_ file ->
+           OpamFilename.of_string file.file_name,
+           file.file_contents)
+        (fun (file_name, file_contents) ->
+           { file_name = OpamFilename.to_string file_name;
+             file_contents })
+
+    let map_file pp1 = file -| map_snd pp1
+
     let item =
       pp ~name:"field-binding"
         (fun ~pos:_ -> function
@@ -968,12 +989,11 @@ module Pp = struct
 
     let extract_field name =
       partition_fields ((=) name) -|
-      map_pair
-        (opt (singleton -| item -|
-              pp ~name:(Printf.sprintf "'%s:' field" name)
-                (fun ~pos:_ (_,v) -> v)
-                (fun v -> name,v)))
-        identity
+      (map_fst @@ opt @@
+       singleton -| item -|
+       pp ~name:(Printf.sprintf "'%s:' field" name)
+         (fun ~pos:_ (_,v) -> v)
+         (fun v -> name,v))
 
     let check_opam_version
         ?(optional=false)
@@ -988,7 +1008,7 @@ module Pp = struct
         | None -> optional
       in
       field name (parse opam_v) -|
-      map_pair (check ~name ~errmsg:"Unsupported or missing file format version" f) identity -|
+      map_fst (check ~name ~errmsg:"Unsupported or missing file format version" f)  -|
       pp
         (fun ~pos:_ (_,x) -> x)
         (fun x ->
