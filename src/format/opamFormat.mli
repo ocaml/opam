@@ -223,7 +223,7 @@ module Pp : sig
     (** Strings or bools *)
     val variable_contents : (value, variable_contents) t
 
-    (** "[a b c]" *)
+    (** "[a b c]"; also allows just "a" to be parsed as a singleton list *)
     val list : (value, value list) t
 
     (** "(a b c)" *)
@@ -237,7 +237,13 @@ module Pp : sig
 
     val map_group : (value, 'a) t -> (value, 'a list) t
 
-    val map_list : (value, 'a) t -> (value, 'a list) t
+    (** An expected list depth may be specified to enable removal of extra
+        brackets (never use |~depth] for an inner list) *)
+    val map_list : ?depth:int -> (value, 'a) t -> (value, 'a list) t
+
+    (** Normalises to the given list depth when parsing, and removes brackets
+        that can be made implicit when printing *)
+    val list_depth : int -> (value, value) t
 
     val map_option : (value, 'a) t -> (value list, 'b) t -> (value, 'a * 'b) t
 

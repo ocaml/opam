@@ -163,7 +163,7 @@ module Print = struct
 
   let format_opamfile fmt f =
     format_items fmt f.file_contents;
-    Format.pp_print_flush fmt ()
+    Format.pp_print_newline fmt ()
 
   let items l =
     format_items Format.str_formatter l; Format.flush_str_formatter ()
@@ -171,8 +171,6 @@ module Print = struct
   let opamfile f =
     items f.file_contents
 end
-
-let log f = OpamConsole.log "FORMAT" f
 
 module Normalise = struct
   (** OPAM normalised file format, for signatures:
@@ -274,9 +272,15 @@ module Pp = struct
       | Some e -> raise e
       | None -> bad_format ?pos fmt
     else
-      Printf.ksprintf
-        (fun s -> log "%s" (string_of_bad_format (Bad_format (pos, [], s))))
-        fmt
+    Printf.ksprintf (fun s ->
+          if OpamConsole.verbose () then
+            match exn with
+            | None ->
+              OpamConsole.warning "%s"
+                (string_of_bad_format (Bad_format (pos, [], s)))
+            | Some e ->
+              OpamConsole.warning "%s" (string_of_bad_format e))
+      fmt
 
   (** Basic pp usage *)
 
@@ -541,19 +545,37 @@ module Pp = struct
 
     let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
-    let map_list pp1 =
+    let list_depth expected_depth =
+      let rec depth = function
+        | List (_,[]) -> 1
+        | List (_,(v::_)) -> 1 + depth v
+        | Option (_,v,_) -> depth v
+        | _ -> 0
+      in
+      let rec wrap n v =
+        if n <= 0 then v else wrap (n-1) (List (pos_null, [v]))
+      in
+      let rec lift n v =
+        if n <= 0 then v else
+        match v with
+        | List (_, [v]) -> lift (n-1) v
+        | v -> v
+      in
+      pp
+        (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
+        (fun v -> lift expected_depth v)
+
+    let map_list ?(depth=0) pp1 =
+      list_depth depth -|
       pp ~name:(Printf.sprintf "[%s]" pp1.name)
-        (fun ~pos v ->
-         try [pp1.parse ~pos v] with
-         | Bad_format _ | Bad_format_list _ | Unexpected _ as err ->
+        (fun ~pos:_ v ->
            match v with
            | List (_, l) ->
              List.rev @@
              List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l
-           | _ -> raise err)
+           | _ -> unexpected ())
         (function
-         | [x] -> pp1.print x
-         | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
+          | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
 
     let map_option pp1 pp2 =
       option -|
@@ -954,7 +976,7 @@ module Pp = struct
                  try errs, parse ppa ~pos (acc, Some v) with
                  | Bad_format (pos,btl,msg) ->
                    let msg =
-                     Printf.sprintf "%sfield '%s:' %s" in_name field msg
+                     Printf.sprintf "%sfield '%s:', %s" in_name field msg
                    in
                    (field,(pos, Printexc.get_backtrace()::btl, msg)) :: errs,
                    acc
@@ -1020,7 +1042,7 @@ module Pp = struct
         | None -> optional
       in
       field name (parse opam_v) -|
-      map_fst (check ~name ~errmsg:"Unsupported or missing file format version" f)  -|
+      map_fst (check ~name ~errmsg:"unsupported or missing file format version" f)  -|
       pp
         (fun ~pos:_ (_,x) -> x)
         (fun x ->
@@ -1036,7 +1058,7 @@ module Pp = struct
     exception Invalid_signature of pos * (string*string*string) list option
 
     let signed ~check =
-      let pp_sig = V.map_list signature in
+      let pp_sig = V.map_list ~depth:2 signature in
       extract_field "signature" -|
       pp ~name:"signed-file"
         (fun ~pos -> function
