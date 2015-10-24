@@ -1306,10 +1306,14 @@ module API = struct
                     install the %s command on your system."
                    msg (OpamConsole.colorise `bold cmd))
                unavailable_repos);
-        if not (check_external_dep "aspcud") then
+        let external_solvers = ["aspucd"; "packup"; "mccs"] in
+        if not (List.exists check_external_dep external_solvers) then
           OpamConsole.warning
-            "Recommended external solver %s not found."
-            (OpamConsole.colorise `bold "aspcud");
+            "No external solver found, one of %s is recommended (see \
+             http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
+             details)"
+            (OpamStd.Format.pretty_list ~last:"or"
+               (List.map (OpamConsole.colorise `bold) external_solvers));
         let advised_deps =
           [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
         in
