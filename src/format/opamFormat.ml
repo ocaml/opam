@@ -79,13 +79,20 @@ let values_pos = function
 
 module Print = struct
 
-  let escape_string s =
+  let escape_string ?(triple=false) s =
     let len = String.length s in
     let buf = Buffer.create (len * 2) in
     for i = 0 to len -1 do
-      match s.[i] with
-      | '\\' | '"' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
-      | c -> Buffer.add_char buf c
+      let c = s.[i] in
+      (match c with
+       | '"'
+         when not triple
+           || (i < len - 2 && s.[i+1] = '"' && s.[i+2] = '"')
+           || i = len - 1 ->
+         Buffer.add_char buf '\\'
+       | '\\' -> Buffer.add_char buf '\\'
+       | _ -> ());
+      Buffer.add_char buf c
     done;
     Buffer.contents buf
 
@@ -106,12 +113,13 @@ module Print = struct
     | Bool (_,b)      -> Format.fprintf fmt "%b" b
     | String (_,s)    ->
       if String.contains s '\n'
-      then Format.fprintf fmt "@[<h>\"\n%s@\n\"@]" (escape_string s)
+      then Format.fprintf fmt "\"\"\"\n%s\"\"\""
+          (escape_string ~triple:true s)
       else Format.fprintf fmt "\"%s\"" (escape_string s)
     | List (_, l) ->
       Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
     | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
-    | Option(_,v,l)   -> Format.fprintf fmt "@[<hv 2>%a@ {@[<hv>%a@]}@]"
+    | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
                            format_value v format_values l
     | Env_binding (_,op,id,v) ->
       Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]"
@@ -139,6 +147,8 @@ module Print = struct
           i format_values l
       else Format.fprintf fmt "@[<hv>%s: [@;<0 2>@[<hv>%a@]@,]@]"
           i format_values l
+    | Variable (_, i, (String (_,s) as v)) when String.contains s '\n' ->
+      Format.fprintf fmt "@[<hov 0>%s: %a@]" i format_value v
     | Variable (_, i, v) ->
       Format.fprintf fmt "@[<hov 2>%s:@ %a@]" i format_value v
     | Section (_,s) ->
@@ -631,7 +641,9 @@ module Pp = struct
           | FNot f -> group (Pfxop (pos_null, `Not, aux ~paren:`Not f))
           | FUndef -> assert false
         in
-        [aux f]
+        match f with
+        | FBool true -> []
+        | f -> [aux f]
       in
       pp ~name:"filter-expression" parse_filter print_filter
 
