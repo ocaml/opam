@@ -590,8 +590,8 @@ let global_options =
     mk_opt ~section ["solver"] "CMD"
       ("Specify the name of the external dependency $(i,solver). \
         The default value is \"aspcud\". \
-        Either 'aspcud', 'packup' or a custom command that should contain \
-        the variables %{input}%, %{output}% and %{criteria}%")
+        Either 'aspcud', 'packup', 'mccs' or a custom command that should \
+        contain the variables %{input}%, %{output}% and %{criteria}%")
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ~section ["criteria"] "CRITERIA"
