@@ -151,6 +151,7 @@ let display_error (n, error) =
     match error with
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
+    | OpamSystem.Process_error e -> disp "%s" (OpamProcess.string_of_result e)
     | e -> disp "%s" (Printexc.to_string e)
   in
   match n with
@@ -602,7 +603,7 @@ let parallel_apply t action action_graph =
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function `Reinstall _ -> false | _ -> true)
+        (function _ -> true)
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;

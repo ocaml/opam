@@ -79,13 +79,20 @@ let values_pos = function
 
 module Print = struct
 
-  let escape_string s =
+  let escape_string ?(triple=false) s =
     let len = String.length s in
     let buf = Buffer.create (len * 2) in
     for i = 0 to len -1 do
-      match s.[i] with
-      | '\\' | '"' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
-      | c -> Buffer.add_char buf c
+      let c = s.[i] in
+      (match c with
+       | '"'
+         when not triple
+           || (i < len - 2 && s.[i+1] = '"' && s.[i+2] = '"')
+           || i = len - 1 ->
+         Buffer.add_char buf '\\'
+       | '\\' -> Buffer.add_char buf '\\'
+       | _ -> ());
+      Buffer.add_char buf c
     done;
     Buffer.contents buf
 
@@ -106,12 +113,13 @@ module Print = struct
     | Bool (_,b)      -> Format.fprintf fmt "%b" b
     | String (_,s)    ->
       if String.contains s '\n'
-      then Format.fprintf fmt "@[<h>\"\n%s@\n\"@]" (escape_string s)
+      then Format.fprintf fmt "\"\"\"\n%s\"\"\""
+          (escape_string ~triple:true s)
       else Format.fprintf fmt "\"%s\"" (escape_string s)
     | List (_, l) ->
       Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
     | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
-    | Option(_,v,l)   -> Format.fprintf fmt "@[<hv 2>%a@ {@[<hv>%a@]}@]"
+    | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
                            format_value v format_values l
     | Env_binding (_,op,id,v) ->
       Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]"
@@ -139,6 +147,8 @@ module Print = struct
           i format_values l
       else Format.fprintf fmt "@[<hv>%s: [@;<0 2>@[<hv>%a@]@,]@]"
           i format_values l
+    | Variable (_, i, (String (_,s) as v)) when String.contains s '\n' ->
+      Format.fprintf fmt "@[<hov 0>%s: %a@]" i format_value v
     | Variable (_, i, v) ->
       Format.fprintf fmt "@[<hov 2>%s:@ %a@]" i format_value v
     | Section (_,s) ->
@@ -153,7 +163,7 @@ module Print = struct
 
   let format_opamfile fmt f =
     format_items fmt f.file_contents;
-    Format.pp_print_flush fmt ()
+    Format.pp_print_newline fmt ()
 
   let items l =
     format_items Format.str_formatter l; Format.flush_str_formatter ()
@@ -161,8 +171,6 @@ module Print = struct
   let opamfile f =
     items f.file_contents
 end
-
-let log f = OpamConsole.log "FORMAT" f
 
 module Normalise = struct
   (** OPAM normalised file format, for signatures:
@@ -264,9 +272,15 @@ module Pp = struct
       | Some e -> raise e
       | None -> bad_format ?pos fmt
     else
-      Printf.ksprintf
-        (fun s -> log "%s" (string_of_bad_format (Bad_format (pos, [], s))))
-        fmt
+    Printf.ksprintf (fun s ->
+          if OpamConsole.verbose () then
+            match exn with
+            | None ->
+              OpamConsole.warning "%s"
+                (string_of_bad_format (Bad_format (pos, [], s)))
+            | Some e ->
+              OpamConsole.warning "%s" (string_of_bad_format e))
+      fmt
 
   (** Basic pp usage *)
 
@@ -340,6 +354,16 @@ module Pp = struct
          let posf2 = OpamStd.Option.default (fun _ -> pos) posf2 in
          parse pp2 ~pos:(posf2 b) b)
       (fun (a,b) -> print pp1 a, print pp2 b)
+
+  let map_fst pp1 =
+    pp
+      (fun ~pos (a,b) -> pp1.parse ~pos a, b)
+      (fun (a, b) -> pp1.print a, b)
+
+  let map_snd pp1 =
+    pp
+      (fun ~pos (a,b) -> a, pp1.parse ~pos b)
+      (fun (a, b) -> a, pp1.print b)
 
   let map_list ?name ?posf pp1 =
     let name = match name with
@@ -521,19 +545,37 @@ module Pp = struct
 
     let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
-    let map_list pp1 =
+    let list_depth expected_depth =
+      let rec depth = function
+        | List (_,[]) -> 1
+        | List (_,(v::_)) -> 1 + depth v
+        | Option (_,v,_) -> depth v
+        | _ -> 0
+      in
+      let rec wrap n v =
+        if n <= 0 then v else wrap (n-1) (List (pos_null, [v]))
+      in
+      let rec lift n v =
+        if n <= 0 then v else
+        match v with
+        | List (_, [v]) -> lift (n-1) v
+        | v -> v
+      in
+      pp
+        (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
+        (fun v -> lift expected_depth v)
+
+    let map_list ?(depth=0) pp1 =
+      list_depth depth -|
       pp ~name:(Printf.sprintf "[%s]" pp1.name)
-        (fun ~pos v ->
-         try [pp1.parse ~pos v] with
-         | Bad_format _ | Bad_format_list _ | Unexpected _ as err ->
+        (fun ~pos:_ v ->
            match v with
            | List (_, l) ->
              List.rev @@
              List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l
-           | _ -> raise err)
+           | _ -> unexpected ())
         (function
-         | [x] -> pp1.print x
-         | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
+          | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
 
     let map_option pp1 pp2 =
       option -|
@@ -621,7 +663,9 @@ module Pp = struct
           | FNot f -> group (Pfxop (pos_null, `Not, aux ~paren:`Not f))
           | FUndef -> assert false
         in
-        [aux f]
+        match f with
+        | FBool true -> []
+        | f -> [aux f]
       in
       pp ~name:"filter-expression" parse_filter print_filter
 
@@ -824,6 +868,17 @@ module Pp = struct
       bindings). *)
   module I = struct
 
+    let file =
+      pp ~name:"opam-file"
+        (fun ~pos:_ file ->
+           OpamFilename.of_string file.file_name,
+           file.file_contents)
+        (fun (file_name, file_contents) ->
+           { file_name = OpamFilename.to_string file_name;
+             file_contents })
+
+    let map_file pp1 = file -| map_snd pp1
+
     let item =
       pp ~name:"field-binding"
         (fun ~pos:_ -> function
@@ -921,7 +976,7 @@ module Pp = struct
                  try errs, parse ppa ~pos (acc, Some v) with
                  | Bad_format (pos,btl,msg) ->
                    let msg =
-                     Printf.sprintf "%sfield '%s:' %s" in_name field msg
+                     Printf.sprintf "%sfield '%s:', %s" in_name field msg
                    in
                    (field,(pos, Printexc.get_backtrace()::btl, msg)) :: errs,
                    acc
@@ -968,12 +1023,11 @@ module Pp = struct
 
     let extract_field name =
       partition_fields ((=) name) -|
-      map_pair
-        (opt (singleton -| item -|
-              pp ~name:(Printf.sprintf "'%s:' field" name)
-                (fun ~pos:_ (_,v) -> v)
-                (fun v -> name,v)))
-        identity
+      (map_fst @@ opt @@
+       singleton -| item -|
+       pp ~name:(Printf.sprintf "'%s:' field" name)
+         (fun ~pos:_ (_,v) -> v)
+         (fun v -> name,v))
 
     let check_opam_version
         ?(optional=false)
@@ -988,7 +1042,7 @@ module Pp = struct
         | None -> optional
       in
       field name (parse opam_v) -|
-      map_pair (check ~name ~errmsg:"Unsupported or missing file format version" f) identity -|
+      map_fst (check ~name ~errmsg:"unsupported or missing file format version" f)  -|
       pp
         (fun ~pos:_ (_,x) -> x)
         (fun x ->
@@ -1004,7 +1058,7 @@ module Pp = struct
     exception Invalid_signature of pos * (string*string*string) list option
 
     let signed ~check =
-      let pp_sig = V.map_list signature in
+      let pp_sig = V.map_list ~depth:2 signature in
       extract_field "signature" -|
       pp ~name:"signed-file"
         (fun ~pos -> function

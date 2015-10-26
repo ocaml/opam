@@ -136,6 +136,14 @@ module Pp : sig
     ?posf2:('b -> pos) ->
     ('a, 'c) t -> ('b, 'd) t -> ('a * 'b, 'c * 'd) t
 
+  (** Builds a pp of pairs by passing the second term along *)
+  val map_fst :
+    ('a, 'b) t -> ('a * 'c, 'b * 'c) t
+
+  (** Builds a pp of pairs by passing the first term along *)
+  val map_snd :
+    ('a, 'b) t -> ('c * 'a, 'c * 'b) t
+
   val map_list :
     ?name:string ->
     ?posf:('a -> pos) -> ('a, 'b) t -> ('a list, 'b list) t
@@ -215,7 +223,7 @@ module Pp : sig
     (** Strings or bools *)
     val variable_contents : (value, variable_contents) t
 
-    (** "[a b c]" *)
+    (** "[a b c]"; also allows just "a" to be parsed as a singleton list *)
     val list : (value, value list) t
 
     (** "(a b c)" *)
@@ -229,7 +237,13 @@ module Pp : sig
 
     val map_group : (value, 'a) t -> (value, 'a list) t
 
-    val map_list : (value, 'a) t -> (value, 'a list) t
+    (** An expected list depth may be specified to enable removal of extra
+        brackets (never use |~depth] for an inner list) *)
+    val map_list : ?depth:int -> (value, 'a) t -> (value, 'a list) t
+
+    (** Normalises to the given list depth when parsing, and removes brackets
+        that can be made implicit when printing *)
+    val list_depth : int -> (value, value) t
 
     val map_option : (value, 'a) t -> (value list, 'b) t -> (value, 'a * 'b) t
 
@@ -325,13 +339,17 @@ module Pp : sig
 
   module I :
   sig
+    val file : (opamfile, filename * opamfile_item list) t
+
+    val map_file : (opamfile_item list, 'a) t -> (opamfile, filename * 'a) t
+
     val item : (opamfile_item, string * value) t
 
     val items : (opamfile_item list, (string * value) list) t
 
     type 'a fields_def = (string * 'a field_parser) list
 
-    (** Parses an item list into a record using a fields_def*)
+    (** Parses an item list into a record using a fields_def *)
     val fields :
       ?name:string ->
       ?strict:bool ->

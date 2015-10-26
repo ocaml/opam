@@ -101,6 +101,47 @@ module Config: sig
 
 end
 
+(** Package descriptions: [$opam/descr/] *)
+module Descr: sig
+
+  include IO_FILE
+
+  val create: string -> t
+
+  (** Create an abstract description file from a string *)
+  val of_string: filename -> string -> t
+
+  (** Return the first line *)
+  val synopsis: t -> string
+
+  (** Return the body *)
+  val body: t -> string
+
+  (** Return the full description *)
+  val full: t -> string
+
+end
+
+(** {2 Urls for OPAM repositories} *)
+module URL: sig
+
+  include IO_FILE
+
+  val create: ?mirrors:url list -> url -> t
+
+  (** URL address *)
+  val url: t -> url
+
+  val mirrors: t -> url list
+
+  (** Archive checksum *)
+  val checksum: t -> string option
+
+  (** Constructor *)
+  val with_checksum: t -> string -> t
+
+end
+
 (** OPAM files *)
 module OPAM: sig
 
@@ -318,26 +359,9 @@ module OPAM: sig
 
   val add_extension: t -> string -> value -> t
 
-end
 
-(** Package descriptions: [$opam/descr/] *)
-module Descr: sig
 
-  include IO_FILE
 
-  val create: string -> t
-
-  (** Create an abstract description file from a string *)
-  val of_string: filename -> string -> t
-
-  (** Return the first line *)
-  val synopsis: t -> string
-
-  (** Return the body *)
-  val body: t -> string
-
-  (** Return the full description *)
-  val full: t -> string
 
 end
 
@@ -518,28 +542,6 @@ module Repo: sig
 
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
-
-end
-
-(** {2 Substitution files} *)
-
-(** {2 Urls for OPAM repositories} *)
-module URL: sig
-
-  include IO_FILE
-
-  val create: ?mirrors:url list -> url -> t
-
-  (** URL address *)
-  val url: t -> url
-
-  val mirrors: t -> url list
-
-  (** Archive checksum *)
-  val checksum: t -> string option
-
-  (** Constructor *)
-  val with_checksum: t -> string -> t
 
 end
 
