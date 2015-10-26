@@ -32,12 +32,6 @@ module Git : OpamVCS.VCS= struct
     fun ?verbose ?env args ->
       OpamSystem.make_command ~dir ?verbose ?env "git" args
 
-  let cmd_url url =
-    match url.OpamUrl.transport with
-    (* Although its manpage claims it does, git doesn't like 'ssh://' prefixes *)
-    | "ssh" -> url.OpamUrl.path
-    | _ -> OpamUrl.base_url url
-
   let init repo =
     let env =
       Array.append (Unix.environment ()) [|
@@ -48,7 +42,8 @@ module Git : OpamVCS.VCS= struct
       |] in
     OpamProcess.Job.of_list [
       git repo ~env [ "init" ];
-      git repo ~env [ "remote" ; "add" ; "origin" ; cmd_url repo.repo_url ];
+      git repo ~env [ "remote" ; "add" ; "origin" ;
+                      OpamUrl.base_url repo.repo_url ];
       git repo ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
     ] @@+ function
     | None -> Done ()
@@ -65,14 +60,14 @@ module Git : OpamVCS.VCS= struct
         | [url] -> Some url
         | _ -> None
       in
-      if current_remote <> Some (cmd_url repo.repo_url) then (
+      if current_remote <> Some (OpamUrl.base_url repo.repo_url) then (
         log "Git remote for %s needs updating (was: %s)"
           (OpamRepositoryBackend.to_string repo)
           (OpamStd.Option.default "<none>" current_remote);
         OpamProcess.Job.of_list [
           git repo ~verbose:false [ "remote" ; "rm" ; "origin" ];
           git repo ~verbose:false
-            [ "remote" ; "add" ; "origin"; cmd_url repo.repo_url ]
+            [ "remote" ; "add" ; "origin"; OpamUrl.base_url repo.repo_url ]
         ] @@+ function
         | None -> Done ()
         | Some (_,err) -> OpamSystem.process_error err
