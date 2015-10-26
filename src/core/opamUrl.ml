@@ -85,10 +85,28 @@ let backend_of_string = function
   | p -> failwith (Printf.sprintf "Unsupported protocol %S" p)
 
 
-let looks_like_ssh_re =
+let looks_like_ssh_path =
   (* ':' before any '/' : assume ssh, like git does. Exception for 'x:' with
      single char, because Windows *)
-  Re.(compile @@ seq [repn (diff any (char '/')) 2 None; char ':'])
+  let re =
+    Re.(compile @@ seq [
+        group @@ repn (diff any (set "/:")) 2 None;
+        char ':';
+        opt @@ group @@ seq [
+          alt [
+            diff any digit;
+            seq [rep digit; compl [digit; char '/']]
+          ];
+          rep any;
+        ];
+        eos;
+      ])
+  in
+  fun path ->
+    try
+      let sub = Re.exec re path in
+      Some (Re.get sub 1 ^ try "/" ^ Re.get sub 2 with Not_found -> "")
+    with Not_found -> None
 
 let parse ?backend s =
   let vc, transport, path, suffix, hash = split_url s in
@@ -108,19 +126,16 @@ let parse ?backend s =
            | None -> backend_of_string tr)
         | None -> `rsync
   in
-  let ssh_or_file path =
-    if Re.execp looks_like_ssh_re path then "ssh", path
-    else "file", OpamSystem.real_path path
-  in
   let transport, path =
-    match backend, transport with
-    | `hg, Some "hg" | `darcs, Some "darcs" -> (* Unspecified transport *)
-      ssh_or_file path
-    | _, Some tr -> tr, path
-    | `http, None -> "http", path
-    | _, None ->
-      if Re.execp looks_like_ssh_re path then "ssh", path
-      else "file", OpamSystem.real_path path
+    match backend, transport, looks_like_ssh_path path with
+    | `http, None, _ ->
+      "http", path
+    | _, (None | Some ("git"|"hg"|"darcs")), Some path ->
+      "ssh", path
+    | _, (None | Some ("hg"|"darcs")), None ->
+      "file", OpamSystem.real_path path
+    | _, Some tr, _ ->
+      tr, path
   in
   {
     transport;
@@ -151,7 +166,7 @@ let base_url url =
 let local_path = function
   | { transport = ("file"|"path"|"local"|"rsync"); path;
       hash = None; backend = (#version_control | `rsync); }
-    when not (Re.execp looks_like_ssh_re path) ->
+    when looks_like_ssh_path path = None ->
     Some path
   | _ -> None
 
@@ -171,7 +186,7 @@ let local_file url =
 
 let guess_version_control s =
   let vc,transport,path,_,_ = split_url s in
-  if vc = None && transport = None && not (Re.execp looks_like_ssh_re path) then
+  if vc = None && transport = None && looks_like_ssh_path path = None then
     let open OpamFilename in
     let open Op in
     let dir = Dir.of_string path in
