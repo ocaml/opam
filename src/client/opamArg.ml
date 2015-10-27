@@ -274,7 +274,7 @@ let repository_name =
   parse, print
 
 let url =
-  let parse str = `Ok (OpamUrl.of_string str) in
+  let parse str = `Ok (OpamUrl.parse str) in
   let print ppf url = pr_str ppf (OpamUrl.to_string url) in
   parse, print
 

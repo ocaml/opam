@@ -599,7 +599,7 @@ module Pp = struct
     let url_with_backend backend =
       string -|
       pp ~name:"url"
-        (fun ~pos:_ -> OpamUrl.parse ~backend)
+        (fun ~pos:_ -> OpamUrl.parse ~backend ~handle_suffix:false)
         (fun url -> OpamUrl.to_string url)
 
     (* a hack to allow "system" compiler as ident rather than string. For

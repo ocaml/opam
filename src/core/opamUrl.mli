@@ -32,8 +32,10 @@ type t = {
                         url *)
 }
 
-(** Same as [of_string], but allows enforcing the expected backend *)
-val parse: ?backend:backend -> string -> t
+(** Same as [of_string], but allows enforcing the expected backend, and may
+    otherwise guess version control from the suffix by default (for e.g.
+    https://foo/bar.git) (this should be disabled when parsing from files) *)
+val parse: ?backend:backend -> ?handle_suffix:bool -> string -> t
 
 include OpamStd.ABSTRACT with type t := t
 
