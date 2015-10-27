@@ -154,10 +154,8 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
   let base_depends =
     if OpamPackage.Set.mem package universe.u_base then Empty else
       OpamFormula.ands
-        (List.map (fun nv ->
-             Atom (OpamPackage.name nv, Atom (`Eq, OpamPackage.version nv)))
-            (OpamPackage.Set.elements
-               (universe.u_base %% universe.u_installed)))
+        (OpamPackage.Name.Set.fold (fun name acc -> Atom (name, Empty) :: acc)
+           (OpamPackage.names_of_packages universe.u_base) [])
   in
   let depends = OpamFormula.ands [base_depends; depends] in
   let depends =

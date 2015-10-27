@@ -37,6 +37,7 @@ let default =
   let external_solver = lazy (
     if OpamSystem.command_exists "aspcud" then Some [CIdent "aspcud", None] else
     if OpamSystem.command_exists "packup" then Some [CIdent "packup", None] else
+    if OpamSystem.command_exists "mccs" then Some [CIdent "mccs", None] else
       None
   ) in
   {
@@ -75,29 +76,55 @@ let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
-let check_cudf_version cmdname =
-  let log fmt = OpamConsole.log "SOLVER" fmt in
-  try
-    log "Checking version of criteria accepted by the external solver";
-    (* Run with closed stdin to workaround bug in some solver scripts *)
-    match
-      OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-        [cmdname; "-v"]
-    with
-    | [] ->
-      log "No response from 'solver -v', using compat criteria";
-      `Compat
-    | s::_ ->
-      match OpamStd.String.split s ' ' with
-      | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
-        log "Solver is aspcud > 1.9: using latest version criteria";
-        `Latest
-      | _ ->
-        log "Solver isn't aspcud > 1.9, using compat criteria";
-        `Compat
-  with OpamSystem.Process_error _ ->
-    log "Solver doesn't know about '-v': using compat criteria";
-    `Compat
+let solver_kind_of_string = function
+  | "aspcud" -> Some `aspcud
+  | "mccs" -> Some `mccs
+  | "packup" -> Some `packup
+  | _ -> None
+
+let solver_args = [
+  `aspcud,
+  [ CIdent "input", None; CIdent "output", None; CIdent "criteria", None ];
+  `mccs,
+  [ CString "-i", None; CIdent "input", None;
+    CString "-o", None; CIdent "output", None;
+    CString "-lexagregate[%{criteria}%]", None];
+  `packup,
+  [ CIdent "input", None; CIdent "output", None;
+    CString "-u", None; CIdent "criteria", None ];
+]
+
+let solver_of_cmd cmd =
+  let solver_opt =
+    match cmd with
+    | (exe, None) :: _ ->
+      let base = match exe with
+        | CString s -> Filename.basename s
+        | CIdent i -> i
+      in
+      solver_kind_of_string base
+    | _ -> None
+  in
+  OpamStd.Option.Op.(solver_opt +! `aspcud)
+
+let external_solver_command ~input ~output ~criteria =
+  let open OpamStd.Option.Op in
+  Lazy.force !r.external_solver >>| fun cmd ->
+  let cmd = match cmd with
+    | [exe] -> exe :: List.assoc (solver_of_cmd cmd) solver_args
+    | cmd -> cmd
+  in
+  OpamFilter.single_command (fun v ->
+      if not (OpamVariable.Full.is_global v) then None else
+      match OpamVariable.to_string (OpamVariable.Full.variable v) with
+      | "aspcud" -> Some (S "aspcud")
+      | "mccs" -> Some (S "mccs")
+      | "packup" -> Some (S "packup")
+      | "input" -> Some (S input)
+      | "output" -> Some (S output)
+      | "criteria" -> Some (S criteria)
+      | _ -> None)
+    cmd
 
 type criteria = {
   crit_default: string;
@@ -111,7 +138,21 @@ let default_criteria_compat = {
  crit_fixup = "-changed,-notuptodate";
 }
 
-let default_criteria_latest = {
+let default_criteria_mccs = {
+  crit_default = "-removed,\
+                  -count[version-lag:,true],\
+                  -changed,\
+                  -count[version-lag:,false],\
+                  -new";
+  crit_upgrade = "-removed,\
+                  -count[version-lag:,false],\
+                  -new";
+  crit_fixup = "-changed,-count[version-lag:,false]";
+}
+
+let default_criteria_packup = default_criteria_compat
+
+let default_criteria_aspcud19 = {
   crit_default = "-count(removed),\
                   -notuptodate(request),-sum(request,version-lag),\
                   -count(down),\
@@ -125,33 +166,56 @@ let default_criteria_latest = {
                 -notuptodate(solution),-sum(solution,version-lag)";
 }
 
-let get_crit c = function
-  | `Default -> c.crit_default
-  | `Upgrade -> c.crit_upgrade
-  | `Fixup -> c.crit_fixup
+let check_aspcud_version = function
+  | (_, Some _) :: _ | [] -> `Compat
+  | ((CString cmdname | CIdent cmdname), None) :: _ ->
+    let log fmt = OpamConsole.log "SOLVER" fmt in
+    try
+      log "Checking version of criteria accepted by the external solver";
+      (* Run with closed stdin to workaround bug in some solver scripts *)
+      match
+        OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
+          [cmdname; "-v"]
+      with
+      | [] ->
+        log "No response from 'solver -v', using compat criteria";
+        `Compat
+      | s::_ ->
+        match OpamStd.String.split s ' ' with
+        | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
+          log "Solver is aspcud > 1.9: using latest version criteria";
+          `Latest
+        | _ ->
+          log "Solver isn't aspcud > 1.9, using compat criteria";
+          `Compat
+    with OpamSystem.Process_error _ ->
+      log "Solver doesn't know about '-v': using compat criteria";
+      `Compat
 
 let with_auto_criteria config =
-  let getv version kind = match Lazy.force version with
-    | `Latest -> get_crit default_criteria_latest kind
-    | `Compat -> get_crit default_criteria_compat kind
-  in
   let open OpamStd.Option.Op in
   match Lazy.force config.external_solver with
   | None -> config
-  | Some (((CString cmdname | CIdent cmdname), None) :: _) ->
-    let version = lazy (check_cudf_version cmdname) in
+  | Some solver_cmd ->
+    let criteria = match solver_of_cmd solver_cmd with
+      | `mccs -> lazy (default_criteria_mccs)
+      | `packup -> lazy (default_criteria_packup)
+      | `aspcud ->
+        lazy (match check_aspcud_version solver_cmd with
+            | `Latest -> default_criteria_aspcud19
+            | `Compat -> default_criteria_compat)
+    in
     set config
       ~solver_preferences_default:
         (config.solver_preferences_default >>+ fun () ->
-         Some (lazy (getv version `Default)))
+         Some (lazy (Lazy.force criteria).crit_default))
       ~solver_preferences_upgrade:
         (config.solver_preferences_upgrade >>+ fun () ->
-         Some (lazy (getv version `Upgrade)))
+         Some (lazy (Lazy.force criteria).crit_upgrade))
       ~solver_preferences_fixup:
         (config.solver_preferences_fixup >>+ fun () ->
-         Some (lazy (getv version `Fixup)))
+         Some (lazy (Lazy.force criteria).crit_fixup))
       ()
-  | _ -> config
 
 let initk k =
   let open OpamStd.Config in
@@ -186,36 +250,6 @@ let initk k =
     ?solver_preferences_fixup:fixup_criteria
 
 let init ?noop:_ = initk (fun () -> ())
-
-let solver_args_aspcud =
-  [ CIdent "input", None; CIdent "output", None; CIdent "criteria", None ]
-
-let solver_args_packup =
-  [ CIdent "input", None; CIdent "output", None;
-    CString "-u", None; CIdent "criteria", None ]
-
-let external_solver_command ~input ~output ~criteria =
-  let open OpamStd.Option.Op in
-  Lazy.force !r.external_solver >>| fun cmd ->
-  let cmd = match cmd with
-    | [CIdent "packup", None] ->
-      cmd @ solver_args_packup
-    | [CString s, None] when OpamStd.String.ends_with ~suffix:"packup" s ->
-      cmd @ solver_args_packup
-    | [_] -> (* default, without args: assume aspcud compatible *)
-      cmd @ solver_args_aspcud
-    | cmd -> cmd
-  in
-  OpamFilter.single_command (fun v ->
-      if not (OpamVariable.Full.is_global v) then None else
-      match OpamVariable.to_string (OpamVariable.Full.variable v) with
-      | "aspcud" -> Some (S "aspcud")
-      | "packup" -> Some (S "packup")
-      | "input" -> Some (S input)
-      | "output" -> Some (S output)
-      | "criteria" -> Some (S criteria)
-      | _ -> None)
-    cmd
 
 let criteria kind =
   let crit = match kind with

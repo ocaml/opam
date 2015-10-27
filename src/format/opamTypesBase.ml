@@ -71,7 +71,7 @@ let url_backend_of_pin_kind = function
 
 let looks_like_version_re =
   Re.(compile @@
-      seq [digit; rep @@ diff any (set "/\\"); eos])
+      seq [bos; digit; rep @@ diff any (set "/\\"); eos])
 
 let pin_option_of_string ?kind ?(guess=false) s =
   match kind with
@@ -86,7 +86,7 @@ let pin_option_of_string ?kind ?(guess=false) s =
       if guess then OpamUrl.guess_version_control s
       else None
     in
-    Source (OpamUrl.parse ?backend s)
+    Source (OpamUrl.parse ?backend ~handle_suffix:guess s)
 
 let string_of_pin_kind = function
   | `version -> "version"

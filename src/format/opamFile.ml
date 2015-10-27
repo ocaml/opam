@@ -428,7 +428,7 @@ module Reinstall = LineFile(struct
 let pp_pin =
   Pp.pp
     ~name:"?pin-kind pin-target"
-    (fun ~pos ->function
+    (fun ~pos -> function
        | [x] -> pin_option_of_string x
        | [k;x] -> pin_option_of_string ~kind:(pin_kind_of_string k) x
        | _ -> OpamFormat.bad_format ~pos "Invalid number of fields")

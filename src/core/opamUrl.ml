@@ -38,6 +38,7 @@ let split_url =
   let re =
     let (@@) f x = f x in
     Re.(compile @@ seq [
+        bos;
         opt @@ seq [
           opt @@ seq [ group @@ rep @@ diff any (set "+:");
                        alt [ char '+'; str "://"] ];
@@ -108,7 +109,7 @@ let looks_like_ssh_path =
       Some (Re.get sub 1 ^ try "/" ^ Re.get sub 2 with Not_found -> "")
     with Not_found -> None
 
-let parse ?backend s =
+let parse ?backend ?(handle_suffix=true) s =
   let vc, transport, path, suffix, hash = split_url s in
   let backend =
     match backend with
@@ -116,15 +117,18 @@ let parse ?backend s =
     | None ->
       match vc with
       | Some vc -> vc_of_string vc
-      | None -> match transport with
+      | None ->
+        let of_suffix ~default =
+          if not handle_suffix then default else
+          match suffix with
+          | None -> default
+          | Some sf -> try vc_of_string sf with Failure _ -> default
+        in
+        match transport with
+        | None -> of_suffix ~default:`rsync
         | Some tr ->
-          (try vc_of_string tr with Failure _ ->
-           match suffix with
-           | Some sf ->
-             (try vc_of_string sf with Failure _ ->
-                backend_of_string tr)
-           | None -> backend_of_string tr)
-        | None -> `rsync
+          try vc_of_string tr with Failure _ ->
+            of_suffix ~default:(backend_of_string tr)
   in
   let transport, path =
     match backend, transport, looks_like_ssh_path path with
@@ -144,7 +148,7 @@ let parse ?backend s =
     backend;
   }
 
-let of_string url = parse url
+let of_string url = parse ~handle_suffix:false url
 
 let to_string url =
   let hash = match url.hash with Some h -> "#" ^ h | None -> "" in

@@ -153,9 +153,10 @@ let update_config t name pins =
   OpamFile.Pinned.write pin_f pins
 
 let pin name ?version pin_option =
-  log "pin %a to %a"
+  log "pin %a to %a (%a)"
     (slog OpamPackage.Name.to_string) name
-    (slog string_of_pin_option) pin_option;
+    (slog string_of_pin_option) pin_option
+    (slog (string_of_pin_kind @* kind_of_pin_option)) pin_option;
   let t = OpamState.load_state "pin" OpamStateConfig.(!r.current_switch) in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pin_kind = kind_of_pin_option pin_option in

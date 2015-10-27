@@ -274,7 +274,7 @@ let repository_name =
   parse, print
 
 let url =
-  let parse str = `Ok (OpamUrl.of_string str) in
+  let parse str = `Ok (OpamUrl.parse str) in
   let print ppf url = pr_str ppf (OpamUrl.to_string url) in
   parse, print
 
@@ -590,8 +590,8 @@ let global_options =
     mk_opt ~section ["solver"] "CMD"
       ("Specify the name of the external dependency $(i,solver). \
         The default value is \"aspcud\". \
-        Either 'aspcud', 'packup' or a custom command that should contain \
-        the variables %{input}%, %{output}% and %{criteria}%")
+        Either 'aspcud', 'packup', 'mccs' or a custom command that should \
+        contain the variables %{input}%, %{output}% and %{criteria}%")
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ~section ["criteria"] "CRITERIA"
