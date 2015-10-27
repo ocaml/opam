@@ -1818,8 +1818,9 @@ module OPAM = struct
         "The 'dev-repo' field doesn't use version control. You may use \
          URLs of the form \"git+https://\" or a \".hg\" or \".git\" suffix"
         (match t.dev_repo with
+         | None -> false
          | Some { OpamUrl.backend = #OpamUrl.version_control; _ } -> false
-         | _ -> true);
+         | Some _ -> true);
       cond 43 `Error
         "Conjunction used in 'conflicts:' field. Only '|' is allowed"
         (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
@@ -1851,10 +1852,12 @@ module OPAM = struct
         let warnings =
           List.map (function
               | Section (pos, s) ->
-                3, `Error, Printf.sprintf "Invalid section: %s at %s"
+                3, `Error,
+                Printf.sprintf "Invalid or duplicate section: '%s' at %s"
                   s.section_name (string_of_pos pos)
               | Variable (pos, f, _) ->
-                3, `Error, Printf.sprintf "Invalid field: %s at %s"
+                3, `Error,
+                Printf.sprintf "Invalid or duplicate field: '%s;' at %s"
                   f (string_of_pos pos))
             invalid_items
         in
