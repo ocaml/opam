@@ -1274,6 +1274,7 @@ let base_package_names t =
   OpamPackage.Name.Set.of_list (List.map fst atoms)
 
 let base_packages t =
+  if OpamStateConfig.(!r.no_base_packages) then OpamPackage.Set.empty else
   let comp = compiler_comp t t.compiler in
   let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
   let candidates = packages_of_atoms t atoms in
