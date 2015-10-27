@@ -63,7 +63,7 @@ endif
 
 # --
 
-SUBS = core format solver opampef repository state client
+SUBS = core format solver repository state client
 OPAMLIB = $(patsubst %,./opam-%,$(SUBS))
 INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
@@ -170,19 +170,6 @@ define PROJ_solver
   RESULT = opam-solver
 endef
 export PROJ_solver
-
-# -- opam-opampef -- #
-opam-opampef.cma: opam-core.cma opam-format.cma ALWAYS
-opam-opampef.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
-
-SRC_opampef = \
-  pefSolver.ml
-
-define PROJ_opampef
-  SOURCES = $(call addmli,opampef,$(SRC_opampef))
-  RESULT = opam-opampef
-endef
-export PROJ_opampef
 
 # -- opam-repository -- #
 opam-repository.cma: opam-core.cma ALWAYS
