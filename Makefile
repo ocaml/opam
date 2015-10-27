@@ -56,7 +56,7 @@ endif
 opam-lib.install:
 	$(MAKE) -C src ../opam-lib.install
 
-libinstall: opam-lib.install
+libinstall: opam-lib.install opam-admin.top
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
 	src/opam-installer $(OPAMINSTALLER_FLAGS) opam-lib.install
 
