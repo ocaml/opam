@@ -535,7 +535,7 @@ let result_summary r =
        try
          Printf.sprintf " \"%s\""
            (List.find
-              Re.(execp (compile (seq [ rep (diff any alpha);
+              Re.(execp (compile (seq [ bos; rep (diff any alpha);
                                         no_case (str "error") ])))
               (List.rev es))
        with Not_found -> ""
