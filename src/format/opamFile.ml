@@ -1863,7 +1863,7 @@ module OPAM = struct
         in
         let t, warnings =
           let pp = Pp.I.fields ~name:"opam-file" ~empty raw_fields in
-          let warn_of_bad_format (pos, _, msg) =
+          let warn_of_bad_format (pos, msg) =
             2, `Error, Printf.sprintf "File format error%s: %s"
               (match pos with
                | Some (_,li,col) when li >= 0 && col >= 0 ->

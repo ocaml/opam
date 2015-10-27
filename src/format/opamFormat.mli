@@ -20,9 +20,8 @@ open OpamTypes
 
 (** {2 Parsing functions} *)
 
-(** Format error reporting: position, possible backtrace list (since the
-    exception may be modified and re-raised), and message *)
-type bad_format = pos option * string list * string
+(** Format error reporting: position and message *)
+type bad_format = pos option * string
 
 (** All the following parsing function raise [Bad_format] in case the
     input does not have the right format. *)

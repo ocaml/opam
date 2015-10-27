@@ -18,7 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 
-type bad_format = pos option * string list * string
+type bad_format = pos option * string
 
 exception Bad_format of bad_format
 exception Bad_format_list of bad_format list
@@ -26,35 +26,26 @@ exception Bad_format_list of bad_format list
 let bad_format ?pos fmt =
   Printf.ksprintf
     (fun str ->
-       raise (Bad_format (pos,[],str)))
+       raise (Bad_format (pos,str)))
     fmt
 
 let add_pos pos = function
-  | Bad_format (pos_opt,btl,msg) as e ->
-    if pos_opt = None || pos_opt = Some pos_null then
-      let backtrace = Printexc.get_backtrace () in
-      Bad_format (Some pos, backtrace::btl, msg)
+  | Bad_format (pos_opt,msg) as e ->
+    if pos_opt = None || pos_opt = Some pos_null
+    then Bad_format (Some pos, msg)
     else e
   | e -> e
 
-let string_of_backtrace_list = function
-  | [] | _ when not (Printexc.backtrace_status ()) -> ""
-  | btl -> List.fold_left (fun s bts ->
-      let bt_lines = OpamStd.String.split bts '\n' in
-      "\n  Backtrace:\n    "^(String.concat "\n    " bt_lines)^s
-    ) "" btl
-
 let rec string_of_bad_format ?file e =
   match e, file with
-  | Bad_format (Some pos, btl, msg), _ ->
-    Printf.sprintf "At %s:\n  %s%s"
-      (string_of_pos pos) msg (string_of_backtrace_list btl)
-  | Bad_format (None, btl, msg), Some f ->
-    Printf.sprintf "In %s:\n  %s%s"
-      (OpamFilename.to_string f) msg (string_of_backtrace_list btl)
-  | Bad_format (None, btl, msg), None ->
-    Printf.sprintf "Input error:\n  %s%s"
-      msg (string_of_backtrace_list btl)
+  | Bad_format (Some pos, msg), _ ->
+    Printf.sprintf "At %s:\n%s"
+      (string_of_pos pos) msg
+  | Bad_format (None, msg), Some f ->
+    Printf.sprintf "In %s:\n%s"
+      (OpamFilename.to_string f) msg
+  | Bad_format (None, msg), None ->
+    Printf.sprintf "Input error:\n%s" msg
   | Bad_format_list bfl, _ ->
     OpamStd.List.concat_map "\n"
       (fun bf -> string_of_bad_format ?file (Bad_format bf)) bfl
@@ -277,7 +268,7 @@ module Pp = struct
             match exn with
             | None ->
               OpamConsole.warning "%s"
-                (string_of_bad_format (Bad_format (pos, [], s)))
+                (string_of_bad_format (Bad_format (pos, s)))
             | Some e ->
               OpamConsole.warning "%s" (string_of_bad_format e))
       fmt
@@ -974,11 +965,11 @@ module Pp = struct
                try
                  let pos, v = OpamStd.String.Map.find field field_map in
                  try errs, parse ppa ~pos (acc, Some v) with
-                 | Bad_format (pos,btl,msg) ->
+                 | Bad_format (pos, msg) ->
                    let msg =
                      Printf.sprintf "%sfield '%s:', %s" in_name field msg
                    in
-                   (field,(pos, Printexc.get_backtrace()::btl, msg)) :: errs,
+                   (field, (pos, msg)) :: errs,
                    acc
                with
                | Not_found -> errs, acc)
