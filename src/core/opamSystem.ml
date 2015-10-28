@@ -83,16 +83,20 @@ let remove_dir dir =
   )
 
 let temp_files = Hashtbl.create 1024
-let logs_cleaner = lazy (
-  OpamStd.Sys.at_exit (fun () ->
-      if not OpamCoreConfig.(!r.keep_log_dir) then
-        remove_dir OpamCoreConfig.(!r.log_dir)
-    ))
+let logs_cleaner =
+  let to_clean = ref OpamStd.String.Set.empty in
+  OpamStd.Sys.at_exit
+    (fun () -> OpamStd.String.Set.iter remove_dir !to_clean);
+  fun tmp_dir ->
+    if OpamCoreConfig.(!r.keep_log_dir) then
+      to_clean := OpamStd.String.Set.remove tmp_dir !to_clean
+    else
+      to_clean := OpamStd.String.Set.add tmp_dir !to_clean
 
 let rec temp_file ?dir prefix =
   let temp_dir = match dir with
     | None   ->
-      Lazy.force logs_cleaner;
+      logs_cleaner OpamCoreConfig.(!r.log_dir);
       OpamCoreConfig.(!r.log_dir)
     | Some d -> d in
   mkdir temp_dir;
@@ -242,7 +246,7 @@ let getchdir s =
     with Sys_error _ ->
       let p = OpamCoreConfig.(!r.log_dir) in
       if Sys.file_exists p then p else
-        (mkdir p; Lazy.force logs_cleaner; p)
+        (mkdir p; logs_cleaner p; p)
   in
   chdir s;
   p
