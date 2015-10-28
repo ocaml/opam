@@ -133,10 +133,16 @@ val up_to_date_env: state -> bool
     `opam config env`]) *)
 val eval_string: state -> string
 
-(** Print a warning if the environment is not set-up properly on init. *)
+(** Print a warning if the environment is not set-up properly.
+    (General message) *)
+val check_and_print_env_warning: state -> unit
+
+(** Print a warning if the environment is not set-up properly.
+    (init message) *)
 val print_env_warning_at_init: state -> user_config -> unit
 
-(** Print a warning if the environment is not set-up properly on switch. *)
+(** Print a warning if the environment is not set-up properly.
+    (switch message) *)
 val print_env_warning_at_switch: state -> unit
 
 (** {2 Initialisation} *)
@@ -149,6 +155,9 @@ val display_setup: state -> shell -> filename -> unit
 
 (** Update the user configuration. *)
 val update_setup: state -> user_config option -> global_config option -> unit
+
+(** Update scripts in ~/.opam/opam-init (subset of [update_setup]) *)
+val update_init_scripts: state -> global:(global_config option) -> unit
 
 (** {2 Filters} *)
 
