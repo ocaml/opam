@@ -203,7 +203,7 @@ module OPAM: sig
   val substs: t -> basename list
 
   (** List of environment variables to set-up for the build *)
-  val build_env: t -> (string * string * string) list
+  val build_env: t -> env_updates
 
   (** List of command to run for building the package *)
   val build: t -> command list
@@ -287,6 +287,9 @@ module OPAM: sig
       for compatibility *)
   val has_flag: package_flag -> t -> bool
 
+  (** The environment variables that this package exports *)
+  val env: t -> env_updates
+
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
 
@@ -351,6 +354,8 @@ module OPAM: sig
 
   val with_flags: t -> package_flag list -> t
 
+  val with_env: t -> env_updates -> t
+
   val with_dev_repo: t -> url -> t
 
   val with_extra_sources: t -> (url * string * basename option) list -> t
@@ -358,10 +363,6 @@ module OPAM: sig
   val with_extensions: t -> value OpamStd.String.Map.t -> t
 
   val add_extension: t -> string -> value -> t
-
-
-
-
 
 end
 
