@@ -36,10 +36,10 @@ let () =
     args
 
 let () =
-  let quiet = !short || !list in
-  iter_packages ~quiet ~opam:(fun nv opam ->
-      let w = OpamFile.OPAM.validate opam in
-      if List.exists (fun (n,_,_) -> List.mem n !excludes) w then opam else
+  OpamPackage.Map.iter (fun nv prefix ->
+      let opam_file = OpamRepositoryPath.opam repo prefix nv in
+      let w, _ = OpamFile.OPAM.validate_file opam_file in
+      if List.exists (fun (n,_,_) -> List.mem n !excludes) w then () else
       let w =
         if !includes = [] then w
         else List.filter (fun (n,_,_) -> List.mem n !includes) w
@@ -57,6 +57,5 @@ let () =
         else
           OpamConsole.msg "\r\027[KIn %s:\n%s\n"
             (OpamPackage.to_string nv)
-            (OpamFile.OPAM.warns_to_string w);
-      opam
-    ) ()
+            (OpamFile.OPAM.warns_to_string w))
+    (OpamRepository.packages_with_prefixes repo)
