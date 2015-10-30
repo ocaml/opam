@@ -115,13 +115,9 @@ module Switch: sig
   (** Backup file for state export *)
   val backup: t -> switch -> filename
 
-  (** List of installed packages with their version:
-      {i $opam/$switch/installed} *)
-  val installed: t -> switch -> filename
-
-  (** List of packages explicitly installed by the user: {i
-      $opam/$switch/installed.roots} *)
-  val installed_roots: t -> switch -> filename
+  (** Switch state: currently installed packages, roots, pinnings, etc. {i
+      $opam/$switch/state} *)
+  val state: t -> switch -> filename
 
   (** Temporary folders used to decompress and compile
       the corresponding archives:
@@ -160,9 +156,6 @@ module Switch: sig
   (** Global config for the switch: {i
       $opam/$switch/config/global-config.config} *)
   val global_config: t -> switch -> filename
-
-  (** Pinned package file: {i $opam/$switch/pinned}  *)
-  val pinned: t -> switch -> filename
 
   (** Build dir for all pinned packages: {i
       $opam/$switch/packages.dev/} *)

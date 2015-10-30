@@ -55,10 +55,13 @@ val cleanup_package_artefacts: t -> package -> unit
     solution. Takes a graph of atomic actions. *)
 val sources_needed: t -> OpamSolver.ActionGraph.t -> package_set
 
-(** Update package metadata *)
-val update_metadata:
+(** Returns the updated switch state and write it to disk (unless in dry_run
+    mode) (warning: changes to [t] are written to disk even if the optional
+    parameter isn't specified) *)
+val update_switch_state:
+  ?installed:package_set ->
+  ?installed_roots:package_set ->
+  ?reinstall:package_set ->
+  ?pinned:pin_option name_map ->
   t ->
-  installed:package_set ->
-  installed_roots:package_set ->
-  reinstall:package_set ->
   t

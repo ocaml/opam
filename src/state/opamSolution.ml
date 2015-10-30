@@ -316,7 +316,7 @@ let parallel_apply t action action_graph =
 
   let add_to_install nv =
     t_ref :=
-      OpamAction.update_metadata t
+      OpamAction.update_switch_state t
         ~installed:(OpamPackage.Set.add nv !t_ref.installed)
         ~reinstall:(OpamPackage.Set.remove nv !t_ref.reinstall)
         ~installed_roots:
@@ -332,7 +332,7 @@ let parallel_apply t action action_graph =
   let remove_from_install nv =
     let rm = OpamPackage.Set.remove nv in
     t_ref :=
-      OpamAction.update_metadata t
+      OpamAction.update_switch_state t
         ~installed:(rm !t_ref.installed)
         ~installed_roots:(rm !t_ref.installed_roots)
         ~reinstall:(rm !t_ref.reinstall);

@@ -391,35 +391,22 @@ module Compiler_index = Repo_index(OpamCompiler)
     <switch>/reinstall): table
     <package> <version> *)
 
-module PkgList = struct
+module PkgList = LineFile (struct
 
-  type t = package_set
+    let internal = "package-version-list"
 
-  let empty = OpamPackage.Set.empty
+    type t = package_set
 
-  let pp =
-    OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
-    (Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
-     Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
-    -| Pp.pp
-      (fun ~pos:_ (n,v) -> OpamPackage.create n v)
-      (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
+    let empty = OpamPackage.Set.empty
 
-end
+    let pp =
+      OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
+      (Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+       Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
+      -| Pp.pp
+        (fun ~pos:_ (n,v) -> OpamPackage.create n v)
+        (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
 
-module Installed = LineFile(struct
-    let internal = "installed"
-    include PkgList
-  end)
-
-module Installed_roots = LineFile(struct
-    let internal = "installed.roots"
-    include PkgList
-  end)
-
-module Reinstall = LineFile(struct
-    let internal = "reinstall"
-    include PkgList
   end)
 
 (** Lists of pinned packages (<switch>/pinned): table
@@ -435,7 +422,7 @@ let pp_pin =
     (fun x -> [string_of_pin_kind (kind_of_pin_option x);
                string_of_pin_option x])
 
-module Pinned = LineFile(struct
+module Pinned_legacy = LineFile(struct
 
     let internal = "pinned"
 
@@ -481,74 +468,91 @@ module File_attributes = LineFile(struct
 (** Switch export/import format: table
     <name> <version> <installed-state> [pinning-kind] [pinning-url] *)
 
-module State = LineFile(struct
+module StateTable = struct
 
-    let internal = "export"
+  let internal = "export"
 
-    module M = OpamPackage.Name.Map
+  module M = OpamPackage.Name.Map
 
-    type t = package_set * package_set * pin_option M.t
+  type t = {
+    installed: package_set;
+    installed_roots: package_set;
+    pinned: pin_option M.t;
+  }
 
-    let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty, M.empty)
+  let empty = {
+    installed = OpamPackage.Set.empty;
+    installed_roots = OpamPackage.Set.empty;
+    pinned = M.empty;
+  }
 
-    let pp_state =
-      Pp.pp ~name:"pkg-state"
-        (fun ~pos:_ -> function
-           | "root" -> `Root
-           | "noroot" | "installed" -> `Installed
-           | "uninstalled" -> `Uninstalled
-           | _ -> Pp.unexpected ())
-        (function
-          | `Root -> "root"
-          | `Installed -> "installed"
-          | `Uninstalled -> "uninstalled")
+  let pp_state =
+    Pp.pp ~name:"pkg-state"
+      (fun ~pos:_ -> function
+         | "root" -> `Root
+         | "noroot" | "installed" -> `Installed
+         | "uninstalled" -> `Uninstalled
+         | _ -> Pp.unexpected ())
+      (function
+        | `Root -> "root"
+        | `Installed -> "installed"
+        | `Uninstalled -> "uninstalled")
 
-    let pp_lines =
-      M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
-      Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
-      Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t) ^+
-      (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
+  let pp_lines =
+    M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
+    Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+    Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t) ^+
+    (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
 
-    (* Convert from one name-map to set * set * map *)
-    let pp =
-      pp_lines -| Pp.pp
-        (fun ~pos:_ map ->
-           M.fold
-             (fun name (version,(state,pin)) (installed,roots,pinned) ->
-                let nv = OpamPackage.create name version in
-                (match state with
-                 | `Installed | `Root -> OpamPackage.Set.add nv installed
-                 | `Uninstalled -> installed),
-                (match state with
-                 | `Root -> OpamPackage.Set.add nv roots
-                 | `Installed | `Uninstalled -> roots),
-                (match pin with
-                 | Some pin -> M.add name pin pinned
-                 | None -> pinned))
-             map
-             (OpamPackage.Set.empty, OpamPackage.Set.empty, M.empty))
-        (fun (installed,roots,pinned) ->
-           M.empty |>
-           OpamPackage.Set.fold (fun nv ->
-               M.add (OpamPackage.name nv)
-                 (OpamPackage.version nv, (`Installed, None)))
-             installed |>
-           OpamPackage.Set.fold (fun nv ->
-               M.add (OpamPackage.name nv)
-                 (OpamPackage.version nv, (`Root, None)))
-             roots |>
-           M.fold (fun name pin map ->
-               try
-                 let v, (state, _) = M.find name map in
-                 M.add name (v, (state, Some pin)) map
-               with Not_found ->
-                 let v = OpamPackage.Version.of_string "--" in
-                 M.add name (v, (`Uninstalled, Some pin)) map)
-             pinned)
+  (* Convert from one name-map to type t *)
+  let pp =
+    pp_lines -| Pp.pp
+      (fun ~pos:_ map ->
+         M.fold
+           (fun name (version,(state,pin)) t ->
+              let nv = OpamPackage.create name version in
+              {
+                installed = (match state with
+                    | `Installed | `Root -> OpamPackage.Set.add nv t.installed
+                    | `Uninstalled -> t.installed);
+                installed_roots = (match state with
+                    | `Root -> OpamPackage.Set.add nv t.installed_roots
+                    | `Installed | `Uninstalled -> t.installed_roots);
+                pinned = (match pin with
+                    | Some pin -> M.add name pin t.pinned
+                    | None -> t.pinned);
+              })
+           map
+           empty)
+      (fun t ->
+         M.empty |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Installed, None)))
+           t.installed |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Root, None)))
+           t.installed_roots |>
+         M.fold (fun name pin map ->
+             try
+               let v, (state, _) = M.find name map in
+               M.add name (v, (state, Some pin)) map
+             with Not_found ->
+               let v = OpamPackage.Version.of_string "--" in
+               M.add name (v, (`Uninstalled, Some pin)) map)
+           t.pinned)
 
-  end)
+end
 
-
+module State = struct
+  type t = StateTable.t = {
+    installed: package_set;
+    installed_roots: package_set;
+    pinned: pin_option name_map;
+  }
+  include (LineFile (StateTable) : IO_FILE with type t := t)
+end
 
 (** III - Opam Syntax parser and associated file types *)
 

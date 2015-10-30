@@ -73,16 +73,16 @@ module Types: sig
     (** The list of packages, keeping the one available for the
         current compiler version *)
 
-    pinned: OpamFile.Pinned.t;
+    pinned: pin_option name_map;
     (** The list of pinned packages *)
 
-    installed: OpamFile.Installed.t;
+    installed: package_set;
     (** The list of installed packages *)
 
-    installed_roots: OpamFile.Installed_roots.t;
+    installed_roots: package_set;
     (** The list of packages explicitly installed by the user *)
 
-    reinstall: OpamFile.Reinstall.t;
+    reinstall: package_set;
     (** The list of packages which needs to be reinsalled *)
   }
 
@@ -108,6 +108,13 @@ val with_switch: switch -> state -> state
 
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> switch -> state
+
+(** The package switch state as stored in ~/.opam/<switch>/state *)
+val switch_state: state -> OpamFile.State.t
+
+(** Writes the ~/.opam/<switch>/state file corresponding to the current state
+    (installed, pinned packages, etc.). Does nothing in dryrun mode *)
+val write_switch_state: state -> unit
 
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe

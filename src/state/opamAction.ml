@@ -287,21 +287,23 @@ let compilation_env t opam =
   ] @ env0 in
   OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
 
-let update_metadata t ~installed ~installed_roots ~reinstall =
-  let installed_roots = OpamPackage.Set.inter installed_roots installed in
-  let reinstall = OpamPackage.Set.inter installed reinstall in
+let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
+  let open OpamStd.Option.Op in
+  let open OpamPackage.Set.Op in
+  let installed = installed +! t.installed in
+  let t =
+    { t with
+      installed;
+      installed_roots = (installed_roots +! t.installed_roots) %% installed;
+      pinned = pinned +! t.pinned; }
+  in
   if not OpamStateConfig.(!r.dryrun) then (
-  OpamFile.Installed.write
-    (OpamPath.Switch.installed t.root t.switch)
-    installed;
-  OpamFile.Installed_roots.write
-    (OpamPath.Switch.installed_roots t.root t.switch)
-    installed_roots;
-  OpamFile.Reinstall.write
-    (OpamPath.Switch.reinstall t.root t.switch)
-    reinstall;
+    OpamState.write_switch_state t;
+    OpamFile.PkgList.write
+      (OpamPath.Switch.reinstall t.root t.switch)
+      ((reinstall +! t.reinstall) %% installed);
   );
-  {t with installed; installed_roots; reinstall}
+  t
 
 let removal_needs_download t nv =
   match OpamState.opam_opt t nv with

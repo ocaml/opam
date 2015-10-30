@@ -371,18 +371,19 @@ module Aliases: IO_FILE with type t = compiler switch_map
 
 (** Import/export file. This difference with [installed] is that we
     are explicit about root packages. *)
-module State: IO_FILE with type t =
-  package_set * package_set * pin_option OpamPackage.Name.Map.t
+module State: sig
+  type t = {
+    installed: package_set;
+    installed_roots: package_set;
+    pinned: pin_option name_map;
+  }
+  include IO_FILE with type t := t
+end
 
-(** List of installed packages: [$opam/$oversion/installed] *)
-module Installed: IO_FILE with type t = package_set
-
-(** List of packages explicitly installed by the user:
-    [$opam/$switch/installed.user] *)
-module Installed_roots: IO_FILE with type t = package_set
-
-(** List of packages to reinstall: [$opam/$oversion/reinstall] *)
-module Reinstall: IO_FILE with type t = package_set
+(** A simple list of packages and versions: (used for the older
+    [$opam/$switch/{installed,installed_roots}], still needed to
+    migrate from 1.2 repository, and for reinstall) *)
+module PkgList: IO_FILE with type t = package_set
 
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig
@@ -520,8 +521,9 @@ module Compiler_index: IO_FILE with
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
 
-(** Pinned package files *)
-module Pinned: IO_FILE with type t = pin_option name_map
+(** Pinned package files (only used for migration from 1.2, the inclusive State
+    module is now used instead) *)
+module Pinned_legacy: IO_FILE with type t = pin_option name_map
 
 (** Repository metadata *)
 module Repo: sig
