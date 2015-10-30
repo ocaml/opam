@@ -1857,7 +1857,7 @@ module OPAM = struct
                   s.section_name (string_of_pos pos)
               | Variable (pos, f, _) ->
                 3, `Error,
-                Printf.sprintf "Invalid or duplicate field: '%s;' at %s"
+                Printf.sprintf "Invalid or duplicate field: '%s:' at %s"
                   f (string_of_pos pos))
             invalid_items
         in
