@@ -467,8 +467,8 @@ let export filename =
       OpamStateConfig.(!r.current_switch) in
   let export = (t.installed, t.installed_roots, t.pinned) in
   match filename with
-  | None   -> OpamFile.Export.write_to_channel stdout export
-  | Some f -> OpamFile.Export.write f export
+  | None   -> OpamFile.State.write_to_channel stdout export
+  | Some f -> OpamFile.State.write f export
 
 let show () =
   OpamConsole.msg "%s\n"
@@ -508,7 +508,7 @@ let with_backup switch command f =
   let t = OpamState.load_state command switch in
   let file = OpamPath.backup t.root in
   OpamFilename.mkdir (OpamPath.backup_dir t.root);
-  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
+  OpamFile.State.write file (t.installed, t.installed_roots, t.pinned);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -540,8 +540,8 @@ let import filename =
   with_backup OpamStateConfig.(!r.current_switch) "switch-import"
     (fun t ->
        let importfile = match filename with
-         | None   -> OpamFile.Export.read_from_channel stdin
-         | Some f -> OpamFile.Export.read f in
+         | None   -> OpamFile.State.read_from_channel stdin
+         | Some f -> OpamFile.State.read f in
        import_t importfile t)
 
 let () =

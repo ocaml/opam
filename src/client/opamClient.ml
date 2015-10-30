@@ -155,7 +155,7 @@ let with_switch_backup command f =
   let t = OpamState.load_state command OpamStateConfig.(!r.current_switch) in
   let file = OpamPath.Switch.backup t.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
-  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
+  OpamFile.State.write file (t.installed, t.installed_roots, t.pinned);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)

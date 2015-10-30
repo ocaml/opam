@@ -481,7 +481,7 @@ module File_attributes = LineFile(struct
 (** Switch export/import format: table
     <name> <version> <installed-state> [pinning-kind] [pinning-url] *)
 
-module Export = LineFile(struct
+module State = LineFile(struct
 
     let internal = "export"
 
