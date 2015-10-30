@@ -157,90 +157,6 @@ let atom2cudf universe version_map (name,cstr) =
   in
   (cudfname,cudfconstr)
 
-(*
-let opam2cudf universe ?(depopts=false) ~build version_map package =
-  let name = OpamPackage.name package in
-  let version = OpamPackage.version package in
-  let dev = OpamPackage.Set.mem package universe.u_dev in
-  let depends =
-    try filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
-          (OpamPackage.Map.find package universe.u_depends)
-    with Not_found -> Empty in
-  let base_depends =
-    if OpamPackage.Set.mem package universe.u_base then Empty else
-      OpamFormula.ands
-        (OpamPackage.Name.Set.fold (fun name acc -> Atom (name, Empty) :: acc)
-           (OpamPackage.names_of_packages universe.u_base) [])
-  in
-  let depends = OpamFormula.ands [base_depends; depends] in
-  let depends =
-    let opts = depopts_of_package ~build universe package in
-    if depopts then
-      let opts = List.rev_map OpamFormula.of_conjunction opts in
-      And (depends, Or(depends, OpamFormula.ors opts))
-    else depends
-  in
-  let conflicts =
-    try OpamPackage.Map.find package universe.u_conflicts
-    with Not_found -> Empty in
-  let conflicts =
-    (name, None) :: (* prevents install of multiple versions of the same pkg *)
-    OpamFormula.to_disjunction conflicts in
-  let installed = OpamPackage.Set.mem package universe.u_installed in
-  let base = OpamPackage.Set.mem package universe.u_base in
-  let reinstall = match universe.u_action with
-    | Upgrade reinstall | Reinstall reinstall ->
-      OpamPackage.Set.mem package reinstall
-    | _                 -> false in
-  let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
-  let pinned_to_current_version =
-    OpamPackage.Set.mem package universe.u_pinned in
-  let version_lag =
-    let all_versions = OpamPackage.versions_of_name universe.u_available name in
-    let count,i =
-      OpamPackage.Version.Set.fold
-        (fun v (i,r) -> if v = version then i,i else i+1, r)
-        all_versions (0,0)
-    in
-    count - i
-  in
-  let extras =
-    let e = [
-      OpamCudf.s_source, `String (OpamPackage.Name.to_string name);
-      OpamCudf.s_source_number, `String (OpamPackage.Version.to_string version);
-    ] in
-    let e = if installed && reinstall
-      then (OpamCudf.s_reinstall, `Bool true)::e else e in
-    let e = if installed_root
-      then (OpamCudf.s_installed_root, `Bool true)::e else e in
-    let e =
-      if pinned_to_current_version then (OpamCudf.s_pinned, `Bool true)::e
-      else if version_lag = 0 then e
-      else (OpamCudf.s_version_lag, `Int version_lag)::e
-    in
-    e
-  in
-  let extras =
-    List.fold_left (fun extras (label,set) ->
-        if OpamPackage.Set.mem package set then (label, `Int 1)::extras
-        else extras)
-      extras universe.u_attrs
-  in
-  { Cudf.default_package with
-    Cudf.
-    package = name_to_cudf (OpamPackage.name package);
-    version = OpamPackage.Map.find package version_map;
-    depends = List.rev_map (List.rev_map (atom2cudf universe version_map))
-        (OpamFormula.to_cnf depends);
-    conflicts = List.rev_map (atom2cudf universe version_map) conflicts;
-    installed;
-    keep = if base then `Keep_version else `Keep_none;
-    (* was_installed: reserved for the solver; *)
-    (* provides: unused atm *)
-    pkg_extra = extras;
-  }
-*)
-
 let pefcudf_aux (switch,switches,profiles,depopts,installed) tables pefpkglist =
   let options = { Opam.Opamcudf.switch = switch; switches; profiles; depopts} in
   let extras = [ ("reinstall",("reinstall", `Bool (Some false))); ] in
@@ -255,9 +171,10 @@ let pefcudf_aux (switch,switches,profiles,depopts,installed) tables pefpkglist =
   List.flatten cudfpkglist
 
 let pefcudflist universe ?(depopts=false) ~build opam_packages =
-  log "Pef -> Cudflist (depopts:%b, build:%b)" depopts build;
   let options = 
     let (switch,switches,profiles) = universe.u_options in
+    log "Pef -> Cudflist (depopts:%b, build:%b, switch:%s, switches:%s)" 
+    depopts build switch (String.concat "," switches);
     let l = ref profiles in
     if build then l := "build"::!l;
     (switch,switches,!l,depopts,false)
@@ -292,8 +209,6 @@ let pefcudflist universe ?(depopts=false) ~build opam_packages =
   pefcudf_aux options tables pefpkglist
 
 let load_cudf_universe ?depopts ~build universe opam_packages =
-  log "Load cudf universe (depopts:%b, build:%b)"
-    (OpamStd.Option.default false depopts) build;
   Cudf.load_universe (pefcudflist universe ?depopts ~build opam_packages)
 
 let string_of_request r =
