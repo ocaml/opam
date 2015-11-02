@@ -13,7 +13,8 @@ src
 │   ├── opamProcess.ml                  Process and job handling, with logs, termination status, etc.
 │   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations
 │   ├── opamFilename.ml                 Higher level file and directory name manipulation AND file operations, wrappers on OpamSystem using the filename type
-│   └── opamParallel.ml                 Parallel execution of jobs following a directed graph
+│   ├── opamParallel.ml                 Parallel execution of jobs following a directed graph
+│   └── opamUrl.ml                      URL parsing and printing, with support for our different backends
 │
 ├── format                              Definition of OPAM datastructures and its file interface
 │   │   [ opam-format lib ]
@@ -70,16 +71,16 @@ src
 │
 ├── client                              Everything related to the OPAM state, installation and front-end
 │   │   [ opam-client lib ]
-│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
+│   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation), plus helper for global setup
 │   ├── opamConfigCommand.ml            Functions for the "opam config" subcommand
 │   ├── opamPinCommand.ml               Functions for the "opam pin" subcommand
 │   ├── opamRepositoryCommand.ml        Functions for the "opam repository" subcommand
 │   ├── opamSwitchCommand.ml            Functions for the "opam switch" subcommand
 │   ├── opamClient.ml                   High-level execution of user-facing functions like "upgrade", and wrappers around the *Command modules
-│   │   [ opam exe ]
 │   ├── opamGitVersion.mli              (generated) Current git version of OPAM
-│   ├── opamArg.ml                      Command-line argument parser (opam exec only)
-│   └── opamMain.ml                     Main
+│   ├── opamArg.ml                      Command-line argument parsers and helpers
+│   │   [ opam exe ]
+│   └── opamMain.ml                     Main, including cmdliner command handling
 │
 └── tools
     │   [ opam-admin tool ]
@@ -92,6 +93,6 @@ src
     ├── opam_admin.ml                   Source of the opam-admin tool, main
     │   [ other stand-alone tools ]
     ├── opam_admin_top.ml               Tiny library for admin-scripts, included in opam-admin.top
-    ├── opam_check.ml                   Tiny tool used in internal checks
+    ├── opam_check.ml                   Tiny tool used in internal checks ("make tests")
     ├── opam_installer.ml               Handles OPAM's ".install" files
     └── opamlfind.ml                    Experimental ocamlfind wrapper tool
