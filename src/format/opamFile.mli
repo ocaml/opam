@@ -375,6 +375,7 @@ module State: sig
   type t = {
     installed: package_set;
     installed_roots: package_set;
+    compiler: package_set;
     pinned: pin_option name_map;
   }
   include IO_FILE with type t := t

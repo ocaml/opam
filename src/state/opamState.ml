@@ -40,8 +40,11 @@ module Types = struct
     compiler_index: OpamFile.Compiler_index.t;
     (** Current switch *)
     switch: switch;
+    (** [compiler] and [compiler_version] are obsolete, to be replaced by
+        [compiler_packages] *)
     compiler: compiler;
     compiler_version: compiler_version lazy_t;
+    compiler_packages: package_set;
     switch_config: OpamFile.Dot_config.t;
     opams: OpamFile.OPAM.t package_map;
     packages: package_set;
@@ -1187,6 +1190,7 @@ let empty = {
   switch = OpamSwitch.system;
   compiler = OpamCompiler.system;
   compiler_version = lazy (OpamCompiler.Version.of_string "none");
+  compiler_packages = OpamPackage.Set.empty;
   switch_config = OpamFile.Dot_config.empty;
   opams = OpamPackage.Map.empty;
   repositories = OpamRepositoryName.Map.empty;
@@ -1277,7 +1281,7 @@ let upgrade_to_1_3 () =
   log "Upgrade switch state files format to 1.3";
   let root  = OpamStateConfig.(!r.root_dir) in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-  OpamSwitch.Map.iter (fun switch _ ->
+  OpamSwitch.Map.iter (fun switch c ->
       let switch_dir = OpamPath.Switch.root root switch in
       let open OpamFilename.Op in
       let installed_f = switch_dir // "installed" in
@@ -1286,9 +1290,30 @@ let upgrade_to_1_3 () =
       let installed = OpamFile.PkgList.safe_read installed_f in
       let installed_roots = OpamFile.PkgList.safe_read installed_roots_f in
       let pinned = OpamFile.Pinned_legacy.safe_read pinned_f in
+      let compiler =
+        let comp = OpamFile.Comp.read (OpamPath.compiler_comp root c) in
+        let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
+        List.fold_left (fun acc (name,_) ->
+            let nv =
+              try
+                match OpamPackage.Name.Map.find name pinned with
+                | Version v -> OpamPackage.create name v
+                | Source _ ->
+                  let overlay = OpamPath.Switch.Overlay.opam root switch name in
+                  let opam = OpamFile.OPAM.read overlay in
+                  match OpamFile.OPAM.version_opt opam with
+                  | Some v -> OpamPackage.create name v
+                  | None -> raise Not_found
+              with Not_found ->
+                OpamPackage.max_version installed name
+            in
+            OpamPackage.Set.add nv acc)
+          OpamPackage.Set.empty atoms
+      in
       OpamFile.State.write
         (OpamPath.Switch.state root switch)
-        { OpamFile.State.installed; installed_roots; pinned };
+        { OpamFile.State.
+          installed; installed_roots; pinned; compiler };
       OpamFilename.remove installed_f;
       OpamFilename.remove installed_roots_f;
       OpamFilename.remove pinned_f)
@@ -1355,35 +1380,9 @@ let load_env_state call_site switch =
   log "LOAD-ENV-STATE(%s)" call_site;
   with_switch switch t
 
-let base_package_names t =
-  let comp = compiler_comp t t.compiler in
-  let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
-  OpamPackage.Name.Set.of_list (List.map fst atoms)
+let base_package_names t = OpamPackage.names_of_packages t.compiler_packages
 
-let base_packages t =
-  if OpamStateConfig.(!r.no_base_packages) then OpamPackage.Set.empty else
-  let comp = compiler_comp t t.compiler in
-  let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
-  let candidates = packages_of_atoms t atoms in
-
-  List.fold_left (fun acc (name,_ as atom) ->
-      if is_pinned t name then
-        (* Allow overriding of base package through pinning *)
-        OpamPackage.Set.add (pinned t name) acc
-      else
-      let nvs = OpamPackage.packages_of_name candidates name in
-      if OpamPackage.Set.is_empty nvs then
-        (OpamConsole.error "Base package %s of compiler %s not found! Ignored."
-           (OpamFormula.short_string_of_atom atom)
-           (OpamCompiler.to_string t.compiler);
-         acc)
-      else
-      let installed = nvs %% t.installed in
-      if OpamPackage.Set.is_empty installed then
-        OpamPackage.Set.add (OpamPackage.Set.choose nvs) acc
-      else
-        installed ++ acc
-    ) OpamPackage.Set.empty atoms
+let base_packages t = t.compiler_packages
 
 let is_compiler_installed t comp =
   OpamSwitch.Map.exists (fun _ c -> c = comp) t.aliases
@@ -1395,6 +1394,7 @@ let switch_state t =
   { OpamFile.State.
     installed = t.installed;
     installed_roots = t.installed_roots;
+    compiler = t.compiler_packages;
     pinned = t.pinned; }
 
 let write_switch_state t =
@@ -1733,7 +1733,8 @@ let load_state ?save_cache call_site switch =
           (OpamCompiler.to_string compiler);
     OpamFile.Comp.version (OpamFile.Comp.read comp_f)
   ) in
-  let { OpamFile.State. installed; installed_roots; pinned } =
+  let { OpamFile.State. installed; installed_roots; pinned;
+        compiler = compiler_packages; } =
     OpamFile.State.safe_read (OpamPath.Switch.state t.root switch)
   in
   let opams =
@@ -1755,7 +1756,8 @@ let load_state ?save_cache call_site switch =
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall t.root switch)
   in
   let t = {
-    t with partial; switch; compiler; compiler_version; switch_config;
+    t with partial; switch; compiler; compiler_version; compiler_packages;
+           switch_config;
            installed; pinned; installed_roots; opams; packages; reinstall
   } in
   let t = { t with packages = pinned_packages t ++ packages } in

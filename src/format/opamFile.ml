@@ -477,23 +477,27 @@ module StateTable = struct
   type t = {
     installed: package_set;
     installed_roots: package_set;
+    compiler: package_set;
     pinned: pin_option M.t;
   }
 
   let empty = {
     installed = OpamPackage.Set.empty;
     installed_roots = OpamPackage.Set.empty;
+    compiler = OpamPackage.Set.empty;
     pinned = M.empty;
   }
 
   let pp_state =
     Pp.pp ~name:"pkg-state"
       (fun ~pos:_ -> function
+         | "compiler" -> `Compiler
          | "root" -> `Root
          | "noroot" | "installed" -> `Installed
          | "uninstalled" -> `Uninstalled
          | _ -> Pp.unexpected ())
       (function
+        | `Compiler -> "compiler"
         | `Root -> "root"
         | `Installed -> "installed"
         | `Uninstalled -> "uninstalled")
@@ -513,11 +517,16 @@ module StateTable = struct
               let nv = OpamPackage.create name version in
               {
                 installed = (match state with
-                    | `Installed | `Root -> OpamPackage.Set.add nv t.installed
+                    | `Installed | `Root | `Compiler ->
+                      OpamPackage.Set.add nv t.installed
                     | `Uninstalled -> t.installed);
                 installed_roots = (match state with
-                    | `Root -> OpamPackage.Set.add nv t.installed_roots
+                    | `Root | `Compiler ->
+                      OpamPackage.Set.add nv t.installed_roots
                     | `Installed | `Uninstalled -> t.installed_roots);
+                compiler = (match state with
+                    | `Compiler -> OpamPackage.Set.add nv t.compiler
+                    | `Root | `Installed | `Uninstalled -> t.compiler);
                 pinned = (match pin with
                     | Some pin -> M.add name pin t.pinned
                     | None -> t.pinned);
@@ -534,6 +543,10 @@ module StateTable = struct
              M.add (OpamPackage.name nv)
                (OpamPackage.version nv, (`Root, None)))
            t.installed_roots |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Compiler, None)))
+           t.compiler |>
          M.fold (fun name pin map ->
              try
                let v, (state, _) = M.find name map in
@@ -549,6 +562,7 @@ module State = struct
   type t = StateTable.t = {
     installed: package_set;
     installed_roots: package_set;
+    compiler: package_set;
     pinned: pin_option name_map;
   }
   include (LineFile (StateTable) : IO_FILE with type t := t)

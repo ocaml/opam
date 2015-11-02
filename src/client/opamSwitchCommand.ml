@@ -287,6 +287,9 @@ let install_packages switch compiler =
       OpamSolution.apply ~ask:false t (Switch roots)
         ~requested:roots
         solution in
+    let t = OpamState.load_state "switch-install-with-packages-3" switch in
+    let t = { t with compiler_packages = to_install_pkgs } in
+    OpamState.write_switch_state t;
     OpamSolution.check_solution t result
 
 let install_cont ~quiet ~warning ~update_config switch compiler =
