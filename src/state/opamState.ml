@@ -1999,19 +1999,19 @@ let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty) (updates: 
   env @ expand_env t ?opam updates variables
 
 let env_updates ~opamswitch ?(force_path=false) t =
-  let comp = compiler_comp t t.compiler in
-
   let add_to_path = OpamPath.Switch.bin t.root t.switch t.switch_config in
   let new_path =
     "PATH",
     (if force_path then "+=" else "=+="),
     OpamFilename.Dir.to_string add_to_path in
+(* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
+*)
   let man_path =
     let open OpamStd.Sys in
     match os () with
@@ -2020,7 +2020,11 @@ let env_updates ~opamswitch ?(force_path=false) t =
     | _ ->
       ["MANPATH", "=:",
        OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch t.switch_config)] in
-  let comp_env = OpamFile.Comp.env comp in
+  let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
+    OpamPackage.Set.fold (fun nv acc -> OpamFile.OPAM.env (opam t nv) @ acc)
+      t.installed []
+  in
+  let comp_env = OpamFile.Comp.env (compiler_comp t t.compiler) in
   let switch =
     if opamswitch then [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ]
     else [] in
@@ -2033,8 +2037,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
     then [ "OPAMROOT", "=", current_string ]
     else []
   in
-  new_path :: toplevel_dir :: new_perl5lib ::
-  (man_path @ switch @ root @ comp_env)
+  new_path :: (man_path @ switch @ root @ comp_env @ pkg_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
@@ -2430,6 +2433,13 @@ let print_env_warning_at_init t user =
       line
       (OpamConsole.colorise `yellow "1.")
       (eval_string t) profile_string ocamlinit_string line
+
+let check_and_print_env_warning t =
+  if up_to_date_env t then ()
+  else
+    OpamConsole.msg
+      "# The opam environment has changed, you should run '%s'"
+      (OpamConsole.colorise `bold (eval_string t))
 
 let print_env_warning_at_switch t =
   if up_to_date_env t then ()

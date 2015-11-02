@@ -1003,6 +1003,7 @@ module OPAMSyntax = struct
     ocaml_version: compiler_constraint option;
     os         : (bool * string) generic_formula;
     flags      : package_flag list;
+    env        : env_updates;
 
     (* Build instructions *)
     build      : command list;
@@ -1014,7 +1015,7 @@ module OPAMSyntax = struct
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : (string * string * string) list;
+    build_env  : env_updates;
     features   : (OpamVariable.t * string * filter) list;
     extra_sources: (url * string * basename option) list;
 
@@ -1052,6 +1053,7 @@ module OPAMSyntax = struct
     ocaml_version = None;
     os         = Empty;
     flags      = [];
+    env        = [];
 
     build      = [];
     build_test = [];
@@ -1113,6 +1115,7 @@ module OPAMSyntax = struct
   let os t = t.os
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
+  let env t = t.env
 
   let build t = t.build
   let build_test t = t.build_test
@@ -1172,6 +1175,7 @@ module OPAMSyntax = struct
   let with_flags t flags = { t with flags }
   let add_flags t flags =
     { t with flags = OpamStd.List.sort_nodup compare (flags @ t.flags) }
+  let with_env t env = { t with env }
 
   let with_build t build = { t with build }
   let with_build_test t build_test = { t with build_test }
@@ -1397,6 +1401,8 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.ident -|
          Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
+      "env", no_cleanup Pp.ppacc with_build_env build_env
+        (Pp.V.map_list ~depth:2 Pp.V.env_binding);
 
       "build", no_cleanup Pp.ppacc with_build build
         (Pp.V.map_list ~depth:2 Pp.V.command);
