@@ -112,7 +112,7 @@ endif
 
 ####################  variables depending on your OCaml-installation
 
-SYSTEM := $(shell ocamlc -config 2>/dev/null | grep system | sed 's/system: //')
+SYSTEM := $(shell ocamlc -config 2>/dev/null | sed -n -e 's/^system: //p ')
     # This may be
     # - mingw
     # - mingw64
