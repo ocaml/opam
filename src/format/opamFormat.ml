@@ -112,9 +112,9 @@ module Print = struct
     | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
     | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
                            format_value v format_values l
-    | Env_binding (_,op,id,v) ->
+    | Env_binding (_,id,op,v) ->
       Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]"
-        format_value id op format_value v
+        format_value id (string_of_env_update_op op) format_value v
 
   and format_values fmt = function
     | [] -> ()
@@ -208,8 +208,9 @@ module Normalise = struct
     | Option(_,v,l) ->
       OpamStd.List.concat_map ~left:(value v ^ " {") ~right: "}"
         " " value l
-    | Env_binding (_,op,id,v) ->
-      String.concat " " ["["; value id; op; value v; "]"]
+    | Env_binding (_,id,op,v) ->
+      String.concat " "
+        ["["; value id; string_of_env_update_op op; value v; "]"]
 
   let rec item = function
     | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
@@ -765,12 +766,12 @@ module Pp = struct
 
     let env_binding =
       let parse ~pos:_ = function
-        | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, "=", s
-        | Env_binding (_, op, Ident (_,i), String (_,s)) -> i, op, s
+        | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, Eq, s, None
+        | Env_binding (_, Ident (_,i), op, String (_,s)) -> i, op, s, None
         | _ -> unexpected ()
       in
-      let print (id, op, str) =
-        Env_binding (pos_null, op, print ident id, print string str)
+      let print (id, op, str, _) =
+        Env_binding (pos_null, print ident id, op, print string str)
       in
       list -| singleton -| pp ~name:"env-binding" parse print
 

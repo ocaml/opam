@@ -38,7 +38,7 @@ let get_pos n =
 %token <OpamTypes.relop> RELOP
 %token <OpamTypes.logop> LOGOP
 %token <OpamTypes.pfxop> PFXOP
-%token <string> ENVOP
+%token <OpamTypes.env_update_op> ENVOP
 
 %left COLON
 %left ATOM
@@ -80,7 +80,7 @@ value:
 | value LBRACE values RBRACE { Option (get_pos 2,$1, $3) }
 | value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
 | atom RELOP atom            { Relop (get_pos 2,$2,$1,$3) }
-| atom ENVOP atom            { Env_binding (get_pos 1,$2,$1,$3) }
+| atom ENVOP atom            { Env_binding (get_pos 1,$1,$2,$3) }
 | PFXOP value                { Pfxop (get_pos 1,$1,$2) }
 | RELOP atom                 { Prefix_relop (get_pos 1,$1,$2) }
 ;

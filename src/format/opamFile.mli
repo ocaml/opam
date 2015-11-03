@@ -203,7 +203,7 @@ module OPAM: sig
   val substs: t -> basename list
 
   (** List of environment variables to set-up for the build *)
-  val build_env: t -> env_updates
+  val build_env: t -> env_update list
 
   (** List of command to run for building the package *)
   val build: t -> command list
@@ -288,7 +288,7 @@ module OPAM: sig
   val has_flag: package_flag -> t -> bool
 
   (** The environment variables that this package exports *)
-  val env: t -> env_updates
+  val env: t -> env_update list
 
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
@@ -354,7 +354,7 @@ module OPAM: sig
 
   val with_flags: t -> package_flag list -> t
 
-  val with_env: t -> env_updates -> t
+  val with_env: t -> env_update list -> t
 
   val with_dev_repo: t -> url -> t
 
@@ -371,18 +371,20 @@ module Aliases: IO_FILE with type t = compiler switch_map
 
 (** Import/export file. This difference with [installed] is that we
     are explicit about root packages. *)
-module Export: IO_FILE with type t =
-  package_set * package_set * pin_option OpamPackage.Name.Map.t
+module State: sig
+  type t = {
+    installed: package_set;
+    installed_roots: package_set;
+    compiler: package_set;
+    pinned: pin_option name_map;
+  }
+  include IO_FILE with type t := t
+end
 
-(** List of installed packages: [$opam/$oversion/installed] *)
-module Installed: IO_FILE with type t = package_set
-
-(** List of packages explicitly installed by the user:
-    [$opam/$switch/installed.user] *)
-module Installed_roots: IO_FILE with type t = package_set
-
-(** List of packages to reinstall: [$opam/$oversion/reinstall] *)
-module Reinstall: IO_FILE with type t = package_set
+(** A simple list of packages and versions: (used for the older
+    [$opam/$switch/{installed,installed_roots}], still needed to
+    migrate from 1.2 repository, and for reinstall) *)
+module PkgList: IO_FILE with type t = package_set
 
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig
@@ -391,7 +393,7 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    compiler -> compiler_version -> name list -> (string * string * string) list -> t
+    compiler -> compiler_version -> name list -> env_update list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
@@ -426,7 +428,7 @@ module Comp: sig
 
   (** Environment variable to set-up before running commands in the
       subtree *)
-  val env: t -> (string * string * string) list
+  val env: t -> env_update list
 
   val tags: t -> string list
 
@@ -520,8 +522,9 @@ module Compiler_index: IO_FILE with
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
 
-(** Pinned package files *)
-module Pinned: IO_FILE with type t = pin_option name_map
+(** Pinned package files (only used for migration from 1.2, the inclusive State
+    module is now used instead) *)
+module Pinned_legacy: IO_FILE with type t = pin_option name_map
 
 (** Repository metadata *)
 module Repo: sig

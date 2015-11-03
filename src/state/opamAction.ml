@@ -280,28 +280,34 @@ let string_of_commands commands =
 let compilation_env t opam =
   let env0 = OpamState.get_full_env ~opam ~force_path:true t in
   let env1 = [
-    ("MAKEFLAGS", "");
-    ("MAKELEVEL", "");
-    ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
-    ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
+    ("MAKEFLAGS", "", None);
+    ("MAKELEVEL", "", None);
+    ("OPAM_PACKAGE_NAME",
+     OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
+     None);
+    ("OPAM_PACKAGE_VERSION",
+     OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
+     None)
   ] @ env0 in
   OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
 
-let update_metadata t ~installed ~installed_roots ~reinstall =
-  let installed_roots = OpamPackage.Set.inter installed_roots installed in
-  let reinstall = OpamPackage.Set.inter installed reinstall in
+let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
+  let open OpamStd.Option.Op in
+  let open OpamPackage.Set.Op in
+  let installed = installed +! t.installed in
+  let t =
+    { t with
+      installed;
+      installed_roots = (installed_roots +! t.installed_roots) %% installed;
+      pinned = pinned +! t.pinned; }
+  in
   if not OpamStateConfig.(!r.dryrun) then (
-  OpamFile.Installed.write
-    (OpamPath.Switch.installed t.root t.switch)
-    installed;
-  OpamFile.Installed_roots.write
-    (OpamPath.Switch.installed_roots t.root t.switch)
-    installed_roots;
-  OpamFile.Reinstall.write
-    (OpamPath.Switch.reinstall t.root t.switch)
-    reinstall;
+    OpamState.write_switch_state t;
+    OpamFile.PkgList.write
+      (OpamPath.Switch.reinstall t.root t.switch)
+      ((reinstall +! t.reinstall) %% installed);
   );
-  {t with installed; installed_roots; reinstall}
+  t
 
 let removal_needs_download t nv =
   match OpamState.opam_opt t nv with
@@ -362,7 +368,7 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
               let text = OpamProcess.make_command_text name ~args cmd in
               Some
                 (OpamSystem.make_command ?name:nameopt ~text cmd args
-                   ~env:(OpamFilename.env_of_list env)
+                   ~env:(OpamTypesBase.env_array env)
                    ~dir:(OpamFilename.Dir.to_string exec_dir)
                    ~verbose:(OpamConsole.verbose ())
                    ~check_existence:false))
@@ -507,7 +513,7 @@ let build_package t source nv =
      then OpamFile.OPAM.build_doc opam else [])
   in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
-  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.root t.switch nv in
   let rec run_commands = function
@@ -539,7 +545,7 @@ let install_package t nv =
   let opam = OpamState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
-  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.root t.switch nv in
   let rec run_commands = function

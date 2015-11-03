@@ -18,6 +18,8 @@ open OpamTypes
 open OpamState.Types
 open OpamPackage.Set.Op
 
+module S = OpamFile.State
+
 let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
@@ -194,13 +196,6 @@ let remove_t ?(confirm = true) t =
   then
     clear_switch t t.switch
 
-let update_global_config t ~warning switch =
-  let t = OpamState.update_switch_config t switch in
-  if warning then
-    OpamState.print_env_warning_at_switch t;
-  t
-
-
 let install_compiler ~quiet switch compiler =
   log "install %b %a %a" quiet
     (slog OpamSwitch.to_string) switch
@@ -285,9 +280,12 @@ let install_packages switch compiler =
       OpamSolution.apply ~ask:false t (Switch roots)
         ~requested:roots
         solution in
+    let t = OpamState.load_state "switch-install-with-packages-3" switch in
+    let t = { t with compiler_packages = to_install_pkgs } in
+    OpamState.write_switch_state t;
     OpamSolution.check_solution t result
 
-let install_cont ~quiet ~warning ~update_config switch compiler =
+let install_cont ~quiet ~update_config switch compiler =
   let t = OpamState.load_state "install"
       OpamStateConfig.(!r.current_switch) in
   let comp_dir = OpamPath.Switch.root t.root switch in
@@ -316,42 +314,39 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
   else
     install_compiler ~quiet switch compiler;
   let t =
-    if update_config then update_global_config ~warning:false t switch
-    else t
+    if update_config then OpamState.update_switch_config t switch else t
   in
   switch,
   fun () ->
-    (try install_packages switch compiler
-     with e ->
-       clear_switch ~keep_debug:true t switch;
-       OpamStateConfig.write t.root t.config;
-       raise e);
-    if warning && update_config then
-      OpamState.print_env_warning_at_switch t
+    try install_packages switch compiler
+    with e ->
+      clear_switch ~keep_debug:true t switch;
+      OpamStateConfig.write t.root t.config;
+      raise e
 
-let install ~quiet ~warning ~update_config switch compiler =
-  (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
+let install ~quiet ~update_config switch compiler =
+  (snd (install_cont ~quiet ~update_config switch compiler)) ()
 
-let switch_cont ?compiler ~quiet ~warning switch =
+let switch_cont ?compiler ~quiet switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let t = OpamState.load_state "switch-1"
       OpamStateConfig.(!r.current_switch) in
   let switch, cont =
     if OpamState.is_switch_installed t switch then
-      (ignore (update_global_config ~warning t switch);
+      (ignore (OpamState.update_switch_config t switch);
        switch, fun () -> ())
     else
     let compiler =
       match compiler with
       | None -> OpamCompiler.of_string (OpamSwitch.to_string switch)
       | Some c -> c in
-    install_cont ~quiet ~warning ~update_config:true switch compiler
+    install_cont ~quiet ~update_config:true switch compiler
   in
   switch,
   cont
 
-let switch ?compiler ~quiet ~warning switch =
-  (snd (switch_cont ?compiler ~quiet ~warning switch)) ()
+let switch ?compiler ~quiet switch =
+  (snd (switch_cont ?compiler ~quiet switch)) ()
 
 (* unused ?
 (* Remove from [set] all the packages whose names appear in
@@ -366,28 +361,26 @@ let filter_names ~filter set =
 let import_t importfile t =
   log "import switch";
 
-  let imported, import_roots, import_pins = importfile in
-
   let pinned =
     OpamPackage.Name.Map.merge (fun _ current import ->
         match current, import with
         | _, (Some _ as p) -> p
         | p, None -> p)
-      t.pinned import_pins
+      t.pinned importfile.S.pinned
   in
   let pinned_version name =
     try
       Some (OpamPackage.version
               (OpamPackage.Set.choose_one
-                 (OpamPackage.packages_of_name imported name)))
+                 (OpamPackage.packages_of_name importfile.S.installed name)))
     with Not_found | Invalid_argument _ -> None
   in
   (* Add the imported pins in case they don't exist already *)
   let available =
     OpamPackage.Set.fold (fun nv available ->
         if OpamPackage.Set.mem nv available then available else
-        if OpamPackage.Name.Map.mem (OpamPackage.name nv) import_pins then
-          OpamPackage.Set.add nv available
+        if OpamPackage.Name.Map.mem (OpamPackage.name nv) importfile.S.pinned
+        then OpamPackage.Set.add nv available
         else (
           OpamConsole.warning "%s Skipping."
             (OpamState.unavailable_reason t
@@ -396,14 +389,15 @@ let import_t importfile t =
           available
         )
       )
-      imported (Lazy.force t.available_packages)
+      importfile.S.installed (Lazy.force t.available_packages)
   in
-  let imported = imported %% available in
-  let import_roots = import_roots %% available in
-  let pin_f = OpamPath.Switch.pinned t.root t.switch in
+  let imported = importfile.S.installed %% available in
+  let import_roots = importfile.S.installed_roots %% available in
   let revert_pins () =
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
-      OpamFile.Pinned.write pin_f t.pinned
+      let state_f = OpamPath.Switch.state t.root t.switch in
+      let switch_state = S.safe_read state_f in
+      S.write state_f { switch_state with S.pinned = t.pinned }
   in
   let t = {t with pinned;
                   available_packages = lazy available;
@@ -427,11 +421,12 @@ let import_t importfile t =
         ) else OpamPackage.Set.empty
       in
 
-      let t =
+      let t = (* needs to be reloaded after the update *)
         if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show) then t
         else
-          (OpamFile.Pinned.write pin_f pinned;
-           OpamState.load_state "pin-import" t.switch) in
+          (OpamState.write_switch_state t;
+           OpamState.load_state "pin-import" t.switch)
+      in
 
       let available =
         imported %% (Lazy.force t.available_packages ++ t.installed) in
@@ -457,18 +452,15 @@ let import_t importfile t =
   (match solution with
    | No_solution | Aborted -> revert_pins ()
    | Error _ | OK _ | Nothing_to_do -> ());
-  OpamSolution.check_solution t solution;
-  OpamFile.Installed_roots.write
-    (OpamPath.Switch.installed_roots t.root t.switch)
-    OpamPackage.Set.Op.(t.installed_roots ++ import_roots)
+  OpamSolution.check_solution t solution
 
 let export filename =
-  let t = OpamState.load_state "switch-export"
-      OpamStateConfig.(!r.current_switch) in
-  let export = (t.installed, t.installed_roots, t.pinned) in
+  let switch = OpamStateConfig.(!r.current_switch) in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let st = S.safe_read (OpamPath.Switch.state root switch) in
   match filename with
-  | None   -> OpamFile.Export.write_to_channel stdout export
-  | Some f -> OpamFile.Export.write f export
+  | None   -> S.write_to_channel stdout st
+  | Some f -> S.write f st
 
 let show () =
   OpamConsole.msg "%s\n"
@@ -482,7 +474,7 @@ let reinstall_t t =
     OpamStd.Sys.exit 1;
   );
   let ocaml_version = t.compiler in
-  let export = (t.installed, t.installed_roots, t.pinned) in
+  let export = OpamState.switch_state t in
 
   (* Remove the directory (except the overlays, backups and lock) *)
   let switch_root = OpamPath.Switch.root t.root t.switch in
@@ -508,7 +500,7 @@ let with_backup switch command f =
   let t = OpamState.load_state command switch in
   let file = OpamPath.backup t.root in
   OpamFilename.mkdir (OpamPath.backup_dir t.root);
-  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
+  S.write file (OpamState.switch_state t);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -540,8 +532,8 @@ let import filename =
   with_backup OpamStateConfig.(!r.current_switch) "switch-import"
     (fun t ->
        let importfile = match filename with
-         | None   -> OpamFile.Export.read_from_channel stdin
-         | Some f -> OpamFile.Export.read f in
+         | None   -> S.read_from_channel stdin
+         | Some f -> S.read f in
        import_t importfile t)
 
 let () =
