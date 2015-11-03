@@ -102,24 +102,27 @@ let list ns =
     ) vars
 
 let print_env env =
-  List.iter (fun (k,v) ->
-    OpamConsole.msg "%s=%S; export %s;\n" k v k;
+  List.iter (fun (k,v,comment) ->
+      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
+      OpamConsole.msg "%s=%S; export %s;\n" k v k;
   ) env
 
 let print_csh_env env =
-  List.iter (fun (k,v) ->
-    OpamConsole.msg "setenv %s %S;\n" k v;
+  List.iter (fun (k,v,comment) ->
+      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
+      OpamConsole.msg "setenv %s %S;\n" k v;
   ) env
 
 let print_sexp_env env =
   OpamConsole.msg "(\n";
-  List.iter (fun (k,v) ->
+  List.iter (fun (k,v,_) ->
     OpamConsole.msg "  (%S %S)\n" k v;
   ) env;
   OpamConsole.msg ")\n"
 
 let print_fish_env env =
-  List.iter (fun (k,v) ->
+  List.iter (fun (k,v,comment) ->
+      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
       match k with
       | "PATH" | "MANPATH" | "CDPATH" ->
         (* This function assumes that `v` does not include any variable expansions
@@ -214,7 +217,7 @@ let exec ~inplace_path command =
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let env =
-    let env = OpamState.get_full_env ~force_path:(not inplace_path) t in
-    let env = List.rev_map (fun (k,v) -> k^"="^v) env in
-    Array.of_list env in
+    OpamTypesBase.env_array
+      (OpamState.get_full_env ~force_path:(not inplace_path) t)
+  in
   raise (OpamStd.Sys.Exec (cmd, args, env))

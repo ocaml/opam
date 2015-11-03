@@ -1021,7 +1021,7 @@ module OPAMSyntax = struct
     ocaml_version: compiler_constraint option;
     os         : (bool * string) generic_formula;
     flags      : package_flag list;
-    env        : env_updates;
+    env        : env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -1033,7 +1033,7 @@ module OPAMSyntax = struct
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : env_updates;
+    build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
     extra_sources: (url * string * basename option) list;
 
@@ -1110,7 +1110,7 @@ module OPAMSyntax = struct
 
   let check name = function
     | None    ->
-      OpamFormat.bad_format "Invalid OPAM file (missing field %S)" name
+      OpamFormat.bad_format "Invalid opam file (missing field %S)" name
     | Some n -> n
 
   let ext_field_prefix = "x-"
@@ -1133,7 +1133,14 @@ module OPAMSyntax = struct
   let os t = t.os
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
-  let env t = t.env
+  let env t =
+    List.map
+      (fun env -> match t.name, env with
+        | Some name, (var,op,value,None) ->
+          var, op, value,
+          Some ("Updated by package " ^ OpamPackage.Name.to_string name)
+        | _, b -> b)
+      t.env
 
   let build t = t.build
   let build_test t = t.build_test
@@ -1419,7 +1426,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.ident -|
          Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
-      "env", no_cleanup Pp.ppacc with_build_env build_env
+      "setenv", no_cleanup Pp.ppacc with_build_env build_env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
 
       "build", no_cleanup Pp.ppacc with_build build
@@ -2141,7 +2148,7 @@ module CompSyntax = struct
     make         : string list ;
     build        : command list ;
     packages     : formula ;
-    env          : (string * string * string) list;
+    env          : env_update list;
     tags         : string list;
   }
 
@@ -2176,7 +2183,14 @@ module CompSyntax = struct
 
   let packages t = t.packages
   let preinstalled t = t.preinstalled
-  let env t = t.env
+  let env t =
+    List.map (function
+        | var,op,value,None ->
+          var, op, value,
+          Some ("Updated by compiler " ^ OpamCompiler.to_string t.name)
+        | b -> b)
+      t.env
+
   let tags t = t.tags
 
   let with_opam_version t opam_version = {t with opam_version}

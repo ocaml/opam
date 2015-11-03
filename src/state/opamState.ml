@@ -1076,9 +1076,9 @@ let create_system_compiler_description root =
         OpamFile.Comp.create_preinstalled name version
           (if OpamStateConfig.(!r.no_base_packages) then []
            else static_base_packages)
-          [ "CAML_LD_LIBRARY_PATH", "=",
+          [ "CAML_LD_LIBRARY_PATH", Eq,
             "%{lib}%/stublibs" ^ String.make 1 (OpamStd.Sys.path_sep ()) ^
-            Filename.concat libdir "stublibs" ] in
+            Filename.concat libdir "stublibs", None ] in
       OpamFile.Comp.write comp f
 
 let system_needs_upgrade_displayed = ref false
@@ -1986,14 +1986,14 @@ let source t ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let expand_env t ?opam (env: env_updates) variables : env =
+let expand_env t ?opam (env: env_update list) variables : env =
   let fenv v =
     try resolve_variable t ?opam variables v
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
   in
-  List.rev_map (fun (ident, symbol, string) ->
+  List.rev_map (fun (ident, op, string, comment) ->
     let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
@@ -2017,27 +2017,33 @@ let expand_env t ?opam (env: env_updates) variables : env =
         | "" :: _ -> (a :: c) @ [""]
         | _       -> a :: c in
     let c = String.make 1 (OpamStd.Sys.path_sep ()) in
-    match symbol with
-    | "="  -> (ident, string)
-    | "+=" -> (ident, String.concat c (string :: read_env ()))
-    | "=+" -> (ident, String.concat c (read_env () @ [string]))
-    | ":=" -> (ident, String.concat c (cons ~head:true string (read_env())))
-    | "=:" -> (ident, String.concat c (cons ~head:false string (read_env())))
-    | "=+=" -> (ident, String.concat c (update_env string))
-    | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
+    match op with
+    | Eq  -> ident, string, comment
+    | PlusEq -> ident, String.concat c (string :: read_env ()), comment
+    | EqPlus -> ident, String.concat c (read_env () @ [string]), comment
+    | EqPlusEq -> ident, String.concat c (update_env string), comment
+    | ColonEq ->
+      ident, String.concat c (cons ~head:true string (read_env())), comment
+    | EqColon ->
+      ident, String.concat c (cons ~head:false string (read_env())), comment
   ) env
 
-let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty) (updates: env_updates) =
+let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty)
+    (updates: env_update list) =
   let env =
-    List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
+    List.filter (fun (k,_,_) -> List.for_all (fun (u,_,_,_) -> u <> k) updates)
+      env
+  in
   env @ expand_env t ?opam updates variables
 
 let env_updates ~opamswitch ?(force_path=false) t =
   let add_to_path = OpamPath.Switch.bin t.root t.switch t.switch_config in
   let new_path =
     "PATH",
-    (if force_path then "+=" else "=+="),
-    OpamFilename.Dir.to_string add_to_path in
+    (if force_path then PlusEq else EqPlusEq),
+    OpamFilename.Dir.to_string add_to_path,
+    Some "Current opam switch binary dir"
+  in
 (* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -2052,15 +2058,21 @@ let env_updates ~opamswitch ?(force_path=false) t =
     | OpenBSD | NetBSD | FreeBSD ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
-      ["MANPATH", "=:",
-       OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch t.switch_config)] in
+      ["MANPATH", EqColon,
+       OpamFilename.Dir.to_string
+         (OpamPath.Switch.man_dir t.root t.switch t.switch_config),
+      Some "Current opam switch man dir"]
+  in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
-    OpamPackage.Set.fold (fun nv acc -> OpamFile.OPAM.env (opam t nv) @ acc)
+    OpamPackage.Set.fold (fun nv acc ->
+        OpamFile.OPAM.env (opam t nv)
+        @ acc)
       t.installed []
   in
   let comp_env = OpamFile.Comp.env (compiler_comp t t.compiler) in
   let switch =
-    if opamswitch then [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ]
+    if opamswitch then
+      [ "OPAMSWITCH", Eq, OpamSwitch.to_string t.switch, None ]
     else [] in
   let root =
     let current = t.root in
@@ -2068,7 +2080,7 @@ let env_updates ~opamswitch ?(force_path=false) t =
     let current_string = OpamFilename.Dir.to_string current in
     let env = OpamStd.Env.getopt "OPAMROOT" in
     if current <> default || (env <> None && env <> Some current_string)
-    then [ "OPAMROOT", "=", current_string ]
+    then [ "OPAMROOT", Eq, current_string, None ]
     else []
   in
   new_path :: (man_path @ switch @ root @ comp_env @ pkg_env)
@@ -2086,7 +2098,7 @@ let get_opam_env ~force_path t =
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path ?opam t =
-  let env0 = OpamStd.Env.list () in
+  let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add_to_env t ?opam env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
@@ -2141,16 +2153,24 @@ let update_ocamlinit () =
 
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
-  let sh   (k,v) = Printf.sprintf "%s=%S; export %s;\n" k v k in
-  let csh  (k,v) = Printf.sprintf "if ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n" k k k v in
-  let fish (k,v) =
+  let sh   (k,v,comment) =
+    Printf.sprintf "%s%s=%S; export %s;\n"
+      (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
+      k v k in
+  let csh  (k,v,comment) =
+    Printf.sprintf "%sif ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n"
+      (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
+      k k k v in
+  let fish (k,v,comment) =
     (* Fish converts some colon-separated vars to arrays, which have to be treated differently.
      * Opam only changes PATH and MANPATH but we handle CDPATH for completeness. *)
     let fish_array_vars = ["PATH"; "MANPATH"; "CDPATH"] in
     let fish_array_derefs = List.map (fun s -> "$" ^ s) fish_array_vars in
     if not (List.mem k fish_array_vars) then
       (* Regular string variables *)
-      Printf.sprintf "set -gx %s %S;\n" k v
+      Printf.sprintf "%sset -gx %s %S;\n"
+        (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
+        k v
     else
       (* The MANPATH and CDPATH have default "values" if they are unset and we
        * must be sure that we preserve these defaults when "appending" to them.
@@ -2170,24 +2190,26 @@ let string_of_env_update t shell updates =
       let vs = OpamStd.String.split_delim v ':' in
       let to_arr_element v =
         if List.mem v fish_array_derefs then v else Printf.sprintf "%S" v in
-      let set_array = Printf.sprintf "set -gx %s %s;\n" k (OpamStd.List.concat_map " " to_arr_element vs) in
+      let set_array =
+        Printf.sprintf "%sset -gx %s %s;\n"
+          (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
+          k (OpamStd.List.concat_map " " to_arr_element vs) in
       (init_array ^ set_array) in
   let export = match shell with
-    | `zsh
-    | `sh  -> sh
+    | `zsh | `sh  -> sh
     | `fish -> fish
     | `csh -> csh in
-  let aux (ident, symbol, string) =
+  let aux (ident, symbol, string, comment) =
     let string = OpamFilter.expand_string fenv string in
     let key, value = match symbol with
-      | "="  -> (ident, string)
-      | "+="
-      | ":=" -> (ident, Printf.sprintf "%s:$%s" string ident)
-      | "=:"
-      | "=+" -> (ident, (match shell with `csh -> Printf.sprintf "${%s}:%s" ident string | _ -> Printf.sprintf "$%s:%s" ident string))
-      | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
-      | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
-    export (key, value) in
+      | Eq  -> ident, string
+      | PlusEq | ColonEq -> ident, Printf.sprintf "%s:$%s" string ident
+      | EqColon | EqPlus ->
+        ident, (match shell with `csh -> Printf.sprintf "${%s}:%s" ident string
+                               | _ -> Printf.sprintf "$%s:%s" ident string)
+      | EqPlusEq -> ident, Printf.sprintf "%s:$%s" string ident
+    in
+    export (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
 
 let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, complete_sh)=
@@ -2421,11 +2443,11 @@ let eval_string t =
 let up_to_date_env t =
   let changes =
     List.filter
-      (fun (s, v) -> Some v <>
-                     try Some (OpamStd.Env.get s) with Not_found -> None)
+      (fun (s, v, _) -> Some v <>
+                        try Some (OpamStd.Env.get s) with Not_found -> None)
       (get_opam_env ~force_path:false t) in
   log "Not up-to-date env variables: [%s]"
-    (String.concat " " (List.map fst changes));
+    (String.concat " " (List.map (fun (v, _, _) -> v) changes));
   changes = []
 
 let print_env_warning_at_init t user =

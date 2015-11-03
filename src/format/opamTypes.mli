@@ -350,6 +350,8 @@ type command = arg list * filter option
 (** Source file positions: filename, line, column *)
 type pos = filename * int * int
 
+type env_update_op = Eq | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq
+
 (** Base values *)
 type value =
   | Bool of pos * bool
@@ -363,7 +365,7 @@ type value =
   | List of pos * value list
   | Group of pos * value list
   | Option of pos * value * value list
-  | Env_binding of pos * string * value * value
+  | Env_binding of pos * value * env_update_op * value
 
 (** An opamfile section *)
 type opamfile_section = {
@@ -437,11 +439,12 @@ type stats = {
   s_remove   : int;
 }
 
-(** Environement variables *)
-type env = (string * string) list
+(** Environement variables: var name, value, optional comment *)
+type env = (string * string * string option) list
 
 (** Environment updates *)
-type env_updates = (string * string * string) list
+type env_update = string * env_update_op * string * string option
+(** var, update_op, value, comment *)
 
 (** Tags *)
 type tags = OpamStd.String.Set.t OpamStd.String.SetMap.t

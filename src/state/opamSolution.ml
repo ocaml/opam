@@ -176,8 +176,8 @@ let string_of_errors errors =
 *)
 
 let new_variables e =
-  let e = List.filter (fun (_,s,_) -> s="=") e in
-  let e = List.rev_map (fun (v,_,_) -> v) e in
+  let e = List.filter (function (_,Eq,_,_) -> true | _ -> false) e in
+  let e = List.rev_map (fun (v,_,_,_) -> v) e in
   OpamStd.String.Set.of_list e
 
 let variable_warnings = ref false

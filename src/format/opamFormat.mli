@@ -297,7 +297,7 @@ module Pp : sig
       (value, (name * 'a) OpamFormula.formula) t
 
     (** Environment variable updates syntax *)
-    val env_binding : (value, string * string * string) t
+    val env_binding : (value, env_update) t
 
     (** For the "features" field, e.g. a list of [(variable "doc" {filter})] *)
     val features : (value, (variable * string * filter) list) t

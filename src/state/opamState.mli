@@ -134,7 +134,8 @@ val get_opam_env: force_path:bool -> state -> env
 
 (** Update an environment. *)
 val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env ->
-  ?variables:(variable_contents option) OpamVariable.Map.t -> (string * string * string) list -> env
+  ?variables:(variable_contents option) OpamVariable.Map.t ->
+  env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)
 val up_to_date_env: state -> bool

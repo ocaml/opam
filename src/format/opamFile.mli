@@ -203,7 +203,7 @@ module OPAM: sig
   val substs: t -> basename list
 
   (** List of environment variables to set-up for the build *)
-  val build_env: t -> env_updates
+  val build_env: t -> env_update list
 
   (** List of command to run for building the package *)
   val build: t -> command list
@@ -288,7 +288,7 @@ module OPAM: sig
   val has_flag: package_flag -> t -> bool
 
   (** The environment variables that this package exports *)
-  val env: t -> env_updates
+  val env: t -> env_update list
 
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
@@ -354,7 +354,7 @@ module OPAM: sig
 
   val with_flags: t -> package_flag list -> t
 
-  val with_env: t -> env_updates -> t
+  val with_env: t -> env_update list -> t
 
   val with_dev_repo: t -> url -> t
 
@@ -393,7 +393,7 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    compiler -> compiler_version -> name list -> (string * string * string) list -> t
+    compiler -> compiler_version -> name list -> env_update list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
@@ -428,7 +428,7 @@ module Comp: sig
 
   (** Environment variable to set-up before running commands in the
       subtree *)
-  val env: t -> (string * string * string) list
+  val env: t -> env_update list
 
   val tags: t -> string list
 

@@ -1422,8 +1422,7 @@ let check_and_run_external_commands () =
            OpamState.load_env_state "plugins"
              OpamStateConfig.(!r.current_switch)
          in
-         let env = OpamState.get_full_env ~force_path:false t in
-         Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) env))
+         env_array (OpamState.get_full_env ~force_path:false t))
       else
         Unix.environment ()
     in

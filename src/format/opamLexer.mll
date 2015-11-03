@@ -89,7 +89,7 @@ rule token = parse
 | relop  { RELOP (relop_of_string (Lexing.lexeme lexbuf)) }
 | logop  { LOGOP (logop_of_string (Lexing.lexeme lexbuf)) }
 | pfxop  { PFXOP (pfxop_of_string (Lexing.lexeme lexbuf)) }
-| envop  { ENVOP (Lexing.lexeme lexbuf) }
+| envop  { ENVOP (env_update_op_of_string (Lexing.lexeme lexbuf)) }
 | eof    { EOF }
 | _      { let token = Lexing.lexeme lexbuf in
            error "'%s' is not a valid token" token }
