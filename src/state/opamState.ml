@@ -2436,9 +2436,9 @@ let eval_string t =
   in
   match OpamStd.Sys.guess_shell_compat () with
   | `fish ->
-    Printf.sprintf "eval (opam config env%s%s)\n" root switch
+    Printf.sprintf "eval (opam config env%s%s)" root switch
   | _ ->
-    Printf.sprintf "eval `opam config env%s%s`\n" root switch
+    Printf.sprintf "eval `opam config env%s%s`" root switch
 
 let up_to_date_env t =
   let changes =
@@ -2485,24 +2485,20 @@ let print_env_warning_at_init t user =
        %s To configure OPAM in the current shell session, you need to run:\n\
        \n\
       \      %s\n\
+       \n\
        %s%s%s\n\n"
       line
       (OpamConsole.colorise `yellow "1.")
       (eval_string t) profile_string ocamlinit_string line
 
-let check_and_print_env_warning t =
-  if up_to_date_env t then ()
-  else
-    OpamConsole.msg
-      "# The opam environment has changed, you should run '%s'"
-      (OpamConsole.colorise `bold (eval_string t))
+let is_switch_globally_set t =
+  OpamFile.Config.switch t.config = t.switch
 
-let print_env_warning_at_switch t =
-  if up_to_date_env t then ()
-  else
-    OpamConsole.msg
-      "# To setup the new switch in the current shell, you need to run:\n%s"
-      (eval_string t)
+let check_and_print_env_warning t =
+  if is_switch_globally_set t && not (up_to_date_env t) then
+    OpamConsole.formatted_msg
+      "# Run %s to update the current shell environment\n"
+      (OpamConsole.colorise `bold (eval_string t))
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =

@@ -21,12 +21,12 @@ open OpamTypes
 (** Install a new switch. Returns a continuation that must be run to install the
     packages, but only needs a switch lock. *)
 val install_cont:
-  quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler ->
+  quiet:bool -> update_config:bool -> switch -> compiler ->
   switch * (unit -> unit)
 
 (** Like [install_cont] but runs the continuation already *)
 val install:
-  quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler -> unit
+  quiet:bool -> update_config:bool -> switch -> compiler -> unit
 
 (** Install a compiler's base packages *)
 val install_packages: switch -> compiler -> unit
@@ -42,11 +42,10 @@ val remove: switch -> unit
 
 (** Switch to the given compiler switch. Returns a continuation like [install] *)
 val switch_cont:
-  ?compiler:compiler -> quiet:bool -> warning:bool -> switch ->
-  switch * (unit -> unit)
+  ?compiler:compiler -> quiet:bool -> switch -> switch * (unit -> unit)
 
 (** Like [switch_cont] but runs the continuation already. *)
-val switch: ?compiler:compiler -> quiet:bool -> warning:bool -> switch -> unit
+val switch: ?compiler:compiler -> quiet:bool -> switch -> unit
 
 (** Reinstall the given compiler switch. *)
 val reinstall: switch -> unit

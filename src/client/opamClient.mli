@@ -125,10 +125,10 @@ module API: sig
     (** Set the given switch, installing it if necessary. Take the
         global file lock. *)
     val switch:
-      ?compiler:compiler -> quiet:bool -> warning:bool -> switch -> unit
+      ?compiler:compiler -> quiet:bool -> switch -> unit
 
     (** Install the given compiler. *)
-    val install: quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler -> unit
+    val install: quiet:bool -> update_config:bool -> switch -> compiler -> unit
 
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)

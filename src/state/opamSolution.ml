@@ -71,13 +71,13 @@ let check_solution state = function
     OpamConsole.msg "No solution found, exiting\n";
     OpamStd.Sys.exit 3
   | Error (success, failed, _remaining) ->
-    OpamState.check_and_print_env_warning state;
     List.iter (post_message state) success;
     List.iter (post_message ~failed:true state) failed;
+    OpamState.check_and_print_env_warning state;
     OpamStd.Sys.exit 4
   | OK actions ->
-    OpamState.check_and_print_env_warning state;
-    List.iter (post_message state) actions
+    List.iter (post_message state) actions;
+    OpamState.check_and_print_env_warning state
   | Nothing_to_do -> OpamConsole.msg "Nothing to do.\n"
   | Aborted     -> OpamStd.Sys.exit 0
 
@@ -323,7 +323,9 @@ let parallel_apply t action action_graph =
           (if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs
            then OpamPackage.Set.add nv !t_ref.installed_roots
            else !t_ref.installed_roots);
-    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] then
+    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] &&
+       OpamState.is_switch_globally_set t
+    then
       OpamState.update_init_scripts t ~global:None;
     if not OpamStateConfig.(!r.dryrun) then
       OpamState.install_metadata !t_ref nv
@@ -336,7 +338,9 @@ let parallel_apply t action action_graph =
         ~installed:(rm !t_ref.installed)
         ~installed_roots:(rm !t_ref.installed_roots)
         ~reinstall:(rm !t_ref.reinstall);
-    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] then
+    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] &&
+       OpamState.is_switch_globally_set t
+    then
       OpamState.update_init_scripts t ~global:None;
   in
 

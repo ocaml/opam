@@ -196,13 +196,6 @@ let remove_t ?(confirm = true) t =
   then
     clear_switch t t.switch
 
-let update_global_config t ~warning switch =
-  let t = OpamState.update_switch_config t switch in
-  if warning then
-    OpamState.print_env_warning_at_switch t;
-  t
-
-
 let install_compiler ~quiet switch compiler =
   log "install %b %a %a" quiet
     (slog OpamSwitch.to_string) switch
@@ -292,7 +285,7 @@ let install_packages switch compiler =
     OpamState.write_switch_state t;
     OpamSolution.check_solution t result
 
-let install_cont ~quiet ~warning ~update_config switch compiler =
+let install_cont ~quiet ~update_config switch compiler =
   let t = OpamState.load_state "install"
       OpamStateConfig.(!r.current_switch) in
   let comp_dir = OpamPath.Switch.root t.root switch in
@@ -321,42 +314,39 @@ let install_cont ~quiet ~warning ~update_config switch compiler =
   else
     install_compiler ~quiet switch compiler;
   let t =
-    if update_config then update_global_config ~warning:false t switch
-    else t
+    if update_config then OpamState.update_switch_config t switch else t
   in
   switch,
   fun () ->
-    (try install_packages switch compiler
-     with e ->
-       clear_switch ~keep_debug:true t switch;
-       OpamStateConfig.write t.root t.config;
-       raise e);
-    if warning && update_config then
-      OpamState.print_env_warning_at_switch t
+    try install_packages switch compiler
+    with e ->
+      clear_switch ~keep_debug:true t switch;
+      OpamStateConfig.write t.root t.config;
+      raise e
 
-let install ~quiet ~warning ~update_config switch compiler =
-  (snd (install_cont ~quiet ~warning ~update_config switch compiler)) ()
+let install ~quiet ~update_config switch compiler =
+  (snd (install_cont ~quiet ~update_config switch compiler)) ()
 
-let switch_cont ?compiler ~quiet ~warning switch =
+let switch_cont ?compiler ~quiet switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let t = OpamState.load_state "switch-1"
       OpamStateConfig.(!r.current_switch) in
   let switch, cont =
     if OpamState.is_switch_installed t switch then
-      (ignore (update_global_config ~warning t switch);
+      (ignore (OpamState.update_switch_config t switch);
        switch, fun () -> ())
     else
     let compiler =
       match compiler with
       | None -> OpamCompiler.of_string (OpamSwitch.to_string switch)
       | Some c -> c in
-    install_cont ~quiet ~warning ~update_config:true switch compiler
+    install_cont ~quiet ~update_config:true switch compiler
   in
   switch,
   cont
 
-let switch ?compiler ~quiet ~warning switch =
-  (snd (switch_cont ?compiler ~quiet ~warning switch)) ()
+let switch ?compiler ~quiet switch =
+  (snd (switch_cont ?compiler ~quiet switch)) ()
 
 (* unused ?
 (* Remove from [set] all the packages whose names appear in

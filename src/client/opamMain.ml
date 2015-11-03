@@ -876,9 +876,6 @@ let switch =
     mk_opt ["A";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
       Arg.(some string) None in
-  let no_warning =
-    mk_flag ["no-warning"]
-      "Do not display any warning related to environment variables." in
   let no_switch =
     mk_flag ["no-switch"]
       "Only install the compiler switch, without switching to it. If the compiler \
@@ -891,13 +888,12 @@ let switch =
 
   let switch global_options
       build_options command alias_of print_short installed all
-      no_warning no_switch params =
+      no_switch params =
     apply_global_options global_options;
     apply_build_options build_options;
     let mk_comp alias = match alias_of with
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
-    let warning = not no_warning in
     let quiet = (fst global_options).quiet in
     match command, params with
     | None      , []
@@ -907,7 +903,6 @@ let switch =
     | Some `install, [switch] ->
       Client.SWITCH.install
         ~quiet
-        ~warning
         ~update_config:(not no_switch)
         (OpamSwitch.of_string switch)
         (mk_comp switch);
@@ -936,7 +931,6 @@ let switch =
       Client.SWITCH.switch
         ?compiler:(if alias_of = None then None else Some (mk_comp switch))
         ~quiet
-        ~warning
         (OpamSwitch.of_string switch);
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
@@ -944,7 +938,7 @@ let switch =
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_warning $no_switch $params)),
+             $installed $all $no_switch $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)

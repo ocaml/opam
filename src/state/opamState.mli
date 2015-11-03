@@ -109,6 +109,10 @@ val dump_state: state -> out_channel -> unit
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state
 
+(** Returns [true] if the current switch of the state is the one set in
+    ~/.opam/config, [false] otherwise *)
+val is_switch_globally_set: state -> bool
+
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> switch -> state
 
@@ -148,13 +152,10 @@ val eval_string: state -> string
     (General message) *)
 val check_and_print_env_warning: state -> unit
 
-(** Print a warning if the environment is not set-up properly.
-    (init message) *)
+(** Print a warning if the environment is not set-up properly, and advises to
+    update user's file depending on what has already been done automatically
+    according to [user_config] *)
 val print_env_warning_at_init: state -> user_config -> unit
-
-(** Print a warning if the environment is not set-up properly.
-    (switch message) *)
-val print_env_warning_at_switch: state -> unit
 
 (** {2 Initialisation} *)
 
