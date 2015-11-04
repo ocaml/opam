@@ -549,14 +549,16 @@ module StateTable = struct
              M.add (OpamPackage.name nv)
                (OpamPackage.version nv, (`Root, None)))
            t.installed_roots |>
-         OpamPackage.Set.fold (fun nv ->
-             M.add (OpamPackage.name nv)
-               (OpamPackage.version nv, (`Compiler, None)))
+         OpamPackage.Set.fold (fun nv acc ->
+             let name = OpamPackage.name nv in
+             try
+               let (v, _) = M.find name acc in
+               M.add name (v, (`Compiler, None)) acc
+             with Not_found ->
+               M.add name
+                 (OpamPackage.version nv, (`Uninstalled_compiler, None))
+                 acc)
            t.compiler |>
-         OpamPackage.Set.fold (fun nv ->
-             M.add (OpamPackage.name nv)
-               (OpamPackage.version nv, (`Uninstalled_compiler, None)))
-           OpamPackage.Set.Op.(t.compiler -- t.installed) |>
          M.fold (fun name pin map ->
              try
                let v, (state, _) = M.find name map in

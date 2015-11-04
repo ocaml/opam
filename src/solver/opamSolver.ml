@@ -152,7 +152,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
           (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
   let base_depends =
-    if OpamPackage.Set.mem package universe.u_base then Empty else
+    if OpamPackage.has_name universe.u_base name then Empty else
       OpamFormula.ands
         (OpamPackage.Name.Set.fold (fun name acc -> Atom (name, Empty) :: acc)
            (OpamPackage.names_of_packages universe.u_base) [])
