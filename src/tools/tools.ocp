@@ -31,3 +31,19 @@ begin program "opamlfind"
   ]
   requires = [ "unix" ]
 end
+
+begin program "opam-admin.top"
+  has_asm = false
+  ocamlc = "ocamlmktop"
+  files = [
+    "opam_admin_top.ml"
+  ]
+  requires = [
+    "opam-core"
+    "opam-format"
+    "opam-solver"
+    "opam-repository"
+    "opam-state"
+    "opam-client"
+  ]
+end

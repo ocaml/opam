@@ -109,6 +109,7 @@ fastlink:
 	   ln -sf $(addprefix ../../,\
 	        $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard _obuild/opam-$l/*.$e)))\
 	      src/$l/;)
+	@ln -sf ../_obuild/opam-admin.top/opam-admin.top.byte src/opam-admin.top
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
