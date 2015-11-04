@@ -73,11 +73,16 @@ let mkdir dir =
     end in
   aux dir
 
-(* XXX: won't work on windows *)
+let rm_command =
+  if OpamStd.Sys.(os () = Win32) then
+    "cmd /d /v:off /c rd /s /q"
+  else
+    "rm -rf"
+
 let remove_dir dir =
   log "rmdir %s" dir;
   if Sys.file_exists dir then (
-    let err = Sys.command (Printf.sprintf "rm -rf %s" dir) in
+    let err = Sys.command (Printf.sprintf "%s %s" rm_command dir) in
       if err <> 0 then
         internal_error "Cannot remove %s (error %d)." dir err
   )
