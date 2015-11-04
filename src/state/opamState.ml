@@ -1305,7 +1305,9 @@ let upgrade_to_1_3 () =
                   | Some v -> OpamPackage.create name v
                   | None -> raise Not_found
               with Not_found ->
-                OpamPackage.max_version installed name
+              try OpamPackage.max_version installed name with Not_found ->
+                OpamPackage.create name
+                  (OpamPackage.Version.of_string "~unknown")
             in
             OpamPackage.Set.add nv acc)
           OpamPackage.Set.empty atoms
