@@ -2153,14 +2153,15 @@ let update_ocamlinit () =
 
 let string_of_env_update t shell updates =
   let fenv = resolve_variable t OpamVariable.Map.empty in
+  let make_comment comment_opt =
+    OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment_opt
+  in
   let sh   (k,v,comment) =
     Printf.sprintf "%s%s=%S; export %s;\n"
-      (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
-      k v k in
+      (make_comment comment) k v k in
   let csh  (k,v,comment) =
     Printf.sprintf "%sif ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %S\n"
-      (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
-      k k k v in
+      (make_comment comment) k k k v in
   let fish (k,v,comment) =
     (* Fish converts some colon-separated vars to arrays, which have to be treated differently.
      * Opam only changes PATH and MANPATH but we handle CDPATH for completeness. *)
@@ -2169,8 +2170,7 @@ let string_of_env_update t shell updates =
     if not (List.mem k fish_array_vars) then
       (* Regular string variables *)
       Printf.sprintf "%sset -gx %s %S;\n"
-        (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
-        k v
+        (make_comment comment) k v
     else
       (* The MANPATH and CDPATH have default "values" if they are unset and we
        * must be sure that we preserve these defaults when "appending" to them.
@@ -2192,7 +2192,7 @@ let string_of_env_update t shell updates =
         if List.mem v fish_array_derefs then v else Printf.sprintf "%S" v in
       let set_array =
         Printf.sprintf "%sset -gx %s %s;\n"
-          (OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment)
+          (make_comment comment)
           k (OpamStd.List.concat_map " " to_arr_element vs) in
       (init_array ^ set_array) in
   let export = match shell with
