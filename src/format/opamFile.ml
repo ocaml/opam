@@ -495,12 +495,14 @@ module StateTable = struct
          | "root" -> `Root
          | "noroot" | "installed" -> `Installed
          | "uninstalled" -> `Uninstalled
+         | "uninstalled-compiler" -> `Uninstalled_compiler
          | _ -> Pp.unexpected ())
       (function
         | `Compiler -> "compiler"
         | `Root -> "root"
         | `Installed -> "installed"
-        | `Uninstalled -> "uninstalled")
+        | `Uninstalled -> "uninstalled"
+        | `Uninstalled_compiler -> "uninstalled-compiler")
 
   let pp_lines =
     M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
@@ -519,14 +521,18 @@ module StateTable = struct
                 installed = (match state with
                     | `Installed | `Root | `Compiler ->
                       OpamPackage.Set.add nv t.installed
-                    | `Uninstalled -> t.installed);
+                    | `Uninstalled | `Uninstalled_compiler ->
+                      t.installed);
                 installed_roots = (match state with
                     | `Root | `Compiler ->
                       OpamPackage.Set.add nv t.installed_roots
-                    | `Installed | `Uninstalled -> t.installed_roots);
+                    | `Installed | `Uninstalled | `Uninstalled_compiler ->
+                      t.installed_roots);
                 compiler = (match state with
-                    | `Compiler -> OpamPackage.Set.add nv t.compiler
-                    | `Root | `Installed | `Uninstalled -> t.compiler);
+                    | `Compiler | `Uninstalled_compiler ->
+                      OpamPackage.Set.add nv t.compiler
+                    | `Root | `Installed | `Uninstalled ->
+                      t.compiler);
                 pinned = (match pin with
                     | Some pin -> M.add name pin t.pinned
                     | None -> t.pinned);
@@ -547,6 +553,10 @@ module StateTable = struct
              M.add (OpamPackage.name nv)
                (OpamPackage.version nv, (`Compiler, None)))
            t.compiler |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Uninstalled_compiler, None)))
+           OpamPackage.Set.Op.(t.compiler -- t.installed) |>
          M.fold (fun name pin map ->
              try
                let v, (state, _) = M.find name map in

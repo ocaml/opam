@@ -103,13 +103,18 @@ let list ns =
 
 let print_env env =
   List.iter (fun (k,v,comment) ->
-      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
+      (* '#' comment are concatenated by shell expansion + eval and cause
+         everything to be ignored, don't use them.
+         ':' is not supported by fish, just ignore comments there. *)
+      if OpamConsole.verbose () then
+        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
       OpamConsole.msg "%s=%S; export %s;\n" k v k;
   ) env
 
 let print_csh_env env =
   List.iter (fun (k,v,comment) ->
-      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
+      if OpamConsole.verbose () then
+        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
       OpamConsole.msg "setenv %s %S;\n" k v;
   ) env
 
@@ -121,8 +126,7 @@ let print_sexp_env env =
   OpamConsole.msg ")\n"
 
 let print_fish_env env =
-  List.iter (fun (k,v,comment) ->
-      OpamStd.Option.iter (OpamConsole.msg "# %s\n") comment;
+  List.iter (fun (k,v,_) ->
       match k with
       | "PATH" | "MANPATH" | "CDPATH" ->
         (* This function assumes that `v` does not include any variable expansions
