@@ -624,7 +624,7 @@ module type SyntaxFileArg = sig
   val pp: (opamfile, filename * t) Pp.t
 end
 
-module SyntaxFile(X: SyntaxFileArg) = struct
+module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
 
   module IO = struct
     let to_opamfile filename t = Pp.print X.pp (filename, t)
@@ -645,6 +645,7 @@ module SyntaxFile(X: SyntaxFileArg) = struct
   end
 
   include IO
+  include X
   include MakeIO(struct
       include X
       include IO
