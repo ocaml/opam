@@ -177,6 +177,8 @@ val update_init_scripts: state -> global:(global_config option) -> unit
 val global_variable_names: (string * string) list
 val package_variable_names: (string * string) list
 
+val compute_env_updates: state -> env_update list
+
 (** Check for user-defined variable overwrite. *)
 val get_env_var: full_variable -> variable_contents option
 
