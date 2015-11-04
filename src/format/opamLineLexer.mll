@@ -25,15 +25,16 @@ let word = Buffer.create 57
 
 }
 
-let normalchar = [^' ' '\t' '\n' '\\']
+let normalchar = [^' ' '\t' '\n' '\\' '"' ]
 
 rule main = parse
 | '\n'         { Lexing.new_line lexbuf; NEWLINE }
-| [' ' '\t']+  { main lexbuf }
+| [' ' '\t' ]+  { main lexbuf }
 | (normalchar* as w) '\\'
                { Buffer.reset word ; Buffer.add_string word w; escaped lexbuf }
 | (normalchar* as w)
                { WORD w }
+| '\"'         { Buffer.reset word; quoted lexbuf }
 | eof          { EOF }
 
 and escaped = parse
@@ -41,6 +42,11 @@ and escaped = parse
                { Buffer.add_string word w; escaped lexbuf }
 | (_ normalchar*) as w
                { Buffer.add_string word w; WORD (Buffer.contents word) }
+
+and quoted = parse
+| '"'          { WORD (Scanf.unescaped (Buffer.contents word)) }
+| ( [^ '"' '\\' ] | ( '\\' _ ) ) * as w
+               { Buffer.add_string word w; quoted lexbuf }
 
 {
 

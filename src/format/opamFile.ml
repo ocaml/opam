@@ -237,35 +237,16 @@ module LinesBase = struct
 
   let internal = "lines"
 
-  let find_escapes s len =
-    let rec aux acc i =
-      if i < 0 then acc else
-      let acc =
-        match s.[i] with
-        | '\\' | ' ' | '\t' | '\n' ->
-          let esc,count = acc in
-          i::esc, count + 1
-        | _ -> acc in
-      aux acc (i-1) in
-    aux ([],0) (len - 1)
+  let need_escape s =
+    let rec aux i =
+      i >= 0 &&
+      match s.[i] with
+      | '\\' | ' ' | '\t' | '\n' | '"' -> true
+      | _ -> aux (i-1) in
+    aux (String.length s - 1)
 
-  let escape_spaces str =
-    let len = String.length str in
-    match find_escapes str len with
-    | [], _ -> str
-    | escapes, n ->
-      let buf = Bytes.create (len + n) in
-      let rec aux i = function
-        | ofs1::(ofs2::_ as r) ->
-          Bytes.blit_string str ofs1 buf (ofs1+i) (ofs2-ofs1);
-          Bytes.set buf (ofs2+i) '\\';
-          aux (i+1) r
-        | [ofs] ->
-          Bytes.blit_string str ofs buf (ofs+i) (len-ofs);
-          buf
-        | [] -> assert false
-      in
-      Bytes.to_string (aux 0 (0::escapes))
+  let escaped s =
+    if need_escape s then Printf.sprintf "%S" s else s
 
   let of_channel (_:filename) ic =
     OpamLineLexer.main (Lexing.from_channel ic)
@@ -274,10 +255,10 @@ module LinesBase = struct
     List.iter (function
         | [] -> ()
         | w::r ->
-          output_string oc (escape_spaces w);
+          output_string oc (escaped w);
           List.iter (fun w ->
               output_char oc '\t';
-              output_string oc (escape_spaces w))
+              output_string oc (escaped w))
             r;
           output_char oc '\n')
       t
@@ -291,10 +272,10 @@ module LinesBase = struct
         (match l with
          | [] -> ()
          | w::r ->
-           Buffer.add_string buf (escape_spaces w);
+           Buffer.add_string buf (escaped w);
            List.iter (fun w ->
                Buffer.add_char buf '\t';
-               Buffer.add_string buf (escape_spaces w))
+               Buffer.add_string buf (escaped w))
              r);
         Buffer.add_string buf "\n"
       ) lines;
