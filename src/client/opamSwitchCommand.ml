@@ -334,6 +334,7 @@ let switch_cont ?compiler ~quiet switch =
   let switch, cont =
     if OpamState.is_switch_installed t switch then
       (ignore (OpamState.update_switch_config t switch);
+       OpamState.check_and_print_env_warning t;
        switch, fun () -> ())
     else
     let compiler =
