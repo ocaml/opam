@@ -558,3 +558,24 @@ module Stats: sig
   val print: unit -> unit
 
 end
+
+
+(**/**)
+
+module type SyntaxFileArg = sig
+  val internal: string
+  type t
+  val empty: t
+  val pp: (opamfile, filename * t) OpamFormat.Pp.t
+end
+
+module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t
+
+module type LineFileArg = sig
+  val internal: string
+  type t
+  val empty: t
+  val pp: (string list list, t) OpamFormat.Pp.t
+end
+
+module LineFile (X: LineFileArg) : IO_FILE with type t := X.t
