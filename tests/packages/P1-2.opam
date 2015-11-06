@@ -6,3 +6,4 @@ maintainer: "contact@ocamlpro.com"
 substs:     [ "P1.config" ]
 libraries:  [ "p1" ]
 build: [ "./build.sh" ]
+setenv: [P1 = "version2"]

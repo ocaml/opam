@@ -1436,7 +1436,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.ident -|
          Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
-      "setenv", no_cleanup Pp.ppacc with_build_env build_env
+      "setenv", no_cleanup Pp.ppacc with_env env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
 
       "build", no_cleanup Pp.ppacc with_build build
