@@ -727,8 +727,7 @@ module API = struct
         (OpamSolution.atoms_of_packages
            (t.installed_roots %% Lazy.force t.available_packages)) in
     let base_packages =
-      let comp = OpamState.compiler_comp t t.compiler in
-      OpamFormula.to_conjunction (OpamFile.Comp.packages comp) in
+      OpamSolution.eq_atoms_of_packages (OpamState.base_packages t) in
     let base_packages =
       List.map (fun atom ->
           try OpamPackage.Set.find (OpamFormula.check atom) t.installed
@@ -1482,7 +1481,13 @@ module API = struct
               { t with installed_roots =
                          OpamPackage.Set.add nv t.installed_roots }
             | Some false ->
-              if OpamPackage.Set.mem nv t.installed_roots then
+              if OpamPackage.Set.mem nv t.compiler_packages then
+                (OpamConsole.note
+                   "Package %s is part of the compiler base and can't be set \
+                    as 'installed automatically'"
+                   (OpamPackage.name_to_string nv);
+                 t)
+              else if OpamPackage.Set.mem nv t.installed_roots then
                 { t with installed_roots =
                            OpamPackage.Set.remove nv t.installed_roots }
               else
