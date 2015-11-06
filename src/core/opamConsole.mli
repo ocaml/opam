@@ -78,7 +78,7 @@ val header_error :
 
 (** Display a dynamic status line to stdout, that will be erased on next output.
     The message should not be wider than screen nor contain newlines. *)
-val status_line : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
+val status_line : ('a, unit, string, unit) format4 -> 'a
 
 (** Ask the user to press Y/y/N/n to continue (returns a boolean).
     Defaults to true (yes) if unspecified *)

@@ -140,7 +140,7 @@ let print_fish_env env =
 
 let env ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
-  let t = OpamState.load_env_state "config-env"
+  let t = OpamState.load_state "config-env"
       OpamStateConfig.(!r.current_switch) in
   let env = OpamState.get_opam_env ~force_path:(not inplace_path) t in
   if sexp then

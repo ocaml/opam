@@ -43,3 +43,5 @@ post-messages: [ "Thanks SO MUCH for installing this humble package"
                  "Nooo, something went wrong, this makes me feel sooo sad..." {failure} ]
 
 bug-reports: "TEST.com"
+
+setenv: [P1 = "version1"]
