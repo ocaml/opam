@@ -17,7 +17,7 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure"]
-  [make]
+  [make "%{ocp-build:installed?fast:all}%"]
   [make "-C" "src" "../opam-lib.install"]
 ]
 depends: [
@@ -28,4 +28,7 @@ depends: [
   "re" {>= "1.2.0"}
   "ocamlfind" {build}
   "jsonm"
+]
+depopts: [
+  "ocp-build" {build}
 ]
