@@ -307,7 +307,11 @@ let add_pinned_overlay ?(template=false) ?version t name =
     let files = List.filter (fun f -> f <> opam_f && f <> url_f) files in
     let opam = OPAM.read opam_f in
     let url =
-      try Some (URL.read url_f) with e -> OpamStd.Exn.fatal e; None in
+      try Some (URL.read url_f)
+      with e ->
+        OpamStd.Exn.fatal e;
+        OPAM.url opam
+    in
     opam, url, orig, files
   in
   try match OpamPackage.Name.Map.find name t.pinned with
@@ -315,7 +319,8 @@ let add_pinned_overlay ?(template=false) ?version t name =
       let opam, url, root, files = get_orig_meta (OpamPackage.create name v) in
       List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
         files;
-      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
+      OPAM.write (pkg_overlay Ov.opam)
+        (OPAM.with_version (OPAM.with_url_opt opam None) v);
       OpamStd.Option.iter (URL.write (pkg_overlay Ov.url)) url
     | _ ->
       let nv = OpamStd.Option.map (OpamPackage.create name) version in
@@ -338,7 +343,8 @@ let add_pinned_overlay ?(template=false) ?version t name =
       let url = url_of_locally_pinned_package t name in
       List.iter (fun f -> OpamFilename.copy_in ~root f (pkg_overlay Ov.package))
         files;
-      OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v);
+      OPAM.write (pkg_overlay Ov.opam)
+        (OPAM.with_version (OPAM.with_url_opt opam None) v);
       URL.write (pkg_overlay Ov.url) url
   with Not_found -> (* No original meta *)
     let url = url_of_locally_pinned_package t name in
@@ -397,6 +403,43 @@ let is_locally_pinned t name =
     | _ -> true
   with Not_found -> false
 
+let read_opam dir =
+  let opam_file = dir // "opam" in
+  let url_file = dir // "url" in
+  let descr_file = dir // "descr" in
+  let opam =
+    try Some (OpamFile.OPAM.read opam_file) with
+    | OpamSystem.Internal_error _ | Not_found -> None
+    | Parsing.Parse_error | OpamFormat.Bad_format _ | Lexer_error _ ->
+      OpamConsole.warning "Errors while parsing %s, skipping."
+        (OpamFilename.to_string opam_file);
+      None
+  in
+  match opam with
+  | Some opam ->
+    let opam =
+      if OpamFilename.exists url_file then
+        try OpamFile.OPAM.with_url opam (OpamFile.URL.read url_file)
+        with e ->
+          OpamStd.Exn.fatal e;
+          OpamConsole.warning "Errors while parsing %s, skipping."
+            (OpamFilename.to_string url_file);
+          opam
+      else opam
+    in
+    let opam =
+      if OpamFilename.exists descr_file then
+        try OpamFile.OPAM.with_descr opam (OpamFile.Descr.read descr_file)
+        with e ->
+          OpamStd.Exn.fatal e;
+          OpamConsole.warning "Errors while parsing %s, skipping."
+            (OpamFilename.to_string descr_file);
+          opam
+      else opam
+    in
+    Some opam
+  | None -> None
+
 let opam_opt t nv =
   let name = OpamPackage.name nv in
   let base () =
@@ -409,18 +452,21 @@ let opam_opt t nv =
       else
         None
   in
+  let overlay_dir = OpamPath.Switch.Overlay.package t.root t.switch name in
   let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
   if OpamFilename.exists overlay then
-    let o = OpamFile.OPAM.read overlay in
-    if OpamFile.OPAM.version o = OpamPackage.version nv then Some o
-    else if OpamPackage.Map.mem nv t.opams then
-      (log "Looking for %s which is pinned to %s (not using overlay)"
-         (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
-       base ())
-    else
-      (log "Opam file for %s not found: using the overlay even if it's for %s"
-         (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
-       Some (OpamFile.OPAM.with_version o (OpamPackage.version nv)))
+    match read_opam overlay_dir with
+    | Some o ->
+      if OpamFile.OPAM.version o = OpamPackage.version nv then Some o
+      else if OpamPackage.Map.mem nv t.opams then
+        (log "Looking for %s which is pinned to %s (not using overlay)"
+           (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
+         base ())
+      else
+        (log "Opam file for %s not found: using the overlay even if it's for %s"
+           (OpamPackage.to_string nv) (OpamPackage.Version.to_string (OpamFile.OPAM.version o));
+         Some (OpamFile.OPAM.with_version o (OpamPackage.version nv)))
+    | None -> base ()
   else
     base ()
 
@@ -581,17 +627,13 @@ let pinned_packages t =
     t.pinned OpamPackage.Set.empty
 
 let descr_opt t nv =
-  OpamStd.Option.map OpamFile.Descr.read
-    (descr_file t nv)
+  OpamStd.Option.Op.(opam_opt t nv >>= OpamFile.OPAM.descr)
 
 let descr t nv =
-  match descr_file t nv with
-  | None -> OpamFile.Descr.empty
-  | Some f -> OpamFile.Descr.read f
+  OpamStd.Option.Op.(descr_opt t nv +! OpamFile.Descr.empty)
 
 let url t nv =
-  OpamStd.Option.map OpamFile.URL.read
-    (url_file t nv)
+  OpamStd.Option.Op.(opam_opt t nv >>= OpamFile.OPAM.url)
 
 let global_dev_packages t =
   let dir = OpamPath.dev_packages_dir t.root in
@@ -1660,18 +1702,8 @@ let load_repository_state ?(save_cache=true) () =
   let compiler_index =
     OpamFile.Compiler_index.safe_read (OpamPath.compiler_index t.root) in
   let load_opam_file nv =
-    try
-      let file =
-        package_repo_dir t.root repositories package_index nv // "opam"
-      in
-      try Some (OpamFile.OPAM.read file) with
-      | OpamFormat.Bad_format _ | Lexer_error _ -> None
-    with
-    | Not_found -> None
-    | Parsing.Parse_error | OpamSystem.Internal_error _ ->
-      OpamConsole.warning "Errors while parsing %s OPAM file, skipping."
-        (OpamPackage.to_string nv);
-      None
+    let dir = package_repo_dir t.root repositories package_index nv in
+    read_opam dir
   in
   let opams =
     match opams with Some o -> o | None ->
@@ -1744,9 +1776,10 @@ let load_state ?save_cache call_site switch =
     OpamPackage.Set.fold (fun nv opams ->
         if OpamPackage.Map.mem nv opams then opams else
         try
-          OpamPackage.Map.add
-            nv (OpamFile.OPAM.read (OpamPath.opam t.root nv))
-            opams
+          OpamStd.Option.Op.(
+            (read_opam (OpamPath.packages t.root nv) >>| fun opam ->
+             OpamPackage.Map.add nv opam opams)
+            +! opams)
         with
         | OpamFormat.Bad_format _ | Lexer_error _
         | Parsing.Parse_error | OpamSystem.Internal_error _ -> opams

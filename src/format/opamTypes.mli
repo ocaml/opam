@@ -370,7 +370,7 @@ type value =
 (** An opamfile section *)
 type opamfile_section = {
   section_kind  : string;
-  section_name  : string;
+  section_name  : string option;
   section_items : opamfile_item list;
 }
 

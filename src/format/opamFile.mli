@@ -290,6 +290,10 @@ module OPAM: sig
   (** The environment variables that this package exports *)
   val env: t -> env_update list
 
+  val descr: t -> Descr.t option
+
+  val url: t -> URL.t option
+
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
 
@@ -364,6 +368,10 @@ module OPAM: sig
 
   val add_extension: t -> string -> value -> t
 
+  val with_descr: t -> Descr.t -> t
+  val with_descr_opt: t -> Descr.t option -> t
+  val with_url: t -> URL.t -> t
+  val with_url_opt: t -> URL.t option -> t
 end
 
 (** Compiler aliases: [$opam/aliases] *)

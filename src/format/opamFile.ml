@@ -163,14 +163,17 @@ module DescrIO = struct
   let synopsis = fst
   let body = snd
 
-  let full (x,y) = x ^ "\n" ^ y
+  let full (x,y) =
+    match y with
+    | "" -> x ^ "\n"
+    | y -> String.concat "" [x; "\n\n"; y; "\n"]
 
   let of_channel _ ic =
     let x =
-      try input_line ic
+      try OpamStd.String.strip (input_line ic)
       with End_of_file | Sys_error _ -> "" in
     let y =
-      try OpamSystem.string_of_channel ic
+      try OpamStd.String.strip (OpamSystem.string_of_channel ic)
       with End_of_file | Sys_error _ -> ""
     in
     x, y
@@ -178,14 +181,17 @@ module DescrIO = struct
   let to_channel _ oc (x,y) =
     output_string oc x;
     output_char oc '\n';
-    output_string oc y
+    if y <> "" then
+      (output_char oc '\n';
+       output_string oc y;
+       output_char oc '\n')
 
   let create str =
     let head, tail =
       match OpamStd.String.cut_at str '\n' with
       | None       -> str, ""
       | Some (h,t) -> h, t in
-    head, tail
+    OpamStd.String.strip head, OpamStd.String.strip tail
 
   let of_string _ = create
 
@@ -1013,6 +1019,7 @@ module URL = struct
 end
 
 
+
 (** (3) Opam package format *)
 
 module OPAMSyntax = struct
@@ -1068,7 +1075,11 @@ module OPAMSyntax = struct
     bug_reports: string list;
 
     (* Extension fields (x-foo: "bar") *)
-    extensions  : (pos * value) OpamStd.String.Map.t;
+    extensions : (pos * value) OpamStd.String.Map.t;
+
+    (* Extra sections *)
+    url        : URL.t option;
+    descr      : Descr.t option;
   }
 
   let empty = {
@@ -1114,6 +1125,8 @@ module OPAMSyntax = struct
     bug_reports = [];
 
     extensions  = OpamStd.String.Map.empty;
+    url         = None;
+    descr       = None;
   }
 
   let create nv =
@@ -1191,6 +1204,9 @@ module OPAMSyntax = struct
        | OpamFormat.Bad_format _ as e -> raise (OpamFormat.add_pos pos e))
     with Not_found -> None
 
+  let url t = t.url
+  let descr t = t.descr
+
   (* Setters *)
 
   let with_opam_version t opam_version = { t with opam_version }
@@ -1251,6 +1267,11 @@ module OPAMSyntax = struct
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
+
+  let with_url t url = { t with url = Some url }
+  let with_url_opt t url = { t with url }
+  let with_descr t descr = { t with descr = Some descr }
+  let with_descr_opt t descr = { t with descr }
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when validating). It's better to do them in the same pass
@@ -1399,6 +1420,10 @@ module OPAMSyntax = struct
         Pp.ppacc_opt with_version version_opt
         (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t));
 
+      "descr", no_cleanup Pp.ppacc_opt with_descr descr
+        (Pp.V.string_tr -|
+         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "author", no_cleanup Pp.ppacc
@@ -1508,6 +1533,10 @@ module OPAMSyntax = struct
     List.map (fun (name, (_, cleaned_up_pp)) -> name, cleaned_up_pp)
       fields_gen
 
+  let sections = [
+    "url", Pp.ppacc_opt with_url url URL.pp_contents;
+  ]
+
   let raw_fields =
     List.map (fun (name, (raw_pp, _)) -> name, raw_pp)
       fields_gen
@@ -1542,11 +1571,12 @@ module OPAMSyntax = struct
   let pp_raw =
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true fields -|
+    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true
+      ~sections fields -|
     Pp.I.partition_fields is_ext_field -| Pp.map_pair
       (Pp.I.items -|
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
-      (Pp.I.fields ~name:"opam-file" ~empty fields -|
+      (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
        handle_flags_in_tags) -|
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions t extensions)
@@ -1888,9 +1918,10 @@ module OPAM = struct
     let warnings, t =
       try
         let f = reader filename in
-        let _, good_items, invalid_items =
+        let _, _, good_items, invalid_items =
           Pp.parse ~pos:(pos_file filename)
-            (Pp.I.good_fields ~name:"opam-file" ~allow_extensions:true fields)
+            (Pp.I.good_fields ~name:"opam-file" ~allow_extensions:true
+               ~sections fields)
             f.file_contents
         in
         let warnings =
@@ -1898,7 +1929,7 @@ module OPAM = struct
               | Section (pos, s) ->
                 3, `Error,
                 Printf.sprintf "Invalid or duplicate section: '%s' at %s"
-                  s.section_name (string_of_pos pos)
+                  s.section_kind (string_of_pos pos)
               | Variable (pos, f, _) ->
                 3, `Error,
                 Printf.sprintf "Invalid or duplicate field: '%s:' at %s"
@@ -2248,6 +2279,7 @@ module CompSyntax = struct
         (Pp.V.url_with_backend `hg);
       "local", Pp.ppacc_opt with_src OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
+
 
       "patches", Pp.ppacc with_patches patches
         (Pp.V.map_list ~depth:1 @@ Pp.V.url);

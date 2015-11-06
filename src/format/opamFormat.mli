@@ -310,7 +310,7 @@ module Pp : sig
 
   (** Used to parse a single field of a record: ['a] on the left is the
       accumulator, or value of the record parsed so far. *)
-  type 'a field_parser = ('a * value option, 'a) t
+  type ('a, 'value) field_parser = ('a * 'value option, 'a) t
 
   (** Make a field parser from setter, getter and base pp. [cleanup] is an
       optional sanitisation function that is called on parsed elements
@@ -319,8 +319,8 @@ module Pp : sig
     ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
     ('acc -> 'a -> 'acc) ->
     ('acc -> 'a) ->
-    (value, 'a) t ->
-    'acc field_parser
+    ('value, 'a) t ->
+    ('acc, 'value) field_parser
 
   (** Same as [ppacc], but when the field may be unset in the record, i.e. the
       getter returns an option *)
@@ -328,11 +328,11 @@ module Pp : sig
     ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
     ('acc -> 'a -> 'acc) ->
     ('acc -> 'a option) ->
-    (value, 'a) t ->
-    'acc field_parser
+    ('value, 'a) t ->
+    ('acc, 'value) field_parser
 
   (** A field parser that ignores its argument *)
-  val ppacc_ignore : 'a field_parser
+  val ppacc_ignore : ('a, value) field_parser
 
   (** Specific Pps for items lists and fields (opamfile) *)
 
@@ -346,14 +346,15 @@ module Pp : sig
 
     val items : (opamfile_item list, (string * value) list) t
 
-    type 'a fields_def = (string * 'a field_parser) list
+    type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
     (** Parses an item list into a record using a fields_def *)
     val fields :
       ?name:string ->
       ?strict:bool ->
       empty:'a ->
-      'a fields_def ->
+      ?sections:(('a, opamfile_item list) fields_def) ->
+      ('a, value) fields_def ->
       (opamfile_item list, 'a) t
 
     (** Partitions a file's items into the ones that are known but not defined
@@ -363,9 +364,11 @@ module Pp : sig
     val good_fields :
       ?name:string ->
       ?allow_extensions:bool ->
-      'a fields_def ->
+      ?sections:(('a, opamfile_item list) fields_def) ->
+      ('a, value) fields_def ->
       (opamfile_item list,
-       'a fields_def * opamfile_item list * opamfile_item list) t
+       ('a, value) fields_def * ('a, opamfile_item list) fields_def *
+       opamfile_item list * opamfile_item list) t
 
     (** Filters out any unrecognised items from the file during parsing, warning
         in debug and failing in strict mode in case of mismatches *)
@@ -373,7 +376,8 @@ module Pp : sig
       ?name:string ->
       ?allow_extensions:bool ->
       ?strict:bool ->
-      (string * 'a) list ->
+      ?sections:(('a, opamfile_item list) fields_def) ->
+      ('a, value) fields_def ->
       (opamfile_item list, opamfile_item list) t
 
     (** Partitions items in an opamfile base on a condition on the variable
