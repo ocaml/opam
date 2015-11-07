@@ -44,6 +44,6 @@ begin program "opam-admin.top"
     "opam-solver"
     "opam-repository"
     "opam-state"
-    "opam-client"
+    "re.glob"
   ]
 end
