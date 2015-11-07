@@ -2530,7 +2530,9 @@ let is_switch_globally_set t =
   OpamFile.Config.switch t.config = t.switch
 
 let check_and_print_env_warning t =
-  if is_switch_globally_set t && not (up_to_date_env t) then
+  if (is_switch_globally_set t ||
+      OpamStateConfig.(!r.switch_from <> `Command_line)) &&
+     not (up_to_date_env t) then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
       (OpamConsole.colorise `bold (eval_string t))
