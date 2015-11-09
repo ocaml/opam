@@ -376,6 +376,9 @@ module Sys : sig
   (** Queried lazily *)
   val arch: unit -> string
 
+  (** Append .exe (only if missing) to executable filenames on Windows *)
+  val executable_name : string -> string
+
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
 

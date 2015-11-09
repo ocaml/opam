@@ -683,6 +683,16 @@ module OpamSys = struct
     | "fish" -> `fish
     | _      -> `sh
 
+  let executable_name =
+    if os () = Win32 then
+      fun name ->
+        if Filename.check_suffix name ".exe" then
+          name
+        else
+          name ^ ".exe"
+    else
+      fun x -> x
+
   let guess_shell_compat () =
     try shell_of_string (Filename.basename (Env.get "SHELL"))
     with Not_found -> `sh
