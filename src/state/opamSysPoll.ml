@@ -38,9 +38,10 @@ let arch_lazy = lazy (
   let raw = match Sys.os_type with
     | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
     | "Win32" ->
-      (match OpamStd.Env.getopt "PROCESSOR_ARCHITECTURE" with
-       | Some "X86" as a -> OpamStd.Env.getopt "PROCESSOR_ARCHITEW6432" ++ a
-       | arch -> arch)
+      if Sys.word_size = 32 && not (OpamStubs.isWoW64 ()) then
+        Some "i686"
+      else
+        Some "x86_64"
     | _ -> None
   in
   match raw with
@@ -112,7 +113,10 @@ let os_version_lazy = lazy (
     os_release_field "VERSION_ID" >>= norm
   | Some "macos" ->
     command_output ["sw_vers"; "-productVersion"] >>= norm
-  | Some ("win32" | "cygwin") ->
+  | Some "win32" ->
+    let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
+    OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
+  | Some "cygwin" ->
     (try
        command_output ["cmd"; "/C"; "ver"] >>= fun s ->
        Scanf.sscanf s "%_s@[ Version %s@]" norm

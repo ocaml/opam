@@ -50,3 +50,7 @@ val getWindowsVersion : unit -> int * int * int * int
   (** Windows only. Returns the Windows version as
       [(major, minor, build, revision)]. This function only works if opam is
       compiled OCaml 4.06.0 or later, it returns [(0, 0, 0, 0)] otherwise. *)
+
+val isWoW64 : unit -> bool
+  (** Returns [false] unless this process is a 32-bit Windows process running
+      in the WoW64 sub-system (i.e. is being run on 64-bit Windows). *)

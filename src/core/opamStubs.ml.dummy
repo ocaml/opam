@@ -20,3 +20,4 @@ let fillConsoleOutputCharacter _ _ _ = that's_a_no_no
 let getConsoleMode = that's_a_no_no
 let setConsoleMode _ = that's_a_no_no
 let getWindowsVersion = that's_a_no_no
+let isWoW64 () = false

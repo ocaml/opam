@@ -586,6 +586,8 @@ module OpamSys = struct
       OpamString.split_delim path path_sep
 
   let with_process_in cmd args f =
+    if Sys.win32 then
+      assert false;
     let path = split_path_variable (Env.get "PATH") in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
