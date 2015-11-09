@@ -114,7 +114,9 @@ module Make (G : G) = struct
           (finished + M.cardinal running) njobs
       in
       let texts =
-        limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
+        if OpamConsole.disp_status_line () then
+          limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
+        else title::texts
       in
       if texts <> [] then OpamConsole.status_line "%s" (String.concat " " texts)
     in
