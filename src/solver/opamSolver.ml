@@ -36,7 +36,7 @@ let empty_universe =
     u_depends = OpamPackage.Map.empty;
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
-    u_action = Install OpamPackage.Name.Set.empty;
+    u_action = Install (OpamPackage.Name.Set.empty,OpamSwitch.Set.empty);
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
     u_dev = OpamPackage.Set.empty;
@@ -182,8 +182,8 @@ let pefcudflist universe ?(depopts=false) ~build opam_packages =
   let pefuniv = universe.u_pefuniv in
   let tables = universe.u_tables in
   let reinstall = match universe.u_action with
-    | Upgrade reinstall 
-    | Reinstall reinstall -> reinstall
+    | Upgrade (reinstall , _ )
+    | Reinstall (reinstall , _ ) -> reinstall
     | _ -> OpamPackage.Set.empty
   in
   OpamPackage.Set.iter (fun p ->

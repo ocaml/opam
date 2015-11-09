@@ -190,6 +190,17 @@ type repository = {
   repo_priority: int;
 }
 
+(** {2 Switches} *)
+
+(** Compiler switches *)
+type switch = OpamSwitch.t
+
+(** Set of compiler switches *)
+type switch_set = OpamSwitch.Set.t
+
+(** Map of compile switches *)
+type 'a switch_map = 'a OpamSwitch.Map.t
+
 (** {2 Solver} *)
 
 (** Used internally when computing sequences of actions *)
@@ -262,9 +273,9 @@ type 'a request = {
 
 (** user request action *)
 type user_action =
-  | Install of name_set (** The 'root' packages to be installed *)
-  | Upgrade of package_set (** The subset of packages to upgrade *)
-  | Reinstall of package_set
+  | Install of (name_set * switch_set) (** The 'root' packages to be installed *)
+  | Upgrade of (package_set * switch_set) (** The subset of packages to upgrade on each switch *)
+  | Reinstall of (package_set * switch_set)
   | Depends
   | Init
   | Remove
@@ -385,17 +396,6 @@ type opamfile = {
   file_contents: opamfile_item list;
   file_name    : string;
 }
-
-(** {2 Switches} *)
-
-(** Compiler switches *)
-type switch = OpamSwitch.t
-
-(** Set of compiler switches *)
-type switch_set = OpamSwitch.Set.t
-
-(** Map of compile switches *)
-type 'a switch_map = 'a OpamSwitch.Map.t
 
 (** {2 Misc} *)
 

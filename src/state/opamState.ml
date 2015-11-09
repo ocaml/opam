@@ -41,7 +41,7 @@ module Types = struct
     (** Current switch *)
     switch: switch;
     compiler: compiler;
-    compiler_version: compiler_version lazy_t;
+    compiler_version: compiler_version Lazy.t;
     switch_config: OpamFile.Dot_config.t;
     opams: OpamFile.OPAM.t package_map;
     packages: package_set;
@@ -1303,7 +1303,6 @@ let is_compiler_installed t comp =
 
 let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
-
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =

@@ -748,21 +748,30 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
+  let upgradeall = mk_flag ["a";"all"] "Upgrade packages in all switches" in
+  let switches =
+    mk_opt ["s";"switches"] "SWITCHES"
+    "List of switches to upgrade"
+    Arg.(list switch) []
+  in
   let fixup =
     mk_flag ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
        packages installed together...). This requires that you have an \
        external solver installed (aspcud, cudf-services.irill.org, ...)" in
-  let upgrade global_options build_options fixup atoms =
+  let upgrade global_options build_options switches upgradeall fixup atoms =
     apply_global_options global_options;
     apply_build_options build_options;
     if fixup then
       if atoms <> [] then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else `Ok (Client.fixup ())
+    else if upgradeall then
+      `Ok (Client.upgrade_all (OpamSwitch.Set.of_list switches) atoms)
     else
-      `Ok (Client.upgrade atoms) in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $atom_list)),
+      `Ok (Client.upgrade atoms)
+  in
+  Term.(ret (pure upgrade $global_options $build_options $switches $upgradeall $fixup $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
