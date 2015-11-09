@@ -2597,13 +2597,20 @@ let update_setup_interactive t shell dot_profile =
    is set, this is done for ALL the switches (useful when a package
    changed upstream for instance). If not, only the reinstall state of the
    current switch is changed. *)
-let add_to_reinstall t ~all packages =
-  log "add-to-reinstall all:%b packages:%a" all
+let add_to_reinstall t ~all_unpinned packages =
+  log "add-to-reinstall all:%b packages:%a" all_unpinned
     (slog OpamPackage.Set.to_string) packages;
   let aux switch =
-    let installed =
-      (OpamFile.State.safe_read (OpamPath.Switch.state t.root switch))
-      .OpamFile.State.installed in
+    let { OpamFile.State.installed; pinned; _ } =
+      OpamFile.State.safe_read (OpamPath.Switch.state t.root switch)
+    in
+    let packages =
+      if all_unpinned then
+        OpamPackage.Set.filter
+          (fun nv -> not OpamPackage.(Name.Map.mem (name nv) pinned))
+          packages
+      else packages
+    in
     let reinstall =
       OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall t.root switch) ++
       packages in
@@ -2616,7 +2623,7 @@ let add_to_reinstall t ~all packages =
       OpamFile.PkgList.write file reinstall
     else
       OpamFilename.remove file in
-  if all
+  if all_unpinned
   then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
   else aux t.switch
 
@@ -3008,9 +3015,14 @@ let update_dev_packages t packages =
       (OpamPackage.Set.elements packages)
   in
   let global =
-    OpamPackage.Set.of_list (OpamPackage.Map.keys (global_dev_packages t)) in
-  add_to_reinstall t ~all:true (updates %% global);
-  add_to_reinstall t ~all:false (updates -- global);
+    OpamPackage.Set.of_list (OpamPackage.Map.keys (global_dev_packages t))
+  in
+  let pinned =
+    OpamPackage.Set.filter (fun nv -> is_pinned t (OpamPackage.name nv))
+      packages
+  in
+  add_to_reinstall t ~all_unpinned:true (updates %% global -- pinned);
+  add_to_reinstall t ~all_unpinned:false (updates -- global ++ pinned);
   updates
 
 let update_pinned_packages t names =
@@ -3033,7 +3045,7 @@ let update_pinned_packages t names =
         OpamPackage.Set.add (pinned t name) acc)
       updates OpamPackage.Set.empty
   in
-  add_to_reinstall t ~all:false updates;
+  add_to_reinstall t ~all_unpinned:false updates;
   updates
 
 (* Try to download $name.$version+opam.tar.gz *)
