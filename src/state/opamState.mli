@@ -351,11 +351,11 @@ val repository_of_package: state -> package -> repository option
 val repository_and_prefix_of_package:
   state -> package -> (repository * string option) option
 
-(** Add the given packages to the set of package to reinstall. If [all]
-    is set, this is done for ALL the switches (useful when a package
-    change upstream for instance). If not, only the reinstall state of the
-    current switch is changed. *)
-val add_to_reinstall: state -> all:bool -> package_set -> unit
+(** Add the given packages to the set of package to reinstall and save to disk.
+    If [all_unpinned] is set, this is done for all the switches where the
+    package is not pinned (useful when a package changed upstream for instance).
+    If not, only the reinstall state of the current switch is changed. *)
+val add_to_reinstall: state -> all_unpinned:bool -> package_set -> unit
 
 (** Return the files for a given package *)
 val copy_files: state -> package -> dirname -> unit
