@@ -796,7 +796,8 @@ module API = struct
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
         OpamProcess.Job.run (OpamRepository.init repo);
-        ignore (OpamState.install_global_config root switch);
+        OpamState.install_global_config root switch
+          (OpamState.gen_switch_global_config root switch);
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);

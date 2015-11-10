@@ -1805,15 +1805,12 @@ let load_state ?save_cache call_site switch =
   ) else
     t
 
-(* install ~/.opam/switches/<switch>/config/global-conf.config *)
-let install_global_config root switch =
-  log "install_global_config switch=%a" (slog OpamSwitch.to_string) switch;
-
-  (* .config *)
+let gen_switch_global_config root switch =
+  let map f l =
+    List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l
+  in
+  let id x = x in
   let vars =
-    let map f l = List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
-    let id x = x in
-
     map OpamFilename.Dir.to_string
       [
         ("root", root);
@@ -1837,13 +1834,17 @@ let install_global_config root switch =
        with Not_found -> "group");
       ("make" , OpamStateConfig.(Lazy.force !r.makecmd));
       ("os"   , OpamStd.Sys.os_string ());
-    ] in
+    ]
+  in
+  OpamFile.Dot_config.create vars
 
-  let config = OpamFile.Dot_config.create vars in
+(* install ~/.opam/switches/<switch>/config/global-conf.config *)
+let install_global_config root switch config =
+  log "install_global_config switch=%a" (slog OpamSwitch.to_string) switch;
+
   OpamFile.Dot_config.write
     (OpamPath.Switch.global_config root switch)
-    config;
-  config
+    config
 
 let fix_descriptions_hook =
   ref (fun ?save_cache:_ ?verbose:_ _ -> assert false)
@@ -1892,7 +1893,7 @@ let upgrade_to_1_1 () =
     (* fix the base config files *)
     let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
     OpamSwitch.Map.iter (fun switch _ ->
-        ignore (install_global_config root switch)
+        install_global_config root switch (gen_switch_global_config root switch)
       ) aliases;
 
     OpamFilename.with_tmp_dir (fun tmp_dir ->
@@ -2638,15 +2639,47 @@ let add_to_reinstall t ~all_unpinned packages =
   then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
   else aux t.switch
 
-let add_switch root switch compiler =
-  log "add_switch switch=%a compiler=%a"
-    (slog OpamSwitch.to_string) switch
-    (slog OpamCompiler.to_string) compiler;
-  let aliases_f = OpamPath.aliases root in
-  let aliases = OpamFile.Aliases.safe_read aliases_f in
-  if not (OpamSwitch.Map.mem switch aliases) then begin
-    OpamFile.Aliases.write aliases_f (OpamSwitch.Map.add switch compiler aliases);
-  end
+let create_empty_switch root switch =
+  log "create_empty_switch at %a" (slog OpamSwitch.to_string) switch;
+
+  let switch_dir = OpamPath.Switch.root root switch in
+
+  (* Do some clean-up if necessary *)
+  if OpamFilename.exists_dir switch_dir then
+    failwith (Printf.sprintf "Directory %s already exists"
+                (OpamFilename.Dir.to_string switch_dir));
+
+  try
+    (* Create base directories *)
+    OpamFilename.mkdir switch_dir;
+
+    let config = gen_switch_global_config root switch in
+
+    OpamFilename.mkdir (OpamPath.Switch.lib_dir root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.stublibs root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.toplevel root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.build_dir root switch);
+    OpamFilename.mkdir (OpamPath.Switch.bin root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.sbin root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.doc_dir root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.man_dir root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.install_dir root switch);
+    OpamFilename.mkdir (OpamPath.Switch.config_dir root switch);
+    List.iter (fun num ->
+        OpamFilename.mkdir (OpamPath.Switch.man_dir ~num root switch config)
+      ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
+
+    install_global_config root switch config;
+
+    let aliases_f = OpamPath.aliases root in
+    let aliases = OpamFile.Aliases.safe_read aliases_f in
+    OpamFile.Aliases.write aliases_f
+      (OpamSwitch.Map.add switch (OpamCompiler.of_string "empty") aliases);
+
+  with e ->
+    if not (OpamConsole.debug ()) then
+      OpamFilename.rmdir switch_dir;
+    raise e
 
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
    - update $opam/switch
@@ -2663,140 +2696,109 @@ let install_compiler t ~quiet:_ switch compiler =
       (OpamCompiler.to_string compiler);
     OpamStd.Sys.exit 1;
   );
+  let comp = OpamFile.Comp.read comp_f in
+
+  create_empty_switch t.root switch;
 
   let switch_dir = OpamPath.Switch.root t.root switch in
-
-  (* Do some clean-up if necessary *)
-  if not (is_switch_installed t switch)
-  && OpamFilename.exists_dir switch_dir then
-    OpamFilename.rmdir switch_dir;
-
-  try
-    (* Create base directories *)
-    OpamFilename.mkdir switch_dir;
-    OpamFilename.mkdir (OpamPath.Switch.Default.lib_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.stublibs t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.toplevel t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.build_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.bin t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.sbin t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.doc_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.Default.man_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.install_dir t.root switch);
-    OpamFilename.mkdir (OpamPath.Switch.config_dir t.root switch);
-    List.iter (fun num ->
-        OpamFilename.mkdir (OpamPath.Switch.Default.man_dir ~num t.root switch)
-      ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
-
-    let switch_config = install_global_config t.root switch in
-
-    let comp = OpamFile.Comp.read comp_f in
-    if not (OpamFile.Comp.preinstalled comp) &&
-       OpamFile.Comp.src comp <> None
-    then begin
-
-      (* Install the compiler *)
-      let comp_url = match OpamFile.Comp.src comp with
-        | Some f -> f
-        | None   ->
-          OpamConsole.error_and_exit
-            "No source for compiler %s"
-            (OpamCompiler.to_string compiler) in
-      let build_dir = OpamPath.Switch.build_ocaml t.root switch in
-      let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
-      OpamConsole.header_msg "Installing compiler %s" comp_name;
-      (match comp_url.OpamUrl.backend, OpamUrl.local_dir comp_url with
-       | `rsync, Some dir -> OpamFilename.link_dir ~src:dir ~dst:build_dir
-       | _ ->
-         OpamProcess.Job.run @@
-         OpamFilename.with_tmp_dir_job (fun download_dir ->
-             let fake_pkg =
-               match repository_and_prefix_of_compiler t compiler with
-               | None -> OpamPackage.of_string "compiler.get"
-               | Some (repo,_) ->
-                 OpamPackage.of_string (OpamRepositoryName.to_string
-                                          repo.repo_name ^ ".comp")
-             in
-             let text =
-               OpamProcess.make_command_text ~color:`magenta
-                 comp_name (OpamUrl.string_of_backend comp_url.OpamUrl.backend)
-             in
-             OpamProcess.Job.with_text text @@
-             OpamRepository.pull_url fake_pkg download_dir None [comp_url]
-             @@+ function
-             | Not_available u ->
-               OpamConsole.error_and_exit "%s is not available." u
-             | Up_to_date r | Result r ->
-               Done (OpamFilename.extract_generic_file r build_dir)
-           ));
-      let patches = OpamFile.Comp.patches comp in
-      let patch_command url =
-        let text =
-          OpamProcess.make_command_text ~color:`magenta
-            comp_name ~args:[OpamUrl.basename url] "download"
-        in
-        OpamProcess.Job.with_text text @@
-        OpamDownload.download ~overwrite:true url build_dir
-      in
-      let patches =
-        OpamParallel.map
-          ~jobs:(dl_jobs t)
-          ~command:patch_command
-          patches
-      in
-      List.iter (fun f -> OpamFilename.patch f build_dir) patches;
-      OpamConsole.msg "Now compiling OCaml. This may take a while, \
-                       please bear with us...\n";
-      let commands =
-        if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then
-          [ ( "./configure" :: OpamFile.Comp.configure comp )
-            @ [ "-prefix";  OpamFilename.Dir.to_string switch_dir ]
-          (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-          (* NOTE In case it exists 2 '-prefix', in general the script
-             ./configure will only consider the last one, others will be
-             discarded. *)
-          ; (OpamStateConfig.(Lazy.force !r.makecmd)::OpamFile.Comp.make comp)
-          ; [OpamStateConfig.(Lazy.force !r.makecmd); "install" ]
-          ]
-        else
-        let t = { t with switch; compiler; switch_config } in
-        let env = resolve_variable t OpamVariable.Map.empty in
-        OpamFilter.commands env (OpamFile.Comp.build comp)
-      in
-      let commands =
-        OpamStd.List.filter_map (function
-            | [] -> None
-            | cmd::args ->
-              let text =
-                OpamProcess.make_command_text ~color:`magenta comp_name
-                  ~args cmd
-              in
-              Some (OpamSystem.make_command
-                      ~text
-                      ~dir:(OpamFilename.Dir.to_string build_dir)
-                      ~verbose:(OpamConsole.verbose ())
-                      cmd args))
-          commands
-      in
-      match
-        OpamProcess.Job.run (OpamProcess.Job.of_list commands)
-      with
-      | None ->
-        OpamConsole.msg "Done.\n";
-        if not OpamStateConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir
-      | Some (cmd,err) ->
-        OpamConsole.error_and_exit "Compiler build failed at %S:\n%s"
-          (OpamProcess.string_of_command cmd)
-          (OpamProcess.string_of_result err)
-    end;
-
-    (* Update ~/.opam/aliases *)
-    add_switch t.root switch compiler
-
-  with e ->
-    if not (OpamConsole.debug ()) then
-      OpamFilename.rmdir switch_dir;
-    raise e
+  if OpamFile.Comp.preinstalled comp ||
+     OpamFile.Comp.src comp = None
+  then ()
+  else
+  (* Install the compiler *)
+  let comp_url = match OpamFile.Comp.src comp with
+    | Some f -> f
+    | None   ->
+      OpamConsole.error_and_exit
+        "No source for compiler %s"
+        (OpamCompiler.to_string compiler) in
+  let build_dir = OpamPath.Switch.build_ocaml t.root switch in
+  let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
+  OpamConsole.header_msg "Installing compiler %s" comp_name;
+  (match comp_url.OpamUrl.backend, OpamUrl.local_dir comp_url with
+   | `rsync, Some dir -> OpamFilename.link_dir ~src:dir ~dst:build_dir
+   | _ ->
+     OpamProcess.Job.run @@
+     OpamFilename.with_tmp_dir_job (fun download_dir ->
+         let fake_pkg =
+           match repository_and_prefix_of_compiler t compiler with
+           | None -> OpamPackage.of_string "compiler.get"
+           | Some (repo,_) ->
+             OpamPackage.of_string (OpamRepositoryName.to_string
+                                      repo.repo_name ^ ".comp")
+         in
+         let text =
+           OpamProcess.make_command_text ~color:`magenta
+             comp_name (OpamUrl.string_of_backend comp_url.OpamUrl.backend)
+         in
+         OpamProcess.Job.with_text text @@
+         OpamRepository.pull_url fake_pkg download_dir None [comp_url]
+         @@+ function
+         | Not_available u ->
+           OpamConsole.error_and_exit "%s is not available." u
+         | Up_to_date r | Result r ->
+           Done (OpamFilename.extract_generic_file r build_dir)
+       ));
+  let patches = OpamFile.Comp.patches comp in
+  let patch_command url =
+    let text =
+      OpamProcess.make_command_text ~color:`magenta
+        comp_name ~args:[OpamUrl.basename url] "download"
+    in
+    OpamProcess.Job.with_text text @@
+    OpamDownload.download ~overwrite:true url build_dir
+  in
+  let patches =
+    OpamParallel.map
+      ~jobs:(dl_jobs t)
+      ~command:patch_command
+      patches
+  in
+  List.iter (fun f -> OpamFilename.patch f build_dir) patches;
+  OpamConsole.msg "Now compiling OCaml. This may take a while, \
+                   please bear with us...\n";
+  let commands =
+    if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then
+      [ ( "./configure" :: OpamFile.Comp.configure comp )
+        @ [ "-prefix";  OpamFilename.Dir.to_string switch_dir ]
+      (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+      (* NOTE In case it exists 2 '-prefix', in general the script
+         ./configure will only consider the last one, others will be
+         discarded. *)
+      ; (OpamStateConfig.(Lazy.force !r.makecmd)::OpamFile.Comp.make comp)
+      ; [OpamStateConfig.(Lazy.force !r.makecmd); "install" ]
+      ]
+    else
+    let switch_config = load_switch_config t switch in
+    let t = { t with switch; compiler; switch_config } in
+    let env = resolve_variable t OpamVariable.Map.empty in
+    OpamFilter.commands env (OpamFile.Comp.build comp)
+  in
+  let commands =
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text =
+            OpamProcess.make_command_text ~color:`magenta comp_name
+              ~args cmd
+          in
+          Some (OpamSystem.make_command
+                  ~text
+                  ~dir:(OpamFilename.Dir.to_string build_dir)
+                  ~verbose:(OpamConsole.verbose ())
+                  cmd args))
+      commands
+  in
+  match
+    OpamProcess.Job.run (OpamProcess.Job.of_list commands)
+  with
+  | None ->
+    OpamConsole.msg "Done.\n";
+    if not OpamStateConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir
+  | Some (cmd,err) ->
+    OpamConsole.error_and_exit "Compiler build failed at %S:\n%s"
+      (OpamProcess.string_of_command cmd)
+      (OpamProcess.string_of_result err)
 
 let write_switch_state t =
   if not OpamStateConfig.(!r.dryrun) then
