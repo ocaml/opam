@@ -246,8 +246,12 @@ val redirect: state -> repository -> (repository * filter option) option
 
 (** {2 Compilers} *)
 
+(** Create the default global_config structure for a switch, including default
+    paths (lib, bin, etc.) *)
+val gen_switch_global_config: dirname -> switch -> OpamFile.Dot_config.t
+
 (** (Re-)install the configuration for a given root and switch *)
-val install_global_config: dirname -> switch -> OpamFile.Dot_config.t
+val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
