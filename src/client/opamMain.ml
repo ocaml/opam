@@ -529,6 +529,8 @@ let config =
       try
         let state = OpamState.load_state "config-report"
           OpamStateConfig.(!r.current_switch) in
+        let ct_state =
+          OpamState.Types.get_switch state state.OpamState.Types.switch_current in
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -564,24 +566,24 @@ let config =
           );
         print "pinned" "%s"
           OpamPackage.Name.Map.(
-            if is_empty state.pinned then "0" else
+            if is_empty ct_state.pinned then "0" else
             let nver, nlocal, nvc =
               fold (fun _ p (nver, nlocal, nvc) -> match p with
                   | Version _ -> nver+1, nlocal, nvc
                   | Source {OpamUrl.backend = #OpamUrl.version_control; _} ->
                     nver, nlocal, nvc+1
                   | Source _ -> nver, nlocal+1, nvc)
-                state.pinned (0,0,0) in
+                ct_state.pinned (0,0,0) in
             String.concat ", "
               (nprint "version" nver @
                nprint "path" nlocal @
                nprint "version control" nvc)
           );
         print "current-switch" "%s%s"
-          (OpamSwitch.to_string state.switch)
+          (OpamSwitch.to_string ct_state.switch)
           (if (OpamFile.Comp.preinstalled
                  (OpamFile.Comp.read
-                    (OpamPath.compiler_comp state.root state.compiler)))
+                    (OpamPath.compiler_comp state.root ct_state.compiler)))
            then "*" else "");
         let index_file = OpamFilename.to_string (OpamPath.package_index state.root) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
@@ -1149,12 +1151,12 @@ let source =
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
     let open OpamState.Types in
-    let t = OpamState.load_state "source"
-        OpamStateConfig.(!r.current_switch) in
+    let t = OpamState.load_state "source" OpamStateConfig.(!r.current_switch) in
+    let ct = get_switch t t.switch_current in
     let nv =
       try
         OpamPackage.Set.max_elt
-          (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+          (OpamPackage.Set.filter (OpamFormula.check atom) ct.packages)
       with Not_found ->
         OpamConsole.error_and_exit "No package matching %s found."
           (OpamFormula.short_string_of_atom atom)
@@ -1204,7 +1206,7 @@ let source =
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
         move_dir
-          ~src:(OpamPath.Switch.build t.root t.switch nv)
+          ~src:(OpamPath.Switch.build t.root ct.switch nv)
           ~dst:dir;
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);
@@ -1441,14 +1443,13 @@ let check_and_run_external_commands () =
       raise (OpamStd.Sys.Exec (command, argv, env))
     else if initialised then
       (* Look for a corresponding package *)
-      let t =
-        OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
-      in
+      let t = OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch) in
       let open OpamState.Types in
+      let ct = get_switch t t.switch_current in
       let prefixed_name = plugin_prefix ^ name in
       let candidates =
         OpamPackage.packages_of_names
-          (Lazy.force t.available_packages)
+          (Lazy.force ct.available_packages)
           (OpamPackage.Name.Set.of_list @@
            List.map OpamPackage.Name.of_string [ prefixed_name; name ])
       in
@@ -1457,7 +1458,7 @@ let check_and_run_external_commands () =
             OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamState.opam t nv))
           candidates
       in
-      let installed = OpamPackage.Set.inter plugins t.installed in
+      let installed = OpamPackage.Set.inter plugins ct.installed in
       if OpamPackage.Set.is_empty candidates then
         ()
       else if not OpamPackage.Set.(is_empty installed) then
