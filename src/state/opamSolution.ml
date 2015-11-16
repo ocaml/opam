@@ -469,9 +469,10 @@ let parallel_apply t action action_graph =
   let action_results =
     OpamConsole.header_msg "Processing actions";
     try
-      let installs =
+      let installs_removes =
         PackageActionGraph.fold_vertex
-          (fun a acc -> match a with `Install _ as i -> i::acc | _ -> acc)
+          (fun a acc -> match a with `Install _ | `Remove _ as i -> i::acc
+                                   | _ -> acc)
           action_graph []
       in
       let results =
@@ -479,7 +480,7 @@ let parallel_apply t action action_graph =
           ~jobs:(OpamState.jobs t)
           ~command:job
           ~dry_run:OpamStateConfig.(!r.dryrun)
-          ~mutually_exclusive:[installs]
+          ~mutually_exclusive:[installs_removes]
           action_graph
       in
       if OpamStateConfig.(!r.json_out <> None) then
