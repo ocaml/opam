@@ -311,6 +311,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
     { t with
       installed;
       installed_roots = (installed_roots +! t.installed_roots) %% installed;
+      reinstall = (reinstall +! t.reinstall) %% installed;
       pinned = pinned +! t.pinned;
       compiler_packages; }
   in
@@ -318,7 +319,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
     OpamState.write_switch_state t;
     OpamFile.PkgList.write
       (OpamPath.Switch.reinstall t.root t.switch)
-      ((reinstall +! t.reinstall) %% installed);
+      t.reinstall
   );
   t
 
