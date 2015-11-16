@@ -27,23 +27,6 @@ module API: sig
     shell -> filename -> [`ask|`yes|`no] ->
     unit
 
-  (** Display all available packages that matches any of the
-      regexps. *)
-  val list:
-    print_short:bool ->
-    filter:[`all|`installed|`roots|`installable] ->
-    order:[`normal|`depends] ->
-    exact_name:bool ->
-    case_sensitive:bool ->
-    ?depends:(atom list) ->
-    ?reverse_depends:bool -> ?recursive_depends:bool -> ?resolve_depends:bool ->
-    ?depopts:bool -> ?depexts:string list -> ?dev:bool ->
-    string list ->
-    unit
-
-  (** Display a general summary of a collection of packages. *)
-  val info: fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
-
   (** Install the given list of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots.
       Third argument installs all dependencies but not the packages themselves *)
@@ -168,6 +151,27 @@ module API: sig
 
     (** List the current pinned packages. *)
     val list: short:bool -> unit -> unit
+
+  end
+
+  module LIST: sig
+
+    (** Display all available packages that matches any of the
+        regexps. *)
+    val list:
+      print_short:bool ->
+      filter:[`all|`installed|`roots|`installable] ->
+      order:[`normal|`depends] ->
+      exact_name:bool ->
+      case_sensitive:bool ->
+      ?depends:(atom list) ->
+      ?reverse_depends:bool -> ?recursive_depends:bool -> ?resolve_depends:bool ->
+      ?depopts:bool -> ?depexts:string list -> ?dev:bool ->
+      string list ->
+      unit
+
+    (** Display a general summary of a collection of packages. *)
+    val info: fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
 
   end
 

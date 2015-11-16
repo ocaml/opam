@@ -223,6 +223,7 @@ SRC_client = \
   opamConfigCommand.ml \
   opamRepositoryCommand.ml \
   opamPinCommand.ml \
+  opamListCommand.ml \
   opamClient.ml \
   opamGitVersion.ml \
   opamArg.ml

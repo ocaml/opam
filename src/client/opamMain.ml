@@ -259,7 +259,7 @@ let list =
     let order = if sort then `depends else `normal in
     match filter, (depends_on, required_by, resolve) with
     | Some filter, (depends, [], [] | [], depends, [] | [], [], depends) ->
-      Client.list
+      Client.LIST.list
         ~print_short ~filter ~order
         ~exact_name:true ~case_sensitive:false
         ~depends ~reverse_depends:(depends_on <> [])
@@ -308,7 +308,7 @@ let search =
       | true, _ -> `installed
       | _       -> `all in
     let order = `normal in
-    Client.list ~print_short ~filter ~order
+    Client.LIST.list ~print_short ~filter ~order
       ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed $installed_roots_flag $case_sensitive
@@ -344,7 +344,7 @@ let show =
       "Print the location of the opam file used for this package" in
   let pkg_info global_options fields raw where packages =
     apply_global_options global_options;
-    Client.info ~fields ~raw_opam:raw ~where packages in
+    Client.LIST.info ~fields ~raw_opam:raw ~where packages in
   Term.(pure pkg_info $global_options $fields $raw $where $nonempty_atom_list),
   term_info "show" ~doc ~man
 
