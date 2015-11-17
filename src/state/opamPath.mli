@@ -165,6 +165,9 @@ module Switch: sig
       $opam/$switch/packages.dev/$name.$version/} *)
   val dev_package: t -> switch -> name -> dirname
 
+  (** Cached environment updates. *)
+  val environment: t -> switch -> filename
+
   (** Locations for the visible part of the installation *)
 
   (** Default config *)
