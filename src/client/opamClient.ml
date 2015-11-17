@@ -18,7 +18,6 @@ open OpamTypes
 open OpamState.Types
 open OpamStd.Op
 open OpamPackage.Set.Op
-open OpamFilename.Op
 
 let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog

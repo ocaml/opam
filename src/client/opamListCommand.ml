@@ -340,9 +340,9 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
         | `all         -> t.packages
         | `installed   -> t.installed
         | `roots       -> t.installed_roots
-        | `installable ->
-          t.installed ++
-          OpamSolver.installable (OpamState.universe t Depends) in
+        | `installable -> t.installed ++ Lazy.force t.available_packages
+        (* OpamSolver.installable (OpamState.universe t Depends) -- too expensive *)
+    in
     let packages =
       if resolve_depends then packages
       else if depexts <> None then packages ++ depends
