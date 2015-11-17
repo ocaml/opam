@@ -968,7 +968,6 @@ module Repo_config = struct
 end
 
 (** Global or package switch-local configuration variables.
-    This file has free fields.
     (<switch>/config/global-config.config,
     <switch>/lib/<pkgname>/opam.config) *)
 
@@ -976,33 +975,78 @@ module Dot_configSyntax = struct
 
   let internal = ".config"
 
-  type t = (variable * variable_contents) list
+  type t = {
+    vars: (variable * variable_contents) list;
+    file_depends: (filename * string) list;
+  }
 
-  let create variables = variables
+  let empty = {
+    vars = [];
+    file_depends = [];
+  }
 
-  let empty = []
+  let create vars = { empty with vars }
 
-  let pp =
-    Pp.I.map_file @@
+  let vars t = t.vars
+  let with_vars t vars = { t with vars }
+
+  let file_depends t = t.file_depends
+  let with_file_depends t file_depends = { t with file_depends }
+
+  let pp_variables =
     Pp.I.items -|
     Pp.map_list
       (Pp.map_pair
          (Pp.of_module "variable" (module OpamVariable: Pp.STR with type t = OpamVariable.t))
          Pp.V.variable_contents)
 
-  let variables t = List.rev_map fst t
+  let pp_contents =
+    Pp.I.fields ~name:"config-file" ~empty
+      ~sections:[
+        "variables", Pp.ppacc with_vars vars pp_variables
+      ]
+      [
+        "opam-version", Pp.ppacc (fun t _ -> t) (fun _ -> OpamVersion.current)
+          (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
+        "file-depends", Pp.ppacc with_file_depends file_depends
+          (Pp.V.map_list ~depth:2 @@ Pp.V.map_pair
+             (Pp.V.string -| Pp.of_module "path" (module OpamFilename: Pp.STR with type t = OpamFilename.t))
+             (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest))
+      ]
 
-  let bindings t = t
+  (* Files with the variables at toplevel and no other fields are allowed for
+     backwards-compat, when opam-version is unset or too old *)
+  let pp =
+    Pp.I.map_file @@
+    Pp.I.field "opam-version"
+      (Pp.parse
+         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t)))
+    -| Pp.pp
+      (fun ~pos (opam_version_opt, s) ->
+         match opam_version_opt with
+         | Some v when
+             OpamVersion.compare v (OpamVersion.of_string "1.3.0~dev3") > 0 ->
+           Pp.parse ~pos pp_contents s
+         | _ -> {empty with vars = Pp.parse ~pos pp_variables s})
+      (fun t -> None, Pp.print pp_contents t)
+
+
+  let variables t = List.rev_map fst t.vars
+
+  let bindings t = t.vars
 
   let variable t s =
-    try Some (List.assoc s t)
+    try Some (List.assoc s t.vars)
     with Not_found -> None
 
   let set t k v =
-    let t = List.remove_assoc k t in
-    match v with
-    | Some v -> (k,v) :: t
-    | None -> t
+    let vars = List.remove_assoc k t.vars in
+    let vars =
+      match v with
+      | Some v -> (k,v) :: vars
+      | None -> vars
+    in
+    { t with vars }
 
 end
 module Dot_config = struct
