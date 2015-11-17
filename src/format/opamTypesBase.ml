@@ -125,6 +125,27 @@ let pfxop_of_string = function
   | "!" -> `Not
   | _ -> raise (Invalid_argument "pfxop_of_string")
 
+let string_of_env_update_op = function
+  | Eq -> "="
+  | PlusEq -> "+="
+  | EqPlus -> "=+"
+  | EqPlusEq -> "=+="
+  | ColonEq -> ":="
+  | EqColon -> "=:"
+
+let env_update_op_of_string = function
+  | "=" -> Eq
+  | "+=" -> PlusEq
+  | "=+" -> EqPlus
+  | "=+=" -> EqPlusEq
+  | ":=" -> ColonEq
+  | "=:" -> EqColon
+  | _ -> raise (Invalid_argument "env_update_op_of_string")
+
+let env_array l =
+  Array.of_list (List.rev_map (fun (k,v, _) -> k^"="^v) l)
+
+
 let string_of_filter_ident (pkgs,var,converter) =
   OpamStd.List.concat_map ~nil:"" "+" ~right:":"
     OpamPackage.Name.to_string pkgs ^

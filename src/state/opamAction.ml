@@ -280,28 +280,48 @@ let string_of_commands commands =
 let compilation_env t opam =
   let env0 = OpamState.get_full_env ~opam ~force_path:true t in
   let env1 = [
-    ("MAKEFLAGS", "");
-    ("MAKELEVEL", "");
-    ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
-    ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
+    ("MAKEFLAGS", "", None);
+    ("MAKELEVEL", "", None);
+    ("OPAM_PACKAGE_NAME",
+     OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
+     None);
+    ("OPAM_PACKAGE_VERSION",
+     OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
+     None)
   ] @ env0 in
   OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
 
-let update_metadata t ~installed ~installed_roots ~reinstall =
-  let installed_roots = OpamPackage.Set.inter installed_roots installed in
-  let reinstall = OpamPackage.Set.inter installed reinstall in
+let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
+  let open OpamStd.Option.Op in
+  let open OpamPackage.Set.Op in
+  let installed = installed +! t.installed in
+  let compiler_packages =
+    if OpamPackage.Set.is_empty (t.compiler_packages -- installed) then
+      t.compiler_packages
+    else (* adjust version of installed compiler packages *)
+      let names = OpamPackage.names_of_packages t.compiler_packages in
+      let installed_base = OpamPackage.packages_of_names installed names in
+      installed_base ++
+      (* keep version of uninstalled compiler packages *)
+      OpamPackage.packages_of_names t.compiler_packages
+        (OpamPackage.Name.Set.diff names
+           (OpamPackage.names_of_packages installed_base))
+  in
+  let t =
+    { t with
+      installed;
+      installed_roots = (installed_roots +! t.installed_roots) %% installed;
+      reinstall = (reinstall +! t.reinstall) %% installed;
+      pinned = pinned +! t.pinned;
+      compiler_packages; }
+  in
   if not OpamStateConfig.(!r.dryrun) then (
-  OpamFile.Installed.write
-    (OpamPath.Switch.installed t.root t.switch)
-    installed;
-  OpamFile.Installed_roots.write
-    (OpamPath.Switch.installed_roots t.root t.switch)
-    installed_roots;
-  OpamFile.Reinstall.write
-    (OpamPath.Switch.reinstall t.root t.switch)
-    reinstall
+    OpamState.write_switch_state t;
+    OpamFile.PkgList.write
+      (OpamPath.Switch.reinstall t.root t.switch)
+      t.reinstall
   );
-  {t with installed; installed_roots; reinstall}
+  t
 
 let removal_needs_download t nv =
   match OpamState.opam_opt t nv with
@@ -326,8 +346,8 @@ let removal_needs_download t nv =
     not (List.for_all use_ocamlfind commands)
 
 (* Remove a given package *)
-let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
-  log "Removing %a (%b)" (slog OpamPackage.to_string) nv metadata;
+let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
+  log "Removing %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -362,7 +382,7 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
               let text = OpamProcess.make_command_text name ~args cmd in
               Some
                 (OpamSystem.make_command ?name:nameopt ~text cmd args
-                   ~env:(OpamFilename.env_of_list env)
+                   ~env:(OpamTypesBase.env_array env)
                    ~dir:(OpamFilename.Dir.to_string exec_dir)
                    ~verbose:(OpamConsole.verbose ())
                    ~check_existence:false))
@@ -440,16 +460,8 @@ let remove_package_aux t ~metadata ?(keep_build=false) ?(silent=false) nv =
       OpamState.remove_overlay t name;
   in
 
-  let cleanup_meta () =
-    (* Update the metadata *)
-    let installed = OpamPackage.Set.remove nv t.installed in
-    let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
-    let reinstall = OpamPackage.Set.remove nv t.reinstall in
-    ignore (update_metadata t ~installed ~installed_roots ~reinstall)
-  in
   remove_job @@+ fun () ->
   if not OpamStateConfig.(!r.dryrun) then uninstall_files ();
-  if metadata then cleanup_meta ();
   if not silent then
     OpamConsole.msg "%s removed   %s.%s\n"
       (if not (OpamConsole.utf8 ()) then "->" else
@@ -495,11 +507,11 @@ let sources_needed t g =
       | _ -> assert false)
     g OpamPackage.Set.empty
 
-let remove_package t ~metadata ?keep_build ?silent nv =
+let remove_package t ?keep_build ?silent nv =
   if OpamStateConfig.(!r.fake) || OpamStateConfig.(!r.show) then
     Done (OpamConsole.msg "Would remove: %s.\n" (OpamPackage.to_string nv))
   else
-    remove_package_aux t ~metadata ?keep_build ?silent nv
+    remove_package_aux t ?keep_build ?silent nv
 
 (* Compiles a package.
    Assumes the package has already been downloaded to [source].
@@ -515,7 +527,7 @@ let build_package t source nv =
      then OpamFile.OPAM.build_doc opam else [])
   in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
-  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.root t.switch nv in
   let rec run_commands = function
@@ -534,7 +546,7 @@ let build_package t source nv =
            name (String.concat " " (cmd::args));
          (* FIXME: this shouldn't be needed, but lots of packages still install
             during this step, so make sure to cleanup *)
-         remove_package ~metadata:false t ~keep_build:true ~silent:true nv @@+ fun () ->
+         remove_package t ~keep_build:true ~silent:true nv @@+ fun () ->
          Done (Some (OpamSystem.Process_error result)))
     | []::commands -> run_commands commands
     | [] -> Done None
@@ -547,7 +559,7 @@ let install_package t nv =
   let opam = OpamState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
-  let env = OpamFilename.env_of_list (compilation_env t opam) in
+  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.root t.switch nv in
   let rec run_commands = function
@@ -566,7 +578,7 @@ let install_package t nv =
         OpamConsole.error
           "The installation of %s failed at %S."
           name (String.concat " " (cmd::args));
-        remove_package ~metadata:false t ~keep_build:true ~silent:true nv
+        remove_package t ~keep_build:true ~silent:true nv
         @@| fun () -> Some (OpamSystem.Process_error result)
       )
     | []::commands -> run_commands commands
@@ -585,5 +597,5 @@ let install_package t nv =
         (OpamPackage.version_to_string nv);
       Done None
     with e ->
-      remove_package ~metadata:false t ~keep_build:true ~silent:true nv
+      remove_package t ~keep_build:true ~silent:true nv
       @@| fun () -> OpamStd.Exn.fatal e; Some e

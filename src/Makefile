@@ -317,10 +317,10 @@ endef
 ../opam-lib.install: $(OPAMLIB:=.cma)
 	@echo 'lib: [' >$@
 	@echo '  "META"' >>$@
-	{ $(patsubst %,echo '  "src/'%'"';,\
+	@{ $(patsubst %,echo '  "src/'%'"';,\
 	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
 	} >>$@
-	{ $(patsubst %,echo '  "src/'%'"';,\
+	@{ $(patsubst %,echo '  "src/'%'"';,\
 	    $(wildcard \
 	      $(addprefix tools/opam_admin_top.,mli cmi cmx cmxs cmti)))\
 	} >>$@

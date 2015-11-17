@@ -114,7 +114,9 @@ module Make (G : G) = struct
           (finished + M.cardinal running) njobs
       in
       let texts =
-        limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
+        if OpamConsole.disp_status_line () then
+          limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
+        else title::texts
       in
       if texts <> [] then OpamConsole.status_line "%s" (String.concat " " texts)
     in
@@ -149,11 +151,6 @@ module Make (G : G) = struct
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
-          if OpamProcess.is_verbose_command cmd ||
-             not (OpamConsole.disp_status_line ()) then
-            OpamStd.Option.iter
-              (OpamConsole.msg "%s Command started\n")
-              (OpamProcess.text_of_command cmd);
           let p =
             if dry_run then OpamProcess.dry_run_background cmd
             else OpamProcess.run_background cmd

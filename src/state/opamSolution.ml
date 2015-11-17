@@ -73,9 +73,11 @@ let check_solution state = function
   | Error (success, failed, _remaining) ->
     List.iter (post_message state) success;
     List.iter (post_message ~failed:true state) failed;
+    OpamState.check_and_print_env_warning state;
     OpamStd.Sys.exit 4
   | OK actions ->
-    List.iter (post_message state) actions
+    List.iter (post_message state) actions;
+    OpamState.check_and_print_env_warning state
   | Nothing_to_do -> OpamConsole.msg "Nothing to do.\n"
   | Aborted     -> OpamStd.Sys.exit 0
 
@@ -174,8 +176,8 @@ let string_of_errors errors =
 *)
 
 let new_variables e =
-  let e = List.filter (fun (_,s,_) -> s="=") e in
-  let e = List.rev_map (fun (v,_,_) -> v) e in
+  let e = List.filter (function (_,Eq,_,_) -> true | _ -> false) e in
+  let e = List.rev_map (fun (v,_,_,_) -> v) e in
   OpamStd.String.Set.of_list e
 
 let variable_warnings = ref false
@@ -314,13 +316,17 @@ let parallel_apply t action action_graph =
 
   let add_to_install nv =
     t_ref :=
-      OpamAction.update_metadata t
+      OpamAction.update_switch_state t
         ~installed:(OpamPackage.Set.add nv !t_ref.installed)
         ~reinstall:(OpamPackage.Set.remove nv !t_ref.reinstall)
         ~installed_roots:
           (if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs
            then OpamPackage.Set.add nv !t_ref.installed_roots
            else !t_ref.installed_roots);
+    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] &&
+       OpamState.is_switch_globally_set t
+    then
+      OpamState.update_init_scripts t ~global:None;
     if not OpamStateConfig.(!r.dryrun) then
       OpamState.install_metadata !t_ref nv
   in
@@ -328,10 +334,14 @@ let parallel_apply t action action_graph =
   let remove_from_install nv =
     let rm = OpamPackage.Set.remove nv in
     t_ref :=
-      OpamAction.update_metadata t
+      OpamAction.update_switch_state t
         ~installed:(rm !t_ref.installed)
         ~installed_roots:(rm !t_ref.installed_roots)
         ~reinstall:(rm !t_ref.reinstall);
+    if OpamFile.OPAM.env (OpamState.opam t nv) <> [] &&
+       OpamState.is_switch_globally_set t
+    then
+      OpamState.update_init_scripts t ~global:None;
   in
 
   (* 1/ fetch needed package archives *)
@@ -449,7 +459,7 @@ let parallel_apply t action action_graph =
           (try OpamAction.extract_package t source nv
            with e -> OpamStd.Exn.fatal e);
         OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
-          (OpamAction.remove_package t ~metadata:false nv) @@| fun () ->
+          (OpamAction.remove_package t nv) @@| fun () ->
         remove_from_install nv;
         store_time ();
         `Successful (installed, OpamPackage.Set.add nv removed)

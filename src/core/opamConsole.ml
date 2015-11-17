@@ -172,17 +172,22 @@ let formatted_msg ?indent fmt =
     (fun s -> print_string (OpamStd.Format.reformat ?indent s); flush stdout)
     fmt
 
-let status_line fmt =
+let last_status = ref ""
+let status_line =
   let carriage_delete = "\r\027[K" in
-  let endline = if debug () then "\n" else carriage_delete in
-  if disp_status_line () then (
-    flush stderr;
-    Printf.kfprintf
-      (fun ch -> output_string ch endline (* unflushed *))
-      stdout
-      ("%s" ^^ fmt ^^ "%!") carriage_delete
-  ) else
-    Printf.ifprintf stdout fmt
+  fun fmt ->
+    if debug () || not (disp_status_line ()) then
+      Printf.ksprintf
+        (fun s -> if s <> !last_status then (last_status := s; print_endline s))
+        fmt
+    else
+      Printf.ksprintf
+        (fun s ->
+           print_string carriage_delete;
+           print_string s;
+           flush stdout;
+           print_string carriage_delete (* unflushed *))
+        fmt
 
 let header_width () = min 80 (OpamStd.Sys.terminal_columns ())
 

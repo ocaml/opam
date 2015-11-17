@@ -163,14 +163,17 @@ module DescrIO = struct
   let synopsis = fst
   let body = snd
 
-  let full (x,y) = x ^ "\n" ^ y
+  let full (x,y) =
+    match y with
+    | "" -> x ^ "\n"
+    | y -> String.concat "" [x; "\n\n"; y; "\n"]
 
   let of_channel _ ic =
     let x =
-      try input_line ic
+      try OpamStd.String.strip (input_line ic)
       with End_of_file | Sys_error _ -> "" in
     let y =
-      try OpamSystem.string_of_channel ic
+      try OpamStd.String.strip (OpamSystem.string_of_channel ic)
       with End_of_file | Sys_error _ -> ""
     in
     x, y
@@ -178,14 +181,17 @@ module DescrIO = struct
   let to_channel _ oc (x,y) =
     output_string oc x;
     output_char oc '\n';
-    output_string oc y
+    if y <> "" then
+      (output_char oc '\n';
+       output_string oc y;
+       output_char oc '\n')
 
   let create str =
     let head, tail =
       match OpamStd.String.cut_at str '\n' with
       | None       -> str, ""
       | Some (h,t) -> h, t in
-    head, tail
+    OpamStd.String.strip head, OpamStd.String.strip tail
 
   let of_string _ = create
 
@@ -391,35 +397,22 @@ module Compiler_index = Repo_index(OpamCompiler)
     <switch>/reinstall): table
     <package> <version> *)
 
-module PkgList = struct
+module PkgList = LineFile (struct
 
-  type t = package_set
+    let internal = "package-version-list"
 
-  let empty = OpamPackage.Set.empty
+    type t = package_set
 
-  let pp =
-    OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
-    (Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
-     Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
-    -| Pp.pp
-      (fun ~pos:_ (n,v) -> OpamPackage.create n v)
-      (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
+    let empty = OpamPackage.Set.empty
 
-end
+    let pp =
+      OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
+      (Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+       Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
+      -| Pp.pp
+        (fun ~pos:_ (n,v) -> OpamPackage.create n v)
+        (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
 
-module Installed = LineFile(struct
-    let internal = "installed"
-    include PkgList
-  end)
-
-module Installed_roots = LineFile(struct
-    let internal = "installed.roots"
-    include PkgList
-  end)
-
-module Reinstall = LineFile(struct
-    let internal = "reinstall"
-    include PkgList
   end)
 
 (** Lists of pinned packages (<switch>/pinned): table
@@ -435,7 +428,7 @@ let pp_pin =
     (fun x -> [string_of_pin_kind (kind_of_pin_option x);
                string_of_pin_option x])
 
-module Pinned = LineFile(struct
+module Pinned_legacy = LineFile(struct
 
     let internal = "pinned"
 
@@ -481,74 +474,117 @@ module File_attributes = LineFile(struct
 (** Switch export/import format: table
     <name> <version> <installed-state> [pinning-kind] [pinning-url] *)
 
-module Export = LineFile(struct
+module StateTable = struct
 
-    let internal = "export"
+  let internal = "export"
 
-    module M = OpamPackage.Name.Map
+  module M = OpamPackage.Name.Map
 
-    type t = package_set * package_set * pin_option M.t
+  type t = {
+    installed: package_set;
+    installed_roots: package_set;
+    compiler: package_set;
+    pinned: pin_option M.t;
+  }
 
-    let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty, M.empty)
+  let empty = {
+    installed = OpamPackage.Set.empty;
+    installed_roots = OpamPackage.Set.empty;
+    compiler = OpamPackage.Set.empty;
+    pinned = M.empty;
+  }
 
-    let pp_state =
-      Pp.pp ~name:"pkg-state"
-        (fun ~pos:_ -> function
-           | "root" -> `Root
-           | "noroot" | "installed" -> `Installed
-           | "uninstalled" -> `Uninstalled
-           | _ -> Pp.unexpected ())
-        (function
-          | `Root -> "root"
-          | `Installed -> "installed"
-          | `Uninstalled -> "uninstalled")
+  let pp_state =
+    Pp.pp ~name:"pkg-state"
+      (fun ~pos:_ -> function
+         | "compiler" -> `Compiler
+         | "root" -> `Root
+         | "noroot" | "installed" -> `Installed
+         | "uninstalled" -> `Uninstalled
+         | "uninstalled-compiler" -> `Uninstalled_compiler
+         | _ -> Pp.unexpected ())
+      (function
+        | `Compiler -> "compiler"
+        | `Root -> "root"
+        | `Installed -> "installed"
+        | `Uninstalled -> "uninstalled"
+        | `Uninstalled_compiler -> "uninstalled-compiler")
 
-    let pp_lines =
-      M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
-      Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
-      Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t) ^+
-      (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
+  let pp_lines =
+    M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
+    Pp.of_module "pkg-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t) ^+
+    Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t) ^+
+    (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
 
-    (* Convert from one name-map to set * set * map *)
-    let pp =
-      pp_lines -| Pp.pp
-        (fun ~pos:_ map ->
-           M.fold
-             (fun name (version,(state,pin)) (installed,roots,pinned) ->
-                let nv = OpamPackage.create name version in
-                (match state with
-                 | `Installed | `Root -> OpamPackage.Set.add nv installed
-                 | `Uninstalled -> installed),
-                (match state with
-                 | `Root -> OpamPackage.Set.add nv roots
-                 | `Installed | `Uninstalled -> roots),
-                (match pin with
-                 | Some pin -> M.add name pin pinned
-                 | None -> pinned))
-             map
-             (OpamPackage.Set.empty, OpamPackage.Set.empty, M.empty))
-        (fun (installed,roots,pinned) ->
-           M.empty |>
-           OpamPackage.Set.fold (fun nv ->
-               M.add (OpamPackage.name nv)
-                 (OpamPackage.version nv, (`Installed, None)))
-             installed |>
-           OpamPackage.Set.fold (fun nv ->
-               M.add (OpamPackage.name nv)
-                 (OpamPackage.version nv, (`Root, None)))
-             roots |>
-           M.fold (fun name pin map ->
-               try
-                 let v, (state, _) = M.find name map in
-                 M.add name (v, (state, Some pin)) map
-               with Not_found ->
-                 let v = OpamPackage.Version.of_string "--" in
-                 M.add name (v, (`Uninstalled, Some pin)) map)
-             pinned)
+  (* Convert from one name-map to type t *)
+  let pp =
+    pp_lines -| Pp.pp
+      (fun ~pos:_ map ->
+         M.fold
+           (fun name (version,(state,pin)) t ->
+              let nv = OpamPackage.create name version in
+              {
+                installed = (match state with
+                    | `Installed | `Root | `Compiler ->
+                      OpamPackage.Set.add nv t.installed
+                    | `Uninstalled | `Uninstalled_compiler ->
+                      t.installed);
+                installed_roots = (match state with
+                    | `Root | `Compiler ->
+                      OpamPackage.Set.add nv t.installed_roots
+                    | `Installed | `Uninstalled | `Uninstalled_compiler ->
+                      t.installed_roots);
+                compiler = (match state with
+                    | `Compiler | `Uninstalled_compiler ->
+                      OpamPackage.Set.add nv t.compiler
+                    | `Root | `Installed | `Uninstalled ->
+                      t.compiler);
+                pinned = (match pin with
+                    | Some pin -> M.add name pin t.pinned
+                    | None -> t.pinned);
+              })
+           map
+           empty)
+      (fun t ->
+         M.empty |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Installed, None)))
+           t.installed |>
+         OpamPackage.Set.fold (fun nv ->
+             M.add (OpamPackage.name nv)
+               (OpamPackage.version nv, (`Root, None)))
+           t.installed_roots |>
+         OpamPackage.Set.fold (fun nv acc ->
+             let name = OpamPackage.name nv in
+             try
+               let (v, _) = M.find name acc in
+               M.add name (v, (`Compiler, None)) acc
+             with Not_found ->
+               M.add name
+                 (OpamPackage.version nv, (`Uninstalled_compiler, None))
+                 acc)
+           t.compiler |>
+         M.fold (fun name pin map ->
+             try
+               let v, (state, _) = M.find name map in
+               M.add name (v, (state, Some pin)) map
+             with Not_found ->
+               let v = OpamPackage.Version.of_string "--" in
+               M.add name (v, (`Uninstalled, Some pin)) map)
+           t.pinned)
 
-  end)
+end
 
-
+module State = struct
+  type t = StateTable.t = {
+    installed: package_set;
+    installed_roots: package_set;
+    compiler: package_set;
+    pinned: pin_option name_map;
+  }
+  include (LineFile (StateTable) : IO_FILE with type t := t)
+end
 
 (** III - Opam Syntax parser and associated file types *)
 
@@ -596,7 +632,7 @@ module type SyntaxFileArg = sig
   val pp: (opamfile, filename * t) Pp.t
 end
 
-module SyntaxFile(X: SyntaxFileArg) = struct
+module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
 
   module IO = struct
     let to_opamfile filename t = Pp.print X.pp (filename, t)
@@ -617,6 +653,7 @@ module SyntaxFile(X: SyntaxFileArg) = struct
   end
 
   include IO
+  include X
   include MakeIO(struct
       include X
       include IO
@@ -982,6 +1019,7 @@ module URL = struct
 end
 
 
+
 (** (3) Opam package format *)
 
 module OPAMSyntax = struct
@@ -1003,6 +1041,7 @@ module OPAMSyntax = struct
     ocaml_version: compiler_constraint option;
     os         : (bool * string) generic_formula;
     flags      : package_flag list;
+    env        : env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -1014,7 +1053,7 @@ module OPAMSyntax = struct
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : (string * string * string) list;
+    build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
     extra_sources: (url * string * basename option) list;
 
@@ -1036,7 +1075,11 @@ module OPAMSyntax = struct
     bug_reports: string list;
 
     (* Extension fields (x-foo: "bar") *)
-    extensions  : (pos * value) OpamStd.String.Map.t;
+    extensions : (pos * value) OpamStd.String.Map.t;
+
+    (* Extra sections *)
+    url        : URL.t option;
+    descr      : Descr.t option;
   }
 
   let empty = {
@@ -1052,6 +1095,7 @@ module OPAMSyntax = struct
     ocaml_version = None;
     os         = Empty;
     flags      = [];
+    env        = [];
 
     build      = [];
     build_test = [];
@@ -1081,6 +1125,8 @@ module OPAMSyntax = struct
     bug_reports = [];
 
     extensions  = OpamStd.String.Map.empty;
+    url         = None;
+    descr       = None;
   }
 
   let create nv =
@@ -1090,7 +1136,7 @@ module OPAMSyntax = struct
 
   let check name = function
     | None    ->
-      OpamFormat.bad_format "Invalid OPAM file (missing field %S)" name
+      OpamFormat.bad_format "Invalid opam file (missing field %S)" name
     | Some n -> n
 
   let ext_field_prefix = "x-"
@@ -1113,6 +1159,14 @@ module OPAMSyntax = struct
   let os t = t.os
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
+  let env t =
+    List.map
+      (fun env -> match t.name, env with
+        | Some name, (var,op,value,None) ->
+          var, op, value,
+          Some ("Updated by package " ^ OpamPackage.Name.to_string name)
+        | _, b -> b)
+      t.env
 
   let build t = t.build
   let build_test t = t.build_test
@@ -1150,6 +1204,9 @@ module OPAMSyntax = struct
        | OpamFormat.Bad_format _ as e -> raise (OpamFormat.add_pos pos e))
     with Not_found -> None
 
+  let url t = t.url
+  let descr t = t.descr
+
   (* Setters *)
 
   let with_opam_version t opam_version = { t with opam_version }
@@ -1172,6 +1229,7 @@ module OPAMSyntax = struct
   let with_flags t flags = { t with flags }
   let add_flags t flags =
     { t with flags = OpamStd.List.sort_nodup compare (flags @ t.flags) }
+  let with_env t env = { t with env }
 
   let with_build t build = { t with build }
   let with_build_test t build_test = { t with build_test }
@@ -1209,6 +1267,11 @@ module OPAMSyntax = struct
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
+
+  let with_url t url = { t with url = Some url }
+  let with_url_opt t url = { t with url }
+  let with_descr t descr = { t with descr = Some descr }
+  let with_descr_opt t descr = { t with descr }
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when validating). It's better to do them in the same pass
@@ -1357,6 +1420,10 @@ module OPAMSyntax = struct
         Pp.ppacc_opt with_version version_opt
         (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t));
 
+      "descr", no_cleanup Pp.ppacc_opt with_descr descr
+        (Pp.V.string_tr -|
+         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "author", no_cleanup Pp.ppacc
@@ -1397,6 +1464,8 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.ident -|
          Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
+      "setenv", no_cleanup Pp.ppacc with_env env
+        (Pp.V.map_list ~depth:2 Pp.V.env_binding);
 
       "build", no_cleanup Pp.ppacc with_build build
         (Pp.V.map_list ~depth:2 Pp.V.command);
@@ -1464,6 +1533,10 @@ module OPAMSyntax = struct
     List.map (fun (name, (_, cleaned_up_pp)) -> name, cleaned_up_pp)
       fields_gen
 
+  let sections = [
+    "url", Pp.ppacc_opt with_url url URL.pp_contents;
+  ]
+
   let raw_fields =
     List.map (fun (name, (raw_pp, _)) -> name, raw_pp)
       fields_gen
@@ -1498,11 +1571,12 @@ module OPAMSyntax = struct
   let pp_raw =
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true fields -|
+    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true
+      ~sections fields -|
     Pp.I.partition_fields is_ext_field -| Pp.map_pair
       (Pp.I.items -|
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
-      (Pp.I.fields ~name:"opam-file" ~empty fields -|
+      (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
        handle_flags_in_tags) -|
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions t extensions)
@@ -1844,9 +1918,10 @@ module OPAM = struct
     let warnings, t =
       try
         let f = reader filename in
-        let _, good_items, invalid_items =
+        let _, _, good_items, invalid_items =
           Pp.parse ~pos:(pos_file filename)
-            (Pp.I.good_fields ~name:"opam-file" ~allow_extensions:true fields)
+            (Pp.I.good_fields ~name:"opam-file" ~allow_extensions:true
+               ~sections fields)
             f.file_contents
         in
         let warnings =
@@ -1854,7 +1929,7 @@ module OPAM = struct
               | Section (pos, s) ->
                 3, `Error,
                 Printf.sprintf "Invalid or duplicate section: '%s' at %s"
-                  s.section_name (string_of_pos pos)
+                  s.section_kind (string_of_pos pos)
               | Variable (pos, f, _) ->
                 3, `Error,
                 Printf.sprintf "Invalid or duplicate field: '%s:' at %s"
@@ -2117,7 +2192,7 @@ module CompSyntax = struct
     make         : string list ;
     build        : command list ;
     packages     : formula ;
-    env          : (string * string * string) list;
+    env          : env_update list;
     tags         : string list;
   }
 
@@ -2152,7 +2227,14 @@ module CompSyntax = struct
 
   let packages t = t.packages
   let preinstalled t = t.preinstalled
-  let env t = t.env
+  let env t =
+    List.map (function
+        | var,op,value,None ->
+          var, op, value,
+          Some ("Updated by compiler " ^ OpamCompiler.to_string t.name)
+        | b -> b)
+      t.env
+
   let tags t = t.tags
 
   let with_opam_version t opam_version = {t with opam_version}
@@ -2197,6 +2279,7 @@ module CompSyntax = struct
         (Pp.V.url_with_backend `hg);
       "local", Pp.ppacc_opt with_src OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
+
 
       "patches", Pp.ppacc with_patches patches
         (Pp.V.map_list ~depth:1 @@ Pp.V.url);

@@ -58,6 +58,9 @@ module Types: sig
     compiler_version: compiler_version Lazy.t;
     (** The current version of the compiler *)
 
+    compiler_packages: package_set;
+    (** The packages that form the base of the current compiler *)
+
     switch_config: OpamFile.Dot_config.t;
     (** The contents of the global configuration file for this
         switch *)
@@ -73,16 +76,16 @@ module Types: sig
     (** The list of packages, keeping the one available for the
         current compiler version *)
 
-    pinned: OpamFile.Pinned.t;
+    pinned: pin_option name_map;
     (** The list of pinned packages *)
 
-    installed: OpamFile.Installed.t;
+    installed: package_set;
     (** The list of installed packages *)
 
-    installed_roots: OpamFile.Installed_roots.t;
+    installed_roots: package_set;
     (** The list of packages explicitly installed by the user *)
 
-    reinstall: OpamFile.Reinstall.t;
+    reinstall: package_set;
     (** The list of packages which needs to be reinsalled *)
   }
 
@@ -107,8 +110,19 @@ val pef_state : OpamFormula.atom OpamTypes.request -> state -> Opam.Packages.req
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state
 
+(** Returns [true] if the current switch of the state is the one set in
+    ~/.opam/config, [false] otherwise *)
+val is_switch_globally_set: state -> bool
+
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> switch -> state
+
+(** The package switch state as stored in ~/.opam/<switch>/state *)
+val switch_state: state -> OpamFile.State.t
+
+(** Writes the ~/.opam/<switch>/state file corresponding to the current state
+    (installed, pinned packages, etc.). Does nothing in dryrun mode *)
+val write_switch_state: state -> unit
 
 (** Create a universe from the current state *)
 val universe: ?orphans:package_set -> state -> user_action -> universe
@@ -125,7 +139,8 @@ val get_opam_env: force_path:bool -> state -> env
 
 (** Update an environment. *)
 val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env ->
-  ?variables:(variable_contents option) OpamVariable.Map.t -> (string * string * string) list -> env
+  ?variables:(variable_contents option) OpamVariable.Map.t ->
+  env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)
 val up_to_date_env: state -> bool
@@ -134,11 +149,14 @@ val up_to_date_env: state -> bool
     `opam config env`]) *)
 val eval_string: state -> string
 
-(** Print a warning if the environment is not set-up properly on init. *)
-val print_env_warning_at_init: state -> user_config -> unit
+(** Print a warning if the environment is not set-up properly.
+    (General message) *)
+val check_and_print_env_warning: state -> unit
 
-(** Print a warning if the environment is not set-up properly on switch. *)
-val print_env_warning_at_switch: state -> unit
+(** Print a warning if the environment is not set-up properly, and advises to
+    update user's file depending on what has already been done automatically
+    according to [user_config] *)
+val print_env_warning_at_init: state -> user_config -> unit
 
 (** {2 Initialisation} *)
 
@@ -150,6 +168,9 @@ val display_setup: state -> shell -> filename -> unit
 
 (** Update the user configuration. *)
 val update_setup: state -> user_config option -> global_config option -> unit
+
+(** Update scripts in ~/.opam/opam-init (subset of [update_setup]) *)
+val update_init_scripts: state -> global:(global_config option) -> unit
 
 (** {2 Filters} *)
 
@@ -331,11 +352,11 @@ val repository_of_package: state -> package -> repository option
 val repository_and_prefix_of_package:
   state -> package -> (repository * string option) option
 
-(** Add the given packages to the set of package to reinstall. If [all]
-    is set, this is done for ALL the switches (useful when a package
-    change upstream for instance). If not, only the reinstall state of the
-    current switch is changed. *)
-val add_to_reinstall: state -> all:bool -> package_set -> unit
+(** Add the given packages to the set of package to reinstall and save to disk.
+    If [all_unpinned] is set, this is done for all the switches where the
+    package is not pinned (useful when a package changed upstream for instance).
+    If not, only the reinstall state of the current switch is changed. *)
+val add_to_reinstall: state -> all_unpinned:bool -> package_set -> unit
 
 (** Return the files for a given package *)
 val copy_files: state -> package -> dirname -> unit

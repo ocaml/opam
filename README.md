@@ -12,19 +12,26 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 ## Compiling this repo
 
 * Make sure you have OCaml and GNU make installed. If you don't have a recent
-  enough version of OCaml (>= 3.12.1) at hand, see the next paragraph.
+  enough version of OCaml (>= 3.12.1) at hand, see the next section.
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
-  dependencies installed and only need the opam binary (not the libs). This will
-  locally take care of all OCaml dependencies for you.
-* Otherwise, make sure to have ocamlfind, ocamlgraph, cmdliner, jsonm, cudf,
-  dose 3.2.2+opam and re >= 1.2.0 installed. Or run `opam install
-  opam-lib --deps-only` if you already have a working instance. Re-run
-  `./configure` once done.
+  dependencies installed. This will locally take care of all OCaml dependencies
+  for you (downloading them, unless you used the inclusive archive we provide
+  for each release).
 * Run `make`
 * Run `make install`
-* Run `make libinstall` if needed (this is incompatible with `make lib-ext`, as
-  the opam library would conflict with installed versions of the dependencies)
+
+This is all you need for installing and using opam, but if you want to use the
+`opam-lib` (to work on opam-related tools), you need to link it to installed
+libraries, rather than use `make lib-ext` which would cause conflicts. It's
+easier to already have a working opam installation in this case, so you can do
+it as a second step.
+
+* Make sure to have ocamlfind, ocamlgraph, cmdliner, jsonm, cudf,
+  dose 3.2.2+opam and re >= 1.2.0 installed. Or run `opam install
+  opam-lib --deps-only` if you already have a working instance. Re-run
+  `./configure` once done
+* Run `make libinstall` at the end
 
 ## Compiling without OCaml
 

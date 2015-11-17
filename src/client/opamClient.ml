@@ -155,7 +155,7 @@ let with_switch_backup command f =
   let t = OpamState.load_state command OpamStateConfig.(!r.current_switch) in
   let file = OpamPath.Switch.backup t.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
-  OpamFile.Export.write file (t.installed, t.installed_roots, t.pinned);
+  OpamFile.State.write file (OpamState.switch_state t);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -727,8 +727,7 @@ module API = struct
         (OpamSolution.atoms_of_packages
            (t.installed_roots %% Lazy.force t.available_packages)) in
     let base_packages =
-      let comp = OpamState.compiler_comp t t.compiler in
-      OpamFormula.to_conjunction (OpamFile.Comp.packages comp) in
+      OpamSolution.eq_atoms_of_packages (OpamState.base_packages t) in
     let base_packages =
       List.map (fun atom ->
           try OpamPackage.Set.find (OpamFormula.check atom) t.installed
@@ -791,10 +790,9 @@ module API = struct
   let update_dev_packages_t atoms t =
     let to_update =
       List.fold_left (fun to_update (name,_) ->
-          match OpamState.pinned_opt t name with
-          | None -> to_update
-          | Some nv ->
-            OpamPackage.Set.add nv to_update)
+          if OpamState.is_locally_pinned t name then
+            OpamPackage.Set.add (OpamState.pinned t name) to_update
+          else to_update)
         OpamPackage.Set.empty atoms
     in
     if OpamPackage.Set.is_empty to_update then t else (
@@ -802,8 +800,7 @@ module API = struct
       try
         let updated = OpamState.update_dev_packages t to_update in
         if OpamPackage.Set.is_empty updated then t
-        else OpamState.load_state "reload-dev-package-updated"
-            OpamStateConfig.(!r.current_switch)
+        else OpamState.load_state "reload-dev-package-updated" t.switch
       with e ->
         OpamStd.Exn.fatal e;
         t
@@ -1278,8 +1275,8 @@ module API = struct
           let global = { complete = true; switch_eval = true } in
           OpamState.update_setup t (Some user) (Some global);
           true in
-      if updated then OpamState.print_env_warning_at_switch t
-      else OpamState.print_env_warning_at_init t user in
+      if not updated then
+        OpamState.print_env_warning_at_init t user in
 
     if OpamFilename.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.";
@@ -1490,7 +1487,13 @@ module API = struct
               { t with installed_roots =
                          OpamPackage.Set.add nv t.installed_roots }
             | Some false ->
-              if OpamPackage.Set.mem nv t.installed_roots then
+              if OpamPackage.Set.mem nv t.compiler_packages then
+                (OpamConsole.note
+                   "Package %s is part of the compiler base and can't be set \
+                    as 'installed automatically'"
+                   (OpamPackage.name_to_string nv);
+                 t)
+              else if OpamPackage.Set.mem nv t.installed_roots then
                 { t with installed_roots =
                            OpamPackage.Set.remove nv t.installed_roots }
               else
@@ -1516,8 +1519,7 @@ module API = struct
           "Removing %s from the list of installed roots.\n"
           (OpamStd.Format.pretty_list diff)
       );
-      let file = OpamPath.Switch.installed_roots t.root t.switch in
-      OpamFile.Installed_roots.write file t.installed_roots;
+      OpamState.write_switch_state t
     );
 
     let available_packages = Lazy.force t.available_packages in
@@ -1599,7 +1601,7 @@ module API = struct
           try
             let nv = OpamPackage.max_version candidates (fst atom) in
             OpamConsole.note "Forcing removal of (uninstalled) %s" (OpamPackage.to_string nv);
-            OpamProcess.Job.run (OpamAction.remove_package ~metadata:false t nv);
+            OpamProcess.Job.run (OpamAction.remove_package t nv);
             OpamAction.cleanup_package_artefacts t nv;
             nothing_to_do := false
           with Not_found ->
@@ -1670,11 +1672,11 @@ module API = struct
       if not_installed <> [] then
         if
           force ||
-          (OpamConsole.warning "%s %s not installed."
-             (OpamStd.Format.pretty_list
-                (List.map OpamFormula.short_string_of_atom not_installed))
-             (match not_installed with [_] -> "is" | _ -> "are");
-           OpamConsole.confirm "Install ?")
+          OpamConsole.confirm "%s %s not installed. Install %s ?"
+            (OpamStd.Format.pretty_list
+               (List.rev_map OpamFormula.short_string_of_atom not_installed))
+            (match not_installed with [_] -> "is" | _ -> "are")
+            (match not_installed with [_] -> "it" | _ -> "them")
         then not_installed
         else OpamStd.Sys.exit 1
       else []
@@ -1948,13 +1950,13 @@ module SafeAPI = struct
 
   module SWITCH = struct
 
-    let switch ?compiler ~quiet ~warning name =
+    let switch ?compiler ~quiet name =
       global_then_switch_lock (fun () ->
-        API.SWITCH.switch_cont ?compiler ~quiet ~warning name)
+        API.SWITCH.switch_cont ?compiler ~quiet name)
 
-    let install ~quiet ~warning ~update_config switch ocaml_version =
+    let install ~quiet ~update_config switch ocaml_version =
       global_then_switch_lock (fun () ->
-        API.SWITCH.install_cont ~quiet ~warning ~update_config switch ocaml_version)
+        API.SWITCH.install_cont ~quiet ~update_config switch ocaml_version)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)

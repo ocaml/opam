@@ -97,9 +97,7 @@ module Switch = struct
 
   let backup t a = backup_dir t a // backup_file ()
 
-  let installed t a = root t a // "installed"
-
-  let installed_roots t a = root t a // "installed.roots"
+  let state t a = root t a // "state"
 
   let build_dir t a = root t a / "build"
 
@@ -122,8 +120,6 @@ module Switch = struct
   let config_dir t a = root t a / "config"
 
   let global_config t a = config_dir t a // "global-config.config"
-
-  let pinned t a = root t a // "pinned"
 
   let dev_packages_dir t a = root t a / "packages.dev"
 

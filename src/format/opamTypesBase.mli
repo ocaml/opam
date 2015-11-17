@@ -96,6 +96,12 @@ val string_of_pfxop: pfxop -> string
 
 val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
 
+val string_of_env_update_op: env_update_op -> string
+
+val env_update_op_of_string: string -> env_update_op
+
+val env_array: env -> string array
+
 (** Parses the data suitable for a filter.FIdent from a string. May
     raise [Failure msg] on bad package names *)
 val filter_ident_of_string:
