@@ -509,13 +509,21 @@ module Dot_config: sig
   (** Create a new .config file (containing only variables) *)
   val create: (variable * variable_contents) list -> t
 
+  (** Dependency towards file-system paths and their hashes *)
+  val file_depends: t -> (filename * string) list
+
+  val with_file_depends: t -> (filename * string) list -> t
+
+  (** Sets all bindings in the file *)
+  val with_vars: t -> (variable * variable_contents) list -> t
+
   (** Top-level variables *)
   val variable: t -> variable  -> variable_contents option
 
   (** The list of top-level variables *)
   val variables: t -> variable list
 
-  (** Lists all the bindings in the file *)
+  (** Lists all the variable bindings in the file *)
   val bindings: t -> (variable * variable_contents) list
 
   (** Sets the given variable, overriding any previous definition.
