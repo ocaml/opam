@@ -1441,11 +1441,6 @@ let switch_state t =
     compiler = t.compiler_packages;
     pinned = t.pinned; }
 
-let write_switch_state t =
-  if not OpamStateConfig.(!r.dryrun) then
-    let f = OpamPath.Switch.state t.root t.switch in
-    OpamFile.State.write f (switch_state t)
-
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
     Printf.sprintf "%s" (OpamStd.List.concat_map " | " string_of_atom (List.rev c)) in
@@ -2258,15 +2253,8 @@ let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty)
   in
   env @ expand_env t ?opam updates variables
 
-let env_updates ~opamswitch ?(force_path=false) t =
-  let add_to_path = OpamPath.Switch.bin t.root t.switch t.switch_config in
-  let new_path =
-    "PATH",
-    (if force_path then PlusEq else EqPlusEq),
-    OpamFilename.Dir.to_string add_to_path,
-    Some "Current opam switch binary dir"
-  in
-(* Todo: put these back into their packages !
+let compute_env_updates t =
+  (* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
@@ -2292,10 +2280,6 @@ let env_updates ~opamswitch ?(force_path=false) t =
       t.installed []
   in
   let comp_env = OpamFile.Comp.env (compiler_comp t t.compiler) in
-  let switch =
-    if opamswitch then
-      [ "OPAMSWITCH", Eq, OpamSwitch.to_string t.switch, None ]
-    else [] in
   let root =
     let current = t.root in
     let default = OpamStateConfig.(default.root_dir) in
@@ -2305,7 +2289,29 @@ let env_updates ~opamswitch ?(force_path=false) t =
     then [ "OPAMROOT", Eq, current_string, None ]
     else []
   in
-  new_path :: (man_path @ switch @ root @ comp_env @ pkg_env)
+  man_path @ root @ comp_env @ pkg_env
+
+let env_updates ~opamswitch ?(force_path=false) t =
+  let update =
+    let fn = OpamPath.Switch.environment t.root t.switch in
+    if OpamFilename.exists fn then
+      OpamFile.Environment.read fn
+    else
+      let update = compute_env_updates t in
+      OpamFile.Environment.write fn update;
+      update
+  in
+  let add_to_path = OpamPath.Switch.bin t.root t.switch t.switch_config in
+  let new_path =
+    "PATH",
+    (if force_path then PlusEq else EqPlusEq),
+    OpamFilename.Dir.to_string add_to_path,
+    Some "Current opam switch binary dir" in
+  let switch =
+    if opamswitch then
+      [ "OPAMSWITCH", Eq, OpamSwitch.to_string t.switch, None ]
+    else [] in
+  new_path :: switch @ update
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
@@ -2973,6 +2979,14 @@ let install_compiler t ~quiet:_ switch compiler =
     if not (OpamConsole.debug ()) then
       OpamFilename.rmdir switch_dir;
     raise e
+
+let write_switch_state t =
+  if not OpamStateConfig.(!r.dryrun) then
+    let f = OpamPath.Switch.state t.root t.switch in
+    OpamFile.Environment.write
+      (OpamPath.Switch.environment t.root t.switch)
+      (compute_env_updates t);
+    OpamFile.State.write f (switch_state t)
 
 (* write the new version in the configuration file *)
 let update_switch_config t switch =

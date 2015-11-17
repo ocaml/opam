@@ -125,6 +125,8 @@ module Switch = struct
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
+  let environment t a = root t a // "environment"
+
   module Default = struct
 
     (** Visible files that can be redirected using

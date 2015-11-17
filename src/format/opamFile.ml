@@ -443,6 +443,34 @@ module Pinned_legacy = LineFile(struct
 
   end)
 
+
+(** Cached environment updates (<switch>/environment) *)
+
+module Environment = LineFile(struct
+
+    let internal = "environment"
+
+    type t = env_update list
+
+    let empty = []
+
+    let pp =
+      Pp.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
+      Pp.identity ^+
+      Pp.of_pair "env_update_op"
+        (env_update_op_of_string, string_of_env_update_op) ^+
+      Pp.identity ^+
+      Pp.opt Pp.singleton
+
+    let pp =
+       pp -|
+       Pp.map_list
+         (Pp.pp
+           (fun ~pos:_ (a, (b, (c, d))) -> (a, b, c, d))
+           (fun (a, b, c, d) -> (a, (b, (c, d)))))
+
+  end)
+
 (** (2) Part of the public repository format *)
 
 (** repository index files ("urls.txt"): table

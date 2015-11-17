@@ -394,6 +394,9 @@ end
     migrate from 1.2 repository, and for reinstall) *)
 module PkgList: IO_FILE with type t = package_set
 
+(** Cached environment updates (<switch>/environment) *)
+module Environment: IO_FILE with type t = env_update list
+
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig
 

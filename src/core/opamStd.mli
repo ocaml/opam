@@ -142,6 +142,8 @@ end
 
 module List : sig
 
+  val cons: 'a -> 'a list -> 'a list
+
   (** Convert list items to string and concat. [sconcat_map sep f x] is equivalent
       to String.concat sep (List.map f x) but tail-rec. *)
   val concat_map:

@@ -61,6 +61,8 @@ let max_print = 100
 
 module OpamList = struct
 
+  let cons x xs = x :: xs
+
   let concat_map ?(left="") ?(right="") ?nil sep f =
     function
     | [] -> (match nil with Some s -> s | None -> left^right)
