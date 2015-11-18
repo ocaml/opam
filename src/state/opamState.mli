@@ -20,61 +20,29 @@ open OpamTypes
 
 (** Client state *)
 module Types: sig
-  type t = {
-    partial: bool;
-  (* type global = { *)
-    root: OpamPath.t;
-    (** The global OPAM root path *)
 
-    config: OpamFile.Config.t;
-    (** The main configuration file *)
-
-    aliases: OpamFile.Aliases.t;
-    (** The association list between switch and compiler *)
-
-  (* } *)
-
-  (* type repos = { *)
-    repositories: OpamFile.Repo_config.t repository_name_map;
-    (** The list of repositories *)
-
-    compilers: compiler_set;
-    (** The list of compiler available to install *)
-
-    package_index: OpamFile.Package_index.t;
-    (** Package index *)
-
-    compiler_index: OpamFile.Compiler_index.t;
-    (** Compiler index *)
-  (* } *)
-
-  (* type switch = { *)
+  type switch_state = {
     switch: switch;
-    (** The current active switch *)
+    (** The switch name *)
 
     compiler: compiler;
-    (** The current compiler name (corresponding to a .comp file) *)
+    (** The compiler name (corresponding to a .comp file) *)
 
     compiler_version: compiler_version Lazy.t;
-    (** The current version of the compiler *)
+    (** The version of the compiler *)
 
     compiler_packages: package_set;
     (** The packages that form the base of the current compiler *)
 
     switch_config: OpamFile.Dot_config.t;
-    (** The contents of the global configuration file for this
-        switch *)
-
-    opams: OpamFile.OPAM.t package_map;
-    (** The list of OPAM files (excluding the ones that exist purely
-        as overlays) *)
+    (** The contents of the global configuration file for this switch *)
 
     packages: package_set;
     (** The list of packages *)
 
     available_packages: package_set Lazy.t;
     (** The list of packages, keeping the one available for the
-        current compiler version *)
+        compiler version *)
 
     pinned: pin_option name_map;
     (** The list of pinned packages *)
@@ -88,6 +56,42 @@ module Types: sig
     reinstall: package_set;
     (** The list of packages which needs to be reinsalled *)
   }
+
+  type t = {
+    partial: bool;
+    root: OpamPath.t;
+    (** The global OPAM root path *)
+
+    config: OpamFile.Config.t;
+    (** The main configuration file *)
+
+    aliases: OpamFile.Aliases.t;
+    (** The association list between switch and compiler *)
+
+    repositories: OpamFile.Repo_config.t repository_name_map;
+    (** The list of repositories *)
+
+    compilers: compiler_set;
+    (** The list of compiler available to install *)
+
+    package_index: OpamFile.Package_index.t;
+    (** Package index *)
+
+    compiler_index: OpamFile.Compiler_index.t;
+    (** Compiler index *)
+
+    switches : switch_state OpamSwitch.Map.t;
+    (** Map of all available switches *)
+
+    opams: OpamFile.OPAM.t package_map;
+    (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
+
+    switch_current: switch;
+    (** The current active switch *)
+
+  }
+
+  val get_switch : t -> switch -> switch_state
 
 end
 

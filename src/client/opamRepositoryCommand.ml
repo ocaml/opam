@@ -250,6 +250,7 @@ let update_dev_packages t ~verbose packages =
 let fix_package_descriptions t ~verbose =
   log "Updating %a/ ...\n"
     (slog (OpamFilename.prettify_dir @* OpamPath.packages_dir)) t.root;
+  let ct = get_switch t t.switch_current in
 
   let global_index = OpamState.package_state t in
   let repo_index   = OpamState.package_repository_state t in
@@ -288,7 +289,7 @@ let fix_package_descriptions t ~verbose =
   log "missing-installed: %a" (slog OpamPackage.Set.to_string) missing_installed_packages;
 
   let deleted_packages =
-    t.packages -- OpamPackage.keys repo_index -- OpamState.pinned_packages t
+    ct.packages -- OpamPackage.keys repo_index -- OpamState.pinned_packages t
   in
   log "deleted-packages: %a" (slog OpamPackage.Set.to_string) deleted_packages;
 
@@ -378,7 +379,7 @@ let fix_package_descriptions t ~verbose =
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
       let file =
-        OpamPath.Switch.Overlay.opam t.root t.switch (OpamPackage.name nv) in
+        OpamPath.Switch.Overlay.opam t.root ct.switch (OpamPackage.name nv) in
       let file =
         if OpamFilename.exists file then file else OpamPath.opam t.root nv in
       if not (OpamFilename.exists file) then
@@ -392,7 +393,7 @@ let fix_package_descriptions t ~verbose =
           OpamConsole.warning
             "%s is installed in %s but it does not have metadata."
             (OpamPackage.to_string nv) switches_string
-    ) t.installed;
+    ) ct.installed;
 
   let updates = {
     created = new_packages;

@@ -26,25 +26,26 @@ module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
 let process_dot_install t nv =
+  let ct = get_switch t t.switch_current in
   if OpamStateConfig.(!r.dryrun) then
       OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
   else
-  let build_dir = OpamPath.Switch.build t.root t.switch nv in
+  let build_dir = OpamPath.Switch.build t.root ct.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
       log "Installing %s.\n" (OpamPackage.to_string nv);
       let name = OpamPackage.name nv in
-      let config_f = OpamPath.Switch.build_config t.root t.switch nv in
+      let config_f = OpamPath.Switch.build_config t.root ct.switch nv in
       let config = OpamFile.Dot_config.safe_read config_f in
-      let install_f = OpamPath.Switch.build_install t.root t.switch nv in
+      let install_f = OpamPath.Switch.build_install t.root ct.switch nv in
       let install = OpamFile.Dot_install.safe_read install_f in
 
       (* .install *)
-      let install_f = OpamPath.Switch.install t.root t.switch name in
+      let install_f = OpamPath.Switch.install t.root ct.switch name in
       OpamFile.Dot_install.write install_f install;
 
       (* .config *)
-      let dot_config = OpamPath.Switch.Default.config t.root t.switch name in
+      let dot_config = OpamPath.Switch.Default.config t.root ct.switch name in
       OpamFilename.mkdir (OpamFilename.dirname dot_config);
       OpamFile.Dot_config.write dot_config config;
 
@@ -61,7 +62,7 @@ let process_dot_install t nv =
 
       (* Install a list of files *)
       let install_files exec dst_fn files_fn =
-        let dst_dir = dst_fn t.root t.switch name in
+        let dst_dir = dst_fn t.root ct.switch name in
         let files = files_fn install in
         if not (OpamFilename.exists_dir dst_dir) then (
           log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
@@ -78,8 +79,8 @@ let process_dot_install t nv =
 
       let module P = OpamPath.Switch in
       let module I = OpamFile.Dot_install in
-      let instdir_gen fpath r s _ = fpath r s t.switch_config in
-      let instdir_pkg fpath r s n = fpath r s t.switch_config n in
+      let instdir_gen fpath r s _ = fpath r s ct.switch_config in
+      let instdir_pkg fpath r s n = fpath r s ct.switch_config n in
 
       (* bin *)
       install_files true (instdir_gen P.bin) I.bin;
@@ -147,6 +148,7 @@ let process_dot_install t nv =
    * apply the patches
    * substitute the files *)
 let prepare_package_build t nv =
+  let ct = get_switch t t.switch_current in
   let opam = OpamState.opam t nv in
 
   (* Substitute the patched files.*)
@@ -174,7 +176,7 @@ let prepare_package_build t nv =
     ignore (iter_patches print_apply)
   else
 
-  let p_build = OpamPath.Switch.build t.root t.switch nv in
+  let p_build = OpamPath.Switch.build t.root ct.switch nv in
 
   OpamFilename.mkdir p_build;
   OpamFilename.in_dir p_build (fun () ->
@@ -191,7 +193,7 @@ let prepare_package_build t nv =
   (* Apply the patches *)
   let patching_errors =
     iter_patches (fun base ->
-      let root = OpamPath.Switch.build t.root t.switch nv in
+      let root = OpamPath.Switch.build t.root ct.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
       print_apply base;
       OpamFilename.patch patch p_build)
@@ -209,20 +211,21 @@ let prepare_package_build t nv =
   if patching_errors <> [] then (
     let msg =
       Printf.sprintf "These patches didn't apply at %s:\n%s"
-        (OpamFilename.Dir.to_string (OpamPath.Switch.build t.root t.switch nv))
+        (OpamFilename.Dir.to_string (OpamPath.Switch.build t.root ct.switch nv))
         (OpamStd.Format.itemize (fun x -> x) patching_errors)
     in
     failwith msg
   )
 
 let download_package t nv =
+  let ct = get_switch t t.switch_current in
   log "download_package: %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then Done (`Successful None) else
   let dir =
-    try match OpamPackage.Name.Map.find name t.pinned with
+    try match OpamPackage.Name.Map.find name ct.pinned with
       | Version _ -> Some (OpamPath.dev_package t.root nv)
-      | _ -> Some (OpamPath.Switch.dev_package t.root t.switch name)
+      | _ -> Some (OpamPath.Switch.dev_package t.root ct.switch name)
     with Not_found -> None
   in
   let of_dl = function
@@ -248,12 +251,13 @@ let download_package t nv =
   OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
 
 let extract_package t source nv =
+  let ct = get_switch t t.switch_current in
   log "extract_package: %a from %a"
     (slog OpamPackage.to_string) nv
     (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
     source;
   if OpamStateConfig.(!r.dryrun) then () else
-  let build_dir = OpamPath.Switch.build t.root t.switch nv in
+  let build_dir = OpamPath.Switch.build t.root ct.switch nv in
   OpamFilename.rmdir build_dir;
   let () =
     match source with
@@ -294,32 +298,35 @@ let compilation_env t opam =
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
   let open OpamStd.Option.Op in
   let open OpamPackage.Set.Op in
-  let installed = installed +! t.installed in
+  let ct = get_switch t t.switch_current in
+  let installed = installed +! ct.installed in
   let compiler_packages =
-    if OpamPackage.Set.is_empty (t.compiler_packages -- installed) then
-      t.compiler_packages
+    if OpamPackage.Set.is_empty (ct.compiler_packages -- installed) then
+      ct.compiler_packages
     else (* adjust version of installed compiler packages *)
-      let names = OpamPackage.names_of_packages t.compiler_packages in
+      let names = OpamPackage.names_of_packages ct.compiler_packages in
       let installed_base = OpamPackage.packages_of_names installed names in
       installed_base ++
       (* keep version of uninstalled compiler packages *)
-      OpamPackage.packages_of_names t.compiler_packages
+      OpamPackage.packages_of_names ct.compiler_packages
         (OpamPackage.Name.Set.diff names
            (OpamPackage.names_of_packages installed_base))
   in
-  let t =
-    { t with
+  let ct = get_switch t t.switch_current in
+  let ct =
+    { ct with
       installed;
-      installed_roots = (installed_roots +! t.installed_roots) %% installed;
-      reinstall = (reinstall +! t.reinstall) %% installed;
-      pinned = pinned +! t.pinned;
+      installed_roots = (installed_roots +! ct.installed_roots) %% installed;
+      reinstall = (reinstall +! ct.reinstall) %% installed;
+      pinned = pinned +! ct.pinned;
       compiler_packages; }
   in
+  let t = { t with switches = OpamSwitch.Map.add t.switch_current ct t.switches} in
   if not OpamStateConfig.(!r.dryrun) then (
     OpamState.write_switch_state t;
     OpamFile.PkgList.write
-      (OpamPath.Switch.reinstall t.root t.switch)
-      t.reinstall
+      (OpamPath.Switch.reinstall t.root ct.switch)
+      ct.reinstall
   );
   t
 
@@ -347,20 +354,21 @@ let removal_needs_download t nv =
 
 (* Remove a given package *)
 let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
+  let ct = get_switch t t.switch_current in
   log "Removing %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
   let opam = OpamState.opam_opt t nv in
 
-  let dot_install = OpamPath.Switch.install t.root t.switch name in
+  let dot_install = OpamPath.Switch.install t.root ct.switch name in
 
   let remove_job =
     match opam with
     | None      -> OpamConsole.msg "No OPAM file has been found!\n"; Done ()
     | Some opam ->
       let env = compilation_env t opam in
-      let p_build = OpamPath.Switch.build t.root t.switch nv in
+      let p_build = OpamPath.Switch.build t.root ct.switch nv in
       (* We try to run the remove scripts in the folder where it was
          extracted If it does not exist, we try to download and
          extract the archive again, if that fails, we don't really
@@ -404,7 +412,7 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
 
   let remove_files dst_fn files =
     let files = files install in
-    let dst_dir = dst_fn t.root t.switch t.switch_config in
+    let dst_dir = dst_fn t.root ct.switch ct.switch_config in
     List.iter (fun (base, dst) ->
         let dst_file = match dst with
           | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
@@ -413,7 +421,7 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
       ) files in
 
   let remove_files_and_dir ?(quiet=false) dst_fn files =
-    let dir = dst_fn t.root t.switch t.switch_config name in
+    let dir = dst_fn t.root ct.switch ct.switch_config name in
     remove_files (fun _ _ _ -> dir) files;
     if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
     else if not quiet && OpamFilename.exists_dir dir then
@@ -423,13 +431,13 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
   let uninstall_files () =
     (* Remove build/<package> *)
     if not (keep_build || OpamStateConfig.(!r.keep_build_dir)) then
-      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
+      OpamFilename.rmdir (OpamPath.Switch.build t.root ct.switch nv);
 
     (* Remove .config and .install *)
     log "Removing config and install files";
-    OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
+    OpamFilename.remove (OpamPath.Switch.install t.root ct.switch name);
     OpamFilename.remove
-      (OpamPath.Switch.config t.root t.switch t.switch_config name);
+      (OpamPath.Switch.config t.root ct.switch ct.switch_config name);
 
     log "Removing files from .install";
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
@@ -471,16 +479,15 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
       (OpamPackage.version_to_string nv);
   Done ()
 
-
 (* Removes build dir and source cache of package if unneeded *)
 let cleanup_package_artefacts t nv =
+  let ct = get_switch t t.switch_current in
   log "Cleaning up artefacts of %a" (slog OpamPackage.to_string) nv;
-
-  let build_dir = OpamPath.Switch.build t.root t.switch nv in
+  let build_dir = OpamPath.Switch.build t.root ct.switch nv in
   if not OpamStateConfig.(!r.keep_build_dir) && OpamFilename.exists_dir build_dir then
     OpamFilename.rmdir build_dir;
   let name = OpamPackage.name nv in
-  let dev_dir = OpamPath.Switch.dev_package t.root t.switch name in
+  let dev_dir = OpamPath.Switch.dev_package t.root ct.switch name in
   if not (OpamState.is_package_installed t nv) then (
     if OpamFilename.exists_dir dev_dir then (
       log "Cleaning-up the switch repository";
@@ -517,6 +524,7 @@ let remove_package t ?keep_build ?silent nv =
    Assumes the package has already been downloaded to [source].
 *)
 let build_package t source nv =
+  let ct = get_switch t t.switch_current in
   extract_package t source nv;
   let opam = OpamState.opam t nv in
   let commands =
@@ -529,7 +537,7 @@ let build_package t source nv =
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
-  let dir = OpamPath.Switch.build t.root t.switch nv in
+  let dir = OpamPath.Switch.build t.root ct.switch nv in
   let rec run_commands = function
     | (cmd::args)::commands ->
       let text = OpamProcess.make_command_text name ~args cmd in
@@ -556,12 +564,13 @@ let build_package t source nv =
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
 let install_package t nv =
+  let ct = get_switch t t.switch_current in
   let opam = OpamState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamState.filter_env ~opam t) commands in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
-  let dir = OpamPath.Switch.build t.root t.switch nv in
+  let dir = OpamPath.Switch.build t.root ct.switch nv in
   let rec run_commands = function
     | (cmd::args)::commands ->
       let text = OpamProcess.make_command_text name ~args cmd in
