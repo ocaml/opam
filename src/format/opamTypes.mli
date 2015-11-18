@@ -290,18 +290,8 @@ type universe = {
   u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
-  u_depends  : ext_formula package_map;
-  u_depopts  : ext_formula package_map;
-  u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
-  u_pinned   : package_set;
-  u_dev      : package_set; (** packages with a version-controlled upstream *)
-  u_base     : package_set;
-  u_attrs    : (string * package_set) list;
-  (** extra CUDF attributes for the given packages *)
-  u_test     : bool; (** Test dependencies should be honored *)
-  u_doc      : bool; (** Doc dependencies should be honored *)
 }
 
 (** {2 Command line arguments} *)

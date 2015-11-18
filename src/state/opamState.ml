@@ -1509,12 +1509,11 @@ let string_of_conjunction string_of_atom c =
   Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
 
 let pef_package ?(orphans=OpamPackage.Set.empty) t =
-  let ct = get_switch t t.switch_current in 
+  let ct = get_switch t t.switch_current in
   let depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams in
   let depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams in
   let conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams in
   let maintainers = OpamPackage.Map.map OpamFile.OPAM.maintainer t.opams in
-  (* let devs = dev_packages t in *)
   let base = base_packages t in
   let to_atom_ext_formula t =
     let atom (r,v) = Atom (r, v) in
@@ -1568,6 +1567,7 @@ let pef_package ?(orphans=OpamPackage.Set.empty) t =
     let opam = opam t package in
     let available =
       let available_filter t switch =
+        (* XXX here is not necessary to load everything ... *)
         let t = with_switch switch t in
         let env v = 
           if not (OpamVariable.Full.is_global v) then None else
@@ -1613,6 +1613,7 @@ let pef_package ?(orphans=OpamPackage.Set.empty) t =
     match available with
     |None -> None
     |Some _ -> 
+      let ct = get_switch t t.switch_current in 
       let installed =
         let l =
           OpamSwitch.Map.fold (fun switch _ acc ->
@@ -1796,16 +1797,7 @@ let universe ?(orphans=OpamPackage.Set.empty) t action =
     u_action    = action;
     u_installed = ct.installed;
     u_available = Lazy.force ct.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
     u_installed_roots = ct.installed_roots;
-    u_pinned    = pinned_packages t;
-    u_dev       = dev_packages t;
-    u_base      = base_packages t;
-    u_attrs     = [];
-    u_test      = OpamStateConfig.(!r.build_test);
-    u_doc       = OpamStateConfig.(!r.build_doc);
   }
 
 let installed_timestamp t name =
