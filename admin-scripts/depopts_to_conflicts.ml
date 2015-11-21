@@ -6,22 +6,15 @@ open Opam_admin_top;;
 iter_packages ~opam:(fun _ opam ->
     let depopts =
       let formula = OpamFile.OPAM.depopts opam in
-      let names =
-        OpamStd.List.remove_duplicates @@
-        List.map fst @@
-        OpamFormula.atoms @@
-        OpamFormula.formula_of_extended ~filter:(fun _ -> true) @@
-        formula in
+      let atoms =
+        OpamFormula.fold_left
+          (fun acc (n,(flags,_)) ->
+             OpamFormula.Atom (n, (flags, OpamFormula.Empty)) :: acc)
+          [] formula
+      in
       OpamFormula.ors @@
-      List.rev_map (fun n ->
-          let flags =
-            OpamStd.List.remove_duplicates @@
-            OpamFormula.fold_left (fun acc (name,(flags,_)) ->
-                if name = n then flags @ acc else acc)
-              [] formula
-          in
-          OpamFormula.Atom (n, (flags,OpamFormula.Empty)))
-        names
+      OpamStd.List.remove_duplicates @@
+      List.rev atoms
     in
     let conflicts = (* add complement of the depopts as conflicts *)
       let module NM = OpamPackage.Name.Map in
@@ -62,7 +55,7 @@ iter_packages ~opam:(fun _ opam ->
       let add_conflicts =
         let c = OpamFormula.to_disjunction conflicts in
         List.filter (fun f -> not (List.mem f c)) neg_depopts in
-      OpamFormula.ands (conflicts :: [OpamFormula.of_disjunction add_conflicts])
+      OpamFormula.ors (conflicts :: [OpamFormula.of_disjunction add_conflicts])
     in
     let opam = OpamFile.OPAM.with_depopts opam depopts in
     let opam = OpamFile.OPAM.with_conflicts opam conflicts in
