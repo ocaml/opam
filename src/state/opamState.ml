@@ -2017,14 +2017,7 @@ let source t ~shell ?(interactive_only=false) f =
   else s
 
 let expand_env t ?opam (env: env_update list) variables : env =
-  let fenv v =
-    try resolve_variable t ?opam variables v
-    with Not_found ->
-      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
-      None
-  in
   List.rev_map (fun (ident, op, string, comment) ->
-    let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
       try OpamStd.Env.reset_value ~prefix (OpamStd.Sys.path_sep ())
@@ -2075,6 +2068,12 @@ let compute_env_updates t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
 *)
+  let fenv ?opam v =
+    try resolve_variable t ?opam OpamVariable.Map.empty v
+    with Not_found ->
+      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      None
+  in
   let man_path =
     let open OpamStd.Sys in
     match os () with
@@ -2088,11 +2087,19 @@ let compute_env_updates t =
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        OpamFile.OPAM.env (opam t nv)
+        let opam = opam t nv in
+        List.map (fun (name,op,str,cmt) ->
+            let s = OpamFilter.expand_string (fenv ~opam) str in
+            Printf.eprintf "%s: %S => %S\n" (OpamPackage.to_string nv) str s;
+            name, op, s, cmt)
+          (OpamFile.OPAM.env opam)
         @ acc)
       t.installed []
   in
-  let comp_env = OpamFile.Comp.env (compiler_comp t t.compiler) in
+  let comp_env =
+    List.map (fun (name,op,str,cmt) ->
+        name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
+      (OpamFile.Comp.env (compiler_comp t t.compiler)) in
   let root =
     let current = t.root in
     let default = OpamStateConfig.(default.root_dir) in
