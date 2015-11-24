@@ -141,7 +141,9 @@ let edit t name =
     in
     match installed_nv with
     | None -> None
-    | Some nv -> Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
+    | Some nv ->
+      OpamState.write_switch_state t;
+      Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
 (* unused ?
 let update_set set old cur save =
   if OpamPackage.Set.mem old set then
