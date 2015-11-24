@@ -14,12 +14,13 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamStd.AbstractString
+open OpamTypes
+open OpamStateTypes
 
-let system = of_string "system"
+val load: ?lock:lock_kind -> unit -> global_state
 
-let not_installed s =
-  OpamConsole.error_and_exit
-    "The selected compiler switch %s is not installed. Please choose a \
-     different one using the 'opam switch' command."
-    (to_string s)
+(** The set of all installed packages, in any switch *)
+val all_installed: global_state -> package_set
+
+val fold_switches:
+  (switch -> OpamFile.State.t -> 'a -> 'a) -> global_state -> 'a -> 'a

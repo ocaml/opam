@@ -203,7 +203,16 @@ SRC_state = \
   opamStateConfig.ml \
   opamOCaml.ml \
   opamScript.ml \
-  opamState.ml \
+  opamStateTypes.mli \
+  opamGlobalState.ml \
+  opamPackageVar.ml \
+  opamFileHandling.ml \
+  opamRepositoryState.ml \
+  opamSwitchState.ml \
+  opamSwitchAction.ml \
+  opamEnv.ml \
+  opamPinned.ml \
+  opamUpdate.ml \
   opamAction.ml \
   opamSolution.ml
 

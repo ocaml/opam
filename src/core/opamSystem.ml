@@ -183,10 +183,10 @@ let list kind dir =
   with File_not_found _ -> []
 
 let files_with_links =
-  list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
+  list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> false)
 
 let files_all_not_dir =
-    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
+    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> false)
 
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)

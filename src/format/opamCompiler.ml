@@ -24,7 +24,7 @@ module Version = struct
   include OpamStd.AbstractString
 
   let of_string str =
-    if OpamStd.String.contains str '+' then
+    if OpamStd.String.contains_char str '+' then
       failwith "'+' is not allowed in compiler versions";
     of_string str
 

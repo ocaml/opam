@@ -29,6 +29,12 @@ type variable_contents =
 (** Pretty print of variable contents *)
 val string_of_variable_contents: variable_contents -> string
 
+(** Variable contents constructors *)
+
+val string: string -> variable_contents
+val int: int -> variable_contents
+val bool: bool -> variable_contents
+val dirname: OpamFilename.Dir.t -> variable_contents
 
 module Full: sig
 
@@ -59,5 +65,9 @@ module Full: sig
 
   (** Create a global variable *)
   val global: variable -> t
+
+  (** Looks up for an environment override through the environment, by means of
+      [OPAMVAR_glovar] or [OPAMVAR_pkg_pkgvar] *)
+  val read_from_env: t -> variable_contents option
 
 end

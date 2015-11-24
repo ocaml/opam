@@ -14,12 +14,31 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamStd.AbstractString
+open OpamTypes
+open OpamStateTypes
 
-let system = of_string "system"
+(** Add overlay files for a pinned package. If no definition is found
+    use a minimal OPAM file unless [template] is set to [true]. *)
+val add_overlay:
+  ?template:bool -> ?version:version -> repos_state ->
+  switch -> name -> pin_option -> unit
 
-let not_installed s =
-  OpamConsole.error_and_exit
-    "The selected compiler switch %s is not installed. Please choose a \
-     different one using the 'opam switch' command."
-    (to_string s)
+(** Remove all overlay files *)
+val remove_overlay: global_state -> switch -> name -> unit
+
+(** Returns the version the package is pinned to. @raise [Not_found] *)
+val version: switch_state -> name -> version
+
+(** Returns the package with the pinned-to version from a pinned package name.
+    @raise [Not_found] *)
+val package: switch_state -> name -> package
+
+(** Returns the package with the pinned-to version from a package name, if
+    pinned *)
+val package_opt: switch_state -> name -> package option
+
+(** The set of all pinned packages with their pinning versions *)
+val packages: switch_state -> package_set
+
+(** Looks up an 'opam' file for the given named package in a source directory *)
+val find_opam_file_in_source: name -> dirname -> filename option

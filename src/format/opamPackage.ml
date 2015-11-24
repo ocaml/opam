@@ -99,7 +99,8 @@ let version t = t.version
 let sep = '.'
 
 let of_string_opt s =
-  if OpamStd.String.contains s ' ' || OpamStd.String.contains s '\n' then
+  if OpamStd.String.contains_char s ' ' ||
+     OpamStd.String.contains_char s '\n' then
     None
   else match OpamStd.String.cut_at s sep with
     | None        -> None

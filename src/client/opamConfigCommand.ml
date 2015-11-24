@@ -66,7 +66,10 @@ let list ns =
       let nv = OpamState.get_package t name in
       let opam = OpamState.opam t nv in
       let env = OpamState.filter_env ~opam t in
-      let conf = OpamState.dot_config t name in
+      let conf =
+        OpamFile.Dot_config.safe_read
+          (OpamPath.Switch.config t.root t.switch name)
+      in
       let pkg_vars =
         OpamStd.List.filter_map (fun (vname, desc) ->
             let v = OpamVariable.(Full.create name (of_string vname)) in

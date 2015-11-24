@@ -283,11 +283,14 @@ type universe = {
   u_installed_roots: package_set;
   u_pinned   : package_set;
   u_dev      : package_set; (** packages with a version-controlled upstream *)
+  (* NOTE: only needed for the dev depflag, remove and pre-compute instead *)
   u_base     : package_set;
   u_attrs    : (string * package_set) list;
-  (** extra CUDF attributes for the given packages *)
+
+  (* extra CUDF attributes for the given packages *)
   u_test     : bool; (** Test dependencies should be honored *)
   u_doc      : bool; (** Doc dependencies should be honored *)
+  (* NOTE: pre-compute these also *)
 }
 
 (** {2 Command line arguments} *)

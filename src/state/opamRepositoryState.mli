@@ -14,12 +14,21 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamStd.AbstractString
+open OpamTypes
 
-let system = of_string "system"
+open OpamStateTypes
 
-let not_installed s =
-  OpamConsole.error_and_exit
-    "The selected compiler switch %s is not installed. Please choose a \
-     different one using the 'opam switch' command."
-    (to_string s)
+(** Caching of repository loading (marshall of all parsed opam files) *)
+module Cache: sig
+  val save: repos_state -> unit
+  val load: dirname -> OpamFile.OPAM.t package_map option
+  val remove: unit -> unit
+end
+
+val load:
+  ?save_cache:bool -> ?lock:lock_kind -> global_state -> repos_state
+
+(** Downloads the repository-mirrored package archive into
+    $opam/archives/$name.$version+opam.tar.gz if not already there, and
+    returns the file name if found either way *)
+val download_archive: repos_state -> package -> filename option OpamProcess.job
