@@ -253,6 +253,9 @@ val gen_switch_global_config: dirname -> switch -> OpamFile.Dot_config.t
 (** (Re-)install the configuration for a given root and switch *)
 val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
+(** Initialises a new switch with the given name in the given opam root *)
+val create_empty_switch: dirname -> switch -> unit
+
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
 

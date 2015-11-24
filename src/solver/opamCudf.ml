@@ -626,8 +626,8 @@ let get_final_universe ~version_map univ req =
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
       make_conflicts ~version_map univ r
-    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _} ->
-      fail "inconsistent return value."
+    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
+      (* fail "inconsistent return value." *)
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
       check_request ~version_map univ req

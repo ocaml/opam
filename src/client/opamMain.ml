@@ -885,17 +885,74 @@ let switch =
   let all =
     mk_flag ["a";"all"]
       "List all the compilers which can be installed on the system." in
+  let packages =
+    mk_flag ["packages"]
+      "Use packages rather than compiler definitions" in
 
   let switch global_options
       build_options command alias_of print_short installed all
-      no_switch params =
+      no_switch packages params =
     apply_global_options global_options;
     apply_build_options build_options;
     let mk_comp alias = match alias_of with
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
     let quiet = (fst global_options).quiet in
-    match command, params with
+    if packages then match command, params with
+      | None      , []
+      | Some `list, [] -> assert false
+      | Some `install, (name::_ as pkgs) ->
+        let switch = OpamSwitch.of_string name in
+        let packages =
+          OpamPackage.Set.of_list (List.rev_map OpamPackage.of_string pkgs)
+        in
+        OpamState.create_empty_switch OpamStateConfig.(!r.root_dir) switch;
+        let t = OpamState.load_state "switch-install" switch in
+        let compiler_packages =
+          OpamPackage.Set.of_list
+            (OpamSolver.dependencies ~depopts:true ~build:true ~installed:false
+               (OpamState.universe t Init)
+               packages)
+        in
+        let t = { t with OpamState.Types.compiler_packages } in
+        OpamState.write_switch_state t;
+        OpamStateConfig.update
+          ~current_switch:switch
+          ~switch_from:`Default ();
+        let _t =
+          if no_switch then t
+          else OpamState.update_switch_config t switch
+        in
+        Client.fixup ();
+        `Ok ()
+      | Some `export, [filename] ->
+        Client.SWITCH.export
+          (if filename = "-" then None else Some (OpamFilename.of_string filename));
+        `Ok ()
+      | Some `import, [filename] ->
+        Client.SWITCH.import
+          (if filename = "-" then None else Some (OpamFilename.of_string filename));
+        `Ok ()
+      | Some `remove, switches ->
+        List.iter
+          (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch))
+          switches;
+        `Ok ()
+      | Some `reinstall, [switch] ->
+        Client.SWITCH.reinstall (OpamSwitch.of_string switch);
+        `Ok ()
+      | Some `current, [] ->
+        Client.SWITCH.show ();
+        `Ok ()
+      | Some `set, [switch]
+      | Some `default switch, [] ->
+        Client.SWITCH.switch
+          ?compiler:(if alias_of = None then None else Some (mk_comp switch))
+          ~quiet
+          (OpamSwitch.of_string switch);
+        `Ok ()
+      | command, params -> bad_subcommand commands ("switch", command, params)
+    else match command, params with
     | None      , []
     | Some `list, [] ->
       Client.SWITCH.list ~print_short ~installed ~all;
@@ -938,7 +995,7 @@ let switch =
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_switch $params)),
+             $installed $all $no_switch $packages $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
