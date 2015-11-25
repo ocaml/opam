@@ -6,7 +6,7 @@ open Opam_admin_top;;
 #require "re";;
 
 let github_re =
-  Re.compile (Re_perl.re "https?://([^/]*github.com/.*)/archive/.*");;
+  Re.compile (Re_perl.re "([^/]*github.com/.*)/archive/.*");;
 
 iter_packages_gen @@ fun nv ~prefix:_ ~opam ~descr:_ ~url ~dot_install:_ ->
 let opam =
@@ -14,14 +14,18 @@ let opam =
     match url with
     | None -> opam
     | Some u ->
-        match OpamFile.URL.(kind u, url u) with
-        | `http, (addr,None) when Re.execp github_re addr ->
-            let substrings = Re.exec github_re addr in
-            let git = Printf.sprintf "git://%s" (Re.get substrings 1) in
-            let opam =
-              OpamFile.OPAM.with_dev_repo opam (Some (OpamTypes.Git (git,None)))
-            in
-            OpamFile.OPAM.with_opam_version opam (OpamVersion.of_string "1.2")
-        | _ -> opam
+      let url = OpamFile.URL.url u in
+      if url.OpamUrl.backend = `http &&
+         Re.execp github_re url.OpamUrl.path then
+        let substrings = Re.exec github_re url.OpamUrl.path in
+        let dev_url =
+          { OpamUrl.transport = "https";
+            path = Re.get substrings 1;
+            hash = None;
+            backend = `git }
+        in
+        let opam = OpamFile.OPAM.with_dev_repo opam dev_url in
+        OpamFile.OPAM.with_opam_version opam (OpamVersion.of_string "1.2")
+      else opam
 in
 opam, `Keep, `Keep, `Keep

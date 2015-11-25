@@ -372,6 +372,10 @@ module OPAM: sig
   val with_descr_opt: t -> Descr.t option -> t
   val with_url: t -> URL.t -> t
   val with_url_opt: t -> URL.t option -> t
+
+  (** Prints to a string, while keeping the format of the original file as much as possible *)
+  val to_string_with_preserved_format: filename -> t -> string
+
 end
 
 (** Compiler aliases: [$opam/aliases] *)

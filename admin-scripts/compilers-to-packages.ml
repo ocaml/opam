@@ -1,6 +1,7 @@
 #!/usr/bin/env opam-admin.top
 
 #directory "+../opam-lib";;
+#directory "+../re";;
 
 (**************************************************************************)
 (*                                                                        *)
@@ -20,6 +21,59 @@
 open OpamTypes
 open OpamProcess.Job.Op
 open Opam_admin_top
+;;
+
+let vars_new_1_2 = [ "compiler"; "ocaml-native"; "ocaml-native-tools";
+                     "ocaml-native-dynlink"; "arch" ]
+
+let replace_vars_str = function
+  | "compiler" -> "ocaml:compiler"
+  | "preinstalled" -> "ocaml:preinstalled"
+  | "ocaml-version" -> "ocaml:version"
+  | "ocaml-native" -> "ocaml:native"
+  | "ocaml-native-tools" -> "ocaml:native-tools"
+  | "ocaml-native-dynlink" -> "ocaml:native-dynlink"
+  | v -> v
+
+let replace_vars v = OpamVariable.of_string (replace_vars_str (OpamVariable.to_string v))
+
+let filter_string =
+  let rex =
+    Re.(compile ( seq [
+        str "%{";
+        rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")]);
+        str "}%";
+      ]))
+  in
+  Re_pcre.substitute ~rex ~subst:(fun s ->
+      "%{" ^ replace_vars_str (String.sub s 2 (String.length s - 4)) ^ "}%")
+
+let rec map_filter = function
+  | FIdent ([],i,df) -> FIdent ([], replace_vars i, df)
+  | FString s -> FString (filter_string s)
+  | FBool _ | FIdent _ | FUndef as f -> f
+  | FOp (f1,op,f2) -> FOp (map_filter f1, op, map_filter f2)
+  | FAnd (f1,f2) -> FAnd (map_filter f1, map_filter f2)
+  | FOr (f1,f2) -> FOr (map_filter f1, map_filter f2)
+  | FNot f -> FNot (map_filter f)
+
+let filter_vars_optlist ol =
+  List.map (fun (x, filter) -> x, OpamStd.Option.Op.(filter >>| map_filter)) ol
+
+let filter_args sl =
+  List.map
+    (fun (s, filter) ->
+       (match s with
+        | CString s -> CString (filter_string s)
+        | CIdent i -> CIdent (replace_vars_str i)),
+       OpamStd.Option.Op.(filter >>| map_filter))
+    sl
+
+let filter_vars_commands ol =
+  List.map
+    (fun (args, filter) -> filter_args args,
+                           OpamStd.Option.Op.(filter >>| map_filter))
+    ol
 ;;
 
 iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
@@ -61,12 +115,13 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
     |> O.with_build @ build
     |> O.with_maintainer @ [ "contact@ocamlpro.com" ]
     |> O.with_patches @ List.map nofilter patches
+    |> O.with_env @ OpamFile.Comp.env comp
+    |> O.with_flags @ [Pkgflag_Compiler]
   in
   (match OpamFile.Comp.src comp with
    | None -> ()
    | Some address ->
-     let adr,kind = OpamTypesBase.parse_url address in
-     let url = OpamFile.URL.create kind adr in
+     let url = OpamFile.URL.create address in
      OpamFile.URL.write (OpamRepositoryPath.url repo prefix nv) url);
   OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
   OpamStd.Option.iter
@@ -89,65 +144,36 @@ iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
   comp, `Keep
 ;;
 
+module OF = OpamFile.OPAM
+;;
+
 iter_packages ~opam:(fun nv opam ->
-    let ocaml_version = OpamFile.OPAM.ocaml_version opam in
-    let ocaml_version_formula, available =
-      match ocaml_version with
-      | None ->
-        let available = OpamFile.OPAM.available opam in
-        let rec aux = function
-          | FOp (FIdent ([],var,None), op, FString v)
-            when OpamVariable.to_string var = "ocaml-version" ->
-            Atom (op, OpamPackage.Version.of_string v)
-          | FNot f ->
-            OpamFormula.neg (fun (op,v) -> OpamFormula.neg_relop op, v)
-              (aux f)
-          | FAnd (f1,f2) -> OpamFormula.ands [aux f1; aux f2]
-          | FOr (f1,f2) -> OpamFormula.ors [aux f1; aux f2]
-          | _ -> Empty
-        in
-        let ocaml_dep_formula = aux available in
-        let rec aux =
-          function
-          | FOp (FIdent ([],var,None), op, FString v)
-            when OpamVariable.to_string var = "ocaml-version" ->
-              None
-          | FNot f -> OpamStd.Option.map (fun f -> FNot f) (aux f)
-          | FAnd (f1,f2) -> (match aux f1, aux f2 with
-              | Some f1, Some f2 -> Some (FAnd (f1,f2))
-              | None, f | f, None -> f)
-          | FOr (f1,f2) -> (match aux f1, aux f2 with
-              | Some f1, Some f2 -> Some (FOr (f1,f2))
-              | None, None -> None
-              | None, f | f, None ->
-                OpamConsole.error_and_exit "Unconvertible 'available' field in %s"
-                  (OpamPackage.to_string nv))
-          | f -> Some f
-        in
-        let rem_available =
-          OpamStd.Option.default (FBool true) (aux available)
-        in
-        ocaml_dep_formula, rem_available
-      | Some f ->
-        OpamFormula.map (fun (op,v) ->
-            Atom (op, OpamPackage.Version.of_string
-                    (OpamCompiler.Version.to_string v))
-          ) f,
-        OpamFile.OPAM.available opam
-    in
-    let depends = OpamFormula.(
-        And (Atom (OpamPackage.Name.of_string "ocaml",
-                   ([],ocaml_version_formula)),
-             OpamFile.OPAM.depends opam)
-      )
-    in
-    let opam = OpamFile.OPAM.with_ocaml_version opam None in
     if OpamPackage.name_to_string nv <> "ocaml" then
-      let opam = OpamFile.OPAM.with_depends opam depends in
-      let opam = OpamFile.OPAM.with_available opam available in
+      let available = map_filter (OF.available opam) in
+      let available =
+        match OF.ocaml_version opam with
+        | None -> available
+        | Some cstr ->
+          let filter = OpamFormula.
+          OpamFormula.ands [cstr; available]
+      in
+      let opam = OpamFile.OPAM.with_ocaml_version opam OpamFormula.Empty in
+      let opam = OF.with_available opam available in
+      let opam =
+        OF.with_build opam (filter_vars_commands (OF.build opam)) in
+      let opam =
+        OF.with_install opam (filter_vars_commands (OF.install opam)) in
+      let opam =
+        OF.with_features opam
+          (List.map (fun (a,b,f) -> a, b, map_filter f) (OF.features opam)) in
+      let opam = OF.with_opam_version opam (OpamVersion.of_string "1.3") in
+      let opam = OF.with_patches opam (filter_vars_optlist (OF.patches opam)) in
+      let opam = OF.with_libraries opam (filter_vars_optlist (OF.libraries opam)) in
+      let opam = OF.with_syntax opam (filter_vars_optlist (OF.syntax opam)) in
+      let opam = OF.with_messages opam (filter_vars_optlist (OF.messages opam)) in
+      let opam = OF.with_post_messages opam (filter_vars_optlist (OF.post_messages opam)) in
       opam
     else opam)
   ()
-  (* Warning : no conversion done on the _variable_ ocaml-version *)
 ;;
 

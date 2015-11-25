@@ -278,7 +278,7 @@ let string_of_commands commands =
 *)
 
 let compilation_env t opam =
-  let env0 = OpamState.get_full_env ~opam ~force_path:true t in
+  let env0 = OpamState.get_full_env ~force_path:true t in
   let env1 = [
     ("MAKEFLAGS", "", None);
     ("MAKELEVEL", "", None);
@@ -289,7 +289,7 @@ let compilation_env t opam =
      OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
      None)
   ] @ env0 in
-  OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
+  OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
   let open OpamStd.Option.Op in

@@ -87,7 +87,9 @@ let iter_packages_gen ?(quiet=false) f =
       let changed = ref false in
       let upd () = changed := true; incr changed_files in
       if opam <> opam2 then
-        (upd (); OpamFile.OPAM.write opam_file opam2);
+        (upd ();
+         let s = OpamFile.OPAM.to_string_with_preserved_format opam_file opam2 in
+         OpamFilename.write opam_file s);
       if descr <> descr2 then
         (upd (); wopt OpamFile.Descr.write descr_file descr2);
       if url <> url2 then
