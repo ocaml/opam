@@ -112,12 +112,28 @@ let atom2cudf universe version_map (name,cstr) =
 
 let pefcudf_aux (switch,switches,profiles,depopts,installed) tables pefpkglist =
   let options = { Opam.Opamcudf.switch = switch; switches; profiles; depopts} in
-  let extras = [ ("reinstall",("reinstall", `Bool (Some false))); ] in
   let cudfpkglist =
     List.map (fun pkg ->
-      if (installed && (List.mem switch pkg#installedlist)) || not installed then
-        let pl = Opam.Opamcudf.tocudf tables ~options ~extras pkg in
-        List.fold_left (fun acc1 p -> p :: acc1) [] pl
+      let reinstallist =
+        try OpamStd.String.split (pkg#get_extra "reinstall") ','
+        with Not_found -> []
+      in
+      if (installed && (List.mem switch pkg#installedlist)) || not installed then (
+        let pl = Opam.Opamcudf.tocudf tables ~options pkg in
+        List.fold_left (fun acc1 p ->
+          let sw =
+            try Cudf.lookup_package_property p "switch"
+            with Not_found -> failwith "mandatory field switch not found"
+          in
+          let p =
+            if List.mem sw reinstallist then
+              { p with pkg_extra = ("reinstall",`Bool true) :: p.pkg_extra }
+            else 
+              p
+          in
+          p :: acc1
+        ) [] pl
+      )
       else []
     ) pefpkglist
   in
@@ -139,16 +155,6 @@ let pefcudflist universe ?(depopts=false) ~build opam_packages =
     | Reinstall (reinstall , _ ) -> reinstall
     | _ -> OpamPackage.Set.empty
   in
-  OpamPackage.Set.iter (fun p ->
-    let name = OpamPackage.name p in
-    let version = OpamPackage.version p in
-    let n = OpamPackage.Name.to_string name in
-    let v = OpamPackage.Version.to_string version in
-    try
-      let pkg = Hashtbl.find pefuniv (n,v) in
-      Hashtbl.replace pefuniv (n,v) (pkg#add_extra "reinstall" "true")
-    with Not_found -> ()
-  ) reinstall;
   let pefpkglist =
     OpamPackage.Set.fold (fun p acc -> 
       let name = OpamPackage.name p in

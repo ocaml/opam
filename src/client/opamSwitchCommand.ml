@@ -248,14 +248,12 @@ let install_packages switch compiler =
     package_error p;
     OpamStd.Sys.exit 10
   | [] ->
+    let request = {(OpamSolver.request ()) with wish_upgrade = to_install } in
     let solution =
       OpamSolution.resolve t (Switch roots)
         ~orphans:OpamPackage.Set.empty
-        { wish_install = [];
-          wish_remove  = [];
-          wish_upgrade = to_install;
-          criteria = `Default;
-          extra_attributes = []; } in
+        (OpamSwitch.Map.singleton t.switch_current request)
+    in
     let solution = match solution with
       | Success s -> s
       | _ ->
@@ -432,14 +430,11 @@ let import_t importfile t =
 
       let roots = OpamPackage.names_of_packages import_roots in
 
+      let request = {(OpamSolver.request ()) with wish_upgrade = to_import } in
       OpamSolution.resolve_and_apply t (Import roots)
         ~requested:(OpamPackage.names_of_packages imported)
         ~orphans:OpamPackage.Set.empty
-        { wish_install = to_import;
-          wish_remove  = [];
-          wish_upgrade = [];
-          criteria = `Default;
-          extra_attributes = []; }
+        (OpamSwitch.Map.singleton t.switch_current request)
     with e ->
       revert_pins ();
       raise e

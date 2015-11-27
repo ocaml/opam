@@ -749,19 +749,18 @@ let apply ?ask t action ~requested solution =
 
 let resolve ?(verbose=true) t action ~orphans request =
   log "resolve";
-  let ct = get_switch t t.switch_current in
   if OpamStateConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
-    OpamJson.append "switch" (OpamSwitch.to_json ct.switch)
+    OpamJson.append "switch" (OpamSwitch.to_json t.switch_current)
   );
+  let request = OpamSwitch.Map.find t.switch_current request in
   Json.output_request request action;
-  let r =
-    OpamSolver.resolve ~verbose (OpamState.universe ~orphans t action) ~orphans request
-  in
-  Json.output_solution t r;
-  r
+  let universe = OpamState.universe ~orphans t action in
+  let result = OpamSolver.resolve ~verbose universe ~orphans request in
+  Json.output_solution t result;
+  result
 
 let resolve_and_apply ?ask t action ~requested ~orphans request =
   log "resolve and apply";

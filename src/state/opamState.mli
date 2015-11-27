@@ -109,7 +109,6 @@ end
 val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
-val pef_state : OpamFormula.atom OpamTypes.request -> state -> Opam.Packages.request * Opam.Packages.package list
 
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state
@@ -127,6 +126,8 @@ val switch_state: state -> OpamFile.State.t
 (** Writes the ~/.opam/<switch>/state file corresponding to the current state
     (installed, pinned packages, etc.). Does nothing in dryrun mode *)
 val write_switch_state: state -> unit
+
+val add_switch_state: state -> switch -> state
 
 (** Create a universe from the current state *)
 val universe: ?orphans:package_set -> state -> user_action -> universe

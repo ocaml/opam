@@ -647,11 +647,16 @@ module API = struct
      anymore) from orphan versions, because they have a different impact on
      the request (needs version change VS needs uninstall).
      See also preprocess_request and check_conflicts *)
-  let orphans ?changes ?(transitive=false) t =
-    let ct = get_switch t t.switch_current in
+  let orphans ?switch ?changes ?(transitive=false) t =
+    let ct =
+      match switch with
+      |None -> get_switch t t.switch_current
+      |Some sw -> get_switch t sw
+    in
     let all = ct.packages ++ ct.installed in
     let allnames = OpamPackage.names_of_packages all in
-    let universe = OpamState.universe t (Reinstall (OpamPackage.Set.empty, OpamSwitch.Set.empty)) in
+    let switches = OpamSwitch.Set.singleton ct.switch in
+    let universe = OpamState.universe t (Reinstall (OpamPackage.Set.empty,switches)) in
     (* Basic definition of orphan packages *)
     let orphans = ct.installed -- Lazy.force ct.available_packages in
     (* Restriction to the request-related packages *)
@@ -816,108 +821,133 @@ module API = struct
         t
     )
 
-  let compute_upgrade_t ?(switches=OpamSwitch.Set.empty) atoms t =
-    let ct = get_switch t t.switch_current in
+  let compute_upgrade_t ~switches atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+    log "SWITCHHHH %s" (OpamSwitch.Set.to_string switches);
     if atoms = [] then
-      let to_reinstall = ct.reinstall %% ct.installed in
-      let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-      let ct = get_switch t t.switch_current in
-      let to_upgrade = ct.installed -- full_orphans -- orphan_versions in
-      let to_install = ct.installed -- full_orphans in
+      let (orphans,to_reinstall,request) =
+        OpamSwitch.Set.fold (fun switch (orph,reinst,acc) ->
+          let ct = get_switch t switch in
+          let to_reinstall = ct.reinstall %% ct.installed in
+          let t, full_orphans, orphan_versions = orphans ~switch ~transitive:true t in
+          let ct = get_switch t switch in
+          let to_upgrade = ct.installed -- full_orphans -- orphan_versions in
+          let to_install = ct.installed -- full_orphans in
+          let orphans = full_orphans ++ orphan_versions in
+          let req =
+            (preprocessed_request t full_orphans orphan_versions
+             ~wish_install:(OpamSolution.atoms_of_packages to_install)
+             ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
+             ~criteria:`Upgrade) ()
+          in
+          (orph ++ orphans,reinst ++ to_reinstall,OpamSwitch.Map.add switch req acc)
+        ) switches (OpamPackage.Set.empty,OpamPackage.Set.empty,OpamSwitch.Map.empty)
+      in
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade (to_reinstall,switches) in
-      requested,
-      action,
-      OpamSolution.resolve t action
-        ~orphans:(full_orphans ++ orphan_versions)
-        (preprocessed_request t full_orphans orphan_versions
-           ~wish_install:(OpamSolution.atoms_of_packages to_install)
-           ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
-           ~criteria:`Upgrade ())
+      let solution = OpamSolution.resolve t action ~orphans request in
+      (requested, action, solution)
     else
-    let atoms =
-      List.map (function
-          | (n,None) ->
-            (* force strict update for unchanged, non dev or pinned packages
-               (strict update makes no sense for pinned packages which have
-               a fixed version) *)
-            (try
-               let nv = OpamState.find_installed_package_by_name t n in
-               if OpamState.is_dev_package t nv ||
-                  OpamState.is_pinned t n ||
-                  OpamPackage.Set.mem nv ct.reinstall
-               then (n, None)
-               else
-                 let atom = (n, Some (`Gt, OpamPackage.version nv)) in
-                 if OpamPackage.Set.exists (OpamFormula.check atom)
-                     (Lazy.force ct.available_packages)
-                 then atom
-                 else (n, None)
-             with Not_found -> (n,None))
-          | atom -> atom
-        ) atoms in
-    let to_upgrade, not_installed =
-      List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
-          try
-            let nv =
-              OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
-                ct.installed in
-            OpamPackage.Set.add nv packages, not_installed
-          with Not_found ->
-            packages, atom :: not_installed)
-        (OpamPackage.Set.empty,[]) atoms in
-    let to_install =
-      if not_installed = [] then [] else
-      if OpamConsole.confirm "%s %s not installed. Install %s ?"
-          (OpamStd.Format.pretty_list
-             (List.rev_map OpamFormula.short_string_of_atom not_installed))
-          (match not_installed with [_] -> "is" | _ -> "are")
-          (match not_installed with [_] -> "it" | _ -> "them")
-      then not_installed
-      else []
-    in
-    let changes = to_upgrade ++ OpamState.packages_of_atoms t to_install in
-    let to_reinstall =
-      (* Only treat related reinstalls (i.e. the ones belonging to the
-         dependency cone of packages specified to update) *)
-      let universe = OpamState.universe t (Upgrade (OpamPackage.Set.empty,switches)) in
-      let all_deps =
-        OpamPackage.names_of_packages @@ OpamPackage.Set.of_list @@
-        OpamSolver.dependencies ~depopts:true ~build:false ~installed:true
-          universe changes
+      let orphans,to_reinstall,request =
+        OpamSwitch.Set.fold (fun switch (orph,reinst,acc) ->
+          let ct = get_switch t switch in
+          let atoms =
+            List.map (function
+                | (n,None) ->
+                  (* force strict update for unchanged, non dev or pinned packages
+                     (strict update makes no sense for pinned packages which have
+                     a fixed version) *)
+                  (try
+                     let nv = OpamState.find_installed_package_by_name t n in
+                     if OpamState.is_dev_package t nv ||
+                        OpamState.is_pinned t n ||
+                        OpamPackage.Set.mem nv ct.reinstall
+                     then (n, None)
+                     else
+                       let atom = (n, Some (`Gt, OpamPackage.version nv)) in
+                       if OpamPackage.Set.exists (OpamFormula.check atom)
+                           (Lazy.force ct.available_packages)
+                       then atom
+                       else (n, None)
+                   with Not_found -> (n,None))
+                | atom -> atom
+              ) atoms in
+          let to_upgrade, not_installed =
+            List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
+                try
+                  let nv =
+                    OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
+                      ct.installed in
+                  OpamPackage.Set.add nv packages, not_installed
+                with Not_found ->
+                  packages, atom :: not_installed)
+              (OpamPackage.Set.empty,[]) atoms in
+          let to_install =
+            if not_installed = [] then [] else
+            if OpamConsole.confirm "%s %s not installed. Install %s ?"
+                (OpamStd.Format.pretty_list
+                   (List.rev_map OpamFormula.short_string_of_atom not_installed))
+                (match not_installed with [_] -> "is" | _ -> "are")
+                (match not_installed with [_] -> "it" | _ -> "them")
+            then not_installed
+            else []
+          in
+          let changes = to_upgrade ++ OpamState.packages_of_atoms t to_install in
+          let to_reinstall =
+            (* Only treat related reinstalls (i.e. the ones belonging to the
+               dependency cone of packages specified to update) *)
+            let universe = OpamState.universe t (Upgrade (OpamPackage.Set.empty,switches)) in
+            let all_deps =
+              OpamPackage.names_of_packages @@ OpamPackage.Set.of_list @@
+              OpamSolver.dependencies ~depopts:true ~build:false ~installed:true
+                universe changes
+            in
+            OpamPackage.Set.filter
+              (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) all_deps)
+              ct.reinstall
+          in
+          let t, full_orphans, orphan_versions = orphans ~changes t in
+          let to_remove = to_upgrade %% full_orphans in
+          let to_upgrade = to_upgrade -- full_orphans in
+          let upgrade_atoms =
+            (* packages corresponds to the currently installed versions.
+               Not what we are interested in, recover the original atom constraints *)
+            List.map (fun nv ->
+                let name = OpamPackage.name nv in
+                try name, List.assoc name atoms
+                with Not_found -> name, None)
+              (OpamPackage.Set.elements to_upgrade)
+          in
+          let req =
+            preprocessed_request t full_orphans orphan_versions
+               ~wish_install:to_install
+               ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
+               ~wish_upgrade:upgrade_atoms
+               ()
+          in
+          let orphans = full_orphans ++ orphan_versions in
+          (orph ++ orphans,reinst ++ to_reinstall,OpamSwitch.Map.add switch req acc)
+        ) switches (OpamPackage.Set.empty,OpamPackage.Set.empty,OpamSwitch.Map.empty)
       in
-      OpamPackage.Set.filter
-        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) all_deps)
-        ct.reinstall
-    in
-    let t, full_orphans, orphan_versions = orphans ~changes t in
-    let to_remove = to_upgrade %% full_orphans in
-    let to_upgrade = to_upgrade -- full_orphans in
-    let requested = names in
-    let action = Upgrade (to_reinstall,switches) in
-    let upgrade_atoms =
-      (* packages corresponds to the currently installed versions.
-         Not what we are interested in, recover the original atom constraints *)
-      List.map (fun nv ->
-          let name = OpamPackage.name nv in
-          try name, List.assoc name atoms
-          with Not_found -> name, None)
-        (OpamPackage.Set.elements to_upgrade) in
-    requested,
-    action,
-    OpamSolution.resolve t action
-      ~orphans:(full_orphans ++ orphan_versions)
-      (preprocessed_request t full_orphans orphan_versions
-         ~wish_install:to_install
-         ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
-         ~wish_upgrade:upgrade_atoms
-         ())
+      let action = Upgrade (to_reinstall,switches) in
+      let requested = names in
+      let solution = OpamSolution.resolve t action ~orphans request in
+      (requested, action, solution)
 
-  let upgrade_t ?ask ?(switches=OpamSwitch.Set.empty) atoms t =
+  let upgrade_t ?ask ?switches atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
+    let switches =
+      match switches with
+      |None -> OpamSwitch.Set.singleton t.switch_current
+      |Some sw -> sw
+    in
+    let t =
+      OpamSwitch.Set.fold (fun switch tacc ->
+        OpamState.add_switch_state t switch
+      ) switches t
+    in
     let ct = get_switch t t.switch_current in
     match compute_upgrade_t ~switches atoms t with
     | requested, _action, Conflicts cs ->
@@ -1008,7 +1038,7 @@ module API = struct
     with_switch_backup "upgrade all" @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t atoms t
+    upgrade_t ~switches atoms t
 
   let fixup_t t =
     log "FIXUP";
@@ -1021,15 +1051,18 @@ module API = struct
     else
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
     let ct = get_switch t t.switch_current in
-    let action = Upgrade (OpamPackage.Set.empty,OpamSwitch.Set.empty) in
+    let action = Upgrade (OpamPackage.Set.empty,OpamSwitch.Set.singleton ct.switch) in
     let all_orphans = full_orphans ++ orphan_versions in
     let resolve pkgs =
-      pkgs,
-      OpamSolution.resolve t action ~orphans:all_orphans
-        (OpamSolver.request
+      let request = 
+        OpamSolver.request
            ~install:(OpamSolution.atoms_of_packages pkgs)
            ~criteria:`Fixup
-           ())
+           ()
+      in
+      pkgs,
+      OpamSolution.resolve t action ~orphans:all_orphans
+        (OpamSwitch.Map.singleton t.switch_current request)
     in
     let is_success = function
       | _, Success _ -> true
@@ -1252,16 +1285,17 @@ module API = struct
          else "")
     in
     if not no_stats then
-    let universe = OpamState.universe t (Upgrade (OpamPackage.Set.empty,OpamSwitch.Set.empty)) in
+    let switches = OpamSwitch.Set.singleton t.switch_current in
+    let universe = OpamState.universe t (Upgrade (OpamPackage.Set.empty,switches)) in
     match OpamSolver.check_for_conflicts universe with
     | Some cs ->
-      let need_fixup = match compute_upgrade_t [] t with
+      let need_fixup = match compute_upgrade_t ~switches [] t with
         | _, _, Success _ -> false
         | _, _, Conflicts _ -> true
       in
       broken_state_message ~need_fixup cs
     | None ->
-      match compute_upgrade_t [] t with
+      match compute_upgrade_t ~switches [] t with
       | _, _, Success upgrade ->
         let stats = OpamSolver.stats upgrade in
         if OpamSolution.sum stats > 0 then
@@ -1551,7 +1585,6 @@ module API = struct
       else
         (OpamSolution.check_availability t available_packages atoms;
          available_packages) in
-    log "AVA1 %a" (slog OpamPackage.Set.to_string) available_packages;
     let ct = { ct with available_packages = lazy available_packages } in
     let t = { t with switches = OpamSwitch.Map.singleton ct.switch ct } in
 
@@ -1567,16 +1600,17 @@ module API = struct
       in
       let action =
         if wish_upgrade <> [] then 
-          Upgrade (OpamPackage.Set.of_list pkg_skip,OpamSwitch.Set.empty)
+          Upgrade (OpamPackage.Set.of_list pkg_skip,OpamSwitch.Set.singleton ct.switch)
         (* Fixme: the above won't properly handle setting as a root *)
         else match add_to_roots, deps_only with
           | Some false, _ | None, true ->
-            Install (OpamPackage.Name.Set.empty,OpamSwitch.Set.empty)
-          | _ -> Install (names,OpamSwitch.Set.empty) in
+            Install (OpamPackage.Name.Set.empty,OpamSwitch.Set.singleton ct.switch)
+          | _ -> Install (names,OpamSwitch.Set.singleton ct.switch) in
       let solution =
         OpamSolution.resolve t action
           ~orphans:(full_orphans ++ orphan_versions)
-          request in
+          (OpamSwitch.Map.singleton t.switch_current request)
+      in
       let solution = match solution with
         | Conflicts cs ->
           log "conflict!";
@@ -1667,13 +1701,16 @@ module API = struct
                (OpamSolver.dependencies ~build:true
                   ~depopts:true ~installed:true universe to_remove))
         else to_remove in
+      let request =
+        OpamSolver.request
+           ~install:(OpamSolution.eq_atoms_of_packages to_keep)
+           ~remove:(OpamSolution.atoms_of_packages to_remove)
+           ()
+      in
       let solution =
         OpamSolution.resolve_and_apply ?ask t Remove ~requested
           ~orphans:(full_orphans ++ orphan_versions)
-          (OpamSolver.request
-             ~install:(OpamSolution.eq_atoms_of_packages to_keep)
-             ~remove:(OpamSolution.atoms_of_packages to_remove)
-             ())
+          (OpamSwitch.Map.singleton t.switch_current request)
       in
       OpamSolution.check_solution t solution
     ) else if !nothing_to_do then
@@ -1709,6 +1746,7 @@ module API = struct
       to_install @ OpamSolution.eq_atoms_of_packages reinstall in
 
     let t, full_orphans, orphan_versions = check_conflicts t atoms in
+    let ct = get_switch t t.switch_current in
 
     let requested =
       OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
@@ -1722,10 +1760,10 @@ module API = struct
 
     let solution =
       OpamSolution.resolve_and_apply ?ask t 
-        (Reinstall (reinstall,OpamSwitch.Set.empty)) ~requested
+        (Reinstall (reinstall,OpamSwitch.Set.singleton ct.switch)) ~requested
         ~orphans:(full_orphans ++ orphan_versions)
-        request in
-
+        (OpamSwitch.Map.singleton t.switch_current request)
+    in
     OpamSolution.check_solution t solution
 
   let reinstall names =

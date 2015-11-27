@@ -503,6 +503,11 @@ let config =
     | Some `pef, params ->
       let opam_state = OpamState.load_state "config-universe"
           OpamStateConfig.(!r.current_switch) in
+      let opam_state =
+        List.fold_left (fun t sw ->
+          OpamState.add_switch_state t sw
+        ) opam_state (OpamSwitch.Map.keys opam_state.aliases)
+      in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
@@ -769,7 +774,10 @@ let upgrade =
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else `Ok (Client.fixup ())
     else if upgradeall then
-      `Ok (Client.upgrade_all (OpamSwitch.Set.of_list switches) atoms)
+      if switches = [] then
+        `Ok (Client.upgrade_all (OpamSwitch.Set.empty) atoms)
+      else
+        `Ok (Client.upgrade_all (OpamSwitch.Set.of_list switches) atoms)
     else
       `Ok (Client.upgrade atoms)
   in
