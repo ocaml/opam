@@ -2271,15 +2271,8 @@ let source t ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let expand_env t ?opam (env: env_update list) variables : env =
-  let fenv v =
-    try resolve_variable t ?opam variables v
-    with Not_found ->
-      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
-      None
-  in
+let expand_env t (env: env_update list) : env =
   List.rev_map (fun (ident, op, string, comment) ->
-    let string = OpamFilter.expand_string fenv string in
     let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
       try OpamStd.Env.reset_value ~prefix (OpamStd.Sys.path_sep ())
@@ -2313,13 +2306,12 @@ let expand_env t ?opam (env: env_update list) variables : env =
       ident, String.concat c (cons ~head:false string (read_env())), comment
   ) env
 
-let add_to_env t ?opam (env: env) ?(variables=OpamVariable.Map.empty)
-    (updates: env_update list) =
+let add_to_env t (env: env) (updates: env_update list) =
   let env =
     List.filter (fun (k,_,_) -> List.for_all (fun (u,_,_,_) -> u <> k) updates)
       env
   in
-  env @ expand_env t ?opam updates variables
+  env @ expand_env t updates
 
 let compute_env_updates t =
   let ct = get_switch t t.switch_current in
@@ -2331,6 +2323,12 @@ let compute_env_updates t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root ct.switch ct.switch_config) in
 *)
+  let fenv ?opam v =
+    try resolve_variable t ?opam OpamVariable.Map.empty v
+    with Not_found ->
+      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      None
+  in
   let man_path =
     let open OpamStd.Sys in
     match os () with
@@ -2344,11 +2342,19 @@ let compute_env_updates t =
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        OpamFile.OPAM.env (opam t nv)
+        let opam = opam t nv in
+        List.map (fun (name,op,str,cmt) ->
+            let s = OpamFilter.expand_string (fenv ~opam) str in
+            Printf.eprintf "%s: %S => %S\n" (OpamPackage.to_string nv) str s;
+            name, op, s, cmt)
+          (OpamFile.OPAM.env opam)
         @ acc)
       ct.installed []
   in
-  let comp_env = OpamFile.Comp.env (compiler_comp t ct.compiler) in
+  let comp_env =
+    List.map (fun (name,op,str,cmt) ->
+        name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
+      (OpamFile.Comp.env (compiler_comp t ct.compiler)) in
   let root =
     let current = t.root in
     let default = OpamStateConfig.(default.root_dir) in
@@ -2395,9 +2401,9 @@ let get_opam_env ~force_path t =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
-let get_full_env ~force_path ?opam t =
+let get_full_env ~force_path t =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add_to_env t ?opam env0 (env_updates ~opamswitch:true ~force_path t)
+  add_to_env t env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in

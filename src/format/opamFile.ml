@@ -651,6 +651,98 @@ module Syntax = struct
   let to_string _file_name t =
     OpamFormat.Print.opamfile t
 
+  let to_string_with_preserved_format filename ~empty ?(sections=[]) ~fields pp t =
+    let str = OpamFilename.read filename in
+    let syn_file = of_string filename str in
+    let syn_t = Pp.print pp (filename, t) in
+    let it_name = function
+      | Variable (_, f, _) | Section (_, {section_kind = f; _}) -> f
+    in
+    let it_pos = function
+      | Section (pos,_) | Variable (pos,_,_) -> pos
+    in
+    let lines_index =
+      let rec aux acc s =
+        let until =
+          try Some (String.index_from s (List.hd acc) '\n')
+          with Not_found -> None
+        in
+        match until with
+        | Some until -> aux (until+1 :: acc) s
+        | None -> Array.of_list (List.rev acc)
+      in
+      aux [0] str
+    in
+    let pos_index (_file, li, col) = lines_index.(li - 1) + col in
+    let field_str name =
+      let rec aux = function
+        | it1 :: r when it_name it1 = name ->
+          let start = pos_index (it_pos it1) in
+          let stop = match r with
+            | it2 :: _ -> pos_index (it_pos it2) - 1
+            | [] ->
+              let len = ref (String.length str) in
+              while str.[!len - 1] = '\n' do decr len done;
+              !len
+          in
+          String.sub str start (stop - start)
+        | _ :: r -> aux r
+        | [] -> raise Not_found
+      in
+      aux syn_file.file_contents
+    in
+    let rem, strs =
+      List.fold_left (fun (rem, strs) item ->
+          List.filter (fun i -> it_name i <> it_name item) rem,
+          match item with
+          | Variable (pos, name, v) ->
+            (try
+               let ppa = List.assoc name fields in
+               match snd (Pp.print ppa t) with
+               | None | Some (List (_, [])) | Some (List (_,[List(_,[])])) ->
+                 strs
+               | field_syn_t when
+                   field_syn_t =
+                   snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
+                 ->
+                 (* unchanged *)
+                 field_str name :: strs
+               | _ ->
+                 try
+                   let f =
+                     List.find (fun i -> it_name i = name) syn_t.file_contents
+                   in
+                   OpamFormat.Print.items [f] :: strs
+                 with Not_found -> strs
+             with Not_found ->
+               if OpamStd.String.starts_with ~prefix:"x-" name then
+                 field_str name :: strs
+               else strs)
+          | Section (pos, {section_kind = name; section_items = v;_}) ->
+            (try
+               let ppa = List.assoc name sections in
+               let sec_field_t = snd (Pp.print ppa t) in
+               if sec_field_t <> None &&
+                  sec_field_t = snd
+                    (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
+               then
+                 (* unchanged *)
+                 field_str name :: strs
+               else
+               try
+                 let f =
+                   List.find (fun i -> it_name i = name) syn_t.file_contents
+                 in
+                 OpamFormat.Print.items [f] :: strs
+               with Not_found -> strs
+             with Not_found -> strs)
+        )
+        (syn_t.file_contents, []) syn_file.file_contents
+    in
+    String.concat "\n"
+      (List.rev_append strs
+         (if rem = [] then [""] else [OpamFormat.Print.items rem;""]))
+
 end
 
 module type SyntaxFileArg = sig
@@ -1454,12 +1546,12 @@ module OPAMSyntax = struct
 
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list ~depth:1 Pp.V.string);
-      "author", no_cleanup Pp.ppacc
+      "authors", no_cleanup Pp.ppacc
         with_author author
         (Pp.V.map_list ~depth:1 Pp.V.string);
-      "authors", no_cleanup Pp.ppacc
+      "author", no_cleanup Pp.ppacc
         (fun t a -> if t.author = [] then with_author t a else
-            OpamFormat.bad_format "multiple \"author:\" fields" author)
+            OpamFormat.bad_format "multiple \"authors:\" fields" author)
         (fun _ -> [])
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "license", no_cleanup Pp.ppacc with_license license
@@ -1655,6 +1747,10 @@ module OPAMSyntax = struct
                   (OpamStd.Option.default (OpamPackage.version nv) t.version))
                (OpamFilename.prettify filename);
            {t with name = None; version = None})
+
+  let to_string_with_preserved_format filename t =
+    Syntax.to_string_with_preserved_format filename ~empty ~sections
+      ~fields:raw_fields pp t
 
 end
 module OPAM = struct
