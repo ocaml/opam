@@ -506,7 +506,7 @@ let config =
       let opam_state =
         List.fold_left (fun t sw ->
           OpamState.add_switch_state t sw
-        ) opam_state (OpamSwitch.Map.keys opam_state.aliases)
+        ) opam_state (OpamSwitch.Map.keys opam_state.OpamState.Types.aliases)
       in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with

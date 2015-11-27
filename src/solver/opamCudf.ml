@@ -105,7 +105,6 @@ type conflict_case =
 type conflict =
   Cudf.universe * version_map * conflict_case
 
-
 module Map = OpamStd.Map.Make(Pkg)
 module Set = OpamStd.Set.Make(Pkg)
 module Graph = struct
@@ -474,13 +473,6 @@ let dump_cudf_request (_, univ,_ as cudf) criteria =
      | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
      | None -> Printf.fprintf oc "#internal OPAM solver\n");
     Cudf_printer.pp_cudf oc cudf;
-    (*
-    OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
-      let name = OpamPackage.name_to_string pkg in
-      let version = OpamPackage.version_to_string pkg in
-      Printf.fprintf oc "#v2v:%s:%d=%s\n" name vnum version;
-    ) version_map;
-    *)
     close_out oc;
     Graph.output (Graph.of_universe univ) f;
     Some filename
@@ -543,13 +535,6 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
       Cudf_parser.load_solution_from_file
         (OpamFilename.to_string solver_out) universe in
     OpamFilename.remove solver_out;
-(*
-    if Cudf.universe_size (snd r) = 0 &&
-       not OpamStateConfig.(!r.no_base_packages) &&
-       Cudf.installed_size universe <> 0
-    then
-      raise (Common.CudfSolver.Error "empty solution");
-*)
     r
   with e ->
     OpamFilename.remove solver_in;

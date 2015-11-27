@@ -64,7 +64,7 @@ let name_to_cudf switch name =
    (this shouldn't happen for any constraint in the universe, now that we
    compute a full version map, but may still happen for user-provided
    constraints) *)
-let atom2cudf universe version_map (name,cstr) =
+let atom2cudf universe (name,cstr) =
   let tables = universe.u_tables in
   let (switch,_,_) = universe.u_options in
   let cudfname = name_to_cudf switch name in
@@ -79,7 +79,7 @@ let atom2cudf universe version_map (name,cstr) =
       with Not_found ->
         let all_versions =
           try
-            let l = Hashtbl.find version_map.Pef.Pefcudf.versions_table (OpamPackage.Name.to_string name) in
+            let l = Hashtbl.find tables.Pef.Pefcudf.versions_table (OpamPackage.Name.to_string name) in
             List.fold_left (fun acc v ->
               let nv = OpamPackage.create name (OpamPackage.Version.of_string v) in
               OpamPackage.Map.add nv (Pef.Pefcudf.get_cudf_version tables ("",v)) acc
@@ -127,7 +127,7 @@ let pefcudf_aux (switch,switches,profiles,depopts,installed) tables pefpkglist =
           in
           let p =
             if List.mem sw reinstallist then
-              { p with pkg_extra = ("reinstall",`Bool true) :: p.pkg_extra }
+              { p with Cudf.pkg_extra = ("reinstall",`Bool true) :: p.Cudf.pkg_extra }
             else 
               p
           in
@@ -200,7 +200,7 @@ let map_request f r =
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)
-let cleanup_request universe (req:atom request) =
+let cleanup_request universe req:atom request =
   let wish_install =
     List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
       req.wish_install in
@@ -225,17 +225,16 @@ let cycle_conflict ~version_map univ cycles =
 
 let resolve ?(verbose=true) universe ~orphans request =
   log "resolve request=%a" (slog string_of_request) request;
-  let version_map = universe.u_tables in
   let simple_universe =
     load_cudf_universe universe ~build:true
       (universe.u_packages ++ universe.u_installed -- orphans) in
   let request = cleanup_request universe request in
-  let cudf_request = map_request (atom2cudf universe version_map) request in
-  let add_orphan_packages u =
-    load_cudf_universe universe ~build:true
-      (orphans ++
-         (OpamPackage.Set.of_list
-            (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
+  let cudf_request = map_request (atom2cudf universe) request in
+  let add_orphan_packages cudfuniv =
+    let cudflist = Cudf.get_packages cudfuniv in
+    let orphlist = pefcudflist universe ~build:true orphans in
+    Cudf.load_universe (orphlist @ cudflist)
+  in
   let version_map = universe.u_tables in
   let resolve u req =
     if OpamCudf.external_solver_available ()
@@ -282,16 +281,13 @@ let filter_dependencies
     f_direction ~depopts ~build ~installed
     ?(unavailable=false) universe packages =
   if OpamPackage.Set.is_empty packages then [] else
-    let version_map = universe.u_tables in
     let u_packages =
       packages ++
       if installed then universe.u_installed else
       if unavailable then universe.u_packages else
         universe.u_packages in
-    let cudf_universe =
-      load_cudf_universe ~depopts ~build universe u_packages in
-    let cudf_packages =
-      Cudf.get_packages (load_cudf_universe ~depopts ~build universe packages) in
+    let cudf_universe = load_cudf_universe ~depopts ~build universe u_packages in
+    let cudf_packages = pefcudflist universe ~depopts ~build packages in
     let topo_packages = f_direction cudf_universe cudf_packages in
     let result = List.rev_map OpamCudf.cudf2opam topo_packages in
     log "filter_dependencies packages=%a result=%a"
@@ -305,19 +301,18 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
 let check_for_conflicts universe =
-  let version_map = universe.u_tables in
   let cudf_universe =
     load_cudf_universe ~depopts:false ~build:true universe universe.u_packages
   in
   let installed =
-    Cudf.get_packages (
-      load_cudf_universe ~depopts:false ~build:true universe universe.u_installed
-    )
+    let filter p = p.Cudf.installed in
+    Cudf.get_packages ~filter cudf_universe
   in
   match Algo.Depsolver.edos_coinstall cudf_universe installed with
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
     None
   | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } as c ->
+    let version_map = universe.u_tables in
     match OpamCudf.make_conflicts ~version_map cudf_universe c with
     | Conflicts cs -> Some cs
     | _ -> None
