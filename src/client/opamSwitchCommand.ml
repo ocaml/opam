@@ -314,7 +314,7 @@ let install_cont ~quiet ~update_config switch compiler =
   else
     install_compiler ~quiet switch compiler;
   let t =
-    if update_config then OpamState.update_switch_config t switch else t
+    if update_config then OpamSwitchAction.set_current_switch t switch else t
   in
   switch,
   fun () ->
@@ -333,7 +333,7 @@ let switch_cont ?compiler ~quiet switch =
       OpamStateConfig.(!r.current_switch) in
   let switch, cont =
     if OpamState.is_switch_installed t switch then
-      let t = OpamState.update_switch_config t switch in
+      let t = OpamSwitchAction.set_current_switch t switch in
       OpamState.check_and_print_env_warning t;
       switch, fun () -> ()
     else

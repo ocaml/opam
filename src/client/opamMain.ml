@@ -541,7 +541,7 @@ let config =
         let nprint label n =
           if n <> 0 then [Printf.sprintf "%d (%s)" n label]
           else [] in
-        print "jobs" "%d" (OpamState.jobs state);
+        print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
         print "repositories" "%s"
           OpamRepositoryName.Map.(
             let nhttp, nlocal, nvcs =
@@ -921,7 +921,7 @@ let switch =
           ~switch_from:`Default ();
         let _t =
           if no_switch then t
-          else OpamState.update_switch_config t switch
+          else OpamSwitchAction.set_current_switch t switch
         in
         Client.fixup ();
         `Ok ()

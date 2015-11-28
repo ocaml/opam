@@ -91,6 +91,9 @@ let exists_dir dirname =
   try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
   with Unix.Unix_error _ -> false
 
+let opt_dir dirname =
+  if exists_dir dirname then Some dirname else None
+
 let copy_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error
@@ -195,6 +198,9 @@ let remove filename =
 let exists filename =
   try (Unix.stat (to_string filename)).Unix.st_kind = Unix.S_REG
   with Unix.Unix_error _ -> false
+
+let opt_file filename =
+  if exists filename then Some filename else None
 
 let with_contents fn filename =
   fn (read filename)

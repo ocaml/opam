@@ -24,6 +24,7 @@ module type SET = sig
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
 
   module Op : sig
@@ -38,6 +39,7 @@ module type MAP = sig
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
+  val find_opt: key -> 'a t -> 'a option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
@@ -89,6 +91,10 @@ module OpamList = struct
       let pos = prepend pos left in
       assert (pos = 0);
       Bytes.to_string buf
+
+  let rec find_opt f = function
+    | [] -> None
+    | x::r -> if f x then Some x else find_opt f r
 
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
@@ -155,8 +161,16 @@ module Set = struct
     let map f t =
       S.fold (fun e set -> S.add (f e) set) t S.empty
 
-    let find fn s =
-      choose (filter fn s)
+    exception Found of elt
+
+    let find_opt fn t =
+      try iter (fun x -> if fn x then raise (Found x)) t; None
+      with Found x -> Some x
+
+    let find fn t =
+      match find_opt fn t with
+      | Some x -> x
+      | None -> raise Not_found
 
     let to_json t =
       let elements = S.elements t in
@@ -234,6 +248,8 @@ module Map = struct
                ("value", json_of_value v) ]
         ) bindings in
       `A jsons
+
+    let find_opt k map = try Some (find k map) with Not_found -> None
 
     let safe_add k v map =
       if mem k map
@@ -352,9 +368,12 @@ module OpamString = struct
     n >= x
     && String.sub s (n - x) x = suffix
 
-  let contains s c =
+  let contains_char s c =
     try let _ = String.index s c in true
     with Not_found -> false
+
+  let contains ~sub =
+    Re.(execp (compile (str sub)))
 
   let exact_match re s =
     try

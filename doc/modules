@@ -65,7 +65,16 @@ src
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
 │   ├── opamOCaml.ml                    OCaml installation version and specifics detection
 │   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
-│   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
+│   ├── opamStateTypes.mli              Defines the types holding global, repository and switch states
+│   ├── opamGlobalState.ml              Loading and handling of the global state of an opam root
+│   ├── opamRepositoryState.ml          loading and handling of the repository state of an opam root (i.e. what is in ~/.opam/repo)
+│   ├── opamSwitchState.ml              Loading and querying a switch state
+│   ├── opamPackageVar.ml               Resolution and handling of opam variables + filters
+│   ├── opamFileHandling.ml             Generic tools for handling package metadata
+│   ├── opamSwitchAction.ml             Switch-related actions and changes
+│   ├── opamEnv.ml                      Process environment setup and handling, shell configuration
+│   ├── opamPinned.ml                   Specific query and handling of pinned packages
+│   ├── opamUpdate.ml                   Synchronisation and downloading of package sources
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
 │   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │

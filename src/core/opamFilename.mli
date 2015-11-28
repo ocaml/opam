@@ -61,8 +61,11 @@ val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 (** Link a directory *)
 val link_dir: src:Dir.t -> dst:Dir.t -> unit
 
-(** Does the directory existsb ? *)
+(** Does the directory exist ? *)
 val exists_dir: Dir.t -> bool
+
+(** Returns the argument as option, if the directory exists *)
+val opt_dir: Dir.t -> Dir.t option
 
 (** Return the parent directory *)
 val dirname_dir: Dir.t -> Dir.t
@@ -129,6 +132,10 @@ val write: t -> string -> unit
 
 (** Returns true if the file exists and is a regular file or a symlink to one *)
 val exists: t -> bool
+
+(** Returns the argument as option if it exists and is either a regular file or
+    a symlink to one *)
+val opt_file: t -> t option
 
 (** Check whether a file has a given suffix *)
 val check_suffix: t -> string -> bool

@@ -161,7 +161,10 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       let chan = open_out f in
       let env = Array.to_list env in
       (* Remove dubious variables *)
-      let env = List.filter (fun line -> not (OpamStd.String.contains line '$')) env in
+      let env =
+        List.filter (fun line -> not (OpamStd.String.contains_char line '$'))
+          env
+      in
       output_lines chan env;
       close_out chan in
 

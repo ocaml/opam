@@ -67,6 +67,8 @@ module Stats = struct
     aux "write" !write_files
 end
 
+let dummy_file = OpamFilename.raw "<none>"
+
 module MakeIO (F : IO_Arg) = struct
 
   let log ?level fmt =
@@ -122,8 +124,6 @@ module MakeIO (F : IO_Arg) = struct
       log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
       F.empty
     )
-
-  let dummy_file = OpamFilename.raw "<none>"
 
   let read_from_f f input =
     try f input with
@@ -1244,6 +1244,10 @@ module OPAMSyntax = struct
     (* Extra sections *)
     url        : URL.t option;
     descr      : Descr.t option;
+
+    (* Related metadata directory (not an actual field of the file)
+       This can be used to locate e.g. the files/ overlays *)
+    metadata_dir: dirname option;
   }
 
   let empty = {
@@ -1291,6 +1295,8 @@ module OPAMSyntax = struct
     extensions  = OpamStd.String.Map.empty;
     url         = None;
     descr       = None;
+
+    metadata_dir = None
   }
 
   let create nv =
@@ -1371,6 +1377,8 @@ module OPAMSyntax = struct
   let url t = t.url
   let descr t = t.descr
 
+  let metadata_dir t = t.metadata_dir
+
   (* Setters *)
 
   let with_opam_version t opam_version = { t with opam_version }
@@ -1436,6 +1444,8 @@ module OPAMSyntax = struct
   let with_url_opt t url = { t with url }
   let with_descr t descr = { t with descr = Some descr }
   let with_descr_opt t descr = { t with descr }
+
+  let with_metadata_dir t metadata_dir = { t with metadata_dir }
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when validating). It's better to do them in the same pass
@@ -1685,7 +1695,9 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter));
       "dev-repo", no_cleanup Pp.ppacc_opt with_dev_repo dev_repo
-        (Pp.V.url -|
+        (Pp.V.string -|
+         Pp.of_pair "vc-url"
+           OpamUrl.(parse ?backend:None ?handle_suffix:None, to_string) -|
          Pp.check ~errmsg:"invalid remote url"
            (function {OpamUrl.transport = "file" | "local" | "path"; _} -> false
                    | _ -> true));
@@ -1751,6 +1763,11 @@ module OPAMSyntax = struct
     Pp.pp
       (fun ~pos (filename, t) ->
          filename,
+         let metadata_dir =
+           if filename <> dummy_file then Some (OpamFilename.dirname filename)
+           else None
+         in
+         let t = { t with metadata_dir } in
          match OpamPackage.of_filename filename, t.name, t.version with
          | Some nv, Some tname, _ when OpamPackage.name nv <> tname ->
            Pp.warn ~pos
@@ -2057,7 +2074,7 @@ module OPAM = struct
                    (List.map to_string (Set.elements undep_pkgs))
          (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
       cond 42 `Error
-        "The 'dev-repo' field doesn't use version control. You may use \
+        "The 'dev-repo:' field doesn't use version control. You may use \
          URLs of the form \"git+https://\" or a \".hg\" or \".git\" suffix"
         (match t.dev_repo with
          | None -> false

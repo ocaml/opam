@@ -409,3 +409,19 @@ type 'a ext_package_formula =
 
 let formula_of_extended ~filter =
   map (fun (n, (kws,formula)) -> if filter kws then Atom (n, formula) else Empty)
+
+let reduce_extended ~filter =
+  map (fun (n, (kws, formula)) ->
+      let kws =
+        List.fold_left (fun acc kw ->
+            match acc with
+            | None -> None
+            | Some kws -> match filter kw with
+              | Some true -> acc
+              | Some false -> None
+              | None -> Some (kw::kws))
+          (Some []) (List.rev kws)
+      in
+      match kws with
+      | None -> Empty
+      | Some kws -> Atom (n, (kws, formula)))

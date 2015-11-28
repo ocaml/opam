@@ -208,9 +208,11 @@ module API = struct
   let update_dev_packages_t atoms t =
     let to_update =
       List.fold_left (fun to_update (name,_) ->
-          if OpamState.is_locally_pinned t name then
-            OpamPackage.Set.add (OpamState.pinned t name) to_update
-          else to_update)
+          if
+            match OpamPackage.Name.Map.find_opt name t.pinned with
+            | Some (v, Source _) ->
+              OpamPackage.Set.add (OpamPackage.create name v) to_update
+            | None | Some (_, Version _) -> to_update)
         OpamPackage.Set.empty atoms
     in
     if OpamPackage.Set.is_empty to_update then t else (
@@ -587,7 +589,7 @@ module API = struct
       in
       let t =
         OpamParallel.reduce
-          ~jobs:(OpamState.dl_jobs t)
+          ~jobs:OpamStateConfig.(!r.dl_jobs)
           ~command
           ~merge:(fun f1 f2 x -> f1 (f2 x))
           ~nil:(fun x -> x)

@@ -30,6 +30,7 @@ module type SET = sig
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  val find_opt: (elt -> bool) -> t -> elt option
 
   (** Raises Failure in case the element is already present *)
   val safe_add: elt -> t -> t
@@ -53,6 +54,7 @@ module type MAP = sig
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
+  val find_opt: key -> 'a t -> 'a option
 
   (** A key will be in the union of [m1] and [m2] if it is appears
       either [m1] or [m2], with the corresponding value. If a key
@@ -150,6 +152,9 @@ module List : sig
     ?left:string -> ?right:string -> ?nil:string ->
     string -> ('a -> string) -> 'a list -> string
 
+  (** Like [List.find], but returning option instead of raising *)
+  val find_opt: ('a -> bool) -> 'a list -> 'a option
+
   val to_string: ('a -> string) -> 'a list -> string
 
   (** Removes consecutive duplicates in a list *)
@@ -187,7 +192,8 @@ module String : sig
 
   val starts_with: prefix:string -> string -> bool
   val ends_with: suffix:string -> string -> bool
-  val contains: string -> char -> bool
+  val contains_char: string -> char -> bool
+  val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
 
   (** {3 Manipulation} *)

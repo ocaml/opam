@@ -157,7 +157,11 @@ module Switch: sig
       $opam/$switch/config/global-config.config} *)
   val global_config: t -> switch -> filename
 
-  (** Build dir for all pinned packages: {i
+  (** Package-specific configuration file for installed packages: {i
+      $opam/$switch/config/$name.config} *)
+  val config: t -> switch -> name -> filename
+
+  (** Source dir for all pinned packages: {i
       $opam/$switch/packages.dev/} *)
   val dev_packages_dir: t -> switch -> dirname
 
@@ -175,10 +179,6 @@ module Switch: sig
     (** Library path for a given package:
         {i $opam/$switch/lib/$name} *)
     val lib: t -> switch -> name -> dirname
-
-    (** Compile and link flags for a given package: {i
-        $opam/$switch/lib/$name/opam.config} *)
-    val config: t -> switch -> name -> filename
 
     (** Library path: {i $opam/$switch/lib} *)
     val lib_dir: t -> switch -> dirname
@@ -270,10 +270,6 @@ module Switch: sig
   (** Etc directory for a given package: {i
       $opam/$switch/etc/$package} *)
   val etc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
-
-  (** Compile and link flags for a given package: {i
-      $opam/$switch/lib/$name/opam.config} *)
-  val config: t -> switch -> OpamFile.Dot_config.t -> name -> filename
 
   module Overlay: sig
     (** Switch metadata overlay (over the global metadata): {i

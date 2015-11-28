@@ -16,7 +16,7 @@
 
 (** Repository sub-command functions. *)
 
-open OpamState.Types
+open OpamStateTypes
 open OpamTypes
 
 (** Update the given repository from its upstream. Returns a concurrency-safe

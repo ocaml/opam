@@ -14,12 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamStd.AbstractString
+open OpamTypes
 
-let system = of_string "system"
-
-let not_installed s =
-  OpamConsole.error_and_exit
-    "The selected compiler switch %s is not installed. Please choose a \
-     different one using the 'opam switch' command."
-    (to_string s)
+(** Read the opam metadata from a given directory (opam file, with possible
+    overrides from url and descr files) *)
+val read_opam: dirname -> OpamFile.OPAM.t option

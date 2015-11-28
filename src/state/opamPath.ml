@@ -121,6 +121,9 @@ module Switch = struct
 
   let global_config t a = config_dir t a // "global-config.config"
 
+  let config t a n =
+    config_dir t a // (OpamPackage.Name.to_string n ^ ".config")
+
   let dev_packages_dir t a = root t a / "packages.dev"
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
@@ -135,8 +138,6 @@ module Switch = struct
     let lib_dir t a = root t a / "lib"
 
     let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
-
-    let config t a n = lib t a n // "opam.config"
 
     let stublibs t a = lib_dir t a / "stublibs"
 
@@ -178,9 +179,6 @@ module Switch = struct
 
   let lib t a c n =
     lib_dir t a c / OpamPackage.Name.to_string n
-
-  let config t a c n =
-    lib t a c n // "opam.config"
 
   let stublibs t a c =
     lookup c "stublibs" (lib_dir t a c / "stublibs")

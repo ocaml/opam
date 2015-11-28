@@ -294,6 +294,8 @@ module OPAM: sig
 
   val url: t -> URL.t option
 
+  val metadata_dir: t -> dirname option
+
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
 
@@ -372,6 +374,8 @@ module OPAM: sig
   val with_descr_opt: t -> Descr.t option -> t
   val with_url: t -> URL.t -> t
   val with_url_opt: t -> URL.t option -> t
+
+  val with_metadata_dir: t -> dirname option -> t
 
   (** Prints to a string, while keeping the format of the original file as much as possible *)
   val to_string_with_preserved_format: filename -> t -> string

@@ -23,6 +23,32 @@ open OpamProcess.Job.Op
 let log fmt = OpamConsole.log "REPOSITORY" fmt
 let slog = OpamConsole.slog
 
+let eval_redirect gt repo =
+  if repo.repo_url.OpamUrl.backend <> `http then None else
+  let redirect =
+    repo
+    |> OpamRepositoryPath.repo
+    |> OpamFile.Repo.safe_read
+    |> OpamFile.Repo.redirect
+  in
+  let redirect = List.fold_left (fun acc (redirect, filter) ->
+      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve_global gt) filter
+      then (redirect, filter) :: acc
+      else acc
+    ) [] redirect in
+  match redirect with
+  | []         -> None
+  | (r,f) :: _ ->
+    let config_f = OpamRepositoryPath.config repo in
+    let config = OpamFile.Repo_config.read config_f in
+    let repo_url = OpamUrl.of_string r in
+    if repo_url <> config.repo_url then (
+      let config = { config with repo_url } in
+      OpamFile.Repo_config.write config_f config;
+      Some (config, f)
+    ) else
+      None
+
 let update t repo =
   let max_loop = 10 in
   (* Recursively traverse redirection links, but stop after 10 steps or if
@@ -44,7 +70,7 @@ let update t repo =
         (OpamConsole.warning "%s: Cyclic redirections, stopping."
            (OpamRepositoryName.to_string repo.repo_name);
          Done ())
-      else match OpamState.redirect t r with
+      else match eval_redirect t r with
         | None -> Done ()
         | Some (new_repo, f) ->
           OpamFilename.rmdir repo.repo_root;
@@ -313,7 +339,7 @@ let fix_package_descriptions t ~verbose =
            are not in a testing environment *)
   if OpamClientConfig.(!r.sync_archives) then
     OpamParallel.iter
-      ~jobs:(OpamState.dl_jobs t)
+      ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command:(fun nv ->
           log "download %a"
             (slog @@ OpamFilename.to_string @* OpamPath.archive t.root) nv;
@@ -451,7 +477,14 @@ let cleanup t repo =
   OpamState.Cache.remove ();
   fix_descriptions ~save_cache:false t
 
-(* XXX: this module uses OpamState.load_state, which loads the full switch state; 
+let find_repository rt repo_name =
+  try OpamRepositoryName.Map.find repo_name rt.repositories
+  with Not_found ->
+    OpamConsole.error_and_exit
+      "%s is not a valid repository name."
+      (OpamRepositoryName.to_string repo_name)
+
+(* XXX: this module uses OpamState.load_state, which loads the full switch state;
    actually the switch is completely unneeded *)
 
 let priority repo_name ~priority =
@@ -460,7 +493,7 @@ let priority repo_name ~priority =
   (* 1/ update the config file *)
   let t = OpamState.load_state ~save_cache:false "repository-priority"
       OpamStateConfig.(!r.current_switch) in
-  let repo = OpamState.find_repository t repo_name in
+  let repo = find_repository t repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
     let config = OpamFile.Repo_config.read config_f in
@@ -474,7 +507,7 @@ let add name url ~priority:prio =
   let t =
     OpamState.load_state "repository-add" OpamStateConfig.(!r.current_switch)
   in
-  if OpamState.mem_repository t name then
+  if OpamRepositoryName.Map.mem repo_name t.repositories then
     OpamConsole.error_and_exit "%s is already a remote repository"
       (OpamRepositoryName.to_string name);
   let prio = match prio with
@@ -518,14 +551,14 @@ let remove name =
   log "repository-remove";
   let t = OpamState.load_state "repository-remove"
       OpamStateConfig.(!r.current_switch) in
-  let repo = OpamState.find_repository t name in
+  let repo = find_repository t name in
   cleanup t repo
 
 let set_url name url =
   log "repository-remove";
   let t = OpamState.load_state ~save_cache:false "repository-set-url"
       OpamStateConfig.(!r.current_switch) in
-  let repo = OpamState.find_repository t name in
+  let repo = find_repository t name in
   if repo.repo_url.OpamUrl.backend <> url.OpamUrl.backend then
     (remove name;
      add name url ~priority:(Some repo.repo_priority))
@@ -545,7 +578,7 @@ let list ~short =
     List.iter
       (fun r ->
          OpamConsole.msg "%s\n" (OpamRepositoryName.to_string r.repo_name))
-      (OpamState.sorted_repositories t)
+      (OpamRepository.sort t.repositories)
   else
     let pretty_print r =
       OpamConsole.msg "%4d %-7s %10s     %s\n"
