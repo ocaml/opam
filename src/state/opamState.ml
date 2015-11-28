@@ -2089,7 +2089,6 @@ let compute_env_updates t =
         let opam = opam t nv in
         List.map (fun (name,op,str,cmt) ->
             let s = OpamFilter.expand_string (fenv ~opam) str in
-            Printf.eprintf "%s: %S => %S\n" (OpamPackage.to_string nv) str s;
             name, op, s, cmt)
           (OpamFile.OPAM.env opam)
         @ acc)
