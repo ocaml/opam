@@ -1615,7 +1615,6 @@ let pef_package ?(orphans=OpamPackage.Set.empty) switches t =
     match available with
     |None -> log "None ! %s" (OpamPackage.to_string package) ; None
     |Some _ -> 
-      let ct = get_switch t t.switch_current in 
       let name = Some("package",(OpamPackage.name_to_string package)) in
       let version = Some("version",(OpamPackage.version_to_string package)) in
       let maintainer =
@@ -1725,8 +1724,7 @@ let dump_state t oc =
   ) (pef_package switches t)
 
 let pef_packagelist ?(profiles=[]) switches t =
-  let ct = get_switch t t.switch_current in
-  let switch = OpamSwitch.to_string ct.switch in
+  let switch = OpamSwitch.to_string t.switch_current in
   let options = (switch,List.map OpamSwitch.to_string switches,profiles) in
   (* parse_string here is wrong ... It should parse the list XXX *)
   let extras = [("reinstall",Some (Pef.Packages.parse_s Pef.Packages.parse_string))] in 
@@ -1766,19 +1764,8 @@ let installed_versions t name =
       map
   ) t.aliases OpamPackage.Map.empty
 
-let universe ?(orphans=OpamPackage.Set.empty) t action =
-  let ct = get_switch t t.switch_current in
-  let opams = (* Read overlays of pinned packages *)
-    OpamPackage.Name.Map.fold (fun name pin map ->
-        let v = version_of_pin t name pin in
-        let overlay = OpamPath.Switch.Overlay.opam t.root ct.switch name in
-        if OpamFilename.exists overlay then
-          OpamPackage.Map.add
-            (OpamPackage.create name v) (OpamFile.OPAM.read overlay) map
-        else map)
-      ct.pinned t.opams
-  in
-  let switch = OpamSwitch.to_string ct.switch in
+let universe ?(orphans=OpamPackage.Set.empty) t u_action =
+  let switch = OpamSwitch.to_string t.switch_current in
   let all_switches = OpamSwitch.Set.of_list (OpamSwitch.Map.keys t.aliases) in
   let profiles = 
     let l = ref [] in
@@ -1787,37 +1774,37 @@ let universe ?(orphans=OpamPackage.Set.empty) t action =
     !l
   in
   let action_switches =
-    match action with
+    match u_action with
     |Reinstall (_,sw) |Upgrade (_,sw) |Install (_,sw) -> sw
-    |_ -> OpamSwitch.Set.singleton ct.switch
+    |_ -> OpamSwitch.Set.singleton t.switch_current
   in
-  (* Here is where we create the PEF universe and pass the comparison function *)
+  (* Here is where we create the PEF universe and pass the comparison function 
+   * We consider all packages in all switches that are relevant for the current
+   * action. 
+  *)
   let switches =
     let sw = OpamSwitch.Set.inter all_switches action_switches in
     OpamSwitch.Set.fold (fun s acc -> s::acc) sw []
   in
-  Printf.fprintf stderr "aaaaaaaaaa\n";
-  List.iter (fun par ->
-    List.iter (fun (k,(_,v)) -> Printf.fprintf stderr "%s: %s\n" k v) (List.rev par);
-    Printf.fprintf stderr "\n"
-  ) (pef_package switches t)
-  ;
-  Printf.fprintf stderr "aaaaaaaaaa\n";
+  let (u_installed,u_packages,u_available,u_installed_roots) =
+    let acc = (OpamPackage.Set.empty,OpamPackage.Set.empty,OpamPackage.Set.empty,OpamPackage.Set.empty) in
+    List.fold_left (fun (inst,pkgs,avai,inst_roots) sw ->
+      let ct = get_switch t sw in
+      let u_installed = inst ++ ct.installed in
+      let u_packages = pkgs ++ ct.installed ++ ct.packages in
+      let u_available = avai ++ (Lazy.force ct.available_packages) in
+      let u_installed_roots = inst_roots ++ ct.installed_roots in
+      (u_installed,u_packages,u_available,u_installed_roots)
+    ) acc switches
+  in
 
-  let options = (switch,List.map OpamSwitch.to_string switches,profiles) in
-  let pefuniv = pef_packageuniv ~orphans switches t in
-  let pefpkglist = Hashtbl.fold (fun _ v acc -> v::acc) pefuniv [] in 
-  let tables = Pef.Pefcudf.init_tables Versioning.Debian.compare pefpkglist in
-  {
-    u_pefuniv   = pefuniv;
-    u_options   = options;
-    u_tables    = tables;
-    u_packages  = ct.installed ++ ct.packages;
-    u_action    = action;
-    u_installed = ct.installed;
-    u_available = Lazy.force ct.available_packages;
-    u_installed_roots = ct.installed_roots;
-  }
+  let u_options = (switch,List.map OpamSwitch.to_string switches,profiles) in
+  let u_pefuniv = pef_packageuniv ~orphans switches t in
+  (* XXX This could be done in a smarter way *)
+  let pefpkglist = Hashtbl.fold (fun _ v acc -> v::acc) u_pefuniv [] in 
+  let u_tables = Pef.Pefcudf.init_tables Versioning.Debian.compare pefpkglist in
+  { u_pefuniv; u_options; u_tables; u_packages;
+    u_action; u_installed; u_available; u_installed_roots }
 
 let installed_timestamp t name =
   let ct = get_switch t t.switch_current in

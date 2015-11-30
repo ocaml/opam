@@ -237,8 +237,7 @@ let resolve ?(verbose=true) universe ~orphans request =
   in
   let version_map = universe.u_tables in
   let resolve u req =
-    if OpamCudf.external_solver_available ()
-    then
+    if OpamCudf.external_solver_available () then
       try
         let resp = OpamCudf.resolve ~extern:true ~version_map u req in
         OpamCudf.to_actions add_orphan_packages u resp
@@ -305,8 +304,7 @@ let check_for_conflicts universe =
     load_cudf_universe ~depopts:false ~build:true universe universe.u_packages
   in
   let installed =
-    let filter p = p.Cudf.installed in
-    Cudf.get_packages ~filter cudf_universe
+    pefcudflist universe ~depopts:false ~build:true universe.u_installed
   in
   match Algo.Depsolver.edos_coinstall cudf_universe installed with
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
