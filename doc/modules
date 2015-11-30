@@ -76,6 +76,7 @@ src
 │   ├── opamPinCommand.ml               Functions for the "opam pin" subcommand
 │   ├── opamRepositoryCommand.ml        Functions for the "opam repository" subcommand
 │   ├── opamSwitchCommand.ml            Functions for the "opam switch" subcommand
+│   ├── opamListCommand.ml              Functions for the "opam list" subcommand
 │   ├── opamClient.ml                   High-level execution of user-facing functions like "upgrade", and wrappers around the *Command modules
 │   ├── opamGitVersion.mli              (generated) Current git version of OPAM
 │   ├── opamArg.ml                      Command-line argument parsers and helpers
