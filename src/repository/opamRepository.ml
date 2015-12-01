@@ -107,7 +107,7 @@ let check_version repo =
     |> OpamFile.Repo.opam_version
   in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
-     OpamVersion.compare repo_version OpamVersion.current > 0 then
+     OpamVersion.compare repo_version OpamVersion.current_nopatch > 0 then
     OpamConsole.error_and_exit
       "The current version of OPAM cannot read the repository %S. \n\
        You should upgrade to at least version %s.\n"
