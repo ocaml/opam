@@ -775,7 +775,10 @@ let upgrade =
       else `Ok (Client.fixup ())
     else if upgradeall then
       if switches = [] then
-        `Ok (Client.upgrade_all (OpamSwitch.Set.empty) atoms)
+        let root = OpamStateConfig.(!r.root_dir) in
+        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+        let switches = OpamSwitch.Set.of_list (OpamSwitch.Map.keys aliases) in
+        `Ok (Client.upgrade_all switches atoms)
       else
         `Ok (Client.upgrade_all (OpamSwitch.Set.of_list switches) atoms)
     else

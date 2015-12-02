@@ -22,32 +22,46 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog
 
-let with_switch_backup command f =
+let with_switch_backup ?switches command f =
   let t = OpamState.load_state command OpamStateConfig.(!r.current_switch) in
-  let ct = get_switch t t.switch_current in
-  let file = OpamPath.Switch.backup t.root ct.switch in
-  OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root ct.switch);
-  OpamFile.State.write file (OpamState.switch_state t);
-  try
-    f t;
-    OpamFilename.remove file (* We might want to keep it even if successful ? *)
-  with
-  | OpamStd.Sys.Exit 0 as e -> raise e
-  | err ->
-    OpamStd.Exn.register_backtrace err;
-    let t1 = OpamState.load_state "switch-backup-err" OpamStateConfig.(!r.current_switch) in
-    let ct1 = get_switch t1 t1.switch_current in
-    if OpamPackage.Set.equal ct.installed ct1.installed &&
-       OpamPackage.Set.equal ct.installed_roots ct1.installed_roots then
-      OpamFilename.remove file
-    else
-      (prerr_string
-         (OpamStd.Format.reformat
-            (Printf.sprintf
-               "\nThe former state can be restored with:\n    \
-                %s switch import %S\n%!"
-               Sys.argv.(0) (OpamFilename.prettify file))));
-    raise err
+  let switches =
+    match switches with
+    |None -> OpamSwitch.Set.singleton t.switch_current
+    |Some sw -> sw
+  in
+  let t =
+    OpamSwitch.Set.fold (fun switch tacc ->
+      log "with_switch_backup load %s" (OpamSwitch.to_string switch);
+      OpamState.add_switch_state tacc switch
+    ) switches t
+  in
+  OpamSwitch.Set.iter (fun switch ->
+      log "with_switch_backup iter %s" (OpamSwitch.to_string switch);
+    let ct = get_switch t switch in
+    let file = OpamPath.Switch.backup t.root ct.switch in
+    OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root ct.switch);
+    OpamFile.State.write file (OpamState.switch_state t);
+    try
+      f t;
+      OpamFilename.remove file (* We might want to keep it even if successful ? *)
+    with
+    | OpamStd.Sys.Exit 0 as e -> raise e
+    | err ->
+      OpamStd.Exn.register_backtrace err;
+      let t1 = OpamState.load_state "switch-backup-err" OpamStateConfig.(!r.current_switch) in
+      let ct1 = get_switch t1 t1.switch_current in
+      if OpamPackage.Set.equal ct.installed ct1.installed &&
+         OpamPackage.Set.equal ct.installed_roots ct1.installed_roots then
+        OpamFilename.remove file
+      else
+        (prerr_string
+           (OpamStd.Format.reformat
+              (Printf.sprintf
+                 "\nThe former state can be restored with:\n    \
+                  %s switch import %S\n%!"
+                 Sys.argv.(0) (OpamFilename.prettify file))));
+      raise err
+  ) switches
 
 module API = struct
 
@@ -239,7 +253,6 @@ module API = struct
 
   let compute_upgrade_t ~switches atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    log "SWITCHHHH %s" (OpamSwitch.Set.to_string switches);
     if atoms = [] then
       let (orphans,to_reinstall,request) =
         OpamSwitch.Set.fold (fun switch (orph,reinst,acc) ->
@@ -259,6 +272,8 @@ module API = struct
           (orph ++ orphans,reinst ++ to_reinstall,OpamSwitch.Map.add switch req acc)
         ) switches (OpamPackage.Set.empty,OpamPackage.Set.empty,OpamSwitch.Map.empty)
       in
+      log "compute_upgrade_t %s" (OpamSwitch.Set.to_string switches);
+      log "compute_upgrade_t %s" (OpamSwitch.to_string t.switch_current);
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade (to_reinstall,switches) in
       let solution = OpamSolution.resolve t action ~orphans request in
@@ -350,21 +365,10 @@ module API = struct
       let solution = OpamSolution.resolve t action ~orphans request in
       (requested, action, solution)
 
-  let upgrade_t ?ask ?switches atoms t =
+  let upgrade_t ?ask switches atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
-    let switches =
-      match switches with
-      |None -> OpamSwitch.Set.singleton t.switch_current
-      |Some sw -> sw
-    in
-    let t =
-      OpamSwitch.Set.fold (fun switch tacc ->
-        OpamState.add_switch_state t switch
-      ) switches t
-    in
-    let ct = get_switch t t.switch_current in
     match compute_upgrade_t ~switches atoms t with
     | requested, _action, Conflicts cs ->
       log "conflict!";
@@ -399,6 +403,8 @@ module API = struct
       OpamStd.Sys.exit 3
     | requested, action, Success solution ->
       let result = OpamSolution.apply ?ask t action ~requested solution in
+      (* XXX *)
+      let ct = get_switch t t.switch_current in
       if result = Nothing_to_do then (
         let to_check =
           if OpamPackage.Name.Set.is_empty requested then ct.installed
@@ -448,13 +454,14 @@ module API = struct
     with_switch_backup "upgrade" @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t atoms t
+    let switches = OpamSwitch.Set.singleton t.switch_current in
+    upgrade_t switches atoms t
 
   let upgrade_all switches names =
-    with_switch_backup "upgrade all" @@ fun t ->
+    with_switch_backup ~switches "upgrade all" @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t ~switches atoms t
+    upgrade_t switches atoms t
 
   let fixup_t t =
     log "FIXUP";
@@ -1214,7 +1221,9 @@ module API = struct
                (OpamPackage.Name.to_string name);
              if OpamPackage.Set.mem nv (Lazy.force ct.available_packages)
              then reinstall_t ~ask:true [name, Some (`Eq, OpamPackage.version nv)] t
-             else upgrade_t ~ask:true [name, Some (`Neq, OpamPackage.version nv)] t)
+             else 
+               let switches = OpamSwitch.Set.singleton t.switch_current in
+               upgrade_t ~ask:true switches [name, Some (`Neq, OpamPackage.version nv)] t)
           else
             (OpamConsole.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
              (* Package no longer available *)
@@ -1312,7 +1321,10 @@ module API = struct
             )
             (ct,[]) names
         in
-        upgrade_t ~ask:true atoms { t with switches = OpamSwitch.Map.singleton ct.switch ct }
+        let switches = OpamSwitch.Set.singleton ct.switch in
+        (* let t = { t with switches = OpamSwitch.Map.singleton ct.switch ct } in
+    * *)
+        upgrade_t ~ask:true switches atoms
 
     let list = list
   end

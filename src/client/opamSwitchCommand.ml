@@ -352,7 +352,7 @@ let switch ?compiler ~quiet switch =
 
 let import_t importfile t =
   let ct = get_switch t t.switch_current in
-  log "import switch";
+  log "import switch : %s" (OpamSwitch.to_string t.switch_current);
   let pinned =
     OpamPackage.Name.Map.merge (fun _ current import ->
         match current, import with
@@ -395,7 +395,7 @@ let import_t importfile t =
             available_packages = lazy available;
             packages = ct.packages ++ available }
   in
-  let t = { t with switches = OpamSwitch.Map.singleton ct.switch ct } in
+  let t = { t with switches = OpamSwitch.Map.add ct.switch ct t.switches } in
   let solution =
     try
       let _ =
@@ -420,6 +420,7 @@ let import_t importfile t =
           (OpamState.write_switch_state t;
            OpamState.load_state "pin-import" ct.switch)
       in
+      let ct = get_switch t t.switch_current in
 
       let available =
         imported %% (Lazy.force ct.available_packages ++ ct.installed) in
@@ -430,6 +431,7 @@ let import_t importfile t =
 
       let roots = OpamPackage.names_of_packages import_roots in
 
+      OpamState.print_state t;
       let request = {(OpamSolver.request ()) with wish_upgrade = to_import } in
       OpamSolution.resolve_and_apply t (Import roots)
         ~requested:(OpamPackage.names_of_packages imported)

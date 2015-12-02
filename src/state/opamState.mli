@@ -109,6 +109,7 @@ end
 val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
+val print_state: state -> unit
 
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state
@@ -190,7 +191,7 @@ val get_env_var: full_variable -> variable_contents option
 val filter_env:
   ?opam:OpamFile.OPAM.t ->
   ?local_variables:((variable_contents option) OpamVariable.Map.t) ->
-  state -> full_variable -> variable_contents option
+  ?switch:switch -> state -> full_variable -> variable_contents option
 
 (** [contents_of_variable t v] resolves the variable [v] using the
     (lazy) state [t]. First check in the environment for overwrites,
@@ -326,7 +327,7 @@ val installed_timestamp: state -> name -> float
 val unknown_package: state -> atom -> string
 
 (** Returns an explanation why a package is not currently available *)
-val unavailable_reason: state -> atom -> string
+val unavailable_reason: ?switch:switch -> state -> atom -> string
 
 (** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
 val download_archive: state -> package ->

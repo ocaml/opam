@@ -86,14 +86,17 @@ let print_state t =
   log "COMPILERS : %a" (slog OpamCompiler.Set.to_string) t.compilers;
   log "ALIASES   : %a" (slog OpamSwitch.Set.to_string) (OpamSwitch.Set.of_list (OpamSwitch.Map.keys t.aliases));
   log "REPOS     : %a" (slog string_of_repositories) t.repositories;
-  let ct = get_switch t t.switch_current in
-  log "SWITCH    : %a" (slog OpamSwitch.to_string) ct.switch;
-  log "COMPILER  : %a" (slog OpamCompiler.to_string) ct.compiler;
-  log "PACKAGES  : %a" (slog packages) ct.packages;
-  log "INSTALLED : %a" (slog OpamPackage.Set.to_string) ct.installed;
-  log "ROOTS     : %a" (slog OpamPackage.Set.to_string) ct.installed_roots;
-  log "REINSTALL : %a" (slog OpamPackage.Set.to_string) ct.reinstall;
-  log "AVAILABLE : %a" (slog OpamPackage.Set.to_string) (Lazy.force ct.available_packages)
+  log "CURRENT   : %a" (slog OpamSwitch.to_string) t.switch_current;
+  OpamSwitch.Map.iter (fun switch ct ->
+    log " SWITCH    : %a" (slog OpamSwitch.to_string) ct.switch;
+    log " COMPILER  : %a" (slog OpamCompiler.to_string) ct.compiler;
+    log " PACKAGES  : %a" (slog packages) ct.packages;
+    log " INSTALLED : %a" (slog OpamPackage.Set.to_string) ct.installed;
+    log " ROOTS     : %a" (slog OpamPackage.Set.to_string) ct.installed_roots;
+    log " REINSTALL : %a" (slog OpamPackage.Set.to_string) ct.reinstall;
+    log " AVAILABLE : %a" (slog OpamPackage.Set.to_string) (Lazy.force ct.available_packages);
+    log " ---------";
+  ) t.switches
 
 let compiler_comp t c =
   OpamFile.Comp.read (OpamPath.compiler_comp t.root c)
@@ -776,8 +779,8 @@ let get_env_var v =
   with Not_found -> None
 
 (* filter handling *)
-let rec resolve_variable t ?opam:opam_arg local_variables v =
-  let ct = get_switch t t.switch_current in
+let rec resolve_variable switch t ?opam:opam_arg local_variables v =
+  let ct = get_switch t switch in
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_var v =
@@ -811,7 +814,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
       let v, _descr, filt = List.find (fun (id,_,_) -> id = v) features in
       let local_variables = (* Avoid recursion *)
         OpamVariable.Map.add v None local_variables in
-      try Some (OpamFilter.eval (resolve_variable t ~opam local_variables) filt)
+      try Some (OpamFilter.eval (resolve_variable switch t ~opam local_variables) filt)
       with Failure _ ->
         OpamConsole.warning "Feature %s of %s didn't resolve%s"
           (OpamVariable.to_string v) (to_str opam)
@@ -894,8 +897,7 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
     | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root ct.switch ct.switch_config name)
     | "share",     _         -> dirname (OpamPath.Switch.share   t.root ct.switch ct.switch_config name)
     | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root ct.switch ct.switch_config name)
-    | "build",     Some opam ->
-      dirname (OpamPath.Switch.build t.root ct.switch (get_nv opam))
+    | "build",     Some opam -> dirname (OpamPath.Switch.build   t.root ct.switch (get_nv opam))
     | "version",   Some opam ->
       let ver = OpamFile.OPAM.version opam in
       string (OpamPackage.Version.to_string ver)
@@ -956,8 +958,11 @@ let rec resolve_variable t ?opam:opam_arg local_variables v =
   in
   contents
 
-let filter_env ?opam ?(local_variables=OpamVariable.Map.empty) t =
-  resolve_variable t ?opam local_variables
+let filter_env ?opam ?(local_variables=OpamVariable.Map.empty) ?switch t =
+  let switch =
+    match switch with None -> t.switch_current | Some sw -> sw
+  in
+  resolve_variable switch t ?opam local_variables
 
 let redirect t repo =
   if repo.repo_url.OpamUrl.backend <> `http then None else
@@ -1018,8 +1023,8 @@ let consistent_os opam =
       os $ OpamStd.Sys.os_string () in
     OpamFormula.eval atom f
 
-let consistent_available_field t opam =
-  OpamFilter.eval_to_bool ~default:false (filter_env ~opam t)
+let consistent_available_field switch t opam =
+  OpamFilter.eval_to_bool ~default:false (filter_env ~opam ~switch t)
     (OpamFile.OPAM.available opam)
 
 let quick_var_lookup v =
@@ -1044,13 +1049,14 @@ let contents_of_variable t v =
   match quick_var_lookup v with
   | Some c -> c
   | None   ->
-    let env = filter_env (Lazy.force t) in
+    let t = Lazy.force t in
+    let env = filter_env t in
     let default = S "#undefined" in
     OpamFilter.ident_value env ~default (OpamFilter.ident_of_var v)
 
 (* List the packages which do fulfil the compiler and OS constraints *)
-let available_packages t =
-  let ct = get_switch t t.switch_current in
+let available_packages switch t =
+  let ct = get_switch t switch in
   let filter nv =
     match opam_opt t nv with
     | None -> false
@@ -1061,7 +1067,7 @@ let available_packages t =
       in
       consistent_ocaml_version ct opam
       && consistent_os opam
-      && consistent_available_field t opam
+      && consistent_available_field switch t opam
       && has_repository ()
   in
   let pinned = pinned_packages t in
@@ -1088,8 +1094,9 @@ let unknown_package t (name, _ as atom) =
       (OpamPackage.Name.to_string name)
 
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason t (name, _ as atom) =
-  let ct = get_switch t t.switch_current in
+let unavailable_reason ?switch t (name, _ as atom) =
+  let switch = match switch with None -> t.switch_current | Some sw -> sw in
+  let ct = get_switch t switch in
   let reasons () =
     let candidates =
       OpamPackage.Set.filter (OpamFormula.check atom) ct.packages in
@@ -1112,7 +1119,7 @@ let unavailable_reason t (name, _ as atom) =
                (fun (b,s) -> (if b then "= " else "!= ") ^ s)
                (OpamFile.OPAM.os opam))
         ]) @
-      (if consistent_available_field t opam then [] else [
+      (if consistent_available_field switch t opam then [] else [
           Printf.sprintf "your system doesn't comply with %s"
             (OpamFilter.to_string (OpamFile.OPAM.available opam))
         ]) in
@@ -1613,7 +1620,7 @@ let pef_package ?(orphans=OpamPackage.Set.empty) switches t =
       |l -> Some("switch",(String.concat ", " (List.map OpamSwitch.to_string l)))
     in
     match available with
-    |None -> log "None ! %s" (OpamPackage.to_string package) ; None
+    |None -> None
     |Some _ -> 
       let name = Some("package",(OpamPackage.name_to_string package)) in
       let version = Some("version",(OpamPackage.version_to_string package)) in
@@ -1711,8 +1718,6 @@ let pef_package ?(orphans=OpamPackage.Set.empty) switches t =
       OpamPackage.Set.union (ct.packages ++ ct.installed) acc
     ) orphans switches
   in
-  print_state t;
-  log "ALL %s" (OpamPackage.Set.to_string s);
   OpamPackage.Set.fold (fun p l -> match aux switches t p with None -> l | Some par -> par::l) s []
 ;;
 
@@ -1999,6 +2004,7 @@ let load_state_switch t switch =
 
 (* load the switch data and add it to [t] *)
 let add_switch_state t switch =
+  log "add_switch_state %s" (OpamSwitch.to_string switch);
   let ct = load_state_switch t switch in
   let partial = false in
   let opams =
@@ -2016,11 +2022,14 @@ let add_switch_state t switch =
       )
       ct.installed t.opams
   in
-  let t = { t with partial; opams; 
-              switch_current = switch;
+  (* let old_current = t.switch_current in *)
+  let t = { t with partial; opams; (* switch_current = switch; *)
               switches = OpamSwitch.Map.add switch ct t.switches} in
-  let ct = { ct with available_packages = lazy (available_packages t) } in
-  { t with switches = OpamSwitch.Map.add switch ct t.switches }
+  let ct = { ct with available_packages = lazy (available_packages switch t) } in
+  let t = { t with
+    (* switch_current = old_current; *)
+    switches = OpamSwitch.Map.add switch ct t.switches } in
+  t
 
 let load_state ?save_cache call_site switch =
   let chrono = OpamConsole.timer () in
@@ -2030,9 +2039,9 @@ let load_state ?save_cache call_site switch =
   log "LOAD-STATE(%s)" call_site;
   print_state t ;
 
-  let t = add_switch_state t switch in
+  let t = { (add_switch_state t switch) with switch_current = switch } in
+  print_state t ;
 
-  print_state t;
   let load_time = chrono () in
   log "State %s loaded in %.3fs" call_site load_time;
   (* Check whether the system compiler has been updated *)
@@ -2311,7 +2320,7 @@ let compute_env_updates t =
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root ct.switch ct.switch_config) in
 *)
   let fenv ?opam v =
-    try resolve_variable t ?opam OpamVariable.Map.empty v
+    try resolve_variable t.switch_current t ?opam OpamVariable.Map.empty v
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
@@ -2442,7 +2451,7 @@ let update_ocamlinit () =
     OpamConsole.msg "  ~/.ocamlinit is already up-to-date.\n"
 
 let string_of_env_update t shell updates =
-  let fenv = resolve_variable t OpamVariable.Map.empty in
+  let fenv = resolve_variable t.switch_current t OpamVariable.Map.empty in
   let make_comment comment_opt =
     OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment_opt
   in
@@ -3009,7 +3018,7 @@ let install_compiler t ~quiet:_ switch compiler =
         let ct = get_switch t t.switch_current in
         let ct = { ct with switch; compiler; switch_config } in
         let t = { t with switches = OpamSwitch.Map.add switch ct t.switches } in
-        let env = resolve_variable t OpamVariable.Map.empty in
+        let env = resolve_variable switch t OpamVariable.Map.empty in
         OpamFilter.commands env (OpamFile.Comp.build comp)
       in
       let commands =
