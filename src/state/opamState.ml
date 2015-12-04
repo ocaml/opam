@@ -3033,15 +3033,12 @@ let update_dev_packages t packages =
       ~nil:OpamPackage.Set.empty
       (OpamPackage.Set.elements packages)
   in
-  let global =
-    OpamPackage.Set.of_list (OpamPackage.Map.keys (global_dev_packages t))
-  in
   let pinned =
     OpamPackage.Set.filter (fun nv -> is_pinned t (OpamPackage.name nv))
       packages
   in
-  add_to_reinstall t ~all_unpinned:true (updates %% global -- pinned);
-  add_to_reinstall t ~all_unpinned:false (updates -- global ++ pinned);
+  add_to_reinstall t ~all_unpinned:true (updates -- pinned);
+  add_to_reinstall t ~all_unpinned:false (updates %% pinned);
   updates
 
 let update_pinned_packages t names =
