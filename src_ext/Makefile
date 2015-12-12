@@ -15,10 +15,10 @@ URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
 MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
 
 URL_cudf = http://opam.ocaml.org/archives/cudf.0.7+opam.tar.gz
-MD5_cudf = b12d933a96bd326e2443241faca7aa8c
+MD5_cudf = 2c23f4a6c377270c34962574a1bed669
 
 URL_dose = http://opam.ocaml.org/archives/dose.3.3+opam.tar.gz
-MD5_dose = 6c14696d8ab24fb88c1e592b8518c48a
+MD5_dose = 27798238d02777e4d1ccd032b3189421
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
