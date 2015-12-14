@@ -2098,16 +2098,7 @@ let compute_env_updates t =
     List.map (fun (name,op,str,cmt) ->
         name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
       (OpamFile.Comp.env (compiler_comp t t.compiler)) in
-  let root =
-    let current = t.root in
-    let default = OpamStateConfig.(default.root_dir) in
-    let current_string = OpamFilename.Dir.to_string current in
-    let env = OpamStd.Env.getopt "OPAMROOT" in
-    if current <> default || (env <> None && env <> Some current_string)
-    then [ "OPAMROOT", Eq, current_string, None ]
-    else []
-  in
-  man_path @ root @ comp_env @ pkg_env
+  man_path @ comp_env @ pkg_env
 
 let env_updates ~opamswitch ?(force_path=false) t =
   let update =
@@ -2125,11 +2116,20 @@ let env_updates ~opamswitch ?(force_path=false) t =
     (if force_path then PlusEq else EqPlusEq),
     OpamFilename.Dir.to_string add_to_path,
     Some "Current opam switch binary dir" in
+  let root =
+    let current = t.root in
+    let default = OpamStateConfig.(default.root_dir) in
+    let current_string = OpamFilename.Dir.to_string current in
+    let env = OpamStd.Env.getopt "OPAMROOT" in
+    if current <> default || (env <> None && env <> Some current_string)
+    then [ "OPAMROOT", Eq, current_string, None ]
+    else []
+  in
   let switch =
     if opamswitch then
       [ "OPAMSWITCH", Eq, OpamSwitch.to_string t.switch, None ]
     else [] in
-  new_path :: switch @ update
+  new_path :: root @ switch @ update
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
