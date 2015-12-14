@@ -441,8 +441,10 @@ let info ~fields ~raw_opam ~where atoms =
 
   let show_fields = List.length fields <> 1 in
 
-  let print_one name
-      { current_version; tags; syntax; libraries; extension; _ } =
+  let print_summary name =
+
+    (* All the version of the package *)
+    let versions = OpamPackage.versions_of_name t.packages name in
 
     (* Compute the installed versions, for each switch *)
     let installed = OpamState.installed_versions t name in
@@ -453,6 +455,36 @@ let info ~fields ~raw_opam ~where atoms =
           (OpamPackage.Version.to_string (OpamPackage.version nv))
           (String.concat " " (List.map OpamSwitch.to_string aliases)) in
       String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
+
+    let installed_version = match OpamPackage.Map.cardinal installed with
+      | 0 -> [ "installed-version" , "none" ]
+      | 1 -> [ "installed-version" , installed_str ]
+      | _ -> [ "installed-versions", installed_str ] in
+
+    let available_versions =
+      let strings = List.map OpamPackage.Version.to_string
+          (OpamPackage.Version.Set.elements versions) in
+      match strings with
+      | []  -> []
+      | [v] -> [ "available-version" , v ]
+      | l   -> [ "available-versions", String.concat ", " l ] in
+
+    let all_fields =
+      [ "package", OpamPackage.Name.to_string name ]
+      @ installed_version
+      @ available_versions
+    in
+
+    List.iter (fun (f, desc) ->
+        if show_fields then
+          OpamConsole.msg "%s "
+            (OpamConsole.colorise `blue (Printf.sprintf "%20s:" f));
+        OpamConsole.msg "%s\n" desc
+      ) all_fields;
+  in
+
+  let print_one name
+      { current_version; tags; syntax; libraries; extension; _ } =
 
     let nv = OpamPackage.create name current_version in
     let opam = OpamState.opam t nv in
@@ -516,22 +548,6 @@ let info ~fields ~raw_opam ~where atoms =
         | None   -> []
         | Some c -> [ "upstream-checksum", c ] in
 
-    (* All the version of the package *)
-    let versions = OpamPackage.versions_of_name t.packages name in
-
-    let installed_version = match OpamPackage.Map.cardinal installed with
-      | 0 -> [ "installed-version" , "" ]
-      | 1 -> [ "installed-version" , installed_str ]
-      | _ -> [ "installed-versions", installed_str ] in
-
-    let available_versions =
-      let strings = List.map OpamPackage.Version.to_string
-          (OpamPackage.Version.Set.elements versions) in
-      match strings with
-      | []  -> []
-      | [v] -> [ "available-version" , v ]
-      | l   -> [ "available-versions", String.concat ", " l ] in
-
     let mk empty to_string name field =
       let v = field opam in
       if empty = v then []
@@ -567,8 +583,7 @@ let info ~fields ~raw_opam ~where atoms =
     let version = OpamPackage.version nv in
 
     let all_fields =
-      [ "package", OpamPackage.Name.to_string name ]
-      @ [ "version", OpamPackage.Version.to_string version ]
+      [ "metadata of version", OpamPackage.Version.to_string version ]
       @ repository
       @ url
       @ homepage
@@ -583,8 +598,6 @@ let info ~fields ~raw_opam ~where atoms =
       @ depends
       @ depopts
       @ os
-      @ installed_version
-      @ available_versions
       @ Lazy.force extension
       @ descr in
 
@@ -602,4 +615,8 @@ let info ~fields ~raw_opam ~where atoms =
     if raw_opam then OpamFile.OPAM.write_to_channel stdout opam
   in
 
-  OpamPackage.Name.Map.iter print_one details
+  OpamPackage.Name.Map.iter (fun k v -> 
+    print_summary k;
+    OpamConsole.msg "----------------------------------------------------------------------\n";
+    print_one k v
+  )details
