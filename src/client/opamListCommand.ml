@@ -39,12 +39,13 @@ type package_details = {
 }
 
 let details_of_package t name versions =
+  let ct = get_switch t t.switch_current in
   let installed_version =
     try Some
           (OpamPackage.version
              (OpamPackage.Set.find
                 (fun nv -> OpamPackage.name nv = name)
-                t.installed))
+                ct.installed))
     with Not_found -> None in
   let current_version = match installed_version with
     | Some v when OpamPackage.Version.Set.mem v versions -> v
@@ -153,6 +154,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
 
 (* Prints a list of package details in the 'opam list' format *)
 let print_list t ~uninst_versions ~short ~shortv ~order names =
+  let ct = get_switch t t.switch_current in
   let get_version info =
     if uninst_versions then Some (info.current_version)
     else info.installed_version in
@@ -184,7 +186,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
           try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
           with Not_found -> acc
         ) [] packages in
-  let roots = OpamPackage.names_of_packages t.installed_roots in
+  let roots = OpamPackage.names_of_packages ct.installed_roots in
   List.iter (
     if short then
       fun (name, d) ->
@@ -237,6 +239,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       regexp =
     let t = OpamState.load_state "list"
         OpamStateConfig.(!r.current_switch) in
+    let ct = get_switch t t.switch_current in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
@@ -256,7 +259,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
     in
     let depends = OpamState.packages_of_atoms t depends_atoms in
     let packages =
-      if not depends_mode then t.packages
+      if not depends_mode then ct.packages
       else if resolve_depends then
         let universe =
           let u = OpamState.universe t Depends in
@@ -313,7 +316,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
               formula in
           OpamPackage.Set.for_all depends_on deps
         in
-        OpamPackage.Set.filter (is_dependent_on depends) t.packages
+        OpamPackage.Set.filter (is_dependent_on depends) ct.packages
       else
       let deps nv =
         let opam = OpamState.opam t nv in
@@ -331,16 +334,16 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
     let depends =
       (* Filter to keep only the relevant versions *)
       if resolve_depends then
-        packages %% depends ++ depends %% t.installed
+        packages %% depends ++ depends %% ct.installed
       else depends
     in
     let packages =
       if resolve_depends then packages else
         packages %% match filter with
-        | `all         -> t.packages
-        | `installed   -> t.installed
-        | `roots       -> t.installed_roots
-        | `installable -> t.installed ++ Lazy.force t.available_packages
+        | `all         -> ct.packages
+        | `installed   -> ct.installed
+        | `roots       -> ct.installed_roots
+        | `installable -> ct.installed ++ Lazy.force ct.available_packages
         (* OpamSolver.installable (OpamState.universe t Depends) -- too expensive *)
     in
     let packages =
@@ -421,7 +424,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
                OpamPackage.Set.elements depends)
         in
         OpamConsole.msg "# %s packages%s for %s:\n" kind results
-          (OpamSwitch.to_string t.switch) in
+          (OpamSwitch.to_string ct.switch) in
       if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
         print_header ();
       print_list t ~uninst_versions:depends_mode ~short:print_short
@@ -433,6 +436,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
 let info ~fields ~raw_opam ~where atoms =
   let t = OpamState.load_state "info"
       OpamStateConfig.(!r.current_switch) in
+  let ct = get_switch t t.switch_current in
   let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
   let details =
     let map = OpamPackage.to_map (OpamState.packages_of_atoms t atoms) in
@@ -459,7 +463,7 @@ let info ~fields ~raw_opam ~where atoms =
     let opam_f () =
       (* The above gives the opam structure, but the location of the orig file
          is lost: re-compute *)
-      let overlay = OpamPath.Switch.Overlay.opam t.root t.switch name in
+      let overlay = OpamPath.Switch.Overlay.opam t.root ct.switch name in
       if OpamFilename.exists overlay &&
          OpamFile.OPAM.(version (read overlay)) = current_version
       then overlay else
@@ -481,7 +485,7 @@ let info ~fields ~raw_opam ~where atoms =
         | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ]
       in
       try
-        match OpamPackage.Name.Map.find name t.pinned with
+        match OpamPackage.Name.Map.find name ct.pinned with
         | Version v -> repo @ ["pinned", OpamPackage.Version.to_string v]
         | Source url ->
           let revision =
@@ -489,7 +493,7 @@ let info ~fields ~raw_opam ~where atoms =
               { repo_name = OpamRepositoryName.of_string "tmp";
                 repo_url = url;
                 repo_priority = 0;
-                repo_root = OpamPath.Switch.dev_package t.root t.switch name; }
+                repo_root = OpamPath.Switch.dev_package t.root ct.switch name; }
             in
             (match OpamProcess.Job.run (OpamRepository.revision repo) with
              | Some v -> Printf.sprintf " (%s)" (OpamPackage.Version.to_string v)
@@ -517,7 +521,7 @@ let info ~fields ~raw_opam ~where atoms =
         | Some c -> [ "upstream-checksum", c ] in
 
     (* All the version of the package *)
-    let versions = OpamPackage.versions_of_name t.packages name in
+    let versions = OpamPackage.versions_of_name ct.packages name in
 
     let installed_version = match OpamPackage.Map.cardinal installed with
       | 0 -> [ "installed-version" , "" ]

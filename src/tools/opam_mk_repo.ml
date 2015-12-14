@@ -214,9 +214,7 @@ let resolve_deps args index names =
     OpamSolver.empty_universe with
     u_packages = packages;
     u_available = packages; (* XXX add a compiler/OS option ? *)
-    u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-    u_action = Install requested;
+    u_action = Install (requested, OpamSwitch.Set.empty);
   } in
   let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [];
                   criteria = `Default; extra_attributes = []; } in

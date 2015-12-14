@@ -20,61 +20,29 @@ open OpamTypes
 
 (** Client state *)
 module Types: sig
-  type t = {
-    partial: bool;
-  (* type global = { *)
-    root: OpamPath.t;
-    (** The global OPAM root path *)
 
-    config: OpamFile.Config.t;
-    (** The main configuration file *)
-
-    aliases: OpamFile.Aliases.t;
-    (** The association list between switch and compiler *)
-
-  (* } *)
-
-  (* type repos = { *)
-    repositories: OpamFile.Repo_config.t repository_name_map;
-    (** The list of repositories *)
-
-    compilers: compiler_set;
-    (** The list of compiler available to install *)
-
-    package_index: OpamFile.Package_index.t;
-    (** Package index *)
-
-    compiler_index: OpamFile.Compiler_index.t;
-    (** Compiler index *)
-  (* } *)
-
-  (* type switch = { *)
+  type switch_state = {
     switch: switch;
-    (** The current active switch *)
+    (** The switch name *)
 
     compiler: compiler;
-    (** The current compiler name (corresponding to a .comp file) *)
+    (** The compiler name (corresponding to a .comp file) *)
 
     compiler_version: compiler_version Lazy.t;
-    (** The current version of the compiler *)
+    (** The version of the compiler *)
 
     compiler_packages: package_set;
     (** The packages that form the base of the current compiler *)
 
     switch_config: OpamFile.Dot_config.t;
-    (** The contents of the global configuration file for this
-        switch *)
-
-    opams: OpamFile.OPAM.t package_map;
-    (** The list of OPAM files (excluding the ones that exist purely
-        as overlays) *)
+    (** The contents of the global configuration file for this switch *)
 
     packages: package_set;
     (** The list of packages *)
 
     available_packages: package_set Lazy.t;
     (** The list of packages, keeping the one available for the
-        current compiler version *)
+        compiler version *)
 
     pinned: pin_option name_map;
     (** The list of pinned packages *)
@@ -88,6 +56,42 @@ module Types: sig
     reinstall: package_set;
     (** The list of packages which needs to be reinsalled *)
   }
+
+  type t = {
+    partial: bool;
+    root: OpamPath.t;
+    (** The global OPAM root path *)
+
+    config: OpamFile.Config.t;
+    (** The main configuration file *)
+
+    aliases: OpamFile.Aliases.t;
+    (** The association list between switch and compiler *)
+
+    repositories: OpamFile.Repo_config.t repository_name_map;
+    (** The list of repositories *)
+
+    compilers: compiler_set;
+    (** The list of compiler available to install *)
+
+    package_index: OpamFile.Package_index.t;
+    (** Package index *)
+
+    compiler_index: OpamFile.Compiler_index.t;
+    (** Compiler index *)
+
+    switches : switch_state OpamSwitch.Map.t;
+    (** Map of all available switches *)
+
+    opams: OpamFile.OPAM.t package_map;
+    (** The list of OPAM files (excluding the ones that exist purely as overlays) *)
+
+    switch_current: switch;
+    (** The current active switch *)
+
+  }
+
+  val get_switch : t -> switch -> switch_state
 
 end
 
@@ -105,6 +109,7 @@ end
 val load_state: ?save_cache:bool -> string -> switch -> state
 
 val dump_state: state -> out_channel -> unit
+val print_state: state -> unit
 
 (** Adjust the switch, compiler and switch_config in a partial state *)
 val with_switch: switch -> state -> state
@@ -123,8 +128,10 @@ val switch_state: state -> OpamFile.State.t
     (installed, pinned packages, etc.). Does nothing in dryrun mode *)
 val write_switch_state: state -> unit
 
+val add_switch_state: state -> switch -> state
+
 (** Create a universe from the current state *)
-val universe: state -> user_action -> universe
+val universe: ?orphans:package_set -> state -> user_action -> universe
 
 (** {2 Environment} *)
 
@@ -184,7 +191,7 @@ val get_env_var: full_variable -> variable_contents option
 val filter_env:
   ?opam:OpamFile.OPAM.t ->
   ?local_variables:((variable_contents option) OpamVariable.Map.t) ->
-  state -> full_variable -> variable_contents option
+  ?switch:switch -> state -> full_variable -> variable_contents option
 
 (** [contents_of_variable t v] resolves the variable [v] using the
     (lazy) state [t]. First check in the environment for overwrites,
@@ -320,7 +327,7 @@ val installed_timestamp: state -> name -> float
 val unknown_package: state -> atom -> string
 
 (** Returns an explanation why a package is not currently available *)
-val unavailable_reason: state -> atom -> string
+val unavailable_reason: ?switch:switch -> state -> atom -> string
 
 (** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
 val download_archive: state -> package ->

@@ -23,16 +23,18 @@ let log fmt = OpamConsole.log "COMMAND" fmt
 let slog = OpamConsole.slog
 
 let cleanup_dev_dirs t name =
-  let packages = OpamPackage.packages_of_name t.packages name in
+  let ct = get_switch t t.switch_current in
+  let packages = OpamPackage.packages_of_name ct.packages name in
   OpamPackage.Set.iter (fun nv ->
-      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch name);
+      OpamFilename.rmdir (OpamPath.Switch.build t.root ct.switch nv);
+      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root ct.switch name);
     ) packages
 
 let edit t name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
+  let ct = get_switch t t.switch_current in
   let pin =
-    try OpamPackage.Name.Map.find name t.pinned
+    try OpamPackage.Name.Map.find name ct.pinned
     with Not_found ->
       OpamConsole.error_and_exit "%s is not pinned."
         (OpamPackage.Name.to_string name)
@@ -41,8 +43,8 @@ let edit t name =
     try Some (OpamState.find_installed_package_by_name t name)
     with Not_found -> None
   in
-  let file = OpamPath.Switch.Overlay.opam t.root t.switch name in
-  let temp_file = OpamPath.Switch.Overlay.tmp_opam t.root t.switch name in
+  let file = OpamPath.Switch.Overlay.opam t.root ct.switch name in
+  let temp_file = OpamPath.Switch.Overlay.tmp_opam t.root ct.switch name in
   let orig_opam =
     try Some (OpamFile.OPAM.read file) with e -> OpamStd.Exn.fatal e; None
   in
@@ -150,7 +152,9 @@ let update_set set old cur save =
     save (OpamPackage.Set.add cur (OpamPackage.Set.remove old set))
 *)
 let update_config t name pinned =
-  OpamState.write_switch_state { t with pinned };
+  let ct = get_switch t t.switch_current in
+  let ct = { ct with pinned } in
+  OpamState.write_switch_state { t with switches = OpamSwitch.Map.add ct.switch ct t.switches };
   cleanup_dev_dirs t name
 
 let pin name ?version pin_option =
@@ -159,6 +163,7 @@ let pin name ?version pin_option =
     (slog string_of_pin_option) pin_option
     (slog (string_of_pin_kind @* kind_of_pin_option)) pin_option;
   let t = OpamState.load_state "pin" OpamStateConfig.(!r.current_switch) in
+  let ct = get_switch t t.switch_current in
   let pin_kind = kind_of_pin_option pin_option in
   let installed_version =
     try
@@ -168,7 +173,7 @@ let pin name ?version pin_option =
 
   let _check = match pin_option with
     | Version v ->
-      if not (OpamPackage.Set.mem (OpamPackage.create name v) t.packages) then
+      if not (OpamPackage.Set.mem (OpamPackage.create name v) ct.packages) then
         OpamConsole.error_and_exit "Package %s has no version %s"
           (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v);
       if version <> None && version <> Some v then
@@ -179,7 +184,7 @@ let pin name ?version pin_option =
 
   let no_changes =
     try
-      let current = OpamPackage.Name.Map.find name t.pinned in
+      let current = OpamPackage.Name.Map.find name ct.pinned in
       let no_changes = pin_option = current in
       if no_changes then
         OpamConsole.note
@@ -196,7 +201,7 @@ let pin name ?version pin_option =
           (string_of_pin_option current);
       if OpamConsole.confirm "Proceed ?" then
         (OpamFilename.remove
-           (OpamPath.Switch.Overlay.tmp_opam t.root t.switch name);
+           (OpamPath.Switch.Overlay.tmp_opam t.root ct.switch name);
          no_changes)
       else OpamStd.Sys.exit 0
     with Not_found ->
@@ -209,7 +214,7 @@ let pin name ?version pin_option =
         then OpamStd.Sys.exit 0);
       false
   in
-  let pins = OpamPackage.Name.Map.remove name t.pinned in
+  let pins = OpamPackage.Name.Map.remove name ct.pinned in
   if OpamPackage.Set.is_empty (OpamState.find_packages_by_name t name) &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package ?"
@@ -225,7 +230,8 @@ let pin name ?version pin_option =
 
   let pinned = OpamPackage.Name.Map.add name pin_option pins in
   update_config t name pinned;
-  let t = { t with pinned } in
+  let ct = { ct with pinned } in
+  let t = { t with switches = OpamSwitch.Map.singleton ct.switch ct } in
   OpamState.add_pinned_overlay t ?version name;
 
   if not no_changes then
@@ -266,6 +272,7 @@ let unpin ?state names =
     | None -> OpamState.load_state "pin" OpamStateConfig.(!r.current_switch)
     | Some t -> t
   in
+  let ct = get_switch t t.switch_current in
   let pinned, needs_reinstall =
     List.fold_left (fun (pins, needs_reinstall) name ->
         try
@@ -289,10 +296,12 @@ let unpin ?state names =
           OpamConsole.note "%s is not pinned."
             (OpamPackage.Name.to_string name);
           pins, needs_reinstall)
-      (t.pinned, [])
+      (ct.pinned, [])
       names
   in
-  OpamState.write_switch_state { t with pinned };
+  let ct1 = { ct with pinned } in
+  let t1 = { t with switches = OpamSwitch.Map.add ct1.switch ct1 t.switches } in
+  OpamState.write_switch_state t1;
   List.iter (cleanup_dev_dirs t) names;
   needs_reinstall
 
@@ -300,10 +309,11 @@ let list ~short () =
   log "pin_list";
   let t = OpamState.load_state "pin-list"
       OpamStateConfig.(!r.current_switch) in
+  let ct = get_switch t t.switch_current in
   if short then
     OpamPackage.Name.Map.iter
       (fun n _ -> OpamConsole.msg "%s\n" (OpamPackage.Name.to_string n))
-      t.pinned
+      ct.pinned
   else
   let lines (n,a) =
     let kind = string_of_pin_kind (kind_of_pin_option a) in
@@ -324,5 +334,5 @@ let list ~short () =
       string_of_pin_option a ]
     @ extra
   in
-  let table = List.map lines (OpamPackage.Name.Map.bindings t.pinned) in
+  let table = List.map lines (OpamPackage.Name.Map.bindings ct.pinned) in
   OpamStd.Format.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)

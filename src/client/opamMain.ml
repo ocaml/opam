@@ -503,6 +503,11 @@ let config =
     | Some `pef, params ->
       let opam_state = OpamState.load_state "config-universe"
           OpamStateConfig.(!r.current_switch) in
+      let opam_state =
+        List.fold_left (fun t sw ->
+          OpamState.add_switch_state t sw
+        ) opam_state (OpamSwitch.Map.keys opam_state.OpamState.Types.aliases)
+      in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
@@ -529,6 +534,8 @@ let config =
       try
         let state = OpamState.load_state "config-report"
           OpamStateConfig.(!r.current_switch) in
+        let ct_state =
+          OpamState.Types.get_switch state state.OpamState.Types.switch_current in
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -564,24 +571,24 @@ let config =
           );
         print "pinned" "%s"
           OpamPackage.Name.Map.(
-            if is_empty state.pinned then "0" else
+            if is_empty ct_state.pinned then "0" else
             let nver, nlocal, nvc =
               fold (fun _ p (nver, nlocal, nvc) -> match p with
                   | Version _ -> nver+1, nlocal, nvc
                   | Source {OpamUrl.backend = #OpamUrl.version_control; _} ->
                     nver, nlocal, nvc+1
                   | Source _ -> nver, nlocal+1, nvc)
-                state.pinned (0,0,0) in
+                ct_state.pinned (0,0,0) in
             String.concat ", "
               (nprint "version" nver @
                nprint "path" nlocal @
                nprint "version control" nvc)
           );
         print "current-switch" "%s%s"
-          (OpamSwitch.to_string state.switch)
+          (OpamSwitch.to_string ct_state.switch)
           (if (OpamFile.Comp.preinstalled
                  (OpamFile.Comp.read
-                    (OpamPath.compiler_comp state.root state.compiler)))
+                    (OpamPath.compiler_comp state.root ct_state.compiler)))
            then "*" else "");
         let index_file = OpamFilename.to_string (OpamPath.package_index state.root) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
@@ -748,21 +755,36 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
+  let upgradeall = mk_flag ["a";"all"] "Upgrade packages in all switches" in
+  let switches =
+    mk_opt ["s";"switches"] "SWITCHES"
+    "List of switches to upgrade"
+    Arg.(list switch) []
+  in
   let fixup =
     mk_flag ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
        packages installed together...). This requires that you have an \
        external solver installed (aspcud, cudf-services.irill.org, ...)" in
-  let upgrade global_options build_options fixup atoms =
+  let upgrade global_options build_options switches upgradeall fixup atoms =
     apply_global_options global_options;
     apply_build_options build_options;
     if fixup then
       if atoms <> [] then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else `Ok (Client.fixup ())
+    else if upgradeall then
+      if switches = [] then
+        let root = OpamStateConfig.(!r.root_dir) in
+        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+        let switches = OpamSwitch.Set.of_list (OpamSwitch.Map.keys aliases) in
+        `Ok (Client.upgrade_all switches atoms)
+      else
+        `Ok (Client.upgrade_all (OpamSwitch.Set.of_list switches) atoms)
     else
-      `Ok (Client.upgrade atoms) in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $atom_list)),
+      `Ok (Client.upgrade atoms)
+  in
+  Term.(ret (pure upgrade $global_options $build_options $switches $upgradeall $fixup $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
@@ -1134,12 +1156,12 @@ let source =
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
     let open OpamState.Types in
-    let t = OpamState.load_state "source"
-        OpamStateConfig.(!r.current_switch) in
+    let t = OpamState.load_state "source" OpamStateConfig.(!r.current_switch) in
+    let ct = get_switch t t.switch_current in
     let nv =
       try
         OpamPackage.Set.max_elt
-          (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+          (OpamPackage.Set.filter (OpamFormula.check atom) ct.packages)
       with Not_found ->
         OpamConsole.error_and_exit "No package matching %s found."
           (OpamFormula.short_string_of_atom atom)
@@ -1189,7 +1211,7 @@ let source =
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
         move_dir
-          ~src:(OpamPath.Switch.build t.root t.switch nv)
+          ~src:(OpamPath.Switch.build t.root ct.switch nv)
           ~dst:dir;
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);
@@ -1425,14 +1447,13 @@ let check_and_run_external_commands () =
       raise (OpamStd.Sys.Exec (command, argv, env))
     else if initialised then
       (* Look for a corresponding package *)
-      let t =
-        OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch)
-      in
+      let t = OpamState.load_state "plugins-inst" OpamStateConfig.(!r.current_switch) in
       let open OpamState.Types in
+      let ct = get_switch t t.switch_current in
       let prefixed_name = plugin_prefix ^ name in
       let candidates =
         OpamPackage.packages_of_names
-          (Lazy.force t.available_packages)
+          (Lazy.force ct.available_packages)
           (OpamPackage.Name.Set.of_list @@
            List.map OpamPackage.Name.of_string [ prefixed_name; name ])
       in
@@ -1441,7 +1462,7 @@ let check_and_run_external_commands () =
             OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamState.opam t nv))
           candidates
       in
-      let installed = OpamPackage.Set.inter plugins t.installed in
+      let installed = OpamPackage.Set.inter plugins ct.installed in
       if OpamPackage.Set.is_empty candidates then
         ()
       else if not OpamPackage.Set.(is_empty installed) then

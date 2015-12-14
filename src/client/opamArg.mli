@@ -127,6 +127,9 @@ val filename: filename Arg.converter
 (** Dirnam converter *)
 val dirname: dirname Arg.converter
 
+(** Switch converter *)
+val switch: switch Arg.converter
+
 (** Compiler converter *)
 val compiler: compiler Arg.converter
 

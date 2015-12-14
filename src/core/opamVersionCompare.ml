@@ -166,6 +166,14 @@ let compare (x : string) (y : string) =
       else normalize_comp_result (compare_chunks r1 r2)
 ;;
 
+(*
+let compare v w =
+  match v,w with
+  |"legacy","base" -> 1
+  |"base","legacy" -> -1
+  |_,_ -> compare v w
+*)
+
 let equal (x : string) (y : string) =
   if x = y then true else (compare x y) = 0
 ;;

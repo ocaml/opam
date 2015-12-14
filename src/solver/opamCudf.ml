@@ -28,12 +28,22 @@ let s_installed_root = "installed-root"
 let s_pinned = "pinned"
 let s_version_lag = "version-lag"
 
+let decode_cudf_name name =
+  let extract_name x =
+    try String.sub x 0 (String.index x ':') with
+    | Not_found -> x
+  in
+  extract_name (Common.CudfAdd.decode name)
+
 let cudf2opam cpkg =
-  let sname = Cudf.lookup_package_property cpkg s_source in
-  let name = OpamPackage.Name.of_string sname in
-  let sver = Cudf.lookup_package_property cpkg s_source_number in
-  let version = OpamPackage.Version.of_string sver in
-  OpamPackage.create name version
+  try
+    let sname = decode_cudf_name cpkg.Cudf.package in
+    let name = OpamPackage.Name.of_string sname in
+    let sver = Cudf.lookup_package_property cpkg "number" in
+    let version = OpamPackage.Version.of_string sver in
+    OpamPackage.create name version
+  with Not_found ->
+    failwith "fatal error. Wrong encoding to cudf"
 
 let cudfnv2opam ?version_map ?cudf_universe (name,v) =
   let nv = match cudf_universe with
@@ -45,15 +55,12 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
   match nv with
   | Some nv -> nv
   | None ->
-    let name = OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
     match version_map with
     | Some vmap ->
-      let nvset =
-        OpamPackage.Map.filter
-          (fun nv cv -> OpamPackage.name nv = name && cv = v)
-          vmap
-      in
-      fst (OpamPackage.Map.choose nvset)
+        let cver = Pef.Pefcudf.get_real_version vmap (name,v) in
+        let version = OpamPackage.Version.of_string cver in
+        let name = OpamPackage.Name.of_string (decode_cudf_name name) in
+        OpamPackage.create name version
     | None -> raise Not_found
 
 let string_of_package p =
@@ -91,11 +98,12 @@ let string_of_actions l =
 
 exception Cyclic_actions of Action.t list list
 
+type version_map = Pef.Pefcudf.tables
 type conflict_case =
   | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
   | Conflict_cycle of string list list
 type conflict =
-  Cudf.universe * int package_map * conflict_case
+  Cudf.universe * version_map * conflict_case
 
 module Map = OpamStd.Map.Make(Pkg)
 module Set = OpamStd.Set.Make(Pkg)
@@ -170,40 +178,12 @@ let string_of_universe u =
 let vpkg2atom cudfnv2opam (name,cstr) =
   match cstr with
   | None ->
-    OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
+    OpamPackage.Name.of_string (decode_cudf_name name), None
   | Some (relop,v) ->
     try
       let nv = cudfnv2opam (name,v) in
       OpamPackage.name nv, Some (relop, OpamPackage.version nv)
     with Not_found -> assert false
-(* Should be unneeded now that we pass a full version_map along
-   [{
-      log "Could not find corresponding version in cudf universe: %a"
-        (slog string_of_atom) (name,cstr);
-      let candidates =
-        Cudf.lookup_packages cudf_universe name in
-      let solutions =
-        Cudf.lookup_packages ~filter:cstr cudf_universe name in
-      let module OVS = OpamPackage.Version.Set in
-      let to_version_set l =
-        OVS.of_list
-          (List.map (fun p -> OpamPackage.version (cudf2opam p)) l) in
-      let solutions = to_version_set solutions in
-      let others = OVS.Op.(to_version_set candidates -- solutions) in
-      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
-      match relop, OVS.is_empty solutions, OVS.is_empty others with
-      | _, true, true -> None
-      | `Leq, false, _ | `Lt, false, true -> Some (`Leq, OVS.max_elt solutions)
-      | `Lt, _, false | `Leq, true, false -> Some (`Lt, OVS.min_elt others)
-      | `Geq, false, _ | `Gt, false, true -> Some (`Geq, OVS.min_elt solutions)
-      | `Gt, _, false | `Geq, true, false -> Some (`Gt, OVS.max_elt others)
-      | `Eq, false, _ -> Some (`Eq, OVS.choose solutions)
-      | `Eq, true, _ ->
-        Some (`Eq, OpamPackage.Version.of_string "<unavailable version>")
-      | `Neq, false, true -> None
-      | `Neq, _, false -> Some (`Neq, OVS.choose others)
-   }]
-*)
 
 let vpkg2opam cudfnv2opam vpkg =
   match vpkg2atom cudfnv2opam vpkg with
@@ -327,7 +307,7 @@ let make_chains cudfnv2opam depends =
         in
         let formula = OpamFormula.simplify_version_formula formula in
         let opam_name =
-          OpamPackage.Name.of_string (Common.CudfAdd.decode name)
+          OpamPackage.Name.of_string (decode_cudf_name name)
         in
         let formula = Atom (opam_name, formula) in
         let children_constrs =
@@ -421,9 +401,8 @@ let default_preamble =
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
     (s_pinned,         `Bool (Some false));
-    (s_version_lag,    `Nat (Some 0));
   ] in
-  Common.CudfAdd.add_properties Cudf.default_preamble l
+  Common.CudfAdd.add_properties Opam.Opamcudf.preamble l
 
 let remove universe name constr =
   let filter p =
@@ -466,8 +445,6 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-
-
 let string_of_request r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
     (string_of_vpkgs r.wish_install)
@@ -483,11 +460,10 @@ let dump_universe oc univ =
   Cudf_printer.pp_cudf oc
     (default_preamble, univ, Cudf.default_request)
 
-let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
+let dump_cudf_request (_, univ,_ as cudf) criteria =
   function
   | None   -> None
   | Some f ->
-    ignore ( version_map: int OpamPackage.Map.t );
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
@@ -497,24 +473,20 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
      | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
      | None -> Printf.fprintf oc "#internal OPAM solver\n");
     Cudf_printer.pp_cudf oc cudf;
-    OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
-      let name = OpamPackage.name_to_string pkg in
-      let version = OpamPackage.version_to_string pkg in
-      Printf.fprintf oc "#v2v:%s:%d=%s\n" name vnum version;
-    ) version_map;
     close_out oc;
     Graph.output (Graph.of_universe univ) f;
     Some filename
 
-let dump_cudf_error ~version_map univ req =
+let dump_cudf_error univ req =
   let cudf_file = match OpamSolverConfig.(!r.cudf_file) with
     | Some f -> f
     | None ->
       let (/) = Filename.concat in
-      OpamCoreConfig.(!r.log_dir) /
+      (* OpamCoreConfig.(!r.log_dir) / *)
+      "/tmp" /
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
-    dump_cudf_request (to_cudf univ req) ~version_map
+    dump_cudf_request (to_cudf univ req)
       (if external_solver_available ()
        then OpamSolverConfig.criteria req.criteria
        else "")
@@ -563,37 +535,36 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
       Cudf_parser.load_solution_from_file
         (OpamFilename.to_string solver_out) universe in
     OpamFilename.remove solver_out;
-(*
-    if Cudf.universe_size (snd r) = 0 &&
-       not OpamStateConfig.(!r.no_base_packages) &&
-       Cudf.installed_size universe <> 0
-    then
-      raise (Common.CudfSolver.Error "empty solution");
-*)
     r
   with e ->
     OpamFilename.remove solver_in;
     OpamFilename.remove solver_out;
     raise e
 
-let call_external_solver ~version_map univ req =
+let call_external_solver univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
     log "Calling external solver with criteria %s" criteria;
-    ignore (dump_cudf_request ~version_map cudf_request
+    ignore (dump_cudf_request cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try
       Algo.Depsolver.check_request_using
         ~call_solver:(dose_solver_callback ~criteria)
         ~criteria ~explain:true cudf_request
-    with e ->
+    with e -> (
       OpamStd.Exn.fatal e;
-      OpamConsole.warning "External solver failed:";
-      OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-      failwith "opamSolver"
+      Algo.Depsolver.Error(Printexc.to_string e)
+    )
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
+
+let fail univ req msg =
+  (* OpamCoreConfig.(r := { !r with keep_log_dir = true }); *)
+  (* XXX KEEPLOGS -> nothing is going to be printed unless KEEPLOGS is set *)
+  let f = dump_cudf_error univ req in
+  OpamConsole.warning "External solver failed with %s Request saved to %S" msg f;
+  failwith "opamSolver"
 
 let check_request ?(explain=true) ~version_map univ req =
   match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
@@ -601,33 +572,21 @@ let check_request ?(explain=true) ~version_map univ req =
       (Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r)) ->
     make_conflicts ~version_map univ r
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
-  | Algo.Depsolver.Error msg ->
-    let f = dump_cudf_error ~version_map univ req in
-    OpamConsole.error "Internal solver failed with %s Request saved to %S"
-      msg f;
-    failwith "opamSolver"
+  | Algo.Depsolver.Error msg -> fail univ req msg
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
     conflict_empty ~version_map univ
 
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
-  let fail msg =
-    let f = dump_cudf_error ~version_map univ req in
-    OpamConsole.warning "External solver failed with %s Request saved to %S"
-      msg f;
-    failwith "opamSolver" in
-  match call_external_solver ~version_map univ req with
+  match call_external_solver univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
-  | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
-    (* XXX Is this still needed with latest dose ? *)
-    Success (Cudf.load_universe [])
-  | Algo.Depsolver.Error str -> fail str
+  | Algo.Depsolver.Error msg -> fail univ req msg
   | Algo.Depsolver.Unsat r   ->
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
       make_conflicts ~version_map univ r
     | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _} ->
-      fail "inconsistent return value."
+      fail univ req "inconsistent return value."
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
       check_request ~version_map univ req

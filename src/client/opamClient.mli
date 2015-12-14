@@ -45,6 +45,9 @@ module API: sig
       An empty list means upgrade all installed packages. *)
   val upgrade: atom list -> unit
 
+  (** Same as [upgrade] but work on a list of switches *)
+  val upgrade_all: switch_set -> atom list -> unit
+
   (** Recovers from an inconsistent universe *)
   val fixup: unit -> unit
 
@@ -188,7 +191,7 @@ val read_lock: (unit -> unit) -> unit
 
 (** Loads state with [command], and calls [f] on it. The loaded state is backed
     up, and in case of error, a message is displayed on how to revert. *)
-val with_switch_backup: string -> (OpamState.state -> unit) -> unit
+val with_switch_backup: ?switches:switch_set -> string -> (OpamState.state -> unit) -> unit
 
 (** This version of the API can be used concurrently. *)
 module SafeAPI: (module type of API)

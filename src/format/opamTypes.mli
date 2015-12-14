@@ -190,6 +190,17 @@ type repository = {
   repo_priority: int;
 }
 
+(** {2 Switches} *)
+
+(** Compiler switches *)
+type switch = OpamSwitch.t
+
+(** Set of compiler switches *)
+type switch_set = OpamSwitch.Set.t
+
+(** Map of compile switches *)
+type 'a switch_map = 'a OpamSwitch.Map.t
+
 (** {2 Solver} *)
 
 (** Used internally when computing sequences of actions *)
@@ -262,9 +273,9 @@ type 'a request = {
 
 (** user request action *)
 type user_action =
-  | Install of name_set (** The 'root' packages to be installed *)
-  | Upgrade of package_set (** The subset of packages to upgrade *)
-  | Reinstall of package_set
+  | Install of (name_set * switch_set) (** The 'root' packages to be installed *)
+  | Upgrade of (package_set * switch_set) (** The subset of packages to upgrade on each switch *)
+  | Reinstall of (package_set * switch_set)
   | Depends
   | Init
   | Remove
@@ -273,21 +284,14 @@ type user_action =
 
 (** Solver universe *)
 type universe = {
+  u_pefuniv  : ((string * string), Opam.Packages.package) Hashtbl.t;
+  u_options  : (string * string list * string list);
+  u_tables   : Pef.Pefcudf.tables;
   u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
-  u_depends  : ext_formula package_map;
-  u_depopts  : ext_formula package_map;
-  u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
-  u_pinned   : package_set;
-  u_dev      : package_set; (** packages with a version-controlled upstream *)
-  u_base     : package_set;
-  u_attrs    : (string * package_set) list;
-  (** extra CUDF attributes for the given packages *)
-  u_test     : bool; (** Test dependencies should be honored *)
-  u_doc      : bool; (** Doc dependencies should be honored *)
 }
 
 (** {2 Command line arguments} *)
@@ -384,17 +388,6 @@ type opamfile = {
   file_contents: opamfile_item list;
   file_name    : string;
 }
-
-(** {2 Switches} *)
-
-(** Compiler switches *)
-type switch = OpamSwitch.t
-
-(** Set of compiler switches *)
-type switch_set = OpamSwitch.Set.t
-
-(** Map of compile switches *)
-type 'a switch_map = 'a OpamSwitch.Map.t
 
 (** {2 Misc} *)
 

@@ -24,7 +24,7 @@ val resolve:
   OpamState.state ->
   user_action ->
   orphans:package_set ->
-  atom request ->
+  atom request OpamSwitch.Map.t ->
   (OpamSolver.solution, OpamCudf.conflict) result
 
 (** Apply a solution returned by the solver. If [ask] is not
@@ -47,7 +47,7 @@ val resolve_and_apply:
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   orphans:package_set ->
-  atom request ->
+  atom request OpamSwitch.Map.t ->
   solver_result
 
 (** Raise an error if no solution is found or in case of error. *)

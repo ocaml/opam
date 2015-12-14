@@ -293,6 +293,11 @@ let compiler =
   let print ppf comp = pr_str ppf (OpamCompiler.to_string comp) in
   parse, print
 
+let switch =
+  let parse str = `Ok (OpamSwitch.of_string str) in
+  let print ppf comp = pr_str ppf (OpamSwitch.to_string comp) in
+  parse, print
+
 let package_name =
   let parse str =
     try `Ok (OpamPackage.Name.of_string str)
