@@ -541,7 +541,7 @@ recommended to check the validity and quality of your `opam` files.
 
 - <a id="opamfield-dev-repo">`dev-repo: <string>`</a>:
   the URL of the package's source repository, which may be useful for
-  developpers: not to be mistaken with the URL file, which points to the
+  developers: not to be mistaken with the URL file, which points to the
   specific packaged version.
 
 - <a id="opamfield-tags">`tags: [ <string> ... ]`</a>:
