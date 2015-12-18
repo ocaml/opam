@@ -720,7 +720,7 @@ recommended to check the validity and quality of your `opam` files.
       instead)
     - <a id="opamflag-compiler">`compiler`</a>:
       the package is to be treated as a compiler, and available through the
-      `opam switch` command. This as several consequences:
+      `opam switch` command. This has several consequences:
       - when installed this way, the package and all its dependencies will be
         immutable and excluded from `opam switch rebuild`
       - the package _must_ include or generate a `global-config.config` file at its root
