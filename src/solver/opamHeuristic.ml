@@ -391,7 +391,7 @@ let implicits universe request =
   let interesting_names = find_interesting_names universe request in
 
   let implicit_installed, implicit_not_installed =
-    let implicit =
+    let implicits =
       let request_names =
         OpamStd.String.Set.of_list (List.map fst request.wish_upgrade) in
       let all_names = OpamStd.String.Set.of_list interesting_names in
@@ -399,12 +399,12 @@ let implicits universe request =
     let installed =
       let filter p =
         p.Cudf.installed
-        && OpamStd.String.Set.mem p.Cudf.package implicit in
+        && OpamStd.String.Set.mem p.Cudf.package implicits in
       Cudf.get_packages ~filter universe in
     let not_installed =
       let filter n =
         List.for_all (fun p -> p.Cudf.package <> n) installed in
-      let set = OpamStd.String.Set.filter filter implicit in
+      let set = OpamStd.String.Set.filter filter implicits in
       let list = OpamStd.String.Set.elements set in
       (* Favor packages with higher version number to discard
          deprecated packages. *)
