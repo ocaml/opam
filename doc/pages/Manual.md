@@ -541,7 +541,7 @@ recommended to check the validity and quality of your `opam` files.
 
 - <a id="opamfield-dev-repo">`dev-repo: <string>`</a>:
   the URL of the package's source repository, which may be useful for
-  developpers: not to be mistaken with the URL file, which points to the
+  developers: not to be mistaken with the URL file, which points to the
   specific packaged version.
 
 - <a id="opamfield-tags">`tags: [ <string> ... ]`</a>:
@@ -720,7 +720,7 @@ recommended to check the validity and quality of your `opam` files.
       instead)
     - <a id="opamflag-compiler">`compiler`</a>:
       the package is to be treated as a compiler, and available through the
-      `opam switch` command. This as several consequences:
+      `opam switch` command. This has several consequences:
       - when installed this way, the package and all its dependencies will be
         immutable and excluded from `opam switch rebuild`
       - the package _must_ include or generate a `global-config.config` file at its root
