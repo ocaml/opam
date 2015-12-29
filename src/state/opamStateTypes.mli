@@ -71,12 +71,6 @@ type repos_state = {
 
 (** State of a given switch: options, available and installed packages, etc.*)
 type switch_state = {
-  switch_lock: lock_kind;
-
-  switch_global: global_state;
-
-  switch_repos: repos_state;
-
   switch: switch;
   (** The current active switch *)
 
@@ -115,4 +109,21 @@ type switch_state = {
   (* Missing: a cache for
      - switch-global and package variables
      - the solver universe ? *)
+}
+
+(** State of a given switch: options, available and installed packages, etc.*)
+type state = {
+  switch_lock: lock_kind;
+
+  switch_global: global_state;
+
+  switch_repos: repos_state;
+
+  current_switch: switch;
+  (** The current active switch *)
+
+  switchmap: switch_state OpamSwitch.Map.t;
+  (** The map of all switches that are relevant for the current request.
+      The default is an empty map. The keys are always a subset of the active
+      switches *)
 }

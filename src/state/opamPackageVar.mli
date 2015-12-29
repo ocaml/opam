@@ -30,14 +30,14 @@ val ocaml_variable_names: (string * string) list
 val resolve_global: global_state -> full_variable -> variable_contents option
 
 (** Resolves global variables within the context of a switch *)
-val resolve_switch: switch_state -> full_variable -> variable_contents option
+val resolve_switch: state -> switch -> full_variable -> variable_contents option
 
 (** Resolves filter variables, including global, switch and package variables ;
     a map of locally defined variables can be supplied, as well as the opam file
     of origin, which is used to resolve self-references (implicit ["%{bin}%"] or
     explicit ["%{_:bin}%"] *)
 val resolve:
-  switch_state -> ?opam:OpamFile.OPAM.t ->
+  state -> switch -> ?opam:OpamFile.OPAM.t ->
   ?local:OpamVariable.variable_contents option OpamVariable.Map.t ->
   OpamFilter.env
 

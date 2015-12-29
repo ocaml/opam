@@ -24,8 +24,9 @@ val create_empty_switch: dirname -> ?compiler:compiler -> switch -> unit
 val install_compiler: global_state -> quiet:bool -> switch -> compiler -> unit
 
 (** Writes the current state file to disk (installed, pinned, root packages etc.).
-    Unless [OpamStateConfig.(!r.dryrun)] *)
-val write_state_file: switch_state -> unit
+    Unless [OpamStateConfig.(!r.dryrun)]. Writes all switches loaded in the current
+    state. *)
+val write_state_file: state -> unit
 
 (** Update the on-disk set of packages marked to reinstall *)
 val add_to_reinstall:
@@ -33,7 +34,7 @@ val add_to_reinstall:
   package_set -> unit
 
 (** Updates the defined default switch and loads its state *)
-val set_current_switch: global_state -> switch -> switch_state
+val set_current_switch: global_state -> switch -> state
 
 (** Create the default global_config structure for a switch, including default
     paths (lib, bin, etc.) *)
@@ -47,10 +48,10 @@ val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
 (** Stores a copy of the package's metadata in [/packages/NAME/NAME.VERSION].
     Used for installed packages *)
-val install_metadata: switch_state -> package -> unit
+val install_metadata: state -> switch -> package -> unit
 
 (** Remove the metadata copy in [/packages/NAME/NAME.VERSION], after checking
     for each package that it isn't installed in any switch anymore *)
-val remove_metadata: switch_state -> package_set -> unit
+val remove_metadata: state -> switch -> package_set -> unit
 
 

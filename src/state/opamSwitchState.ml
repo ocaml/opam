@@ -28,6 +28,13 @@ open OpamStateTypes
 let load_state_file gt switch =
     OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
 
+let get_switch st switch =
+  try OpamSwitch.Map.find switch st.switchmap
+  with Not_found ->
+    OpamConsole.error_and_exit
+	"%s is not a valid switch"
+	(OpamSwitch.to_string switch)
+
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
   if OpamFilename.exists f then OpamFile.Dot_config.read f
@@ -37,16 +44,7 @@ let load_switch_config gt switch =
        (OpamSwitch.to_string switch);
      OpamFile.Dot_config.empty)
 
-let load ?(lock=Lock_readonly) gt rt switch =
-  let chrono = OpamConsole.timer () in
-  log "LOAD-SWITCH-STATE";
-
-  if not (OpamSwitch.Map.mem switch gt.aliases) then
-    (log "%a does not contain the compiler name associated to the switch %a"
-       (slog @@ OpamFilename.to_string @* OpamPath.aliases) gt.root
-       (slog OpamSwitch.to_string) switch;
-     OpamSwitch.not_installed switch)
-  else
+let load_switch gt rt switch =
   let switch_config = load_switch_config gt switch in
   let { OpamFile.State. installed; installed_roots; pinned;
         compiler = compiler_packages; } =
@@ -115,12 +113,28 @@ let load ?(lock=Lock_readonly) gt rt switch =
   let reinstall =
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch)
   in
+  {
+    switch; compiler_packages; switch_config;
+    installed; pinned; installed_roots; opams; packages;
+    available_packages; reinstall;
+  }
+
+let load ?(lock=Lock_readonly) gt rt switch =
+  let chrono = OpamConsole.timer () in
+  log "LOAD-SWITCH-STATE (%s)" (OpamSwitch.to_string switch);
+
+  if not (OpamSwitch.Map.mem switch gt.aliases) then
+    (log "%a does not contain the compiler name associated to the switch %a"
+       (slog @@ OpamFilename.to_string @* OpamPath.aliases) gt.root
+       (slog OpamSwitch.to_string) switch;
+     OpamSwitch.not_installed switch)
+  else
   let st = {
     switch_global = gt;
     switch_repos = rt;
-    switch_lock = lock; switch; compiler_packages; switch_config;
-    installed; pinned; installed_roots; opams; packages;
-    available_packages; reinstall;
+    switch_lock = lock;
+    current_switch = switch;
+    switchmap = OpamSwitch.Map.singleton switch (load_switch gt rt switch)
   } in
   log "Switch state loaded in %.3fs" (chrono ());
   (* !X check system dependencies of installed packages *)
@@ -134,95 +148,104 @@ let load ?(lock=Lock_readonly) gt rt switch =
     then t
     else OpamStd.Sys.exit 0
   ) else
-    t
-*)
+    t 
+  *)
 
-let state_file st =
+let state_file sst =
   { OpamFile.State.
-    installed = st.installed;
-    installed_roots = st.installed_roots;
-    compiler = st.compiler_packages;
-    pinned = OpamPackage.Name.Map.map snd st.pinned; }
+    installed = sst.installed;
+    installed_roots = sst.installed_roots;
+    compiler = sst.compiler_packages;
+    pinned = OpamPackage.Name.Map.map snd sst.pinned; }
 
-let opam st nv = OpamPackage.Map.find nv st.opams
+(* load a new switch. Does not change the current switch *)
+let add_switch st rt switch =
+  { st with
+    switchmap =
+      OpamSwitch.Map.add switch (load_switch st.switch_global rt switch) st.switchmap
+  }
 
-let opam_opt st nv = try Some (opam st nv) with Not_found -> None
+let opam sst nv =
+  OpamPackage.Map.find nv sst.opams
 
-let descr_opt st nv =
-  OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.descr)
+let opam_opt sst nv = try Some (opam sst nv) with Not_found -> None
 
-let descr st nv =
-  OpamStd.Option.Op.(descr_opt st nv +! OpamFile.Descr.empty)
+let descr_opt sst nv =
+  OpamStd.Option.Op.(opam_opt sst nv >>= OpamFile.OPAM.descr)
 
-let url st nv =
-  OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
+let descr sst nv =
+  OpamStd.Option.Op.(descr_opt sst nv +! OpamFile.Descr.empty)
 
-let files st nv =
+let url sst nv =
+  OpamStd.Option.Op.(opam_opt sst nv >>= OpamFile.OPAM.url)
+
+let files sst nv =
   OpamStd.Option.Op.(
-    opam_opt st nv >>= OpamFile.OPAM.metadata_dir >>|
+    opam_opt sst nv >>= OpamFile.OPAM.metadata_dir >>|
     (fun dir -> dir / "files" ) >>=
     OpamFilename.opt_dir
   )
 
-let is_name_installed st name =
-  OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) st.installed
+let is_name_installed sst name =
+  OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) sst.installed
 
-let find_installed_package_by_name st name =
-  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) st.installed
+let find_installed_package_by_name sst name =
+  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) sst.installed
 
-let packages_of_atoms st atoms =
+let packages_of_atoms sst atoms =
   let check_atoms nv =
     let name = OpamPackage.name nv in
     let atoms = List.filter (fun (n,_) -> n = name) atoms in
     atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
-  OpamPackage.Set.filter check_atoms st.packages
+  OpamPackage.Set.filter check_atoms sst.packages
 
-let get_package st name =
-  try OpamPinned.package st name with Not_found ->
-  try find_installed_package_by_name st name with Not_found ->
-  try OpamPackage.max_version (Lazy.force st.available_packages) name
+let get_package sst name =
+  try OpamPinned.package sst name with Not_found ->
+  try find_installed_package_by_name sst name with Not_found ->
+  try OpamPackage.max_version (Lazy.force sst.available_packages) name
   with Not_found ->
-    OpamPackage.max_version st.packages name
+    OpamPackage.max_version sst.packages name
 
-let is_dev_package st nv =
-  match url st nv with
+let is_dev_package sst nv =
+  match url sst nv with
   | None -> false
   | Some urlf ->
     match OpamFile.URL.(url urlf, checksum urlf) with
     | { OpamUrl.backend = `http; _ }, _ | _, Some _ -> false
     | _, None -> true
 
-let dev_packages st =
-  OpamPackage.Set.filter (is_dev_package st)
-    (st.installed ++ OpamPinned.packages st)
+let dev_packages sst =
+  OpamPackage.Set.filter (is_dev_package sst)
+    (sst.installed ++ OpamPinned.packages sst)
 
-let universe st action = {
-  u_packages  = st.packages;
-  u_action    = action;
-  u_installed = st.installed;
-  u_available = Lazy.force st.available_packages;
-  u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
-  u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
-  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
-  u_installed_roots = st.installed_roots;
-  u_pinned    = OpamPinned.packages st;
-  u_dev       = dev_packages st;
-  u_base      = st.compiler_packages;
-  u_attrs     = [];
-  u_test      = OpamStateConfig.(!r.build_test);
-  u_doc       = OpamStateConfig.(!r.build_doc);
-}
-
-
+let universe st action = 
+  let sst = get_switch st st.current_switch in
+  {
+    u_packages  = sst.packages;
+    u_action    = action;
+    u_installed = sst.installed;
+    u_available = Lazy.force sst.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends sst.opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts sst.opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts sst.opams;
+    u_installed_roots = sst.installed_roots;
+    u_pinned    = OpamPinned.packages sst;
+    u_dev       = dev_packages sst;
+    u_base      = sst.compiler_packages;
+    u_attrs     = [];
+    u_test      = OpamStateConfig.(!r.build_test);
+    u_doc       = OpamStateConfig.(!r.build_doc);
+  }
 
 (* User-directed helpers *)
 
 let is_switch_globally_set st =
-  OpamFile.Config.switch st.switch_global.config = st.switch
+  OpamFile.Config.switch st.switch_global.config = st.current_switch
 
-let not_found_message st (name, cstr) =
+let not_found_message st switch (name, cstr) =
+  let sst = get_switch st switch in
   match cstr with
-  | Some (relop,v) when OpamPackage.has_name st.packages name ->
+  | Some (relop,v) when OpamPackage.has_name sst.packages name ->
     Printf.sprintf "Package %s has no version %s%s."
       (OpamPackage.Name.to_string name)
       (match relop with `Eq -> "" | r -> string_of_relop r)
@@ -232,13 +255,14 @@ let not_found_message st (name, cstr) =
       (OpamPackage.Name.to_string name)
 
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason st (name, _ as atom) =
+let unavailable_reason st switch (name, _ as atom) =
+  let sst = get_switch st switch in
   let candidates =
-    OpamPackage.Set.filter (OpamFormula.check atom) st.packages in
+    OpamPackage.Set.filter (OpamFormula.check atom) sst.packages in
   let nv = OpamPackage.max_version candidates name in
-  let avail = OpamFile.OPAM.available (opam st nv) in
+  let avail = OpamFile.OPAM.available (opam sst nv) in
   if not (OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch st)
+            (OpamPackageVar.resolve_switch st sst.switch)
             avail)
   then
     Printf.sprintf "%s has unmet availability conditions: %s"
@@ -246,7 +270,7 @@ let unavailable_reason st (name, _ as atom) =
       (OpamFilter.to_string avail)
   else
   try
-    let (version, pin) = OpamPackage.Name.Map.find name st.pinned in
+    let (version, pin) = OpamPackage.Name.Map.find name sst.pinned in
     Printf.sprintf
       "%s is not available because the package is pinned to %s."
       (OpamFormula.short_string_of_atom atom)
@@ -257,7 +281,7 @@ let unavailable_reason st (name, _ as atom) =
          Printf.sprintf "%s, version %s" (string_of_pin_option pin)
            (OpamPackage.Version.to_string version))
   with Not_found ->
-    not_found_message st atom
+    not_found_message st sst.switch atom
 
 let load_full_compat _ switch =
   let gt = OpamGlobalState.load () in

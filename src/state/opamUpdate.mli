@@ -23,26 +23,26 @@ open OpamStateTypes
 
     Side-effect: update the reinstall files (on all switches, for non-pinned
     packages). *)
-val dev_packages: switch_state -> package_set -> package_set
+val dev_packages: state -> switch -> package_set -> package_set
 
 (** Updates a single dev or pinned package from its upstream; returns true
     if changed, false otherwise *)
-val dev_package: switch_state -> package -> bool OpamProcess.job
+val dev_package: state -> switch -> package -> bool OpamProcess.job
 
 (** A subset of update_dev_packages that only takes packages names and only
     works on pinned packages. Also updates the reinstall file of the current
     switch *)
-val pinned_packages: switch_state -> name_set -> package_set
+val pinned_packages: state -> switch -> name_set -> package_set
 
 (** Updates a dev pinned package from its upstream; returns true if changed,
     false otherwise *)
 val pinned_package:
-  switch_state -> ?fixed_version:version -> name -> bool OpamProcess.job
+  state -> switch -> ?fixed_version:version -> name -> bool OpamProcess.job
 
 (** Download or synchronise the upstream source for the given package into the
     given directory.
     For non-VC remotes, verifies the checksum if any *)
 val download_upstream:
-  switch_state -> package -> dirname ->
+  state -> switch -> package -> dirname ->
   generic_file download option OpamProcess.job
 

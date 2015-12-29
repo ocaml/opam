@@ -65,7 +65,8 @@ let add (env: env) (updates: env_update list) =
   in
   env @ expand updates
 
-let compute_updates st =
+let compute_updates st switch =
+  let sst = OpamSwitchState.get_switch st switch in
   (* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -75,7 +76,7 @@ let compute_updates st =
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
 *)
   let fenv ?opam v =
-    try OpamPackageVar.resolve st ?opam v
+    try OpamPackageVar.resolve st switch ?opam v
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
@@ -89,21 +90,21 @@ let compute_updates st =
       ["MANPATH", EqColon,
        OpamFilename.Dir.to_string
          (OpamPath.Switch.man_dir
-            st.switch_global.root st.switch st.switch_config),
+            st.switch_global.root sst.switch sst.switch_config),
       Some "Current opam switch man dir"]
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        let opam = OpamSwitchState.opam st nv in
+        let opam = OpamSwitchState.opam sst nv in
         List.map (fun (name,op,str,cmt) ->
             let s = OpamFilter.expand_string (fenv ~opam) str in
             name, op, s, cmt)
           (OpamFile.OPAM.env opam)
         @ acc)
-      st.installed []
+      sst.installed []
   in
   let comp_env = (* deprecated & costly (not cached!) *)
-    let compiler = OpamSwitch.Map.find st.switch st.switch_global.aliases in
+    let compiler = OpamSwitch.Map.find sst.switch st.switch_global.aliases in
     let comp_file = OpamPath.compiler_comp st.switch_global.root compiler in
     List.map (fun (name,op,str,cmt) ->
         name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
@@ -120,18 +121,19 @@ let compute_updates st =
   in
   man_path @ root @ comp_env @ pkg_env
 
-let updates ~opamswitch ?(force_path=false) st =
+let updates ~opamswitch ?(force_path=false) st switch =
+  let sst = OpamSwitchState.get_switch st switch in
   let root = st.switch_global.root in
   let update =
-    let fn = OpamPath.Switch.environment root st.switch in
+    let fn = OpamPath.Switch.environment root switch in
     if OpamFilename.exists fn then
       OpamFile.Environment.read fn
     else
-      let update = compute_updates st in
+      let update = compute_updates st switch in
       OpamFile.Environment.write fn update;
       update
   in
-  let add_to_path = OpamPath.Switch.bin root st.switch st.switch_config in
+  let add_to_path = OpamPath.Switch.bin root switch sst.switch_config in
   let new_path =
     "PATH",
     (if force_path then PlusEq else EqPlusEq),
@@ -139,7 +141,7 @@ let updates ~opamswitch ?(force_path=false) st =
     Some "Current opam switch binary dir" in
   let switch =
     if opamswitch then
-      [ "OPAMSWITCH", Eq, OpamSwitch.to_string st.switch, None ]
+      [ "OPAMSWITCH", Eq, OpamSwitch.to_string switch, None ]
     else [] in
   new_path :: switch @ update
 
@@ -151,20 +153,20 @@ let updates ~opamswitch ?(force_path=false) st =
 
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
-let get_opam ~force_path st =
+let get_opam ~force_path st switch =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
-  add [] (updates ~opamswitch ~force_path st)
+  add [] (updates ~opamswitch ~force_path st switch)
 
-let get_full ~force_path st =
+let get_full ~force_path st switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env0 (updates ~opamswitch:true ~force_path st)
+  add env0 (updates ~opamswitch:true ~force_path st switch)
 
-let is_up_to_date st =
+let is_up_to_date st switch =
   let changes =
     List.filter
       (fun (s, v, _) -> Some v <>
                         try Some (OpamStd.Env.get s) with Not_found -> None)
-      (get_opam ~force_path:false st) in
+      (get_opam ~force_path:false st switch) in
   log "Not up-to-date env variables: [%s]"
     (String.concat " " (List.map (fun (v, _, _) -> v) changes));
   changes = []
@@ -238,8 +240,8 @@ let source gt ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let string_of_update st shell updates =
-  let fenv = OpamPackageVar.resolve st in
+let string_of_update st switch shell updates =
+  let fenv = OpamPackageVar.resolve st switch in
   let make_comment comment_opt =
     OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment_opt
   in
@@ -325,7 +327,7 @@ let init_script st ~switch_eval ~complete ~shell
   append "Load the opam-switch-eval script" switch_eval;
   Buffer.contents buf
 
-let update_init_scripts st ~global =
+let update_init_scripts st switch ~global =
   let init_scripts =
     match global with
     | None   -> []
@@ -343,14 +345,14 @@ let update_init_scripts st ~global =
       in
       List.map aux scripts in
   let scripts =
-    let updates = updates ~opamswitch:false st in
+    let updates = updates ~opamswitch:false st switch in
     [
       (complete_sh   , OpamScript.complete);
       (complete_zsh  , OpamScript.complete_zsh);
       (switch_eval_sh, OpamScript.switch_eval);
-      (variables_sh  , string_of_update st `sh updates);
-      (variables_csh , string_of_update st `csh updates);
-      (variables_fish, string_of_update st `fish updates);
+      (variables_sh  , string_of_update st switch `sh updates);
+      (variables_csh , string_of_update st switch `csh updates);
+      (variables_fish, string_of_update st switch `fish updates);
     ] @
     init_scripts
   in
@@ -493,7 +495,7 @@ let update_ocamlinit () =
   ) else
     OpamConsole.msg "  ~/.ocamlinit is already up-to-date.\n"
 
-let update_setup st user global =
+let update_setup st switch user global =
   begin match user with
     | Some { ocamlinit = false; dot_profile = None; _ }
     | None   -> ()
@@ -508,7 +510,7 @@ let update_setup st user global =
     | None   -> ()
     | Some _ ->
       OpamConsole.msg "Global configuration:\n";
-      update_init_scripts st ~global
+      update_init_scripts st switch ~global
   end
 
 let display_setup gt shell dot_profile =
@@ -553,8 +555,8 @@ let display_setup gt shell dot_profile =
   OpamConsole.msg "Global configuration:\n";
   List.iter print global_setup
 
-let print_env_warning_at_init st user =
-  if is_up_to_date st then ()
+let print_env_warning_at_init st switch user =
+  if is_up_to_date st switch then ()
   else
     let profile_string = match user.dot_profile with
       | None -> ""
@@ -592,24 +594,24 @@ let print_env_warning_at_init st user =
        %s%s%s\n\n"
       line
       (OpamConsole.colorise `yellow "1.")
-      (eval_string st.switch_global.root st.switch)
+      (eval_string st.switch_global.root st.current_switch)
       profile_string ocamlinit_string
       line
 
-let check_and_print_env_warning st =
+let check_and_print_env_warning st switch =
   if (OpamSwitchState.is_switch_globally_set st ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
-     not (is_up_to_date st) then
+     not (is_up_to_date st switch) then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
-      (OpamConsole.colorise `bold (eval_string st.switch_global.root st.switch))
+      (OpamConsole.colorise `bold (eval_string st.switch_global.root switch))
 
-let update_setup_interactive st shell dot_profile =
+let update_setup_interactive st switch shell dot_profile =
   let update dot_profile =
     let modify_user_conf = dot_profile <> None in
     let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
     OpamConsole.msg "\n";
-    update_setup st user (Some {complete=true; switch_eval=true});
+    update_setup st switch user (Some {complete=true; switch_eval=true});
     modify_user_conf in
 
   OpamConsole.msg "\n";

@@ -85,16 +85,16 @@ let remove_overlay gt switch name =
   OpamFilename.rmdir
     (OpamPath.Switch.Overlay.package gt.root switch name)
 
-let version st name = fst (OpamPackage.Name.Map.find name st.pinned)
+let version sst name = fst (OpamPackage.Name.Map.find name sst.pinned)
 
-let package st name = OpamPackage.create name (version st name)
+let package sst name = OpamPackage.create name (version sst name)
 
-let package_opt st name = try Some (package st name) with Not_found -> None
+let package_opt sst name = try Some (package sst name) with Not_found -> None
 
-let packages st =
+let packages sst =
   OpamPackage.Name.Map.fold (fun name (v,_) acc ->
       OpamPackage.Set.add (OpamPackage.create name v) acc)
-    st.pinned OpamPackage.Set.empty
+    sst.pinned OpamPackage.Set.empty
 
 let find_opam_file_in_source name dir =
   OpamStd.List.find_opt OpamFilename.exists [
@@ -103,5 +103,3 @@ let find_opam_file_in_source name dir =
     dir / "opam" // "opam";
     dir // "opam"
   ]
-
-

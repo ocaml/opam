@@ -104,15 +104,16 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
    data, or only recompilation-triggering changes: this could be used also after
    normal update *)
 (* !X rewrite to better use switch_state rather than reload overlay *)
-let pinned_package st ?fixed_version name =
+let pinned_package st switch ?fixed_version name =
+  let sst = OpamSwitchState.get_switch st switch in
   let root = st.switch_global.root in
-  let overlay = OpamPath.Switch.Overlay.package root st.switch name in
-  let url_f = OpamPath.Switch.Overlay.url root st.switch name in
+  let overlay = OpamPath.Switch.Overlay.package root sst.switch name in
+  let url_f = OpamPath.Switch.Overlay.url root sst.switch name in
   if not (OpamFilename.exists url_f) then Done false else
   let url = OpamFile.URL.read url_f in
-  let srcdir = OpamPath.Switch.dev_package root st.switch name in
+  let srcdir = OpamPath.Switch.dev_package root sst.switch name in
   let pinning_kind =
-    kind_of_pin_option (snd (OpamPackage.Name.Map.find name st.pinned)) in
+    kind_of_pin_option (snd (OpamPackage.Name.Map.find name sst.pinned)) in
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
      from the repo *)
@@ -203,7 +204,7 @@ let pinned_package st ?fixed_version name =
     hash_meta @@
     local_opam ?fixed_version
       ~check
-      ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam root st.switch name)
+      ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam root sst.switch name)
       name srcdir
   in
   let user_meta, old_meta, repo_meta =
@@ -260,7 +261,7 @@ let pinned_package st ?fixed_version name =
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (OpamUrl.to_string (OpamFile.URL.url url));
        OpamFilename.remove
-         (OpamPath.Switch.Overlay.tmp_opam root st.switch name);
+         (OpamPath.Switch.Overlay.tmp_opam root sst.switch name);
        install_meta srcdir user_meta new_meta)
     else if
       OpamConsole.formatted_msg
@@ -282,23 +283,25 @@ let pinned_package st ?fixed_version name =
     );
   Done result
 
-let dev_package st nv =
+let dev_package st switch nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
+  let sst = OpamSwitchState.get_switch st switch in
   let name = OpamPackage.name nv in
-  if OpamPinned.package_opt st name = Some nv then
-    pinned_package st name
+  if OpamPinned.package sst name = nv then
+    pinned_package st switch name
   else
-  match OpamSwitchState.url st nv with
+  match OpamSwitchState.url sst nv with
   | None     -> Done false
   | Some url ->
     if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
       fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
 
-let dev_packages st packages =
+let dev_packages st switch packages =
+  let sst = OpamSwitchState.get_switch st switch in
   log "update-dev-packages";
   let command nv =
     OpamProcess.Job.ignore_errors ~default:OpamPackage.Set.empty @@
-    dev_package st nv @@| function
+    dev_package st switch nv @@| function
     | true -> OpamPackage.Set.singleton nv
     | false -> OpamPackage.Set.empty
   in
@@ -311,25 +314,26 @@ let dev_packages st packages =
   in
   let pinned =
     OpamPackage.Set.filter
-      (fun nv -> OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned)
+      (fun nv -> OpamPackage.Name.Map.mem (OpamPackage.name nv) sst.pinned)
       packages
   in
-  OpamSwitchAction.add_to_reinstall st.switch_global st.switch
-    (OpamSwitchState.state_file st)
+  OpamSwitchAction.add_to_reinstall st.switch_global sst.switch
+    (OpamSwitchState.state_file sst)
     ~unpinned_only:false updates;
   let unpinned_updates = updates -- pinned in
   OpamGlobalState.fold_switches (fun switch state_file () ->
-      if switch <> st.switch then
+      if switch <> sst.switch then
         OpamSwitchAction.add_to_reinstall st.switch_global switch state_file
           ~unpinned_only:true unpinned_updates)
     st.switch_global ();
   updates
 
-let pinned_packages st names =
+let pinned_packages st switch names =
   log "update-pinned-packages";
+  let sst = OpamSwitchState.get_switch st switch in
   let command name =
     OpamProcess.Job.ignore_errors ~default:OpamPackage.Name.Set.empty @@
-    pinned_package st name @@| function
+    pinned_package st switch name @@| function
     | true -> OpamPackage.Name.Set.singleton name
     | false -> OpamPackage.Name.Set.empty
   in
@@ -343,17 +347,18 @@ let pinned_packages st names =
   in
   let updates =
     OpamPackage.Name.Set.fold (fun name acc ->
-        OpamPackage.Set.add (OpamPinned.package st name) acc)
+        OpamPackage.Set.add (OpamPinned.package sst name) acc)
       updates OpamPackage.Set.empty
   in
-  OpamSwitchAction.add_to_reinstall st.switch_global st.switch
-    (OpamSwitchState.state_file st) ~unpinned_only:false updates;
+  OpamSwitchAction.add_to_reinstall st.switch_global sst.switch
+    (OpamSwitchState.state_file sst) ~unpinned_only:false updates;
   updates
 
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
-let download_upstream st nv dirname =
-  match OpamSwitchState.url st nv with
+let download_upstream st switch nv dirname =
+  let sst = OpamSwitchState.get_switch st switch in
+  match OpamSwitchState.url sst nv with
   | None   -> Done None
   | Some u ->
     let remote_url = OpamFile.URL.url u in

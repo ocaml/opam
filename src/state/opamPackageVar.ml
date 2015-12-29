@@ -137,13 +137,14 @@ let resolve_switch_raw gt switch switch_config full_var =
           with Not_found ->
             None
 
-let resolve_switch st full_var =
-  resolve_switch_raw st.switch_global st.switch st.switch_config full_var
+let resolve_switch st switch full_var =
+  let sst = OpamSwitchState.get_switch st switch in
+  resolve_switch_raw st.switch_global sst.switch sst.switch_config full_var
 
 open OpamVariable
 
 (* filter handling *)
-let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
+let rec resolve st switch ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
@@ -151,7 +152,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     let get name =
       let cfg =
         OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config st.switch_global.root st.switch name)
+          (OpamPath.Switch.config st.switch_global.root switch name)
       in
       try OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
       with Not_found -> None
@@ -182,7 +183,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       let v, _descr, filt = List.find (fun (id,_,_) -> id = v) features in
       let local = (* Avoid recursion *)
         OpamVariable.Map.add v None local in
-      try Some (OpamFilter.eval (resolve st ~opam ~local) filt)
+      try Some (OpamFilter.eval (resolve st switch ~opam ~local) filt)
       with Failure _ ->
         OpamConsole.warning "Feature %s of %s didn't resolve%s"
           (OpamVariable.to_string v) (to_str opam)
@@ -191,6 +192,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
         None
     with Not_found -> None
   in
+  let sst = OpamSwitchState.get_switch st switch in
   let get_package_var v =
     if OpamVariable.Full.is_global v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
@@ -208,9 +210,9 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
         try
           let nv =
             OpamPackage.Set.choose
-              (OpamPackage.packages_of_name st.installed name)
+              (OpamPackage.packages_of_name sst.installed name)
           in
-          Some (OpamPackage.Map.find nv st.opams)
+          Some (OpamPackage.Map.find nv sst.opams)
         with Not_found -> None
     in
     let feat = match opam with
@@ -221,32 +223,32 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     let root = st.switch_global.root in
     match var_str, opam with
     | "installed", Some _ ->
-      Some (bool (OpamPackage.has_name st.installed name))
+      Some (bool (OpamPackage.has_name sst.installed name))
     | "installed", None ->
       Some (bool false)
     | "pinned", _ ->
-      Some (bool (OpamPackage.Name.Map.mem name st.pinned))
+      Some (bool (OpamPackage.Name.Map.mem name sst.pinned))
     | "name", _ ->
-      if OpamPackage.has_name st.packages name
+      if OpamPackage.has_name sst.packages name
       then Some (string (OpamPackage.Name.to_string name))
       else None
     | _, None -> None
     | "bin", _ ->
-      Some (dirname (OpamPath.Switch.bin root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.bin root sst.switch sst.switch_config))
     | "sbin", _ ->
-      Some (dirname (OpamPath.Switch.sbin root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.sbin root sst.switch sst.switch_config))
     | "lib", _ ->
-      Some (dirname (OpamPath.Switch.lib root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.lib root sst.switch sst.switch_config name))
     | "man", _ ->
-      Some (dirname (OpamPath.Switch.man_dir root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.man_dir root sst.switch sst.switch_config))
     | "doc", _ ->
-      Some (dirname (OpamPath.Switch.doc root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.doc root sst.switch sst.switch_config name))
     | "share", _ ->
-      Some (dirname (OpamPath.Switch.share root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.share root sst.switch sst.switch_config name))
     | "etc", _ ->
-      Some (dirname (OpamPath.Switch.etc root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.etc root sst.switch sst.switch_config name))
     | "build", Some opam ->
-      Some (dirname (OpamPath.Switch.build root st.switch (get_nv opam)))
+      Some (dirname (OpamPath.Switch.build root sst.switch (get_nv opam)))
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
@@ -268,7 +270,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
              try
                let nv =
                  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
-                   st.installed
+                   sst.installed
                in
                let version = OpamPackage.version nv in
                match cstr with
@@ -310,7 +312,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
           Full.read_from_env, v;
           (if v' <> v then Full.read_from_env else skip), v';
           read_package_var, v;
-          resolve_switch st, v;
+          resolve_switch st sst.switch, v;
           (if v' <> v then read_package_var else skip), v';
           get_package_var, v';
         ]

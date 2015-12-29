@@ -17,18 +17,18 @@
 open OpamTypes
 open OpamStateTypes
 
-val load:
-  ?lock:lock_kind -> global_state -> repos_state -> switch -> switch_state
+val load: ?lock:lock_kind -> global_state -> repos_state -> switch -> state
 
 (** Loads global, repository and switch state in one go. Using the
     lower-granularity functions is recommended, but this can help for the
     transition. First argument is a debug string (ignored) *)
-val load_full_compat: string -> switch -> switch_state
+val load_full_compat: string -> switch -> state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)
 val load_state_file: global_state -> switch -> OpamFile.State.t
 
+val get_switch : state -> switch -> switch_state
 (** {2 Helpers to access state data} *)
 
 val state_file: switch_state -> OpamFile.State.t
@@ -78,7 +78,7 @@ val dev_packages: switch_state -> package_set
 
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets *)
-val universe: switch_state -> user_action -> universe
+val universe: state -> user_action -> universe
 
 (** {2 User interaction and reporting } *)
 
@@ -86,11 +86,11 @@ val universe: switch_state -> user_action -> universe
     [$OPAMROOT/config], [false] otherwise. This doesn't imply that the switch is
     current w.r.t. either the process or the shell, for that you need to check
     [OpamStateConfig.(!r.switch_from)] *)
-val is_switch_globally_set: switch_state -> bool
+val is_switch_globally_set: state -> bool
 
 (** Returns a message about a package or version that couldn't be found *)
-val not_found_message: switch_state -> atom -> string
+val not_found_message: state -> switch -> atom -> string
 
 (** Returns a printable explanation why a package is not currently available
     (pinned to an incompatible version, unmet [available:] constraints...) *)
-val unavailable_reason: switch_state -> atom -> string
+val unavailable_reason: state -> switch -> atom -> string
