@@ -34,6 +34,7 @@ let empty_universe =
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
     u_action = Install OpamPackage.Name.Set.empty;
+    u_orphans = OpamPackage.Set.empty;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
     u_dev = OpamPackage.Set.empty;
@@ -324,19 +325,19 @@ let cycle_conflict ~version_map univ cycles =
              Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
-let resolve ?(verbose=true) universe ~orphans request =
+let resolve ?(verbose=true) universe request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map =
     cudf_versions_map universe
-      (universe.u_available ++ universe.u_installed ++ orphans) in
+      (universe.u_available ++ universe.u_installed ++ universe.u_orphans) in
   let simple_universe =
     load_cudf_universe universe ~version_map ~build:true
-      (universe.u_available ++ universe.u_installed -- orphans) in
+      (universe.u_available ++ universe.u_installed -- universe.u_orphans) in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let add_orphan_packages u =
     load_cudf_universe universe ~version_map ~build:true
-      (orphans ++
+      (universe.u_orphans ++
          (OpamPackage.Set.of_list
             (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
@@ -355,7 +356,7 @@ let resolve ?(verbose=true) universe ~orphans request =
   | Conflicts _ as c -> c
   | Success actions ->
     let all_packages =
-      universe.u_available ++ orphans in
+      universe.u_available ++ universe.u_orphans in
     let simple_universe =
       load_cudf_universe universe ~depopts:true ~build:false
         ~version_map all_packages in

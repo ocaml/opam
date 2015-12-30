@@ -78,7 +78,7 @@ val dev_packages: switch_state -> package_set
 
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets *)
-val universe: state -> user_action -> universe
+val universe: state -> user_action -> package_set -> universe
 
 (** {2 User interaction and reporting } *)
 

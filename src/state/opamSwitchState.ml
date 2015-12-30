@@ -218,11 +218,12 @@ let dev_packages sst =
   OpamPackage.Set.filter (is_dev_package sst)
     (sst.installed ++ OpamPinned.packages sst)
 
-let universe st action = 
+let universe st action orphans = 
   let sst = get_switch st st.current_switch in
   {
     u_packages  = sst.packages;
     u_action    = action;
+    u_orphans   = orphans;
     u_installed = sst.installed;
     u_available = Lazy.force sst.available_packages;
     u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends sst.opams;

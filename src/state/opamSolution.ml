@@ -774,8 +774,8 @@ let resolve ?(verbose=true) st action ~orphans request =
     OpamJson.append "switch" (OpamSwitch.to_json st.current_switch)
   );
   Json.output_request request action;
-  let univ = OpamSwitchState.universe st action in
-  let r = OpamSolver.resolve ~verbose univ ~orphans request in
+  let univ = OpamSwitchState.universe st action orphans in
+  let r = OpamSolver.resolve ~verbose univ request in
   Json.output_solution st st.current_switch r;
   r
 
