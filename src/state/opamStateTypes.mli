@@ -72,20 +72,19 @@ type repos_state = {
 (** State of a given switch: options, available and installed packages, etc.*)
 type switch_state = {
   switch: switch;
-  (** The current active switch *)
+  (** The current switch *)
 
   compiler_packages: package_set;
   (** The packages that form the base of the current compiler *)
 
   switch_config: OpamFile.Dot_config.t;
-  (** The contents of the global configuration file for this
-      switch *)
+  (** The contents of the global configuration file for this switch *)
 
   opams: OpamFile.OPAM.t package_map;
-  (** The metadata of all packages, gathered from repo, local cache and pinning
-      overlays. This includes URL and descr data (even if they were originally
-      in separate files), as well as the original metadata directory (that can
-      be used to retrieve the files/ subdir) *)
+  (** The metadata of all packages specific to this switch from local cache and
+      pinning overlays. This includes URL and descr data (even if they were 
+      originally in separate files), as well as the original metadata directory 
+      (that can be used to retrieve the files/ subdir) *)
 
   packages: package_set;
   (** The set of all known packages *)

@@ -63,8 +63,10 @@ let string_of_cnf string_of_atom cnf =
 let string_of_conjunction string_of_atom c =
   Printf.sprintf "%s" (OpamStd.List.concat_map " , " string_of_atom (List.rev c))
 
+(* transform all opams (from repo_opams and each switch) to pef.
+   We consider only opams available for at least one switch *)
 let pef_package switches st =
-  let aux switches sst nv package =
+  let aux switches nv package =
     let opam_name = OpamPackage.name nv in
     let opam_version = OpamPackage.version nv in
     let avail = OpamFile.OPAM.available package in
@@ -169,21 +171,17 @@ let pef_package switches st =
               base;depends;conflicts;depopts;reinstall]
       )
   in
-  (* in the future st.opams would contain all shared opams among all
-   * repos and sst.opams the repo specific opams *)
-  let cache = Hashtbl.create 1023 in
+  let to_pef s acc =
+    OpamPackage.Map.fold (fun nv opam acc ->
+      match aux switches nv opam with
+      |None -> acc
+      |Some par -> par::acc
+    ) s acc
+  in
   List.fold_left (fun acc switch ->
     let sst = OpamSwitchState.get_switch st switch in
-    OpamPackage.Map.fold (fun nv opam acc1 ->
-      if Hashtbl.mem cache opam then acc1
-      else begin
-        Hashtbl.add cache opam ();
-        match aux switches sst nv opam with
-        |None -> acc1
-        |Some par -> par::acc1
-      end
-    ) sst.opams acc
-  ) [] switches
+    to_pef sst.opams acc
+  ) (to_pef st.switch_repos.repo_opams []) switches
 ;;
 
 let dump_state st oc =

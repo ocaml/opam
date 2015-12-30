@@ -71,9 +71,11 @@ let load_switch gt rt switch =
           opams)
       pinned (OpamPackage.Name.Map.empty, OpamPackage.Map.empty)
   in
-  let opams =
+  let opams = pinned_opams in
+  (*
     OpamPackage.Map.union (fun _ x -> x) rt.repo_opams pinned_opams
   in
+  *)
   let opams =
     (* Add installed packages without repository (from ~/.opam/packages) *)
     OpamPackage.Set.fold (fun nv opams ->
