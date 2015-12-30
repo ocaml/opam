@@ -214,6 +214,7 @@ SRC_state = \
   opamSwitchAction.ml \
   opamUpdate.ml \
   opamAction.ml \
+	opamPef.ml \
   opamSolution.ml
 
 define PROJ_state
