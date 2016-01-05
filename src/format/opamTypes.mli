@@ -282,6 +282,7 @@ type universe = {
   
   u_action   : user_action;
   u_orphans  : package_set;
+  u_versionmap : int package_map;
 
   u_installed_roots: package_set;
   u_pinned   : package_set;

@@ -220,20 +220,58 @@ let dev_packages sst =
   OpamPackage.Set.filter (is_dev_package sst)
     (sst.installed ++ OpamPinned.packages sst)
 
+let cudf_versions_map (u_depends,u_depopts,u_conflicts,u_dev) packages =
+  log "cudf_versions_map";
+  let add_referred_to_packages filt acc refmap =
+    OpamPackage.Map.fold (fun package deps acc ->
+        let dev = OpamPackage.Set.mem package u_dev in
+        List.fold_left (fun acc -> function
+            | n, Some (_, v) -> OpamPackage.Set.add (OpamPackage.create n v) acc
+            | _, None -> acc)
+          acc (OpamFormula.atoms (filt ~dev deps)))
+      refmap acc
+  in
+  let filt = filter_deps ~build:true ~test:true ~doc:true in
+  let id = fun ~dev:_ x -> x in
+  let packages = add_referred_to_packages filt packages u_depends in
+  let packages = add_referred_to_packages filt packages u_depopts in
+  let packages = add_referred_to_packages id packages u_conflicts in
+  let pmap = OpamPackage.to_map packages in
+  OpamPackage.Name.Map.fold (fun name versions acc ->
+      let _, map =
+        OpamPackage.Version.Set.fold
+          (fun version (i,acc) ->
+             let nv = OpamPackage.create name version in
+             i + 1, OpamPackage.Map.add nv i acc)
+          versions (1,acc) in
+      map)
+    pmap OpamPackage.Map.empty
+
 let universe st action orphans = 
   let sst = get_switch st st.current_switch in
+  let u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends sst.opams in
+  let u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts sst.opams in
+  let u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts sst.opams in
+  let u_available = Lazy.force sst.available_packages in
+  let u_installed = sst.installed in
+  let u_dev       = dev_packages sst in
+  let u_orphans   = orphans in
+  let all_packages = u_available ++ u_installed ++ u_orphans in
+  let u = (u_depends,u_depopts,u_conflicts,u_dev) in
+  let u_versionmap = cudf_versions_map u all_packages in
   {
     u_packages  = sst.packages;
     u_action    = action;
-    u_orphans   = orphans;
-    u_installed = sst.installed;
-    u_available = Lazy.force sst.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends sst.opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts sst.opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts sst.opams;
+    u_orphans;
+    u_versionmap;
+    u_installed;
+    u_available;
+    u_depends;
+    u_depopts;
+    u_conflicts;
     u_installed_roots = sst.installed_roots;
     u_pinned    = OpamPinned.packages sst;
-    u_dev       = dev_packages sst;
+    u_dev;
     u_base      = sst.compiler_packages;
     u_attrs     = [];
     u_test      = OpamStateConfig.(!r.build_test);
