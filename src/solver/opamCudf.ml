@@ -483,11 +483,10 @@ let dump_universe oc univ =
   Cudf_printer.pp_cudf oc
     (default_preamble, univ, Cudf.default_request)
 
-let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
+let dump_cudf_request (_, univ,_ as cudf) criteria =
   function
   | None   -> None
   | Some f ->
-    ignore ( version_map: int OpamPackage.Map.t );
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
@@ -497,16 +496,11 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
      | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
      | None -> Printf.fprintf oc "#internal OPAM solver\n");
     Cudf_printer.pp_cudf oc cudf;
-    OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
-      let name = OpamPackage.name_to_string pkg in
-      let version = OpamPackage.version_to_string pkg in
-      Printf.fprintf oc "#v2v:%s:%d=%s\n" name vnum version;
-    ) version_map;
     close_out oc;
     Graph.output (Graph.of_universe univ) f;
     Some filename
 
-let dump_cudf_error ~version_map univ req =
+let dump_cudf_error univ req =
   let cudf_file = match OpamSolverConfig.(!r.cudf_file) with
     | Some f -> f
     | None ->
@@ -514,7 +508,7 @@ let dump_cudf_error ~version_map univ req =
       OpamCoreConfig.(!r.log_dir) /
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
-    dump_cudf_request (to_cudf univ req) ~version_map
+    dump_cudf_request (to_cudf univ req)
       (if external_solver_available ()
        then OpamSolverConfig.criteria req.criteria
        else "")
@@ -576,12 +570,12 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
     OpamFilename.remove solver_out;
     raise e
 
-let call_external_solver ~version_map univ req =
+let call_external_solver univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
     log "Calling external solver with criteria %s" criteria;
-    ignore (dump_cudf_request ~version_map cudf_request
+    ignore (dump_cudf_request cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try
       Algo.Depsolver.check_request_using
@@ -602,7 +596,7 @@ let check_request ?(explain=true) ~version_map univ req =
     make_conflicts ~version_map univ r
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
-    let f = dump_cudf_error ~version_map univ req in
+    let f = dump_cudf_error univ req in
     OpamConsole.error "Internal solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver"
@@ -612,11 +606,11 @@ let check_request ?(explain=true) ~version_map univ req =
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
   let fail msg =
-    let f = dump_cudf_error ~version_map univ req in
+    let f = dump_cudf_error univ req in
     OpamConsole.warning "External solver failed with %s Request saved to %S"
       msg f;
     failwith "opamSolver" in
-  match call_external_solver ~version_map univ req with
+  match call_external_solver univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
     (* XXX Is this still needed with latest dose ? *)
