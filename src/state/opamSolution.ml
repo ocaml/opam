@@ -256,7 +256,7 @@ module Json = struct
     in
     OpamJson.append "request" j
 
-  let output_solution st switch solution =
+  let output_solution versionmap st switch solution =
     if OpamStateConfig.(!r.json_out = None) then () else
     match solution with
     | Success solution ->
@@ -269,9 +269,10 @@ module Json = struct
       OpamJson.append "solution" (`A (List.rev to_proceed))
     | Conflicts cs ->
       let causes,_,cycles =
-        OpamCudf.strings_of_conflict (OpamSwitchState.unavailable_reason st switch) cs
+        OpamCudf.strings_of_conflict versionmap 
+        (OpamSwitchState.unavailable_reason st switch) cs
       in
-      let chains = OpamCudf.conflict_chains cs in
+      let chains = OpamCudf.conflict_chains versionmap cs in
       let jchains =
         `A (List.map (fun c ->
             `A ((List.map (fun f -> `String (OpamFormula.to_string f)) c)))
@@ -776,14 +777,15 @@ let resolve ?(verbose=true) st action ~orphans request =
   Json.output_request request action;
   let univ = OpamSwitchState.universe st action orphans in
   let r = OpamSolver.resolve ~verbose univ request in
-  Json.output_solution st st.current_switch r;
-  r
+  Json.output_solution univ.u_versionmap st st.current_switch r;
+  match r with
+  | Conflicts cs -> 
+    let reasons = OpamSwitchState.unavailable_reason st st.current_switch in
+    OpamConsole.msg "%s" (OpamCudf.string_of_conflict univ.u_versionmap reasons cs);
+    Conflicts cs
+  | Success solution -> Success solution
 
 let resolve_and_apply ?ask st action ~requested ~orphans request =
   match resolve st action ~orphans request with
-  | Conflicts cs ->
-    log "conflict!";
-    let reasons = OpamSwitchState.unavailable_reason st st.current_switch in
-    OpamConsole.msg "%s" (OpamCudf.string_of_conflict reasons cs);
-    No_solution
+  | Conflicts cs -> No_solution
   | Success solution -> apply ?ask st action ~requested solution

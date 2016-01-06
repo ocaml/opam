@@ -224,7 +224,7 @@ let actions_of_state ~version_map universe request state =
     wish_install = [];
     wish_upgrade = state @ installed
   } in
-  match OpamCudf.check_request ~version_map small_universe request with
+  match OpamCudf.check_request small_universe request with
   | Conflicts c ->
     log "not reachable! universe=%a request=%a"
       (slog OpamCudf.string_of_universe) small_universe
@@ -312,7 +312,7 @@ let state_space ?(filters = fun _ -> None) universe wish_remove interesting_name
 let state_of_request ?(verbose=true) ~version_map current_universe request =
   log "state_of_request";
 
-  match OpamCudf.check_request ~explain:false  ~version_map current_universe request with
+  match OpamCudf.check_request ~explain:false current_universe request with
   | Conflicts _             ->
     log "state-of-request: %a CONFLICT!"
       (slog OpamCudf.string_of_request) request;

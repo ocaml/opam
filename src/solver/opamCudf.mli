@@ -62,7 +62,6 @@ val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package lis
     [explain] is set to [false] *)
 val check_request:
   ?explain:bool ->
-  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
@@ -172,25 +171,23 @@ val s_version_lag: string
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 val make_conflicts:
-  version_map:int package_map -> Cudf.universe ->
-  Algo.Diagnostic.diagnosis -> ('a, conflict) result
+  Cudf.universe -> Algo.Diagnostic.diagnosis -> ('a, conflict) result
 val cycle_conflict:
-  version_map:int package_map -> Cudf.universe ->
-  string list list -> ('a, conflict) result
+  Cudf.universe -> string list list -> ('a, conflict) result
 
 (** Convert a conflict to something readable by the user. The first argument
     should return a string like "lwt<3.2.1 is not available because..." when called
     on an unavailable package (the reason can't be known this deep in the solver) *)
-val string_of_conflict: (atom -> string) -> conflict -> string
+val string_of_conflict: int OpamPackage.Map.t -> (atom -> string) -> conflict -> string
 
 (** Returns three lists of strings:
     - the final reasons why the request can't be satisfied
     - the dependency chains explaining it
     - the cycles in the actions to process (exclusive with the other two) *)
-val strings_of_conflict:
+val strings_of_conflict: int OpamPackage.Map.t ->
   (atom -> string) -> conflict -> string list * string list * string list
 
-val conflict_chains: conflict -> OpamFormula.t list list
+val conflict_chains: int OpamPackage.Map.t -> conflict -> OpamFormula.t list list
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit

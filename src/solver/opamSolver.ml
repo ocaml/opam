@@ -287,14 +287,6 @@ let cleanup_request universe (req:atom request) =
       ) req.wish_upgrade in
   { req with wish_install; wish_upgrade }
 
-let cycle_conflict version_map universe cycles =
-  OpamCudf.cycle_conflict version_map universe
-    (List.map
-       (List.map
-          (fun a ->
-             Action.to_string (map_action OpamCudf.cudf2opam a)))
-       cycles)
-
 let resolve ?(verbose=true) universe request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map = universe.u_versionmap in
@@ -321,7 +313,7 @@ let resolve ?(verbose=true) universe request =
            You may also retry with option --use-internal-solver"
     else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
-  | Conflicts _ as c -> c
+  | Conflicts _ as cs -> cs
   | Success actions ->
     let all_packages = universe.u_available ++ universe.u_orphans in
     let simple_universe =
@@ -334,7 +326,12 @@ let resolve ?(verbose=true) universe request =
           ~simple_universe ~complete_universe actions in
       Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
-      cycle_conflict version_map complete_universe cycles
+	OpamCudf.cycle_conflict complete_universe
+	  (List.map
+	     (List.map
+		  (fun a ->
+		     Action.to_string (map_action OpamCudf.cudf2opam a)))
+	     cycles)
 
 let get_atomic_action_graph t =
   cudf_to_opam_graph OpamCudf.cudf2opam t
@@ -388,7 +385,7 @@ let check_for_conflicts universe =
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
     None
   | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } as c ->
-    match OpamCudf.make_conflicts universe.u_versionmap cudf_universe c with
+    match OpamCudf.make_conflicts cudf_universe c with
     | Conflicts cs -> Some cs
     | _ -> None
 

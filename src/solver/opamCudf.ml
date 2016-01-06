@@ -95,7 +95,7 @@ type conflict_case =
   | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
   | Conflict_cycle of string list list
 type conflict =
-  Cudf.universe * int package_map * conflict_case
+  Cudf.universe * conflict_case
 
 module Map = OpamStd.Map.Make(Pkg)
 module Set = OpamStd.Set.Make(Pkg)
@@ -210,15 +210,15 @@ let vpkg2opam cudfnv2opam vpkg =
   | p, None -> p, Empty
   | p, Some (relop,v) -> p, Atom (relop, v)
 
-let conflict_empty ~version_map univ =
-  Conflicts (univ, version_map, Conflict_dep (fun () -> []))
-let make_conflicts ~version_map univ = function
+let conflict_empty univ =
+  Conflicts (univ, Conflict_dep (fun () -> []))
+let make_conflicts univ = function
   | {Algo.Diagnostic.result = Algo.Diagnostic.Failure f; _} ->
-    Conflicts (univ, version_map, Conflict_dep f)
+    Conflicts (univ, Conflict_dep f)
   | {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _} ->
     raise (Invalid_argument "make_conflicts")
-let cycle_conflict ~version_map univ cycle =
-  Conflicts (univ, version_map, Conflict_cycle cycle)
+let cycle_conflict univ cycle =
+  Conflicts (univ, Conflict_cycle cycle)
 
 let arrow_concat =
   String.concat (OpamConsole.colorise `yellow " -> ")
@@ -364,23 +364,23 @@ let strings_of_chains cudfnv2opam reasons =
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
-let strings_of_conflict unav_reasons = function
-  | univ, version_map, Conflict_dep reasons ->
+let strings_of_conflict version_map unav_reasons = function
+  | univ, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
     strings_of_final_reasons cudfnv2opam unav_reasons r,
     strings_of_chains cudfnv2opam r,
     []
-  | _univ, _version_map, Conflict_cycle cycles ->
+  | _univ, Conflict_cycle cycles ->
     [], [], strings_of_cycles cycles
 
-let conflict_chains = function
-  | cudf_universe, version_map, Conflict_dep r ->
+let conflict_chains version_map = function
+  | cudf_universe, Conflict_dep r ->
     make_chains (cudfnv2opam ~cudf_universe ~version_map) (r ())
   | _ -> []
 
-let string_of_conflict unav_reasons conflict =
-  let final, chains, cycles = strings_of_conflict unav_reasons conflict in
+let string_of_conflict version_map unav_reasons conflict =
+  let final, chains, cycles = strings_of_conflict version_map unav_reasons conflict in
   let b = Buffer.create 1024 in
   let pr_items b l = List.iter (Printf.bprintf b "  - %s\n") l in
   if cycles <> [] then
@@ -589,11 +589,11 @@ let call_external_solver univ req =
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
-let check_request ?(explain=true) ~version_map univ req =
+let check_request ?(explain=true) univ req =
   match Algo.Depsolver.check_request ~explain (to_cudf univ req) with
   | Algo.Depsolver.Unsat
       (Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r)) ->
-    make_conflicts ~version_map univ r
+    make_conflicts univ r
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
     let f = dump_cudf_error univ req in
@@ -601,7 +601,7 @@ let check_request ?(explain=true) ~version_map univ req =
       msg f;
     failwith "opamSolver"
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
-    conflict_empty ~version_map univ
+    conflict_empty univ
 
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
@@ -619,12 +619,12 @@ let get_final_universe ~version_map univ req =
   | Algo.Depsolver.Unsat r   ->
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
-      make_conflicts ~version_map univ r
+      make_conflicts univ r
     | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
       (* fail "inconsistent return value." *)
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
-      check_request ~version_map univ req
+      check_request univ req
 
 let diff univ sol =
   let before =
@@ -653,7 +653,7 @@ let actions_of_diff (install, remove) =
 let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
   if extern then get_final_universe ~version_map universe request
-  else check_request ~version_map universe request
+  else check_request universe request
 
 let to_actions f universe result =
   let aux u1 u2 =
