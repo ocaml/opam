@@ -2016,9 +2016,9 @@ let source t ~shell ?(interactive_only=false) f =
       Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-let expand_env t (env: env_update list) : env =
+let expand_env ~root (env: env_update list) : env =
+  let prefix = OpamFilename.Dir.to_string root in
   List.rev_map (fun (ident, op, string, comment) ->
-    let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
       try OpamStd.Env.reset_value ~prefix (OpamStd.Sys.path_sep ())
             (OpamStd.Env.get ident)
@@ -2051,12 +2051,12 @@ let expand_env t (env: env_update list) : env =
       ident, String.concat c (cons ~head:false string (read_env())), comment
   ) env
 
-let add_to_env t (env: env) (updates: env_update list) =
+let add_to_env ~root (env: env) (updates: env_update list) =
   let env =
     List.filter (fun (k,_,_) -> List.for_all (fun (u,_,_,_) -> u <> k) updates)
       env
   in
-  env @ expand_env t updates
+  env @ expand_env ~root updates
 
 let compute_env_updates t =
   (* Todo: put these back into their packages !
@@ -2141,11 +2141,11 @@ let env_updates ~opamswitch ?(force_path=false) t =
    we really want to get the environment for this switch. *)
 let get_opam_env ~force_path t =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
-  add_to_env t [] (env_updates ~opamswitch ~force_path t)
+  add_to_env ~root:t.root [] (env_updates ~opamswitch ~force_path t)
 
 let get_full_env ~force_path t =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add_to_env t env0 (env_updates ~opamswitch:true ~force_path t)
+  add_to_env ~root:t.root env0 (env_updates ~opamswitch:true ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
