@@ -55,25 +55,6 @@ let depopts_of_package universe ~build package =
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
 
-let is_installed universe (name,_) =
-  OpamPackage.Set.exists (fun pkg ->
-      OpamPackage.name pkg = name
-    ) universe.u_installed
-
-let find_installed universe (name, _) =
-  let pkg = OpamPackage.Set.find (fun pkg ->
-      OpamPackage.name pkg = name
-    ) universe.u_installed in
-  OpamPackage.version pkg
-
-let is_available universe wish_remove (name, _ as c) =
-  let version = find_installed universe c in
-  OpamPackage.Set.exists (fun pkg ->
-      OpamPackage.name pkg = name && OpamPackage.version pkg = version
-    ) universe.u_available
-  &&
-  List.for_all (fun (n, _) -> n <> name) wish_remove
-
 let name_to_cudf name =
   Common.CudfAdd.encode (OpamPackage.Name.to_string name)
 
@@ -260,40 +241,12 @@ let map_request f r =
     criteria = r.criteria;
     extra_attributes = r.extra_attributes; }
 
-(* Remove duplicate packages *)
-(* Add upgrade constraints *)
-let cleanup_request universe (req:atom request) =
-  let wish_install =
-    List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
-      req.wish_install in
-  let wish_install = (* Always add compiler packages *)
-    OpamStd.List.filter_map (fun nv ->
-        let n = OpamPackage.name nv in
-        if List.mem_assoc n req.wish_install ||
-           List.mem_assoc n req.wish_upgrade
-        then None
-        else Some (n, Some (`Eq, OpamPackage.version nv)))
-      (OpamPackage.Set.elements universe.u_base)
-    @ wish_install
-  in
-  let wish_upgrade =
-    List.rev_map (fun (n,c as pkg) ->
-        if c = None
-        && is_installed universe pkg
-        && is_available universe req.wish_remove pkg then
-          n, Some (`Geq, find_installed universe pkg)
-        else
-          pkg
-      ) req.wish_upgrade in
-  { req with wish_install; wish_upgrade }
-
 let resolve ?(verbose=true) universe request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map = universe.u_versionmap in
   let simple_universe =
     load_cudf_universe universe ~build:true
       (universe.u_available ++ universe.u_installed -- universe.u_orphans) in
-  let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe) request in
   let add_orphan_packages u =
     load_cudf_universe universe ~build:true

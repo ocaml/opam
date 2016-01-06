@@ -767,6 +767,63 @@ let apply ?ask st action ~requested solution =
       Aborted
   )
 
+(* Remove duplicate packages *)
+(* Add upgrade constraints *)
+let make_request st (req : atom request) =
+  let sst = OpamSwitchState.get_switch st st.current_switch in
+  let find_installed (name, _) =
+    OpamPackage.version (
+      OpamPackage.Set.find (fun pkg ->
+        OpamPackage.name pkg = name
+      ) sst.installed 
+    )
+  in
+  let is_available version wish_remove (name, _ as c) =
+    OpamPackage.Set.exists (fun pkg ->
+        OpamPackage.name pkg = name && 
+        OpamPackage.version pkg = version
+      ) (Lazy.force sst.available_packages)
+    &&
+    List.for_all (fun (n, _) -> n <> name) wish_remove
+  in
+  let wish_install =
+    OpamStd.List.filter_map (fun (n,c) ->
+      if not (List.mem_assoc n req.wish_upgrade) then
+        Some (n,c)
+      else None
+    ) req.wish_install
+  in
+  let wish_install = (* Always add compiler packages *)
+    OpamStd.List.filter_map (fun nv ->
+        let n = OpamPackage.name nv in
+        if List.mem_assoc n req.wish_install ||
+           List.mem_assoc n req.wish_upgrade
+        then None
+        else Some (n, Some (`Eq, OpamPackage.version nv))
+    ) (OpamPackage.Set.elements sst.compiler_packages)
+    @ wish_install
+  in
+  let wish_upgrade =
+    List.rev_map (fun (n,c as pkg) ->
+        if c = None then
+          try
+            let version = find_installed pkg in
+            if is_available version req.wish_remove pkg then
+              (n, Some (`Geq, version))
+            else
+              pkg
+          with Not_found -> pkg
+        else
+          pkg
+      ) req.wish_upgrade
+  in
+  { wish_install;
+    wish_remove = req.wish_remove;
+    wish_upgrade;
+    criteria = req.criteria;
+    extra_attributes = req.extra_attributes
+  }
+
 let resolve ?(verbose=true) st action ~orphans request =
   if OpamStateConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
@@ -774,6 +831,7 @@ let resolve ?(verbose=true) st action ~orphans request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json st.current_switch)
   );
+  let request = make_request st request in
   Json.output_request request action;
   let univ = OpamSwitchState.universe st action orphans in
   let r = OpamSolver.resolve ~verbose univ request in

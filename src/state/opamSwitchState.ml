@@ -256,7 +256,7 @@ let universe st action orphans =
   let u_installed = sst.installed in
   let u_dev       = dev_packages sst in
   let u_orphans   = orphans in
-  let all_packages = u_available ++ u_installed ++ u_orphans in
+  let all_packages = sst.packages ++ u_orphans in
   let u = (u_depends,u_depopts,u_conflicts,u_dev) in
   let u_versionmap = cudf_versions_map u all_packages in
   {
