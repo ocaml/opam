@@ -325,22 +325,44 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
+(* This function is part of dose . Temporarely copied here *)
+let is_consistent univ =
+  match Cudf_checker.is_consistent univ with
+  |true, None ->
+      Algo.Diagnostic.Success (fun ?(all=false) () ->
+        if all then
+          Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ
+        else []
+      )
+  |false, Some `Unsat_dep (nv,vpkgformula) ->
+      Algo.Diagnostic.Failure (fun () ->
+        let pkg = Cudf.lookup_package univ nv in
+        List.map (fun vpkglist ->
+          Algo.Diagnostic.Missing(pkg,vpkglist)
+        ) vpkgformula
+      )
+  |false, Some `Conflict (nv,vpkglist) ->
+      Algo.Diagnostic.Failure (fun () ->
+        let pkg1 = Cudf.lookup_package univ nv in
+        List.flatten (
+          List.map (fun vpkg ->
+            List.map (fun pkg2 ->
+              Algo.Diagnostic.Conflict (pkg1,pkg2,vpkg)
+            ) (Common.CudfAdd.who_provides univ vpkg)
+          ) vpkglist
+        )
+      )
+  |(true|false),_ -> failwith "Bug in Cudf_checker.is_consistent"
+
 let check_for_conflicts universe =
   let cudf_universe =
     load_cudf_universe ~depopts:false ~build:true universe  universe.u_packages
   in
-  let installed =
-    List.rev_map
-      (opam2cudf universe ~depopts:false ~build:true)
-      (OpamPackage.Set.elements universe.u_installed)
-  in
-  match Algo.Depsolver.edos_coinstall cudf_universe installed with
-  | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
-    None
-  | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } as c ->
-    match OpamCudf.make_conflicts cudf_universe c with
-    | Conflicts cs -> Some cs
-    | _ -> None
+  match is_consistent cudf_universe with
+  |Algo.Diagnostic.Success _ -> None
+  |Algo.Diagnostic.Failure f -> 
+      let Conflicts cs = OpamCudf.dep_conflict cudf_universe f in
+      Some cs
 
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->

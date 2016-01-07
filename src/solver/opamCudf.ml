@@ -219,6 +219,8 @@ let make_conflicts univ = function
     raise (Invalid_argument "make_conflicts")
 let cycle_conflict univ cycle =
   Conflicts (univ, Conflict_cycle cycle)
+let dep_conflict univ f =
+  Conflicts (univ, Conflict_dep f)
 
 let arrow_concat =
   String.concat (OpamConsole.colorise `yellow " -> ")
