@@ -17,6 +17,9 @@
 open OpamTypes
 
 (** Client state *)
+(* !X Rather use a phantom type for [readonly xxx_state], [readwrite xxx_state],
+   etc. and ensure well-typedness of state writing functions to guarantee
+   soundness of locking ? *)
 type lock_kind = Lock_none | Lock_readonly | Lock_readwrite
 
 (** Global state corresponding to an opam root and its configuration *)
@@ -31,7 +34,7 @@ type global_state = {
   config: OpamFile.Config.t;
   (** The main configuration file *)
 
-  aliases: OpamFile.Aliases.t;
+  aliases: compiler switch_map;
   (** The association list between switch and compiler *)
 
 }

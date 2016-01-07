@@ -35,13 +35,12 @@ val add_to_reinstall:
 (** Updates the defined default switch and loads its state *)
 val set_current_switch: global_state -> switch -> switch_state
 
-(* (** Create the default global_config structure for a switch, including default
+(** Create the default global_config structure for a switch, including default
     paths (lib, bin, etc.) *)
-val gen_switch_global_config: dirname -> switch -> OpamFile.Dot_config.t *)
+val gen_global_config: dirname -> switch -> OpamFile.Dot_config.t
 
-(* (** (Re-)install the configuration for a given root and switch *)
-val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit *)
-
+(** (Re-)install the configuration for a given root and switch *)
+val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
 (* !X These two are more repository than switch related; remove_metadata
    actually depends on wether installed in other switches *)

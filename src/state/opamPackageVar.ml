@@ -67,6 +67,7 @@ let package_variable_names = [
 let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
   (* backwards-compat, these are replaced by variables exported from the
      'ocaml' package.
+     !X
      /!\ reloads files for every variable resolution ! *)
   let module V = OpamVariable in
   let compiler = OpamSwitch.Map.find switch gt.aliases in
@@ -144,7 +145,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
-    (* X! Add a cache for this to switch_state *)
+    (* !X Add a cache for this to switch_state *)
     let get name =
       let cfg =
         OpamFile.Dot_config.safe_read

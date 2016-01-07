@@ -65,10 +65,10 @@ let args =
       { infer; install; force; orphans; findlib_pkgs; opam_pkgs }
     ) $ infer $ install $ force $ orphans $ findlib_pkgs $ opam_pkgs)
 
-let state = lazy (OpamState.load_state "opam-admin-findlib")
+let state = lazy (OpamSwitchState.load "opam-admin-findlib")
 
 let installed_findlibs () =
-  let { OpamState.Types.root; switch; _ } = Lazy.force state in
+  let { OpamStateTypes.root; switch; _ } = Lazy.force state in
   let libdir = OpamPath.Switch.lib_dir root switch in
   let dirs = OpamFilename.dirs libdir in
   let libs = List.fold_left (fun acc dir ->
@@ -104,7 +104,7 @@ let declared_findlibs repo packages =
     with Not_found ->
       acc
   in
-  let { OpamState.Types.installed } = Lazy.force state in
+  let { OpamStateTypes.installed } = Lazy.force state in
   OpamPackage.Set.fold aux installed StringSet.empty
 
 let infer_from_remove_command opam =
@@ -121,7 +121,7 @@ let infer_from_remove_command opam =
     ) StringSet.empty cmds
 
 let infer_from_name args package =
-  let { OpamState.Types.root; switch; installed } = Lazy.force state in
+  let { OpamStateTypes.root; switch; installed } = Lazy.force state in
   if args.install && not (OpamPackage.Set.mem package installed) then (
     let atom =
       OpamPackage.name package, Some (`Eq, OpamPackage.version package)

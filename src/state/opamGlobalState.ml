@@ -194,16 +194,26 @@ let load ?(lock=Lock_readonly) () =
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   { global_lock=lock; root; config; aliases }
 
-let all_installed gt =
-  OpamSwitch.Map.fold (fun switch _ acc ->
-      OpamPackage.Set.union acc
-      (OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch))
-      .OpamFile.State.installed
-    ) gt.aliases OpamPackage.Set.empty
-
 let fold_switches f gt acc =
   OpamSwitch.Map.fold (fun switch _ acc ->
       f switch
         (OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch))
         acc
     ) gt.aliases acc
+
+let all_installed gt =
+  fold_switches (fun _ state acc ->
+      OpamPackage.Set.union acc state.OpamFile.State.installed)
+    gt  OpamPackage.Set.empty
+
+let installed_versions gt name =
+  fold_switches (fun switch state acc ->
+      let installed =
+        OpamPackage.packages_of_name state.OpamFile.State.installed name
+      in
+      try
+        let nv = OpamPackage.Set.choose installed in
+        try OpamPackage.Map.add nv (switch::OpamPackage.Map.find nv acc) acc
+        with Not_found -> OpamPackage.Map.add nv [switch] acc
+      with Not_found -> acc)
+    gt OpamPackage.Map.empty

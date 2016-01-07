@@ -17,6 +17,7 @@
 (** Switch commands. *)
 
 open OpamTypes
+open OpamStateTypes
 
 (** Install a new switch. Returns a continuation that must be run to install the
     packages, but only needs a switch lock. *)
@@ -29,16 +30,16 @@ val install:
   quiet:bool -> update_config:bool -> switch -> compiler -> unit
 
 (** Install a compiler's base packages *)
-val install_packages: switch -> compiler -> unit
+val install_packages: switch_state -> unit
 
 (** Import a file which contains the packages to install. *)
-val import: filename option -> unit
+val import: global_state -> switch -> filename option -> unit
 
 (** Export a file which contains the installed packages. *)
 val export: filename option -> unit
 
 (** Remove the given compiler switch. *)
-val remove: switch -> unit
+val remove: global_state -> switch -> unit
 
 (** Switch to the given compiler switch. Returns a continuation like [install] *)
 val switch_cont:
@@ -48,7 +49,7 @@ val switch_cont:
 val switch: ?compiler:compiler -> quiet:bool -> switch -> unit
 
 (** Reinstall the given compiler switch. *)
-val reinstall: switch -> unit
+val reinstall: global_state -> switch -> unit
 
 (** Display the current compiler switch. *)
 val show: unit -> unit

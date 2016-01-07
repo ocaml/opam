@@ -285,7 +285,7 @@ let pinned_package st ?fixed_version name =
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
-  if OpamPinned.package st name = nv then
+  if OpamPinned.package_opt st name = Some nv then
     pinned_package st name
   else
   match OpamSwitchState.url st nv with

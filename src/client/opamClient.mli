@@ -17,6 +17,7 @@
 (** Client entry-point. *)
 
 open OpamTypes
+open OpamStateTypes
 
 (** OPAM API. *)
 module API: sig
@@ -115,17 +116,17 @@ module API: sig
 
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)
-    val import: filename option -> unit
+    val import: global_state -> switch -> filename option -> unit
 
     (** Export the packages to a file. If no filename is specified,
         write to stdout. *)
     val export: filename option -> unit
 
     (** Remove the given compiler. *)
-    val remove: switch -> unit
+    val remove: global_state -> switch -> unit
 
     (** Reinstall the given compiler. *)
-    val reinstall: switch -> unit
+    val reinstall: global_state -> switch -> unit
 
     (** List the available compiler descriptions. *)
     val list: print_short:bool -> installed:bool -> all:bool -> unit
@@ -188,7 +189,7 @@ val read_lock: (unit -> unit) -> unit
 
 (** Loads state with [command], and calls [f] on it. The loaded state is backed
     up, and in case of error, a message is displayed on how to revert. *)
-val with_switch_backup: string -> (OpamState.state -> unit) -> unit
+val with_switch_backup: string -> (switch_state -> unit) -> unit
 
 (** This version of the API can be used concurrently. *)
 module SafeAPI: (module type of API)

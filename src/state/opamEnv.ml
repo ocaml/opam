@@ -20,7 +20,6 @@ open OpamTypesBase
 open OpamFilename.Op
 
 let log fmt = OpamConsole.log "ENV" fmt
-let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 

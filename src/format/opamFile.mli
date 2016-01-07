@@ -294,6 +294,9 @@ module OPAM: sig
 
   val url: t -> URL.t option
 
+  (** Related metadata directory (not an actual field of the file, linked to the
+      file location).
+      This can be used to locate e.g. the files/ overlays *)
   val metadata_dir: t -> dirname option
 
   (** Sets the opam version *)
