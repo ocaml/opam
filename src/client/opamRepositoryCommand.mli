@@ -21,28 +21,28 @@ open OpamTypes
 
 (** Update the given repository from its upstream. Returns a concurrency-safe
     state update function *)
-val update: t -> repository ->
-  (OpamState.state -> OpamState.state) OpamProcess.job
+val update: global_state -> repository ->
+  (repos_state -> repos_state) OpamProcess.job
 
 (** Update the package index. *)
-val update_package_index: t -> t
+val update_package_index: repos_state -> repos_state
 
 (** Update the compiler index. *)
-val update_compiler_index: t -> t
+val update_compiler_index: repos_state -> repos_state
 
 (** Update the given dev packages. *)
-val update_dev_packages: t -> verbose:bool -> package_set -> package_set
+val update_dev_packages: switch_state -> verbose:bool -> package_set -> package_set
 
 (** Fix the compiler descriptions and display the changes if [verbose]
     is set. *)
-val fix_compiler_descriptions: t -> verbose:bool -> compiler_set updates
+val fix_compiler_descriptions: repos_state -> verbose:bool -> compiler_set updates
 
 (** Fix the the package descriptions and display the changes if
     [verbose] is set. *)
-val fix_package_descriptions: t -> verbose:bool -> package_set updates
+val fix_package_descriptions: repos_state -> verbose:bool -> package_set updates
 
 (** Fix all the package and compiler descriptions. *)
-val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> t -> unit
+val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> repos_state -> unit
 
 (** List the available repositories. *)
 val list: short:bool -> unit

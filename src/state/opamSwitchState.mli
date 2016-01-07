@@ -17,7 +17,17 @@
 open OpamTypes
 open OpamStateTypes
 
-val load: ?lock:lock_kind -> global_state -> repos_state -> switch -> switch_state
+val load:
+  ?lock:lock_kind -> global_state -> repos_state -> switch -> switch_state
+
+(** Loads global, repository and switch state in one go. Using the
+    lower-granularity functions is recommended, but this can help for the
+    transition. First argument is a debug string (ignored) *)
+val load_full_compat: string -> switch -> switch_state
+
+(** Load the switch's state file, without constructing the package maps: much
+    faster than loading the full switch state *)
+val load_state_file: global_state -> switch -> OpamFile.State.t
 
 (** {2 Helpers to access state data} *)
 
@@ -45,7 +55,8 @@ val files: switch_state -> package -> dirname option
 (** Check whether a package name is installed *)
 val is_name_installed: switch_state -> name -> bool
 
-(** Return the installed package with the right name *)
+(** Return the installed package with the right name
+    @raise [Not_found] *)
 val find_installed_package_by_name: switch_state -> name -> package
 
 (** Return all packages satisfying one of the given atoms from a state *)
@@ -83,4 +94,3 @@ val not_found_message: switch_state -> atom -> string
 (** Returns a printable explanation why a package is not currently available
     (pinned to an incompatible version, unmet [available:] constraints...) *)
 val unavailable_reason: switch_state -> atom -> string
-

@@ -24,3 +24,7 @@ val all_installed: global_state -> package_set
 
 val fold_switches:
   (switch -> OpamFile.State.t -> 'a -> 'a) -> global_state -> 'a -> 'a
+
+(** Returns the map of installed instances of the package name towards the list
+    of switches they are installed in *)
+val installed_versions: global_state -> name -> switch list package_map

@@ -17,6 +17,7 @@
 (** Pin subcommand. *)
 
 open OpamTypes
+open OpamStateTypes
 
 (** Pin a package. Returns [Some is_same_version] if the package should be
     reinstalled (or upgraded if [is_same_version] is false) *)
@@ -26,10 +27,10 @@ val pin: name -> ?version:version -> pin_option -> bool option
     Returns [Some is_same_version] if the package should be rebuilt.
     raises [Not_found] if no valid opam file is available and the user didn't
     succeed in producing one. *)
-val edit: OpamState.state -> name -> bool option
+val edit: switch_state -> name -> bool option
 
 (** Unpin packages. Returns the list of packages that should be rebuilt *)
-val unpin: ?state:OpamState.state -> name list -> name list
+val unpin: global_state -> ?state:switch_state -> name list -> name list
 
-(** List the pinned packages. *)
+(** List the pinned packages to the user. *)
 val list: short:bool -> unit -> unit

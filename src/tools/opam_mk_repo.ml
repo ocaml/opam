@@ -171,7 +171,7 @@ let faked_var_resolve args v =
         (function None -> (fun (f,v) -> f v) | r -> (fun _ -> r))
         None
         [
-          OpamState.get_env_var, v;
+          OpamVariable.Full.read_from_env, v;
           get_global_var, v;
         ]
     with Exit -> None

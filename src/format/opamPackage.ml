@@ -110,7 +110,7 @@ let of_string_opt s =
 
 let of_string s = match of_string_opt s with
   | Some x -> x
-  | None   -> OpamConsole.error_and_exit "%s is not a valid versioned package name" s
+  | None   -> failwith "OpamPackage.of_string"
 
 let to_string t =
   match Version.to_string t.version with

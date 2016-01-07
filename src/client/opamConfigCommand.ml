@@ -18,11 +18,11 @@ let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
 open OpamTypes
-(* open OpamState.Types *)
+open OpamStateTypes
 
 let help t =
   OpamConsole.msg "# Global OPAM configuration variables\n\n";
-  let global = OpamState.global_config t in
+  let global = t.switch_config in
   let global_vars = OpamFile.Dot_config.variables global in
   List.iter (fun var ->
       OpamConsole.msg "%-20s %s\n"
@@ -38,24 +38,24 @@ let help t =
       if not (List.mem var global_vars) then
         OpamConsole.msg "%-20s %-20s # %s\n"
           varname
-          (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
+          (OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
              ([],var,None))
           doc)
-    OpamState.global_variable_names;
+    OpamPackageVar.global_variable_names;
   OpamConsole.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
   List.iter (fun (var, doc) ->
       OpamConsole.msg "PKG:%-37s # %s\n" var doc)
-    OpamState.package_variable_names
+    OpamPackageVar.package_variable_names
 
 (* List all the available variables *)
 let list ns =
   log "config-list";
-  let t = OpamState.load_state "config-list"
+  let t = OpamSwitchState.load_full_compat "config-list"
       OpamStateConfig.(!r.current_switch) in
   if ns = [] then help t else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
-      let conf = OpamState.global_config t in
+      let conf = t.switch_config in
       List.map (fun (v,c) ->
           OpamVariable.Full.global v,
           OpamVariable.string_of_variable_contents c,
@@ -63,12 +63,12 @@ let list ns =
         (OpamFile.Dot_config.bindings conf)
     else
     try
-      let nv = OpamState.get_package t name in
-      let opam = OpamState.opam t nv in
-      let env = OpamState.filter_env ~opam t in
+      let nv = OpamSwitchState.get_package t name in
+      let opam = OpamSwitchState.opam t nv in
+      let env = OpamPackageVar.resolve ~opam t in
       let conf =
         OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config t.root t.switch name)
+          (OpamPath.Switch.config t.switch_global.root t.switch name)
       in
       let pkg_vars =
         OpamStd.List.filter_map (fun (vname, desc) ->
@@ -77,7 +77,7 @@ let list ns =
               let c = OpamFilter.ident_string env (OpamFilter.ident_of_var v) in
               Some (v, c, desc)
             with Failure _ -> None)
-          OpamState.package_variable_names
+          OpamPackageVar.package_variable_names
       in
       let feature_vars =
         List.map (fun (v, desc, filt) ->
@@ -143,9 +143,9 @@ let print_fish_env env =
 
 let env ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
-  let t = OpamState.load_state "config-env"
+  let t = OpamSwitchState.load_full_compat "config-env"
       OpamStateConfig.(!r.current_switch) in
-  let env = OpamState.get_opam_env ~force_path:(not inplace_path) t in
+  let env = OpamEnv.get_opam ~force_path:(not inplace_path) t in
   if sexp then
     print_sexp_env env
   else if csh then
@@ -157,18 +157,18 @@ let env ~csh ~sexp ~fish ~inplace_path =
 
 let subst fs =
   log "config-substitute";
-  let t = OpamState.load_state "config-substitute"
+  let t = OpamSwitchState.load_full_compat "config-substitute"
       OpamStateConfig.(!r.current_switch) in
   List.iter
-    (OpamFilter.expand_interpolations_in_file (OpamState.filter_env t))
+    (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve t))
     fs
 
 let expand str =
   log "config-expand";
-  let t = OpamState.load_state "config-expand"
+  let t = OpamSwitchState.load_full_compat "config-expand"
       OpamStateConfig.(!r.current_switch) in
   OpamConsole.msg "%s\n"
-    (OpamFilter.expand_string (OpamState.filter_env t) str)
+    (OpamFilter.expand_string (OpamPackageVar.resolve t) str)
 
 let set var value =
   if not (OpamVariable.Full.is_global var) then
@@ -196,35 +196,43 @@ let set var value =
       (OpamFile.Dot_config.set config var newval)
 
 let variable v =
-  let t = lazy (
-    OpamState.load_state "config-variable" OpamStateConfig.(!r.current_switch)
-  ) in
-  let contents = OpamState.contents_of_variable t v in
-  OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+  let gt = OpamGlobalState.load () in
+  match OpamPackageVar.resolve_global gt v with
+  | Some c ->
+    OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+  | None ->
+    let t =
+      OpamSwitchState.load_full_compat "config-variable"
+        OpamStateConfig.(!r.current_switch)
+    in
+    match OpamPackageVar.resolve t v with
+    | Some c ->
+      OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+    | None ->
+      OpamConsole.error_and_exit "Variable not found"
 
 let setup user global =
   log "config-setup";
-  let t = OpamState.load_state "config-setup"
+  let t = OpamSwitchState.load_full_compat "config-setup"
       OpamStateConfig.(!r.current_switch) in
-  OpamState.update_setup t user global
+  OpamEnv.update_setup t user global
 
 let setup_list shell dot_profile =
   log "config-setup-list";
-  let t = OpamState.load_state "config-setup-list"
-      OpamStateConfig.(!r.current_switch) in
-  OpamState.display_setup t shell dot_profile
+  let t = OpamGlobalState.load () in
+  OpamEnv.display_setup t shell dot_profile
 
 let exec ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
-  let t = OpamState.load_state "config-exec"
+  let t = OpamSwitchState.load_full_compat "config-exec"
       OpamStateConfig.(!r.current_switch) in
   let cmd, args =
-    match List.map (OpamFilter.expand_string (OpamState.filter_env t)) command
+    match List.map (OpamFilter.expand_string (OpamPackageVar.resolve t)) command
     with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let env =
     OpamTypesBase.env_array
-      (OpamState.get_full_env ~force_path:(not inplace_path) t)
+      (OpamEnv.get_full ~force_path:(not inplace_path) t)
   in
   raise (OpamStd.Sys.Exec (cmd, args, env))

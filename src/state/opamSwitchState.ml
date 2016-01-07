@@ -25,6 +25,9 @@ let slog = OpamConsole.slog
 
 open OpamStateTypes
 
+let load_state_file gt switch =
+    OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
+
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
   if OpamFilename.exists f then OpamFile.Dot_config.read f
@@ -47,7 +50,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
   let switch_config = load_switch_config gt switch in
   let { OpamFile.State. installed; installed_roots; pinned;
         compiler = compiler_packages; } =
-    OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
+    load_state_file gt switch
   in
   let pinned, pinned_opams =
     (* Pinned packages with overlays *)
@@ -217,7 +220,7 @@ let universe st action = {
 let is_switch_globally_set st =
   OpamFile.Config.switch st.switch_global.config = st.switch
 
-let not_found_message st (name, cstr as atom) =
+let not_found_message st (name, cstr) =
   match cstr with
   | Some (relop,v) when OpamPackage.has_name st.packages name ->
     Printf.sprintf "Package %s has no version %s%s."
@@ -255,3 +258,8 @@ let unavailable_reason st (name, _ as atom) =
            (OpamPackage.Version.to_string version))
   with Not_found ->
     not_found_message st atom
+
+let load_full_compat _ switch =
+  let gt = OpamGlobalState.load () in
+  let rt = OpamRepositoryState.load gt in
+  load gt rt switch
