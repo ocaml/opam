@@ -203,7 +203,7 @@ let satisfy pkg constrs =
       n = pkg.Cudf.package && Cudf.version_matches pkg.Cudf.version v
     ) constrs
 
-let actions_of_state ~version_map universe request state =
+let actions_of_state universe request state =
   log "actions_of_state %a" (slog OpamCudf.string_of_packages) state;
   let installed =
     let filter p =
@@ -309,7 +309,7 @@ let state_space ?(filters = fun _ -> None) universe wish_remove interesting_name
 (* Find a possible good state which satisfies a request. The idea is
    call iteratively this function while refining the constraints of
    the request until reaching a fix-point. *)
-let state_of_request ?(verbose=true) ~version_map current_universe request =
+let state_of_request ?(verbose=true) current_universe request =
   log "state_of_request";
 
   match OpamCudf.check_request ~explain:false current_universe request with
@@ -475,7 +475,7 @@ let trim_universe universe request =
 
 (* Various heuristic to transform a solution checker into an optimized
    solver. *)
-let optimize ?(verbose=true) ~version_map map_init_u universe request =
+let optimize ?(verbose=true) map_init_u universe request =
 
   (* We start be specializing the request. *)
   let request =
@@ -509,10 +509,10 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
     universe;
 
   (* Upgrade the explicit packages first *)
-  match state_of_request ~verbose ~version_map universe request with
+  match state_of_request ~verbose universe request with
   | None       ->
     OpamCudf.to_actions map_init_u (untrim universe)
-      (OpamCudf.resolve ~extern:false ~version_map universe request)
+      (OpamCudf.resolve ~extern:false universe request)
   | Some state ->
     log "STATE(0) %a" (slog OpamCudf.string_of_packages) state;
 
@@ -528,7 +528,7 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
       ) else (
         let request = refine state request in
         let request = add_to_upgrade request p.Cudf.package in
-        match state_of_request ~verbose ~version_map universe request with
+        match state_of_request ~verbose universe request with
         | None       ->
           log "discard %s" p.Cudf.package;
           state
@@ -560,7 +560,7 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
           log "adding %s to the request" name;
           let request = refine state request in
           let request = add_to_upgrade request name in
-          match state_of_request ~verbose ~version_map universe request with
+          match state_of_request ~verbose universe request with
           | None       -> (universe, state)
           | Some state -> (universe, state)
         )
@@ -578,14 +578,14 @@ let optimize ?(verbose=true) ~version_map map_init_u universe request =
 
     log "STATE(2) %a" (slog OpamCudf.string_of_packages) state;
     let universe = map_init_u (untrim universe) in
-    Success (actions_of_state ~version_map universe request state)
+    Success (actions_of_state universe request state)
 
-let resolve ?(verbose=true) ~version_map map_init_u universe request =
+let resolve ?(verbose=true) map_init_u universe request =
   try
     if request.wish_upgrade <> [] then
-      optimize ~verbose ~version_map map_init_u universe request
+      optimize ~verbose map_init_u universe request
     else
-      let res = OpamCudf.resolve ~extern:false ~version_map universe request in
+      let res = OpamCudf.resolve ~extern:false universe request in
       OpamCudf.to_actions map_init_u universe res
   with Not_reachable c ->
     Conflicts c

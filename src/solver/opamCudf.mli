@@ -68,7 +68,6 @@ val check_request:
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
-  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
@@ -109,7 +108,6 @@ val compute_root_causes: ActionGraph.t -> OpamPackage.Name.Set.t ->
     [~extern] specifies whether the external solver should be used *)
 val resolve:
   extern:bool ->
-  version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
@@ -180,16 +178,16 @@ val dep_conflict:
 (** Convert a conflict to something readable by the user. The first argument
     should return a string like "lwt<3.2.1 is not available because..." when called
     on an unavailable package (the reason can't be known this deep in the solver) *)
-val string_of_conflict: int OpamPackage.Map.t -> (atom -> string) -> conflict -> string
+val string_of_conflict: Pef.Pefcudf.tables -> (atom -> string) -> conflict -> string
 
 (** Returns three lists of strings:
     - the final reasons why the request can't be satisfied
     - the dependency chains explaining it
     - the cycles in the actions to process (exclusive with the other two) *)
-val strings_of_conflict: int OpamPackage.Map.t ->
+val strings_of_conflict: Pef.Pefcudf.tables ->
   (atom -> string) -> conflict -> string list * string list * string list
 
-val conflict_chains: int OpamPackage.Map.t -> conflict -> OpamFormula.t list list
+val conflict_chains: Pef.Pefcudf.tables -> conflict -> OpamFormula.t list list
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit

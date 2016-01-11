@@ -28,12 +28,22 @@ let s_installed_root = "installed-root"
 let s_pinned = "pinned"
 let s_version_lag = "version-lag"
 
+let decode_cudf_name name =
+  let extract_name x =
+    try String.sub x 0 (String.index x ':') with
+    | Not_found -> x
+  in
+  extract_name (Common.CudfAdd.decode name)
+
 let cudf2opam cpkg =
-  let sname = Cudf.lookup_package_property cpkg s_source in
-  let name = OpamPackage.Name.of_string sname in
-  let sver = Cudf.lookup_package_property cpkg s_source_number in
-  let version = OpamPackage.Version.of_string sver in
-  OpamPackage.create name version
+  try
+    let sname = decode_cudf_name cpkg.Cudf.package in
+    let name = OpamPackage.Name.of_string sname in
+    let sver = Cudf.lookup_package_property cpkg "number" in
+    let version = OpamPackage.Version.of_string sver in
+    OpamPackage.create name version
+  with Not_found ->
+    failwith "fatal error. Wrong encoding to cudf"
 
 let cudfnv2opam ?version_map ?cudf_universe (name,v) =
   let nv = match cudf_universe with
@@ -45,15 +55,12 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
   match nv with
   | Some nv -> nv
   | None ->
-    let name = OpamPackage.Name.of_string (Common.CudfAdd.decode name) in
     match version_map with
     | Some vmap ->
-      let nvset =
-        OpamPackage.Map.filter
-          (fun nv cv -> OpamPackage.name nv = name && cv = v)
-          vmap
-      in
-      fst (OpamPackage.Map.choose nvset)
+        let cver = Pef.Pefcudf.get_real_version vmap (name,v) in
+        let version = OpamPackage.Version.of_string cver in
+        let name = OpamPackage.Name.of_string (decode_cudf_name name) in
+        OpamPackage.create name version
     | None -> raise Not_found
 
 let string_of_package p =
@@ -94,8 +101,7 @@ exception Cyclic_actions of Action.t list list
 type conflict_case =
   | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
   | Conflict_cycle of string list list
-type conflict =
-  Cudf.universe * conflict_case
+type conflict = Cudf.universe * conflict_case
 
 module Map = OpamStd.Map.Make(Pkg)
 module Set = OpamStd.Set.Make(Pkg)
@@ -176,34 +182,6 @@ let vpkg2atom cudfnv2opam (name,cstr) =
       let nv = cudfnv2opam (name,v) in
       OpamPackage.name nv, Some (relop, OpamPackage.version nv)
     with Not_found -> assert false
-(* Should be unneeded now that we pass a full version_map along
-   [{
-      log "Could not find corresponding version in cudf universe: %a"
-        (slog string_of_atom) (name,cstr);
-      let candidates =
-        Cudf.lookup_packages cudf_universe name in
-      let solutions =
-        Cudf.lookup_packages ~filter:cstr cudf_universe name in
-      let module OVS = OpamPackage.Version.Set in
-      let to_version_set l =
-        OVS.of_list
-          (List.map (fun p -> OpamPackage.version (cudf2opam p)) l) in
-      let solutions = to_version_set solutions in
-      let others = OVS.Op.(to_version_set candidates -- solutions) in
-      OpamPackage.Name.of_string (Common.CudfAdd.decode name),
-      match relop, OVS.is_empty solutions, OVS.is_empty others with
-      | _, true, true -> None
-      | `Leq, false, _ | `Lt, false, true -> Some (`Leq, OVS.max_elt solutions)
-      | `Lt, _, false | `Leq, true, false -> Some (`Lt, OVS.min_elt others)
-      | `Geq, false, _ | `Gt, false, true -> Some (`Geq, OVS.min_elt solutions)
-      | `Gt, _, false | `Geq, true, false -> Some (`Gt, OVS.max_elt others)
-      | `Eq, false, _ -> Some (`Eq, OVS.choose solutions)
-      | `Eq, true, _ ->
-        Some (`Eq, OpamPackage.Version.of_string "<unavailable version>")
-      | `Neq, false, true -> None
-      | `Neq, _, false -> Some (`Neq, OVS.choose others)
-   }]
-*)
 
 let vpkg2opam cudfnv2opam vpkg =
   match vpkg2atom cudfnv2opam vpkg with
@@ -606,7 +584,7 @@ let check_request ?(explain=true) univ req =
     conflict_empty univ
 
 (* Return the universe in which the system has to go *)
-let get_final_universe ~version_map univ req =
+let get_final_universe univ req =
   let fail msg =
     let f = dump_cudf_error univ req in
     OpamConsole.warning "External solver failed with %s Request saved to %S"
@@ -652,9 +630,9 @@ let actions_of_diff (install, remove) =
   let actions = Set.fold (fun p acc -> `Remove p :: acc) remove actions in
   actions
 
-let resolve ~extern ~version_map universe request =
+let resolve ~extern universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  if extern then get_final_universe ~version_map universe request
+  if extern then get_final_universe universe request
   else check_request universe request
 
 let to_actions f universe result =

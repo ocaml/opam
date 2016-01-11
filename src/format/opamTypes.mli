@@ -273,28 +273,16 @@ type user_action =
 
 (** Solver universe *)
 type universe = {
+  u_pefuniv  : ((string * string), Opam.Packages.package) Hashtbl.t;
+  u_options  : (string * string list * string list);
+
   u_packages : package_set; (** all packages with a corresponding opam *)
   u_installed: package_set; (** all installed package in the current switch *)
   u_available: package_set; (** all packages that can be installed in the current switch *)
-  u_depends  : ext_formula package_map;
-  u_depopts  : ext_formula package_map;
-  u_conflicts: formula package_map;
   
   u_action   : user_action;
   u_orphans  : package_set; (** package installed and not available upstream *)
-  u_versionmap : int package_map; (** map from package to cudf version *)
-
-  u_installed_roots: package_set;
-  u_pinned   : package_set;
-  u_dev      : package_set; (** packages with a version-controlled upstream *)
-  (* NOTE: only needed for the dev depflag, remove and pre-compute instead *)
-  u_base     : package_set;
-  u_attrs    : (string * package_set) list;
-
-  (* extra CUDF attributes for the given packages *)
-  u_test     : bool; (** Test dependencies should be honored *)
-  u_doc      : bool; (** Doc dependencies should be honored *)
-  (* NOTE: pre-compute these also *)
+  u_versionmap : Pef.Pefcudf.tables; (** map from package to cudf version *)
 }
 
 (** {2 Command line arguments} *)
