@@ -145,7 +145,7 @@ let pin name ?version pin_option =
     (slog OpamPackage.Name.to_string) name
     (slog string_of_pin_option) pin_option
     (slog (string_of_pin_kind @* kind_of_pin_option)) pin_option;
-  let t = OpamSwitchState.load_full_compat "pin" OpamStateConfig.(!r.current_switch) in
+  let t = OpamSwitchState.load_full_compat "pin" (OpamStateConfig.get_switch ()) in
   let pin_kind = kind_of_pin_option pin_option in
   let installed_version =
     try
@@ -258,7 +258,7 @@ let unpin gt ?state names =
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   let switch, state_file = match state with
     | None ->
-      let switch = OpamStateConfig.(!r.current_switch) in
+      let switch = (OpamStateConfig.get_switch ()) in
       switch, OpamSwitchState.load_state_file gt switch
     | Some st ->
       st.switch, OpamSwitchState.state_file st
@@ -298,7 +298,7 @@ let unpin gt ?state names =
 let list ~short () =
   log "pin_list";
   let t = OpamSwitchState.load_full_compat "pin-list"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   if short then
     OpamPackage.Name.Map.iter
       (fun n _ -> OpamConsole.msg "%s\n" (OpamPackage.Name.to_string n))

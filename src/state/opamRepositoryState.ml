@@ -154,9 +154,6 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   if save_cache && not cached then Cache.save rt;
   rt
 
-let sorted_repositories rt =
-  OpamRepository.sort rt.repositories
-
 let compiler_index rt =
   OpamRepository.compiler_index rt.repositories
 
@@ -223,14 +220,6 @@ let package_repository_partial_state rt nv ~archive =
   let exists_archive = OpamFilename.exists (OpamRepositoryPath.archive repo nv) in
   exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
 
-let repository_and_prefix_of_package rt nv =
-  try
-    let repo, prefix = OpamPackage.Map.find nv rt.package_index in
-    let repo = OpamRepositoryName.Map.find repo rt.repositories in
-    Some (repo, prefix)
-   with Not_found ->
-     None
-
 let repository_of_package rt nv =
   try
     let repo, _ = OpamPackage.Map.find nv rt.package_index in
@@ -261,14 +250,6 @@ let compiler_repository_state rt =
       | [] -> map
       | l  -> OpamCompiler.Map.add comp l map
     ) rt.compiler_index OpamCompiler.Map.empty
-
-let repository_and_prefix_of_compiler rt comp =
-  try
-    let repo, prefix = OpamCompiler.Map.find comp rt.compiler_index in
-    let repo = OpamRepositoryName.Map.find repo rt.repositories in
-    Some (repo, prefix)
-  with Not_found ->
-    None
 
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt nv =

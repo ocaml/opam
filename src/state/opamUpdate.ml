@@ -16,7 +16,6 @@
 
 open OpamTypes
 open OpamStateTypes
-open OpamTypesBase
 open OpamProcess.Job.Op
 open OpamFilename.Op
 open OpamPackage.Set.Op

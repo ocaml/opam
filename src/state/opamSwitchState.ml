@@ -218,7 +218,7 @@ let universe st action = {
 (* User-directed helpers *)
 
 let is_switch_globally_set st =
-  OpamFile.Config.switch st.switch_global.config = st.switch
+  OpamFile.Config.switch st.switch_global.config = Some st.switch
 
 let not_found_message st (name, cstr) =
   match cstr with

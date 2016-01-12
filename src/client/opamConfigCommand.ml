@@ -51,7 +51,7 @@ let help t =
 let list ns =
   log "config-list";
   let t = OpamSwitchState.load_full_compat "config-list"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   if ns = [] then help t else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
@@ -144,7 +144,7 @@ let print_fish_env env =
 let env ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
   let t = OpamSwitchState.load_full_compat "config-env"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   let env = OpamEnv.get_opam ~force_path:(not inplace_path) t in
   if sexp then
     print_sexp_env env
@@ -158,7 +158,7 @@ let env ~csh ~sexp ~fish ~inplace_path =
 let subst fs =
   log "config-substitute";
   let t = OpamSwitchState.load_full_compat "config-substitute"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   List.iter
     (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve t))
     fs
@@ -166,7 +166,7 @@ let subst fs =
 let expand str =
   log "config-expand";
   let t = OpamSwitchState.load_full_compat "config-expand"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   OpamConsole.msg "%s\n"
     (OpamFilter.expand_string (OpamPackageVar.resolve t) str)
 
@@ -177,7 +177,7 @@ let set var value =
   let var = OpamVariable.Full.variable var in
   let config_f =
     OpamPath.Switch.global_config
-      OpamStateConfig.(!r.root_dir) OpamStateConfig.(!r.current_switch)
+      OpamStateConfig.(!r.root_dir) (OpamStateConfig.get_switch ())
   in
   let config = OpamFile.Dot_config.read config_f in
   let oldval = OpamFile.Dot_config.variable config var in
@@ -203,7 +203,7 @@ let variable v =
   | None ->
     let t =
       OpamSwitchState.load_full_compat "config-variable"
-        OpamStateConfig.(!r.current_switch)
+        (OpamStateConfig.get_switch ())
     in
     match OpamPackageVar.resolve t v with
     | Some c ->
@@ -214,7 +214,7 @@ let variable v =
 let setup user global =
   log "config-setup";
   let t = OpamSwitchState.load_full_compat "config-setup"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   OpamEnv.update_setup t user global
 
 let setup_list shell dot_profile =
@@ -225,7 +225,7 @@ let setup_list shell dot_profile =
 let exec ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   let t = OpamSwitchState.load_full_compat "config-exec"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   let cmd, args =
     match List.map (OpamFilter.expand_string (OpamPackageVar.resolve t)) command
     with

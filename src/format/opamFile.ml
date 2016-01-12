@@ -791,7 +791,7 @@ module ConfigSyntax = struct
   type t = {
     opam_version : opam_version;
     repositories : repository_name list ;
-    switch : switch;
+    switch : switch option;
     jobs : int;
     dl_tool : arg list option;
     dl_jobs : int;
@@ -813,7 +813,8 @@ module ConfigSyntax = struct
 
   let with_opam_version t opam_version = { t with opam_version }
   let with_repositories t repositories = { t with repositories }
-  let with_switch t switch = { t with switch }
+  let with_switch_opt t switch = { t with switch }
+  let with_switch t switch = { t with switch = Some switch }
   let with_jobs t jobs = { t with jobs }
   let with_dl_tool t dl_tool = { t with dl_tool = Some dl_tool }
   let with_dl_jobs t dl_jobs = { t with dl_jobs }
@@ -831,7 +832,7 @@ module ConfigSyntax = struct
   let empty = {
     opam_version = OpamVersion.current;
     repositories = [];
-    switch = OpamSwitch.of_string "<empty>";
+    switch = None;
     jobs = 1;
     dl_tool = None;
     dl_jobs = 1;
@@ -841,7 +842,7 @@ module ConfigSyntax = struct
 
   let fields =
     let with_switch t sw =
-      if t.switch = empty.switch then with_switch t sw
+      if t.switch = None then with_switch t sw
       else OpamFormat.bad_format "Multiple switch specifications"
     in
     [
@@ -853,7 +854,7 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:1
            (Pp.V.string -|
             Pp.of_module "repository" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t)));
-      "switch", Pp.ppacc
+      "switch", Pp.ppacc_opt
         with_switch switch
         (Pp.V.string -| Pp.of_module "switch" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t));
       "jobs", Pp.ppacc
@@ -896,9 +897,7 @@ module ConfigSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_fields ~name fields -|
-    Pp.I.fields ~name ~empty fields -|
-    Pp.check ~name (fun t -> t.switch <> empty.switch)
-      ~errmsg:"missing switch"
+    Pp.I.fields ~name ~empty fields
 
 end
 module Config = struct

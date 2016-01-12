@@ -17,7 +17,7 @@ open OpamTypes
 
 type t = private {
   root_dir: OpamFilename.Dir.t;
-  current_switch: OpamSwitch.t;
+  current_switch: OpamSwitch.t option;
   switch_from: [ `Env | `Command_line | `Default ];
   jobs: int Lazy.t;
   dl_jobs: int;
@@ -78,3 +78,6 @@ val filter_deps: ?dev:bool -> ext_formula -> formula
     Returns true if a config file was found and could be read, false
     otherwise *)
 val load_defaults: OpamFilename.Dir.t -> bool
+
+(** Returns the current switch, failing with an error message is none is set. *)
+val get_switch: unit -> switch

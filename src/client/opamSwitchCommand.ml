@@ -27,7 +27,7 @@ let slog = OpamConsole.slog
 (* TODO: add repo *)
 let list ~print_short ~installed ~all =
   log "list";
-  let t = OpamSwitchState.load_full_compat "list" OpamStateConfig.(!r.current_switch) in
+  let t = OpamSwitchState.load_full_compat "list" (OpamStateConfig.get_switch ()) in
   let descr c =
     if c = OpamCompiler.system then
       let system_version =
@@ -146,12 +146,13 @@ let list ~print_short ~installed ~all =
   match OpamStateConfig.(!r.switch_from) with
   | `Env ->
     let sys = OpamFile.Config.switch t.switch_global.config in
-    if sys <> OpamStateConfig.(!r.current_switch) then
+    if sys <> Some (OpamStateConfig.get_switch ()) then
       (OpamConsole.msg "\n";
        OpamConsole.note
          "Current switch is set locally through the OPAMSWITCH variable.\n\
           The current global system switch is %s."
-         (OpamConsole.colorise `bold (OpamSwitch.to_string sys)))
+         (OpamStd.Option.to_string ~none:"unset"
+            (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
   | `Default ->
      if not (OpamEnv.is_up_to_date t) then
        (OpamConsole.msg "\n";
@@ -182,7 +183,7 @@ let remove_t ?(confirm = true) t =
     OpamStd.Sys.exit 1;
   );
   if Some t.switch =
-     OpamStd.Option.Op.(OpamStateConfig.load t.switch_global.root >>|
+     OpamStd.Option.Op.(OpamStateConfig.load t.switch_global.root >>=
                          OpamFile.Config.switch)
   then
     OpamConsole.error_and_exit
@@ -203,7 +204,7 @@ let install_compiler ~quiet switch compiler =
 
   (* Remember the current switch to be able to roll-back *)
   let t = OpamSwitchState.load_full_compat "switch-install-with-packages-1"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
 
   (* install the new OCaml version *)
   try OpamSwitchAction.install_compiler t.switch_global ~quiet switch compiler
@@ -472,7 +473,7 @@ let import_t importfile t =
   OpamSolution.check_solution t solution
 
 let export filename =
-  let switch = OpamStateConfig.(!r.current_switch) in
+  let switch = (OpamStateConfig.get_switch ()) in
   let root = OpamStateConfig.(!r.root_dir) in
   let st = S.safe_read (OpamPath.Switch.state root switch) in
   match filename with
@@ -481,7 +482,7 @@ let export filename =
 
 let show () =
   OpamConsole.msg "%s\n"
-    (OpamSwitch.to_string OpamStateConfig.(!r.current_switch))
+    (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
@@ -539,7 +540,7 @@ let with_backup gt switch f =
       Printf.eprintf "The former package state can be restored with \
                       %s switch import %S%s\n"
         Sys.argv.(0) (OpamFilename.to_string backup_state_file)
-        (if OpamStateConfig.(!r.current_switch <> switch ||
+        (if OpamStateConfig.(!r.current_switch <> Some switch ||
                              !r.switch_from = `Command_line)
          then Printf.sprintf " --switch %s" (OpamSwitch.to_string switch)
          else "");

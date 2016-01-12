@@ -24,7 +24,7 @@ let slog = OpamConsole.slog
 
 let with_switch_backup _command f =
   let t = OpamSwitchState.load_full_compat "client"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   let file = OpamPath.Switch.backup t.switch_global.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch_global.root t.switch);
   OpamFile.State.write file (OpamSwitchState.state_file t);
@@ -36,7 +36,7 @@ let with_switch_backup _command f =
   | err ->
     OpamStd.Exn.register_backtrace err;
     let t1 = OpamSwitchState.load_full_compat "switch-backup-err"
-        OpamStateConfig.(!r.current_switch) in
+        (OpamStateConfig.get_switch ()) in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
@@ -563,7 +563,7 @@ module API = struct
       rt
     in
 
-    let st = OpamSwitchState.load gt rt OpamStateConfig.(!r.current_switch) in
+    let st = OpamSwitchState.load gt rt (OpamStateConfig.get_switch ()) in
 
     let dev_packages, nondev_packages =
       if repos_only then OpamPackage.Set.empty, OpamPackage.Set.empty
@@ -591,7 +591,7 @@ module API = struct
           (OpamPackage.Set.to_json updates);
       (* !X update_dev_packages should provide an updated switch state
          already *)
-      OpamSwitchState.load gt rt  OpamStateConfig.(!r.current_switch)
+      OpamSwitchState.load gt rt  (OpamStateConfig.get_switch ())
     in
 
     log "dry-upgrade";
@@ -733,6 +733,7 @@ module API = struct
               the following commands are required for OPAM to operate:\n%s"
              (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
 
+        (*
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
@@ -743,33 +744,35 @@ module API = struct
         (* Create ~/.opam/compilers/system.comp *)
         (* !X port to the new system !!
            OpamState.create_system_compiler_description root; *)
-
+        *)
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create switch [repo.repo_name]
+          OpamFile.Config.create None [repo.repo_name]
             OpamStateConfig.(Lazy.force default.jobs)
             OpamStateConfig.(default.dl_jobs)
         in
         OpamStateConfig.write root config;
 
         (* Create ~/.opam/aliases *)
-        OpamFile.Aliases.write
-          (OpamPath.aliases root)
-          (OpamSwitch.Map.singleton switch compiler);
+        (* OpamFile.Aliases.write *)
+        (*   (OpamPath.aliases root) *)
+        (*   (OpamSwitch.Map.singleton switch compiler); *)
 
         (* Init repository *)
+        (*
         OpamFile.Package_index.write (OpamPath.package_index root)
           OpamPackage.Map.empty;
         OpamFile.Compiler_index.write (OpamPath.compiler_index root)
           OpamCompiler.Map.empty;
+        *)
         OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
         OpamProcess.Job.run (OpamRepository.init repo);
-        OpamSwitchAction.install_global_config root switch
-          (OpamSwitchAction.gen_global_config root switch);
+        (* OpamSwitchAction.install_global_config root switch *)
+        (*   (OpamSwitchAction.gen_global_config root switch); *)
 
         (* Init global dirs *)
         OpamFilename.mkdir (OpamPath.packages_dir root);
-        OpamFilename.mkdir (OpamPath.compilers_dir root);
+        (* OpamFilename.mkdir (OpamPath.compilers_dir root); *)
 
         (* Load the partial state, and update the global state *)
         log "updating repository state";
@@ -781,7 +784,7 @@ module API = struct
         in
         OpamRepositoryCommand.fix_descriptions rt
           ~save_cache:false ~verbose:false;
-
+        (*
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";
         let quiet = (compiler = OpamCompiler.system) in
@@ -791,7 +794,7 @@ module API = struct
         log "installing compiler packages";
         let st = OpamSwitchState.load gt rt switch in
         OpamSwitchCommand.install_packages st
-
+           *)
       with e ->
         OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
@@ -800,7 +803,7 @@ module API = struct
           OpamFilename.rmdir root;
         raise e);
     let t = OpamSwitchState.load_full_compat "init"
-        OpamStateConfig.(!r.current_switch) in
+        (OpamStateConfig.get_switch ()) in
     update_setup t
 
 
@@ -1152,7 +1155,7 @@ module API = struct
         | Some o -> o
         | None ->
           let t = OpamSwitchState.load_full_compat "pin-get-upstream"
-              OpamStateConfig.(!r.current_switch) in
+              (OpamStateConfig.get_switch ()) in
           get_upstream t name
       in
       let needs_reinstall = pin name ?version pin_option in
@@ -1235,7 +1238,7 @@ let read_lock f = f ()
 
 let switch_lock f = f ()
   (* OpamState.check *)
-  (*   (Switch_lock ((fun () -> OpamStateConfig.(!r.current_switch)), f)) *)
+  (*   (Switch_lock ((fun () -> (OpamStateConfig.get_switch ())), f)) *)
 
 let global_lock f = f ()
   (* OpamState.check (Global_lock f) *)

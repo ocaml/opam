@@ -19,7 +19,7 @@
 include OpamStd.ABSTRACT
 
 (** System switch name *)
-val system: t
+val unset: t
 
 (** Display an error message when a switch is not installed. *)
 val not_installed: t -> 'a

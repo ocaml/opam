@@ -56,7 +56,7 @@ module Config: sig
 
   (** Creation *)
   val create:
-    switch ->
+    switch option ->
     repository_name list ->
     ?criteria:(OpamTypes.solver_criteria * string) list ->
     ?solver:(arg list) ->
@@ -67,6 +67,7 @@ module Config: sig
 
   (** OCaml switch updates *)
   val with_switch : t -> switch -> t
+  val with_switch_opt : t -> switch option -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository_name list -> t
@@ -85,7 +86,7 @@ module Config: sig
   val repositories: t  -> repository_name list
 
   (** Return the OCaml switch *)
-  val switch: t -> switch
+  val switch: t -> switch option
 
   (** Return the number of jobs *)
   val jobs: t -> int

@@ -505,7 +505,7 @@ let config =
       failwith "!X todo"
 (*
       let opam_state = OpamSwitchState.load_full_compat "config-universe"
-          OpamStateConfig.(!r.current_switch) in
+          (OpamStateConfig.get_switch ()) in
       let dump oc = OpamState.dump_state opam_state oc in
       (match params with
        | [] -> `Ok (dump stdout)
@@ -514,7 +514,7 @@ let config =
 *)
     | Some `cudf, params ->
       let opam_state = OpamSwitchState.load_full_compat "config-universe"
-          OpamStateConfig.(!r.current_switch) in
+          (OpamStateConfig.get_switch ()) in
       let opam_univ = OpamSwitchState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -532,7 +532,7 @@ let config =
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
         let state = OpamSwitchState.load_full_compat "config-report"
-          OpamStateConfig.(!r.current_switch) in
+          (OpamStateConfig.get_switch ()) in
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -940,7 +940,7 @@ let switch =
       | Some `import, [filename] ->
         Client.SWITCH.import
           (OpamGlobalState.load ())
-          OpamStateConfig.(!r.current_switch)
+          (OpamStateConfig.get_switch ())
           (if filename = "-" then None else Some (OpamFilename.of_string filename));
         `Ok ()
       | Some `remove, switches ->
@@ -984,7 +984,7 @@ let switch =
     | Some `import, [filename] ->
       Client.SWITCH.import
         (OpamGlobalState.load ())
-        OpamStateConfig.(!r.current_switch)
+        (OpamStateConfig.get_switch ())
         (if filename = "-" then None else Some (OpamFilename.of_string filename));
       `Ok ()
     | Some `remove, switches ->
@@ -1209,7 +1209,7 @@ let source =
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
     let t = OpamSwitchState.load_full_compat "source"
-        OpamStateConfig.(!r.current_switch) in
+        (OpamStateConfig.get_switch ()) in
     let nv =
       try
         OpamPackage.Set.max_elt
@@ -1487,7 +1487,7 @@ let check_and_run_external_commands () =
         OpamStateConfig.init ~root_dir ();
         let gt = OpamGlobalState.load () in
         Some (OpamSwitchState.load gt (OpamRepositoryState.load gt)
-                OpamStateConfig.(!r.current_switch))
+                (OpamStateConfig.get_switch ()))
       )
       else None
     in

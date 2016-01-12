@@ -16,7 +16,7 @@
 
 include OpamStd.AbstractString
 
-let system = of_string "system"
+let unset = of_string "#unset#"
 
 let not_installed s =
   OpamConsole.error_and_exit

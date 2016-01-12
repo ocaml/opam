@@ -235,7 +235,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       ?(resolve_depends=false) ?(depopts=false) ?depexts ?dev
       regexp =
     let t = OpamSwitchState.load_full_compat "list"
-        OpamStateConfig.(!r.current_switch) in
+        (OpamStateConfig.get_switch ()) in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
@@ -431,7 +431,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
 
 let info ~fields ~raw_opam ~where atoms =
   let t = OpamSwitchState.load_full_compat "info"
-      OpamStateConfig.(!r.current_switch) in
+      (OpamStateConfig.get_switch ()) in
   let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
   let details =
     let map = OpamPackage.to_map (OpamSwitchState.packages_of_atoms t atoms) in
