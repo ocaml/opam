@@ -123,17 +123,19 @@ let resolve_switch_raw gt switch switch_config full_var =
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
-    try OpamFile.Dot_config.variable switch_config var
-    with Not_found ->
-    match resolve_global gt full_var with
+    match OpamFile.Dot_config.variable switch_config var with
     | Some _ as c -> c
     | None ->
-      match V.to_string var with
-      | "switch" -> Some (V.string (OpamSwitch.to_string switch))
-      | var_name ->
-        try
-          Some (resolve_compat_ocaml_variables gt switch switch_config var_name)
-        with Not_found -> None
+      match resolve_global gt full_var with
+      | Some _ as c -> c
+      | None ->
+        match V.to_string var with
+        | "switch" -> Some (V.string (OpamSwitch.to_string switch))
+        | var_name ->
+          try
+            Some (resolve_compat_ocaml_variables gt switch switch_config var_name)
+          with Not_found ->
+            None
 
 let resolve_switch st full_var =
   resolve_switch_raw st.switch_global st.switch st.switch_config full_var
