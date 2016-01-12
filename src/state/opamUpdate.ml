@@ -111,8 +111,6 @@ let pinned_package st ?fixed_version name =
   if not (OpamFilename.exists url_f) then Done false else
   let url = OpamFile.URL.read url_f in
   let srcdir = OpamPath.Switch.dev_package root st.switch name in
-  let pinning_kind =
-    kind_of_pin_option (snd (OpamPackage.Name.Map.find name st.pinned)) in
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
      from the repo *)
@@ -129,8 +127,7 @@ let pinned_package st ?fixed_version name =
         (OpamFilename.rec_files files_dir))
   in
   let old_meta = (* Version previously present in the source *)
-    if pinning_kind = `version then [] else
-      hash_meta @@ local_opam ?fixed_version name srcdir
+    hash_meta @@ local_opam ?fixed_version name srcdir
   in
   let old_opam_file =
     try Some (List.find OpamFilename.exists
@@ -285,14 +282,15 @@ let pinned_package st ?fixed_version name =
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
   let name = OpamPackage.name nv in
-  if OpamPinned.package_opt st name = Some nv then
+  match OpamPackage.Name.Map.find_opt name st.pinned with
+  | Some (v, Source _) when v = OpamPackage.version nv ->
     pinned_package st name
-  else
-  match OpamSwitchState.url st nv with
-  | None     -> Done false
-  | Some url ->
-    if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
-      fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
+  | _ ->
+    match OpamSwitchState.url st nv with
+    | None     -> Done false
+    | Some url ->
+      if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
+        fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
 
 let dev_packages st packages =
   log "update-dev-packages";
