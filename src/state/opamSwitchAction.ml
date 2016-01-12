@@ -260,13 +260,14 @@ let install_metadata st nv =
   let opam_mirror = OpamPath.opam st.switch_global.root nv in
   if OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned ||
      OpamFilename.exists opam_mirror then ()
-  else
-  OpamFile.OPAM.write opam_mirror (OpamSwitchState.opam st nv);
-  match OpamSwitchState.files st nv with
-  | Some src ->
-    OpamFilename.copy_dir ~src
-      ~dst:(OpamPath.files st.switch_global.root nv)
-  | None -> ()
+  else (
+    OpamFile.OPAM.write opam_mirror (OpamSwitchState.opam st nv);
+    match OpamSwitchState.files st nv with
+    | Some src ->
+      OpamFilename.copy_dir ~src
+        ~dst:(OpamPath.files st.switch_global.root nv)
+    | None -> ()
+  )
 
 let remove_metadata st packages =
   let all_installed = OpamGlobalState.all_installed st.switch_global in
