@@ -26,7 +26,7 @@ module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
 let process_dot_install st switch nv =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let root = st.switch_global.root in
   if OpamStateConfig.(!r.dryrun) then
       OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
@@ -149,7 +149,7 @@ let process_dot_install st switch nv =
    * apply the patches
    * substitute the files *)
 let prepare_package_build st switch nv =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let opam = OpamSwitchState.opam sst nv in
 
   (* Substitute the patched files.*)
@@ -221,7 +221,7 @@ let prepare_package_build st switch nv =
 
 let download_package st switch nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let name = OpamPackage.name nv in
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
     Done (`Successful None)
@@ -263,7 +263,7 @@ let extract_package st switch source nv =
     (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
     source;
   if OpamStateConfig.(!r.dryrun) then () else
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let build_dir = OpamPath.Switch.build st.switch_global.root sst.switch nv in
   OpamFilename.rmdir build_dir;
   let () =
@@ -307,7 +307,7 @@ let compilation_env st switch opam =
 let update_state ?installed ?installed_roots ?reinstall ?pinned st switch =
   let open OpamStd.Option.Op in
   let open OpamPackage.Set.Op in
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let installed = installed +! sst.installed in
   let compiler_packages =
     if OpamPackage.Set.is_empty (sst.compiler_packages -- installed) then
@@ -339,7 +339,7 @@ let update_state ?installed ?installed_roots ?reinstall ?pinned st switch =
   st
 
 let removal_needs_download st switch nv =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   match OpamSwitchState.opam_opt sst nv with
   | None ->
     OpamConsole.warning
@@ -365,7 +365,7 @@ let removal_needs_download st switch nv =
 (* Remove a given package *)
 let remove_package_aux st switch ?(keep_build=false) ?(silent=false) nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -497,7 +497,7 @@ let remove_package_aux st switch ?(keep_build=false) ?(silent=false) nv =
 (* Removes build dir and source cache of package if unneeded *)
 let cleanup_package_artefacts st switch nv =
   log "Cleaning up artefacts of %a" (slog OpamPackage.to_string) nv;
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
 
   let build_dir = OpamPath.Switch.build st.switch_global.root sst.switch nv in
   if not OpamStateConfig.(!r.keep_build_dir) &&
@@ -545,7 +545,7 @@ let remove_package st switch ?keep_build ?silent nv =
 *)
 let build_package st switch source nv =
   extract_package st switch source nv;
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let opam = OpamSwitchState.opam sst nv in
   let commands =
     OpamFile.OPAM.build opam @
@@ -586,7 +586,7 @@ let build_package st switch source nv =
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
 let install_package st switch nv =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let opam = OpamSwitchState.opam sst nv in
   let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamPackageVar.resolve ~opam st sst.switch) commands in

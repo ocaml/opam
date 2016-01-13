@@ -105,7 +105,7 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
    normal update *)
 (* !X rewrite to better use switch_state rather than reload overlay *)
 let pinned_package st switch ?fixed_version name =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let root = st.switch_global.root in
   let overlay = OpamPath.Switch.Overlay.package root sst.switch name in
   let url_f = OpamPath.Switch.Overlay.url root sst.switch name in
@@ -285,7 +285,7 @@ let pinned_package st switch ?fixed_version name =
 
 let dev_package st switch nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let name = OpamPackage.name nv in
   if OpamPinned.package sst name = nv then
     pinned_package st switch name
@@ -297,7 +297,7 @@ let dev_package st switch nv =
       fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
 
 let dev_packages st switch packages =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   log "update-dev-packages";
   let command nv =
     OpamProcess.Job.ignore_errors ~default:OpamPackage.Set.empty @@
@@ -330,7 +330,7 @@ let dev_packages st switch packages =
 
 let pinned_packages st switch names =
   log "update-pinned-packages";
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let command name =
     OpamProcess.Job.ignore_errors ~default:OpamPackage.Name.Set.empty @@
     pinned_package st switch name @@| function
@@ -357,7 +357,7 @@ let pinned_packages st switch names =
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
 let download_upstream st switch nv dirname =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   match OpamSwitchState.url sst nv with
   | None   -> Done None
   | Some u ->

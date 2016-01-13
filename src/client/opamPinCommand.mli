@@ -27,7 +27,7 @@ val pin: name -> ?version:version -> pin_option -> bool option
     Returns [Some is_same_version] if the package should be rebuilt.
     raises [Not_found] if no valid opam file is available and the user didn't
     succeed in producing one. *)
-val edit: switch_state -> name -> bool option
+val edit: state -> name -> bool option
 
 (** Unpin packages. Returns the list of packages that should be rebuilt *)
 val unpin: global_state -> ?state:switch_state -> name list -> name list

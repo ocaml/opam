@@ -28,13 +28,6 @@ open OpamStateTypes
 let load_state_file gt switch =
     OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
 
-let get_switch st switch =
-  try OpamSwitch.Map.find switch st.switchmap
-  with Not_found ->
-    OpamConsole.error_and_exit
-   "%s is not a valid switch"
-   (OpamSwitch.to_string switch)
-
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
   if OpamFilename.exists f then OpamFile.Dot_config.read f
@@ -160,12 +153,16 @@ let state_file sst =
     compiler = sst.compiler_packages;
     pinned = OpamPackage.Name.Map.map snd sst.pinned; }
 
-(* load a new switch. Does not change the current switch *)
-let add_switch st rt switch =
+let add_switch st sst =
   { st with
     switchmap =
-      OpamSwitch.Map.add switch (load_switch st.switch_global rt switch) st.switchmap
+      OpamSwitch.Map.add sst.switch sst st.switchmap
   }
+
+(* load a new switch. Does not change the current switch *)
+let load_add_switch st rt switch =
+  let sst = load_switch st.switch_global rt switch in
+  add_switch st sst
 
 let opam sst nv =
   OpamPackage.Map.find nv sst.opams
@@ -247,7 +244,7 @@ let universe st u_action u_orphans =
   let (u_installed,u_packages,u_available) =
     let acc = (OpamPackage.Set.empty,OpamPackage.Set.empty,OpamPackage.Set.empty) in
     List.fold_left (fun (inst,pkgs,avai) sw ->
-      let ct = get_switch st sw in
+      let ct = OpamStateTypes.get_switch st sw in
       let u_installed = inst ++ ct.installed in
       let u_packages = pkgs ++ ct.installed ++ ct.packages in
       let u_available = avai ++ (Lazy.force ct.available_packages) in
@@ -256,9 +253,6 @@ let universe st u_action u_orphans =
   in
   let u_options = (switch,List.map OpamSwitch.to_string switches,profiles) in
   let u_pefuniv = OpamPef.pef_packageuniv switches st in
-(*  dump_state st stdout;
-  print_state st;
-  *)
   (* XXX This could be done in a smarter way *)
   let pefpkglist = Hashtbl.fold (fun _ v acc -> v::acc) u_pefuniv [] in
   let u_versionmap = Pef.Pefcudf.init_tables Versioning.Debian.compare pefpkglist in
@@ -271,7 +265,7 @@ let is_switch_globally_set st =
   OpamFile.Config.switch st.switch_global.config = st.current_switch
 
 let not_found_message st switch (name, cstr) =
-  let sst = get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   match cstr with
   | Some (relop,v) when OpamPackage.has_name sst.packages name ->
     Printf.sprintf "Package %s has no version %s%s."
@@ -284,7 +278,7 @@ let not_found_message st switch (name, cstr) =
 
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason st switch (name, _ as atom) =
-  let sst = get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let candidates =
     OpamPackage.Set.filter (OpamFormula.check atom) sst.packages in
   let nv = OpamPackage.max_version candidates name in
@@ -315,3 +309,16 @@ let load_full_compat _ switch =
   let gt = OpamGlobalState.load () in
   let rt = OpamRepositoryState.load gt in
   load gt rt switch
+
+(* This function is stupidly expensive XXX *)
+let string_of_conflict st switch cs =
+  let universe = universe st Depends OpamPackage.Set.empty in
+  let sst = OpamStateTypes.get_switch st switch in
+  let un_re = unavailable_reason st switch in
+  OpamCudf.string_of_conflict universe.u_versionmap un_re cs
+
+let strings_of_conflict st switch cs =
+  let universe = universe st Depends OpamPackage.Set.empty in
+  let sst = OpamStateTypes.get_switch st switch in
+  let un_re = unavailable_reason st switch in
+  OpamCudf.strings_of_conflict universe.u_versionmap un_re cs

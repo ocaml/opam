@@ -273,7 +273,8 @@ let print_updated_dev_packages pinned_packages =
 let update_dev_packages t ~verbose packages =
   log "update-dev-packages updates %a" (slog OpamPackage.Set.to_string)
     packages;
-  let updates = OpamUpdate.dev_packages t packages in
+  let sst = OpamStateTypes.get_switch t t.current_switch in
+  let updates = OpamUpdate.dev_packages t sst.switch packages in
   if verbose then print_updated_dev_packages updates ;
   updates
 

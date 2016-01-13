@@ -260,7 +260,7 @@ let set_current_switch gt switch =
   st
 
 let install_metadata st switch nv =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let opam_mirror = OpamPath.opam st.switch_global.root nv in
   if OpamPackage.Name.Map.mem (OpamPackage.name nv) sst.pinned ||
      OpamFilename.exists opam_mirror then ()

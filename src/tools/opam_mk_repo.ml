@@ -181,6 +181,7 @@ let consistent_available_field args opam =
   OpamFilter.eval_to_bool ~default:false (faked_var_resolve args)
     (OpamFile.OPAM.available opam)
 
+    (*
 let resolve_deps args index names =
   let atoms =
     List.map (fun str ->
@@ -236,7 +237,7 @@ let resolve_deps args index names =
             Printf.sprintf "%s is unavailable"
               (OpamFormula.string_of_atom atom))
          cs)
-
+*)
 let process
     ({index; gener_digest; dryrun; recurse;
       names; debug; resolve; dev;_} as args) =
@@ -335,7 +336,8 @@ let process
       OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
     if resolve then
-      resolve_deps args new_index names
+      (* resolve_deps args new_index names *)
+      failwith "Temporarly removed"
     else if recurse then
       get_transitive_dependencies new_packages
     else

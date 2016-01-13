@@ -138,7 +138,7 @@ let resolve_switch_raw gt switch switch_config full_var =
             None
 
 let resolve_switch st switch full_var =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   resolve_switch_raw st.switch_global sst.switch sst.switch_config full_var
 
 open OpamVariable
@@ -192,7 +192,7 @@ let rec resolve st switch ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
         None
     with Not_found -> None
   in
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let get_package_var v =
     if OpamVariable.Full.is_global v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in

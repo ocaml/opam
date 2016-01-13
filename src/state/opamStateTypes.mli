@@ -126,3 +126,7 @@ type state = {
       The default is an empty map. The keys are always a subset of the active
       switches *)
 }
+
+(** Get a switch_state from the switchmap. Raise: Not_found if the switch_state
+    does not exist *)
+val get_switch : state -> switch -> switch_state

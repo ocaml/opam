@@ -25,7 +25,7 @@ module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) st switch action =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   match action, failed with
   | `Remove _, _ | `Reinstall _, _ | `Build _, false -> ()
   | `Build pkg, true | `Install pkg, _ | `Change (_,_,pkg), _ ->
@@ -107,7 +107,7 @@ let atom_of_name name =
 *)
 
 let check_availability ?permissive st switch set atoms =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let available = OpamPackage.to_map set in
   let check_atom (name, _ as atom) =
     let exists =
@@ -127,7 +127,7 @@ let check_availability ?permissive st switch set atoms =
      OpamStd.Sys.exit 66)
 
 let sanitize_atom_list ?(permissive=false) st switch atoms =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let packages =
     OpamPackage.to_map (OpamPackage.Set.union sst.packages sst.installed) in
   (* gets back the original capitalization of the package name *)
@@ -307,7 +307,7 @@ end
    and report to user. Takes a graph of atomic actions *)
 let parallel_apply st switch action action_graph =
   log "parallel_apply";
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
 
   (* We keep an imperative state up-to-date and flush it to disk as soon
      as an operation terminates *)
@@ -335,7 +335,7 @@ let parallel_apply st switch action action_graph =
            then OpamPackage.Set.add nv !t_ref.installed_roots
            else !t_ref.installed_roots)
     in
-    t_ref := OpamSwitchState.get_switch tmp !t_ref.switch;
+    t_ref := OpamStateTypes.get_switch tmp !t_ref.switch;
     if OpamFile.OPAM.env (OpamSwitchState.opam !t_ref nv) <> [] &&
        OpamSwitchState.is_switch_globally_set st
     then
@@ -355,7 +355,7 @@ let parallel_apply st switch action action_graph =
         ~installed_roots:(rm !t_ref.installed_roots)
         ~reinstall:(rm !t_ref.reinstall)
     in
-    t_ref := OpamSwitchState.get_switch tmp !t_ref.switch;
+    t_ref := OpamStateTypes.get_switch tmp !t_ref.switch;
     if OpamFile.OPAM.env (OpamSwitchState.opam !t_ref nv) <> [] &&
        OpamSwitchState.is_switch_globally_set st
     then
@@ -655,7 +655,7 @@ let simulate_new_state state t =
   { state with installed }
 
 let print_external_tags st switch solution =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let packages = OpamSolver.new_packages solution in
   let external_tags = OpamStd.String.Set.of_list OpamStateConfig.(!r.external_tags) in
   let values =
@@ -704,7 +704,7 @@ let apply ?ask st action ~requested solution =
     Nothing_to_do
   else (
     (* Otherwise, compute the actions to perform *)
-    let sst = OpamSwitchState.get_switch st st.current_switch in
+    let sst = OpamStateTypes.get_switch st st.current_switch in
     let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false &&
                         OpamStateConfig.(!r.external_tags) = [] in
@@ -770,7 +770,7 @@ let apply ?ask st action ~requested solution =
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)
 let make_request st (req : atom request) =
-  let sst = OpamSwitchState.get_switch st st.current_switch in
+  let sst = OpamStateTypes.get_switch st st.current_switch in
   let find_installed (name, _) =
     OpamPackage.version (
       OpamPackage.Set.find (fun pkg ->

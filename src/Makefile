@@ -204,17 +204,18 @@ SRC_state = \
   opamOCaml.ml \
   opamScript.ml \
   opamStateTypes.mli \
+	opamStateTypes.ml \
   opamGlobalState.ml \
   opamPackageVar.ml \
   opamFileHandling.ml \
   opamRepositoryState.ml \
   opamPinned.ml \
+	opamPef.ml \
   opamSwitchState.ml \
   opamEnv.ml \
   opamSwitchAction.ml \
   opamUpdate.ml \
   opamAction.ml \
-	opamPef.ml \
   opamSolution.ml
 
 define PROJ_state

@@ -30,7 +30,7 @@ val install:
   quiet:bool -> update_config:bool -> switch -> compiler -> unit
 
 (** Install a compiler's base packages *)
-val install_packages: switch_state -> unit
+val install_packages: state -> unit
 
 (** Import a file which contains the packages to install. *)
 val import: global_state -> switch -> filename option -> unit

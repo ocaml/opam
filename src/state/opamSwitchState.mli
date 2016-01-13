@@ -28,7 +28,12 @@ val load_full_compat: string -> switch -> state
     faster than loading the full switch state *)
 val load_state_file: global_state -> switch -> OpamFile.State.t
 
-val get_switch : state -> switch -> switch_state
+(** Add a switch to the switchmap *)
+val add_switch : state -> switch_state -> state
+
+(** Load a switch_state from disk and add it to the switchmap *)
+val load_add_switch : state -> repos_state -> switch -> state
+
 (** {2 Helpers to access state data} *)
 
 val state_file: switch_state -> OpamFile.State.t
@@ -94,3 +99,15 @@ val not_found_message: state -> switch -> atom -> string
 (** Returns a printable explanation why a package is not currently available
     (pinned to an incompatible version, unmet [available:] constraints...) *)
 val unavailable_reason: state -> switch -> atom -> string
+
+(** Convert a conflict to something readable by the user. The first argument
+    should return a string like "lwt<3.2.1 is not available because..." when called
+    on an unavailable package (the reason can't be known this deep in the solver) *)
+val string_of_conflict: state -> switch -> OpamCudf.conflict -> string
+
+(** Returns three lists of strings:
+    - the final reasons why the request can't be satisfied
+    - the dependency chains explaining it
+    - the cycles in the actions to process (exclusive with the other two) *)
+val strings_of_conflict: state -> switch -> OpamCudf.conflict -> string list * string list * string list
+

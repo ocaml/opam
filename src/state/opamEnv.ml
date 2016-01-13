@@ -66,7 +66,7 @@ let add (env: env) (updates: env_update list) =
   env @ expand updates
 
 let compute_updates st switch =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   (* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -122,7 +122,7 @@ let compute_updates st switch =
   man_path @ root @ comp_env @ pkg_env
 
 let updates ~opamswitch ?(force_path=false) st switch =
-  let sst = OpamSwitchState.get_switch st switch in
+  let sst = OpamStateTypes.get_switch st switch in
   let root = st.switch_global.root in
   let update =
     let fn = OpamPath.Switch.environment root switch in

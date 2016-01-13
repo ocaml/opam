@@ -66,122 +66,122 @@ let string_of_conjunction string_of_atom c =
 (* transform all opams (from repo_opams and each switch) to pef.
    We consider only opams available for at least one switch *)
 let pef_package switches st =
-  let aux switches nv package =
-    let opam_name = OpamPackage.name nv in
-    let opam_version = OpamPackage.version nv in
-    let avail = OpamFile.OPAM.available package in
-    let available =
-      let filter switch = 
-        let env = OpamPackageVar.resolve ~opam:package st switch in
-        OpamFilter.eval_to_bool ~default:false env avail
+  let pef_packages_opams_aux opams acc =
+    let aux switches nv package =
+      let opam_name = OpamPackage.name nv in
+      let opam_version = OpamPackage.version nv in
+      let avail = OpamFile.OPAM.available package in
+      let available =
+        let filter switch = 
+          let env = OpamPackageVar.resolve ~opam:package st switch in
+          OpamFilter.eval_to_bool ~default:false env avail
+        in
+        match List.filter filter (OpamSwitch.Map.keys st.switch_global.aliases) with
+        |[] -> None
+        |l -> Some("switch",(String.concat ", " (List.map OpamSwitch.to_string l)))
       in
-      match List.filter filter (OpamSwitch.Map.keys st.switch_global.aliases) with
-      |[] -> None
-      |l -> Some("switch",(String.concat ", " (List.map OpamSwitch.to_string l)))
+      match available with
+      |None -> None
+      |Some _ -> 
+        let name = Some("package",(OpamPackage.Name.to_string opam_name)) in
+        let version = Some("version",(OpamPackage.Version.to_string opam_version)) in
+        let maintainer =
+          try
+            let m = OpamFile.OPAM.maintainer package in
+            Some("maintainer",(string_of_conjunction (fun a -> a) m))
+          with Not_found -> None
+        in
+        let depends =
+          try
+            let d = OpamFile.OPAM.depends package in
+            let dd = formula_of_extended d in
+            Some ("depends", string_of_cnf string_of_atom dd)
+          with Not_found -> None
+        in
+        let depopts =
+          try
+            let d = OpamFile.OPAM.depopts package in
+            let dd = formula_of_extended d in
+            Some ("depopts", string_of_cnf string_of_atom dd)
+          with Not_found -> None
+        in
+        let conflicts =
+          try
+            let c = OpamFile.OPAM.conflicts package in
+            let cc = (opam_name,None)::(OpamFormula.to_disjunction c) in
+            Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
+          with Not_found -> None
+        in
+        let pinned =
+          let l =
+            List.fold_left (fun acc switch ->
+              let sst = OpamStateTypes.get_switch st switch in
+              if OpamPackage.Name.Map.mem opam_name sst.pinned then
+                (OpamSwitch.to_string switch) :: acc
+              else acc
+            ) [] switches
+          in
+          match l with
+          |[] -> None
+          |l -> Some("pinned",String.concat ", " l)
+        in
+        let installed =
+          let l =
+            List.fold_left (fun acc switch ->
+              let sst = OpamStateTypes.get_switch st switch in
+              if OpamPackage.Set.mem nv sst.installed then
+                (OpamSwitch.to_string switch) :: acc
+              else acc
+            ) [] switches
+          in
+          match l with
+          |[] -> None
+          |l -> Some("installed",String.concat ", " l)
+        in
+        let reinstall =
+          let l =
+            List.fold_left (fun acc switch ->
+              let sst = OpamStateTypes.get_switch st switch in
+              if OpamPackage.Set.mem nv sst.reinstall then
+                (OpamSwitch.to_string switch) :: acc
+              else acc
+            ) [] switches
+          in
+          match l with
+          |[] -> None
+          |l -> Some("reinstall",String.concat ", " l)
+        in
+        let base =
+          let l =
+            List.fold_left (fun acc switch ->
+              let sst = OpamStateTypes.get_switch st switch in
+              if OpamPackage.Set.mem nv sst.compiler_packages then
+                (OpamSwitch.to_string switch) :: acc
+              else acc
+            ) [] switches
+          in
+          match l with
+          |[] -> None
+          |l -> Some("base",String.concat ", " l)
+        in
+        Some (
+          List.fold_left (fun acc -> function
+            |None -> acc
+            |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
+          ) [] [name;version;maintainer;available;installed;pinned;
+                base;depends;conflicts;depopts;reinstall]
+        )
     in
-    match available with
-    |None -> None
-    |Some _ -> 
-      let name = Some("package",(OpamPackage.Name.to_string opam_name)) in
-      let version = Some("version",(OpamPackage.Version.to_string opam_version)) in
-      let maintainer =
-        try
-          let m = OpamFile.OPAM.maintainer package in
-          Some("maintainer",(string_of_conjunction (fun a -> a) m))
-        with Not_found -> None
-      in
-      let depends =
-        try
-          let d = OpamFile.OPAM.depends package in
-          let dd = formula_of_extended d in
-          Some ("depends", string_of_cnf string_of_atom dd)
-        with Not_found -> None
-      in
-      let depopts =
-        try
-          let d = OpamFile.OPAM.depopts package in
-          let dd = formula_of_extended d in
-          Some ("depopts", string_of_cnf string_of_atom dd)
-        with Not_found -> None
-      in
-      let conflicts =
-        try
-          let c = OpamFile.OPAM.conflicts package in
-          let cc = (opam_name,None)::(OpamFormula.to_disjunction c) in
-          Some("conflicts", string_of_conjunction OpamFormula.string_of_atom cc)
-        with Not_found -> None
-      in
-      let pinned =
-        let l =
-          List.fold_left (fun acc switch ->
-            let sst = OpamSwitchState.get_switch st switch in
-            if OpamPackage.Name.Map.mem opam_name sst.pinned then
-              (OpamSwitch.to_string switch) :: acc
-            else acc
-          ) [] switches
-        in
-        match l with
-        |[] -> None
-        |l -> Some("pinned",String.concat ", " l)
-      in
-      let installed =
-        let l =
-          List.fold_left (fun acc switch ->
-            let sst = OpamSwitchState.get_switch st switch in
-            if OpamPackage.Set.mem nv sst.installed then
-              (OpamSwitch.to_string switch) :: acc
-            else acc
-          ) [] switches
-        in
-        match l with
-        |[] -> None
-        |l -> Some("installed",String.concat ", " l)
-      in
-      let reinstall =
-        let l =
-          List.fold_left (fun acc switch ->
-            let sst = OpamSwitchState.get_switch st switch in
-            if OpamPackage.Set.mem nv sst.reinstall then
-              (OpamSwitch.to_string switch) :: acc
-            else acc
-          ) [] switches
-        in
-        match l with
-        |[] -> None
-        |l -> Some("reinstall",String.concat ", " l)
-      in
-      let base =
-        let l =
-          List.fold_left (fun acc switch ->
-            let sst = OpamSwitchState.get_switch st switch in
-            if OpamPackage.Set.mem nv sst.compiler_packages then
-              (OpamSwitch.to_string switch) :: acc
-            else acc
-          ) [] switches
-        in
-        match l with
-        |[] -> None
-        |l -> Some("base",String.concat ", " l)
-      in
-      Some (
-        List.fold_left (fun acc -> function
-          |None -> acc
-          |Some (k,v) -> (k,(Common.Format822.dummy_loc,v))::acc
-        ) [] [name;version;maintainer;available;installed;pinned;
-              base;depends;conflicts;depopts;reinstall]
-      )
-  in
-  let to_pef s acc =
     OpamPackage.Map.fold (fun nv opam acc ->
       match aux switches nv opam with
       |None -> acc
       |Some par -> par::acc
-    ) s acc
+    ) opams acc
   in
   List.fold_left (fun acc switch ->
-    let sst = OpamSwitchState.get_switch st switch in
-    to_pef sst.opams acc
-  ) (to_pef st.switch_repos.repo_opams []) switches
+    let sst = OpamStateTypes.get_switch st switch in
+    pef_packages_opams_aux sst.opams acc
+  ) (pef_packages_opams_aux st.switch_repos.repo_opams []) switches
 ;;
 
 let dump_state st oc =

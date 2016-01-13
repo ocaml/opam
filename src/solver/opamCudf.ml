@@ -446,8 +446,6 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-
-
 let string_of_request r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
     (string_of_vpkgs r.wish_install)
