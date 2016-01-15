@@ -25,26 +25,38 @@ type env = full_variable -> variable_contents option
 
 type fident = name list * variable * (string * string) option
 
-let rec to_string = function
-  | FBool b    -> string_of_bool b
-  | FString s  -> Printf.sprintf "%S" s
-  | FIdent (pkgs,var,converter) ->
-    OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
-    (if pkgs <> [] then ":" else "") ^
-    OpamVariable.to_string var ^
-    (match converter with
-     | Some (it,ifu) -> "?"^it^":"^ifu
-     | None -> "")
-  | FOp(e,s,f) ->
-    Printf.sprintf "%s %s %s"
-      (to_string e) (string_of_relop s) (to_string f)
-  | FAnd (e,f) -> Printf.sprintf "%s & %s" (to_string e) (to_string f)
-  | FOr (e,f)  -> Printf.sprintf "%s | %s" (to_string e) (to_string f)
-  | FNot (FBool _ | FString _ | FIdent _ as e) ->
-    Printf.sprintf "!%s" (to_string e)
-  | FNot e     ->
-    Printf.sprintf "!(%s)" (to_string e)
-  | FUndef -> "#undefined"
+let to_string t =
+  let rec aux ?(context=`Or) t =
+    let paren ?(cond=false) f =
+      if cond || OpamFormatConfig.(!r.all_parens)
+      then Printf.sprintf "(%s)" f else f
+    in
+    match t with
+    | FBool b    -> string_of_bool b
+    | FString s  -> Printf.sprintf "%S" s
+    | FIdent (pkgs,var,converter) ->
+      OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
+      (if pkgs <> [] then ":" else "") ^
+      OpamVariable.to_string var ^
+      (match converter with
+       | Some (it,ifu) -> "?"^it^":"^ifu
+       | None -> "")
+    | FOp(e,s,f) ->
+      paren ~cond:(context <> `Or && context <> `And)
+        (Printf.sprintf "%s %s %s"
+           (aux ~context:`Relop e) (string_of_relop s) (aux ~context:`Relop f))
+    | FAnd (e,f) ->
+      paren ~cond:(context <> `Or && context <> `And)
+        (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
+    | FOr (e,f)  ->
+      paren ~cond:(context <> `Or)
+        (Printf.sprintf "%s | %s" (aux e) (aux f))
+    | FNot e     ->
+      paren ~cond:(context = `Relop)
+        (Printf.sprintf "!%s" (aux ~context:`Not e))
+    | FUndef -> "#undefined"
+  in
+  aux t
 
 let rec fold_down_left f acc filter = match filter with
   | FOp(l,_,r) | FAnd(l,r) | FOr(l,r) ->

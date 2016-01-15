@@ -108,23 +108,23 @@ let make_or a b = match a, b with
   | a, b -> Or (a, b)
 
 let string_of_formula string_of_a f =
-  let rec aux ?paren f =
-    let paren = match paren with
-      | Some _ when OpamFormatConfig.(!r.all_parens) -> Some `All
-      | paren -> paren
+  let rec aux ?(in_and=false) f =
+    let paren_if ?(cond=false) s =
+      if cond || OpamFormatConfig.(!r.all_parens)
+      then Printf.sprintf "(%s)" s
+      else s
     in
     match f with
     | Empty    -> "0"
-    | Atom a   ->
-      let s = string_of_a a in
-      if OpamFormatConfig.(!r.all_parens) then Printf.sprintf "(%s)" s else s
+    | Atom a   -> paren_if (string_of_a a)
     | Block x  -> Printf.sprintf "(%s)" (aux x)
-    | And(x,y) -> (* And, Or have the same priority, left-associative *)
-      let lpar, rpar = if paren = Some `Or then "(",")" else "","" in
-      Printf.sprintf "%s%s & %s%s" lpar (aux x) (aux ~paren:`And y) rpar
+    | And(x,y) ->
+      paren_if
+        (Printf.sprintf "%s & %s"
+           (aux ~in_and:true x) (aux ~in_and:true y))
     | Or(x,y)  ->
-      let lpar, rpar = if paren = Some `And then "(",")" else "","" in
-      Printf.sprintf "%s%s | %s%s" lpar (aux x) (aux ~paren:`Or y) rpar
+      paren_if ~cond:in_and
+        (Printf.sprintf "%s | %s" (aux x) (aux y))
   in
   aux f
 

@@ -36,13 +36,15 @@ let get_pos n =
 %token COLON
 %token <int> INT
 %token <OpamTypes.relop> RELOP
-%token <OpamTypes.logop> LOGOP
+%token AND
+%token OR
 %token <OpamTypes.pfxop> PFXOP
 %token <OpamTypes.env_update_op> ENVOP
 
 %left COLON
 %left ATOM
-%left LOGOP
+%left AND
+%left OR
 %nonassoc ENVOP
 %nonassoc PFXOP
 %left LBRACE RBRACE
@@ -82,7 +84,8 @@ value:
 | LPAR values RPAR           { Group (get_pos 1,$2) }
 | LBRACKET values RBRACKET   { List (get_pos 1,$2) }
 | value LBRACE values RBRACE { Option (get_pos 2,$1, $3) }
-| value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
+| value AND value            { Logop (get_pos 2,`And,$1,$3) }
+| value OR value             { Logop (get_pos 2,`Or,$1,$3) }
 | atom RELOP atom            { Relop (get_pos 2,$2,$1,$3) }
 | atom ENVOP atom            { Env_binding (get_pos 1,$1,$2,$3) }
 | PFXOP value                { Pfxop (get_pos 1,$1,$2) }

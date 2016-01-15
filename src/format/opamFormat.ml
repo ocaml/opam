@@ -645,22 +645,28 @@ module Pp = struct
         | [Group(_,[f])] | [f] -> aux f
       in
       let print_filter f =
-        let rec aux ?paren f =
-          let group ?kind f =
-            if OpamFormatConfig.(!r.all_parens) ||
-               (paren <> None && paren <> kind)
-            then Group (pos_null, [f]) else f
+        let rec aux ?(context=`Or) f =
+          let group_if ?(cond=false) f =
+            if cond || OpamFormatConfig.(!r.all_parens)
+            then Group (pos_null, [f])
+            else f
           in
           match f with
           | FString s  -> print string s
           | FIdent fid -> print filter_ident fid
           | FBool b    -> print bool b
-          | FOp(e,s,f) -> group (Relop (pos_null, s, aux e, aux f))
-          | FOr(e,f) -> (* And, Or have the same priority, left-associative *)
-            group ~kind:`Or (Logop (pos_null, `Or, aux e, aux ~paren:`Or f))
+          | FOp(e,s,f) ->
+            group_if ~cond:(context <> `Or && context <> `And)
+              (Relop (pos_null, s, aux ~context:`Relop e, aux ~context:`Relop f))
+          | FOr(e,f) ->
+            group_if ~cond:(context <> `Or)
+              (Logop (pos_null, `Or, aux ~context:`Or e, aux ~context:`Or f))
           | FAnd(e,f) ->
-            group ~kind:`And (Logop (pos_null, `And, aux e, aux ~paren:`And f))
-          | FNot f -> group (Pfxop (pos_null, `Not, aux ~paren:`Not f))
+            group_if ~cond:(context <> `Or && context <> `And)
+              (Logop (pos_null, `And, aux ~context:`And e, aux ~context:`And f))
+          | FNot f ->
+            group_if ~cond:(context = `Relop)
+              (Pfxop (pos_null, `Not, aux ~context:`Not f))
           | FUndef -> assert false
         in
         match f with
@@ -691,11 +697,22 @@ module Pp = struct
         OpamFormula.ands (List.map aux l)
       in
       let rec print_constraints cs =
-        let rec aux = function
+        let rec aux ?(in_and=false) cs =
+          let group_if ?(cond=false) f =
+            if cond || OpamFormatConfig.(!r.all_parens)
+            then Group (pos_null, [f])
+            else f
+          in
+          match cs with
           | Empty       -> assert false
-          | Atom (r, v) -> Prefix_relop (pos_null, r, print version v)
-          | And (x, y)  -> Logop (pos_null, `And, aux x, aux y)
-          | Or (x, y)   -> Logop (pos_null, `Or, aux x, aux y)
+          | Atom (r, v) ->
+            group_if (Prefix_relop (pos_null, r, print version v))
+          | And (x, y)  ->
+            group_if
+              (Logop (pos_null, `And, aux ~in_and:true x, aux ~in_and:true y))
+          | Or (x, y)   ->
+            group_if ~cond:in_and
+              (Logop (pos_null, `Or, aux x, aux y))
           | Block g     -> Group (pos_null, print_constraints g)
         in
         match cs with
@@ -761,12 +778,22 @@ module Pp = struct
         join (List.map aux l)
       in
       let rec print_formula f =
-        let rec aux = function
+        let rec aux ?(in_and=false) f =
+          let group_if ?(cond=false) f =
+            if cond || OpamFormatConfig.(!r.all_parens)
+            then Group (pos_null, [f])
+            else f
+          in
+          match f with
           | Empty -> assert false
           | Block f -> Group (pos_null, print_formula f)
-          | And (e,f) -> Logop (pos_null, `And, aux e, aux f)
-          | Or (e,f) -> Logop (pos_null, `Or, aux e, aux f)
-          | Atom at -> print (package_atom constraints) at
+          | And (e,f) ->
+            group_if
+              (Logop (pos_null, `And, aux ~in_and:true e, aux ~in_and:true f))
+          | Or (e,f) ->
+            group_if ~cond:in_and
+              (Logop (pos_null, `Or, aux e, aux f))
+          | Atom at -> group_if (print (package_atom constraints) at)
         in
         List.map aux (split f)
       in
