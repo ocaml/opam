@@ -163,6 +163,6 @@ _opam()
   return 0
 }
 
-autoload bashcompinit
+autoload -U bashcompinit
 bashcompinit
 complete -F _opam opam
