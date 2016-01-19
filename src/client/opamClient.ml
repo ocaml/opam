@@ -27,7 +27,7 @@ let with_switch_backup _command f =
       (OpamStateConfig.get_switch ()) in
   let file = OpamPath.Switch.backup t.switch_global.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch_global.root t.switch);
-  OpamFile.State.write file (OpamSwitchState.state_file t);
+  OpamFile.State.write file (OpamSwitchState.selections t);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -642,20 +642,8 @@ module API = struct
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
-    let dot_profile_o = Some dot_profile in
-    let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
     let root_empty =
       not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
-    let update_setup t =
-      let updated = match update_config with
-        | `ask -> OpamEnv.update_setup_interactive t shell dot_profile
-        | `no  -> false
-        | `yes ->
-          let global = { complete = true; switch_eval = true } in
-          OpamEnv.update_setup t (Some user) (Some global);
-          true in
-      if not updated then
-        OpamEnv.print_env_warning_at_init t user in
 
     if OpamFilename.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.";
@@ -747,7 +735,7 @@ module API = struct
         *)
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create None [repo.repo_name]
+          OpamFile.Config.create [] None [repo.repo_name]
             OpamStateConfig.(Lazy.force default.jobs)
             OpamStateConfig.(default.dl_jobs)
         in
@@ -802,9 +790,17 @@ module API = struct
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root;
         raise e);
-    let t = OpamSwitchState.load_full_compat "init"
-        (OpamStateConfig.get_switch ()) in
-    update_setup t
+    let gt = OpamGlobalState.load () in
+    let updated = match update_config with
+      | `no  -> false
+      | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
+      | `yes ->
+        OpamEnv.update_user_setup root ~ocamlinit:true ~dot_profile shell;
+        OpamEnv.write_static_init_scripts root ~switch_eval:true ~completion:true;
+        true
+    in
+    if not updated then
+      OpamEnv.print_env_warning_at_init gt ~ocamlinit:true ~dot_profile shell
 
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
@@ -907,7 +903,7 @@ module API = struct
           "Removing %s from the list of installed roots.\n"
           (OpamStd.Format.pretty_list diff)
       );
-      OpamSwitchAction.write_state_file t
+      OpamSwitchAction.write_selections t
     );
 
     let available_packages = Lazy.force t.available_packages in
@@ -1165,9 +1161,11 @@ module API = struct
         OpamProcess.Job.run
           (OpamUpdate.pinned_package t ?fixed_version:version name)
       in
+      (*
       if not updated then
         (ignore (unpin t.switch_global ~state:t [name]);
          OpamStd.Sys.exit 1);
+      *)
       OpamConsole.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
       let empty_opam = OpamFile.OPAM.(
@@ -1278,8 +1276,12 @@ module SafeAPI = struct
     let env ~csh ~sexp ~fish ~inplace_path =
       API.CONFIG.env ~csh ~sexp ~fish ~inplace_path
 
-    let setup local global =
-      global_lock (fun () -> API.CONFIG.setup local global)
+    let setup
+        ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+        ~user ~global =
+      global_lock (fun () -> API.CONFIG.setup
+                      ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+                      ~user ~global)
 
     let setup_list shell dot_profile =
       read_lock (fun () -> API.CONFIG.setup_list shell dot_profile)
@@ -1325,13 +1327,14 @@ module SafeAPI = struct
 
   module SWITCH = struct
 
-    let switch ?compiler ~quiet name =
+    let switch ~quiet ?compiler ?packages name =
       global_then_switch_lock (fun () ->
-        API.SWITCH.switch_cont ?compiler ~quiet name)
+        API.SWITCH.switch_cont ~quiet ?compiler ?packages name)
 
-    let install ~quiet ~update_config switch ocaml_version =
+    let install ~quiet ~update_config ?compiler ?packages switch =
       global_then_switch_lock (fun () ->
-        API.SWITCH.install_cont ~quiet ~update_config switch ocaml_version)
+        API.SWITCH.install_cont ~quiet ~update_config
+          ?compiler ?packages switch)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)
@@ -1339,8 +1342,8 @@ module SafeAPI = struct
     let export filename =
       read_lock (fun () -> API.SWITCH.export filename)
 
-    let remove switch =
-      global_lock (fun () -> API.SWITCH.remove switch)
+    let remove gt ?confirm switch =
+      global_lock (fun () -> API.SWITCH.remove gt ?confirm switch)
 
     let reinstall switch =
       global_then_switch_lock (fun () ->

@@ -130,7 +130,7 @@ let edit t name =
     match installed_nv with
     | None -> None
     | Some nv ->
-      OpamSwitchAction.write_state_file t;
+      OpamSwitchAction.write_selections t;
       Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
 (* unused ?
 let update_set set old cur save =
@@ -138,7 +138,7 @@ let update_set set old cur save =
     save (OpamPackage.Set.add cur (OpamPackage.Set.remove old set))
 *)
 let update_config t pinned =
-  OpamSwitchAction.write_state_file { t with pinned }
+  OpamSwitchAction.write_selections { t with pinned }
 
 let pin name ?version pin_option =
   log "pin %a to %a (%a)"
@@ -256,19 +256,19 @@ let pin name ?version pin_option =
 let unpin gt ?state names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
-  let switch, state_file = match state with
+  let switch, selections = match state with
     | None ->
       let switch = (OpamStateConfig.get_switch ()) in
-      switch, OpamSwitchState.load_state_file gt switch
+      switch, OpamSwitchState.load_selections gt switch
     | Some st ->
-      st.switch, OpamSwitchState.state_file st
+      st.switch, OpamSwitchState.selections st
   in
   let pinned, needs_reinstall =
     List.fold_left (fun (pins, needs_reinstall) name ->
         try
-          let current = OpamPackage.Name.Map.find name pins in
+          let _, current = OpamPackage.Name.Map.find name pins in
           let is_installed =
-            OpamPackage.has_name state_file.OpamFile.State.installed name
+            OpamPackage.has_name selections.sel_installed name
           in
           let pins = OpamPackage.Name.Map.remove name pins in
           let needs_reinstall = match current with
@@ -287,12 +287,12 @@ let unpin gt ?state names =
           OpamConsole.note "%s is not pinned."
             (OpamPackage.Name.to_string name);
           pins, needs_reinstall)
-      (state_file.OpamFile.State.pinned, [])
+      (selections.sel_pinned, [])
       names
   in
   OpamFile.State.write
     (OpamPath.Switch.state gt.root switch)
-    {state_file with OpamFile.State.pinned};
+    {selections with sel_pinned = pinned};
   needs_reinstall
 
 let list ~short () =

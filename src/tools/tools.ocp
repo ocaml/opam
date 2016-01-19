@@ -31,7 +31,7 @@ begin program "opamlfind"
   ]
   requires = [ "unix" ]
 end
-
+(*
 begin program "opam-admin.top"
   has_asm = false
   ocamlc = "ocamlmktop"
@@ -47,3 +47,4 @@ begin program "opam-admin.top"
     "re.glob"
   ]
 end
+*)

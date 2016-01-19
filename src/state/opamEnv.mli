@@ -41,9 +41,16 @@ val compute_updates: switch_state -> env_update list
 
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current environment (OPAMROOT, OPAMSWITCH variables) and shell (as
-    returned by [eval `opam config env`]). Takes root and switch. *)
-val eval_string: dirname -> switch -> string
+    returned by [eval `opam config env`]) *)
+val eval_string: global_state -> switch option -> string
 
+(** Returns the updated contents of the PATH variable for the given opam root
+    and switch (set [force_path] to ensure the opam path is leading) *)
+val path: force_path:bool -> dirname -> switch -> string
+
+(** Returns the full environment with only the PATH variable updated, as per
+    [path] *)
+val full_with_path: force_path:bool -> dirname -> switch -> env
 
 (** {2 Shell and initialisation support} *)
 
@@ -53,17 +60,23 @@ val eval_string: dirname -> switch -> string
 (** Details the process to the user, and interactively update the global and
     user configurations. Returns [true] if the update was confirmed and
     successful *)
-val update_setup_interactive: switch_state -> shell -> filename -> bool
+val setup_interactive: dirname -> dot_profile:filename -> shell -> bool
 
 (** Display the global and user configuration for OPAM. *)
-val display_setup: global_state -> shell -> filename -> unit
+val display_setup: dirname -> dot_profile:filename -> shell -> unit
 
-(** Update the user configuration. *)
-val update_setup:
-  switch_state -> user_config option -> global_config option -> unit
+(** Update the user configuration in $HOME for good opam integration. *)
+val update_user_setup:
+  dirname -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit
 
-(** Update scripts in ~/.opam/opam-init (subset of [update_setup]) *)
-val update_init_scripts: switch_state -> global:(global_config option) -> unit
+(** Write the generic scripts in ~/.opam/opam-init needed to import state for
+    various shells *)
+val write_static_init_scripts:
+  dirname -> switch_eval:bool -> completion:bool -> unit
+
+(** Update the shell scripts containing the current switch configuration in
+    ~/.opam/opam-init *)
+val write_dynamic_init_scripts: switch_state -> unit
 
 (** Print a warning if the environment is not set-up properly.
     (General message) *)
@@ -72,4 +85,5 @@ val check_and_print_env_warning: switch_state -> unit
 (** Print a long message with explanations if the environment is not set-up
     properly, and advises to update user's file depending on what has already
     been done automatically according to [user_config] *)
-val print_env_warning_at_init: switch_state -> user_config -> unit
+val print_env_warning_at_init:
+  global_state -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit

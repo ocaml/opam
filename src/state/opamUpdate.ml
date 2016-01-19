@@ -312,7 +312,7 @@ let dev_packages st packages =
       packages
   in
   OpamSwitchAction.add_to_reinstall st.switch_global st.switch
-    (OpamSwitchState.state_file st)
+    (OpamSwitchState.selections st)
     ~unpinned_only:false updates;
   let unpinned_updates = updates -- pinned in
   OpamGlobalState.fold_switches (fun switch state_file () ->
@@ -344,7 +344,7 @@ let pinned_packages st names =
       updates OpamPackage.Set.empty
   in
   OpamSwitchAction.add_to_reinstall st.switch_global st.switch
-    (OpamSwitchState.state_file st) ~unpinned_only:false updates;
+    (OpamSwitchState.selections st) ~unpinned_only:false updates;
   updates
 
 (* Download a package from its upstream source, using 'cache_dir' as cache

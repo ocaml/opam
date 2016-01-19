@@ -508,18 +508,13 @@ module StateTable = struct
 
   module M = OpamPackage.Name.Map
 
-  type t = {
-    installed: package_set;
-    installed_roots: package_set;
-    compiler: package_set;
-    pinned: pin_option M.t;
-  }
+  type t = switch_selections
 
   let empty = {
-    installed = OpamPackage.Set.empty;
-    installed_roots = OpamPackage.Set.empty;
-    compiler = OpamPackage.Set.empty;
-    pinned = M.empty;
+    sel_installed = OpamPackage.Set.empty;
+    sel_roots = OpamPackage.Set.empty;
+    sel_compiler = OpamPackage.Set.empty;
+    sel_pinned = OpamPackage.Name.Map.empty;
   }
 
   let pp_state =
@@ -552,24 +547,24 @@ module StateTable = struct
            (fun name (version,(state,pin)) t ->
               let nv = OpamPackage.create name version in
               {
-                installed = (match state with
+                sel_installed = (match state with
                     | `Installed | `Root | `Compiler ->
-                      OpamPackage.Set.add nv t.installed
+                      OpamPackage.Set.add nv t.sel_installed
                     | `Uninstalled | `Uninstalled_compiler ->
-                      t.installed);
-                installed_roots = (match state with
+                      t.sel_installed);
+                sel_roots = (match state with
                     | `Root | `Compiler ->
-                      OpamPackage.Set.add nv t.installed_roots
+                      OpamPackage.Set.add nv t.sel_roots
                     | `Installed | `Uninstalled | `Uninstalled_compiler ->
-                      t.installed_roots);
-                compiler = (match state with
+                      t.sel_roots);
+                sel_compiler = (match state with
                     | `Compiler | `Uninstalled_compiler ->
-                      OpamPackage.Set.add nv t.compiler
+                      OpamPackage.Set.add nv t.sel_compiler
                     | `Root | `Installed | `Uninstalled ->
-                      t.compiler);
-                pinned = (match pin with
-                    | Some pin -> M.add name pin t.pinned
-                    | None -> t.pinned);
+                      t.sel_compiler);
+                sel_pinned = (match pin with
+                    | Some pin -> M.add name (version, pin) t.sel_pinned
+                    | None -> t.sel_pinned);
               })
            map
            empty)
@@ -578,11 +573,11 @@ module StateTable = struct
          OpamPackage.Set.fold (fun nv ->
              M.add (OpamPackage.name nv)
                (OpamPackage.version nv, (`Installed, None)))
-           t.installed |>
+           t.sel_installed |>
          OpamPackage.Set.fold (fun nv ->
              M.add (OpamPackage.name nv)
                (OpamPackage.version nv, (`Root, None)))
-           t.installed_roots |>
+           t.sel_roots |>
          OpamPackage.Set.fold (fun nv acc ->
              let name = OpamPackage.name nv in
              try
@@ -592,25 +587,19 @@ module StateTable = struct
                M.add name
                  (OpamPackage.version nv, (`Uninstalled_compiler, None))
                  acc)
-           t.compiler |>
-         M.fold (fun name pin map ->
-             try
-               let v, (state, _) = M.find name map in
-               M.add name (v, (state, Some pin)) map
-             with Not_found ->
-               let v = OpamPackage.Version.of_string "--" in
-               M.add name (v, (`Uninstalled, Some pin)) map)
-           t.pinned)
+           t.sel_compiler |>
+         M.fold (fun name (v, pin) map ->
+             let state =
+               try let _, (state, _) = M.find name map in state
+               with Not_found -> `Uninstalled
+             in
+             M.add name (v, (state, Some pin)) map)
+           t.sel_pinned)
 
 end
 
 module State = struct
-  type t = StateTable.t = {
-    installed: package_set;
-    installed_roots: package_set;
-    compiler: package_set;
-    pinned: pin_option name_map;
-  }
+  type t = switch_selections
   include (LineFile (StateTable) : IO_FILE with type t := t)
 end
 
@@ -790,7 +779,8 @@ module ConfigSyntax = struct
 
   type t = {
     opam_version : opam_version;
-    repositories : repository_name list ;
+    repositories : repository_name list;
+    installed_switches : switch list;
     switch : switch option;
     jobs : int;
     dl_tool : arg list option;
@@ -801,6 +791,7 @@ module ConfigSyntax = struct
 
   let opam_version t = t.opam_version
   let repositories t = t.repositories
+  let installed_switches t = t.installed_switches
   let switch t = t.switch
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
@@ -813,6 +804,8 @@ module ConfigSyntax = struct
 
   let with_opam_version t opam_version = { t with opam_version }
   let with_repositories t repositories = { t with repositories }
+  let with_installed_switches t installed_switches =
+    { t with installed_switches }
   let with_switch_opt t switch = { t with switch }
   let with_switch t switch = { t with switch = Some switch }
   let with_jobs t jobs = { t with jobs }
@@ -824,14 +817,18 @@ module ConfigSyntax = struct
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver t solver = { t with solver = Some solver }
 
-  let create switch repositories ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
+  let create installed_switches switch repositories
+      ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
     { opam_version = OpamVersion.current;
-      repositories ; switch ; jobs ; dl_tool = download_tool; dl_jobs ;
+      repositories ;
+      installed_switches; switch;
+      jobs; dl_tool = download_tool; dl_jobs;
       solver_criteria = criteria; solver }
 
   let empty = {
     opam_version = OpamVersion.current;
     repositories = [];
+    installed_switches = [];
     switch = None;
     jobs = 1;
     dl_tool = None;
@@ -854,6 +851,11 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:1
            (Pp.V.string -|
             Pp.of_module "repository" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t)));
+      "installed_switches", Pp.ppacc
+        with_installed_switches installed_switches
+        (Pp.V.map_list ~depth:1
+           (Pp.V.string -|
+            Pp.of_module "switch" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t)));
       "switch", Pp.ppacc_opt
         with_switch switch
         (Pp.V.string -| Pp.of_module "switch" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t));
@@ -903,6 +905,79 @@ end
 module Config = struct
   include ConfigSyntax
   include SyntaxFile(ConfigSyntax)
+end
+
+module SwitchSelectionsSyntax = struct
+
+  let internal = "switch-state"
+
+  type t = switch_selections
+
+  let empty = {
+    sel_installed = OpamPackage.Set.empty;
+    sel_roots = OpamPackage.Set.empty;
+    sel_compiler = OpamPackage.Set.empty;
+    sel_pinned = OpamPackage.Name.Map.empty;
+  }
+
+  let pp_package =
+    Pp.of_module "package"
+      (module OpamPackage: Pp.STR with type t = OpamPackage.t)
+
+  let pp_pkglist =
+    Pp.V.map_list (Pp.V.string -| pp_package) -|
+    Pp.pp (fun ~pos:_ -> OpamPackage.Set.of_list) OpamPackage.Set.elements
+
+  let fields = [
+    "opam-version", Pp.ppacc_ignore;
+    "compiler", Pp.ppacc
+      (fun t sel_compiler -> {t with sel_compiler}) (fun t -> t.sel_compiler)
+      pp_pkglist;
+    "roots", Pp.ppacc
+      (fun t sel_roots -> {t with sel_roots})
+      (fun t -> t.sel_roots)
+      pp_pkglist;
+    "installed", Pp.ppacc
+      (fun t installed ->
+         {t with sel_installed = OpamPackage.Set.union t.sel_roots installed})
+      (fun t -> t.sel_installed)
+      pp_pkglist;
+    "pinned", Pp.ppacc
+      (fun t sel_pinned -> {t with sel_pinned}) (fun t -> t.sel_pinned)
+      (Pp.V.map_list ~depth:1
+         (Pp.V.map_option
+            (Pp.V.string -| pp_package)
+            (Pp.opt @@ Pp.singleton -| Pp.V.url) -|
+          Pp.pp
+            (fun ~pos:_ -> function
+               | nv, None -> nv, Version (OpamPackage.version nv)
+               | nv, Some u -> nv, Source u)
+            (function
+              | nv, Version v -> assert (OpamPackage.version nv = v); nv, None
+              | nv, Source u -> nv, Some u)) -|
+       Pp.pp
+         (fun ~pos:_ pins ->
+            List.fold_left (fun acc (nv,pin) ->
+                OpamPackage.Name.Map.add
+                  (OpamPackage.name nv) (OpamPackage.version nv, pin) acc)
+              OpamPackage.Name.Map.empty pins)
+         (fun nmap ->
+            OpamPackage.Name.Map.fold (fun name (version, pin) acc ->
+                (OpamPackage.create name version, pin)::acc)
+              nmap []));
+  ]
+
+  let pp =
+    Pp.I.map_file @@
+    Pp.I.check_opam_version () -|
+    Pp.I.check_fields fields -|
+    Pp.I.fields ~name:"repo-file" ~empty fields
+
+end
+
+module SwitchSelections = struct
+  type t = switch_selections
+  include SyntaxFile(SwitchSelectionsSyntax)
 end
 
 (** Local repository config file (repo/<repo>/config) *)
@@ -1024,7 +1099,7 @@ module Dot_configSyntax = struct
       (fun ~pos (opam_version_opt, s) ->
          match opam_version_opt with
          | Some v when
-             OpamVersion.compare v (OpamVersion.of_string "1.3.0~dev3") > 0 ->
+             OpamVersion.compare v (OpamVersion.of_string "1.3~dev3") > 0 ->
            Pp.parse ~pos pp_contents s
          | _ -> {empty with vars = Pp.parse ~pos pp_variables s})
       (fun t -> None, Pp.print pp_contents t)

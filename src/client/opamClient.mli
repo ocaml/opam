@@ -59,7 +59,11 @@ module API: sig
     val env: csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool -> unit
 
     (** Global and user setup of OPAM. *)
-    val setup: user_config option -> global_config option -> unit
+    val setup:
+      ?dot_profile:OpamTypes.filename -> ocamlinit:bool ->
+      switch_eval:bool -> completion:bool ->
+      shell:OpamTypes.shell ->
+      user:bool -> global:bool -> unit
 
     (** Display global and user informations about OPAM setup. *)
     val setup_list: shell -> filename -> unit
@@ -109,10 +113,14 @@ module API: sig
     (** Set the given switch, installing it if necessary. Take the
         global file lock. *)
     val switch:
-      ?compiler:compiler -> quiet:bool -> switch -> unit
+      quiet:bool -> ?compiler:compiler -> ?packages:atom conjunction ->
+      switch -> unit
 
     (** Install the given compiler. *)
-    val install: quiet:bool -> update_config:bool -> switch -> compiler -> unit
+    val install:
+      quiet:bool -> update_config:bool ->
+      ?compiler:compiler -> ?packages:atom conjunction ->
+      switch -> unit
 
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)
@@ -123,7 +131,7 @@ module API: sig
     val export: filename option -> unit
 
     (** Remove the given compiler. *)
-    val remove: global_state -> switch -> unit
+    val remove: global_state -> ?confirm:bool -> switch -> unit
 
     (** Reinstall the given compiler. *)
     val reinstall: global_state -> switch -> unit

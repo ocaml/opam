@@ -312,11 +312,11 @@ let fix_package_descriptions rt ~verbose =
     OpamGlobalState.fold_switches OpamSwitch.Map.add gt OpamSwitch.Map.empty
   in
   let all_installed_unpinned =
-    OpamSwitch.Map.fold (fun _ sf acc ->
+    OpamSwitch.Map.fold (fun _ sel acc ->
         OpamPackage.Set.filter
           (fun nv -> not (OpamPackage.Name.Map.mem (OpamPackage.name nv)
-                            sf.OpamFile.State.pinned))
-          sf.OpamFile.State.installed
+                            sel.sel_pinned))
+          sel.sel_installed
         ++ acc)
       package_states OpamPackage.Set.empty
   in

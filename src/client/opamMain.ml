@@ -453,16 +453,15 @@ let config =
       let global      = all || global in
       let profile     = user  || profile in
       let ocamlinit   = user  || ocamlinit in
-      let complete    = global && not no_complete in
+      let completion    = global && not no_complete in
       let switch_eval = global && not no_switch_eval in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         `Ok (Client.CONFIG.setup_list shell dot_profile)
-      else if profile || ocamlinit || complete || switch_eval then
+      else if profile || ocamlinit || completion || switch_eval then
         let dot_profile = if profile then Some dot_profile else None in
-        let user   = if user then Some { shell; ocamlinit; dot_profile } else None in
-        let global = if global then Some { complete; switch_eval } else None in
-        `Ok (Client.CONFIG.setup user global)
+        `Ok (Client.CONFIG.setup ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+               ~user ~global)
       else
         `Ok (OpamConsole.msg
           "usage: opam config setup [options]\n\
@@ -842,7 +841,7 @@ let switch =
      already installed (e.g. it will not transparently switch to the \
      installed compiler switch, as with $(b,set)).";
     "set", `set, ["SWITCH"],
-      "Set the currently active switch, installing it if needed.";
+    "Set the currently active switch, installing it if needed.";
     "remove", `remove, ["SWITCH"], "Remove the given compiler.";
     "export", `export, ["FILE"],
     "Save the current switch state to a file.";
@@ -893,79 +892,27 @@ let switch =
     mk_flag ["a";"all"]
       "List all the compilers which can be installed on the system." in
   let packages =
-    mk_flag ["packages"]
-      "Use packages rather than compiler definitions" in
+    mk_opt ["packages"] "PKGS"
+      "When installing a switch, define the given set of packages as compiler."
+      Arg.(some (list atom)) None in
+  let empty =
+    mk_flag ["empty"]
+      "Allow creating an empty (without compiler) switch." in
 
   let switch global_options
       build_options command alias_of print_short installed all
-      no_switch packages params =
+      no_switch packages empty params =
     apply_global_options global_options;
     apply_build_options build_options;
-    let mk_comp alias = match alias_of with
-      | None      -> OpamCompiler.of_string alias
-      | Some comp -> OpamCompiler.of_string comp in
+    let mk_comp switch =
+      match alias_of with
+      | None ->
+        if empty || packages <> None then None
+        else Some (OpamCompiler.of_string switch)
+      | Some comp -> Some (OpamCompiler.of_string comp)
+    in
     let quiet = (fst global_options).quiet in
-    if packages then match command, params with
-      | None      , []
-      | Some `list, [] -> assert false
-      | Some `install, (name::_ as pkgs) ->
-        let switch = OpamSwitch.of_string name in
-        let packages =
-          (* !X catch failure *)
-          OpamPackage.Set.of_list (List.rev_map OpamPackage.of_string pkgs)
-        in
-        OpamSwitchAction.create_empty_switch OpamStateConfig.(!r.root_dir) switch;
-        let t = OpamSwitchState.load_full_compat "switch-install" switch in
-        let compiler_packages =
-          OpamPackage.Set.of_list
-            (OpamSolver.dependencies ~depopts:true ~build:true ~installed:false
-               (OpamSwitchState.universe t Init)
-               packages)
-        in
-        let t = { t with OpamStateTypes.compiler_packages } in
-        OpamSwitchAction.write_state_file t;
-        OpamStateConfig.update
-          ~current_switch:switch
-          ~switch_from:`Default ();
-        let _t =
-          if no_switch then t
-          else OpamSwitchAction.set_current_switch t.switch_global switch
-        in
-        Client.fixup ();
-        `Ok ()
-      | Some `export, [filename] ->
-        Client.SWITCH.export
-          (if filename = "-" then None else Some (OpamFilename.of_string filename));
-        `Ok ()
-      | Some `import, [filename] ->
-        Client.SWITCH.import
-          (OpamGlobalState.load ())
-          (OpamStateConfig.get_switch ())
-          (if filename = "-" then None else Some (OpamFilename.of_string filename));
-        `Ok ()
-      | Some `remove, switches ->
-        List.iter
-          (fun switch -> Client.SWITCH.remove
-              (OpamGlobalState.load ())
-              (OpamSwitch.of_string switch))
-          switches;
-        `Ok ()
-      | Some `reinstall, [switch] ->
-        Client.SWITCH.reinstall (OpamGlobalState.load ())
-          (OpamSwitch.of_string switch);
-        `Ok ()
-      | Some `current, [] ->
-        Client.SWITCH.show ();
-        `Ok ()
-      | Some `set, [switch]
-      | Some `default switch, [] ->
-        Client.SWITCH.switch
-          ?compiler:(if alias_of = None then None else Some (mk_comp switch))
-          ~quiet
-          (OpamSwitch.of_string switch);
-        `Ok ()
-      | command, params -> bad_subcommand commands ("switch", command, params)
-    else match command, params with
+    match command, params with
     | None      , []
     | Some `list, [] ->
       Client.SWITCH.list ~print_short ~installed ~all;
@@ -974,8 +921,9 @@ let switch =
       Client.SWITCH.install
         ~quiet
         ~update_config:(not no_switch)
-        (OpamSwitch.of_string switch)
-        (mk_comp switch);
+        ?compiler:(mk_comp switch)
+        ?packages
+        (OpamSwitch.of_string switch);
       `Ok ()
     | Some `export, [filename] ->
       Client.SWITCH.export
@@ -1004,8 +952,9 @@ let switch =
     | Some `set, [switch]
     | Some `default switch, [] ->
       Client.SWITCH.switch
-        ?compiler:(if alias_of = None then None else Some (mk_comp switch))
         ~quiet
+        ?compiler:(mk_comp switch)
+        ?packages
         (OpamSwitch.of_string switch);
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
@@ -1013,7 +962,7 @@ let switch =
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_switch $packages $params)),
+             $installed $all $no_switch $packages $empty $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -1482,81 +1431,80 @@ let check_and_run_external_commands () =
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let st_opt =
-      if OpamStateConfig.load_defaults root_dir then (
-        OpamStateConfig.init ~root_dir ();
-        let gt = OpamGlobalState.load () in
-        Some (OpamSwitchState.load gt (OpamRepositoryState.load gt)
-                (OpamStateConfig.get_switch ()))
-      )
-      else None
-    in
+    let has_init = OpamStateConfig.load_defaults root_dir in
     let env =
-      match st_opt with
-      | Some st -> env_array (OpamEnv.get_full ~force_path:false st)
-      | None -> Unix.environment ()
+      if has_init then (
+        OpamStateConfig.init ~root_dir ();
+        match OpamStateConfig.(!r.current_switch) with
+        | None -> Unix.environment ()
+        | Some sw ->
+          env_array (OpamEnv.full_with_path ~force_path:false root_dir sw)
+      ) else
+        Unix.environment ()
     in
     if OpamSystem.command_exists ~env command then
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
-    else
+    else if has_init then
       (* Look for a corresponding package *)
-    match st_opt with
-    | None -> ()
-    | Some st ->
-      let prefixed_name = plugin_prefix ^ name in
-      let candidates =
-        OpamPackage.packages_of_names
-          (Lazy.force st.available_packages)
-          (OpamPackage.Name.Set.of_list @@
-           List.map OpamPackage.Name.of_string [ prefixed_name; name ])
-      in
-      let plugins =
-        OpamPackage.Set.filter (fun nv ->
-            OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamSwitchState.opam st nv))
-          candidates
-      in
-      let installed = OpamPackage.Set.inter plugins st.installed in
-      if OpamPackage.Set.is_empty candidates then
-        ()
-      else if not OpamPackage.Set.(is_empty installed) then
-        (OpamConsole.error
-           "Plugin %s is already installed, but no %s command was found.\n\
-            Try upgrading, and report to the package maintainer if \
-            the problem persists."
-           (OpamPackage.to_string (OpamPackage.Set.choose installed))
-           command;
-         exit 1)
-      else if OpamPackage.Set.is_empty plugins then
-        (OpamConsole.error
-           "%s is not a known command or plugin (package %s does \
-            not have the 'plugin' flag set)."
-           name
-           (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
-         exit 1)
-      else if
-        OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
-                             Install it on the current switch?"
-          name
-      then
-        let nv =
-          try
-            OpamPackage.max_version plugins
-              (OpamPackage.Name.of_string prefixed_name)
-          with Not_found ->
-            OpamPackage.max_version plugins
-              (OpamPackage.Name.of_string name)
+      match OpamStateConfig.(!r.current_switch) with
+      | None -> ()
+      | Some sw ->
+        let gt = OpamGlobalState.load () in
+        let st = OpamSwitchState.load gt (OpamRepositoryState.load gt) sw in
+        let prefixed_name = plugin_prefix ^ name in
+        let candidates =
+          OpamPackage.packages_of_names
+            (Lazy.force st.available_packages)
+            (OpamPackage.Name.Set.of_list @@
+             List.map OpamPackage.Name.of_string [ prefixed_name; name ])
         in
-        OpamRepositoryConfig.init ();
-        OpamSolverConfig.init ();
-        OpamClientConfig.init ();
-        Client.install [OpamSolution.eq_atom_of_package nv]
-          None ~deps_only:false ~upgrade:false;
-        OpamConsole.header_msg "Carrying on to \"%s\""
-          (String.concat " " (Array.to_list Sys.argv));
-        OpamConsole.msg "\n";
-        let argv = Array.of_list (command :: args) in
-        raise (OpamStd.Sys.Exec (command, argv, env))
+        let plugins =
+          OpamPackage.Set.filter (fun nv ->
+              OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamSwitchState.opam st nv))
+            candidates
+        in
+        let installed = OpamPackage.Set.inter plugins st.installed in
+        if OpamPackage.Set.is_empty candidates then
+          ()
+        else if not OpamPackage.Set.(is_empty installed) then
+          (OpamConsole.error
+             "Plugin %s is already installed, but no %s command was found.\n\
+              Try upgrading, and report to the package maintainer if \
+              the problem persists."
+             (OpamPackage.to_string (OpamPackage.Set.choose installed))
+             command;
+           exit 1)
+        else if OpamPackage.Set.is_empty plugins then
+          (OpamConsole.error
+             "%s is not a known command or plugin (package %s does \
+              not have the 'plugin' flag set)."
+             name
+             (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
+           exit 1)
+        else if
+          OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
+                               Install it on the current switch?"
+            name
+        then
+          let nv =
+            try
+              OpamPackage.max_version plugins
+                (OpamPackage.Name.of_string prefixed_name)
+            with Not_found ->
+              OpamPackage.max_version plugins
+                (OpamPackage.Name.of_string name)
+          in
+          OpamRepositoryConfig.init ();
+          OpamSolverConfig.init ();
+          OpamClientConfig.init ();
+          Client.install [OpamSolution.eq_atom_of_package nv]
+            None ~deps_only:false ~upgrade:false;
+          OpamConsole.header_msg "Carrying on to \"%s\""
+            (String.concat " " (Array.to_list Sys.argv));
+          OpamConsole.msg "\n";
+          let argv = Array.of_list (command :: args) in
+          raise (OpamStd.Sys.Exec (command, argv, env))
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;

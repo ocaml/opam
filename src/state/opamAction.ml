@@ -325,7 +325,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
       compiler_packages; }
   in
   if not OpamStateConfig.(!r.dryrun) then (
-    OpamSwitchAction.write_state_file t;
+    OpamSwitchAction.write_selections t;
     OpamFile.PkgList.write
       (OpamPath.Switch.reinstall t.switch_global.root t.switch)
       t.reinstall

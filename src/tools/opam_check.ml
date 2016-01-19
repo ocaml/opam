@@ -54,7 +54,7 @@ let installed () =
     | Some sw -> sw
     | None -> failwith "No switch set" in
   let state = OpamFile.State.safe_read (OpamPath.Switch.state root version) in
-  state.OpamFile.State.installed
+  state.OpamTypes.sel_installed
 
 let () =
   let installed = installed () in

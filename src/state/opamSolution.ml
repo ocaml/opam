@@ -321,33 +321,37 @@ let parallel_apply t action action_graph =
   in
 
   let add_to_install nv =
-    t_ref :=
+    let t =
       OpamAction.update_switch_state t
         ~installed:(OpamPackage.Set.add nv !t_ref.installed)
         ~reinstall:(OpamPackage.Set.remove nv !t_ref.reinstall)
         ~installed_roots:
           (if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs
            then OpamPackage.Set.add nv !t_ref.installed_roots
-           else !t_ref.installed_roots);
+           else !t_ref.installed_roots)
+    in
     if OpamFile.OPAM.env (OpamSwitchState.opam t nv) <> [] &&
        OpamSwitchState.is_switch_globally_set t
     then
-      OpamEnv.update_init_scripts t ~global:None;
+      OpamEnv.write_dynamic_init_scripts t;
     if not OpamStateConfig.(!r.dryrun) then
-      OpamSwitchAction.install_metadata !t_ref nv
+      OpamSwitchAction.install_metadata !t_ref nv;
+    t_ref := t
   in
 
   let remove_from_install nv =
     let rm = OpamPackage.Set.remove nv in
-    t_ref :=
+    let t =
       OpamAction.update_switch_state t
         ~installed:(rm !t_ref.installed)
         ~installed_roots:(rm !t_ref.installed_roots)
-        ~reinstall:(rm !t_ref.reinstall);
+        ~reinstall:(rm !t_ref.reinstall)
+    in
     if OpamFile.OPAM.env (OpamSwitchState.opam t nv) <> [] &&
        OpamSwitchState.is_switch_globally_set t
     then
-      OpamEnv.update_init_scripts t ~global:None;
+      OpamEnv.write_dynamic_init_scripts t;
+    t_ref := t
   in
 
   (* 1/ fetch needed package archives *)

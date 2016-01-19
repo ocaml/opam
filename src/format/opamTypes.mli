@@ -306,19 +306,6 @@ type pin_kind = [ `version | OpamUrl.backend ]
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]
 
-(** Global configuration option *)
-type global_config = {
-  complete   : bool;
-  switch_eval: bool;
-}
-
-(** User configuration option *)
-type user_config = {
-  shell      : shell;
-  ocamlinit  : bool;
-  dot_profile: filename option;
-}
-
 (** {2 Filtered commands} *)
 
 type relop = OpamFormula.relop
@@ -398,6 +385,14 @@ type switch_set = OpamSwitch.Set.t
 
 (** Map of compile switches *)
 type 'a switch_map = 'a OpamSwitch.Map.t
+
+type switch_selections = {
+  sel_installed: package_set;
+  sel_roots: package_set;
+  sel_compiler: package_set;
+  sel_pinned: (version * pin_option) name_map;
+}
+
 
 (** {2 Misc} *)
 

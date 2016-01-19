@@ -56,6 +56,7 @@ module Config: sig
 
   (** Creation *)
   val create:
+    switch list ->
     switch option ->
     repository_name list ->
     ?criteria:(OpamTypes.solver_criteria * string) list ->
@@ -389,15 +390,18 @@ end
 (** Compiler aliases: [$opam/aliases] *)
 module Aliases: IO_FILE with type t = compiler switch_map
 
-(** Import/export file. This difference with [installed] is that we
-    are explicit about root packages. *)
+(** Switch state file as table, also used for import/export. This includes
+    compiler and root packages information, as well as pinned packages and their
+    target (but not their local metadata). *)
 module State: sig
-  type t = {
-    installed: package_set;
-    installed_roots: package_set;
-    compiler: package_set;
-    pinned: pin_option name_map;
-  }
+  type t = switch_selections
+  include IO_FILE with type t := t
+end
+
+(** A newer format for switch state, using the opam file syntax rather than a
+    table. This is more readable and extensible. *)
+module SwitchSelections: sig
+  type t = switch_selections
   include IO_FILE with type t := t
 end
 

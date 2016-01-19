@@ -211,16 +211,24 @@ let variable v =
     | None ->
       OpamConsole.error_and_exit "Variable not found"
 
-let setup user global =
+let setup ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+  ~user ~global =
   log "config-setup";
-  let t = OpamSwitchState.load_full_compat "config-setup"
-      (OpamStateConfig.get_switch ()) in
-  OpamEnv.update_setup t user global
+  let gt = OpamGlobalState.load () in
+  if user then
+    OpamEnv.update_user_setup gt.root ~ocamlinit ?dot_profile shell;
+  if global then (
+    OpamEnv.write_static_init_scripts gt.root ~switch_eval ~completion;
+    match OpamFile.Config.switch gt.config with
+    | Some sw ->
+      let st = OpamSwitchState.load gt (OpamRepositoryState.load gt) sw in
+      OpamEnv.write_dynamic_init_scripts st
+    | None -> ()
+  )
 
 let setup_list shell dot_profile =
   log "config-setup-list";
-  let t = OpamGlobalState.load () in
-  OpamEnv.display_setup t shell dot_profile
+  OpamEnv.display_setup OpamStateConfig.(!r.root_dir) ~dot_profile shell
 
 let exec ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;

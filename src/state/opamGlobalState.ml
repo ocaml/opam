@@ -115,22 +115,31 @@ module Format_upgrade = struct
         let installed = OpamFile.PkgList.safe_read installed_f in
         let installed_roots = OpamFile.PkgList.safe_read installed_roots_f in
         let pinned = OpamFile.Pinned_legacy.safe_read pinned_f in
+        let pinned =
+          OpamPackage.Name.Map.mapi (fun name pin ->
+              let v =
+                match pin with
+                | Version v -> v
+                | Source _ ->
+                  let overlay = OpamPath.Switch.Overlay.opam root switch name in
+                  let opam = OpamFile.OPAM.safe_read overlay in
+                    OpamStd.Option.default (OpamPackage.Version.of_string "0")
+                      (OpamFile.OPAM.version_opt opam)
+              in
+              v, pin)
+            pinned
+        in
         let compiler =
           let comp = OpamFile.Comp.read (OpamPath.compiler_comp root c) in
           let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
           List.fold_left (fun acc (name,_) ->
               let nv =
                 try
-                  match OpamPackage.Name.Map.find name pinned with
-                  | Version v -> OpamPackage.create name v
-                  | Source _ ->
-                    let overlay = OpamPath.Switch.Overlay.opam root switch name in
-                    let opam = OpamFile.OPAM.read overlay in
-                    match OpamFile.OPAM.version_opt opam with
-                    | Some v -> OpamPackage.create name v
-                    | None -> raise Not_found
+                  let v, _ = OpamPackage.Name.Map.find name pinned in
+                  OpamPackage.create name v
                 with Not_found ->
-                try OpamPackage.max_version installed name with Not_found ->
+                try OpamPackage.max_version installed name
+                with Not_found ->
                   OpamPackage.create name
                     (OpamPackage.Version.of_string "~unknown")
               in
@@ -139,8 +148,10 @@ module Format_upgrade = struct
         in
         OpamFile.State.write
           (OpamPath.Switch.state root switch)
-          { OpamFile.State.
-            installed; installed_roots; pinned; compiler };
+          { sel_installed = installed;
+            sel_roots = installed_roots;
+            sel_pinned = pinned;
+            sel_compiler = compiler };
         OpamFilename.remove installed_f;
         OpamFilename.remove installed_roots_f;
         OpamFilename.remove pinned_f;
@@ -202,14 +213,14 @@ let fold_switches f gt acc =
     ) gt.aliases acc
 
 let all_installed gt =
-  fold_switches (fun _ state acc ->
-      OpamPackage.Set.union acc state.OpamFile.State.installed)
+  fold_switches (fun _ sel acc ->
+      OpamPackage.Set.union acc sel.sel_installed)
     gt  OpamPackage.Set.empty
 
 let installed_versions gt name =
-  fold_switches (fun switch state acc ->
+  fold_switches (fun switch sel acc ->
       let installed =
-        OpamPackage.packages_of_name state.OpamFile.State.installed name
+        OpamPackage.packages_of_name sel.sel_installed name
       in
       try
         let nv = OpamPackage.Set.choose installed in

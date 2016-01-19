@@ -123,6 +123,8 @@ let resolve_switch_raw gt switch switch_config full_var =
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
+    (* !X Variables from packages forming the current compiler should be
+       accessible here *)
     match OpamFile.Dot_config.variable switch_config var with
     | Some _ as c -> c
     | None ->

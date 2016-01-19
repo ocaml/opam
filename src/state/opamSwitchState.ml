@@ -25,7 +25,7 @@ let slog = OpamConsole.slog
 
 open OpamStateTypes
 
-let load_state_file gt switch =
+let load_selections gt switch =
     OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
 
 let load_switch_config gt switch =
@@ -48,29 +48,41 @@ let load ?(lock=Lock_readonly) gt rt switch =
      OpamSwitch.not_installed switch)
   else
   let switch_config = load_switch_config gt switch in
-  let { OpamFile.State. installed; installed_roots; pinned;
-        compiler = compiler_packages; } =
-    load_state_file gt switch
+  let { sel_installed = installed; sel_roots = installed_roots;
+        sel_pinned = pinned; sel_compiler = compiler_packages; } =
+    load_selections gt switch
   in
   let pinned, pinned_opams =
     (* Pinned packages with overlays *)
-    OpamPackage.Name.Map.fold (fun name pin (pinned,opams) ->
+    OpamPackage.Name.Map.fold (fun name (version,pin) (pinned,opams) ->
+        let nv = OpamPackage.create name version in
         let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
         match OpamFileHandling.read_opam overlay_dir with
+        | None ->
+          OpamPackage.Name.Map.add name (version, pin) pinned,
+          opams
         | Some o ->
-          let version, o = match pin with
-            | Version version ->
+          let version, o =
+            match pin, OpamFile.OPAM.version_opt o with
+            | Version version, Some v when v <> version ->
+              log "warn: %s pinned to %s but has overlay at %s"
+                (OpamPackage.Name.to_string name)
+                (OpamPackage.Version.to_string version)
+                (OpamPackage.Version.to_string v);
               version, OpamFile.OPAM.with_version o version
-            | Source _ ->
-              OpamStd.Option.default (OpamPackage.Version.of_string "0")
-                (OpamFile.OPAM.version_opt o), o
+            | Version _, _ ->
+              version, OpamFile.OPAM.with_version o version
+            | Source _, Some v when v <> version ->
+              log "warn: updating version of pinned %s as in overlay (was: %s)"
+                (OpamPackage.to_string nv)
+                (OpamPackage.Version.to_string v);
+              v, o
+            | Source _, _ ->
+              version, o
           in
           OpamPackage.Name.Map.add name (version,pin) pinned,
           OpamPackage.Map.add (OpamPackage.create name version) o opams
-        | None ->
-          OpamPackage.Name.Map.add name (OpamPackage.Version.of_string "0", pin)
-            pinned,
-          opams)
+      )
       pinned (OpamPackage.Name.Map.empty, OpamPackage.Map.empty)
   in
   let opams =
@@ -137,12 +149,11 @@ let load ?(lock=Lock_readonly) gt rt switch =
     t
 *)
 
-let state_file st =
-  { OpamFile.State.
-    installed = st.installed;
-    installed_roots = st.installed_roots;
-    compiler = st.compiler_packages;
-    pinned = OpamPackage.Name.Map.map snd st.pinned; }
+let selections st =
+  { sel_installed = st.installed;
+    sel_roots = st.installed_roots;
+    sel_compiler = st.compiler_packages;
+    sel_pinned = st.pinned; }
 
 let opam st nv = OpamPackage.Map.find nv st.opams
 

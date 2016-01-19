@@ -17,15 +17,17 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Initialises a new switch with the given name in the given opam root *)
-val create_empty_switch: dirname -> ?compiler:compiler -> switch -> unit
+(** Initialises a new switch with the given name in the given opam root,
+    registers it in the global config and returns the updated global state *)
+val create_empty_switch:
+  global_state -> ?compiler:compiler -> switch -> global_state
 
-(** Creates the given switch, and installs the given compiler *)
+(** Installs the given compiler in the given (empty) switch *)
 val install_compiler: global_state -> quiet:bool -> switch -> compiler -> unit
 
 (** Writes the current state file to disk (installed, pinned, root packages etc.).
     Unless [OpamStateConfig.(!r.dryrun)] *)
-val write_state_file: switch_state -> unit
+val write_selections: switch_state -> unit
 
 (** Update the on-disk set of packages marked to reinstall *)
 val add_to_reinstall:

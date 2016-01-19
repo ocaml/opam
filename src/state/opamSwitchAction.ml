@@ -62,10 +62,10 @@ let install_global_config root switch config =
     (OpamPath.Switch.global_config root switch)
     config
 
-let create_empty_switch root
+let create_empty_switch gt
     ?(compiler = OpamCompiler.of_string "empty") switch =
   log "create_empty_switch at %a" (slog OpamSwitch.to_string) switch;
-
+  let root = gt.root in
   let switch_dir = OpamPath.Switch.root root switch in
 
   (* Do some clean-up if necessary *)
@@ -97,8 +97,9 @@ let create_empty_switch root
 
     let aliases_f = OpamPath.aliases root in
     let aliases = OpamFile.Aliases.safe_read aliases_f in
-    OpamFile.Aliases.write aliases_f
-      (OpamSwitch.Map.add switch compiler aliases);
+    let aliases = OpamSwitch.Map.add switch compiler aliases in
+    OpamFile.Aliases.write aliases_f aliases;
+    { gt with aliases }
   with e ->
     if not (OpamConsole.debug ()) then
       OpamFilename.rmdir switch_dir;
@@ -122,8 +123,6 @@ let install_compiler gt ~quiet:_ switch compiler =
     OpamStd.Sys.exit 1;
   );
   let comp = OpamFile.Comp.read comp_f in
-
-  create_empty_switch gt.root ~compiler switch;
 
   let switch_dir = OpamPath.Switch.root gt.root switch in
   if OpamFile.Comp.preinstalled comp ||
@@ -220,22 +219,24 @@ let install_compiler gt ~quiet:_ switch compiler =
       (OpamProcess.string_of_command cmd)
       (OpamProcess.string_of_result err)
 
-let write_state_file st =
+let write_selections st =
   if not OpamStateConfig.(!r.dryrun) then
     let f = OpamPath.Switch.state st.switch_global.root st.switch in
     let env = OpamPath.Switch.environment st.switch_global.root st.switch in
-    OpamFile.State.write f (OpamSwitchState.state_file st);
+    OpamFile.State.write f (OpamSwitchState.selections st);
     OpamFile.Environment.write env (OpamEnv.compute_updates st)
 
-let add_to_reinstall gt switch switch_state_file ~unpinned_only packages =
+let add_to_reinstall gt switch switch_selections ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
-  let { OpamFile.State.installed; pinned; _ } = switch_state_file in
+  let { sel_installed = installed; sel_pinned = pinned; _ } =
+    switch_selections
+  in
   let packages =
     if unpinned_only then
-      OpamPackage.Set.filter
-        (fun nv -> not OpamPackage.(Name.Map.mem (name nv) pinned))
-        packages
+      OpamPackage.Name.Map.fold
+        (fun name (v,_) -> OpamPackage.Set.remove (OpamPackage.create name v))
+        pinned packages
     else packages
   in
   let reinstall_file = OpamPath.Switch.reinstall gt.root switch in
@@ -253,7 +254,7 @@ let set_current_switch gt switch =
   OpamStateConfig.write gt.root config;
   let rt = OpamRepositoryState.load gt in
   let st = OpamSwitchState.load gt rt switch in
-  OpamEnv.update_init_scripts st ~global:None;
+  OpamEnv.write_dynamic_init_scripts st;
   st
 
 let install_metadata st nv =
