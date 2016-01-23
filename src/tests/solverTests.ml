@@ -3,8 +3,6 @@ open TestsCommon
 
 open OpamTypes
 
-let tear_down () test_ctxt = ()
-
 let make_package (n,v) =
   let name = OpamPackage.Name.of_string n in
   let version = OpamPackage.Version.of_string v in
@@ -122,13 +120,13 @@ let test_resolve = [
 let test_suite =
   "load_cudf_universe" >::: (ListLabels.map test_load_cudf_universe ~f:(fun (name, test_fn) ->
     name >:: (fun test_ctxt ->
-      bracket ignore tear_down test_ctxt;
+      bracket TestsScenarios.set_up TestsScenarios.tear_down test_ctxt;
       test_fn test_ctxt
     )
   )) @
    (ListLabels.map test_resolve ~f:(fun (name, test_fn) ->
       name >:: (fun test_ctxt ->
-        bracket ignore tear_down test_ctxt;
+        bracket TestsScenarios.set_up TestsScenarios.tear_down test_ctxt;
         test_fn test_ctxt
       )
     ))

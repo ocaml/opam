@@ -3,8 +3,6 @@ open TestsCommon
 
 open OpamTypes
 
-let tear_down () test_ctxt = ()
-
 let make_package (n,v) =
   let name = OpamPackage.Name.of_string n in
   let version = OpamPackage.Version.of_string v in
@@ -32,7 +30,7 @@ let make_state l =
     repositories = OpamRepositoryName.Map.empty;
     packages;
     available_packages = lazy packages;
-    aliases = OpamFile.Aliases.empty;
+    aliases = OpamSwitch.Map.singleton OpamSwitch.system OpamCompiler.system;
     compilers = OpamCompiler.Set.singleton OpamCompiler.system;
     pinned = OpamPackage.Name.Map.empty;
     installed = OpamPackage.Set.empty;
@@ -43,15 +41,26 @@ let make_state l =
     compiler_index = OpamCompiler.Map.empty;
   }
 
-
 let test_resolve_and_apply test_ctxt =
-  OpamSolverConfig.init ();
   let t = make_state ["a","1"] in
-  let action = Install (OpamPackage.Name.Set.singleton (OpamPackage.Name.of_string "a")) in
+  let action = 
+    let pkgnameset = OpamPackage.Name.Set.singleton (OpamPackage.Name.of_string "a") in
+    Install pkgnameset 
+  in
   let requested = OpamPackage.Name.Set.empty in
   let orphans = OpamPackage.Set.empty in
-  let request = OpamSolver.request ~criteria:`Default () in
-  let result = OpamSolution.resolve_and_apply t action requested orphans request in
+  let request =
+    OpamSolver.request
+      ~install:[(OpamPackage.Name.of_string "a",None)]
+      ~criteria:`Default ()
+  in
+  let result =
+    OpamSolution.resolve_and_apply 
+      ~ask:false t action 
+      ~requested 
+      ~orphans 
+      request
+  in
   let expected = OK [] in
   SolverResultOut.assert_equal result expected
 
@@ -65,7 +74,7 @@ let test_suite =
   "test resolve" >::: (ListLabels.map 
     test_resolve ~f:(fun (name, test_fn) ->
     name >:: (fun test_ctxt ->
-      bracket ignore tear_down test_ctxt;
+      bracket TestsScenarios.set_up TestsScenarios.tear_down test_ctxt;
       test_fn test_ctxt
     )
   )) 

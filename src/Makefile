@@ -314,6 +314,7 @@ opam-tests: opam ALWAYS
 define PROJ_opam-tests
   SOURCES = \
 						tests/testsCommon.ml \
+						tests/testsScenarios.ml \
 						tests/solverTests.ml \
 						tests/stateTests.ml
   RESULT = opam-tests
