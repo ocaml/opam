@@ -25,8 +25,9 @@ let slog = OpamConsole.slog
 let with_switch_backup _command f =
   let t = OpamSwitchState.load_full_compat "client"
       OpamStateConfig.(!r.current_switch) in
-  let file = OpamPath.Switch.backup t.switch_global.root t.switch in
-  OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch_global.root t.switch);
+  let root = OpamStateConfig.(!r.root_dir) in
+  let file = OpamPath.Switch.backup root t.switch in
+  OpamFilename.mkdir (OpamPath.Switch.backup_dir root t.switch);
   OpamFile.State.write file (OpamSwitchState.state_file t);
   try
     f t;
@@ -808,9 +809,10 @@ module API = struct
   let check_conflicts t atoms =
     let changes = OpamSwitchState.packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
+    let root = OpamStateConfig.(!r.root_dir) in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
-      not (OpamFilename.exists_dir (OpamPath.packages t.switch_global.root nv)) in
+      not (OpamFilename.exists_dir (OpamPath.packages root nv)) in
     let full_orphans, full_orphans_with_local_data =
       OpamPackage.Set.partition has_no_local_data
         full_orphans in
@@ -1166,7 +1168,8 @@ module API = struct
         (ignore (unpin t.switch_global ~state:t [name]);
          OpamStd.Sys.exit 1);
       OpamConsole.msg "\n";
-      let opam_f = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
+      let root = OpamStateConfig.(!r.root_dir) in
+      let opam_f = OpamPath.Switch.Overlay.opam root t.switch name in
       let empty_opam = OpamFile.OPAM.(
           empty = with_name_opt (with_version_opt (read opam_f) None) None
         ) in

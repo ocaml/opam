@@ -24,6 +24,7 @@ let slog = OpamConsole.slog
 
 let edit t name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
+  let root = OpamStateConfig.(!r.root_dir) in
   let version, pin =
     try OpamPackage.Name.Map.find name t.pinned
     with Not_found ->
@@ -34,8 +35,8 @@ let edit t name =
     try Some (OpamSwitchState.find_installed_package_by_name t name)
     with Not_found -> None
   in
-  let file = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
-  let temp_file = OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name in
+  let file = OpamPath.Switch.Overlay.opam root t.switch name in
+  let temp_file = OpamPath.Switch.Overlay.tmp_opam root t.switch name in
   let orig_opam =
     try Some (OpamFile.OPAM.read file) with e -> OpamStd.Exn.fatal e; None
   in
@@ -145,6 +146,7 @@ let pin name ?version pin_option =
     (slog OpamPackage.Name.to_string) name
     (slog string_of_pin_option) pin_option
     (slog (string_of_pin_kind @* kind_of_pin_option)) pin_option;
+  let root = OpamStateConfig.(!r.root_dir) in
   let t = OpamSwitchState.load_full_compat "pin" OpamStateConfig.(!r.current_switch) in
   let pin_kind = kind_of_pin_option pin_option in
   let installed_version =
@@ -184,7 +186,7 @@ let pin name ?version pin_option =
           (string_of_pin_option current);
       if OpamConsole.confirm "Proceed ?" then
         (OpamFilename.remove
-           (OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name);
+           (OpamPath.Switch.Overlay.tmp_opam root t.switch name);
          version, no_changes)
       else OpamStd.Sys.exit 0
     with Not_found ->
@@ -256,6 +258,7 @@ let pin name ?version pin_option =
 let unpin gt ?state names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
+  let root = OpamStateConfig.(!r.root_dir) in
   let switch, state_file = match state with
     | None ->
       let switch = OpamStateConfig.(!r.current_switch) in
@@ -291,7 +294,7 @@ let unpin gt ?state names =
       names
   in
   OpamFile.State.write
-    (OpamPath.Switch.state gt.root switch)
+    (OpamPath.Switch.state root switch)
     {state_file with OpamFile.State.pinned};
   needs_reinstall
 

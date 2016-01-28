@@ -531,6 +531,7 @@ let config =
          else "no");
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
+        let root = OpamStateConfig.(!r.root_dir) in
         let state = OpamSwitchState.load_full_compat "config-report"
           OpamStateConfig.(!r.current_switch) in
         let external_solver =
@@ -585,12 +586,11 @@ let config =
           (if (OpamFile.Comp.preinstalled
                  (OpamFile.Comp.read
                     (OpamPath.compiler_comp
-                       state.switch_global.root
+                       root
                        (OpamSwitch.Map.find state.switch
                           state.switch_global.aliases))))
            then "*" else "");
-        let index_file = OpamFilename.to_string (OpamPath.package_index
-                                                   state.switch_global.root) in
+        let index_file = OpamFilename.to_string (OpamPath.package_index root) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
               (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
@@ -1262,8 +1262,9 @@ let source =
       | `Error _ -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
+        let root = OpamStateConfig.(!r.root_dir) in
         move_dir
-          ~src:(OpamPath.Switch.build t.switch_global.root t.switch nv)
+          ~src:(OpamPath.Switch.build root t.switch nv)
           ~dst:dir;
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);

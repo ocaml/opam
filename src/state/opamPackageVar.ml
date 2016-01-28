@@ -63,15 +63,15 @@ let package_variable_names = [
   "hash",      "Hash of the package archive";
 ]
 
-
 let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
   (* backwards-compat, these are replaced by variables exported from the
      'ocaml' package.
      !X
      /!\ reloads files for every variable resolution ! *)
   let module V = OpamVariable in
+  let root = OpamStateConfig.(!r.root_dir) in
   let compiler = OpamSwitch.Map.find switch gt.aliases in
-  let comp = OpamFile.Comp.read (OpamPath.compiler_comp gt.root compiler) in
+  let comp = OpamFile.Comp.read (OpamPath.compiler_comp root compiler) in
   let preinstalled_comp = OpamFile.Comp.preinstalled comp in
   match ocaml_var with
   | "ocaml-version" -> V.string (OpamCompiler.Version.to_string
@@ -84,21 +84,21 @@ let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
       V.bool (Lazy.force OpamOCaml.ocaml_native_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin gt.root switch switch_config
+                (OpamPath.Switch.bin root switch switch_config
                  // "ocamlopt"))
   | "ocaml-native-tools" ->
     if preinstalled_comp then
       V.bool (Lazy.force OpamOCaml.ocaml_opt_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin gt.root switch switch_config
+                (OpamPath.Switch.bin root switch switch_config
                  // "ocamlc.opt"))
   | "ocaml-native-dynlink" ->
     if preinstalled_comp then
       V.bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.lib_dir gt.root switch switch_config
+                (OpamPath.Switch.lib_dir root switch switch_config
                  / "ocaml" // "dynlink.cmxa"))
   | _ -> raise Not_found
 
@@ -144,6 +144,7 @@ open OpamVariable
 
 (* filter handling *)
 let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
+  let root = OpamStateConfig.(!r.root_dir) in
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
@@ -151,7 +152,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     let get name =
       let cfg =
         OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config st.switch_global.root st.switch name)
+          (OpamPath.Switch.config root st.switch name)
       in
       try OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
       with Not_found -> None
@@ -218,7 +219,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       | None -> None in
     if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
-    let root = st.switch_global.root in
+    let root = OpamStateConfig.(!r.root_dir) in
     match var_str, opam with
     | "installed", Some _ ->
       Some (bool (OpamPackage.has_name st.installed name))

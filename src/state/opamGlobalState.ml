@@ -192,12 +192,13 @@ let load ?(lock=Lock_readonly) () =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = load_config root in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-  { global_lock=lock; root; config; aliases }
+  { global_lock=lock; config; aliases }
 
 let fold_switches f gt acc =
+  let root = OpamStateConfig.(!r.root_dir) in
   OpamSwitch.Map.fold (fun switch _ acc ->
       f switch
-        (OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch))
+        (OpamFile.State.safe_read (OpamPath.Switch.state root switch))
         acc
     ) gt.aliases acc
 

@@ -105,7 +105,7 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
    normal update *)
 (* !X rewrite to better use switch_state rather than reload overlay *)
 let pinned_package st ?fixed_version name =
-  let root = st.switch_global.root in
+  let root = OpamStateConfig.(!r.root_dir) in
   let overlay = OpamPath.Switch.Overlay.package root st.switch name in
   let url_f = OpamPath.Switch.Overlay.url root st.switch name in
   if not (OpamFilename.exists url_f) then Done false else
@@ -292,7 +292,8 @@ let dev_package st nv =
   | None     -> Done false
   | Some url ->
     if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
-      fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
+      let root = OpamStateConfig.(!r.root_dir) in
+      fetch_dev_package url (OpamPath.dev_package root nv) nv
 
 let dev_packages st packages =
   log "update-dev-packages";

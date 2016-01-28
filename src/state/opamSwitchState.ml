@@ -26,10 +26,12 @@ let slog = OpamConsole.slog
 open OpamStateTypes
 
 let load_state_file gt switch =
-    OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
+  let root = OpamStateConfig.(!r.root_dir) in
+  OpamFile.State.safe_read (OpamPath.Switch.state root switch)
 
 let load_switch_config gt switch =
-  let f = OpamPath.Switch.global_config gt.root switch in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let f = OpamPath.Switch.global_config root switch in
   if OpamFilename.exists f then OpamFile.Dot_config.read f
   else
     (OpamConsole.error "No global config file found for switch %s. \
@@ -40,10 +42,11 @@ let load_switch_config gt switch =
 let load ?(lock=Lock_readonly) gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
+  let root = OpamStateConfig.(!r.root_dir) in
 
   if not (OpamSwitch.Map.mem switch gt.aliases) then
     (log "%a does not contain the compiler name associated to the switch %a"
-       (slog @@ OpamFilename.to_string @* OpamPath.aliases) gt.root
+       (slog @@ OpamFilename.to_string @* OpamPath.aliases) root
        (slog OpamSwitch.to_string) switch;
      OpamSwitch.not_installed switch)
   else
@@ -55,7 +58,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
   let pinned, pinned_opams =
     (* Pinned packages with overlays *)
     OpamPackage.Name.Map.fold (fun name pin (pinned,opams) ->
-        let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
+        let overlay_dir = OpamPath.Switch.Overlay.package root switch name in
         match OpamFileHandling.read_opam overlay_dir with
         | Some o ->
           let version, o = match pin with
@@ -82,7 +85,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
         if OpamPackage.Map.mem nv opams then opams else
         try
           OpamStd.Option.Op.(
-            (OpamFileHandling.read_opam (OpamPath.packages gt.root nv) >>| fun opam ->
+            (OpamFileHandling.read_opam (OpamPath.packages root nv) >>| fun opam ->
              OpamPackage.Map.add nv opam opams)
             +! opams)
         with
@@ -113,7 +116,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
     OpamPackage.keys avail_map
   ) in
   let reinstall =
-    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch)
+    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall root switch)
   in
   let st = {
     switch_global = gt;

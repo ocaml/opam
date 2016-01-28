@@ -114,7 +114,8 @@ let install_compiler gt ~quiet:_ switch compiler =
     (slog OpamSwitch.to_string) switch
     (slog OpamCompiler.to_string) compiler;
 
-  let comp_f = OpamPath.compiler_comp gt.root compiler in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let comp_f = OpamPath.compiler_comp root compiler in
   if not (OpamFilename.exists comp_f) then (
     OpamConsole.msg "Cannot find %s: %s is not a valid compiler name.\n"
       (OpamFilename.to_string comp_f)
@@ -123,9 +124,9 @@ let install_compiler gt ~quiet:_ switch compiler =
   );
   let comp = OpamFile.Comp.read comp_f in
 
-  create_empty_switch gt.root ~compiler switch;
+  create_empty_switch root ~compiler switch;
 
-  let switch_dir = OpamPath.Switch.root gt.root switch in
+  let switch_dir = OpamPath.Switch.root root switch in
   if OpamFile.Comp.preinstalled comp ||
      OpamFile.Comp.src comp = None
   then ()
@@ -137,7 +138,7 @@ let install_compiler gt ~quiet:_ switch compiler =
       OpamConsole.error_and_exit
         "No source for compiler %s"
         (OpamCompiler.to_string compiler) in
-  let build_dir = OpamPath.Switch.build_ocaml gt.root switch in
+  let build_dir = OpamPath.Switch.build_ocaml root switch in
   let comp_name = OpamCompiler.to_string (OpamFile.Comp.name comp) in
   OpamConsole.header_msg "Installing compiler %s" comp_name;
   (match comp_url.OpamUrl.backend, OpamUrl.local_dir comp_url with
@@ -189,7 +190,7 @@ let install_compiler gt ~quiet:_ switch compiler =
       ]
     else
     let switch_config =
-      OpamFile.Dot_config.read (OpamPath.Switch.global_config gt.root switch)
+      OpamFile.Dot_config.read (OpamPath.Switch.global_config root switch)
     in
     let env = OpamPackageVar.resolve_switch_raw gt switch switch_config in
     OpamFilter.commands env (OpamFile.Comp.build comp)
@@ -222,14 +223,16 @@ let install_compiler gt ~quiet:_ switch compiler =
 
 let write_state_file st =
   if not OpamStateConfig.(!r.dryrun) then
-    let f = OpamPath.Switch.state st.switch_global.root st.switch in
-    let env = OpamPath.Switch.environment st.switch_global.root st.switch in
+    let root = OpamStateConfig.(!r.root_dir) in
+    let f = OpamPath.Switch.state root st.switch in
+    let env = OpamPath.Switch.environment root st.switch in
     OpamFile.State.write f (OpamSwitchState.state_file st);
     OpamFile.Environment.write env (OpamEnv.compute_updates st)
 
 let add_to_reinstall gt switch switch_state_file ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
+  let root = OpamStateConfig.(!r.root_dir) in
   let { OpamFile.State.installed; pinned; _ } = switch_state_file in
   let packages =
     if unpinned_only then
@@ -238,7 +241,7 @@ let add_to_reinstall gt switch switch_state_file ~unpinned_only packages =
         packages
     else packages
   in
-  let reinstall_file = OpamPath.Switch.reinstall gt.root switch in
+  let reinstall_file = OpamPath.Switch.reinstall root switch in
   let reinstall =
     (OpamFile.PkgList.safe_read reinstall_file ++ packages) %% installed
   in
@@ -248,16 +251,18 @@ let add_to_reinstall gt switch switch_state_file ~unpinned_only packages =
     OpamFile.PkgList.write reinstall_file reinstall
 
 let set_current_switch gt switch =
+  let root = OpamStateConfig.(!r.root_dir) in
   let config = OpamFile.Config.with_switch gt.config switch in
   let gt = { gt with config } in
-  OpamStateConfig.write gt.root config;
+  OpamStateConfig.write root config;
   let rt = OpamRepositoryState.load gt in
   let st = OpamSwitchState.load gt rt switch in
   OpamEnv.update_init_scripts st ~global:None;
   st
 
 let install_metadata st nv =
-  let opam_mirror = OpamPath.opam st.switch_global.root nv in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let opam_mirror = OpamPath.opam root nv in
   if OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned ||
      OpamFilename.exists opam_mirror then ()
   else (
@@ -265,15 +270,16 @@ let install_metadata st nv =
     match OpamSwitchState.files st nv with
     | Some src ->
       OpamFilename.copy_dir ~src
-        ~dst:(OpamPath.files st.switch_global.root nv)
+        ~dst:(OpamPath.files root nv)
     | None -> ()
   )
 
 let remove_metadata st packages =
+  let root = OpamStateConfig.(!r.root_dir) in
   let all_installed = OpamGlobalState.all_installed st.switch_global in
   let packages = packages -- all_installed in
   OpamPackage.Set.iter (fun nv ->
-      let dir = OpamPath.packages st.switch_global.root nv in
+      let dir = OpamPath.packages root nv in
       OpamFilename.rmdir dir;
       let parent = OpamFilename.dirname_dir dir in
       if OpamFilename.dir_is_empty parent then OpamFilename.rmdir parent;

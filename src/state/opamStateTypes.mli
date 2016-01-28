@@ -26,11 +26,6 @@ type lock_kind = Lock_none | Lock_readonly | Lock_readwrite
 type global_state = {
   global_lock: lock_kind;
 
-  root: OpamPath.t;
-  (** The global OPAM root path (caution: this is stored here but some code may
-      rely on OpamStateConfig.root_dir ; in other words, multiple root handling
-      isn't really supported at the moment) *)
-
   config: OpamFile.Config.t;
   (** The main configuration file *)
 

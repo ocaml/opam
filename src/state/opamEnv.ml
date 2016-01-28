@@ -74,6 +74,7 @@ let compute_updates st =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
 *)
+  let root = OpamStateConfig.(!r.root_dir) in
   let fenv ?opam v =
     try OpamPackageVar.resolve st ?opam v
     with Not_found ->
@@ -88,8 +89,7 @@ let compute_updates st =
     | _ ->
       ["MANPATH", EqColon,
        OpamFilename.Dir.to_string
-         (OpamPath.Switch.man_dir
-            st.switch_global.root st.switch st.switch_config),
+         (OpamPath.Switch.man_dir root st.switch st.switch_config),
       Some "Current opam switch man dir"]
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
@@ -104,13 +104,13 @@ let compute_updates st =
   in
   let comp_env = (* deprecated & costly (not cached!) *)
     let compiler = OpamSwitch.Map.find st.switch st.switch_global.aliases in
-    let comp_file = OpamPath.compiler_comp st.switch_global.root compiler in
+    let comp_file = OpamPath.compiler_comp root compiler in
     List.map (fun (name,op,str,cmt) ->
         name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
       (OpamFile.Comp.(env (safe_read comp_file)))
   in
   let root =
-    let current = st.switch_global.root in
+    let current = root in
     let default = OpamStateConfig.(default.root_dir) in
     let current_string = OpamFilename.Dir.to_string current in
     let env = OpamStd.Env.getopt "OPAMROOT" in
@@ -121,7 +121,7 @@ let compute_updates st =
   man_path @ root @ comp_env @ pkg_env
 
 let updates ~opamswitch ?(force_path=false) st =
-  let root = st.switch_global.root in
+  let root = OpamStateConfig.(!r.root_dir) in
   let update =
     let fn = OpamPath.Switch.environment root st.switch in
     if OpamFilename.exists fn then
@@ -217,7 +217,8 @@ let init_file = function
   | `fish -> init_fish
 
 let source gt ~shell ?(interactive_only=false) f =
-  let file f = OpamFilename.to_string (OpamPath.init gt.root // f) in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let file f = OpamFilename.to_string (OpamPath.init root // f) in
   let s =
     match shell with
     | `csh ->
@@ -326,6 +327,7 @@ let init_script st ~switch_eval ~complete ~shell
   Buffer.contents buf
 
 let update_init_scripts st ~global =
+  let root = OpamStateConfig.(!r.root_dir) in
   let init_scripts =
     match global with
     | None   -> []
@@ -365,7 +367,7 @@ let update_init_scripts st ~global =
   ] in
   let updated = ref false in
   let write (name, body) =
-    let file = OpamPath.init st.switch_global.root // name in
+    let file = OpamPath.init root // name in
     let needs_update =
       if OpamFilename.exists file
       && List.mem name overwrite then
@@ -384,14 +386,15 @@ let update_init_scripts st ~global =
       (fun init_file ->
          let pretty_init_file =
            OpamFilename.prettify
-             (OpamPath.init st.switch_global.root // init_file)
+             (OpamPath.init root // init_file)
          in
          if !updated then OpamConsole.msg "  Updating %s\n" pretty_init_file
          else OpamConsole.msg "  %s is already up-to-date.\n" pretty_init_file)
       [ init_sh; init_zsh; init_csh; init_fish ]
 
 let status_of_init_file gt init_sh =
-  let init_sh = OpamPath.init gt.root // init_sh in
+  let root = OpamStateConfig.(!r.root_dir) in
+  let init_sh = OpamPath.init root // init_sh in
   if OpamFilename.exists init_sh then (
     let init = OpamFilename.read init_sh in
     if OpamFilename.exists init_sh then
@@ -406,7 +409,7 @@ let status_of_init_file gt init_sh =
 
 let dot_profile_needs_update gt dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else
-  let root = gt.root in
+  let root = OpamStateConfig.(!r.root_dir) in
   let body = OpamFilename.read dot_profile in
   let pattern1 = "opam config env" in
   let pattern2 = OpamFilename.to_string (OpamPath.init root // "init") in
@@ -512,6 +515,7 @@ let update_setup st user global =
   end
 
 let display_setup gt shell dot_profile =
+  let root = OpamStateConfig.(!r.root_dir) in
   let print (k,v) = OpamConsole.msg "  %-25s - %s\n" k v in
   let not_set = "not set" in
   let ok      = "string is already present so file unchanged" in
@@ -528,7 +532,7 @@ let display_setup gt shell dot_profile =
       (OpamFilename.prettify dot_profile, dot_profile_status); ]
   in
   let init_file = init_file shell in
-  let pretty_init_file = OpamFilename.prettify (OpamPath.init gt.root // init_file) in
+  let pretty_init_file = OpamFilename.prettify (OpamPath.init root // init_file) in
   let global_setup =
     match status_of_init_file gt init_file with
     | None -> [pretty_init_file, not_set ]
@@ -556,6 +560,7 @@ let display_setup gt shell dot_profile =
 let print_env_warning_at_init st user =
   if is_up_to_date st then ()
   else
+    let root = OpamStateConfig.(!r.root_dir) in
     let profile_string = match user.dot_profile with
       | None -> ""
       | Some f ->
@@ -592,7 +597,7 @@ let print_env_warning_at_init st user =
        %s%s%s\n\n"
       line
       (OpamConsole.colorise `yellow "1.")
-      (eval_string st.switch_global.root st.switch)
+      (eval_string root st.switch)
       profile_string ocamlinit_string
       line
 
@@ -600,9 +605,10 @@ let check_and_print_env_warning st =
   if (OpamSwitchState.is_switch_globally_set st ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
      not (is_up_to_date st) then
-    OpamConsole.formatted_msg
-      "# Run %s to update the current shell environment\n"
-      (OpamConsole.colorise `bold (eval_string st.switch_global.root st.switch))
+       let root = OpamStateConfig.(!r.root_dir) in
+       OpamConsole.formatted_msg
+         "# Run %s to update the current shell environment\n"
+         (OpamConsole.colorise `bold (eval_string root st.switch))
 
 let update_setup_interactive st shell dot_profile =
   let update dot_profile =
