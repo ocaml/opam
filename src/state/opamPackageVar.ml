@@ -69,9 +69,8 @@ let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
      !X
      /!\ reloads files for every variable resolution ! *)
   let module V = OpamVariable in
-  let root = OpamStateConfig.(!r.root_dir) in
   let compiler = OpamSwitch.Map.find switch gt.aliases in
-  let comp = OpamFile.Comp.read (OpamPath.compiler_comp root compiler) in
+  let comp = OpamFile.Comp.read (OpamPath.compiler_comp compiler) in
   let preinstalled_comp = OpamFile.Comp.preinstalled comp in
   match ocaml_var with
   | "ocaml-version" -> V.string (OpamCompiler.Version.to_string
@@ -84,21 +83,21 @@ let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
       V.bool (Lazy.force OpamOCaml.ocaml_native_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin root switch switch_config
+                (OpamPath.Switch.bin switch switch_config
                  // "ocamlopt"))
   | "ocaml-native-tools" ->
     if preinstalled_comp then
       V.bool (Lazy.force OpamOCaml.ocaml_opt_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin root switch switch_config
+                (OpamPath.Switch.bin switch switch_config
                  // "ocamlc.opt"))
   | "ocaml-native-dynlink" ->
     if preinstalled_comp then
       V.bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
     else
       V.bool (OpamFilename.exists
-                (OpamPath.Switch.lib_dir root switch switch_config
+                (OpamPath.Switch.lib_dir switch switch_config
                  / "ocaml" // "dynlink.cmxa"))
   | _ -> raise Not_found
 
@@ -144,7 +143,6 @@ open OpamVariable
 
 (* filter handling *)
 let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
-  let root = OpamStateConfig.(!r.root_dir) in
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
@@ -152,7 +150,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     let get name =
       let cfg =
         OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config root st.switch name)
+          (OpamPath.Switch.config st.switch name)
       in
       try OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
       with Not_found -> None
@@ -219,7 +217,6 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       | None -> None in
     if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
-    let root = OpamStateConfig.(!r.root_dir) in
     match var_str, opam with
     | "installed", Some _ ->
       Some (bool (OpamPackage.has_name st.installed name))
@@ -233,21 +230,21 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       else None
     | _, None -> None
     | "bin", _ ->
-      Some (dirname (OpamPath.Switch.bin root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.bin st.switch st.switch_config))
     | "sbin", _ ->
-      Some (dirname (OpamPath.Switch.sbin root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.sbin st.switch st.switch_config))
     | "lib", _ ->
-      Some (dirname (OpamPath.Switch.lib root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.lib st.switch st.switch_config name))
     | "man", _ ->
-      Some (dirname (OpamPath.Switch.man_dir root st.switch st.switch_config))
+      Some (dirname (OpamPath.Switch.man_dir st.switch st.switch_config))
     | "doc", _ ->
-      Some (dirname (OpamPath.Switch.doc root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.doc st.switch st.switch_config name))
     | "share", _ ->
-      Some (dirname (OpamPath.Switch.share root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.share st.switch st.switch_config name))
     | "etc", _ ->
-      Some (dirname (OpamPath.Switch.etc root st.switch st.switch_config name))
+      Some (dirname (OpamPath.Switch.etc st.switch st.switch_config name))
     | "build", Some opam ->
-      Some (dirname (OpamPath.Switch.build root st.switch (get_nv opam)))
+      Some (dirname (OpamPath.Switch.build st.switch (get_nv opam)))
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
@@ -286,7 +283,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "hash", Some opam ->
       (try
          let nv = get_nv opam in
-         let f = OpamPath.archive root nv in
+         let f = OpamPath.archive nv in
          if OpamFilename.exists f then Some (string (OpamFilename.digest f))
          else Some (string "")
        with Not_found -> Some (string ""))

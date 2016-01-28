@@ -25,9 +25,8 @@ let slog = OpamConsole.slog
 let with_switch_backup _command f =
   let t = OpamSwitchState.load_full_compat "client"
       OpamStateConfig.(!r.current_switch) in
-  let root = OpamStateConfig.(!r.root_dir) in
-  let file = OpamPath.Switch.backup root t.switch in
-  OpamFilename.mkdir (OpamPath.Switch.backup_dir root t.switch);
+  let file = OpamPath.Switch.backup t.switch in
+  OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch);
   OpamFile.State.write file (OpamSwitchState.state_file t);
   try
     f t;
@@ -641,8 +640,8 @@ module API = struct
 
   let init repo compiler shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
-    let root = OpamStateConfig.(!r.root_dir) in
-    let config_f = OpamPath.config root in
+    let root = OpamPath.root () in
+    let config_f = OpamPath.config () in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
     let root_empty =
@@ -751,26 +750,26 @@ module API = struct
             OpamStateConfig.(Lazy.force default.jobs)
             OpamStateConfig.(default.dl_jobs)
         in
-        OpamStateConfig.write root config;
+        OpamStateConfig.write (OpamPath.config ()) config;
 
         (* Create ~/.opam/aliases *)
         OpamFile.Aliases.write
-          (OpamPath.aliases root)
+          (OpamPath.aliases ())
           (OpamSwitch.Map.singleton switch compiler);
 
         (* Init repository *)
-        OpamFile.Package_index.write (OpamPath.package_index root)
+        OpamFile.Package_index.write (OpamPath.package_index ())
           OpamPackage.Map.empty;
-        OpamFile.Compiler_index.write (OpamPath.compiler_index root)
+        OpamFile.Compiler_index.write (OpamPath.compiler_index ())
           OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
         OpamProcess.Job.run (OpamRepository.init repo);
-        OpamSwitchAction.install_global_config root switch
-          (OpamSwitchAction.gen_global_config root switch);
+        OpamSwitchAction.install_global_config switch
+          (OpamSwitchAction.gen_global_config switch);
 
         (* Init global dirs *)
-        OpamFilename.mkdir (OpamPath.packages_dir root);
-        OpamFilename.mkdir (OpamPath.compilers_dir root);
+        OpamFilename.mkdir (OpamPath.packages_dir ());
+        OpamFilename.mkdir (OpamPath.compilers_dir ());
 
         (* Load the partial state, and update the global state *)
         log "updating repository state";
@@ -809,10 +808,9 @@ module API = struct
   let check_conflicts t atoms =
     let changes = OpamSwitchState.packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
-    let root = OpamStateConfig.(!r.root_dir) in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
-      not (OpamFilename.exists_dir (OpamPath.packages root nv)) in
+      not (OpamFilename.exists_dir (OpamPath.packages nv)) in
     let full_orphans, full_orphans_with_local_data =
       OpamPackage.Set.partition has_no_local_data
         full_orphans in
@@ -1168,8 +1166,7 @@ module API = struct
         (ignore (unpin t.switch_global ~state:t [name]);
          OpamStd.Sys.exit 1);
       OpamConsole.msg "\n";
-      let root = OpamStateConfig.(!r.root_dir) in
-      let opam_f = OpamPath.Switch.Overlay.opam root t.switch name in
+      let opam_f = OpamPath.Switch.Overlay.opam t.switch name in
       let empty_opam = OpamFile.OPAM.(
           empty = with_name_opt (with_version_opt (read opam_f) None) None
         ) in

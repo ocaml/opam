@@ -42,8 +42,7 @@ val compute_updates: switch_state -> env_update list
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current environment (OPAMROOT, OPAMSWITCH variables) and shell (as
     returned by [eval `opam config env`]). Takes root and switch. *)
-val eval_string: dirname -> switch -> string
-
+val eval_string: switch -> string
 
 (** {2 Shell and initialisation support} *)
 

@@ -29,7 +29,7 @@ let reset_env = lazy (
       | "PATH" ->
         k, String.concat path_sep_str
           (OpamStd.Env.reset_value path_sep
-             ~prefix:OpamStateConfig.(OpamFilename.Dir.to_string !r.root_dir)
+             ~prefix:(OpamFilename.Dir.to_string (OpamPath.root()))
              v)
       | _      -> c
     ) env in

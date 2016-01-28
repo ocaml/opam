@@ -61,10 +61,10 @@ include OpamStd.Config.Sig
 val opamroot: ?root_dir:dirname -> unit -> dirname
 
 (** Loads the global configuration file, protecting against concurrent writes *)
-val load: dirname -> OpamFile.Config.t option
+val load: filename -> OpamFile.Config.t option
 
 (** Writes the global configuration file, protecting against concurrent reads *)
-val write: dirname -> OpamFile.Config.t -> unit
+val write: filename -> OpamFile.Config.t -> unit
 
 (** Filters flagged dependencies in an ext_formula using the currently set
     options (doc, test). Build dependencies are included *)
@@ -77,4 +77,4 @@ val filter_deps: ?dev:bool -> ext_formula -> formula
 
     Returns true if a config file was found and could be read, false
     otherwise *)
-val load_defaults: OpamFilename.Dir.t -> bool
+val load_defaults: dirname -> bool

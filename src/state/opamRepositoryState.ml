@@ -69,16 +69,15 @@ module Cache = struct
       OpamFilename.remove file;
       None
 
-  let load root =
-    let file = OpamPath.state_cache root in
-    if OpamFilename.exists file
-    then marshal_from_file file
+  let load () =
+    let file = OpamPath.state_cache () in
+    if OpamFilename.exists file then
+      marshal_from_file file
     else None
 
   let save rt =
     let chrono = OpamConsole.timer () in
-    let root = OpamStateConfig.(!r.root_dir) in
-    let file = OpamPath.state_cache root in
+    let file = OpamPath.state_cache () in
     assert (OpamPackage.Map.is_empty rt.package_index ||
             not (OpamPackage.Map.is_empty rt.repo_opams));
     OpamFilename.remove file;
@@ -93,16 +92,15 @@ module Cache = struct
     log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
 
   let remove () =
-    let root = OpamStateConfig.(!r.root_dir) in
-    let file = OpamPath.state_cache root in
+    let file = OpamPath.state_cache () in
     OpamFilename.remove file
 
 end
 
 (* Returns the directory holding the original metadata of the package. *)
-let package_repo_dir root repositories package_index nv =
-  if OpamFilename.exists (OpamPath.opam root nv) then
-    OpamPath.packages root nv
+let package_repo_dir repositories package_index nv =
+  if OpamFilename.exists (OpamPath.opam nv) then
+    OpamPath.packages nv
   else
   let repo_name, prefix = OpamPackage.Map.find nv package_index in
   let repo = OpamRepositoryName.Map.find repo_name repositories in
@@ -111,13 +109,12 @@ let package_repo_dir root repositories package_index nv =
 let load ?(save_cache=true) ?(lock=Lock_none) gt =
   (* let t = load_global_state () in *)
   log "LOAD-REPOSITORY-STATE";
-  let root = OpamStateConfig.(!r.root_dir) in
 
-  let opams = Cache.load root in
+  let opams = Cache.load () in
   let cached = opams <> None in
   if cached then log "Cache found";
   let compilers =
-    let files = OpamFilename.rec_files (OpamPath.compilers_dir root) in
+    let files = OpamFilename.rec_files (OpamPath.compilers_dir ()) in
     let comp = OpamStd.List.filter_map OpamCompiler.of_filename files in
     OpamCompiler.Set.of_list comp
   in
@@ -125,16 +122,16 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
     let names = OpamFile.Config.repositories gt.config in
     List.fold_left (fun map repo_name ->
         let repo = OpamFile.Repo_config.read
-            (OpamRepositoryPath.raw_config root repo_name) in
+            (OpamRepositoryPath.raw_config (OpamPath.root ()) repo_name) in
         OpamRepositoryName.Map.add repo_name repo map
       ) OpamRepositoryName.Map.empty names
   in
   let package_index =
-    OpamFile.Package_index.safe_read (OpamPath.package_index root) in
+    OpamFile.Package_index.safe_read (OpamPath.package_index ()) in
   let compiler_index =
-    OpamFile.Compiler_index.safe_read (OpamPath.compiler_index root) in
+    OpamFile.Compiler_index.safe_read (OpamPath.compiler_index ()) in
   let load_opam_file nv =
-    let dir = package_repo_dir root repositories package_index nv in
+    let dir = package_repo_dir repositories package_index nv in
     OpamFileHandling.read_opam dir
   in
   let repo_opams =
@@ -166,12 +163,11 @@ let package_index rt =
   OpamRepository.package_index rt.repositories
 
 let package_state_one gt all nv =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let opam    = OpamPath.opam root nv in
-  let descr   = OpamPath.descr root nv in
-  let url     = OpamPath.url root nv in
-  let files   = OpamPath.files root nv in
-  let archive = OpamPath.archive root nv in
+  let opam    = OpamPath.opam nv in
+  let descr   = OpamPath.descr nv in
+  let url     = OpamPath.url nv in
+  let files   = OpamPath.files nv in
+  let archive = OpamPath.archive nv in
   if not (OpamFilename.exists opam) then []
   else match all with
     | `all ->
@@ -190,14 +186,13 @@ let package_state_one gt all nv =
 
 let package_state rt =
   let gt = rt.repos_global in
-  let root = OpamStateConfig.(!r.root_dir) in
   let installed = OpamPackage.Set.fold (fun nv map ->
       let state = package_state_one gt `all nv in
       OpamPackage.Map.add nv state map
     ) (OpamGlobalState.all_installed gt) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
       if OpamPackage.Map.mem nv map then map
-      else if OpamFilename.exists (OpamPath.opam root nv) then
+      else if OpamFilename.exists (OpamPath.opam nv) then
         let state = package_state_one gt `all nv in
         OpamPackage.Map.add nv state map
       else
@@ -207,11 +202,10 @@ let package_state rt =
     ) rt.package_index installed
 
 let package_partial_state rt nv ~archive =
-  let root = OpamStateConfig.(!r.root_dir) in
   match package_state_one rt.repos_global (`partial archive) nv with
   | []    -> false, []
   | state ->
-    let archive = OpamPath.archive root nv in
+    let archive = OpamPath.archive nv in
     OpamFilename.exists archive, state
 
 let package_repository_state rt =
@@ -245,9 +239,8 @@ let repository_of_package rt nv =
     None
 
 let compiler_state_one gt c =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let comp = OpamPath.compiler_comp root c in
-  let descr = OpamPath.compiler_descr root c in
+  let comp = OpamPath.compiler_comp c in
+  let descr = OpamPath.compiler_descr c in
   if OpamFilename.exists comp then
     Some (OpamFilename.checksum comp @ OpamFilename.checksum descr)
   else
@@ -279,8 +272,7 @@ let repository_and_prefix_of_compiler rt comp =
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt nv =
   log "get_archive %a" (slog OpamPackage.to_string) nv;
-  let root = OpamStateConfig.(!r.root_dir) in
-  let dst = OpamPath.archive root nv in
+  let dst = OpamPath.archive nv in
   match repository_of_package rt nv with
   | None -> Done None
   | Some repo ->

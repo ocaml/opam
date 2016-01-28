@@ -150,19 +150,17 @@ let opamroot ?root_dir () =
    OpamStd.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string)
   +! default.root_dir
 
-let load opamroot =
-  let f = OpamPath.config opamroot in
-  if OpamFilename.exists f then
+let load config_file =
+  if OpamFilename.exists config_file then
     OpamFilename.with_flock ~read:true
-      (OpamFilename.add_extension f "lock")
-      (fun f -> Some (OpamFile.Config.read f)) f
+      (OpamFilename.add_extension config_file "lock")
+      (fun f -> Some (OpamFile.Config.read f)) config_file
   else None
 
-let write opamroot conf =
-  let f = OpamPath.config opamroot in
+let write config_file conf =
   OpamFilename.with_flock ~read:false
-    (OpamFilename.add_extension f "lock")
-    (OpamFile.Config.write f) conf
+    (OpamFilename.add_extension config_file "lock")
+    (OpamFile.Config.write config_file) conf
 
 let filter_deps ?(dev=true) f =
   OpamTypesBase.filter_deps
@@ -172,8 +170,13 @@ let filter_deps ?(dev=true) f =
     ~dev
     f
 
-let load_defaults root_dir =
-  match load root_dir with
+let load_defaults root =
+  (* here cannot use OpamPath.config. This is the only exception *)
+  let config_file =
+    let open OpamFilename.Op in
+    root // "config" 
+  in
+  match load config_file with
   | None -> false
   | Some conf ->
     let open OpamStd.Option.Op in

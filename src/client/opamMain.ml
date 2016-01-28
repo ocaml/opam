@@ -151,7 +151,7 @@ let init =
     let repo_priority = 0 in
     let repo_url = OpamUrl.parse ?backend:repo_kind repo_url in
     let repository = {
-      repo_root = OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir)) repo_name;
+      repo_root = OpamRepositoryPath.create (OpamPath.root ()) repo_name;
       repo_name; repo_url; repo_priority } in
     let update_config =
       if no_setup then `no
@@ -527,11 +527,10 @@ let config =
       print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
       print "self-upgrade" "%s"
         (if self_upgrade_status global_options = `Running then
-           OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
+           OpamFilename.prettify (fst (self_upgrade_exe (OpamPath.root ())))
          else "no");
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
-        let root = OpamStateConfig.(!r.root_dir) in
         let state = OpamSwitchState.load_full_compat "config-report"
           OpamStateConfig.(!r.current_switch) in
         let external_solver =
@@ -586,11 +585,10 @@ let config =
           (if (OpamFile.Comp.preinstalled
                  (OpamFile.Comp.read
                     (OpamPath.compiler_comp
-                       root
                        (OpamSwitch.Map.find state.switch
                           state.switch_global.aliases))))
            then "*" else "");
-        let index_file = OpamFilename.to_string (OpamPath.package_index root) in
+        let index_file = OpamFilename.to_string (OpamPath.package_index ()) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
               (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
@@ -914,7 +912,7 @@ let switch =
           (* !X catch failure *)
           OpamPackage.Set.of_list (List.rev_map OpamPackage.of_string pkgs)
         in
-        OpamSwitchAction.create_empty_switch OpamStateConfig.(!r.root_dir) switch;
+        OpamSwitchAction.create_empty_switch switch;
         let t = OpamSwitchState.load_full_compat "switch-install" switch in
         let compiler_packages =
           OpamPackage.Set.of_list
@@ -1262,9 +1260,8 @@ let source =
       | `Error _ -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
         (try OpamAction.extract_package t s nv with Failure _ -> ());
-        let root = OpamStateConfig.(!r.root_dir) in
         move_dir
-          ~src:(OpamPath.Switch.build root t.switch nv)
+          ~src:(OpamPath.Switch.build t.switch nv)
           ~dst:dir;
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);

@@ -48,10 +48,9 @@ let () =
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
 
 let installed () =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let config = OpamFile.Config.read (OpamPath.config root) in
+  let config = OpamFile.Config.read (OpamPath.config ()) in
   let version = OpamFile.Config.switch config in
-  let state = OpamFile.State.safe_read (OpamPath.Switch.state root version) in
+  let state = OpamFile.State.safe_read (OpamPath.Switch.state version) in
   state.OpamFile.State.installed
 
 let () =

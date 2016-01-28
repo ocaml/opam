@@ -133,7 +133,7 @@ let iter_install f instfile o =
         (OpamStd.Option.default (OpamFilename.basename src) dst)
   in
   let dest_global ?fix instdir_f =
-    dest ?fix (instdir_f o.prefix (OpamSwitch.of_string ""))
+    dest ?fix (instdir_f (OpamSwitch.of_string ""))
   in
   let dest_pkg ?fix instdir_f =
     let fix =
@@ -143,7 +143,7 @@ let iter_install f instfile o =
         fix
     in
     dest ?fix
-      (instdir_f o.prefix (OpamSwitch.of_string "") o.pkgname)
+      (instdir_f (OpamSwitch.of_string "") o.pkgname)
   in
   List.iter f
     [ dest_global                 D.bin,      S.bin instfile,        true;
@@ -205,7 +205,7 @@ let uninstall options =
     (List.rev (OpamFilename.Dir.Set.elements !dirs_to_remove));
   List.iter (fun df ->
       cmd.rmdir ~opt:false
-        (df options.prefix (OpamSwitch.of_string "") options.pkgname))
+        (df (OpamSwitch.of_string "") options.pkgname))
     OpamPath.Switch.Default.([ lib; share; etc; doc ]);
   List.iter
     (fun (_src, dst) ->
@@ -334,6 +334,7 @@ let command =
   Term.(
     pure
       (fun options remove ->
+	   OpamStateConfig.init ~root_dir:options.prefix ();
          if remove then uninstall options else install options)
     $ options $ remove)
 

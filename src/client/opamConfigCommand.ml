@@ -50,7 +50,6 @@ let help t =
 (* List all the available variables *)
 let list ns =
   log "config-list";
-  let root = OpamStateConfig.(!r.root_dir) in
   let t = OpamSwitchState.load_full_compat "config-list"
       OpamStateConfig.(!r.current_switch) in
   if ns = [] then help t else
@@ -69,7 +68,7 @@ let list ns =
       let env = OpamPackageVar.resolve ~opam t in
       let conf =
         OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config root t.switch name)
+          (OpamPath.Switch.config t.switch name)
       in
       let pkg_vars =
         OpamStd.List.filter_map (fun (vname, desc) ->
@@ -177,8 +176,7 @@ let set var value =
       "Only global variables may be set using this command";
   let var = OpamVariable.Full.variable var in
   let config_f =
-    OpamPath.Switch.global_config
-      OpamStateConfig.(!r.root_dir) OpamStateConfig.(!r.current_switch)
+    OpamPath.Switch.global_config OpamStateConfig.(!r.current_switch)
   in
   let config = OpamFile.Dot_config.read config_f in
   let oldval = OpamFile.Dot_config.variable config var in

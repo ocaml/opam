@@ -28,7 +28,6 @@ let slog = OpamConsole.slog
 let list ~print_short ~installed ~all =
   log "list";
   let t = OpamSwitchState.load_full_compat "list" OpamStateConfig.(!r.current_switch) in
-  let root = OpamStateConfig.(!r.root_dir) in
   let descr c =
     if c = OpamCompiler.system then
       let system_version =
@@ -37,7 +36,7 @@ let list ~print_short ~installed ~all =
         | Some v -> v in
       OpamFile.Descr.create (Printf.sprintf "System compiler (%s)" system_version)
     else
-      OpamFile.Descr.safe_read (OpamPath.compiler_descr root c) in
+      OpamFile.Descr.safe_read (OpamPath.compiler_descr c) in
 
   let installed_str     = "I" in
   let current_str       = "C" in
@@ -68,7 +67,7 @@ let list ~print_short ~installed ~all =
   let officials, patches =
     OpamCompiler.Set.fold (fun comp (officials, patches) ->
         try
-          let c = OpamFile.Comp.read (OpamPath.compiler_comp root comp) in
+          let c = OpamFile.Comp.read (OpamPath.compiler_comp comp) in
           let version = OpamFile.Comp.version c in
           if OpamCompiler.Version.to_string version =
              OpamCompiler.to_string comp then
@@ -159,14 +158,13 @@ let list ~print_short ~installed ~all =
         OpamConsole.warning
           "The environment is not in sync with the current switch.\n\
            You should run: %s"
-          (OpamEnv.eval_string root t.switch))
+          (OpamEnv.eval_string t.switch))
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) t switch =
-  let root = OpamStateConfig.(!r.root_dir) in
   let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.switch_global.aliases in
-  OpamFile.Aliases.write (OpamPath.aliases root) aliases;
-  let comp_dir = OpamPath.Switch.root root switch in
+  OpamFile.Aliases.write (OpamPath.aliases ()) aliases;
+  let comp_dir = OpamPath.Switch.root switch in
   if keep_debug && (OpamStateConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
     OpamConsole.note "Keeping %s despite errors (debug mode), \
                       you may want to remove it by hand"
@@ -177,15 +175,14 @@ let clear_switch ?(keep_debug=false) t switch =
 
 let remove_t ?(confirm = true) t =
   log "remove switch=%a" (slog OpamSwitch.to_string) t.switch;
-  let root = OpamStateConfig.(!r.root_dir) in
-  let comp_dir = OpamPath.Switch.root root t.switch in
+  let comp_dir = OpamPath.Switch.root t.switch in
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string t.switch);
     OpamStd.Sys.exit 1;
   );
   if Some t.switch =
-     OpamStd.Option.Op.(OpamStateConfig.load root >>|
+     OpamStd.Option.Op.(OpamStateConfig.load (OpamPath.config ()) >>|
                          OpamFile.Config.switch)
   then
     OpamConsole.error_and_exit
@@ -203,7 +200,6 @@ let install_compiler ~quiet switch compiler =
   log "install %b %a %a" quiet
     (slog OpamSwitch.to_string) switch
     (slog OpamCompiler.to_string) compiler;
-  let root = OpamStateConfig.(!r.root_dir) in
 
   (* Remember the current switch to be able to roll-back *)
   let t = OpamSwitchState.load_full_compat "switch-install-with-packages-1"
@@ -214,7 +210,7 @@ let install_compiler ~quiet switch compiler =
   with e ->
     (* OpamConsole.error "%s" (Printexc.to_string e); *)
     clear_switch ~keep_debug:true t switch;
-    OpamStateConfig.write root t.switch_global.config;
+    OpamStateConfig.write (OpamPath.config ()) t.switch_global.config;
     raise e
 
 
@@ -222,10 +218,9 @@ let install_packages t =
   (* install the compiler packages *)
   (* let t = OpamSwitchState.load_full_compat "switch-install-with-packages-2" switch in *)
   let switch = t.switch in
-  let root = OpamStateConfig.(!r.root_dir) in
   let compiler = OpamSwitch.Map.find switch t.switch_global.aliases in
 
-  let comp = OpamFile.Comp.read (OpamPath.compiler_comp root compiler) in
+  let comp = OpamFile.Comp.read (OpamPath.compiler_comp compiler) in
   let to_install = OpamFormula.atoms (OpamFile.Comp.packages comp) in
   let roots = OpamPackage.Name.Set.of_list (List.map fst to_install) in
 
@@ -294,15 +289,14 @@ let install_packages t =
 
 let install_cont ~quiet ~update_config switch compiler =
   let gt = OpamGlobalState.load () in
-  let root = OpamStateConfig.(!r.root_dir) in
-  let comp_dir = OpamPath.Switch.root root switch in
+  let comp_dir = OpamPath.Switch.root switch in
   let already_installed = OpamSwitch.Map.mem switch gt.aliases in
   if not already_installed &&
      Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
     OpamConsole.error_and_exit
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
-  let comp_f = OpamPath.compiler_comp root compiler in
+  let comp_f = OpamPath.compiler_comp compiler in
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
     if compiler = OpamCompiler.system then (
@@ -329,7 +323,7 @@ let install_cont ~quiet ~update_config switch compiler =
     try install_packages t
     with e ->
       clear_switch ~keep_debug:true t switch;
-      OpamStateConfig.write root t.switch_global.config;
+      OpamStateConfig.write (OpamPath.config ()) t.switch_global.config;
       raise e
 
 let install ~quiet ~update_config switch compiler =
@@ -369,7 +363,6 @@ let filter_names ~filter set =
 (** !X todo: include overlays in state/export file *)
 let import_t importfile t =
   log "import switch";
-  let root = OpamStateConfig.(!r.root_dir) in
 
   let prev_state = OpamSwitchState.state_file t in
 
@@ -410,7 +403,7 @@ let import_t importfile t =
   let revert_pins () =
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
       let switch_state = OpamSwitchState.load_state_file t.switch_global t.switch in
-      let state_f = OpamPath.Switch.state root t.switch in
+      let state_f = OpamPath.Switch.state t.switch in
       S.write state_f { switch_state with S.pinned = prev_state.S.pinned }
   in
   let t =
@@ -432,7 +425,7 @@ let import_t importfile t =
       let _ =
         OpamPackage.Name.Map.iter (fun name pin ->
             let overlay_dir =
-              OpamPath.Switch.Overlay.package root t.switch name
+              OpamPath.Switch.Overlay.package t.switch name
             in
             if not (OpamFilename.exists_dir overlay_dir) then
               OpamPinned.add_overlay t.switch_repos ?version:(pinned_version name)
@@ -480,8 +473,7 @@ let import_t importfile t =
 
 let export filename =
   let switch = OpamStateConfig.(!r.current_switch) in
-  let root = OpamStateConfig.(!r.root_dir) in
-  let st = S.safe_read (OpamPath.Switch.state root switch) in
+  let st = S.safe_read (OpamPath.Switch.state switch) in
   match filename with
   | None   -> S.write_to_channel stdout st
   | Some f -> S.write f st
@@ -492,7 +484,6 @@ let show () =
 
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
-  let root = OpamStateConfig.(!r.root_dir) in
   let ocaml_version =
     try OpamSwitch.Map.find switch gt.aliases
     with Not_found ->
@@ -503,13 +494,13 @@ let reinstall_gt gt switch =
   let export = OpamSwitchState.load_state_file gt switch in
 
   (* Remove the directory (except the overlays, backups and lock) *)
-  let switch_root = OpamPath.Switch.root root switch in
+  let switch_root = OpamPath.Switch.root switch in
   let keep_dirs = [
-    OpamPath.Switch.Overlay.dir root switch;
-    OpamPath.Switch.backup_dir root switch;
+    OpamPath.Switch.Overlay.dir switch;
+    OpamPath.Switch.backup_dir switch;
   ] in
   let keep_files = [
-    OpamPath.Switch.lock root switch;
+    OpamPath.Switch.lock switch;
   ] in
   List.iter
     (fun d -> if not (List.mem d keep_dirs) then OpamFilename.rmdir d)
@@ -525,9 +516,8 @@ let reinstall_gt gt switch =
 (* !X unify with OpamClient.with_switch_backup; set a number of backups and just
    rename older versions .1, .2 etc. ? *)
 let with_backup gt switch f =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let state_file = OpamPath.Switch.state root switch in
-  let backup_state_file = OpamPath.backup root in
+  let state_file = OpamPath.Switch.state switch in
+  let backup_state_file = OpamPath.backup () in
   OpamFilename.copy ~src:state_file ~dst:backup_state_file;
   try
     f gt switch;

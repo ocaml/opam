@@ -129,10 +129,8 @@ let print_updated_compilers updates =
     updates.deleted
 
 let fix_compiler_descriptions t ~verbose =
-  let root = OpamStateConfig.(!r.root_dir) in
   log "Updating %a/ ...\n"
-    (slog (OpamFilename.prettify_dir @* OpamPath.compilers_dir))
-    root;
+    (slog @@ OpamFilename.prettify_dir) (OpamPath.compilers_dir ());
   let global_index = OpamRepositoryState.compiler_state t in
   let repo_index = OpamRepositoryState.compiler_repository_state t in
   let niet = String.concat ":" in
@@ -168,7 +166,7 @@ let fix_compiler_descriptions t ~verbose =
   (* Delete compiler descritions (unless they are still installed) *)
   OpamCompiler.Set.iter (fun comp ->
       if not (OpamSwitch.Map.exists (fun _ c -> c = comp) t.repos_global.aliases) then
-        let dir = OpamPath.compilers root comp in
+        let dir = OpamPath.compilers comp in
         OpamFilename.rmdir dir;
     ) deleted_compilers;
 
@@ -179,7 +177,7 @@ let fix_compiler_descriptions t ~verbose =
       | Some (repo_name, prefix) ->
         let repo = OpamRepositoryName.Map.find repo_name t.repositories in
         let files = OpamRepository.compiler_files repo prefix comp in
-        let dir = OpamPath.compilers root comp in
+        let dir = OpamPath.compilers comp in
         OpamFilename.rmdir dir;
         OpamFilename.mkdir dir;
         List.iter (fun file ->
@@ -282,14 +280,10 @@ let update_dev_packages t ~verbose packages =
    reinstall *)
 let fix_package_descriptions rt ~verbose =
   let gt = rt.repos_global in
-  let root = OpamStateConfig.(!r.root_dir) in
   log "Updating %a/ ...\n"
-    (slog (OpamFilename.prettify_dir @* OpamPath.packages_dir))
-    root;
+    (slog @@ OpamFilename.prettify_dir) (OpamPath.packages_dir ());
 
-  let global_index =
-    OpamRepositoryState.package_state rt
-  in
+  let global_index = OpamRepositoryState.package_state rt in
   let repo_index =
     OpamRepositoryState.package_repository_state rt
   in
@@ -349,7 +343,7 @@ let fix_package_descriptions rt ~verbose =
   let upstream_deleted_packages =
     OpamPackage.Set.filter
       (fun nv ->
-         not (OpamFilename.exists (OpamPath.opam root nv)))
+         not (OpamFilename.exists (OpamPath.opam nv)))
       deleted_packages in
 
   (* that's not a good idea *at all* to enable this hook if you
@@ -359,8 +353,7 @@ let fix_package_descriptions rt ~verbose =
       ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command:(fun nv ->
           log "download %a"
-            (slog @@ OpamFilename.to_string @*
-                     OpamPath.archive root) nv;
+            (slog @@ OpamFilename.to_string) (OpamPath.archive nv);
           OpamRepositoryState.download_archive rt nv @@+
           fun _ -> Done ())
       (OpamPackage.Map.keys repo_index);
@@ -402,7 +395,7 @@ let fix_package_descriptions rt ~verbose =
       match OpamPackage.Map.find_opt nv rt.package_index with
       | None                -> ()
       | Some (repo_name, prefix) ->
-        let dir = OpamPath.packages root nv in
+        let dir = OpamPath.packages nv in
         let repo =
           OpamRepositoryName.Map.find repo_name rt.repositories
         in
@@ -417,14 +410,14 @@ let fix_package_descriptions rt ~verbose =
           List.iter (fun file ->
               OpamFilename.copy_in ~root:reporoot file dir
             ) files;
-          OpamFilename.remove (OpamPath.archive root nv);
+          OpamFilename.remove (OpamPath.archive nv);
           OpamFilename.remove (OpamRepositoryPath.archive repo nv);
     ) (OpamPackage.Set.union missing_installed_packages updated_packages);
 
   (* Remove archives of non-installed packages (these may no longer be
      up-to-date) *)
   OpamPackage.Set.iter (fun nv ->
-      let f = OpamPath.archive root nv in
+      let f = OpamPath.archive nv in
       if OpamFilename.exists f then
         (log "Cleaning up obsolete archive %a" (slog OpamFilename.to_string) f;
          OpamFilename.remove f))
@@ -447,16 +440,14 @@ let fix_package_descriptions rt ~verbose =
   updates
 
 let update_package_index rt =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let file = OpamPath.package_index root in
+  let file = OpamPath.package_index () in
   log "Updating %a ...\n" (slog OpamFilename.prettify) file;
   let package_index = OpamRepositoryState.package_index rt in
   OpamFile.Package_index.write file package_index;
   { rt with package_index }
 
 let update_compiler_index rt =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let file = OpamPath.compiler_index root in
+  let file = OpamPath.compiler_index () in
   log "Updating %a ...\n" (slog OpamFilename.prettify) file;
   let compiler_index = OpamRepositoryState.compiler_index rt in
   OpamFile.Compiler_index.write file compiler_index;
@@ -468,9 +459,8 @@ let update_config t repos =
   log "update-config %a"
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
-  let root = OpamStateConfig.(!r.root_dir) in
   let new_config = OpamFile.Config.with_repositories t.config repos in
-  OpamStateConfig.write root new_config
+  OpamStateConfig.write (OpamPath.config ()) new_config
 
 let fix_descriptions
     ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =
@@ -517,7 +507,6 @@ let priority repo_name ~priority =
 
 let add name url ~priority:prio =
   log "repository-add";
-  let root = OpamStateConfig.(!r.root_dir) in
   let rt = OpamRepositoryState.load ~save_cache:false (OpamGlobalState.load ()) in
   if OpamRepositoryName.Map.mem name rt.repositories then
     OpamConsole.error_and_exit "%s is already a remote repository"
@@ -533,7 +522,7 @@ let add name url ~priority:prio =
     repo_name     = name;
     repo_url      = url;
     repo_priority = prio;
-    repo_root     = OpamRepositoryPath.create root name;
+    repo_root     = OpamRepositoryPath.create (OpamPath.root ()) name;
   } in
   if OpamUrl.local_dir url <> None &&
      OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo) = None &&

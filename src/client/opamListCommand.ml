@@ -477,12 +477,12 @@ let info ~fields ~raw_opam ~where atoms =
         | _, Version v -> repo @ ["pinned", OpamPackage.Version.to_string v]
         | _, Source url ->
           let revision =
-            let root = OpamStateConfig.(!r.root_dir) in
             let repo =
               { repo_name = OpamRepositoryName.of_string "tmp";
                 repo_url = url;
                 repo_priority = 0;
-                repo_root = OpamPath.Switch.dev_package root t.switch name; }
+                repo_root = OpamPath.Switch.dev_package t.switch name
+              }
             in
             (match OpamProcess.Job.run (OpamRepository.revision repo) with
              | Some v -> Printf.sprintf " (%s)"

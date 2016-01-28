@@ -30,8 +30,7 @@ let add_overlay ?(template=false) ?version rt switch name pin =
     OpamStd.Option.Op.(
       slog @@ fun v -> (v >>| OpamPackage.Version.to_string) +! "none"
     ) version;
-  let root = OpamStateConfig.(!r.root_dir) in
-  let pkg_overlay f = f root switch name in
+  let pkg_overlay f = f switch name in
   let copy_files opam =
     match OpamFile.OPAM.metadata_dir opam with
     | Some bd ->
@@ -82,9 +81,8 @@ let add_overlay ?(template=false) ?version rt switch name pin =
       OPAM.write (pkg_overlay (if template then Ov.tmp_opam else Ov.opam)) opam
 
 let remove_overlay gt switch name =
-  let root = OpamStateConfig.(!r.root_dir) in
   OpamFilename.rmdir
-    (OpamPath.Switch.Overlay.package root switch name)
+    (OpamPath.Switch.Overlay.package switch name)
 
 let version st name = fst (OpamPackage.Name.Map.find name st.pinned)
 

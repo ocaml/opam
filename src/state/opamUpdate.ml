@@ -105,12 +105,11 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
    normal update *)
 (* !X rewrite to better use switch_state rather than reload overlay *)
 let pinned_package st ?fixed_version name =
-  let root = OpamStateConfig.(!r.root_dir) in
-  let overlay = OpamPath.Switch.Overlay.package root st.switch name in
-  let url_f = OpamPath.Switch.Overlay.url root st.switch name in
+  let overlay = OpamPath.Switch.Overlay.package st.switch name in
+  let url_f = OpamPath.Switch.Overlay.url st.switch name in
   if not (OpamFilename.exists url_f) then Done false else
   let url = OpamFile.URL.read url_f in
-  let srcdir = OpamPath.Switch.dev_package root st.switch name in
+  let srcdir = OpamPath.Switch.dev_package st.switch name in
   let pinning_kind =
     kind_of_pin_option (snd (OpamPackage.Name.Map.find name st.pinned)) in
   (* Four versions of the metadata: from the old and new versions
@@ -203,7 +202,7 @@ let pinned_package st ?fixed_version name =
     hash_meta @@
     local_opam ?fixed_version
       ~check
-      ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam root st.switch name)
+      ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam st.switch name)
       name srcdir
   in
   let user_meta, old_meta, repo_meta =
@@ -260,7 +259,7 @@ let pinned_package st ?fixed_version name =
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (OpamUrl.to_string (OpamFile.URL.url url));
        OpamFilename.remove
-         (OpamPath.Switch.Overlay.tmp_opam root st.switch name);
+         (OpamPath.Switch.Overlay.tmp_opam st.switch name);
        install_meta srcdir user_meta new_meta)
     else if
       OpamConsole.formatted_msg
@@ -272,8 +271,8 @@ let pinned_package st ?fixed_version name =
         (OpamFilename.Dir.to_string overlay)
     then (
       let bak =
-        OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak") in
-      OpamFilename.mkdir (OpamPath.backup_dir root);
+        OpamPath.backup_dir () / (OpamPackage.Name.to_string name ^ ".bak") in
+      OpamFilename.mkdir (OpamPath.backup_dir ());
       OpamFilename.rmdir bak;
       OpamFilename.copy_dir ~src:overlay ~dst:bak;
       OpamConsole.formatted_msg "User metadata backed up in %s\n"
@@ -292,8 +291,7 @@ let dev_package st nv =
   | None     -> Done false
   | Some url ->
     if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
-      let root = OpamStateConfig.(!r.root_dir) in
-      fetch_dev_package url (OpamPath.dev_package root nv) nv
+      fetch_dev_package url (OpamPath.dev_package nv) nv
 
 let dev_packages st packages =
   log "update-dev-packages";

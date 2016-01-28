@@ -199,8 +199,8 @@ opam-state.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.cm
 opam-state.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
 
 SRC_state = \
-  opamPath.ml \
   opamStateConfig.ml \
+  opamPath.ml \
   opamOCaml.ml \
   opamScript.ml \
   opamStateTypes.mli \
