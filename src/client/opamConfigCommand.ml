@@ -218,8 +218,7 @@ let setup user global =
 
 let setup_list shell dot_profile =
   log "config-setup-list";
-  let t = OpamGlobalState.load () in
-  OpamEnv.display_setup t shell dot_profile
+  OpamEnv.display_setup shell dot_profile
 
 let exec ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;

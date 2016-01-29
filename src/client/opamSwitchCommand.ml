@@ -402,7 +402,7 @@ let import_t importfile t =
   let import_roots = importfile.S.installed_roots %% available in
   let revert_pins () =
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
-      let switch_state = OpamSwitchState.load_state_file t.switch_global t.switch in
+      let switch_state = OpamSwitchState.load_state_file t.switch in
       let state_f = OpamPath.Switch.state t.switch in
       S.write state_f { switch_state with S.pinned = prev_state.S.pinned }
   in
@@ -491,7 +491,7 @@ let reinstall_gt gt switch =
         "The compiler switch %s does not exist.\n"
         (OpamSwitch.to_string switch)
   in
-  let export = OpamSwitchState.load_state_file gt switch in
+  let export = OpamSwitchState.load_state_file switch in
 
   (* Remove the directory (except the overlays, backups and lock) *)
   let switch_root = OpamPath.Switch.root switch in

@@ -27,7 +27,7 @@ val load_full_compat: string -> switch -> switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)
-val load_state_file: global_state -> switch -> OpamFile.State.t
+val load_state_file: switch -> OpamFile.State.t
 
 (** {2 Helpers to access state data} *)
 

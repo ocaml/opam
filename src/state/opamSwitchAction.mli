@@ -29,8 +29,7 @@ val write_state_file: switch_state -> unit
 
 (** Update the on-disk set of packages marked to reinstall *)
 val add_to_reinstall:
-  global_state -> switch -> OpamFile.State.t -> unpinned_only:bool ->
-  package_set -> unit
+  switch -> OpamFile.State.t -> unpinned_only:bool -> package_set -> unit
 
 (** Updates the defined default switch and loads its state *)
 val set_current_switch: global_state -> switch -> switch_state

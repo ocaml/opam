@@ -24,7 +24,7 @@ val add_overlay:
   switch -> name -> pin_option -> unit
 
 (** Remove all overlay files *)
-val remove_overlay: global_state -> switch -> name -> unit
+val remove_overlay: switch -> name -> unit
 
 (** Returns the version the package is pinned to. @raise [Not_found] *)
 val version: switch_state -> name -> version

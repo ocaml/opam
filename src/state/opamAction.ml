@@ -468,7 +468,7 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
     (* Cleanup if there was any stale overlay (unpinned but left installed
        package) *)
     if not (OpamPackage.Name.Map.mem name t.pinned) then
-      OpamPinned.remove_overlay t.switch_global t.switch name;
+      OpamPinned.remove_overlay t.switch name;
   in
 
   remove_job @@+ fun () ->

@@ -107,7 +107,6 @@ let package_repo_dir repositories package_index nv =
   OpamRepositoryPath.packages repo prefix nv
 
 let load ?(save_cache=true) ?(lock=Lock_none) gt =
-  (* let t = load_global_state () in *)
   log "LOAD-REPOSITORY-STATE";
 
   let opams = Cache.load () in
@@ -153,16 +152,13 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   if save_cache && not cached then Cache.save rt;
   rt
 
-let sorted_repositories rt =
-  OpamRepository.sort rt.repositories
-
 let compiler_index rt =
   OpamRepository.compiler_index rt.repositories
 
 let package_index rt =
   OpamRepository.package_index rt.repositories
 
-let package_state_one gt all nv =
+let package_state_one all nv =
   let opam    = OpamPath.opam nv in
   let descr   = OpamPath.descr nv in
   let url     = OpamPath.url nv in
@@ -187,13 +183,13 @@ let package_state_one gt all nv =
 let package_state rt =
   let gt = rt.repos_global in
   let installed = OpamPackage.Set.fold (fun nv map ->
-      let state = package_state_one gt `all nv in
+      let state = package_state_one `all nv in
       OpamPackage.Map.add nv state map
     ) (OpamGlobalState.all_installed gt) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
       if OpamPackage.Map.mem nv map then map
       else if OpamFilename.exists (OpamPath.opam nv) then
-        let state = package_state_one gt `all nv in
+        let state = package_state_one `all nv in
         OpamPackage.Map.add nv state map
       else
         let repo = OpamRepositoryName.Map.find repo rt.repositories in
@@ -201,8 +197,8 @@ let package_state rt =
         OpamPackage.Map.add nv state map
     ) rt.package_index installed
 
-let package_partial_state rt nv ~archive =
-  match package_state_one rt.repos_global (`partial archive) nv with
+let package_partial_state nv ~archive =
+  match package_state_one (`partial archive) nv with
   | []    -> false, []
   | state ->
     let archive = OpamPath.archive nv in
@@ -222,14 +218,6 @@ let package_repository_partial_state rt nv ~archive =
   let exists_archive = OpamFilename.exists (OpamRepositoryPath.archive repo nv) in
   exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
 
-let repository_and_prefix_of_package rt nv =
-  try
-    let repo, prefix = OpamPackage.Map.find nv rt.package_index in
-    let repo = OpamRepositoryName.Map.find repo rt.repositories in
-    Some (repo, prefix)
-   with Not_found ->
-     None
-
 let repository_of_package rt nv =
   try
     let repo, _ = OpamPackage.Map.find nv rt.package_index in
@@ -238,7 +226,7 @@ let repository_of_package rt nv =
   with Not_found ->
     None
 
-let compiler_state_one gt c =
+let compiler_state_one c =
   let comp = OpamPath.compiler_comp c in
   let descr = OpamPath.compiler_descr c in
   if OpamFilename.exists comp then
@@ -248,7 +236,7 @@ let compiler_state_one gt c =
 
 let compiler_state rt =
   OpamCompiler.Set.fold (fun c map ->
-      match compiler_state_one rt.repos_global c with
+      match compiler_state_one c with
       | None   -> map
       | Some s -> OpamCompiler.Map.add c s map
     ) rt.compilers OpamCompiler.Map.empty
@@ -260,14 +248,6 @@ let compiler_repository_state rt =
       | [] -> map
       | l  -> OpamCompiler.Map.add comp l map
     ) rt.compiler_index OpamCompiler.Map.empty
-
-let repository_and_prefix_of_compiler rt comp =
-  try
-    let repo, prefix = OpamCompiler.Map.find comp rt.compiler_index in
-    let repo = OpamRepositoryName.Map.find repo rt.repositories in
-    Some (repo, prefix)
-  with Not_found ->
-    None
 
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt nv =

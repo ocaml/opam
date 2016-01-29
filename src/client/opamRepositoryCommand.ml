@@ -371,7 +371,7 @@ let fix_package_descriptions rt ~verbose =
        the important files without the archive have changed. *)
   let changed_packages = OpamPackage.Set.filter (fun nv ->
       let archive_g, checksums_g =
-        OpamRepositoryState.package_partial_state rt
+        OpamRepositoryState.package_partial_state 
           nv ~archive:true in
       let archive_r, checksums_r =
         OpamRepositoryState.package_repository_partial_state rt
@@ -380,7 +380,7 @@ let fix_package_descriptions rt ~verbose =
         checksums_g <> checksums_r
       else
         let _, checksums_g =
-          OpamRepositoryState.package_partial_state rt
+          OpamRepositoryState.package_partial_state
             nv ~archive:false in
         let _, checksums_r =
           OpamRepositoryState.package_repository_partial_state rt
@@ -435,7 +435,7 @@ let fix_package_descriptions rt ~verbose =
   (* update $opam/$oversion/reinstall for all installed switches *)
   OpamSwitch.Map.iter (fun switch state ->
       OpamSwitchAction.add_to_reinstall ~unpinned_only:true
-        gt switch state updates.changed)
+        switch state updates.changed)
     package_states;
   updates
 

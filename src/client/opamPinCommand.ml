@@ -253,13 +253,13 @@ let pin name ?version pin_option =
     else Some false
   else None
 
-let unpin gt ?state names =
+let unpin ?state names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   let switch, state_file = match state with
     | None ->
       let switch = OpamStateConfig.(!r.current_switch) in
-      switch, OpamSwitchState.load_state_file gt switch
+      switch, OpamSwitchState.load_state_file switch
     | Some st ->
       st.switch, OpamSwitchState.state_file st
   in
@@ -276,7 +276,7 @@ let unpin gt ?state names =
             | _ when is_installed -> name::needs_reinstall
             | _ -> needs_reinstall
           in
-          if not is_installed then OpamPinned.remove_overlay gt switch name;
+          if not is_installed then OpamPinned.remove_overlay switch name;
           OpamConsole.msg "%s is now %a from %s %s\n"
             (OpamPackage.Name.to_string name)
             (OpamConsole.acolor `bold) "unpinned"

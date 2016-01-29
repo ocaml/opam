@@ -30,7 +30,7 @@ val pin: name -> ?version:version -> pin_option -> bool option
 val edit: switch_state -> name -> bool option
 
 (** Unpin packages. Returns the list of packages that should be rebuilt *)
-val unpin: global_state -> ?state:switch_state -> name list -> name list
+val unpin: ?state:switch_state -> name list -> name list
 
 (** List the pinned packages to the user. *)
 val list: short:bool -> unit -> unit

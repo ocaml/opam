@@ -54,7 +54,7 @@ val compiler_index:
 val package_state: repos_state -> checksums package_map
 
 (** Global & partial package state. *)
-val package_partial_state: repos_state -> package -> archive:bool -> bool * checksums
+val package_partial_state: package -> archive:bool -> bool * checksums
 
 (** Repository state *)
 val package_repository_state: repos_state -> checksums package_map

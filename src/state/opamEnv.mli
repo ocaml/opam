@@ -55,7 +55,7 @@ val eval_string: switch -> string
 val update_setup_interactive: switch_state -> shell -> filename -> bool
 
 (** Display the global and user configuration for OPAM. *)
-val display_setup: global_state -> shell -> filename -> unit
+val display_setup: shell -> filename -> unit
 
 (** Update the user configuration. *)
 val update_setup:

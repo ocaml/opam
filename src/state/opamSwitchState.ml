@@ -25,10 +25,10 @@ let slog = OpamConsole.slog
 
 open OpamStateTypes
 
-let load_state_file gt switch =
+let load_state_file switch =
   OpamFile.State.safe_read (OpamPath.Switch.state switch)
 
-let load_switch_config gt switch =
+let load_switch_config switch =
   let f = OpamPath.Switch.global_config switch in
   if OpamFilename.exists f then OpamFile.Dot_config.read f
   else
@@ -47,10 +47,10 @@ let load ?(lock=Lock_readonly) gt rt switch =
        (slog OpamSwitch.to_string) switch;
      OpamSwitch.not_installed switch)
   else
-  let switch_config = load_switch_config gt switch in
+  let switch_config = load_switch_config switch in
   let { OpamFile.State. installed; installed_roots; pinned;
         compiler = compiler_packages; } =
-    load_state_file gt switch
+    load_state_file switch
   in
   let pinned, pinned_opams =
     (* Pinned packages with overlays *)

@@ -227,7 +227,7 @@ let write_state_file st =
     OpamFile.State.write f (OpamSwitchState.state_file st);
     OpamFile.Environment.write env (OpamEnv.compute_updates st)
 
-let add_to_reinstall gt switch switch_state_file ~unpinned_only packages =
+let add_to_reinstall switch switch_state_file ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
   let { OpamFile.State.installed; pinned; _ } = switch_state_file in

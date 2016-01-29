@@ -214,7 +214,7 @@ let init_file = function
   | `bash -> init_sh
   | `fish -> init_fish
 
-let source gt ~shell ?(interactive_only=false) f =
+let source ~shell ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init () // f) in
   let s =
     match shell with
@@ -297,19 +297,19 @@ let string_of_update st shell updates =
     export (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
 
-let init_script st ~switch_eval ~complete ~shell
+let init_script ~switch_eval ~complete ~shell
     (variables_sh, switch_eval_sh, complete_sh) =
   let variables =
-    Some (source st.switch_global ~shell variables_sh) in
+    Some (source ~shell variables_sh) in
   let switch_eval =
     if switch_eval then
-      OpamStd.Option.map (source st.switch_global ~shell ~interactive_only:true)
+      OpamStd.Option.map (source ~shell ~interactive_only:true)
         switch_eval_sh
     else
       None in
   let complete =
     if complete then
-      OpamStd.Option.map (source st.switch_global ~shell ~interactive_only:true)
+      OpamStd.Option.map (source ~shell ~interactive_only:true)
         complete_sh
     else
       None in
@@ -336,7 +336,7 @@ let update_init_scripts st ~global =
       ] in
       let aux (shell, init, scripts) =
         init,
-        init_script st
+        init_script 
           ~shell ~switch_eval:g.switch_eval ~complete:g.complete scripts
       in
       List.map aux scripts in
@@ -388,7 +388,7 @@ let update_init_scripts st ~global =
          else OpamConsole.msg "  %s is already up-to-date.\n" pretty_init_file)
       [ init_sh; init_zsh; init_csh; init_fish ]
 
-let status_of_init_file gt init_sh =
+let status_of_init_file init_sh =
   let init_sh = OpamPath.init () // init_sh in
   if OpamFilename.exists init_sh then (
     let init = OpamFilename.read init_sh in
@@ -402,7 +402,7 @@ let status_of_init_file gt init_sh =
   ) else
     None
 
-let dot_profile_needs_update gt dot_profile =
+let dot_profile_needs_update dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else
   let body = OpamFilename.read dot_profile in
   let pattern1 = "opam config env" in
@@ -419,9 +419,9 @@ let dot_profile_needs_update gt dot_profile =
   else if Re.execp (uncommented_re [pattern3]) body then `otherroot
   else `yes
 
-let update_dot_profile gt dot_profile shell =
+let update_dot_profile dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
-  match dot_profile_needs_update gt dot_profile with
+  match dot_profile_needs_update dot_profile with
   | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile
   | `otherroot ->
     OpamConsole.msg
@@ -440,7 +440,7 @@ let update_dot_profile gt dot_profile shell =
         "%s\n\n\
          # OPAM configuration\n\
          %s"
-        (OpamStd.String.strip body) (source gt ~shell init_file) in
+        (OpamStd.String.strip body) (source ~shell init_file) in
     OpamFilename.write dot_profile body
 
 (* A little bit of remaining OCaml specific stuff. Can we find another way ? *)
@@ -499,7 +499,7 @@ let update_setup st user global =
       if l.ocamlinit then update_ocamlinit ();
       match l.dot_profile with
       | None   -> ()
-      | Some f -> update_dot_profile st.switch_global f l.shell;
+      | Some f -> update_dot_profile f l.shell;
   end;
   begin match global with
     | None   -> ()
@@ -508,7 +508,7 @@ let update_setup st user global =
       update_init_scripts st ~global
   end
 
-let display_setup gt shell dot_profile =
+let display_setup shell dot_profile =
   let print (k,v) = OpamConsole.msg "  %-25s - %s\n" k v in
   let not_set = "not set" in
   let ok      = "string is already present so file unchanged" in
@@ -517,7 +517,7 @@ let display_setup gt shell dot_profile =
     let ocamlinit_status =
       if ocamlinit_needs_update () then not_set else ok in
     let dot_profile_status =
-      match dot_profile_needs_update gt dot_profile with
+      match dot_profile_needs_update dot_profile with
       | `no        -> ok
       | `yes       -> not_set
       | `otherroot -> error in
@@ -527,7 +527,7 @@ let display_setup gt shell dot_profile =
   let init_file = init_file shell in
   let pretty_init_file = OpamFilename.prettify (OpamPath.init () // init_file) in
   let global_setup =
-    match status_of_init_file gt init_file with
+    match status_of_init_file init_file with
     | None -> [pretty_init_file, not_set ]
     | Some(complete_sh, complete_zsh, switch_eval_sh) ->
       let completion =
@@ -563,7 +563,7 @@ let print_env_warning_at_init st user =
           \      %s\n"
           (OpamConsole.colorise `yellow "2.")
           (OpamFilename.prettify f)
-          (source st.switch_global ~shell:user.shell (init_file user.shell))
+          (source ~shell:user.shell (init_file user.shell))
     in
     let ocamlinit_string =
       if not user.ocamlinit then "" else
@@ -642,7 +642,7 @@ let update_setup_interactive st shell dot_profile =
       \    [N/y/f]"
       (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
       (OpamConsole.colorise `bold @@ string_of_shell shell)
-      (source st.switch_global ~shell (init_file shell))
+      (source ~shell (init_file shell))
       (OpamConsole.colorise `cyan @@ "~/.ocamlinit")
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)

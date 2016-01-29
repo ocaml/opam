@@ -313,13 +313,13 @@ let dev_packages st packages =
       (fun nv -> OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned)
       packages
   in
-  OpamSwitchAction.add_to_reinstall st.switch_global st.switch
+  OpamSwitchAction.add_to_reinstall st.switch
     (OpamSwitchState.state_file st)
     ~unpinned_only:false updates;
   let unpinned_updates = updates -- pinned in
   OpamGlobalState.fold_switches (fun switch state_file () ->
       if switch <> st.switch then
-        OpamSwitchAction.add_to_reinstall st.switch_global switch state_file
+        OpamSwitchAction.add_to_reinstall switch state_file
           ~unpinned_only:true unpinned_updates)
     st.switch_global ();
   updates
@@ -345,7 +345,7 @@ let pinned_packages st names =
         OpamPackage.Set.add (OpamPinned.package st name) acc)
       updates OpamPackage.Set.empty
   in
-  OpamSwitchAction.add_to_reinstall st.switch_global st.switch
+  OpamSwitchAction.add_to_reinstall st.switch
     (OpamSwitchState.state_file st) ~unpinned_only:false updates;
   updates
 

@@ -1163,7 +1163,7 @@ module API = struct
           (OpamUpdate.pinned_package t ?fixed_version:version name)
       in
       if not updated then
-        (ignore (unpin t.switch_global ~state:t [name]);
+        (ignore (unpin ~state:t [name]);
          OpamStd.Sys.exit 1);
       OpamConsole.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.switch name in
@@ -1175,7 +1175,7 @@ module API = struct
           try OpamPinCommand.edit t name
           with Not_found ->
             (OpamConsole.error "No valid metadata available.";
-             ignore (unpin t.switch_global ~state:t [name]);
+             ignore (unpin ~state:t [name]);
              OpamStd.Sys.exit 1)
         else None
       in
@@ -1198,8 +1198,7 @@ module API = struct
         if action then post_pin_action t name
 
     let unpin ?(action=true) names =
-      let gt = OpamGlobalState.load () in
-      let reinstall = unpin gt names in
+      let reinstall = unpin names in
       if action && reinstall <> [] then
         with_switch_backup "pin-reinstall" @@ fun t ->
         let t,atoms =

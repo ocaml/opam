@@ -80,7 +80,7 @@ let add_overlay ?(template=false) ?version rt switch name pin =
       let opam = OpamFile.OPAM.with_url opam url_f in
       OPAM.write (pkg_overlay (if template then Ov.tmp_opam else Ov.opam)) opam
 
-let remove_overlay gt switch name =
+let remove_overlay switch name =
   OpamFilename.rmdir
     (OpamPath.Switch.Overlay.package switch name)
 
