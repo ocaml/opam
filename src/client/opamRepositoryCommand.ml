@@ -49,7 +49,7 @@ let eval_redirect gt repo =
     ) else
       None
 
-let update t repo =
+let update rt repo =
   let max_loop = 10 in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we start to cycle. *)
@@ -70,7 +70,7 @@ let update t repo =
         (OpamConsole.warning "%s: Cyclic redirections, stopping."
            (OpamRepositoryName.to_string repo.repo_name);
          Done ())
-      else match eval_redirect t r with
+      else match eval_redirect rt r with
         | None -> Done ()
         | Some (new_repo, f) ->
           OpamFilename.rmdir repo.repo_root;
@@ -94,10 +94,10 @@ let update t repo =
   in
   OpamRepository.check_version repo @@+ fun () ->
   Done (
-    fun t ->
-      { t with
+    fun rt ->
+      { rt with
         repositories =
-          OpamRepositoryName.Map.add repo.repo_name repo t.repositories }
+          OpamRepositoryName.Map.add repo.repo_name repo rt.repositories }
   )
 
 let print_updated_compilers updates =
@@ -128,11 +128,11 @@ let print_updated_compilers updates =
     "The following compiler descriptions have been DELETED"
     updates.deleted
 
-let fix_compiler_descriptions t ~verbose =
+let fix_compiler_descriptions rt ~verbose =
   log "Updating %a/ ...\n"
     (slog @@ OpamFilename.prettify_dir) (OpamPath.compilers_dir ());
-  let global_index = OpamRepositoryState.compiler_state t in
-  let repo_index = OpamRepositoryState.compiler_repository_state t in
+  let global_index = OpamRepositoryState.compiler_state rt in
+  let repo_index = OpamRepositoryState.compiler_repository_state rt in
   let niet = String.concat ":" in
   log "global-index: %a" (slog @@ OpamCompiler.Map.to_string niet) global_index;
   log "repo-index  : %a" (slog @@ OpamCompiler.Map.to_string niet) repo_index;
@@ -147,7 +147,7 @@ let fix_compiler_descriptions t ~verbose =
             set
         ) repo_index OpamCompiler.Set.empty in
     OpamCompiler.Set.partition
-      (fun c -> OpamSwitch.Map.exists (fun _ c1 -> c = c1) t.repos_global.aliases)
+      (fun c -> OpamSwitch.Map.exists (fun _ c1 -> c = c1) rt.repos_global.aliases)
       updated_compilers in
   log "updated-compilers: %a" (slog OpamCompiler.Set.to_string) updated_compilers;
   log "new-compilers    : %a" (slog OpamCompiler.Set.to_string) new_compilers;
@@ -160,22 +160,22 @@ let fix_compiler_descriptions t ~verbose =
           map
         else
           OpamCompiler.Set.add comp map
-      ) t.compilers OpamCompiler.Set.empty in
+      ) rt.compilers OpamCompiler.Set.empty in
   log "deleted-compilers: %a" (slog OpamCompiler.Set.to_string) deleted_compilers;
 
   (* Delete compiler descritions (unless they are still installed) *)
   OpamCompiler.Set.iter (fun comp ->
-      if not (OpamSwitch.Map.exists (fun _ c -> c = comp) t.repos_global.aliases) then
+      if not (OpamSwitch.Map.exists (fun _ c -> c = comp) rt.repos_global.aliases) then
         let dir = OpamPath.compilers comp in
         OpamFilename.rmdir dir;
     ) deleted_compilers;
 
   (* Update the compiler description *)
   OpamCompiler.Set.iter (fun comp ->
-      match OpamCompiler.Map.find_opt comp t.compiler_index with
+      match OpamCompiler.Map.find_opt comp rt.compiler_index with
       | None -> ()
       | Some (repo_name, prefix) ->
-        let repo = OpamRepositoryName.Map.find repo_name t.repositories in
+        let repo = OpamRepositoryName.Map.find repo_name rt.repositories in
         let files = OpamRepository.compiler_files repo prefix comp in
         let dir = OpamPath.compilers comp in
         OpamFilename.rmdir dir;
@@ -455,48 +455,44 @@ let update_compiler_index rt =
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
-let update_config t repos =
+let update_config repo_config repos =
   log "update-config %a"
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
-  let new_config = OpamFile.Config.with_repositories t.config repos in
+  let new_config = OpamFile.Config.with_repositories repo_config repos in
   OpamStateConfig.write (OpamPath.config ()) new_config
 
 let fix_descriptions
-    ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =
-  let t = update_compiler_index t in
-  let _ = fix_compiler_descriptions t ~verbose in
-  let t = update_package_index t in
-  let _ = fix_package_descriptions t ~verbose in
-  if save_cache then OpamRepositoryState.Cache.save t
+    ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) rt =
+  let rt = update_compiler_index rt in
+  let _ = fix_compiler_descriptions rt ~verbose in
+  let rt = update_package_index rt in
+  let _ = fix_package_descriptions rt ~verbose in
+  if save_cache then OpamRepositoryState.Cache.save rt
 
 (* Remove any remaining of [repo] from OPAM state *)
-let cleanup t repo =
-   log "cleanup %a" (slog OpamRepositoryName.to_string) repo.repo_name;
-  let repos = OpamRepositoryName.Map.keys t.repositories in
-  update_config t.repos_global (List.filter ((<>) repo.repo_name) repos);
+let cleanup rt repo =
+  log "cleanup %a" (slog OpamRepositoryName.to_string) repo.repo_name;
+  let repos = OpamRepositoryName.Map.keys rt.repositories in
+  update_config rt.repos_global.config (List.filter ((<>) repo.repo_name) repos);
   OpamFilename.rmdir repo.repo_root;
   OpamRepositoryState.Cache.remove ();
-  fix_descriptions ~save_cache:false t
+  fix_descriptions ~save_cache:false rt
 
-let find_repository rt repo_name =
-  try OpamRepositoryName.Map.find repo_name rt.repositories
+let find_repository repositories repo_name =
+  try OpamRepositoryName.Map.find repo_name repositories
   with Not_found ->
     OpamConsole.error_and_exit
       "%s is not a valid repository name."
       (OpamRepositoryName.to_string repo_name)
 
-(* XXX: this module uses OpamSwitchState.load, which loads the full switch state;
-   actually the switch is completely unneeded *)
-
 let priority repo_name ~priority =
   log "repository-priority";
 
   (* 1/ update the config file *)
-  let rt =
-    OpamRepositoryState.load ~save_cache:false (OpamGlobalState.load ())
-  in
-  let repo = find_repository rt repo_name in
+  let gt = OpamGlobalState.load () in
+  let rt = OpamRepositoryState.load ~save_cache:false gt in
+  let repo = find_repository rt.repositories repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
     let config = OpamFile.Repo_config.read config_f in
@@ -507,7 +503,8 @@ let priority repo_name ~priority =
 
 let add name url ~priority:prio =
   log "repository-add";
-  let rt = OpamRepositoryState.load ~save_cache:false (OpamGlobalState.load ()) in
+  let gt = OpamGlobalState.load () in
+  let rt = OpamRepositoryState.load ~save_cache:false gt in
   if OpamRepositoryName.Map.mem name rt.repositories then
     OpamConsole.error_and_exit "%s is already a remote repository"
       (OpamRepositoryName.to_string name);
@@ -535,7 +532,7 @@ let add name url ~priority:prio =
   OpamProcess.Job.run (OpamRepository.init repo);
   log "Adding %a" (slog OpamRepositoryBackend.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo rt.repositories in
-  update_config rt.repos_global (OpamRepositoryName.Map.keys repositories);
+  update_config rt.repos_global.config (OpamRepositoryName.Map.keys repositories);
   let rt = { rt with repositories } in
   OpamRepositoryState.Cache.remove ();
   try
@@ -550,14 +547,16 @@ let add name url ~priority:prio =
 
 let remove name =
   log "repository-remove";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
-  let repo = find_repository rt name in
+  let gt = OpamGlobalState.load () in
+  let rt = OpamRepositoryState.load gt in
+  let repo = find_repository rt.repositories name in
   cleanup rt repo
 
 let set_url name url =
   log "repository-remove";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
-  let repo = find_repository rt name in
+  let gt = OpamGlobalState.load () in
+  let repositories = OpamRepositoryState.repositories gt in
+  let repo = find_repository repositories name in
   if repo.repo_url.OpamUrl.backend <> url.OpamUrl.backend then
     (remove name;
      add name url ~priority:(Some repo.repo_priority))
@@ -571,12 +570,13 @@ let set_url name url =
 
 let list ~short =
   log "repository-list";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
+  let gt = OpamGlobalState.load () in
+  let repositories = OpamRepositoryState.repositories gt in
   if short then
     List.iter
       (fun r ->
          OpamConsole.msg "%s\n" (OpamRepositoryName.to_string r.repo_name))
-      (OpamRepository.sort rt.repositories)
+      (OpamRepository.sort repositories)
   else
     let pretty_print r =
       OpamConsole.msg "%4d %-7s %10s     %s\n"
@@ -585,5 +585,5 @@ let list ~short =
            (OpamUrl.string_of_backend r.repo_url.OpamUrl.backend))
         (OpamRepositoryName.to_string r.repo_name)
         (OpamUrl.to_string r.repo_url) in
-    let repos = OpamRepository.sort rt.repositories in
+    let repos = OpamRepository.sort repositories in
     List.iter pretty_print repos

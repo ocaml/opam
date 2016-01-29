@@ -97,6 +97,15 @@ module Cache = struct
 
 end
 
+let repositories gt =
+  let names = OpamFile.Config.repositories gt.config in
+  List.fold_left (fun map repo_name ->
+    let root = OpamPath.root () in
+    let config = OpamRepositoryPath.raw_config root repo_name in
+    let repo = OpamFile.Repo_config.read config in
+    OpamRepositoryName.Map.add repo_name repo map
+  ) OpamRepositoryName.Map.empty names
+
 (* Returns the directory holding the original metadata of the package. *)
 let package_repo_dir repositories package_index nv =
   if OpamFilename.exists (OpamPath.opam nv) then
@@ -117,14 +126,7 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
     let comp = OpamStd.List.filter_map OpamCompiler.of_filename files in
     OpamCompiler.Set.of_list comp
   in
-  let repositories =
-    let names = OpamFile.Config.repositories gt.config in
-    List.fold_left (fun map repo_name ->
-        let repo = OpamFile.Repo_config.read
-            (OpamRepositoryPath.raw_config (OpamPath.root ()) repo_name) in
-        OpamRepositoryName.Map.add repo_name repo map
-      ) OpamRepositoryName.Map.empty names
-  in
+  let repositories = repositories gt in
   let package_index =
     OpamFile.Package_index.safe_read (OpamPath.package_index ()) in
   let compiler_index =

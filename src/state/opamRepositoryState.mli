@@ -33,6 +33,7 @@ val load:
     returns the file name if found either way *)
 val download_archive: repos_state -> package -> filename option OpamProcess.job
 
+val repositories : global_state -> repository repository_name_map
 
 (** "states" denote a given instance of the metadata for a given package and
     version. "partial" is used to decide that the package needs to be recompiled
