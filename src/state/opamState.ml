@@ -2002,7 +2002,7 @@ let source t ~shell ?(interactive_only=false) f =
     | `csh ->
       Printf.sprintf "source %s >& /dev/null || true\n" (file f)
     | `fish ->
-      Printf.sprintf "source %s > /dev/null 2> /dev/null or true\n" (file f)
+      Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
     | _ ->
       Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
   in
