@@ -137,14 +137,11 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   in
   let repo_opams =
     match opams with Some o -> o | None ->
-      let packages =
-        OpamPackage.Set.of_list (OpamPackage.Map.keys package_index)
-      in
       OpamPackage.Set.fold (fun nv map ->
           match load_opam_file nv with
           | Some o -> OpamPackage.Map.add nv o map
           | None -> map
-        ) packages OpamPackage.Map.empty
+        ) (OpamPackage.keys package_index) OpamPackage.Map.empty
   in
   let rt =
     { repos_global = gt;

@@ -234,17 +234,22 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
       ?(resolve_depends=false) ?(depopts=false) ?depexts ?dev
       regexp =
-    let t = OpamSwitchState.load_full_compat "list"
-        (OpamStateConfig.get_switch ()) in
+    let gt = OpamGlobalState.load () in
+    let rt = OpamRepositoryState.load gt in
+    let st =
+      match OpamStateConfig.(!r.current_switch) with
+      | None -> OpamSwitchState.load_virtual gt rt
+      | Some sw -> OpamSwitchState.load gt rt sw
+    in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
          of the package. Take installed or max version only when there is no
          version constraint *)
-      OpamSwitchState.get_package t name
+      OpamSwitchState.get_package st name
     in
     let depends_atoms =
-      let atoms = OpamSolution.sanitize_atom_list ~permissive:true t depends in
+      let atoms = OpamSolution.sanitize_atom_list ~permissive:true st depends in
       if resolve_depends then atoms else
         List.map (function
             | _, Some _ as atom -> atom
@@ -253,12 +258,12 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
               with Not_found -> n, None)
           atoms
     in
-    let depends = OpamSwitchState.packages_of_atoms t depends_atoms in
+    let depends = OpamSwitchState.packages_of_atoms st depends_atoms in
     let packages =
-      if not depends_mode then t.packages
+      if not depends_mode then st.packages
       else if resolve_depends then
         let universe =
-          let u = OpamSwitchState.universe t Depends in
+          let u = OpamSwitchState.universe st Depends in
           match filter with
           | `all -> { u with u_available = u.u_packages }
           | `installed -> u
@@ -275,10 +280,10 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
             OpamConsole.msg "No solution%s for %s:\n%s"
               (if depopts then " including optional dependencies" else "")
               (OpamFormula.string_of_atoms depends_atoms)
-              (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
+              (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason st) cs);
           OpamStd.Sys.exit 1
       else if recursive_depends then
-        let universe = OpamSwitchState.universe t Depends in
+        let universe = OpamSwitchState.universe st Depends in
         let deps =
           if reverse_depends then OpamSolver.reverse_dependencies
           else OpamSolver.dependencies in
@@ -290,7 +295,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
         |> OpamPackage.Set.of_list
       else if reverse_depends then
         let is_dependent_on deps nv =
-          let opam = OpamSwitchState.opam t nv in
+          let opam = OpamSwitchState.opam st nv in
           let formula =
             OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
           let formula =
@@ -312,15 +317,15 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
               formula in
           OpamPackage.Set.for_all depends_on deps
         in
-        OpamPackage.Set.filter (is_dependent_on depends) t.packages
+        OpamPackage.Set.filter (is_dependent_on depends) st.packages
       else
       let deps nv =
-        let opam = OpamSwitchState.opam t nv in
+        let opam = OpamSwitchState.opam st nv in
         let deps =
-          OpamSwitchState.packages_of_atoms t @@ OpamFormula.atoms @@
+          OpamSwitchState.packages_of_atoms st @@ OpamFormula.atoms @@
           OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
         if depopts then
-          deps ++ (OpamSwitchState.packages_of_atoms t @@ OpamFormula.atoms @@
+          deps ++ (OpamSwitchState.packages_of_atoms st @@ OpamFormula.atoms @@
                    OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam))
         else deps
       in
@@ -330,17 +335,17 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
     let depends =
       (* Filter to keep only the relevant versions *)
       if resolve_depends then
-        packages %% depends ++ depends %% t.installed
+        packages %% depends ++ depends %% st.installed
       else depends
     in
     let packages =
       if resolve_depends then packages else
         packages %% match filter with
-        | `all         -> t.packages
-        | `installed   -> t.installed
-        | `roots       -> t.installed_roots
-        | `installable -> t.installed ++ Lazy.force t.available_packages
-        (* OpamSolver.installable (OpamSwitchState.universe t Depends) -- too expensive *)
+        | `all         -> st.packages
+        | `installed   -> st.installed
+        | `roots       -> st.installed_roots
+        | `installable -> st.installed ++ Lazy.force st.available_packages
+        (* OpamSolver.installable (OpamSwitchState.universe st Depends) -- too expensive *)
     in
     let packages =
       if resolve_depends then packages
@@ -349,7 +354,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       else packages
     in
     let details =
-      details_of_package_regexps t packages ~exact_name ~case_sensitive regexp
+      details_of_package_regexps st packages ~exact_name ~case_sensitive regexp
     in
     if not print_short && not (OpamPackage.Set.is_empty packages) &&
        OpamPackage.Name.Map.is_empty details
@@ -373,7 +378,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
           (OpamConsole.colorise `cyan @@ String.concat "," tags_list);
       let depexts =
         OpamPackage.Set.fold (fun nv acc ->
-            let opam = OpamSwitchState.opam t nv in
+            let opam = OpamSwitchState.opam st nv in
             match OpamFile.OPAM.depexts opam with
             | None -> acc
             | Some tags ->
@@ -420,10 +425,10 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
                OpamPackage.Set.elements depends)
         in
         OpamConsole.msg "# %s packages%s for %s:\n" kind results
-          (OpamSwitch.to_string t.switch) in
+          (OpamSwitch.to_string st.switch) in
       if not print_short && OpamPackage.Name.Map.cardinal details > 0 then
         print_header ();
-      print_list t ~uninst_versions:depends_mode ~short:print_short
+      print_list st ~uninst_versions:depends_mode ~short:print_short
         ~shortv:resolve_depends ~order details;
       if regexp <> [] &&
          OpamPackage.Name.Map.is_empty details
@@ -564,12 +569,6 @@ let info ~fields ~raw_opam ~where atoms =
     let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
     let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in
 
-    let os =
-      mk Empty
-        (OpamFormula.string_of_formula (fun (t,s) ->
-             if t then s else "!"^s))
-        "os" OpamFile.OPAM.os in
-
     let descr =
       let d = OpamSwitchState.descr t nv in
       ["description", OpamFile.Descr.full d] in
@@ -591,7 +590,6 @@ let info ~fields ~raw_opam ~where atoms =
       @ syntax
       @ depends
       @ depopts
-      @ os
       @ Lazy.force extension
       @ descr in
 

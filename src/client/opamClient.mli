@@ -113,13 +113,13 @@ module API: sig
     (** Set the given switch, installing it if necessary. Take the
         global file lock. *)
     val switch:
-      quiet:bool -> ?compiler:compiler -> ?packages:atom conjunction ->
+      quiet:bool -> packages:atom conjunction ->
       switch -> unit
 
     (** Install the given compiler. *)
     val install:
       quiet:bool -> update_config:bool ->
-      ?compiler:compiler -> ?packages:atom conjunction ->
+      packages:atom conjunction ->
       switch -> unit
 
     (** Import the packages from a file. If no filename is specified,

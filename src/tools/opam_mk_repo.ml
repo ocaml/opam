@@ -107,37 +107,6 @@ let args =
     $compiler_version $switch
   )
 
-let consistent_ocaml_version args opam =
-  match args.compiler_version with
-  | None -> true
-  | Some cv ->
-    let system = OpamCompiler.Version.of_string "system" in
-    let atom (r,v) =
-      match OpamCompiler.Version.to_string v with
-      | "system" ->
-        begin match r with
-          | `Eq  -> OpamCompiler.Version.compare cv system = 0
-          | `Neq -> OpamCompiler.Version.compare cv system <> 0
-          | _    -> OpamSystem.internal_error
-                      "%s is not a valid constraint for the system compiler \
-                       (only '=' and '!=' are valid)."
-                      (OpamFormula.string_of_relop r)
-        end
-      | _ -> OpamCompiler.Version.eval_relop r cv v
-    in
-    match OpamFile.OPAM.ocaml_version opam with
-    | None   -> true
-    | Some c -> OpamFormula.eval atom c
-
-let consistent_os args opam =
-  match OpamFile.OPAM.os opam with
-  | Empty -> true
-  | f ->
-    let atom (b, os) =
-      let ($) = if b then (=) else (<>) in
-      os $ args.os_string in
-    OpamFormula.eval atom f
-
 let string str = Some (S str)
 let bool b = Some (B b)
 let is_global_conf v =
@@ -189,11 +158,6 @@ let resolve_deps args index names =
           OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
         | None -> OpamPackage.Name.of_string str, None)
       names in
-  let consistent opam =
-    consistent_ocaml_version args opam
-    && consistent_os args opam
-    && consistent_available_field args opam
-  in
   let opams =
     List.fold_left
       (fun opams r ->
@@ -203,7 +167,8 @@ let resolve_deps args index names =
            match OpamPackage.of_dirname (OpamFilename.dirname f) with
            | Some nv ->
              let opam = OpamFile.OPAM.read f in
-             if consistent opam then OpamPackage.Map.add nv opam opams else opams
+             if consistent_available_field args opam
+             then OpamPackage.Map.add nv opam opams else opams
            | None -> opams
          else opams)
       OpamPackage.Map.empty

@@ -128,75 +128,6 @@ let print_updated_compilers updates =
     "The following compiler descriptions have been DELETED"
     updates.deleted
 
-let fix_compiler_descriptions t ~verbose =
-  log "Updating %a/ ...\n"
-    (slog (OpamFilename.prettify_dir @* OpamPath.compilers_dir))
-    t.repos_global.root;
-  let global_index = OpamRepositoryState.compiler_state t in
-  let repo_index = OpamRepositoryState.compiler_repository_state t in
-  let niet = String.concat ":" in
-  log "global-index: %a" (slog @@ OpamCompiler.Map.to_string niet) global_index;
-  log "repo-index  : %a" (slog @@ OpamCompiler.Map.to_string niet) repo_index;
-
-  let updated_compilers, new_compilers =
-    let updated_compilers =
-      OpamCompiler.Map.fold (fun comp state set ->
-          if not (OpamCompiler.Map.mem comp global_index)
-          || OpamCompiler.Map.find comp global_index <> state then
-            OpamCompiler.Set.add comp set
-          else
-            set
-        ) repo_index OpamCompiler.Set.empty in
-    OpamCompiler.Set.partition
-      (fun c -> OpamSwitch.Map.exists (fun _ c1 -> c = c1) t.repos_global.aliases)
-      updated_compilers in
-  log "updated-compilers: %a" (slog OpamCompiler.Set.to_string) updated_compilers;
-  log "new-compilers    : %a" (slog OpamCompiler.Set.to_string) new_compilers;
-
-  let deleted_compilers =
-    OpamCompiler.Set.fold (fun comp map ->
-        if comp = OpamCompiler.system             (* system *)
-        || OpamCompiler.Map.mem comp repo_index   (* OR available *)
-        then
-          map
-        else
-          OpamCompiler.Set.add comp map
-      ) t.compilers OpamCompiler.Set.empty in
-  log "deleted-compilers: %a" (slog OpamCompiler.Set.to_string) deleted_compilers;
-
-  (* Delete compiler descritions (unless they are still installed) *)
-  OpamCompiler.Set.iter (fun comp ->
-      if not (OpamSwitch.Map.exists (fun _ c -> c = comp) t.repos_global.aliases) then
-        let dir = OpamPath.compilers t.repos_global.root comp in
-        OpamFilename.rmdir dir;
-    ) deleted_compilers;
-
-  (* Update the compiler description *)
-  OpamCompiler.Set.iter (fun comp ->
-      match OpamCompiler.Map.find_opt comp t.compiler_index with
-      | None -> ()
-      | Some (repo_name, prefix) ->
-        let repo = OpamRepositoryName.Map.find repo_name t.repositories in
-        let files = OpamRepository.compiler_files repo prefix comp in
-        let dir = OpamPath.compilers t.repos_global.root comp in
-        OpamFilename.rmdir dir;
-        OpamFilename.mkdir dir;
-        List.iter (fun file ->
-            OpamFilename.copy_in file dir
-          ) files;
-    ) (OpamCompiler.Set.union updated_compilers new_compilers);
-
-  let updates = {
-    created = new_compilers;
-    updated = updated_compilers;
-    deleted = deleted_compilers;
-    changed = OpamCompiler.Set.empty; (* we don't reinstall compilers yet *)
-  } in
-
-  if verbose then print_updated_compilers updates;
-
-  updates
-
 let print_updated_packages gt updates =
 
   let print singular plural map fn =
@@ -470,7 +401,6 @@ let update_config t repos =
 let fix_descriptions
     ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =
   let t = update_compiler_index t in
-  let _ = fix_compiler_descriptions t ~verbose in
   let t = update_package_index t in
   let _ = fix_package_descriptions t ~verbose in
   if save_cache then OpamRepositoryState.Cache.save t
@@ -490,9 +420,6 @@ let find_repository rt repo_name =
     OpamConsole.error_and_exit
       "%s is not a valid repository name."
       (OpamRepositoryName.to_string repo_name)
-
-(* XXX: this module uses OpamSwitchState.load, which loads the full switch state;
-   actually the switch is completely unneeded *)
 
 let priority repo_name ~priority =
   log "repository-priority";

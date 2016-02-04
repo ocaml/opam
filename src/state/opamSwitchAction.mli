@@ -20,7 +20,7 @@ open OpamStateTypes
 (** Initialises a new switch with the given name in the given opam root,
     registers it in the global config and returns the updated global state *)
 val create_empty_switch:
-  global_state -> ?compiler:compiler -> switch -> global_state
+  global_state -> switch -> global_state
 
 (** Installs the given compiler in the given (empty) switch *)
 val install_compiler: global_state -> quiet:bool -> switch -> compiler -> unit
@@ -31,7 +31,7 @@ val write_selections: switch_state -> unit
 
 (** Update the on-disk set of packages marked to reinstall *)
 val add_to_reinstall:
-  global_state -> switch -> OpamFile.State.t -> unpinned_only:bool ->
+  global_state -> switch -> switch_selections -> unpinned_only:bool ->
   package_set -> unit
 
 (** Updates the defined default switch and loads its state *)
@@ -55,4 +55,12 @@ val install_metadata: switch_state -> package -> unit
     for each package that it isn't installed in any switch anymore *)
 val remove_metadata: switch_state -> package_set -> unit
 
+(** Updates the package selections and switch config to take into account the
+    given newly installed package. The updated state is written to disk unless
+    [OpamStateConfig.(!r.dry_run)] and returned. *)
+val add_to_installed: switch_state -> ?root:bool -> package -> switch_state
 
+(** Updates the package selections and switch config to take into account the
+    removed package. The updated state is written to disk unless
+    [OpamStateConfig.(!r.dry_run)] and returned. *)
+val remove_from_installed: switch_state -> package -> switch_state

@@ -26,7 +26,7 @@ let slog = OpamConsole.slog
 open OpamStateTypes
 
 let load_selections gt switch =
-    OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch)
+    OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections gt.root switch)
 
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
@@ -41,10 +41,10 @@ let load ?(lock=Lock_readonly) gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
 
-  if not (OpamSwitch.Map.mem switch gt.aliases) then
-    (log "%a does not contain the compiler name associated to the switch %a"
-       (slog @@ OpamFilename.to_string @* OpamPath.aliases) gt.root
-       (slog OpamSwitch.to_string) switch;
+  if not (List.mem switch (OpamFile.Config.installed_switches gt.config)) then
+    (log "The switch %a does not appear to be installed according to %a"
+       (slog OpamSwitch.to_string) switch
+       (slog @@ OpamFilename.to_string @* OpamPath.config) gt.root;
      OpamSwitch.not_installed switch)
   else
   let switch_config = load_switch_config gt switch in
@@ -149,6 +149,25 @@ let load ?(lock=Lock_readonly) gt rt switch =
     t
 *)
 
+let load_virtual gt rt =
+  let opams = rt.repo_opams in
+  let packages = OpamPackage.keys opams in
+  {
+    switch_global = gt;
+    switch_repos = rt;
+    switch_lock = Lock_none;
+    switch = OpamSwitch.of_string "none";
+    compiler_packages = OpamPackage.Set.empty;
+    switch_config = OpamFile.Dot_config.empty;
+    installed = OpamPackage.Set.empty;
+    pinned = OpamPackage.Name.Map.empty;
+    installed_roots = OpamPackage.Set.empty;
+    opams;
+    packages;
+    available_packages = lazy packages;
+    reinstall = OpamPackage.Set.empty;
+  }
+
 let selections st =
   { sel_installed = st.installed;
     sel_roots = st.installed_roots;
@@ -246,6 +265,10 @@ let not_found_message st (name, cstr) =
 let unavailable_reason st (name, _ as atom) =
   let candidates =
     OpamPackage.Set.filter (OpamFormula.check atom) st.packages in
+  if OpamPackage.Set.is_empty candidates then
+    Printf.sprintf "No package matching \"%s\" found"
+      (OpamFormula.short_string_of_atom atom)
+  else
   let nv = OpamPackage.max_version candidates name in
   let avail = OpamFile.OPAM.available (opam st nv) in
   if not (OpamFilter.eval_to_bool ~default:false

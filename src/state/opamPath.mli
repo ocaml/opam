@@ -116,8 +116,11 @@ module Switch: sig
   val backup: t -> switch -> filename
 
   (** Switch state: currently installed packages, roots, pinnings, etc. {i
-      $opam/$switch/state} *)
+      $opam/$switch/state} (deprecated) *)
   val state: t -> switch -> filename
+
+  (** Switch selections {i $opam/$switch/switch-state} *)
+  val selections: t -> switch -> filename
 
   (** Temporary folders used to decompress and compile
       the corresponding archives:

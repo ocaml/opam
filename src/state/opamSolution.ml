@@ -321,37 +321,12 @@ let parallel_apply t action action_graph =
   in
 
   let add_to_install nv =
-    let t =
-      OpamAction.update_switch_state t
-        ~installed:(OpamPackage.Set.add nv !t_ref.installed)
-        ~reinstall:(OpamPackage.Set.remove nv !t_ref.reinstall)
-        ~installed_roots:
-          (if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs
-           then OpamPackage.Set.add nv !t_ref.installed_roots
-           else !t_ref.installed_roots)
-    in
-    if OpamFile.OPAM.env (OpamSwitchState.opam t nv) <> [] &&
-       OpamSwitchState.is_switch_globally_set t
-    then
-      OpamEnv.write_dynamic_init_scripts t;
-    if not OpamStateConfig.(!r.dryrun) then
-      OpamSwitchAction.install_metadata !t_ref nv;
-    t_ref := t
+    let root = OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs in
+    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv
   in
 
   let remove_from_install nv =
-    let rm = OpamPackage.Set.remove nv in
-    let t =
-      OpamAction.update_switch_state t
-        ~installed:(rm !t_ref.installed)
-        ~installed_roots:(rm !t_ref.installed_roots)
-        ~reinstall:(rm !t_ref.reinstall)
-    in
-    if OpamFile.OPAM.env (OpamSwitchState.opam t nv) <> [] &&
-       OpamSwitchState.is_switch_globally_set t
-    then
-      OpamEnv.write_dynamic_init_scripts t;
-    t_ref := t
+    t_ref := OpamSwitchAction.remove_from_installed !t_ref nv
   in
 
   (* 1/ fetch needed package archives *)
@@ -429,9 +404,13 @@ let parallel_apply t action action_graph =
         let t0 = Unix.gettimeofday () in
         fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
       in
+      let visible_installed =
+        OpamPackage.Set.Op.(t.installed -- removed ++ installed)
+      in
       let t = (* Local state for this process, only prerequisites are visible *)
-        { t with installed =
-                   OpamPackage.Set.Op.(t.installed -- removed ++ installed) }
+        { t with installed = visible_installed; }
+        (* !X note : t.switch_config.bindings should be updated as well to
+           handle compiler upgrades better *)
       in
       let nv = action_contents action in
       let source =

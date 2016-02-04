@@ -99,6 +99,8 @@ module Switch = struct
 
   let state t a = root t a // "state"
 
+  let selections t a = root t a // "switch-state"
+
   let build_dir t a = root t a / "build"
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv

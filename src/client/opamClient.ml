@@ -27,7 +27,7 @@ let with_switch_backup _command f =
       (OpamStateConfig.get_switch ()) in
   let file = OpamPath.Switch.backup t.switch_global.root t.switch in
   OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch_global.root t.switch);
-  OpamFile.State.write file (OpamSwitchState.selections t);
+  OpamFile.SwitchSelections.write file (OpamSwitchState.selections t);
   try
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
@@ -538,15 +538,14 @@ module API = struct
           repos
           rt
       in
-      let rt, compiler_updates =
-        let rt = OpamRepositoryCommand.update_compiler_index rt in
-        rt, OpamRepositoryCommand.fix_compiler_descriptions rt
-          ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in
+      (* let rt, compiler_updates = *)
+      (*   let rt = OpamRepositoryCommand.update_compiler_index rt in *)
+      (*   rt, OpamRepositoryCommand.fix_compiler_descriptions rt *)
+      (*     ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in *)
       let rt, package_updates =
         let rt = OpamRepositoryCommand.update_package_index rt in
         rt, OpamRepositoryCommand.fix_package_descriptions rt
           ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in
-      OpamRepositoryState.Cache.save rt;
 
       (* If necessary, output a JSON file *)
       if OpamStateConfig.(!r.json_out <> None) then (
@@ -556,12 +555,12 @@ module API = struct
                ("deleted", to_json update.deleted);
                ("changed", to_json update.changed); ] in
         OpamJson.append "package-updates"
-          (json OpamPackage.Set.to_json package_updates);
-        OpamJson.append "compiler-updates"
-          (json OpamCompiler.Set.to_json compiler_updates)
+          (json OpamPackage.Set.to_json package_updates)
       );
-      rt
+      OpamRepositoryState.load gt
     in
+
+    if OpamStateConfig.(!r.current_switch) = None then () else
 
     let st = OpamSwitchState.load gt rt (OpamStateConfig.get_switch ()) in
 
@@ -754,7 +753,9 @@ module API = struct
           OpamCompiler.Map.empty;
         *)
         OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
-        OpamProcess.Job.run (OpamRepository.init repo);
+        OpamProcess.Job.run
+          OpamProcess.Job.Op.(OpamRepository.init repo @@+ fun () ->
+                              OpamRepository.update repo);
         (* OpamSwitchAction.install_global_config root switch *)
         (*   (OpamSwitchAction.gen_global_config root switch); *)
 
@@ -1327,14 +1328,14 @@ module SafeAPI = struct
 
   module SWITCH = struct
 
-    let switch ~quiet ?compiler ?packages name =
+    let switch ~quiet ~packages name =
       global_then_switch_lock (fun () ->
-        API.SWITCH.switch_cont ~quiet ?compiler ?packages name)
+        API.SWITCH.switch_cont ~quiet ~packages name)
 
-    let install ~quiet ~update_config ?compiler ?packages switch =
+    let install ~quiet ~update_config ~packages switch =
       global_then_switch_lock (fun () ->
         API.SWITCH.install_cont ~quiet ~update_config
-          ?compiler ?packages switch)
+          ~packages switch)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)

@@ -34,9 +34,6 @@ type global_state = {
   config: OpamFile.Config.t;
   (** The main configuration file *)
 
-  aliases: compiler switch_map;
-  (** The association list between switch and compiler *)
-
 }
 
 (** State corresponding to the repo/ subdir: all available packages, their

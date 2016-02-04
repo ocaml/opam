@@ -103,3 +103,6 @@ val single_command: env -> arg list -> string list
 
 (** Extracts variables appearing in a list of commands *)
 val commands_variables: command list -> full_variable list
+
+(** Converts a generic formula to a filter, given a converter for atoms *)
+val of_formula: ('a -> filter) -> 'a generic_formula -> filter

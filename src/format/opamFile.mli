@@ -70,6 +70,8 @@ module Config: sig
   val with_switch : t -> switch -> t
   val with_switch_opt : t -> switch option -> t
 
+  val with_installed_switches: t -> switch list -> t
+
   (** Repository updates *)
   val with_repositories: t -> repository_name list -> t
 
@@ -88,6 +90,8 @@ module Config: sig
 
   (** Return the OCaml switch *)
   val switch: t -> switch option
+
+  val installed_switches: t -> switch list
 
   (** Return the number of jobs *)
   val jobs: t -> int
@@ -188,12 +192,6 @@ module OPAM: sig
 
   (** The informations in both the name and version fields, as a package *)
   val package: t -> package
-
-  (** Compiler constraint *)
-  val ocaml_version: t -> compiler_constraint option
-
-  (** OS constraint *)
-  val os: t -> (bool * string) generic_formula
 
   (** Availability formula (OS + compiler constraints) *)
   val available: t -> filter
@@ -342,13 +340,6 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs : t -> basename list -> t
 
-  (** Construct as [compiler_version] *)
-  val with_ocaml_version: t -> compiler_constraint -> t
-
-  val with_ocaml_version_opt: t -> compiler_constraint option -> t
-
-  val with_os: t -> (bool * string) generic_formula -> t
-
   val with_available : t -> filter -> t
 
   (** Construct as [maintainer] *)
@@ -465,6 +456,9 @@ module Comp: sig
   val with_make: t -> string list -> t
   val with_build: t -> command list -> t
   val with_packages: t -> formula -> t
+
+  (** Converts a compiler definition to package metadata. For compat. *)
+  val to_package: name -> t -> Descr.t option -> OPAM.t
 
 end
 

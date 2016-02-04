@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamStd.Op
-open OpamFilename.Op
 
 open OpamStateTypes
 
@@ -64,11 +63,13 @@ let package_variable_names = [
 ]
 
 
-let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
+let resolve_compat_ocaml_variables _gt _switch _switch_config _ocaml_var =
+  raise Not_found
   (* backwards-compat, these are replaced by variables exported from the
      'ocaml' package.
      !X
      /!\ reloads files for every variable resolution ! *)
+(*
   let module V = OpamVariable in
   let compiler = OpamSwitch.Map.find switch gt.aliases in
   let comp = OpamFile.Comp.read (OpamPath.compiler_comp gt.root compiler) in
@@ -101,6 +102,7 @@ let resolve_compat_ocaml_variables gt switch switch_config ocaml_var =
                 (OpamPath.Switch.lib_dir gt.root switch switch_config
                  / "ocaml" // "dynlink.cmxa"))
   | _ -> raise Not_found
+*)
 
 let resolve_global gt full_var =
   let module V = OpamVariable in

@@ -56,14 +56,3 @@ val cleanup_package_artefacts: switch_state -> package -> unit
 (** Compute the set of packages which will need to be downloaded to apply a
     solution. Takes a graph of atomic actions. *)
 val sources_needed: switch_state -> OpamSolver.ActionGraph.t -> package_set
-
-(** Returns the updated switch state and write it to disk (unless in dry_run
-    mode) (warning: changes to [t] are written to disk even if the optional
-    parameter isn't specified) *)
-val update_switch_state:
-  ?installed:package_set ->
-  ?installed_roots:package_set ->
-  ?reinstall:package_set ->
-  ?pinned:(version * pin_option) name_map ->
-  switch_state ->
-  switch_state

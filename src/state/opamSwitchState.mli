@@ -20,6 +20,11 @@ open OpamStateTypes
 val load:
   ?lock:lock_kind -> global_state -> repos_state -> switch -> switch_state
 
+(** Creates a virtual state with all package available and nothing installed.
+    Useful for querying and simulating actions when no switch is yet
+    configured *)
+val load_virtual: global_state -> repos_state -> switch_state
+
 (** Loads global, repository and switch state in one go. Using the
     lower-granularity functions is recommended, but this can help for the
     transition. First argument is a debug string (ignored) *)
@@ -27,7 +32,7 @@ val load_full_compat: string -> switch -> switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)
-val load_selections: global_state -> switch -> OpamFile.State.t
+val load_selections: global_state -> switch -> switch_selections
 
 (** {2 Helpers to access state data} *)
 

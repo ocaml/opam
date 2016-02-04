@@ -17,6 +17,7 @@
     lookup in the PATH, [system_*] functions extract the OPAMROOT paths before
     looking up*)
 
+val where_is_ocamlc: string option Lazy.t
 val ocaml_version: string option Lazy.t
 val ocaml_opt_available: bool Lazy.t
 val ocaml_native_available: bool Lazy.t

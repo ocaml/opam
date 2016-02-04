@@ -146,7 +146,7 @@ module Set = struct
       match elements s with
       | [x] -> x
       | [] -> raise Not_found
-      | _  -> invalid_arg "choose_one"
+      | _  -> failwith "choose_one"
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l

@@ -17,8 +17,9 @@
 open OpamTypes
 open OpamStateTypes
 open OpamPackage.Set.Op
+open OpamStd.Op
 
-module S = OpamFile.State
+module S = OpamFile.SwitchSelections
 
 let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
@@ -27,6 +28,8 @@ let slog = OpamConsole.slog
 (* TODO: add repo *)
 let list ~print_short ~installed ~all =
   log "list";
+  OpamConsole.msg "Todo"
+(*
   let gt = OpamGlobalState.load () in
   let switch = OpamStateConfig.(!r.current_switch) in
   let descr c =
@@ -171,16 +174,20 @@ let list ~print_short ~installed ~all =
           "The environment is not in sync with the current switch.\n\
            You should run: %s"
           (OpamEnv.eval_string gt (Some switch)))
-  | _ -> ()
+  | _ -> () *)
 
 let clear_switch ?(keep_debug=false) gt switch =
-  let () = match OpamStateConfig.load gt.root with
-    | Some conf when OpamFile.Config.switch conf = Some switch ->
-      OpamStateConfig.write gt.root (OpamFile.Config.with_switch_opt conf None)
-    | _ -> ()
+  let module C = OpamFile.Config in
+  let config = gt.config in
+  let config =
+    C.with_installed_switches config
+      (List.filter ((<>) switch) (C.installed_switches config))
   in
-  let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) gt.aliases in
-  OpamFile.Aliases.write (OpamPath.aliases gt.root) aliases;
+  let config =
+    if C.switch config = Some switch then C.with_switch_opt config None
+    else config
+  in
+  OpamStateConfig.write gt.root config;
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if keep_debug && (OpamStateConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
     OpamConsole.note "Keeping %s despite errors (debug mode), \
@@ -205,83 +212,69 @@ let remove gt ?(confirm = true) switch =
   then
     clear_switch gt switch
 
-let compiler_packages gt compiler =
-  let comp = OpamFile.Comp.read (OpamPath.compiler_comp gt.root compiler) in
-  OpamFormula.atoms (OpamFile.Comp.packages comp)
-
 let install_compiler_packages t atoms =
   (* install the compiler packages *)
-  let switch = t.switch in
-
   let roots = OpamPackage.Name.Set.of_list (List.map fst atoms) in
-
-  let bad_packages =
-    OpamStd.List.filter_map (fun (n, c) ->
-        try
-          let nv = OpamSwitchState.find_installed_package_by_name t n in
-          if c = Some (`Eq, OpamPackage.version nv) then
-            None
-          else
-            Some (n, Some (OpamPackage.version nv))
-        with Not_found -> None
-      ) atoms
+  let not_found =
+    OpamPackage.Name.Set.diff roots @@
+    OpamPackage.names_of_packages @@
+    OpamPackage.packages_of_names t.packages roots
   in
-
-  let package_error = function
-    | n, None   ->
-      OpamConsole.error "%s is an invalid package" (OpamPackage.Name.to_string n)
-    | n, Some v ->
-      OpamConsole.error "%s.%s is not available for the current compiler"
-        (OpamPackage.Name.to_string n)
-        (OpamPackage.Version.to_string v) in
-
-  match bad_packages with
-  | p::_ ->
-    package_error p;
-    OpamStd.Sys.exit 10
-  | [] ->
-    let solution =
-      OpamSolution.resolve t (Switch roots)
-        ~orphans:OpamPackage.Set.empty
-        { wish_install = [];
-          wish_remove  = [];
-          wish_upgrade = atoms;
-          criteria = `Default;
-          extra_attributes = []; } in
-    let solution = match solution with
-      | Success s -> s
-      | _ ->
-        OpamConsole.error_and_exit "Could not resolve set of base packages"
-    in
-    (match OpamSolver.stats solution with
-     | { s_install = _; s_reinstall = 0; s_upgrade = 0;
-         s_downgrade=0; s_remove = 0 } -> ()
-     | _ ->
-       OpamConsole.error_and_exit
-         "Inconsistent resolution of base package installs");
-    let to_install_pkgs = OpamSolver.new_packages solution in
-    let to_install_names = OpamPackage.names_of_packages to_install_pkgs in
-    if not (OpamStateConfig.(!r.no_base_packages)) &&
-       not (OpamPackage.Name.Set.equal to_install_names roots)
-    then
+  if not (OpamPackage.Name.Set.is_empty not_found) then
+    OpamConsole.error_and_exit
+      "No packages %s found."
+      (OpamPackage.Name.Set.to_string not_found);
+  let solution =
+    OpamSolution.resolve t (Switch roots)
+      ~orphans:OpamPackage.Set.empty
+      { wish_install = [];
+        wish_remove  = [];
+        wish_upgrade = atoms;
+        criteria = `Default;
+        extra_attributes = []; } in
+  let solution = match solution with
+    | Success s -> s
+    | Conflicts cs ->
+      OpamConsole.error_and_exit "Could not resolve set of base packages:\n%s"
+        (OpamCudf.string_of_conflict
+           (OpamSwitchState.unavailable_reason t) cs);
+  in
+  let () = match OpamSolver.stats solution with
+    | { s_install = _; s_reinstall = 0; s_upgrade = 0;
+        s_downgrade=0; s_remove = 0 } -> ()
+    | stats ->
       OpamConsole.error_and_exit
-        "Inconsistent set of base compiler packages: \
-         %s needed but not included / %s extra"
-        OpamPackage.Name.Set.(to_string (diff to_install_names roots))
-        OpamPackage.Name.Set.(to_string (diff roots to_install_names));
+        "Inconsistent resolution of base package installs:\n%s"
+        (OpamSolver.string_of_stats stats)
+  in
+  let to_install_pkgs = OpamSolver.new_packages solution in
+  let base_comp = OpamPackage.packages_of_names to_install_pkgs roots in
+  let non_comp =
+    OpamPackage.Set.filter
+      (fun nv ->
+         not (OpamFile.OPAM.has_flag Pkgflag_Compiler
+                (OpamSwitchState.opam t nv)))
+      base_comp
+  in
+  if not (OpamPackage.Set.is_empty non_comp) &&
+     not (OpamConsole.confirm ~default:false
+            "Packages %s don't have the 'compiler' flag set. Are you sure \
+             you want to set them as the compiler base for this switch ?"
+            (OpamPackage.Set.to_string non_comp))
+  then
+    OpamConsole.error_and_exit "Aborted installation of non-compiler packages \
+                                as switch base.";
+  let t = { t with compiler_packages = to_install_pkgs } in
     let result =
       OpamSolution.apply ~ask:false t (Switch roots)
         ~requested:roots
         solution in
-    let t = OpamSwitchState.load_full_compat "switch-install-with-packages-3" switch in
-    let t = { t with compiler_packages = to_install_pkgs } in
-    OpamSwitchAction.write_selections t;
     OpamSolution.check_solution t result
 
-let install_cont ~quiet ~update_config ?compiler ?packages switch =
+let install_cont ~quiet ~update_config ~packages switch =
   let gt = OpamGlobalState.load () in
   let comp_dir = OpamPath.Switch.root gt.root switch in
-  if OpamSwitch.Map.mem switch gt.aliases then
+  if List.mem switch (OpamFile.Config.installed_switches gt.config) then
     OpamConsole.error_and_exit
       "There already is an installed compiler switch named %s"
       (OpamSwitch.to_string switch);
@@ -289,70 +282,37 @@ let install_cont ~quiet ~update_config ?compiler ?packages switch =
     OpamConsole.error_and_exit
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
-  let gt = OpamSwitchAction.create_empty_switch gt ?compiler switch in
-  let () = match compiler with
-    | None -> ()
-    | Some comp ->
-      let comp_f = OpamPath.compiler_comp gt.root comp in
-      if not (OpamFilename.exists_dir comp_dir)
-      && not (OpamFilename.exists comp_f) then
-        if comp = OpamCompiler.system then (
-          OpamConsole.error_and_exit "No OCaml compiler found in path."
-        ) else
-          OpamConsole.error_and_exit
-            "%S is not a valid compiler."
-            (OpamCompiler.to_string comp);
-      try OpamSwitchAction.install_compiler gt ~quiet switch comp
-      with e ->
-        clear_switch ~keep_debug:true gt switch;
-        raise e
-  in
+  let gt = OpamSwitchAction.create_empty_switch gt switch in
   let st =
     if update_config then OpamSwitchAction.set_current_switch gt switch
     else OpamSwitchState.load gt (OpamRepositoryState.load gt) switch
   in
   switch,
   fun () ->
-    let packages = match packages with
-      | Some pkgs -> pkgs
-      | None -> match compiler with
-        | Some comp -> compiler_packages gt comp
-        | None -> []
-    in
     try install_compiler_packages st packages
     with e ->
       clear_switch ~keep_debug:true gt switch;
       raise e
 
-let install ~quiet ~update_config ?compiler ?packages switch =
-  (snd (install_cont ~quiet ~update_config ?compiler ?packages switch)) ()
+let install ~quiet ~update_config ~packages switch =
+  (snd (install_cont ~quiet ~update_config ~packages switch)) ()
 
-let switch_cont ~quiet ?compiler ?packages switch =
+let switch_cont ~quiet ~packages switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let gt = OpamGlobalState.load () in
   let switch, cont =
-    if OpamSwitch.Map.mem switch gt.aliases then
+    if List.mem switch (OpamFile.Config.installed_switches gt.config) then
       let t = OpamSwitchAction.set_current_switch gt switch in
       OpamEnv.check_and_print_env_warning t;
       switch, fun () -> ()
     else
-      install_cont ~quiet ~update_config:true ?compiler ?packages switch
+      install_cont ~quiet ~update_config:true ~packages switch
   in
   switch,
   cont
 
-let switch ~quiet ?compiler ?packages switch =
-  (snd (switch_cont ~quiet ?compiler ?packages switch)) ()
-
-(* unused ?
-(* Remove from [set] all the packages whose names appear in
-   [filter]. *)
-let filter_names ~filter set =
-  let names = OpamPackage.names_of_packages filter in
-  OpamPackage.Set.filter (fun nv ->
-    not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
-  ) set
-*)
+let switch ~quiet ~packages switch =
+  (snd (switch_cont ~quiet ~packages switch)) ()
 
 (** !X todo: include overlays in state/export file *)
 let import_t importfile t =
@@ -385,15 +345,17 @@ let import_t importfile t =
   in
   let imported = importfile.sel_installed %% available in
   let import_roots = importfile.sel_roots %% available in
-  let revert_pins () =
+  let import_compiler = importfile.sel_compiler %% available in
+  let revert_pins () = (* Called in case of error or abortion *)
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
       let switch_state = OpamSwitchState.load_selections t.switch_global t.switch in
-      let state_f = OpamPath.Switch.state t.switch_global.root t.switch in
+      let state_f = OpamPath.Switch.selections t.switch_global.root t.switch in
       S.write state_f { switch_state with sel_pinned = prev_state.sel_pinned }
   in
   let t =
     {t with available_packages = lazy available;
             packages = t.packages ++ available;
+            compiler_packages = import_compiler;
             pinned }
   in
   let solution =
@@ -450,7 +412,7 @@ let import_t importfile t =
 let export filename =
   let switch = (OpamStateConfig.get_switch ()) in
   let root = OpamStateConfig.(!r.root_dir) in
-  let st = S.safe_read (OpamPath.Switch.state root switch) in
+  let st = S.safe_read (OpamPath.Switch.selections root switch) in
   match filename with
   | None   -> S.write_to_channel stdout st
   | Some f -> S.write f st
@@ -461,13 +423,6 @@ let show () =
 
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
-  let ocaml_version =
-    try OpamSwitch.Map.find switch gt.aliases
-    with Not_found ->
-      OpamConsole.error_and_exit
-        "The compiler switch %s does not exist.\n"
-        (OpamSwitch.to_string switch)
-  in
   let export = OpamSwitchState.load_selections gt switch in
 
   (* Remove the directory (except the overlays, backups and lock) *)
@@ -486,14 +441,14 @@ let reinstall_gt gt switch =
     (fun f -> if not (List.mem f keep_files) then OpamFilename.remove f)
     (OpamFilename.files switch_root);
 
-  OpamSwitchAction.install_compiler gt ~quiet:false switch ocaml_version;
-  let t = OpamSwitchState.load gt (OpamRepositoryState.load gt) switch in
-  import_t export t
+  let gt = OpamSwitchAction.create_empty_switch gt switch in
+  let st = OpamSwitchState.load gt (OpamRepositoryState.load gt) switch in
+  import_t export st
 
 (* !X unify with OpamClient.with_switch_backup; set a number of backups and just
    rename older versions .1, .2 etc. ? *)
 let with_backup gt switch f =
-  let state_file = OpamPath.Switch.state gt.root switch in
+  let state_file = OpamPath.Switch.selections gt.root switch in
   let backup_state_file = OpamPath.backup gt.root in
   OpamFilename.copy ~src:state_file ~dst:backup_state_file;
   try
@@ -502,9 +457,8 @@ let with_backup gt switch f =
   with
   | OpamStd.Sys.Exit 0 as e -> raise e
   | err ->
-    let new_state = OpamFile.State.safe_read state_file in
-    let old_state = OpamFile.State.safe_read backup_state_file in
-    let module S = OpamFile.State in
+    let new_state = OpamFile.SwitchSelections.safe_read state_file in
+    let old_state = OpamFile.SwitchSelections.safe_read backup_state_file in
     if OpamPackage.Set.equal new_state.sel_installed old_state.sel_installed &&
        OpamPackage.Set.equal
          new_state.sel_roots old_state.sel_roots &&

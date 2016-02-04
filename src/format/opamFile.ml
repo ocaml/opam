@@ -929,7 +929,9 @@ module SwitchSelectionsSyntax = struct
     Pp.pp (fun ~pos:_ -> OpamPackage.Set.of_list) OpamPackage.Set.elements
 
   let fields = [
-    "opam-version", Pp.ppacc_ignore;
+    "opam-version", Pp.ppacc
+      (fun t _ -> t) (fun _ -> OpamVersion.current_nopatch)
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
     "compiler", Pp.ppacc
       (fun t sel_compiler -> {t with sel_compiler}) (fun t -> t.sel_compiler)
       pp_pkglist;
@@ -1276,8 +1278,6 @@ module OPAMSyntax = struct
     depopts    : ext_formula;
     conflicts  : formula;
     available  : filter;
-    ocaml_version: compiler_constraint option;
-    os         : (bool * string) generic_formula;
     flags      : package_flag list;
     env        : env_update list;
 
@@ -1322,6 +1322,10 @@ module OPAMSyntax = struct
     (* Related metadata directory (not an actual field of the file)
        This can be used to locate e.g. the files/ overlays *)
     metadata_dir: dirname option;
+
+    (* Deprecated, for compat and proper linting *)
+    ocaml_version: compiler_constraint option;
+    os         : (bool * string) generic_formula;
   }
 
   let empty = {
@@ -1334,8 +1338,6 @@ module OPAMSyntax = struct
     depopts    = OpamFormula.Empty;
     conflicts  = OpamFormula.Empty;
     available  = FBool true;
-    ocaml_version = None;
-    os         = Empty;
     flags      = [];
     env        = [];
 
@@ -1370,7 +1372,10 @@ module OPAMSyntax = struct
     url         = None;
     descr       = None;
 
-    metadata_dir = None
+    metadata_dir = None;
+
+    ocaml_version = None;
+    os         = Empty;
   }
 
   let create nv =
@@ -1399,8 +1404,6 @@ module OPAMSyntax = struct
   let depopts t = t.depopts
   let conflicts t = t.conflicts
   let available t = t.available
-  let ocaml_version t = t.ocaml_version
-  let os t = t.os
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
   let env t =
@@ -1468,10 +1471,6 @@ module OPAMSyntax = struct
   let with_depopts t depopts = { t with depopts }
   let with_conflicts t conflicts = {t with conflicts }
   let with_available t available = { t with available }
-  let with_ocaml_version t ocaml_version =
-    { t with ocaml_version = Some ocaml_version }
-  let with_ocaml_version_opt t ocaml_version = { t with ocaml_version }
-  let with_os t os = { t with os }
   let with_flags t flags = { t with flags }
   let add_flags t flags =
     { t with flags = OpamStd.List.sort_nodup compare (flags @ t.flags) }
@@ -1520,6 +1519,10 @@ module OPAMSyntax = struct
   let with_descr_opt t descr = { t with descr }
 
   let with_metadata_dir t metadata_dir = { t with metadata_dir }
+
+  let with_ocaml_version t ocaml_version =
+    { t with ocaml_version = Some ocaml_version }
+  let with_os t os = { t with os }
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when validating). It's better to do them in the same pass
@@ -1702,12 +1705,6 @@ module OPAMSyntax = struct
         (Pp.V.package_formula `Disj Pp.V.constraints);
       "available", no_cleanup Pp.ppacc with_available available
         (Pp.V.list_depth 1 -| Pp.V.list -| Pp.V.filter);
-      "ocaml-version", no_cleanup
-        Pp.ppacc_opt with_ocaml_version ocaml_version
-        (Pp.V.list_depth 1 -| Pp.V.list -|
-         Pp.V.constraints Pp.V.compiler_version);
-      "os", no_cleanup Pp.ppacc with_os os
-        Pp.V.os_constraint;
       "flags", with_cleanup cleanup_flags Pp.ppacc add_flags flags
         (Pp.V.map_list ~depth:1 @@
          Pp.V.ident -|
@@ -1736,7 +1733,7 @@ module OPAMSyntax = struct
       "features", no_cleanup Pp.ppacc with_features features
         Pp.V.features;
       "extra-sources", no_cleanup Pp.ppacc with_extra_sources extra_sources
-        (Pp.V.map_list ~depth:1 @@
+        (Pp.V.map_list ~depth:2 @@
          Pp.V.map_pair
            (Pp.V.map_option
               Pp.V.url
@@ -1776,7 +1773,15 @@ module OPAMSyntax = struct
            (function {OpamUrl.transport = "file" | "local" | "path"; _} -> false
                    | _ -> true));
 
-      "configure-style", (Pp.ppacc_ignore, Pp.ppacc_ignore); (* deprecated *)
+      (* deprecated fields, here for compat *)
+      "configure-style", (Pp.ppacc_ignore, Pp.ppacc_ignore);
+
+      "ocaml-version", no_cleanup
+        Pp.ppacc_opt with_ocaml_version OpamStd.Option.none
+        (Pp.V.list_depth 1 -| Pp.V.list -|
+         Pp.V.constraints Pp.V.compiler_version);
+      "os", no_cleanup Pp.ppacc_opt with_os OpamStd.Option.none
+        Pp.V.os_constraint;
     ]
 
   let fields =
@@ -1817,6 +1822,41 @@ module OPAMSyntax = struct
     in
     Pp.pp parse print
 
+  let handle_deprecated_available =
+    let add_available available filter =
+      match available with
+      | FBool true -> filter
+      | f -> FAnd (filter, f)
+    in
+    let parse ~pos:_ t =
+      let available = t.available in
+      let available =
+        match t.ocaml_version with
+        | None -> available
+        | Some ocaml_version ->
+          let var = OpamVariable.of_string "ocaml-version" in
+          let mk_atom (op,v) =
+            FOp (FIdent ([], var, None), op,
+                 FString (OpamCompiler.Version.to_string v))
+          in
+          let filter = OpamFilter.of_formula mk_atom ocaml_version in
+          add_available available filter
+      in
+      let available =
+        match t.os with
+        | Empty -> available
+        | os ->
+          let var = OpamVariable.of_string "os" in
+          let mk_atom (eq,name) =
+            FOp (FIdent ([], var, None), (if eq then `Eq else `Neq), FString name)
+          in
+          let filter = OpamFilter.of_formula mk_atom os in
+          add_available available filter
+      in
+      { t with available }
+    in
+    Pp.pp parse (fun x -> x)
+
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw =
     Pp.I.map_file @@
@@ -1827,7 +1867,8 @@ module OPAMSyntax = struct
       (Pp.I.items -|
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
       (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
-       handle_flags_in_tags) -|
+       handle_flags_in_tags -|
+       handle_deprecated_available) -|
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions t extensions)
       (fun t -> extensions t, t)
@@ -2624,6 +2665,59 @@ module CompSyntax = struct
                (OpamCompiler.Version.to_string version)
                (OpamFilename.to_string filename);
            { t with name = empty.name })
+
+  let to_package pkg_name comp descr_opt =
+    let version =
+      OpamPackage.Version.of_string (OpamCompiler.to_string (name comp))
+    in
+    let nofilter x = x, (None: filter option) in
+    let depends =
+      OpamFormula.map (fun (n, formula) -> Atom (n, ([], formula)))
+        comp.packages
+    in
+    let url =
+      OpamStd.Option.map
+        (fun url -> URL.with_url URL.empty url)
+        comp.src
+    in
+    let build, install =
+      match comp.build with
+      | [] ->
+        List.map (fun l -> nofilter (List.map nofilter l)) [
+          (List.map (fun s -> CString s) ("./configure" :: configure comp ))
+          @ [ CString "-prefix"; CIdent "prefix" ];
+          CIdent "make" :: List.map (fun s -> CString s) (make comp);
+        ],
+        List.map (fun l -> nofilter (List.map nofilter l)) [
+          [ CIdent "make"; CString "install" ];
+        ]
+      | cl -> cl, []
+    in
+    let extra_sources =
+      List.map (fun url ->
+          url, Digest.string "" (* no hash !? *), None
+        )
+        comp.patches
+    in
+    let patches =
+      List.map
+        (fun u -> nofilter (OpamFilename.Base.of_string (OpamUrl.basename u)))
+        comp.patches
+    in
+    let pkg = OPAM.create (OpamPackage.create pkg_name version) in
+    { pkg with
+      OPAM.
+      depends;
+      build;
+      install;
+      maintainer = [ "contact@ocamlpro.com" ];
+      extra_sources;
+      patches;
+      env = comp.env;
+      flags = [Pkgflag_Compiler];
+      url;
+      descr = descr_opt;
+    }
 
 end
 module Comp = struct

@@ -103,13 +103,6 @@ let compute_updates st =
         @ acc)
       st.installed []
   in
-  let comp_env = (* deprecated & costly (not cached!) *)
-    let compiler = OpamSwitch.Map.find st.switch st.switch_global.aliases in
-    let comp_file = OpamPath.compiler_comp st.switch_global.root compiler in
-    List.map (fun (name,op,str,cmt) ->
-        name, op, OpamFilter.expand_string (fenv ?opam:None) str, cmt)
-      (OpamFile.Comp.(env (safe_read comp_file)))
-  in
   let root =
     let current = st.switch_global.root in
     let default = OpamStateConfig.(default.root_dir) in
@@ -119,7 +112,7 @@ let compute_updates st =
     then [ "OPAMROOT", Eq, current_string, None ]
     else []
   in
-  man_path @ root @ comp_env @ pkg_env
+  man_path @ root @ pkg_env
 
 let updates ~opamswitch ?(force_path=false) st =
   let root = st.switch_global.root in

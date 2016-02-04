@@ -33,10 +33,6 @@ val update_compiler_index: repos_state -> repos_state
 (** Update the given dev packages. *)
 val update_dev_packages: switch_state -> verbose:bool -> package_set -> package_set
 
-(** Fix the compiler descriptions and display the changes if [verbose]
-    is set. *)
-val fix_compiler_descriptions: repos_state -> verbose:bool -> compiler_set updates
-
 (** Fix the the package descriptions and display the changes if
     [verbose] is set. *)
 val fix_package_descriptions: repos_state -> verbose:bool -> package_set updates

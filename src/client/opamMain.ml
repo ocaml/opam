@@ -579,15 +579,8 @@ let config =
                nprint "path" nlocal @
                nprint "version control" nvc)
           );
-        print "current-switch" "%s%s"
-          (OpamSwitch.to_string state.switch)
-          (if (OpamFile.Comp.preinstalled
-                 (OpamFile.Comp.read
-                    (OpamPath.compiler_comp
-                       state.switch_global.root
-                       (OpamSwitch.Map.find state.switch
-                          state.switch_global.aliases))))
-           then "*" else "");
+        print "current-switch" "%s"
+          (OpamSwitch.to_string state.switch);
         let index_file = OpamFilename.to_string (OpamPath.package_index
                                                    state.switch_global.root) in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
@@ -893,7 +886,8 @@ let switch =
       "List all the compilers which can be installed on the system." in
   let packages =
     mk_opt ["packages"] "PKGS"
-      "When installing a switch, define the given set of packages as compiler."
+      "When installing a switch, explicitely define the set of packages to set \
+       as the switch base (a.k.a. \"compiler\")."
       Arg.(some (list atom)) None in
   let empty =
     mk_flag ["empty"]
@@ -904,12 +898,56 @@ let switch =
       no_switch packages empty params =
     apply_global_options global_options;
     apply_build_options build_options;
-    let mk_comp switch =
-      match alias_of with
-      | None ->
-        if empty || packages <> None then None
-        else Some (OpamCompiler.of_string switch)
-      | Some comp -> Some (OpamCompiler.of_string comp)
+    let packages =
+      match packages, empty with
+      | None, true -> Some []
+      | packages, _ -> packages
+    in
+    let guess_compiler_package name =
+      (* Guess the compiler from the switch name: within compiler packages,
+         match [name] against "pkg.version", "pkg", and, as a last resort,
+         "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
+      let gt = OpamGlobalState.load () in
+      let rt = OpamRepositoryState.load gt in
+      let compiler_packages =
+        OpamPackage.Map.filter
+          (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
+          rt.repo_opams
+        |> OpamPackage.keys
+      in
+      match OpamPackage.of_string_opt name with
+      | Some nv when OpamPackage.Set.mem nv compiler_packages ->
+        [OpamSolution.eq_atom_of_package nv]
+      | _ ->
+        let pkgname = OpamPackage.Name.of_string name in
+        if OpamPackage.has_name compiler_packages  pkgname then
+          [pkgname, None]
+        else
+        let version = OpamPackage.Version.of_string name in
+        let has_version =
+          OpamPackage.Set.filter (fun nv -> OpamPackage.version nv = version)
+            compiler_packages
+        in
+        try
+          [OpamSolution.eq_atom_of_package
+             (OpamPackage.Set.choose_one has_version)]
+        with
+        | Not_found ->
+          OpamConsole.error_and_exit
+            "No compiler matching '%s' found" name
+        | Failure _ ->
+          OpamConsole.error_and_exit
+            "Compiler selection '%s' is ambiguous. matching packages: %s"
+            name (OpamPackage.Set.to_string has_version)
+    in
+    let compiler_packages switch =
+      match packages, alias_of with
+      | Some pkgs, None -> pkgs
+      | None, Some al -> guess_compiler_package al
+      | None, None -> guess_compiler_package switch
+      | Some _, Some _ ->
+        OpamConsole.error_and_exit
+          "Options --alias-of and --packages are incompatible"
     in
     let quiet = (fst global_options).quiet in
     match command, params with
@@ -921,8 +959,7 @@ let switch =
       Client.SWITCH.install
         ~quiet
         ~update_config:(not no_switch)
-        ?compiler:(mk_comp switch)
-        ?packages
+        ~packages:(compiler_packages switch)
         (OpamSwitch.of_string switch);
       `Ok ()
     | Some `export, [filename] ->
@@ -953,8 +990,7 @@ let switch =
     | Some `default switch, [] ->
       Client.SWITCH.switch
         ~quiet
-        ?compiler:(mk_comp switch)
-        ?packages
+        ~packages:(compiler_packages switch)
         (OpamSwitch.of_string switch);
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)

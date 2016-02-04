@@ -316,3 +316,10 @@ let command_variables (l,f) =
     (filter_opt_variables f) l
 let commands_variables l =
   List.fold_left (fun acc c -> command_variables c @ acc) [] l
+
+let rec of_formula atom_f = function
+  | Empty -> FBool true
+  | Atom at -> atom_f at
+  | Block f -> of_formula atom_f f
+  | And (a, b) -> FAnd (of_formula atom_f a, of_formula atom_f b)
+  | Or (a, b) -> FOr (of_formula atom_f a, of_formula atom_f b)

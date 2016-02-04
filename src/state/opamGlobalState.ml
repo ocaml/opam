@@ -146,8 +146,8 @@ module Format_upgrade = struct
               OpamPackage.Set.add nv acc)
             OpamPackage.Set.empty atoms
         in
-        OpamFile.State.write
-          (OpamPath.Switch.state root switch)
+        OpamFile.SwitchSelections.write
+          (OpamPath.Switch.selections root switch)
           { sel_installed = installed;
             sel_roots = installed_roots;
             sel_pinned = pinned;
@@ -167,6 +167,112 @@ module Format_upgrade = struct
           installed)
       aliases
 
+  let v1_3_dev5 = OpamVersion.of_string "1.3~dev5"
+
+  let from_1_3_dev2_to_1_3_dev5 root =
+    log "Upgrade switch state files format to 1.3 step 2";
+    let aliases_f = OpamPath.aliases root in
+    let aliases = OpamFile.Aliases.safe_read aliases_f in
+    OpamSwitch.Map.iter (fun switch comp_name ->
+        (* Convert state-file table format to selections file, opam syntax
+           format *)
+        let state_f = OpamPath.Switch.state root switch in
+        let selections = OpamFile.State.safe_read state_f in
+        let selections_f = OpamPath.Switch.selections root switch in
+        (* Change comp file to a package *)
+        let selections =
+          if comp_name <> OpamCompiler.of_string "empty" then
+            let name = OpamPackage.Name.of_string "ocaml" in
+            let comp_f = OpamPath.compiler_comp root comp_name in
+            let comp = OpamFile.Comp.read comp_f in
+            let descr_f = OpamPath.compiler_descr root comp_name in
+            let descr =
+              if OpamFilename.exists descr_f
+              then Some (OpamFile.Descr.read descr_f)
+              else None
+            in
+            let comp_opam =
+              OpamFile.Comp.to_package name comp descr
+            in
+            let nv = OpamFile.OPAM.package comp_opam in
+            let switch_config_f = OpamPath.Switch.global_config root switch in
+            let switch_config = OpamFile.Dot_config.safe_read switch_config_f in
+            let config =
+              if OpamFile.Comp.preinstalled comp then
+                let config =
+                  OpamFile.Dot_config.create @@
+                  List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
+                  [ "ocaml-version",
+                    S (OpamStd.Option.default "unknown"
+                         (Lazy.force OpamOCaml.system_ocamlc_version));
+                    "compiler", S (OpamCompiler.to_string comp_name);
+                    "preinstalled", B true;
+                    "ocaml-native", B (Lazy.force OpamOCaml.ocaml_native_available);
+                    "ocaml-native-tools", B (Lazy.force OpamOCaml.ocaml_opt_available);
+                    "ocaml-native-dynlink", B (Lazy.force OpamOCaml.ocaml_natdynlink_available);
+                    "ocaml-stubsdir",
+                    S (Filename.concat
+                         (OpamStd.Option.default "/usr/lib/ocaml"
+                            (Lazy.force OpamOCaml.system_ocamlc_where))
+                         "stublibs")
+                   ]
+                in
+                match Lazy.force OpamOCaml.where_is_ocamlc with
+                | Some ocamlc ->
+                  let f = OpamFilename.of_string ocamlc in
+                  OpamFile.Dot_config.with_file_depends config
+                    [f, OpamFilename.digest f]
+                | None -> config
+              else
+                OpamFile.Dot_config.create @@
+                List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
+                [ "ocaml-version",
+                  S (OpamCompiler.Version.to_string
+                       (OpamFile.Comp.version comp));
+                  "compiler", S (OpamCompiler.to_string comp_name);
+                  "preinstalled", B false;
+                  "ocaml-native",
+                  B (OpamFilename.exists
+                       (OpamPath.Switch.bin root switch switch_config
+                        // "ocamlopt"));
+                  "ocaml-native-tools",
+                  B (OpamFilename.exists
+                       (OpamPath.Switch.bin root switch switch_config
+                        // "ocamlc.opt"));
+                  "ocaml-native-dynlink",
+                  B (OpamFilename.exists
+                       (OpamPath.Switch.lib_dir root switch switch_config
+                        / "ocaml" // "dynlink.cmxa"));
+                  "ocaml-stubsdir",
+                  S (OpamFilename.Dir.to_string
+                       (OpamPath.Switch.stublibs root switch switch_config));
+                ]
+            in
+            let config_f = OpamPath.Switch.config root switch name in
+            OpamFile.OPAM.write (OpamPath.opam root nv) comp_opam;
+            OpamFile.Dot_config.write config_f config;
+            (* Also export compiler variables as globals *)
+            OpamFile.Dot_config.write switch_config_f
+              (OpamFile.Dot_config.with_vars switch_config
+                 (OpamFile.Dot_config.bindings switch_config @
+                  OpamFile.Dot_config.bindings config));
+            {selections with
+             sel_installed = OpamPackage.Set.add nv selections.sel_installed;
+             sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
+             sel_roots = OpamPackage.Set.add nv selections.sel_compiler; }
+          else selections
+        in
+        OpamFile.SwitchSelections.write selections_f selections;
+        OpamFilename.remove state_f)
+      aliases;
+    let conf_f = OpamPath.config root in
+    let conf = OpamFile.Config.safe_read conf_f in
+    let conf =
+      OpamFile.Config.with_installed_switches conf (OpamSwitch.Map.keys aliases)
+    in
+    OpamFile.Config.write conf_f conf;
+    OpamFilename.remove aliases_f
+
   let as_necessary root config =
     let config_version = OpamFile.Config.opam_version config in
     let cmp = OpamVersion.(compare current_nopatch config_version) in
@@ -177,15 +283,21 @@ module Format_upgrade = struct
           "%s reports a newer OPAM version, aborting."
           (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
     else
-    if OpamVersion.compare config_version v1_3_dev2 < 0 then
-      let config = OpamFile.Config.with_opam_version config v1_3_dev2 in
-      if OpamVersion.compare config_version v1_1 < 0 then from_1_0_to_1_1 root;
-      if OpamVersion.compare config_version v1_2 < 0 then from_1_1_to_1_2 root;
-      from_1_2_to_1_3_dev2 root;
+    if OpamVersion.compare config_version v1_3_dev5 < 0 then
+      let config = OpamFile.Config.with_opam_version config v1_3_dev5 in
+      if OpamVersion.compare config_version v1_1 < 0 then
+        from_1_0_to_1_1 root;
+      if OpamVersion.compare config_version v1_2 < 0 then
+        from_1_1_to_1_2 root;
+      if OpamVersion.compare config_version v1_3_dev2 < 0 then
+        from_1_2_to_1_3_dev2 root;
+      if OpamVersion.compare config_version v1_3_dev5 < 0 then
+        from_1_3_dev2_to_1_3_dev5 root;
       OpamStateConfig.write root config;
       config
     else
-      config;
+      config
+
 end
 
 let load_config root =
@@ -202,15 +314,15 @@ let load ?(lock=Lock_readonly) () =
   log "LOAD-GLOBAL-STATE";
   let root = OpamStateConfig.(!r.root_dir) in
   let config = load_config root in
-  let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-  { global_lock=lock; root; config; aliases }
+  { global_lock=lock; root; config; }
 
 let fold_switches f gt acc =
-  OpamSwitch.Map.fold (fun switch _ acc ->
+  List.fold_left (fun acc switch ->
       f switch
-        (OpamFile.State.safe_read (OpamPath.Switch.state gt.root switch))
+        (OpamFile.SwitchSelections.safe_read
+           (OpamPath.Switch.selections gt.root switch))
         acc
-    ) gt.aliases acc
+    ) acc (OpamFile.Config.installed_switches gt.config)
 
 let all_installed gt =
   fold_switches (fun _ sel acc ->

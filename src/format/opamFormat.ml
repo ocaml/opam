@@ -113,7 +113,7 @@ module Print = struct
     | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
                            format_value v format_values l
     | Env_binding (_,id,op,v) ->
-      Format.fprintf fmt "@[<h>[ %a %s@ %a ]@]"
+      Format.fprintf fmt "@[<h>%a %s@ %a@]"
         format_value id (string_of_env_update_op op) format_value v
 
   and format_values fmt = function
@@ -216,7 +216,7 @@ module Normalise = struct
         " " value l
     | Env_binding (_,id,op,v) ->
       String.concat " "
-        ["["; value id; string_of_env_update_op op; value v; "]"]
+        [value id; string_of_env_update_op op; value v]
 
   let rec item = function
     | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""

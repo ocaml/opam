@@ -300,38 +300,6 @@ let compilation_env t opam =
   ] @ env0 in
   OpamEnv.add env1 (OpamFile.OPAM.build_env opam)
 
-let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
-  let open OpamStd.Option.Op in
-  let open OpamPackage.Set.Op in
-  let installed = installed +! t.installed in
-  let compiler_packages =
-    if OpamPackage.Set.is_empty (t.compiler_packages -- installed) then
-      t.compiler_packages
-    else (* adjust version of installed compiler packages *)
-      let names = OpamPackage.names_of_packages t.compiler_packages in
-      let installed_base = OpamPackage.packages_of_names installed names in
-      installed_base ++
-      (* keep version of uninstalled compiler packages *)
-      OpamPackage.packages_of_names t.compiler_packages
-        (OpamPackage.Name.Set.diff names
-           (OpamPackage.names_of_packages installed_base))
-  in
-  let t =
-    { t with
-      installed;
-      installed_roots = (installed_roots +! t.installed_roots) %% installed;
-      reinstall = (reinstall +! t.reinstall) %% installed;
-      pinned = pinned +! t.pinned;
-      compiler_packages; }
-  in
-  if not OpamStateConfig.(!r.dryrun) then (
-    OpamSwitchAction.write_selections t;
-    OpamFile.PkgList.write
-      (OpamPath.Switch.reinstall t.switch_global.root t.switch)
-      t.reinstall
-  );
-  t
-
 let removal_needs_download st nv =
   match OpamSwitchState.opam_opt st nv with
   | None ->

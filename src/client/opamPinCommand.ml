@@ -290,8 +290,8 @@ let unpin gt ?state names =
       (selections.sel_pinned, [])
       names
   in
-  OpamFile.State.write
-    (OpamPath.Switch.state gt.root switch)
+  OpamFile.SwitchSelections.write
+    (OpamPath.Switch.selections gt.root switch)
     {selections with sel_pinned = pinned};
   needs_reinstall
 

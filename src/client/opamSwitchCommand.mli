@@ -23,14 +23,14 @@ open OpamStateTypes
     packages, but only needs a switch lock. *)
 val install_cont:
   quiet:bool -> update_config:bool ->
-  ?compiler:compiler -> ?packages:atom conjunction ->
+  packages:atom conjunction ->
   switch ->
   switch * (unit -> unit)
 
 (** Like [install_cont] but runs the continuation already *)
 val install:
   quiet:bool -> update_config:bool ->
-  ?compiler:compiler -> ?packages:atom conjunction -> switch -> unit
+  packages:atom conjunction -> switch -> unit
 
 (** Install a compiler's base packages *)
 val install_compiler_packages: switch_state -> atom conjunction -> unit
@@ -48,12 +48,12 @@ val remove: global_state -> ?confirm:bool -> switch -> unit
     already (with the given compiler, or empty if unspecified). Returns a
     continuation like [install] *)
 val switch_cont:
-  quiet:bool -> ?compiler:compiler -> ?packages:atom conjunction ->
+  quiet:bool -> packages:atom conjunction ->
   switch -> switch * (unit -> unit)
 
 (** Like [switch_cont] but runs the continuation already. *)
 val switch:
-  quiet:bool -> ?compiler:compiler -> ?packages:atom conjunction ->
+  quiet:bool -> packages:atom conjunction ->
   switch -> unit
 
 (** Reinstall the given compiler switch. *)
