@@ -1,0 +1,11 @@
+opam-version: "1.3"
+variables {
+  asmcomp:  "-I %{lib}%/P1"
+  bytecomp: "-I %{lib}%/P1"
+  asmlink:  "-I %{lib}%/P1 p1.cmxa"
+  bytelink: "-I %{lib}%/P1 p1.cma"
+  LOCAL: "local"
+  l: "L"
+  FOO: "foo"
+  bar: true
+}

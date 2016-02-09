@@ -9,7 +9,7 @@ REPOKIND ?= local
 # To test GIT repo
 OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
-PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
+PACKAGES  = P1-0 P1-1 P1-2 P2 P3 P4 P5
 
 ifndef OPAM
   OPAM = $(realpath ../src/opam)
@@ -95,6 +95,8 @@ endif
 
 upload: $(ARCHIVES)
 	cp -r packages/ocaml $(OPAM_REPO)/packages
+	mkdir -p $(OPAM_REPO)/packages/P1.0
+	cp packages/P1-0.opam     $(OPAM_REPO)/packages/P1.0/opam
 	mkdir -p $(OPAM_REPO)/packages/P1.1
 	cp packages/P1-1.opam     $(OPAM_REPO)/packages/P1.1/opam
 	cp packages/P1-1/README   $(OPAM_REPO)/packages/P1.1/descr
@@ -111,6 +113,11 @@ upload: $(ARCHIVES)
 	cp packages/P5.opam       $(OPAM_REPO)/packages/P5.1/opam
 	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
 ifeq ($(REPOKIND), git)
+	cd $(OPAM_REPO)/packages/ocaml.system && git add * && git commit -a -m "Adding ocaml.system"
+	cd $(OPAM_REPO)/packages/ocaml.20 && git add * && git commit -a -m "Adding ocaml.20"
+	cd $(OPAM_REPO)/packages/ocaml.10+a+b && git add * && git commit -a -m "Adding ocaml.10+a+b"
+	echo 'git: "$(OPAM_GIT)/P1-0"' > $(OPAM_REPO)/packages/P1.0/url
+	cd $(OPAM_REPO)/packages/P1.0/ && git add * && git commit -a -m "Adding P0"
 	echo 'git: "$(OPAM_GIT)/P1-1"' > $(OPAM_REPO)/packages/P1.1/url
 	cd $(OPAM_REPO)/packages/P1.1/ && git add * && git commit -a -m "Adding P1"
 	echo 'git: "$(OPAM_GIT)/P2"'   > $(OPAM_REPO)/packages/P2.1/url
@@ -122,11 +129,13 @@ ifeq ($(REPOKIND), git)
 	echo 'git: "$(OPAM_GIT)/P5"'   > $(OPAM_REPO)/packages/P5.1/url
 	cd $(OPAM_REPO)/packages/P5.1/ && git add * && git commit -a -m "Adding P5"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
+	mkdir $(OPAM_GIT)/P1-0 && cp packages/P1-0/* $(OPAM_GIT)/P1-0/
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
 	mkdir $(OPAM_GIT)/P2   && cp packages/P2/*   $(OPAM_GIT)/P2/
 	mkdir $(OPAM_GIT)/P3   && cp packages/P3/*   $(OPAM_GIT)/P3/
 	mkdir $(OPAM_GIT)/P4   && cp packages/P4/*   $(OPAM_GIT)/P4/
 	mkdir $(OPAM_GIT)/P5   && cp packages/P5/*   $(OPAM_GIT)/P5/
+	cd $(OPAM_GIT)/P1-0 && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P1-1 && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P2   && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P3   && git init && git add * && git commit -a -m "initial commit"
@@ -134,6 +143,7 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_GIT)/P5   && git init && git add * && git commit -a -m "initial commit"
 else
 	mkdir -p $(OPAM_REPO)/archives
+	cp packages/P1-0.tar.gz $(OPAM_REPO)/archives/P1.0+opam.tar.gz
 	cp packages/P1-1.tar.gz $(OPAM_REPO)/archives/P1.1+opam.tar.gz
 	cp packages/P2.tar.gz $(OPAM_REPO)/archives/P2.1+opam.tar.gz
 	cp packages/P3.tar.gz $(OPAM_REPO)/archives/P3.1~weird-version.test+opam.tar.gz
@@ -261,11 +271,7 @@ switch-alias:
 switch-env-packages:
 	$(CHECK) -l switch-env-packages-1 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch 10+a+b
-ifeq ($(REPOKIND), git)
-	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.1 P2.1 P3.1~weird-version.test P4.3
-else
-	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.2 P2.1 P3.1~weird-version.test P4.3
-endif
+	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.0 P2.1 P3.1~weird-version.test P4.3
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
 repo:
@@ -273,8 +279,8 @@ repo:
 	$(OPAMBIN) repo remove $(REPO)2
 	$(OPAMBIN) repo remove $(REPO)
 
-packages/%.tar.gz: packages/% 
-	cd packages && tar czf $*.tar.gz $* 
+packages/%.tar.gz: packages/%
+	cd packages && tar czf $*.tar.gz $*
 
 clean:
 	rm -f test.log fulltest.log

@@ -22,7 +22,9 @@ build: [
 ]
 
 os: [ !"NO" | ( !"NO" & !"YES") ]
-ocaml-version: [ ="system" | ="20" | ="10" ]
+ocaml-version: [ !="20" | !="10" ]
+
+available: [ ocaml-version = "20" | ocaml-version = "10" | preinstalled ]
 
 (* List of files to substitute env variables *)
 substs: [ "P1.config" ]
