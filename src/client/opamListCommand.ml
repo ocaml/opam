@@ -607,8 +607,10 @@ let info ~fields ~raw_opam ~where atoms =
     if raw_opam then OpamFile.OPAM.write_to_channel stdout opam
   in
 
-  OpamPackage.Name.Map.iter (fun k v -> 
-    print_summary k;
-    OpamConsole.msg "----------------------------------------------------------------------\n";
-    print_one k v
+  OpamPackage.Name.Map.iter (fun k v ->
+      if not (raw_opam || where) then (
+        print_summary k;
+        OpamConsole.msg "----------------------------------------------------------------------\n";
+      );
+      print_one k v
   )details
