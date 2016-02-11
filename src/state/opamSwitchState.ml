@@ -103,6 +103,23 @@ let load ?(lock=Lock_readonly) gt rt switch =
       )
       installed opams
   in
+  (* Packages without metadata, maybe they were just unpinned, but not removed:
+     look for an overlay.
+     NOTE: this should be removed once we have a real cache for installed
+     package's meta *)
+  let orphans = installed -- OpamPackage.keys opams in
+  let opams =
+    OpamPackage.Set.fold (fun nv opams ->
+        let name = OpamPackage.name nv in
+        let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
+        match OpamFileHandling.read_opam overlay_dir with
+        | Some opam -> OpamPackage.Map.add nv opam opams
+        | None -> opams
+        (* !X this shouldn't happen, but could lead to trouble in e.g. 'opam
+           list' *)
+      )
+      orphans opams
+  in
   let packages = OpamPackage.keys opams ++ installed in
   let available_packages = lazy (
     let pinned_names = OpamPackage.Name.(Set.of_list (Map.keys pinned)) in
