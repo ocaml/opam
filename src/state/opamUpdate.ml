@@ -49,14 +49,6 @@ let fetch_dev_package url srcdir nv =
    to find [files] and [descr]. *)
 let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
     name dir =
-  let metadir =
-    if root then dir else
-    match
-      OpamFilename.opt_dir (dir / (OpamPackage.Name.to_string name ^ ".opam"))
-    with
-    | Some d -> d
-    | None -> dir / "opam"
-  in
   let opam_file =
     if root then OpamFilename.opt_file (dir // "opam")
     else OpamPinned.find_opam_file_in_source name dir
@@ -126,8 +118,6 @@ let pinned_package st ?fixed_version name =
       (local_opam ?fixed_version name srcdir >>| hash_meta) +! []
     )
   in
-  let old_opam_file = OpamPinned.find_opam_file_in_source name srcdir in
-  let was_single_opam_file = (old_opam_file = Some (srcdir // "opam")) in
   let user_meta, empty_user_meta, user_version =
     (* Installed version (overlay) *)
     if OpamFile.OPAM.metadata_dir current_opam <> Some overlay then
@@ -194,7 +184,7 @@ let pinned_package st ?fixed_version name =
     | `Changed f -> Printf.sprintf "The contents of %S changed" f
   in
   let install_meta dir rm_hash hash =
-    let root =
+    let package_root =
       let d = dir / (OpamPackage.Name.to_string name ^ ".opam") in
       if OpamFilename.exists_dir d then d else
       let d = dir / "opam" in
@@ -208,8 +198,13 @@ let pinned_package st ?fixed_version name =
             OpamStd.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
           in
           OpamFile.OPAM.write (overlay // f)
-            (OpamFile.OPAM.with_version_opt o vo)
-        | `Digest _ -> OpamFilename.copy_in ~root (root // f) overlay)
+            (OpamFile.OPAM.with_url
+               (OpamFile.OPAM.with_version_opt o vo)
+               url);
+          OpamFilename.remove
+            (OpamPath.Switch.Overlay.url root st.switch name)
+        | `Digest _ ->
+          OpamFilename.copy_in ~root:package_root (package_root // f) overlay)
       hash
   in
   (* Metadata from the package changed *)

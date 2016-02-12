@@ -114,6 +114,17 @@ let edit t name =
   | None -> if empty_opam then raise Not_found else None
   | Some new_opam ->
     OpamFilename.move ~src:temp_file ~dst:file;
+    let url_file =
+      OpamPath.Switch.Overlay.url t.switch_global.root t.switch name
+    in
+    if OpamFile.OPAM.url new_opam = None then
+      (* Preserve original url *)
+      OpamStd.Option.Op.(
+        (orig_opam >>= OpamFile.OPAM.url >>| OpamFile.URL.write url_file) +! ()
+      )
+    else
+      (* Remove url overlay that would hide the in-opam url *)
+      OpamFilename.remove url_file;
     OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
     if Some new_opam = orig_opam then (
@@ -141,11 +152,13 @@ let edit t name =
     | Some nv ->
       OpamSwitchAction.write_selections t;
       Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
+
 (* unused ?
 let update_set set old cur save =
   if OpamPackage.Set.mem old set then
     save (OpamPackage.Set.add cur (OpamPackage.Set.remove old set))
 *)
+
 let update_config t pinned =
   OpamSwitchAction.write_selections { t with pinned }
 
