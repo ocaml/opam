@@ -290,8 +290,11 @@ let fix_package_descriptions rt ~verbose =
           log "download %a"
             (slog @@ OpamFilename.to_string @*
                      OpamPath.archive gt.root) nv;
-          OpamRepositoryState.download_archive rt nv @@+
-          fun _ -> Done ())
+          try
+            OpamRepositoryState.download_archive rt nv @@+
+            fun _ -> Done ()
+          with Not_found -> Done ()
+        )
       (OpamPackage.Map.keys repo_index);
 
   (* Do not recompile a package if only OPAM or descr files have
