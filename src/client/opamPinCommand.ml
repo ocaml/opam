@@ -49,11 +49,20 @@ let edit t name =
   if not (OpamFilename.exists temp_file) then
     OpamFilename.copy ~src:file ~dst:temp_file;
   let rec edit () =
+    let edited_ok =
+      try
+        Sys.command
+          (Printf.sprintf "%s %s"
+             (OpamClientConfig.(!r.editor))
+             (OpamFilename.to_string temp_file))
+        = 0
+      with _ -> false
+    in
+    if not edited_ok then
+      (OpamConsole.error "Editor returned non-zero code, aborting.";
+       None)
+    else
     try
-      ignore @@ Sys.command
-        (Printf.sprintf "%s %s"
-           (OpamClientConfig.(!r.editor))
-           (OpamFilename.to_string temp_file));
       let warnings,opam_opt =
         OpamFile.OPAM.validate_file temp_file
       in
