@@ -284,6 +284,14 @@ module Format_upgrade = struct
           (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
     else
     if OpamVersion.compare config_version v1_3_dev5 < 0 then
+      if OpamVersion.git () <> None &&
+         OpamConsole.confirm
+           "This dev version of opam requires an update to the layout of %s, \
+            which can't be reverted.\n\
+            You may want to back it up before going further. Abort ?"
+           (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
+      then OpamConsole.error_and_exit "Aborted"
+      else
       let config = OpamFile.Config.with_opam_version config v1_3_dev5 in
       if OpamVersion.compare config_version v1_1 < 0 then
         from_1_0_to_1_1 root;
