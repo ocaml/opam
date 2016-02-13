@@ -28,128 +28,115 @@ let slog = OpamConsole.slog
 (* TODO: add repo *)
 let list ~print_short ~installed ~all =
   log "list";
-  OpamConsole.msg "Todo"
-(*
   let gt = OpamGlobalState.load () in
-  let switch = OpamStateConfig.(!r.current_switch) in
-  let descr c =
-    if c = OpamCompiler.system then
-      let system_version =
-        match Lazy.force OpamOCaml.system_ocamlc_version with
-        | None   -> "<none>"
-        | Some v -> v in
-      OpamFile.Descr.create (Printf.sprintf "System compiler (%s)" system_version)
-    else
-      OpamFile.Descr.safe_read (OpamPath.compiler_descr gt.root c) in
 
-  let installed_str     = "I" in
-  let current_str       = "C" in
-  let not_installed_str = "--" in
+  let get_switch_opam sw sel nv =
+    let name = OpamPackage.name nv in
+    let opam =
+      if not (OpamPackage.Name.Map.mem name sel.sel_pinned) then
+        OpamFileHandling.read_opam (OpamPath.packages gt.root nv)
+      else None
+    in
+    OpamStd.Option.Op.(
+      opam >>+ fun () ->
+      OpamFileHandling.read_opam
+        (OpamPath.Switch.Overlay.package gt.root sw name))
+  in
+  let installed_switches =
+    OpamGlobalState.fold_switches (fun sw sel acc ->
+        let opams =
+          (* !X use cache of installed opams once it exists *)
+          OpamPackage.Set.fold (fun nv acc ->
+              match get_switch_opam sw sel nv with
+              | Some opam -> OpamPackage.Map.add nv opam acc
+              | None -> acc)
+            sel.sel_compiler OpamPackage.Map.empty
+        in
+        let ifempty default m =
+          if OpamPackage.Map.is_empty m then default else m
+        in
+        let comp =
+          OpamPackage.Map.filter
+            (fun nv _ -> OpamPackage.Set.mem nv sel.sel_roots)
+            opams
+          |> ifempty opams
+        in
+        let comp =
+          OpamPackage.Map.filter
+            (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
+            comp
+          |> ifempty comp
+        in
+        OpamSwitch.Map.add sw comp acc)
+      gt
+      OpamSwitch.Map.empty
+  in
+  let available, notshown =
+    if installed then OpamPackage.Map.empty, 0 else
+    let rt = OpamRepositoryState.load gt in
+    let st = OpamSwitchState.load_virtual gt rt in
+    let is_main_comp_re =
+      Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
+    in
+    OpamPackage.Map.fold
+      (fun nv opam (acc,notshown) ->
+         if OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+            OpamPackage.Set.mem nv (Lazy.force st.available_packages)
+         then
+           if all ||
+              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv))
+           then OpamPackage.Map.add nv opam acc, notshown
+           else acc, notshown + 1
+         else acc, notshown)
+      st.opams (OpamPackage.Map.empty, 0)
+  in
+  let list =
+    OpamSwitch.Map.fold (fun sw opams acc ->
+        let descr =
+          match OpamPackage.Map.values opams with
+          | [opam] -> OpamFile.OPAM.descr opam
+          | _ -> None
+        in
+        (Some sw, OpamPackage.keys opams, descr) :: acc)
+      installed_switches []
+  in
+  let list =
+    OpamPackage.Map.fold (fun nv opam acc ->
+        let packages = OpamPackage.Set.singleton nv in
+        if
+          List.exists
+            (fun (_, nvs, _) -> OpamPackage.Set.equal nvs packages)
+            list
+        then acc
+        else (None, packages, OpamFile.OPAM.descr opam) :: acc)
+      available list
+  in
+  let list = List.sort compare list in
 
-  let installed_s =
-    OpamSwitch.Map.fold (fun name comp acc ->
-      let s =
-        if Some name = switch
-        then current_str
-        else installed_str in
-      let n = OpamSwitch.to_string name in
-      let c = OpamCompiler.to_string comp in
-      let d = descr comp in
-      (OpamCompiler.version comp, n, s, c, d) :: acc
-    ) gt.aliases [] in
+  let table =
+    List.map (OpamConsole.colorise `blue)
+      ["# switch"; "compiler"; "description" ] ::
+    List.map (fun (swopt, packages, descr) ->
+        List.map
+          (if swopt <> None && swopt = OpamStateConfig.(!r.current_switch)
+           then OpamConsole.colorise `bold else fun s -> s)
+          [ OpamStd.Option.to_string ~none:"-" OpamSwitch.to_string swopt;
+            OpamStd.List.concat_map ","
+              (OpamConsole.colorise `yellow @* OpamPackage.to_string)
+              (OpamPackage.Set.elements packages);
+            OpamStd.Option.to_string ~none:"" OpamFile.Descr.synopsis descr ])
+      list
+  in
+  OpamStd.Format.print_table stdout ~sep:" " (OpamStd.Format.align_table table);
 
-  let rt = OpamRepositoryState.load gt in
-  let descrs =
-    OpamCompiler.Set.filter (fun comp ->
-      OpamSwitch.Map.for_all (fun s c ->
-        (* it is either not installed *)
-        c <> comp
-        (* or it is installed with an alias name. *)
-        || OpamSwitch.to_string s <> OpamCompiler.to_string comp
-      ) gt.aliases
-    ) rt.compilers in
-
-  let officials, patches =
-    OpamCompiler.Set.fold (fun comp (officials, patches) ->
-        try
-          let c = OpamFile.Comp.read (OpamPath.compiler_comp gt.root comp) in
-          let version = OpamFile.Comp.version c in
-          if OpamCompiler.Version.to_string version =
-             OpamCompiler.to_string comp then
-            comp :: officials, patches
-          else
-            officials, comp :: patches
-        with OpamFormat.Bad_format _ -> officials, patches
-    ) descrs ([],[]) in
-
-  let mk l =
-    List.fold_left (fun acc comp ->
-      let c = OpamCompiler.to_string comp in
-      let d = descr comp in
-      (OpamCompiler.version comp,
-       not_installed_str, not_installed_str, c, d) :: acc
-    ) [] l in
-
-  let to_show =
-    if installed then
-      installed_s
-    else if all then
-      mk officials @ installed_s @ mk patches
-    else
-      mk officials @ installed_s in
-
-  let to_show =
-    List.sort
-      (fun (v1,_,_,_,_) (v2,_,_,_,_) -> OpamCompiler.Version.compare v1 v2)
-      to_show in
-
-  let max_name, max_state, max_compiler =
-    List.fold_left (fun (n,s,c) (_,name, state, compiler, _) ->
-      let n = max (String.length name) n in
-      let s = max (String.length state) s in
-      let c = max (String.length compiler) c in
-      (n, s, c)
-    ) (0,0,0) to_show in
-
-  let print_compiler (_, name, state, compiler, descr) =
-    if print_short then
-      let name =
-        if name = not_installed_str
-        then compiler
-        else name in
-      OpamConsole.msg "%s\n" name
-    else
-      let bold_current s =
-        if Some (OpamSwitch.of_string name) = switch
-        then OpamConsole.colorise `bold s
-        else s in
-      let colored_name = bold_current name in
-      let colored_state =
-        if state = not_installed_str then state else
-          bold_current (OpamConsole.colorise `blue state) in
-      let colored_compiler =
-        bold_current (OpamConsole.colorise `yellow compiler) in
-      let colored_descr = bold_current (OpamFile.Descr.synopsis descr) in
-      let colored_body =
-        if (OpamConsole.verbose ()) then
-          match OpamStd.String.strip (OpamFile.Descr.body descr) with
-          | "" -> ""
-          | d  -> "\n"^d^"\n"
-        else "" in
-      OpamConsole.msg "%s %s %s  %s%s\n"
-        (OpamStd.Format.indent_left colored_name ~visual:name max_name)
-        (OpamStd.Format.indent_right colored_state ~visual:state max_state)
-        (OpamStd.Format.indent_left colored_compiler ~visual:compiler max_compiler)
-        colored_descr colored_body in
-
-  List.iter print_compiler to_show;
-  if not installed && not all && not print_short && patches <> [] then
+  if not print_short && notshown > 0 then
     OpamConsole.msg "# %d more patched or experimental compilers, \
                      use '--all' to show\n"
-      (List.length patches);
+      notshown;
   if not print_short then
-  match switch, OpamStateConfig.(!r.switch_from) with
-  | None, _ when not (OpamSwitch.Map.is_empty gt.aliases) ->
+  match OpamStateConfig.(!r.current_switch), OpamStateConfig.(!r.switch_from)
+  with
+  | None, _ when OpamFile.Config.installed_switches gt.config <> [] ->
     OpamConsole.note
       "No switch is currently set, you should use 'opam switch <switch>' \
        to set an active switch"
@@ -174,7 +161,7 @@ let list ~print_short ~installed ~all =
           "The environment is not in sync with the current switch.\n\
            You should run: %s"
           (OpamEnv.eval_string gt (Some switch)))
-  | _ -> () *)
+  | _ -> ()
 
 let clear_switch ?(keep_debug=false) gt switch =
   let module C = OpamFile.Config in

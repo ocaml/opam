@@ -795,7 +795,7 @@ module Pp = struct
               (Logop (pos_null, `Or, aux e, aux f))
           | Atom at -> group_if (print (package_atom constraints) at)
         in
-        List.map aux (split f)
+        List.map (aux ~in_and:false) (split f)
       in
       list -| pp ~name:"pkg-formula" parse_formula print_formula
 

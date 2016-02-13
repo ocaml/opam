@@ -851,7 +851,7 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:1
            (Pp.V.string -|
             Pp.of_module "repository" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t)));
-      "installed_switches", Pp.ppacc
+      "installed-switches", Pp.ppacc
         with_installed_switches installed_switches
         (Pp.V.map_list ~depth:1
            (Pp.V.string -|
