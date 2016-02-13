@@ -146,8 +146,8 @@ module Format_upgrade = struct
               OpamPackage.Set.add nv acc)
             OpamPackage.Set.empty atoms
         in
-        OpamFile.SwitchSelections.write
-          (OpamPath.Switch.selections root switch)
+        OpamFile.State.write
+          (OpamPath.Switch.state root switch)
           { sel_installed = installed;
             sel_roots = installed_roots;
             sel_pinned = pinned;
@@ -169,7 +169,7 @@ module Format_upgrade = struct
 
   let v1_3_dev5 = OpamVersion.of_string "1.3~dev5"
 
-  let from_1_3_dev2_to_1_3_dev5 root =
+  let from_1_3_dev2_to_1_3_dev5 root conf =
     log "Upgrade switch state files format to 1.3 step 2";
     let aliases_f = OpamPath.aliases root in
     let aliases = OpamFile.Aliases.safe_read aliases_f in
@@ -219,7 +219,7 @@ module Format_upgrade = struct
                 in
                 match Lazy.force OpamOCaml.where_is_ocamlc with
                 | Some ocamlc ->
-                  let f = OpamFilename.of_string ocamlc in
+                  let f = OpamFilename.Dir.of_string ocamlc // "ocamlc" in
                   OpamFile.Dot_config.with_file_depends config
                     [f, OpamFilename.digest f]
                 | None -> config
@@ -259,19 +259,17 @@ module Format_upgrade = struct
             {selections with
              sel_installed = OpamPackage.Set.add nv selections.sel_installed;
              sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
-             sel_roots = OpamPackage.Set.add nv selections.sel_compiler; }
+             sel_roots = OpamPackage.Set.add nv selections.sel_roots; }
           else selections
         in
         OpamFile.SwitchSelections.write selections_f selections;
         OpamFilename.remove state_f)
       aliases;
-    let conf_f = OpamPath.config root in
-    let conf = OpamFile.Config.safe_read conf_f in
     let conf =
       OpamFile.Config.with_installed_switches conf (OpamSwitch.Map.keys aliases)
     in
-    OpamFile.Config.write conf_f conf;
-    OpamFilename.remove aliases_f
+    OpamFilename.remove aliases_f;
+    conf
 
   let as_necessary root config =
     let config_version = OpamFile.Config.opam_version config in
@@ -299,8 +297,11 @@ module Format_upgrade = struct
         from_1_1_to_1_2 root;
       if OpamVersion.compare config_version v1_3_dev2 < 0 then
         from_1_2_to_1_3_dev2 root;
-      if OpamVersion.compare config_version v1_3_dev5 < 0 then
-        from_1_3_dev2_to_1_3_dev5 root;
+      let config =
+        if OpamVersion.compare config_version v1_3_dev5 < 0 then
+          from_1_3_dev2_to_1_3_dev5 root config
+        else config
+      in
       OpamStateConfig.write root config;
       config
     else

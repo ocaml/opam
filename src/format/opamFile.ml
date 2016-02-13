@@ -2695,7 +2695,7 @@ module CompSyntax = struct
     in
     let extra_sources =
       List.map (fun url ->
-          url, Digest.string "" (* no hash !? *), None
+          url, Digest.to_hex (Digest.string "") (* no hash !? *), None
         )
         comp.patches
     in
