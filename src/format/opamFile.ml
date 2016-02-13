@@ -2189,8 +2189,8 @@ module OPAM = struct
                    (List.map to_string (Set.elements undep_pkgs))
          (not (OpamPackage.Name.Set.is_empty undep_pkgs)));
       cond 42 `Error
-        "The 'dev-repo:' field doesn't use version control. You may use \
-         URLs of the form \"git+https://\" or a \".hg\" or \".git\" suffix"
+        "The 'dev-repo:' field doesn't use version control. You should use \
+         URLs of the form \"git://\", \"git+https://\", \"hg+https://\"..."
         (match t.dev_repo with
          | None -> false
          | Some { OpamUrl.backend = #OpamUrl.version_control; _ } -> false
