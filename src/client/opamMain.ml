@@ -919,26 +919,30 @@ let switch =
       | Some nv when OpamPackage.Set.mem nv compiler_packages ->
         [OpamSolution.eq_atom_of_package nv]
       | _ ->
-        let pkgname = OpamPackage.Name.of_string name in
-        if OpamPackage.has_name compiler_packages  pkgname then
-          [pkgname, None]
-        else
-        let version = OpamPackage.Version.of_string name in
-        let has_version =
-          OpamPackage.Set.filter (fun nv -> OpamPackage.version nv = version)
-            compiler_packages
+        let pkgname =
+          try Some (OpamPackage.Name.of_string name)
+          with Failure _ -> None
         in
-        try
-          [OpamSolution.eq_atom_of_package
-             (OpamPackage.Set.choose_one has_version)]
-        with
-        | Not_found ->
-          OpamConsole.error_and_exit
-            "No compiler matching '%s' found" name
-        | Failure _ ->
-          OpamConsole.error_and_exit
-            "Compiler selection '%s' is ambiguous. matching packages: %s"
-            name (OpamPackage.Set.to_string has_version)
+        match pkgname with
+        | Some pkgname when OpamPackage.has_name compiler_packages pkgname ->
+          [pkgname, None]
+        | _ ->
+          let version = OpamPackage.Version.of_string name in
+          let has_version =
+            OpamPackage.Set.filter (fun nv -> OpamPackage.version nv = version)
+              compiler_packages
+          in
+          try
+            [OpamSolution.eq_atom_of_package
+               (OpamPackage.Set.choose_one has_version)]
+          with
+          | Not_found ->
+            OpamConsole.error_and_exit
+              "No compiler matching '%s' found" name
+          | Failure _ ->
+            OpamConsole.error_and_exit
+              "Compiler selection '%s' is ambiguous. matching packages: %s"
+              name (OpamPackage.Set.to_string has_version)
     in
     let compiler_packages switch =
       match packages, alias_of with
