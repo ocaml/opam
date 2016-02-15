@@ -21,6 +21,7 @@
 open OpamTypes
 open OpamProcess.Job.Op
 open Opam_admin_top
+open OpamStd.Option.Op
 ;;
 
 let () =
@@ -31,89 +32,73 @@ let () =
   Printexc.register_printer error_printer
 ;;
 
-iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
-  let opam = OpamFile.Comp.to_package (OpamFile.Comp.name comp) comp descr in
-  let nv = OpamFile.OPAM.package opam in
-  let extra_sources =
-    OpamParallel.map
-      ~jobs:3
-      ~command:(fun url ->
-          let err e =
-            OpamConsole.error
-              "Could not get patch file for %s from %s (%s), skipping"
-              (OpamPackage.to_string nv) (OpamUrl.to_string url)
-              (Printexc.to_string e);
-            Done None
-          in
-          OpamFilename.with_tmp_dir_job @@ fun dir ->
-          try
-            OpamProcess.Job.catch err
-              (OpamDownload.download ~overwrite:false url dir
-               @@| fun f -> Some (url, OpamFilename.digest f, None))
-          with e -> err e)
-      (OpamFile.Comp.patches comp)
-  in
-  if List.mem None extra_files then
-    comp, `Keep
-  else
-  let opam = OpamFile.OPAM.with_extra_sources opam extra_sources in
-  OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
-  let config =
-    OpamFile.Dot_config.create @@
-    List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
-    [ "ocaml-version",
-      S (OpamCompiler.Version.to_string (OpamFile.Comp.version comp));
-      "compiler", S (OpamCompiler.to_string (OpamFile.Comp.name comp));
-      "preinstalled", B false;
-      (* fixme: generate those from build/config artifacts using a script ?
-         Guess from os and arch vars and use static 'features' + variable
-         expansion ? *)
-      "ocaml-native", B true;
-      "ocaml-native-tools", B true;
-      "ocaml-native-dynlink", B true;
-      "ocaml-stubsdir", S "%{lib}%/stublibs"; ]
-  in
-  OpamFile.Dot_config.write
-    OpamFilename.Op.(OpamRepositoryPath.files repo prefix nv // "ocaml.config")
-    config;
-  comp, `Remove
+OpamCompiler.Map.iter (fun c prefix ->
+    let comp_file = OpamRepositoryPath.compiler_comp repo prefix c in
+    let comp = OpamFile.Comp.read comp_file in
+    let descr_file =
+      OpamRepositoryPath.compiler_descr repo prefix c |>
+      OpamFilename.opt_file
+    in
+    let descr = descr_file >>| OpamFile.Descr.read in
+    let opam =
+      OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
+        comp descr
+    in
+    let nv = OpamFile.OPAM.package opam in
+    let patches = OpamFile.Comp.patches comp in
+    if patches <> [] then
+      OpamConsole.msg "Fetching patches of %s to check their checksums...\n"
+        (OpamPackage.to_string nv);
+    let extra_sources =
+      (* Download them just to get their mandatory MD5 *)
+      OpamParallel.map
+        ~jobs:3
+        ~command:(fun url ->
+            let err e =
+              OpamConsole.error
+                "Could not get patch file for %s from %s (%s), skipping"
+                (OpamPackage.to_string nv) (OpamUrl.to_string url)
+                (Printexc.to_string e);
+              Done None
+            in
+            OpamFilename.with_tmp_dir_job @@ fun dir ->
+            try
+              OpamProcess.Job.catch err
+                (OpamDownload.download ~overwrite:false url dir
+                 @@| fun f -> Some (url, OpamFilename.digest f, None))
+            with e -> err e)
+        (OpamFile.Comp.patches comp)
+    in
+    if List.mem None extra_sources then ()
+    else
+    let opam =
+      OpamFile.OPAM.with_extra_sources opam
+        (OpamStd.List.filter_some extra_sources)
+    in
+    OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
+    let config =
+      OpamFile.Dot_config.create @@
+      List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
+      [ "ocaml-version",
+        S (OpamCompiler.Version.to_string (OpamFile.Comp.version comp));
+        "compiler", S (OpamCompiler.to_string (OpamFile.Comp.name comp));
+        "preinstalled", B false;
+        (* fixme: generate those from build/config artifacts using a script ?
+           Guess from os and arch vars and use static 'features' + variable
+           expansion ?
+           ... or just let them be fixed by hand ? *)
+        "ocaml-native", B true;
+        "ocaml-native-tools", B true;
+        "ocaml-native-dynlink", B true;
+        "ocaml-stubsdir", S "%{lib}%/stublibs"; ]
+    in
+    OpamFile.Dot_config.write
+      OpamFilename.Op.(OpamRepositoryPath.files repo prefix nv // "ocaml.config")
+      config;
+    OpamFilename.remove comp_file;
+    OpamStd.Option.iter OpamFilename.remove descr_file;
+    OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
+    OpamConsole.msg "Compiler %s successfully converted to package %s\n"
+      (OpamCompiler.to_string c) (OpamPackage.to_string nv))
+  (OpamRepository.compilers_with_prefixes repo)
 ;;
-
-module OF = OpamFile.OPAM
-;;
-
-let rec filter_of_formula atom_f = function
-  | Empty -> FBool true
-  | Atom at -> atom_f at
-  | Block f -> filter_of_formula atom_f f
-  | And (a, b) -> FAnd (filter_of_formula atom_f a, filter_of_formula atom_f b)
-  | Or (a, b) -> FOr (filter_of_formula atom_f a, filter_of_formula atom_f b)
-;;
-
-iter_packages ~opam:(fun nv opam ->
-    if OpamPackage.name_to_string nv <> "ocaml" then
-      let available =
-        match OF.ocaml_version opam with
-        | None -> OF.available opam
-        | Some cstr ->
-          let filter =
-            filter_of_formula
-              (fun (op,v) ->
-                 FOp
-                   (FIdent ([], OpamVariable.of_string "ocaml-version", None),
-                    op,
-                    FString (OpamCompiler.Version.to_string v)))
-              cstr
-          in
-          match OF.available opam with
-          | FBool true -> filter
-          | f -> FAnd (filter, f)
-      in
-      let opam = OpamFile.OPAM.with_ocaml_version opam OpamFormula.Empty in
-      let opam = OF.with_available opam available in
-      let opam = OF.with_opam_version opam (OpamVersion.of_string "1.3~dev4") in
-      opam
-    else opam)
-  ()
-;;
-

@@ -187,12 +187,13 @@ module Format_upgrade = struct
             let comp = OpamFile.Comp.read comp_f in
             let descr_f = OpamPath.compiler_descr root comp_name in
             let descr =
-              if OpamFilename.exists descr_f
-              then Some (OpamFile.Descr.read descr_f)
-              else None
+              if OpamFilename.exists descr_f then OpamFile.Descr.read descr_f
+              else
+                OpamFile.Descr.create
+                  "Switch relying on a system-wide installation of OCaml"
             in
             let comp_opam =
-              OpamFile.Comp.to_package name comp descr
+              OpamFile.Comp.to_package name comp (Some descr)
             in
             let nv = OpamFile.OPAM.package comp_opam in
             let switch_config_f = OpamPath.Switch.global_config root switch in
@@ -269,6 +270,8 @@ module Format_upgrade = struct
       OpamFile.Config.with_installed_switches conf (OpamSwitch.Map.keys aliases)
     in
     OpamFilename.remove aliases_f;
+    OpamConsole.note "Opam root update successful. You should run 'opam \
+                      update' to sync with the new format repositories.";
     conf
 
   let as_necessary root config =

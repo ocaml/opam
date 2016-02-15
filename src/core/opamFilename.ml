@@ -50,6 +50,14 @@ let with_tmp_dir_job fjob =
 let rmdir dirname =
   OpamSystem.remove_dir (Dir.to_string dirname)
 
+let rec rmdir_cleanup dirname =
+  let sd = Dir.to_string dirname in
+  if OpamSystem.dir_is_empty sd then (
+    rmdir dirname;
+    let parent = Filename.dirname sd in
+    if parent <> sd then rmdir_cleanup parent
+  )
+
 let cwd () =
   Dir.of_string (Unix.getcwd ())
 
