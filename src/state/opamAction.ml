@@ -249,9 +249,6 @@ let download_package st nv =
         let dir = OpamPath.dev_package st.switch_global.root nv in
         OpamUpdate.download_upstream st nv dir @@| of_dl
   in
-  (* let extras = *)
-  (*   List.map (fun (url,checksum,fname) -> *)
-  (*       OpamDownload.download_as ~checksum  *)
   OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
 
 let extract_package st source nv =
@@ -271,9 +268,26 @@ let extract_package st source nv =
   let is_repackaged_archive =
     Some (F (OpamPath.archive st.switch_global.root nv)) = source
   in
-  if not is_repackaged_archive then
+  if not is_repackaged_archive then (
+    (* !X this should be done during the download phase, but at
+       the moment it assumes a single file *)
+    let extra_dls =
+      OpamParallel.map
+        ~jobs:OpamStateConfig.(!r.dl_jobs)
+        ~command:(fun (url,checksum,fname) ->
+            let fname =
+              OpamStd.Option.default
+                (OpamFilename.Base.of_string (OpamUrl.basename url))
+                fname
+            in
+            OpamDownload.download_as
+              ~overwrite:true
+              ~checksum url
+              (OpamFilename.create build_dir fname))
+        (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv))
+    in
     OpamStd.Option.iter (fun src -> OpamFilename.copy_files ~src ~dst:build_dir)
-      (OpamSwitchState.files st nv);
+      (OpamSwitchState.files st nv));
   prepare_package_build st nv
 
 (* unused ?
