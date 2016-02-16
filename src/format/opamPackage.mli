@@ -34,8 +34,13 @@ module Name: sig
 
 end
 
+type t = private {
+  name: Name.t;
+  version: Version.t;
+}
+
 (** Package (name x version) pairs *)
-include OpamStd.ABSTRACT
+include OpamStd.ABSTRACT with type t := t
 
 (** Return the package name *)
 val name: t -> Name.t

@@ -55,7 +55,10 @@ type 'a download =
 (** {2 Packages} *)
 
 (** Packages are ([name] * [version]) tuple *)
-type package = OpamPackage.t
+type package = OpamPackage.t = private {
+  name: OpamPackage.Name.t;
+  version: OpamPackage.Version.t;
+}
 
 (** Set of packages *)
 type package_set = OpamPackage.Set.t
