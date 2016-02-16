@@ -271,21 +271,19 @@ let extract_package st source nv =
   if not is_repackaged_archive then (
     (* !X this should be done during the download phase, but at
        the moment it assumes a single file *)
-    let extra_dls =
-      OpamParallel.map
-        ~jobs:OpamStateConfig.(!r.dl_jobs)
-        ~command:(fun (url,checksum,fname) ->
-            let fname =
-              OpamStd.Option.default
-                (OpamFilename.Base.of_string (OpamUrl.basename url))
-                fname
-            in
-            OpamDownload.download_as
-              ~overwrite:true
-              ~checksum url
-              (OpamFilename.create build_dir fname))
-        (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv))
-    in
+    OpamParallel.iter
+      ~jobs:OpamStateConfig.(!r.dl_jobs)
+      ~command:(fun (url,checksum,fname) ->
+          let fname =
+            OpamStd.Option.default
+              (OpamFilename.Base.of_string (OpamUrl.basename url))
+              fname
+          in
+          OpamDownload.download_as
+            ~overwrite:true
+            ~checksum url
+            (OpamFilename.create build_dir fname))
+      (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv));
     OpamStd.Option.iter (fun src -> OpamFilename.copy_files ~src ~dst:build_dir)
       (OpamSwitchState.files st nv));
   prepare_package_build st nv
