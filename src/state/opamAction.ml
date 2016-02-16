@@ -289,7 +289,7 @@ let compilation_env t opam =
      OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
      None)
   ] @ env0 in
-  OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
+  OpamState.add_to_env ~root:t.root env1 (OpamFile.OPAM.build_env opam)
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned t =
   let open OpamStd.Option.Op in
