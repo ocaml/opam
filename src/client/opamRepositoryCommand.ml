@@ -145,7 +145,7 @@ let print_updated_packages gt updates =
 
   let installed_switches nv =
     let installed =
-      OpamGlobalState.installed_versions gt (OpamPackage.name nv)
+      OpamGlobalState.installed_versions gt nv.name
     in
     let installed =
       try OpamPackage.Map.find nv installed
@@ -154,7 +154,7 @@ let print_updated_packages gt updates =
     | [] -> None
     | _  -> Some (
         Printf.sprintf "%s (%s)"
-          (OpamPackage.Version.to_string (OpamPackage.version nv))
+          (OpamPackage.Version.to_string nv.version)
           (OpamStd.Format.pretty_list (List.map OpamSwitch.to_string installed))
       ) in
 
@@ -245,7 +245,7 @@ let fix_package_descriptions rt ~verbose =
   let all_installed_unpinned =
     OpamSwitch.Map.fold (fun _ sel acc ->
         OpamPackage.Set.filter
-          (fun nv -> not (OpamPackage.Name.Map.mem (OpamPackage.name nv)
+          (fun nv -> not (OpamPackage.Name.Map.mem nv.name
                             sel.sel_pinned))
           sel.sel_installed
         ++ acc)

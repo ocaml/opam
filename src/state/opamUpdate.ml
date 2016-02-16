@@ -30,7 +30,7 @@ let fetch_dev_package url srcdir nv =
   log "updating %a" (slog OpamUrl.to_string) remote_url;
   let text =
     OpamProcess.make_command_text
-      (OpamPackage.Name.to_string (OpamPackage.name nv))
+      (OpamPackage.Name.to_string nv.name)
       (OpamUrl.string_of_backend remote_url.OpamUrl.backend) in
   OpamProcess.Job.with_text text @@
   OpamRepository.pull_url nv srcdir checksum mirrors
@@ -131,7 +131,7 @@ let pinned_package st ?fixed_version name =
   let repo_meta = (* Version from the repo *)
     let nv_opam =
       let packages =
-        OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
+        OpamPackage.Map.filter (fun nv _ -> nv.name = name)
           st.switch_repos.repo_opams
       in
       match user_version with
@@ -242,9 +242,9 @@ let pinned_package st ?fixed_version name =
 
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
-  let name = OpamPackage.name nv in
+  let name = nv.name in
   match OpamPackage.Name.Map.find_opt name st.pinned with
-  | Some (v, Source _) when v = OpamPackage.version nv ->
+  | Some (v, Source _) when v = nv.version ->
     pinned_package st name
   | _ ->
     match OpamSwitchState.url st nv with
@@ -270,7 +270,7 @@ let dev_packages st packages =
   in
   let pinned =
     OpamPackage.Set.filter
-      (fun nv -> OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned)
+      (fun nv -> OpamPackage.Name.Map.mem nv.name st.pinned)
       packages
   in
   OpamSwitchAction.add_to_reinstall st.switch_global st.switch

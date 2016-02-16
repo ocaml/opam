@@ -155,7 +155,7 @@ let resolve_deps args index names =
     List.map (fun str ->
         match OpamPackage.of_string_opt str with
         | Some nv ->
-          OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+          OpamSolution.eq_atom nv.name nv.version
         | None -> OpamPackage.Name.of_string str, None)
       names in
   let opams =

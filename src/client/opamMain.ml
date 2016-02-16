@@ -929,7 +929,7 @@ let switch =
         | _ ->
           let version = OpamPackage.Version.of_string name in
           let has_version =
-            OpamPackage.Set.filter (fun nv -> OpamPackage.version nv = version)
+            OpamPackage.Set.filter (fun nv -> nv.version = version)
               compiler_packages
           in
           try
@@ -1256,7 +1256,7 @@ let source =
           ~dst:dir;
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);
-        if OpamPinned.find_opam_file_in_source (OpamPackage.name nv) dir = None
+        if OpamPinned.find_opam_file_in_source nv.name dir = None
         then
           let f =
             if OpamFilename.exists_dir Op.(dir / "opam")
@@ -1280,7 +1280,7 @@ let source =
         Source (OpamUrl.parse ~backend
                   ("file://"^OpamFilename.Dir.to_string dir))
       in
-      Client.PIN.pin (OpamPackage.name nv) ~version:(OpamPackage.version nv)
+      Client.PIN.pin nv.name ~version:nv.version
         (Some pin_option)
   in
   Term.(pure source

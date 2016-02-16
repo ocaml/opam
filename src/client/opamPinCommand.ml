@@ -151,7 +151,7 @@ let edit t name =
     | None -> None
     | Some nv ->
       OpamSwitchAction.write_selections t;
-      Some (OpamPackage.version nv = OpamFile.OPAM.version new_opam)
+      Some (nv.version = OpamFile.OPAM.version new_opam)
 
 (* unused ?
 let update_set set old cur save =
@@ -331,7 +331,7 @@ let list ~short () =
     let state, extra =
       try
         let nv = OpamSwitchState.find_installed_package_by_name t n in
-        if OpamPackage.version nv = v
+        if nv.version = v
         then "",[]
         else
           OpamConsole.colorise `red " (not in sync)",

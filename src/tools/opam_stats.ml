@@ -132,7 +132,7 @@ let stats repo =
           | Some nv -> OpamPackage.Set.add nv packages
         ) OpamPackage.Set.empty files in
       let names = OpamPackage.Set.fold (fun nv names ->
-          OpamPackage.Name.Set.add (OpamPackage.name nv) names
+          OpamPackage.Name.Set.add nv.name names
         ) packages OpamPackage.Name.Set.empty in
       { commit; date; authors; packages; names }
     ) commits in

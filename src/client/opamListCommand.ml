@@ -42,7 +42,7 @@ let details_of_package t name versions =
     try Some
           (OpamPackage.version
              (OpamPackage.Set.find
-                (fun nv -> OpamPackage.name nv = name)
+                (fun nv -> nv.name = name)
                 t.installed))
     with Not_found -> None in
   let current_version = match installed_version with
@@ -101,7 +101,7 @@ let details_of_package_regexps t packages ~exact_name ~case_sensitive regexps =
         match OpamPackage.of_string_opt str with
         | Some nv ->
           if OpamPackage.Set.mem nv packages then
-            let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+            let name = OpamPackage.Name.to_string nv.name in
             Re_glob.globx name
           else
             Re_glob.globx str
@@ -179,7 +179,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
           universe packages
       in
       List.fold_left (fun acc nv ->
-          try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
+          try (nv.name, List.assoc nv packages_info) :: acc
           with Not_found -> acc
         ) [] packages in
   let roots = OpamPackage.names_of_packages t.installed_roots in
@@ -304,8 +304,8 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
                  OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam)]
             else formula in
           let depends_on nv =
-            let name = OpamPackage.name nv in
-            let v = OpamPackage.version nv in
+            let name = nv.name in
+            let v = nv.version in
             List.exists (fun (n,_) -> name = n) (OpamFormula.atoms formula) &&
             OpamFormula.eval
               (fun (n,cstr) ->
@@ -455,7 +455,7 @@ let info ~fields ~raw_opam ~where atoms =
     let installed_str =
       let one (nv, aliases) =
         Printf.sprintf "%s [%s]"
-          (OpamPackage.Version.to_string (OpamPackage.version nv))
+          (OpamPackage.Version.to_string nv.version)
           (String.concat " " (List.map OpamSwitch.to_string aliases)) in
       String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
@@ -572,7 +572,7 @@ let info ~fields ~raw_opam ~where atoms =
       let d = OpamSwitchState.descr t nv in
       ["description", OpamFile.Descr.full d] in
 
-    let version = OpamPackage.version nv in
+    let version = nv.version in
 
     let all_fields =
       [ "metadata of version", OpamPackage.Version.to_string version ]

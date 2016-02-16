@@ -16,6 +16,7 @@
 
 open OpamStd.Op
 
+open OpamTypes
 open OpamStateTypes
 
 (* Lists of defined variables, for documentation *)
@@ -271,10 +272,10 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
           (fun (n,cstr) ->
              try
                let nv =
-                 OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
+                 OpamPackage.Set.find (fun nv -> nv.name = n)
                    st.installed
                in
-               let version = OpamPackage.version nv in
+               let version = nv.version in
                match cstr with
                | None -> Some nv
                | Some (op,v) when OpamFormula.eval_relop op version v -> Some nv

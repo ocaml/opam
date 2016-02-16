@@ -259,7 +259,7 @@ let set_current_switch gt switch =
 
 let install_metadata st nv =
   let opam_mirror = OpamPath.opam st.switch_global.root nv in
-  if OpamPackage.Name.Map.mem (OpamPackage.name nv) st.pinned ||
+  if OpamPackage.Name.Map.mem nv.name st.pinned ||
      OpamFilename.exists opam_mirror then ()
   else (
     OpamFile.OPAM.write opam_mirror (OpamSwitchState.opam st nv);
@@ -319,7 +319,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   st
 
 let add_to_installed st ?(root=false) nv =
-  let name = OpamPackage.name nv in
+  let name = nv.name in
   let st =
     update_switch_state st
       ~installed:(OpamPackage.Set.add nv st.installed)
@@ -387,7 +387,7 @@ let remove_from_installed st nv =
       OpamFile.Dot_config.bindings @@
       OpamFile.Dot_config.safe_read
         (OpamPath.Switch.config st.switch_global.root st.switch
-           (OpamPackage.name nv))
+           nv.name)
     in
     let rev_vars, _ =
       List.fold_left (fun (vars,to_remove) (v,_ as binding) ->

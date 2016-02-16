@@ -31,7 +31,7 @@ let list ~print_short ~installed ~all =
   let gt = OpamGlobalState.load () in
 
   let get_switch_opam sw sel nv =
-    let name = OpamPackage.name nv in
+    let name = nv.name in
     let opam =
       if not (OpamPackage.Name.Map.mem name sel.sel_pinned) then
         OpamFileHandling.read_opam (OpamPath.packages gt.root nv)
@@ -319,13 +319,13 @@ let import_t importfile t =
   let available =
     OpamPackage.Set.fold (fun nv available ->
         if OpamPackage.Set.mem nv available then available else
-        if OpamPackage.Name.Map.mem (OpamPackage.name nv) importfile.sel_pinned
+        if OpamPackage.Name.Map.mem nv.name importfile.sel_pinned
         then OpamPackage.Set.add nv available
         else (
           OpamConsole.warning "%s Skipping."
             (OpamSwitchState.unavailable_reason t
                (OpamSolution.eq_atom
-                  (OpamPackage.name nv) (OpamPackage.version nv)));
+                  nv.name nv.version));
           available
         )
       )

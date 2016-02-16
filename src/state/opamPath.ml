@@ -33,7 +33,7 @@ let packages_dir t = t / "packages"
 
 let packages t nv =
   packages_dir t
-  / OpamPackage.Name.to_string (OpamPackage.name nv)
+  / OpamPackage.Name.to_string nv.name
   / OpamPackage.to_string nv
 
 let opam t nv = packages t nv // "opam"
@@ -108,10 +108,10 @@ module Switch = struct
   let build_ocaml t a = build_dir t a / "ocaml"
 
   let build_install t a nv =
-    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install")
+    build t a nv // (OpamPackage.Name.to_string nv.name ^ ".install")
 
   let build_config t a nv =
-    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".config")
+    build t a nv // (OpamPackage.Name.to_string nv.name ^ ".config")
 
   let install_dir t a = root t a / "install"
 

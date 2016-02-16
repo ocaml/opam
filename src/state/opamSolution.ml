@@ -88,13 +88,13 @@ let eq_atom name version =
   name, Some (`Eq, version)
 
 let eq_atom_of_package nv =
-  eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+  eq_atom nv.name nv.version
 
 let eq_atoms_of_packages set =
   List.rev_map eq_atom_of_package (OpamPackage.Set.elements set)
 
 let atom_of_package nv =
-  OpamPackage.name nv, None
+  nv.name, None
 
 let atoms_of_packages set =
   List.rev_map (fun n -> n, None)
@@ -204,7 +204,7 @@ let print_variable_warnings st =
       "OCAMLFIND_LDCONF";
     ] in
     if OpamPackage.Set.exists (
-        fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind"
+        fun nv -> OpamPackage.Name.to_string nv.name = "ocamlfind"
       ) t.installed then
       List.iter warn ocamlfind_vars;
     (* 2. Warn about variables possibly set by other compilers *)
@@ -321,7 +321,7 @@ let parallel_apply t action action_graph =
   in
 
   let add_to_install nv =
-    let root = OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs in
+    let root = OpamPackage.Name.Set.mem nv.name root_installs in
     t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv
   in
 
@@ -520,7 +520,7 @@ let parallel_apply t action action_graph =
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
         | `Remove nv
-          when not (OpamPackage.Name.Map.mem (OpamPackage.name nv) t.pinned) ->
+          when not (OpamPackage.Name.Map.mem nv.name t.pinned) ->
           OpamAction.cleanup_package_artefacts t nv (* no-op if reinstalled *)
         | `Remove _ | `Install _ | `Build _ -> ()
         | _ -> assert false)
@@ -697,7 +697,7 @@ let apply ?ask t action ~requested solution =
         )  messages in
       let rewrite nv =
         (* mark pinned packages with a star *)
-        let n = OpamPackage.name nv in
+        let n = nv.name in
         if OpamPackage.Name.Map.mem n t.pinned && OpamPinned.package t n = nv then
           OpamPackage.create n
             (OpamPackage.Version.of_string

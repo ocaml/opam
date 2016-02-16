@@ -57,7 +57,7 @@ let add_overlay ?(template=false) ?version rt switch name pin =
         | _ ->
           let versions =
             OpamPackage.Map.fold (fun nv _ acc ->
-                if OpamPackage.name nv = name then
+                if nv.name = name then
                   OpamPackage.Set.add nv acc
                 else acc)
               rt.package_index OpamPackage.Set.empty

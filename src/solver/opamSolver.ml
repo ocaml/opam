@@ -119,7 +119,7 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
          compute a full version map, but may still happen for user-provided
          constraints) *)
       let all_versions =
-        OpamPackage.Map.filter (fun nv _ -> OpamPackage.name nv = name)
+        OpamPackage.Map.filter (fun nv _ -> nv.name = name)
           version_map in
       match op with
       | `Neq -> None (* Always true *)
@@ -131,7 +131,7 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
           | `Leq | `Lt -> (fun x -> -x), `Leq in
         let rev_version_map =
           OpamPackage.Map.fold (fun nv cv acc ->
-              OpamStd.IntMap.add (sign cv) (OpamPackage.version nv) acc)
+              OpamStd.IntMap.add (sign cv) nv.version acc)
             all_versions OpamStd.IntMap.empty in
         let map =
           OpamStd.IntMap.filter
@@ -297,11 +297,11 @@ let cleanup_request universe (req:atom request) =
       req.wish_install in
   let wish_install = (* Always add compiler packages *)
     OpamStd.List.filter_map (fun nv ->
-        let n = OpamPackage.name nv in
+        let n = nv.name in
         if List.mem_assoc n req.wish_install ||
            List.mem_assoc n req.wish_upgrade
         then None
-        else Some (n, Some (`Eq, OpamPackage.version nv)))
+        else Some (n, Some (`Eq, nv.version)))
       (OpamPackage.Set.elements universe.u_base)
     @ wish_install
   in

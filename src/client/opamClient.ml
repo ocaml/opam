@@ -91,7 +91,7 @@ module API = struct
           allnames
           (OpamPackage.names_of_packages (all -- orphans)) in
       OpamPackage.Set.partition
-        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) orphan_names)
+        (fun nv -> OpamPackage.Name.Set.mem nv.name orphan_names)
         orphans
     in
     let full_orphans, orphan_versions = full_partition orphans in
@@ -257,7 +257,7 @@ module API = struct
                   OpamPackage.Set.mem nv t.reinstall
                then (n, None)
                else
-                 let atom = (n, Some (`Gt, OpamPackage.version nv)) in
+                 let atom = (n, Some (`Gt, nv.version)) in
                  if OpamPackage.Set.exists (OpamFormula.check atom)
                      (Lazy.force t.available_packages)
                  then atom
@@ -269,7 +269,7 @@ module API = struct
       List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
           try
             let nv =
-              OpamPackage.Set.find (fun nv -> OpamPackage.name nv = n)
+              OpamPackage.Set.find (fun nv -> nv.name = n)
                 t.installed in
             OpamPackage.Set.add nv packages, not_installed
           with Not_found ->
@@ -296,7 +296,7 @@ module API = struct
           universe changes
       in
       OpamPackage.Set.filter
-        (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) all_deps)
+        (fun nv -> OpamPackage.Name.Set.mem nv.name all_deps)
         t.reinstall
     in
     let t, full_orphans, orphan_versions = orphans ~changes t in
@@ -308,7 +308,7 @@ module API = struct
       (* packages corresponds to the currently installed versions.
          Not what we are interested in, recover the original atom constraints *)
       List.map (fun nv ->
-          let name = OpamPackage.name nv in
+          let name = nv.name in
           try name, List.assoc name atoms
           with Not_found -> name, None)
         (OpamPackage.Set.elements to_upgrade) in
@@ -495,7 +495,7 @@ module API = struct
       else if names = [] then OpamGlobalState.all_installed gt
       else
         OpamPackage.Set.filter (fun nv ->
-            let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+            let name = OpamPackage.Name.to_string nv.name in
             let pkg = OpamPackage.to_string nv in
             List.exists (fun s -> s = name || s = pkg) names
           ) (OpamGlobalState.all_installed gt)
@@ -861,14 +861,14 @@ module API = struct
               if not upgrade then
                 OpamConsole.note
                   "Package %s is already installed (current version is %s)."
-                  (OpamPackage.Name.to_string (OpamPackage.name nv))
-                  (OpamPackage.Version.to_string (OpamPackage.version nv));
+                  (OpamPackage.Name.to_string nv.name)
+                  (OpamPackage.Version.to_string nv.version);
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
                 OpamConsole.note
                   "Package %s is already installed as a root."
-                  (OpamPackage.Name.to_string (OpamPackage.name nv));
+                  (OpamPackage.Name.to_string nv.name);
               { t with installed_roots =
                          OpamPackage.Set.add nv t.installed_roots }
             | Some false ->
@@ -884,7 +884,7 @@ module API = struct
               else
                 (OpamConsole.note
                    "Package %s is already marked as 'installed automatically'."
-                   (OpamPackage.Name.to_string (OpamPackage.name nv));
+                   (OpamPackage.Name.to_string nv.name);
                  t)
           else t
         )  t pkg_skip in
@@ -951,7 +951,7 @@ module API = struct
           let solution =
             if deps_only then
               OpamSolver.filter_solution (fun nv ->
-                  not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names))
+                  not (OpamPackage.Name.Set.mem nv.name names))
                 solution
             else solution in
           OpamSolution.apply ?ask t action ~requested:names solution in
@@ -1103,7 +1103,7 @@ module API = struct
       let nv = try Some (OpamPinned.package t name) with Not_found -> None in
       try match nv with
       | Some nv ->
-        let v = OpamPackage.version nv in
+        let v = nv.version in
         OpamConsole.msg "%s needs to be %sinstalled.\n"
           (OpamPackage.Name.to_string name)
           (if OpamPackage.has_name t.installed name then "re" else "");
@@ -1120,8 +1120,8 @@ module API = struct
             (OpamConsole.msg "%s needs to be reinstalled.\n"
                (OpamPackage.Name.to_string name);
              if OpamPackage.Set.mem nv (Lazy.force t.available_packages)
-             then reinstall_t ~ask:true [name, Some (`Eq, OpamPackage.version nv)] t
-             else upgrade_t ~ask:true [name, Some (`Neq, OpamPackage.version nv)] t)
+             then reinstall_t ~ask:true [name, Some (`Eq, nv.version)] t
+             else upgrade_t ~ask:true [name, Some (`Neq, nv.version)] t)
           else
             (OpamConsole.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
              (* Package no longer available *)
@@ -1211,7 +1211,7 @@ module API = struct
                 let avail = Lazy.force t.available_packages in
                 if OpamPackage.Set.mem nv avail then
                   {t with reinstall = OpamPackage.Set.add nv t.reinstall},
-                  (name, Some (`Eq, OpamPackage.version nv))::atoms
+                  (name, Some (`Eq, nv.version))::atoms
                 else
                   t, (name, None)::atoms
               with Not_found -> t, atoms

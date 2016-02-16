@@ -110,7 +110,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
   let orphans = installed -- OpamPackage.keys opams in
   let opams =
     OpamPackage.Set.fold (fun nv opams ->
-        let name = OpamPackage.name nv in
+        let name = nv.name in
         let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
         match OpamFileHandling.read_opam overlay_dir with
         | Some opam -> OpamPackage.Map.add nv opam opams
@@ -126,7 +126,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
     let from_repos =
       OpamPackage.Map.filter
         (fun nv _ ->
-           not (OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned_names))
+           not (OpamPackage.Name.Set.mem nv.name pinned_names))
         rt.repo_opams
     in
     let all_with_metadata =
@@ -212,14 +212,14 @@ let files st nv =
   )
 
 let is_name_installed st name =
-  OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) st.installed
+  OpamPackage.Set.exists (fun nv -> nv.name = name) st.installed
 
 let find_installed_package_by_name st name =
-  OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) st.installed
+  OpamPackage.Set.find (fun nv -> nv.name = name) st.installed
 
 let packages_of_atoms st atoms =
   let check_atoms nv =
-    let name = OpamPackage.name nv in
+    let name = nv.name in
     let atoms = List.filter (fun (n,_) -> n = name) atoms in
     atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
   OpamPackage.Set.filter check_atoms st.packages

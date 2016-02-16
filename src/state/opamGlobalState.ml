@@ -64,8 +64,8 @@ module Format_upgrade = struct
             with Not_found -> OpamPackage.Version.of_string "0" in
         let fix_version nv =
           let obsolete_pinned_v = OpamPackage.Version.of_string "pinned" in
-          if OpamPackage.version nv = obsolete_pinned_v then
-            let name = OpamPackage.name nv in
+          if nv.version = obsolete_pinned_v then
+            let name = nv.name in
             OpamPackage.create name (pinned_version name)
           else nv in
         List.iter remove_pinned_suffix
@@ -157,7 +157,7 @@ module Format_upgrade = struct
         OpamFilename.remove pinned_f;
         (* Move .config files back *)
         OpamPackage.Set.iter (fun nv ->
-            let name = OpamPackage.name nv in
+            let name = nv.name in
             let src =
               OpamPath.Switch.Default.lib root switch name // "opam.config"
             in

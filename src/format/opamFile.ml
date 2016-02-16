@@ -411,7 +411,7 @@ module PkgList = LineFile (struct
        Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version: Pp.STR with type t = OpamPackage.Version.t))
       -| Pp.pp
         (fun ~pos:_ (n,v) -> OpamPackage.create n v)
-        (fun nv -> OpamPackage.name nv, OpamPackage.version nv)
+        (fun nv -> nv.name, nv.version)
 
   end)
 
@@ -571,21 +571,21 @@ module StateTable = struct
       (fun t ->
          M.empty |>
          OpamPackage.Set.fold (fun nv ->
-             M.add (OpamPackage.name nv)
-               (OpamPackage.version nv, (`Installed, None)))
+             M.add nv.name
+               (nv.version, (`Installed, None)))
            t.sel_installed |>
          OpamPackage.Set.fold (fun nv ->
-             M.add (OpamPackage.name nv)
-               (OpamPackage.version nv, (`Root, None)))
+             M.add nv.name
+               (nv.version, (`Root, None)))
            t.sel_roots |>
          OpamPackage.Set.fold (fun nv acc ->
-             let name = OpamPackage.name nv in
+             let name = nv.name in
              try
                let (v, _) = M.find name acc in
                M.add name (v, (`Compiler, None)) acc
              with Not_found ->
                M.add name
-                 (OpamPackage.version nv, (`Uninstalled_compiler, None))
+                 (nv.version, (`Uninstalled_compiler, None))
                  acc)
            t.sel_compiler |>
          M.fold (fun name (v, pin) map ->
@@ -952,16 +952,16 @@ module SwitchSelectionsSyntax = struct
             (Pp.opt @@ Pp.singleton -| Pp.V.url) -|
           Pp.pp
             (fun ~pos:_ -> function
-               | nv, None -> nv, Version (OpamPackage.version nv)
+               | nv, None -> nv, Version nv.version
                | nv, Some u -> nv, Source u)
             (function
-              | nv, Version v -> assert (OpamPackage.version nv = v); nv, None
+              | nv, Version v -> assert (nv.version = v); nv, None
               | nv, Source u -> nv, Some u)) -|
        Pp.pp
          (fun ~pos:_ pins ->
             List.fold_left (fun acc (nv,pin) ->
                 OpamPackage.Name.Map.add
-                  (OpamPackage.name nv) (OpamPackage.version nv, pin) acc)
+                  nv.name (nv.version, pin) acc)
               OpamPackage.Name.Map.empty pins)
          (fun nmap ->
             OpamPackage.Name.Map.fold (fun name (version, pin) acc ->
@@ -1379,8 +1379,8 @@ module OPAMSyntax = struct
   }
 
   let create nv =
-    let name = Some (OpamPackage.name nv) in
-    let version = Some (OpamPackage.version nv) in
+    let name = Some (nv.OpamPackage.name) in
+    let version = Some (nv.OpamPackage.version) in
     { empty with name; version }
 
   let check name = function
@@ -1539,20 +1539,20 @@ module OPAMSyntax = struct
 
   let cleanup_name _opam_version ~pos:(file,_,_ as pos) name =
     match OpamPackage.of_filename file with
-    | Some nv when OpamPackage.name nv <> name ->
+    | Some nv when nv.OpamPackage.name <> name ->
       Pp.warn ~pos "This file is for package '%s' but its 'name:' field \
                     advertises '%s'."
         (OpamPackage.name_to_string nv) (OpamPackage.Name.to_string name);
-      OpamPackage.name nv
+      nv.OpamPackage.name
     | _ -> name
 
   let cleanup_version _opam_version ~pos:(file,_,_ as pos) version =
     match OpamPackage.of_filename file with
-    | Some nv when OpamPackage.version nv <> version ->
+    | Some nv when nv.OpamPackage.version <> version ->
       Pp.warn ~pos "This file is for version '%s' but its 'version:' field \
                     advertises '%s'."
         (OpamPackage.version_to_string nv) (OpamPackage.Version.to_string version);
-      OpamPackage.version nv
+      nv.OpamPackage.version
     | _ -> version
 
   let cleanup_depflags _opam_version ~pos ext_formula =
@@ -1885,14 +1885,14 @@ module OPAMSyntax = struct
          in
          let t = { t with metadata_dir } in
          match OpamPackage.of_filename filename, t.name, t.version with
-         | Some nv, Some tname, _ when OpamPackage.name nv <> tname ->
+         | Some nv, Some tname, _ when nv.OpamPackage.name <> tname ->
            Pp.warn ~pos
              "Field 'name: %S' doesn't match the name %S implied by the \
               file name"
              (OpamPackage.Name.to_string tname)
              (OpamPackage.name_to_string nv);
            with_nv t nv
-         | Some nv, _, Some tversion when OpamPackage.version nv <> tversion ->
+         | Some nv, _, Some tversion when nv.OpamPackage.version <> tversion ->
            Pp.warn ~pos
              "Field 'version: %S' doesn't match the version %S implied by the \
               file name"
@@ -1912,16 +1912,16 @@ module OPAMSyntax = struct
              (OpamFilename.to_string filename);
            t
          | Some nv, _, _ ->
-           if t.name <> None && t.name <> Some (OpamPackage.name nv) ||
-              t.version <> None && t.version <> Some (OpamPackage.version nv)
+           if t.name <> None && t.name <> Some (nv.OpamPackage.name) ||
+              t.version <> None && t.version <> Some (nv.OpamPackage.version)
            then
              OpamConsole.warning
                "Skipping inconsistent 'name:' or 'version:' fields (%s) \
                 while saving %s"
                (OpamPackage.to_string @@
                 OpamPackage.create
-                  (OpamStd.Option.default (OpamPackage.name nv) t.name)
-                  (OpamStd.Option.default (OpamPackage.version nv) t.version))
+                  (OpamStd.Option.default (nv.OpamPackage.name) t.name)
+                  (OpamStd.Option.default (nv.OpamPackage.version) t.version))
                (OpamFilename.prettify filename);
            {t with name = None; version = None})
 
@@ -1977,7 +1977,7 @@ module OPAM = struct
       install    = [[CIdent "make", None; CString "install", None], None];
       remove     = [[CString "ocamlfind", None; CString "remove", None;
                      CString
-                       (OpamPackage.Name.to_string (OpamPackage.name nv)),
+                       (OpamPackage.Name.to_string (nv.OpamPackage.name)),
                      None],
                     None];
       depends    = Atom (OpamPackage.Name.of_string "ocamlfind",
@@ -2259,8 +2259,8 @@ module OPAM = struct
           match OpamPackage.of_filename filename, t with
           | None, _ | _, None -> warnings
           | Some nv, Some t ->
-            let name = OpamPackage.name nv in
-            let version = OpamPackage.version nv in
+            let name = nv.OpamPackage.name in
+            let version = nv.OpamPackage.version in
             warnings @
             (match t.name with
              | Some tname when tname <> name ->

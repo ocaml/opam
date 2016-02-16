@@ -34,7 +34,7 @@ let process_dot_install st nv =
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
       log "Installing %s.\n" (OpamPackage.to_string nv);
-      let name = OpamPackage.name nv in
+      let name = nv.name in
       let config_f = OpamPath.Switch.build_config root st.switch nv in
       let config = OpamFile.Dot_config.safe_read config_f in
       let install_f = OpamPath.Switch.build_install root st.switch nv in
@@ -219,7 +219,7 @@ let prepare_package_build st nv =
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-  let name = OpamPackage.name nv in
+  let name = nv.name in
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
     Done (`Successful None)
   else
@@ -338,7 +338,7 @@ let removal_needs_download st nv =
 (* Remove a given package *)
 let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
-  let name = OpamPackage.name nv in
+  let name = nv.name in
 
   (* Run the remove script *)
   let opam = OpamSwitchState.opam_opt t nv in
@@ -474,7 +474,7 @@ let cleanup_package_artefacts t nv =
   if not OpamStateConfig.(!r.keep_build_dir) &&
      OpamFilename.exists_dir build_dir then
     OpamFilename.rmdir build_dir;
-  let name = OpamPackage.name nv in
+  let name = nv.name in
   let dev_dir =
     OpamPath.Switch.dev_package t.switch_global.root t.switch name
   in
