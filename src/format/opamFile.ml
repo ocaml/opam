@@ -1394,10 +1394,10 @@ module OPAMSyntax = struct
   (* Getters *)
 
   let opam_version t = t.opam_version
-  let name t = check "name" t.name
-  let name_opt t = t.name
-  let version t = check "version" t.version
-  let version_opt t = t.version
+  let name (t:t) = check "name" t.name
+  let name_opt (t:t) = t.name
+  let version (t:t) = check "version" t.version
+  let version_opt (t:t) = t.version
   let package t = OpamPackage.create (name t) (version t)
 
   let depends t = t.depends
@@ -1406,7 +1406,7 @@ module OPAMSyntax = struct
   let available t = t.available
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
-  let env t =
+  let env (t:t) =
     List.map
       (fun env -> match t.name, env with
         | Some name, (var,op,value,None) ->
@@ -1460,12 +1460,13 @@ module OPAMSyntax = struct
 
   let with_opam_version t opam_version = { t with opam_version }
 
-  let with_name t name = { t with name = Some name }
-  let with_name_opt t name = { t with name }
-  let with_version t version = { t with version = Some version }
-  let with_version_opt t version = { t with version }
-  let with_nv t nv = { t with name = Some (OpamPackage.name nv);
-                              version = Some (OpamPackage.version nv) }
+  let with_name (t:t) name = { t with name = Some name }
+  let with_name_opt (t:t) name = { t with name }
+  let with_version (t:t) version = { t with version = Some version }
+  let with_version_opt (t:t) version = { t with version }
+  let with_nv (t:t) nv =
+    { t with name = Some (nv.OpamPackage.name);
+             version = Some (nv.OpamPackage.version) }
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -2516,8 +2517,8 @@ module CompSyntax = struct
     let packages = OpamFormula.ands (List.map mk packages) in
     { empty with name; version; preinstalled = true; packages; env }
 
-  let name t = t.name
-  let version t = t.version
+  let name (t:t) = t.name
+  let version (t:t) = t.version
   let patches t = t.patches
   let configure t = t.configure
   let make t = t.make
@@ -2527,7 +2528,7 @@ module CompSyntax = struct
 
   let packages t = t.packages
   let preinstalled t = t.preinstalled
-  let env t =
+  let env (t:t) =
     List.map (function
         | var,op,value,None ->
           var, op, value,
@@ -2538,8 +2539,8 @@ module CompSyntax = struct
   let tags t = t.tags
 
   let with_opam_version t opam_version = {t with opam_version}
-  let with_name t name = {t with name}
-  let with_version t version = {t with version}
+  let with_name (t:t) name = {t with name}
+  let with_version (t:t) version = {t with version}
   let with_src t src = { t with src }
   let with_patches t patches = {t with patches}
   let with_configure t configure = {t with configure}
@@ -2615,7 +2616,7 @@ module CompSyntax = struct
   let pp =
     pp_raw -|
     Pp.pp
-      (fun ~pos (filename, t) ->
+      (fun ~pos (filename, (t:t)) ->
          filename, match OpamCompiler.of_filename filename with
          | None ->
            if t.name = empty.name ||

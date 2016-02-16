@@ -249,13 +249,13 @@ module Pp = struct
   type ('a,'b) t = {
     parse: pos:pos -> 'a -> 'b;
     print: 'b -> 'a;
-    name: string;
+    ppname: string;
     name_constr: string -> string;
   }
 
   let pp ?(name="") ?(name_constr=fun x -> x) parse print =
     {
-      parse; print; name; name_constr;
+      parse; print; ppname = name; name_constr;
     }
 
   let of_pair name (simple_parse, print) =
@@ -286,13 +286,13 @@ module Pp = struct
 
   let parse pp ~pos x = try pp.parse ~pos x with
     | Bad_format _ | Bad_format_list _ as e -> raise (add_pos pos e)
-    | Unexpected (Some pos) -> bad_format ~pos "expected %s" pp.name
-    | Unexpected None -> bad_format ~pos "expected %s" pp.name
+    | Unexpected (Some pos) -> bad_format ~pos "expected %s" pp.ppname
+    | Unexpected None -> bad_format ~pos "expected %s" pp.ppname
     | Failure msg ->
-      bad_format ~pos "while expecting %s: %s" pp.name msg
+      bad_format ~pos "while expecting %s: %s" pp.ppname msg
     | e ->
       OpamStd.Exn.fatal e;
-      bad_format ~pos "while expecting %s: %s" pp.name (Printexc.to_string e)
+      bad_format ~pos "while expecting %s: %s" pp.ppname (Printexc.to_string e)
 
   let print pp x = pp.print x
 
@@ -306,21 +306,23 @@ module Pp = struct
         parse pp2 ~pos y
       );
     print = pp1.print @* pp2.print;
-    name = (match pp2.name with "" -> pp1.name | name -> pp1.name_constr name);
+    ppname =
+      (match pp2.ppname with "" -> pp1.ppname
+                           | name -> pp1.name_constr name);
     name_constr = pp1.name_constr @* pp2.name_constr;
   }
 
   let identity = {
     parse = (fun ~pos:_ x -> x);
     print = (fun x -> x);
-    name = "";
+    ppname = "";
     name_constr = (fun x -> x);
   }
 
   let ignore = {
     parse = (fun ~pos:_ -> OpamStd.Option.none);
     print = (fun _ -> assert false);
-    name = "ignored";
+    ppname = "ignored";
     name_constr = (fun _ -> "<ignored>");
   }
 
@@ -342,9 +344,9 @@ module Pp = struct
             false));
          x)
 
-  let map_pair ?name ?posf1 ?posf2 pp1 pp2 =
+  let map_pair ?name ?posf1 ?posf2 (pp1: ('a,'b) t) (pp2: ('c,'d) t) =
     let name = match name with
-      | None -> Printf.sprintf "(%s, %s)" pp1.name pp2.name
+      | None -> Printf.sprintf "(%s, %s)" pp1.ppname pp2.ppname
       | Some n -> n
     in
     pp ~name
@@ -367,7 +369,7 @@ module Pp = struct
 
   let map_list ?name ?posf pp1 =
     let name = match name with
-      | None -> pp1.name ^ "*"
+      | None -> pp1.ppname ^ "*"
       | Some n -> n
     in
     pp ~name
@@ -378,7 +380,7 @@ module Pp = struct
 
   let map_option ?name pp1 =
     let name = match name with
-      | None -> pp1.name ^ "?"
+      | None -> pp1.ppname ^ "?"
       | Some n -> n
     in
     pp ~name
@@ -388,7 +390,7 @@ module Pp = struct
   let singleton = {
     parse = (fun ~pos:_ -> function [x] -> x | _ -> unexpected ());
     print = (fun x -> [x]);
-    name = "";
+    ppname = "";
     name_constr = (fun x -> x);
   }
 
@@ -412,7 +414,7 @@ module Pp = struct
 
   let lines_set ~empty ~add ~fold pp1 =
     pp
-      ~name:(Printf.sprintf "(%s) lines" pp1.name)
+      ~name:(Printf.sprintf "(%s) lines" pp1.ppname)
       (fun ~pos:(file,_,_) lines ->
          List.fold_left (fun (i,acc) -> function
              | [] -> i + 1, acc
@@ -424,7 +426,7 @@ module Pp = struct
 
   let lines_map ~empty ~add ~fold pp1 =
     pp
-      ~name:(Printf.sprintf "(%s) lines" pp1.name)
+      ~name:(Printf.sprintf "(%s) lines" pp1.ppname)
       (fun ~pos:(file,_,_) lines ->
          List.fold_left (fun (i,acc) -> function
              | [] -> i + 1, acc
@@ -439,7 +441,7 @@ module Pp = struct
   (** Build tuples from lists *)
   let (^+) pp1 pp2 =
     pp
-      ~name:(Printf.sprintf "%s %s" pp1.name pp2.name)
+      ~name:(Printf.sprintf "%s %s" pp1.ppname pp2.ppname)
       (fun ~pos -> function
          | x::r -> parse pp1 ~pos x, parse pp2 ~pos r
          | [] -> unexpected ())
@@ -449,7 +451,7 @@ module Pp = struct
 
   let opt pp1 =
     pp
-      ~name:("?"^pp1.name)
+      ~name:("?"^pp1.ppname)
       (fun ~pos -> function [] -> None | l -> Some (pp1.parse ~pos l))
       (function Some x -> pp1.print x | None -> [])
 
@@ -465,7 +467,7 @@ module Pp = struct
 
 (*
   let list2 pp1 pp2 =
-    pp ~name:(Printf.sprintf "%s %s" pp1.name pp2.name)
+    pp ~name:(Printf.sprintf "%s %s" pp1.ppname pp2.ppname)
       (function [a; b] -> parse pp1 a, parse pp2 b
               | _ -> unexpected ())
       (fun (x,y) -> [print pp1 x; print pp2 y])
@@ -567,7 +569,7 @@ module Pp = struct
 
     let map_list ?(depth=0) pp1 =
       list_depth depth -|
-      pp ~name:(Printf.sprintf "[%s]" pp1.name)
+      pp ~name:(Printf.sprintf "[%s]" pp1.ppname)
         (fun ~pos:_ v ->
            match v with
            | List (_, l) ->
@@ -579,13 +581,13 @@ module Pp = struct
 
     let map_option pp1 pp2 =
       option -|
-      map_pair ~name:(Printf.sprintf "%s ?{%s}" pp1.name pp2.name)
+      map_pair ~name:(Printf.sprintf "%s ?{%s}" pp1.ppname pp2.ppname)
         ~posf1:value_pos
         ~posf2:(fun v -> OpamStd.Option.default pos_null (values_pos v))
         pp1 pp2
 
     let map_pair pp1 pp2 =
-      pp ~name:(Printf.sprintf "[%s %s]" pp1.name pp2.name)
+      pp ~name:(Printf.sprintf "[%s %s]" pp1.ppname pp2.ppname)
         (fun ~pos:_ -> function
           | List (_,[a; b]) ->
             parse pp1 ~pos:(value_pos a) a, parse pp2 ~pos:(value_pos b) b
@@ -719,7 +721,7 @@ module Pp = struct
         | Empty -> []
         | cs -> [aux cs]
       in
-      pp ~name:(version.name ^ "-constraints")
+      pp ~name:(version.ppname ^ "-constraints")
         parse_constraints print_constraints
 
     let dep_flag =
@@ -877,7 +879,7 @@ module Pp = struct
       let print s = s, OpamStd.Option.map pp1.print (get s) in
       {
         parse; print;
-        name = pp1.name;
+        ppname = pp1.ppname;
         name_constr = (fun x -> x);
       }
 
@@ -887,7 +889,7 @@ module Pp = struct
   let ppacc_ignore = {
     parse = (fun ~pos:_ (acc,_) -> acc);
     print = (fun s -> s, None);
-    name = "<ignored>";
+    ppname = "<ignored>";
     name_constr = (fun _ -> "<ignored>");
   }
 

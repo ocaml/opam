@@ -26,7 +26,6 @@ let slog = OpamConsole.slog
 let s_not_installed = "--"
 
 type package_details = {
-  name: name;
   current_version: version;
   installed_version: version option;
   synopsis: string Lazy.t;
@@ -85,7 +84,7 @@ let details_of_package t name versions =
           List.flatten file @ acc
         ) [] OpamClientConfig.search_files
   ) in
-  { name; current_version; installed_version;
+  { current_version; installed_version;
     synopsis; descr; tags;
     syntax; libraries; extension; others; }
 
