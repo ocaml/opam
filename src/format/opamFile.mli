@@ -18,6 +18,13 @@ open OpamTypes
 
 (** Functions to read and write OPAM configuration files in a typed way *)
 
+(** Associate a type to a filename through a phantom type *)
+type 'a t = private filename
+
+type 'a typed_file = 'a t
+
+val make: filename -> 'a t
+
 (** All Configuration files satisfies this signature *)
 module type IO_FILE = sig
 
@@ -28,21 +35,21 @@ module type IO_FILE = sig
   val empty: t
 
   (** Write some contents to a file *)
-  val write: filename -> t -> unit
+  val write: t typed_file -> t -> unit
 
   (** Read file contents. Raise an error if the file does not exist. *)
-  val read: filename -> t
+  val read: t typed_file -> t
 
   (** Read file contents. Return [empty] if the file does not exist. *)
-  val safe_read: filename -> t
+  val safe_read: t typed_file -> t
 
-  val read_from_channel: ?filename:filename -> in_channel -> t
+  val read_from_channel: ?filename:t typed_file -> in_channel -> t
 
-  val read_from_string: ?filename:filename -> string -> t
+  val read_from_string: ?filename:t typed_file -> string -> t
 
-  val write_to_channel: ?filename:filename -> out_channel -> t -> unit
+  val write_to_channel: ?filename:t typed_file -> out_channel -> t -> unit
 
-  val write_to_string: ?filename:filename -> t -> string
+  val write_to_string: ?filename:t typed_file -> t -> string
 
 end
 
@@ -115,7 +122,7 @@ module Descr: sig
   val create: string -> t
 
   (** Create an abstract description file from a string *)
-  val of_string: filename -> string -> t
+  val of_string: t typed_file -> string -> t
 
   (** Return the first line *)
   val synopsis: t -> string
@@ -169,11 +176,11 @@ module OPAM: sig
 
   (** Same as [validate], but operates on a file, which allows catching parse
       errors too. You can specify an expected name and version *)
-  val validate_file: filename ->
+  val validate_file: t typed_file ->
     (int * [`Warning|`Error] * string) list * t option
 
   (** Like [validate_file], but takes the file contents as a string *)
-  val validate_string: filename -> string ->
+  val validate_string: t typed_file -> string ->
     (int * [`Warning|`Error] * string) list * t option
 
   (** Utility function to print validation results *)
@@ -374,7 +381,7 @@ module OPAM: sig
   val with_metadata_dir: t -> dirname option -> t
 
   (** Prints to a string, while keeping the format of the original file as much as possible *)
-  val to_string_with_preserved_format: filename -> t -> string
+  val to_string_with_preserved_format: t typed_file -> t -> string
 
 end
 
@@ -595,7 +602,7 @@ module type SyntaxFileArg = sig
   val internal: string
   type t
   val empty: t
-  val pp: (opamfile, filename * t) OpamFormat.Pp.t
+  val pp: (opamfile, t typed_file * t) OpamFormat.Pp.t
 end
 
 module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t

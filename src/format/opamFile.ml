@@ -31,26 +31,32 @@ open OpamStd.Op
 module Pp = OpamFormat.Pp
 open Pp.Op
 
+type 'a t = filename
+
+type 'a typed_file = 'a t
+
+let make f = (f: 'a t)
+
 module type IO_FILE = sig
   type t
   val empty: t
-  val write: filename -> t -> unit
-  val read : filename -> t
-  val safe_read: filename -> t
-  val read_from_channel: ?filename:filename -> in_channel -> t
-  val read_from_string: ?filename:filename -> string -> t
-  val write_to_channel: ?filename:filename -> out_channel -> t -> unit
-  val write_to_string: ?filename:filename -> t -> string
+  val write: 'a typed_file -> t -> unit
+  val read : 'a typed_file -> t
+  val safe_read: 'a typed_file -> t
+  val read_from_channel: ?filename:'a typed_file -> in_channel -> t
+  val read_from_string: ?filename:'a typed_file -> string -> t
+  val write_to_channel: ?filename:'a typed_file -> out_channel -> t -> unit
+  val write_to_string: ?filename:'a typed_file -> t -> string
 end
 
 module type IO_Arg = sig
   val internal : string
   type t
   val empty : t
-  val of_channel : filename -> in_channel  -> t
-  val to_channel : filename -> out_channel -> t -> unit
-  val of_string : filename -> string -> t
-  val to_string : filename -> t -> string
+  val of_channel : 'a typed_file -> in_channel  -> t
+  val to_channel : 'a typed_file -> out_channel -> t -> unit
+  val of_string : 'a typed_file -> string -> t
+  val to_string : 'a typed_file -> t -> string
 end
 
 module Stats = struct
