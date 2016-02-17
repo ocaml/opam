@@ -23,12 +23,12 @@ let update_cache t = root t // "update.cache"
 
 let create root name = root / "repo" / OpamRepositoryName.to_string name
 
-let repo t = root t // "repo"
+let repo t = root t // "repo" |> OpamFile.make
 
 let raw_config root name =
-  root / "repo" / OpamRepositoryName.to_string name // "config"
+  root / "repo" / OpamRepositoryName.to_string name // "config" |> OpamFile.make
 
-let config t = root t // "config"
+let config t = root t // "config" |> OpamFile.make
 
 let packages_dir t = root t / "packages"
 
@@ -37,11 +37,11 @@ let packages t prefix nv =
   | None   -> packages_dir t / OpamPackage.to_string nv
   | Some p -> packages_dir t / p / OpamPackage.to_string nv
 
-let opam t prefix nv = packages t prefix nv // "opam"
+let opam t prefix nv = packages t prefix nv // "opam" |> OpamFile.make
 
-let descr t prefix nv = packages t prefix nv // "descr"
+let descr t prefix nv = packages t prefix nv // "descr" |> OpamFile.make
 
-let url t prefix nv = packages t prefix nv // "url"
+let url t prefix nv = packages t prefix nv // "url" |> OpamFile.make
 
 let files t prefix nv = packages t prefix nv / "files"
 
@@ -55,13 +55,13 @@ let compilers_dir t = root t / "compilers"
 
 let compiler_comp t prefix c =
   match prefix with
-  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".comp")
-  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".comp")
+  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".comp") |> OpamFile.make
+  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".comp") |> OpamFile.make
 
 let compiler_descr t prefix c =
   match prefix with
-  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".descr")
-  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".descr")
+  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".descr") |> OpamFile.make
+  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".descr") |> OpamFile.make
 
 module Remote = struct
   (** URL, not FS paths *)

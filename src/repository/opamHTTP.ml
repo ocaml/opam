@@ -36,16 +36,20 @@ let index_archive = "index.tar.gz"
 
 let local_files repo =
   let all =
-    OpamRepositoryPath.repo repo ::
+    (OpamFile.filename (OpamRepositoryPath.repo repo)) ::
       OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo) @
       OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo) @
       OpamFilename.rec_files (OpamRepositoryPath.compilers_dir repo) in
   List.filter OpamFilename.exists all
 
+let as_index_file f = (OpamFile.make f : file_attribute_set OpamFile.t)
+
 (* Generate urls.txt (for opam-admin, or rebuilding if interrupted during
    update *)
 let rebuild_local_state ~write repo =
-  let local_index_file = OpamFilename.Op.(repo.repo_root // index_file) in
+  let local_index_file =
+    as_index_file OpamFilename.Op.(repo.repo_root // index_file)
+  in
   log "Rebuilding urls.txt at %a" (slog OpamFilename.Dir.to_string)
     repo.repo_root;
   let index =
@@ -83,7 +87,7 @@ let get_state repo =
   try List.assoc repo.repo_url !state_cache with Not_found ->
     let urls =
       try OpamFile.File_attributes.read
-            OpamFilename.Op.(repo.repo_root // index_file)
+            (as_index_file OpamFilename.Op.(repo.repo_root // index_file))
       with e -> OpamStd.Exn.fatal e; rebuild_local_state ~write:true repo
     in
     let state = state_of_index_file repo urls in
@@ -94,11 +98,13 @@ let sync_state repo =
   let old_state = get_state repo in
   let remote_index_file = OpamUrl.Op.(repo.repo_url / index_file) in
   let remote_index_archive = OpamUrl.Op.(repo.repo_url / index_archive) in
-  let index_file = OpamFilename.Op.(repo.repo_root // index_file) in
-  let index_file_new = OpamFilename.Op.(repo.repo_root // index_file_new) in
+  let index_file =
+    as_index_file OpamFilename.Op.(repo.repo_root // index_file) in
+  let index_file_new =
+    as_index_file OpamFilename.Op.(repo.repo_root // index_file_new) in
   let index_archive = OpamFilename.Op.(repo.repo_root // index_archive) in
   OpamDownload.download_as ~compress:true ~overwrite:true
-    remote_index_file index_file_new
+    remote_index_file (OpamFile.filename index_file_new)
   @@+ fun () ->
   let urls = OpamFile.File_attributes.read index_file_new in
   let new_state = state_of_index_file repo urls in
@@ -116,7 +122,7 @@ let sync_state repo =
     changed_files;
   (* Remove the index before making changes, so that it'll be consistently
      rebuilt in case of interruption *)
-  OpamFilename.remove index_file;
+  OpamFilename.remove (OpamFile.filename index_file);
   (if OpamFilename.Map.cardinal changed_files > 4 then (
       log "-> downloading the full archive";
       OpamProcess.Job.catch
@@ -148,7 +154,9 @@ let sync_state repo =
        changed_files (Done ())
    else Done ())
   @@+ fun () ->
-  OpamFilename.move ~src:index_file_new ~dst:index_file;
+  OpamFilename.move
+    ~src:(OpamFile.filename index_file_new)
+    ~dst:(OpamFile.filename index_file);
   state_cache := (repo.repo_url, new_state) ::
                  (List.remove_assoc repo.repo_url !state_cache);
   OpamConsole.msg "[%s] synchronized from %s\n"

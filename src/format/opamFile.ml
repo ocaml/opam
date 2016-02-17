@@ -36,6 +36,7 @@ type 'a t = filename
 type 'a typed_file = 'a t
 
 let make f = (f: 'a t)
+let filename f = (f: 'a t :> filename)
 
 module type IO_FILE = sig
   type t

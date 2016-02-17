@@ -44,7 +44,7 @@ val compiler_index: repository repository_name_map -> (repository_name * string 
 (** {2 State} *)
 
 (** Get the package archive checksum off an url file *)
-val url_checksum: OpamFilename.t -> checksums
+val url_checksum: OpamFile.URL.t OpamFile.t -> checksums
 
 (** Get all the package files *)
 val package_files: repository -> string option -> package -> archive:bool ->
@@ -83,7 +83,7 @@ val pull_url:
 
 (** Pull and fix the resulting digest *)
 val pull_url_and_fix_digest:
-  package -> dirname -> string -> filename -> url list ->
+  package -> dirname -> string -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull an archive in a repository *)

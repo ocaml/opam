@@ -18,9 +18,9 @@ open OpamTypesBase
 open OpamFilename.Op
 
 let read_opam dir =
-  let opam_file = dir // "opam" in
-  let url_file = dir // "url" in
-  let descr_file = dir // "descr" in
+  let (opam_file: OpamFile.OPAM.t OpamFile.t) = OpamFile.make (dir // "opam") in
+  let (url_file: OpamFile.URL.t OpamFile.t) = OpamFile.make (dir // "url") in
+  let (descr_file: OpamFile.Descr.t OpamFile.t)  = OpamFile.make (dir // "descr") in
   let opam =
     try Some (OpamFile.OPAM.read opam_file) with
     | OpamSystem.Internal_error _ | Not_found -> None

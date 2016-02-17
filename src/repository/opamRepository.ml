@@ -126,6 +126,7 @@ let extract_prefix repo dir nv =
   OpamStd.String.remove_prefix ~prefix (OpamStd.String.remove_suffix ~suffix dir)
 *)
 let file f =
+  let f = OpamFile.filename f in
   if OpamFilename.exists f then [f] else []
 
 let dir d =
@@ -171,16 +172,17 @@ let package_files repo prefix nv ~archive =
   let url = OpamRepositoryPath.url repo prefix nv in
   let files = OpamRepositoryPath.files repo prefix nv in
   let archive =
-    if archive then file (OpamRepositoryPath.archive repo nv)
+    let f = OpamRepositoryPath.archive repo nv in
+    if archive && OpamFilename.exists f then [f]
     else [] in
   file opam @ file descr @ file url @ dir files @ archive
 
 let package_important_files repo prefix nv ~archive =
   let url = OpamRepositoryPath.url repo prefix nv in
   let files = OpamRepositoryPath.files repo prefix nv in
-  if archive then
-    let archive = OpamRepositoryPath.archive repo nv in
-    file url @ dir files @ file archive
+  let archive_f = OpamRepositoryPath.archive repo nv in
+  if archive && OpamFilename.exists archive_f then
+    file url @ dir files @ [archive_f]
   else
     file url @ dir files
 
@@ -191,7 +193,7 @@ let package_state repo prefix nv all =
   let url = OpamRepositoryPath.url repo prefix nv in
   let l =
     List.map (fun f ->
-        if all <> `all && f = url then url_checksum f
+        if all <> `all && f = OpamFile.filename url then url_checksum url
         else OpamFilename.checksum f)
       fs in
   List.flatten l
@@ -242,7 +244,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
   (* Download the remote file / fetch the remote repository *)
   let download download_dir =
-    if OpamFilename.exists url_file then (
+    if OpamFilename.exists (OpamFile.filename url_file) then (
       let url = OpamFile.URL.read url_file in
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
@@ -281,7 +283,8 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
     (* Finally create the final archive *)
   let create_archive files extract_root =
-    if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
+    if not (OpamFilename.Set.is_empty files) ||
+       OpamFilename.exists (OpamFile.filename url_file) then (
       OpamConsole.msg "Creating %s.\n" (OpamFilename.to_string archive);
       OpamFilename.exec extract_root [
         [ "tar" ; "czf" ;

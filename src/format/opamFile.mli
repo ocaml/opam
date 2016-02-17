@@ -24,6 +24,7 @@ type 'a t = private filename
 type 'a typed_file = 'a t
 
 val make: filename -> 'a t
+val filename: 'a t -> filename
 
 (** All Configuration files satisfies this signature *)
 module type IO_FILE = sig
