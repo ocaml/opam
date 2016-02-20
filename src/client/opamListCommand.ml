@@ -80,7 +80,9 @@ let details_of_package t name versions =
     | None  -> []
     | Some dir ->
       List.fold_left (fun acc filename ->
-          let file = OpamFile.Lines.safe_read (dir // filename) in
+          let file =
+            OpamFile.Lines.safe_read (OpamFile.make (dir // filename))
+          in
           List.flatten file @ acc
         ) [] OpamClientConfig.search_files
   ) in

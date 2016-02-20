@@ -30,7 +30,7 @@ let load_selections gt switch =
 
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
-  if OpamFilename.exists f then OpamFile.Dot_config.read f
+  if OpamFile.exists f then OpamFile.Dot_config.read f
   else
     (OpamConsole.error "No global config file found for switch %s. \
                         Switch broken ?"
@@ -44,7 +44,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
   if not (List.mem switch (OpamFile.Config.installed_switches gt.config)) then
     (log "The switch %a does not appear to be installed according to %a"
        (slog OpamSwitch.to_string) switch
-       (slog @@ OpamFilename.to_string @* OpamPath.config) gt.root;
+       (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
      OpamSwitch.not_installed switch)
   else
   let switch_config = load_switch_config gt switch in

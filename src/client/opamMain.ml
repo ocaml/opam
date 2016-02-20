@@ -581,8 +581,9 @@ let config =
           );
         print "current-switch" "%s"
           (OpamSwitch.to_string state.switch);
-        let index_file = OpamFilename.to_string (OpamPath.package_index
-                                                   state.switch_global.root) in
+        let index_file =
+          OpamFile.to_string (OpamPath.package_index state.switch_global.root)
+        in
         let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
               (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
@@ -968,13 +969,15 @@ let switch =
       `Ok ()
     | Some `export, [filename] ->
       Client.SWITCH.export
-        (if filename = "-" then None else Some (OpamFilename.of_string filename));
+        (if filename = "-" then None
+         else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
     | Some `import, [filename] ->
       Client.SWITCH.import
         (OpamGlobalState.load ())
         (OpamStateConfig.get_switch ())
-        (if filename = "-" then None else Some (OpamFilename.of_string filename));
+        (if filename = "-" then None
+         else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
     | Some `remove, switches ->
       let gt = OpamGlobalState.load () in
@@ -1099,9 +1102,11 @@ let pin ?(unpin_only=false) () =
   let guess_name path =
     let open OpamFilename.Op in
     if not (OpamFilename.exists_dir path) then raise Not_found else
-    let opamf = path / "opam" // "opam" in
-    let opamf = if OpamFilename.exists opamf then opamf else path // "opam" in
-    if OpamFilename.exists opamf then
+    let opamf = OpamFile.make (path / "opam" // "opam") in
+    let opamf : OpamFile.OPAM.t OpamFile.t =
+      if OpamFile.exists opamf then opamf else OpamFile.make (path // "opam")
+    in
+    if OpamFile.exists opamf then
       try match OpamFile.OPAM.(name_opt (read opamf)) with
         | Some name -> name
         | None -> raise Not_found
@@ -1260,8 +1265,8 @@ let source =
         then
           let f =
             if OpamFilename.exists_dir Op.(dir / "opam")
-            then Op.(dir / "opam" // "opam")
-            else Op.(dir // "opam")
+            then OpamFile.make Op.(dir / "opam" // "opam")
+            else OpamFile.make Op.(dir // "opam")
           in
           OpamFile.OPAM.write f
             (OpamFile.OPAM.with_substs
@@ -1311,12 +1316,13 @@ let lint =
   in
   let lint global_options file normalise short =
     apply_global_options global_options;
-    let opam_f =
+    let opam_f : OpamFile.OPAM.t OpamFile.t =
       if Sys.is_directory file then
-        OpamFilename.Op.(OpamFilename.Dir.of_string file // "opam")
-      else OpamFilename.of_string file
+        OpamFile.make
+          OpamFilename.Op.(OpamFilename.Dir.of_string file // "opam")
+      else OpamFile.make (OpamFilename.of_string file)
     in
-    if OpamFilename.exists opam_f then
+    if OpamFile.exists opam_f then
       try
         let warnings,opam = OpamFile.OPAM.validate_file opam_f in
         let failed =
@@ -1329,12 +1335,12 @@ let lint =
                   warnings))
         else if warnings = [] then
           OpamConsole.msg "%s: %s\n"
-            (OpamFilename.prettify opam_f)
+            (OpamFile.to_string opam_f)
             (OpamConsole.colorise `green "Passed.")
         else
           OpamConsole.msg "%s found in %s:\n%s\n"
             (if failed then "Errors" else "Warnings")
-            (OpamFilename.prettify opam_f)
+            (OpamFile.to_string opam_f)
             (OpamFile.OPAM.warns_to_string warnings);
         if normalise then
           OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
@@ -1347,7 +1353,7 @@ let lint =
         OpamStd.Sys.exit 1
     else
       (OpamConsole.error_and_exit "No opam file found at %s"
-         (OpamFilename.to_string opam_f))
+         (OpamFile.to_string opam_f))
   in
   Term.(pure lint $global_options $file $normalise $short),
   term_info "lint" ~doc ~man

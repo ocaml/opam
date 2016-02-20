@@ -166,7 +166,7 @@ let resolve_deps args index names =
          if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
            match OpamPackage.of_dirname (OpamFilename.dirname f) with
            | Some nv ->
-             let opam = OpamFile.OPAM.read f in
+             let opam = OpamFile.OPAM.read (OpamFile.make f) in
              if consistent_available_field args opam
              then OpamPackage.Map.add nv opam opams else opams
            | None -> opams
@@ -259,7 +259,9 @@ let process
 
   (* Read urls.txt *)
   log "Reading urls.txt";
-  let local_index_file = OpamFilename.of_string "urls.txt" in
+  let local_index_file : file_attribute_set OpamFile.t =
+    OpamFile.make (OpamFilename.of_string "urls.txt")
+  in
   let old_index = OpamFile.File_attributes.safe_read local_index_file in
   let new_index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
@@ -269,7 +271,7 @@ let process
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
-    if OpamFilename.exists opam_f then (
+    if OpamFile.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
       let deps =
         OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam) in
@@ -368,7 +370,7 @@ let process
         let url_file = OpamRepositoryPath.url repo prefix nv in
         try
           if not dryrun then OpamFilename.remove local_archive;
-          if OpamFilename.exists url_file &&
+          if OpamFile.exists url_file &&
              OpamFile.URL.(url (read url_file)).OpamUrl.backend = `http
           then (
             OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);

@@ -33,10 +33,10 @@ val update_cache: t -> filename
 val lock: t -> filename
 
 (** Main configuration file: {i $opam/config} *)
-val config: t -> filename
+val config: t -> OpamFile.Config.t OpamFile.t
 
 (** Compiler aliases *)
-val aliases: t -> filename
+val aliases: t -> OpamFile.Aliases.t OpamFile.t
 
 (** Package directroy {i $opam/packages/} *)
 val packages_dir: t -> dirname
@@ -45,10 +45,10 @@ val packages_dir: t -> dirname
 val packages: t -> package -> dirname
 
 (** OPAM files: {i $opam/packages/$NAME/$NAME.$VERSION/opam} *)
-val opam: t -> package -> filename
+val opam: t -> package -> OpamFile.OPAM.t OpamFile.t
 
 (** URL files: {i $opam/packages/$NAME/$NAME.$VERSION/url} *)
-val url: t -> package -> filename
+val url: t -> package -> OpamFile.URL.t OpamFile.t
 
 (** Additional files: {i $opam/packages/$NAME/$NAME.$VERSION/files} *)
 val files: t -> package -> dirname
@@ -60,7 +60,7 @@ val dev_packages_dir: t -> dirname
 val dev_package: t -> package -> dirname
 
 (** Description file: {i $opam/packages/$NAME/$NAME.$VERSION/descr} *)
-val descr: t -> package -> filename
+val descr: t -> package -> OpamFile.Descr.t OpamFile.t
 
 (** Archives dir *)
 val archives_dir: t -> dirname
@@ -69,10 +69,10 @@ val archives_dir: t -> dirname
 val archive: t -> package -> filename
 
 (** Compiler files: {i $opam/compilers/$VERSION/$COMP.comp} *)
-val compiler_comp: t -> compiler -> filename
+val compiler_comp: t -> compiler -> OpamFile.Comp.t OpamFile.t
 
 (** Compiler description files: {i $opam/compilers/$VERSION/$COMP.descr} *)
-val compiler_descr: t -> compiler -> filename
+val compiler_descr: t -> compiler -> OpamFile.Descr.t OpamFile.t
 
 (** Compiler files: {i $opam/compilers/} *)
 val compilers_dir: t -> dirname
@@ -81,10 +81,10 @@ val compilers_dir: t -> dirname
 val compilers: t -> compiler -> dirname
 
 (** Return the repository index: {i $opam/repo/package-index} *)
-val package_index: t -> filename
+val package_index: t -> OpamFile.Package_index.t OpamFile.t
 
 (** Return the repository index: {i $opam/repo/compiler-index} *)
-val compiler_index: t -> filename
+val compiler_index: t -> OpamFile.Compiler_index.t OpamFile.t
 
 (** Init scripts *)
 val init: t -> dirname
@@ -96,7 +96,7 @@ val log: t -> dirname
 val backup_dir: t -> dirname
 
 (** Backup file for state export *)
-val backup: t -> filename
+val backup: t -> switch_selections OpamFile.t
 
 (** Switch related paths *)
 module Switch: sig
@@ -113,14 +113,14 @@ module Switch: sig
   val backup_dir: t -> switch -> dirname
 
   (** Backup file for state export *)
-  val backup: t -> switch -> filename
+  val backup: t -> switch -> switch_selections OpamFile.t
 
   (** Switch state: currently installed packages, roots, pinnings, etc. {i
       $opam/$switch/state} (deprecated) *)
-  val state: t -> switch -> filename
+  val state: t -> switch -> OpamFile.State.t OpamFile.t
 
   (** Switch selections {i $opam/$switch/switch-state} *)
-  val selections: t -> switch -> filename
+  val selections: t -> switch -> switch_selections OpamFile.t
 
   (** Temporary folders used to decompress and compile
       the corresponding archives:
@@ -136,33 +136,33 @@ module Switch: sig
 
   (** Temporary location of install files: {i
       $opam/$switch/build/$package/$name.install} *)
-  val build_install: t -> switch -> package -> filename
+  val build_install: t -> switch -> package -> OpamFile.Dot_install.t OpamFile.t
 
   (** Temporary location of config files: {i
       $opam/$switch/build/$packages/$name.config} *)
-  val build_config: t -> switch -> package -> filename
+  val build_config: t -> switch -> package -> OpamFile.Dot_config.t OpamFile.t
 
   (** Installed files for a given package: {i
       $opam/$switch/install/$name.install} *)
-  val install: t -> switch -> name -> filename
+  val install: t -> switch -> name -> OpamFile.Dot_install.t OpamFile.t
 
   (** Installed files: {i $opam/$switch/install/} *)
   val install_dir: t -> switch -> dirname
 
   (** Packages to reinstall on next upgrade: {i
       $opam/$switch/reinstall} *)
-  val reinstall: t -> switch -> filename
+  val reinstall: t -> switch -> OpamFile.PkgList.t OpamFile.t
 
   (** Configuration folder: {i $opam/$switch/config} *)
   val config_dir: t -> switch -> dirname
 
   (** Global config for the switch: {i
       $opam/$switch/config/global-config.config} *)
-  val global_config: t -> switch -> filename
+  val global_config: t -> switch -> OpamFile.Dot_config.t OpamFile.t
 
   (** Package-specific configuration file for installed packages: {i
       $opam/$switch/config/$name.config} *)
-  val config: t -> switch -> name -> filename
+  val config: t -> switch -> name -> OpamFile.Dot_config.t OpamFile.t
 
   (** Source dir for all pinned packages: {i
       $opam/$switch/packages.dev/} *)
@@ -173,7 +173,7 @@ module Switch: sig
   val dev_package: t -> switch -> name -> dirname
 
   (** Cached environment updates. *)
-  val environment: t -> switch -> filename
+  val environment: t -> switch -> OpamFile.Environment.t OpamFile.t
 
   (** Locations for the visible part of the installation *)
 
@@ -285,18 +285,18 @@ module Switch: sig
 
     (** OPAM overlay: {i
         $opam/$switch/cache/$name.$version/opam} *)
-    val opam: t -> switch -> name -> filename
+    val opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** OPAM temp overlay (for user editing): {i
         $opam/$switch/cache/$name.$version/opam_} *)
-    val tmp_opam: t -> switch -> name -> filename
+    val tmp_opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** URL overlay: {i
         $opam/$switch/overlay/$name.$version/url} *)
-    val url: t -> switch -> name -> filename
+    val url: t -> switch -> name -> OpamFile.URL.t OpamFile.t
 
     (** Descr orverlay *)
-    val descr: t -> switch -> name -> filename
+    val descr: t -> switch -> name -> OpamFile.Descr.t OpamFile.t
 
     (** Files overlay *)
     val files: t -> switch -> name -> dirname

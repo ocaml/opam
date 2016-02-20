@@ -17,7 +17,7 @@ open OpamTypes
 open Cmdliner
 
 type options = {
-  file: OpamFilename.t;
+  file: OpamFile.Dot_install.t OpamFile.t;
   pkgname: OpamPackage.Name.t;
   prefix: OpamFilename.Dir.t;
   script: bool;
@@ -291,13 +291,16 @@ let options =
           in
           raise (Invalid_argument msg)
     in
+    let file = (OpamFile.make file: OpamFile.Dot_install.t OpamFile.t) in
     let prefix = OpamFilename.Dir.of_string prefix in
     let pkgname = match name with
       | Some n -> OpamPackage.Name.of_string n
-      | None when OpamFilename.check_suffix file ".install" ->
+      | None
+        when OpamFilename.check_suffix (OpamFile.filename file) ".install" ->
         OpamPackage.Name.of_string
           (OpamFilename.Base.to_string
-             (OpamFilename.basename (OpamFilename.chop_extension file)))
+             (OpamFilename.basename
+                (OpamFilename.chop_extension (OpamFile.filename file))))
       | None ->
         raise (Invalid_argument
                  "Could not guess the package name, please specify `--name'")

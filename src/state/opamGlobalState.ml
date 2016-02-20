@@ -73,12 +73,14 @@ module Format_upgrade = struct
         List.iter remove_pinned_suffix
           (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root switch));
         let switch_prefix = OpamPath.Switch.root root switch in
-        let installed_f = OpamFilename.Op.(switch_prefix // "installed") in
+        let installed_f =
+          OpamFile.make OpamFilename.Op.(switch_prefix // "installed")
+        in
         let installed = OpamFile.PkgList.safe_read installed_f in
         OpamFile.PkgList.write installed_f
           (OpamPackage.Set.map fix_version installed);
         let installed_roots_f =
-          OpamFilename.Op.(switch_prefix // "installed.roots")
+          OpamFile.make OpamFilename.Op.(switch_prefix // "installed.roots")
         in
         let installed_roots = OpamFile.PkgList.safe_read installed_roots_f in
         OpamFile.PkgList.write installed_roots_f
@@ -112,9 +114,15 @@ module Format_upgrade = struct
         let installed_f = switch_dir // "installed" in
         let installed_roots_f = switch_dir // "installed.roots" in
         let pinned_f = switch_dir // "pinned" in
-        let installed = OpamFile.PkgList.safe_read installed_f in
-        let installed_roots = OpamFile.PkgList.safe_read installed_roots_f in
-        let pinned = OpamFile.Pinned_legacy.safe_read pinned_f in
+        let installed =
+          OpamFile.PkgList.safe_read (OpamFile.make installed_f)
+        in
+        let installed_roots =
+          OpamFile.PkgList.safe_read (OpamFile.make installed_roots_f)
+        in
+        let pinned =
+          OpamFile.Pinned_legacy.safe_read (OpamFile.make pinned_f)
+        in
         let pinned =
           OpamPackage.Name.Map.mapi (fun name pin ->
               let v =
@@ -161,7 +169,9 @@ module Format_upgrade = struct
             let src =
               OpamPath.Switch.Default.lib root switch name // "opam.config"
             in
-            let dst = OpamPath.Switch.config root switch name in
+            let dst =
+              OpamFile.filename (OpamPath.Switch.config root switch name)
+            in
             if OpamFilename.exists src then
               OpamFilename.move ~src ~dst)
           installed)
@@ -187,7 +197,7 @@ module Format_upgrade = struct
             let comp = OpamFile.Comp.read comp_f in
             let descr_f = OpamPath.compiler_descr root comp_name in
             let descr =
-              if OpamFilename.exists descr_f then OpamFile.Descr.read descr_f
+              if OpamFile.exists descr_f then OpamFile.Descr.read descr_f
               else
                 OpamFile.Descr.create
                   "Switch relying on a system-wide installation of OCaml"
@@ -264,12 +274,12 @@ module Format_upgrade = struct
           else selections
         in
         OpamFile.SwitchSelections.write selections_f selections;
-        OpamFilename.remove state_f)
+        OpamFilename.remove (OpamFile.filename state_f))
       aliases;
     let conf =
       OpamFile.Config.with_installed_switches conf (OpamSwitch.Map.keys aliases)
     in
-    OpamFilename.remove aliases_f;
+    OpamFilename.remove (OpamFile.filename aliases_f);
     OpamConsole.note "Opam root update successful. You should run 'opam \
                       update' to sync with the new format repositories.";
     conf

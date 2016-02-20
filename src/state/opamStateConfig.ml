@@ -153,16 +153,17 @@ let opamroot ?root_dir () =
 
 let load opamroot =
   let f = OpamPath.config opamroot in
-  if OpamFilename.exists f then
+  let fname = OpamFile.filename f in
+  if OpamFilename.exists fname then
     OpamFilename.with_flock ~read:true
-      (OpamFilename.add_extension f "lock")
+      (OpamFilename.add_extension fname "lock")
       (fun f -> Some (OpamFile.Config.read f)) f
   else None
 
 let write opamroot conf =
   let f = OpamPath.config opamroot in
   OpamFilename.with_flock ~read:false
-    (OpamFilename.add_extension f "lock")
+    (OpamFilename.add_extension (OpamFile.filename f) "lock")
     (OpamFile.Config.write f) conf
 
 let filter_deps ?(dev=true) f =

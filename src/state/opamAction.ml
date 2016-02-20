@@ -46,7 +46,7 @@ let process_dot_install st nv =
 
       (* .config *)
       let dot_config = OpamPath.Switch.config root st.switch name in
-      OpamFilename.mkdir (OpamFilename.dirname dot_config);
+      OpamFilename.mkdir (OpamFilename.dirname (OpamFile.filename dot_config));
       OpamFile.Dot_config.write dot_config config;
 
       let warnings = ref [] in
@@ -135,7 +135,7 @@ let process_dot_install st nv =
         let msg =
           Printf.sprintf
             "Some files in %s couldn't be installed:\n%s"
-            (OpamFilename.prettify install_f)
+            (OpamFile.to_string install_f)
             (String.concat "" (List.map print !warnings))
         in
         failwith msg
@@ -421,9 +421,11 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
     (* Remove .config and .install *)
     log "Removing config and install files";
     OpamFilename.remove
-      (OpamPath.Switch.install t.switch_global.root t.switch name);
+      (OpamFile.filename
+         (OpamPath.Switch.install t.switch_global.root t.switch name));
     OpamFilename.remove
-      (OpamPath.Switch.config t.switch_global.root t.switch name);
+      (OpamFile.filename
+         (OpamPath.Switch.config t.switch_global.root t.switch name));
 
     log "Removing files from .install";
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;

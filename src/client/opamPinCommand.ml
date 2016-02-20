@@ -43,18 +43,20 @@ let edit t name =
     orig_opam = None ||
     orig_opam = Some (OpamFile.OPAM.create (OpamPackage.create name version))
   in
-  if empty_opam && not (OpamFilename.exists temp_file) then
+  if empty_opam && not (OpamFile.exists temp_file) then
     OpamPinned.add_overlay ~template:true ~version
       t.switch_repos t.switch name pin;
-  if not (OpamFilename.exists temp_file) then
-    OpamFilename.copy ~src:file ~dst:temp_file;
+  if not (OpamFile.exists temp_file) then
+    OpamFilename.copy
+      ~src:(OpamFile.filename file)
+      ~dst:(OpamFile.filename temp_file);
   let rec edit () =
     let edited_ok =
       try
         Sys.command
           (Printf.sprintf "%s %s"
              (OpamClientConfig.(!r.editor))
-             (OpamFilename.to_string temp_file))
+             (OpamFile.to_string temp_file))
         = 0
       with _ -> false
     in
@@ -106,14 +108,16 @@ let edit t name =
     with e ->
       OpamStd.Exn.fatal e;
       if OpamConsole.confirm "Errors in %s, retry editing ?"
-          (OpamFilename.to_string file)
+          (OpamFile.to_string file)
       then edit ()
       else None
   in
   match edit () with
   | None -> if empty_opam then raise Not_found else None
   | Some new_opam ->
-    OpamFilename.move ~src:temp_file ~dst:file;
+    OpamFilename.move
+      ~src:(OpamFile.filename temp_file)
+      ~dst:(OpamFile.filename file);
     let url_file =
       OpamPath.Switch.Overlay.url t.switch_global.root t.switch name
     in
@@ -124,7 +128,7 @@ let edit t name =
       )
     else
       (* Remove url overlay that would hide the in-opam url *)
-      OpamFilename.remove url_file;
+      OpamFilename.remove (OpamFile.filename url_file);
     OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
     if Some new_opam = orig_opam then (
@@ -144,7 +148,9 @@ let edit t name =
         in
         if OpamConsole.confirm "Save the new opam file back to %S ?"
             (OpamFilename.to_string src_opam) then
-          OpamFilename.copy ~src:file ~dst:src_opam
+          OpamFilename.copy
+            ~src:(OpamFile.filename file)
+            ~dst:src_opam
       | _ -> ()
     in
     match installed_nv with
@@ -206,7 +212,8 @@ let pin name ?version pin_option =
           (string_of_pin_option current);
       if OpamConsole.confirm "Proceed ?" then
         (OpamFilename.remove
-           (OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name);
+           (OpamFile.filename
+              (OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name));
          version, no_changes)
       else OpamStd.Sys.exit 0
     with Not_found ->

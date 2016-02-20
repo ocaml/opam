@@ -116,9 +116,9 @@ let install_compiler gt ~quiet:_ switch compiler =
     (slog OpamCompiler.to_string) compiler;
 
   let comp_f = OpamPath.compiler_comp gt.root compiler in
-  if not (OpamFilename.exists comp_f) then (
+  if not (OpamFile.exists comp_f) then (
     OpamConsole.msg "Cannot find %s: %s is not a valid compiler name.\n"
-      (OpamFilename.to_string comp_f)
+      (OpamFile.to_string comp_f)
       (OpamCompiler.to_string compiler);
     OpamStd.Sys.exit 1;
   );
@@ -244,7 +244,7 @@ let add_to_reinstall gt switch switch_selections ~unpinned_only packages =
     (OpamFile.PkgList.safe_read reinstall_file ++ packages) %% installed
   in
   if OpamPackage.Set.is_empty reinstall then
-    OpamFilename.remove reinstall_file
+    OpamFilename.remove (OpamFile.filename reinstall_file)
   else
     OpamFile.PkgList.write reinstall_file reinstall
 
@@ -260,7 +260,7 @@ let set_current_switch gt switch =
 let install_metadata st nv =
   let opam_mirror = OpamPath.opam st.switch_global.root nv in
   if OpamPackage.Name.Map.mem nv.name st.pinned ||
-     OpamFilename.exists opam_mirror then ()
+     OpamFile.exists opam_mirror then ()
   else (
     OpamFile.OPAM.write opam_mirror (OpamSwitchState.opam st nv);
     match OpamSwitchState.files st nv with

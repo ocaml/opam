@@ -100,7 +100,7 @@ end
 
 (* Returns the directory holding the original metadata of the package. *)
 let package_repo_dir root repositories package_index nv =
-  if OpamFilename.exists (OpamPath.opam root nv) then
+  if OpamFile.exists (OpamPath.opam root nv) then
     OpamPath.packages root nv
   else
   let repo_name, prefix = OpamPackage.Map.find nv package_index in
@@ -163,12 +163,13 @@ let package_state_one gt all nv =
   let url     = OpamPath.url gt.root nv in
   let files   = OpamPath.files gt.root nv in
   let archive = OpamPath.archive gt.root nv in
-  if not (OpamFilename.exists opam) then []
+  let cksum f = OpamFilename.checksum (OpamFile.filename f) in
+  if not (OpamFile.exists opam) then []
   else match all with
     | `all ->
-      OpamFilename.checksum opam
-      @ OpamFilename.checksum descr
-      @ OpamFilename.checksum url
+      cksum opam
+      @ cksum descr
+      @ cksum url
       @ OpamFilename.checksum_dir files
       @ OpamFilename.checksum archive
     | `partial true ->
@@ -187,7 +188,7 @@ let package_state rt =
     ) (OpamGlobalState.all_installed gt) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
       if OpamPackage.Map.mem nv map then map
-      else if OpamFilename.exists (OpamPath.opam gt.root nv) then
+      else if OpamFile.exists (OpamPath.opam gt.root nv) then
         let state = package_state_one gt `all nv in
         OpamPackage.Map.add nv state map
       else
@@ -226,8 +227,8 @@ let repository_of_package rt nv =
     None
 
 let compiler_state_one gt c =
-  let comp = OpamPath.compiler_comp gt.root c in
-  let descr = OpamPath.compiler_descr gt.root c in
+  let comp = OpamFile.filename (OpamPath.compiler_comp gt.root c) in
+  let descr = OpamFile.filename (OpamPath.compiler_descr gt.root c) in
   if OpamFilename.exists comp then
     Some (OpamFilename.checksum comp @ OpamFilename.checksum descr)
   else

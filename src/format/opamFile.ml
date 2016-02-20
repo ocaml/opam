@@ -37,6 +37,8 @@ type 'a typed_file = 'a t
 
 let make f = (f: 'a t)
 let filename f = (f: 'a t :> filename)
+let to_string f = OpamFilename.to_string (filename f)
+let exists f = OpamFilename.exists (filename f)
 
 module type IO_FILE = sig
   type t

@@ -26,28 +26,28 @@ let read_opam dir =
     | OpamSystem.Internal_error _ | Not_found -> None
     | Parsing.Parse_error | OpamFormat.Bad_format _ | Lexer_error _ ->
       OpamConsole.warning "Errors while parsing %s, skipping."
-        (OpamFilename.to_string opam_file);
+        (OpamFile.to_string opam_file);
       None
   in
   match opam with
   | Some opam ->
     let opam =
-      if OpamFilename.exists url_file then
+      if OpamFile.exists url_file then
         try OpamFile.OPAM.with_url opam (OpamFile.URL.read url_file)
         with e ->
           OpamStd.Exn.fatal e;
           OpamConsole.warning "Errors while parsing %s, skipping."
-            (OpamFilename.to_string url_file);
+            (OpamFile.to_string url_file);
           opam
       else opam
     in
     let opam =
-      if OpamFilename.exists descr_file then
+      if OpamFile.exists descr_file then
         try OpamFile.OPAM.with_descr opam (OpamFile.Descr.read descr_file)
         with e ->
           OpamStd.Exn.fatal e;
           OpamConsole.warning "Errors while parsing %s, skipping."
-            (OpamFilename.to_string descr_file);
+            (OpamFile.to_string descr_file);
           opam
       else opam
     in

@@ -244,7 +244,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
   (* Download the remote file / fetch the remote repository *)
   let download download_dir =
-    if OpamFilename.exists (OpamFile.filename url_file) then (
+    if OpamFile.exists url_file then (
       let url = OpamFile.URL.read url_file in
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
@@ -284,7 +284,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
     (* Finally create the final archive *)
   let create_archive files extract_root =
     if not (OpamFilename.Set.is_empty files) ||
-       OpamFilename.exists (OpamFile.filename url_file) then (
+       OpamFile.exists url_file then (
       OpamConsole.msg "Creating %s.\n" (OpamFilename.to_string archive);
       OpamFilename.exec extract_root [
         [ "tar" ; "czf" ;

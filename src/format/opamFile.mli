@@ -25,6 +25,8 @@ type 'a typed_file = 'a t
 
 val make: filename -> 'a t
 val filename: 'a t -> filename
+val to_string: 'a t -> string
+val exists: 'a t -> bool
 
 (** All Configuration files satisfies this signature *)
 module type IO_FILE = sig

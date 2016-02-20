@@ -30,7 +30,8 @@ let with_switch_backup _command f =
   OpamFile.SwitchSelections.write file (OpamSwitchState.selections t);
   try
     f t;
-    OpamFilename.remove file (* We might want to keep it even if successful ? *)
+    (* Note: We might want to keep it even if successful ? *)
+    OpamFilename.remove (OpamFile.filename file)
   with
   | OpamStd.Sys.Exit 0 as e -> raise e
   | err ->
@@ -39,14 +40,14 @@ let with_switch_backup _command f =
         (OpamStateConfig.get_switch ()) in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
-      OpamFilename.remove file
+      OpamFilename.remove (OpamFile.filename file)
     else
       (prerr_string
          (OpamStd.Format.reformat
             (Printf.sprintf
                "\nThe former state can be restored with:\n    \
                 %s switch import %S\n%!"
-               Sys.argv.(0) (OpamFilename.prettify file))));
+               Sys.argv.(0) (OpamFile.to_string file))));
     raise err
 
 module API = struct
@@ -644,7 +645,7 @@ module API = struct
     let root_empty =
       not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
-    if OpamFilename.exists config_f then (
+    if OpamFile.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.";
     ) else (
       if not root_empty then (

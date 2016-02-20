@@ -25,7 +25,7 @@ let packages = OpamRepository.packages repo
 let compilers = OpamRepository.compilers repo
 
 let wopt w f = function
-  | None -> OpamFilename.remove f
+  | None -> OpamFilename.remove (OpamFile.filename f)
   | Some contents -> w f contents
 
 let apply f x prefix y =
@@ -60,21 +60,23 @@ let iter_packages_gen ?(quiet=false) f =
       let opam = OpamFile.OPAM.read opam_file in
       let descr_file = OpamRepositoryPath.descr repo prefix package in
       let descr =
-        if OpamFilename.exists descr_file then
+        if OpamFile.exists descr_file then
           Some (OpamFile.Descr.read descr_file)
         else None
       in
       let url_file = OpamRepositoryPath.url repo prefix package in
       let url =
-        if OpamFilename.exists url_file then
+        if OpamFile.exists url_file then
           Some (OpamFile.URL.read url_file)
         else None
       in
-      let dot_install_file =
-        OpamRepositoryPath.files repo prefix package
-        // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
+      let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
+        OpamFile.make
+          (OpamRepositoryPath.files repo prefix package
+           // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
+      in
       let dot_install =
-        if OpamFilename.exists dot_install_file then
+        if OpamFile.exists dot_install_file then
           Some (OpamFile.Dot_install.read dot_install_file)
         else None
       in
@@ -89,7 +91,7 @@ let iter_packages_gen ?(quiet=false) f =
       if opam <> opam2 then
         (upd ();
          let s = OpamFile.OPAM.to_string_with_preserved_format opam_file opam2 in
-         OpamFilename.write opam_file s);
+         OpamFilename.write (OpamFile.filename opam_file) s);
       if descr <> descr2 then
         (upd (); wopt OpamFile.Descr.write descr_file descr2);
       if url <> url2 then
@@ -130,7 +132,7 @@ let iter_compilers_gen ?(quiet=false) f =
       let comp = OpamFile.Comp.read comp_file in
       let descr_file = OpamRepositoryPath.compiler_descr repo prefix c in
       let descr =
-        if OpamFilename.exists descr_file then
+        if OpamFile.exists descr_file then
           Some (OpamFile.Descr.read descr_file)
         else None
       in

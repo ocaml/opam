@@ -49,9 +49,10 @@ let fetch_dev_package url srcdir nv =
    to find [files] and [descr]. *)
 let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
     name dir =
-  let opam_file =
-    if root then OpamFilename.opt_file (dir // "opam")
-    else OpamPinned.find_opam_file_in_source name dir
+  let opam_file: OpamFile.OPAM.t OpamFile.t option =
+    OpamStd.Option.map OpamFile.make
+      (if root then OpamFilename.opt_file (dir // "opam")
+       else OpamPinned.find_opam_file_in_source name dir)
   in
   match opam_file with
   | None -> None
@@ -72,7 +73,7 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
            "Errors in opam file from %s upstream, ignored (fix with \
             'opam pin edit')"
            (OpamPackage.Name.to_string name);
-       OpamFilename.copy ~src:local_opam ~dst:dst
+       OpamFilename.copy ~src:(OpamFile.filename local_opam) ~dst:dst
      | _ -> ());
     OpamStd.Option.map
       (fun opam ->
@@ -161,10 +162,13 @@ let pinned_package st ?fixed_version name =
   (* Do the update *)
   fetch_dev_package url srcdir fake_nv @@+ fun result ->
   let new_meta = (* New version from the source *)
+    let copy_invalid_to =
+      OpamFile.filename (OpamPath.Switch.Overlay.tmp_opam root st.switch name)
+    in
     OpamStd.Option.Op.(
       (local_opam ?fixed_version
+         ~copy_invalid_to
          ~check:true
-         ~copy_invalid_to:(OpamPath.Switch.Overlay.tmp_opam root st.switch name)
          name srcdir
        >>| hash_meta)
       +! [])
@@ -197,12 +201,13 @@ let pinned_package st ?fixed_version name =
           let vo =
             OpamStd.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
           in
-          OpamFile.OPAM.write (overlay // f)
+          OpamFile.OPAM.write (OpamFile.make (overlay // f))
             (OpamFile.OPAM.with_url
                (OpamFile.OPAM.with_version_opt o vo)
                url);
           OpamFilename.remove
-            (OpamPath.Switch.Overlay.url root st.switch name)
+            (OpamFile.filename
+               (OpamPath.Switch.Overlay.url root st.switch name))
         | `Digest _ ->
           OpamFilename.copy_in ~root:package_root (package_root // f) overlay)
       hash
@@ -218,7 +223,8 @@ let pinned_package st ?fixed_version name =
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (OpamUrl.to_string (OpamFile.URL.url url));
        OpamFilename.remove
-         (OpamPath.Switch.Overlay.tmp_opam root st.switch name);
+         (OpamFile.filename
+            (OpamPath.Switch.Overlay.tmp_opam root st.switch name));
        install_meta srcdir user_meta new_meta)
     else if
       OpamConsole.formatted_msg

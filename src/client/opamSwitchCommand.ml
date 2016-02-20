@@ -438,10 +438,12 @@ let reinstall_gt gt switch =
 let with_backup gt switch f =
   let state_file = OpamPath.Switch.selections gt.root switch in
   let backup_state_file = OpamPath.backup gt.root in
-  OpamFilename.copy ~src:state_file ~dst:backup_state_file;
+  OpamFilename.copy
+    ~src:(OpamFile.filename state_file)
+    ~dst:(OpamFile.filename backup_state_file);
   try
     f gt switch;
-    OpamFilename.remove backup_state_file
+    OpamFilename.remove (OpamFile.filename backup_state_file)
   with
   | OpamStd.Sys.Exit 0 as e -> raise e
   | err ->
@@ -451,11 +453,11 @@ let with_backup gt switch f =
        OpamPackage.Set.equal
          new_state.sel_roots old_state.sel_roots &&
        OpamPackage.Set.equal new_state.sel_compiler old_state.sel_compiler
-    then OpamFilename.remove backup_state_file
+    then OpamFilename.remove (OpamFile.filename backup_state_file)
     else
       Printf.eprintf "The former package state can be restored with \
                       %s switch import %S%s\n"
-        Sys.argv.(0) (OpamFilename.to_string backup_state_file)
+        Sys.argv.(0) (OpamFile.to_string backup_state_file)
         (if OpamStateConfig.(!r.current_switch <> Some switch ||
                              !r.switch_from = `Command_line)
          then Printf.sprintf " --switch %s" (OpamSwitch.to_string switch)

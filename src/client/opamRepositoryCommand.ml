@@ -278,7 +278,7 @@ let fix_package_descriptions rt ~verbose =
   let upstream_deleted_packages =
     OpamPackage.Set.filter
       (fun nv ->
-         not (OpamFilename.exists (OpamPath.opam gt.root nv)))
+         not (OpamFile.exists (OpamPath.opam gt.root nv)))
       deleted_packages in
 
   (* that's not a good idea *at all* to enable this hook if you
@@ -380,14 +380,14 @@ let fix_package_descriptions rt ~verbose =
 
 let update_package_index rt =
   let file = OpamPath.package_index rt.repos_global.root in
-  log "Updating %a ...\n" (slog OpamFilename.prettify) file;
+  log "Updating %a ...\n" (slog OpamFile.to_string) file;
   let package_index = OpamRepositoryState.package_index rt in
   OpamFile.Package_index.write file package_index;
   { rt with package_index }
 
 let update_compiler_index rt =
   let file = OpamPath.compiler_index rt.repos_global.root in
-  log "Updating %a ...\n" (slog OpamFilename.prettify) file;
+  log "Updating %a ...\n" (slog OpamFile.to_string) file;
   let compiler_index = OpamRepositoryState.compiler_index rt in
   OpamFile.Compiler_index.write file compiler_index;
   { rt with compiler_index }
