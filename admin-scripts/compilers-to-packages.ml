@@ -75,7 +75,7 @@ OpamCompiler.Map.iter (fun c prefix ->
       OpamFile.OPAM.with_extra_sources opam
         (OpamStd.List.filter_some extra_sources)
     in
-    OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
+    OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
     let config =
       OpamFile.Dot_config.create @@
       List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
