@@ -503,10 +503,19 @@ let repo_kind_flag =
     Arg.(some (enum (main_kinds @ aliases_kinds))) None
 
 let jobs_flag =
+  let positive : int Arg.converter =
+    let (parser, printer) = Arg.int in
+    let parser s =
+      match parser s with
+      | `Error _ as e -> e
+      | `Ok n as r -> if n <= 0
+        then `Error "expected a positive integer"
+        else r in
+    (parser, printer) in
   mk_opt ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. You can also set it using \
      the $(b,\\$OPAMJOBS) environment variable."
-    Arg.(some int) None
+    Arg.(some positive) None
 
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
