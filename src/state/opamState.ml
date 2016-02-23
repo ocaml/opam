@@ -2143,9 +2143,9 @@ let get_opam_env ~force_path t =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   add_to_env t [] (env_updates ~opamswitch ~force_path t)
 
-let get_full_env ~force_path t =
+let get_full_env ?(opamswitch=true) ~force_path t =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add_to_env t env0 (env_updates ~opamswitch:true ~force_path t)
+  add_to_env t env0 (env_updates ~opamswitch ~force_path t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in

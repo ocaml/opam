@@ -373,7 +373,9 @@ let config =
     "Execute $(i,COMMAND) with the correct environment variables. \
      This command can be used to cross-compile between switches using \
      $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). \
-     Opam expansion takes place in command and args.";
+     Opam expansion takes place in command and args. If no switch is \
+     present on the command line or in the OPAMSWITCH environment \
+     variable, OPAMSWITCH is not set in $(i,COMMAND)'s environment.";
     "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
      be accessed with the syntax $(i,pkg:var).";
