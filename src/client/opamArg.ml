@@ -507,7 +507,7 @@ let jobs_flag =
     let (parser, printer) = Arg.int in
     let parser s =
       match parser s with
-      | `Error _ as e -> e
+      | `Error _ -> `Error "expected a positive integer"
       | `Ok n as r -> if n <= 0
         then `Error "expected a positive integer"
         else r in
