@@ -217,8 +217,10 @@ let exec ~inplace_path command =
     match command with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
+  let opamswitch = !OpamGlobals.switch <> `Not_set in
   let env =
-    let env = OpamState.get_full_env ~force_path:(not inplace_path) t in
+    let env =
+      OpamState.get_full_env ~opamswitch ~force_path:(not inplace_path) t in
     let env = List.rev_map (fun (k,v) -> k^"="^v) env in
     Array.of_list env in
   raise (OpamGlobals.Exec (cmd, args, env))
