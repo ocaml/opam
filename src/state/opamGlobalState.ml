@@ -197,10 +197,10 @@ module Format_upgrade = struct
             let comp = OpamFile.Comp.read comp_f in
             let descr_f = OpamPath.compiler_descr root comp_name in
             let descr =
-              if OpamFile.exists descr_f then OpamFile.Descr.read descr_f
-              else
-                OpamFile.Descr.create
-                  "Switch relying on a system-wide installation of OCaml"
+              OpamStd.Option.default
+                (OpamFile.Descr.create
+                   "Switch relying on a system-wide installation of OCaml")
+                (OpamFile.Descr.read_opt descr_f)
             in
             let comp_opam =
               OpamFile.Comp.to_package name comp (Some descr)

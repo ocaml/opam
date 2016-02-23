@@ -244,8 +244,9 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
   (* Download the remote file / fetch the remote repository *)
   let download download_dir =
-    if OpamFile.exists url_file then (
-      let url = OpamFile.URL.read url_file in
+    match OpamFile.URL.read_opt url_file with
+    | None -> Done None
+    | Some url ->
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -259,8 +260,6 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       | _ ->
         pull_url nv download_dir checksum mirrors
         @@+ fun f -> Done (Some f)
-    ) else
-      Done None
   in
 
   (* if we've downloaded a file, extract it, otherwise just copy it *)

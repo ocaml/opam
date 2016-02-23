@@ -32,8 +32,10 @@ type global_state = {
       isn't really supported at the moment) *)
 
   config: OpamFile.Config.t;
-  (** The main configuration file *)
-
+  (** The main configuration file. A note of caution: this corresponds to the
+      configuration as loaded from the file: to get the current options, which
+      may be overriden through the command-line or environment, see
+      OpamStateConfig *)
 }
 
 (** State corresponding to the repo/ subdir: all available packages, their

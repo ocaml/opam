@@ -43,6 +43,9 @@ module type IO_FILE = sig
   (** Read file contents. Raise an error if the file does not exist. *)
   val read: t typed_file -> t
 
+  (** Returns [None] on non-existing file *)
+  val read_opt: t typed_file -> t option
+
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: t typed_file -> t
 

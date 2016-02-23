@@ -610,8 +610,9 @@ let info ~fields ~raw_opam ~where atoms =
 
   OpamPackage.Name.Map.iter (fun k v ->
       if not (raw_opam || where) then (
+        OpamConsole.header_msg "Information on all versions";
         print_summary k;
-        OpamConsole.msg "----------------------------------------------------------------------\n";
+        OpamConsole.header_msg "Version-specific details";
       );
       print_one k v
   )details

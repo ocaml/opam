@@ -30,12 +30,13 @@ let load_selections gt switch =
 
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
-  if OpamFile.exists f then OpamFile.Dot_config.read f
-  else
-    (OpamConsole.error "No global config file found for switch %s. \
-                        Switch broken ?"
-       (OpamSwitch.to_string switch);
-     OpamFile.Dot_config.empty)
+  match OpamFile.Dot_config.read_opt f with
+  | Some c -> c
+  | None ->
+    OpamConsole.error
+      "No global config file found for switch %s. Switch broken ?"
+      (OpamSwitch.to_string switch);
+    OpamFile.Dot_config.empty
 
 let load ?(lock=Lock_readonly) gt rt switch =
   let chrono = OpamConsole.timer () in

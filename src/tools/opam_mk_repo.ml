@@ -271,8 +271,8 @@ let process
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
-    if OpamFile.exists opam_f then (
-      let opam = OpamFile.OPAM.read opam_f in
+    match OpamFile.OPAM.read_opt opam_f with
+    | Some opam ->
       let deps =
         OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam) in
       let depopts =
@@ -280,8 +280,9 @@ let process
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
         ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
-    ) else
-      OpamPackage.Set.empty in
+    | None ->
+      OpamPackage.Set.empty
+  in
   let get_transitive_dependencies packages =
     let rec get_transitive_dependencies_aux visited to_visit = 
       match to_visit with 
@@ -370,14 +371,13 @@ let process
         let url_file = OpamRepositoryPath.url repo prefix nv in
         try
           if not dryrun then OpamFilename.remove local_archive;
-          if OpamFile.exists url_file &&
-             OpamFile.URL.(url (read url_file)).OpamUrl.backend = `http
-          then (
+          match OpamFile.URL.read_opt url_file with
+          | Some urlf when OpamFile.URL.(url urlf).OpamUrl.backend = `http ->
             OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);
             let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
             if dryrun then OpamProcess.Job.dry_run job
             else OpamProcess.Job.run job
-          )
+          | None -> ()
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;

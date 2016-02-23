@@ -45,6 +45,7 @@ module type IO_FILE = sig
   val empty: t
   val write: 'a typed_file -> t -> unit
   val read : 'a typed_file -> t
+  val read_opt: 'a typed_file -> t option
   val safe_read: 'a typed_file -> t
   val read_from_channel: ?filename:'a typed_file -> in_channel -> t
   val read_from_string: ?filename:'a typed_file -> string -> t
@@ -123,6 +124,10 @@ module MakeIO (F : IO_Arg) = struct
         OpamConsole.error "%s" (OpamFormat.string_of_bad_format ~file:f e);
         if OpamFormatConfig.(!r.strict) then OpamStd.Sys.exit 66
         else raise e
+
+  let read_opt f =
+    if OpamFilename.exists f then Some (read f)
+    else None
 
   let safe_read f =
     if OpamFilename.exists f then

@@ -59,27 +59,15 @@ let iter_packages_gen ?(quiet=false) f =
       let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
       let descr_file = OpamRepositoryPath.descr repo prefix package in
-      let descr =
-        if OpamFile.exists descr_file then
-          Some (OpamFile.Descr.read descr_file)
-        else None
-      in
+      let descr = OpamFile.Descr.read_opt descr_file in
       let url_file = OpamRepositoryPath.url repo prefix package in
-      let url =
-        if OpamFile.exists url_file then
-          Some (OpamFile.URL.read url_file)
-        else None
-      in
+      let url = OpamFile.URL.read_opt url_file in
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
           (OpamRepositoryPath.files repo prefix package
            // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
       in
-      let dot_install =
-        if OpamFile.exists dot_install_file then
-          Some (OpamFile.Dot_install.read dot_install_file)
-        else None
-      in
+      let dot_install = OpamFile.Dot_install.read_opt dot_install_file in
       let opam2, descr2, url2, dot_install2 =
         f package ~prefix ~opam ~descr ~url ~dot_install
       in
@@ -131,11 +119,7 @@ let iter_compilers_gen ?(quiet=false) f =
       let comp_file = OpamRepositoryPath.compiler_comp repo prefix c in
       let comp = OpamFile.Comp.read comp_file in
       let descr_file = OpamRepositoryPath.compiler_descr repo prefix c in
-      let descr =
-        if OpamFile.exists descr_file then
-          Some (OpamFile.Descr.read descr_file)
-        else None
-      in
+      let descr = OpamFile.Descr.read_opt descr_file in
       let comp2, descr2 = f c ~prefix ~comp ~descr in
       let descr2 = of_action descr descr2 in
       let changed = ref false in

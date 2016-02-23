@@ -118,9 +118,9 @@ let updates ~opamswitch ?(force_path=false) st =
   let root = st.switch_global.root in
   let update =
     let fn = OpamPath.Switch.environment root st.switch in
-    if OpamFile.exists fn then
-      OpamFile.Environment.read fn
-    else
+    match OpamFile.Environment.read_opt fn with
+    | Some env -> env
+    | None ->
       let update = compute_updates st in
       OpamFile.Environment.write fn update;
       update
