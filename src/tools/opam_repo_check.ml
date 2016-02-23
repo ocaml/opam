@@ -67,15 +67,4 @@ let process args =
         OpamFile.Dot_install.write dot_install
         (OpamFile.Dot_install.read dot_install);
 
-  ) packages;
-
-  (* compilers *)
-  let compilers = OpamRepository.compilers_with_prefixes repo in
-  OpamCompiler.Map.iter (fun c prefix ->
-      let comp = OpamRepositoryPath.compiler_comp repo prefix c in
-      let descr = OpamRepositoryPath.compiler_descr repo prefix c in
-      OpamConsole.msg "Processing compiler %s\n" (OpamCompiler.to_string c);
-      write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
-      if OpamFile.exists descr then
-        write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
-  ) compilers
+  ) packages

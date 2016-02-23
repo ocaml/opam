@@ -374,14 +374,14 @@ module Aliases = LineFile(struct
 
     let internal = "aliases"
 
-    type t = compiler switch_map
+    type t = string switch_map
 
     let empty = OpamSwitch.Map.empty
 
     let pp =
       OpamSwitch.Map.(Pp.lines_map ~empty ~add ~fold) @@
       Pp.of_module "switch-name" (module OpamSwitch: Pp.STR with type t = OpamSwitch.t) ^+
-      (Pp.last -| Pp.of_module "compiler" (module OpamCompiler: Pp.STR with type t = OpamCompiler.t))
+      Pp.last
 
   end)
 
@@ -404,8 +404,6 @@ module Repo_index (A : OpamStd.ABSTRACT) = LineFile(struct
   end)
 
 module Package_index = Repo_index(OpamPackage)
-
-module Compiler_index = Repo_index(OpamCompiler)
 
 (** List of packages (<switch>/installed, <switch>/installed-roots,
     <switch>/reinstall): table
@@ -1338,7 +1336,7 @@ module OPAMSyntax = struct
     metadata_dir: dirname option;
 
     (* Deprecated, for compat and proper linting *)
-    ocaml_version: compiler_constraint option;
+    ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
     os         : (bool * string) generic_formula;
   }
 
@@ -1851,8 +1849,7 @@ module OPAMSyntax = struct
         | Some ocaml_version ->
           let var = OpamVariable.of_string "ocaml-version" in
           let mk_atom (op,v) =
-            FOp (FIdent ([], var, None), op,
-                 FString (OpamCompiler.Version.to_string v))
+            FOp (FIdent ([], var, None), op, FString v)
           in
           let filter = OpamFilter.of_formula mk_atom ocaml_version in
           add_available available filter
@@ -2496,6 +2493,9 @@ module CompSyntax = struct
 
   let internal = "comp"
 
+  type compiler = string
+  type compiler_version = string
+
   type t = {
     opam_version : opam_version ;
     name         : compiler ;
@@ -2513,8 +2513,8 @@ module CompSyntax = struct
 
   let empty = {
     opam_version = OpamVersion.current;
-    name         = OpamCompiler.of_string "<none>";
-    version      = OpamCompiler.Version.of_string "<none>";
+    name         = "<none>";
+    version      = "<none>";
     src          = None;
     preinstalled = false;
     patches   = [];
@@ -2546,7 +2546,7 @@ module CompSyntax = struct
     List.map (function
         | var,op,value,None ->
           var, op, value,
-          Some ("Updated by compiler " ^ OpamCompiler.to_string t.name)
+          Some ("Updated by compiler " ^ t.name)
         | b -> b)
       t.env
 
@@ -2575,10 +2575,10 @@ module CompSyntax = struct
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
       "name", Pp.ppacc_opt with_name
         (fun t -> if t.name = empty.name then None else Some t.name)
-        (Pp.V.string -| Pp.of_module "name" (module OpamCompiler: Pp.STR with type t = OpamCompiler.t));
+        Pp.V.string;
       "version", Pp.ppacc_opt with_version
         (fun t -> if t.version = empty.version then None else Some t.version)
-        (Pp.V.string -| Pp.of_module "version" (module OpamCompiler.Version: Pp.STR with type t = OpamCompiler.Version.t));
+        Pp.V.string;
 
       "src", Pp.ppacc_opt with_src src
         Pp.V.url;
@@ -2617,6 +2617,13 @@ module CompSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.string);
     ]
 
+  let system_compiler = "system"
+
+  let version_of_name name =
+    match OpamStd.String.cut_at name '+' with
+    | Some (v,_) -> v
+    | None -> name
+
   let pp_raw =
     let name = internal in
     Pp.I.map_file @@
@@ -2627,14 +2634,24 @@ module CompSyntax = struct
                       exclusive "
       (fun t -> t.build = [] || t.configure = [] && t.make = [])
 
+  let of_filename f =
+    if OpamFilename.check_suffix f ".comp" then
+      f
+      |> OpamFilename.chop_extension
+      |> OpamFilename.basename
+      |> OpamFilename.Base.to_string
+      |> fun x -> Some x
+    else
+      None
+
   let pp =
     pp_raw -|
     Pp.pp
       (fun ~pos (filename, (t:t)) ->
-         filename, match OpamCompiler.of_filename filename with
+         filename, match of_filename filename with
          | None ->
            if t.name = empty.name ||
-              t.name <> OpamCompiler.system && t.version = empty.version
+              t.name <> "system" && t.version = empty.version
            then
              OpamFormat.bad_format ~pos
                "File name not in the form <name>.<version>, and missing 'name:' \
@@ -2645,20 +2662,20 @@ module CompSyntax = struct
            t
          | Some name ->
            let version =
-             if name = OpamCompiler.system then t.version
-             else OpamCompiler.version name
+             if name = "system" then t.version
+             else version_of_name name
            in
            if t.name <> empty.name && t.name <> name then
              Pp.warn ~pos "Mismatching file name and 'name:' field";
-           if name <> OpamCompiler.system &&
+           if name <> system_compiler &&
               t.version <> empty.version && t.version <> version then
              Pp.warn ~pos "Mismatching file name and 'version:' field";
            {t with name; version})
       (fun (filename, t) ->
-         filename, match OpamCompiler.of_filename filename with
+         filename, match of_filename filename with
          | None ->
            if t.name = empty.name ||
-              t.name <> OpamCompiler.system && t.version = empty.version
+              t.name <> system_compiler && t.version = empty.version
            then
              OpamConsole.warning
                "Outputting .comp file %s with unspecified name or version"
@@ -2666,24 +2683,22 @@ module CompSyntax = struct
            t
          | Some name ->
            let version =
-             if name = OpamCompiler.system then t.version
-             else OpamCompiler.version name
+             if name = system_compiler then t.version
+             else version_of_name name
            in
            if t.name <> empty.name && t.name <> name ||
-              name <> OpamCompiler.system &&
+              name <> system_compiler &&
               t.version <> empty.version && t.version <> version
            then
              OpamConsole.warning
                "Skipping inconsistent 'name:' or 'version:' fields (%s.%s) \
                 while saving %s"
-               (OpamCompiler.to_string t.name)
-               (OpamCompiler.Version.to_string version)
-               (OpamFilename.to_string filename);
+               t.name version (OpamFilename.to_string filename);
            { t with name = empty.name })
 
   let to_package pkg_name comp descr_opt =
     let version =
-      OpamPackage.Version.of_string (OpamCompiler.to_string (name comp))
+      OpamPackage.Version.of_string (name comp)
     in
     let nofilter x = x, (None: filter option) in
     let depends =

@@ -26,17 +26,11 @@ type t = dirname
 (** State cache *)
 val state_cache: t -> filename
 
-(** Update cache *)
-val update_cache: t -> filename
-
 (** lock file *)
 val lock: t -> filename
 
 (** Main configuration file: {i $opam/config} *)
 val config: t -> OpamFile.Config.t OpamFile.t
-
-(** Compiler aliases *)
-val aliases: t -> OpamFile.Aliases.t OpamFile.t
 
 (** Package directroy {i $opam/packages/} *)
 val packages_dir: t -> dirname
@@ -68,23 +62,8 @@ val archives_dir: t -> dirname
 (** Archive file: {i $opam/archives/$NAME.$VERSION+opam.tar.gz} *)
 val archive: t -> package -> filename
 
-(** Compiler files: {i $opam/compilers/$VERSION/$COMP.comp} *)
-val compiler_comp: t -> compiler -> OpamFile.Comp.t OpamFile.t
-
-(** Compiler description files: {i $opam/compilers/$VERSION/$COMP.descr} *)
-val compiler_descr: t -> compiler -> OpamFile.Descr.t OpamFile.t
-
-(** Compiler files: {i $opam/compilers/} *)
-val compilers_dir: t -> dirname
-
-(** Compiler subdir {i $opam/compilers/$VERSION/$COMP} *)
-val compilers: t -> compiler -> dirname
-
 (** Return the repository index: {i $opam/repo/package-index} *)
 val package_index: t -> OpamFile.Package_index.t OpamFile.t
-
-(** Return the repository index: {i $opam/repo/compiler-index} *)
-val compiler_index: t -> OpamFile.Compiler_index.t OpamFile.t
 
 (** Init scripts *)
 val init: t -> dirname

@@ -51,18 +51,6 @@ let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let upload_dir t = root t / "upload"
 
-let compilers_dir t = root t / "compilers"
-
-let compiler_comp t prefix c =
-  match prefix with
-  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".comp") |> OpamFile.make
-  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".comp") |> OpamFile.make
-
-let compiler_descr t prefix c =
-  match prefix with
-  | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".descr") |> OpamFile.make
-  | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".descr") |> OpamFile.make
-
 module Remote = struct
   (** URL, not FS paths *)
   open OpamUrl.Op
@@ -75,7 +63,4 @@ module Remote = struct
 
   let archive t nv =
     t.repo_url / "archives" / (OpamPackage.to_string nv ^ "+opam.tar.gz")
-
-  let compilers_url t =
-    t.repo_url / "compilers"
 end

@@ -53,16 +53,9 @@ type repos_state = {
   repositories: OpamFile.Repo_config.t repository_name_map;
   (** The list of repositories *)
 
-  compilers: compiler_set;
-  (** The list of compiler available to install *)
-
   package_index: (repository_name * string option) package_map;
   (** Package index
       (map from packages to their repository and relative path) *)
-
-  compiler_index: (repository_name * string option) compiler_map;
-  (** Compiler index
-      (map from compilers to their repository and relative path) *)
 
   repo_opams: OpamFile.OPAM.t package_map;
   (** All opam files that can be found in the configured repositories *)

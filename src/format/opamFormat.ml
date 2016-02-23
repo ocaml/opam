@@ -605,18 +605,16 @@ module Pp = struct
         (fun url -> OpamUrl.to_string url)
 
     (* a hack to allow "system" compiler as ident rather than string. For
-       backwards-compat. *)
+       backwards-compat. Deprecated, for migration only *)
     let compiler_version =
-      let str_system = OpamCompiler.(to_string system) in
-      let comp = of_module "compiler-version" (module OpamCompiler.Version: STR with type t = OpamCompiler.Version.t) in
-      let parse ~pos = function
-        | Ident (_, v) when v = str_system -> parse comp ~pos v
-        | String (_, v) -> parse comp ~pos v
+      let system_compiler = "system" in
+      let parse ~pos:_ = function
+        | Ident (_, v) when v = system_compiler -> v
+        | String (_, v) -> v
         | _ -> unexpected ()
       in
       let print v =
-        let v = print comp v in
-        if v = str_system then print ident v
+        if v = system_compiler then print ident v
         else print string v
       in
       pp ~name:"compiler-version" parse print

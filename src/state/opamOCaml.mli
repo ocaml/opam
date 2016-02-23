@@ -24,4 +24,3 @@ val ocaml_native_available: bool Lazy.t
 val ocaml_natdynlink_available: bool Lazy.t
 val system_ocamlc_version: string option Lazy.t
 val system_ocamlc_where: string option Lazy.t
-val system_compiler: OpamCompiler.t option Lazy.t

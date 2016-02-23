@@ -39,17 +39,6 @@ val download_archive: repos_state -> package -> filename option OpamProcess.job
     (the boolean indicating the presence of a local repackaged archive),
     "full" is for all metadata including e.g. [descr] *)
 
-(** Global compiler state *)
-val compiler_state: repos_state -> checksums compiler_map
-
-(** Repository state *)
-val compiler_repository_state: repos_state -> checksums compiler_map
-
-(** Build a map which says in which repository the latest metadata for
-    a given compiler is. *)
-val compiler_index:
-  repos_state -> (repository_name * string option) compiler_map
-
 (** Global package state. *)
 val package_state: repos_state -> checksums package_map
 

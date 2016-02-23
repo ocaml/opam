@@ -81,7 +81,4 @@ let ocaml_natdynlink_available = lazy OpamStd.Option.Op.(
 
 let system_ocamlc_version = lazy (ocaml_cmd ~system:true "-version")
 let system_ocamlc_where = lazy (ocaml_cmd ~system:true "-where")
-let system_compiler = lazy (
-  OpamStd.Option.Op.(Lazy.force system_ocamlc_version >>|
-                      OpamCompiler.of_string)
-)
+

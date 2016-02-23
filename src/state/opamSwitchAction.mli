@@ -22,9 +22,6 @@ open OpamStateTypes
 val create_empty_switch:
   global_state -> switch -> global_state
 
-(** Installs the given compiler in the given (empty) switch *)
-val install_compiler: global_state -> quiet:bool -> switch -> compiler -> unit
-
 (** Writes the current state file to disk (installed, pinned, root packages etc.).
     Unless [OpamStateConfig.(!r.dryrun)] *)
 val write_selections: switch_state -> unit

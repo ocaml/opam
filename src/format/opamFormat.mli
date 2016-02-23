@@ -256,7 +256,7 @@ module Pp : sig
     (** Specialised url parser when the backend is already known *)
     val url_with_backend : OpamUrl.backend -> (value, url) t
 
-    val compiler_version : (value, compiler_version) t
+    val compiler_version : (value, string) t
 
     val filter_ident :
       (value,

@@ -24,12 +24,6 @@ val packages: repository -> package_set
 (** Get the list of packages (and their possible prefix) *)
 val packages_with_prefixes: repository -> string option package_map
 
-(** Get the list of all compiler *)
-val compilers: repository -> compiler_set
-
-(** Get the list of compilers (and their possible prefix) *)
-val compilers_with_prefixes: repository -> string option compiler_map
-
 (** {2 Repository Collection Operations } *)
 
 (** Sort a collection of repositories by priority *)
@@ -37,9 +31,6 @@ val sort: repository repository_name_map -> repository list
 
 (** Generate a package index from a collection of repositories *)
 val package_index: repository repository_name_map -> (repository_name * string option) package_map
-
-(** Generate a compiler index from a collection of repositories *)
-val compiler_index: repository repository_name_map -> (repository_name * string option) compiler_map
 
 (** {2 State} *)
 
@@ -57,12 +48,6 @@ val package_files: repository -> string option -> package -> archive:bool ->
 val package_state: repository -> string option -> package ->
   [`all|`partial of bool]
   -> checksums
-
-(** Get all the compiler files *)
-val compiler_files: repository -> string option -> compiler -> filename list
-
-(** Compute a compiler state (ie. a list of checksums). *)
-val compiler_state: repository -> string option -> compiler -> checksums
 
 (** {2 Repository backends} *)
 

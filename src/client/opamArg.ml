@@ -288,11 +288,6 @@ let dirname =
   let print ppf dir = pr_str ppf (OpamFilename.prettify_dir dir) in
   parse, print
 
-let compiler =
-  let parse str = `Ok (OpamCompiler.of_string str) in
-  let print ppf comp = pr_str ppf (OpamCompiler.to_string comp) in
-  parse, print
-
 let package_name =
   let parse str =
     try `Ok (OpamPackage.Name.of_string str)

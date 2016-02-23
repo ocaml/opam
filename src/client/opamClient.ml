@@ -539,10 +539,6 @@ module API = struct
           repos
           rt
       in
-      (* let rt, compiler_updates = *)
-      (*   let rt = OpamRepositoryCommand.update_compiler_index rt in *)
-      (*   rt, OpamRepositoryCommand.fix_compiler_descriptions rt *)
-      (*     ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in *)
       let rt, package_updates =
         let rt = OpamRepositoryCommand.update_package_index rt in
         rt, OpamRepositoryCommand.fix_package_descriptions rt
@@ -638,7 +634,7 @@ module API = struct
         log "State isn't broken but upgrade fails: something might be wrong.";
         broken_state_message ~need_fixup:true cs
 
-  let init repo compiler shell dot_profile update_config =
+  let init repo shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in

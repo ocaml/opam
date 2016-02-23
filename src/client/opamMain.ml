@@ -132,8 +132,6 @@ let init =
     `P "The state of repositories can be synchronized by using $(b,opam update).";
     `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
-  let compiler =
-    mk_opt ["compiler"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
@@ -144,7 +142,7 @@ let init =
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
-      build_options repo_kind repo_name repo_url compiler
+      build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -158,9 +156,9 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    Client.init repository compiler shell dot_profile update_config in
+    Client.init repository shell dot_profile update_config in
   Term.(pure init
-    $global_options $build_options $repo_kind_flag $repo_name $repo_url $compiler
+    $global_options $build_options $repo_kind_flag $repo_name $repo_url
     $no_setup $auto_setup $shell_opt $dot_profile_flag),
   term_info "init" ~doc ~man
 

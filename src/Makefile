@@ -139,7 +139,6 @@ SRC_format = \
   opamPackage.ml \
   opamVariable.ml \
   opamFormula.ml \
-  opamCompiler.ml \
   opamTypes.mli \
   opamTypesBase.ml \
   opamParser.mly \

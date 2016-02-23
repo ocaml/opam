@@ -114,11 +114,6 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   let opams = Cache.load gt.root in
   let cached = opams <> None in
   if cached then log "Cache found";
-  let compilers =
-    let files = OpamFilename.rec_files (OpamPath.compilers_dir gt.root) in
-    let comp = OpamStd.List.filter_map OpamCompiler.of_filename files in
-    OpamCompiler.Set.of_list comp
-  in
   let repositories =
     let names = OpamFile.Config.repositories gt.config in
     List.fold_left (fun map repo_name ->
@@ -129,8 +124,6 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   in
   let package_index =
     OpamFile.Package_index.safe_read (OpamPath.package_index gt.root) in
-  let compiler_index =
-    OpamFile.Compiler_index.safe_read (OpamPath.compiler_index gt.root) in
   let load_opam_file nv =
     let dir = package_repo_dir gt.root repositories package_index nv in
     OpamFileHandling.read_opam dir
@@ -146,13 +139,10 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
   let rt =
     { repos_global = gt;
       repos_lock = lock;
-      repositories; compilers; package_index; compiler_index; repo_opams }
+      repositories; package_index; repo_opams }
   in
   if save_cache && not cached then Cache.save rt;
   rt
-
-let compiler_index rt =
-  OpamRepository.compiler_index rt.repositories
 
 let package_index rt =
   OpamRepository.package_index rt.repositories
@@ -225,29 +215,6 @@ let repository_of_package rt nv =
     Some repo
   with Not_found ->
     None
-
-let compiler_state_one gt c =
-  let comp = OpamFile.filename (OpamPath.compiler_comp gt.root c) in
-  let descr = OpamFile.filename (OpamPath.compiler_descr gt.root c) in
-  if OpamFilename.exists comp then
-    Some (OpamFilename.checksum comp @ OpamFilename.checksum descr)
-  else
-    None
-
-let compiler_state rt =
-  OpamCompiler.Set.fold (fun c map ->
-      match compiler_state_one rt.repos_global c with
-      | None   -> map
-      | Some s -> OpamCompiler.Map.add c s map
-    ) rt.compilers OpamCompiler.Map.empty
-
-let compiler_repository_state rt =
-  OpamCompiler.Map.fold (fun comp (repo, prefix) map ->
-      let repo = OpamRepositoryName.Map.find repo rt.repositories in
-      match OpamRepository.compiler_state repo prefix comp with
-      | [] -> map
-      | l  -> OpamCompiler.Map.add comp l map
-    ) rt.compiler_index OpamCompiler.Map.empty
 
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt nv =

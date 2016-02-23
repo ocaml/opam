@@ -143,7 +143,14 @@ module Format_upgrade = struct
             pinned
         in
         let compiler =
-          let comp = OpamFile.Comp.read (OpamPath.compiler_comp root c) in
+          let version = match OpamStd.String.cut_at c '+' with
+            | Some (v,_) -> v
+            | None -> c
+          in
+          let comp =
+            OpamFile.Comp.read
+              (OpamFile.make (root / "compilers" / version / c // (c ^".comp")))
+          in
           let atoms = OpamFormula.atoms (OpamFile.Comp.packages comp) in
           List.fold_left (fun acc (name,_) ->
               let nv =
@@ -186,7 +193,7 @@ module Format_upgrade = struct
 
   let from_1_3_dev2_to_1_3_dev5 root conf =
     log "Upgrade switch state files format to 1.3 step 2";
-    let aliases_f = OpamPath.aliases root in
+    let aliases_f = OpamFile.make (root // "aliases") in
     let aliases = OpamFile.Aliases.safe_read aliases_f in
     OpamSwitch.Map.iter (fun switch comp_name ->
         (* Convert state-file table format to selections file, opam syntax
@@ -194,13 +201,23 @@ module Format_upgrade = struct
         let state_f = OpamPath.Switch.state root switch in
         let selections = OpamFile.State.safe_read state_f in
         let selections_f = OpamPath.Switch.selections root switch in
+        let comp_version = match OpamStd.String.cut_at comp_name '+' with
+          | Some (v,_) -> v
+          | None -> comp_name
+        in
         (* Change comp file to a package *)
         let selections =
-          if comp_name <> OpamCompiler.of_string "empty" then
+          if comp_name <> "empty" then
             let name = OpamPackage.Name.of_string "ocaml" in
-            let comp_f = OpamPath.compiler_comp root comp_name in
+            let comp_f =
+              OpamFile.make (root / "compilers" / comp_version /
+                             comp_name // (comp_name ^ ".comp"))
+            in
             let comp = OpamFile.Comp.read comp_f in
-            let descr_f = OpamPath.compiler_descr root comp_name in
+            let descr_f =
+              OpamFile.make (root / "compilers" / comp_version /
+                             comp_name // (comp_name ^ ".descr"))
+            in
             let descr =
               OpamStd.Option.default
                 (OpamFile.Descr.create
@@ -221,7 +238,7 @@ module Format_upgrade = struct
                   [ "ocaml-version",
                     S (OpamStd.Option.default "unknown"
                          (Lazy.force OpamOCaml.system_ocamlc_version));
-                    "compiler", S (OpamCompiler.to_string comp_name);
+                    "compiler", S comp_name;
                     "preinstalled", B true;
                     "ocaml-native", B (Lazy.force OpamOCaml.ocaml_native_available);
                     "ocaml-native-tools", B (Lazy.force OpamOCaml.ocaml_opt_available);
@@ -243,9 +260,8 @@ module Format_upgrade = struct
                 OpamFile.Dot_config.create @@
                 List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
                 [ "ocaml-version",
-                  S (OpamCompiler.Version.to_string
-                       (OpamFile.Comp.version comp));
-                  "compiler", S (OpamCompiler.to_string comp_name);
+                  S (OpamFile.Comp.version comp);
+                  "compiler", S comp_name;
                   "preinstalled", B false;
                   "ocaml-native",
                   B (OpamFilename.exists

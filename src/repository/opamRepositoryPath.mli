@@ -63,15 +63,6 @@ val archives_dir: repository -> dirname
     {i $opam/repo/$repo/upload/} *)
 val upload_dir: repository -> dirname
 
-(** Compiler files: {i $opam/repo/$repo/compilers/} *)
-val compilers_dir: repository -> dirname
-
-(** Compiler files: {i $opam/repo/$repo/compilers/XXX/$OVERSION.comp} *)
-val compiler_comp: repository -> string option -> compiler -> OpamFile.Comp.t OpamFile.t
-
-(** Compiler description files: {i $opam/repo/$repo/compilers/XXX/$OVERSION.descr} *)
-val compiler_descr: repository -> string option -> compiler -> OpamFile.Descr.t OpamFile.t
-
 
 (** Url constructor for parts of remote repositories, when applicable (http and
     rsync) *)
@@ -84,7 +75,4 @@ module Remote: sig
 
   (** Remote archive {i $remote/archives/$NAME.$VERSION.tar.gz} *)
   val archive: repository -> package -> url
-
-  (** Remote compiler files: {i $remote/compilers} *)
-  val compilers_url: repository -> url
 end

@@ -100,34 +100,6 @@ let update t repo =
           OpamRepositoryName.Map.add repo.repo_name repo t.repositories }
   )
 
-let print_updated_compilers updates =
-
-  let print singular plural map =
-    if not (OpamCompiler.Set.is_empty map) then (
-      if OpamCompiler.Set.cardinal map = 1 then
-        OpamConsole.msg "%s:\n" singular
-      else
-        OpamConsole.msg "%s:\n" plural;
-      OpamCompiler.Set.iter (fun comp ->
-        OpamConsole.msg " - %s\n" (OpamCompiler.to_string comp)
-      ) map
-    ) in
-
-  print
-    "The following NEW compiler is available"
-    "The following NEW compilers are available"
-    updates.created;
-
-  print
-    "The following compiler description has been UPDATED"
-    "The following compiler descriptions have been UPDATED"
-    updates.updated;
-
-  print
-    "The following compiler description has been DELETED"
-    "The following compiler descriptions have been DELETED"
-    updates.deleted
-
 let print_updated_packages gt updates =
 
   let print singular plural map fn =
@@ -385,13 +357,6 @@ let update_package_index rt =
   OpamFile.Package_index.write file package_index;
   { rt with package_index }
 
-let update_compiler_index rt =
-  let file = OpamPath.compiler_index rt.repos_global.root in
-  log "Updating %a ...\n" (slog OpamFile.to_string) file;
-  let compiler_index = OpamRepositoryState.compiler_index rt in
-  OpamFile.Compiler_index.write file compiler_index;
-  { rt with compiler_index }
-
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
 let update_config t repos =
@@ -403,7 +368,6 @@ let update_config t repos =
 
 let fix_descriptions
     ?(save_cache=true) ?(verbose = OpamCoreConfig.(!r.verbose_level) >= 3) t =
-  let t = update_compiler_index t in
   let t = update_package_index t in
   let _ = fix_package_descriptions t ~verbose in
   if save_cache then OpamRepositoryState.Cache.save t
@@ -461,7 +425,6 @@ let add name url ~priority:prio =
   } in
   if OpamUrl.local_dir url <> None &&
      OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo) = None &&
-     OpamUrl.local_dir (OpamRepositoryPath.Remote.compilers_url repo) = None &&
      not (OpamConsole.confirm
             "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
              Is it really the directory of your repo ?"

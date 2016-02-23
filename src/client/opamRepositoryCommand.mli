@@ -27,9 +27,6 @@ val update: global_state -> repository ->
 (** Update the package index. *)
 val update_package_index: repos_state -> repos_state
 
-(** Update the compiler index. *)
-val update_compiler_index: repos_state -> repos_state
-
 (** Update the given dev packages. *)
 val update_dev_packages: switch_state -> verbose:bool -> package_set -> package_set
 

@@ -127,9 +127,6 @@ val filename: filename Arg.converter
 (** Dirnam converter *)
 val dirname: dirname Arg.converter
 
-(** Compiler converter *)
-val compiler: compiler Arg.converter
-
 (** Package name converter *)
 val package_name: name Arg.converter
 

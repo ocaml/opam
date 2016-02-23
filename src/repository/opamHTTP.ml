@@ -38,8 +38,7 @@ let local_files repo =
   let all =
     (OpamFile.filename (OpamRepositoryPath.repo repo)) ::
       OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo) @
-      OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo) @
-      OpamFilename.rec_files (OpamRepositoryPath.compilers_dir repo) in
+      OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo) in
   List.filter OpamFilename.exists all
 
 let as_index_file f = (OpamFile.make f : file_attribute_set OpamFile.t)

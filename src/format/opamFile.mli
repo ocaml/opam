@@ -391,8 +391,8 @@ module OPAM: sig
 
 end
 
-(** Compiler aliases: [$opam/aliases] *)
-module Aliases: IO_FILE with type t = compiler switch_map
+(** Compiler aliases: [$opam/aliases]. Deprecated, used only for migration *)
+module Aliases: IO_FILE with type t = string switch_map
 
 (** Switch state file as table, also used for import/export. This includes
     compiler and root packages information, as well as pinned packages and their
@@ -417,10 +417,14 @@ module PkgList: IO_FILE with type t = package_set
 (** Cached environment updates (<switch>/environment) *)
 module Environment: IO_FILE with type t = env_update list
 
-(** Compiler version [$opam/compilers/] *)
+(** Compiler version [$opam/compilers/]. Deprecated, only used to upgrade old
+    data *)
 module Comp: sig
 
   include IO_FILE
+
+  type compiler = string
+  type compiler_version = string
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
@@ -556,10 +560,6 @@ end
 (** Association between package names and repositories *)
 module Package_index: IO_FILE with
   type t = (repository_name * string option) package_map
-
-(** Association between compiler names and repositories *)
-module Compiler_index: IO_FILE with
-  type t = (repository_name * string option) compiler_map
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository

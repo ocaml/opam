@@ -43,7 +43,6 @@ let init repo =
   OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
   OpamFilename.mkdir (OpamRepositoryPath.packages_dir repo);
   OpamFilename.mkdir (OpamRepositoryPath.archives_dir repo);
-  OpamFilename.mkdir (OpamRepositoryPath.compilers_dir repo);
   Done ()
 
 let pull_url package local_dirname checksum remote_url =
@@ -132,23 +131,6 @@ let file f =
 let dir d =
   if OpamFilename.exists_dir d then OpamFilename.rec_files d else []
 
-(* Compiler updates *)
-
-let compilers_with_prefixes r =
-  OpamCompiler.prefixes (OpamRepositoryPath.compilers_dir r)
-
-let compilers repo =
-OpamCompiler.list (OpamRepositoryPath.compilers_dir repo)
-
-let compiler_files repo prefix c =
-  let comp = OpamRepositoryPath.compiler_comp repo prefix c in
-  let descr = OpamRepositoryPath.compiler_descr repo prefix c in
-  file comp @ file descr
-
-let compiler_state repo prefix c =
-  let fs = compiler_files repo prefix c in
-  List.flatten (List.map OpamFilename.checksum fs)
-
 let packages r =
   OpamPackage.list (OpamRepositoryPath.packages_dir r)
 
@@ -217,17 +199,6 @@ let package_index repositories =
           else OpamPackage.Map.add nv (repo.repo_name, prefix) map
         ) packages map
     ) OpamPackage.Map.empty repositories
-
-let compiler_index repositories =
-  log "compiler-index";
-  let repositories = sort repositories in
-  List.fold_left (fun map repo ->
-      let comps = compilers_with_prefixes repo in
-      OpamCompiler.Map.fold (fun comp prefix map ->
-          if OpamCompiler.Map.mem comp map then map
-          else OpamCompiler.Map.add comp (repo.repo_name, prefix) map
-        ) comps map
-    ) OpamCompiler.Map.empty repositories
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;

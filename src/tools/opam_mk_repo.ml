@@ -30,7 +30,7 @@ type args = {
   resolve: bool;
   debug: bool;
   (* option for resolve *)
-  compiler_version: OpamCompiler.Version.t option;
+  compiler_version: string option;
   switch: OpamSwitch.t option;
   os_string: string;
 }
@@ -95,11 +95,9 @@ let args =
     pure
       (fun index gener_digest dryrun recurse dev names debug resolve
         compiler_version switch ->
-        let compiler_version =
-          Option.map OpamCompiler.Version.of_string compiler_version in
         let switch =
           match switch with
-          | None -> Option.map (fun cv -> OpamSwitch.of_string (OpamCompiler.Version.to_string cv)) compiler_version
+          | None -> Option.map OpamSwitch.of_string compiler_version
           | Some switch -> Some (OpamSwitch.of_string switch) in
          {index; gener_digest; dryrun; recurse; dev; names; debug; resolve;
           compiler_version; switch; os_string = OpamStd.Sys.os_string ()})
@@ -119,13 +117,13 @@ let faked_var_resolve args v =
     | "ocaml-version" -> begin
         match args.compiler_version with
         | None -> None
-        | Some cv -> string (OpamCompiler.Version.to_string cv)
+        | Some cv -> string cv
       end
     | "opam-version"  -> string (OpamVersion.to_string OpamVersion.current)
     | "preinstalled"  -> begin
         match args.compiler_version with
         | None -> None
-        | Some cv -> bool (OpamCompiler.Version.to_string cv = "system")
+        | Some cv -> bool (cv = "system")
       end
     | "switch"        -> begin
         match args.switch with
@@ -377,7 +375,7 @@ let process
             let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
             if dryrun then OpamProcess.Job.dry_run job
             else OpamProcess.Job.run job
-          | None -> ()
+          | _ -> ()
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;

@@ -24,8 +24,7 @@ module API: sig
 
   (** Initialize the client a consistent state. *)
   val init:
-    repository -> compiler ->
-    shell -> filename -> [`ask|`yes|`no] ->
+    repository -> shell -> filename -> [`ask|`yes|`no] ->
     unit
 
   (** Install the given list of packages. Second argument, if not None, specifies

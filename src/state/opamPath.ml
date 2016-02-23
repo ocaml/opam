@@ -26,11 +26,7 @@ let config t = t /- "config"
 
 let state_cache t = t // "state.cache"
 
-let update_cache t = t // "update.cache"
-
 let lock t = t // "lock"
-
-let aliases t = t /- "aliases"
 
 let packages_dir t = t / "packages"
 
@@ -51,22 +47,7 @@ let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let files t nv = packages t nv / "files"
 
-let compilers_dir t = t / "compilers"
-
-let compilers t c =
-  compilers_dir t
-  / OpamCompiler.Version.to_string (OpamCompiler.version c)
-  / OpamCompiler.to_string c
-
-let compiler_comp t c =
-  compilers t c /- (OpamCompiler.to_string c ^ ".comp")
-
-let compiler_descr t c =
-  compilers t c /- (OpamCompiler.to_string c ^ ".descr")
-
 let package_index t = t / "repo" /- "package-index"
-
-let compiler_index t = t / "repo" /- "compiler-index"
 
 let init  t = t / "opam-init"
 
