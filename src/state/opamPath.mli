@@ -82,10 +82,14 @@ module Switch: sig
 
   (** Locations of opam internal dirs and files *)
 
-  (** Root dir: {i $opam/$switch} *)
+  (** The switch prefix: {i $opam/$switch} *)
   val root: t -> switch -> dirname
 
-  (** lock file: {i $opam/lock} *)
+  (** The subdirectory of the prefix where opam data lives:
+      {i $opam/$switch/.opam-switch}*)
+  val meta: t -> switch -> dirname
+
+  (** lock file: {i $meta/lock} *)
   val lock: t -> switch -> filename
 
   (** The directory where backups are stored for this switch *)
@@ -95,60 +99,60 @@ module Switch: sig
   val backup: t -> switch -> switch_selections OpamFile.t
 
   (** Switch state: currently installed packages, roots, pinnings, etc. {i
-      $opam/$switch/state} (deprecated) *)
+      $meta/state} (deprecated) *)
   val state: t -> switch -> OpamFile.State.t OpamFile.t
 
-  (** Switch selections {i $opam/$switch/switch-state} *)
+  (** Switch selections {i $meta/switch-state} *)
   val selections: t -> switch -> switch_selections OpamFile.t
 
   (** Temporary folders used to decompress and compile
       the corresponding archives:
-      {i $opam/$switch/build/$packages} *)
+      {i $meta/build/$packages} *)
   val build: t -> switch -> package -> dirname
 
   (** Temporary folders used to decompress and compile the OCaml
-      compiler: {i $opam/$switch/build/ocaml} *)
+      compiler: {i $meta/build/ocaml} *)
   val build_ocaml: t -> switch -> dirname
 
-  (** Temporary folder: {i $opam/$switch/build} *)
+  (** Temporary folder: {i $meta/build} *)
   val build_dir: t -> switch -> dirname
 
   (** Temporary location of install files: {i
-      $opam/$switch/build/$package/$name.install} *)
+      $meta/build/$package/$name.install} *)
   val build_install: t -> switch -> package -> OpamFile.Dot_install.t OpamFile.t
 
   (** Temporary location of config files: {i
-      $opam/$switch/build/$packages/$name.config} *)
+      $meta/build/$packages/$name.config} *)
   val build_config: t -> switch -> package -> OpamFile.Dot_config.t OpamFile.t
 
   (** Installed files for a given package: {i
-      $opam/$switch/install/$name.install} *)
+      $meta/install/$name.install} *)
   val install: t -> switch -> name -> OpamFile.Dot_install.t OpamFile.t
 
-  (** Installed files: {i $opam/$switch/install/} *)
+  (** Installed files: {i $meta/install/} *)
   val install_dir: t -> switch -> dirname
 
   (** Packages to reinstall on next upgrade: {i
-      $opam/$switch/reinstall} *)
+      $meta/reinstall} *)
   val reinstall: t -> switch -> OpamFile.PkgList.t OpamFile.t
 
-  (** Configuration folder: {i $opam/$switch/config} *)
+  (** Configuration folder: {i $meta/config} *)
   val config_dir: t -> switch -> dirname
 
   (** Global config for the switch: {i
-      $opam/$switch/config/global-config.config} *)
+      $meta/config/global-config.config} *)
   val global_config: t -> switch -> OpamFile.Dot_config.t OpamFile.t
 
   (** Package-specific configuration file for installed packages: {i
-      $opam/$switch/config/$name.config} *)
+      $meta/config/$name.config} *)
   val config: t -> switch -> name -> OpamFile.Dot_config.t OpamFile.t
 
   (** Source dir for all pinned packages: {i
-      $opam/$switch/packages.dev/} *)
+      $meta/packages.dev/} *)
   val dev_packages_dir: t -> switch -> dirname
 
   (** Build dir for a given pinned package: {i
-      $opam/$switch/packages.dev/$name.$version/} *)
+      $meta/packages.dev/$name.$version/} *)
   val dev_package: t -> switch -> name -> dirname
 
   (** Cached environment updates. *)
@@ -159,47 +163,47 @@ module Switch: sig
   (** Default config *)
   module Default : sig
     (** Library path for a given package:
-        {i $opam/$switch/lib/$name} *)
+        {i $prefix/lib/$name} *)
     val lib: t -> switch -> name -> dirname
 
-    (** Library path: {i $opam/$switch/lib} *)
+    (** Library path: {i $prefix/lib} *)
     val lib_dir: t -> switch -> dirname
 
     (** DLL paths *)
     val stublibs: t -> switch -> dirname
 
-    (** toplevel path: {i $opam/$switch/lib/toplevel} *)
+    (** toplevel path: {i $prefix/lib/toplevel} *)
     val toplevel: t -> switch -> dirname
 
     (** Documentation path for a given package:
-        {i $opam/$switch/doc/$name} *)
+        {i $prefix/doc/$name} *)
     val doc: t -> switch -> name -> dirname
 
-    (** Documentation path: {i $opam/$switch/doc/} *)
+    (** Documentation path: {i $prefix/doc/} *)
     val doc_dir: t -> switch -> dirname
 
-    (** Shared directory: {i $opam/$switch/share} *)
+    (** Shared directory: {i $prefix/share} *)
     val share_dir: t -> switch -> dirname
 
     (** Share directory for a given package: {i
-        $opam/$switch/share/$package} *)
+        $prefix/share/$package} *)
     val share: t -> switch -> name -> dirname
 
-    (** Etc directory: {i $opam/$switch/etc} *)
+    (** Etc directory: {i $prefix/etc} *)
     val etc_dir: t -> switch -> dirname
 
     (** Etc directory for a given package: {i
-        $opam/$switch/etc/$package} *)
+        $prefix/etc/$package} *)
     val etc: t -> switch -> name -> dirname
 
-    (** Man pages path: {i $opam/$switch/man/}. The optional
+    (** Man pages path: {i $prefix/man/}. The optional
         [num] argument will add a {i manN } suffix if specified *)
     val man_dir: ?num:string -> t -> switch -> dirname
 
-    (** Installed binaries: {i $opam/$switch/bin} *)
+    (** Installed binaries: {i $prefix/bin} *)
     val bin: t -> switch -> dirname
 
-    (** Installed system binaries: {i $opam/$switch/sbin} *)
+    (** Installed system binaries: {i $prefix/sbin} *)
     val sbin: t -> switch -> dirname
   end
 
@@ -207,71 +211,71 @@ module Switch: sig
 
   (** Package-independent dirs *)
 
-  (** Library path: {i $opam/$switch/lib} *)
+  (** Library path: {i $prefix/lib} *)
   val lib_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
 
   (** DLL paths *)
   val stublibs: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** toplevel path: {i $opam/$switch/lib/toplevel} *)
+  (** toplevel path: {i $prefix/lib/toplevel} *)
   val toplevel: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Documentation path: {i $opam/$switch/doc/} *)
+  (** Documentation path: {i $prefix/doc/} *)
   val doc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Shared directory: {i $opam/$switch/share} *)
+  (** Shared directory: {i $prefix/share} *)
   val share_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Etc directory: {i $opam/$switch/etc} *)
+  (** Etc directory: {i $prefix/etc} *)
   val etc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Man pages path: {i $opam/$switch/man/}. The optional
+  (** Man pages path: {i $prefix/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
   val man_dir: ?num:string -> t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Installed binaries: {i $opam/$switch/bin} *)
+  (** Installed binaries: {i $prefix/bin} *)
   val bin: t -> switch -> OpamFile.Dot_config.t -> dirname
 
-  (** Installed system binaries: {i $opam/$switch/sbin} *)
+  (** Installed system binaries: {i $prefix/sbin} *)
   val sbin: t -> switch -> OpamFile.Dot_config.t -> dirname
 
   (** Package dependent dirs *)
 
   (** Library path for a given package:
-      {i $opam/$switch/lib/$name} *)
+      {i $prefix/lib/$name} *)
   val lib: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
 
   (** Documentation path for a given package:
-      {i $opam/$switch/doc/$name} *)
+      {i $prefix/doc/$name} *)
   val doc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
 
   (** Share directory for a given package: {i
-      $opam/$switch/share/$package} *)
+      $prefix/share/$package} *)
   val share: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
 
   (** Etc directory for a given package: {i
-      $opam/$switch/etc/$package} *)
+      $prefix/etc/$package} *)
   val etc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
 
   module Overlay: sig
     (** Switch metadata overlay (over the global metadata): {i
-        $opam/$switch/overlay/} *)
+        $meta/overlay/} *)
     val dir: t -> switch -> dirname
 
     (** Switch metadata overlay (over the global metadata): {i
-        $opam/$switch/overlay/$name.$version} *)
+        $meta/overlay/$name.$version} *)
     val package: t -> switch -> name -> dirname
 
     (** OPAM overlay: {i
-        $opam/$switch/cache/$name.$version/opam} *)
+        $meta/overlay/$name.$version/opam} *)
     val opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** OPAM temp overlay (for user editing): {i
-        $opam/$switch/cache/$name.$version/opam_} *)
+        $meta/overlay/$name.$version/opam_} *)
     val tmp_opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** URL overlay: {i
-        $opam/$switch/overlay/$name.$version/url} *)
+        $meta/overlay/$name.$version/url} *)
     val url: t -> switch -> name -> OpamFile.URL.t OpamFile.t
 
     (** Descr orverlay *)
