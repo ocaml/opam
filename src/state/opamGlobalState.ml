@@ -38,7 +38,7 @@ module Format_upgrade = struct
 
   let from_1_1_to_1_2 root =
     log "Upgrade pinned packages format to 1.2";
-    let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+    let aliases = OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases")) in
     let remove_pinned_suffix d =
       let s = OpamFilename.Dir.to_string d in
       if Filename.check_suffix s ".pinned" then
@@ -48,12 +48,17 @@ module Format_upgrade = struct
     let packages = lazy (
       OpamPackage.Set.of_list
         (OpamPackage.Map.keys
-           (OpamFile.Package_index.safe_read (OpamPath.package_index root)))
+           (OpamFile.Package_index.safe_read
+              (OpamFile.make (root / "repo" // "package-index"))))
     ) in
     OpamSwitch.Map.iter (fun switch _ ->
+        let switch_root = root / OpamSwitch.to_string switch in
         let pinned_version name =
           try
-            let f = OpamPath.Switch.Overlay.opam root switch name in
+            let f =
+              OpamFile.make (switch_root / "overlay" /
+                             OpamPackage.Name.to_string name // "opam")
+            in
             match OpamFile.OPAM.version_opt (OpamFile.OPAM.read f) with
             | None -> raise Not_found
             | Some v -> v
@@ -69,10 +74,10 @@ module Format_upgrade = struct
             OpamPackage.create name (pinned_version name)
           else nv in
         List.iter remove_pinned_suffix
-          (OpamFilename.dirs (OpamPath.Switch.dev_packages_dir root switch));
+          (OpamFilename.dirs (switch_root / "packages.dev"));
         List.iter remove_pinned_suffix
-          (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root switch));
-        let switch_prefix = OpamPath.Switch.root root switch in
+          (OpamFilename.dirs (switch_root / "overlay"));
+        let switch_prefix = switch_root in
         let installed_f =
           OpamFile.make OpamFilename.Op.(switch_prefix // "installed")
         in
@@ -92,25 +97,22 @@ module Format_upgrade = struct
               OpamFilename.basename @@
               OpamFilename.chop_extension f in
             if name <> "global-config" then
-              let dst =
-                OpamPath.Switch.Default.lib root switch
-                  (OpamPackage.Name.of_string name)
-                // "opam.config"
-              in
+              let dst = switch_root / "lib" / name // "opam.config" in
               OpamFilename.mkdir (OpamFilename.dirname dst);
               OpamFilename.move ~src:f ~dst
           )
-          (OpamFilename.files (OpamPath.Switch.config_dir root switch))
+          (OpamFilename.files (switch_root / "config"))
       ) aliases
 
   let v1_3_dev2 = OpamVersion.of_string "1.3~dev2"
 
   let from_1_2_to_1_3_dev2 root =
     log "Upgrade switch state files format to 1.3";
-    let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+    let aliases =
+      OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases"))
+    in
     OpamSwitch.Map.iter (fun switch c ->
-        let switch_dir = OpamPath.Switch.root root switch in
-        let open OpamFilename.Op in
+        let switch_dir = root / OpamSwitch.to_string switch in
         let installed_f = switch_dir // "installed" in
         let installed_roots_f = switch_dir // "installed.roots" in
         let pinned_f = switch_dir // "pinned" in
@@ -129,7 +131,10 @@ module Format_upgrade = struct
                 match pin with
                 | Version v -> v
                 | Source _ ->
-                  let overlay = OpamPath.Switch.Overlay.opam root switch name in
+                  let overlay =
+                    OpamFile.make (switch_dir / "overlay" /
+                                   OpamPackage.Name.to_string name // "opam")
+                  in
                   let opam = OpamFile.OPAM.safe_read overlay in
                     OpamStd.Option.default (OpamPackage.Version.of_string "0")
                       (OpamFile.OPAM.version_opt opam)
