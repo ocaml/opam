@@ -129,8 +129,9 @@ val universe: state -> user_action -> universe
 (** {2 Environment} *)
 
 (** Get the current environment with OPAM specific additions. If [force_path],
-    the PATH is modified to ensure opam dirs are leading. *)
-val get_full_env: force_path:bool -> state -> env
+    the PATH is modified to ensure opam dirs are leading. If [opamswitch],
+    the OPAMSWITCH environment variable is included (default true). *)
+val get_full_env: ?opamswitch:bool -> force_path:bool -> state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. *)
