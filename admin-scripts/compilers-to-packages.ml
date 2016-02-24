@@ -32,14 +32,26 @@ let () =
   Printexc.register_printer error_printer
 ;;
 
-OpamCompiler.Map.iter (fun c prefix ->
-    let comp_file = OpamRepositoryPath.compiler_comp repo prefix c in
-    let comp = OpamFile.Comp.read comp_file in
+let compilers =
+  let compilers_dir = OpamFilename.Op.(repo.repo_root / "compilers") in
+  if OpamFilename.exists_dir compilers_dir then (
+    List.fold_left (fun map f ->
+        if OpamFilename.check_suffix f ".comp" then
+          let c = OpamFilename.(Base.to_string (basename (chop_extension f))) in
+          OpamStd.String.Map.add c f map
+        else
+          map)
+      OpamStd.String.Map.empty (OpamFilename.rec_files compilers_dir)
+  ) else
+    OpamStd.String.Map.empty
+;;
+
+OpamStd.String.Map.iter (fun c comp_file ->
+    let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
     let descr_file =
-      OpamRepositoryPath.compiler_descr repo prefix c |>
-      OpamFilename.opt_file
+      OpamFilename.(opt_file (add_extension (chop_extension comp_file) ".descr"))
     in
-    let descr = descr_file >>| OpamFile.Descr.read in
+    let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
     let opam =
       OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
         comp descr
@@ -75,13 +87,16 @@ OpamCompiler.Map.iter (fun c prefix ->
       OpamFile.OPAM.with_extra_sources opam
         (OpamStd.List.filter_some extra_sources)
     in
+    let opam =
+      OpamFile.OPAM.with_substs opam (OpamFilename.Base.of_string "ocaml.config")
+    in
     OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
     let config =
       OpamFile.Dot_config.create @@
       List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
       [ "ocaml-version",
-        S (OpamCompiler.Version.to_string (OpamFile.Comp.version comp));
-        "compiler", S (OpamCompiler.to_string (OpamFile.Comp.name comp));
+        S (OpamFile.Comp.version comp);
+        "compiler", S (OpamFile.Comp.name comp);
         "preinstalled", B false;
         (* fixme: generate those from build/config artifacts using a script ?
            Guess from os and arch vars and use static 'features' + variable
@@ -93,12 +108,14 @@ OpamCompiler.Map.iter (fun c prefix ->
         "ocaml-stubsdir", S "%{lib}%/stublibs"; ]
     in
     OpamFile.Dot_config.write
-      OpamFilename.Op.(OpamRepositoryPath.files repo prefix nv // "ocaml.config")
+      (OpamFile.make
+         OpamFilename.Op.(OpamRepositoryPath.files repo (Some "ocaml") nv
+                          // "ocaml.config.in"))
       config;
     OpamFilename.remove comp_file;
     OpamStd.Option.iter OpamFilename.remove descr_file;
     OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
     OpamConsole.msg "Compiler %s successfully converted to package %s\n"
-      (OpamCompiler.to_string c) (OpamPackage.to_string nv))
-  (OpamRepository.compilers_with_prefixes repo)
+      c (OpamPackage.to_string nv))
+  compilers
 ;;
