@@ -305,6 +305,30 @@ module Format_upgrade = struct
                       update' to sync with the new format repositories.";
     conf
 
+  let v1_3_dev6 = OpamVersion.of_string "1.3~dev6"
+
+  let from_1_3_dev5_to_1_3_dev6 root conf =
+    log "Upgrade switch state files format to 1.3 step 3";
+    (* Move switch internals to [switch/.opam-switch] *)
+    List.iter (fun switch ->
+        let switch_dir = root / OpamSwitch.to_string switch in
+        let meta_dir =  switch_dir / ".opam-switch" in
+        OpamFilename.mkdir meta_dir;
+        List.iter (fun f ->
+            let src = switch_dir // f in
+            let dst = meta_dir // f in
+            if OpamFilename.exists src then OpamFilename.move ~src ~dst)
+          ["lock"; "switch-state"; "reinstall"; "environment"];
+        List.iter (fun d ->
+            let src = switch_dir / d in
+            let dst = meta_dir / d in
+            if OpamFilename.exists_dir src then OpamFilename.move_dir ~src ~dst)
+          ["backup"; "build"; "install"; "config"; "packages.dev"; "overlay"]
+      )
+      (OpamFile.Config.installed_switches conf)
+
+  let latest_version = v1_3_dev6
+
   let as_necessary root config =
     let config_version = OpamFile.Config.opam_version config in
     let cmp = OpamVersion.(compare current_nopatch config_version) in
@@ -315,7 +339,7 @@ module Format_upgrade = struct
           "%s reports a newer OPAM version, aborting."
           (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
     else
-    if OpamVersion.compare config_version v1_3_dev5 < 0 then
+    if OpamVersion.compare config_version latest_version < 0 then
       if OpamVersion.git () <> None &&
          OpamConsole.confirm
            "This dev version of opam requires an update to the layout of %s, \
@@ -336,6 +360,8 @@ module Format_upgrade = struct
           from_1_3_dev2_to_1_3_dev5 root config
         else config
       in
+      if OpamVersion.compare config_version v1_3_dev6 < 0 then
+        from_1_3_dev5_to_1_3_dev6 root config;
       OpamStateConfig.write root config;
       config
     else

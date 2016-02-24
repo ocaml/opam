@@ -75,17 +75,19 @@ module Switch = struct
 
   (** Internal files and dirs with static location *)
 
-  let lock t a = root t a // "lock"
+  let meta t a = root t a / ".opam-switch"
 
-  let backup_dir t a = root t a / "backup"
+  let lock t a = meta t a // "lock"
+
+  let backup_dir t a = meta t a / "backup"
 
   let backup t a = backup_dir t a /- backup_file ()
 
-  let state t a = root t a /- "state"
+  let state t a = meta t a /- "state"
 
-  let selections t a = root t a /- "switch-state"
+  let selections t a = meta t a /- "switch-state"
 
-  let build_dir t a = root t a / "build"
+  let build_dir t a = meta t a / "build"
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv
 
@@ -97,24 +99,24 @@ module Switch = struct
   let build_config t a nv =
     build t a nv /- (OpamPackage.Name.to_string nv.name ^ ".config")
 
-  let install_dir t a = root t a / "install"
+  let install_dir t a = meta t a / "install"
 
   let install t a n = install_dir t a /- (OpamPackage.Name.to_string n ^ ".install")
 
-  let reinstall t a = root t a /- "reinstall"
+  let reinstall t a = meta t a /- "reinstall"
 
-  let config_dir t a = root t a / "config"
+  let config_dir t a = meta t a / "config"
 
   let global_config t a = config_dir t a /- "global-config.config"
 
   let config t a n =
     config_dir t a /- (OpamPackage.Name.to_string n ^ ".config")
 
-  let dev_packages_dir t a = root t a / "packages.dev"
+  let dev_packages_dir t a = meta t a / "packages.dev"
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
-  let environment t a = root t a /- "environment"
+  let environment t a = meta t a /- "environment"
 
   module Default = struct
 
