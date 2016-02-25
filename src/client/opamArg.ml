@@ -301,6 +301,16 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+let positive_integer : int Arg.converter =
+  let (parser, printer) = Arg.int in
+  let parser s =
+    match parser s with
+    | `Error _ -> `Error "expected a positive integer"
+    | `Ok n as r -> if n <= 0
+      then `Error "expected a positive integer"
+      else r in
+  (parser, printer)
+
 (* name * version option *)
 let package =
   let parse str =
@@ -503,19 +513,10 @@ let repo_kind_flag =
     Arg.(some (enum (main_kinds @ aliases_kinds))) None
 
 let jobs_flag =
-  let positive : int Arg.converter =
-    let (parser, printer) = Arg.int in
-    let parser s =
-      match parser s with
-      | `Error _ -> `Error "expected a positive integer"
-      | `Ok n as r -> if n <= 0
-        then `Error "expected a positive integer"
-        else r in
-    (parser, printer) in
   mk_opt ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. You can also set it using \
      the $(b,\\$OPAMJOBS) environment variable."
-    Arg.(some positive) None
+    Arg.(some positive_integer) None
 
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
