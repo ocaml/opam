@@ -166,8 +166,7 @@ module Format_upgrade = struct
               OpamPackage.Set.add nv acc)
             OpamPackage.Set.empty atoms
         in
-        OpamFile.State.write
-          (OpamPath.Switch.state root switch)
+        OpamFile.State.write (OpamFile.make (switch_dir // "state"))
           { sel_installed = installed;
             sel_roots = installed_roots;
             sel_pinned = pinned;
@@ -179,10 +178,12 @@ module Format_upgrade = struct
         OpamPackage.Set.iter (fun nv ->
             let name = nv.name in
             let src =
-              OpamPath.Switch.Default.lib root switch name // "opam.config"
+              switch_dir / "lib" / OpamPackage.Name.to_string name //
+              "opam.config"
             in
             let dst =
-              OpamFile.filename (OpamPath.Switch.config root switch name)
+              switch_dir / "config" //
+              (OpamPackage.Name.to_string name ^ ".config")
             in
             if OpamFilename.exists src then
               OpamFilename.move ~src ~dst)
@@ -198,9 +199,10 @@ module Format_upgrade = struct
     OpamSwitch.Map.iter (fun switch comp_name ->
         (* Convert state-file table format to selections file, opam syntax
            format *)
-        let state_f = OpamPath.Switch.state root switch in
+        let switch_dir = root / OpamSwitch.to_string switch in
+        let state_f = OpamFile.make (switch_dir // "state") in
         let selections = OpamFile.State.safe_read state_f in
-        let selections_f = OpamPath.Switch.selections root switch in
+        let selections_f = OpamFile.make (switch_dir // "switch-state") in
         let comp_version = match OpamStd.String.cut_at comp_name '+' with
           | Some (v,_) -> v
           | None -> comp_name
@@ -228,7 +230,10 @@ module Format_upgrade = struct
               OpamFile.Comp.to_package name comp (Some descr)
             in
             let nv = OpamFile.OPAM.package comp_opam in
-            let switch_config_f = OpamPath.Switch.global_config root switch in
+            let switch_config_f =
+              OpamFile.make
+                (switch_dir / "config" // "global-config.config")
+            in
             let switch_config = OpamFile.Dot_config.safe_read switch_config_f in
             let config =
               if OpamFile.Comp.preinstalled comp then
@@ -248,7 +253,7 @@ module Format_upgrade = struct
                          (OpamStd.Option.default "/usr/lib/ocaml"
                             (Lazy.force OpamOCaml.system_ocamlc_where))
                          "stublibs")
-                   ]
+                  ]
                 in
                 match Lazy.force OpamOCaml.where_is_ocamlc with
                 | Some ocamlc ->
@@ -280,8 +285,16 @@ module Format_upgrade = struct
                        (OpamPath.Switch.stublibs root switch switch_config));
                 ]
             in
-            let config_f = OpamPath.Switch.config root switch name in
-            OpamFile.OPAM.write (OpamPath.opam root nv) comp_opam;
+            let config_f =
+              OpamFile.make
+                (switch_dir / "config" //
+                 (OpamPackage.Name.to_string name ^".config"))
+            in
+            OpamFile.OPAM.write
+              (OpamFile.make
+                 (root / "packages" / OpamPackage.Name.to_string name
+                  / OpamPackage.to_string nv // "opam"))
+              comp_opam;
             OpamFile.Dot_config.write config_f config;
             (* Also export compiler variables as globals *)
             OpamFile.Dot_config.write switch_config_f
