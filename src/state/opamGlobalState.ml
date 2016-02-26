@@ -341,14 +341,18 @@ module Format_upgrade = struct
     else
     if OpamVersion.compare config_version latest_version < 0 then
       if OpamVersion.git () <> None &&
-         OpamConsole.confirm
-           "This dev version of opam requires an update to the layout of %s, \
-            which can't be reverted.\n\
-            You may want to back it up before going further. Abort ?"
+         OpamConsole.read
+           "This dev version of opam requires an update to the layout of %s \
+            from version %s to version %s, which can't be reverted.\n\
+            You may want to back it up before going further.\n\
+            Type \"yes\" to perform the update and continue:"
            (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
+           (OpamVersion.to_string config_version)
+           (OpamVersion.to_string latest_version)
+         <> Some "yes"
       then OpamConsole.error_and_exit "Aborted"
       else
-      let config = OpamFile.Config.with_opam_version config v1_3_dev5 in
+      let config = OpamFile.Config.with_opam_version config latest_version in
       if OpamVersion.compare config_version v1_1 < 0 then
         from_1_0_to_1_1 root;
       if OpamVersion.compare config_version v1_2 < 0 then
