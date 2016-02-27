@@ -61,10 +61,12 @@ let pull_url package local_dirname checksum remote_url =
   let rec attempt = function
     | [] -> assert false
     | [url] -> pull url
-    | url::mirrors ->
+    | url:: (mirror :: _ as mirrors) ->
       pull url @@+ function
       | Not_available s ->
-        OpamConsole.warning "download of %s failed, trying mirror" s;
+        OpamConsole.warning "download of %s at %s failed, trying mirror %s"
+          (OpamPackage.to_string package) s
+          (OpamUrl.to_string mirror);
         attempt mirrors
       | r -> Done r
   in

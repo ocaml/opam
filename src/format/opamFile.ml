@@ -797,6 +797,7 @@ module ConfigSyntax = struct
     dl_jobs : int;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
+    backup_urls : string list;
   }
 
   let opam_version t = t.opam_version
@@ -804,6 +805,7 @@ module ConfigSyntax = struct
   let switch t = t.switch
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
+  let backup_urls t = t.backup_urls
   let dl_jobs t = t.dl_jobs
   let criteria t = t.solver_criteria
   let criterion kind t =
@@ -815,6 +817,7 @@ module ConfigSyntax = struct
   let with_repositories t repositories = { t with repositories }
   let with_switch t switch = { t with switch }
   let with_jobs t jobs = { t with jobs }
+  let with_backup_urls t backup_urls = { t with backup_urls }
   let with_dl_tool t dl_tool = { t with dl_tool = Some dl_tool }
   let with_dl_jobs t dl_jobs = { t with dl_jobs }
   let with_criteria t solver_criteria = { t with solver_criteria }
@@ -823,10 +826,13 @@ module ConfigSyntax = struct
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver t solver = { t with solver = Some solver }
 
+  let backup_url_ocamlpro = "http://opam.ocamlpro.com/backup"
+
   let create switch repositories ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
     { opam_version = OpamVersion.current;
       repositories ; switch ; jobs ; dl_tool = download_tool; dl_jobs ;
-      solver_criteria = criteria; solver }
+      solver_criteria = criteria; solver;
+      backup_urls = [backup_url_ocamlpro] }
 
   let empty = {
     opam_version = OpamVersion.current;
@@ -837,6 +843,7 @@ module ConfigSyntax = struct
     dl_jobs = 1;
     solver_criteria = [];
     solver = None;
+    backup_urls = [backup_url_ocamlpro];
   }
 
   let fields =
@@ -874,6 +881,9 @@ module ConfigSyntax = struct
       "solver-fixup-criteria", Pp.ppacc_opt
         (with_criterion `Fixup) (criterion `Fixup)
         Pp.V.string;
+      "backup-urls", Pp.ppacc
+        with_backup_urls backup_urls
+        (Pp.V.map_list ~depth:1 Pp.V.string);
       "solver", Pp.ppacc_opt
         with_solver solver
         (Pp.V.map_list ~depth:1 Pp.V.arg);

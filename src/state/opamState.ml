@@ -632,6 +632,7 @@ let descr_opt t nv =
 let descr t nv =
   OpamStd.Option.Op.(descr_opt t nv +! OpamFile.Descr.empty)
 
+(* parse and return the 'url' file for this package *)
 let url t nv =
   OpamStd.Option.Op.(opam_opt t nv >>= OpamFile.OPAM.url)
 
@@ -3100,8 +3101,23 @@ let download_upstream t nv dirname =
   | None   -> Done None
   | Some u ->
     let remote_url = OpamFile.URL.url u in
-    let mirrors = remote_url :: OpamFile.URL.mirrors u in
     let checksum = OpamFile.URL.checksum u in
+    let mirrors = [] in
+    let mirrors = match checksum with
+      | None -> mirrors
+         (* if we have a checksum, we can query the backup_urls *)
+      | Some checksum -> (* checksum is already in hexa *)
+        let backup_urls = OpamFile.Config.backup_urls t.config in
+        List.map (fun backup_url ->
+          let link = Printf.sprintf "%s/%c/%c/%c/%s"
+            backup_url
+            checksum.[0] checksum.[1] checksum.[2]
+            checksum in
+          OpamUrl.of_string link
+        ) backup_urls @ mirrors
+    in
+    let mirrors = OpamFile.URL.mirrors u @ mirrors in
+    let mirrors = remote_url :: mirrors in
     let text =
       OpamProcess.make_command_text (OpamPackage.name_to_string nv)
         (OpamUrl.string_of_backend remote_url.OpamUrl.backend)
