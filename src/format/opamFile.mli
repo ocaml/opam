@@ -192,6 +192,11 @@ module OPAM: sig
   (** Utility function to print validation results *)
   val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
+  (** Returns the opam value (including url, descr) with all non-effective (i.e.
+      user-directed information that doesn't change opam's view on the package)
+      fields set to their empty values. Useful for comparisons. *)
+  val effective_part: t -> t
+
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
@@ -312,6 +317,9 @@ module OPAM: sig
       This can be used to locate e.g. the files/ overlays *)
   val metadata_dir: t -> dirname option
 
+  (** Names and hashes of the files below files/ *)
+  val extra_files: t -> (OpamFilename.Base.t * string) list option
+
   (** Sets the opam version *)
   val with_opam_version: t -> opam_version -> t
 
@@ -385,6 +393,9 @@ module OPAM: sig
   val with_url_opt: t -> URL.t option -> t
 
   val with_metadata_dir: t -> dirname option -> t
+
+  val with_extra_files: t -> (OpamFilename.Base.t * string) list -> t
+  val with_extra_files_opt: t -> (OpamFilename.Base.t * string) list option -> t
 
   (** Prints to a string, while keeping the format of the original file as much as possible *)
   val to_string_with_preserved_format: t typed_file -> t -> string

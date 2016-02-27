@@ -70,4 +70,19 @@ let read_opam dir =
       OpamFile.OPAM.with_descr opam descr
     | None -> opam
   in
+  let extra_files =
+    OpamFile.OPAM.metadata_dir opam >>=
+    OpamFilename.opt_dir >>| fun dir ->
+    let files_dir = OpamFilename.Op.(dir / "files") in
+    List.map
+      (fun f ->
+         OpamFilename.Base.of_string (OpamFilename.remove_prefix files_dir f),
+         OpamFilename.digest f)
+      (OpamFilename.rec_files files_dir)
+  in
+  let opam =
+    if OpamFile.OPAM.extra_files opam <> None then
+      OpamFile.OPAM.with_extra_files opam (extra_files +! [])
+    else opam
+  in
   opam

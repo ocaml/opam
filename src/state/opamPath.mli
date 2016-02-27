@@ -32,29 +32,11 @@ val lock: t -> filename
 (** Main configuration file: {i $opam/config} *)
 val config: t -> OpamFile.Config.t OpamFile.t
 
-(** Package directroy {i $opam/packages/} *)
-val packages_dir: t -> dirname
-
-(** Package sub-directory {i $opam/packages/$NAME/$NAME.$VERSION/} *)
-val packages: t -> package -> dirname
-
-(** OPAM files: {i $opam/packages/$NAME/$NAME.$VERSION/opam} *)
-val opam: t -> package -> OpamFile.OPAM.t OpamFile.t
-
-(** URL files: {i $opam/packages/$NAME/$NAME.$VERSION/url} *)
-val url: t -> package -> OpamFile.URL.t OpamFile.t
-
-(** Additional files: {i $opam/packages/$NAME/$NAME.$VERSION/files} *)
-val files: t -> package -> dirname
-
 (** Temporary folder for dev packages {i $opam/packages.dev/} *)
 val dev_packages_dir: t -> dirname
 
 (** Temporary folder for dev packages {i $opam/packages.dev/$NAME.$VERSION/} *)
 val dev_package: t -> package -> dirname
-
-(** Description file: {i $opam/packages/$NAME/$NAME.$VERSION/descr} *)
-val descr: t -> package -> OpamFile.Descr.t OpamFile.t
 
 (** Archives dir *)
 val archives_dir: t -> dirname
@@ -97,10 +79,6 @@ module Switch: sig
 
   (** Backup file for state export *)
   val backup: t -> switch -> switch_selections OpamFile.t
-
-  (** Switch state: currently installed packages, roots, pinnings, etc. {i
-      $meta/state} (deprecated) *)
-  val state: t -> switch -> OpamFile.State.t OpamFile.t
 
   (** Switch selections {i $meta/switch-state} *)
   val selections: t -> switch -> switch_selections OpamFile.t
@@ -157,6 +135,14 @@ module Switch: sig
 
   (** Cached environment updates. *)
   val environment: t -> switch -> OpamFile.Environment.t OpamFile.t
+
+  (** Directory where the metadata of installed packages is mirrored.
+      {i $meta/packages/} *)
+  val installed_opams: t -> switch -> dirname
+
+  (** The mirror of the opam file for the given installed package
+      {i $meta/packages/$name.$version.opam} *)
+  val installed_opam: t -> switch -> package -> OpamFile.OPAM.t OpamFile.t
 
   (** Locations for the visible part of the installation *)
 

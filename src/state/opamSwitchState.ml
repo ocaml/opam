@@ -26,7 +26,7 @@ let slog = OpamConsole.slog
 open OpamStateTypes
 
 let load_selections gt switch =
-    OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections gt.root switch)
+  OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections gt.root switch)
 
 let load_switch_config gt switch =
   let f = OpamPath.Switch.global_config gt.root switch in
@@ -86,42 +86,22 @@ let load ?(lock=Lock_readonly) gt rt switch =
       )
       pinned (OpamPackage.Name.Map.empty, OpamPackage.Map.empty)
   in
-  let opams =
-    OpamPackage.Map.union (fun _ x -> x) rt.repo_opams pinned_opams
-  in
-  let opams =
-    (* Add installed packages without repository (from ~/.opam/packages) *)
+  let installed_opams =
     OpamPackage.Set.fold (fun nv opams ->
-        if OpamPackage.Map.mem nv opams then opams else
-        try
-          OpamStd.Option.Op.(
-            (OpamFileHandling.read_opam (OpamPath.packages gt.root nv) >>| fun opam ->
-             OpamPackage.Map.add nv opam opams)
-            +! opams)
-        with
-        | OpamFormat.Bad_format _ | Lexer_error _
-        | Parsing.Parse_error | OpamSystem.Internal_error _ -> opams
-      )
-      installed opams
+        OpamStd.Option.Op.(
+          (OpamFile.OPAM.read_opt
+             (OpamPath.Switch.installed_opam gt.root switch nv)
+           >>| fun opam -> OpamPackage.Map.add nv opam opams)
+          +! opams))
+      installed OpamPackage.Map.empty
   in
-  (* Packages without metadata, maybe they were just unpinned, but not removed:
-     look for an overlay.
-     NOTE: this should be removed once we have a real cache for installed
-     package's meta *)
-  let orphans = installed -- OpamPackage.keys opams in
   let opams =
-    OpamPackage.Set.fold (fun nv opams ->
-        let name = nv.name in
-        let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
-        match OpamFileHandling.read_opam overlay_dir with
-        | Some opam -> OpamPackage.Map.add nv opam opams
-        | None -> opams
-        (* !X this shouldn't happen, but could lead to trouble in e.g. 'opam
-           list' *)
-      )
-      orphans opams
+    (* Add/override overlays of pinned packages and local mirror of metadata for
+       all installed packages (from ~/.opam/switch/.opam-switch/packages) *)
+    let ( ++ ) = OpamPackage.Map.union (fun _ x -> x) in
+    rt.repo_opams ++ pinned_opams ++ installed_opams
   in
-  let packages = OpamPackage.keys opams ++ installed in
+  let packages = OpamPackage.keys opams in
   let available_packages = lazy (
     let pinned_names = OpamPackage.Name.(Set.of_list (Map.keys pinned)) in
     let from_repos =
@@ -142,8 +122,49 @@ let load ?(lock=Lock_readonly) gt rt switch =
     in
     OpamPackage.keys avail_map
   ) in
+  let changed =
+    (* Note: This doesn't detect changed _dev_ packages, since it's based on the
+       metadata or the archive hash changing and they don't have an archive
+       hash. *)
+    OpamPackage.Map.merge (fun _ opam_repo opam_installed ->
+        match opam_repo, opam_installed with
+        | Some r, Some i
+          when OpamFile.OPAM.effective_part i <> OpamFile.OPAM.effective_part r ->
+          Some ()
+        | _ -> None)
+      rt.repo_opams installed_opams
+    |> OpamPackage.keys
+  in
+  let ext_files_changed =
+    OpamPackage.Map.filter (fun nv _ ->
+        let conf = (* !X todo: cache this and use for variables resolution *)
+          OpamFile.Dot_config.safe_read
+            (OpamPath.Switch.config gt.root switch nv.name)
+        in
+        List.exists (fun (file, hash) ->
+            let deleted = not (OpamFilename.exists file) in
+            let changed = deleted || OpamFilename.digest file <> hash in
+            if deleted then
+              OpamConsole.error
+                "System file %s, which package %s depends upon, \
+                 no longer exists.\n\
+                 The package has been marked for reinstallation, but you \
+                 should reinstall its system dependencies first."
+                (OpamFilename.to_string file) (OpamPackage.to_string nv)
+            else if changed then
+              OpamConsole.warning
+                "File %s was changed on your system. \
+                 %s has been marked for reinstallation."
+                (OpamFilename.to_string file) (OpamPackage.to_string nv);
+            changed)
+          (OpamFile.Dot_config.file_depends conf))
+      installed_opams
+    |> OpamPackage.keys
+  in
   let reinstall =
-    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch)
+    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
+    changed ++
+    ext_files_changed
   in
   let st = {
     switch_global = gt;

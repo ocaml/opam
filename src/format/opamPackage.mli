@@ -59,7 +59,8 @@ val name_to_string: t -> string
 val version_to_string: t -> string
 
 (** Guess the package name from a filename. This function extracts
-    [name] and [version] from {i /path/to/$name.$version/opam} *)
+    [name] and [version] from {i /path/to/$name.$version/opam}, or
+    {i /path/to/$name.$version.opam} *)
 val of_filename: OpamFilename.t -> t option
 
 (** Guess the package name from a directory name. This function extracts {i

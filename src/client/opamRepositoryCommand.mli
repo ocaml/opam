@@ -27,16 +27,6 @@ val update: global_state -> repository ->
 (** Update the package index. *)
 val update_package_index: repos_state -> repos_state
 
-(** Update the given dev packages. *)
-val update_dev_packages: switch_state -> verbose:bool -> package_set -> package_set
-
-(** Fix the the package descriptions and display the changes if
-    [verbose] is set. *)
-val fix_package_descriptions: repos_state -> verbose:bool -> package_set updates
-
-(** Fix all the package and compiler descriptions. *)
-val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> repos_state -> unit
-
 (** List the available repositories. *)
 val list: short:bool -> unit
 

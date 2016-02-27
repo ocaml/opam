@@ -169,6 +169,8 @@ let of_dirname f =
 let of_filename f =
   if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
     of_dirname (OpamFilename.dirname f)
+  else if OpamFilename.check_suffix f ".opam" then
+    of_string_opt OpamFilename.(Base.to_string (basename (chop_extension f)))
   else
     None
 

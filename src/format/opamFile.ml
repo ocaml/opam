@@ -1335,6 +1335,10 @@ module OPAMSyntax = struct
        This can be used to locate e.g. the files/ overlays *)
     metadata_dir: dirname option;
 
+    (* Names and hashes of the files below files/ *)
+    extra_files: (OpamFilename.Base.t * string) list option;
+
+
     (* Deprecated, for compat and proper linting *)
     ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
     os         : (bool * string) generic_formula;
@@ -1385,6 +1389,7 @@ module OPAMSyntax = struct
     descr       = None;
 
     metadata_dir = None;
+    extra_files = None;
 
     ocaml_version = None;
     os         = Empty;
@@ -1467,6 +1472,7 @@ module OPAMSyntax = struct
   let descr t = t.descr
 
   let metadata_dir t = t.metadata_dir
+  let extra_files t = t.extra_files
 
   (* Setters *)
 
@@ -1532,6 +1538,8 @@ module OPAMSyntax = struct
   let with_descr_opt t descr = { t with descr }
 
   let with_metadata_dir t metadata_dir = { t with metadata_dir }
+  let with_extra_files t extra_files = { t with extra_files = Some extra_files }
+  let with_extra_files_opt t extra_files = { t with extra_files }
 
   let with_ocaml_version t ocaml_version =
     { t with ocaml_version = Some ocaml_version }
@@ -1786,6 +1794,12 @@ module OPAMSyntax = struct
            (function {OpamUrl.transport = "file" | "local" | "path"; _} -> false
                    | _ -> true));
 
+      "extra-files", no_cleanup Pp.ppacc_opt with_extra_files extra_files
+        (Pp.V.map_list ~depth:2 @@
+         Pp.V.map_pair
+           pp_basename
+           (Pp.V.string (* -| Pp.check ~name:"md5" OpamFilename.valid_digest *)));
+
       (* deprecated fields, here for compat *)
       "configure-style", (Pp.ppacc_ignore, Pp.ppacc_ignore);
 
@@ -1946,6 +1960,62 @@ module OPAM = struct
   include SyntaxFile(OPAMSyntax)
 
   (** Extra stuff for opam files *)
+
+  let effective_part (t:t) =
+    {
+      opam_version = empty.opam_version;
+
+      name       = t.name;
+      version    = t.version;
+
+      depends    = t.depends;
+      depopts    = t.depopts;
+      conflicts  = t.conflicts;
+      available  = t.available;
+      flags      = t.flags;
+      env        = t.env;
+
+      build      = t.build;
+      build_test = t.build_test;
+      build_doc  = t.build_doc;
+      install    = t.install;
+      remove     = t.remove;
+
+      substs     = t.substs;
+      patches    = t.patches;
+      build_env  = t.build_env;
+      features   = t.features;
+      extra_sources = t.extra_sources;
+
+      messages   = empty.messages;
+      post_messages = empty.post_messages;
+      depexts    = empty.depexts;
+      libraries  = empty.libraries;
+      syntax     = empty.syntax;
+      dev_repo   = empty.dev_repo;
+
+      maintainer = empty.maintainer;
+      author     = empty.author;
+      license    = empty.license;
+      tags       = empty.tags;
+      homepage   = empty.homepage;
+      doc        = empty.doc;
+      bug_reports = empty.bug_reports;
+
+      extensions  = empty.extensions;
+      url         =
+        OpamStd.Option.Op.(
+          (t.url >>= URL.checksum >>| URL.with_checksum URL.empty)
+          ++ empty.url);
+      descr       = empty.descr;
+
+      metadata_dir = empty.metadata_dir;
+      extra_files = t.extra_files;
+
+      ocaml_version = empty.ocaml_version;
+      os         = empty.os;
+    }
+
 
   let template nv =
     let t = create nv in

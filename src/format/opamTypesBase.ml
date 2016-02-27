@@ -206,6 +206,7 @@ let string_of_pkg_flag = function
   | Pkgflag_Verbose -> "verbose"
   | Pkgflag_Plugin -> "plugin"
   | Pkgflag_Compiler -> "compiler"
+  | Pkgflag_Virtual -> "virtual"
   | Pkgflag_Unknown s -> s
 
 let pkg_flag_of_string = function

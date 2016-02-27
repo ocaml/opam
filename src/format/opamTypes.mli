@@ -110,6 +110,8 @@ type package_flag =
                        [opam-<name>] exec, and may be auto-installed when doing
                        [opam <name>] *)
   | Pkgflag_Compiler (** Package may be used for 'opam switch' *)
+  | Pkgflag_Virtual (** Virtual package: no install or remove instructions,
+                        .install, but likely has depexts *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** Flags on dependencies *)
@@ -440,11 +442,3 @@ type checksums = string list
 
 (** {2 JSON} *)
 type json = OpamJson.t
-
-(** {2 Updates} *)
-type 'a updates = {
-  created: 'a;
-  updated: 'a;
-  deleted: 'a;
-  changed: 'a;
-}

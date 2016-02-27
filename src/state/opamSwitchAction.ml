@@ -111,11 +111,12 @@ let write_selections st =
     OpamFile.SwitchSelections.write f (OpamSwitchState.selections st);
     OpamFile.Environment.write env (OpamEnv.compute_updates st)
 
-let add_to_reinstall gt switch switch_selections ~unpinned_only packages =
+let add_to_reinstall st ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
+  let root = st.switch_global.root in
   let { sel_installed = installed; sel_pinned = pinned; _ } =
-    switch_selections
+    OpamSwitchState.selections st
   in
   let packages =
     if unpinned_only then
@@ -124,14 +125,15 @@ let add_to_reinstall gt switch switch_selections ~unpinned_only packages =
         pinned packages
     else packages
   in
-  let reinstall_file = OpamPath.Switch.reinstall gt.root switch in
-  let reinstall =
-    (OpamFile.PkgList.safe_read reinstall_file ++ packages) %% installed
-  in
-  if OpamPackage.Set.is_empty reinstall then
+  let reinstall_file = OpamPath.Switch.reinstall root st.switch in
+  let current_reinstall = OpamFile.PkgList.safe_read reinstall_file in
+  let reinstall = current_reinstall ++ packages %% installed in
+  if OpamPackage.Set.equal current_reinstall reinstall then ()
+  else if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove (OpamFile.filename reinstall_file)
   else
-    OpamFile.PkgList.write reinstall_file reinstall
+    OpamFile.PkgList.write reinstall_file reinstall;
+  { st with reinstall = st.reinstall ++ packages %% installed }
 
 let set_current_switch gt switch =
   let config = OpamFile.Config.with_switch gt.config switch in
@@ -143,30 +145,17 @@ let set_current_switch gt switch =
   st
 
 let install_metadata st nv =
-  let opam_mirror = OpamPath.opam st.switch_global.root nv in
-  if OpamPackage.Name.Map.mem nv.name st.pinned ||
-     OpamFile.exists opam_mirror then ()
-  else (
-    OpamFile.OPAM.write opam_mirror (OpamSwitchState.opam st nv);
-    match OpamSwitchState.files st nv with
-    | Some src ->
-      OpamFilename.copy_dir ~src
-        ~dst:(OpamPath.files st.switch_global.root nv)
-    | None -> ()
-  )
+  OpamFile.OPAM.write
+    (OpamPath.Switch.installed_opam st.switch_global.root st.switch nv)
+    (OpamSwitchState.opam st nv)
 
 let remove_metadata st packages =
-  let all_installed = OpamGlobalState.all_installed st.switch_global in
-  let packages = packages -- all_installed in
   OpamPackage.Set.iter (fun nv ->
-      let dir = OpamPath.packages st.switch_global.root nv in
-      OpamFilename.rmdir dir;
-      let parent = OpamFilename.dirname_dir dir in
-      if OpamFilename.dir_is_empty parent then OpamFilename.rmdir parent;
-(* !X This removed archives a bit too eagerly. To be replaced by e.g. a cleanup done only on [opam update]:
-      let archive = OpamPath.archive t.root nv in
-      OpamFilename.remove archive; *)
-    ) packages
+      OpamFilename.remove
+        (OpamFile.filename
+           (OpamPath.Switch.installed_opam
+              st.switch_global.root st.switch nv)))
+    packages
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let open OpamStd.Option.Op in

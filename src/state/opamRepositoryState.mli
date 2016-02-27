@@ -33,25 +33,6 @@ val load:
     returns the file name if found either way *)
 val download_archive: repos_state -> package -> filename option OpamProcess.job
 
-
-(** "states" denote a given instance of the metadata for a given package and
-    version. "partial" is used to decide that the package needs to be recompiled
-    (the boolean indicating the presence of a local repackaged archive),
-    "full" is for all metadata including e.g. [descr] *)
-
-(** Global package state. *)
-val package_state: repos_state -> checksums package_map
-
-(** Global & partial package state. *)
-val package_partial_state: repos_state -> package -> archive:bool -> bool * checksums
-
-(** Repository state *)
-val package_repository_state: repos_state -> checksums package_map
-
-(** Repository & partial package state. *)
-val package_repository_partial_state: repos_state -> package -> archive:bool ->
-  bool * checksums
-
 (** Builds a map which says in which repository the latest metadata
     for a given package are. The function respect the bustom
     priorities given by the order of [priorities]. *)

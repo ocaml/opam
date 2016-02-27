@@ -26,11 +26,6 @@ val create_empty_switch:
     Unless [OpamStateConfig.(!r.dryrun)] *)
 val write_selections: switch_state -> unit
 
-(** Update the on-disk set of packages marked to reinstall *)
-val add_to_reinstall:
-  global_state -> switch -> switch_selections -> unpinned_only:bool ->
-  package_set -> unit
-
 (** Updates the defined default switch and loads its state *)
 val set_current_switch: global_state -> switch -> switch_state
 
@@ -41,9 +36,6 @@ val gen_global_config: dirname -> switch -> OpamFile.Dot_config.t
 (** (Re-)install the configuration for a given root and switch *)
 val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
-(* !X These two are more repository than switch related; remove_metadata
-   actually depends on wether installed in other switches *)
-
 (** Stores a copy of the package's metadata in [/packages/NAME/NAME.VERSION].
     Used for installed packages *)
 val install_metadata: switch_state -> package -> unit
@@ -51,6 +43,9 @@ val install_metadata: switch_state -> package -> unit
 (** Remove the metadata copy in [/packages/NAME/NAME.VERSION], after checking
     for each package that it isn't installed in any switch anymore *)
 val remove_metadata: switch_state -> package_set -> unit
+
+(** Update the on-disk set of packages marked to reinstall *)
+val add_to_reinstall: switch_state -> unpinned_only:bool -> package_set -> switch_state
 
 (** Updates the package selections and switch config to take into account the
     given newly installed package. The updated state is written to disk unless

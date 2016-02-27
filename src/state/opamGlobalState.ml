@@ -340,7 +340,40 @@ module Format_upgrade = struct
       )
       (OpamFile.Config.installed_switches conf)
 
-  let latest_version = v1_3_dev6
+  let v1_3_dev7 = OpamVersion.of_string "1.3~dev7"
+
+  let from_1_3_dev6_to_1_3_dev7 root conf =
+    log "Upgrade switch state files format to 1.3 step 4";
+    (* Get mirrors of the metadata of all installed packages into
+       switch_meta_dir/packages *)
+    List.iter (fun switch ->
+        let switch_dir = root / OpamSwitch.to_string switch in
+        let meta_dir =  switch_dir / ".opam-switch" in
+        let installed =
+          (OpamFile.SwitchSelections.safe_read
+             (OpamFile.make (switch_dir // "switch-state")))
+          .sel_installed
+        in
+        OpamFilename.mkdir (meta_dir / "packages");
+        OpamPackage.Set.iter (fun nv ->
+            let dst = meta_dir / "packages" // (OpamPackage.to_string nv ^ ".opam") in
+            try
+              let src =
+                List.find OpamFilename.exists [
+                  meta_dir / "overlay" / OpamPackage.Name.to_string nv.name // "opam";
+                  root / "packages" / OpamPackage.Name.to_string nv.name /
+                  OpamPackage.to_string nv // "opam";
+                ]
+              in
+              OpamFilename.copy ~src ~dst
+            with Not_found ->
+              OpamFile.OPAM.write (OpamFile.make dst) (OpamFile.OPAM.create nv)
+          )
+          installed)
+      (OpamFile.Config.installed_switches conf);
+    OpamFilename.rmdir (root / "packages")
+
+  let latest_version = v1_3_dev7
 
   let as_necessary root config =
     let config_version = OpamFile.Config.opam_version config in
@@ -379,6 +412,8 @@ module Format_upgrade = struct
       in
       if OpamVersion.compare config_version v1_3_dev6 < 0 then
         from_1_3_dev5_to_1_3_dev6 root config;
+      if OpamVersion.compare config_version v1_3_dev7 < 0 then
+        from_1_3_dev6_to_1_3_dev7 root config;
       OpamStateConfig.write root config;
       config
     else

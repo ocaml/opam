@@ -539,22 +539,20 @@ module API = struct
           repos
           rt
       in
-      let rt, package_updates =
-        let rt = OpamRepositoryCommand.update_package_index rt in
-        rt, OpamRepositoryCommand.fix_package_descriptions rt
-          ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2) in
+      OpamRepositoryCommand.update_package_index rt
+(*
+      let changed =
+        OpamRepositoryCommand.check_package_upstream_changes rt st
+      in
+        OpamRepositoryCommand.fix_package_descriptions rt
+          ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2)
+      in
+*)
 
-      (* If necessary, output a JSON file *)
-      if OpamStateConfig.(!r.json_out <> None) then (
-        let json to_json update =
-          `O [ ("created", to_json update.created);
-               ("updated", to_json update.updated);
-               ("deleted", to_json update.deleted);
-               ("changed", to_json update.changed); ] in
-        OpamJson.append "package-updates"
-          (json OpamPackage.Set.to_json package_updates)
-      );
-      OpamRepositoryState.load gt
+      (* !X todo
+         - cleanup obsolete archives of uninstalled packages ?
+         - handle sync_archives
+      *)
     in
 
     if OpamStateConfig.(!r.current_switch) = None then () else
@@ -578,10 +576,7 @@ module API = struct
       if OpamPackage.Set.is_empty dev_packages then st
       else
       let () = OpamConsole.header_msg "Synchronizing development packages" in
-      let updates =
-        OpamRepositoryCommand.update_dev_packages st
-          ~verbose:(OpamConsole.verbose ())
-          dev_packages in
+      let updates = OpamUpdate.dev_packages st dev_packages in
       if OpamStateConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
           (OpamPackage.Set.to_json updates);
@@ -756,20 +751,12 @@ module API = struct
         (* OpamSwitchAction.install_global_config root switch *)
         (*   (OpamSwitchAction.gen_global_config root switch); *)
 
-        (* Init global dirs *)
-        OpamFilename.mkdir (OpamPath.packages_dir root);
-        (* OpamFilename.mkdir (OpamPath.compilers_dir root); *)
-
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let gt = OpamGlobalState.load () in
         let rt = OpamRepositoryState.load ~save_cache:false gt in
         OpamConsole.header_msg "Fetching repository information";
-        let rt =
-          OpamProcess.Job.run (OpamRepositoryCommand.update gt repo) rt
-        in
-        OpamRepositoryCommand.fix_descriptions rt
-          ~save_cache:false ~verbose:false;
+        ignore (OpamProcess.Job.run (OpamRepositoryCommand.update gt repo) rt)
         (*
         (* Load the partial state, and install the new compiler if needed *)
         log "updating package state";
@@ -807,7 +794,8 @@ module API = struct
     let t, full_orphans, orphan_versions = orphans ~changes t in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
-      not (OpamFilename.exists_dir (OpamPath.packages t.switch_global.root nv)) in
+      not (OpamFile.exists
+             (OpamPath.Switch.installed_opam t.switch_global.root t.switch nv)) in
     let full_orphans, full_orphans_with_local_data =
       OpamPackage.Set.partition has_no_local_data
         full_orphans in

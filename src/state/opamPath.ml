@@ -28,24 +28,9 @@ let state_cache t = t // "state.cache"
 
 let lock t = t // "lock"
 
-let packages_dir t = t / "packages"
-
-let packages t nv =
-  packages_dir t
-  / OpamPackage.Name.to_string nv.name
-  / OpamPackage.to_string nv
-
-let opam t nv = packages t nv /- "opam"
-
-let url t nv = packages t nv /- "url"
-
-let descr t nv = packages t nv /- "descr"
-
 let archives_dir t = t / "archives"
 
 let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
-
-let files t nv = packages t nv / "files"
 
 let package_index t = t / "repo" /- "package-index"
 
@@ -83,8 +68,6 @@ module Switch = struct
 
   let backup t a = backup_dir t a /- backup_file ()
 
-  let state t a = meta t a /- "state"
-
   let selections t a = meta t a /- "switch-state"
 
   let build_dir t a = meta t a / "build"
@@ -117,6 +100,11 @@ module Switch = struct
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
   let environment t a = meta t a /- "environment"
+
+  let installed_opams t a = meta t a / "packages"
+
+  let installed_opam t a nv =
+    installed_opams t a /- (OpamPackage.to_string nv ^ ".opam")
 
   module Default = struct
 

@@ -30,24 +30,14 @@ let list ~print_short ~installed ~all =
   log "list";
   let gt = OpamGlobalState.load () in
 
-  let get_switch_opam sw sel nv =
-    let name = nv.name in
-    let opam =
-      if not (OpamPackage.Name.Map.mem name sel.sel_pinned) then
-        OpamFileHandling.read_opam (OpamPath.packages gt.root nv)
-      else None
-    in
-    OpamStd.Option.Op.(
-      opam >>+ fun () ->
-      OpamFileHandling.read_opam
-        (OpamPath.Switch.Overlay.package gt.root sw name))
-  in
   let installed_switches =
     OpamGlobalState.fold_switches (fun sw sel acc ->
         let opams =
-          (* !X use cache of installed opams once it exists *)
           OpamPackage.Set.fold (fun nv acc ->
-              match get_switch_opam sw sel nv with
+              match
+                OpamFile.OPAM.read_opt
+                  (OpamPath.Switch.installed_opam gt.root sw nv)
+              with
               | Some opam -> OpamPackage.Map.add nv opam acc
               | None -> acc)
             sel.sel_compiler OpamPackage.Map.empty
