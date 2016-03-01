@@ -206,7 +206,7 @@ module Switch = struct
 
   module Overlay = struct
 
-    let dir t a = root t a / "overlay"
+    let dir t a = meta t a / "overlay"
 
     let package t a n = dir t a / OpamPackage.Name.to_string n
 
