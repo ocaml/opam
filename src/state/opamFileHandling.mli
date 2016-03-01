@@ -21,6 +21,11 @@ open OpamTypes
     of files below files/ *)
 val read_opam: dirname -> OpamFile.OPAM.t option
 
+(** Adds (or overrides) data from url, descr or files/ in the specified dir or
+    the opam file's metadata dir (only files and hashes are included for files
+    below files/) *)
+val add_aux_files: ?dir:dirname -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+
 (*
 type effective_hash = private string
 

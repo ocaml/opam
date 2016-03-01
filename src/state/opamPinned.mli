@@ -41,4 +41,4 @@ val package_opt: switch_state -> name -> package option
 val packages: switch_state -> package_set
 
 (** Looks up an 'opam' file for the given named package in a source directory *)
-val find_opam_file_in_source: name -> dirname -> filename option
+val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t option

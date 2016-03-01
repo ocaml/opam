@@ -43,18 +43,8 @@ let fetch_dev_package url srcdir nv =
   | Result _        -> true
 
 
-(* Used to get the different versions of metadata for pinned packages.
-   Returns [opam, descr_file, files_dir]. We don't consider [url] since
-   this is for pinned packages. if [root], don't look for a subdir [opam]
-   to find [files] and [descr]. *)
-let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
-    name dir =
-  let opam_file: OpamFile.OPAM.t OpamFile.t option =
-    OpamStd.Option.map OpamFile.make
-      (if root then OpamFilename.opt_file (dir // "opam")
-       else OpamPinned.find_opam_file_in_source name dir)
-  in
-  match opam_file with
+let local_opam ?(check=false) ?copy_invalid_to name dir =
+  match OpamPinned.find_opam_file_in_source name dir with
   | None -> None
   | Some local_opam ->
     let warns, opam_opt = OpamFile.OPAM.validate_file local_opam in
@@ -78,173 +68,137 @@ let local_opam ?(root=false) ?fixed_version ?(check=false) ?copy_invalid_to
     OpamStd.Option.map
       (fun opam ->
          let opam = OpamFile.OPAM.with_name opam name in
-         let opam = match fixed_version with
-           | None -> opam
-           | Some v -> OpamFile.OPAM.with_version opam v
-         in
-         opam)
+         if OpamFilename.dirname (OpamFile.filename local_opam) <> dir then
+           (* Subdir metadata *)
+           OpamFileHandling.add_aux_files opam
+         else opam)
       opam_opt
 
-(* todo: implement a separate diff2, diff3 for package metadata with either all
-   data, or only recompilation-triggering changes: this could be used also after
-   normal update *)
 let pinned_package st ?fixed_version name =
+  log "update-pinned-package %s" (OpamPackage.Name.to_string name);
   let root = st.switch_global.root in
-  let nv = OpamPinned.package st name in
-  let current_opam = OpamSwitchState.opam st nv in
-  let overlay = OpamPath.Switch.Overlay.package root st.switch name in
-  match OpamFile.OPAM.url current_opam with
-  | None -> Done false
-  | Some url ->
+  let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
+  let overlay_opam = OpamFileHandling.read_opam overlay_dir in
+  match OpamPackage.Name.Map.find name st.pinned with
+  | version, Version _ -> Done false
+  | version, Source url ->
+  let version = OpamStd.Option.default  version fixed_version in
+  let nv = OpamPackage.create name version in
+  let urlf = OpamFile.URL.create url in
   let srcdir = OpamPath.Switch.dev_package root st.switch name in
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
      from the repo *)
-  let hash_meta opam =
-    ["opam",
-     `Opam OpamFile.OPAM.(with_metadata_dir (with_url_opt opam None) None)] @
-    match OpamFile.OPAM.metadata_dir opam with
-    | Some dir when dir <> srcdir ->
-      let files_dir = dir / "files" in
-      if OpamFilename.exists_dir files_dir then
-        List.map (fun f ->
-            OpamFilename.remove_prefix (OpamFilename.dirname_dir files_dir) f,
-            `Digest (OpamFilename.digest f))
-          (OpamFilename.rec_files files_dir)
-      else []
-    | _ -> []
-  in
-  let old_meta = (* Version previously present in the source *)
-    OpamStd.Option.Op.(
-      (local_opam ?fixed_version name srcdir >>| hash_meta) +! []
-    )
-  in
-  let user_meta, empty_user_meta, user_version =
-    (* Installed version (overlay) *)
-    if OpamFile.OPAM.metadata_dir current_opam <> Some overlay then
-      [], true, None
-    else
-      hash_meta current_opam,
-      OpamFile.OPAM.(empty =
-                     with_name_opt (with_version_opt current_opam None) None),
-      OpamFile.OPAM.version_opt current_opam
-  in
-  let repo_meta = (* Version from the repo *)
-    let nv_opam =
-      let packages =
-        OpamPackage.Map.filter (fun nv _ -> nv.name = name)
-          st.switch_repos.repo_opams
-      in
-      match user_version with
-      | None ->
-        (try Some (OpamPackage.Map.max_binding packages) with
-         | Not_found -> None)
-      | Some v ->
-        let nv = OpamPackage.create name v in
-        (* get the latest version below v *)
-        match OpamPackage.Map.split nv packages with
-        | _, (Some opam), _ -> Some (nv, opam)
-        | below, None, _ when not (OpamPackage.Map.is_empty below) ->
-          Some (OpamPackage.Map.max_binding below)
-        | _, None, above when not (OpamPackage.Map.is_empty above) ->
-          Some (OpamPackage.Map.min_binding above)
-        | _ -> None
+  let old_source_opam = local_opam name srcdir in
+  let repo_opam =
+    let packages =
+      OpamPackage.Map.filter (fun nv _ -> nv.name = name)
+        st.switch_repos.repo_opams
     in
-    let opam = match nv_opam with
-      | None ->
-        OpamFile.OPAM.with_name OpamFile.OPAM.empty name
-      | Some (_, opam) ->
-        OpamFile.OPAM.with_version_opt opam user_version
-    in
-    hash_meta opam
+    (* get the latest version below v *)
+    match OpamPackage.Map.split nv packages with
+    | _, (Some opam), _ -> Some opam
+    | below, None, _ when not (OpamPackage.Map.is_empty below) ->
+      Some (snd (OpamPackage.Map.max_binding below))
+    | _, None, above when not (OpamPackage.Map.is_empty above) ->
+      Some (snd (OpamPackage.Map.min_binding above))
+    | _ -> None
   in
-  let fake_nv = OpamPackage.create name (OpamPackage.Version.of_string "") in
   (* Do the update *)
-  fetch_dev_package url srcdir fake_nv @@+ fun result ->
-  let new_meta = (* New version from the source *)
+  fetch_dev_package urlf srcdir nv @@+ fun result ->
+  let new_source_opam =
     let copy_invalid_to =
       OpamFile.filename (OpamPath.Switch.Overlay.tmp_opam root st.switch name)
     in
-    OpamStd.Option.Op.(
-      (local_opam ?fixed_version
-         ~copy_invalid_to
-         ~check:true
-         name srcdir
-       >>| hash_meta)
-      +! [])
+    local_opam ~copy_invalid_to ~check:true name srcdir
   in
-  let rec diff a b = match a,b with
-    | (f1,h1)::r1, (f2,h2)::r2 ->
-      if f1 < f2 then `Removed f1 :: diff r1 b
-      else if f1 > f2 then `Added f2 :: diff a r2
-      else if h1 = h2 then diff r1 r2
-      else `Changed f1 :: diff r1 r2
-    | l, [] -> List.map (fun (f,_) -> `Removed f) l
-    | [], l -> List.map (fun (f,_) -> `Added f) l
-  in
-  let diff_to_string = function
-    | `Removed f -> Printf.sprintf "%S was removed" f
-    | `Added f -> Printf.sprintf "%S was added" f
-    | `Changed f -> Printf.sprintf "The contents of %S changed" f
-  in
-  let install_meta dir rm_hash hash =
-    let package_root =
-      let d = dir / (OpamPackage.Name.to_string name ^ ".opam") in
-      if OpamFilename.exists_dir d then d else
-      let d = dir / "opam" in
-      if OpamFilename.exists_dir d then d else
-        dir
+  let equal_opam a b =
+    let cleanup_opam o =
+      let o = OpamFile.OPAM.with_version_opt o None in
+      let o = OpamFile.OPAM.with_url_opt o None in
+      OpamFile.OPAM.effective_part o
     in
-    List.iter (fun (f, _) -> OpamFilename.remove (overlay // f)) rm_hash;
-    List.iter (fun (f,kind) -> match kind with
-        | `Opam o ->
-          let vo =
-            OpamStd.Option.Op.(OpamFile.OPAM.version_opt o ++ user_version)
-          in
-          OpamFile.OPAM.write (OpamFile.make (overlay // f))
-            (OpamFile.OPAM.with_url
-               (OpamFile.OPAM.with_version_opt o vo)
-               url);
-          OpamFilename.remove
-            (OpamFile.filename
-               (OpamPath.Switch.Overlay.url root st.switch name))
-        | `Digest _ ->
-          OpamFilename.copy_in ~root:package_root (package_root // f) overlay)
-      hash
+    cleanup_opam a = cleanup_opam b
   in
-  (* Metadata from the package changed *)
-  if result && new_meta <> [] &&
-     new_meta <> old_meta && new_meta <> user_meta
+  let changed_opam old new_ = match old, new_ with
+    | None, Some _ -> true
+    | _, None -> false
+    | Some a, Some b -> not (equal_opam a b)
+  in
+  let save_new_overlay () =
+    let opam =
+      OpamStd.Option.Op.(
+        new_source_opam ++
+        repo_opam +!
+        OpamFile.OPAM.create nv
+      ) in
+    OpamFilename.mkdir overlay_dir;
+    let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
+    List.iter OpamFilename.remove
+      OpamPath.Switch.Overlay.[
+        OpamFile.filename opam_file;
+        OpamFile.filename (url root st.switch name);
+        OpamFile.filename (descr root st.switch name);
+      ];
+    let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
+    OpamFilename.rmdir files_dir;
+    let opam = OpamFile.OPAM.with_url opam urlf in
+    let opam = OpamFile.OPAM.with_name opam name in
+    let opam =
+      match fixed_version with
+      | Some v -> OpamFile.OPAM.with_version opam v
+      | None -> opam
+    in
+    (match OpamFile.OPAM.(metadata_dir opam, extra_files opam) with
+     | Some srcdir, Some files ->
+       List.iter (fun (file, hash) ->
+           let src = OpamFilename.create (srcdir/"files") file in
+           if OpamFilename.digest src = hash then
+             OpamFilename.copy ~src
+               ~dst:(OpamFilename.create files_dir file)
+           else
+             OpamConsole.warning "Ignoring file %s with invalid hash"
+               (OpamFilename.to_string src))
+         files
+     | _ -> ());
+    OpamFile.OPAM.write opam_file
+      (OpamFile.OPAM.with_extra_files_opt opam None);
+  in
+  (* Metadata from the package source changed *)
+  if overlay_opam = None ||
+     result &&
+     changed_opam old_source_opam new_source_opam &&
+     changed_opam overlay_opam new_source_opam
   then
-    if old_meta = user_meta || repo_meta = user_meta || empty_user_meta then
-      (* No manual changes *)
-      (OpamConsole.formatted_msg
-         "[%s] Installing new package description from %s\n"
+    (if not (changed_opam old_source_opam overlay_opam) ||
+        not (changed_opam repo_opam overlay_opam)
+     then
+       (* No manual changes *)
+       (OpamConsole.formatted_msg
+          "[%s] Installing new package description from upstream %s\n"
+          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+          (OpamUrl.to_string url);
+        save_new_overlay ())
+     else if
+       OpamConsole.formatted_msg
+         "[%s] Conflicting update of the metadata from %s."
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-         (OpamUrl.to_string (OpamFile.URL.url url));
-       OpamFilename.remove
-         (OpamFile.filename
-            (OpamPath.Switch.Overlay.tmp_opam root st.switch name));
-       install_meta srcdir user_meta new_meta)
-    else if
-      OpamConsole.formatted_msg
-        "[%s] Conflicting update of the metadata from %s:\n%s"
-        (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-        (OpamUrl.to_string (OpamFile.URL.url url))
-        (OpamStd.Format.itemize diff_to_string (diff user_meta new_meta));
-      OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
-        (OpamFilename.Dir.to_string overlay)
-    then (
-      let bak =
-        OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak") in
-      OpamFilename.mkdir (OpamPath.backup_dir root);
-      OpamFilename.rmdir bak;
-      OpamFilename.copy_dir ~src:overlay ~dst:bak;
-      OpamConsole.formatted_msg "User metadata backed up in %s\n"
-        (OpamFilename.Dir.to_string bak);
-      install_meta srcdir user_meta new_meta;
-    );
-  Done result
+         (OpamUrl.to_string url);
+       OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
+         (OpamFilename.Dir.to_string overlay_dir)
+     then (
+       let bak =
+         OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
+       in
+       OpamFilename.mkdir (OpamPath.backup_dir root);
+       OpamFilename.rmdir bak;
+       OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
+       OpamConsole.formatted_msg "User metadata backed up in %s\n"
+         (OpamFilename.Dir.to_string bak);
+       save_new_overlay ());
+     Done true)
+  else
+    Done result
 
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;

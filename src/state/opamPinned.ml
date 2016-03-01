@@ -97,11 +97,10 @@ let packages st =
     st.pinned OpamPackage.Set.empty
 
 let find_opam_file_in_source name dir =
-  OpamStd.List.find_opt OpamFilename.exists [
-    dir / (OpamPackage.Name.to_string name ^ ".opam") // "opam";
-    dir // (OpamPackage.Name.to_string name ^ ".opam");
-    dir / "opam" // "opam";
-    dir // "opam"
-  ]
-
-
+  OpamStd.Option.map OpamFile.make
+    (OpamStd.List.find_opt OpamFilename.exists [
+        dir / (OpamPackage.Name.to_string name ^ ".opam") // "opam";
+        dir // (OpamPackage.Name.to_string name ^ ".opam");
+        dir / "opam" // "opam";
+        dir // "opam"
+      ])

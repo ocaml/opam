@@ -143,14 +143,15 @@ let edit t name =
       match dir with
       | Some dir ->
         let src_opam =
-          OpamStd.Option.default OpamFilename.Op.(dir // "opam")
+          OpamStd.Option.default
+            (OpamFile.make OpamFilename.Op.(dir // "opam"))
             (OpamPinned.find_opam_file_in_source name dir)
         in
         if OpamConsole.confirm "Save the new opam file back to %S ?"
-            (OpamFilename.to_string src_opam) then
+            (OpamFile.to_string src_opam) then
           OpamFilename.copy
             ~src:(OpamFile.filename file)
-            ~dst:src_opam
+            ~dst:(OpamFile.filename src_opam)
       | _ -> ()
     in
     match installed_nv with
@@ -243,7 +244,7 @@ let pin name ?version pin_option =
     (OpamConsole.msg "Aborting.\n";
      OpamStd.Sys.exit 0);
 
-  log "Adding %a => %a"
+  log "Pin map: adding %a => %a"
     (slog string_of_pin_option) pin_option
     (slog OpamPackage.Name.to_string) name;
 
@@ -252,13 +253,14 @@ let pin name ?version pin_option =
   let t = { t with pinned } in
   OpamPinned.add_overlay
     t.switch_repos ~version:pin_version t.switch name pin_option;
-
   if not no_changes then
-    OpamConsole.msg "%s is now %a-pinned to %s\n"
-      (OpamPackage.Name.to_string name)
-      (OpamConsole.acolor `bold)
-      (string_of_pin_kind pin_kind)
-      (string_of_pin_option pin_option);
+    (OpamConsole.msg "%s is now %a-pinned to %s\n"
+       (OpamPackage.Name.to_string name)
+       (OpamConsole.acolor `bold)
+       (string_of_pin_kind pin_kind)
+       (string_of_pin_option pin_option);
+     OpamFilename.rmdir
+       (OpamPath.Switch.dev_package t.switch_global.root t.switch name));
 
   (match pin_option with
    | Source ({ OpamUrl.backend = #OpamUrl.version_control;

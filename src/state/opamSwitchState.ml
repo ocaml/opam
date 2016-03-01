@@ -55,6 +55,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
   in
   let pinned, pinned_opams =
     (* Pinned packages with overlays *)
+    (* !X todo: don't allow overlays for version-pinned packages *)
     OpamPackage.Name.Map.fold (fun name (version,pin) (pinned,opams) ->
         let nv = OpamPackage.create name version in
         let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
@@ -80,6 +81,21 @@ let load ?(lock=Lock_readonly) gt rt switch =
               v, o
             | Source _, _ ->
               version, o
+          in
+          let pin, o =
+            match pin, OpamFile.OPAM.url o with
+            | Source pin_url, Some opam_url
+              when pin_url <> OpamFile.URL.url opam_url ->
+              log "warn: updating url of source-pinned package %s as in \
+                   overlay (from %s to %s)"
+                (OpamPackage.Name.to_string name)
+                (OpamUrl.to_string pin_url)
+                (OpamUrl.to_string (OpamFile.URL.url opam_url));
+              Source (OpamFile.URL.url opam_url),
+              o
+            | Source pin_url, None ->
+              pin, OpamFile.OPAM.with_url o (OpamFile.URL.create pin_url)
+            | _ -> pin, o
           in
           OpamPackage.Name.Map.add name (version,pin) pinned,
           OpamPackage.Map.add (OpamPackage.create name version) o opams
