@@ -1981,6 +1981,7 @@ let () = upgrade_to_1_1_hook := upgrade_to_1_1
 let switch_eval_sh = "switch_eval.sh"
 let complete_sh    = "complete.sh"
 let complete_zsh   = "complete.zsh"
+let prompt_sh      = "prompt.sh"
 let variables_sh   = "variables.sh"
 let variables_csh  = "variables.csh"
 let variables_fish = "variables.fish"
@@ -2272,6 +2273,8 @@ let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, c
       OpamStd.Option.map (source t ~shell ~interactive_only:true) complete_sh
     else
       None in
+  let prompt =
+    Some (source t ~shell prompt_sh) in
   let buf = Buffer.create 128 in
   let append name = function
     | None   -> ()
@@ -2280,6 +2283,7 @@ let init_script t ~switch_eval ~complete ~shell (variables_sh, switch_eval_sh, c
   append "Load the environment variables" variables;
   append "Load the auto-complete scripts" complete;
   append "Load the opam-switch-eval script" switch_eval;
+  append "Load the prompt script" prompt;
   Buffer.contents buf
 
 let update_init_scripts t ~global =
@@ -2301,6 +2305,7 @@ let update_init_scripts t ~global =
     (complete_sh   , OpamScript.complete);
     (complete_zsh  , OpamScript.complete_zsh);
     (switch_eval_sh, OpamScript.switch_eval);
+    (prompt_sh     , OpamScript.prompt);
     (variables_sh  , string_of_env_update t `sh   (env_updates ~opamswitch:false t));
     (variables_csh , string_of_env_update t `csh  (env_updates ~opamswitch:false t));
     (variables_fish, string_of_env_update t `fish (env_updates ~opamswitch:false t));
@@ -2350,7 +2355,8 @@ let status_of_init_file t init_sh =
       let complete_sh = aux complete_sh in
       let complete_zsh = aux complete_zsh in
       let switch_eval_sh = aux switch_eval_sh in
-      Some (complete_sh, complete_zsh, switch_eval_sh)
+      let prompt_sh = aux prompt_sh in
+      Some (complete_sh, complete_zsh, switch_eval_sh, prompt_sh)
     else
       None
   ) else
@@ -2439,7 +2445,7 @@ let display_setup t shell dot_profile =
   let global_setup =
     match status_of_init_file t init_file with
     | None -> [pretty_init_file, not_set ]
-    | Some(complete_sh, complete_zsh, switch_eval_sh) ->
+    | Some(complete_sh, complete_zsh, switch_eval_sh, prompt_sh) ->
       let completion =
         if not complete_sh
         && not complete_zsh then
@@ -2450,8 +2456,14 @@ let display_setup t shell dot_profile =
           ok
         else
           not_set in
+      let prompt =
+        if prompt_sh then
+          ok
+        else
+          not_set in
       [ ("init-script"     , Printf.sprintf "%s" pretty_init_file);
         ("auto-completion" , completion);
+        ("prompt"          , prompt);
         ("opam-switch-eval", switch_eval);
       ]
   in
