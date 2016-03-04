@@ -19,7 +19,7 @@ __opam_ps1()
         ;;
     esac
 
-    local switch_name="$(opam switch show 2>/dev/null)"
+    local switch_name="$(opam switch show --safe 2>/dev/null)"
     if [ -z "$switch_name" ]; then
         return $exit
     fi
