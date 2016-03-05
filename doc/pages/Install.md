@@ -44,8 +44,8 @@ list of supported distributions:
 
 #### Archlinux
 
-The [opam](http://aur.archlinux.org/packages.php?ID=62127) and
-[opam-git](http://aur.archlinux.org/packages.php?ID=62387) packages are
+The [opam](https://aur.archlinux.org/packages/opam/) and
+[opam-git](https://aur.archlinux.org/packages/opam-git/) packages are
 available in the [AUR](https://wiki.archlinux.org/index.php/AUR). Replace `opam`
 with `opam-git` in the following instruction to get the development version:
 
