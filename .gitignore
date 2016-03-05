@@ -1,5 +1,6 @@
 _obuild/
 bootstrap/
+tests/tmp/
 .*.swp
 src_ext/cudf/
 src_ext/dose/
@@ -54,6 +55,7 @@ src/opam-admin
 src/opam-installer
 src/opam-check
 src/opamlfind
+src/opam-admin.top
 ._d
 ._ncdi
 ._bcdi
