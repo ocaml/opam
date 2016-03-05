@@ -239,8 +239,9 @@ let exec ~inplace_path command =
     with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
+  let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   let env =
     OpamTypesBase.env_array
-      (OpamEnv.get_full ~force_path:(not inplace_path) t)
+      (OpamEnv.get_full ~opamswitch ~force_path:(not inplace_path) t)
   in
   raise (OpamStd.Sys.Exec (cmd, args, env))

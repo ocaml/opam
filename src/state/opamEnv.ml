@@ -149,9 +149,9 @@ let get_opam ~force_path st =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   add [] (updates ~opamswitch ~force_path st)
 
-let get_full ~force_path st =
+let get_full ?(opamswitch=true) ~force_path st =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env0 (updates ~opamswitch:true ~force_path st)
+  add env0 (updates ~opamswitch ~force_path st)
 
 let path ~force_path root switch =
   let bindir =

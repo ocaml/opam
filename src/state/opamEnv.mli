@@ -20,8 +20,9 @@ open OpamStateTypes
 (** {2 Environment handling} *)
 
 (** Get the current environment with OPAM specific additions. If [force_path],
-    the PATH is modified to ensure opam dirs are leading. *)
-val get_full: force_path:bool -> switch_state -> env
+    the PATH is modified to ensure opam dirs are leading. If [opamswitch],
+    the OPAMSWITCH environment variable is included (default true). *)
+val get_full: ?opamswitch:bool -> force_path:bool -> switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. *)
