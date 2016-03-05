@@ -88,7 +88,8 @@ OpamStd.String.Map.iter (fun c comp_file ->
         (OpamStd.List.filter_some extra_sources)
     in
     let opam =
-      OpamFile.OPAM.with_substs opam (OpamFilename.Base.of_string "ocaml.config")
+      OpamFile.OPAM.with_substs opam
+        [OpamFilename.Base.of_string "ocaml.config"]
     in
     OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
     let config =
