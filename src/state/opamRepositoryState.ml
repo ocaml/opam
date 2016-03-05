@@ -24,7 +24,7 @@ let slog = OpamConsole.slog
 
 module Cache = struct
   type t = {
-    cached_opams: (package * OpamFile.OPAM.t) list;
+    cached_opams: (repository_name * (package * OpamFile.OPAM.t) list) list;
   }
 
   let check_marshaled_file file =
@@ -63,7 +63,11 @@ module Cache = struct
       let (cache: t) = Marshal.from_channel ic in
       close_in ic;
       log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
-      Some (OpamPackage.Map.of_list cache.cached_opams)
+      let repos_map =
+        OpamRepositoryName.Map.map OpamPackage.Map.of_list
+          (OpamRepositoryName.Map.of_list cache.cached_opams)
+      in
+      Some repos_map
     | None ->
       log "Invalid cache, removing";
       OpamFilename.remove file;
@@ -78,15 +82,16 @@ module Cache = struct
   let save rt =
     let chrono = OpamConsole.timer () in
     let file = OpamPath.state_cache rt.repos_global.root in
-    assert (OpamPackage.Map.is_empty rt.package_index ||
-            not (OpamPackage.Map.is_empty rt.repo_opams));
     OpamFilename.remove file;
     log "Writing the cache of metadata to %s ...\n"
       (OpamFilename.prettify file);
     let oc = open_out_bin (OpamFilename.to_string file) in
     output_string oc (OpamVersion.magic ());
     Marshal.to_channel oc
-      { cached_opams = OpamPackage.Map.bindings rt.repo_opams }
+      { cached_opams =
+          List.map
+            (fun (repo_name, opams) -> repo_name, OpamPackage.Map.bindings opams)
+            (OpamRepositoryName.Map.bindings rt.repo_opams) }
       [Marshal.No_sharing];
     close_out oc;
     log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
@@ -98,14 +103,18 @@ module Cache = struct
 
 end
 
-(* Returns the directory holding the original metadata of the package. *)
-let package_repo_dir root repositories package_index nv =
-  let repo_name, prefix = OpamPackage.Map.find nv package_index in
-  let repo = OpamRepositoryName.Map.find repo_name repositories in
-  OpamRepositoryPath.packages repo prefix nv
+let load_repo_opams repo =
+  OpamPackage.Map.mapi
+    (fun nv prefix ->
+       match
+         OpamFileHandling.read_opam
+           (OpamRepositoryPath.packages repo prefix nv)
+       with
+       | None -> assert false
+       | Some o -> o)
+    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo))
 
 let load ?(save_cache=true) ?(lock=Lock_none) gt =
-  (* let t = load_global_state () in *)
   log "LOAD-REPOSITORY-STATE";
 
   let opams = Cache.load gt.root in
@@ -119,46 +128,57 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
         OpamRepositoryName.Map.add repo_name repo map
       ) OpamRepositoryName.Map.empty names
   in
-  let package_index =
-    OpamFile.Package_index.safe_read (OpamPath.package_index gt.root) in
-  let load_opam_file nv =
-    let dir = package_repo_dir gt.root repositories package_index nv in
-    OpamFileHandling.read_opam dir
-  in
   let repo_opams =
-    match opams with Some o -> o | None ->
-      OpamPackage.Set.fold (fun nv map ->
-          match load_opam_file nv with
-          | Some o -> OpamPackage.Map.add nv o map
-          | None -> map
-        ) (OpamPackage.keys package_index) OpamPackage.Map.empty
+    match opams with
+    | Some o -> o (* cached *)
+    | None -> OpamRepositoryName.Map.map load_repo_opams repositories
   in
   let rt =
     { repos_global = gt;
       repos_lock = lock;
-      repositories; package_index; repo_opams }
+      repositories; repo_opams }
   in
   if save_cache && not cached then Cache.save rt;
   rt
 
-let package_index rt =
-  OpamRepository.package_index rt.repositories
+let find_package_opt rt repo_list nv =
+  List.fold_left (function
+      | None ->
+        fun repo_name ->
+          let opams = OpamRepositoryName.Map.find repo_name rt.repo_opams in
+          OpamStd.Option.Op.(
+            OpamPackage.Map.find_opt nv opams
+            >>| fun opam -> repo_name, opam
+          )
+      | some -> fun _ -> some)
+    None repo_list
 
-let repository_of_package rt nv =
-  try
-    let repo, _ = OpamPackage.Map.find nv rt.package_index in
-    let repo = OpamRepositoryName.Map.find repo rt.repositories in
-    Some repo
-  with Not_found ->
-    None
+let build_index rt repo_list =
+  List.fold_left (fun acc repo_name ->
+      let repo_opams =
+        OpamRepositoryName.Map.find repo_name rt.repo_opams
+      in
+      OpamPackage.Map.union (fun a _ -> a) acc repo_opams)
+    OpamPackage.Map.empty
+    repo_list
+
+let repos_list rt =
+  let repos = OpamRepositoryName.Map.bindings rt.repositories in
+  let repos =
+    List.sort
+      (fun (_, conf1) (_, conf2) -> conf2.repo_priority - conf1.repo_priority)
+      repos
+  in
+  List.map fst repos
 
 (* Try to download $name.$version+opam.tar.gz *)
-let download_archive rt nv =
+let download_archive rt repo_list nv =
   log "get_archive %a" (slog OpamPackage.to_string) nv;
   let dst = OpamPath.archive rt.repos_global.root nv in
-  match repository_of_package rt nv with
+  match find_package_opt rt repo_list nv with
   | None -> Done None
-  | Some repo ->
+  | Some (repo_name, _) ->
+    let repo = OpamRepositoryName.Map.find repo_name rt.repositories in
     let text =
       OpamProcess.make_command_text
         (OpamPackage.name_to_string nv)

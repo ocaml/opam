@@ -111,45 +111,50 @@ let load ?(lock=Lock_readonly) gt rt switch =
           +! opams))
       installed OpamPackage.Map.empty
   in
+  let repos_package_index =
+    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+  in
   let opams =
-    (* Add/override overlays of pinned packages and local mirror of metadata for
-       all installed packages (from ~/.opam/switch/.opam-switch/packages) *)
     let ( ++ ) = OpamPackage.Map.union (fun _ x -> x) in
-    rt.repo_opams ++ pinned_opams ++ installed_opams
+    installed_opams ++ repos_package_index ++ pinned_opams
   in
   let packages = OpamPackage.keys opams in
+  let unpinned_name nv =
+    not (OpamPackage.Name.Map.mem nv.name pinned)
+  in
   let available_packages = lazy (
-    let pinned_names = OpamPackage.Name.(Set.of_list (Map.keys pinned)) in
-    let from_repos =
-      OpamPackage.Map.filter
-        (fun nv _ ->
-           not (OpamPackage.Name.Set.mem nv.name pinned_names))
-        rt.repo_opams
+    (* remove all versions of pinned packages, only the pinned-to version should
+       be available *)
+    let opams_unpinned =
+      OpamPackage.Map.filter (fun nv _ -> unpinned_name nv) opams
     in
-    let all_with_metadata =
-      OpamPackage.Map.union (fun _ _ -> assert false) from_repos pinned_opams
+    let opams =
+      OpamPackage.Map.union (fun _ _ -> assert false) opams_unpinned pinned_opams
     in
     let avail_map =
       OpamPackage.Map.filter (fun _ opam ->
           OpamFilter.eval_to_bool ~default:false
             (OpamPackageVar.resolve_switch_raw gt switch switch_config)
             (OpamFile.OPAM.available opam))
-        all_with_metadata
+        opams
     in
     OpamPackage.keys avail_map
   ) in
   let changed =
     (* Note: This doesn't detect changed _dev_ packages, since it's based on the
        metadata or the archive hash changing and they don't have an archive
-       hash. *)
-    OpamPackage.Map.merge (fun _ opam_repo opam_installed ->
-        match opam_repo, opam_installed with
+       hash. Dev package update should add to the reinstall file *)
+    OpamPackage.Map.merge (fun _ opam_new opam_installed ->
+        match opam_new, opam_installed with
         | Some r, Some i
           when OpamFile.OPAM.effective_part i <> OpamFile.OPAM.effective_part r ->
           Some ()
         | _ -> None)
-      rt.repo_opams installed_opams
+      opams installed_opams
     |> OpamPackage.keys
+  in
+  let changed =
+    changed -- (OpamPackage.Set.filter unpinned_name compiler_packages)
   in
   let ext_files_changed =
     OpamPackage.Map.filter (fun nv _ ->
@@ -186,26 +191,17 @@ let load ?(lock=Lock_readonly) gt rt switch =
     switch_global = gt;
     switch_repos = rt;
     switch_lock = lock; switch; compiler_packages; switch_config;
+    repos_package_index; installed_opams;
     installed; pinned; installed_roots; opams; packages;
     available_packages; reinstall;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
-  (* !X check system dependencies of installed packages *)
   st
-  (*
-  (* Check whether the system compiler has been updated *)
-  if system_needs_upgrade t then (
-    reinstall_system_compiler t;
-    if OpamConsole.confirm "\nSystem update successful. Go on with %S ?"
-        (String.concat " " (Array.to_list Sys.argv))
-    then t
-    else OpamStd.Sys.exit 0
-  ) else
-    t
-*)
 
 let load_virtual gt rt =
-  let opams = rt.repo_opams in
+  let opams =
+    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+  in
   let packages = OpamPackage.keys opams in
   {
     switch_global = gt;
@@ -215,8 +211,10 @@ let load_virtual gt rt =
     compiler_packages = OpamPackage.Set.empty;
     switch_config = OpamFile.Dot_config.empty;
     installed = OpamPackage.Set.empty;
+    installed_opams = OpamPackage.Map.empty;
     pinned = OpamPackage.Name.Map.empty;
     installed_roots = OpamPackage.Set.empty;
+    repos_package_index = opams;
     opams;
     packages;
     available_packages = lazy packages;

@@ -79,14 +79,12 @@ let add_aux_files ?dir opam =
       | None -> opam
     in
     let extra_files =
-      OpamFile.OPAM.metadata_dir opam >>=
-      OpamFilename.opt_dir >>| fun dir ->
-      let files_dir = OpamFilename.Op.(dir / "files") in
+      OpamFilename.opt_dir files_dir >>| fun dir ->
       List.map
         (fun f ->
-           OpamFilename.Base.of_string (OpamFilename.remove_prefix files_dir f),
+           OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
            OpamFilename.digest f)
-        (OpamFilename.rec_files files_dir)
+        (OpamFilename.rec_files dir)
     in
     let opam =
       match OpamFile.OPAM.extra_files opam, extra_files with

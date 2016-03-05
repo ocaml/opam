@@ -24,14 +24,6 @@ val packages: repository -> package_set
 (** Get the list of packages (and their possible prefix) *)
 val packages_with_prefixes: repository -> string option package_map
 
-(** {2 Repository Collection Operations } *)
-
-(** Sort a collection of repositories by priority *)
-val sort: repository repository_name_map -> repository list
-
-(** Generate a package index from a collection of repositories *)
-val package_index: repository repository_name_map -> (repository_name * string option) package_map
-
 (** {2 State} *)
 
 (** Get the package archive checksum off an url file *)

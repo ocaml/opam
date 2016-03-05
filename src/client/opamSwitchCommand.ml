@@ -338,28 +338,25 @@ let import_t importfile t =
   in
   let solution =
     try
-      let _ =
-        OpamPackage.Name.Map.iter (fun name (version,pin) ->
-            let overlay_dir =
-              OpamPath.Switch.Overlay.package t.switch_global.root t.switch name
-            in
-            if not (OpamFilename.exists_dir overlay_dir) then
-              OpamPinned.add_overlay t.switch_repos ~version
-                t.switch name pin)
-          pinned;
-        if not (OpamPackage.Name.Map.is_empty pinned) then (
+      OpamPackage.Name.Map.iter (fun name (version,pin) ->
+          let overlay_dir =
+            OpamPath.Switch.Overlay.package t.switch_global.root t.switch name
+          in
+          if not (OpamFilename.exists_dir overlay_dir) then
+            OpamPinned.add_overlay ~version t name pin)
+        pinned;
+      let t, _ =
+        if OpamPackage.Name.Map.is_empty pinned then
+          t, OpamPackage.Set.empty
+        else (
           OpamConsole.header_msg "Synchronising pinned packages";
           OpamUpdate.pinned_packages t
             (OpamPackage.Name.Set.of_list (OpamPackage.Name.Map.keys pinned))
-        ) else OpamPackage.Set.empty
+        )
       in
 
-      let t = (* needs to be reloaded after the update *)
-        if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show) then t
-        else
-          (OpamSwitchAction.write_selections t;
-           OpamSwitchState.load_full_compat "pin-import" t.switch)
-      in
+      if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+        OpamSwitchAction.write_selections t;
 
       let available =
         imported %% (Lazy.force t.available_packages ++ t.installed) in

@@ -92,19 +92,16 @@ let update t repo =
     |> OpamFile.Repo_config.safe_read
   in
   OpamRepository.check_version repo @@+ fun () ->
+  let opams = OpamRepositoryState.load_repo_opams repo in
   Done (
     fun t ->
       { t with
         repositories =
-          OpamRepositoryName.Map.add repo.repo_name repo t.repositories }
+          OpamRepositoryName.Map.add repo.repo_name repo t.repositories;
+        repo_opams =
+          OpamRepositoryName.Map.add repo.repo_name opams t.repo_opams;
+      }
   )
-
-let update_package_index rt =
-  let file = OpamPath.package_index rt.repos_global.root in
-  log "Updating %a ...\n" (slog OpamFile.to_string) file;
-  let package_index = OpamRepositoryState.package_index rt in
-  OpamFile.Package_index.write file package_index;
-  { rt with package_index }
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
@@ -212,15 +209,16 @@ let list ~short =
   if short then
     List.iter
       (fun r ->
-         OpamConsole.msg "%s\n" (OpamRepositoryName.to_string r.repo_name))
-      (OpamRepository.sort rt.repositories)
+         OpamConsole.msg "%s\n" (OpamRepositoryName.to_string r))
+      (OpamRepositoryState.repos_list rt)
   else
-    let pretty_print r =
+    let pretty_print name =
+      let r = OpamRepositoryName.Map.find name rt.repositories in
       OpamConsole.msg "%4d %-7s %10s     %s\n"
         r.repo_priority
         (Printf.sprintf "[%s]"
            (OpamUrl.string_of_backend r.repo_url.OpamUrl.backend))
         (OpamRepositoryName.to_string r.repo_name)
         (OpamUrl.to_string r.repo_url) in
-    let repos = OpamRepository.sort rt.repositories in
+    let repos = OpamRepositoryState.repos_list rt in
     List.iter pretty_print repos

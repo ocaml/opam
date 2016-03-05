@@ -908,10 +908,13 @@ let switch =
          "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
       let gt = OpamGlobalState.load () in
       let rt = OpamRepositoryState.load gt in
+      let package_index =
+        OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+      in
       let compiler_packages =
         OpamPackage.Map.filter
           (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
-          rt.repo_opams
+          package_index
         |> OpamPackage.keys
       in
       match OpamPackage.of_string_opt name with

@@ -18,7 +18,6 @@ open OpamTypes
 open OpamStateTypes
 open OpamProcess.Job.Op
 open OpamFilename.Op
-open OpamPackage.Set.Op
 
 let log fmt = OpamConsole.log "UPDATE" fmt
 let slog = OpamConsole.slog
@@ -42,6 +41,19 @@ let fetch_dev_package url srcdir nv =
   | Up_to_date _    -> false
   | Result _        -> true
 
+let update_state nv pin opam st =
+  { st with
+    opams = OpamPackage.Map.add nv opam st.opams;
+    packages = OpamPackage.Set.add nv st.packages;
+    available_packages = lazy (
+      if OpamFilter.eval_to_bool ~default:false
+          (OpamPackageVar.resolve_switch st) (OpamFile.OPAM.available opam)
+      then OpamPackage.Set.add nv (Lazy.force st.available_packages)
+      else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
+    );
+    pinned = OpamPackage.Name.Map.add nv.name (nv.version, pin) st.pinned;
+    reinstall = OpamPackage.Set.add nv st.reinstall;
+  }
 
 let local_opam ?(check=false) ?copy_invalid_to name dir =
   match OpamPinned.find_opam_file_in_source name dir with
@@ -80,8 +92,8 @@ let pinned_package st ?fixed_version name =
   let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
   let overlay_opam = OpamFileHandling.read_opam overlay_dir in
   match OpamPackage.Name.Map.find name st.pinned with
-  | version, Version _ -> Done false
-  | version, Source url ->
+  | _, Version _ -> Done ((fun st -> st), false)
+  | version, (Source url as pin) ->
   let version = OpamStd.Option.default  version fixed_version in
   let nv = OpamPackage.create name version in
   let urlf = OpamFile.URL.create url in
@@ -92,8 +104,7 @@ let pinned_package st ?fixed_version name =
   let old_source_opam = local_opam name srcdir in
   let repo_opam =
     let packages =
-      OpamPackage.Map.filter (fun nv _ -> nv.name = name)
-        st.switch_repos.repo_opams
+      OpamPackage.Map.filter (fun nv _ -> nv.name = name) st.repos_package_index
     in
     (* get the latest version below v *)
     match OpamPackage.Map.split nv packages with
@@ -125,13 +136,7 @@ let pinned_package st ?fixed_version name =
     | _, None -> false
     | Some a, Some b -> not (equal_opam a b)
   in
-  let save_new_overlay () =
-    let opam =
-      OpamStd.Option.Op.(
-        new_source_opam ++
-        repo_opam +!
-        OpamFile.OPAM.create nv
-      ) in
+  let save_overlay opam =
     OpamFilename.mkdir overlay_dir;
     let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
     List.iter OpamFilename.remove
@@ -163,42 +168,55 @@ let pinned_package st ?fixed_version name =
      | _ -> ());
     OpamFile.OPAM.write opam_file
       (OpamFile.OPAM.with_extra_files_opt opam None);
+    opam
   in
-  (* Metadata from the package source changed *)
-  if overlay_opam = None ||
-     result &&
-     changed_opam old_source_opam new_source_opam &&
-     changed_opam overlay_opam new_source_opam
-  then
-    (if not (changed_opam old_source_opam overlay_opam) ||
-        not (changed_opam repo_opam overlay_opam)
-     then
-       (* No manual changes *)
-       (OpamConsole.formatted_msg
-          "[%s] Installing new package description from upstream %s\n"
-          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-          (OpamUrl.to_string url);
-        save_new_overlay ())
-     else if
-       OpamConsole.formatted_msg
-         "[%s] Conflicting update of the metadata from %s."
+  match new_source_opam with
+  | Some new_opam
+    when result &&
+         changed_opam old_source_opam new_source_opam &&
+         changed_opam overlay_opam new_source_opam ->
+    (* Metadata from the package source changed *)
+    if not (changed_opam old_source_opam overlay_opam) ||
+       not (changed_opam repo_opam overlay_opam)
+    then
+      (* No manual changes *)
+      (OpamConsole.formatted_msg
+         "[%s] Installing new package description from upstream %s\n"
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (OpamUrl.to_string url);
-       OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
-         (OpamFilename.Dir.to_string overlay_dir)
-     then (
-       let bak =
-         OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
-       in
-       OpamFilename.mkdir (OpamPath.backup_dir root);
-       OpamFilename.rmdir bak;
-       OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
-       OpamConsole.formatted_msg "User metadata backed up in %s\n"
-         (OpamFilename.Dir.to_string bak);
-       save_new_overlay ());
-     Done true)
-  else
-    Done result
+       let opam = save_overlay new_opam in
+       Done (update_state nv pin opam, true))
+    else if
+      OpamConsole.formatted_msg
+        "[%s] Conflicting update of the metadata from %s."
+        (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+        (OpamUrl.to_string url);
+      OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
+        (OpamFilename.Dir.to_string overlay_dir)
+    then (
+      let bak =
+        OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
+      in
+      OpamFilename.mkdir (OpamPath.backup_dir root);
+      OpamFilename.rmdir bak;
+      OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
+      OpamConsole.formatted_msg "User metadata backed up in %s\n"
+        (OpamFilename.Dir.to_string bak);
+      let opam = save_overlay new_opam in
+      Done (update_state nv pin opam, true))
+    else
+      Done ((fun st -> st), true)
+  | _ when overlay_opam = None ->
+    let new_opam = OpamStd.Option.Op.(
+        new_source_opam ++
+        repo_opam ++
+        old_source_opam +!
+        OpamSwitchState.opam st nv
+      ) in
+    let opam = save_overlay new_opam in
+    Done (update_state nv pin opam, true)
+  | _ ->
+    Done ((fun st -> st), result)
 
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
@@ -208,68 +226,87 @@ let dev_package st nv =
     pinned_package st name
   | _ ->
     match OpamSwitchState.url st nv with
-    | None     -> Done false
+    | None     -> Done ((fun st -> st), false)
     | Some url ->
-      if (OpamFile.URL.url url).OpamUrl.backend = `http then Done false else
-        fetch_dev_package url (OpamPath.dev_package st.switch_global.root nv) nv
+      if (OpamFile.URL.url url).OpamUrl.backend = `http then
+        Done ((fun st -> st), false)
+      else
+        fetch_dev_package url
+          (OpamPath.dev_package st.switch_global.root nv) nv
+        @@| fun result -> (fun st -> st), result
 
 let dev_packages st packages =
   log "update-dev-packages";
   let command nv =
-    OpamProcess.Job.ignore_errors ~default:OpamPackage.Set.empty @@
-    dev_package st nv @@| function
+    OpamProcess.Job.ignore_errors
+      ~default:((fun st -> st), OpamPackage.Set.empty) @@
+    dev_package st nv @@| fun (st_update, changed) ->
+    st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
     | false -> OpamPackage.Set.empty
   in
-  let updates =
+  let merge (st_update1, set1) (st_update2, set2) =
+    (fun st -> st_update1 (st_update2 st)),
+    OpamPackage.Set.union set1 set2
+  in
+  let st_update, updated_set =
     OpamParallel.reduce ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command
-      ~merge:OpamPackage.Set.union
-      ~nil:OpamPackage.Set.empty
+      ~merge
+      ~nil:((fun st -> st), OpamPackage.Set.empty)
       (OpamPackage.Set.elements packages)
   in
+  let st = st_update st in
+  let st =
+    OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updated_set
+  in
+  st, updated_set
+(* !X 'update' should not touch switch data, but the dev package mirrors
+   are still shared, so for the moment other switches will miss the reinstall
+
   let pinned =
     OpamPackage.Set.filter
       (fun nv -> OpamPackage.Name.Map.mem nv.name st.pinned)
       packages
   in
-  let st =
-    OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates
-  in
-  let unpinned_updates = updates -- pinned in
-(* !X 'update' should not touch switch data, but the dev package mirrors
-   are still shared, so for the moment other switches will miss the reinstall
-
+  let unpinned_updates = updated_set -- pinned in
   OpamGlobalState.fold_switches (fun switch state_file () ->
       if switch <> st.switch then
         OpamSwitchAction.add_to_reinstall st.switch_global switch state_file
           ~unpinned_only:true unpinned_updates)
     st.switch_global ();
 *)
-  updates
 
 let pinned_packages st names =
   log "update-pinned-packages";
   let command name =
-    OpamProcess.Job.ignore_errors ~default:OpamPackage.Name.Set.empty @@
-    pinned_package st name @@| function
+    OpamProcess.Job.ignore_errors
+      ~default:((fun st -> st), OpamPackage.Name.Set.empty) @@
+    pinned_package st name @@| fun (st_update, changed) ->
+    st_update,
+    match changed with
     | true -> OpamPackage.Name.Set.singleton name
     | false -> OpamPackage.Name.Set.empty
   in
-  let updates =
+  let merge (st_update1, set1) (st_update2, set2) =
+    (fun st -> st_update1 (st_update2 st)),
+    OpamPackage.Name.Set.union set1 set2
+  in
+  let st_update, updates =
     OpamParallel.reduce
       ~jobs:(OpamFile.Config.jobs st.switch_global.config)
       ~command
-      ~merge:OpamPackage.Name.Set.union
-      ~nil:OpamPackage.Name.Set.empty
+      ~merge
+      ~nil:((fun st -> st), OpamPackage.Name.Set.empty)
       (OpamPackage.Name.Set.elements names)
   in
+  let st = st_update st in
   let updates =
     OpamPackage.Name.Set.fold (fun name acc ->
         OpamPackage.Set.add (OpamPinned.package st name) acc)
       updates OpamPackage.Set.empty
   in
-  OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates;
+  OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates,
   updates
 
 (* Download a package from its upstream source, using 'cache_dir' as cache

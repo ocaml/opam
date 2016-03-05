@@ -20,8 +20,8 @@ open OpamStateTypes
 (** Add overlay files for a pinned package. If no definition is found
     use a minimal OPAM file unless [template] is set to [true]. *)
 val add_overlay:
-  ?template:bool -> ?version:version -> repos_state ->
-  switch -> name -> pin_option -> unit
+  ?template:bool -> ?version:version -> switch_state ->
+  name -> pin_option -> unit
 
 (** Remove all overlay files *)
 val remove_overlay: global_state -> switch -> name -> unit

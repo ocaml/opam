@@ -21,23 +21,27 @@ open OpamStateTypes
     first in the switch cache and then in the global cache. Return the
     packages whose contents have changed upstream.
 
-    Side-effect: update the reinstall files (on all switches, for non-pinned
-    packages). *)
-val dev_packages: switch_state -> package_set -> package_set
+    Side-effect: update the reinstall file, adding installed changed packages to
+    the current switch to-reinstall set. *)
+val dev_packages: switch_state -> package_set -> switch_state * package_set
 
 (** Updates a single dev or pinned package from its upstream; returns true
-    if changed, false otherwise *)
-val dev_package: switch_state -> package -> bool OpamProcess.job
+    if changed, false otherwise, and a switch_state update function, applying
+    possible changes in packages metadata *)
+val dev_package: switch_state -> package ->
+  ((switch_state -> switch_state) * bool) OpamProcess.job
 
 (** A subset of update_dev_packages that only takes packages names and only
     works on pinned packages. Also updates the reinstall file of the current
     switch *)
-val pinned_packages: switch_state -> name_set -> package_set
+val pinned_packages: switch_state -> name_set -> switch_state * package_set
 
 (** Updates a dev pinned package from its upstream; returns true if changed,
-    false otherwise *)
+    false otherwise, and a switch_state update function, applying possible
+    changes in packages metadata *)
 val pinned_package:
-  switch_state -> ?fixed_version:version -> name -> bool OpamProcess.job
+  switch_state -> ?fixed_version:version -> name ->
+  ((switch_state -> switch_state) * bool) OpamProcess.job
 
 (** Download or synchronise the upstream source for the given package into the
     given directory.

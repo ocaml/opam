@@ -44,8 +44,7 @@ let edit t name =
     orig_opam = Some (OpamFile.OPAM.create (OpamPackage.create name version))
   in
   if empty_opam && not (OpamFile.exists temp_file) then
-    OpamPinned.add_overlay ~template:true ~version
-      t.switch_repos t.switch name pin;
+    OpamPinned.add_overlay ~template:true ~version t name pin;
   if not (OpamFile.exists temp_file) then
     OpamFilename.copy
       ~src:(OpamFile.filename file)
@@ -113,7 +112,9 @@ let edit t name =
       else None
   in
   match edit () with
-  | None -> if empty_opam then raise Not_found else None
+  | None ->
+    if empty_opam then raise Not_found
+    else t, None
   | Some new_opam ->
     OpamFilename.move
       ~src:(OpamFile.filename temp_file)
@@ -121,19 +122,24 @@ let edit t name =
     let url_file =
       OpamPath.Switch.Overlay.url t.switch_global.root t.switch name
     in
-    if OpamFile.OPAM.url new_opam = None then
-      (* Preserve original url *)
-      OpamStd.Option.Op.(
-        (orig_opam >>= OpamFile.OPAM.url >>| OpamFile.URL.write url_file) +! ()
-      )
-    else
-      (* Remove url overlay that would hide the in-opam url *)
-      OpamFilename.remove (OpamFile.filename url_file);
+    let url =
+      match OpamFile.OPAM.url new_opam with
+      | None ->
+        (* Preserve original url *)
+        let open OpamStd.Option.Op in
+        let url = orig_opam >>= OpamFile.OPAM.url in
+        (url >>| OpamFile.URL.write url_file) +! ();
+        url
+      | Some u ->
+        (* Remove url overlay that would hide the in-opam url *)
+        OpamFilename.remove (OpamFile.filename url_file);
+        Some u
+    in
     OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
     if Some new_opam = orig_opam then (
       OpamConsole.msg "Package metadata unchanged.\n";
-      None
+      t, None
     ) else
     let () =
       let dir = match pin with
@@ -149,25 +155,36 @@ let edit t name =
         in
         if OpamConsole.confirm "Save the new opam file back to %S ?"
             (OpamFile.to_string src_opam) then
-          OpamFilename.copy
-            ~src:(OpamFile.filename file)
-            ~dst:(OpamFile.filename src_opam)
+          OpamFilename.write (OpamFile.filename src_opam)
+            (OpamFile.OPAM.to_string_with_preserved_format src_opam
+               (OpamFile.OPAM.with_url_opt
+                  (OpamFile.OPAM.with_extra_files new_opam [])
+                  None))
       | _ -> ()
     in
+    let t =
+      let opams =
+        t.opams
+        |> OpamPackage.Map.filter (fun nv _ -> nv.name <> name)
+        |> OpamPackage.Map.add (OpamFile.OPAM.package new_opam)
+          (OpamFile.OPAM.with_url_opt new_opam url)
+      in
+      let pin = match pin, url with
+        | Source _, Some u -> Source (OpamFile.URL.url u)
+        | pin, _ -> pin
+      in
+      let pinned =
+        OpamPackage.Name.Map.add name (OpamFile.OPAM.version new_opam, pin)
+          t.pinned
+      in
+      { t with opams; pinned }
+    in
     match installed_nv with
-    | None -> None
+    | None -> t, None
     | Some nv ->
       OpamSwitchAction.write_selections t;
+      t,
       Some (nv.version = OpamFile.OPAM.version new_opam)
-
-(* unused ?
-let update_set set old cur save =
-  if OpamPackage.Set.mem old set then
-    save (OpamPackage.Set.add cur (OpamPackage.Set.remove old set))
-*)
-
-let update_config t pinned =
-  OpamSwitchAction.write_selections { t with pinned }
 
 let pin name ?version pin_option =
   log "pin %a to %a (%a)"
@@ -249,10 +266,9 @@ let pin name ?version pin_option =
     (slog OpamPackage.Name.to_string) name;
 
   let pinned = OpamPackage.Name.Map.add name (pin_version, pin_option) pins in
-  update_config t pinned;
   let t = { t with pinned } in
-  OpamPinned.add_overlay
-    t.switch_repos ~version:pin_version t.switch name pin_option;
+  OpamSwitchAction.write_selections t;
+  OpamPinned.add_overlay ~version:pin_version t name pin_option;
   if not no_changes then
     (OpamConsole.msg "%s is now %a-pinned to %s\n"
        (OpamPackage.Name.to_string name)

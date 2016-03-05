@@ -44,7 +44,8 @@ val install_metadata: switch_state -> package -> unit
     for each package that it isn't installed in any switch anymore *)
 val remove_metadata: switch_state -> package_set -> unit
 
-(** Update the on-disk set of packages marked to reinstall *)
+(** Update the on-disk set of packages marked to reinstall on the current
+    switch *)
 val add_to_reinstall: switch_state -> unpinned_only:bool -> package_set -> switch_state
 
 (** Updates the package selections and switch config to take into account the

@@ -22,7 +22,7 @@ let log fmt = OpamConsole.log "PINNED" fmt
 let slog = OpamConsole.slog
 
 (* Copies package definition from the repository to the overlay *)
-let add_overlay ?(template=false) ?version rt switch name pin =
+let add_overlay ?(template=false) ?version st name pin =
   let open OpamFile in
   let module Ov = OpamPath.Switch.Overlay in
   log "Add pinning overlay for %a (template:%b, version:%a)"
@@ -30,7 +30,8 @@ let add_overlay ?(template=false) ?version rt switch name pin =
     OpamStd.Option.Op.(
       slog @@ fun v -> (v >>| OpamPackage.Version.to_string) +! "none"
     ) version;
-  let root = rt.repos_global.root in
+  let root = st.switch_global.root in
+  let switch = st.switch in
   let pkg_overlay f = f root switch name in
   let copy_files opam =
     match OpamFile.OPAM.metadata_dir opam with
@@ -43,7 +44,7 @@ let add_overlay ?(template=false) ?version rt switch name pin =
   match pin with
   | Version v ->
     let rv = OpamPackage.create name v in
-    let opam = OpamPackage.Map.find rv rt.repo_opams in
+    let opam = OpamPackage.Map.find rv st.repos_package_index in
     copy_files opam;
     OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v)
   | Source url ->
@@ -52,20 +53,20 @@ let add_overlay ?(template=false) ?version rt switch name pin =
     try
       let rv = (* repo version *)
         match nv with
-        (* Lookup in package_index to ignore pinned versions *)
-        | Some nv when OpamPackage.Map.mem nv rt.package_index -> nv
+        (* Lookup in repositories to ignore pinned versions *)
+        | Some nv when OpamPackage.Map.mem nv st.repos_package_index -> nv
         | _ ->
           let versions =
             OpamPackage.Map.fold (fun nv _ acc ->
                 if nv.name = name then
                   OpamPackage.Set.add nv acc
                 else acc)
-              rt.package_index OpamPackage.Set.empty
+              st.repos_package_index OpamPackage.Set.empty
           in
           OpamPackage.max_version versions name (* raises Not_found *)
       in
       let v = OpamStd.Option.default (OpamPackage.version rv) version in
-      let opam = OpamPackage.Map.find rv rt.repo_opams in
+      let opam = OpamPackage.Map.find rv st.repos_package_index in
       copy_files opam;
       OPAM.write (pkg_overlay Ov.opam)
         (OPAM.with_version (OPAM.with_url opam url_f) v)

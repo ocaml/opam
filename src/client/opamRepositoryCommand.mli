@@ -24,9 +24,6 @@ open OpamTypes
 val update: global_state -> repository ->
   (repos_state -> repos_state) OpamProcess.job
 
-(** Update the package index. *)
-val update_package_index: repos_state -> repos_state
-
 (** List the available repositories. *)
 val list: short:bool -> unit
 

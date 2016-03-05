@@ -219,9 +219,7 @@ module API = struct
     if OpamPackage.Set.is_empty to_update then t else (
       OpamConsole.header_msg "Synchronising pinned packages";
       try
-        let updated = OpamUpdate.dev_packages t to_update in
-        if OpamPackage.Set.is_empty updated then t
-        else OpamSwitchState.load_full_compat "reload-dev-package-updated" t.switch
+        fst (OpamUpdate.dev_packages t to_update)
       with e ->
         OpamStd.Exn.fatal e;
         t
@@ -530,28 +528,16 @@ module API = struct
         OpamRepositoryCommand.update gt repo
       in
       OpamRepositoryState.Cache.remove ();
-      let rt =
-        OpamParallel.reduce
-          ~jobs:OpamStateConfig.(!r.dl_jobs)
-          ~command
-          ~merge:(fun f1 f2 x -> f1 (f2 x))
-          ~nil:(fun x -> x)
-          repos
-          rt
-      in
-      OpamRepositoryCommand.update_package_index rt
-(*
-      let changed =
-        OpamRepositoryCommand.check_package_upstream_changes rt st
-      in
-        OpamRepositoryCommand.fix_package_descriptions rt
-          ~verbose:(OpamCoreConfig.(!r.verbose_level) >= 2)
-      in
-*)
-
+      OpamParallel.reduce
+        ~jobs:OpamStateConfig.(!r.dl_jobs)
+        ~command
+        ~merge:(fun f1 f2 x -> f1 (f2 x))
+        ~nil:(fun x -> x)
+        repos
+        rt
       (* !X todo
          - cleanup obsolete archives of uninstalled packages ?
-         - handle sync_archives
+         - handle OpamClientConfig.(!r.sync_archives) ? (dl all)
       *)
     in
 
@@ -576,13 +562,11 @@ module API = struct
       if OpamPackage.Set.is_empty dev_packages then st
       else
       let () = OpamConsole.header_msg "Synchronizing development packages" in
-      let updates = OpamUpdate.dev_packages st dev_packages in
+      let st, updates = OpamUpdate.dev_packages st dev_packages in
       if OpamStateConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
           (OpamPackage.Set.to_json updates);
-      (* !X update_dev_packages should provide an updated switch state
-         already *)
-      OpamSwitchState.load gt rt  (OpamStateConfig.get_switch ())
+      st
     in
 
     log "dry-upgrade";
@@ -1141,33 +1125,40 @@ module API = struct
           get_upstream t name
       in
       let needs_reinstall = pin name ?version pin_option in
+      (* !X todo: OpamPinCommand.pin should return a switch_state *)
       with_switch_backup "pin-reinstall" @@ fun t ->
       OpamConsole.msg "\n";
-      let updated =
+      let orig_version = OpamPinned.version t name in
+      let t_update, updated =
         OpamProcess.Job.run
           (OpamUpdate.pinned_package t ?fixed_version:version name)
       in
-      (*
-      if not updated then
-        (ignore (unpin t.switch_global ~state:t [name]);
-         OpamStd.Sys.exit 1);
-      *)
+      let t = t_update t in
       OpamConsole.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
       let empty_opam = OpamFile.OPAM.(
-          empty = with_name_opt (with_version_opt (read opam_f) None) None
+          empty =
+          with_url_opt
+            (with_metadata_dir
+               (with_name_opt
+                  (with_version_opt (read opam_f) None)
+                  None)
+               None)
+            None
         ) in
-      let needs_reinstall2 =
+      let t, needs_reinstall2 =
         if edit || empty_opam then
           try OpamPinCommand.edit t name
           with Not_found ->
             (OpamConsole.error "No valid metadata available.";
              ignore (unpin t.switch_global ~state:t [name]);
              OpamStd.Sys.exit 1)
-        else None
+        else if updated then
+          t, Some (OpamPinned.version t name = orig_version)
+        else
+          t, None
       in
       if action then
-        let t = OpamSwitchState.load_full_compat "pin-reinstall-2" t.switch in
         if not (OpamPackage.has_name t.installed name) ||
            needs_reinstall <> None ||
            needs_reinstall2 <> None
@@ -1176,13 +1167,8 @@ module API = struct
     let edit ?(action=true) name =
       with_switch_backup "pin-edit" @@ fun t ->
       match edit t name with
-      | None -> ()
-      | Some true ->
-        if action then post_pin_action t name
-      | Some false ->
-        (* Version changed: reload the state to ensure consistency *)
-        let t = OpamSwitchState.load_full_compat "pin-edit-2" t.switch in
-        if action then post_pin_action t name
+      | _, None -> ()
+      | t, Some _ -> if action then post_pin_action t name
 
     let unpin ?(action=true) names =
       let gt = OpamGlobalState.load () in

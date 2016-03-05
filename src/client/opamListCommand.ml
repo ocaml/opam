@@ -506,7 +506,8 @@ let info ~fields ~raw_opam ~where atoms =
     (* where does it come from (eg. which repository) *)
     let repository =
       let repo =
-        match OpamPackage.Map.find_opt nv t.switch_repos.package_index with
+        match OpamRepositoryState.find_package_opt t.switch_repos
+                (OpamRepositoryState.repos_list t.switch_repos) nv with
         | None -> []
         | Some (r,_) -> [ "repository", OpamRepositoryName.to_string r ]
       in

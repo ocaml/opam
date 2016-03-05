@@ -225,7 +225,8 @@ let download_package st nv =
   else
   let dir =
     try match OpamPackage.Name.Map.find name st.pinned with
-      | _, Version _ -> Some (OpamPath.dev_package st.switch_global.root nv)
+      | _, Version _ ->
+        Some (OpamPath.dev_package st.switch_global.root nv)
       | _ -> Some (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
     with Not_found ->
       if OpamSwitchState.is_dev_package st nv then
@@ -241,7 +242,10 @@ let download_package st nv =
     | Some dir ->
       OpamUpdate.download_upstream st nv dir @@| of_dl
     | None ->
-      OpamRepositoryState.download_archive st.switch_repos nv @@+ function
+      OpamRepositoryState.download_archive st.switch_repos
+        (OpamRepositoryState.repos_list st.switch_repos)
+        nv
+      @@+ function
       | Some f ->
         assert (f = OpamPath.archive st.switch_global.root nv);
         Done (`Successful (Some (F f)))

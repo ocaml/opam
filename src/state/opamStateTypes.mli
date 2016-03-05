@@ -52,12 +52,12 @@ type repos_state = {
 
   repositories: OpamFile.Repo_config.t repository_name_map;
   (** The list of repositories *)
-
+(*
   package_index: (repository_name * string option) package_map;
   (** Package index
       (map from packages to their repository and relative path) *)
-
-  repo_opams: OpamFile.OPAM.t package_map;
+*)
+  repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 }
 
@@ -79,6 +79,10 @@ type switch_state = {
   (** The contents of the global configuration file for this
       switch *)
 
+  repos_package_index: OpamFile.OPAM.t package_map;
+  (** Metadata of all packages that could be found in the configured
+      repositories *)
+
   opams: OpamFile.OPAM.t package_map;
   (** The metadata of all packages, gathered from repo, local cache and pinning
       overlays. This includes URL and descr data (even if they were originally
@@ -97,12 +101,16 @@ type switch_state = {
   installed: package_set;
   (** The set of all installed packages *)
 
+  installed_opams: OpamFile.OPAM.t package_map;
+  (** The cached metadata of installed packages (may differ from the metadata
+      that is in [opams] for updated packages) *)
+
   installed_roots: package_set;
   (** The set of packages explicitly installed by the user (subset of
       [installed]) *)
 
   reinstall: package_set;
-  (** The set of packages which needs to be reinsalled *)
+  (** The set of packages which needs to be reinstalled *)
 
   (* Missing: a cache for
      - switch-global and package variables

@@ -32,6 +32,7 @@ val lock: t -> filename
 (** Main configuration file: {i $opam/config} *)
 val config: t -> OpamFile.Config.t OpamFile.t
 
+(* to remove *)
 (** Temporary folder for dev packages {i $opam/packages.dev/} *)
 val dev_packages_dir: t -> dirname
 
