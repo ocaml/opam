@@ -223,12 +223,11 @@ module Map = struct
       List.rev (M.fold (fun k _ acc -> k :: acc) map [])
 
     let union f m1 m2 =
-      M.fold (fun k v m ->
-        if M.mem k m then
-          M.add k (f v (M.find k m)) (M.remove k m)
-        else
-          M.add k v m
-      ) m1 m2
+      M.merge (fun k a b -> match a, b with
+          | Some _ as s, None | None, (Some _ as s) -> s
+          | Some v1, Some v2 -> Some (f v1 v2)
+          | None, None -> assert false)
+        m1 m2
 
     let to_string string_of_value m =
       if M.cardinal m > max_print then
