@@ -258,8 +258,9 @@ module Format_upgrade = struct
                 match Lazy.force OpamOCaml.where_is_ocamlc with
                 | Some ocamlc ->
                   let f = OpamFilename.Dir.of_string ocamlc // "ocamlc" in
-                  OpamFile.Dot_config.with_file_depends config
+                  OpamFile.Dot_config.with_file_depends
                     [f, OpamFilename.digest f]
+                    config
                 | None -> config
               else
                 OpamFile.Dot_config.create @@
@@ -298,9 +299,10 @@ module Format_upgrade = struct
             OpamFile.Dot_config.write config_f config;
             (* Also export compiler variables as globals *)
             OpamFile.Dot_config.write switch_config_f
-              (OpamFile.Dot_config.with_vars switch_config
+              (OpamFile.Dot_config.with_vars
                  (OpamFile.Dot_config.bindings switch_config @
-                  OpamFile.Dot_config.bindings config));
+                  OpamFile.Dot_config.bindings config)
+                 switch_config);
             {selections with
              sel_installed = OpamPackage.Set.add nv selections.sel_installed;
              sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
@@ -311,7 +313,7 @@ module Format_upgrade = struct
         OpamFilename.remove (OpamFile.filename state_f))
       aliases;
     let conf =
-      OpamFile.Config.with_installed_switches conf (OpamSwitch.Map.keys aliases)
+      OpamFile.Config.with_installed_switches (OpamSwitch.Map.keys aliases) conf
     in
     OpamFilename.remove (OpamFile.filename aliases_f);
     OpamConsole.note "Opam root update successful. You should run 'opam \
@@ -398,7 +400,7 @@ module Format_upgrade = struct
          <> Some "yes"
       then OpamConsole.error_and_exit "Aborted"
       else
-      let config = OpamFile.Config.with_opam_version config latest_version in
+      let config = OpamFile.Config.with_opam_version latest_version config in
       if OpamVersion.compare config_version v1_1 < 0 then
         from_1_0_to_1_1 root;
       if OpamVersion.compare config_version v1_2 < 0 then
@@ -426,7 +428,7 @@ let load_config root =
     | Some c -> c
     | None ->
       if OpamFilename.exists_dir (root / "opam") then
-        OpamFile.Config.(with_opam_version empty (OpamVersion.of_string "1.1"))
+        OpamFile.Config.(with_opam_version (OpamVersion.of_string "1.1") empty)
       else OpamFile.Config.empty
   in
   Format_upgrade.as_necessary root config

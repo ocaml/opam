@@ -46,7 +46,7 @@ let add_overlay ?(template=false) ?version st name pin =
     let rv = OpamPackage.create name v in
     let opam = OpamPackage.Map.find rv st.repos_package_index in
     copy_files opam;
-    OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version opam v)
+    OPAM.write (pkg_overlay Ov.opam) (OPAM.with_version v opam)
   | Source url ->
     let nv = OpamStd.Option.map (OpamPackage.create name) version in
     let url_f = OpamFile.URL.create url in
@@ -69,7 +69,7 @@ let add_overlay ?(template=false) ?version st name pin =
       let opam = OpamPackage.Map.find rv st.repos_package_index in
       copy_files opam;
       OPAM.write (pkg_overlay Ov.opam)
-        (OPAM.with_version (OPAM.with_url opam url_f) v)
+        (OPAM.with_version v (OPAM.with_url url_f opam))
     with Not_found -> (* No original meta *)
       let version =
         OpamStd.Option.default
@@ -79,7 +79,7 @@ let add_overlay ?(template=false) ?version st name pin =
       in
       let nv = OpamPackage.create name version in
       let opam = if template then OPAM.template nv else OPAM.create nv in
-      let opam = OpamFile.OPAM.with_url opam url_f in
+      let opam = OpamFile.OPAM.with_url url_f opam in
       OPAM.write (pkg_overlay (if template then Ov.tmp_opam else Ov.opam)) opam
 
 let remove_overlay gt switch name =

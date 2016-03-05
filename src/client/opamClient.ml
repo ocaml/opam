@@ -1137,14 +1137,12 @@ module API = struct
       OpamConsole.msg "\n";
       let opam_f = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
       let empty_opam = OpamFile.OPAM.(
-          empty =
-          with_url_opt
-            (with_metadata_dir
-               (with_name_opt
-                  (with_version_opt (read opam_f) None)
-                  None)
-               None)
-            None
+          with_url_opt None @@
+          with_metadata_dir None @@
+          with_name_opt None @@
+          with_version_opt None @@
+          read opam_f
+          = empty
         ) in
       let t, needs_reinstall2 =
         if edit || empty_opam then

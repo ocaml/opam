@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamStateTypes
+open OpamStd.Op
 open OpamProcess.Job.Op
 open OpamFilename.Op
 
@@ -79,7 +80,7 @@ let local_opam ?(check=false) ?copy_invalid_to name dir =
      | _ -> ());
     OpamStd.Option.map
       (fun opam ->
-         let opam = OpamFile.OPAM.with_name opam name in
+         let opam = OpamFile.OPAM.with_name name opam in
          if OpamFilename.dirname (OpamFile.filename local_opam) <> dir then
            (* Subdir metadata *)
            OpamFileHandling.add_aux_files opam
@@ -125,9 +126,9 @@ let pinned_package st ?fixed_version name =
   in
   let equal_opam a b =
     let cleanup_opam o =
-      let o = OpamFile.OPAM.with_version_opt o None in
-      let o = OpamFile.OPAM.with_url_opt o None in
-      OpamFile.OPAM.effective_part o
+      OpamFile.OPAM.effective_part
+        (OpamFile.OPAM.with_version_opt None
+           (OpamFile.OPAM.with_url_opt None o))
     in
     cleanup_opam a = cleanup_opam b
   in
@@ -147,11 +148,11 @@ let pinned_package st ?fixed_version name =
       ];
     let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
     OpamFilename.rmdir files_dir;
-    let opam = OpamFile.OPAM.with_url opam urlf in
-    let opam = OpamFile.OPAM.with_name opam name in
     let opam =
+      OpamFile.OPAM.with_url urlf @@
+      OpamFile.OPAM.with_name name @@
       match fixed_version with
-      | Some v -> OpamFile.OPAM.with_version opam v
+      | Some v -> OpamFile.OPAM.with_version v opam
       | None -> opam
     in
     (match OpamFile.OPAM.(metadata_dir opam, extra_files opam) with
@@ -167,7 +168,7 @@ let pinned_package st ?fixed_version name =
          files
      | _ -> ());
     OpamFile.OPAM.write opam_file
-      (OpamFile.OPAM.with_extra_files_opt opam None);
+      (OpamFile.OPAM.with_extra_files_opt None opam);
     opam
   in
   match new_source_opam with

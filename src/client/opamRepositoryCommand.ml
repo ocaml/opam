@@ -109,7 +109,7 @@ let update_config t repos =
   log "update-config %a"
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
-  let new_config = OpamFile.Config.with_repositories t.config repos in
+  let new_config = OpamFile.Config.with_repositories repos t.config in
   OpamStateConfig.write t.root new_config
 
 (* Remove any remaining of [repo] from OPAM state *)

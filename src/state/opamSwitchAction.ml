@@ -94,8 +94,9 @@ let create_empty_switch gt switch =
     install_global_config root switch config;
 
     let root_config =
-      OpamFile.Config.with_installed_switches gt.config
+      OpamFile.Config.with_installed_switches
         (switch::OpamFile.Config.installed_switches gt.config)
+        gt.config
     in
     OpamStateConfig.write root root_config;
     { gt with config = root_config }
@@ -136,7 +137,7 @@ let add_to_reinstall st ~unpinned_only packages =
   { st with reinstall = st.reinstall ++ packages %% installed }
 
 let set_current_switch gt switch =
-  let config = OpamFile.Config.with_switch gt.config switch in
+  let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
   OpamStateConfig.write gt.root config;
   let rt = OpamRepositoryState.load gt in
@@ -229,7 +230,7 @@ let add_to_installed st ?(root=false) nv =
         (OpamPath.Switch.config st.switch_global.root st.switch name)
     in
     let switch_config =
-      OpamFile.Dot_config.with_vars st.switch_config (pkg_vars @ switch_vars)
+      OpamFile.Dot_config.with_vars (pkg_vars @ switch_vars) st.switch_config
     in
     if not OpamStateConfig.(!r.dryrun) then
       install_global_config st.switch_global.root st.switch switch_config;
@@ -270,7 +271,7 @@ let remove_from_installed st nv =
         ([], pkg_vars) switch_vars
     in
     let switch_config =
-      OpamFile.Dot_config.with_vars st.switch_config (List.rev rev_vars)
+      OpamFile.Dot_config.with_vars (List.rev rev_vars) st.switch_config
     in
     if not OpamStateConfig.(!r.dryrun) then
       install_global_config st.switch_global.root st.switch switch_config;

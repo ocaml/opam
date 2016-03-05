@@ -871,7 +871,7 @@ module Pp = struct
     = fun ?(cleanup = fun ~pos:_ _acc x -> x) set get pp1 ->
       let parse ~pos = function
         | acc, Some s ->
-          set acc (cleanup ~pos acc (pp1.parse ~pos s))
+          set (cleanup ~pos acc (pp1.parse ~pos s)) acc
         | acc, None -> acc
       in
       let print s = s, OpamStd.Option.map pp1.print (get s) in

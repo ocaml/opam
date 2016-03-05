@@ -155,11 +155,11 @@ let edit t name =
         in
         if OpamConsole.confirm "Save the new opam file back to %S ?"
             (OpamFile.to_string src_opam) then
-          OpamFilename.write (OpamFile.filename src_opam)
-            (OpamFile.OPAM.to_string_with_preserved_format src_opam
-               (OpamFile.OPAM.with_url_opt
-                  (OpamFile.OPAM.with_extra_files new_opam [])
-                  None))
+          OpamFilename.write (OpamFile.filename src_opam) @@
+          OpamFile.OPAM.to_string_with_preserved_format src_opam @@
+          OpamFile.OPAM.with_url_opt None @@
+          OpamFile.OPAM.with_extra_files [] @@
+          new_opam
       | _ -> ()
     in
     let t =
@@ -167,7 +167,7 @@ let edit t name =
         t.opams
         |> OpamPackage.Map.filter (fun nv _ -> nv.name <> name)
         |> OpamPackage.Map.add (OpamFile.OPAM.package new_opam)
-          (OpamFile.OPAM.with_url_opt new_opam url)
+          (OpamFile.OPAM.with_url_opt url new_opam)
       in
       let pin = match pin, url with
         | Source _, Some u -> Source (OpamFile.URL.url u)

@@ -814,20 +814,20 @@ module ConfigSyntax = struct
     with Not_found -> None
   let solver t = t.solver
 
-  let with_opam_version t opam_version = { t with opam_version }
-  let with_repositories t repositories = { t with repositories }
-  let with_installed_switches t installed_switches =
+  let with_opam_version opam_version t = { t with opam_version }
+  let with_repositories repositories t = { t with repositories }
+  let with_installed_switches installed_switches t =
     { t with installed_switches }
-  let with_switch_opt t switch = { t with switch }
-  let with_switch t switch = { t with switch = Some switch }
-  let with_jobs t jobs = { t with jobs }
-  let with_dl_tool t dl_tool = { t with dl_tool = Some dl_tool }
-  let with_dl_jobs t dl_jobs = { t with dl_jobs }
-  let with_criteria t solver_criteria = { t with solver_criteria }
-  let with_criterion kind t criterion =
+  let with_switch_opt switch t = { t with switch }
+  let with_switch switch t = { t with switch = Some switch }
+  let with_jobs jobs t = { t with jobs }
+  let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
+  let with_dl_jobs dl_jobs t = { t with dl_jobs }
+  let with_criteria solver_criteria t = { t with solver_criteria }
+  let with_criterion kind criterion t =
     { t with solver_criteria =
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
-  let with_solver t solver = { t with solver = Some solver }
+  let with_solver solver t = { t with solver = Some solver }
 
   let create installed_switches switch repositories
       ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
@@ -850,8 +850,8 @@ module ConfigSyntax = struct
   }
 
   let fields =
-    let with_switch t sw =
-      if t.switch = None then with_switch t sw
+    let with_switch sw t =
+      if t.switch = None then with_switch sw t
       else OpamFormat.bad_format "Multiple switch specifications"
     in
     [
@@ -942,22 +942,22 @@ module SwitchSelectionsSyntax = struct
 
   let fields = [
     "opam-version", Pp.ppacc
-      (fun t _ -> t) (fun _ -> OpamVersion.current_nopatch)
+      (fun _ t -> t) (fun _ -> OpamVersion.current_nopatch)
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
     "compiler", Pp.ppacc
-      (fun t sel_compiler -> {t with sel_compiler}) (fun t -> t.sel_compiler)
+      (fun sel_compiler t -> {t with sel_compiler}) (fun t -> t.sel_compiler)
       pp_pkglist;
     "roots", Pp.ppacc
-      (fun t sel_roots -> {t with sel_roots})
+      (fun sel_roots t -> {t with sel_roots})
       (fun t -> t.sel_roots)
       pp_pkglist;
     "installed", Pp.ppacc
-      (fun t installed ->
+      (fun installed t ->
          {t with sel_installed = OpamPackage.Set.union t.sel_roots installed})
       (fun t -> t.sel_installed)
       pp_pkglist;
     "pinned", Pp.ppacc
-      (fun t sel_pinned -> {t with sel_pinned}) (fun t -> t.sel_pinned)
+      (fun sel_pinned t -> {t with sel_pinned}) (fun t -> t.sel_pinned)
       (Pp.V.map_list ~depth:1
          (Pp.V.map_option
             (Pp.V.string -| pp_package)
@@ -1011,27 +1011,27 @@ module Repo_configSyntax = struct
 
   let fields = [
     "name", Pp.ppacc
-      (fun r repo_name -> {r with repo_name})
+      (fun repo_name r -> {r with repo_name})
       (fun r -> r.repo_name)
       (Pp.V.string -|
        Pp.of_module "repository-name" (module OpamRepositoryName: Pp.STR with type t = OpamRepositoryName.t));
     "address", Pp.ppacc
-      (fun r repo_url -> {r with repo_url})
+      (fun repo_url r -> {r with repo_url})
       (fun r -> r.repo_url)
       Pp.V.url;
     "kind", Pp.ppacc_opt (* deprecated *)
-      (fun r backend ->
+      (fun backend r ->
          {r with repo_url = {r.repo_url with OpamUrl.backend}})
       OpamStd.Option.none
       (Pp.V.string -|
        Pp.of_pair "repository-kind"
          OpamUrl.(backend_of_string, string_of_backend));
     "priority", Pp.ppacc
-      (fun r repo_priority -> {r with repo_priority})
+      (fun repo_priority r -> {r with repo_priority})
       (fun r -> r.repo_priority)
       Pp.V.int;
     "root", Pp.ppacc
-      (fun r repo_root -> {r with repo_root})
+      (fun repo_root r -> {r with repo_root})
       (fun r -> r.repo_root)
       (Pp.V.string -|
        Pp.of_module "directory" (module OpamFilename.Dir: Pp.STR with type t = OpamFilename.Dir.t));
@@ -1076,10 +1076,10 @@ module Dot_configSyntax = struct
   let create vars = { empty with vars }
 
   let vars t = t.vars
-  let with_vars t vars = { t with vars }
+  let with_vars vars t = { t with vars }
 
   let file_depends t = t.file_depends
-  let with_file_depends t file_depends = { t with file_depends }
+  let with_file_depends file_depends t = { t with file_depends }
 
   let pp_variables =
     Pp.I.items -|
@@ -1094,7 +1094,7 @@ module Dot_configSyntax = struct
         "variables", Pp.ppacc with_vars vars pp_variables
       ]
       [
-        "opam-version", Pp.ppacc (fun t _ -> t) (fun _ -> OpamVersion.current)
+        "opam-version", Pp.ppacc (fun _ t -> t) (fun _ -> OpamVersion.current)
           (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion: Pp.STR with type t = OpamVersion.t));
         "file-depends", Pp.ppacc with_file_depends file_depends
           (Pp.V.map_list ~depth:2 @@ Pp.V.map_pair
@@ -1169,10 +1169,10 @@ module RepoSyntax = struct
   let upstream t = t.upstream
   let redirect t = t.redirect
 
-  let with_opam_version t opam_version = { t with opam_version }
-  let with_browse t browse = { t with browse = Some browse }
-  let with_upstream t upstream = { t with upstream = Some upstream }
-  let with_redirect t redirect = { t with redirect }
+  let with_opam_version opam_version t = { t with opam_version }
+  let with_browse browse t = { t with browse = Some browse }
+  let with_upstream upstream t = { t with upstream = Some upstream }
+  let with_redirect redirect t = { t with redirect }
 
   let fields = [
     "opam-version", Pp.ppacc
@@ -1226,14 +1226,14 @@ module URLSyntax = struct
   let mirrors t = t.mirrors
   let checksum t = t.checksum
 
-  let with_url t url = { t with url }
-  let with_mirrors t mirrors = { t with mirrors }
-  let with_checksum t checksum = { t with checksum = Some checksum }
+  let with_url url t = { t with url }
+  let with_mirrors mirrors t = { t with mirrors }
+  let with_checksum checksum t = { t with checksum = Some checksum }
 
   let fields =
-    let with_url t url =
+    let with_url url t =
       if t.url <> OpamUrl.empty then OpamFormat.bad_format "Too many URLS"
-      else with_url t url
+      else with_url url t
     in
     [
       "src", Pp.ppacc with_url url
@@ -1476,53 +1476,53 @@ module OPAMSyntax = struct
 
   (* Setters *)
 
-  let with_opam_version t opam_version = { t with opam_version }
+  let with_opam_version opam_version t = { t with opam_version }
 
-  let with_name (t:t) name = { t with name = Some name }
-  let with_name_opt (t:t) name = { t with name }
-  let with_version (t:t) version = { t with version = Some version }
-  let with_version_opt (t:t) version = { t with version }
-  let with_nv (t:t) nv =
+  let with_name name (t:t) = { t with name = Some name }
+  let with_name_opt name (t:t) = { t with name }
+  let with_version version (t:t) = { t with version = Some version }
+  let with_version_opt version (t:t) = { t with version }
+  let with_nv nv (t:t) =
     { t with name = Some (nv.OpamPackage.name);
              version = Some (nv.OpamPackage.version) }
 
-  let with_depends t depends = { t with depends }
-  let with_depopts t depopts = { t with depopts }
-  let with_conflicts t conflicts = {t with conflicts }
-  let with_available t available = { t with available }
-  let with_flags t flags = { t with flags }
-  let add_flags t flags =
+  let with_depends depends t = { t with depends }
+  let with_depopts depopts t = { t with depopts }
+  let with_conflicts conflicts t = {t with conflicts }
+  let with_available available t = { t with available }
+  let with_flags flags t = { t with flags }
+  let add_flags flags t =
     { t with flags = OpamStd.List.sort_nodup compare (flags @ t.flags) }
-  let with_env t env = { t with env }
+  let with_env env t = { t with env }
 
-  let with_build t build = { t with build }
-  let with_build_test t build_test = { t with build_test }
-  let with_build_doc t build_doc = { t with build_doc }
-  let with_install t install = { t with install }
-  let with_remove t remove = { t with remove }
+  let with_build build t = { t with build }
+  let with_build_test build_test t = { t with build_test }
+  let with_build_doc build_doc t = { t with build_doc }
+  let with_install install t = { t with install }
+  let with_remove remove t = { t with remove }
 
-  let with_substs t substs = { t with substs }
-  let with_patches t patches = { t with patches }
-  let with_build_env t build_env = { t with build_env }
-  let with_features t features = {t with features }
-  let with_extra_sources t extra_sources = { t with extra_sources }
+  let with_substs substs t = { t with substs }
+  let with_patches patches t = { t with patches }
+  let with_build_env build_env t = { t with build_env }
+  let with_features features t = {t with features }
+  let with_extra_sources extra_sources t = { t with extra_sources }
 
-  let with_messages t messages = { t with messages }
-  let with_post_messages t post_messages = { t with post_messages }
-  let with_depexts t depexts = { t with depexts = Some depexts }
-  let with_libraries t libraries = { t with libraries }
-  let with_syntax t syntax = { t with syntax }
-  let with_dev_repo t dev_repo = { t with dev_repo = Some dev_repo }
+  let with_messages messages t = { t with messages }
+  let with_post_messages post_messages t = { t with post_messages }
+  let with_depexts depexts t = { t with depexts = Some depexts }
+  let with_libraries libraries t = { t with libraries }
+  let with_syntax syntax t = { t with syntax }
+  let with_dev_repo dev_repo t = { t with dev_repo = Some dev_repo }
 
-  let with_maintainer t maintainer = { t with maintainer }
-  let with_author t author = { t with author }
-  let with_license t license = { t with license }
-  let with_tags t tags = { t with tags }
-  let with_homepage t homepage = { t with homepage }
-  let with_doc t doc = { t with doc }
-  let with_bug_reports t bug_reports = { t with bug_reports }
+  let with_maintainer maintainer t = { t with maintainer }
+  let with_author author t = { t with author }
+  let with_license license t = { t with license }
+  let with_tags tags t = { t with tags }
+  let with_homepage homepage t = { t with homepage }
+  let with_doc doc t = { t with doc }
+  let with_bug_reports bug_reports t = { t with bug_reports }
 
-  let with_extensions t extensions =
+  let with_extensions extensions t =
     if not (OpamStd.String.Map.for_all (fun k _ -> is_ext_field k) extensions)
     then invalid_arg "OpamFile.OPAM.with_extensions";
     {t with
@@ -1532,18 +1532,18 @@ module OPAMSyntax = struct
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
 
-  let with_url t url = { t with url = Some url }
-  let with_url_opt t url = { t with url }
-  let with_descr t descr = { t with descr = Some descr }
-  let with_descr_opt t descr = { t with descr }
+  let with_url url t = { t with url = Some url }
+  let with_url_opt url t = { t with url }
+  let with_descr descr t = { t with descr = Some descr }
+  let with_descr_opt descr t = { t with descr }
 
-  let with_metadata_dir t metadata_dir = { t with metadata_dir }
-  let with_extra_files t extra_files = { t with extra_files = Some extra_files }
-  let with_extra_files_opt t extra_files = { t with extra_files }
+  let with_metadata_dir metadata_dir t = { t with metadata_dir }
+  let with_extra_files extra_files t = { t with extra_files = Some extra_files }
+  let with_extra_files_opt extra_files t = { t with extra_files }
 
-  let with_ocaml_version t ocaml_version =
+  let with_ocaml_version ocaml_version t =
     { t with ocaml_version = Some ocaml_version }
-  let with_os t os = { t with os }
+  let with_os os t = { t with os }
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when validating). It's better to do them in the same pass
@@ -1702,7 +1702,7 @@ module OPAMSyntax = struct
         with_author author
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "author", no_cleanup Pp.ppacc
-        (fun t a -> if t.author = [] then with_author t a else
+        (fun a t -> if t.author = [] then with_author a t else
             OpamFormat.bad_format "multiple \"authors:\" fields" author)
         (fun _ -> [])
         (Pp.V.map_list ~depth:1 Pp.V.string);
@@ -1896,7 +1896,7 @@ module OPAMSyntax = struct
        handle_flags_in_tags -|
        handle_deprecated_available) -|
     Pp.pp
-      (fun ~pos:_ (extensions, t) -> with_extensions t extensions)
+      (fun ~pos:_ (extensions, t) -> with_extensions extensions t)
       (fun t -> extensions t, t)
 
   let pp =
@@ -1916,15 +1916,15 @@ module OPAMSyntax = struct
               file name"
              (OpamPackage.Name.to_string tname)
              (OpamPackage.name_to_string nv);
-           with_nv t nv
+           with_nv nv t
          | Some nv, _, Some tversion when nv.OpamPackage.version <> tversion ->
            Pp.warn ~pos
              "Field 'version: %S' doesn't match the version %S implied by the \
               file name"
              (OpamPackage.Version.to_string tversion)
              (OpamPackage.version_to_string nv);
-           with_nv t nv
-         | Some nv, _, _ -> with_nv t nv
+           with_nv nv t
+         | Some nv, _, _ -> with_nv nv t
          | None, _, _ -> t)
       (fun (filename, t) ->
          filename,
@@ -2005,7 +2005,8 @@ module OPAM = struct
       extensions  = empty.extensions;
       url         =
         OpamStd.Option.Op.(
-          (t.url >>= URL.checksum >>| URL.with_checksum URL.empty)
+          (t.url >>= URL.checksum >>|
+           fun cksum -> URL.with_checksum cksum URL.empty)
           ++ empty.url);
       descr       = empty.descr;
 
@@ -2451,18 +2452,18 @@ module Dot_installSyntax = struct
   let doc t = t.doc
   let libexec t = t.libexec
 
-  let with_bin t bin = { t with bin }
-  let with_sbin t sbin = { t with sbin }
-  let with_lib t lib = { t with lib }
-  let with_toplevel t toplevel = { t with toplevel }
-  let with_stublibs t stublibs = { t with stublibs }
-  let with_misc t misc = { t with misc }
-  let with_share t share = { t with share }
-  let with_share_root t share_root = { t with share_root }
-  let with_etc t etc = { t with etc }
-  let with_man t man = { t with man }
-  let with_doc t doc = { t with doc }
-  let with_libexec t libexec = { t with libexec }
+  let with_bin bin t = { t with bin }
+  let with_sbin sbin t = { t with sbin }
+  let with_lib lib t = { t with lib }
+  let with_toplevel toplevel t = { t with toplevel }
+  let with_stublibs stublibs t = { t with stublibs }
+  let with_misc misc t = { t with misc }
+  let with_share share t = { t with share }
+  let with_share_root share_root t = { t with share_root }
+  let with_etc etc t = { t with etc }
+  let with_man man t = { t with man }
+  let with_doc doc t = { t with doc }
+  let with_libexec libexec t = { t with libexec }
 
   let add_man_section_dir src =
     let file = Filename.basename (OpamFilename.Base.to_string src.c) in
@@ -2622,23 +2623,23 @@ module CompSyntax = struct
 
   let tags t = t.tags
 
-  let with_opam_version t opam_version = {t with opam_version}
-  let with_name (t:t) name = {t with name}
-  let with_version (t:t) version = {t with version}
-  let with_src t src = { t with src }
-  let with_patches t patches = {t with patches}
-  let with_configure t configure = {t with configure}
-  let with_make t make = {t with make}
-  let with_build t build = {t with build}
-  let with_packages t packages = {t with packages}
-  let with_preinstalled t preinstalled = {t with preinstalled}
-  let with_env t env = {t with env}
-  let with_tags t tags = {t with tags}
+  let with_opam_version opam_version t = {t with opam_version}
+  let with_name name (t:t) = {t with name}
+  let with_version version (t:t) = {t with version}
+  let with_src src t = { t with src }
+  let with_patches patches t = {t with patches}
+  let with_configure configure t = {t with configure}
+  let with_make make t = {t with make}
+  let with_build build t = {t with build}
+  let with_packages packages t = {t with packages}
+  let with_preinstalled preinstalled t = {t with preinstalled}
+  let with_env env t = {t with env}
+  let with_tags tags t = {t with tags}
 
   let fields =
-    let with_src t url =
+    let with_src url t =
       if t.src <> None then OpamFormat.bad_format "Too many URLS"
-      else with_src t (Some url)
+      else with_src (Some url) t
     in
     [
       "opam-version", Pp.ppacc with_opam_version opam_version
@@ -2777,7 +2778,7 @@ module CompSyntax = struct
     in
     let url =
       OpamStd.Option.map
-        (fun url -> URL.with_url URL.empty url)
+        (fun url -> URL.with_url url URL.empty)
         comp.src
     in
     let build, install =

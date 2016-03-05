@@ -80,20 +80,20 @@ module Config: sig
     t
 
   (** OCaml switch updates *)
-  val with_switch : t -> switch -> t
-  val with_switch_opt : t -> switch option -> t
+  val with_switch: switch -> t -> t
+  val with_switch_opt: switch option -> t -> t
 
-  val with_installed_switches: t -> switch list -> t
+  val with_installed_switches: switch list -> t -> t
 
   (** Repository updates *)
-  val with_repositories: t -> repository_name list -> t
+  val with_repositories: repository_name list -> t -> t
 
   (** Update opam-version *)
-  val with_opam_version: t -> OpamVersion.t -> t
+  val with_opam_version: OpamVersion.t -> t -> t
 
-  val with_criteria: t -> (solver_criteria * string) list -> t
+  val with_criteria: (solver_criteria * string) list -> t -> t
 
-  val with_solver: t -> arg list -> t
+  val with_solver: arg list -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -157,7 +157,7 @@ module URL: sig
   val checksum: t -> string option
 
   (** Constructor *)
-  val with_checksum: t -> string -> t
+  val with_checksum: string -> t -> t
 
 end
 
@@ -249,9 +249,9 @@ module OPAM: sig
   (** Parse a single extended field (reports proper file position) *)
   val extended: t -> string -> (value -> 'a) -> 'a option
 
-  val with_messages: t -> (string * filter option) list -> t
+  val with_messages: (string * filter option) list -> t -> t
 
-  val with_post_messages: t -> (string * filter option) list -> t
+  val with_post_messages: (string * filter option) list -> t -> t
 
   (** Package conflicts *)
   val conflicts: t -> formula
@@ -321,81 +321,81 @@ module OPAM: sig
   val extra_files: t -> (OpamFilename.Base.t * string) list option
 
   (** Sets the opam version *)
-  val with_opam_version: t -> opam_version -> t
+  val with_opam_version: opam_version -> t -> t
 
   (** The package source repository address *)
   val dev_repo: t -> url option
 
   (** construct as [name] *)
-  val with_name: t -> name -> t
-  val with_name_opt: t -> name option -> t
+  val with_name: name -> t -> t
+  val with_name_opt: name option -> t -> t
 
   (** construct as [version] *)
-  val with_version: t -> version -> t
-  val with_version_opt: t -> version option -> t
+  val with_version: version -> t -> t
+  val with_version_opt: version option -> t -> t
 
   (** Construct as [depends] *)
-  val with_depends : t -> ext_formula -> t
+  val with_depends: ext_formula -> t -> t
 
   (** Construct as [depopts] *)
-  val with_depopts : t -> ext_formula -> t
+  val with_depopts: ext_formula -> t -> t
 
-  val with_conflicts : t -> formula -> t
+  val with_conflicts: formula -> t -> t
 
-  val with_features : t -> (OpamVariable.t * string * filter) list -> t
+  val with_features: (OpamVariable.t * string * filter) list -> t -> t
 
   (** Construct as [build] *)
-  val with_build: t -> command list -> t
+  val with_build: command list -> t -> t
 
-  val with_install: t -> command list -> t
+  val with_install: command list -> t -> t
 
   (** Construct as [remove] *)
-  val with_remove : t -> command list -> t
+  val with_remove: command list -> t -> t
 
   (** Construct as [libraries] *)
-  val with_libraries : t -> (string * filter option) list -> t
+  val with_libraries: (string * filter option) list -> t -> t
 
   (** Replace the [syntax] field of the given OPAM file. *)
-  val with_syntax: t -> (string * filter option) list -> t
+  val with_syntax: (string * filter option) list -> t -> t
 
   (** Construct as [substs] *)
-  val with_substs : t -> basename list -> t
+  val with_substs: basename list -> t -> t
 
-  val with_available : t -> filter -> t
+  val with_available: filter -> t -> t
 
   (** Construct as [maintainer] *)
-  val with_maintainer: t -> string list -> t
+  val with_maintainer: string list -> t -> t
 
   (** Construct as [patches] *)
-  val with_patches: t -> (basename * filter option) list -> t
+  val with_patches: (basename * filter option) list -> t -> t
 
   (** Construct using [bug_reports] *)
-  val with_bug_reports: t -> string list -> t
+  val with_bug_reports: string list -> t -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: t -> tags -> t
+  val with_depexts: tags -> t -> t
 
-  val with_flags: t -> package_flag list -> t
+  val with_flags: package_flag list -> t -> t
 
-  val with_env: t -> env_update list -> t
+  val with_env: env_update list -> t -> t
 
-  val with_dev_repo: t -> url -> t
+  val with_dev_repo: url -> t -> t
 
-  val with_extra_sources: t -> (url * string * basename option) list -> t
+  val with_extra_sources: (url * string * basename option) list -> t -> t
 
-  val with_extensions: t -> value OpamStd.String.Map.t -> t
+  val with_extensions: value OpamStd.String.Map.t -> t -> t
 
   val add_extension: t -> string -> value -> t
 
-  val with_descr: t -> Descr.t -> t
-  val with_descr_opt: t -> Descr.t option -> t
-  val with_url: t -> URL.t -> t
-  val with_url_opt: t -> URL.t option -> t
+  val with_descr: Descr.t -> t -> t
+  val with_descr_opt: Descr.t option -> t -> t
+  val with_url: URL.t -> t -> t
+  val with_url_opt: URL.t option -> t -> t
 
-  val with_metadata_dir: t -> dirname option -> t
+  val with_metadata_dir: dirname option -> t -> t
 
-  val with_extra_files: t -> (OpamFilename.Base.t * string) list -> t
-  val with_extra_files_opt: t -> (OpamFilename.Base.t * string) list option -> t
+  val with_extra_files: (OpamFilename.Base.t * string) list -> t -> t
+  val with_extra_files_opt: (OpamFilename.Base.t * string) list option -> t -> t
 
   (** Prints to a string, while keeping the format of the original file as much as possible *)
   val to_string_with_preserved_format: t typed_file -> t -> string
@@ -478,12 +478,12 @@ module Comp: sig
 
   val tags: t -> string list
 
-  val with_src: t -> url option -> t
-  val with_patches: t -> url list -> t
-  val with_configure: t -> string list -> t
-  val with_make: t -> string list -> t
-  val with_build: t -> command list -> t
-  val with_packages: t -> formula -> t
+  val with_src: url option -> t -> t
+  val with_patches: url list -> t -> t
+  val with_configure: string list -> t -> t
+  val with_make: string list -> t -> t
+  val with_build: command list -> t -> t
+  val with_packages: formula -> t -> t
 
   (** Converts a compiler definition to package metadata. For compat. *)
   val to_package: name -> t -> Descr.t option -> OPAM.t
@@ -546,10 +546,10 @@ module Dot_config: sig
   (** Dependency towards file-system paths and their hashes *)
   val file_depends: t -> (filename * string) list
 
-  val with_file_depends: t -> (filename * string) list -> t
+  val with_file_depends: (filename * string) list -> t -> t
 
   (** Sets all bindings in the file *)
-  val with_vars: t -> (variable * variable_contents) list -> t
+  val with_vars: (variable * variable_contents) list -> t -> t
 
   (** Top-level variables *)
   val variable: t -> variable  -> variable_contents option

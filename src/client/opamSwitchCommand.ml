@@ -158,11 +158,12 @@ let clear_switch ?(keep_debug=false) gt switch =
   let module C = OpamFile.Config in
   let config = gt.config in
   let config =
-    C.with_installed_switches config
+    C.with_installed_switches
       (List.filter ((<>) switch) (C.installed_switches config))
+      config
   in
   let config =
-    if C.switch config = Some switch then C.with_switch_opt config None
+    if C.switch config = Some switch then C.with_switch_opt None config
     else config
   in
   OpamStateConfig.write gt.root config;

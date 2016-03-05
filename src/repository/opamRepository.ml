@@ -86,7 +86,7 @@ let pull_url_and_fix_digest package dirname checksum file url =
         "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
         (OpamPackage.to_string package) checksum actual;
       let u = OpamFile.URL.read file in
-      OpamFile.URL.write file (OpamFile.URL.with_checksum u actual)
+      OpamFile.URL.write file (OpamFile.URL.with_checksum actual u)
     );
     Done r
 

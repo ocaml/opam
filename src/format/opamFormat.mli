@@ -317,7 +317,7 @@ module Pp : sig
       before calling the setter. *)
   val ppacc :
     ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
-    ('acc -> 'a -> 'acc) ->
+    ('a -> 'acc -> 'acc) ->
     ('acc -> 'a) ->
     ('value, 'a) t ->
     ('acc, 'value) field_parser
@@ -326,7 +326,7 @@ module Pp : sig
       getter returns an option *)
   val ppacc_opt :
     ?cleanup:(pos:pos -> 'acc -> 'a -> 'a) ->
-    ('acc -> 'a -> 'acc) ->
+    ('a -> 'acc -> 'acc) ->
     ('acc -> 'a option) ->
     ('value, 'a) t ->
     ('acc, 'value) field_parser

@@ -1272,9 +1272,9 @@ let source =
             else OpamFile.make Op.(dir // "opam")
           in
           OpamFile.OPAM.write f
-            (OpamFile.OPAM.with_substs
-               (OpamFile.OPAM.with_patches opam [])
-               [])
+            (OpamFile.OPAM.with_substs [] @@
+             OpamFile.OPAM.with_patches [] @@
+             opam)
     );
 
     if pin then

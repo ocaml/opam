@@ -71,9 +71,9 @@ let load ?(lock=Lock_readonly) gt rt switch =
                 (OpamPackage.Name.to_string name)
                 (OpamPackage.Version.to_string version)
                 (OpamPackage.Version.to_string v);
-              version, OpamFile.OPAM.with_version o version
+              version, OpamFile.OPAM.with_version version o
             | Version _, _ ->
-              version, OpamFile.OPAM.with_version o version
+              version, OpamFile.OPAM.with_version version o
             | Source _, Some v when v <> version ->
               log "warn: updating version of pinned %s as in overlay (was: %s)"
                 (OpamPackage.to_string nv)
@@ -94,7 +94,7 @@ let load ?(lock=Lock_readonly) gt rt switch =
               Source (OpamFile.URL.url opam_url),
               o
             | Source pin_url, None ->
-              pin, OpamFile.OPAM.with_url o (OpamFile.URL.create pin_url)
+              pin, OpamFile.OPAM.with_url (OpamFile.URL.create pin_url) o
             | _ -> pin, o
           in
           OpamPackage.Name.Map.add name (version,pin) pinned,

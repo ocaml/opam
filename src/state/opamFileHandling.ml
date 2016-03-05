@@ -65,7 +65,7 @@ let add_aux_files ?dir opam =
           log "Overriding url of %s through external url file at %s"
             (OpamPackage.to_string (OpamFile.OPAM.package opam))
             (OpamFilename.Dir.to_string dir);
-        OpamFile.OPAM.with_url opam url
+        OpamFile.OPAM.with_url url opam
       | None -> opam
     in
     let opam =
@@ -75,7 +75,7 @@ let add_aux_files ?dir opam =
           log "Overriding descr of %s through external descr fileat %s"
             (OpamPackage.to_string (OpamFile.OPAM.package opam))
             (OpamFilename.Dir.to_string dir);
-        OpamFile.OPAM.with_descr opam descr
+        OpamFile.OPAM.with_descr descr opam
       | None -> opam
     in
     let extra_files =
@@ -89,7 +89,7 @@ let add_aux_files ?dir opam =
     let opam =
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
-      | None, Some ef -> OpamFile.OPAM.with_extra_files opam ef
+      | None, Some ef -> OpamFile.OPAM.with_extra_files ef opam
       | Some ef, None ->
         log "Missing expected extra files %s at %s/files"
           (OpamStd.List.concat_map ", "
