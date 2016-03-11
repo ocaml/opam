@@ -103,7 +103,7 @@ remove: ["ocamlfind" "remove" "project"]
 depends: "ocamlfind"
 ```
 
-The `opam-version`, `maintainer` and `version` fields are mandatory ; you should
+The `opam-version` and `maintainer` fields are mandatory; you should
 remove the others rather than leave them empty.
 * You'll probably be the `maintainer` for now, so give a way to contact you in
   case your package needs maintenance.
@@ -130,7 +130,8 @@ than a single element: `maintainer`, `author`, `homepage`, `bug-reports`,
 `license` and `depends`.
 
 For the list of available fields and specification of the format, see the
-[OPAM manual](Manual.html#opam).
+[OPAM manual](Manual.html#opam). Also consider using the `opam lint` command to
+check the validity and quality of your `opam` file.
 
 One you save and quit, OPAM will syntax-check and let you edit again in case of
 errors.
@@ -147,8 +148,8 @@ $ opam install <project> --verbose
 
 At this point, OPAM will get a snapshot of the project, resolve its dependencies
 and propose a course of actions for the install. Let it go and see if your
-project installs successfully ; it's a good idea to use `--verbose` as it will
-make OPAM print the output of the externals commands, in particular the ones in
+project installs successfully; it's a good idea to use `--verbose` as it will
+make OPAM print the output of the external commands, in particular the ones in
 the `build` instructions.
 
 You can now check that everything is installed as expected. Do also check that
@@ -163,7 +164,7 @@ $ opam pin edit <project>
 to get back to editing the `opam` file. Manually editing the `opam` file in
 your source tree also works.
 
-So far, so good ! You may have missed dependencies in case they were already
+So far, so good! You may have missed dependencies in case they were already
 installed on your system, but that will be checked automatically by the
 continuous integration system when you attempt to publish your package to the
 OPAM repository, so don't worry.
@@ -265,7 +266,7 @@ Here is how to do it from scratch:
 5.  Back to the web interface, refresh, hit the `Pull request` button, check your
     changes and confirm;
 
-6.  Wait for feedback !
+6.  Wait for feedback!
 
 ### Once you are done
 
@@ -318,7 +319,7 @@ source if any, but otherwise only what is in the OPAM repository matters. Use
 ## More on opam files
 
 The opam files can express much more than what was shown above. Without getting
-into too much details, here are some of the most useful features:
+into too much detail, here are some of the most useful features:
 
 * **Version constraints**: an optional version constraint can be added after any
   package name in `depends`: simply write `"package" {>= "3.2"}`. Warning,
@@ -346,7 +347,7 @@ into too much details, here are some of the most useful features:
   work.
 * **Variables**: you can get a list of predefined variables that you can use in
   your opam rules with `opam config list`.
-* **Filters**: full commands, or single commands arguments, may need to be
+* **Filters**: full commands, or single command arguments, may need to be
   omitted depending on the environment. This uses the same optional argument
   syntax as above, postfix curly braces, with boolean conditions:
 
