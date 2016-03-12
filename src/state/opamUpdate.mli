@@ -37,8 +37,8 @@ val dev_package: switch_state -> package ->
 val pinned_packages: switch_state -> name_set -> switch_state * package_set
 
 (** Updates a dev pinned package from its upstream; returns true if changed,
-    false otherwise, and a switch_state update function, applying possible
-    changes in packages metadata *)
+    false otherwise, and a switch_state update function that applies possible
+    changes in packages metadata. Updates the on-disk overlay *)
 val pinned_package:
   switch_state -> ?fixed_version:version -> name ->
   ((switch_state -> switch_state) * bool) OpamProcess.job

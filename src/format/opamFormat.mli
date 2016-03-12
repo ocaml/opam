@@ -386,12 +386,24 @@ module Pp : sig
       (string -> bool) ->
       (opamfile_item list, opamfile_item list * opamfile_item list) t
 
+    (** Partitions items in an opamfile base on a generic condition on the
+        items *)
+    val partition :
+      (opamfile_item -> bool) ->
+      (opamfile_item list, opamfile_item list * opamfile_item list) t
+
     (** Parse a single field from a file, return the result and the unchanged
         item list. The single field is ignored when printing back. *)
     val field :
       string ->
       (pos:pos -> value -> 'a) ->
       (opamfile_item list, 'a option * opamfile_item list) t
+
+    (** Parse a single section with the given "kind", towards its name and
+        contents *)
+    val section :
+      string ->
+      (opamfile_item, (string option * opamfile_item list)) t
 
     (** Extracts a single item with the given variable name from an item list.
         The item is removed from the returned item list, and the two are

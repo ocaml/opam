@@ -34,6 +34,14 @@ val load_full_compat: string -> switch -> switch_state
     faster than loading the full switch state *)
 val load_selections: global_state -> switch -> switch_selections
 
+(** Raw function to compute the availability of all packages, given the switch
+    configuration and the set of pinned packages. (The result is included in
+    global_state.available_packages) *)
+val compute_available_packages:
+  global_state -> switch -> OpamFile.Dot_config.t ->
+  pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
+  package_set
+
 (** {2 Helpers to access state data} *)
 
 val selections: switch_state -> switch_selections
@@ -84,6 +92,21 @@ val dev_packages: switch_state -> package_set
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets *)
 val universe: switch_state -> user_action -> universe
+
+(** {2 Updating} *)
+
+(** Sets the given opam file for the given package, updating the other related
+    fields along the way *)
+val update_package_metadata:
+  package -> OpamFile.OPAM.t -> switch_state -> switch_state
+
+(** Removes the metadata associated to the given package, also updating the
+    packages and available sets. *)
+val remove_package_metadata: package -> switch_state -> switch_state
+
+(** Like [update_package_metadata], but also ensures the package is pinned to
+    the given version. Also marks it for reinstall if changed. *)
+val update_pin: package -> OpamFile.OPAM.t -> switch_state -> switch_state
 
 (** {2 User interaction and reporting } *)
 

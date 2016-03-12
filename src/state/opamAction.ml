@@ -223,22 +223,17 @@ let download_package st nv =
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
     Done (`Successful None)
   else
-  let dir =
-    try match OpamPackage.Name.Map.find name st.pinned with
-      | _, Version _ ->
-        Some (OpamPath.dev_package st.switch_global.root nv)
-      | _ -> Some (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
-    with Not_found ->
-      if OpamSwitchState.is_dev_package st nv then
-        Some (OpamPath.dev_package st.switch_global.root nv)
-      else None
+  let dev_dir =
+    if OpamSwitchState.is_dev_package st nv then
+      Some (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
+    else None
   in
   let of_dl = function
     | Some (Up_to_date f | Result f) -> `Successful (Some f)
     | Some (Not_available s) -> `Error s
     | None -> `Successful None
   in
-  let job = match dir with
+  let job = match dev_dir with
     | Some dir ->
       OpamUpdate.download_upstream st nv dir @@| of_dl
     | None ->
@@ -454,10 +449,6 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
         end
       ) (OpamFile.Dot_install.misc install);
 
-    (* Cleanup if there was any stale overlay (unpinned but left installed
-       package) *)
-    if not (OpamPackage.Name.Map.mem name t.pinned) then
-      OpamPinned.remove_overlay t.switch_global t.switch name;
   in
 
   remove_job @@+ fun () ->

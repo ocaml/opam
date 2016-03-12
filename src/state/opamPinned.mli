@@ -17,11 +17,13 @@
 open OpamTypes
 open OpamStateTypes
 
+(*
 (** Add overlay files for a pinned package. If no definition is found
     use a minimal OPAM file unless [template] is set to [true]. *)
 val add_overlay:
   ?template:bool -> ?version:version -> switch_state ->
   name -> pin_option -> unit
+*)
 
 (** Remove all overlay files *)
 val remove_overlay: global_state -> switch -> name -> unit
@@ -42,3 +44,7 @@ val packages: switch_state -> package_set
 
 (** Looks up an 'opam' file for the given named package in a source directory *)
 val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t option
+
+(** Finds back the location of the opam file this package definition was loaded
+    from *)
+val orig_opam_file: OpamFile.OPAM.t -> OpamFile.OPAM.t OpamFile.t option

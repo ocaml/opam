@@ -15,40 +15,85 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamStateTypes
 open OpamStd.Op
 
 let log fmt = OpamConsole.log "COMMAND" fmt
 let slog = OpamConsole.slog
 
-let edit t name =
-  log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
-  let version, pin =
-    try OpamPackage.Name.Map.find name t.pinned
-    with Not_found ->
-      OpamConsole.error_and_exit "%s is not pinned."
-        (OpamPackage.Name.to_string name)
+let string_of_pinned opam =
+  let bold = OpamConsole.colorise `bold in
+  Printf.sprintf "pinned %s (version %s)"
+    (OpamStd.Option.to_string ~none:(bold "locally")
+       (fun u -> "to " ^ (bold (OpamUrl.to_string (OpamFile.URL.url u))))
+       (OpamFile.OPAM.url opam))
+    (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
+
+let get_definition ?version st nv url =
+  let dummy_opam =
+    OpamFile.OPAM.create nv
+    |> OpamFile.OPAM.with_url (OpamFile.URL.create url)
   in
-  let installed_nv =
-    try Some (OpamSwitchState.find_installed_package_by_name t name)
-    with Not_found -> None
+  let current_opam =
+    OpamSwitchState.opam_opt st nv
   in
-  let file = OpamPath.Switch.Overlay.opam t.switch_global.root t.switch name in
-  let temp_file = OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name in
-  let orig_opam =
-    try Some (OpamFile.OPAM.read file) with e -> OpamStd.Exn.fatal e; None
+  let source_opam =
+    let state_update, changed =
+      OpamProcess.Job.run
+        (OpamUpdate.pinned_package ?fixed_version:version
+           (OpamSwitchState.update_package_metadata nv dummy_opam st)
+           nv.name)
+    in
+    if changed then
+      let st = state_update st in
+      let opam = OpamSwitchState.opam st nv in
+      if opam = dummy_opam then None else Some opam
+    else None
   in
-  let empty_opam =
-    orig_opam = None ||
-    orig_opam = Some (OpamFile.OPAM.create (OpamPackage.create name version))
-  in
-  if empty_opam && not (OpamFile.exists temp_file) then
-    OpamPinned.add_overlay ~template:true ~version t name pin;
-  if not (OpamFile.exists temp_file) then
-    OpamFilename.copy
-      ~src:(OpamFile.filename file)
-      ~dst:(OpamFile.filename temp_file);
+  OpamStd.Option.Op.(source_opam ++ current_opam)
+
+let copy_files st opam =
+  let name = OpamFile.OPAM.name opam in
+  match OpamFile.OPAM.(metadata_dir opam, extra_files opam) with
+  | None, Some (_::_ as files) ->
+    OpamConsole.warning
+      "Ignoring overlay files of %s (files/*) that were not found: %s"
+      (OpamPackage.Name.to_string name)
+      (OpamStd.List.to_string (fun (b,_) -> OpamFilename.Base.to_string b)
+         files);
+    opam
+  | Some bd, Some (_::_ as files) ->
+    let destdir =
+      OpamPath.Switch.Overlay.files st.switch_global.root st.switch name
+    in
+    let files =
+      List.fold_left
+        (fun acc (f, hash) ->
+           let src = OpamFilename.create bd f in
+           if not (OpamFilename.exists src) then
+             (OpamConsole.warning "Overlay file of %s %s not found, ignoring"
+                (OpamPackage.Name.to_string name)
+                (OpamFilename.to_string src);
+              acc)
+           else
+           let actual_hash = OpamFilename.digest src in
+           if actual_hash <> hash then
+             (if OpamFormatConfig.(!r.strict) then
+               OpamConsole.error_and_exit "Hash mismatch on %s %s (strict mode)"
+              else
+                OpamConsole.warning
+                  "Hash doesn't match for overlay file of %s %s, adjusted")
+               (OpamPackage.Name.to_string name)
+               (OpamFilename.to_string src);
+           OpamFilename.copy ~src ~dst:(OpamFilename.create destdir f);
+           (f, actual_hash) :: acc)
+        [] files
+    in
+    OpamFile.OPAM.with_extra_files (List.rev files) opam
+  | _ -> opam
+
+(* Returns the new opam file, without writing it to disk *)
+let edit_raw name temp_file =
   let rec edit () =
     let edited_ok =
       try
@@ -64,7 +109,7 @@ let edit t name =
        None)
     else
     try
-      let warnings,opam_opt =
+      let warnings, opam_opt =
         OpamFile.OPAM.validate_file temp_file
       in
       let opam = match opam_opt with
@@ -85,15 +130,11 @@ let edit t name =
           false
         | _ -> true
       in
-      let versioncheck = match pin, OpamFile.OPAM.version_opt opam with
-        | _, None ->
+      let versioncheck = match OpamFile.OPAM.version_opt opam with
+        | None ->
           OpamConsole.error "Missing \"version\" field.";
           false
-        | Version vpin, Some v when v <> vpin ->
-          OpamConsole.error "Bad \"version: %S\" field, package is pinned to %s"
-            (OpamPackage.Version.to_string v) (OpamPackage.Version.to_string vpin);
-          false
-        | _ -> true
+        | Some _ -> true
       in
       if not namecheck || not versioncheck then failwith "Bad name/version";
       match warnings with
@@ -107,256 +148,325 @@ let edit t name =
     with e ->
       OpamStd.Exn.fatal e;
       if OpamConsole.confirm "Errors in %s, retry editing ?"
-          (OpamFile.to_string file)
+          (OpamFile.to_string temp_file)
       then edit ()
       else None
   in
   match edit () with
-  | None ->
-    if empty_opam then raise Not_found
-    else t, None
-  | Some new_opam ->
-    OpamFilename.move
-      ~src:(OpamFile.filename temp_file)
-      ~dst:(OpamFile.filename file);
-    let url_file =
-      OpamPath.Switch.Overlay.url t.switch_global.root t.switch name
-    in
-    let url =
-      match OpamFile.OPAM.url new_opam with
-      | None ->
-        (* Preserve original url *)
-        let open OpamStd.Option.Op in
-        let url = orig_opam >>= OpamFile.OPAM.url in
-        (url >>| OpamFile.URL.write url_file) +! ();
-        url
-      | Some u ->
-        (* Remove url overlay that would hide the in-opam url *)
-        OpamFilename.remove (OpamFile.filename url_file);
-        Some u
-    in
+  | None -> None
+  | Some new_opam -> Some new_opam
+
+let edit st name =
+  log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
+  let nv = OpamPinned.package st name in
+  let path f = f st.switch_global.root st.switch name in
+  let overlay_file = path OpamPath.Switch.Overlay.opam in
+  let temp_file = path OpamPath.Switch.Overlay.tmp_opam in
+  let current_opam = OpamSwitchState.opam_opt st nv in
+  if not (OpamFile.exists temp_file) then
+    (let base_opam = match current_opam with
+        | None -> OpamFile.OPAM.template nv
+        | Some o -> o
+     in
+     OpamFile.OPAM.write_with_preserved_format
+       ?format_from:(OpamPinned.orig_opam_file base_opam)
+       temp_file base_opam);
+  match edit_raw name temp_file with
+  | None -> st
+  | Some opam ->
     OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
-    if Some new_opam = orig_opam then (
-      OpamConsole.msg "Package metadata unchanged.\n";
-      t, None
-    ) else
-    let () =
-      let dir = match pin with
-        | Source url -> OpamUrl.local_dir url
-        | Version _ -> None
-      in
-      match dir with
-      | Some dir ->
-        let src_opam =
-          OpamStd.Option.default
-            (OpamFile.make OpamFilename.Op.(dir // "opam"))
-            (OpamPinned.find_opam_file_in_source name dir)
-        in
-        if OpamConsole.confirm "Save the new opam file back to %S ?"
-            (OpamFile.to_string src_opam) then
-          OpamFilename.write (OpamFile.filename src_opam) @@
-          OpamFile.OPAM.to_string_with_preserved_format src_opam @@
-          OpamFile.OPAM.with_url_opt None @@
-          OpamFile.OPAM.with_extra_files [] @@
-          new_opam
-      | _ -> ()
-    in
-    let t =
-      let opams =
-        t.opams
-        |> OpamPackage.Map.filter (fun nv _ -> nv.name <> name)
-        |> OpamPackage.Map.add (OpamFile.OPAM.package new_opam)
-          (OpamFile.OPAM.with_url_opt url new_opam)
-      in
-      let pin = match pin, url with
-        | Source _, Some u -> Source (OpamFile.URL.url u)
-        | pin, _ -> pin
-      in
-      let pinned =
-        OpamPackage.Name.Map.add name (OpamFile.OPAM.version new_opam, pin)
-          t.pinned
-      in
-      { t with opams; pinned }
-    in
-    match installed_nv with
-    | None -> t, None
-    | Some nv ->
-      OpamSwitchAction.write_selections t;
-      t,
-      Some (nv.version = OpamFile.OPAM.version new_opam)
+    match current_opam with
+    |  Some o when OpamFile.OPAM.equal opam o ->
+      (OpamConsole.msg "Package metadata unchanged.\n"; st)
+    | _ ->
+      (* Remove obsolete auxiliary files, in case *)
+      OpamFilename.remove
+        (OpamFile.filename (path OpamPath.Switch.Overlay.url));
+      OpamFilename.remove
+        (OpamFile.filename (path OpamPath.Switch.Overlay.descr));
 
-let pin name ?version pin_option =
-  log "pin %a to %a (%a)"
+      let opam_extra =
+        OpamStd.Option.default [] @@ OpamFile.OPAM.extra_files opam
+      in
+      List.iter (fun f ->
+          let base =
+            OpamFilename.Base.of_string @@
+            OpamFilename.remove_prefix (path OpamPath.Switch.Overlay.files) f
+          in
+          if not (List.mem_assoc base opam_extra) then
+            (OpamConsole.note "Removing obsolete overlay file %s"
+               (OpamFilename.to_string f);
+             OpamFilename.remove f))
+        (OpamFilename.rec_files (path OpamPath.Switch.Overlay.files));
+
+      (* Write to overlay *)
+      OpamFile.OPAM.write_with_preserved_format ~format_from:temp_file
+        overlay_file
+        opam;
+      OpamFilename.remove (OpamFile.filename temp_file);
+
+      (* Save back to source *)
+      begin match
+          OpamStd.Option.Op.(OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir)
+        with
+        | Some dir ->
+          let src_opam =
+            OpamStd.Option.default
+              (OpamFile.make OpamFilename.Op.(dir // "opam"))
+              (OpamPinned.find_opam_file_in_source name dir)
+          in
+          if OpamConsole.confirm "Save the new opam file back to %S ?"
+              (OpamFile.to_string src_opam) then
+            OpamFile.OPAM.write_with_preserved_format src_opam @@
+            OpamFile.OPAM.with_url_opt None @@
+            OpamFile.OPAM.with_extra_files [] @@
+            opam
+        | _ -> ()
+      end;
+
+      let st = OpamSwitchState.update_pin nv opam st in
+      OpamSwitchAction.write_selections st;
+      st
+
+let version_pin st name version =
+  let root = st.switch_global.root in
+  let nv = OpamPackage.create name version in
+  let repo_opam =
+    try OpamPackage.Map.find nv st.repos_package_index
+    with Not_found ->
+      OpamConsole.error_and_exit
+        "Package %s has no known version %s in the repositories"
+        (OpamPackage.Name.to_string name)
+        (OpamPackage.Version.to_string version)
+  in
+  begin match OpamPinned.package_opt st name with
+    | Some pinned_nv ->
+      let opam = OpamSwitchState.opam st pinned_nv in
+      if Some opam =
+         OpamPackage.Map.find_opt pinned_nv st.repos_package_index
+      then (* already version-pinned *)
+        (if pinned_nv <> nv then
+           OpamConsole.note
+             "Package %s used to be pinned to version %s"
+             (OpamPackage.Name.to_string name)
+             (OpamPackage.Version.to_string version))
+      else if OpamConsole.confirm
+          "Package %s is already %s. Unpin and continue ?"
+          (OpamPackage.Name.to_string name)
+          (string_of_pinned opam)
+      then
+        OpamFilename.rmdir
+          (OpamPath.Switch.Overlay.package root st.switch name)
+      else
+        (OpamConsole.msg "Aborting.\n"; OpamStd.Sys.exit 10)
+    | None -> ()
+  end;
+  let st = OpamSwitchState.update_pin nv repo_opam st in
+  OpamSwitchAction.write_selections st;
+  st
+
+let source_pin st name ?version ?edit:(need_edit=false) target_url =
+  log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
-    (slog string_of_pin_option) pin_option
-    (slog (string_of_pin_kind @* kind_of_pin_option)) pin_option;
-  let t = OpamSwitchState.load_full_compat "pin" (OpamStateConfig.get_switch ()) in
-  let pin_kind = kind_of_pin_option pin_option in
+    (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
+    (slog OpamUrl.to_string) target_url;
   let installed_version =
     try
       Some (OpamPackage.version
-              (OpamSwitchState.find_installed_package_by_name t name))
-    with Not_found -> None in
-
-  let version = match pin_option with
-    | Version v ->
-      if not (OpamPackage.Set.mem (OpamPackage.create name v) t.packages) then
-        OpamConsole.error_and_exit "Package %s has no version %s"
-          (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v);
-      if version <> None && version <> Some v then
-        OpamConsole.error_and_exit "Inconsistent version request for %s"
-          (OpamPackage.Name.to_string name);
-      Some v
-    | _ -> version
+              (OpamSwitchState.find_installed_package_by_name st name))
+    with Not_found -> None
   in
 
-  let cur_version, no_changes =
+  let cur_version, cur_url =
     try
-      let version, current = OpamPackage.Name.Map.find name t.pinned in
-      let no_changes = pin_option = current in
+      let cur_version = OpamPinned.version st name in
+      let nv = OpamPackage.create name cur_version in
+      let cur_opam = OpamSwitchState.opam st nv in
+      let cur_url = OpamFile.OPAM.get_url cur_opam in
+      let no_changes =
+        Some target_url = cur_url && (version = Some cur_version || version = None)
+      in
+      OpamConsole.note
+        "Package %s is %s %s."
+        (OpamPackage.Name.to_string name)
+        (if no_changes then "already" else "currently")
+        (string_of_pinned cur_opam);
       if no_changes then
-        OpamConsole.note
-          "Package %s is already %s-pinned to %s.\n\
-           This will erase any previous custom definition."
-          (OpamPackage.Name.to_string name)
-          (string_of_pin_kind (kind_of_pin_option current))
-          (string_of_pin_option current)
-      else
-        OpamConsole.note
-          "%s is currently %s-pinned to %s."
-          (OpamPackage.Name.to_string name)
-          (string_of_pin_kind (kind_of_pin_option current))
-          (string_of_pin_option current);
-      if OpamConsole.confirm "Proceed ?" then
-        (OpamFilename.remove
-           (OpamFile.filename
-              (OpamPath.Switch.Overlay.tmp_opam t.switch_global.root t.switch name));
-         version, no_changes)
-      else OpamStd.Sys.exit 0
+        (OpamConsole.msg "No changes.\n"; OpamStd.Sys.exit 0);
+      if OpamConsole.confirm "Proceed and change pinning target ?" then
+        OpamFilename.remove
+          (OpamFile.filename
+             (OpamPath.Switch.Overlay.tmp_opam
+                st.switch_global.root st.switch name))
+      else OpamStd.Sys.exit 10;
+      cur_version, cur_url
     with Not_found ->
-      if OpamPackage.has_name t.compiler_packages name then (
+      if OpamPackage.has_name st.compiler_packages name then (
         OpamConsole.warning
           "Package %s is part of the base packages of this compiler."
           (OpamPackage.Name.to_string name);
         if not @@ OpamConsole.confirm
             "Are you sure you want to override this and pin it anyway ?"
-        then OpamStd.Sys.exit 0);
+        then OpamStd.Sys.exit 10
+      );
       let version =
-        try OpamPackage.version (OpamSwitchState.get_package t name)
+        try OpamPackage.version (OpamSwitchState.get_package st name)
         with Not_found ->
           OpamStd.Option.Op.(installed_version +!
                              OpamPackage.Version.of_string "~dev")
       in
-      version, false
+      version, None
   in
-  let pin_version = OpamStd.Option.Op.(version +! cur_version) in
-  let pins = OpamPackage.Name.Map.remove name t.pinned in
-  if OpamPackage.Set.is_empty (OpamPackage.packages_of_name t.packages name) &&
+
+  if OpamPackage.Set.is_empty (OpamPackage.packages_of_name st.packages name) &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
             (OpamConsole.colorise `bold "NEW"))
   then
     (OpamConsole.msg "Aborting.\n";
-     OpamStd.Sys.exit 0);
+     OpamStd.Sys.exit 10);
 
-  log "Pin map: adding %a => %a"
-    (slog string_of_pin_option) pin_option
-    (slog OpamPackage.Name.to_string) name;
-
-  let pinned = OpamPackage.Name.Map.add name (pin_version, pin_option) pins in
-  let t = { t with pinned } in
-  OpamSwitchAction.write_selections t;
-  OpamPinned.add_overlay ~version:pin_version t name pin_option;
-  if not no_changes then
-    (OpamConsole.msg "%s is now %a-pinned to %s\n"
-       (OpamPackage.Name.to_string name)
-       (OpamConsole.acolor `bold)
-       (string_of_pin_kind pin_kind)
-       (string_of_pin_option pin_option);
+  (match cur_url with
+   | Some u when OpamUrl.(
+       u.transport <> target_url.transport ||
+       u.path <> target_url.path ||
+       u.backend <> target_url.backend
+     ) ->
      OpamFilename.rmdir
-       (OpamPath.Switch.dev_package t.switch_global.root t.switch name));
-
-  (match pin_option with
-   | Source ({ OpamUrl.backend = #OpamUrl.version_control;
-               transport = "file";
-               hash = None;
-               path = _; } as url) ->
-     (match OpamUrl.local_dir url with
-      | Some dir ->
-        OpamConsole.note
-          "Pinning in mixed mode: OPAM will use tracked files in the current \
-           working tree from %s. If this is not what you want, pin to a given \
-           branch (e.g. %s#HEAD)"
-          (OpamFilename.Dir.to_string dir) (OpamUrl.to_string url)
-      | None -> ())
+       (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
    | _ -> ());
 
-  if not no_changes && installed_version <> None then
-    if installed_version = Some pin_version then
-      if pin_kind = `version then None
-      else Some true
-    else Some false
-  else None
+  let pin_version = OpamStd.Option.Op.(version +! cur_version) in
 
-let unpin gt ?state names =
+  let nv = OpamPackage.create name pin_version in
+
+  let opam_opt = get_definition ?version st nv target_url in
+
+  let need_edit = need_edit || opam_opt = None in
+
+  let temp_file =
+    OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
+  in
+
+  let opam_opt =
+    let opam_base = match opam_opt with
+      | None -> OpamFile.OPAM.template nv
+      | Some opam -> opam
+    in
+    let opam_base =
+      OpamFile.OPAM.with_url (OpamFile.URL.create target_url) opam_base
+    in
+    if need_edit then
+      (OpamFile.OPAM.write_with_preserved_format
+         ?format_from:(OpamPinned.orig_opam_file opam_base)
+         temp_file opam_base;
+       edit_raw name temp_file)
+    else
+      Some (OpamFile.OPAM.with_url (OpamFile.URL.create target_url) opam_base)
+  in
+  match opam_opt with
+  | None ->
+    OpamConsole.error_and_exit "No valid package definition found"
+  | Some opam ->
+    (* might have been changed during edit *)
+    let url = OpamFile.OPAM.get_url opam in
+
+    OpamFilename.rmdir
+      (OpamPath.Switch.Overlay.package st.switch_global.root st.switch nv.name);
+
+    let opam = copy_files st opam in
+
+    OpamFile.OPAM.write_with_preserved_format
+      ?format_from:(OpamPinned.orig_opam_file opam)
+      (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
+      opam;
+
+    OpamFilename.remove (OpamFile.filename temp_file);
+
+    let st = OpamSwitchState.update_pin nv opam st in
+
+    OpamSwitchAction.write_selections st;
+    OpamConsole.msg "%s is now %s\n"
+      (OpamPackage.Name.to_string name)
+      (string_of_pinned opam);
+
+    (match url with
+     | Some ({ OpamUrl.backend = #OpamUrl.version_control;
+               transport = "file";
+               hash = None;
+               path = _; }
+             as url) ->
+       (match OpamUrl.local_dir url with
+        | Some dir ->
+          OpamConsole.note
+            "Pinning in mixed mode: OPAM will use tracked files in the current \
+             working tree from %s. If this is not what you want, pin to a \
+             given branch (e.g. %s#HEAD)"
+            (OpamFilename.Dir.to_string dir) (OpamUrl.to_string url)
+        | None -> ())
+     | _ -> ());
+    st
+
+(* pure *)
+let unpin_one st name =
+  let nv = OpamPinned.package st name in
+  let st =
+    match
+      OpamStd.Option.Op.(
+        OpamPackage.Map.find_opt nv st.repos_package_index ++
+        OpamPackage.Map.find_opt nv st.installed_opams
+      )
+    with
+    | None -> OpamSwitchState.remove_package_metadata nv st
+    | Some opam -> OpamSwitchState.update_package_metadata nv opam st
+  in
+  { st with pinned = OpamPackage.Set.remove nv st.pinned }
+
+let unpin st names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
-  let switch, selections = match state with
-    | None ->
-      let switch = (OpamStateConfig.get_switch ()) in
-      switch, OpamSwitchState.load_selections gt switch
-    | Some st ->
-      st.switch, OpamSwitchState.selections st
-  in
-  let pinned, needs_reinstall =
-    List.fold_left (fun (pins, needs_reinstall) name ->
-        try
-          let _, current = OpamPackage.Name.Map.find name pins in
-          let is_installed =
-            OpamPackage.has_name selections.sel_installed name
-          in
-          let pins = OpamPackage.Name.Map.remove name pins in
-          let needs_reinstall = match current with
-            | Version _ -> needs_reinstall
-            | _ when is_installed -> name::needs_reinstall
-            | _ -> needs_reinstall
-          in
-          if not is_installed then OpamPinned.remove_overlay gt switch name;
-          OpamConsole.msg "%s is now %a from %s %s\n"
-            (OpamPackage.Name.to_string name)
-            (OpamConsole.acolor `bold) "unpinned"
-            (string_of_pin_kind (kind_of_pin_option current))
-            (string_of_pin_option current);
-          pins, needs_reinstall
-        with Not_found ->
-          OpamConsole.note "%s is not pinned."
-            (OpamPackage.Name.to_string name);
-          pins, needs_reinstall)
-      (selections.sel_pinned, [])
-      names
-  in
-  OpamFile.SwitchSelections.write
-    (OpamPath.Switch.selections gt.root switch)
-    {selections with sel_pinned = pinned};
-  needs_reinstall
+  List.fold_left (fun st name ->
+      match OpamPinned.package_opt st name with
+      | Some nv ->
+        let opam = OpamSwitchState.opam st nv in
+        let st = unpin_one st name in
+        OpamFilename.rmdir_cleanup
+          (OpamPath.Switch.Overlay.package
+             st.switch_global.root st.switch name);
+        OpamSwitchAction.write_selections st;
+        OpamConsole.msg "%s is no longer %s\n"
+          (OpamPackage.Name.to_string name)
+          (string_of_pinned opam);
+        st
+      | None ->
+        OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);
+        st)
+    st names
 
-let list ~short () =
+let list st ~short =
   log "pin_list";
-  let t = OpamSwitchState.load_full_compat "pin-list"
-      (OpamStateConfig.get_switch ()) in
   if short then
-    OpamPackage.Name.Map.iter
-      (fun n _ -> OpamConsole.msg "%s\n" (OpamPackage.Name.to_string n))
-      t.pinned
+    OpamPackage.Set.iter
+      (fun nv -> OpamConsole.msg "%s\n" (OpamPackage.name_to_string nv))
+      st.pinned
   else
-  let lines (n,(v,a)) =
-    let kind = string_of_pin_kind (kind_of_pin_option a) in
+  let lines nv =
+    let opam = OpamSwitchState.opam st nv in
+    let url = OpamFile.OPAM.get_url opam in
+    let kind, target =
+      if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
+        "version", OpamPackage.Version.to_string nv.version
+      else
+      match url with
+      | Some u -> OpamUrl.string_of_backend u.OpamUrl.backend, OpamUrl.to_string u
+      | None -> "local definition", ""
+    in
     let state, extra =
       try
-        let nv = OpamSwitchState.find_installed_package_by_name t n in
-        if nv.version = v
+        if (OpamSwitchState.find_installed_package_by_name st nv.name).version =
+           nv.version
         then "",[]
         else
           OpamConsole.colorise `red " (not in sync)",
@@ -364,11 +474,11 @@ let list ~short () =
              (OpamPackage.version_to_string nv)]
       with Not_found -> OpamConsole.colorise `yellow " (uninstalled)", []
     in
-    [ OpamPackage.to_string (OpamPinned.package t n);
+    [ OpamPackage.to_string nv;
       state;
       OpamConsole.colorise `blue kind;
-      string_of_pin_option a ]
+      target ]
     @ extra
   in
-  let table = List.map lines (OpamPackage.Name.Map.bindings t.pinned) in
+  let table = List.map lines (OpamPackage.Set.elements st.pinned) in
   OpamStd.Format.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)

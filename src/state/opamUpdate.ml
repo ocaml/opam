@@ -42,20 +42,6 @@ let fetch_dev_package url srcdir nv =
   | Up_to_date _    -> false
   | Result _        -> true
 
-let update_state nv pin opam st =
-  { st with
-    opams = OpamPackage.Map.add nv opam st.opams;
-    packages = OpamPackage.Set.add nv st.packages;
-    available_packages = lazy (
-      if OpamFilter.eval_to_bool ~default:false
-          (OpamPackageVar.resolve_switch st) (OpamFile.OPAM.available opam)
-      then OpamPackage.Set.add nv (Lazy.force st.available_packages)
-      else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
-    );
-    pinned = OpamPackage.Name.Map.add nv.name (nv.version, pin) st.pinned;
-    reinstall = OpamPackage.Set.add nv st.reinstall;
-  }
-
 let local_opam ?(check=false) ?copy_invalid_to name dir =
   match OpamPinned.find_opam_file_in_source name dir with
   | None -> None
@@ -89,15 +75,16 @@ let local_opam ?(check=false) ?copy_invalid_to name dir =
 
 let pinned_package st ?fixed_version name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
+  let open OpamStd.Option.Op in
   let root = st.switch_global.root in
   let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
   let overlay_opam = OpamFileHandling.read_opam overlay_dir in
-  match OpamPackage.Name.Map.find name st.pinned with
-  | _, Version _ -> Done ((fun st -> st), false)
-  | version, (Source url as pin) ->
-  let version = OpamStd.Option.default  version fixed_version in
+  match overlay_opam >>| fun opam -> opam, OpamFile.OPAM.url opam with
+  | None | Some (_, None) -> Done ((fun st -> st), false)
+  | Some (opam, Some urlf) ->
+  let url = OpamFile.URL.url urlf in
+  let version = fixed_version +! OpamFile.OPAM.version opam in
   let nv = OpamPackage.create name version in
-  let urlf = OpamFile.URL.create url in
   let srcdir = OpamPath.Switch.dev_package root st.switch name in
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
@@ -186,7 +173,7 @@ let pinned_package st ?fixed_version name =
          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
          (OpamUrl.to_string url);
        let opam = save_overlay new_opam in
-       Done (update_state nv pin opam, true))
+       Done (OpamSwitchState.update_pin nv opam, true))
     else if
       OpamConsole.formatted_msg
         "[%s] Conflicting update of the metadata from %s."
@@ -204,37 +191,35 @@ let pinned_package st ?fixed_version name =
       OpamConsole.formatted_msg "User metadata backed up in %s\n"
         (OpamFilename.Dir.to_string bak);
       let opam = save_overlay new_opam in
-      Done (update_state nv pin opam, true))
+      Done (OpamSwitchState.update_pin nv opam, true))
     else
       Done ((fun st -> st), true)
   | _ when overlay_opam = None ->
-    let new_opam = OpamStd.Option.Op.(
+    let new_opam =
         new_source_opam ++
         repo_opam ++
         old_source_opam +!
         OpamSwitchState.opam st nv
-      ) in
+    in
     let opam = save_overlay new_opam in
-    Done (update_state nv pin opam, true)
+    Done (OpamSwitchState.update_pin nv opam, true)
   | _ ->
     Done ((fun st -> st), result)
 
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
-  let name = nv.name in
-  match OpamPackage.Name.Map.find_opt name st.pinned with
-  | Some (v, Source _) when v = nv.version ->
-    pinned_package st name
-  | _ ->
-    match OpamSwitchState.url st nv with
-    | None     -> Done ((fun st -> st), false)
-    | Some url ->
-      if (OpamFile.URL.url url).OpamUrl.backend = `http then
-        Done ((fun st -> st), false)
-      else
-        fetch_dev_package url
-          (OpamPath.dev_package st.switch_global.root nv) nv
-        @@| fun result -> (fun st -> st), result
+  if OpamPackage.Set.mem nv st.pinned then
+    pinned_package st nv.name
+  else
+  match OpamSwitchState.url st nv with
+  | None     -> Done ((fun st -> st), false)
+  | Some url ->
+    if (OpamFile.URL.url url).OpamUrl.backend = `http then
+      Done ((fun st -> st), false)
+    else
+      fetch_dev_package url
+        (OpamPath.dev_package st.switch_global.root nv) nv
+      @@| fun result -> (fun st -> st), result
 
 let dev_packages st packages =
   log "update-dev-packages";

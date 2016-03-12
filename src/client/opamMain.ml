@@ -565,19 +565,25 @@ let config =
                nprint "version-controlled" nvcs)
           );
         print "pinned" "%s"
-          OpamPackage.Name.Map.(
-            if is_empty state.pinned then "0" else
-            let nver, nlocal, nvc =
-              fold (fun _ (_,p) (nver, nlocal, nvc) -> match p with
-                  | Version _ -> nver+1, nlocal, nvc
-                  | Source {OpamUrl.backend = #OpamUrl.version_control; _} ->
-                    nver, nlocal, nvc+1
-                  | Source _ -> nver, nlocal+1, nvc)
-                state.pinned (0,0,0) in
-            String.concat ", "
-              (nprint "version" nver @
-               nprint "path" nlocal @
-               nprint "version control" nvc)
+          (if OpamPackage.Set.is_empty state.pinned then "0" else
+           let pinnings =
+             OpamPackage.Set.fold (fun nv acc ->
+                 let opam = OpamSwitchState.opam state nv in
+                 let kind =
+                   if Some opam =
+                      OpamPackage.Map.find_opt nv state.repos_package_index
+                   then "version"
+                   else
+                     OpamStd.Option.to_string ~none:"local"
+                       (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
+                       (OpamFile.OPAM.get_url opam)
+                 in
+                 OpamStd.String.Map.update kind succ 0 acc)
+               state.pinned OpamStd.String.Map.empty
+           in
+           String.concat ", "
+             (List.flatten (List.map (fun (k,v) -> nprint k v)
+                              (OpamStd.String.Map.bindings pinnings)))
           );
         print "current-switch" "%s"
           (OpamSwitch.to_string state.switch);

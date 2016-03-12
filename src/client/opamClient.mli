@@ -124,11 +124,11 @@ module API: sig
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)
     val import:
-      global_state -> switch -> switch_selections OpamFile.t option -> unit
+      global_state -> switch -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
     (** Export the packages to a file. If no filename is specified,
         write to stdout. *)
-    val export: switch_selections OpamFile.t option -> unit
+    val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
     (** Remove the given compiler. *)
     val remove: global_state -> ?confirm:bool -> switch -> unit

@@ -916,6 +916,18 @@ module Pp = struct
 
     let items = map_list ~posf:item_pos item
 
+    let section kind =
+      pp ~name:"file-section"
+        (fun ~pos:_ -> function
+           | Section (_, ({section_kind; _} as s)) when section_kind = kind ->
+             s.section_name, s.section_items
+           | Section (pos,sec) ->
+             bad_format ~pos "Unexpected section %s" sec.section_kind
+           | Variable (pos,k,_) ->
+             bad_format ~pos "Unexpected field %s" k)
+        (fun (section_name, section_items) ->
+           Section (pos_null, { section_kind=kind; section_name; section_items }))
+
     type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
     let good_fields ?name ?(allow_extensions=false) ?(sections=[]) fields =
@@ -1061,12 +1073,15 @@ module Pp = struct
       in
       pp ?name parse print
 
-    let partition_fields filter =
+    let partition filter =
       pp
-        (fun ~pos:_ -> List.partition (function
-             | Variable (_,k,_) -> filter k
-             | _ -> false))
+        (fun ~pos:_ -> List.partition filter)
         (fun (a,b) -> a @ b)
+
+    let partition_fields filter =
+      partition @@ function
+      | Variable (_,k,_) -> filter k
+      | _ -> false
 
     let field name parse =
       pp

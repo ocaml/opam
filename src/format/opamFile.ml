@@ -511,7 +511,7 @@ module File_attributes = LineFile(struct
 
 (** (3) Available in interface *)
 
-(** Switch export/import format: table
+(** Old Switch export/import format: table
     <name> <version> <installed-state> [pinning-kind] [pinning-url] *)
 
 module StateTable = struct
@@ -526,7 +526,7 @@ module StateTable = struct
     sel_installed = OpamPackage.Set.empty;
     sel_roots = OpamPackage.Set.empty;
     sel_compiler = OpamPackage.Set.empty;
-    sel_pinned = OpamPackage.Name.Map.empty;
+    sel_pinned = OpamPackage.Set.empty;
   }
 
   let pp_state =
@@ -575,7 +575,12 @@ module StateTable = struct
                     | `Root | `Installed | `Uninstalled ->
                       t.sel_compiler);
                 sel_pinned = (match pin with
-                    | Some pin -> M.add name (version, pin) t.sel_pinned
+                    | Some (Version v) ->
+                      OpamPackage.Set.add (OpamPackage.create name v)
+                        t.sel_pinned
+                    | Some _ ->
+                      OpamPackage.Set.add (OpamPackage.create name version)
+                        t.sel_pinned
                     | None -> t.sel_pinned);
               })
            map
@@ -600,12 +605,13 @@ module StateTable = struct
                  (nv.version, (`Uninstalled_compiler, None))
                  acc)
            t.sel_compiler |>
-         M.fold (fun name (v, pin) map ->
+         OpamPackage.Set.fold (fun nv map ->
              let state =
-               try let _, (state, _) = M.find name map in state
+               try let _, (state, _) = M.find nv.name map in state
                with Not_found -> `Uninstalled
              in
-             M.add name (v, (state, Some pin)) map)
+             (* Incorrect: marks all pins as version. But this is deprecated. *)
+             M.add nv.name (nv.version, (state, Some (Version nv.version))) map)
            t.sel_pinned)
 
 end
@@ -653,6 +659,9 @@ module Syntax = struct
     OpamFormat.Print.opamfile t
 
   let to_string_with_preserved_format filename ~empty ?(sections=[]) ~fields pp t =
+    if not (OpamFilename.exists filename) then
+      to_string filename (Pp.print pp (filename, t))
+    else
     let str = OpamFilename.read filename in
     let syn_file = of_string filename str in
     let syn_t = Pp.print pp (filename, t) in
@@ -929,7 +938,7 @@ module SwitchSelectionsSyntax = struct
     sel_installed = OpamPackage.Set.empty;
     sel_roots = OpamPackage.Set.empty;
     sel_compiler = OpamPackage.Set.empty;
-    sel_pinned = OpamPackage.Name.Map.empty;
+    sel_pinned = OpamPackage.Set.empty;
   }
 
   let pp_package =
@@ -959,33 +968,19 @@ module SwitchSelectionsSyntax = struct
     "pinned", Pp.ppacc
       (fun sel_pinned t -> {t with sel_pinned}) (fun t -> t.sel_pinned)
       (Pp.V.map_list ~depth:1
-         (Pp.V.map_option
-            (Pp.V.string -| pp_package)
-            (Pp.opt @@ Pp.singleton -| Pp.V.url) -|
-          Pp.pp
-            (fun ~pos:_ -> function
-               | nv, None -> nv, Version nv.version
-               | nv, Some u -> nv, Source u)
-            (function
-              | nv, Version v -> assert (nv.version = v); nv, None
-              | nv, Source u -> nv, Some u)) -|
-       Pp.pp
-         (fun ~pos:_ pins ->
-            List.fold_left (fun acc (nv,pin) ->
-                OpamPackage.Name.Map.add
-                  nv.name (nv.version, pin) acc)
-              OpamPackage.Name.Map.empty pins)
-         (fun nmap ->
-            OpamPackage.Name.Map.fold (fun name (version, pin) acc ->
-                (OpamPackage.create name version, pin)::acc)
-              nmap []));
+         (Pp.V.option -|
+          (* The contents of the option is obsolete, the information is now
+             contained in the overlay only *)
+          Pp.pp (fun ~pos:_ (nv,_) -> nv) (fun nv -> nv, []) -|
+          Pp.V.string -| pp_package) -|
+       Pp.of_pair "Package set" OpamPackage.Set.(of_list, elements))
   ]
 
   let pp =
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields fields -|
-    Pp.I.fields ~name:"repo-file" ~empty fields
+    Pp.I.check_fields ~name:"switch-state" fields -|
+    Pp.I.fields ~name:"switch-state" ~empty fields
 
 end
 
@@ -1289,6 +1284,7 @@ module OPAMSyntax = struct
     depends    : ext_formula;
     depopts    : ext_formula;
     conflicts  : formula;
+    provided_by: formula;
     available  : filter;
     flags      : package_flag list;
     env        : env_update list;
@@ -1353,6 +1349,7 @@ module OPAMSyntax = struct
     depends    = OpamFormula.Empty;
     depopts    = OpamFormula.Empty;
     conflicts  = OpamFormula.Empty;
+    provided_by= OpamFormula.Empty;
     available  = FBool true;
     flags      = [];
     env        = [];
@@ -1420,6 +1417,7 @@ module OPAMSyntax = struct
   let depends t = t.depends
   let depopts t = t.depopts
   let conflicts t = t.conflicts
+  let provided_by t = t.provided_by
   let available t = t.available
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
@@ -1470,6 +1468,7 @@ module OPAMSyntax = struct
 
   let url t = t.url
   let descr t = t.descr
+  let get_url t = match url t with Some u -> Some (URL.url u) | None -> None
 
   let metadata_dir t = t.metadata_dir
   let extra_files t = t.extra_files
@@ -1489,6 +1488,7 @@ module OPAMSyntax = struct
   let with_depends depends t = { t with depends }
   let with_depopts depopts t = { t with depopts }
   let with_conflicts conflicts t = {t with conflicts }
+  let with_provided_by provided_by t = {t with provided_by }
   let with_available available t = { t with available }
   let with_flags flags t = { t with flags }
   let add_flags flags t =
@@ -1724,6 +1724,13 @@ module OPAMSyntax = struct
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
         (Pp.V.package_formula `Disj Pp.V.constraints);
+      "provided-by", no_cleanup Pp.ppacc with_provided_by provided_by
+        (Pp.V.package_formula `Disj Pp.V.constraints -|
+         Pp.check ~name:"provided-by"
+           ~errmsg:"'provided-by:' must be a disjunction"
+           (fun f -> match OpamFormula.to_dnf f with
+              | [] | [_] -> true
+              | _::_::_ -> false));
       "available", no_cleanup Pp.ppacc with_available available
         (Pp.V.list_depth 1 -| Pp.V.list -| Pp.V.filter);
       "flags", with_cleanup cleanup_flags Pp.ppacc add_flags flags
@@ -1884,8 +1891,7 @@ module OPAMSyntax = struct
     Pp.pp parse (fun x -> x)
 
   (* Doesn't handle package name encoded in directory name *)
-  let pp_raw =
-    Pp.I.map_file @@
+  let pp_raw_fields =
     Pp.I.check_opam_version () -|
     Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true
       ~sections fields -|
@@ -1898,6 +1904,8 @@ module OPAMSyntax = struct
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions extensions t)
       (fun t -> extensions t, t)
+
+  let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
   let pp =
     pp_raw -|
@@ -1954,6 +1962,11 @@ module OPAMSyntax = struct
     Syntax.to_string_with_preserved_format filename ~empty ~sections
       ~fields:raw_fields pp t
 
+  let write_with_preserved_format ?format_from filename t =
+    let format_from = OpamStd.Option.default filename format_from in
+    let s = to_string_with_preserved_format format_from t in
+    OpamFilename.write filename s
+
 end
 module OPAM = struct
   include OPAMSyntax
@@ -2004,10 +2017,12 @@ module OPAM = struct
 
       extensions  = empty.extensions;
       url         =
-        OpamStd.Option.Op.(
-          (t.url >>= URL.checksum >>|
-           fun cksum -> URL.with_checksum cksum URL.empty)
-          ++ empty.url);
+        (match t.url with
+         | None -> None
+         | Some u -> match URL.checksum u with
+           | None -> Some (URL.create (URL.url u)) (* ignore mirrors *)
+           | Some cksum ->
+             Some (URL.with_checksum cksum URL.empty)); (* ignore actual url *)
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
@@ -2017,6 +2032,11 @@ module OPAM = struct
       os         = empty.os;
     }
 
+  let effectively_equal o1 o2 =
+    effective_part o1 = effective_part o2
+
+  let equal o1 o2 =
+    with_metadata_dir None o1 = with_metadata_dir None o2
 
   let template nv =
     let t = create nv in
@@ -2559,6 +2579,64 @@ module Dot_install = struct
   include Dot_installSyntax
   include SyntaxFile(Dot_installSyntax)
 end
+
+module SwitchExportSyntax = struct
+
+  let internal = "switch-export"
+
+  type t = {
+    selections: switch_selections;
+    overlays: OPAM.t OpamPackage.Name.Map.t;
+  }
+
+  let empty = {
+    selections = SwitchSelectionsSyntax.empty;
+    overlays = OpamPackage.Name.Map.empty;
+  }
+
+  let fields = SwitchSelectionsSyntax.fields
+
+  let pp =
+    Pp.I.map_file @@
+    Pp.I.check_opam_version () -|
+    Pp.I.partition (function
+        | Section (_, { section_kind="package"; section_name=Some _; _ }) ->
+          false
+        | _ -> true) -|
+    Pp.map_pair
+      (Pp.I.check_fields ~name:"export-file" fields -|
+       Pp.I.fields ~name:"export-file"
+         ~empty:SwitchSelectionsSyntax.empty fields)
+      (Pp.map_list
+         (Pp.I.section "package" -|
+          Pp.map_pair
+            (Pp.map_option
+               (Pp.of_module "package-name" (module OpamPackage.Name: Pp.STR with type t = OpamPackage.Name.t)))
+            OPAMSyntax.pp_raw_fields -|
+          Pp.pp
+            (fun ~pos:_ (name, opam) ->
+               match name with
+               | Some name -> name, OPAM.with_name name opam
+               | None -> OPAM.name opam, opam)
+            (fun (name, opam) ->
+               Some name, OPAM.with_name_opt None opam)) -|
+       Pp.of_pair "package-metadata-map"
+         OpamPackage.Name.Map.(of_list,bindings)) -|
+    Pp.pp
+      (fun ~pos:_ (selections, overlays) -> {selections; overlays})
+      (fun {selections; overlays} -> (selections, overlays))
+
+end
+
+module SwitchExport = struct
+  type t = SwitchExportSyntax.t = {
+    selections: switch_selections;
+    overlays: OPAM.t OpamPackage.Name.Map.t;
+  }
+
+  include SyntaxFile(SwitchExportSyntax)
+end
+
 
 module CompSyntax = struct
 

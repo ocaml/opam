@@ -197,6 +197,14 @@ module OPAM: sig
       fields set to their empty values. Useful for comparisons. *)
   val effective_part: t -> t
 
+  (** Returns true if the effective parts of the two package definitions are
+      equal *)
+  val effectively_equal: t -> t -> bool
+
+  (** Compares two package definitions, ignoring the virtual fields bound to
+      file location ([metadata_dir]...) *)
+  val equal: t -> t -> bool
+
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
 
@@ -312,6 +320,8 @@ module OPAM: sig
 
   val url: t -> URL.t option
 
+  val get_url: t -> url option
+
   (** Related metadata directory (not an actual field of the file, linked to the
       file location).
       This can be used to locate e.g. the files/ overlays *)
@@ -397,8 +407,15 @@ module OPAM: sig
   val with_extra_files: (OpamFilename.Base.t * string) list -> t -> t
   val with_extra_files_opt: (OpamFilename.Base.t * string) list option -> t -> t
 
-  (** Prints to a string, while keeping the format of the original file as much as possible *)
+  (** Prints to a string, while keeping the format of the original file as much
+      as possible *)
   val to_string_with_preserved_format: t typed_file -> t -> string
+
+  (** Writes an opam file, but preserving the existing formatting as much as
+      possible. The format is taken from the file that is being overwritten
+      unless [format_from] is specified. *)
+  val write_with_preserved_format:
+    ?format_from:(t typed_file) -> t typed_file -> t -> unit
 
 end
 
@@ -417,6 +434,16 @@ end
     table. This is more readable and extensible. *)
 module SwitchSelections: sig
   type t = switch_selections
+  include IO_FILE with type t := t
+end
+
+(** An extended version of SwitchSelections that can include full opam files as
+    [package "name" {}] sections, for storing overlays *)
+module SwitchExport: sig
+  type t = {
+    selections: switch_selections;
+    overlays: OPAM.t OpamPackage.Name.Map.t;
+  }
   include IO_FILE with type t := t
 end
 

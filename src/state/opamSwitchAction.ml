@@ -116,25 +116,22 @@ let add_to_reinstall st ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
   let root = st.switch_global.root in
-  let { sel_installed = installed; sel_pinned = pinned; _ } =
-    OpamSwitchState.selections st
-  in
   let packages =
     if unpinned_only then
-      OpamPackage.Name.Map.fold
-        (fun name (v,_) -> OpamPackage.Set.remove (OpamPackage.create name v))
-        pinned packages
+      OpamPackage.Set.filter
+        (fun nv -> not (OpamPackage.has_name st.pinned nv.name))
+        packages
     else packages
   in
   let reinstall_file = OpamPath.Switch.reinstall root st.switch in
   let current_reinstall = OpamFile.PkgList.safe_read reinstall_file in
-  let reinstall = current_reinstall ++ packages %% installed in
+  let reinstall = current_reinstall ++ packages %% st.installed in
   if OpamPackage.Set.equal current_reinstall reinstall then ()
   else if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove (OpamFile.filename reinstall_file)
   else
     OpamFile.PkgList.write reinstall_file reinstall;
-  { st with reinstall = st.reinstall ++ packages %% installed }
+  { st with reinstall = st.reinstall ++ packages %% st.installed }
 
 let set_current_switch gt switch =
   let config = OpamFile.Config.with_switch switch gt.config in

@@ -520,8 +520,9 @@ let parallel_apply t action action_graph =
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
         | `Remove nv
-          when not (OpamPackage.Name.Map.mem nv.name t.pinned) ->
-          OpamAction.cleanup_package_artefacts t nv (* no-op if reinstalled *)
+          when not (OpamPackage.has_name t.pinned nv.name) ->
+          OpamAction.cleanup_package_artefacts t nv
+          (* if reinstalled, only removes build dir *)
         | `Remove _ | `Install _ | `Build _ -> ()
         | _ -> assert false)
       graph
@@ -697,12 +698,9 @@ let apply ?ask t action ~requested solution =
         )  messages in
       let rewrite nv =
         (* mark pinned packages with a star *)
-        let n = nv.name in
-        if OpamPackage.Name.Map.mem n t.pinned && OpamPinned.package t n = nv then
-          OpamPackage.create n
-            (OpamPackage.Version.of_string
-               (match OpamPackage.version_to_string nv with
-                | "~unknown" -> "*" | v -> v ^ "*"))
+        if OpamPackage.Set.mem nv t.pinned then
+          OpamPackage.create nv.name
+            OpamPackage.Version.(of_string ((to_string nv.version) ^ "*"))
         else nv
       in
       OpamSolver.print_solution ~messages ~rewrite ~requested solution;

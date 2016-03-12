@@ -378,7 +378,7 @@ type switch_selections = {
   sel_installed: package_set;
   sel_roots: package_set;
   sel_compiler: package_set;
-  sel_pinned: (version * pin_option) name_map;
+  sel_pinned: package_set;
 }
 
 

@@ -511,10 +511,17 @@ let info ~fields ~raw_opam ~where atoms =
         | None -> []
         | Some (r,_) -> [ "repository", OpamRepositoryName.to_string r ]
       in
-      try
-        match OpamPackage.Name.Map.find name t.pinned with
-        | _, Version v -> repo @ ["pinned", OpamPackage.Version.to_string v]
-        | _, Source url ->
+      if OpamPackage.Set.mem nv t.pinned then
+        if OpamPackage.Map.find_opt nv t.repos_package_index = Some opam then
+          repo @ ["pinned", OpamPackage.Version.to_string nv.version]
+        else
+        match OpamFile.OPAM.url opam with
+        | None ->
+          repo @ ["pinned",
+                  Printf.sprintf "%s (locally defined)"
+                    (OpamPackage.Version.to_string nv.version)]
+        | Some urlf ->
+          let url = OpamFile.URL.url urlf in
           let revision =
             let repo =
               { repo_name = OpamRepositoryName.of_string "tmp";
@@ -523,14 +530,16 @@ let info ~fields ~raw_opam ~where atoms =
                 repo_root = OpamPath.Switch.dev_package t.switch_global.root
                     t.switch name; }
             in
-            (match OpamProcess.Job.run (OpamRepository.revision repo) with
-             | Some v -> Printf.sprintf " (%s)"
-                           (OpamPackage.Version.to_string v)
-             | None -> "")
+            OpamProcess.Job.run (OpamRepository.revision repo)
           in
-          ["pinned", OpamUrl.string_of_backend url.OpamUrl.backend ^ revision]
-      with Not_found ->
-        repo
+          let msg =
+            Printf.sprintf "%s %s%s"
+              (OpamPackage.Version.to_string nv.version)
+              (OpamUrl.string_of_backend url.OpamUrl.backend)
+              (OpamStd.Option.to_string OpamPackage.Version.to_string revision)
+          in
+          ["pinned", msg ]
+      else repo
     in
 
     let url = match OpamSwitchState.url t nv with

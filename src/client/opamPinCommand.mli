@@ -19,19 +19,24 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Pin a package. Returns [Some is_same_version] if the package should be
-    reinstalled (or upgraded if [is_same_version] is false) *)
-val pin: name -> ?version:version -> pin_option -> bool option
+(** Pins a package to the given version, and writes to disk. Returns the updated
+    state *)
+val version_pin: switch_state -> name -> version -> switch_state
+
+(** Sets the package as pinned to the given target. A package definition is
+    looked for in the package source and current metadata (in this order).
+
+    If [edit], or if no package definition is found, this opens an editor (with
+    a template if no definition is available). *)
+val source_pin:
+  switch_state -> name -> ?version:version -> ?edit:bool -> url -> switch_state
 
 (** Let the user edit a pinned package's opam file.
-    Returns the updated switch state and [Some is_same_version] if the package
-    should be rebuilt.
-    raises [Not_found] if no valid opam file is available and the user didn't
-    succeed in producing one. *)
-val edit: switch_state -> name -> switch_state * bool option
+    Writes and returns the updated switch state. *)
+val edit: switch_state -> name -> switch_state
 
-(** Unpin packages. Returns the list of packages that should be rebuilt *)
-val unpin: global_state -> ?state:switch_state -> name list -> name list
+(** Unpin packages *)
+val unpin: switch_state -> name list -> switch_state
 
 (** List the pinned packages to the user. *)
-val list: short:bool -> unit -> unit
+val list: switch_state -> short:bool -> unit

@@ -243,6 +243,9 @@ let packages_of_name nvset n =
     nvset
     Set.empty
 
+let package_of_name nvset n =
+  Set.find (fun nv -> nv.name = n) nvset
+
 let packages_of_names nvset nameset =
   Name.Set.fold
     (fun name acc ->
@@ -254,6 +257,9 @@ let versions_of_name packages n =
     (Set.filter
        (fun nv -> name nv = n)
        packages)
+
+let filter_name_out packages name =
+  Set.filter (fun nv -> nv.name <> name) packages
 
 let max_version set name =
   let versions = versions_of_name set name in

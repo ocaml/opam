@@ -93,8 +93,14 @@ val has_name: Set.t -> Name.t -> bool
 (** Return all the packages with the given name *)
 val packages_of_name: Set.t -> Name.t -> Set.t
 
+(** Return a package with the given name *)
+val package_of_name: Set.t -> Name.t -> t
+
 (** Return all the packages with one of the given names *)
 val packages_of_names: Set.t -> Name.Set.t -> Set.t
+
+(** Removes all packages with the given name from a set of packages *)
+val filter_name_out: Set.t -> Name.t -> Set.t
 
 (** Return the maximal available version of a package name from a set.
     Raises [Not_found] if no such package available. *)

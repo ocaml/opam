@@ -95,8 +95,9 @@ type switch_state = {
   available_packages: package_set Lazy.t;
   (** The set of available packages, filtered by their [available:] field *)
 
-  pinned: (OpamPackage.Version.t * pin_option) name_map;
-  (** The names of pinned packages and their pinning target *)
+  pinned: package_set;
+  (** The set of pinned packages (their metadata, including pinning target, is
+      in [opams]) *)
 
   installed: package_set;
   (** The set of all installed packages *)

@@ -43,6 +43,7 @@ module type MAP = sig
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
+  val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
 end
 module type ABSTRACT = sig
   type t
@@ -223,7 +224,7 @@ module Map = struct
       List.rev (M.fold (fun k _ acc -> k :: acc) map [])
 
     let union f m1 m2 =
-      M.merge (fun k a b -> match a, b with
+      M.merge (fun _ a b -> match a, b with
           | Some _ as s, None | None, (Some _ as s) -> s
           | Some v1, Some v2 -> Some (f v1 v2)
           | None, None -> assert false)
@@ -254,6 +255,10 @@ module Map = struct
       if mem k map
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
       else add k v map
+
+    let update k f zero map =
+      let v = try find k map with Not_found -> zero in
+      add k (f v) map
 
   end
 

@@ -38,6 +38,25 @@ let load_switch_config gt switch =
       (OpamSwitch.to_string switch);
     OpamFile.Dot_config.empty
 
+let compute_available_packages gt switch switch_config ~pinned ~opams =
+  (* remove all versions of pinned packages, but the pinned-to version *)
+  let pinned_names = OpamPackage.names_of_packages pinned in
+  let opams =
+    OpamPackage.Map.filter
+      (fun nv _ ->
+         not (OpamPackage.Name.Set.mem nv.name pinned_names) ||
+         OpamPackage.Set.mem nv pinned)
+      opams
+  in
+  let avail_map =
+    OpamPackage.Map.filter (fun _ opam ->
+        OpamFilter.eval_to_bool ~default:false
+          (OpamPackageVar.resolve_switch_raw gt switch switch_config)
+          (OpamFile.OPAM.available opam))
+      opams
+  in
+  OpamPackage.keys avail_map
+
 let load ?(lock=Lock_readonly) gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
@@ -54,53 +73,32 @@ let load ?(lock=Lock_readonly) gt rt switch =
     load_selections gt switch
   in
   let pinned, pinned_opams =
-    (* Pinned packages with overlays *)
-    (* !X todo: don't allow overlays for version-pinned packages *)
-    OpamPackage.Name.Map.fold (fun name (version,pin) (pinned,opams) ->
-        let nv = OpamPackage.create name version in
-        let overlay_dir = OpamPath.Switch.Overlay.package gt.root switch name in
+    OpamPackage.Set.fold (fun nv (pinned,opams) ->
+        let overlay_dir =
+          OpamPath.Switch.Overlay.package gt.root switch nv.name
+        in
         match OpamFileHandling.read_opam overlay_dir with
-        | None ->
-          OpamPackage.Name.Map.add name (version, pin) pinned,
-          opams
+        | None -> (* No overlay => just pinned to a version *)
+          OpamPackage.Set.add nv pinned, opams
         | Some o ->
-          let version, o =
-            match pin, OpamFile.OPAM.version_opt o with
-            | Version version, Some v when v <> version ->
-              log "warn: %s pinned to %s but has overlay at %s"
-                (OpamPackage.Name.to_string name)
-                (OpamPackage.Version.to_string version)
+          let version =
+            match OpamFile.OPAM.version_opt o with
+            | Some v when v <> nv.version ->
+              log "warn: %s has conflicting pinning versions between \
+                   switch-state (%s) and overlay (%s). Using %s."
+                (OpamPackage.Name.to_string nv.name)
+                (OpamPackage.Version.to_string nv.version)
+                (OpamPackage.Version.to_string v)
                 (OpamPackage.Version.to_string v);
-              version, OpamFile.OPAM.with_version version o
-            | Version _, _ ->
-              version, OpamFile.OPAM.with_version version o
-            | Source _, Some v when v <> version ->
-              log "warn: updating version of pinned %s as in overlay (was: %s)"
-                (OpamPackage.to_string nv)
-                (OpamPackage.Version.to_string v);
-              v, o
-            | Source _, _ ->
-              version, o
+              v
+            | _ -> nv.version
           in
-          let pin, o =
-            match pin, OpamFile.OPAM.url o with
-            | Source pin_url, Some opam_url
-              when pin_url <> OpamFile.URL.url opam_url ->
-              log "warn: updating url of source-pinned package %s as in \
-                   overlay (from %s to %s)"
-                (OpamPackage.Name.to_string name)
-                (OpamUrl.to_string pin_url)
-                (OpamUrl.to_string (OpamFile.URL.url opam_url));
-              Source (OpamFile.URL.url opam_url),
-              o
-            | Source pin_url, None ->
-              pin, OpamFile.OPAM.with_url (OpamFile.URL.create pin_url) o
-            | _ -> pin, o
-          in
-          OpamPackage.Name.Map.add name (version,pin) pinned,
-          OpamPackage.Map.add (OpamPackage.create name version) o opams
+          let nv = OpamPackage.create nv.name version in
+          let o = OpamFile.OPAM.with_version version o in
+          OpamPackage.Set.add nv pinned,
+          OpamPackage.Map.add nv o opams
       )
-      pinned (OpamPackage.Name.Map.empty, OpamPackage.Map.empty)
+      pinned (OpamPackage.Set.empty, OpamPackage.Map.empty)
   in
   let installed_opams =
     OpamPackage.Set.fold (fun nv opams ->
@@ -115,46 +113,35 @@ let load ?(lock=Lock_readonly) gt rt switch =
     OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
   in
   let opams =
-    let ( ++ ) = OpamPackage.Map.union (fun _ x -> x) in
-    installed_opams ++ repos_package_index ++ pinned_opams
+    OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
   in
   let packages = OpamPackage.keys opams in
-  let unpinned_name nv =
-    not (OpamPackage.Name.Map.mem nv.name pinned)
+  let available_packages =
+    lazy (compute_available_packages gt switch switch_config
+            ~pinned ~opams)
   in
-  let available_packages = lazy (
-    (* remove all versions of pinned packages, only the pinned-to version should
-       be available *)
-    let opams_unpinned =
-      OpamPackage.Map.filter (fun nv _ -> unpinned_name nv) opams
-    in
-    let opams =
-      OpamPackage.Map.union (fun _ _ -> assert false) opams_unpinned pinned_opams
-    in
-    let avail_map =
-      OpamPackage.Map.filter (fun _ opam ->
-          OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch_raw gt switch switch_config)
-            (OpamFile.OPAM.available opam))
-        opams
-    in
-    OpamPackage.keys avail_map
-  ) in
+  let opams =
+    (* Keep definitions of installed packages, but lowest priority, and after
+       computing availability *)
+    OpamPackage.Map.union (fun _ x -> x) installed_opams opams
+  in
   let changed =
     (* Note: This doesn't detect changed _dev_ packages, since it's based on the
        metadata or the archive hash changing and they don't have an archive
        hash. Dev package update should add to the reinstall file *)
     OpamPackage.Map.merge (fun _ opam_new opam_installed ->
         match opam_new, opam_installed with
-        | Some r, Some i
-          when OpamFile.OPAM.effective_part i <> OpamFile.OPAM.effective_part r ->
+        | Some r, Some i when not (OpamFile.OPAM.effectively_equal i r) ->
           Some ()
         | _ -> None)
       opams installed_opams
     |> OpamPackage.keys
   in
   let changed =
-    changed -- (OpamPackage.Set.filter unpinned_name compiler_packages)
+    changed --
+    OpamPackage.Set.filter
+      (fun nv -> not (OpamPackage.has_name pinned nv.name))
+      compiler_packages
   in
   let ext_files_changed =
     OpamPackage.Map.filter (fun nv _ ->
@@ -212,7 +199,7 @@ let load_virtual gt rt =
     switch_config = OpamFile.Dot_config.empty;
     installed = OpamPackage.Set.empty;
     installed_opams = OpamPackage.Map.empty;
-    pinned = OpamPackage.Name.Map.empty;
+    pinned = OpamPackage.Set.empty;
     installed_roots = OpamPackage.Set.empty;
     repos_package_index = opams;
     opams;
@@ -272,7 +259,9 @@ let is_dev_package st nv =
   | None -> false
   | Some urlf ->
     match OpamFile.URL.(url urlf, checksum urlf) with
-    | { OpamUrl.backend = `http; _ }, _ | _, Some _ -> false
+    | { OpamUrl.backend = `http; _ }, _
+      when not (OpamPackage.Set.mem nv st.pinned) -> false
+    | _, Some _ -> false
     | _, None -> true
 
 let dev_packages st =
@@ -329,22 +318,55 @@ let unavailable_reason st (name, _ as atom) =
             avail)
   then
     Printf.sprintf "%s has unmet availability conditions: %s"
-      (OpamPackage.Name.to_string name)
+      (OpamFormula.short_string_of_atom atom)
       (OpamFilter.to_string avail)
   else
   try
-    let (version, pin) = OpamPackage.Name.Map.find name st.pinned in
+    let nv = OpamPackage.package_of_name st.pinned name in
     Printf.sprintf
       "%s is not available because the package is pinned to %s."
       (OpamFormula.short_string_of_atom atom)
-      (match pin with
-       | Version v ->
-         Printf.sprintf "version %s" (OpamPackage.Version.to_string v)
-       | _ ->
-         Printf.sprintf "%s, version %s" (string_of_pin_option pin)
-           (OpamPackage.Version.to_string version))
+      (OpamPackage.to_string nv)
   with Not_found ->
     not_found_message st atom
+
+let update_package_metadata nv opam st =
+  { st with
+    opams = OpamPackage.Map.add nv opam st.opams;
+    packages = OpamPackage.Set.add nv st.packages;
+    available_packages = lazy (
+      if OpamFilter.eval_to_bool ~default:false
+          (OpamPackageVar.resolve_switch_raw
+             st.switch_global st.switch st.switch_config)
+          (OpamFile.OPAM.available opam)
+      then OpamPackage.Set.add nv (Lazy.force st.available_packages)
+      else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
+    );
+  }
+
+let remove_package_metadata nv st =
+  { st with
+    opams = OpamPackage.Map.remove nv st.opams;
+    packages = OpamPackage.Set.remove nv st.packages;
+    available_packages =
+      lazy (OpamPackage.Set.remove nv (Lazy.force st.available_packages));
+  }
+
+let update_pin nv opam st =
+  let prev_opam = opam_opt st nv in
+  let st = update_package_metadata nv opam st in
+  { st with
+    pinned =
+      OpamPackage.Set.add nv
+        (OpamPackage.filter_name_out st.pinned nv.name);
+    reinstall =
+      match prev_opam with
+      | Some o when
+          OpamPackage.Set.mem nv st.installed &&
+          not (OpamFile.OPAM.effectively_equal o opam) ->
+        OpamPackage.Set.add nv st.reinstall
+      | _ -> st.reinstall;
+  }
 
 let load_full_compat _ switch =
   let gt = OpamGlobalState.load () in

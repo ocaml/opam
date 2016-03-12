@@ -211,10 +211,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       | Some o when OpamFile.OPAM.name o = name -> opam_arg
       | _ ->
         try
-          let nv =
-            OpamPackage.Set.choose
-              (OpamPackage.packages_of_name st.installed name)
-          in
+          let nv = OpamPackage.package_of_name st.installed name in
           Some (OpamPackage.Map.find nv st.opams)
         with Not_found -> None
     in
@@ -230,7 +227,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "installed", None ->
       Some (bool false)
     | "pinned", _ ->
-      Some (bool (OpamPackage.Name.Map.mem name st.pinned))
+      Some (bool (OpamPackage.has_name st.pinned name))
     | "name", _ ->
       if OpamPackage.has_name st.packages name
       then Some (string (OpamPackage.Name.to_string name))
@@ -257,7 +254,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "depends", Some opam ->
       let dev =
         OpamStd.Option.Op.(
-          (OpamFile.OPAM.url opam >>| OpamFile.URL.url >>| fun u ->
+          (OpamFile.OPAM.get_url opam >>| fun u ->
            u.OpamUrl.backend <> `http)
           +! false
         ) in

@@ -36,12 +36,11 @@ val gen_global_config: dirname -> switch -> OpamFile.Dot_config.t
 (** (Re-)install the configuration for a given root and switch *)
 val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
 
-(** Stores a copy of the package's metadata in [/packages/NAME/NAME.VERSION].
-    Used for installed packages *)
+(** Add the package metadata to the switch-local cache of installed packages *)
 val install_metadata: switch_state -> package -> unit
 
-(** Remove the metadata copy in [/packages/NAME/NAME.VERSION], after checking
-    for each package that it isn't installed in any switch anymore *)
+(** Remove the metadata of the package from the switch-local cache of installed
+    packages *)
 val remove_metadata: switch_state -> package_set -> unit
 
 (** Update the on-disk set of packages marked to reinstall on the current

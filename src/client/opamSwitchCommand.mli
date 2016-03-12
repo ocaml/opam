@@ -37,10 +37,12 @@ val install_compiler_packages: switch_state -> atom conjunction -> unit
 
 (** Import a file which contains the packages to install. *)
 val import:
-  global_state -> switch -> switch_selections OpamFile.t option -> unit
+  global_state -> switch -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
-(** Export a file which contains the installed packages. *)
-val export: switch_selections OpamFile.t option -> unit
+(** Export a file which contains the installed packages. If full is specified
+    and true, export metadata of all installed packages (excluding overlay
+    files) as part of the export. *)
+val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
 (** Remove the given compiler switch. *)
 val remove: global_state -> ?confirm:bool -> switch -> unit

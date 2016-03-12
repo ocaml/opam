@@ -142,6 +142,11 @@ module Format_upgrade = struct
               v, pin)
             pinned
         in
+        let sel_pinned =
+          OpamPackage.Name.Map.fold
+            (fun name (v,_) -> OpamPackage.Set.add (OpamPackage.create name v))
+            pinned OpamPackage.Set.empty
+        in
         let compiler =
           let version = match OpamStd.String.cut_at c '+' with
             | Some (v,_) -> v
@@ -169,7 +174,7 @@ module Format_upgrade = struct
         OpamFile.State.write (OpamFile.make (switch_dir // "state"))
           { sel_installed = installed;
             sel_roots = installed_roots;
-            sel_pinned = pinned;
+            sel_pinned;
             sel_compiler = compiler };
         OpamFilename.remove installed_f;
         OpamFilename.remove installed_roots_f;
