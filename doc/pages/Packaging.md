@@ -98,6 +98,10 @@ build: [
   ["./configure" "--prefix=%{prefix}%"]
   [make]
 ]
+build-test: [
+  ["./configure" "--enable-tests"]
+  [make "test"]
+]
 install: [make "install"]
 remove: ["ocamlfind" "remove" "project"]
 depends: "ocamlfind"
@@ -114,6 +118,9 @@ remove the others rather than leave them empty.
   `$(MAKE)` in Makefiles). `%{prefix}%` is another syntax to replace variables
   within strings. `opam config list` will give you the list of available
   variables.
+* `build-test` is similar to `build` but only gets executed when testing the
+  package is requested. It is possible to specify optional dependencies like
+  testing libraries that are installed only when building tests, see below.
 * `install` is similar to `build`, but tells OPAM how to install. This is indeed
   `install: [ [make "install"] ]`, but the extra square brackets are optional
   when there is a single element, just add them if you need more than one
