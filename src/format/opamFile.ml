@@ -1984,6 +1984,7 @@ module OPAM = struct
       depends    = t.depends;
       depopts    = t.depopts;
       conflicts  = t.conflicts;
+      provided_by= t.provided_by;
       available  = t.available;
       flags      = t.flags;
       env        = t.env;

@@ -33,6 +33,7 @@ let empty_universe =
     u_depends = OpamPackage.Map.empty;
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
+    u_provides = OpamPackage.Map.empty;
     u_action = Install OpamPackage.Name.Set.empty;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
@@ -171,6 +172,16 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
   let conflicts =
     (name, None) :: (* prevents install of multiple versions of the same pkg *)
     OpamFormula.to_disjunction conflicts in
+  let provides =
+    try OpamPackage.Map.find package universe.u_provides
+    with Not_found -> OpamPackage.Set.empty
+  in
+  let provides =
+    OpamPackage.Set.fold (fun nv acc ->
+        (name_to_cudf nv.name, Some (`Eq, OpamPackage.Map.find nv version_map))
+        :: acc)
+      provides []
+  in
   let installed = OpamPackage.Set.mem package universe.u_installed in
   let base = OpamPackage.Set.mem package universe.u_base in
   let reinstall = match universe.u_action with
@@ -218,6 +229,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     depends = List.rev_map (List.rev_map (atom2cudf universe version_map))
         (OpamFormula.to_cnf depends);
     conflicts = List.rev_map (atom2cudf universe version_map) conflicts;
+    provides;
     installed;
     keep = if base then `Keep_version else `Keep_none;
     (* was_installed: reserved for the solver; *)

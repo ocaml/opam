@@ -268,22 +268,35 @@ let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
-let universe st action = {
-  u_packages  = st.packages;
-  u_action    = action;
-  u_installed = st.installed;
-  u_available = Lazy.force st.available_packages;
-  u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
-  u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
-  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
-  u_installed_roots = st.installed_roots;
-  u_pinned    = OpamPinned.packages st;
-  u_dev       = dev_packages st;
-  u_base      = st.compiler_packages;
-  u_attrs     = [];
-  u_test      = OpamStateConfig.(!r.build_test);
-  u_doc       = OpamStateConfig.(!r.build_doc);
-}
+let universe st action =
+  let provides =
+    OpamPackage.Map.fold (fun nv opam provides ->
+        let atoms = OpamFormula.atoms (OpamFile.OPAM.provided_by opam) in
+        let packages = packages_of_atoms st atoms in
+        OpamPackage.Set.fold (fun provider provides ->
+            OpamPackage.Map.update provider
+              (OpamPackage.Set.add nv) OpamPackage.Set.empty
+              provides)
+          packages provides)
+      st.opams OpamPackage.Map.empty
+  in
+  {
+    u_packages  = st.packages;
+    u_action    = action;
+    u_installed = st.installed;
+    u_available = Lazy.force st.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
+    u_provides  = provides;
+    u_installed_roots = st.installed_roots;
+    u_pinned    = OpamPinned.packages st;
+    u_dev       = dev_packages st;
+    u_base      = st.compiler_packages;
+    u_attrs     = [];
+    u_test      = OpamStateConfig.(!r.build_test);
+    u_doc       = OpamStateConfig.(!r.build_doc);
+  }
 
 
 

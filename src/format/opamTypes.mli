@@ -267,6 +267,7 @@ type universe = {
   u_depends  : ext_formula package_map;
   u_depopts  : ext_formula package_map;
   u_conflicts: formula package_map;
+  u_provides : package_set package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
