@@ -235,17 +235,25 @@ let files st nv =
   )
 
 let is_name_installed st name =
-  OpamPackage.Set.exists (fun nv -> nv.name = name) st.installed
+  OpamPackage.has_name st.installed name
 
 let find_installed_package_by_name st name =
-  OpamPackage.Set.find (fun nv -> nv.name = name) st.installed
+  OpamPackage.package_of_name st.installed name
 
 let packages_of_atoms st atoms =
-  let check_atoms nv =
-    let name = nv.name in
-    let atoms = List.filter (fun (n,_) -> n = name) atoms in
-    atoms <> [] && List.for_all (fun a -> OpamFormula.check a nv) atoms in
-  OpamPackage.Set.filter check_atoms st.packages
+  (* Conjunction for constraints over the same name, but disjunction on the
+     package names *)
+  let by_name =
+    List.fold_left (fun acc (n,_ as atom) ->
+        OpamPackage.Name.Map.update n (fun a -> atom::a) [] acc)
+      OpamPackage.Name.Map.empty atoms
+  in
+  OpamPackage.Name.Map.fold (fun name atoms acc ->
+      acc ++
+      OpamPackage.Set.filter
+        (fun nv -> List.for_all (fun a -> OpamFormula.check a nv) atoms)
+        (OpamPackage.packages_of_name st.packages name))
+    by_name OpamPackage.Set.empty
 
 let get_package st name =
   try OpamPinned.package st name with Not_found ->

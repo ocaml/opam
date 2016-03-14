@@ -238,13 +238,12 @@ let names_of_packages nvset =
     Name.Set.empty
 
 let packages_of_name nvset n =
-  Set.fold
-    (fun nv set -> if name nv = n then Set.add nv set else set)
-    nvset
-    Set.empty
+  let _, _, nvset = Set.split {name=n; version=""} nvset in
+  let nvset, _, _ = Set.split {name=(n^"\000"); version=""} nvset in
+  nvset
 
 let package_of_name nvset n =
-  Set.find (fun nv -> nv.name = n) nvset
+  Set.choose (packages_of_name nvset n)
 
 let packages_of_names nvset nameset =
   Name.Set.fold
@@ -254,12 +253,10 @@ let packages_of_names nvset nameset =
 
 let versions_of_name packages n =
   versions_of_packages
-    (Set.filter
-       (fun nv -> name nv = n)
-       packages)
+    (packages_of_name packages n)
 
 let filter_name_out packages name =
-  Set.filter (fun nv -> nv.name <> name) packages
+  Set.diff packages (packages_of_name packages name)
 
 let max_version set name =
   let versions = versions_of_name set name in
