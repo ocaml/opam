@@ -197,6 +197,22 @@ let expand_string env text =
   in
   Re_pcre.substitute ~rex:string_interp_regex ~subst text
 
+let unclosed_expansions text =
+  let re =
+    Re.(
+      compile (alt [
+          str "%%";
+          seq [str "%{";
+               group (greedy (rep (diff notnl (char '}'))));
+               opt (group (str "}%"))];
+        ])
+    )
+  in
+  Re.all re text |> OpamStd.List.filter_map @@ fun gr ->
+  if Re.Group.test gr 1 && not (Re.Group.test gr 2) then
+    Some (Re.Group.offset gr 0, Re.Group.get gr 0)
+  else None
+
 let logop1 op = function
   | FUndef -> FUndef
   | e ->

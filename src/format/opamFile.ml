@@ -2124,6 +2124,19 @@ module OPAM = struct
       List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
         [] all_filters
     in
+    let all_expanded_strings =
+      List.map fst t.messages @
+      List.map fst t.post_messages @
+      List.fold_left (fun acc (args, _) ->
+          List.fold_left
+            (fun acc -> function CString s, _ -> s :: acc | _ -> acc)
+            acc args)
+        [] all_commands @
+      List.fold_left
+        (OpamFilter.fold_down_left
+           (fun acc -> function FString s -> s :: acc | _ -> acc))
+        [] all_filters
+    in
     let all_depends =
       OpamPackage.Name.Set.union
         (names_of_formula true t.depends)
@@ -2314,6 +2327,15 @@ module OPAM = struct
          | Some name ->
            OpamStd.String.starts_with ~prefix:"opam-"
              (OpamPackage.Name.to_string name));
+      (let unclosed =
+         List.fold_left (fun acc s ->
+             List.rev_append (OpamFilter.unclosed_expansions s) acc)
+           [] all_expanded_strings
+       in
+       cond 45 `Error
+         "Unclosed variable interpolations in strings"
+         ~detail:(List.map snd unclosed)
+         (unclosed <> []));
     ]
     in
     OpamStd.List.filter_map (fun x -> x) warnings
