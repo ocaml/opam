@@ -15,6 +15,7 @@ src_ext/*.tar.gz
 *.tar.gz
 *~
 .#*
+\#*#
 ocp-build.root
 ocp-build.root.old
 ocp-get
