@@ -61,11 +61,23 @@ OpamStd.String.Map.iter (fun c comp_file ->
     if patches <> [] then
       OpamConsole.msg "Fetching patches of %s to check their checksums...\n"
         (OpamPackage.to_string nv);
+    let cache_file : string list list OpamFile.t =
+      OpamFile.make @@
+      OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
+    in
+    let url_md5 =
+      (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
+        | [url; md5] -> OpamUrl.of_string url, md5
+        | _ -> failwith "Bad cache") |>
+      OpamUrl.Map.of_list
+    in
     let extra_sources =
       (* Download them just to get their mandatory MD5 *)
       OpamParallel.map
         ~jobs:3
         ~command:(fun url ->
+            try Done (Some (url, OpamUrl.Map.find url url_md5, None))
+            with Not_found ->
             let err e =
               OpamConsole.error
                 "Could not get patch file for %s from %s (%s), skipping"
@@ -76,19 +88,26 @@ OpamStd.String.Map.iter (fun c comp_file ->
             OpamFilename.with_tmp_dir_job @@ fun dir ->
             try
               OpamProcess.Job.catch err
-                (OpamDownload.download ~overwrite:false url dir
-                 @@| fun f -> Some (url, OpamFilename.digest f, None))
+                (OpamDownload.download ~overwrite:false url dir @@| fun f ->
+                 Some (url, OpamFilename.digest f, None))
             with e -> err e)
         (OpamFile.Comp.patches comp)
     in
+    List.fold_left
+      (fun url_md5 -> function
+         | Some (url,md5,_) -> OpamUrl.Map.add url md5 url_md5
+         | None -> url_md5)
+      url_md5 extra_sources |>
+    OpamUrl.Map.bindings |>
+    List.map (fun (url,m) -> [OpamUrl.to_string url; m]) |>
+    OpamFile.Lines.write cache_file;
     if List.mem None extra_sources then ()
     else
     let opam =
-      OpamFile.OPAM.with_extra_sources opam
-        (OpamStd.List.filter_some extra_sources)
-    in
-    let opam =
-      OpamFile.OPAM.with_substs opam
+      opam |>
+      OpamFile.OPAM.with_extra_sources
+        (OpamStd.List.filter_some extra_sources) |>
+      OpamFile.OPAM.with_substs
         [OpamFilename.Base.of_string "ocaml.config"]
     in
     OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
