@@ -58,6 +58,10 @@ type fident = name list * variable * (string * string) option
 (** Rewrites string interpolations within a string *)
 val expand_string: env -> string -> string
 
+(** Returns the (beginning, end) offsets and substrings of any unclosed '%{'
+    expansions *)
+val unclosed_expansions: string -> ((int * int) * string) list
+
 (** Computes the value of a filter. May raise [Failure] if [default] isn't
     provided *)
 val eval: ?default:variable_contents -> env -> filter -> variable_contents
