@@ -91,6 +91,11 @@ let cudf_versions_map universe packages =
   let packages = add_referred_to_packages filt packages universe.u_depends in
   let packages = add_referred_to_packages filt packages universe.u_depopts in
   let packages = add_referred_to_packages id packages universe.u_conflicts in
+  let packages =
+    OpamPackage.Map.fold (fun nv deps packages ->
+        OpamPackage.Set.add nv packages ++ deps)
+      universe.u_provides packages
+  in
   let pmap = OpamPackage.to_map packages in
   OpamPackage.Name.Map.fold (fun name versions acc ->
       let _, map =

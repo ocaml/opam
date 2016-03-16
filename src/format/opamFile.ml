@@ -1728,7 +1728,7 @@ module OPAMSyntax = struct
         (Pp.V.package_formula `Disj Pp.V.constraints -|
          Pp.check ~name:"provided-by"
            ~errmsg:"'provided-by:' must be a disjunction"
-           (fun f -> match OpamFormula.to_dnf f with
+           (fun f -> match OpamFormula.to_cnf f with
               | [] | [_] -> true
               | _::_::_ -> false));
       "available", no_cleanup Pp.ppacc with_available available
