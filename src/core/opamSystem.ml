@@ -143,7 +143,9 @@ let read file =
   s
 
 let write file contents =
-  mkdir (Filename.dirname file);
+  if Sys.file_exists file
+  then Sys.remove file
+  else mkdir (Filename.dirname file);
   let oc =
     try open_out_bin file
     with Sys_error _ -> raise (File_not_found file) in

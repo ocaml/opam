@@ -89,7 +89,10 @@ module MakeIO (F : IO_Arg) = struct
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
     let oc =
-      OpamFilename.(mkdir (dirname f));
+      if OpamFilename.exists f then
+        (* better than truncating if there are concurrent reads *)
+        OpamFilename.remove f
+      else OpamFilename.(mkdir (dirname f));
       try open_out_bin filename
       with Sys_error _ -> raise (OpamSystem.File_not_found filename)
     in
