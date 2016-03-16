@@ -46,16 +46,37 @@ let compilers =
     OpamStd.String.Map.empty
 ;;
 
-OpamStd.String.Map.iter (fun c comp_file ->
+let official_ocaml_name = OpamPackage.Name.of_string "ocaml"
+
+let provides_map =
+  OpamStd.String.Map.fold (fun c comp_file provides_map ->
     let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
+    let comp_name = OpamFile.Comp.name comp in
+    let is_official, name, version =
+      match OpamStd.String.cut_at comp_name '+' with
+      | None -> (* Official compiler *)
+        true, official_ocaml_name, OpamPackage.Version.of_string comp_name
+      | Some (version, variant) ->
+        if Re.(execp (compile @@ seq [ bos; str "pr"; rep1 digit; eos ]) variant)
+        then
+          false,
+          OpamPackage.Name.of_string "ocaml+dev",
+          OpamPackage.Version.of_string (version ^ "+" ^ variant)
+        else
+          false,
+          OpamPackage.Name.of_string ("ocaml+"^variant),
+          OpamPackage.Version.of_string version
+    in
+    let conflicts =
+      if is_official then OpamFormula.Empty else
+        OpamFormula.of_disjunction [official_ocaml_name, None]
+    in
+    let path_prefix = Some (OpamPackage.Name.to_string name) in
     let descr_file =
-      OpamFilename.(opt_file (add_extension (chop_extension comp_file) ".descr"))
+      OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
     in
     let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
-    let opam =
-      OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
-        comp descr
-    in
+    let opam = OpamFile.Comp.to_package name comp descr in
     let nv = OpamFile.OPAM.package opam in
     let patches = OpamFile.Comp.patches comp in
     if patches <> [] then
@@ -101,16 +122,37 @@ OpamStd.String.Map.iter (fun c comp_file ->
     OpamUrl.Map.bindings |>
     List.map (fun (url,m) -> [OpamUrl.to_string url; m]) |>
     OpamFile.Lines.write cache_file;
-    if List.mem None extra_sources then ()
+    if List.mem None extra_sources then provides_map
     else
+    let provides_map =
+      if is_official then provides_map else
+      OpamPackage.Map.update
+          (OpamPackage.create official_ocaml_name version)
+          (OpamPackage.Set.add (OpamPackage.create name version))
+          OpamPackage.Set.empty
+          provides_map
+    in
+    let provides_map =
+      let provides =
+        OpamFormula.packages_of_atoms
+          (OpamFormula.atoms (OpamFile.Comp.packages comp))
+          packages
+      in
+      OpamPackage.Set.fold (fun base provides_map ->
+          OpamPackage.Map.update base
+            (OpamPackage.Set.add nv) OpamPackage.Set.empty
+            provides_map)
+        provides provides_map
+    in
     let opam =
       opam |>
+      OpamFile.OPAM.with_conflicts conflicts |>
       OpamFile.OPAM.with_extra_sources
         (OpamStd.List.filter_some extra_sources) |>
       OpamFile.OPAM.with_substs
-        [OpamFilename.Base.of_string "ocaml.config"]
+        [OpamFilename.Base.of_string (OpamPackage.Name.to_string name ^".config")]
     in
-    OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
+    OpamFile.OPAM.write (OpamRepositoryPath.opam repo path_prefix nv) opam;
     let config =
       OpamFile.Dot_config.create @@
       List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
@@ -127,15 +169,37 @@ OpamStd.String.Map.iter (fun c comp_file ->
         "ocaml-native-dynlink", B true;
         "ocaml-stubsdir", S "%{lib}%/stublibs"; ]
     in
+    let files_dir = OpamRepositoryPath.files repo path_prefix nv in
+(* Were those ever supposed to exist ? We do have a few in the repo...
+    OpamStd.Option.iter (fun files ->
+        OpamFilename.move_dir files files_dir)
+      (OpamFilename.opt_dir
+         OpamFilename.Op.(OpamFilename.dirname comp_file / "files"));
+*)
     OpamFile.Dot_config.write
-      (OpamFile.make
-         OpamFilename.Op.(OpamRepositoryPath.files repo (Some "ocaml") nv
-                          // "ocaml.config.in"))
+      (OpamFile.make OpamFilename.Op.(
+           files_dir // (OpamPackage.Name.to_string name ^".config.in")))
       config;
     OpamFilename.remove comp_file;
     OpamStd.Option.iter OpamFilename.remove descr_file;
     OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
     OpamConsole.msg "Compiler %s successfully converted to package %s\n"
-      c (OpamPackage.to_string nv))
-  compilers
+      c (OpamPackage.to_string nv);
+    provides_map)
+  compilers OpamPackage.Map.empty
+;;
+
+OpamPackage.Map.iter (fun nv provided_by ->
+    OpamConsole.msg "Updating 'provided-by:' field of %s\n"
+      (OpamPackage.to_string nv);
+    (OpamRepositoryPath.opam repo
+       (Some (OpamPackage.name_to_string nv)) nv
+     |> fun f ->
+     OpamFile.OPAM.read_opt f >>|
+     OpamFile.OPAM.with_provided_by
+       (OpamFormula.of_disjunction @@
+        OpamSolution.eq_atoms_of_packages provided_by) >>|
+     OpamFile.OPAM.write_with_preserved_format f)
+    +! ())
+  provides_map
 ;;

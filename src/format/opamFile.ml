@@ -2870,13 +2870,9 @@ module CompSyntax = struct
 
   let to_package pkg_name comp descr_opt =
     let version =
-      OpamPackage.Version.of_string (name comp)
+      OpamPackage.Version.of_string (version comp)
     in
     let nofilter x = x, (None: filter option) in
-    let depends =
-      OpamFormula.map (fun (n, formula) -> Atom (n, ([], formula)))
-        comp.packages
-    in
     let url =
       OpamStd.Option.map
         (fun url -> URL.with_url url URL.empty)
@@ -2909,7 +2905,6 @@ module CompSyntax = struct
     let pkg = OPAM.create (OpamPackage.create pkg_name version) in
     { pkg with
       OPAM.
-      depends;
       build;
       install;
       maintainer = [ "contact@ocamlpro.com" ];
