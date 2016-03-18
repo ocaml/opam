@@ -89,35 +89,34 @@ module MakeIO (F : IO_Arg) = struct
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
     let oc =
-      if OpamFilename.exists f then
-        (* better than truncating if there are concurrent reads *)
-        OpamFilename.remove f
-      else OpamFilename.(mkdir (dirname f));
+      OpamFilename.(mkdir (dirname f));
       try open_out_bin filename
       with Sys_error _ -> raise (OpamSystem.File_not_found filename)
     in
     try
+      Unix.lockf (Unix.descr_of_out_channel oc) [Unix.F_LOCK] 0;
       F.to_channel f oc v;
       close_out oc;
       Stats.write_files := filename :: !Stats.write_files;
       log "Wrote %s in %.3fs" filename (chrono ())
     with e -> close_out oc; raise e
 
-  let read f =
+  let read_opt f =
     let filename = OpamFilename.prettify f in
-    Stats.read_files := filename :: !Stats.read_files;
     let chrono = OpamConsole.timer () in
     try
       let ic = OpamFilename.open_in f in
       try
+        Unix.lockf (Unix.descr_of_in_channel ic) [Unix.F_RLOCK] 0;
+        Stats.read_files := filename :: !Stats.read_files;
         let r = F.of_channel f ic in
         close_in ic;
         log ~level:3 "Read %s in %.3fs" filename (chrono ());
-        r
+        Some r
       with e -> close_in ic; raise e
     with
       | OpamSystem.File_not_found s ->
-        OpamSystem.internal_error "File %s does not exist" s
+        None
       | Lexer_error _ | Parsing.Parse_error as e ->
         if OpamFormatConfig.(!r.strict) then
           OpamConsole.error_and_exit "Strict mode: aborting"
@@ -128,19 +127,22 @@ module MakeIO (F : IO_Arg) = struct
         if OpamFormatConfig.(!r.strict) then OpamStd.Sys.exit 66
         else raise e
 
-  let read_opt f =
-    if OpamFilename.exists f then Some (read f)
-    else None
+  let read f =
+    match read_opt f with
+    | Some f -> f
+    | None -> OpamSystem.internal_error "File %s does not exist" s
 
   let safe_read f =
-    if OpamFilename.exists f then
-      try read f with OpamFormat.Bad_format _ ->
-        OpamConsole.msg "[skipped]\n";
+    try
+      match read_opt f with
+      | Some f -> f
+      | None ->
+        log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
         F.empty
-    else (
-      log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
+    with
+    | OpamFormat.Bad_format _ ->
+      OpamConsole.msg "[skipped]\n";
       F.empty
-    )
 
   let read_from_f f input =
     try f input with
@@ -662,9 +664,13 @@ module Syntax = struct
     OpamFormat.Print.opamfile t
 
   let to_string_with_preserved_format filename ~empty ?(sections=[]) ~fields pp t =
-    if not (OpamFilename.exists filename) then
-      to_string filename (Pp.print pp (filename, t))
-    else
+    let current_str_opt =
+      try Some (OpamFilename.read filename)
+      with OpamSystem.File_not_found _ -> None
+    in
+    match current_str_opt with
+    | None -> to_string filename (Pp.print pp (filename, t))
+    | Some str ->
     let str = OpamFilename.read filename in
     let syn_file = of_string filename str in
     let syn_t = Pp.print pp (filename, t) in
