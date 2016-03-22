@@ -191,7 +191,6 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   st
 
 let add_to_installed st ?(root=false) nv =
-  let name = nv.name in
   let st =
     update_switch_state st
       ~installed:(OpamPackage.Set.add nv st.installed)
@@ -202,6 +201,11 @@ let add_to_installed st ?(root=false) nv =
          else st.installed_roots)
   in
   let opam = OpamSwitchState.opam st nv in
+  let conf =
+    OpamFile.Dot_config.safe_read
+      (OpamPath.Switch.config st.switch_global.root st.switch nv.name)
+  in
+  let st = { st with conf_files = OpamPackage.Map.add nv conf st.conf_files } in
   if not OpamStateConfig.(!r.dryrun) then (
     install_metadata st nv;
     if OpamFile.OPAM.env opam <> [] &&
@@ -221,11 +225,7 @@ let add_to_installed st ?(root=false) nv =
        and other packages in one go. But we could at least check 'available:'
        before preforming the builds and issue a warning when this happens *)
     let switch_vars = OpamFile.Dot_config.bindings st.switch_config in
-    let pkg_vars =
-      OpamFile.Dot_config.bindings @@
-      OpamFile.Dot_config.safe_read
-        (OpamPath.Switch.config st.switch_global.root st.switch name)
-    in
+    let pkg_vars = OpamFile.Dot_config.bindings conf in
     let switch_config =
       OpamFile.Dot_config.with_vars (pkg_vars @ switch_vars) st.switch_config
     in
@@ -244,6 +244,9 @@ let remove_from_installed st nv =
       ~reinstall:(rm st.reinstall)
   in
   let opam = OpamSwitchState.opam st nv in
+  let st =
+    { st with conf_files = OpamPackage.Map.remove nv st.conf_files }
+  in
   if not OpamStateConfig.(!r.dryrun) &&
      OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
      OpamSwitchState.is_switch_globally_set st

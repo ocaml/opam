@@ -89,6 +89,10 @@ type switch_state = {
       in separate files), as well as the original metadata directory (that can
       be used to retrieve the files/ subdir) *)
 
+  conf_files: OpamFile.Dot_config.t package_map;
+  (** The opam-config of installed packages (from
+      ".opam-switch/config/pkgname.config") *)
+
   packages: package_set;
   (** The set of all known packages *)
 

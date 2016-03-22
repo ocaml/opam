@@ -65,6 +65,9 @@ val descr_opt: switch_state -> package -> OpamFile.Descr.t option
 (** Return the files/ directory overlay for the given package, if it exists *)
 val files: switch_state -> package -> dirname option
 
+(** Return the installed package's local configuration *)
+val package_config: 'a switch_state -> name -> OpamFile.Dot_config.t
+
 (** Check whether a package name is installed *)
 val is_name_installed: switch_state -> name -> bool
 

@@ -152,13 +152,10 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
-    (* !X Add a cache for this to switch_state *)
     let get name =
-      let cfg =
-        OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config st.switch_global.root st.switch name)
-      in
-      try OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
+      try
+        let cfg = OpamSwitchState.package_config st name in
+        OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
       with Not_found -> None
     in
     match OpamVariable.Full.scope v with

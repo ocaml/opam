@@ -143,31 +143,38 @@ let load ?(lock=Lock_readonly) gt rt switch =
       (fun nv -> not (OpamPackage.has_name pinned nv.name))
       compiler_packages
   in
+  let conf_files =
+    OpamPackage.Set.fold (fun nv acc ->
+        OpamPackage.Map.add nv
+          (OpamFile.Dot_config.safe_read
+             (OpamPath.Switch.config gt.root switch nv.name))
+          acc)
+      installed OpamPackage.Map.empty
+  in
   let ext_files_changed =
-    OpamPackage.Map.filter (fun nv _ ->
-        let conf = (* !X todo: cache this and use for variables resolution *)
-          OpamFile.Dot_config.safe_read
-            (OpamPath.Switch.config gt.root switch nv.name)
-        in
-        List.exists (fun (file, hash) ->
-            let deleted = not (OpamFilename.exists file) in
-            let changed = deleted || OpamFilename.digest file <> hash in
-            if deleted then
-              OpamConsole.error
-                "System file %s, which package %s depends upon, \
-                 no longer exists.\n\
-                 The package has been marked for reinstallation, but you \
-                 should reinstall its system dependencies first."
-                (OpamFilename.to_string file) (OpamPackage.to_string nv)
-            else if changed then
-              OpamConsole.warning
-                "File %s was changed on your system. \
-                 %s has been marked for reinstallation."
-                (OpamFilename.to_string file) (OpamPackage.to_string nv);
-            changed)
-          (OpamFile.Dot_config.file_depends conf))
-      installed_opams
-    |> OpamPackage.keys
+    OpamPackage.Map.fold (fun nv conf acc ->
+        if
+          List.exists (fun (file, hash) ->
+              let deleted = not (OpamFilename.exists file) in
+              let changed = deleted || OpamFilename.digest file <> hash in
+              if deleted then
+                OpamConsole.error
+                  "System file %s, which package %s depends upon, \
+                   no longer exists.\n\
+                   The package has been marked for reinstallation, but you \
+                   should reinstall its system dependencies first."
+                  (OpamFilename.to_string file) (OpamPackage.to_string nv)
+              else if changed then
+                OpamConsole.warning
+                  "File %s was changed on your system. \
+                   %s has been marked for reinstallation."
+                  (OpamFilename.to_string file) (OpamPackage.to_string nv);
+              changed)
+            (OpamFile.Dot_config.file_depends conf)
+        then OpamPackage.Set.add nv acc
+        else acc)
+      conf_files
+      OpamPackage.Set.empty
   in
   let reinstall =
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
@@ -179,8 +186,9 @@ let load ?(lock=Lock_readonly) gt rt switch =
     switch_repos = rt;
     switch_lock = lock; switch; compiler_packages; switch_config;
     repos_package_index; installed_opams;
-    installed; pinned; installed_roots; opams; packages;
-    available_packages; reinstall;
+    installed; pinned; installed_roots;
+    opams; conf_files;
+    packages; available_packages; reinstall;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
   st
@@ -233,6 +241,10 @@ let files st nv =
     (fun dir -> dir / "files" ) >>=
     OpamFilename.opt_dir
   )
+
+let package_config st name =
+  OpamPackage.Map.find st.conf_files
+    (OpamPackage.package_of_name st.installed name)
 
 let is_name_installed st name =
   OpamPackage.has_name st.installed name
