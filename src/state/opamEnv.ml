@@ -120,10 +120,7 @@ let updates ~opamswitch ?(force_path=false) st =
     let fn = OpamPath.Switch.environment root st.switch in
     match OpamFile.Environment.read_opt fn with
     | Some env -> env
-    | None ->
-      let update = compute_updates st in
-      OpamFile.Environment.write fn update;
-      update
+    | None -> compute_updates st
   in
   let add_to_path = OpamPath.Switch.bin root st.switch st.switch_config in
   let new_path =
@@ -374,11 +371,18 @@ let write_static_init_scripts root ~switch_eval ~completion =
 
 let write_dynamic_init_scripts st =
   let updates = updates ~opamswitch:false st in
-  List.iter (write_script st.switch_global.root) [
-    variables_sh, string_of_update st `sh updates;
-    variables_csh, string_of_update st `csh updates;
-    variables_fish, string_of_update st `fish updates;
-  ]
+  try
+    OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
+      st.switch_global.global_lock
+    @@ fun () ->
+    List.iter (write_script st.switch_global.root) [
+      variables_sh, string_of_update st `sh updates;
+      variables_csh, string_of_update st `csh updates;
+      variables_fish, string_of_update st `fish updates;
+    ]
+  with OpamSystem.Locked ->
+    OpamConsole.warning
+      "Global shell init scripts not installed (could not acquire lock)"
 
 let status_of_init_file root init_sh =
   let init_sh = OpamPath.init root // init_sh in

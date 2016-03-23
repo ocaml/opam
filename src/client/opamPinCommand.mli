@@ -21,7 +21,7 @@ open OpamStateTypes
 
 (** Pins a package to the given version, and writes to disk. Returns the updated
     state *)
-val version_pin: switch_state -> name -> version -> switch_state
+val version_pin: ([< rw ] switch_state as 'a) -> name -> version -> 'a
 
 (** Sets the package as pinned to the given target. A package definition is
     looked for in the package source and current metadata (in this order).
@@ -29,14 +29,15 @@ val version_pin: switch_state -> name -> version -> switch_state
     If [edit], or if no package definition is found, this opens an editor (with
     a template if no definition is available). *)
 val source_pin:
-  switch_state -> name -> ?version:version -> ?edit:bool -> url -> switch_state
+  ([< rw ] switch_state as 'a) -> name -> ?version:version -> ?edit:bool ->
+  url -> 'a
 
 (** Let the user edit a pinned package's opam file.
     Writes and returns the updated switch state. *)
-val edit: switch_state -> name -> switch_state
+val edit: ([< rw ] switch_state as 'a)-> name -> 'a
 
 (** Unpin packages *)
-val unpin: switch_state -> name list -> switch_state
+val unpin: ([< rw ] switch_state as 'a) -> name list -> 'a
 
 (** List the pinned packages to the user. *)
-val list: switch_state -> short:bool -> unit
+val list: 'a switch_state -> short:bool -> unit

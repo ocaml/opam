@@ -154,7 +154,11 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let read_package_var v =
     let get name =
       try
-        let cfg = OpamSwitchState.package_config st name in
+        let cfg =
+          OpamPackage.Map.find
+            (OpamPackage.package_of_name st.installed name)
+            st.conf_files
+        in
         OpamFile.Dot_config.variable cfg (OpamVariable.Full.variable v)
       with Not_found -> None
     in

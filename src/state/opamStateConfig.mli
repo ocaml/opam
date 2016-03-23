@@ -75,9 +75,8 @@ val filter_deps: ?dev:bool -> ext_formula -> formula
     functions should still be called afterwards. OpamFormat should be
     initialised beforehand, as it may impact the config file loading.
 
-    Returns true if a config file was found and could be read, false
-    otherwise *)
-val load_defaults: OpamFilename.Dir.t -> bool
+    Returns the config file that was found, if any *)
+val load_defaults: OpamFilename.Dir.t -> OpamFile.Config.t option
 
 (** Returns the current switch, failing with an error message is none is set. *)
 val get_switch: unit -> switch

@@ -24,15 +24,17 @@ let ( /- ) dir f = OpamFile.make (dir // f)
 
 let config t = t /- "config"
 
-let state_cache t = t // "state.cache"
+let state_cache t = t / "repo" // "state.cache"
 
 let lock t = t // "lock"
+
+let config_lock t = t // "config.lock"
 
 let archives_dir t = t / "archives"
 
 let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
-let package_index t = t / "repo" /- "package-index"
+let repos_lock t = t / "repo" // "lock"
 
 let init  t = t / "opam-init"
 

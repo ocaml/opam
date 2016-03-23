@@ -17,108 +17,20 @@
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
-open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "REPOSITORY" fmt
 let slog = OpamConsole.slog
 
-let eval_redirect gt repo =
-  if repo.repo_url.OpamUrl.backend <> `http then None else
-  let redirect =
-    repo
-    |> OpamRepositoryPath.repo
-    |> OpamFile.Repo.safe_read
-    |> OpamFile.Repo.redirect
-  in
-  let redirect = List.fold_left (fun acc (redirect, filter) ->
-      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve_global gt) filter
-      then (redirect, filter) :: acc
-      else acc
-    ) [] redirect in
-  match redirect with
-  | []         -> None
-  | (r,f) :: _ ->
-    let config_f = OpamRepositoryPath.config repo in
-    let config = OpamFile.Repo_config.read config_f in
-    let repo_url = OpamUrl.of_string r in
-    if repo_url <> config.repo_url then (
-      let config = { config with repo_url } in
-      OpamFile.Repo_config.write config_f config;
-      Some (config, f)
-    ) else
-      None
-
-let update t repo =
-  let max_loop = 10 in
-  (* Recursively traverse redirection links, but stop after 10 steps or if
-     we start to cycle. *)
-  let rec job r n =
-    if n = 0 then
-      (OpamConsole.warning "%s: Too many redirections, stopping."
-         (OpamRepositoryName.to_string repo.repo_name);
-       Done ())
-    else
-      let text =
-        OpamProcess.make_command_text ~color:`blue
-          (OpamRepositoryName.to_string repo.repo_name)
-          OpamUrl.(string_of_backend repo.repo_url.backend)
-      in
-      OpamProcess.Job.with_text text @@
-      OpamRepository.update r @@+ fun () ->
-      if n <> max_loop && r = repo then
-        (OpamConsole.warning "%s: Cyclic redirections, stopping."
-           (OpamRepositoryName.to_string repo.repo_name);
-         Done ())
-      else match eval_redirect t r with
-        | None -> Done ()
-        | Some (new_repo, f) ->
-          OpamFilename.rmdir repo.repo_root;
-          OpamFile.Repo_config.write (OpamRepositoryPath.config repo) new_repo;
-          let reason = match f with
-            | None   -> ""
-            | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
-          OpamConsole.note
-            "The repository '%s' will be *%s* redirected to %s%s"
-            (OpamRepositoryName.to_string repo.repo_name)
-            (OpamConsole.colorise `bold "permanently")
-            (OpamUrl.to_string new_repo.repo_url)
-            reason;
-          job new_repo (n-1)
-  in
-  job repo max_loop @@+ fun () ->
-  let repo =
-    repo
-    |> OpamRepositoryPath.config
-    |> OpamFile.Repo_config.safe_read
-  in
-  OpamRepository.check_version repo @@+ fun () ->
-  let opams = OpamRepositoryState.load_repo_opams repo in
-  Done (
-    fun t ->
-      { t with
-        repositories =
-          OpamRepositoryName.Map.add repo.repo_name repo t.repositories;
-        repo_opams =
-          OpamRepositoryName.Map.add repo.repo_name opams t.repo_opams;
-      }
-  )
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
-let update_config t repos =
+let update_config (gt: [< rw ] global_state) repos =
   log "update-config %a"
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;
-  let new_config = OpamFile.Config.with_repositories repos t.config in
-  OpamStateConfig.write t.root new_config
-
-(* Remove any remaining of [repo] from OPAM state *)
-let cleanup t repo =
-   log "cleanup %a" (slog OpamRepositoryName.to_string) repo.repo_name;
-  let repos = OpamRepositoryName.Map.keys t.repositories in
-  update_config t.repos_global (List.filter ((<>) repo.repo_name) repos);
-  OpamFilename.rmdir repo.repo_root;
-  OpamRepositoryState.Cache.remove ()
+  let new_config = OpamFile.Config.with_repositories repos gt.config in
+  OpamStateConfig.write gt.root new_config;
+  { gt with config = new_config }
 
 let find_repository rt repo_name =
   try OpamRepositoryName.Map.find repo_name rt.repositories
@@ -127,23 +39,21 @@ let find_repository rt repo_name =
       "%s is not a valid repository name."
       (OpamRepositoryName.to_string repo_name)
 
-let priority repo_name ~priority =
+let priority gt repo_name ~priority =
   log "repository-priority";
 
-  (* 1/ update the config file *)
-  let rt =
-    OpamRepositoryState.load ~save_cache:false (OpamGlobalState.load ())
-  in
+  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
   let repo = find_repository rt repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
     let config = OpamFile.Repo_config.read config_f in
     { config with repo_priority = priority } in
-  OpamFile.Repo_config.write config_f config
+  OpamFile.Repo_config.write config_f config;
+  rt
 
-let add name url ~priority:prio =
+let add gt name url ~priority:prio =
   log "repository-add";
-  let rt = OpamRepositoryState.load ~save_cache:false (OpamGlobalState.load ()) in
+  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
   if OpamRepositoryName.Map.mem name rt.repositories then
     OpamConsole.error_and_exit "%s is already a remote repository"
       (OpamRepositoryName.to_string name);
@@ -170,42 +80,48 @@ let add name url ~priority:prio =
   OpamProcess.Job.run (OpamRepository.init repo);
   log "Adding %a" (slog OpamRepositoryBackend.to_string) repo;
   let repositories = OpamRepositoryName.Map.add name repo rt.repositories in
-  update_config rt.repos_global (OpamRepositoryName.Map.keys repositories);
-  let rt = { rt with repositories } in
-  OpamRepositoryState.Cache.remove ();
-  try
-    ignore (OpamProcess.Job.run (update rt.repos_global repo) rt)
-  with
+  let gt1 =
+    update_config gt (OpamRepositoryName.Map.keys repositories)
+  in
+  let rt = { rt with repos_global = gt1; repositories } in
+  try OpamUpdate.repositories rt [repo] with
   | e ->
-    cleanup rt repo;
+    let _gt = update_config gt (OpamFile.Config.repositories gt.config) in
+    OpamFilename.rmdir repo.repo_root;
     OpamStd.Exn.fatal e;
     OpamConsole.error_and_exit "Could not fetch repo: %s"
       (Printexc.to_string e)
 
-let remove name =
+let remove gt name =
   log "repository-remove";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
-  let repo = find_repository rt name in
-  cleanup rt repo
+  OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root) @@ fun () ->
+  let repo_root =
+    (OpamFile.Repo_config.read (OpamRepositoryPath.raw_config gt.root name))
+    .repo_root
+  in
+  let repos =
+    List.filter ((<>) name) (OpamFile.Config.repositories gt.config)
+  in
+  let gt = update_config gt repos in
+  OpamRepositoryState.Cache.remove ();
+  OpamFilename.rmdir repo_root;
+  gt
 
-let set_url name url =
+let set_url gt name url =
   log "repository-remove";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
+  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
   let repo = find_repository rt name in
-  if repo.repo_url.OpamUrl.backend <> url.OpamUrl.backend then
-    (remove name;
-     add name url ~priority:(Some repo.repo_priority))
-  else
   let config_f = OpamRepositoryPath.config repo in
   let config =
     let config = OpamFile.Repo_config.read config_f in
-    { config with repo_url = url } in
+    { config with repo_url = url }
+  in
   OpamFile.Repo_config.write config_f config;
-  OpamRepositoryState.Cache.remove ()
+  OpamUpdate.repositories rt [repo]
 
-let list ~short =
+let list gt ~short =
   log "repository-list";
-  let rt = OpamRepositoryState.load (OpamGlobalState.load ()) in
+  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
   if short then
     List.iter
       (fun r ->

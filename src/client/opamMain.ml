@@ -109,7 +109,14 @@ let init_dot_profile shell dot_profile =
   | Some n -> n
   | None   -> OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell)
 
-module Client = OpamClient.SafeAPI
+(* !X Todo: rewrite calls in a separate patch *)
+module Client = struct
+  include OpamClient
+  module REPOSITORY = OpamRepositoryCommand
+  module CONFIG     = OpamConfigCommand
+  module SWITCH     = OpamSwitchCommand
+  module LIST       = OpamListCommand
+end
 
 type command = unit Term.t * Term.info
 
@@ -156,7 +163,9 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    Client.init repository shell dot_profile update_config in
+    let _rt = Client.init repository shell dot_profile update_config in
+    ()
+  in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_url
     $no_setup $auto_setup $shell_opt $dot_profile_flag),
@@ -258,7 +267,8 @@ let list =
     let order = if sort then `depends else `normal in
     match filter, (depends_on, required_by, resolve) with
     | Some filter, (depends, [], [] | [], depends, [] | [], [], depends) ->
-      Client.LIST.list
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      Client.LIST.list gt
         ~print_short ~filter ~order
         ~exact_name:true ~case_sensitive:false
         ~depends ~reverse_depends:(depends_on <> [])
@@ -307,7 +317,8 @@ let search =
       | true, _ -> `installed
       | _       -> `all in
     let order = `normal in
-    Client.LIST.list ~print_short ~filter ~order
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.LIST.list gt ~print_short ~filter ~order
       ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed $installed_roots_flag $case_sensitive
@@ -343,7 +354,8 @@ let show =
       "Print the location of the opam file used for this package" in
   let pkg_info global_options fields raw where packages =
     apply_global_options global_options;
-    Client.LIST.info ~fields ~raw_opam:raw ~where packages in
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.LIST.info gt ~fields ~raw_opam:raw ~where packages in
   Term.(pure pkg_info $global_options $fields $raw $where $nonempty_atom_list),
   term_info "show" ~doc ~man
 
@@ -446,7 +458,12 @@ let config =
     apply_global_options global_options;
     match command, params with
     | Some `env, [] ->
-      `Ok (Client.CONFIG.env
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      let st =
+        OpamSwitchState.load_full ~lock:`Lock_none gt
+          (OpamStateConfig.get_switch ())
+      in
+      `Ok (Client.CONFIG.env st
              ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | Some `setup, [] ->
       let user        = all || user in
@@ -460,7 +477,9 @@ let config =
         `Ok (Client.CONFIG.setup_list shell dot_profile)
       else if profile || ocamlinit || completion || switch_eval then
         let dot_profile = if profile then Some dot_profile else None in
-        `Ok (Client.CONFIG.setup ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+        let gt = OpamGlobalState.load ~lock:`Lock_write () in
+        `Ok (Client.CONFIG.setup gt
+               ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
                ~user ~global)
       else
         `Ok (OpamConsole.msg
@@ -485,21 +504,27 @@ let config =
           list_doc all_doc
           user_doc ocamlinit_doc profile_doc dot_profile_doc
           global_doc no_complete_doc no_eval_doc)
-    | Some `exec, (_::_ as c) -> `Ok (Client.CONFIG.exec ~inplace_path c)
+    | Some `exec, (_::_ as c) ->
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      `Ok (Client.CONFIG.exec gt ~inplace_path c)
     | Some `list, params ->
-      (try `Ok (Client.CONFIG.list (List.map OpamPackage.Name.of_string params))
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      (try `Ok (Client.CONFIG.list gt (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
     | Some `set, [var; value] ->
       `Ok (Client.CONFIG.set (OpamVariable.Full.of_string var) (Some value))
     | Some `unset, [var] ->
       `Ok (Client.CONFIG.set (OpamVariable.Full.of_string var) None)
     | Some `expand, [str] ->
-      `Ok (Client.CONFIG.expand str)
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      `Ok (Client.CONFIG.expand gt str)
     | Some `var, [var] ->
-      (try `Ok (Client.CONFIG.variable (OpamVariable.Full.of_string var))
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      (try `Ok (Client.CONFIG.variable gt (OpamVariable.Full.of_string var))
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
-      `Ok (Client.CONFIG.subst (List.map OpamFilename.Base.of_string files))
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      `Ok (Client.CONFIG.subst gt (List.map OpamFilename.Base.of_string files))
     | Some `pef, _params ->
       failwith "!X todo"
 (*
@@ -512,8 +537,11 @@ let config =
        | _ -> bad_subcommand commands ("config", command, params))
 *)
     | Some `cudf, params ->
-      let opam_state = OpamSwitchState.load_full_compat "config-universe"
-          (OpamStateConfig.get_switch ()) in
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      let opam_state =
+        OpamSwitchState.load_full ~lock:`Lock_none gt
+          (OpamStateConfig.get_switch ())
+      in
       let opam_univ = OpamSwitchState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -530,8 +558,11 @@ let config =
          else "no");
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
-        let state = OpamSwitchState.load_full_compat "config-report"
-          (OpamStateConfig.get_switch ()) in
+        let gt = OpamGlobalState.load ~lock:`Lock_none () in
+        let state =
+          OpamSwitchState.load_full ~lock:`Lock_none gt
+            (OpamStateConfig.get_switch ())
+        in
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -587,6 +618,7 @@ let config =
           );
         print "current-switch" "%s"
           (OpamSwitch.to_string state.switch);
+        (* !X fixme: find a way to do thit without the package index
         let index_file =
           OpamFile.to_string (OpamPath.package_index state.switch_global.root)
         in
@@ -594,6 +626,7 @@ let config =
         Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
               (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
               u.tm_hour u.tm_min);
+        *)
         `Ok ()
       with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     | command, params -> bad_subcommand commands ("config", command, params)
@@ -649,7 +682,8 @@ let install =
       global_options build_options add_to_roots deps_only upgrade atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    Client.install atoms add_to_roots ~deps_only ~upgrade
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.install gt atoms add_to_roots ~deps_only ~upgrade
   in
   Term.(pure install $global_options $build_options
         $add_to_roots $deps_only $upgrade $nonempty_atom_list),
@@ -680,7 +714,8 @@ let remove =
   let remove global_options build_options autoremove force atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    Client.remove ~autoremove ~force atoms in
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.remove gt ~autoremove ~force atoms in
   Term.(pure remove $global_options $build_options $autoremove $force $atom_list),
   term_info "remove" ~doc ~man
 
@@ -695,7 +730,9 @@ let reinstall =
   let reinstall global_options build_options atoms =
     apply_global_options global_options;
     apply_build_options build_options;
-    Client.reinstall atoms in
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.reinstall gt atoms
+  in
   Term.(pure reinstall $global_options $build_options $nonempty_atom_list),
   term_info "reinstall" ~doc ~man
 
@@ -736,8 +773,9 @@ let update =
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ?sync_archives ();
-    Client.update ~repos_only ~dev_only ~no_stats:upgrade names;
-    if upgrade then (OpamConsole.msg "\n"; Client.upgrade [])
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    Client.update gt ~repos_only ~dev_only ~no_stats:upgrade names;
+    if upgrade then (OpamConsole.msg "\n"; Client.upgrade gt [])
   in
   Term.(pure update $global_options $jobs_flag $name_list
         $repos_only $dev_only $sync $upgrade),
@@ -762,12 +800,13 @@ let upgrade =
   let upgrade global_options build_options fixup atoms =
     apply_global_options global_options;
     apply_build_options build_options;
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
     if fixup then
       if atoms <> [] then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
-      else `Ok (Client.fixup ())
+      else `Ok (Client.fixup gt)
     else
-      `Ok (Client.upgrade atoms) in
+      `Ok (Client.upgrade gt atoms) in
   Term.(ret (pure upgrade $global_options $build_options $fixup $atom_list)),
   term_info "upgrade" ~doc ~man
 
@@ -808,22 +847,31 @@ let repository =
     | Some `add, [name;url] ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
-      `Ok (Client.REPOSITORY.add name url ~priority)
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
+      let _rt = Client.REPOSITORY.add gt name url ~priority in
+      `Ok ()
     | (None | Some `list), [] ->
-      `Ok (Client.REPOSITORY.list ~short)
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      `Ok (Client.REPOSITORY.list gt ~short)
     | Some `priority, [name; p] ->
       let name = OpamRepositoryName.of_string name in
       let priority =
         try int_of_string p
         with Failure _ -> OpamConsole.error_and_exit "%s is not an integer." p in
-      `Ok (Client.REPOSITORY.priority name ~priority)
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      let _rt = Client.REPOSITORY.priority gt name ~priority in
+      `Ok ()
     | Some `set_url, [name; url] ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
-      `Ok (Client.REPOSITORY.set_url name url)
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      let _rt = Client.REPOSITORY.set_url gt name url in
+      `Ok ()
     | Some `remove, [name] ->
       let name = OpamRepositoryName.of_string name in
-      `Ok (Client.REPOSITORY.remove name)
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
+      let _gt = Client.REPOSITORY.remove gt name in
+      `Ok ()
     | command, params -> bad_subcommand commands ("repository", command, params)
   in
   Term.ret
@@ -910,12 +958,11 @@ let switch =
       | None, true -> Some []
       | packages, _ -> packages
     in
-    let guess_compiler_package name =
+    let guess_compiler_package gt name =
       (* Guess the compiler from the switch name: within compiler packages,
          match [name] against "pkg.version", "pkg", and, as a last resort,
          "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
-      let gt = OpamGlobalState.load () in
-      let rt = OpamRepositoryState.load gt in
+      let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
       let package_index =
         OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
       in
@@ -954,26 +1001,26 @@ let switch =
               "Compiler selection '%s' is ambiguous. matching packages: %s"
               name (OpamPackage.Set.to_string has_version)
     in
-    let compiler_packages switch =
+    let compiler_packages gt switch =
       match packages, alias_of with
       | Some pkgs, None -> pkgs
-      | None, Some al -> guess_compiler_package al
-      | None, None -> guess_compiler_package switch
+      | None, Some al -> guess_compiler_package gt al
+      | None, None -> guess_compiler_package gt switch
       | Some _, Some _ ->
         OpamConsole.error_and_exit
           "Options --alias-of and --packages are incompatible"
     in
-    let quiet = (fst global_options).quiet in
     match command, params with
     | None      , []
     | Some `list, [] ->
-      Client.SWITCH.list ~print_short ~installed ~all;
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      Client.SWITCH.list gt ~print_short ~installed ~all;
       `Ok ()
     | Some `install, [switch] ->
-      Client.SWITCH.install
-        ~quiet
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
+      Client.SWITCH.install gt
         ~update_config:(not no_switch)
-        ~packages:(compiler_packages switch)
+        ~packages:(compiler_packages gt switch)
         (OpamSwitch.of_string switch);
       `Ok ()
     | Some `export, [filename] ->
@@ -982,21 +1029,21 @@ let switch =
          else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
     | Some `import, [filename] ->
-      Client.SWITCH.import
-        (OpamGlobalState.load ())
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      Client.SWITCH.import gt
         (OpamStateConfig.get_switch ())
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
     | Some `remove, switches ->
-      let gt = OpamGlobalState.load () in
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
       List.iter
         (fun switch -> Client.SWITCH.remove gt (OpamSwitch.of_string switch))
         switches;
       `Ok ()
     | Some `reinstall, [switch] ->
-      Client.SWITCH.reinstall
-        (OpamGlobalState.load ())
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      Client.SWITCH.reinstall gt
         (OpamSwitch.of_string switch);
       `Ok ()
     | Some `current, [] ->
@@ -1004,9 +1051,9 @@ let switch =
       `Ok ()
     | Some `set, [switch]
     | Some `default switch, [] ->
-      Client.SWITCH.switch
-        ~quiet
-        ~packages:(compiler_packages switch)
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
+      Client.SWITCH.switch gt
+        ~packages:(compiler_packages gt switch)
         (OpamSwitch.of_string switch);
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
@@ -1141,7 +1188,9 @@ let pin ?(unpin_only=false) () =
       | Some (#pin_kind as k) -> Some k, false
       | None -> None, OpamClientConfig.(!r.pin_kind_auto) in
     match command, params with
-    | Some `list, [] | None, [] -> `Ok (Client.PIN.list ~short:print_short ())
+    | Some `list, [] | None, [] ->
+      let gt = OpamGlobalState.load ~lock:`Lock_none () in
+      `Ok (Client.PIN.list gt ~short:print_short ())
     | Some `remove, names ->
       let names,errs =
         List.fold_left (fun (names,errs) n -> match (fst package_name) n with
@@ -1150,22 +1199,28 @@ let pin ?(unpin_only=false) () =
           ([],[]) names
       in
       (match errs with
-       | [] -> `Ok (Client.PIN.unpin ~action names)
+       | [] ->
+         let gt = OpamGlobalState.load ~lock:`Lock_none () in
+         `Ok (Client.PIN.unpin gt ~action names)
        | es -> `Error (false, String.concat "\n" es))
     | Some `edit, [n]  ->
       (match (fst package_name) n with
-       | `Ok name -> `Ok (Client.PIN.edit ~action name)
+       | `Ok name ->
+         let gt = OpamGlobalState.load ~lock:`Lock_none () in
+         `Ok (Client.PIN.edit gt ~action name)
        | `Error e -> `Error (false, e))
     | Some `add, [nv] when dev_repo ->
       (match (fst package) nv with
        | `Ok (name,version) ->
-         `Ok (Client.PIN.pin name ~edit ?version ~action None)
+         let gt = OpamGlobalState.load ~lock:`Lock_none () in
+         `Ok (Client.PIN.pin gt name ~edit ?version ~action None)
        | `Error e -> `Error (false, e))
     | Some `add, [path] when not dev_repo ->
       (try
          let name = guess_name (OpamFilename.Dir.of_string path) in
          let pin_option = pin_option_of_string ?kind ~guess path in
-         `Ok (Client.PIN.pin name ~edit ~action (Some pin_option))
+         let gt = OpamGlobalState.load ~lock:`Lock_none () in
+         `Ok (Client.PIN.pin gt name ~edit ~action (Some pin_option))
        with Not_found ->
         `Error (false, Printf.sprintf
                   "No valid package description found at path %s.\n\
@@ -1176,7 +1231,8 @@ let pin ?(unpin_only=false) () =
       (match (fst package) n with
        | `Ok (name,version) ->
          let pin_option = pin_option_of_string ?kind ~guess target in
-         `Ok (Client.PIN.pin name ?version ~edit ~action (Some pin_option))
+         let gt = OpamGlobalState.load ~lock:`Lock_none () in
+         `Ok (Client.PIN.pin gt name ?version ~edit ~action (Some pin_option))
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("pin", command, params)
   in
@@ -1211,8 +1267,11 @@ let source =
       Arg.(some dirname) None in
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
-    let t = OpamSwitchState.load_full_compat "source"
-        (OpamStateConfig.get_switch ()) in
+    let gt = OpamGlobalState.load ~lock:`Lock_none () in
+    let t =
+      OpamSwitchState.load_full ~lock:`Lock_write gt
+        (OpamStateConfig.get_switch ())
+    in
     let nv =
       try
         OpamPackage.Set.max_elt
@@ -1282,7 +1341,6 @@ let source =
              OpamFile.OPAM.with_patches [] @@
              opam)
     );
-
     if pin then
       let backend =
         if dev_repo then match OpamFile.OPAM.dev_repo opam with
@@ -1294,7 +1352,7 @@ let source =
         Source (OpamUrl.parse ~backend
                   ("file://"^OpamFilename.Dir.to_string dir))
       in
-      Client.PIN.pin nv.name ~version:nv.version
+      Client.PIN.pin gt nv.name ~version:nv.version
         (Some pin_option)
   in
   Term.(pure source
@@ -1486,7 +1544,7 @@ let check_and_run_external_commands () =
     OpamStd.Config.init ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let has_init = OpamStateConfig.load_defaults root_dir in
+    let has_init = OpamStateConfig.load_defaults root_dir <> None in
     let env =
       if has_init then (
         OpamStateConfig.init ~root_dir ();
@@ -1505,8 +1563,8 @@ let check_and_run_external_commands () =
       match OpamStateConfig.(!r.current_switch) with
       | None -> ()
       | Some sw ->
-        let gt = OpamGlobalState.load () in
-        let st = OpamSwitchState.load gt (OpamRepositoryState.load gt) sw in
+        let gt = OpamGlobalState.load ~lock:`Lock_none () in
+        let st = OpamSwitchState.load_full ~lock:`Lock_none gt sw in
         let prefixed_name = plugin_prefix ^ name in
         let candidates =
           OpamPackage.packages_of_names
@@ -1521,6 +1579,10 @@ let check_and_run_external_commands () =
         in
         let installed = OpamPackage.Set.inter plugins st.installed in
         if OpamPackage.Set.is_empty candidates then
+          (* !X FIXME: here we loaded a full switch state and discard it, to go on
+             if the command was a valid _prefix_ of an opam command. We should
+             assume prefixes can't be plugins! Or at least not auto-installable
+             ones *)
           ()
         else if not OpamPackage.Set.(is_empty installed) then
           (OpamConsole.error
@@ -1553,7 +1615,7 @@ let check_and_run_external_commands () =
           OpamRepositoryConfig.init ();
           OpamSolverConfig.init ();
           OpamClientConfig.init ();
-          Client.install [OpamSolution.eq_atom_of_package nv]
+          Client.install gt [OpamSolution.eq_atom_of_package nv]
             None ~deps_only:false ~upgrade:false;
           OpamConsole.header_msg "Carrying on to \"%s\""
             (String.concat " " (Array.to_list Sys.argv));

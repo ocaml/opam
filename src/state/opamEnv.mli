@@ -22,11 +22,11 @@ open OpamStateTypes
 (** Get the current environment with OPAM specific additions. If [force_path],
     the PATH is modified to ensure opam dirs are leading. If [opamswitch],
     the OPAMSWITCH environment variable is included (default true). *)
-val get_full: ?opamswitch:bool -> force_path:bool -> switch_state -> env
+val get_full: ?opamswitch:bool -> force_path:bool -> 'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. *)
-val get_opam: force_path:bool -> switch_state -> env
+val get_opam: force_path:bool -> 'a switch_state -> env
 
 (** Update an environment. (Note: depends on the currently defined
     [OpamStateConfig.(!r.root_dir)] to detect existing OPAM-added paths and
@@ -34,16 +34,16 @@ val get_opam: force_path:bool -> switch_state -> env
 val add: env -> env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)
-val is_up_to_date: switch_state -> bool
+val is_up_to_date: 'a switch_state -> bool
 
 (** Returns the current environment updates to configure the current switch with
     its set of installed packages *)
-val compute_updates: switch_state -> env_update list
+val compute_updates: 'a switch_state -> env_update list
 
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current environment (OPAMROOT, OPAMSWITCH variables) and shell (as
     returned by [eval `opam config env`]) *)
-val eval_string: global_state -> switch option -> string
+val eval_string: 'a global_state -> switch option -> string
 
 (** Returns the updated contents of the PATH variable for the given opam root
     and switch (set [force_path] to ensure the opam path is leading) *)
@@ -76,15 +76,18 @@ val write_static_init_scripts:
   dirname -> switch_eval:bool -> completion:bool -> unit
 
 (** Update the shell scripts containing the current switch configuration in
-    ~/.opam/opam-init *)
-val write_dynamic_init_scripts: switch_state -> unit
+    ~/.opam/opam-init ; prints a warning and skips if a write lock on the global
+    state can't be acquired (note: it would be better to acquire a write lock
+    beforehand, but only when working on the switch selected in
+    ~/.opam/config) *)
+val write_dynamic_init_scripts: 'a switch_state -> unit
 
 (** Print a warning if the environment is not set-up properly.
     (General message) *)
-val check_and_print_env_warning: switch_state -> unit
+val check_and_print_env_warning: 'a switch_state -> unit
 
 (** Print a long message with explanations if the environment is not set-up
     properly, and advises to update user's file depending on what has already
     been done automatically according to [user_config] *)
 val print_env_warning_at_init:
-  global_state -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit
+  'a global_state -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit

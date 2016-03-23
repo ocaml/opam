@@ -15,10 +15,11 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamStateTypes
 
-(** Display all available packages that matches any of the
-    regexps. *)
+(** Display all available packages that match any of the regexps. *)
 val list:
+  'a global_state ->
   print_short:bool ->
   filter:[`all|`installed|`roots|`installable] ->
   order:[`normal|`depends] ->
@@ -31,4 +32,6 @@ val list:
   unit
 
 (** Display a general summary of a collection of packages. *)
-val info: fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
+val info:
+  'a global_state ->
+  fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit

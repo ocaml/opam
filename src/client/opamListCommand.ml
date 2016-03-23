@@ -37,6 +37,12 @@ type package_details = {
   others: string list Lazy.t; (* words in lines in files *)
 }
 
+let load_maybe gt =
+  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  match OpamStateConfig.(!r.current_switch) with
+  | None -> OpamSwitchState.load_virtual gt rt
+  | Some sw -> OpamSwitchState.load ~lock:`Lock_none gt rt sw
+
 let details_of_package t name versions =
   let installed_version =
     try Some
@@ -231,17 +237,11 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
         (OpamStd.String.sub_at synop_len (Lazy.force info.synopsis))
   ) names
 
-  let list ~print_short ~filter ~order ~exact_name ~case_sensitive
+  let list gt ~print_short ~filter ~order ~exact_name ~case_sensitive
       ?(depends=[]) ?(reverse_depends=false) ?(recursive_depends=false)
       ?(resolve_depends=false) ?(depopts=false) ?depexts ?dev
       regexp =
-    let gt = OpamGlobalState.load () in
-    let rt = OpamRepositoryState.load gt in
-    let st =
-      match OpamStateConfig.(!r.current_switch) with
-      | None -> OpamSwitchState.load_virtual gt rt
-      | Some sw -> OpamSwitchState.load gt rt sw
-    in
+    let st = load_maybe gt in
     let depends_mode = depends <> [] in
     let get_version name =
       (* We're generally not interested in the aggregated deps for all versions
@@ -435,9 +435,8 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
          OpamPackage.Name.Map.is_empty details
       then OpamStd.Sys.exit 1
 
-let info ~fields ~raw_opam ~where atoms =
-  let t = OpamSwitchState.load_full_compat "info"
-      (OpamStateConfig.get_switch ()) in
+let info gt ~fields ~raw_opam ~where atoms =
+  let t = load_maybe gt in
   let atoms = OpamSolution.sanitize_atom_list t ~permissive:true atoms in
   let details =
     let map = OpamPackage.to_map (OpamSwitchState.packages_of_atoms t atoms) in

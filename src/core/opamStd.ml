@@ -940,7 +940,6 @@ module Config = struct
       ?disp_status_line:(env_when "STATUSLINE")
       ?answer
       ?safe_mode:(env_bool "SAFE")
-      ?lock_retries:(env_int "LOCKRETRIES")
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")
       ?errlog_length:(env_int "ERRLOGLEN")

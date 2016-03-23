@@ -17,7 +17,6 @@
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
-open OpamFilename.Op
 open OpamPackage.Set.Op
 
 let log fmt = OpamConsole.log "STATE" fmt
@@ -57,7 +56,7 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
   in
   OpamPackage.keys avail_map
 
-let load ?(lock=Lock_readonly) gt rt switch =
+let load ~lock:lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
 
@@ -67,6 +66,9 @@ let load ?(lock=Lock_readonly) gt rt switch =
        (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
      OpamSwitch.not_installed switch)
   else
+  let lock =
+    OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
+  in
   let switch_config = load_switch_config gt switch in
   let { sel_installed = installed; sel_roots = installed_roots;
         sel_pinned = pinned; sel_compiler = compiler_packages; } =
@@ -182,9 +184,10 @@ let load ?(lock=Lock_readonly) gt rt switch =
     ext_files_changed
   in
   let st = {
-    switch_global = gt;
-    switch_repos = rt;
-    switch_lock = lock; switch; compiler_packages; switch_config;
+    switch_global = (gt :> unlocked global_state);
+    switch_repos = (rt :> unlocked repos_state);
+    switch_lock = lock;
+    switch; compiler_packages; switch_config;
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
@@ -199,9 +202,9 @@ let load_virtual gt rt =
   in
   let packages = OpamPackage.keys opams in
   {
-    switch_global = gt;
-    switch_repos = rt;
-    switch_lock = Lock_none;
+    switch_global = (gt :> unlocked global_state);
+    switch_repos = (rt :> unlocked repos_state);
+    switch_lock = OpamSystem.lock_none;
     switch = OpamSwitch.of_string "none";
     compiler_packages = OpamPackage.Set.empty;
     switch_config = OpamFile.Dot_config.empty;
@@ -211,6 +214,7 @@ let load_virtual gt rt =
     installed_roots = OpamPackage.Set.empty;
     repos_package_index = opams;
     opams;
+    conf_files = OpamPackage.Map.empty;
     packages;
     available_packages = lazy packages;
     reinstall = OpamPackage.Set.empty;
@@ -221,6 +225,17 @@ let selections st =
     sel_roots = st.installed_roots;
     sel_compiler = st.compiler_packages;
     sel_pinned = st.pinned; }
+
+let unlock st =
+  OpamSystem.funlock st.switch_lock;
+  (st :> unlocked switch_state)
+
+let with_write_lock ?dontblock st f =
+  OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock @@ fun () ->
+  f ({ st with switch_lock = st.switch_lock } : rw switch_state)
+(* We don't actually change the field value, but this makes restricting the
+   phantom lock type possible*)
+
 
 let opam st nv = OpamPackage.Map.find nv st.opams
 
@@ -237,14 +252,17 @@ let url st nv =
 
 let files st nv =
   OpamStd.Option.Op.(
-    opam_opt st nv >>= OpamFile.OPAM.metadata_dir >>|
-    (fun dir -> dir / "files" ) >>=
-    OpamFilename.opt_dir
+    (opam_opt st nv >>= fun opam ->
+     OpamFile.OPAM.metadata_dir opam >>= fun dir ->
+     OpamFile.OPAM.extra_files opam >>| List.map @@ fun (f, _hash) ->
+     OpamFilename.create OpamFilename.Op.(dir / "files") f)
+    +! []
   )
 
 let package_config st name =
-  OpamPackage.Map.find st.conf_files
+  OpamPackage.Map.find
     (OpamPackage.package_of_name st.installed name)
+    st.conf_files
 
 let is_name_installed st name =
   OpamPackage.has_name st.installed name
@@ -389,7 +407,6 @@ let update_pin nv opam st =
       | _ -> st.reinstall;
   }
 
-let load_full_compat _ switch =
-  let gt = OpamGlobalState.load () in
-  let rt = OpamRepositoryState.load gt in
-  load gt rt switch
+let load_full ~lock gt switch =
+  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  load ~lock gt rt switch

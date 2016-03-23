@@ -17,14 +17,33 @@
 open OpamTypes
 
 (** Client state *)
-(* !X Rather use a phantom type for [readonly xxx_state], [readwrite xxx_state],
-   etc. and ensure well-typedness of state writing functions to guarantee
-   soundness of locking ? *)
-type lock_kind = Lock_none | Lock_readonly | Lock_readwrite
+
+(** Phantom types to indicate the locking state of a state, and allow or not
+    on-disk operations.
+
+    Note that each state load is itself locking enough to return a consistent
+    state: a read lock is only needed when the consistency of the actions depend
+    on the fact that the given state doesn't change during the run (e.g. an
+    update that depends on it). In particular, all query commands don't need a
+    read lock.
+*)
+
+(** Phantom type for readwrite-locked state (ensures that there are no
+    concurrent reads or writes) *)
+type rw = [ `Lock_write ]
+
+(** Type for read-locked state (ensures that there are no concurrent writes) *)
+type ro = [ `Lock_read | rw ]
+
+(** Type for unlocked state (single file reads should still be ok) *)
+type unlocked = [ `Lock_none | ro ]
+
+(** The super-type for all lock types *)
+type +'a lock = [< unlocked > `Lock_write ] as 'a
 
 (** Global state corresponding to an opam root and its configuration *)
-type global_state = {
-  global_lock: lock_kind;
+type +'lock global_state = {
+  global_lock: OpamSystem.lock;
 
   root: OpamPath.t;
   (** The global OPAM root path (caution: this is stored here but some code may
@@ -36,38 +55,29 @@ type global_state = {
       configuration as loaded from the file: to get the current options, which
       may be overriden through the command-line or environment, see
       OpamStateConfig *)
-}
+} constraint 'lock = 'lock lock
 
-(** State corresponding to the repo/ subdir: all available packages, their
-    origin and metadata.
+(** State corresponding to the repo/ subdir: all available packages and
+    metadata, for each repository. *)
+type +'lock repos_state = {
+  repos_lock: OpamSystem.lock;
 
-    Note: this state corresponds to a given configuration of repository
-    priorities. For per-switch repositories, we will need also a generic
-    repository state with all packages from all repos, before computation of a
-    given layout. *)
-type repos_state = {
-  repos_lock: lock_kind;
-
-  repos_global: global_state;
+  repos_global: unlocked global_state;
 
   repositories: OpamFile.Repo_config.t repository_name_map;
   (** The list of repositories *)
-(*
-  package_index: (repository_name * string option) package_map;
-  (** Package index
-      (map from packages to their repository and relative path) *)
-*)
+
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
-}
+} constraint 'lock = 'lock lock
 
 (** State of a given switch: options, available and installed packages, etc.*)
-type switch_state = {
-  switch_lock: lock_kind;
+type +'lock switch_state = {
+  switch_lock: OpamSystem.lock;
 
-  switch_global: global_state;
+  switch_global: unlocked global_state;
 
-  switch_repos: repos_state;
+  switch_repos: unlocked repos_state;
 
   switch: switch;
   (** The current active switch *)
@@ -120,4 +130,4 @@ type switch_state = {
   (* Missing: a cache for
      - switch-global and package variables
      - the solver universe ? *)
-}
+} constraint 'lock = 'lock lock

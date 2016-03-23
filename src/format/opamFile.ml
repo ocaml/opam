@@ -94,7 +94,7 @@ module MakeIO (F : IO_Arg) = struct
       with Sys_error _ -> raise (OpamSystem.File_not_found filename)
     in
     try
-      Unix.lockf (Unix.descr_of_out_channel oc) [Unix.F_LOCK] 0;
+      Unix.lockf (Unix.descr_of_out_channel oc) Unix.F_LOCK 0;
       F.to_channel f oc v;
       close_out oc;
       Stats.write_files := filename :: !Stats.write_files;
@@ -107,7 +107,7 @@ module MakeIO (F : IO_Arg) = struct
     try
       let ic = OpamFilename.open_in f in
       try
-        Unix.lockf (Unix.descr_of_in_channel ic) [Unix.F_RLOCK] 0;
+        Unix.lockf (Unix.descr_of_in_channel ic) Unix.F_RLOCK 0;
         Stats.read_files := filename :: !Stats.read_files;
         let r = F.of_channel f ic in
         close_in ic;
@@ -115,7 +115,7 @@ module MakeIO (F : IO_Arg) = struct
         Some r
       with e -> close_in ic; raise e
     with
-      | OpamSystem.File_not_found s ->
+      | OpamSystem.File_not_found _ ->
         None
       | Lexer_error _ | Parsing.Parse_error as e ->
         if OpamFormatConfig.(!r.strict) then
@@ -130,7 +130,9 @@ module MakeIO (F : IO_Arg) = struct
   let read f =
     match read_opt f with
     | Some f -> f
-    | None -> OpamSystem.internal_error "File %s does not exist" s
+    | None ->
+      OpamSystem.internal_error "File %s does not exist or can't be read"
+        (OpamFilename.to_string f)
 
   let safe_read f =
     try
@@ -671,7 +673,6 @@ module Syntax = struct
     match current_str_opt with
     | None -> to_string filename (Pp.print pp (filename, t))
     | Some str ->
-    let str = OpamFilename.read filename in
     let syn_file = of_string filename str in
     let syn_t = Pp.print pp (filename, t) in
     let it_name = function
@@ -856,7 +857,7 @@ module ConfigSyntax = struct
       solver_criteria = criteria; solver }
 
   let empty = {
-    opam_version = OpamVersion.current;
+    opam_version = OpamVersion.current_nopatch;
     repositories = [];
     installed_switches = [];
     switch = None;
@@ -1974,6 +1975,7 @@ module OPAMSyntax = struct
   let write_with_preserved_format ?format_from filename t =
     let format_from = OpamStd.Option.default filename format_from in
     let s = to_string_with_preserved_format format_from t in
+    
     OpamFilename.write filename s
 
 end

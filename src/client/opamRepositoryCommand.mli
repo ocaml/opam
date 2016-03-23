@@ -16,25 +16,28 @@
 
 (** Repository sub-command functions. *)
 
-open OpamStateTypes
 open OpamTypes
-
-(** Update the given repository from its upstream. Returns a concurrency-safe
-    state update function *)
-val update: global_state -> repository ->
-  (repos_state -> repos_state) OpamProcess.job
+open OpamStateTypes
 
 (** List the available repositories. *)
-val list: short:bool -> unit
+val list: 'a global_state -> short:bool -> unit
+
+(* !X FIXME: once switches define their repositories, we should remove the
+   `repositories:` field from ~/.opam/config and rely on the switch priority
+   list, and ~/.opam/repos/*/config only. Then we don't need a lock on
+   global_state anymore. *)
 
 (** Add a new repository. *)
-val add: repository_name -> url -> priority:int option -> unit
+val add:
+  [< rw ] global_state -> repository_name -> url -> priority:int option ->
+  [< rw ] repos_state
 
 (** Remove a repository. *)
-val remove: repository_name -> unit
+val remove: ([< rw ] global_state as 'a) -> repository_name -> 'a
 
 (** Set a repository priority. *)
-val priority: repository_name -> priority:int -> unit
+val priority:
+  'a global_state -> repository_name -> priority:int -> rw repos_state
 
 (** Change the registered address of a repo *)
-val set_url: repository_name -> url -> unit
+val set_url: 'a global_state -> repository_name -> url -> rw repos_state

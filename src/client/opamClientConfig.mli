@@ -81,7 +81,6 @@ val opam_init:
   ?disp_status_line:[ `Always | `Auto | `Never ] ->
   ?answer:bool option ->
   ?safe_mode:bool ->
-  ?lock_retries:int ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   unit -> unit

@@ -19,38 +19,44 @@
 open OpamTypes
 open OpamStateTypes
 
-(** OPAM API. *)
-module API: sig
+(* (\** OPAM API. *\) *)
+(* module API: sig *)
 
   (** Initialize the client a consistent state. *)
   val init:
     repository -> shell -> filename -> [`ask|`yes|`no] ->
-    unit
+    unlocked repos_state
 
   (** Install the given list of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots.
       Third argument installs all dependencies but not the packages themselves *)
   val install:
+    [< unlocked ] global_state ->
     atom list -> bool option -> deps_only:bool -> upgrade:bool -> unit
 
   (** Reinstall the given set of packages. *)
-  val reinstall: atom list -> unit
+  val reinstall:
+    [< unlocked ] global_state -> atom list -> unit
 
   (** Refresh the available packages. *)
-  val update: repos_only:bool -> dev_only:bool -> ?no_stats:bool ->
+  val update:
+    [< unlocked ] global_state ->
+    repos_only:bool -> dev_only:bool -> ?no_stats:bool ->
     string list -> unit
 
   (** Find a consistent state where most of the installed packages are
       upgraded to their latest version, within the given constraints.
       An empty list means upgrade all installed packages. *)
-  val upgrade: atom list -> unit
+  val upgrade: [< unlocked ] global_state -> atom list -> unit
 
   (** Recovers from an inconsistent universe *)
-  val fixup: unit -> unit
+  val fixup: [< unlocked ] global_state -> unit
 
   (** Remove the given list of packages. *)
-  val remove: autoremove:bool -> force:bool -> atom list -> unit
+  val remove:
+    [< unlocked ] global_state -> autoremove:bool -> force:bool -> atom list -> unit
 
+(*
   (** Config API. *)
   module CONFIG: sig
 
@@ -124,45 +130,52 @@ module API: sig
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)
     val import:
-      global_state -> switch -> OpamFile.SwitchExport.t OpamFile.t option -> unit
+      [< rw ] global_state -> switch ->
+      OpamFile.SwitchExport.t OpamFile.t option -> unit
 
     (** Export the packages to a file. If no filename is specified,
         write to stdout. *)
     val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
     (** Remove the given compiler. *)
-    val remove: global_state -> ?confirm:bool -> switch -> unit
+    val remove: [< rw ] global_state -> ?confirm:bool -> switch -> unit
 
     (** Reinstall the given compiler. *)
-    val reinstall: global_state -> switch -> unit
+    val reinstall: [< rw ] global_state -> switch -> unit
 
     (** List the available compiler descriptions. *)
-    val list: print_short:bool -> installed:bool -> all:bool -> unit
+    val list:
+      'a global_state -> print_short:bool -> installed:bool -> all:bool -> unit
 
     (** Display the name of the current compiler. *)
     val show: unit -> unit
 
   end
-
+*)
   (** Pin API *)
   module PIN: sig
 
     (** Set a package pinning. if [pin_option] is [None], set the package defined
         upstream. If [action], prompt for install/reinstall as appropriate after
         pinning. *)
-    val pin: OpamPackage.Name.t ->
+    val pin:
+      [< unlocked ] global_state ->
+      OpamPackage.Name.t ->
       ?edit:bool -> ?version:version -> ?action:bool ->
       pin_option option -> unit
 
-    val edit: ?action:bool -> OpamPackage.Name.t -> unit
+    val edit:
+      [< unlocked ] global_state -> ?action:bool -> OpamPackage.Name.t -> unit
 
-    val unpin: ?action:bool -> OpamPackage.Name.t list -> unit
+    val unpin:
+      [< unlocked ] global_state ->
+      ?action:bool -> OpamPackage.Name.t list -> unit
 
     (** List the current pinned packages. *)
-    val list: short:bool -> unit -> unit
+    val list: [< unlocked ] global_state -> short:bool -> unit -> unit
 
   end
-
+(*
   module LIST: sig
 
     (** Display all available packages that matches any of the
@@ -183,9 +196,9 @@ module API: sig
     val info: fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
 
   end
-
-end
-
+*)
+(* end *)
+(*
 (** Call an unsafe function while taking the global lock. *)
 val global_lock: (unit -> unit) -> unit
 
@@ -197,7 +210,8 @@ val read_lock: (unit -> unit) -> unit
 
 (** Loads state with [command], and calls [f] on it. The loaded state is backed
     up, and in case of error, a message is displayed on how to revert. *)
-val with_switch_backup: string -> (switch_state -> unit) -> unit
+val with_switch_backup: string -> ([< rw ] switch_state -> unit) -> unit
 
 (** This version of the API can be used concurrently. *)
 module SafeAPI: (module type of API)
+*)

@@ -22,7 +22,7 @@ open OpamStateTypes
 (** Resolve an user request *)
 val resolve:
   ?verbose:bool ->
-  switch_state ->
+  'a switch_state ->
   user_action ->
   orphans:package_set ->
   atom request ->
@@ -33,7 +33,7 @@ val resolve:
     obvious from the request *)
 val apply:
   ?ask:bool ->
-  switch_state ->
+  [< rw ] switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   OpamSolver.solution ->
@@ -44,7 +44,7 @@ val apply:
     request *)
 val resolve_and_apply:
   ?ask:bool ->
-  switch_state ->
+  [< rw ] switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   orphans:package_set ->
@@ -52,7 +52,7 @@ val resolve_and_apply:
   solver_result
 
 (** Raise an error if no solution is found or in case of error. *)
-val check_solution: switch_state -> solver_result -> unit
+val check_solution: 'a switch_state -> solver_result -> unit
 
 (** {2 Atoms} *)
 
@@ -76,13 +76,13 @@ val eq_atoms_of_packages: package_set -> atom list
     set. Displays an error and exits otherwise. [permissive] just changes the
     error message. *)
 val check_availability: ?permissive: bool ->
-  switch_state -> OpamPackage.Set.t -> atom list -> unit
+  'a switch_state -> OpamPackage.Set.t -> atom list -> unit
 
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on
     non-existing packages, and unavailable ones unless [permissive] is set.
     Exits with a message on error. *)
-val sanitize_atom_list: ?permissive: bool -> switch_state -> atom list -> atom list
+val sanitize_atom_list: ?permissive: bool -> 'a switch_state -> atom list -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int

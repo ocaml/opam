@@ -283,8 +283,10 @@ let extract_package st source nv =
             ~checksum url
             (OpamFilename.create build_dir fname))
       (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv));
-    OpamStd.Option.iter (fun src -> OpamFilename.copy_files ~src ~dst:build_dir)
-      (OpamSwitchState.files st nv));
+
+    List.iter (fun src -> OpamFilename.copy_in src build_dir)
+      (OpamSwitchState.files st nv)
+  );
   prepare_package_build st nv
 
 (* unused ?

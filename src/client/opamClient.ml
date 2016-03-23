@@ -22,22 +22,31 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog
 
-let with_switch_backup _command f =
-  let t = OpamSwitchState.load_full_compat "client"
-      (OpamStateConfig.get_switch ()) in
-  let file = OpamPath.Switch.backup t.switch_global.root t.switch in
-  OpamFilename.mkdir (OpamPath.Switch.backup_dir t.switch_global.root t.switch);
+let with_switch_backup gt f =
+  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  let t =
+    OpamSwitchState.load ~lock:`Lock_write gt rt
+      (OpamStateConfig.get_switch ())
+  in
+  let file = OpamPath.Switch.backup gt.root t.switch in
+  OpamFilename.mkdir (OpamPath.Switch.backup_dir gt.root t.switch);
   OpamFile.SwitchSelections.write file (OpamSwitchState.selections t);
   try
     f t;
+    let _t = OpamSwitchState.unlock t in
     (* Note: We might want to keep it even if successful ? *)
     OpamFilename.remove (OpamFile.filename file)
   with
-  | OpamStd.Sys.Exit 0 as e -> raise e
+  | OpamStd.Sys.Exit 0 as e ->
+    let _t = OpamSwitchState.unlock t in
+    raise e
   | err ->
     OpamStd.Exn.register_backtrace err;
-    let t1 = OpamSwitchState.load_full_compat "switch-backup-err"
-        (OpamStateConfig.get_switch ()) in
+    let t = OpamSwitchState.unlock t in
+    let t1 =
+      OpamSwitchState.load ~lock:`Lock_none gt rt
+        (OpamStateConfig.get_switch ())
+    in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove (OpamFile.filename file)
@@ -50,7 +59,7 @@ let with_switch_backup _command f =
                Sys.argv.(0) (OpamFile.to_string file))));
     raise err
 
-module API = struct
+(* module API = struct *)
 
   (* When packages are removed from upstream, they normally disappear from the
      'available' packages set and can't be seen by the solver anymore. This is a
@@ -406,8 +415,8 @@ module API = struct
       );
       OpamSolution.check_solution t result
 
-  let upgrade names =
-    with_switch_backup "upgrade" @@ fun t ->
+  let upgrade gt names =
+    with_switch_backup gt @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
     upgrade_t atoms t
@@ -477,11 +486,10 @@ module API = struct
     in
     OpamSolution.check_solution t result
 
-  let fixup () = with_switch_backup "fixup" fixup_t
+  let fixup gt = with_switch_backup gt fixup_t
 
-  let update ~repos_only ~dev_only ?(no_stats=false) names =
-    let gt = OpamGlobalState.load () in
-    let rt = OpamRepositoryState.load gt in
+  let update gt ~repos_only ~dev_only ?(no_stats=false) names =
+    let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
       if dev_only then OpamRepositoryName.Map.empty
@@ -523,29 +531,22 @@ module API = struct
       else
       let repos = OpamRepositoryName.Map.values repositories in
       OpamConsole.header_msg "Updating package repositories";
-      let command repo =
-        OpamProcess.Job.ignore_errors ~default:(fun t -> t)
-          ~message:("Could not update repository " ^
-                    OpamRepositoryName.to_string repo.repo_name) @@
-        OpamRepositoryCommand.update gt repo
-      in
-      OpamRepositoryState.Cache.remove ();
-      OpamParallel.reduce
-        ~jobs:OpamStateConfig.(!r.dl_jobs)
-        ~command
-        ~merge:(fun f1 f2 x -> f1 (f2 x))
-        ~nil:(fun x -> x)
-        repos
-        rt
+      OpamUpdate.repositories rt repos
       (* !X todo
          - cleanup obsolete archives of uninstalled packages ?
          - handle OpamClientConfig.(!r.sync_archives) ? (dl all)
       *)
     in
 
+    let rt = OpamRepositoryState.unlock rt in
+
     if OpamStateConfig.(!r.current_switch) = None then () else
 
-    let st = OpamSwitchState.load gt rt (OpamStateConfig.get_switch ()) in
+    let st =
+      (* !X fixme: no lock needed for a repos-only update ! *)
+      OpamSwitchState.load ~lock:`Lock_write gt rt
+        (OpamStateConfig.get_switch ())
+    in
 
     let dev_packages, nondev_packages =
       if repos_only then OpamPackage.Set.empty, OpamPackage.Set.empty
@@ -570,6 +571,8 @@ module API = struct
           (OpamPackage.Set.to_json updates);
       st
     in
+
+    let st = OpamSwitchState.unlock st in
 
     log "dry-upgrade";
     let broken_state_message ~need_fixup conflicts =
@@ -622,8 +625,11 @@ module API = struct
     let root_empty =
       not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
+    let gt, rt =
     if OpamFile.exists config_f then (
-      OpamConsole.msg "OPAM has already been initialized.";
+      OpamConsole.msg "OPAM has already been initialized.\n";
+      let gt = OpamGlobalState.load ~lock:`Lock_write () in
+      gt, OpamRepositoryState.load ~lock:`Lock_none gt
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -698,18 +704,6 @@ module API = struct
               the following commands are required for OPAM to operate:\n%s"
              (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
 
-        (*
-        (* Create (possibly empty) configuration files *)
-        let switch =
-          if compiler = OpamCompiler.system then
-            OpamSwitch.system
-          else
-            OpamSwitch.of_string (OpamCompiler.to_string compiler) in
-
-        (* Create ~/.opam/compilers/system.comp *)
-        (* !X port to the new system !!
-           OpamState.create_system_compiler_description root; *)
-        *)
         (* Create ~/.opam/config *)
         let config =
           OpamFile.Config.create [] None [repo.repo_name]
@@ -718,50 +712,26 @@ module API = struct
         in
         OpamStateConfig.write root config;
 
-        (* Create ~/.opam/aliases *)
-        (* OpamFile.Aliases.write *)
-        (*   (OpamPath.aliases root) *)
-        (*   (OpamSwitch.Map.singleton switch compiler); *)
-
-        (* Init repository *)
-        (*
-        OpamFile.Package_index.write (OpamPath.package_index root)
-          OpamPackage.Map.empty;
-        OpamFile.Compiler_index.write (OpamPath.compiler_index root)
-          OpamCompiler.Map.empty;
-        *)
         OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
         OpamProcess.Job.run
           OpamProcess.Job.Op.(OpamRepository.init repo @@+ fun () ->
                               OpamRepository.update repo);
-        (* OpamSwitchAction.install_global_config root switch *)
-        (*   (OpamSwitchAction.gen_global_config root switch); *)
 
-        (* Load the partial state, and update the global state *)
         log "updating repository state";
-        let gt = OpamGlobalState.load () in
-        let rt = OpamRepositoryState.load ~save_cache:false gt in
+        let gt = OpamGlobalState.load ~lock:`Lock_write () in
+        let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
-        ignore (OpamProcess.Job.run (OpamRepositoryCommand.update gt repo) rt)
-        (*
-        (* Load the partial state, and install the new compiler if needed *)
-        log "updating package state";
-        let quiet = (compiler = OpamCompiler.system) in
-        OpamSwitchAction.install_compiler gt ~quiet switch compiler;
-
-        (* Finally, load the complete state and install the compiler packages *)
-        log "installing compiler packages";
-        let st = OpamSwitchState.load gt rt switch in
-        OpamSwitchCommand.install_packages st
-           *)
+        let rt = OpamUpdate.repositories rt [repo] in
+        gt, OpamRepositoryState.unlock rt
+        (* FIXME !X: install a switch already ? *)
       with e ->
         OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root;
-        raise e);
-    let gt = OpamGlobalState.load () in
+        raise e)
+    in
     let updated = match update_config with
       | `no  -> false
       | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
@@ -770,8 +740,10 @@ module API = struct
         OpamEnv.write_static_init_scripts root ~switch_eval:true ~completion:true;
         true
     in
+    let gt = OpamGlobalState.unlock gt in
     if not updated then
-      OpamEnv.print_env_warning_at_init gt ~ocamlinit:true ~dot_profile shell
+      OpamEnv.print_env_warning_at_init gt ~ocamlinit:true ~dot_profile shell;
+    rt
 
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)
@@ -929,8 +901,8 @@ module API = struct
       OpamSolution.check_solution t solution
     )
 
-  let install names add_to_roots ~deps_only ~upgrade =
-    with_switch_backup "install" @@ fun t ->
+  let install gt names add_to_roots ~deps_only ~upgrade =
+    with_switch_backup gt @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
     install_t atoms add_to_roots ~deps_only ~upgrade t
@@ -1013,8 +985,8 @@ module API = struct
     ) else if !nothing_to_do then
       OpamConsole.msg "Nothing to do.\n"
 
-  let remove ~autoremove ~force names =
-    with_switch_backup "remove" @@ fun t ->
+  let remove gt ~autoremove ~force names =
+    with_switch_backup gt @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     remove_t ~autoremove ~force atoms t
 
@@ -1061,8 +1033,8 @@ module API = struct
 
     OpamSolution.check_solution t solution
 
-  let reinstall names =
-    with_switch_backup "reinstall" @@ fun t ->
+  let reinstall gt names =
+    with_switch_backup gt @@ fun t ->
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
     reinstall_t atoms t
@@ -1118,15 +1090,12 @@ module API = struct
            the pinning location"
           (OpamPackage.Name.to_string name)
 
-    let pin name ?(edit=false) ?version ?(action=true) pin_option_opt =
+    let pin gt name ?(edit=false) ?version ?(action=true) pin_option_opt =
+      with_switch_backup gt @@ fun st ->
       let pin_option = match pin_option_opt with
         | Some o -> o
-        | None ->
-          let t = OpamSwitchState.load_full_compat "pin-get-upstream"
-              (OpamStateConfig.get_switch ()) in
-          get_upstream t name
+        | None -> get_upstream st name
       in
-      with_switch_backup "pin-add" @@ fun st ->
       let st =
         match pin_option with
         | Source url -> OpamPinCommand.source_pin st name ?version ~edit url
@@ -1135,15 +1104,14 @@ module API = struct
       OpamConsole.msg "\n";
       if action then post_pin_action st name
 
-    let edit ?(action=true) name =
-      with_switch_backup "pin-edit" @@ fun st ->
+    let edit gt ?(action=true) name =
+      with_switch_backup gt @@ fun st ->
       let st = edit st name in
       if action then post_pin_action st name
 
-    let unpin ?(action=true) names =
-      let gt = OpamGlobalState.load () in
+    let unpin gt ?(action=true) names =
       let st =
-        OpamSwitchState.load gt (OpamRepositoryState.load gt)
+        OpamSwitchState.load_full ~lock:`Lock_write gt
           (OpamStateConfig.get_switch ())
       in
       let packages =
@@ -1164,24 +1132,22 @@ module API = struct
         in
         upgrade_t ~ask:true atoms st
 
-    let list ~short () =
-      let gt = OpamGlobalState.load () in
+    let list gt ~short () =
       let st =
-        OpamSwitchState.load gt (OpamRepositoryState.load gt)
+        OpamSwitchState.load_full ~lock:`Lock_none gt
           (OpamStateConfig.get_switch ())
       in
       list st ~short
   end
-
+(*
   module REPOSITORY = OpamRepositoryCommand
   module CONFIG     = OpamConfigCommand
   module SWITCH     = OpamSwitchCommand
   module LIST       = OpamListCommand
+*)
+(* end *)
 
-end
-
-(* !X Reimplement with finer grain and pass states. Functions kept because they
-   still do provide some information *)
+(*
 let read_lock f = f ()
   (* OpamState.check (Read_lock f) *)
 
@@ -1343,3 +1309,4 @@ module SafeAPI = struct
 
   end
 end
+*)

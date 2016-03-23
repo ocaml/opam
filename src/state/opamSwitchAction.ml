@@ -133,12 +133,12 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFile.PkgList.write reinstall_file reinstall;
   { st with reinstall = st.reinstall ++ packages %% st.installed }
 
-let set_current_switch gt switch =
+let set_current_switch gt ~lock switch =
   let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
   OpamStateConfig.write gt.root config;
-  let rt = OpamRepositoryState.load gt in
-  let st = OpamSwitchState.load gt rt switch in
+  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  let st = OpamSwitchState.load gt rt ~lock switch in
   OpamEnv.write_dynamic_init_scripts st;
   st
 

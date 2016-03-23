@@ -74,10 +74,12 @@ val string_of_channel: in_channel -> string
     bad permissions, etc.) *)
 exception File_not_found of string
 
-(** [read filename] returns the contents of [filename] *)
+(** [read filename] returns the contents of [filename] (while taking an advisory
+    read lock to prevent concurrent writes) *)
 val read: string -> string
 
-(** [write filename contents] write [contents] to [filename] *)
+(** [write filename contents] write [contents] to [filename] (while taking an
+    advisory write lock to prevent concurrent reads or writes) *)
 val write: string -> string -> unit
 
 (** [remove filename] removes [filename]. Works whether [filename] is
@@ -187,14 +189,41 @@ val cpu_count: unit -> int
 
 (** {2 File locking function} *)
 
+(** Unix file locks (mutable structure, to follow actual semantics) *)
 type lock
 
-(** Acquires a lock on the given file. Retries 5 times max.
-    By default, this is a write lock. *)
-val flock: ?read:bool -> string -> lock
+(** The different kinds of unix advisory locks available (`Lock_none doesn't
+    actually lock anything, or even create the lock file) *)
+type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
 
-(** Releases an acquired lock *)
+(** Dummy lock *)
+val lock_none: lock
+
+(** Raised when locks can't be acquired and [dontblock] was specified) *)
+exception Locked
+
+(** Acquires a lock on the given file.
+    Raises [Locked] if the lock can't be acquired and [dontblock] is set. Raises
+    [OpamStd.Sys.Exit] if [safe_mode] is set and a write lock is required. Also
+    raises Unix errors if the lock file can't be opened. *)
+val flock: [< lock_flag ] -> ?dontblock:bool -> string -> lock
+
+(** Updates an existing lock to the given level. Raises the same exceptions as
+    [flock]. *)
+val flock_update: [< lock_flag ] -> ?dontblock:bool -> lock -> unit
+
+(** Releases an acquired lock (equivalent to [flock_update `Lock_none]) *)
 val funlock: lock -> unit
+
+(** Returns the highest of the two lock flags (with the order no lock < read
+    lock < write lock) *)
+val lock_max: lock_flag -> lock_flag -> lock_flag
+
+(** Returns true if the lock already has the lock_flag rights or more *)
+val lock_isatleast: [< lock_flag ] -> lock -> bool
+
+(** Returns the current kind of the lock *)
+val get_lock_flag: lock -> lock_flag
 
 (** {2 Misc} *)
 

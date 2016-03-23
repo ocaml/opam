@@ -23,6 +23,107 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "UPDATE" fmt
 let slog = OpamConsole.slog
 
+let eval_redirect gt repo =
+  if repo.repo_url.OpamUrl.backend <> `http then None else
+  let redirect =
+    repo
+    |> OpamRepositoryPath.repo
+    |> OpamFile.Repo.safe_read
+    |> OpamFile.Repo.redirect
+  in
+  let redirect = List.fold_left (fun acc (redirect, filter) ->
+      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve_global gt) filter
+      then (redirect, filter) :: acc
+      else acc
+    ) [] redirect in
+  match redirect with
+  | []         -> None
+  | (r,f) :: _ ->
+    let config_f = OpamRepositoryPath.config repo in
+    let config = OpamFile.Repo_config.read config_f in
+    let repo_url = OpamUrl.of_string r in
+    if repo_url <> config.repo_url then (
+      let config = { config with repo_url } in
+      OpamFile.Repo_config.write config_f config;
+      Some (config, f)
+    ) else
+      None
+
+let repository rt repo =
+  let max_loop = 10 in
+  (* Recursively traverse redirection links, but stop after 10 steps or if
+     we start to cycle. *)
+  let rec job r n =
+    if n = 0 then
+      (OpamConsole.warning "%s: Too many redirections, stopping."
+         (OpamRepositoryName.to_string repo.repo_name);
+       Done ())
+    else
+      let text =
+        OpamProcess.make_command_text ~color:`blue
+          (OpamRepositoryName.to_string repo.repo_name)
+          OpamUrl.(string_of_backend repo.repo_url.backend)
+      in
+      OpamProcess.Job.with_text text @@
+      OpamRepository.update r @@+ fun () ->
+      if n <> max_loop && r = repo then
+        (OpamConsole.warning "%s: Cyclic redirections, stopping."
+           (OpamRepositoryName.to_string repo.repo_name);
+         Done ())
+      else match eval_redirect rt.repos_global r with
+        | None -> Done ()
+        | Some (new_repo, f) ->
+          OpamFilename.rmdir repo.repo_root;
+          OpamFile.Repo_config.write (OpamRepositoryPath.config repo) new_repo;
+          let reason = match f with
+            | None   -> ""
+            | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
+          OpamConsole.note
+            "The repository '%s' will be *%s* redirected to %s%s"
+            (OpamRepositoryName.to_string repo.repo_name)
+            (OpamConsole.colorise `bold "permanently")
+            (OpamUrl.to_string new_repo.repo_url)
+            reason;
+          job new_repo (n-1)
+  in
+  job repo max_loop @@+ fun () ->
+  let repo =
+    repo
+    |> OpamRepositoryPath.config
+    |> OpamFile.Repo_config.safe_read
+  in
+  OpamRepository.check_version repo @@+ fun () ->
+  let opams = OpamRepositoryState.load_repo_opams repo in
+  Done (
+    fun rt ->
+      { rt with
+        repositories =
+          OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
+        repo_opams =
+          OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
+      }
+  )
+
+let repositories rt repos =
+  let command repo =
+    OpamProcess.Job.ignore_errors ~default:(fun t -> t)
+      ~message:("Could not update repository " ^
+                OpamRepositoryName.to_string repo.repo_name) @@
+    repository rt repo
+  in
+  let rt =
+    OpamParallel.reduce
+      ~jobs:OpamStateConfig.(!r.dl_jobs)
+      ~command
+      ~merge:( @* )
+      ~nil:(fun x -> x)
+      ~dry_run:OpamStateConfig.(!r.dryrun)
+      repos
+      rt
+  in
+  OpamRepositoryState.Cache.save rt;
+  rt
+
 let fetch_dev_package url srcdir nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in

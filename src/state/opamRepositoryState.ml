@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamTypesBase
+open OpamStd.Op
 open OpamStateTypes
 open OpamProcess.Job.Op
 
@@ -74,23 +75,25 @@ module Cache = struct
       None
 
   let load root =
-    let file = OpamPath.state_cache root in
-    if OpamFilename.exists file
-    then marshal_from_file file
-    else None
+    match OpamFilename.opt_file (OpamPath.state_cache root) with
+    | Some file ->
+      OpamFilename.with_flock `Lock_read file @@ fun () ->
+      marshal_from_file file
+    | None -> None
 
   let save rt =
     let chrono = OpamConsole.timer () in
     let file = OpamPath.state_cache rt.repos_global.root in
-    OpamFilename.remove file;
-    log "Writing the cache of metadata to %s ...\n"
+    OpamFilename.with_flock `Lock_write file @@ fun () ->
+    log "Writing the cache of repository metadata to %s ...\n"
       (OpamFilename.prettify file);
     let oc = open_out_bin (OpamFilename.to_string file) in
     output_string oc (OpamVersion.magic ());
     Marshal.to_channel oc
       { cached_opams =
           List.map
-            (fun (repo_name, opams) -> repo_name, OpamPackage.Map.bindings opams)
+            (fun (repo_name, opams) ->
+               repo_name, OpamPackage.Map.bindings opams)
             (OpamRepositoryName.Map.bindings rt.repo_opams) }
       [Marshal.No_sharing];
     close_out oc;
@@ -114,12 +117,9 @@ let load_repo_opams repo =
        | Some o -> o)
     (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo))
 
-let load ?(save_cache=true) ?(lock=Lock_none) gt =
+let load ~lock:lock_kind gt =
   log "LOAD-REPOSITORY-STATE";
-
-  let opams = Cache.load gt.root in
-  let cached = opams <> None in
-  if cached then log "Cache found";
+  let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repositories =
     let names = OpamFile.Config.repositories gt.config in
     List.fold_left (fun map repo_name ->
@@ -128,18 +128,23 @@ let load ?(save_cache=true) ?(lock=Lock_none) gt =
         OpamRepositoryName.Map.add repo_name repo map
       ) OpamRepositoryName.Map.empty names
   in
-  let repo_opams =
-    match opams with
-    | Some o -> o (* cached *)
-    | None -> OpamRepositoryName.Map.map load_repo_opams repositories
-  in
-  let rt =
-    { repos_global = gt;
+  let make_rt opams =
+    { repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
-      repositories; repo_opams }
+      repositories;
+      repo_opams = opams; }
   in
-  if save_cache && not cached then Cache.save rt;
-  rt
+  match Cache.load gt.root with
+  | Some opams ->
+    log "Cache found";
+    make_rt opams
+  | None ->
+    OpamFilename.with_flock_upgrade `Lock_read lock @@ fun () ->
+    let rt =
+      make_rt (OpamRepositoryName.Map.map load_repo_opams repositories)
+    in
+    Cache.save rt;
+    rt
 
 let find_package_opt rt repo_list nv =
   List.fold_left (function
@@ -198,3 +203,13 @@ let download_archive rt repo_list nv =
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
     | Result f ->
       OpamFilename.copy ~src:f ~dst; Done (Some dst)
+
+let unlock rt =
+  OpamSystem.funlock rt.repos_lock;
+  (rt :> unlocked repos_state)
+
+let with_write_lock ?dontblock rt f =
+  OpamFilename.with_flock_upgrade `Lock_write ?dontblock rt.repos_lock @@ fun () ->
+  f ({ rt with repos_lock = rt.repos_lock } : rw repos_state)
+(* We don't actually change the field value, but this makes restricting the
+   phantom lock type possible*)

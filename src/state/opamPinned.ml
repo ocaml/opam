@@ -18,10 +18,6 @@ open OpamTypes
 open OpamStateTypes
 open OpamFilename.Op
 
-let remove_overlay gt switch name =
-  OpamFilename.rmdir
-    (OpamPath.Switch.Overlay.package gt.root switch name)
-
 let package st name = OpamPackage.package_of_name st.pinned name
 
 let package_opt st name = try Some (package st name) with Not_found -> None

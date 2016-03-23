@@ -323,10 +323,40 @@ let remove_suffix suffix filename =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
-let with_flock ?read file f x =
-  let lock = OpamSystem.flock ?read (to_string file) in
+let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
+
+let with_flock flag ?dontblock file f =
+  let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
-    let r = f x in
+    let r = f () in
+    OpamSystem.funlock lock;
+    r
+  with e ->
+    OpamStd.Exn.register_backtrace e;
+    OpamSystem.funlock lock;
+    raise e
+
+let with_flock_upgrade flag ?dontblock lock f =
+  if OpamSystem.lock_isatleast flag lock then f ()
+  else (
+    let old_flag = OpamSystem.get_lock_flag lock in
+    OpamSystem.flock_update flag ?dontblock lock;
+    try
+      let r = f () in
+      OpamSystem.flock_update old_flag lock;
+      r
+    with e ->
+      OpamStd.Exn.register_backtrace e;
+      OpamSystem.flock_update old_flag lock;
+      raise e
+  )
+
+let with_flock_write_then_read ?dontblock file write read =
+  let lock = OpamSystem.flock `Lock_write ?dontblock (to_string file) in
+  try
+    let r = write () in
+    OpamSystem.flock_update `Lock_read lock;
+    let r = read r in
     OpamSystem.funlock lock;
     r
   with e ->

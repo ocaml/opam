@@ -167,7 +167,7 @@ let filter_deps ?(dev=true) f =
 
 let load_defaults root_dir =
   match load root_dir with
-  | None -> false
+  | None -> None
   | Some conf ->
     let open OpamStd.Option.Op in
     OpamRepositoryConfig.update
@@ -192,7 +192,7 @@ let load_defaults root_dir =
       ~jobs:(lazy (OpamFile.Config.jobs conf))
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
-    true
+    Some conf
 
 let get_switch () =
   match !r.current_switch with

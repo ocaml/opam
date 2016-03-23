@@ -378,11 +378,12 @@ module Format_upgrade = struct
           )
           installed)
       (OpamFile.Config.installed_switches conf);
-    OpamFilename.rmdir (root / "packages")
+    OpamFilename.rmdir (root / "packages");
+    OpamFilename.rmdir (root / "state.cache")
 
   let latest_version = v1_3_dev7
 
-  let as_necessary root config =
+  let as_necessary global_lock root config =
     let config_version = OpamFile.Config.opam_version config in
     let cmp = OpamVersion.(compare current_nopatch config_version) in
     if cmp = 0 then config
@@ -390,45 +391,58 @@ module Format_upgrade = struct
       if OpamFormatConfig.(!r.skip_version_checks) then config else
         OpamConsole.error_and_exit
           "%s reports a newer OPAM version, aborting."
-          (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
+          (OpamFilename.Dir.to_string root)
     else
-    if OpamVersion.compare config_version latest_version < 0 then
-      if OpamVersion.git () <> None &&
-         OpamConsole.read
-           "This dev version of opam requires an update to the layout of %s \
-            from version %s to version %s, which can't be reverted.\n\
-            You may want to back it up before going further.\n\
-            Type \"yes\" to perform the update and continue:"
-           (OpamFilename.Dir.to_string (OpamStateConfig.(!r.root_dir)))
-           (OpamVersion.to_string config_version)
-           (OpamVersion.to_string latest_version)
-         <> Some "yes"
-      then OpamConsole.error_and_exit "Aborted"
+    if OpamVersion.compare config_version latest_version >= 0 then config else
+    let is_dev = OpamVersion.git () <> None in
+    OpamConsole.formatted_msg
+      "This %sversion of opam requires an update to the layout of %s \
+       from version %s to version %s, which can't be reverted.\n\
+       You may want to back it up before going further.\n"
+      (if is_dev then "development " else "")
+      (OpamFilename.Dir.to_string root)
+      (OpamVersion.to_string config_version)
+      (OpamVersion.to_string latest_version);
+    let dontblock =
+      (* Deadlock until one is killed in interactive mode, but abort in batch *)
+      if OpamStd.Sys.tty_out then None else Some true
+    in
+    try
+      OpamFilename.with_flock_upgrade `Lock_write ?dontblock global_lock
+      @@ fun () ->
+      if is_dev &&
+         Some "yes" =
+         OpamConsole.read "Type \"yes\" to perform the update and continue:" ||
+         not is_dev &&
+         OpamConsole.confirm "Perform the update and continue ?"
+      then
+        let config = OpamFile.Config.with_opam_version latest_version config in
+        if OpamVersion.compare config_version v1_1 < 0 then
+          from_1_0_to_1_1 root;
+        if OpamVersion.compare config_version v1_2 < 0 then
+          from_1_1_to_1_2 root;
+        if OpamVersion.compare config_version v1_3_dev2 < 0 then
+          from_1_2_to_1_3_dev2 root;
+        let config =
+          if OpamVersion.compare config_version v1_3_dev5 < 0 then
+            from_1_3_dev2_to_1_3_dev5 root config
+          else config
+        in
+        if OpamVersion.compare config_version v1_3_dev6 < 0 then
+          from_1_3_dev5_to_1_3_dev6 root config;
+        if OpamVersion.compare config_version v1_3_dev7 < 0 then
+          from_1_3_dev6_to_1_3_dev7 root config;
+        OpamStateConfig.write root config;
+        config
       else
-      let config = OpamFile.Config.with_opam_version latest_version config in
-      if OpamVersion.compare config_version v1_1 < 0 then
-        from_1_0_to_1_1 root;
-      if OpamVersion.compare config_version v1_2 < 0 then
-        from_1_1_to_1_2 root;
-      if OpamVersion.compare config_version v1_3_dev2 < 0 then
-        from_1_2_to_1_3_dev2 root;
-      let config =
-        if OpamVersion.compare config_version v1_3_dev5 < 0 then
-          from_1_3_dev2_to_1_3_dev5 root config
-        else config
-      in
-      if OpamVersion.compare config_version v1_3_dev6 < 0 then
-        from_1_3_dev5_to_1_3_dev6 root config;
-      if OpamVersion.compare config_version v1_3_dev7 < 0 then
-        from_1_3_dev6_to_1_3_dev7 root config;
-      OpamStateConfig.write root config;
-      config
-    else
-      config
+        OpamConsole.error_and_exit "Aborted"
+    with OpamSystem.Locked ->
+      OpamConsole.error_and_exit
+        "Could not acquire lock for performing format upgrade."
 
 end
 
-let load_config root =
+let load_config global_lock root =
   let config = match OpamStateConfig.load root with
     | Some c -> c
     | None ->
@@ -436,13 +450,22 @@ let load_config root =
         OpamFile.Config.(with_opam_version (OpamVersion.of_string "1.1") empty)
       else OpamFile.Config.empty
   in
-  Format_upgrade.as_necessary root config
+  Format_upgrade.as_necessary global_lock root config
 
-let load ?(lock=Lock_readonly) () =
+let load ~lock:lock_kind () =
   log "LOAD-GLOBAL-STATE";
   let root = OpamStateConfig.(!r.root_dir) in
-  let config = load_config root in
-  { global_lock=lock; root; config; }
+  (* Always take a global read lock, this is only used to prevent concurrent
+     ~/.opam format changes *)
+  let global_lock = OpamFilename.flock `Lock_read (OpamPath.lock root) in
+  (* The global_state lock actually concerns the global config file only (and
+     the consistence thereof with the repository and switch sets, and the
+     currently installed shell init scripts) *)
+  let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
+  let config = load_config global_lock root in
+  { global_lock = config_lock;
+    root;
+    config; }
 
 let fold_switches f gt acc =
   List.fold_left (fun acc switch ->
@@ -468,3 +491,13 @@ let installed_versions gt name =
         with Not_found -> OpamPackage.Map.add nv [switch] acc
       with Not_found -> acc)
     gt OpamPackage.Map.empty
+
+let unlock gt =
+  OpamSystem.funlock gt.global_lock;
+  (gt :> unlocked global_state)
+
+let with_write_lock ?dontblock gt f =
+  OpamFilename.with_flock_upgrade `Lock_write ?dontblock gt.global_lock @@ fun () ->
+  f ({ gt with global_lock = gt.global_lock } : rw global_state)
+(* We don't actually change the field value, but this makes restricting the
+   phantom lock type possible*)

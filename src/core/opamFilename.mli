@@ -232,12 +232,32 @@ val touch: t -> unit
 (** Change file permissions *)
 val chmod: t -> int -> unit
 
-(** File locks *)
-val with_flock: ?read:bool -> t -> ('a -> 'b) -> 'a -> 'b
+(** {2 Locking} *)
+
+(** See [OpamSystem.flock]. Prefer the higher level [with_flock] functions when
+    possible *)
+val flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t -> OpamSystem.lock
+
+(** Calls [f] while holding a lock file. Ensures the lock is properly released
+    on [f] exit. Raises [OpamSystem.Locked] if [dontblock] is set and the lock
+    can't be acquired. *)
+val with_flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t ->
+  (unit -> 'a) -> 'a
+
+(** Calls [f] with the file lock upgraded to at least [flag], then restores the
+    previous lock level. Upgrade to [`Lock_write] should never be used in
+    blocking mode as it would deadlock. Raises [OpamSystem.Locked] (but keeps
+    the lock as is) if [dontblock] is set and the lock can't be upgraded. *)
+val with_flock_upgrade:
+  [< OpamSystem.lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (unit -> 'a) -> 'a
+
+(** Runs first function with a write lock on the given file, then releases it to
+    a read lock and runs the second function. *)
+val with_flock_write_then_read:
+  ?dontblock:bool -> t -> (unit -> 'a) -> ('a -> 'b) -> 'b
 
 (** [copy_if_check t src dst] copies all the files from one directory
-    to another. Do nothing if OPAMDONOTCOPYFILE is set to a non-empty
-    value. *)
+    to another. *)
 val copy_files: src:Dir.t -> dst:Dir.t -> unit
 
 module Op: sig
