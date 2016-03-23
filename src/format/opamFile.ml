@@ -826,13 +826,11 @@ module ConfigSyntax = struct
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver t solver = { t with solver = Some solver }
 
-  let backup_url_ocamlpro = "http://opam.ocamlpro.com/backup"
-
   let create switch repositories ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
     { opam_version = OpamVersion.current;
       repositories ; switch ; jobs ; dl_tool = download_tool; dl_jobs ;
       solver_criteria = criteria; solver;
-      backup_urls = [backup_url_ocamlpro] }
+      backup_urls = [] }
 
   let empty = {
     opam_version = OpamVersion.current;
@@ -843,7 +841,7 @@ module ConfigSyntax = struct
     dl_jobs = 1;
     solver_criteria = [];
     solver = None;
-    backup_urls = [backup_url_ocamlpro];
+    backup_urls = [];
   }
 
   let fields =
