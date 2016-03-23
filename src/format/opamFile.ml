@@ -2010,7 +2010,7 @@ module OPAM = struct
            (fun acc v ->
               match OpamVariable.Full.package v with
               | Some n when
-                  t.name = Some n &&
+                  t.name <> Some n &&
                   not (OpamPackage.Name.Set.mem n all_depends) ->
                 OpamPackage.Name.Set.add n acc
               | _ -> acc)
