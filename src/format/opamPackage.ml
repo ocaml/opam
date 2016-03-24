@@ -238,8 +238,11 @@ let names_of_packages nvset =
     Name.Set.empty
 
 let packages_of_name nvset n =
-  let _, _, nvset = Set.split {name=n; version=""} nvset in
-  let nvset, _, _ = Set.split {name=(n^"\000"); version=""} nvset in
+  let min = {name=n; version=""} in
+  let sup = {name=(n^"\000"); version=""} in
+  let _, has_min, nvset = Set.split min nvset in
+  let nvset = if has_min then Set.add min nvset else nvset in
+  let nvset, _, _ = Set.split sup nvset in
   nvset
 
 let package_of_name nvset n =
