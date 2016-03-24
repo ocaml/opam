@@ -459,10 +459,7 @@ let config =
     match command, params with
     | Some `env, [] ->
       let gt = OpamGlobalState.load ~lock:`Lock_none () in
-      let st =
-        OpamSwitchState.load_full ~lock:`Lock_none gt
-          (OpamStateConfig.get_switch ())
-      in
+      OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun st ->
       `Ok (Client.CONFIG.env st
              ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | Some `setup, [] ->
@@ -538,10 +535,7 @@ let config =
 *)
     | Some `cudf, params ->
       let gt = OpamGlobalState.load ~lock:`Lock_none () in
-      let opam_state =
-        OpamSwitchState.load_full ~lock:`Lock_none gt
-          (OpamStateConfig.get_switch ())
-      in
+      OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun opam_state ->
       let opam_univ = OpamSwitchState.universe opam_state Depends in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -559,10 +553,7 @@ let config =
       print "os" "%s" (OpamStd.Sys.os_string ());
       try
         let gt = OpamGlobalState.load ~lock:`Lock_none () in
-        let state =
-          OpamSwitchState.load_full ~lock:`Lock_none gt
-            (OpamStateConfig.get_switch ())
-        in
+        OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun state ->
         let external_solver =
           OpamSolverConfig.external_solver_command
             ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
@@ -1268,10 +1259,9 @@ let source =
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
     let gt = OpamGlobalState.load ~lock:`Lock_none () in
-    let t =
-      OpamSwitchState.load_full ~lock:`Lock_write gt
-        (OpamStateConfig.get_switch ())
-    in
+    (* Fixme: this needs a write lock, because it uses the routines that
+       download to opam's shared switch cache *)
+    OpamSwitchState.with_auto ~lock:`Lock_write gt @@ fun t ->
     let nv =
       try
         OpamPackage.Set.max_elt
@@ -1564,7 +1554,7 @@ let check_and_run_external_commands () =
       | None -> ()
       | Some sw ->
         let gt = OpamGlobalState.load ~lock:`Lock_none () in
-        let st = OpamSwitchState.load_full ~lock:`Lock_none gt sw in
+        OpamSwitchState.with_auto ~lock:`Lock_none gt ~switch:sw @@ fun st ->
         let prefixed_name = plugin_prefix ^ name in
         let candidates =
           OpamPackage.packages_of_names

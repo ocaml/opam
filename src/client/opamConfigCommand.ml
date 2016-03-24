@@ -50,10 +50,7 @@ let help t =
 (* List all the available variables *)
 let list gt ns =
   log "config-list";
-  let t =
-    OpamSwitchState.load_full gt ~lock:`Lock_none
-      (OpamStateConfig.get_switch ())
-  in
+  OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun t ->
   if ns = [] then help t else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
@@ -154,22 +151,16 @@ let env st ~csh ~sexp ~fish ~inplace_path =
 
 let subst gt fs =
   log "config-substitute";
-  let t =
-    OpamSwitchState.load_full gt ~lock:`Lock_none
-      (OpamStateConfig.get_switch ())
-  in
+  OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun st ->
   List.iter
-    (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve t))
+    (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve st))
     fs
 
 let expand gt str =
   log "config-expand";
-  let t =
-    OpamSwitchState.load_full ~lock:`Lock_none gt
-      (OpamStateConfig.get_switch ())
-  in
+  OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun st ->
   OpamConsole.msg "%s\n"
-    (OpamFilter.expand_string (OpamPackageVar.resolve t) str)
+    (OpamFilter.expand_string (OpamPackageVar.resolve st) str)
 
 let set var value =
   if not (OpamVariable.Full.is_global var) then
@@ -202,11 +193,8 @@ let variable gt v =
   | Some c ->
     OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
   | None ->
-    let t =
-      OpamSwitchState.load_full ~lock:`Lock_none gt
-        (OpamStateConfig.get_switch ())
-    in
-    match OpamPackageVar.resolve t v with
+    OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun st ->
+    match OpamPackageVar.resolve st v with
     | Some c ->
       OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
     | None ->
@@ -222,7 +210,7 @@ let setup gt ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
     OpamEnv.write_static_init_scripts gt.root ~switch_eval ~completion;
     match OpamFile.Config.switch gt.config with
     | Some sw ->
-      let st = OpamSwitchState.load_full ~lock:`Lock_none gt sw in
+      OpamSwitchState.with_auto ~lock:`Lock_none gt ~switch:sw @@ fun st ->
       OpamEnv.write_dynamic_init_scripts st
     | None -> ()
   )
@@ -233,10 +221,7 @@ let setup_list shell dot_profile =
 
 let exec gt ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
-  let st =
-    OpamSwitchState.load_full gt ~lock:`Lock_none
-      (OpamStateConfig.get_switch ())
-  in
+  OpamSwitchState.with_auto ~lock:`Lock_none gt @@ fun st ->
   let cmd, args =
     match
       List.map (OpamFilter.expand_string (OpamPackageVar.resolve st)) command

@@ -25,7 +25,13 @@ module Cache: sig
   val remove: unit -> unit
 end
 
-val load: lock:'a lock -> 'b global_state -> 'a repos_state
+val load: lock:'a lock -> [< unlocked ] global_state -> 'a repos_state
+
+(** Loads the repository state as [load], and calls the given function while
+    keeping it locked (as per the [lock] argument), releasing the lock
+    afterwards *)
+val with_:
+  lock:'a lock -> [< unlocked ] global_state -> ('a repos_state -> 'b) -> 'b
 
 (** Returns the repo of origin and metadata corresponding to a package, if
     found, from a sorted list of repositories (highest priority first) *)

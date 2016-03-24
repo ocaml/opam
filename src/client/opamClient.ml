@@ -1110,10 +1110,7 @@ let with_switch_backup gt f =
       if action then post_pin_action st name
 
     let unpin gt ?(action=true) names =
-      let st =
-        OpamSwitchState.load_full ~lock:`Lock_write gt
-          (OpamStateConfig.get_switch ())
-      in
+      OpamSwitchState.with_auto ~lock:`Lock_write gt @@ fun st ->
       let packages =
         OpamStd.List.filter_map (OpamPinned.package_opt st) names
       in
@@ -1133,11 +1130,8 @@ let with_switch_backup gt f =
         upgrade_t ~ask:true atoms st
 
     let list gt ~short () =
-      let st =
-        OpamSwitchState.load_full ~lock:`Lock_none gt
-          (OpamStateConfig.get_switch ())
-      in
-      list st ~short
+      OpamSwitchState.with_auto ~lock:`Lock_none gt @@
+      list ~short
   end
 (*
   module REPOSITORY = OpamRepositoryCommand

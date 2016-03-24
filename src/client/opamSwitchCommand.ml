@@ -260,16 +260,20 @@ let install_cont gt ~update_config ~packages switch =
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
   let gt = OpamSwitchAction.create_empty_switch gt switch in
-  let st =
-    if update_config
-    then OpamSwitchAction.set_current_switch gt ~lock:`Lock_write switch
-    else OpamSwitchState.load_full gt ~lock:`Lock_write switch
-  in
+  (if update_config
+   then fun f ->
+     f (OpamSwitchAction.set_current_switch gt ~lock:`Lock_write switch)
+   else
+     OpamSwitchState.with_auto gt ~lock:`Lock_write ~switch)
+  @@ fun st ->
   let _gt = OpamGlobalState.unlock gt in
   switch,
   fun () ->
-    try install_compiler_packages st packages
+    try
+      install_compiler_packages st packages;
+      ignore (OpamSwitchState.unlock st)
     with e ->
+      let _st = OpamSwitchState.unlock st in
       OpamConsole.warning "Switch %s left partially installed"
         (OpamSwitch.to_string switch);
       raise e
@@ -450,7 +454,7 @@ let show () =
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
 
-  let init_st = OpamSwitchState.load_full gt ~lock:`Lock_write switch in
+  OpamSwitchState.with_auto ~lock:`Lock_write gt ~switch @@ fun init_st ->
 
   let switch_root = OpamPath.Switch.root gt.root switch in
   let opam_subdir = OpamPath.Switch.meta gt.root switch in
@@ -512,5 +516,5 @@ let import gt switch filename =
        let importfile = match filename with
          | None   -> OpamFile.SwitchExport.read_from_channel stdin
          | Some f -> OpamFile.SwitchExport.read f in
-       let st = OpamSwitchState.load_full ~lock:`Lock_write gt switch in
+       OpamSwitchState.with_auto ~lock:`Lock_write gt ~switch @@ fun st ->
        import_t importfile st)

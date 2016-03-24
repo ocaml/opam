@@ -213,3 +213,8 @@ let with_write_lock ?dontblock rt f =
   f ({ rt with repos_lock = rt.repos_lock } : rw repos_state)
 (* We don't actually change the field value, but this makes restricting the
    phantom lock type possible*)
+
+let with_ ~lock gt f =
+  let rt = load ~lock gt in
+  try let r = f rt in ignore (unlock rt); r
+  with e -> ignore (unlock rt); raise e

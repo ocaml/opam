@@ -501,3 +501,8 @@ let with_write_lock ?dontblock gt f =
   f ({ gt with global_lock = gt.global_lock } : rw global_state)
 (* We don't actually change the field value, but this makes restricting the
    phantom lock type possible*)
+
+let with_ ~lock f =
+  let gt = load ~lock () in
+  try let r = f gt in ignore (unlock gt); r
+  with e -> ignore (unlock gt); raise e

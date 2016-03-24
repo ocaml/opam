@@ -17,7 +17,13 @@
 open OpamTypes
 open OpamStateTypes
 
+(** Loads the global state (from the opam root obtained through
+    [OpamStateConfig.(!r.root)]) *)
 val load: lock:'a lock -> unit -> 'a global_state
+
+(** Loads the global state as [load], and calls the given function while keeping
+    it locked (as per the [lock] argument), releasing the lock afterwards *)
+val with_: lock:'a lock -> ('a global_state -> 'b) -> 'b
 
 (** The set of all installed packages, in any switch *)
 val all_installed: 'a global_state -> package_set

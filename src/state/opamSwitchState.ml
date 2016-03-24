@@ -407,6 +407,11 @@ let update_pin nv opam st =
       | _ -> st.reinstall;
   }
 
-let load_full ~lock gt switch =
-  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
-  load ~lock gt rt switch
+let with_ ~lock gt rt switch f =
+  let st = load ~lock gt rt switch in
+  try let r = f st in ignore (unlock st); r
+  with e -> ignore (unlock st); raise e
+
+let with_auto ~lock ?(switch=OpamStateConfig.get_switch ()) gt f =
+  OpamRepositoryState.with_ ~lock:`Lock_none gt @@ fun rt ->
+  with_ ~lock gt rt switch f

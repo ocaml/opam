@@ -20,13 +20,28 @@ open OpamStateTypes
 val load:
   lock:'a lock -> 'b global_state -> 'c repos_state -> switch -> 'a switch_state
 
+(** Loads the switch state as [load], and calls the given function while keeping
+    it locked (as per the [lock] argument), releasing the lock afterwards *)
+val with_:
+  lock:'a lock ->
+  [< unlocked ] global_state ->
+  [< unlocked ] repos_state ->
+  switch ->
+  ('a switch_state -> 'b) -> 'b
+
+(** Loads the switch state for the given switch (or the one set in
+    [OpamStateConfig.get_switch] -- which can fail if no switch is set -- by
+    default) from the global state (including the load of the repository), calls
+    the given function on it and releases the lock afterwards. *)
+val with_auto:
+  lock:'a lock -> ?switch:switch ->
+  [< unlocked ] global_state ->
+  ('a switch_state -> 'b) -> 'b
+
 (** Creates a virtual state with all package available and nothing installed.
     Useful for querying and simulating actions when no switch is yet
     configured *)
 val load_virtual: 'a global_state -> 'b repos_state -> unlocked switch_state
-
-(** Loads both the repository state and the switch state *)
-val load_full: lock:'a lock -> 'b global_state -> switch -> 'a switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)
