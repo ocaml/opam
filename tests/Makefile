@@ -39,19 +39,24 @@ quiet:
 printf = /usr/bin/printf
 
 define RUN
-@$(printf) "\e[1m- %-20s\e[m ..................................... " $(1); \
-if $(MAKE) $(1) >test.log 2>&1; then \
+@COUNT=$$(ls -1 $(REPOKIND)-*.log 2>/dev/null | wc -l); \
+LOG=$$($(printf) "$(REPOKIND)-%02d-$(1).log" $$COUNT); \
+$(printf) "- %02d \e[1m%-20s\e[m ..................................... " \
+  $$COUNT $(1); \
+if $(MAKE) $(1) >$$LOG 2>&1; then \
   $(printf) "\e[32m[ OK ]\e[m\n"; \
 else \
-  $(printf) "\e[31m[FAIL]\e[m\n\n"; \
-  cat test.log; \
-  $(printf) "\n\e[31m>> %s FAILED <<\e[m\n" $(1); \
-  exit 1; \
+  $(printf) "\e[31m$(1) FAILED\e[m\n\n" >>$$LOG; \
+  $(printf) "\e[31m[FAIL]\e[m\n"; \
+  { $(printf) "\e[31m>> %s FAILED <<\e[m\n" $(1); cat $$LOG; } \
+	>> failed-$(REPOKIND).log; \
 fi; \
-cat test.log >> fulltest.log
+cat $$LOG >> fulltest-$(REPOKIND).log
 endef
 
 run:
+	@rm -f failed-$(REPOKIND).log fulltest-$(REPOKIND).log
+	@rm -f $(REPOKIND)-*.log
 	$(call RUN,init)
 	$(call RUN,upload)
 	$(call RUN,install-remove)
@@ -73,7 +78,9 @@ run:
 	$(call RUN,switch-env-packages)
 	$(call RUN,repo)
 	$(call RUN,list)
-	@echo "SUCCESS!"
+	@if [ -e failed-$(REPOKIND).log ]; \
+	then echo "FAILED! Logs in `pwd`/failed-$(REPOKIND).log"; exit 1; \
+	else echo "SUCCESS!"; fi
 
 local:
 	$(MAKE) clean
