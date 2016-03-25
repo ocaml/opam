@@ -23,9 +23,9 @@ let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog
 
 let with_switch_backup gt f =
-  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  let rt = OpamRepositoryState.load `Lock_none gt in
   let t =
-    OpamSwitchState.load ~lock:`Lock_write gt rt
+    OpamSwitchState.load `Lock_write gt rt
       (OpamStateConfig.get_switch ())
   in
   let file = OpamPath.Switch.backup gt.root t.switch in
@@ -44,7 +44,7 @@ let with_switch_backup gt f =
     OpamStd.Exn.register_backtrace err;
     let t = OpamSwitchState.unlock t in
     let t1 =
-      OpamSwitchState.load ~lock:`Lock_none gt rt
+      OpamSwitchState.load `Lock_none gt rt
         (OpamStateConfig.get_switch ())
     in
     if OpamPackage.Set.equal t.installed t1.installed &&
@@ -487,7 +487,7 @@ let with_switch_backup gt f =
   let fixup gt = with_switch_backup gt fixup_t
 
   let update gt ~repos_only ~dev_only ?(no_stats=false) names =
-    let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
+    let rt = OpamRepositoryState.load `Lock_write gt in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let repositories =
       if dev_only then OpamRepositoryName.Map.empty
@@ -542,7 +542,7 @@ let with_switch_backup gt f =
 
     let st =
       (* !X fixme: no lock needed for a repos-only update ! *)
-      OpamSwitchState.load ~lock:`Lock_write gt rt
+      OpamSwitchState.load `Lock_write gt rt
         (OpamStateConfig.get_switch ())
     in
 
@@ -626,8 +626,8 @@ let with_switch_backup gt f =
     let gt, rt =
     if OpamFile.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.\n";
-      let gt = OpamGlobalState.load ~lock:`Lock_write () in
-      gt, OpamRepositoryState.load ~lock:`Lock_none gt
+      let gt = OpamGlobalState.load `Lock_write () in
+      gt, OpamRepositoryState.load `Lock_none gt
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -716,8 +716,8 @@ let with_switch_backup gt f =
                               OpamRepository.update repo);
 
         log "updating repository state";
-        let gt = OpamGlobalState.load ~lock:`Lock_write () in
-        let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
+        let gt = OpamGlobalState.load `Lock_write () in
+        let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
         let rt = OpamUpdate.repositories rt [repo] in
         gt, OpamRepositoryState.unlock rt
@@ -1108,7 +1108,7 @@ let with_switch_backup gt f =
       if action then post_pin_action st name
 
     let unpin gt ?(action=true) names =
-      OpamSwitchState.with_auto ~lock:`Lock_write gt @@ fun st ->
+      OpamSwitchState.with_auto `Lock_write gt @@ fun st ->
       let packages =
         OpamStd.List.filter_map (OpamPinned.package_opt st) names
       in
@@ -1128,6 +1128,6 @@ let with_switch_backup gt f =
         upgrade_t ~ask:true atoms st
 
     let list gt ~short () =
-      OpamSwitchState.with_auto ~lock:`Lock_none gt @@
+      OpamSwitchState.with_auto `Lock_none gt @@
       list ~short
   end

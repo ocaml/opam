@@ -42,7 +42,7 @@ let find_repository rt repo_name =
 let priority gt repo_name ~priority =
   log "repository-priority";
 
-  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
+  let rt = OpamRepositoryState.load `Lock_write gt in
   let repo = find_repository rt repo_name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
@@ -53,7 +53,7 @@ let priority gt repo_name ~priority =
 
 let add gt name url ~priority:prio =
   log "repository-add";
-  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
+  let rt = OpamRepositoryState.load `Lock_write gt in
   if OpamRepositoryName.Map.mem name rt.repositories then
     OpamConsole.error_and_exit "%s is already a remote repository"
       (OpamRepositoryName.to_string name);
@@ -109,7 +109,7 @@ let remove gt name =
 
 let set_url gt name url =
   log "repository-remove";
-  let rt = OpamRepositoryState.load ~lock:`Lock_write gt in
+  let rt = OpamRepositoryState.load `Lock_write gt in
   let repo = find_repository rt name in
   let config_f = OpamRepositoryPath.config repo in
   let config =
@@ -121,7 +121,7 @@ let set_url gt name url =
 
 let list gt ~short =
   log "repository-list";
-  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  let rt = OpamRepositoryState.load `Lock_none gt in
   if short then
     List.iter
       (fun r ->

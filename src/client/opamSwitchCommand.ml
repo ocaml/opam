@@ -62,7 +62,7 @@ let list gt ~print_short ~installed ~all =
   in
   let available, notshown =
     if installed then OpamPackage.Map.empty, 0 else
-    let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+    let rt = OpamRepositoryState.load `Lock_none gt in
     let st = OpamSwitchState.load_virtual gt rt in
     let is_main_comp_re =
       Re.(compile @@ seq [ bos; rep (diff any (char '+')); eos])
@@ -262,9 +262,9 @@ let install_cont gt ~update_config ~packages switch =
   let gt = OpamSwitchAction.create_empty_switch gt switch in
   (if update_config
    then fun f ->
-     f (OpamSwitchAction.set_current_switch gt ~lock:`Lock_write switch)
+     f (OpamSwitchAction.set_current_switch `Lock_write gt switch)
    else
-     OpamSwitchState.with_auto gt ~lock:`Lock_write ~switch)
+     OpamSwitchState.with_auto `Lock_write gt ~switch)
   @@ fun st ->
   let _gt = OpamGlobalState.unlock gt in
   switch,
@@ -285,7 +285,7 @@ let switch_cont gt ~packages switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let switch, cont =
     if List.mem switch (OpamFile.Config.installed_switches gt.config) then
-      let st = OpamSwitchAction.set_current_switch gt ~lock:`Lock_none switch in
+      let st = OpamSwitchAction.set_current_switch `Lock_none gt switch in
       OpamEnv.check_and_print_env_warning st;
       switch, fun () -> ()
     else
@@ -454,7 +454,7 @@ let show () =
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
 
-  OpamSwitchState.with_auto ~lock:`Lock_write gt ~switch @@ fun init_st ->
+  OpamSwitchState.with_auto `Lock_write gt ~switch @@ fun init_st ->
 
   let switch_root = OpamPath.Switch.root gt.root switch in
   let opam_subdir = OpamPath.Switch.meta gt.root switch in
@@ -516,5 +516,5 @@ let import gt switch filename =
        let importfile = match filename with
          | None   -> OpamFile.SwitchExport.read_from_channel stdin
          | Some f -> OpamFile.SwitchExport.read f in
-       OpamSwitchState.with_auto ~lock:`Lock_write gt ~switch @@ fun st ->
+       OpamSwitchState.with_auto `Lock_write gt ~switch @@ fun st ->
        import_t importfile st)

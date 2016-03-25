@@ -28,7 +28,7 @@ val write_selections: [< rw ] switch_state -> unit
 
 (** Updates the defined default switch and loads its state *)
 val set_current_switch:
-  [< rw ] global_state -> lock:'a lock -> switch -> 'a switch_state
+  'a lock -> [< rw ] global_state -> switch -> 'a switch_state
 
 (** Create the default global_config structure for a switch, including default
     paths (lib, bin, etc.) *)

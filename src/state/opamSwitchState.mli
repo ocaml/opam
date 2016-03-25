@@ -18,12 +18,12 @@ open OpamTypes
 open OpamStateTypes
 
 val load:
-  lock:'a lock -> 'b global_state -> 'c repos_state -> switch -> 'a switch_state
+  'a lock -> 'b global_state -> 'c repos_state -> switch -> 'a switch_state
 
 (** Loads the switch state as [load], and calls the given function while keeping
     it locked (as per the [lock] argument), releasing the lock afterwards *)
 val with_:
-  lock:'a lock ->
+  'a lock ->
   [< unlocked ] global_state ->
   [< unlocked ] repos_state ->
   switch ->
@@ -34,7 +34,7 @@ val with_:
     default) from the global state (including the load of the repository), calls
     the given function on it and releases the lock afterwards. *)
 val with_auto:
-  lock:'a lock -> ?switch:switch ->
+  'a lock -> ?switch:switch ->
   [< unlocked ] global_state ->
   ('a switch_state -> 'b) -> 'b
 

@@ -38,10 +38,10 @@ type package_details = {
 }
 
 let load_maybe gt =
-  let rt = OpamRepositoryState.load ~lock:`Lock_none gt in
+  let rt = OpamRepositoryState.load `Lock_none gt in
   match OpamStateConfig.(!r.current_switch) with
   | None -> OpamSwitchState.load_virtual gt rt
-  | Some sw -> OpamSwitchState.load ~lock:`Lock_none gt rt sw
+  | Some sw -> OpamSwitchState.load `Lock_none gt rt sw
 
 let details_of_package t name versions =
   let installed_version =

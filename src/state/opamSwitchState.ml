@@ -56,7 +56,7 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
   in
   OpamPackage.keys avail_map
 
-let load ~lock:lock_kind gt rt switch =
+let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
 
@@ -407,11 +407,11 @@ let update_pin nv opam st =
       | _ -> st.reinstall;
   }
 
-let with_ ~lock gt rt switch f =
-  let st = load ~lock gt rt switch in
+let with_ lock gt rt switch f =
+  let st = load lock gt rt switch in
   try let r = f st in ignore (unlock st); r
   with e -> ignore (unlock st); raise e
 
-let with_auto ~lock ?(switch=OpamStateConfig.get_switch ()) gt f =
-  OpamRepositoryState.with_ ~lock:`Lock_none gt @@ fun rt ->
-  with_ ~lock gt rt switch f
+let with_auto lock ?(switch=OpamStateConfig.get_switch ()) gt f =
+  OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+  with_ lock gt rt switch f

@@ -117,7 +117,7 @@ let load_repo_opams repo =
        | Some o -> o)
     (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo))
 
-let load ~lock:lock_kind gt =
+let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE";
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repositories =
@@ -214,7 +214,7 @@ let with_write_lock ?dontblock rt f =
 (* We don't actually change the field value, but this makes restricting the
    phantom lock type possible*)
 
-let with_ ~lock gt f =
-  let rt = load ~lock gt in
+let with_ lock gt f =
+  let rt = load lock gt in
   try let r = f rt in ignore (unlock rt); r
   with e -> ignore (unlock rt); raise e
