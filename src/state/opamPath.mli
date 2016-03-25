@@ -37,13 +37,6 @@ val config: t -> OpamFile.Config.t OpamFile.t
     switches, repositories lists are expected. No lock needed otherwise) *)
 val config_lock: t -> filename
 
-(* to remove *)
-(** Temporary folder for dev packages {i $opam/packages.dev/} *)
-val dev_packages_dir: t -> dirname
-
-(** Temporary folder for dev packages {i $opam/packages.dev/$NAME.$VERSION/} *)
-val dev_package: t -> package -> dirname
-
 (** Archives dir *)
 val archives_dir: t -> dirname
 

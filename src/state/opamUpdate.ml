@@ -319,7 +319,7 @@ let dev_package st nv =
       Done ((fun st -> st), false)
     else
       fetch_dev_package url
-        (OpamPath.dev_package st.switch_global.root nv) nv
+        (OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name) nv
       @@| fun result -> (fun st -> st), result
 
 let dev_packages st packages =
@@ -348,21 +348,6 @@ let dev_packages st packages =
     OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updated_set
   in
   st, updated_set
-(* !X 'update' should not touch switch data, but the dev package mirrors
-   are still shared, so for the moment other switches will miss the reinstall
-
-  let pinned =
-    OpamPackage.Set.filter
-      (fun nv -> OpamPackage.Name.Map.mem nv.name st.pinned)
-      packages
-  in
-  let unpinned_updates = updated_set -- pinned in
-  OpamGlobalState.fold_switches (fun switch state_file () ->
-      if switch <> st.switch then
-        OpamSwitchAction.add_to_reinstall st.switch_global switch state_file
-          ~unpinned_only:true unpinned_updates)
-    st.switch_global ();
-*)
 
 let pinned_packages st names =
   log "update-pinned-packages";

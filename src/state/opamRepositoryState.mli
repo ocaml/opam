@@ -52,9 +52,8 @@ val repos_list: 'a repos_state -> repository_name list
     without cache *)
 val load_repo_opams: repository -> OpamFile.OPAM.t OpamPackage.Map.t
 
-(** Downloads the repository-mirrored package archive into
-    $opam/archives/$name.$version+opam.tar.gz if not already there, and
-    returns the file name if found either way *)
+(** Downloads the repository-mirrored package archive into the repo's cache
+    ($opam/repo/$repo/archives) ; returns None if not found *)
 val download_archive: 'a repos_state -> repository_name list ->
   package -> filename option OpamProcess.job
 

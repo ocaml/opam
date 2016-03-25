@@ -179,7 +179,6 @@ let repos_list rt =
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt repo_list nv =
   log "get_archive %a" (slog OpamPackage.to_string) nv;
-  let dst = OpamPath.archive rt.repos_global.root nv in
   match find_package_opt rt repo_list nv with
   | None -> Done None
   | Some (repo_name, _) ->
@@ -200,9 +199,9 @@ let download_archive rt repo_list nv =
     | Up_to_date f ->
       OpamConsole.msg "[%s] Archive in cache\n"
         (OpamConsole.colorise `green (OpamPackage.name_to_string nv));
-      OpamFilename.copy ~src:f ~dst; Done (Some dst)
+      Done (Some f)
     | Result f ->
-      OpamFilename.copy ~src:f ~dst; Done (Some dst)
+      Done (Some f)
 
 let unlock rt =
   OpamSystem.funlock rt.repos_lock;

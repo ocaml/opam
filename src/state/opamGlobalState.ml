@@ -379,6 +379,7 @@ module Format_upgrade = struct
           installed)
       (OpamFile.Config.installed_switches conf);
     OpamFilename.rmdir (root / "packages");
+    OpamFilename.rmdir (root / "packages.dev");
     OpamFilename.rmdir (root / "state.cache")
 
   let latest_version = v1_3_dev7

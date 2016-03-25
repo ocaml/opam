@@ -242,10 +242,11 @@ let download_package st nv =
         nv
       @@+ function
       | Some f ->
-        assert (f = OpamPath.archive st.switch_global.root nv);
         Done (`Successful (Some (F f)))
       | None ->
-        let dir = OpamPath.dev_package st.switch_global.root nv in
+        let dir =
+          OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
+        in
         OpamUpdate.download_upstream st nv dir @@| of_dl
   in
   OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
@@ -483,15 +484,6 @@ let cleanup_package_artefacts t nv =
       OpamFilename.rmdir dev_dir );
     log "Removing the local metadata";
     OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv);
-  );
-
-  (* Remove the dev archive if no switch uses the package anymore *)
-  let dev = OpamPath.dev_package t.switch_global.root nv in
-  if OpamFilename.exists_dir dev &&
-     not (OpamPackage.Set.mem nv (OpamGlobalState.all_installed t.switch_global))
-  then (
-    log "Removing %a" (slog OpamFilename.Dir.to_string) dev;
-    OpamFilename.rmdir dev;
   )
 
 let sources_needed st g =

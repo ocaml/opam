@@ -40,10 +40,6 @@ let init  t = t / "opam-init"
 
 let log t = t / "log"
 
-let dev_packages_dir t = t / "packages.dev"
-
-let dev_package t nv = dev_packages_dir t / OpamPackage.to_string nv
-
 let backup_file =
   let file = lazy Unix.(
       let tm = gmtime (Unix.gettimeofday ()) in
