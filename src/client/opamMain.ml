@@ -906,7 +906,8 @@ let switch =
      packages can be installed. If you want to create a new compiler alias \
      (for instance because you already have this compiler version installed), \
      use $(b,opam switch <name> --alias-of <comp>). In case \
-     <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
+     <name> and <comp> are the same, this is equivalent to $(b,opam switch \
+     <comp>).";
     "show", `current, [], "Show the current compiler.";
   ] in
   let man = [
@@ -916,8 +917,8 @@ let switch =
         compiler for the first time. The different compiler versions are \
         totally independent from each other, meaning that OPAM maintains a \
         separate state (e.g. list of installed packages...) for each.";
-    `P "See the documentation of $(b,opam switch list) to see the compilers which \
-        are available, and how to switch or to install a new one."
+    `P "See the documentation of $(b,opam switch list) to see the compilers \
+        which are available, and how to switch or to install a new one."
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
 
   let command, params = mk_subcommands_with_default commands in
@@ -1047,9 +1048,13 @@ let switch =
     | Some `set, [switch]
     | Some `default switch, [] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      OpamSwitchCommand.switch gt
-        ~packages:(compiler_packages gt switch)
-        (OpamSwitch.of_string switch);
+      let switch_name = OpamSwitch.of_string switch in
+      let packages =
+        if List.mem switch_name (OpamFile.Config.installed_switches gt.config)
+        then []
+        else compiler_packages gt switch
+      in
+      OpamSwitchCommand.switch gt ~packages switch_name;
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
