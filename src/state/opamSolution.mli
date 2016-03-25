@@ -33,23 +33,23 @@ val resolve:
     obvious from the request *)
 val apply:
   ?ask:bool ->
-  [< rw ] switch_state ->
+  rw switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   OpamSolver.solution ->
-  solver_result
+  rw switch_state * solver_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not
     specified, prompts the user whenever the solution isn't obvious from the
     request *)
 val resolve_and_apply:
   ?ask:bool ->
-  [< rw ] switch_state ->
+  rw switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   orphans:package_set ->
   atom request ->
-  solver_result
+  rw switch_state * solver_result
 
 (** Raise an error if no solution is found or in case of error. *)
 val check_solution: 'a switch_state -> solver_result -> unit

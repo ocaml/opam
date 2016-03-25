@@ -243,7 +243,7 @@ let install_compiler_packages t atoms =
     OpamConsole.error_and_exit "Aborted installation of non-compiler packages \
                                 as switch base.";
   let t = { t with compiler_packages = to_install_pkgs } in
-  let result =
+  let t, result =
     OpamSolution.apply ~ask:false t (Switch roots)
       ~requested:roots
       solution in
@@ -365,7 +365,7 @@ let import_t importfile t =
       (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Set.elements unavailable));
 
-  let solution =
+  let t, solution =
     let to_import =
       OpamSolution.eq_atoms_of_packages (to_install %% available) @
       OpamSolution.atoms_of_packages unavailable_version

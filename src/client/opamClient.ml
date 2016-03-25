@@ -367,7 +367,7 @@ let with_switch_backup gt f =
       end;
       OpamStd.Sys.exit 3
     | requested, action, Success solution ->
-      let result = OpamSolution.apply ?ask t action ~requested solution in
+      let t, result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
         let to_check =
           if OpamPackage.Name.Set.is_empty requested then t.installed
@@ -471,11 +471,11 @@ let with_switch_backup gt f =
       (* Could still fail with uninstallable base packages actually, but we
          can only fix so far *)
     in
-    let result = match solution with
+    let t, result = match solution with
       | Conflicts cs -> (* ouch... *)
         OpamConsole.msg "%s"
           (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
-        No_solution
+        t, No_solution
       | Success solution ->
         let _, req_rm, _ = orphans ~transitive:false t in
         OpamSolution.apply ~ask:true t action
@@ -882,12 +882,12 @@ let with_switch_backup gt f =
         OpamSolution.resolve t action
           ~orphans:(full_orphans ++ orphan_versions)
           request in
-      let solution = match solution with
+      let t, solution = match solution with
         | Conflicts cs ->
           log "conflict!";
           OpamConsole.msg "%s"
             (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
-          No_solution
+          t, No_solution
         | Success solution ->
           let solution =
             if deps_only then
@@ -971,7 +971,7 @@ let with_switch_backup gt f =
                (OpamSolver.dependencies ~build:true
                   ~depopts:true ~installed:true universe to_remove))
         else to_remove in
-      let solution =
+      let t, solution =
         OpamSolution.resolve_and_apply ?ask t Remove ~requested
           ~orphans:(full_orphans ++ orphan_versions)
           (OpamSolver.request
@@ -1024,7 +1024,7 @@ let with_switch_backup gt f =
         ()
     in
 
-    let solution =
+    let t, solution =
       OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested
         ~orphans:(full_orphans ++ orphan_versions)
         request in

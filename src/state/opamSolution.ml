@@ -531,7 +531,7 @@ let parallel_apply t action action_graph =
   | `Successful () ->
     cleanup_artefacts action_graph;
     OpamConsole.msg "Done.\n";
-    OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
+    t, OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
   | `Exception (OpamStd.Sys.Exit _ | Sys.Break as e) ->
     OpamConsole.msg "Aborting.\n";
     raise e
@@ -551,7 +551,7 @@ let parallel_apply t action action_graph =
     raise e
   | `Error err ->
     match err with
-    | Aborted -> err
+    | Aborted -> t, err
     | Error (successful, failed, remaining) ->
       (* Cleanup build/install actions when one of them failed, it's verbose and
          doesn't add information *)
@@ -609,7 +609,7 @@ let parallel_apply t action action_graph =
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;
-      err
+      t, err
     | _ -> assert false
 
 let simulate_new_state state t =
@@ -672,7 +672,7 @@ let apply ?ask t action ~requested solution =
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
-    Nothing_to_do
+    t, Nothing_to_do
   else (
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
@@ -721,14 +721,14 @@ let apply ?ask t action ~requested solution =
 
     if OpamStateConfig.(!r.external_tags) <> [] then (
       print_external_tags t solution;
-      Aborted
+      t, Aborted
     ) else if not OpamStateConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)
       parallel_apply t action action_graph
     ) else
-      Aborted
+      t, Aborted
   )
 
 let resolve ?(verbose=true) t action ~orphans request =
@@ -751,5 +751,5 @@ let resolve_and_apply ?ask t action ~requested ~orphans request =
     log "conflict!";
     OpamConsole.msg "%s"
       (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
-    No_solution
+    t, No_solution
   | Success solution -> apply ?ask t action ~requested solution
