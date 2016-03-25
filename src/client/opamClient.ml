@@ -449,31 +449,73 @@ let slog = OpamConsole.slog
     t
 
   let update gt ~repos_only ~dev_only ?(no_stats=false) names =
-    let rt = OpamRepositoryState.load `Lock_write gt in
     log "UPDATE %a" (slog @@ String.concat ", ") names;
-    let repositories =
-      if dev_only then OpamRepositoryName.Map.empty
-      else if names = [] then rt.repositories
+    let rt, repo_names =
+      let all_repos = OpamFile.Config.repositories gt.config in
+      let repo_names =
+        if dev_only then [] else
+        if names = [] then all_repos else
+          List.filter
+            (fun r -> List.mem (OpamRepositoryName.to_string r) names)
+            all_repos
+      in
+      if repo_names = [] then
+        OpamRepositoryState.load `Lock_none gt, []
       else
-        OpamRepositoryName.(
-          Map.filter (fun r _ -> List.mem (to_string r) names) rt.repositories
-        )
+      let rt = OpamRepositoryState.load `Lock_write gt in
+      let repos =
+        OpamRepositoryName.Map.filter (fun r _ -> List.mem r repo_names)
+          rt.repositories
+        |> OpamRepositoryName.Map.values
+      in
+      OpamConsole.header_msg "Updating package repositories";
+      let rt = OpamUpdate.repositories rt repos in
+      OpamRepositoryState.unlock rt, repo_names
     in
-    let packages =
-      if repos_only then OpamPackage.Set.empty
-      else if names = [] then OpamGlobalState.all_installed gt
+    let st, packages =
+      if OpamStateConfig.(!r.current_switch) = None then
+        OpamSwitchState.load_virtual gt rt,
+        OpamPackage.Set.empty
+      else if repos_only then
+        OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ()),
+        OpamPackage.Set.empty
       else
-        OpamPackage.Set.filter (fun nv ->
-            let name = OpamPackage.Name.to_string nv.name in
-            let pkg = OpamPackage.to_string nv in
-            List.exists (fun s -> s = name || s = pkg) names
-          ) (OpamGlobalState.all_installed gt)
+      let st =
+        OpamSwitchState.load `Lock_write gt rt (OpamStateConfig.get_switch ())
+      in
+      let packages = st.installed ++ st.pinned in
+      let packages =
+        if names = [] then packages else
+          OpamPackage.Set.filter (fun nv ->
+              let name = OpamPackage.Name.to_string nv.name in
+              let pkg = OpamPackage.to_string nv in
+              List.exists (fun s -> s = name || s = pkg) names
+            ) st.installed
+      in
+      let dev_packages, nondev_packages =
+        OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
+      in
+      if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
+        OpamConsole.warning
+          "The following are not development packages (no dynamic or version \
+           controlled upstream) and can't be updated individually. What you \
+           want is probably to update your repositories: %s"
+          (OpamPackage.Set.to_string nondev_packages);
+      let st =
+        if OpamPackage.Set.is_empty dev_packages then st else (
+          OpamConsole.header_msg "Synchronizing development packages";
+          let st, updates = OpamUpdate.dev_packages st dev_packages in
+          if OpamStateConfig.(!r.json_out <> None) then
+            OpamJson.append "dev-packages-updates"
+              (OpamPackage.Set.to_json updates);
+          st
+        )
+      in
+      OpamSwitchState.unlock st, packages
     in
     let remaining =
       List.filter (fun n -> not (
-          OpamRepositoryName.Map.mem
-            (OpamRepositoryName.of_string n)
-            repositories ||
+          List.mem (OpamRepositoryName.of_string n) repo_names ||
           (try OpamPackage.has_name packages (OpamPackage.Name.of_string n)
            with Failure _ -> false) ||
           (try OpamPackage.Set.mem (OpamPackage.of_string n) packages
@@ -482,59 +524,11 @@ let slog = OpamConsole.slog
     in
 
     if remaining <> [] then
-      OpamConsole.error_and_exit
+      OpamConsole.error
         "Unknown repositories or installed packages: %s"
         (String.concat ", " remaining);
 
-    let rt =
-      if OpamRepositoryName.Map.is_empty repositories then rt
-      else
-      let repos = OpamRepositoryName.Map.values repositories in
-      OpamConsole.header_msg "Updating package repositories";
-      OpamUpdate.repositories rt repos
-      (* !X todo
-         - cleanup obsolete archives of uninstalled packages ?
-         - handle OpamClientConfig.(!r.sync_archives) ? (dl all)
-      *)
-    in
-
-    let rt = OpamRepositoryState.unlock rt in
-
-    if OpamStateConfig.(!r.current_switch) = None then () else
-
-    let st =
-      (* !X fixme: no lock needed for a repos-only update ! *)
-      OpamSwitchState.load `Lock_write gt rt
-        (OpamStateConfig.get_switch ())
-    in
-
-    let dev_packages, nondev_packages =
-      if repos_only then OpamPackage.Set.empty, OpamPackage.Set.empty
-      else
-        OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
-    in
-
-    if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
-      OpamConsole.warning
-        "The following are not development packages (no dynamic or version \
-         controlled upstream) and can't be updated individually. What you want \
-         is probably to update your repositories: %s"
-        (OpamPackage.Set.to_string nondev_packages);
-
-    let st =
-      if OpamPackage.Set.is_empty dev_packages then st
-      else
-      let () = OpamConsole.header_msg "Synchronizing development packages" in
-      let st, updates = OpamUpdate.dev_packages st dev_packages in
-      if OpamStateConfig.(!r.json_out <> None) then
-        OpamJson.append "dev-packages-updates"
-          (OpamPackage.Set.to_json updates);
-      st
-    in
-
-    let st = OpamSwitchState.unlock st in
-
-    log "dry-upgrade";
+    if no_stats then st else
     let broken_state_message ~need_fixup conflicts =
       let reasons, chains, _cycles =
         OpamCudf.strings_of_conflict (OpamSwitchState.unavailable_reason st)
@@ -553,7 +547,7 @@ let slog = OpamConsole.slog
         (if need_fixup && OpamCudf.external_solver_available () then " --fixup"
          else "")
     in
-    if no_stats then () else
+    log "dry-upgrade";
     let universe =
       OpamSwitchState.universe st (Upgrade OpamPackage.Set.empty)
     in
@@ -563,7 +557,7 @@ let slog = OpamConsole.slog
         | _, _, Success _ -> false
         | _, _, Conflicts _ -> true
       in
-      broken_state_message ~need_fixup cs
+      broken_state_message ~need_fixup cs; st
     | None ->
       match compute_upgrade_t [] st with
       | _, _, Success upgrade ->
@@ -573,10 +567,12 @@ let slog = OpamConsole.slog
             "\nUpdates available for %s, apply them with 'opam upgrade':\n\
              ===== %s =====\n"
             (OpamSwitch.to_string st.switch)
-            (OpamSolver.string_of_stats stats)
+            (OpamSolver.string_of_stats stats);
+        st
       | _, _, Conflicts cs ->
         log "State isn't broken but upgrade fails: something might be wrong.";
-        broken_state_message ~need_fixup:true cs
+        broken_state_message ~need_fixup:true cs;
+        st
 
   let init repo shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;

@@ -15,7 +15,6 @@
 
 type t = private {
   print_stats: bool;
-  sync_archives: bool;
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -23,7 +22,6 @@ type t = private {
 
 type 'a options_fun =
   ?print_stats:bool ->
-  ?sync_archives:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -47,7 +45,6 @@ val opam_init:
   ?all_parens:bool ->
   ?log_dir:OpamTypes.dirname ->
   ?print_stats:bool ->
-  ?sync_archives:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->

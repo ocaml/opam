@@ -471,27 +471,27 @@ let config =
                ~user ~global)
       else
         `Ok (OpamConsole.msg
-          "usage: opam config setup [options]\n\
-           \n\
-           Main options\n\
-          \    -l, --list           %s\n\
-          \    -a, --all            %s\n\
-          \    --shell=<bash|sh|csh|zsh|fish>\n\
-          \                         Configure assuming the given shell.\n\
-           \n\
-           User configuration\n\
-          \    -u, --user           %s\n\
-          \    --ocamlinit          %s\n\
-          \    --profile            %s\n\
-          \    --dot-profile FILE   %s\n\
-           \n\
-           Global configuration\n\
-          \    -g,--global          %s\n\
-          \    --no-complete        %s\n\
-          \    --no-switch-eval     %s\n\n"
-          list_doc all_doc
-          user_doc ocamlinit_doc profile_doc dot_profile_doc
-          global_doc no_complete_doc no_eval_doc)
+               "usage: opam config setup [options]\n\
+                \n\
+                Main options\n\
+               \    -l, --list           %s\n\
+               \    -a, --all            %s\n\
+               \    --shell=<bash|sh|csh|zsh|fish>\n\
+               \                         Configure assuming the given shell.\n\
+                \n\
+                User configuration\n\
+               \    -u, --user           %s\n\
+               \    --ocamlinit          %s\n\
+               \    --profile            %s\n\
+               \    --dot-profile FILE   %s\n\
+                \n\
+                Global configuration\n\
+               \    -g,--global          %s\n\
+               \    --no-complete        %s\n\
+               \    --no-switch-eval     %s\n\n"
+               list_doc all_doc
+               user_doc ocamlinit_doc profile_doc dot_profile_doc
+               global_doc no_complete_doc no_eval_doc)
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec gt ~inplace_path c)
@@ -534,83 +534,83 @@ let config =
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
-      let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
-      Printf.printf "# OPAM config report\n";
-      print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
-      print "self-upgrade" "%s"
-        (if self_upgrade_status global_options = `Running then
-           OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
-         else "no");
-      print "os" "%s" (OpamStd.Sys.os_string ());
-      try
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun state ->
-        let external_solver =
-          OpamSolverConfig.external_solver_command
-            ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
-        print "external-solver" "%s"
-          (OpamStd.Option.to_string ~none:"no" (String.concat " ")
-             external_solver);
-        if external_solver <> None then
-          print "criteria" "%s" (OpamSolverConfig.criteria `Default);
-        let nprint label n =
-          if n <> 0 then [Printf.sprintf "%d (%s)" n label]
-          else [] in
-        print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
-        print "repositories" "%s"
-          OpamRepositoryName.Map.(
-            let nhttp, nlocal, nvcs =
-              fold (fun _ {repo_url = {OpamUrl.backend = k; _}; _}
-                     (nhttp, nlocal, nvcs) ->
-                  match k with
-                  | `http -> nhttp+1, nlocal, nvcs
-                  | `rsync -> nhttp, nlocal+1, nvcs
-                  | _ -> nhttp, nlocal, nvcs+1)
-                state.switch_repos.repositories (0,0,0) in
-            let has_default =
-              exists (fun _ {repo_url; _} ->
-                  repo_url = OpamRepositoryBackend.default_url)
-                state.switch_repos.repositories in
-            String.concat ", "
-              (Printf.sprintf "%d%s (http)" nhttp
-                 (if has_default then "*" else "") ::
-               nprint "local" nlocal @
-               nprint "version-controlled" nvcs)
-          );
-        print "pinned" "%s"
-          (if OpamPackage.Set.is_empty state.pinned then "0" else
-           let pinnings =
-             OpamPackage.Set.fold (fun nv acc ->
-                 let opam = OpamSwitchState.opam state nv in
-                 let kind =
-                   if Some opam =
-                      OpamPackage.Map.find_opt nv state.repos_package_index
-                   then "version"
-                   else
-                     OpamStd.Option.to_string ~none:"local"
-                       (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
-                       (OpamFile.OPAM.get_url opam)
-                 in
-                 OpamStd.String.Map.update kind succ 0 acc)
-               state.pinned OpamStd.String.Map.empty
-           in
-           String.concat ", "
-             (List.flatten (List.map (fun (k,v) -> nprint k v)
-                              (OpamStd.String.Map.bindings pinnings)))
-          );
-        print "current-switch" "%s"
-          (OpamSwitch.to_string state.switch);
-        (* !X fixme: find a way to do thit without the package index
-        let index_file =
-          OpamFile.to_string (OpamPath.package_index state.switch_global.root)
-        in
-        let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
-        Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
-              (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
-              u.tm_hour u.tm_min);
-        *)
-        `Ok ()
-      with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
+        let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
+        Printf.printf "# OPAM config report\n";
+        print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
+        print "self-upgrade" "%s"
+          (if self_upgrade_status global_options = `Running then
+             OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
+           else "no");
+        print "os" "%s" (OpamStd.Sys.os_string ());
+        try
+          OpamGlobalState.with_ `Lock_none @@ fun gt ->
+          OpamSwitchState.with_ `Lock_none gt @@ fun state ->
+          let external_solver =
+            OpamSolverConfig.external_solver_command
+              ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
+          print "external-solver" "%s"
+            (OpamStd.Option.to_string ~none:"no" (String.concat " ")
+               external_solver);
+          if external_solver <> None then
+            print "criteria" "%s" (OpamSolverConfig.criteria `Default);
+          let nprint label n =
+            if n <> 0 then [Printf.sprintf "%d (%s)" n label]
+            else [] in
+          print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
+          print "repositories" "%s"
+            OpamRepositoryName.Map.(
+              let nhttp, nlocal, nvcs =
+                fold (fun _ {repo_url = {OpamUrl.backend = k; _}; _}
+                       (nhttp, nlocal, nvcs) ->
+                       match k with
+                       | `http -> nhttp+1, nlocal, nvcs
+                       | `rsync -> nhttp, nlocal+1, nvcs
+                       | _ -> nhttp, nlocal, nvcs+1)
+                  state.switch_repos.repositories (0,0,0) in
+              let has_default =
+                exists (fun _ {repo_url; _} ->
+                    repo_url = OpamRepositoryBackend.default_url)
+                  state.switch_repos.repositories in
+              String.concat ", "
+                (Printf.sprintf "%d%s (http)" nhttp
+                   (if has_default then "*" else "") ::
+                 nprint "local" nlocal @
+                 nprint "version-controlled" nvcs)
+            );
+          print "pinned" "%s"
+            (if OpamPackage.Set.is_empty state.pinned then "0" else
+             let pinnings =
+               OpamPackage.Set.fold (fun nv acc ->
+                   let opam = OpamSwitchState.opam state nv in
+                   let kind =
+                     if Some opam =
+                        OpamPackage.Map.find_opt nv state.repos_package_index
+                     then "version"
+                     else
+                       OpamStd.Option.to_string ~none:"local"
+                         (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
+                         (OpamFile.OPAM.get_url opam)
+                   in
+                   OpamStd.String.Map.update kind succ 0 acc)
+                 state.pinned OpamStd.String.Map.empty
+             in
+             String.concat ", "
+               (List.flatten (List.map (fun (k,v) -> nprint k v)
+                                (OpamStd.String.Map.bindings pinnings)))
+            );
+          print "current-switch" "%s"
+            (OpamSwitch.to_string state.switch);
+          (* !X fixme: find a way to do thit without the package index
+             let index_file =
+             OpamFile.to_string (OpamPath.package_index state.switch_global.root)
+             in
+             let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
+             Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
+                (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
+                u.tm_hour u.tm_min);
+          *)
+          `Ok ()
+        with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     | command, params -> bad_subcommand commands ("config", command, params)
   in
 
@@ -728,46 +728,48 @@ let update =
   let doc = update_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command updates each repository that has been previously set up \
-        by the $(b,opam init) or $(b,opam repository) commands. The list of packages \
-        that can be upgraded will be printed out, and the user can use \
-        $(b,opam upgrade) to upgrade them.";
+    `P "Update the package definitions. This fetches the newest version of the \
+        repositories configured through $(b, opam repository), and the sources \
+        of installed development packages and packages pinned in the current \
+        switch. To use the updated sources and definitions, use \
+        $(b,opam upgrade).";
   ] in
   let repos_only =
     mk_flag ["R"; "repositories"]
-      "Only update repositories, not development packages." in
+      "Update repositories (skipping development packages unless \
+       $(b,--development) is also specified)." in
   let dev_only =
     mk_flag ["development"]
-      "Only update development packages, not repositories." in
-  let sync =
-    mk_flag ["sync-archives"]
-      "Always sync the remote archives files. This is not \
-       a good idea to enable this, unless your really know \
-       what your are doing: this flag will make OPAM try to \
-       download the archive files for ALL the available \
-       packages." in
+      "Update development packages (skipping repositories unless \
+       $(b,--repositories) is also specified)." in
   let upgrade =
     mk_flag ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
   let name_list =
-    arg_list "NAMES" "List of repository or development package names."
+    arg_list "NAMES"
+      "List of repository or development package names to update."
       Arg.string in
-  let update global_options jobs names repos_only dev_only sync upgrade =
+  let update global_options jobs names repos_only dev_only upgrade =
     apply_global_options global_options;
-    let sync_archives = if sync then Some true else None in
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
-    OpamClientConfig.update ?sync_archives ();
+    OpamClientConfig.update ();
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamClient.update gt ~repos_only ~dev_only ~no_stats:upgrade names;
+    let st =
+      OpamClient.update gt
+        ~repos_only:(repos_only && not dev_only)
+        ~dev_only:(dev_only && not repos_only)
+        ~no_stats:upgrade
+        names
+    in
     if upgrade then
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      OpamSwitchState.with_write_lock st @@ fun st ->
       OpamConsole.msg "\n";
       ignore @@ OpamClient.upgrade st []
   in
   Term.(pure update $global_options $jobs_flag $name_list
-        $repos_only $dev_only $sync $upgrade),
+        $repos_only $dev_only $upgrade),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
@@ -1196,8 +1198,8 @@ let pin ?(unpin_only=false) () =
     | Some `remove, names ->
       let names,errs =
         List.fold_left (fun (names,errs) n -> match (fst package_name) n with
-          | `Ok name -> name::names,errs
-          | `Error e -> names,e::errs)
+            | `Ok name -> name::names,errs
+            | `Error e -> names,e::errs)
           ([],[]) names
       in
       (match errs with
@@ -1232,11 +1234,11 @@ let pin ?(unpin_only=false) () =
          ignore @@ OpamClient.PIN.pin st name ~edit ~action (Some pin_option);
          `Ok ()
        with Not_found ->
-        `Error (false, Printf.sprintf
-                  "No valid package description found at path %s.\n\
-                   Please supply at least a package name \
-                   (e.g. `opam pin add NAME PATH')"
-                  path))
+         `Error (false, Printf.sprintf
+                   "No valid package description found at path %s.\n\
+                    Please supply at least a package name \
+                    (e.g. `opam pin add NAME PATH')"
+                   path))
     | Some `add, [n; target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
@@ -1552,92 +1554,92 @@ let check_and_run_external_commands () =
       not (OpamStd.String.starts_with ~prefix:"-" name)
       && List.for_all (fun (_,info) -> Term.name info <> name) commands
     then
-    (* No such command, check if there is a matching plugin *)
-    let command = plugin_prefix ^ name in
-    OpamStd.Config.init ();
-    OpamFormatConfig.init ();
-    let root_dir = OpamStateConfig.opamroot () in
-    let has_init = OpamStateConfig.load_defaults root_dir <> None in
-    let env =
-      if has_init then (
-        OpamStateConfig.init ~root_dir ();
+      (* No such command, check if there is a matching plugin *)
+      let command = plugin_prefix ^ name in
+      OpamStd.Config.init ();
+      OpamFormatConfig.init ();
+      let root_dir = OpamStateConfig.opamroot () in
+      let has_init = OpamStateConfig.load_defaults root_dir <> None in
+      let env =
+        if has_init then (
+          OpamStateConfig.init ~root_dir ();
+          match OpamStateConfig.(!r.current_switch) with
+          | None -> Unix.environment ()
+          | Some sw ->
+            env_array (OpamEnv.full_with_path ~force_path:false root_dir sw)
+        ) else
+          Unix.environment ()
+      in
+      if OpamSystem.command_exists ~env command then
+        let argv = Array.of_list (command :: args) in
+        raise (OpamStd.Sys.Exec (command, argv, env))
+      else if has_init then
+        (* Look for a corresponding package *)
         match OpamStateConfig.(!r.current_switch) with
-        | None -> Unix.environment ()
+        | None -> ()
         | Some sw ->
-          env_array (OpamEnv.full_with_path ~force_path:false root_dir sw)
-      ) else
-        Unix.environment ()
-    in
-    if OpamSystem.command_exists ~env command then
-      let argv = Array.of_list (command :: args) in
-      raise (OpamStd.Sys.Exec (command, argv, env))
-    else if has_init then
-      (* Look for a corresponding package *)
-      match OpamStateConfig.(!r.current_switch) with
-      | None -> ()
-      | Some sw ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
-        let prefixed_name = plugin_prefix ^ name in
-        let candidates =
-          OpamPackage.packages_of_names
-            (Lazy.force st.available_packages)
-            (OpamPackage.Name.Set.of_list @@
-             List.map OpamPackage.Name.of_string [ prefixed_name; name ])
-        in
-        let plugins =
-          OpamPackage.Set.filter (fun nv ->
-              OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamSwitchState.opam st nv))
-            candidates
-        in
-        let installed = OpamPackage.Set.inter plugins st.installed in
-        if OpamPackage.Set.is_empty candidates then
-          (* !X FIXME: here we loaded a full switch state and discard it, to go on
-             if the command was a valid _prefix_ of an opam command. We should
-             assume prefixes can't be plugins! Or at least not auto-installable
-             ones *)
-          ()
-        else if not OpamPackage.Set.(is_empty installed) then
-          (OpamConsole.error
-             "Plugin %s is already installed, but no %s command was found.\n\
-              Try upgrading, and report to the package maintainer if \
-              the problem persists."
-             (OpamPackage.to_string (OpamPackage.Set.choose installed))
-             command;
-           exit 1)
-        else if OpamPackage.Set.is_empty plugins then
-          (OpamConsole.error
-             "%s is not a known command or plugin (package %s does \
-              not have the 'plugin' flag set)."
-             name
-             (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
-           exit 1)
-        else if
-          OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
-                               Install it on the current switch?"
-            name
-        then
-          let nv =
-            try
-              OpamPackage.max_version plugins
-                (OpamPackage.Name.of_string prefixed_name)
-            with Not_found ->
-              OpamPackage.max_version plugins
-                (OpamPackage.Name.of_string name)
+          OpamGlobalState.with_ `Lock_none @@ fun gt ->
+          OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
+          let prefixed_name = plugin_prefix ^ name in
+          let candidates =
+            OpamPackage.packages_of_names
+              (Lazy.force st.available_packages)
+              (OpamPackage.Name.Set.of_list @@
+               List.map OpamPackage.Name.of_string [ prefixed_name; name ])
           in
-          OpamRepositoryConfig.init ();
-          OpamSolverConfig.init ();
-          OpamClientConfig.init ();
-          OpamSwitchState.with_ `Lock_write gt (fun st ->
-              ignore @@
-              OpamClient.install st [OpamSolution.eq_atom_of_package nv]
-                None ~deps_only:false ~upgrade:false
-            );
-          OpamConsole.header_msg "Carrying on to \"%s\""
-            (String.concat " " (Array.to_list Sys.argv));
-          OpamConsole.msg "\n";
-          let argv = Array.of_list (command :: args) in
-          raise (OpamStd.Sys.Exec (command, argv, env))
+          let plugins =
+            OpamPackage.Set.filter (fun nv ->
+                OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamSwitchState.opam st nv))
+              candidates
+          in
+          let installed = OpamPackage.Set.inter plugins st.installed in
+          if OpamPackage.Set.is_empty candidates then
+            (* !X FIXME: here we loaded a full switch state and discard it, to go on
+               if the command was a valid _prefix_ of an opam command. We should
+               assume prefixes can't be plugins! Or at least not auto-installable
+               ones *)
+            ()
+          else if not OpamPackage.Set.(is_empty installed) then
+            (OpamConsole.error
+               "Plugin %s is already installed, but no %s command was found.\n\
+                Try upgrading, and report to the package maintainer if \
+                the problem persists."
+               (OpamPackage.to_string (OpamPackage.Set.choose installed))
+               command;
+             exit 1)
+          else if OpamPackage.Set.is_empty plugins then
+            (OpamConsole.error
+               "%s is not a known command or plugin (package %s does \
+                not have the 'plugin' flag set)."
+               name
+               (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
+             exit 1)
+          else if
+            OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
+                                 Install it on the current switch?"
+              name
+          then
+            let nv =
+              try
+                OpamPackage.max_version plugins
+                  (OpamPackage.Name.of_string prefixed_name)
+              with Not_found ->
+                OpamPackage.max_version plugins
+                  (OpamPackage.Name.of_string name)
+            in
+            OpamRepositoryConfig.init ();
+            OpamSolverConfig.init ();
+            OpamClientConfig.init ();
+            OpamSwitchState.with_ `Lock_write gt (fun st ->
+                ignore @@
+                OpamClient.install st [OpamSolution.eq_atom_of_package nv]
+                  None ~deps_only:false ~upgrade:false
+              );
+            OpamConsole.header_msg "Carrying on to \"%s\""
+              (String.concat " " (Array.to_list Sys.argv));
+            OpamConsole.msg "\n";
+            let argv = Array.of_list (command :: args) in
+            raise (OpamStd.Sys.Exec (command, argv, env))
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
