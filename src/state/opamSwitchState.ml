@@ -271,7 +271,19 @@ let find_installed_package_by_name st name =
   OpamPackage.package_of_name st.installed name
 
 let packages_of_atoms st atoms =
-  OpamFormula.packages_of_atoms atoms st.packages
+  (* Conjunction for constraints over the same name, but disjunction on the
+     package names *)
+  let by_name =
+    List.fold_left (fun acc (n,_ as atom) ->
+        OpamPackage.Name.Map.update n (fun a -> atom::a) [] acc)
+      OpamPackage.Name.Map.empty atoms
+  in
+  OpamPackage.Name.Map.fold (fun name atoms acc ->
+      acc ++
+      OpamPackage.Set.filter
+        (fun nv -> List.for_all (fun a -> OpamFormula.check a nv) atoms)
+        (OpamPackage.packages_of_name st.packages name))
+    by_name OpamPackage.Set.empty
 
 let get_package st name =
   try OpamPinned.package st name with Not_found ->
@@ -294,35 +306,22 @@ let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
-let universe st action =
-  let provides =
-    OpamPackage.Map.fold (fun nv opam provides ->
-        let atoms = OpamFormula.atoms (OpamFile.OPAM.provided_by opam) in
-        let packages = packages_of_atoms st atoms in
-        OpamPackage.Set.fold (fun provider provides ->
-            OpamPackage.Map.update provider
-              (OpamPackage.Set.add nv) OpamPackage.Set.empty
-              provides)
-          packages provides)
-      st.opams OpamPackage.Map.empty
-  in
-  {
-    u_packages  = st.packages;
-    u_action    = action;
-    u_installed = st.installed;
-    u_available = Lazy.force st.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
-    u_provides  = provides;
-    u_installed_roots = st.installed_roots;
-    u_pinned    = OpamPinned.packages st;
-    u_dev       = dev_packages st;
-    u_base      = st.compiler_packages;
-    u_attrs     = [];
-    u_test      = OpamStateConfig.(!r.build_test);
-    u_doc       = OpamStateConfig.(!r.build_doc);
-  }
+let universe st action = {
+  u_packages  = st.packages;
+  u_action    = action;
+  u_installed = st.installed;
+  u_available = Lazy.force st.available_packages;
+  u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
+  u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
+  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
+  u_installed_roots = st.installed_roots;
+  u_pinned    = OpamPinned.packages st;
+  u_dev       = dev_packages st;
+  u_base      = st.compiler_packages;
+  u_attrs     = [];
+  u_test      = OpamStateConfig.(!r.build_test);
+  u_doc       = OpamStateConfig.(!r.build_doc);
+}
 
 
 

@@ -65,7 +65,7 @@ let list gt ~print_short ~installed ~all =
     let rt = OpamRepositoryState.load `Lock_none gt in
     let st = OpamSwitchState.load_virtual gt rt in
     let is_main_comp_re =
-      Re.(compile @@ seq [ bos; rep (diff any (char '+')); eos])
+      Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
     in
     OpamPackage.Map.fold
       (fun nv opam (acc,notshown) ->
@@ -73,7 +73,7 @@ let list gt ~print_short ~installed ~all =
             OpamPackage.Set.mem nv (Lazy.force st.available_packages)
          then
            if all ||
-              Re.(execp is_main_comp_re (OpamPackage.name_to_string nv))
+              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv))
            then OpamPackage.Map.add nv opam acc, notshown
            else acc, notshown + 1
          else acc, notshown)

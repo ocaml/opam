@@ -404,21 +404,6 @@ let simplify_version_formula f =
   in
   aux f
 
-let packages_of_atoms atoms set =
-  (* Conjunction for constraints over the same name, but disjunction on the
-     package names *)
-  let by_name =
-    List.fold_left (fun acc (n,_ as atom) ->
-        OpamPackage.Name.Map.update n (fun a -> atom::a) [] acc)
-      OpamPackage.Name.Map.empty atoms
-  in
-  OpamPackage.Name.Map.fold (fun name atoms acc ->
-      OpamPackage.Set.union acc
-        (OpamPackage.Set.filter
-           (fun nv -> List.for_all (fun a -> check a nv) atoms)
-           (OpamPackage.packages_of_name set name)))
-    by_name OpamPackage.Set.empty
-
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula
 

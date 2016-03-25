@@ -1328,7 +1328,6 @@ module OPAMSyntax = struct
     depends    : ext_formula;
     depopts    : ext_formula;
     conflicts  : formula;
-    provided_by: formula;
     available  : filter;
     flags      : package_flag list;
     env        : env_update list;
@@ -1393,7 +1392,6 @@ module OPAMSyntax = struct
     depends    = OpamFormula.Empty;
     depopts    = OpamFormula.Empty;
     conflicts  = OpamFormula.Empty;
-    provided_by= OpamFormula.Empty;
     available  = FBool true;
     flags      = [];
     env        = [];
@@ -1465,7 +1463,6 @@ module OPAMSyntax = struct
   let depends t = t.depends
   let depopts t = t.depopts
   let conflicts t = t.conflicts
-  let provided_by t = t.provided_by
   let available t = t.available
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
@@ -1536,7 +1533,6 @@ module OPAMSyntax = struct
   let with_depends depends t = { t with depends }
   let with_depopts depopts t = { t with depopts }
   let with_conflicts conflicts t = {t with conflicts }
-  let with_provided_by provided_by t = {t with provided_by }
   let with_available available t = { t with available }
   let with_flags flags t = { t with flags }
   let add_flags flags t =
@@ -1772,13 +1768,6 @@ module OPAMSyntax = struct
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
         (Pp.V.package_formula `Disj Pp.V.constraints);
-      "provided-by", no_cleanup Pp.ppacc with_provided_by provided_by
-        (Pp.V.package_formula `Disj Pp.V.constraints -|
-         Pp.check ~name:"provided-by"
-           ~errmsg:"'provided-by:' must be a disjunction"
-           (fun f -> match OpamFormula.to_cnf f with
-              | [] | [_] -> true
-              | _::_::_ -> false));
       "available", no_cleanup Pp.ppacc with_available available
         (Pp.V.list_depth 1 -| Pp.V.list -| Pp.V.filter);
       "flags", with_cleanup cleanup_flags Pp.ppacc add_flags flags
@@ -2031,7 +2020,6 @@ module OPAM = struct
       depends    = t.depends;
       depopts    = t.depopts;
       conflicts  = t.conflicts;
-      provided_by= t.provided_by;
       available  = t.available;
       flags      = t.flags;
       env        = t.env;
@@ -2928,9 +2916,13 @@ module CompSyntax = struct
 
   let to_package pkg_name comp descr_opt =
     let version =
-      OpamPackage.Version.of_string (version comp)
+      OpamPackage.Version.of_string (name comp)
     in
     let nofilter x = x, (None: filter option) in
+    let depends =
+      OpamFormula.map (fun (n, formula) -> Atom (n, ([], formula)))
+        comp.packages
+    in
     let url =
       OpamStd.Option.map
         (fun url -> URL.with_url url URL.empty)
@@ -2963,6 +2955,7 @@ module CompSyntax = struct
     let pkg = OPAM.create (OpamPackage.create pkg_name version) in
     { pkg with
       OPAM.
+      depends;
       build;
       install;
       maintainer = [ "contact@ocamlpro.com" ];

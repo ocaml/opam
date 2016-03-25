@@ -174,12 +174,6 @@ val to_cnf: t -> atom cnf
 (** Return an equivalent DNF formula *)
 val to_dnf: t -> atom dnf
 
-(** Filters the package matching the given atoms from a package set. This is the
-    special handling used for most queries: a given package must match {i any} name
-    from the atom list, but {i all} the version constraints expressed for its
-    name *)
-val packages_of_atoms: atom list -> OpamPackage.Set.t -> OpamPackage.Set.t
-
 (** Formula over versionned packages with additional flags (used to handle
     eg. build-deps) *)
 type 'a ext_package_formula =
