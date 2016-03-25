@@ -2305,7 +2305,9 @@ module OPAM = struct
               match OpamVariable.Full.package v with
               | Some n when
                   t.name <> Some n &&
-                  not (OpamPackage.Name.Set.mem n all_depends) ->
+                  not (OpamPackage.Name.Set.mem n all_depends) &&
+                  OpamVariable.(Full.variable v <> of_string "installed")
+                ->
                 OpamPackage.Name.Set.add n acc
               | _ -> acc)
            OpamPackage.Name.Set.empty all_variables
