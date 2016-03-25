@@ -434,10 +434,7 @@ let check_for_conflicts universe =
       ~version_map universe  universe.u_packages
   in
   let installed =
-    List.rev_map
-      (opam2cudf universe ~depopts:false ~build:true
-         version_map)
-      (OpamPackage.Set.elements universe.u_installed)
+    Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) cudf_universe
   in
   match Algo.Depsolver.edos_coinstall cudf_universe installed with
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
