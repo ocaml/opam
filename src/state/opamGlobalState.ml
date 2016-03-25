@@ -452,7 +452,7 @@ let load_config global_lock root =
   in
   Format_upgrade.as_necessary global_lock root config
 
-let load lock_kind () =
+let load lock_kind =
   log "LOAD-GLOBAL-STATE";
   let root = OpamStateConfig.(!r.root_dir) in
   (* Always take a global read lock, this is only used to prevent concurrent
@@ -503,6 +503,6 @@ let with_write_lock ?dontblock gt f =
    phantom lock type possible*)
 
 let with_ lock f =
-  let gt = load lock () in
+  let gt = load lock in
   try let r = f gt in ignore (unlock gt); r
   with e -> ignore (unlock gt); raise e

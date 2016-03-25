@@ -20,21 +20,18 @@ open OpamStateTypes
 val load:
   'a lock -> 'b global_state -> 'c repos_state -> switch -> 'a switch_state
 
-(** Loads the switch state as [load], and calls the given function while keeping
-    it locked (as per the [lock] argument), releasing the lock afterwards *)
-val with_:
-  'a lock ->
-  [< unlocked ] global_state ->
-  [< unlocked ] repos_state ->
-  switch ->
-  ('a switch_state -> 'b) -> 'b
+(** Loads the switch state and calls the given function on it, releasing the
+    lock afterwards.
 
-(** Loads the switch state for the given switch (or the one set in
-    [OpamStateConfig.get_switch] -- which can fail if no switch is set -- by
-    default) from the global state (including the load of the repository), calls
-    the given function on it and releases the lock afterwards. *)
-val with_auto:
-  'a lock -> ?switch:switch ->
+    The repository state is automatically loaded if not provided.
+
+    The switch is selected, if not set, using [OpamStateConfig.get_switch] --
+    which can fail if no switch is configured.
+
+    Additionally, in case of a write lock, a backup is saved and a message is
+    printed on restoring if [f] raised an exception and there were changes.  *)
+val with_:
+  'a lock -> ?rt:([< unlocked ] repos_state) -> ?switch:switch ->
   [< unlocked ] global_state ->
   ('a switch_state -> 'b) -> 'b
 

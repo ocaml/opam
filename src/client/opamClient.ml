@@ -22,43 +22,6 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "CLIENT" fmt
 let slog = OpamConsole.slog
 
-let with_switch_backup gt f =
-  let rt = OpamRepositoryState.load `Lock_none gt in
-  let t =
-    OpamSwitchState.load `Lock_write gt rt
-      (OpamStateConfig.get_switch ())
-  in
-  let file = OpamPath.Switch.backup gt.root t.switch in
-  OpamFilename.mkdir (OpamPath.Switch.backup_dir gt.root t.switch);
-  OpamFile.SwitchSelections.write file (OpamSwitchState.selections t);
-  try
-    f t;
-    let _t = OpamSwitchState.unlock t in
-    (* Note: We might want to keep it even if successful ? *)
-    OpamFilename.remove (OpamFile.filename file)
-  with
-  | OpamStd.Sys.Exit 0 as e ->
-    let _t = OpamSwitchState.unlock t in
-    raise e
-  | err ->
-    OpamStd.Exn.register_backtrace err;
-    let t = OpamSwitchState.unlock t in
-    let t1 =
-      OpamSwitchState.load `Lock_none gt rt
-        (OpamStateConfig.get_switch ())
-    in
-    if OpamPackage.Set.equal t.installed t1.installed &&
-       OpamPackage.Set.equal t.installed_roots t1.installed_roots then
-      OpamFilename.remove (OpamFile.filename file)
-    else
-      (prerr_string
-         (OpamStd.Format.reformat
-            (Printf.sprintf
-               "\nThe former state can be restored with:\n    \
-                %s switch import %S\n%!"
-               Sys.argv.(0) (OpamFile.to_string file))));
-    raise err
-
   (* When packages are removed from upstream, they normally disappear from the
      'available' packages set and can't be seen by the solver anymore. This is a
      problem for several reasons, so we compute the set of orphan packages here:
@@ -411,15 +374,15 @@ let with_switch_backup gt f =
                    (OpamPackage.Set.elements unopt)));
           )
       );
-      OpamSolution.check_solution t result
+      OpamSolution.check_solution t result;
+      t
 
-  let upgrade gt names =
-    with_switch_backup gt @@ fun t ->
+  let upgrade t names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
     upgrade_t atoms t
 
-  let fixup_t t =
+  let fixup t =
     log "FIXUP";
     if not (OpamCudf.external_solver_available ()) then
       (OpamConsole.formatted_msg
@@ -482,9 +445,8 @@ let with_switch_backup gt f =
           ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
           solution
     in
-    OpamSolution.check_solution t result
-
-  let fixup gt = with_switch_backup gt fixup_t
+    OpamSolution.check_solution t result;
+    t
 
   let update gt ~repos_only ~dev_only ?(no_stats=false) names =
     let rt = OpamRepositoryState.load `Lock_write gt in
@@ -626,7 +588,7 @@ let with_switch_backup gt f =
     let gt, rt =
     if OpamFile.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.\n";
-      let gt = OpamGlobalState.load `Lock_write () in
+      let gt = OpamGlobalState.load `Lock_write in
       gt, OpamRepositoryState.load `Lock_none gt
     ) else (
       if not root_empty then (
@@ -716,7 +678,7 @@ let with_switch_backup gt f =
                               OpamRepository.update repo);
 
         log "updating repository state";
-        let gt = OpamGlobalState.load `Lock_write () in
+        let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
         let rt = OpamUpdate.repositories rt [repo] in
@@ -896,11 +858,12 @@ let with_switch_backup gt f =
                 solution
             else solution in
           OpamSolution.apply ?ask t action ~requested:names solution in
-      OpamSolution.check_solution t solution
+      OpamSolution.check_solution t solution;
+      t
     )
+    else t
 
-  let install gt names add_to_roots ~deps_only ~upgrade =
-    with_switch_backup gt @@ fun t ->
+  let install t names add_to_roots ~deps_only ~upgrade =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
     install_t atoms add_to_roots ~deps_only ~upgrade t
@@ -979,12 +942,14 @@ let with_switch_backup gt f =
              ~remove:(OpamSolution.atoms_of_packages to_remove)
              ())
       in
-      OpamSolution.check_solution t solution
-    ) else if !nothing_to_do then
-      OpamConsole.msg "Nothing to do.\n"
+      OpamSolution.check_solution t solution;
+      t
+    ) else if !nothing_to_do then (
+      OpamConsole.msg "Nothing to do.\n";
+      t
+    ) else t
 
-  let remove gt ~autoremove ~force names =
-    with_switch_backup gt @@ fun t ->
+  let remove t ~autoremove ~force names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     remove_t ~autoremove ~force atoms t
 
@@ -1029,10 +994,10 @@ let with_switch_backup gt f =
         ~orphans:(full_orphans ++ orphan_versions)
         request in
 
-    OpamSolution.check_solution t solution
+    OpamSolution.check_solution t solution;
+    t
 
-  let reinstall gt names =
-    with_switch_backup gt @@ fun t ->
+  let reinstall t names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
     reinstall_t atoms t
@@ -1067,7 +1032,7 @@ let with_switch_backup gt f =
             (OpamConsole.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
              (* Package no longer available *)
              remove_t ~ask:true ~autoremove:false ~force:false [name, None] st)
-        with Not_found -> ()
+        with Not_found -> st
       with e ->
         OpamConsole.note
           "Pinning command successful, but your installed packages \
@@ -1088,8 +1053,7 @@ let with_switch_backup gt f =
            the pinning location"
           (OpamPackage.Name.to_string name)
 
-    let pin gt name ?(edit=false) ?version ?(action=true) pin_option_opt =
-      with_switch_backup gt @@ fun st ->
+    let pin st name ?(edit=false) ?version ?(action=true) pin_option_opt =
       let pin_option = match pin_option_opt with
         | Some o -> o
         | None -> get_upstream st name
@@ -1100,15 +1064,13 @@ let with_switch_backup gt f =
         | Version v -> OpamPinCommand.version_pin st name v
       in
       OpamConsole.msg "\n";
-      if action then post_pin_action st name
+      if action then post_pin_action st name else st
 
-    let edit gt ?(action=true) name =
-      with_switch_backup gt @@ fun st ->
+    let edit st ?(action=true) name =
       let st = edit st name in
-      if action then post_pin_action st name
+      if action then post_pin_action st name else st
 
-    let unpin gt ?(action=true) names =
-      OpamSwitchState.with_auto `Lock_write gt @@ fun st ->
+    let unpin st ?(action=true) names =
       let packages =
         OpamStd.List.filter_map (OpamPinned.package_opt st) names
       in
@@ -1126,8 +1088,7 @@ let with_switch_backup gt f =
             [] packages
         in
         upgrade_t ~ask:true atoms st
+      else st
 
-    let list gt ~short () =
-      OpamSwitchState.with_auto `Lock_none gt @@
-      list ~short
+    let list = list
   end

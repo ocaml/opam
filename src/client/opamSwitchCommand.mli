@@ -34,7 +34,8 @@ val install:
   packages:atom conjunction -> switch -> unit
 
 (** Install a compiler's base packages *)
-val install_compiler_packages: rw switch_state -> atom conjunction -> unit
+val install_compiler_packages:
+  rw switch_state -> atom conjunction -> rw switch_state
 
 (** Import a file which contains the packages to install. *)
 val import:

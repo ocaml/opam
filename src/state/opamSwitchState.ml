@@ -407,11 +407,35 @@ let update_pin nv opam st =
       | _ -> st.reinstall;
   }
 
-let with_ lock gt rt switch f =
-  let st = load lock gt rt switch in
-  try let r = f st in ignore (unlock st); r
-  with e -> ignore (unlock st); raise e
+let do_backup lock st = match lock with
+  | `Lock_write ->
+    let file = OpamPath.Switch.backup st.switch_global.root st.switch in
+    OpamFile.SwitchSelections.write file (selections st);
+    (function
+      | true -> OpamFilename.remove (OpamFile.filename file)
+      | false ->
+        (* Reload, in order to skip the message if there were no changes *)
+        let st1 = load `Lock_none st.switch_global st.switch_repos st.switch in
+        if OpamPackage.Set.equal st.installed st1.installed &&
+           OpamPackage.Set.equal st.installed_roots st1.installed_roots &&
+           OpamPackage.Set.equal st.compiler_packages st1.compiler_packages &&
+           OpamPackage.Set.equal st.pinned st1.pinned
+        then OpamFilename.remove (OpamFile.filename file)
+        else
+          prerr_string
+            (OpamStd.Format.reformat
+               (Printf.sprintf
+                  "\nThe former state can be restored with:\n    \
+                   %s switch import %S\n%!"
+                  Sys.argv.(0) (OpamFile.to_string file))))
+  | _ -> fun _ -> ()
 
-let with_auto lock ?(switch=OpamStateConfig.get_switch ()) gt f =
-  OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-  with_ lock gt rt switch f
+let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
+  (match rt with
+   | Some rt -> fun f -> f (rt :> unlocked repos_state)
+   | None -> OpamRepositoryState.with_ `Lock_none gt)
+  @@ fun rt ->
+  let st = load lock gt rt switch in
+  let cleanup_backup = do_backup lock st in
+  try let r = f st in ignore (unlock st); cleanup_backup true; r
+  with e -> ignore (unlock st); cleanup_backup false; raise e

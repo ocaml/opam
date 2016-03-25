@@ -28,12 +28,13 @@ val init:
     that given packages should be added or removed from the roots.
     Third argument installs all dependencies but not the packages themselves *)
 val install:
-  [< unlocked ] global_state ->
-  atom list -> bool option -> deps_only:bool -> upgrade:bool -> unit
+  rw switch_state ->
+  atom list -> bool option -> deps_only:bool -> upgrade:bool ->
+  rw switch_state
 
 (** Reinstall the given set of packages. *)
 val reinstall:
-  [< unlocked ] global_state -> atom list -> unit
+  rw switch_state -> atom list -> rw switch_state
 
 (** Refresh the available packages. *)
 val update:
@@ -44,14 +45,15 @@ val update:
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version, within the given constraints.
     An empty list means upgrade all installed packages. *)
-val upgrade: [< unlocked ] global_state -> atom list -> unit
+val upgrade: rw switch_state -> atom list -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
-val fixup: [< unlocked ] global_state -> unit
+val fixup: rw switch_state -> rw switch_state
 
 (** Remove the given list of packages. *)
 val remove:
-  [< unlocked ] global_state -> autoremove:bool -> force:bool -> atom list -> unit
+  rw switch_state -> autoremove:bool -> force:bool -> atom list ->
+  rw switch_state
 
 module PIN: sig
 
@@ -59,19 +61,20 @@ module PIN: sig
       upstream. If [action], prompt for install/reinstall as appropriate after
       pinning. *)
   val pin:
-    [< unlocked ] global_state ->
+    rw switch_state ->
     OpamPackage.Name.t ->
     ?edit:bool -> ?version:version -> ?action:bool ->
-    pin_option option -> unit
+    pin_option option ->
+    rw switch_state
 
   val edit:
-    [< unlocked ] global_state -> ?action:bool -> OpamPackage.Name.t -> unit
+    rw switch_state -> ?action:bool -> OpamPackage.Name.t -> rw switch_state
 
   val unpin:
-    [< unlocked ] global_state ->
-    ?action:bool -> OpamPackage.Name.t list -> unit
+    rw switch_state ->
+    ?action:bool -> OpamPackage.Name.t list -> rw switch_state
 
   (** List the current pinned packages. *)
-  val list: [< unlocked ] global_state -> short:bool -> unit -> unit
+  val list: 'a switch_state -> short:bool -> unit
 
 end

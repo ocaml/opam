@@ -247,7 +247,8 @@ let install_compiler_packages t atoms =
     OpamSolution.apply ~ask:false t (Switch roots)
       ~requested:roots
       solution in
-  OpamSolution.check_solution t result
+  OpamSolution.check_solution t result;
+  t
 
 let install_cont gt ~update_config ~packages switch =
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -264,13 +265,13 @@ let install_cont gt ~update_config ~packages switch =
    then fun f ->
      f (OpamSwitchAction.set_current_switch `Lock_write gt switch)
    else
-     OpamSwitchState.with_auto `Lock_write gt ~switch)
+     OpamSwitchState.with_ `Lock_write gt ~switch)
   @@ fun st ->
   let _gt = OpamGlobalState.unlock gt in
   switch,
   fun () ->
     try
-      install_compiler_packages st packages;
+      let st = install_compiler_packages st packages in
       ignore (OpamSwitchState.unlock st)
     with e ->
       let _st = OpamSwitchState.unlock st in
@@ -403,7 +404,8 @@ let import_t importfile t =
     S.write
       (OpamPath.Switch.selections t.switch_global.root t.switch)
       { sel with sel_pinned = pinned }
-  end
+  end;
+  t
 
 let read_overlays (read: package -> OpamFile.OPAM.t option) packages =
   OpamPackage.Set.fold (fun nv acc ->
@@ -454,7 +456,7 @@ let show () =
 let reinstall_gt gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
 
-  OpamSwitchState.with_auto `Lock_write gt ~switch @@ fun init_st ->
+  OpamSwitchState.with_ `Lock_write gt ~switch @@ fun init_st ->
 
   let switch_root = OpamPath.Switch.root gt.root switch in
   let opam_subdir = OpamPath.Switch.meta gt.root switch in
@@ -516,5 +518,5 @@ let import gt switch filename =
        let importfile = match filename with
          | None   -> OpamFile.SwitchExport.read_from_channel stdin
          | Some f -> OpamFile.SwitchExport.read f in
-       OpamSwitchState.with_auto `Lock_write gt ~switch @@ fun st ->
+       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
        import_t importfile st)
