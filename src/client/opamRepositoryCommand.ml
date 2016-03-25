@@ -24,7 +24,7 @@ let slog = OpamConsole.slog
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
-let update_config (gt: [< rw ] global_state) repos =
+let update_config (gt: rw global_state) repos =
   log "update-config %a"
     (slog @@ OpamStd.List.concat_map ", " OpamRepositoryName.to_string)
     repos;

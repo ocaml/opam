@@ -29,11 +29,11 @@ val list: 'a global_state -> short:bool -> unit
 
 (** Add a new repository. *)
 val add:
-  [< rw ] global_state -> repository_name -> url -> priority:int option ->
-  [< rw ] repos_state
+  rw global_state -> repository_name -> url -> priority:int option ->
+  rw repos_state
 
 (** Remove a repository. *)
-val remove: ([< rw ] global_state as 'a) -> repository_name -> 'a
+val remove: rw global_state -> repository_name -> rw global_state
 
 (** Set a repository priority. *)
 val priority:
