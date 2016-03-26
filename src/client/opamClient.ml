@@ -1059,8 +1059,9 @@ let slog = OpamConsole.slog
         | Source url -> OpamPinCommand.source_pin st name ?version ~edit url
         | Version v -> OpamPinCommand.version_pin st name v
       in
-      OpamConsole.msg "\n";
-      if action then post_pin_action st name else st
+      if action then
+        (OpamConsole.msg "\n"; post_pin_action st name)
+      else st
 
     let edit st ?(action=true) name =
       let st = edit st name in
