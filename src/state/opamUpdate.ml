@@ -124,6 +124,8 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   rt
 
+(* fixme: this doesn't extract the archive, so we won't get the source package's
+   opam file unless we're going through VC. *)
 let fetch_dev_package url srcdir nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -135,44 +137,6 @@ let fetch_dev_package url srcdir nv =
       (OpamUrl.string_of_backend remote_url.OpamUrl.backend) in
   OpamProcess.Job.with_text text @@
   OpamRepository.pull_url nv srcdir checksum mirrors
-  @@| function
-  | Not_available _ ->
-    (* OpamConsole.error "Upstream %s of %s is unavailable" u *)
-    (*   (OpamPackage.to_string nv); *)
-    false
-  | Up_to_date _    -> false
-  | Result _        -> true
-
-let local_opam ?(check=false) ?copy_invalid_to name dir =
-  match OpamPinned.find_opam_file_in_source name dir with
-  | None -> None
-  | Some local_opam ->
-    let warns, opam_opt = OpamFile.OPAM.validate_file local_opam in
-    if check && warns <> [] then
-      (OpamConsole.warning
-         "%s opam file from upstream of %s (fix with 'opam pin edit'):"
-         (if opam_opt = None then "Fatal errors, not using"
-          else "Failed checks in")
-         (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
-       OpamConsole.errmsg "%s\n"
-         (OpamFile.OPAM.warns_to_string warns));
-    (match opam_opt, copy_invalid_to with
-     | None, Some dst ->
-       if not check then
-         OpamConsole.warning
-           "Errors in opam file from %s upstream, ignored (fix with \
-            'opam pin edit')"
-           (OpamPackage.Name.to_string name);
-       OpamFilename.copy ~src:(OpamFile.filename local_opam) ~dst:dst
-     | _ -> ());
-    OpamStd.Option.map
-      (fun opam ->
-         let opam = OpamFile.OPAM.with_name name opam in
-         if OpamFilename.dirname (OpamFile.filename local_opam) <> dir then
-           (* Subdir metadata *)
-           OpamFileHandling.add_aux_files opam
-         else opam)
-      opam_opt
 
 let pinned_package st ?fixed_version name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
@@ -190,7 +154,21 @@ let pinned_package st ?fixed_version name =
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
      from the repo *)
-  let old_source_opam = local_opam name srcdir in
+  let add_extra_files srcdir file opam =
+    if OpamFilename.dirname (OpamFile.filename file) <> srcdir
+    then OpamFileHandling.add_aux_files opam
+    else opam
+  in
+  let old_source_opam_hash, old_source_opam =
+    match OpamPinned.find_opam_file_in_source name srcdir with
+    | None -> None, None
+    | Some f ->
+      Some (OpamFilename.digest (OpamFile.filename f)),
+      try
+        Some (OpamFile.OPAM.read f |> OpamFile.OPAM.with_name name |>
+              add_extra_files srcdir f)
+      with e -> OpamStd.Exn.fatal e; None
+  in
   let repo_opam =
     let packages =
       OpamPackage.Map.filter (fun nv _ -> nv.name = name) st.repos_package_index
@@ -207,10 +185,19 @@ let pinned_package st ?fixed_version name =
   (* Do the update *)
   fetch_dev_package urlf srcdir nv @@+ fun result ->
   let new_source_opam =
-    let copy_invalid_to =
-      OpamFile.filename (OpamPath.Switch.Overlay.tmp_opam root st.switch name)
-    in
-    local_opam ~copy_invalid_to ~check:true name srcdir
+    OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
+    let warns, opam_opt = OpamFile.OPAM.validate_file f in
+    if warns <> [] &&
+       Some (OpamFilename.digest (OpamFile.filename f)) <> old_source_opam_hash
+    then
+      (OpamConsole.warning
+         "%s opam file from upstream of %s:"
+         (if opam_opt = None then "Fatal errors, not using"
+          else "Failed checks in")
+         (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
+       OpamConsole.errmsg "%s\n"
+         (OpamFile.OPAM.warns_to_string warns));
+    opam_opt >>| OpamFile.OPAM.with_name name >>| add_extra_files srcdir f
   in
   let equal_opam a b =
     let cleanup_opam o =
@@ -259,10 +246,9 @@ let pinned_package st ?fixed_version name =
       (OpamFile.OPAM.with_extra_files_opt None opam);
     opam
   in
-  match new_source_opam with
-  | Some new_opam
-    when result &&
-         changed_opam old_source_opam new_source_opam &&
+  match result, new_source_opam with
+  | Result _, Some new_opam
+    when changed_opam old_source_opam new_source_opam &&
          changed_opam overlay_opam new_source_opam ->
     (* Metadata from the package source changed *)
     if not (changed_opam old_source_opam overlay_opam) ||
@@ -295,17 +281,10 @@ let pinned_package st ?fixed_version name =
       Done (OpamSwitchState.update_pin nv opam, true))
     else
       Done ((fun st -> st), true)
-  | _ when overlay_opam = None ->
-    let new_opam =
-        new_source_opam ++
-        repo_opam ++
-        old_source_opam +!
-        OpamSwitchState.opam st nv
-    in
-    let opam = save_overlay new_opam in
-    Done (OpamSwitchState.update_pin nv opam, true)
-  | _ ->
-    Done ((fun st -> st), result)
+  | (Up_to_date _ | Not_available _), _ ->
+    Done ((fun st -> st), false)
+  | Result  _, _ ->
+    Done ((fun st -> st), true)
 
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
@@ -320,7 +299,8 @@ let dev_package st nv =
     else
       fetch_dev_package url
         (OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name) nv
-      @@| fun result -> (fun st -> st), result
+      @@| fun result ->
+      (fun st -> st), match result with Result _ -> true | _ -> false
 
 let dev_packages st packages =
   log "update-dev-packages";
@@ -337,7 +317,9 @@ let dev_packages st packages =
     OpamPackage.Set.union set1 set2
   in
   let st_update, updated_set =
-    OpamParallel.reduce ~jobs:OpamStateConfig.(!r.dl_jobs)
+    (* Fixme: update might be interactive, so to parallelise we need to take the
+       interactive part out and call it afterwards. *)
+    OpamParallel.reduce ~jobs:1 (* OpamStateConfig.(!r.dl_jobs) *)
       ~command
       ~merge
       ~nil:((fun st -> st), OpamPackage.Set.empty)

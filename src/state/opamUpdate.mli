@@ -65,3 +65,6 @@ val download_upstream:
   'a switch_state -> package -> dirname ->
   generic_file download option OpamProcess.job
 
+(** Low-level function to retrieve the package source into its local cache *)
+val fetch_dev_package:
+  OpamFile.URL.t -> dirname -> package -> generic_file download OpamProcess.job
