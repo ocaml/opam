@@ -413,7 +413,8 @@ module OPAM: sig
 
   (** Prints to a string, while keeping the format of the original file as much
       as possible *)
-  val to_string_with_preserved_format: t typed_file -> t -> string
+  val to_string_with_preserved_format:
+    ?format_from:(t typed_file) -> t typed_file -> t -> string
 
   (** Writes an opam file, but preserving the existing formatting as much as
       possible. The format is taken from the file that is being overwritten
