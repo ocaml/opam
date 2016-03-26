@@ -36,7 +36,7 @@ let process_dot_install st nv =
       log "Installing %s.\n" (OpamPackage.to_string nv);
       let name = nv.name in
       let config_f = OpamPath.Switch.build_config root st.switch nv in
-      let config = OpamFile.Dot_config.safe_read config_f in
+      let config = OpamFile.Dot_config.read_opt config_f in
       let install_f = OpamPath.Switch.build_install root st.switch nv in
       let install = OpamFile.Dot_install.safe_read install_f in
 
@@ -45,9 +45,11 @@ let process_dot_install st nv =
       OpamFile.Dot_install.write install_f install;
 
       (* .config *)
-      let dot_config = OpamPath.Switch.config root st.switch name in
-      OpamFilename.mkdir (OpamFilename.dirname (OpamFile.filename dot_config));
-      OpamFile.Dot_config.write dot_config config;
+      (match config with
+       | Some config ->
+         let dot_config = OpamPath.Switch.config root st.switch name in
+         OpamFile.Dot_config.write dot_config config
+       | None -> ());
 
       let warnings = ref [] in
       let check ~src ~dst base =
