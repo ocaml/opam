@@ -250,37 +250,40 @@ let pinned_package st ?fixed_version name =
   | Result _, Some new_opam
     when changed_opam old_source_opam new_source_opam &&
          changed_opam overlay_opam new_source_opam ->
-    (* Metadata from the package source changed *)
-    if not (changed_opam old_source_opam overlay_opam) ||
-       not (changed_opam repo_opam overlay_opam)
-    then
-      (* No manual changes *)
-      (OpamConsole.formatted_msg
-         "[%s] Installing new package description from upstream %s\n"
-         (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-         (OpamUrl.to_string url);
-       let opam = save_overlay new_opam in
-       Done (OpamSwitchState.update_pin nv opam, true))
-    else if
-      OpamConsole.formatted_msg
-        "[%s] Conflicting update of the metadata from %s."
-        (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-        (OpamUrl.to_string url);
-      OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
-        (OpamFilename.Dir.to_string overlay_dir)
-    then (
-      let bak =
-        OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
-      in
-      OpamFilename.mkdir (OpamPath.backup_dir root);
-      OpamFilename.rmdir bak;
-      OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
-      OpamConsole.formatted_msg "User metadata backed up in %s\n"
-        (OpamFilename.Dir.to_string bak);
-      let opam = save_overlay new_opam in
-      Done (OpamSwitchState.update_pin nv opam, true))
-    else
-      Done ((fun st -> st), true)
+    let interactive_part st =
+      (* Metadata from the package source changed *)
+      if not (changed_opam old_source_opam overlay_opam) ||
+         not (changed_opam repo_opam overlay_opam)
+      then
+        (* No manual changes *)
+        (OpamConsole.formatted_msg
+           "[%s] Installing new package description from upstream %s\n"
+           (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+           (OpamUrl.to_string url);
+         let opam = save_overlay new_opam in
+         OpamSwitchState.update_pin nv opam st)
+      else if
+        OpamConsole.formatted_msg
+          "[%s] Conflicting update of the metadata from %s."
+          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+          (OpamUrl.to_string url);
+        OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
+          (OpamFilename.Dir.to_string overlay_dir)
+      then (
+        let bak =
+          OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
+        in
+        OpamFilename.mkdir (OpamPath.backup_dir root);
+        OpamFilename.rmdir bak;
+        OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
+        OpamConsole.formatted_msg "User metadata backed up in %s\n"
+          (OpamFilename.Dir.to_string bak);
+        let opam = save_overlay new_opam in
+        OpamSwitchState.update_pin nv opam st)
+      else
+        st
+    in
+    Done (interactive_part, true)
   | (Up_to_date _ | Not_available _), _ ->
     Done ((fun st -> st), false)
   | Result  _, _ ->
@@ -317,9 +320,7 @@ let dev_packages st packages =
     OpamPackage.Set.union set1 set2
   in
   let st_update, updated_set =
-    (* Fixme: update might be interactive, so to parallelise we need to take the
-       interactive part out and call it afterwards. *)
-    OpamParallel.reduce ~jobs:1 (* OpamStateConfig.(!r.dl_jobs) *)
+    OpamParallel.reduce ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command
       ~merge
       ~nil:((fun st -> st), OpamPackage.Set.empty)
