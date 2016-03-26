@@ -14,7 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypesBase
 open OpamFilename.Op
 open OpamStd.Option.Op
 
@@ -31,7 +30,7 @@ let try_read rd f =
          "Could not read file %s: %s. Skipping.")
       (OpamFile.to_string f) (Printexc.to_string exc);
     None
-  | (Parsing.Parse_error | OpamFormat.Bad_format _ | Lexer_error _) as exc ->
+  | OpamFormat.Bad_format _ as exc ->
     (if OpamFormatConfig.(!r.strict) then
        OpamConsole.error_and_exit
          "Errors while parsing %s: %s.\nAborting (strict mode)."

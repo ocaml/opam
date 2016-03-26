@@ -115,17 +115,14 @@ module MakeIO (F : IO_Arg) = struct
         Some r
       with e -> close_in ic; raise e
     with
-      | OpamSystem.File_not_found _ ->
-        None
-      | Lexer_error _ | Parsing.Parse_error as e ->
-        if OpamFormatConfig.(!r.strict) then
-          OpamConsole.error_and_exit "Strict mode: aborting"
-        else raise e (* Message already printed *)
-      | e ->
-        OpamStd.Exn.fatal e;
-        OpamConsole.error "%s" (OpamFormat.string_of_bad_format ~file:f e);
-        if OpamFormatConfig.(!r.strict) then OpamStd.Sys.exit 66
-        else raise e
+    | OpamSystem.File_not_found _ ->
+      None
+    | e ->
+      OpamStd.Exn.fatal e;
+      if OpamFormatConfig.(!r.strict) then
+        (OpamConsole.error "%s" (OpamFormat.string_of_bad_format ~file:f e);
+         OpamConsole.error_and_exit "Strict mode: aborting")
+      else raise e
 
   let read f =
     match read_opt f with
@@ -142,16 +139,17 @@ module MakeIO (F : IO_Arg) = struct
         log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
         F.empty
     with
-    | OpamFormat.Bad_format _ ->
-      OpamConsole.msg "[skipped]\n";
+    | OpamFormat.Bad_format _ as e->
+      OpamConsole.error "%s [skipped]\n"
+        (OpamFormat.string_of_bad_format ~file:f e);
       F.empty
 
   let read_from_f f input =
     try f input with
     | OpamFormat.Bad_format _ as e ->
-      OpamConsole.error "%s" (OpamFormat.string_of_bad_format e);
       if OpamFormatConfig.(!r.strict) then
-        OpamConsole.error_and_exit "Strict mode: aborting"
+        (OpamConsole.error "%s" (OpamFormat.string_of_bad_format e);
+         OpamConsole.error_and_exit "Strict mode: aborting")
       else raise e
 
   let read_from_channel ?(filename=dummy_file) ic =
@@ -1408,9 +1406,13 @@ module OPAMSyntax = struct
     let version = Some (nv.OpamPackage.version) in
     { empty with name; version }
 
-  let check name = function
-    | None    ->
-      OpamFormat.bad_format "Invalid opam file (missing field %S)" name
+  let check t name = function
+    | None ->
+      let pos =
+        OpamStd.Option.Op.(OpamFilename.Op.(
+            t.metadata_dir >>| fun d -> pos_file (d // "opam")))
+      in
+      OpamFormat.bad_format ?pos "Field '%s:' is required" name
     | Some n -> n
 
   let ext_field_prefix = "x-"
@@ -1419,9 +1421,9 @@ module OPAMSyntax = struct
   (* Getters *)
 
   let opam_version t = t.opam_version
-  let name (t:t) = check "name" t.name
+  let name (t:t) = check t "name" t.name
   let name_opt (t:t) = t.name
-  let version (t:t) = check "version" t.version
+  let version (t:t) = check t "version" t.version
   let version_opt (t:t) = t.version
   let package t = OpamPackage.create (name t) (version t)
 

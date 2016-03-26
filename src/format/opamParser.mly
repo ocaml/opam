@@ -106,17 +106,15 @@ atom:
 
 %%
 
-let error lexbuf exn msg =
+let error lexbuf msg =
   let curr = lexbuf.Lexing.lex_curr_p in
   let start = lexbuf.Lexing.lex_start_p in
-  OpamConsole.error
-      "File %S, line %d, character %d-%d: %s."
-      curr.Lexing.pos_fname
-      start.Lexing.pos_lnum
-      (start.Lexing.pos_cnum - start.Lexing.pos_bol)
-      (curr.Lexing.pos_cnum - curr.Lexing.pos_bol)
-      msg;
-  raise exn
+  let pos =
+    OpamFilename.of_string curr.Lexing.pos_fname,
+    start.Lexing.pos_lnum,
+    start.Lexing.pos_cnum - start.Lexing.pos_bol
+  in
+  raise (OpamFormat.Bad_format (Some pos, msg))
 
 let main t l f =
   try
@@ -124,9 +122,9 @@ let main t l f =
     Parsing.clear_parser ();
     r
   with
-  | Lexer_error msg     as e ->
+  | Lexer_error msg ->
     Parsing.clear_parser ();
-    error l e msg
-  | Parsing.Parse_error as e ->
+    error l msg
+  | Parsing.Parse_error ->
     Parsing.clear_parser ();
-    error l e "parse error"
+    error l "Parse error"

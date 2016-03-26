@@ -38,18 +38,24 @@ let add_pos pos = function
 
 let rec string_of_bad_format ?file e =
   match e, file with
+  | Bad_format (None, msg), Some f
+  | Bad_format (Some (f, -1, -1), msg), _ ->
+    Printf.sprintf "In %s:\n%s"
+      (OpamFilename.to_string f) msg
   | Bad_format (Some pos, msg), _ ->
     Printf.sprintf "At %s:\n%s"
       (string_of_pos pos) msg
-  | Bad_format (None, msg), Some f ->
-    Printf.sprintf "In %s:\n%s"
-      (OpamFilename.to_string f) msg
   | Bad_format (None, msg), None ->
     Printf.sprintf "Input error:\n%s" msg
   | Bad_format_list bfl, _ ->
     OpamStd.List.concat_map "\n"
       (fun bf -> string_of_bad_format ?file (Bad_format bf)) bfl
   | _ -> Printexc.to_string e
+
+let () = Printexc.register_printer @@ function
+  | (Bad_format _ | Bad_format_list _ as e) ->
+    Some (string_of_bad_format ?file:None e)
+  | _ -> None
 
 let item_pos = function
   | Section (pos,_) | Variable (pos,_,_) -> pos
@@ -289,10 +295,16 @@ module Pp = struct
     | Unexpected (Some pos) -> bad_format ~pos "expected %s" pp.ppname
     | Unexpected None -> bad_format ~pos "expected %s" pp.ppname
     | Failure msg ->
-      bad_format ~pos "while expecting %s: %s" pp.ppname msg
+      bad_format ~pos "%s%s"
+        (if pp.ppname <> "" then Printf.sprintf "while expecting %s: " pp.ppname
+         else "")
+        msg
     | e ->
       OpamStd.Exn.fatal e;
-      bad_format ~pos "while expecting %s: %s" pp.ppname (Printexc.to_string e)
+      bad_format ~pos "%s%s"
+        (if pp.ppname <> "" then Printf.sprintf "while expecting %s: " pp.ppname
+         else "")
+        (Printexc.to_string e)
 
   let print pp x = pp.print x
 
