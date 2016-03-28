@@ -224,23 +224,25 @@ let edit st name =
       OpamFilename.remove (OpamFile.filename temp_file);
 
       (* Save back to source *)
-      begin match
-          OpamStd.Option.Op.(OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir)
-        with
-        | Some dir ->
+      ignore OpamStd.Option.Op.(
+          OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir >>| fun dir ->
           let src_opam =
             OpamStd.Option.default
               (OpamFile.make OpamFilename.Op.(dir // "opam"))
               (OpamPinned.find_opam_file_in_source name dir)
           in
-          if OpamConsole.confirm "Save the new opam file back to %S ?"
-              (OpamFile.to_string src_opam) then
-            OpamFile.OPAM.write_with_preserved_format src_opam @@
-            OpamFile.OPAM.with_url_opt None @@
-            OpamFile.OPAM.with_extra_files [] @@
-            opam
-        | _ -> ()
-      end;
+          let clean_opam =
+            OpamFile.OPAM.with_url_opt None @*
+            OpamFile.OPAM.with_extra_files []
+          in
+          if (current_opam >>| fun o ->
+              OpamFile.OPAM.equal (clean_opam opam) (clean_opam o))
+             <> Some true &&
+             OpamConsole.confirm "Save the new opam file back to %S ?"
+               (OpamFile.to_string src_opam) then
+            OpamFile.OPAM.write_with_preserved_format src_opam
+              (clean_opam opam)
+        );
 
       let st = OpamSwitchState.update_pin nv opam st in
       OpamSwitchAction.write_selections st;
