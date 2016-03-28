@@ -2377,7 +2377,6 @@ module OPAM = struct
             invalid_items
         in
         let t, warnings =
-          let pp = Pp.I.fields ~name:"opam-file" ~empty raw_fields in
           let warn_of_bad_format (pos, msg) =
             2, `Error, Printf.sprintf "File format error%s: %s"
               (match pos with
@@ -2387,7 +2386,7 @@ module OPAM = struct
               msg
           in
           try
-            Some (Pp.parse ~pos:(pos_file filename) pp good_items),
+            Some (Pp.parse ~pos:(pos_file filename) pp_raw_fields good_items),
             warnings
           with
           | OpamFormat.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
