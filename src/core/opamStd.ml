@@ -526,6 +526,8 @@ module OpamSys = struct
 
   let tty_out = Unix.isatty Unix.stdout
 
+  let tty_in = Unix.isatty Unix.stdin
+
   let default_columns = 80
 
   let get_terminal_columns () =

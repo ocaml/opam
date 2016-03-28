@@ -311,6 +311,9 @@ module Sys : sig
   (** true if stdout is bound to a terminal *)
   val tty_out : bool
 
+  (** true if stdin is bound to a terminal *)
+  val tty_in : bool
+
   (** Queried lazily, but may change on SIGWINCH *)
   val terminal_columns : unit -> int
 
