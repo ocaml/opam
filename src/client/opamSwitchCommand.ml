@@ -343,7 +343,8 @@ let import_t importfile t =
       available_packages = lazy available;
       packages;
       compiler_packages;
-      pinned }
+      pinned;
+      opams; }
   in
 
   let unavailable_version, unavailable =
