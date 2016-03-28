@@ -503,7 +503,10 @@ module OpamSys = struct
 
   let tty_out = Unix.isatty Unix.stdout
 
-  let default_columns = 80
+  let default_columns =
+    try int_of_string (Env.get "COLUMNS") with
+    | Not_found
+    | Failure _ -> 80
 
   let get_terminal_columns () =
     try (* terminfo *)
@@ -518,9 +521,6 @@ module OpamSys = struct
              | _ -> failwith "stty")
       with
         Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file | Not_found ->
-        try (* shell envvar *)
-          int_of_string (Env.get "COLUMNS")
-        with Not_found | Failure _ ->
           default_columns
 
   let terminal_columns =
