@@ -413,11 +413,12 @@ let read_overlays (read: package -> OpamFile.OPAM.t option) packages =
       match read nv with
       | Some opam ->
         if OpamFile.OPAM.extra_files opam <> None then
-          OpamConsole.warning
-            "Metadata of package %s uses a files/ subdirectory, it may not be \
-             re-imported correctly"
-            (OpamPackage.to_string nv);
-        OpamPackage.Name.Map.add nv.name opam acc
+          (OpamConsole.warning
+             "Metadata of package %s uses a files/ subdirectory, it may not be \
+              re-imported correctly (skipping definition)"
+             (OpamPackage.to_string nv);
+           acc)
+        else OpamPackage.Name.Map.add nv.name opam acc
       | None -> acc)
     packages
     OpamPackage.Name.Map.empty
