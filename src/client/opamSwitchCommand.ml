@@ -453,7 +453,7 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
-let reinstall_gt gt switch =
+let reinstall gt switch =
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
 
   OpamSwitchState.with_ `Lock_write gt ~switch @@ fun init_st ->
@@ -473,50 +473,15 @@ let reinstall_gt gt switch =
       installed_roots = OpamPackage.Set.empty;
       reinstall = OpamPackage.Set.empty; }
   in
+  ignore @@
   import_t { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections st;
              overlays = OpamPackage.Name.Map.empty; }
     st
 
-(* !X unify with OpamClient.with_switch_backup; set a number of backups and just
-   rename older versions .1, .2 etc. ? *)
-let with_backup gt switch f =
-  let state_file = OpamPath.Switch.selections gt.root switch in
-  let backup_state_file = OpamPath.backup gt.root in
-  OpamFilename.copy
-    ~src:(OpamFile.filename state_file)
-    ~dst:(OpamFile.filename backup_state_file);
-  try
-    f gt switch;
-    OpamFilename.remove (OpamFile.filename backup_state_file)
-  with
-  | OpamStd.Sys.Exit 0 as e -> raise e
-  | err ->
-    let new_state = OpamFile.SwitchSelections.safe_read state_file in
-    let old_state = OpamFile.SwitchSelections.safe_read backup_state_file in
-    if OpamPackage.Set.equal new_state.sel_installed old_state.sel_installed &&
-       OpamPackage.Set.equal
-         new_state.sel_roots old_state.sel_roots &&
-       OpamPackage.Set.equal new_state.sel_compiler old_state.sel_compiler
-    then OpamFilename.remove (OpamFile.filename backup_state_file)
-    else
-      Printf.eprintf "The former package state can be restored with \
-                      %s switch import %S%s\n"
-        Sys.argv.(0) (OpamFile.to_string backup_state_file)
-        (if OpamStateConfig.(!r.current_switch <> Some switch ||
-                             !r.switch_from = `Command_line)
-         then Printf.sprintf " --switch %s" (OpamSwitch.to_string switch)
-         else "");
-    raise err
-
-let reinstall gt switch =
-  with_backup gt switch reinstall_gt
-
 let import gt switch filename =
-  with_backup gt switch
-    (fun gt switch ->
-       let importfile = match filename with
-         | None   -> OpamFile.SwitchExport.read_from_channel stdin
-         | Some f -> OpamFile.SwitchExport.read f in
-       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-       import_t importfile st)
+  let importfile = match filename with
+    | None   -> OpamFile.SwitchExport.read_from_channel stdin
+    | Some f -> OpamFile.SwitchExport.read f in
+  OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
+  ignore (import_t importfile st)
