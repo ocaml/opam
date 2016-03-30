@@ -16,6 +16,6 @@ if [ ! -e ${V}.tar.gz ]; then
 fi
 tar -zxvf ${V}.tar.gz
 cd ${V}
-./configure -prefix `pwd`/../ocaml
+./configure -prefix "`pwd`/../ocaml"
 make world opt
 make install
