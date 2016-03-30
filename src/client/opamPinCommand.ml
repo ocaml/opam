@@ -86,7 +86,7 @@ let copy_files st opam =
     let files =
       List.fold_left
         (fun acc (f, hash) ->
-           let src = OpamFilename.create bd f in
+           let src = OpamFilename.(Op.(create (bd/"files") f)) in
            if not (OpamFilename.exists src) then
              (OpamConsole.warning "Overlay file of %s %s not found, ignoring"
                 (OpamPackage.Name.to_string name)
