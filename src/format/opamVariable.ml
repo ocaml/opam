@@ -63,12 +63,13 @@ module Full = struct
   (* Read the variables overriden through the environment *)
   let read_from_env v =
     let var_str = to_string (variable v) in
-    let var_str = OpamStd.String.map (function '-' -> '_' | c -> c) var_str in
+    let undash = OpamStd.String.map (function '-' -> '_' | c -> c) in
     let var_hook =
       match package v with
       | Some n ->
-        Printf.sprintf "%s_%s" (OpamPackage.Name.to_string n) var_str
-      | None -> var_str
+        Printf.sprintf "%s_%s" (undash (OpamPackage.Name.to_string n))
+          (undash var_str)
+      | None -> undash var_str
     in
     try match OpamStd.Env.get ("OPAMVAR_" ^ var_hook) with
       | "true"  | "1" -> Some (bool true)
