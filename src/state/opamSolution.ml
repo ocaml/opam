@@ -66,7 +66,7 @@ let post_message ?(failed=false) st action =
         mark (OpamPackage.to_string pkg)
     )
 
-let check_solution st = function
+let check_solution ?(quiet=false) st = function
   | No_solution ->
     OpamConsole.msg "No solution found, exiting\n";
     OpamStd.Sys.exit 3
@@ -78,7 +78,9 @@ let check_solution st = function
   | OK actions ->
     List.iter (post_message st) actions;
     OpamEnv.check_and_print_env_warning st
-  | Nothing_to_do -> OpamConsole.msg "Nothing to do.\n"
+  | Nothing_to_do ->
+    if not quiet then OpamConsole.msg "Nothing to do.\n";
+    OpamEnv.check_and_print_env_warning st
   | Aborted     -> OpamStd.Sys.exit 0
 
 let sum stats =
@@ -420,7 +422,7 @@ let parallel_apply t action action_graph =
         match action with
         | `Build _ -> Done (`Successful (installed, removed))
         | `Install nv ->
-          OpamConsole.msg "Faking installation of %s"
+          OpamConsole.msg "Faking installation of %s\n"
             (OpamPackage.to_string nv);
           add_to_install nv;
           Done (`Successful (OpamPackage.Set.add nv installed , removed))

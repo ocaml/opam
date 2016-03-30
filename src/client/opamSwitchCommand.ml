@@ -247,7 +247,7 @@ let install_compiler_packages t atoms =
     OpamSolution.apply ~ask:false t (Switch roots)
       ~requested:roots
       solution in
-  OpamSolution.check_solution t result;
+  OpamSolution.check_solution ~quiet:true t result;
   t
 
 let install_cont gt ~update_config ~packages switch =

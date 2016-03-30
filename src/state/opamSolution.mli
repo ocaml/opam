@@ -51,8 +51,10 @@ val resolve_and_apply:
   atom request ->
   rw switch_state * solver_result
 
-(** Raise an error if no solution is found or in case of error. *)
-val check_solution: 'a switch_state -> solver_result -> unit
+(** Raise an error if no solution is found or in case of error. Unless [quiet]
+    is set, print a message indicating that nothing was done on an empty
+    solution. *)
+val check_solution: ?quiet:bool -> 'a switch_state -> solver_result -> unit
 
 (** {2 Atoms} *)
 
