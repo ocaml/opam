@@ -154,7 +154,7 @@ let note fmt =
 
 let errmsg fmt =
   flush stdout;
-  Printf.printf (fmt ^^ "%!")
+  Printf.eprintf (fmt ^^ "%!")
 
 let error_and_exit ?(num=66) fmt =
   Printf.ksprintf (fun str ->
