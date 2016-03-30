@@ -371,6 +371,15 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
     OpamProcess.Job.run @@ get_source_definition ?version st nv urlf
   in
 
+  let nv =
+    match version with
+    | Some _ -> nv
+    | None ->
+      OpamPackage.create name OpamStd.Option.Op.(
+          (opam_opt >>= OpamFile.OPAM.version_opt)
+          +! cur_version)
+  in
+
   let opam_opt =
     OpamStd.Option.Op.(opam_opt >>+ fun () -> OpamSwitchState.opam_opt st nv)
   in
