@@ -482,8 +482,19 @@ let reinstall gt switch =
     st
 
 let import gt switch filename =
-  let importfile = match filename with
-    | None   -> OpamFile.SwitchExport.read_from_channel stdin
-    | Some f -> OpamFile.SwitchExport.read f in
+  let import_str = match filename with
+    | None   -> OpamSystem.string_of_channel stdin
+    | Some f -> OpamFilename.read (OpamFile.filename f)
+  in
+  let importfile =
+    try OpamFile.SwitchExport.read_from_string ?filename import_str
+    with OpamFormat.Bad_format _ as e ->
+      log "Error loading export file, trying the old file format";
+      try
+        let selections = OpamFile.State.read_from_string import_str in
+        { OpamFile.SwitchExport.selections;
+          overlays = OpamPackage.Name.Map.empty }
+      with e1 -> OpamStd.Exn.fatal e1; raise e
+  in
   OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
   ignore (import_t importfile st)
