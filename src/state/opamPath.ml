@@ -101,8 +101,14 @@ module Switch = struct
 
   let installed_opams t a = meta t a / "packages"
 
+  let installed_package_dir t a nv =
+    installed_opams t a / OpamPackage.to_string nv
+
   let installed_opam t a nv =
-    installed_opams t a /- (OpamPackage.to_string nv ^ ".opam")
+    installed_package_dir t a nv /- "opam"
+
+  let installed_opam_files_dir t a nv =
+    installed_package_dir t a nv / "files"
 
   module Default = struct
 

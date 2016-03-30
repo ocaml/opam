@@ -2051,6 +2051,16 @@ module OPAM = struct
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2
 
+  let get_extra_files o =
+    OpamStd.Option.Op.(
+      (metadata_dir o >>= fun mdir ->
+       let files_dir = OpamFilename.Op.(mdir / "files") in
+       extra_files o >>| List.map @@ fun (basename, hash) ->
+       OpamFilename.create files_dir basename,
+       basename, hash)
+      +! []
+    )
+
   let template nv =
     let t = create nv in
     let maintainer =

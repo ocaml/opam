@@ -139,9 +139,18 @@ module Switch: sig
       {i $meta/packages/} *)
   val installed_opams: t -> switch -> dirname
 
+  (** The mirror of the package definition for the given installed package {i
+      $meta/packages/$name.$version/} *)
+  val installed_package_dir: t -> switch -> package -> dirname
+
   (** The mirror of the opam file for the given installed package
-      {i $meta/packages/$name.$version.opam} *)
+      {i $meta/packages/$name.$version/opam} *)
   val installed_opam: t -> switch -> package -> OpamFile.OPAM.t OpamFile.t
+
+  (** Mirror of the extra files attached to the package definitions of installed
+      packages
+      {i $meta/packages/$name.$version/files/} *)
+  val installed_opam_files_dir: t -> switch -> package -> dirname
 
   (** Locations for the visible part of the installation *)
 

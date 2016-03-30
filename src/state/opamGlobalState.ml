@@ -363,18 +363,27 @@ module Format_upgrade = struct
         in
         OpamFilename.mkdir (meta_dir / "packages");
         OpamPackage.Set.iter (fun nv ->
-            let dst = meta_dir / "packages" // (OpamPackage.to_string nv ^ ".opam") in
+            let dstdir =
+              meta_dir / "packages" / OpamPackage.to_string nv
+            in
             try
-              let src =
-                List.find OpamFilename.exists [
-                  meta_dir / "overlay" / OpamPackage.Name.to_string nv.name // "opam";
+              let srcdir =
+                List.find (fun d -> OpamFilename.exists (d // "opam")) [
+                  meta_dir / "overlay" / OpamPackage.Name.to_string nv.name;
                   root / "packages" / OpamPackage.Name.to_string nv.name /
-                  OpamPackage.to_string nv // "opam";
+                  OpamPackage.to_string nv;
                 ]
               in
-              OpamFilename.copy ~src ~dst
+              match OpamFileHandling.read_opam srcdir with
+              | Some opam ->
+                OpamFile.OPAM.write (OpamFile.make (dstdir // "opam")) opam;
+                OpamStd.Option.iter (fun src ->
+                    OpamFilename.copy_dir ~src ~dst:(dstdir / "files"))
+                  (OpamFilename.opt_dir (srcdir / "files"))
+              | None -> raise Not_found
             with Not_found ->
-              OpamFile.OPAM.write (OpamFile.make dst) (OpamFile.OPAM.create nv)
+              OpamFile.OPAM.write (OpamFile.make (dstdir // "opam"))
+                (OpamFile.OPAM.create nv)
           )
           installed)
       (OpamFile.Config.installed_switches conf);

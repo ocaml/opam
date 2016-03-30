@@ -332,6 +332,10 @@ module OPAM: sig
   (** Names and hashes of the files below files/ *)
   val extra_files: t -> (OpamFilename.Base.t * string) list option
 
+  (** Looks up the extra files, and returns their full paths, relative path to
+      the package source, and hash. Doesn't check the hashes. *)
+  val get_extra_files: t -> (filename * basename * string) list
+
   (** Sets the opam version *)
   val with_opam_version: opam_version -> t -> t
 

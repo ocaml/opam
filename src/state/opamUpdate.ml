@@ -230,18 +230,14 @@ let pinned_package st ?fixed_version name =
       | Some v -> OpamFile.OPAM.with_version v opam
       | None -> opam
     in
-    (match OpamFile.OPAM.(metadata_dir opam, extra_files opam) with
-     | Some srcdir, Some files ->
-       List.iter (fun (file, hash) ->
-           let src = OpamFilename.create (srcdir/"files") file in
-           if OpamFilename.digest src = hash then
-             OpamFilename.copy ~src
-               ~dst:(OpamFilename.create files_dir file)
-           else
-             OpamConsole.warning "Ignoring file %s with invalid hash"
-               (OpamFilename.to_string src))
-         files
-     | _ -> ());
+    List.iter (fun (file, rel_file, hash) ->
+        if OpamFilename.digest file = hash then
+          OpamFilename.copy ~src:file
+            ~dst:(OpamFilename.create files_dir rel_file)
+        else
+          OpamConsole.warning "Ignoring file %s with invalid hash"
+            (OpamFilename.to_string file))
+      (OpamFile.OPAM.get_extra_files opam);
     OpamFile.OPAM.write opam_file
       (OpamFile.OPAM.with_extra_files_opt None opam);
     opam

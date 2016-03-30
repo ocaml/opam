@@ -141,9 +141,9 @@ SRC_format = \
   opamFormula.ml \
   opamTypes.mli \
   opamTypesBase.ml \
+  opamFormat.ml \
   opamParser.mly \
   opamLexer.mll \
-  opamFormat.ml \
   opamFilter.ml \
   opamFile.ml
 
@@ -203,9 +203,9 @@ SRC_state = \
   opamOCaml.ml \
   opamScript.ml \
   opamStateTypes.mli \
+  opamFileHandling.ml \
   opamGlobalState.ml \
   opamPackageVar.ml \
-  opamFileHandling.ml \
   opamRepositoryState.ml \
   opamPinned.ml \
   opamSwitchState.ml \

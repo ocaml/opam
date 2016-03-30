@@ -251,13 +251,11 @@ let url st nv =
   OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
 
 let files st nv =
-  OpamStd.Option.Op.(
-    (opam_opt st nv >>= fun opam ->
-     OpamFile.OPAM.metadata_dir opam >>= fun dir ->
-     OpamFile.OPAM.extra_files opam >>| List.map @@ fun (f, _hash) ->
-     OpamFilename.create OpamFilename.Op.(dir / "files") f)
-    +! []
-  )
+  match opam_opt st nv with
+  | None -> []
+  | Some opam ->
+    List.map (fun (file,_base,_hash) -> file)
+      (OpamFile.OPAM.get_extra_files opam)
 
 let package_config st name =
   OpamPackage.Map.find

@@ -143,16 +143,26 @@ let set_current_switch lock gt switch =
   st
 
 let install_metadata st nv =
+  let opam = OpamSwitchState.opam st nv in
   OpamFile.OPAM.write
     (OpamPath.Switch.installed_opam st.switch_global.root st.switch nv)
-    (OpamSwitchState.opam st nv)
+    opam;
+  List.iter (fun (f, rel_path, _hash) ->
+      let dst =
+        OpamFilename.create
+          (OpamPath.Switch.installed_opam_files_dir
+             st.switch_global.root st.switch nv)
+          rel_path
+      in
+      OpamFilename.mkdir (OpamFilename.dirname dst);
+      OpamFilename.copy ~src:f ~dst)
+    (OpamFile.OPAM.get_extra_files opam)
 
 let remove_metadata st packages =
   OpamPackage.Set.iter (fun nv ->
-      OpamFilename.remove
-        (OpamFile.filename
-           (OpamPath.Switch.installed_opam
-              st.switch_global.root st.switch nv)))
+      OpamFilename.rmdir
+        (OpamPath.Switch.installed_package_dir
+           st.switch_global.root st.switch nv))
     packages
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
