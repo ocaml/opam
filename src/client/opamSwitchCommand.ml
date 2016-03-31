@@ -130,13 +130,17 @@ let list gt ~print_short ~installed ~all =
     OpamConsole.note
       "No switch is currently set, you should use 'opam switch <switch>' \
        to set an active switch"
-  | Some switch, `Env ->
+  | Some switch, ((`Env | `Local) as src) ->
     let sys = OpamFile.Config.switch gt.config in
     if sys <> Some switch then
+      let src = match src with
+        | `Env -> "OPAMSWITCH variable"
+        | `Local -> "local sandbox" in
       (OpamConsole.msg "\n";
        OpamConsole.note
-         "Current switch is set locally through the OPAMSWITCH variable.\n\
+         "Current switch is set locally through the %s.\n\
           The current global system switch is %s."
+         src
          (OpamStd.Option.to_string ~none:"unset"
             (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
   | Some switch, `Default ->

@@ -52,7 +52,7 @@ val opam_init:
   ?autoremove:bool ->
   ?editor:string ->
   ?current_switch:OpamSwitch.t ->
-  ?switch_from:[ `Command_line | `Default | `Env ] ->
+  ?switch_from:[ `Command_line | `Default | `Env | `Local ] ->
   ?jobs:int Lazy.t ->
   ?dl_jobs:int ->
   ?external_tags:string list ->

@@ -1180,6 +1180,56 @@ module Dot_config = struct
   include SyntaxFile(Dot_configSyntax)
 end
 
+module Local = struct
+  type t = Dot_config.t
+
+  let empty = Dot_config.empty
+
+  let opam_switch = "OPAMSWITCH"
+
+  let create switch : t =
+    let open OpamVariable in
+    Dot_config.create [
+      of_string opam_switch, S (OpamSwitch.to_string switch) ]
+
+  let str key t =
+    match Dot_config.variable t (OpamVariable.of_string key) with
+    | Some (S value) -> Some value
+    | _              -> None
+
+  let switch t =
+    Option.map OpamSwitch.of_string (str opam_switch t)
+
+  let with_switch t switch =
+    let open OpamVariable in
+    Dot_config.set t (of_string opam_switch) (Some (S (OpamSwitch.to_string switch)))
+
+  let write filename t =
+    Dot_config.write filename t
+
+  let read filename =
+    Dot_config.read filename
+
+  let read_opt filename =
+    Dot_config.read_opt filename
+
+  let safe_read filename =
+    Dot_config.safe_read filename
+
+  let read_from_channel ?filename in_channel =
+    Dot_config.read_from_channel ?filename in_channel
+
+  let read_from_string ?filename string =
+    Dot_config.read_from_string ?filename string
+
+  let write_to_channel ?filename out_channel t =
+    Dot_config.write_to_channel ?filename out_channel t
+
+  let write_to_string ?filename t =
+    Dot_config.write_to_string ?filename t
+
+end
+
 (** (2) General, public repository format *)
 
 (** Public repository definition file (<repo>/repo) *)

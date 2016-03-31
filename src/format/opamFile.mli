@@ -671,6 +671,21 @@ module Dot_config: sig
 
 end
 
+(** .opamlocal files *)
+module Local: sig
+
+  include IO_FILE
+
+  (** Create a new .opamlocal *)
+  val create: OpamTypes.switch -> t
+
+  (** The switch associated with [t] *)
+  val switch: t -> OpamTypes.switch option
+
+  (** Set the switch of [t] *)
+  val with_switch : t -> OpamTypes.switch -> t
+end
+
 (** {2 Repository files} *)
 
 (** Association between package names and repositories *)
