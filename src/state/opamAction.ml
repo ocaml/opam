@@ -273,6 +273,7 @@ let extract_package st source nv =
   if not is_repackaged_archive then (
     (* !X this should be done during the download phase, but at
        the moment it assumes a single file *)
+    let opam = OpamSwitchState.opam st nv in
     OpamParallel.iter
       ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command:(fun (url,checksum,fname) ->
@@ -285,10 +286,14 @@ let extract_package st source nv =
             ~overwrite:true
             ~checksum url
             (OpamFilename.create build_dir fname))
-      (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv));
+      (OpamFile.OPAM.extra_sources opam);
 
-    List.iter (fun src -> OpamFilename.copy_in src build_dir)
-      (OpamSwitchState.files st nv)
+    List.iter (fun (src,base,hash) ->
+        if OpamFilename.digest src <> hash then
+          OpamConsole.error_and_exit "Bad hash for %s"
+            (OpamFilename.to_string src);
+        OpamFilename.copy ~src ~dst:(OpamFilename.create build_dir base))
+      (OpamFile.OPAM.get_extra_files opam)
   );
   prepare_package_build st nv
 
