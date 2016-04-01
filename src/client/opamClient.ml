@@ -1056,8 +1056,10 @@ let slog = OpamConsole.slog
       in
       let st =
         match pin_option with
-        | Source url -> OpamPinCommand.source_pin st name ?version ~edit url
-        | Version v -> OpamPinCommand.version_pin st name v
+        | Source url -> source_pin st name ?version ~edit url
+        | Version v ->
+          let st = version_pin st name v in
+          if edit then OpamPinCommand.edit st name else st
       in
       if action then
         (OpamConsole.msg "\n"; post_pin_action st name)
