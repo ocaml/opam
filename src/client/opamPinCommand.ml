@@ -242,6 +242,7 @@ let edit st name =
               (clean_opam opam)
         );
 
+      let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
       let st = OpamSwitchState.update_pin nv opam st in
       OpamSwitchAction.write_selections st;
       st
