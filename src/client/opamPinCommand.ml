@@ -173,7 +173,12 @@ let edit_raw name temp_file =
 
 let edit st name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
-  let nv = OpamPinned.package st name in
+  let nv =
+    try OpamPinned.package st name
+    with Not_found ->
+      OpamConsole.error_and_exit "%s is not pinned"
+        (OpamPackage.Name.to_string name)
+  in
   let path f = f st.switch_global.root st.switch name in
   let overlay_file = path OpamPath.Switch.Overlay.opam in
   let temp_file = path OpamPath.Switch.Overlay.tmp_opam in
