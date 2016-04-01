@@ -130,7 +130,7 @@ let load lock_kind gt rt switch =
   let changed =
     (* Note: This doesn't detect changed _dev_ packages, since it's based on the
        metadata or the archive hash changing and they don't have an archive
-       hash. Dev package update should add to the reinstall file *)
+       hash. Therefore, dev package update needs to add to the reinstall file *)
     OpamPackage.Map.merge (fun _ opam_new opam_installed ->
         match opam_new, opam_installed with
         | Some r, Some i when not (OpamFile.OPAM.effectively_equal i r) ->
@@ -379,6 +379,11 @@ let update_package_metadata nv opam st =
       then OpamPackage.Set.add nv (Lazy.force st.available_packages)
       else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
     );
+    reinstall =
+      (match OpamPackage.Map.find_opt nv st.installed_opams with
+       | Some inst when not (OpamFile.OPAM.effectively_equal inst opam) ->
+         OpamPackage.Set.add nv (st.reinstall)
+       | _ -> st.reinstall);
   }
 
 let remove_package_metadata nv st =

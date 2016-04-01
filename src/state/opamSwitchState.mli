@@ -44,9 +44,9 @@ val load_virtual: 'a global_state -> 'b repos_state -> unlocked switch_state
     faster than loading the full switch state *)
 val load_selections: 'a global_state -> switch -> switch_selections
 
-(** Raw function to compute the availability of all packages, given the switch
-    configuration and the set of pinned packages. (The result is precomputed in
-    global_state.available_packages once the state is loaded) *)
+(** Raw function to compute the availability of all packages, in [opams], given
+    the switch configuration and the set of pinned packages. (The result is
+    precomputed in global_state.available_packages once the state is loaded) *)
 val compute_available_packages:
   'a global_state -> switch -> OpamFile.Dot_config.t ->
   pinned:package_set -> opams:OpamFile.OPAM.t package_map ->

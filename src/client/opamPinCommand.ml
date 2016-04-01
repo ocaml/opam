@@ -461,19 +461,29 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
     st
 
 (* pure *)
-let unpin_one st name =
-  let nv = OpamPinned.package st name in
+let unpin_one st nv =
   let st =
-    match
-      OpamStd.Option.Op.(
-        OpamPackage.Map.find_opt nv st.repos_package_index ++
-        OpamPackage.Map.find_opt nv st.installed_opams
-      )
-    with
-    | None -> OpamSwitchState.remove_package_metadata nv st
-    | Some opam -> OpamSwitchState.update_package_metadata nv opam st
+    { st with pinned = OpamPackage.Set.remove nv st.pinned }
   in
-  { st with pinned = OpamPackage.Set.remove nv st.pinned }
+  (* Restore availability of other versions of this package from the repos *)
+  let repo_package =
+    OpamPackage.Map.filter (fun nv2 _ -> nv2.name = nv.name)
+      st.repos_package_index
+  in
+  let available_packages = lazy (
+    OpamSwitchState.compute_available_packages
+      st.switch_global st.switch st.switch_config ~pinned:OpamPackage.Set.empty
+      ~opams:repo_package |>
+    OpamPackage.Set.union
+      (OpamPackage.Set.remove nv (Lazy.force st.available_packages))
+  ) in
+  match OpamPackage.Map.find_opt nv st.repos_package_index,
+        OpamPackage.Map.find_opt nv st.installed_opams with
+  | None, None ->
+    OpamSwitchState.remove_package_metadata nv st
+  | Some opam, _ | None, Some opam -> (* forget about overlay *)
+    let st = OpamSwitchState.update_package_metadata nv opam st in
+    { st with available_packages }
 
 let unpin st names =
   log "unpin %a"
@@ -485,7 +495,7 @@ let unpin st names =
       match OpamPinned.package_opt st name with
       | Some nv ->
         let opam = OpamSwitchState.opam st nv in
-        let st = unpin_one st name in
+        let st = unpin_one st nv in
         OpamSwitchAction.write_selections st;
         OpamConsole.msg "%s is no longer %s\n"
           (OpamPackage.Name.to_string name)
