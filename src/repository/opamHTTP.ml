@@ -243,7 +243,9 @@ module B = struct
   let pull_archive repo url =
     log "pull-archive";
     let state = get_state repo in
-    let local_file = OpamUrl.Map.find url state.remote_local in
+    match OpamUrl.Map.find_opt url state.remote_local with
+    | None -> Done (Not_available (OpamUrl.to_string url))
+    | Some local_file ->
     if is_up_to_date state local_file then
       Done (Up_to_date local_file)
     else
