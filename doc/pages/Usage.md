@@ -21,8 +21,8 @@ details.
 ```
 # ** Get started **
 opam init            # Initialize ~/.opam using an already installed OCaml
-opam init --comp 4.02.1
-                     # Initialize with a freshly compiled OCaml 4.02.1
+opam init --comp 4.02.3
+                     # Initialize with a freshly compiled OCaml 4.02.3
 
 # ** Lookup **
 opam list -a         # List all available packages
