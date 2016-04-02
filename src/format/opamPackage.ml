@@ -238,12 +238,11 @@ let names_of_packages nvset =
     Name.Set.empty
 
 let packages_of_name nvset n =
-  let min = {name=n; version=""} in
-  let sup = {name=(n^"\000"); version=""} in
-  let _, has_min, nvset = Set.split min nvset in
-  let nvset = if has_min then Set.add min nvset else nvset in
+  let inf = {name = String.sub n 0 (String.length n - 1); version= ""} in
+  let sup = {name = n^"\000"; version = ""} in
+  let _, _, nvset = Set.split inf nvset in
   let nvset, _, _ = Set.split sup nvset in
-  nvset
+  Set.filter (fun nv -> nv.name = n) nvset
 
 let package_of_name nvset n =
   Set.choose (packages_of_name nvset n)
