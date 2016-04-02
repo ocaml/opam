@@ -44,12 +44,10 @@ let priority gt repo_name ~priority =
 
   let rt = OpamRepositoryState.load `Lock_write gt in
   let repo = find_repository rt repo_name in
-  let config_f = OpamRepositoryPath.config repo in
-  let config =
-    let config = OpamFile.Repo_config.read config_f in
-    { config with repo_priority = priority } in
-  OpamFile.Repo_config.write config_f config;
-  rt
+  let repo = { repo with repo_priority = priority } in
+  OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
+  { rt with repositories =
+              OpamRepositoryName.Map.add repo_name repo rt.repositories }
 
 let add gt name url ~priority:prio =
   log "repository-add";
@@ -111,12 +109,12 @@ let set_url gt name url =
   log "repository-remove";
   let rt = OpamRepositoryState.load `Lock_write gt in
   let repo = find_repository rt name in
-  let config_f = OpamRepositoryPath.config repo in
-  let config =
-    let config = OpamFile.Repo_config.read config_f in
-    { config with repo_url = url }
+  let repo = { repo with repo_url = url } in
+  let rt =
+    { rt with repositories =
+                OpamRepositoryName.Map.add name repo rt.repositories }
   in
-  OpamFile.Repo_config.write config_f config;
+  OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
   OpamUpdate.repositories rt [repo]
 
 let list gt ~short =
