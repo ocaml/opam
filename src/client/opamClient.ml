@@ -1073,9 +1073,13 @@ let slog = OpamConsole.slog
       let packages =
         OpamStd.List.filter_map (OpamPinned.package_opt st) names
       in
+      let pinned_before = st.pinned in
       let st = unpin st names in
       let available = Lazy.force st.available_packages in
-      if action then
+      if action &&
+         not (OpamPackage.Set.is_empty
+                ((pinned_before -- st.pinned) %% st.installed))
+      then
         let atoms =
           List.fold_left (fun atoms nv ->
               if OpamPackage.Set.mem nv available then

@@ -494,12 +494,12 @@ let unpin st names =
            st.switch_global.root st.switch name);
       match OpamPinned.package_opt st name with
       | Some nv ->
-        let opam = OpamSwitchState.opam st nv in
         let st = unpin_one st nv in
         OpamSwitchAction.write_selections st;
         OpamConsole.msg "%s is no longer %s\n"
           (OpamPackage.Name.to_string name)
-          (string_of_pinned opam);
+          (OpamStd.Option.to_string ~none:"pinned"
+             string_of_pinned (OpamSwitchState.opam_opt st nv));
         st
       | None ->
         OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);
@@ -514,6 +514,7 @@ let list st ~short =
       st.pinned
   else
   let lines nv =
+    try
     let opam = OpamSwitchState.opam st nv in
     let url = OpamFile.OPAM.get_url opam in
     let kind, target =
@@ -540,6 +541,9 @@ let list st ~short =
       OpamConsole.colorise `blue kind;
       target ]
     @ extra
+    with Not_found ->
+      [ OpamPackage.to_string nv;
+        OpamConsole.colorise `red " (no definition found)" ]
   in
   let table = List.map lines (OpamPackage.Set.elements st.pinned) in
   OpamStd.Format.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)
