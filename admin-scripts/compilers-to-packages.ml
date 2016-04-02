@@ -76,7 +76,22 @@ let provides_map =
       OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
     in
     let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
-    let opam = OpamFile.Comp.to_package name comp descr in
+    let comp =
+      let drop_names = [ OpamPackage.Name.of_string "base-ocamlbuild" ] in
+      (* ocamlbuild has requirements on variable ocaml-version: it can't be in
+         the dependencies *)
+      OpamFile.Comp.with_packages
+        (OpamFormula.map
+           (fun ((name, _) as atom) ->
+                 if List.mem name drop_names then OpamFormula.Empty
+                 else Atom atom)
+           (OpamFile.Comp.packages comp))
+        comp
+    in
+    let opam =
+      OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
+        comp descr
+    in
     let nv = OpamFile.OPAM.package opam in
     let patches = OpamFile.Comp.patches comp in
     if patches <> [] then
