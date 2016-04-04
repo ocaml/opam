@@ -49,25 +49,6 @@ val full_action_contents: 'a action -> 'a list
 (** Pretty-prints the cause of an action *)
 val string_of_cause: ('pkg -> string) -> 'pkg cause -> string
 
-(** Pretty-printing of pin kinds. *)
-val pin_kind_of_string: string -> pin_kind
-
-(** Parsing of pin kinds *)
-val string_of_pin_kind: pin_kind -> string
-
-(** Read pin options args. If [kind] isn't specified, [guess] is set to [true]
-    and the name isn't explicit, look for VC on the filesystem to get the
-    pinning kind *)
-val pin_option_of_string: ?kind:pin_kind -> ?guess:bool -> string -> pin_option
-
-(** Convert a pin option to a string *)
-val string_of_pin_option: pin_option -> string
-
-(** Get the pin kind from a pin option *)
-val kind_of_pin_option: pin_option -> pin_kind
-
-val url_backend_of_pin_kind: pin_kind -> OpamUrl.backend option
-
 (** Pretty-print *)
 val string_of_shell: shell -> string
 

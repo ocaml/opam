@@ -433,9 +433,44 @@ module PkgList = LineFile (struct
   end)
 
 (** Lists of pinned packages (<switch>/pinned): table
-    <name> <pin-kind> <target> *)
+    <name> <pin-kind> <target>
+
+    Backwards-compatibility code, do not use *)
 
 let pp_pin =
+  let looks_like_version_re =
+    Re.(compile @@
+        seq [bos; digit; rep @@ diff any (set "/\\"); eos])
+  in
+  let pin_option_of_string ?kind s =
+    match kind with
+    | Some `version ->
+      Version (OpamPackage.Version.of_string s)
+    | None when Re.execp looks_like_version_re s ->
+      Version (OpamPackage.Version.of_string s)
+    | Some (#OpamUrl.backend as backend) ->
+      Source (OpamUrl.parse ~backend s)
+    | None ->
+      Source (OpamUrl.parse ~handle_suffix:false s)
+  in
+  let string_of_pin_kind = function
+    | `version -> "version"
+    | `rsync   -> "path"
+    | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
+  in
+  let pin_kind_of_string = function
+    | "version" -> `version
+    | "path"    -> `rsync
+    | s -> OpamUrl.backend_of_string s
+  in
+  let string_of_pin_option = function
+    | Version v -> OpamPackage.Version.to_string v
+    | Source url -> OpamUrl.to_string url
+  in
+  let kind_of_pin_option = function
+    | Version _ -> `version
+    | Source url -> (url.OpamUrl.backend :> pin_kind)
+  in
   Pp.pp
     ~name:"?pin-kind pin-target"
     (fun ~pos -> function
