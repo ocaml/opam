@@ -1077,7 +1077,10 @@ let pin ?(unpin_only=false) () =
      or a URL. \
      $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be replaced by \
-     `--dev-repo' if a package by that name is already known. \
+     `--dev-repo' if a package by that name is already known. Otherwise, if \
+     $(i,TARGET) is $(i,-) or is omitted, the currently defined source package \
+     archive is used, if any, and the package is pinned as a virtual package \
+     (without any source) otherwise. \
      OPAM will infer the kind of pinning from the format of $(i,TARGET), using \
      $(b,path) pinning by default, unless you use an explicit $(b,--kind) \
      option. \
@@ -1096,30 +1099,39 @@ let pin ?(unpin_only=false) () =
      repository, if any.";
     "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
-     change the opam file that OPAM will locally use for pinned package \
-     $(b,NAME), including its version. \
-     To simply change the pinning target, use $(b,add). \
+     change the package definition that OPAM will locally use for package \
+     $(b,NAME), including its version and source URL. \
      The chosen editor is determined from environment variables \
      $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in order.";
   ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command allows local customisation of the packages in a given \
-        switch. A package can be pinned to a specific upstream version, to \
-        a path containing its source, to a version-controlled location or to \
-        a URL. If a file `NAME.opam' with $(i,NAME) matching the package \
-        name, or just `opam', is found at the root of the pinned source, it \
-        will be used as the package's definition, overriding its previous \
-        definition if any. If a directory by one of these names is found, \
-        its contents will be used, also overriding other package metadata \
-        (`descr', extra `files' subdirectory...)"
+        switch. A pinning can either just enforce a given version, or provide \
+        a local, editable version of the definition of the package. It is also \
+        possible to create a new package just by pinning a non-existing \
+        package name.";
+    `P "Any customisation is available through the $(i,edit) subcommand, but \
+        the command-line gives facility for altering the source URL of the \
+        package, since it is the most common use: $(i,opam pin add PKG URL) \
+        modifies package $(i,PKG) to fetch its source from $(i,URL). If a \
+        package definition is found in the package's source tree, it will be \
+        used locally.";
+    `P "If no target (or $(i,-)) is specified, the package is pinned to its \
+        current source archive. The package name can also be omitted if the \
+        target is a directory containing a valid package definition (this \
+        allows to do e.g. $(i,opam pin add .) from a source directory.";
+    `P "If $(i,PACKAGE) has the form $(i,name.version), the pinned package \
+        will be considered as version $(i,version) by opam.";
+    `P "The default subcommand is $(i,list) if there are no further arguments, \
+        and $(i,add) otherwise if unambiguous.";
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params =
     if unpin_only then
       Term.pure (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      mk_subcommands commands in
+      mk_subcommands_with_default commands in
   let edit =
     mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
                           `opam pin edit' after pinning." in
@@ -1131,6 +1143,7 @@ let pin ?(unpin_only=false) () =
       "git"    , `git;
       "darcs"  , `darcs;
       "hg"     , `hg;
+      "none"   , `none;
       "auto"   , `auto;
     ] in
     let help =
@@ -1139,7 +1152,8 @@ let pin ?(unpin_only=false) () =
          If unset or $(i,auto), is inferred from the format of the target, \
          defaulting to the appropriate version control if one is detected in \
          the given directory, or to $(i,path) otherwise. $(i,OPAMPINKINDAUTO) \
-         can be set to \"0\" to disable automatic detection of version control."
+         can be set to \"0\" to disable automatic detection of version control.\
+         Use $(i,none) to pin without a target (for virtual packages)."
         (Arg.doc_alts_enum main_kinds)
     in
     let doc = Arg.info ~docv:"KIND" ~doc:help ["k";"kind"] in
@@ -1182,13 +1196,30 @@ let pin ?(unpin_only=false) () =
     | Some base -> OpamPackage.Name.of_string base
     | None -> raise Not_found
   in
+  let pin_target kind target =
+    let looks_like_version_re =
+      Re.(compile @@ seq [bos; digit; rep @@ diff any (set "/\\"); eos])
+    in
+    let auto () =
+      if target = "-" then
+        `None
+      else if Re.execp looks_like_version_re target then
+        `Version (OpamPackage.Version.of_string target)
+      else
+      let backend = OpamUrl.guess_version_control target in
+      `Source (OpamUrl.parse ?backend ~handle_suffix:true target)
+    in
+    match kind with
+    | Some `version -> `Version (OpamPackage.Version.of_string target)
+    | Some (#OpamUrl.backend as k) -> `Source (OpamUrl.parse ~backend:k target)
+    | Some `none -> `None
+    | Some `auto -> auto ()
+    | None when OpamClientConfig.(!r.pin_kind_auto) -> auto ()
+    | None -> `Source (OpamUrl.parse ~handle_suffix:false target)
+  in
   let pin global_options kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
     let action = not no_act in
-    let kind, guess = match kind with
-      | Some `auto -> None, true
-      | Some (#pin_kind as k) -> Some k, false
-      | None -> None, OpamClientConfig.(!r.pin_kind_auto) in
     match command, params with
     | Some `list, [] | None, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1217,36 +1248,60 @@ let pin ?(unpin_only=false) () =
          ignore @@ OpamClient.PIN.edit st ~action name;
          `Ok ()
        | `Error e -> `Error (false, e))
-    | Some `add, [nv] when dev_repo ->
+    | Some `add, [nv] | Some `default nv, [] when dev_repo ->
       (match (fst package) nv with
        | `Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.pin st name ~edit ?version ~action None;
+         ignore @@ OpamClient.PIN.pin st name ~edit ?version ~action
+           `Dev_upstream;
          `Ok ()
-       | `Error e -> `Error (false, e))
-    | Some `add, [path] when not dev_repo ->
-      (try
-         let name = guess_name (OpamFilename.Dir.of_string path) in
-         let pin_option = pin_option_of_string ?kind ~guess path in
-         OpamGlobalState.with_ `Lock_none @@ fun gt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.pin st name ~edit ~action (Some pin_option);
-         `Ok ()
-       with Not_found ->
-         `Error (false, Printf.sprintf
-                   "No valid package description found at path %s.\n\
-                    Please supply at least a package name \
-                    (e.g. `opam pin add NAME PATH')"
-                   path))
-    | Some `add, [n; target] ->
+       | `Error e ->
+         if command = Some `add then `Error (false, e)
+         else bad_subcommand commands ("pin", command, params))
+    | Some `add, [arg] | Some `default arg, [] ->
+      (match pin_target kind arg with
+       | `Source url when OpamUrl.local_dir url <> None ->
+         (* arg is a directory, lookup an opam file *)
+         (try
+            let name = guess_name (OpamFilename.Dir.of_string arg) in
+            OpamGlobalState.with_ `Lock_none @@ fun gt ->
+            OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+            ignore @@ OpamClient.PIN.pin st name ~edit ~action (`Source url);
+            `Ok ()
+          with Not_found ->
+            `Error (false, Printf.sprintf
+                      "No valid package description found at path %s.\n\
+                       Please supply a package name \
+                       (e.g. `opam pin add NAME PATH')"
+                      (OpamUrl.base_url url)))
+       | _ ->
+         (* arg is a package, guess target *)
+         match (fst package) arg with
+         | `Ok (name,version) ->
+           OpamGlobalState.with_ `Lock_none @@ fun gt ->
+           OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+           if not (OpamPackage.has_name st.packages name) &&
+              command <> Some `add then
+             (* Don't do implicit command on non-existing packages *)
+             bad_subcommand commands ("pin", command, params)
+           else
+             (ignore @@ OpamClient.PIN.pin st name ?version ~edit ~action `None;
+              `Ok ())
+         | `Error _ ->
+           if command = Some `add then
+             `Error (false, Printf.sprintf
+                       "%s is not a valid directory or package name"
+                       arg)
+           else bad_subcommand commands ("pin", command, params))
+    | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
-         let pin_option = pin_option_of_string ?kind ~guess target in
+         let pin = pin_target kind target in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          ignore @@
-         OpamClient.PIN.pin st name ?version ~edit ~action (Some pin_option);
+         OpamClient.PIN.pin st name ?version ~edit ~action pin;
          `Ok ()
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("pin", command, params)
@@ -1363,12 +1418,11 @@ let source =
           | _ -> `rsync
         else `rsync
       in
-      let pin_option =
-        Source (OpamUrl.parse ~backend
-                  ("file://"^OpamFilename.Dir.to_string dir))
+      let target =
+        `Source (OpamUrl.parse ~backend
+                   ("file://"^OpamFilename.Dir.to_string dir))
       in
-      ignore @@ OpamClient.PIN.pin t nv.name ~version:nv.version
-        (Some pin_option)
+      ignore @@ OpamClient.PIN.pin t nv.name ~version:nv.version target
   in
   Term.(pure source
         $global_options $atom $dev_repo $pin $dir),

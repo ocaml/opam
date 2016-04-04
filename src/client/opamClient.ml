@@ -1001,34 +1001,46 @@ let slog = OpamConsole.slog
   module PIN = struct
     open OpamPinCommand
 
+    let definition_hasnt_changed st nv =
+      let open OpamStd.Option.Op in
+      (OpamSwitchState.opam_opt st nv >>= fun cur ->
+       OpamPackage.Map.find_opt nv st.installed_opams >>| fun inst ->
+       OpamFile.OPAM.effectively_equal cur inst)
+      = Some true
+
     let post_pin_action st name =
-      let nv = try Some (OpamPinned.package st name) with Not_found -> None in
-      try match nv with
-      | Some nv ->
-        let v = nv.version in
-        OpamConsole.msg "%s needs to be %sinstalled.\n"
-          (OpamPackage.Name.to_string name)
-          (if OpamPackage.has_name st.installed name then "re" else "");
-        if OpamPackage.Set.mem nv st.installed then
-          reinstall_t ~ask:true [name, Some (`Eq,v)] st (* same version *)
-        else
-          install_t ~ask:true [name, Some (`Eq,v)] None
-            ~deps_only:false ~upgrade:false st
-          (* != version or new *)
-      | None ->
-        try
-          let nv = OpamPackage.package_of_name st.installed name in
-          if OpamPackage.has_name (Lazy.force st.available_packages) name then
+      try match
+          OpamStd.Option.Op.(OpamPinned.package_opt st name ++
+                             OpamPackage.package_of_name_opt st.installed name)
+        with
+        | None -> st
+        | Some nv ->
+          if definition_hasnt_changed st nv then
+            (log "pin-action: no change in metadata, no action needed";
+             st)
+          else if OpamPackage.Set.mem nv st.pinned then
+            let v = nv.version in
+            OpamConsole.msg "%s needs to be %sinstalled.\n"
+              (OpamPackage.Name.to_string name)
+              (if OpamPackage.has_name st.installed name then "re" else "");
+            if OpamPackage.Set.mem nv st.installed then
+              reinstall_t ~ask:true [name, Some (`Eq,v)] st (* same version *)
+            else
+              install_t ~ask:true [name, Some (`Eq,v)] None
+                ~deps_only:false ~upgrade:false st
+                (* != version or new *)
+          else if OpamPackage.has_name (Lazy.force st.available_packages) name
+          then
             (OpamConsole.msg "%s needs to be reinstalled.\n"
                (OpamPackage.Name.to_string name);
              if OpamPackage.Set.mem nv (Lazy.force st.available_packages)
              then reinstall_t ~ask:true [name, Some (`Eq, nv.version)] st
              else upgrade_t ~ask:true [name, Some (`Neq, nv.version)] st)
           else
-            (OpamConsole.msg "%s needs to be removed.\n" (OpamPackage.to_string nv);
+            (OpamConsole.msg "%s needs to be removed.\n"
+               (OpamPackage.to_string nv);
              (* Package no longer available *)
              remove_t ~ask:true ~autoremove:false ~force:false [name, None] st)
-        with Not_found -> st
       with e ->
         OpamConsole.note
           "Pinning command successful, but your installed packages \
@@ -1049,15 +1061,18 @@ let slog = OpamConsole.slog
            the pinning location"
           (OpamPackage.Name.to_string name)
 
-    let pin st name ?(edit=false) ?version ?(action=true) pin_option_opt =
-      let pin_option = match pin_option_opt with
-        | Some o -> o
-        | None -> get_upstream st name
+    let pin st name ?(edit=false) ?version ?(action=true) target =
+      let pin_option = match target with
+        | `Source url -> Some (Source url)
+        | `Version v -> Some (Version v)
+        | `Dev_upstream -> Some (get_upstream st name)
+        | `None -> None
       in
       let st =
         match pin_option with
-        | Source url -> source_pin st name ?version ~edit url
-        | Version v ->
+        | Some (Source url) -> source_pin st name ?version ~edit (Some url)
+        | None -> source_pin st name ?version ~edit None
+        | Some (Version v) ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st
       in
@@ -1066,7 +1081,18 @@ let slog = OpamConsole.slog
       else st
 
     let edit st ?(action=true) name =
-      let st = edit st name in
+      let st =
+        if OpamPackage.has_name st.pinned name then
+          edit st name
+        else if
+          OpamConsole.confirm
+            "Package %s is not pinned. Edit as a new pinning ?"
+            (OpamPackage.Name.to_string name)
+        then
+          source_pin st name ~edit:true None
+        else
+          OpamConsole.error_and_exit "Aborted"
+      in
       if action then post_pin_action st name else st
 
     let unpin st ?(action=true) names =

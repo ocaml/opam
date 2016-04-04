@@ -247,6 +247,9 @@ let packages_of_name nvset n =
 let package_of_name nvset n =
   Set.choose (packages_of_name nvset n)
 
+let package_of_name_opt nvset n =
+  try Some (package_of_name nvset n) with Not_found -> None
+
 let packages_of_names nvset nameset =
   Name.Set.fold
     (fun name acc ->

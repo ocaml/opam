@@ -96,6 +96,9 @@ val packages_of_name: Set.t -> Name.t -> Set.t
 (** Return a package with the given name *)
 val package_of_name: Set.t -> Name.t -> t
 
+(** Return a package with the given name, if any *)
+val package_of_name_opt: Set.t -> Name.t -> t option
+
 (** Return all the packages with one of the given names *)
 val packages_of_names: Set.t -> Name.Set.t -> Set.t
 

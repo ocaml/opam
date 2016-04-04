@@ -293,7 +293,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog OpamUrl.to_string) target_url;
+    (slog (OpamStd.Option.to_string OpamUrl.to_string)) target_url;
   let installed_version =
     try
       Some (OpamPackage.version
@@ -308,7 +308,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
       let cur_opam = OpamSwitchState.opam st nv in
       let cur_url = OpamFile.OPAM.get_url cur_opam in
       let no_changes =
-        Some target_url = cur_url && (version = Some cur_version || version = None)
+        target_url = cur_url && (version = Some cur_version || version = None)
       in
       OpamConsole.note
         "Package %s is %s %s."
@@ -351,21 +351,23 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
     (OpamConsole.msg "Aborting.\n";
      OpamStd.Sys.exit 10);
 
-  (match cur_url with
-   | Some u when OpamUrl.(
-       u.transport <> target_url.transport ||
-       u.path <> target_url.path ||
-       u.backend <> target_url.backend
+  (match cur_url, target_url with
+   | Some u, Some target when OpamUrl.(
+       u.transport <> target.transport ||
+       u.path <> target.path ||
+       u.backend <> target.backend
      ) ->
      OpamFilename.rmdir
        (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
    | _ -> ());
 
+  let target_url = OpamStd.Option.Op.(target_url ++ cur_url) in
+
   let pin_version = OpamStd.Option.Op.(version +! cur_version) in
 
   let nv = OpamPackage.create name pin_version in
 
-  let urlf = OpamFile.URL.create target_url in
+  let urlf = OpamStd.Option.map OpamFile.URL.create target_url in
 
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
@@ -374,8 +376,10 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
-    OpamProcess.Job.run @@ get_source_definition ?version st nv urlf
-  in
+    OpamStd.Option.Op.(
+      urlf >>= fun url ->
+      OpamProcess.Job.run @@ get_source_definition ?version st nv url
+    ) in
 
   let nv =
     match version with
@@ -387,7 +391,10 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   in
 
   let opam_opt =
-    OpamStd.Option.Op.(opam_opt >>+ fun () -> OpamSwitchState.opam_opt st nv)
+    OpamStd.Option.Op.(
+      opam_opt >>+ fun () ->
+      OpamPackage.Map.find_opt nv st.installed_opams >>+ fun () ->
+      OpamSwitchState.opam_opt st nv)
   in
 
   let need_edit = need_edit || opam_opt = None in
@@ -398,7 +405,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
       | Some opam -> opam
     in
     let opam_base =
-      OpamFile.OPAM.with_url urlf opam_base
+      OpamFile.OPAM.with_url_opt urlf opam_base
     in
     if need_edit then
       (if not (OpamFile.exists temp_file) then
@@ -407,7 +414,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
            temp_file opam_base;
        edit_raw name temp_file)
     else
-      Some (OpamFile.OPAM.with_url urlf opam_base)
+      Some (OpamFile.OPAM.with_url_opt urlf opam_base)
   in
   match opam_opt with
   | None ->
@@ -415,14 +422,8 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   | Some opam ->
     let opam =
       match OpamFile.OPAM.get_url opam with
-      | Some url1 when url1 = target_url -> opam
-      | Some _  ->
-        OpamConsole.error
-          "Ignoring url specified in \"opam\" file which doesn't match \
-           (use 'opam pin edit' to change)";
-        OpamFile.OPAM.with_url urlf opam
-      | None ->
-        OpamFile.OPAM.with_url urlf opam
+      | Some _ -> opam
+      | None -> OpamFile.OPAM.with_url_opt urlf opam
     in
 
     OpamFilename.rmdir
@@ -445,10 +446,10 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
       (string_of_pinned opam);
 
     (match target_url with
-     | { OpamUrl.backend = #OpamUrl.version_control;
-         transport = "file";
-         hash = None;
-         path = _; } as url ->
+     | Some ({ OpamUrl.backend = #OpamUrl.version_control;
+               transport = "file";
+               hash = None;
+               path = _; } as url) ->
        (match OpamUrl.local_dir url with
         | Some dir ->
           OpamConsole.note

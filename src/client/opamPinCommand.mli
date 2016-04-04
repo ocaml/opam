@@ -20,16 +20,21 @@ open OpamTypes
 open OpamStateTypes
 
 (** Pins a package to the given version, and writes to disk. Returns the updated
-    state *)
+    state. The main difference with [source_pin] is that a definition overlay is
+    not created. Therefore, the package must exist already. *)
 val version_pin: rw switch_state -> name -> version -> rw switch_state
 
 (** Sets the package as pinned to the given target. A package definition is
     looked for in the package source and current metadata (in this order).
 
     If [edit], or if no package definition is found, this opens an editor (with
-    a template if no definition is available). *)
+    a template if no definition is available).
+
+    If no target url is given, the url from the installed package or
+    repositories, if any, is used and the package is otherwise pinned without
+    target *)
 val source_pin:
-  rw switch_state -> name -> ?version:version -> ?edit:bool ->  url ->
+  rw switch_state -> name -> ?version:version -> ?edit:bool ->  url option ->
   rw switch_state
 
 (** Let the user edit a pinned package's opam file.

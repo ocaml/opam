@@ -58,14 +58,13 @@ val remove:
 
 module PIN: sig
 
-  (** Set a package pinning. if [pin_option] is [None], set the package defined
-      upstream. If [action], prompt for install/reinstall as appropriate after
-      pinning. *)
+  (** Set a package pinning. If [action], prompt for install/reinstall as
+      appropriate after pinning. *)
   val pin:
     rw switch_state ->
     OpamPackage.Name.t ->
     ?edit:bool -> ?version:version -> ?action:bool ->
-    pin_option option ->
+    [< `Source of url | `Version of version | `Dev_upstream | `None ] ->
     rw switch_state
 
   val edit:
