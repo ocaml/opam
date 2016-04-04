@@ -145,6 +145,8 @@ let load lock_kind gt rt switch =
       (fun nv -> not (OpamPackage.has_name pinned nv.name))
       compiler_packages
   in
+  log "Detected changed packages (marked for reinstall): %a"
+    (slog OpamPackage.Set.to_string) changed;
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
         OpamPackage.Map.add nv
@@ -381,8 +383,10 @@ let update_package_metadata nv opam st =
     );
     reinstall =
       (match OpamPackage.Map.find_opt nv st.installed_opams with
-       | Some inst when not (OpamFile.OPAM.effectively_equal inst opam) ->
-         OpamPackage.Set.add nv (st.reinstall)
+       | Some inst ->
+         if OpamFile.OPAM.effectively_equal inst opam
+         then OpamPackage.Set.remove nv (st.reinstall)
+         else OpamPackage.Set.add nv (st.reinstall)
        | _ -> st.reinstall);
   }
 
@@ -395,19 +399,14 @@ let remove_package_metadata nv st =
   }
 
 let update_pin nv opam st =
-  let prev_opam = opam_opt st nv in
-  let st = update_package_metadata nv opam st in
+  update_package_metadata nv opam @@
   { st with
     pinned =
       OpamPackage.Set.add nv
         (OpamPackage.filter_name_out st.pinned nv.name);
-    reinstall =
-      match prev_opam with
-      | Some o when
-          OpamPackage.Set.mem nv st.installed &&
-          not (OpamFile.OPAM.effectively_equal o opam) ->
-        OpamPackage.Set.add nv st.reinstall
-      | _ -> st.reinstall;
+    available_packages = lazy (
+      OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
+    );
   }
 
 let do_backup lock st = match lock with

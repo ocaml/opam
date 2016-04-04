@@ -293,7 +293,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog (OpamStd.Option.to_string OpamUrl.to_string)) target_url;
+    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url;
   let installed_version =
     try
       Some (OpamPackage.version
@@ -301,14 +301,15 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
     with Not_found -> None
   in
 
-  let cur_version, cur_url =
+  let cur_version, cur_urlf =
     try
       let cur_version = OpamPinned.version st name in
       let nv = OpamPackage.create name cur_version in
       let cur_opam = OpamSwitchState.opam st nv in
-      let cur_url = OpamFile.OPAM.get_url cur_opam in
+      let cur_urlf = OpamFile.OPAM.url cur_opam in
       let no_changes =
-        target_url = cur_url && (version = Some cur_version || version = None)
+        target_url = OpamStd.Option.map OpamFile.URL.url cur_urlf &&
+        (version = Some cur_version || version = None)
       in
       OpamConsole.note
         "Package %s is %s %s."
@@ -323,7 +324,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
              (OpamPath.Switch.Overlay.tmp_opam
                 st.switch_global.root st.switch name))
       else OpamStd.Sys.exit 10;
-      cur_version, cur_url
+      cur_version, cur_urlf
     with Not_found ->
       if OpamPackage.has_name st.compiler_packages name then (
         OpamConsole.warning
@@ -351,7 +352,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
     (OpamConsole.msg "Aborting.\n";
      OpamStd.Sys.exit 10);
 
-  (match cur_url, target_url with
+  (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
    | Some u, Some target when OpamUrl.(
        u.transport <> target.transport ||
        u.path <> target.path ||
@@ -361,13 +362,21 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
        (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
    | _ -> ());
 
-  let target_url = OpamStd.Option.Op.(target_url ++ cur_url) in
-
   let pin_version = OpamStd.Option.Op.(version +! cur_version) in
 
   let nv = OpamPackage.create name pin_version in
 
-  let urlf = OpamStd.Option.map OpamFile.URL.create target_url in
+  let urlf =
+    OpamStd.Option.Op.(
+      target_url >>| OpamFile.URL.create >>+ fun () ->
+      cur_urlf >>+ fun () ->
+      OpamPackage.Map.find_opt nv st.installed_opams >>= OpamFile.OPAM.url
+      >>+ fun () ->
+      OpamSwitchState.url st nv
+    )
+  in
+
+  let target_url = OpamStd.Option.map OpamFile.URL.url urlf in
 
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
@@ -495,12 +504,14 @@ let unpin st names =
            st.switch_global.root st.switch name);
       match OpamPinned.package_opt st name with
       | Some nv ->
+        let pin_str =
+          OpamStd.Option.to_string ~none:"pinned"
+            string_of_pinned (OpamSwitchState.opam_opt st nv)
+        in
         let st = unpin_one st nv in
         OpamSwitchAction.write_selections st;
         OpamConsole.msg "%s is no longer %s\n"
-          (OpamPackage.Name.to_string name)
-          (OpamStd.Option.to_string ~none:"pinned"
-             string_of_pinned (OpamSwitchState.opam_opt st nv));
+          (OpamPackage.Name.to_string name) pin_str;
         st
       | None ->
         OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);

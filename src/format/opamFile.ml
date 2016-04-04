@@ -2074,7 +2074,7 @@ module OPAM = struct
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
-      extra_files = t.extra_files;
+      extra_files = OpamStd.Option.Op.(t.extra_files ++ Some []);
 
       ocaml_version = empty.ocaml_version;
       os         = empty.os;
