@@ -272,29 +272,15 @@ let process
     match OpamFile.OPAM.read_opt opam_f with
     | Some opam ->
       OpamFormula.ands OpamFile.OPAM.([depends opam; depopts opam]) |>
-      OpamFormula.map (fun (name,ff) ->
-          let cstr =
-            OpamFormula.partial_eval (function
-                | Constraint c -> `Formula (Atom c)
-                | Filter f ->
-                  let env =
-                    (fun v ->
-                       if v = OpamVariable.Full.of_string "dev"
-                       then Some (B dev)
-                       else None)
-                  in
-                  if OpamFilter.eval_to_bool ~default:true env f
-                  then `True else `False)
-              ff
-          in
-          match cstr with
-          | `True -> Atom (name, Empty)
-          | `False -> Empty
-          | `Formula f -> Atom (name, f))
-      |>
-      OpamFormula.fold_left (fun accu (n,_) ->
-          OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
-        ) OpamPackage.Set.empty
+      OpamPackageVar.filter_depends_formula
+        ~build:true ~dev ~default:true
+        ~env:(fun _ -> None) |>
+      OpamFormula.atoms |>
+      List.fold_left (fun acc atom ->
+          (* fixme: this is a vast super-approximation *)
+          OpamPackage.Set.union acc @@
+          OpamPackage.Set.filter (fun nv -> OpamFormula.check atom nv) packages)
+        OpamPackage.Set.empty
     | None ->
       OpamPackage.Set.empty
   in

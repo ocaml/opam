@@ -43,7 +43,7 @@ let empty_universe =
     u_doc = false;
   }
 
-let filter_deps ~build ~test ~doc ~dev deps =
+let filter_deps ~build ~test ~doc ~dev ?default deps =
   let env var =
     match OpamVariable.Full.to_string var with
     | "build" -> Some (B build)
@@ -52,7 +52,7 @@ let filter_deps ~build ~test ~doc ~dev deps =
     | "dev" -> Some (B dev)
     | _ -> None
   in
-  OpamFilter.filter_formula env deps
+  OpamFilter.filter_formula ?default env deps
 
 (* Get the optional dependencies of a package *)
 let depopts_of_package universe ~build package =
@@ -60,6 +60,7 @@ let depopts_of_package universe ~build package =
     try
       let dev = OpamPackage.Set.mem package universe.u_dev in
       filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
+        ~default:false
         (OpamPackage.Map.find package universe.u_depopts)
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
@@ -96,7 +97,7 @@ let cudf_versions_map universe packages =
   in
   (* include test and doc dependencies even if they aren't required in the
      universe, for consistency of version numbers *)
-  let filt = filter_deps ~build:true ~test:true ~doc:true in
+  let filt = filter_deps ~build:true ~test:true ~doc:true ~default:false in
   let id = fun ~dev:_ x -> x in
   let packages = add_referred_to_packages filt packages universe.u_depends in
   let packages = add_referred_to_packages filt packages universe.u_depopts in
@@ -160,6 +161,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
   let dev = OpamPackage.Set.mem package universe.u_dev in
   let depends =
     try filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
+          ~default:false
           (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
   let base_depends =

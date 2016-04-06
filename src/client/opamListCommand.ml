@@ -297,7 +297,10 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamSwitchState.opam st nv in
-          let atoms = OpamPackageVar.all_depends ?dev ~depopts st opam in
+          let atoms =
+            OpamFormula.atoms
+              (OpamPackageVar.all_depends ?dev ~depopts st opam)
+          in
           let depends_on nv =
             List.exists (fun atom -> OpamFormula.check atom nv) atoms
           in
@@ -308,6 +311,7 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       let deps nv =
         let opam = OpamSwitchState.opam st nv in
         OpamSwitchState.packages_of_atoms st @@
+        OpamFormula.atoms @@
         OpamPackageVar.all_depends ?dev ~depopts st opam
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)

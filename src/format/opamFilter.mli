@@ -112,7 +112,10 @@ val commands_variables: command list -> full_variable list
 (** Converts a generic formula to a filter, given a converter for atoms *)
 val of_formula: ('a -> filter) -> 'a generic_formula -> filter
 
-val filter_formula: env -> filtered_formula -> formula
+(** [default] indicates the result to assume when a filter is undefined; this is
+    normally [false] when computing the universe. Will raise as other filter
+    functions if undefined and [default] is not given. *)
+val filter_formula: ?default:bool -> env -> filtered_formula -> formula
 
 val partial_filter_formula: env -> filtered_formula -> filtered_formula
 

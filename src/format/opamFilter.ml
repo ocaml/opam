@@ -349,11 +349,11 @@ let rec of_formula atom_f = function
   | And (a, b) -> FAnd (of_formula atom_f a, of_formula atom_f b)
   | Or (a, b) -> FOr (of_formula atom_f a, of_formula atom_f b)
 
-let filter_constraints env filtered_constraint =
+let filter_constraints ?default env filtered_constraint =
   OpamFormula.partial_eval
     (function
       | Filter flt ->
-        if eval_to_bool ~default:false env flt then `True else `False
+        if eval_to_bool ?default env flt then `True else `False
       | Constraint c -> `Formula (Atom c))
     filtered_constraint
 
@@ -377,8 +377,8 @@ let gen_filter_formula constraints filtered_formula =
        | `Formula c -> Atom (name, c))
     filtered_formula
 
-let filter_formula env ff =
-  gen_filter_formula (filter_constraints env) ff
+let filter_formula ?default env ff =
+  gen_filter_formula (filter_constraints ?default env) ff
 
 let partial_filter_formula env ff =
   gen_filter_formula (partial_filter_constraints env) ff
