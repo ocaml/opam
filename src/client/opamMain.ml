@@ -1051,12 +1051,20 @@ let switch =
     | Some `default switch, [] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let switch_name = OpamSwitch.of_string switch in
-      let packages =
-        if List.mem switch_name (OpamFile.Config.installed_switches gt.config)
-        then []
-        else compiler_packages gt switch
+      let is_installed =
+        List.mem switch_name (OpamFile.Config.installed_switches gt.config)
       in
-      OpamSwitchCommand.switch gt ~packages switch_name;
+      let packages =
+        if is_installed then [] else compiler_packages gt switch
+      in
+      if no_switch then
+        if is_installed then
+          OpamConsole.msg "Switch already installed, nothing to do.\n"
+        else
+          OpamSwitchCommand.install gt ~update_config:false
+            ~packages switch_name
+      else
+        OpamSwitchCommand.switch gt ~packages switch_name;
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
