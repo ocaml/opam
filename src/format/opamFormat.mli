@@ -276,14 +276,10 @@ module Pp : sig
       (value, 'a) t ->
       (value list, (OpamFormula.relop * 'a) OpamFormula.formula) t
 
-    (** Dependency flags *)
-    val dep_flag : (value, package_dep_flag) t
-
-    (** Extended dependency constraints (with dependency flags) *)
-    val ext_constraints :
-      (value, 'a) t ->
-      (value list,
-       package_dep_flag list * (OpamFormula.relop * 'a) OpamFormula.formula) t
+    (** Dependency constraints mixed with filters *)
+    val filtered_constraints :
+      (value, 'version) t ->
+      (value list, 'version filter_or_constraint OpamFormula.formula) t
 
     val package_atom :
       ((value, version) t -> (value list, 'a) t) -> (value, name * 'a) t

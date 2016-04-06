@@ -271,13 +271,30 @@ let process
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
     match OpamFile.OPAM.read_opt opam_f with
     | Some opam ->
-      let deps =
-        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam) in
-      let depopts =
-        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depopts opam) in
+      OpamFormula.ands OpamFile.OPAM.([depends opam; depopts opam]) |>
+      OpamFormula.map (fun (name,ff) ->
+          let cstr =
+            OpamFormula.partial_eval (function
+                | Constraint c -> `Formula (Atom c)
+                | Filter f ->
+                  let env =
+                    (fun v ->
+                       if v = OpamVariable.Full.of_string "dev"
+                       then Some (B dev)
+                       else None)
+                  in
+                  if OpamFilter.eval_to_bool ~default:true env f
+                  then `True else `False)
+              ff
+          in
+          match cstr with
+          | `True -> Atom (name, Empty)
+          | `False -> Empty
+          | `Formula f -> Atom (name, f))
+      |>
       OpamFormula.fold_left (fun accu (n,_) ->
           OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
-        ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
+        ) OpamPackage.Set.empty
     | None ->
       OpamPackage.Set.empty
   in

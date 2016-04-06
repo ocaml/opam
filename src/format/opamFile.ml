@@ -1325,8 +1325,8 @@ module OPAMSyntax = struct
     version    : OpamPackage.Version.t option;
 
     (* Relationships; solver and availability info *)
-    depends    : ext_formula;
-    depopts    : ext_formula;
+    depends    : filtered_formula;
+    depopts    : filtered_formula;
     conflicts  : formula;
     available  : filter;
     flags      : package_flag list;
@@ -1619,27 +1619,7 @@ module OPAMSyntax = struct
       nv.OpamPackage.version
     | _ -> version
 
-  let cleanup_depflags _opam_version ~pos ext_formula =
-    (* remove unknown dependency flags *)
-    OpamFormula.map (fun (name, (flags, cstr)) ->
-        let unknown_flags =
-          OpamStd.List.filter_map (function
-              | Depflag_Unknown n -> Some n
-              | _ -> None)
-            flags in
-        if unknown_flags <> [] then
-          Pp.warn ~pos "Unknown flags %s ignored for dependency %s"
-            (OpamStd.Format.pretty_list unknown_flags)
-            (OpamPackage.Name.to_string name);
-        let known_flags = List.filter (function
-            | Depflag_Unknown _ -> false
-            | _ -> true)
-            flags in
-        Atom (name, (known_flags, cstr)))
-      ext_formula
-
   let cleanup_depopts opam_version ~pos depopts =
-    let depopts = cleanup_depflags opam_version ~pos depopts in
     if OpamFormatConfig.(!r.skip_version_checks) ||
        OpamVersion.compare opam_version (OpamVersion.of_string "1.2") < 0
     then depopts
@@ -1647,20 +1627,11 @@ module OPAMSyntax = struct
     (* Make sure depopts are a pure disjunction, without constraints *)
     let rec aux acc disjunction =
       List.fold_left (fun acc -> function
-          | OpamFormula.Atom (_, (_,Empty)) as atom -> atom :: acc
-          | OpamFormula.Atom (name, (flags, cstr)) ->
-            Pp.warn ~pos
-              "Version constraint (%s) no longer allowed in optional \
-               dependency (ignored).\n\
-               Use the 'conflicts' field instead."
-              (OpamFormula.string_of_formula (fun (r,v) ->
-                   OpamFormula.string_of_relop r ^" "^
-                   OpamPackage.Version.to_string v)
-                  cstr);
-            OpamFormula.Atom (name, (flags, Empty)) :: acc
+          | OpamFormula.Atom _ as atom -> atom :: acc
           | f ->
-            Pp.warn "Optional dependencies must be a disjunction. \
-                     Treated as such.";
+            Pp.warn ~pos
+              "Optional dependencies must be a disjunction. \
+               Treated as such.";
             aux acc
               (OpamFormula.fold_left (fun acc a -> OpamFormula.Atom a::acc)
                  [] f)
@@ -1761,10 +1732,10 @@ module OPAMSyntax = struct
       "bug-reports", no_cleanup Pp.ppacc with_bug_reports bug_reports
         (Pp.V.map_list ~depth:1 Pp.V.string);
 
-      "depends", with_cleanup cleanup_depflags Pp.ppacc with_depends depends
-        (Pp.V.package_formula `Conj Pp.V.ext_constraints);
+      "depends", no_cleanup Pp.ppacc with_depends depends
+        (Pp.V.package_formula `Conj Pp.V.filtered_constraints);
       "depopts", with_cleanup cleanup_depopts Pp.ppacc with_depopts depopts
-        (Pp.V.package_formula `Disj Pp.V.ext_constraints);
+        (Pp.V.package_formula `Disj Pp.V.filtered_constraints);
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
         (Pp.V.package_formula `Disj Pp.V.constraints);
@@ -2128,8 +2099,9 @@ module OPAM = struct
                        (OpamPackage.Name.to_string (nv.OpamPackage.name)),
                      None],
                     None];
-      depends    = Atom (OpamPackage.Name.of_string "ocamlfind",
-                         ([Depflag_Build], Empty));
+      depends    =
+        Atom (OpamPackage.Name.of_string "ocamlfind",
+              (Atom (OpamFilter.(Filter (FIdent (ident_of_string "build"))))));
       author     = maintainer;
       homepage   = [""];
       license    = [""];
@@ -2149,10 +2121,9 @@ module OPAM = struct
       else None
     in
     let names_of_formula flag f =
-      OpamPackage.Name.Set.of_list @@
-      List.map fst OpamFormula.(
-          atoms @@ filter_deps ~dev:true ~build:true ~test:flag ~doc:flag f
-        )
+      OpamFormula.fold_left
+        (fun acc (name,_) -> OpamPackage.Name.Set.add name acc)
+        OpamPackage.Name.Set.empty f
     in
     let all_commands =
       t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
@@ -2162,6 +2133,12 @@ module OPAM = struct
       OpamStd.List.filter_map snd t.messages @
       OpamStd.List.filter_map snd t.post_messages @
       [t.available] @
+      OpamFormula.fold_left (fun acc (_, f) ->
+          OpamFormula.fold_left (fun acc -> function
+              | Constraint _ -> acc
+              | Filter f -> f :: acc)
+            acc f)
+        [] (OpamFormula.ands [t.depends; t.depopts]) @
       List.map (fun (_,_,f) -> f) t.features
     in
     let all_variables =
@@ -2245,22 +2222,20 @@ module OPAM = struct
          "Unknown package flags found"
          ~detail:unk_flags
          (unk_flags <> []));
-      (let unk_depflags =
-         OpamFormula.fold_left (fun acc (_, (flags, _)) ->
-             OpamStd.List.filter_map
-               (function Depflag_Unknown s -> Some s | _ -> None)
-               flags
-             @ acc)
-           [] (OpamFormula.ands [t.depends;t.depopts])
+      (let filtered_vars =
+         OpamFilter.variables_of_filtered_formula t.depends @
+         OpamFilter.variables_of_filtered_formula t.depopts
+         |> List.filter (fun v -> not (OpamVariable.Full.is_global v))
+         |> List.map OpamVariable.Full.to_string
        in
        cond 29 `Error
-         "Unknown dependency flags in depends or depopts"
-         ~detail:unk_depflags
-         (unk_depflags <> []));
+         "Package dependencies mention package variables"
+         ~detail:filtered_vars
+         (filtered_vars <> []));
       cond 30 `Error
-        "Field 'depopts' contains formulas or version constraints"
+        "Field 'depopts' is not a pure disjunction"
         (List.exists (function
-             | OpamFormula.Atom (_, (_,Empty)) -> false
+             | OpamFormula.Atom _ -> false
              | _ -> true)
             (OpamFormula.ors_to_list t.depopts));
       (let dup_depends =
@@ -2920,7 +2895,8 @@ module CompSyntax = struct
     in
     let nofilter x = x, (None: filter option) in
     let depends =
-      OpamFormula.map (fun (n, formula) -> Atom (n, ([], formula)))
+      OpamFormula.map (fun (n, formula) ->
+          Atom (n, (OpamFormula.map (fun a -> Atom (Constraint a)) formula)))
         comp.packages
     in
     let url =

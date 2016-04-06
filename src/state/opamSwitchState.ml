@@ -293,26 +293,40 @@ let get_package st name =
     OpamPackage.max_version st.packages name
 
 let is_dev_package st nv =
-  match url st nv with
+  match opam_opt st nv with
+  | Some opam -> OpamPackageVar.is_dev_package st opam
   | None -> false
-  | Some urlf ->
-    match OpamFile.URL.(url urlf, checksum urlf) with
-    | { OpamUrl.backend = `http; _ }, _
-      when not (OpamPackage.Set.mem nv st.pinned) -> false
-    | _, Some _ -> false
-    | _, None -> true
 
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
-let universe st action = {
+let universe st action =
+  let env nv v =
+    if List.mem v OpamPackageVar.predefined_depends_variables then None else
+    let r = OpamPackageVar.resolve_switch st v in
+    if r = None then
+      (if OpamFormatConfig.(!r.strict) then
+         OpamConsole.error_and_exit
+           "undefined filter variable in dependencies of %s: %s"
+       else
+         log
+           "ERR: undefined filter variable in dependencies of %s: %s")
+        (OpamPackage.to_string nv) (OpamVariable.Full.to_string v);
+    r
+  in
+  let get_deps f opams =
+    OpamPackage.Map.mapi (fun nv opam ->
+        OpamFilter.partial_filter_formula (env nv) (f opam)
+      ) opams
+  in
+{
   u_packages  = st.packages;
   u_action    = action;
   u_installed = st.installed;
   u_available = Lazy.force st.available_packages;
-  u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends st.opams;
-  u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts st.opams;
+  u_depends   = get_deps OpamFile.OPAM.depends st.opams;
+  u_depopts   = get_deps OpamFile.OPAM.depopts st.opams;
   u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;

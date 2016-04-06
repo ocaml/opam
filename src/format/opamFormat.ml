@@ -734,38 +734,58 @@ module Pp = struct
       pp ~name:(version.ppname ^ "-constraints")
         parse_constraints print_constraints
 
-    let dep_flag =
-      ident -| pp ~name:"dependency-flag"
-        (fun ~pos:_ -> dep_flag_of_string)
-        string_of_dep_flag
-
-    (* Version constraints with additional leading keywords
-       ("build","test"...), used for dependency flags *)
-    let ext_constraints version =
-      let rec parse_ext_constraints ~pos = function
-        | Ident _ as kw :: r ->
-          let rpos = OpamStd.Option.default pos (values_pos r) in
-          let kws, f = parse_ext_constraints ~pos:rpos r in
-          parse dep_flag ~pos kw :: kws, f
-        | Logop (pos, `And, t1, t2) :: r -> parse_ext_constraints ~pos (t1::t2::r)
-        | t -> [], parse (constraints version) ~pos t
+    let filtered_constraints version =
+      let rec parse_cs ~pos:_ items =
+        let rec aux_parse = function
+          | Prefix_relop (pos, op, v) ->
+            Atom (Constraint (op, parse version ~pos v))
+          | Logop (_, `And, a, b) -> OpamFormula.ands [aux_parse a; aux_parse b]
+          | Logop (_, `Or, a, b) -> OpamFormula.ors [aux_parse a; aux_parse b]
+          | Group (pos, g) -> OpamFormula.Block (parse_cs ~pos g)
+          | Pfxop (pos, `Not, v) ->
+            parse_cs ~pos [v] |>
+            OpamFormula.neg (function
+                | Constraint (op, v) ->
+                  Constraint (OpamFormula.neg_relop op, v)
+                | Filter f ->
+                  Filter (FNot f))
+          | filt ->
+            let f = filter.parse ~pos:(value_pos filt) [filt] in
+            Atom (Filter f)
+        in
+        OpamFormula.ands (List.map aux_parse items)
       in
-      let print (kws, cs) =
-        (* The kws must be aggregated with an '&' to the first constraint, if
-           any *)
-        match print (constraints version) cs, kws with
-        | [], [] -> []
-        | [], kw::kws ->
-          [List.fold_left (fun acc kw ->
-               Logop (pos_null, `And, print dep_flag kw, acc))
-              (print dep_flag kw) kws]
-        | c::cs, kws ->
-          List.fold_left (fun acc kw ->
-              Logop (pos_null, `And, print dep_flag kw, acc))
-            c kws
-          :: cs
+      let rec print_cs cs =
+        let rec aux ?(in_and=false) cs =
+          let group_if ?(cond=false) f =
+            if cond || OpamFormatConfig.(!r.all_parens)
+            then Group (pos_null, [f])
+            else f
+          in
+          match cs with
+          | Empty -> assert false
+          | And (x, y) ->
+            group_if
+              (Logop (pos_null, `And, aux ~in_and:true x, aux ~in_and:true y))
+          | Or (x, y) ->
+            group_if ~cond:in_and
+              (Logop (pos_null, `Or, aux x, aux y))
+          | Block g -> Group (pos_null, print_cs g)
+          | Atom (Constraint (op,v)) ->
+            group_if (Prefix_relop (pos_null, op, print version v))
+          | Atom (Filter flt) ->
+            (match filter.print flt with
+             | f1::fr ->
+               group_if
+                 (List.fold_left (fun a b -> Logop (pos_null, `And, a, b))
+                    f1 fr)
+             | [] -> Group (pos_null, []))
+        in
+        match cs with
+        | Empty -> []
+        | cs -> [aux cs]
       in
-      pp ~name:"ext-constraints" parse_ext_constraints print
+      pp ~name:"filtered-constraints" parse_cs print_cs
 
     let package_atom constraints =
       map_option

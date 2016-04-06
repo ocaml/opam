@@ -157,14 +157,6 @@ let load opamroot =
 let write opamroot conf =
   OpamFile.Config.write (OpamPath.config opamroot) conf
 
-let filter_deps ?(dev=true) f =
-  OpamTypesBase.filter_deps
-    ~build:true
-    ~test:(!r.build_test)
-    ~doc:(!r.build_doc)
-    ~dev
-    f
-
 let load_defaults root_dir =
   match load root_dir with
   | None -> None

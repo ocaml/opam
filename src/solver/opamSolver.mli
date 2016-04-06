@@ -25,6 +25,13 @@ type solution
 
 val empty_universe: universe
 
+(** Resolves the build, test, doc, dev flags in a filtered formula (which is
+    supposed to have been pre-processed to remove switch and global
+    variables) *)
+val filter_deps:
+  build:bool -> test:bool -> doc:bool -> dev:bool ->
+  filtered_formula -> formula
+
 (** {2 Solver} *)
 
 (** Convert a request to a string *)

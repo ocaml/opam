@@ -43,7 +43,18 @@ let empty_universe =
     u_doc = false;
   }
 
-(* Get the optional depencies of a package *)
+let filter_deps ~build ~test ~doc ~dev deps =
+  let env var =
+    match OpamVariable.Full.to_string var with
+    | "build" -> Some (B build)
+    | "test" -> Some (B test)
+    | "doc" -> Some (B doc)
+    | "dev" -> Some (B dev)
+    | _ -> None
+  in
+  OpamFilter.filter_formula env deps
+
+(* Get the optional dependencies of a package *)
 let depopts_of_package universe ~build package =
   let opts =
     try

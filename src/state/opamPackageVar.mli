@@ -26,6 +26,12 @@ val package_variable_names: (string * string) list
 (** Obsolete ocaml variables (for compat) and their description *)
 val ocaml_variable_names: (string * string) list
 
+(** Variables that are pre-defined in the dependency filtered-formula scope, and
+    which resolution is delayed to after the universe is computed (these are the
+    only ones allowed in the universe, and resolved by
+    [OpamSolver.filter_deps] *)
+val predefined_depends_variables: full_variable list
+
 (** Resolves globally available variables only *)
 val resolve_global: 'a global_state -> full_variable -> variable_contents option
 
@@ -46,3 +52,8 @@ val resolve:
 val resolve_switch_raw:
   'a global_state -> switch -> OpamFile.Dot_config.t -> full_variable ->
   variable_contents option
+
+val is_dev_package: 'a switch_state -> OpamFile.OPAM.t -> bool
+
+val all_depends:
+  ?dev:bool -> ?depopts:bool -> 'a switch_state -> OpamFile.OPAM.t -> atom list

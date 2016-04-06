@@ -297,38 +297,18 @@ let print_list t ~uninst_versions ~short ~shortv ~order names =
       else if reverse_depends then
         let is_dependent_on deps nv =
           let opam = OpamSwitchState.opam st nv in
-          let formula =
-            OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
-          let formula =
-            if depopts then
-              OpamFormula.ands
-                [formula;
-                 OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam)]
-            else formula in
+          let atoms = OpamPackageVar.all_depends ?dev ~depopts st opam in
           let depends_on nv =
-            let name = nv.name in
-            let v = nv.version in
-            List.exists (fun (n,_) -> name = n) (OpamFormula.atoms formula) &&
-            OpamFormula.eval
-              (fun (n,cstr) ->
-                 n <> name ||
-                 OpamFormula.eval
-                   (fun (relop,vref) -> OpamFormula.eval_relop relop v vref)
-                   cstr)
-              formula in
+            List.exists (fun atom -> OpamFormula.check atom nv) atoms
+          in
           OpamPackage.Set.for_all depends_on deps
         in
         OpamPackage.Set.filter (is_dependent_on depends) st.packages
       else
       let deps nv =
         let opam = OpamSwitchState.opam st nv in
-        let deps =
-          OpamSwitchState.packages_of_atoms st @@ OpamFormula.atoms @@
-          OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depends opam) in
-        if depopts then
-          deps ++ (OpamSwitchState.packages_of_atoms st @@ OpamFormula.atoms @@
-                   OpamStateConfig.filter_deps ?dev (OpamFile.OPAM.depopts opam))
-        else deps
+        OpamSwitchState.packages_of_atoms st @@
+        OpamPackageVar.all_depends ?dev ~depopts st opam
       in
       OpamPackage.Set.fold (fun nv acc -> acc ++ deps nv)
         depends OpamPackage.Set.empty
@@ -563,7 +543,7 @@ let info gt ~fields ~raw_opam ~where atoms =
       else [name, to_string v] in
 
     let strings = mk [] (String.concat ", ") in
-    let formula = mk Empty OpamFormula.to_string in
+    let formula = mk Empty OpamFilter.string_of_filtered_formula in
     let option f = mk None (function None -> "" | Some x -> f x) in
 
     let author   = strings "authors"  OpamFile.OPAM.author in
@@ -573,8 +553,8 @@ let info gt ~fields ~raw_opam ~where atoms =
     let license  = strings "license"  OpamFile.OPAM.license in
     let doc      = strings "doc"      OpamFile.OPAM.doc in
     let tags     = strings "tags"     (fun _ -> tags) in
-    let depends  = formula "depends"  (OpamStateConfig.filter_deps @* OpamFile.OPAM.depends) in
-    let depopts  = formula "depopts"  (OpamStateConfig.filter_deps @* OpamFile.OPAM.depopts) in
+    let depends  = formula "depends"  OpamFile.OPAM.depends in
+    let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
     let libraries = strings "libraries" (fun _ -> Lazy.force libraries) in
     let syntax    = strings "syntax"    (fun _ -> Lazy.force syntax) in

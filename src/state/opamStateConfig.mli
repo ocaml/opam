@@ -66,10 +66,6 @@ val load: dirname -> OpamFile.Config.t option
 (** Writes the global configuration file, protecting against concurrent reads *)
 val write: dirname -> OpamFile.Config.t -> unit
 
-(** Filters flagged dependencies in an ext_formula using the currently set
-    options (doc, test). Build dependencies are included *)
-val filter_deps: ?dev:bool -> ext_formula -> formula
-
 (** Loads the config file from the OPAM root and updates default values for all
     related OpamXxxConfig modules. Doesn't read the env yet, the [init]
     functions should still be called afterwards. OpamFormat should be

@@ -63,6 +63,10 @@ let package_variable_names = [
   "hash",      "Hash of the package archive";
 ]
 
+let predefined_depends_variables =
+  List.map OpamVariable.Full.of_string [
+    "build"; "test"; "doc"; "dev";
+  ]
 
 let resolve_compat_ocaml_variables _gt _switch _switch_config _ocaml_var =
   raise Not_found
@@ -146,6 +150,35 @@ let resolve_switch st full_var =
   resolve_switch_raw st.switch_global st.switch st.switch_config full_var
 
 open OpamVariable
+
+let is_dev_package st opam =
+  match OpamFile.OPAM.url opam with
+  | None -> false
+  | Some urlf ->
+    match OpamFile.URL.(url urlf, checksum urlf) with
+    | { OpamUrl.backend = `http; _ }, _
+      when not (OpamPackage.Set.mem (OpamFile.OPAM.package opam) st.pinned) ->
+      false
+    | _, Some _ -> false
+    | _, None -> true
+
+let all_depends ?dev ?(depopts=true) st opam =
+  let dev = match dev with None -> is_dev_package st opam | Some d -> d in
+  let filter_formula ff =
+    ff |>
+    OpamFilter.partial_filter_formula (fun v ->
+        if List.mem v predefined_depends_variables then None
+        else resolve_switch st v) |>
+    OpamSolver.filter_deps
+      ~build:true
+      ~test:OpamStateConfig.(!r.build_test)
+      ~doc:OpamStateConfig.(!r.build_doc)
+      ~dev
+  in
+  OpamFormula.atoms (filter_formula (OpamFile.OPAM.depends opam)) @
+  if depopts then
+    OpamFormula.atoms (filter_formula (OpamFile.OPAM.depopts opam))
+  else []
 
 (* filter handling *)
 let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
@@ -253,18 +286,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
-      let dev =
-        OpamStd.Option.Op.(
-          (OpamFile.OPAM.get_url opam >>| fun u ->
-           u.OpamUrl.backend <> `http)
-          +! false
-        ) in
-      let deps =
-        OpamFormula.atoms
-          (OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam)) @
-        OpamFormula.atoms
-          (OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depopts opam))
-      in
+      let deps = all_depends st opam in
       let installed_deps =
         OpamStd.List.filter_map
           (fun (n,cstr) ->
