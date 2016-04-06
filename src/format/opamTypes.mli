@@ -196,6 +196,18 @@ type filter =
   | FNot of filter
   | FUndef of filter
 
+(** {2 Filtered formulas (to express conditional dependencies)}
+
+    These are first reduced to only the dependency-flag variables build, doc,
+    dev, test defined in [Opam formulas *)
+
+type 'a filter_or_constraint =
+  | Filter of filter
+  | Constraint of (relop * 'a)
+
+type filtered_formula =
+  (name * version filter_or_constraint OpamFormula.formula) OpamFormula.formula
+
 (** {2 Solver} *)
 
 (** Used internally when computing sequences of actions *)

@@ -180,6 +180,21 @@ let rec eval atom = function
   | And(x,y) -> eval atom x && eval atom y
   | Or(x,y)  -> eval atom x || eval atom y
 
+let rec partial_eval atom = function
+  | Empty -> `Formula Empty
+  | Atom x -> atom x
+  | And(x,y) ->
+    (match partial_eval atom x, partial_eval atom y with
+     | `False, _ | _, `False -> `False
+     | `True, f | f, `True -> f
+     | `Formula x, `Formula y -> `Formula (And (x,y)))
+  | Or(x,y) ->
+    (match partial_eval atom x, partial_eval atom y with
+     | `True, _ | _, `True -> `True
+     | `False, f | f, `False -> f
+     | `Formula x, `Formula y -> `Formula (Or (x,y)))
+  | Block x -> partial_eval atom x
+
 let check_relop relop c = match relop with
   | `Eq  -> c =  0
   | `Neq -> c <> 0
@@ -199,7 +214,8 @@ let check (name,cstr) package =
 
 let to_string t =
   let string_of_constraint (relop, version) =
-    Printf.sprintf "%s %s" (string_of_relop relop) (OpamPackage.Version.to_string version) in
+    Printf.sprintf "%s %s" (string_of_relop relop)
+      (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
     | n, (Atom _ as c) ->

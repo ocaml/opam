@@ -348,3 +348,64 @@ let rec of_formula atom_f = function
   | Block f -> of_formula atom_f f
   | And (a, b) -> FAnd (of_formula atom_f a, of_formula atom_f b)
   | Or (a, b) -> FOr (of_formula atom_f a, of_formula atom_f b)
+
+let filter_constraints env filtered_constraint =
+  OpamFormula.partial_eval
+    (function
+      | Filter flt ->
+        if eval_to_bool ~default:false env flt then `True else `False
+      | Constraint c -> `Formula (Atom c))
+    filtered_constraint
+
+let partial_filter_constraints env filtered_constraint =
+  OpamFormula.partial_eval
+    (function
+      | Filter flt ->
+        (match reduce ~default_str:None env flt with
+         | FUndef f -> `Formula (Atom (Filter f))
+         | FBool true -> `True
+         | FBool false -> `False
+         | f -> `Formula (Atom (Filter f)))
+      | Constraint c -> `Formula (Atom (Constraint c)))
+    filtered_constraint
+
+let gen_filter_formula constraints filtered_formula =
+  OpamFormula.map
+    (fun (name, fc) -> match constraints fc with
+       | `True -> Atom (name, Empty)
+       | `False -> Empty
+       | `Formula c -> Atom (name, c))
+    filtered_formula
+
+let filter_formula env ff =
+  gen_filter_formula (filter_constraints env) ff
+
+let partial_filter_formula env ff =
+  gen_filter_formula (partial_filter_constraints env) ff
+
+let string_of_filtered_formula =
+  let string_of_constraint =
+    OpamFormula.string_of_formula (function
+        | Constraint (op,v) ->
+          Printf.sprintf "%s %s"
+            (string_of_relop op) (OpamPackage.Version.to_string v)
+        | Filter f -> to_string f)
+  in
+  OpamFormula.string_of_formula (function
+      | n, Empty -> OpamPackage.Name.to_string n
+      | n, c ->
+        let paren = match c with Atom _ -> true | _ -> false in
+        Printf.sprintf "%s %s%s%s"
+          (OpamPackage.Name.to_string n)
+          (if paren then "(" else "")
+          (string_of_constraint c)
+          (if paren then ")" else ""))
+
+let variables_of_filtered_formula ff =
+  OpamFormula.fold_left
+    (fun acc (_, f) ->
+       OpamFormula.fold_left (fun acc -> function
+           | Constraint _ -> acc
+           | Filter f -> variables f @ acc)
+         acc f)
+    [] ff

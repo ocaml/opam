@@ -79,6 +79,11 @@ type 'a formula =
 (** Eval a formula *)
 val eval: ('a -> bool) -> 'a formula -> bool
 
+val partial_eval:
+  ('a -> [ `Formula of 'b formula | `True | `False ]) ->
+  'a formula ->
+  [ `Formula of 'b formula | `True | `False ]
+
 (** Check a relational operator against an integer from compare *)
 val check_relop: relop -> int -> bool
 

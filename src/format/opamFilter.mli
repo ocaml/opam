@@ -111,3 +111,11 @@ val commands_variables: command list -> full_variable list
 
 (** Converts a generic formula to a filter, given a converter for atoms *)
 val of_formula: ('a -> filter) -> 'a generic_formula -> filter
+
+val filter_formula: env -> filtered_formula -> formula
+
+val partial_filter_formula: env -> filtered_formula -> filtered_formula
+
+val string_of_filtered_formula: filtered_formula -> string
+
+val variables_of_filtered_formula: filtered_formula -> full_variable list
