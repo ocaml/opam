@@ -132,31 +132,6 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
-let dep_flag_of_string = function
-  | "build" -> Depflag_Build
-  | "test" -> Depflag_Test
-  | "doc" -> Depflag_Doc
-  | "dev" -> Depflag_Dev
-  | s -> Depflag_Unknown s
-
-let string_of_dep_flag = function
-  | Depflag_Build -> "build"
-  | Depflag_Test -> "test"
-  | Depflag_Doc -> "doc"
-  | Depflag_Dev -> "dev"
-  | Depflag_Unknown s -> s
-
-let filter_deps ~build ~test ~doc ~dev =
-  let filter =
-    List.for_all (function
-        | Depflag_Build -> build
-        | Depflag_Test -> test
-        | Depflag_Doc -> doc
-        | Depflag_Dev -> dev
-        | Depflag_Unknown _ -> true (* ignored *))
-  in
-  OpamFormula.formula_of_extended ~filter
-
 let string_of_pkg_flag = function
   | Pkgflag_LightUninstall -> "light-uninstall"
   | Pkgflag_AllSwitches -> "all-switches"

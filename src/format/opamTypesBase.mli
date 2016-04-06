@@ -91,14 +91,6 @@ val filter_ident_of_string:
 val string_of_filter_ident:
   name list * variable * (string * string) option -> string
 
-val dep_flag_of_string: string -> package_dep_flag
-
-val string_of_dep_flag: package_dep_flag -> string
-
-val filter_deps:
-  build:bool -> test:bool -> doc:bool -> dev:bool ->
-  ext_formula -> formula
-
 val pkg_flag_of_string: string -> package_flag
 
 val string_of_pkg_flag: package_flag -> string

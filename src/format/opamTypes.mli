@@ -114,14 +114,6 @@ type package_flag =
                         .install, but likely has depexts *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
-(** Flags on dependencies *)
-type package_dep_flag =
-  | Depflag_Build
-  | Depflag_Test
-  | Depflag_Doc
-  | Depflag_Dev
-  | Depflag_Unknown of string (** Used for error reporting, otherwise ignored *)
-
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)
 module type GenericPackage = sig
@@ -145,9 +137,6 @@ type atom = OpamFormula.atom
 
 (** Formula over versionned packages *)
 type formula = OpamFormula.t
-
-(** Formula over versionned packages *)
-type ext_formula = package_dep_flag list OpamFormula.ext_package_formula
 
 (** AND formulat *)
 type 'a conjunction = 'a OpamFormula.conjunction

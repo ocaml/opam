@@ -17,7 +17,6 @@ begin library "opam-state"
     "opamEnv.ml"
     "opamSwitchAction.ml"
     "opamUpdate.ml"
-    (* "opamState.ml" *)
     "opamAction.ml"
     "opamSolution.ml"
   ]

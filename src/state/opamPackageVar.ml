@@ -68,47 +68,6 @@ let predefined_depends_variables =
     "build"; "test"; "doc"; "dev";
   ]
 
-let resolve_compat_ocaml_variables _gt _switch _switch_config _ocaml_var =
-  raise Not_found
-  (* backwards-compat, these are replaced by variables exported from the
-     'ocaml' package.
-     !X
-     /!\ reloads files for every variable resolution ! *)
-(*
-  let module V = OpamVariable in
-  let compiler = OpamSwitch.Map.find switch gt.aliases in
-  let comp = OpamFile.Comp.read (OpamPath.compiler_comp gt.root compiler) in
-  let preinstalled_comp = OpamFile.Comp.preinstalled comp in
-  match ocaml_var with
-  | "ocaml-version" -> V.string (OpamCompiler.Version.to_string
-                                   (OpamFile.Comp.version comp))
-  | "compiler" -> V.string (OpamCompiler.to_string
-                              (OpamFile.Comp.name comp))
-  | "preinstalled" -> V.bool preinstalled_comp
-  | "ocaml-native" ->
-    if preinstalled_comp then
-      V.bool (Lazy.force OpamOCaml.ocaml_native_available)
-    else
-      V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin gt.root switch switch_config
-                 // "ocamlopt"))
-  | "ocaml-native-tools" ->
-    if preinstalled_comp then
-      V.bool (Lazy.force OpamOCaml.ocaml_opt_available)
-    else
-      V.bool (OpamFilename.exists
-                (OpamPath.Switch.bin gt.root switch switch_config
-                 // "ocamlc.opt"))
-  | "ocaml-native-dynlink" ->
-    if preinstalled_comp then
-      V.bool (Lazy.force OpamOCaml.ocaml_natdynlink_available)
-    else
-      V.bool (OpamFilename.exists
-                (OpamPath.Switch.lib_dir gt.root switch switch_config
-                 / "ocaml" // "dynlink.cmxa"))
-  | _ -> raise Not_found
-*)
-
 let resolve_global gt full_var =
   let module V = OpamVariable in
   if V.Full.(scope full_var <> Global) then None else
