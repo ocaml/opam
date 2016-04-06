@@ -219,6 +219,7 @@ opam-client.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.c
 opam-client.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa opam-state.cmxa ALWAYS
 
 SRC_client = \
+  opamLocalConfig.ml \
   opamClientConfig.ml \
   opamSwitchCommand.ml \
   opamConfigCommand.ml \

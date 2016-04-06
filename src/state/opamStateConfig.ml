@@ -121,16 +121,9 @@ let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
-  let local =
-    let open OpamFile in
-    try Local.read (make (OpamFilename.of_string ".opamlocal"))
-    with _ -> Local.empty in
   let current_switch, switch_from =
     match env_string "SWITCH" with
-    | Some "" | None ->
-      (match OpamFile.Local.switch local with
-      | None -> None, None
-      | Some switch -> Some switch, Some `Local)
+    | Some "" | None -> None, None
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
   setk (setk (fun c -> r := c; k)) !r
