@@ -97,7 +97,7 @@ let compute_updates st =
     OpamPackage.Set.fold (fun nv acc ->
         let opam = OpamSwitchState.opam st nv in
         List.map (fun (name,op,str,cmt) ->
-            let s = OpamFilter.expand_string (fenv ~opam) str in
+            let s = OpamFilter.expand_string ~default:"" (fenv ~opam) str in
             name, op, s, cmt)
           (OpamFile.OPAM.env opam)
         @ acc)
@@ -309,7 +309,7 @@ let string_of_update st shell updates =
     | `fish -> fish
     | `csh -> csh in
   let aux (ident, symbol, string, comment) =
-    let string = OpamFilter.expand_string fenv string in
+    let string = OpamFilter.expand_string ~default:"" fenv string in
     let key, value = match symbol with
       | Eq  -> ident, string
       | PlusEq | ColonEq -> ident, Printf.sprintf "%s:$%s" string ident

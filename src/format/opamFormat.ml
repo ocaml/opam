@@ -679,7 +679,7 @@ module Pp = struct
           | FNot f ->
             group_if ~cond:(context = `Relop)
               (Pfxop (pos_null, `Not, aux ~context:`Not f))
-          | FUndef -> assert false
+          | FUndef _ -> assert false
         in
         match f with
         | FBool true -> []

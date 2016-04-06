@@ -55,8 +55,9 @@ type env = full_variable -> variable_contents option
     names and optional string converter *)
 type fident = name list * variable * (string * string) option
 
-(** Rewrites string interpolations within a string *)
-val expand_string: env -> string -> string
+(** Rewrites string interpolations within a string. Without [default],
+    preserves undefined expansions as is *)
+val expand_string: ?default:string -> env -> string -> string
 
 (** Returns the (beginning, end) offsets and substrings of any unclosed '%{'
     expansions *)
@@ -66,7 +67,7 @@ val unclosed_expansions: string -> ((int * int) * string) list
     provided *)
 val eval: ?default:variable_contents -> env -> filter -> variable_contents
 
-(** Like [to_value] but casts the result to a bool. Raises [Invalid_argument] if
+(** Like [eval] but casts the result to a bool. Raises [Invalid_argument] if
     not a valid bool and no default supplied. *)
 val eval_to_bool: ?default:bool -> env -> filter -> bool
 

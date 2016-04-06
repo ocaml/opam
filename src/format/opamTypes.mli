@@ -178,6 +178,24 @@ type repository = {
   repo_priority: int;
 }
 
+(** {2 Variable-based filters} *)
+
+type relop = OpamFormula.relop
+type logop = [ `And | `Or ]
+type pfxop = [ `Not ]
+
+type filter =
+  | FBool of bool
+  | FString of string
+  | FIdent of (name list * variable * (string * string) option)
+  (** packages, variable name,
+      string converter (val_if_true, val_if_false_or_undef) *)
+  | FOp of filter * relop * filter
+  | FAnd of filter * filter
+  | FOr of filter * filter
+  | FNot of filter
+  | FUndef of filter
+
 (** {2 Solver} *)
 
 (** Used internally when computing sequences of actions *)
@@ -294,23 +312,7 @@ type pin_kind = [ `version | OpamUrl.backend ]
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]
 
-(** {2 Filtered commands} *)
-
-type relop = OpamFormula.relop
-type logop = [ `And | `Or ]
-type pfxop = [ `Not ]
-
-(** Filter *)
-type filter =
-  | FBool of bool
-  | FString of string
-  | FIdent of (name list * variable * (string * string) option)
-  (** packages, variable name, string converter (val_if_true, val_if_false_or_undef) *)
-  | FOp of filter * relop * filter
-  | FAnd of filter * filter
-  | FOr of filter * filter
-  | FNot of filter
-  | FUndef
+(** {2 Generic command-line definitions with filters} *)
 
 (** A command argument *)
 type simple_arg =
