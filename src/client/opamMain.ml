@@ -1468,7 +1468,7 @@ let lint =
     in
     if OpamFile.exists opam_f then
       try
-        let warnings,opam = OpamFile.OPAM.validate_file opam_f in
+        let warnings,opam = OpamFileTools.lint_file opam_f in
         let failed =
           List.exists (function _,`Error,_ -> true | _ -> false) warnings
         in
@@ -1485,7 +1485,7 @@ let lint =
           OpamConsole.msg "%s found in %s:\n%s\n"
             (if failed then "Errors" else "Warnings")
             (OpamFile.to_string opam_f)
-            (OpamFile.OPAM.warns_to_string warnings);
+            (OpamFileTools.warns_to_string warnings);
         if normalise then
           OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
         if failed then OpamStd.Sys.exit 1

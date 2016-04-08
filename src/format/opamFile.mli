@@ -164,33 +164,78 @@ end
 (** OPAM files *)
 module OPAM: sig
 
-  include IO_FILE
+  type t = private {
+    opam_version: opam_version;
+
+    (* Package ident *)
+    name       : name option;
+    version    : version option;
+
+    (* Relationships; solver and availability info *)
+    depends    : filtered_formula;
+    depopts    : filtered_formula;
+    conflicts  : formula;
+    available  : filter;
+    flags      : package_flag list;
+    env        : env_update list;
+
+    (* Build instructions *)
+    build      : command list;
+    build_test : command list;
+    build_doc  : command list;
+    install    : command list;
+    remove     : command list;
+
+    (* Auxiliary data affecting the build *)
+    substs     : basename list;
+    patches    : (basename * filter option) list;
+    build_env  : env_update list;
+    features   : (OpamVariable.t * string * filter) list;
+    extra_sources: (url * string * basename option) list;
+
+    (* User-facing data used by opam *)
+    messages   : (string * filter option) list;
+    post_messages: (string * filter option) list;
+    depexts    : tags option;
+    libraries  : (string * filter option) list;
+    syntax     : (string * filter option) list;
+    dev_repo   : url option;
+
+    (* Package database details *)
+    maintainer : string list;
+    author     : string list;
+    license    : string list;
+    tags       : string list;
+    homepage   : string list;
+    doc        : string list;
+    bug_reports: string list;
+
+    (* Extension fields (x-foo: "bar") *)
+    extensions : (pos * value) OpamStd.String.Map.t;
+
+    (* Extra sections *)
+    url        : URL.t option;
+    descr      : Descr.t option;
+
+    (* Related metadata directory (not an actual field of the file)
+       This can be used to locate e.g. the files/ overlays *)
+    metadata_dir: dirname option;
+
+    (* Names and hashes of the files below files/ *)
+    extra_files: (OpamFilename.Base.t * string) list option;
+
+
+    (* Deprecated, for compat and proper linting *)
+    ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
+    os         : (bool * string) generic_formula;
+  }
+
+  include IO_FILE with type t := t
 
   val empty: t
 
   (** Create an opam file *)
   val create: package -> t
-
-  (** Create an OPAM package template filled with common options *)
-  val template: package -> t
-
-  (** Runs several sanity checks on the opam file; returns a list of warnings.
-      [`Error] level should be considered unfit for publication, while
-      [`Warning] are advisory but may be accepted. The int is an identifier for
-      this specific warning/error. *)
-  val validate: t -> (int * [`Warning|`Error] * string) list
-
-  (** Same as [validate], but operates on a file, which allows catching parse
-      errors too. You can specify an expected name and version *)
-  val validate_file: t typed_file ->
-    (int * [`Warning|`Error] * string) list * t option
-
-  (** Like [validate_file], but takes the file contents as a string *)
-  val validate_string: t typed_file -> string ->
-    (int * [`Warning|`Error] * string) list * t option
-
-  (** Utility function to print validation results *)
-  val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
   (** Returns the opam value (including url, descr) with all non-effective (i.e.
       user-directed information that doesn't change opam's view on the package)
@@ -380,6 +425,12 @@ module OPAM: sig
   (** Construct as [maintainer] *)
   val with_maintainer: string list -> t -> t
 
+  val with_author: string list -> t -> t
+
+  val with_homepage: string list -> t -> t
+
+  val with_license: string list -> t -> t
+
   (** Construct as [patches] *)
   val with_patches: (basename * filter option) list -> t -> t
 
@@ -422,6 +473,17 @@ module OPAM: sig
   val write_with_preserved_format:
     ?format_from:(t typed_file) -> t typed_file -> t -> unit
 
+  (** Low-level values used for linting and similar processing *)
+
+  (** Allow 'flag:xxx' tags as flags, for compat *)
+  val flag_of_tag: string -> package_flag option
+
+  val fields: (t, value) OpamFormat.Pp.I.fields_def
+
+  val sections: (t, opamfile_item list) OpamFormat.Pp.I.fields_def
+
+  (** Doesn't handle package name encoded in directory name *)
+  val pp_raw_fields: (opamfile_item list, t) OpamFormat.Pp.t
 end
 
 (** Compiler aliases: [$opam/aliases]. Deprecated, used only for migration *)
@@ -644,6 +706,27 @@ module Stats: sig
 
 end
 
+(** Helper module for manipulation of the raw syntax ([opamfile]) format.
+    (the specific file handling modules are derived from this one) *)
+module Syntax : sig
+
+  val pp_channel:
+    'a typed_file -> in_channel -> out_channel ->
+    (unit, opamfile) OpamFormat.Pp.t
+
+  val of_channel: 'a typed_file -> in_channel  -> opamfile
+  val to_channel: 'a typed_file -> out_channel -> opamfile -> unit
+  val of_string: 'a typed_file -> string -> opamfile
+  val to_string: 'a typed_file -> opamfile -> string
+  val to_string_with_preserved_format:
+    'a typed_file -> ?format_from:'a typed_file ->
+    empty:'a ->
+    ?sections: ('a, opamfile_item list) OpamFormat.Pp.I.fields_def ->
+    fields:('a, value) OpamFormat.Pp.I.fields_def ->
+    (opamfile, filename * 'a) OpamFormat.Pp.t ->
+    'a -> string
+
+end
 
 (**/**)
 

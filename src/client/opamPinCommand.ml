@@ -46,13 +46,13 @@ let get_source_definition ?version st nv url =
     match OpamPinned.find_opam_file_in_source nv.name srcdir with
     | None -> None
     | Some f ->
-      match OpamFile.OPAM.validate_file f with
+      match OpamFileTools.lint_file f with
       | warns, None ->
         OpamConsole.error
           "Invalid opam file in %s source from %s:"
           (OpamPackage.to_string nv)
           (OpamUrl.to_string (OpamFile.URL.url url));
-        OpamConsole.msg "%s\n" (OpamFile.OPAM.warns_to_string warns);
+        OpamConsole.msg "%s\n" (OpamFileTools.warns_to_string warns);
         let dst =
           OpamFile.filename
             (OpamPath.Switch.Overlay.tmp_opam root st.switch nv.name)
@@ -66,7 +66,7 @@ let get_source_definition ?version st nv url =
            (fix with 'opam pin edit'):"
           (OpamPackage.to_string nv)
           (OpamUrl.to_string (OpamFile.URL.url url));
-        OpamConsole.errmsg "%s\n" (OpamFile.OPAM.warns_to_string warns);
+        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns);
         Some (fix opam)
 
 let copy_files st opam =
@@ -125,12 +125,12 @@ let edit_raw name temp_file =
     else
     try
       let warnings, opam_opt =
-        OpamFile.OPAM.validate_file temp_file
+        OpamFileTools.lint_file temp_file
       in
       let opam = match opam_opt with
         | None ->
           OpamConsole.msg "Invalid opam file:\n%s\n"
-            (OpamFile.OPAM.warns_to_string warnings);
+            (OpamFileTools.warns_to_string warnings);
           failwith "Syntax errors"
         | Some opam -> opam
       in
@@ -156,7 +156,7 @@ let edit_raw name temp_file =
       | [] -> Some opam
       | ws ->
         OpamConsole.warning "The opam file didn't pass validation:";
-        OpamConsole.errmsg "%s\n" (OpamFile.OPAM.warns_to_string ws);
+        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string ws);
         if OpamConsole.confirm "Continue anyway ('no' will reedit) ?"
         then Some opam
         else edit ()
@@ -185,7 +185,7 @@ let edit st name =
   let current_opam = OpamSwitchState.opam_opt st nv in
   if not (OpamFile.exists temp_file) then
     (let base_opam = match current_opam with
-        | None -> OpamFile.OPAM.template nv
+        | None -> OpamFileTools.template nv
         | Some o -> o
      in
      OpamFile.OPAM.write_with_preserved_format
@@ -410,7 +410,7 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
 
   let opam_opt =
     let opam_base = match opam_opt with
-      | None -> OpamFile.OPAM.template nv
+      | None -> OpamFileTools.template nv
       | Some opam -> opam
     in
     let opam_base =

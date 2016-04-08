@@ -374,7 +374,7 @@ module Format_upgrade = struct
                   OpamPackage.to_string nv;
                 ]
               in
-              match OpamFileHandling.read_opam srcdir with
+              match OpamFileTools.read_opam srcdir with
               | Some opam ->
                 OpamFile.OPAM.write (OpamFile.make (dstdir // "opam")) opam;
                 OpamStd.Option.iter (fun src ->

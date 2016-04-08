@@ -79,7 +79,7 @@ let load lock_kind gt rt switch =
         let overlay_dir =
           OpamPath.Switch.Overlay.package gt.root switch nv.name
         in
-        match OpamFileHandling.read_opam overlay_dir with
+        match OpamFileTools.read_opam overlay_dir with
         | None -> (* No overlay => just pinned to a version *)
           OpamPackage.Set.add nv pinned, opams
         | Some o ->

@@ -143,7 +143,7 @@ let pinned_package st ?fixed_version name =
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
   let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
-  let overlay_opam = OpamFileHandling.read_opam overlay_dir in
+  let overlay_opam = OpamFileTools.read_opam overlay_dir in
   match overlay_opam >>| fun opam -> opam, OpamFile.OPAM.url opam with
   | None | Some (_, None) -> Done ((fun st -> st), false)
   | Some (opam, Some urlf) ->
@@ -156,7 +156,7 @@ let pinned_package st ?fixed_version name =
      from the repo *)
   let add_extra_files srcdir file opam =
     if OpamFilename.dirname (OpamFile.filename file) <> srcdir
-    then OpamFileHandling.add_aux_files opam
+    then OpamFileTools.add_aux_files opam
     else opam
   in
   let old_source_opam_hash, old_source_opam =
@@ -186,7 +186,7 @@ let pinned_package st ?fixed_version name =
   fetch_dev_package urlf srcdir nv @@+ fun result ->
   let new_source_opam =
     OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
-    let warns, opam_opt = OpamFile.OPAM.validate_file f in
+    let warns, opam_opt = OpamFileTools.lint_file f in
     if warns <> [] &&
        Some (OpamFilename.digest (OpamFile.filename f)) <> old_source_opam_hash
     then
@@ -196,7 +196,7 @@ let pinned_package st ?fixed_version name =
           else "Failed checks in")
          (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
        OpamConsole.errmsg "%s\n"
-         (OpamFile.OPAM.warns_to_string warns));
+         (OpamFileTools.warns_to_string warns));
     opam_opt >>| OpamFile.OPAM.with_name name >>| add_extra_files srcdir f
   in
   let equal_opam a b =

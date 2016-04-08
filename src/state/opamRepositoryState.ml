@@ -110,7 +110,7 @@ let load_repo_opams repo =
   OpamPackage.Map.mapi
     (fun nv prefix ->
        match
-         OpamFileHandling.read_opam
+         OpamFileTools.read_opam
            (OpamRepositoryPath.packages repo prefix nv)
        with
        | None -> assert false

@@ -432,7 +432,7 @@ let export ?(full=false) filename =
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let overlays =
       read_overlays (fun nv ->
-          OpamFileHandling.read_opam
+          OpamFileTools.read_opam
             (OpamPath.Switch.Overlay.package root switch nv.name))
         selections.sel_pinned
     in

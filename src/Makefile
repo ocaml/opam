@@ -203,7 +203,7 @@ SRC_state = \
   opamOCaml.ml \
   opamScript.ml \
   opamStateTypes.mli \
-  opamFileHandling.ml \
+  opamFileTools.ml \
   opamGlobalState.ml \
   opamPackageVar.ml \
   opamRepositoryState.ml \

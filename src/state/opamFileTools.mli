@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2016 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved.This file is distributed under the terms of the   *)
@@ -14,7 +14,30 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Tools for manipulating and checking package definition ("opam") files *)
+
 open OpamTypes
+
+(** Create an OPAM package template filled with common options *)
+val template: package -> OpamFile.OPAM.t
+
+(** Runs several sanity checks on the opam file; returns a list of warnings.
+    [`Error] level should be considered unfit for publication, while
+    [`Warning] are advisory but may be accepted. The int is an identifier for
+    this specific warning/error. *)
+val lint: OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
+
+(** Same as [validate], but operates on a file, which allows catching parse
+    errors too. You can specify an expected name and version *)
+val lint_file: OpamFile.OPAM.t OpamFile.typed_file ->
+  (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
+
+(** Like [validate_file], but takes the file contents as a string *)
+val lint_string: OpamFile.OPAM.t OpamFile.typed_file -> string ->
+  (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
+
+(** Utility function to print validation results *)
+val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
 (** Read the opam metadata from a given directory (opam file, with possible
     overrides from url and descr files). Also includes the names and hashes
@@ -25,21 +48,3 @@ val read_opam: dirname -> OpamFile.OPAM.t option
     the opam file's metadata dir (only files and hashes are included for files
     below files/) *)
 val add_aux_files: ?dir:dirname -> OpamFile.OPAM.t -> OpamFile.OPAM.t
-
-(*
-type effective_hash = private string
-
-type full_hash = private string
-
-(** Returns the "effective hash" of the given metadata, i.e. the hash of all
-    data that has a computational effect on the package. In other words,
-    human-directed informative fields like description and maintainer are
-    excluded, but upstream hash and instructions are included.
-
-    Used, for example, to detect when a package should be rebuilt. *)
-val effective_hash: OpamFile.OPAM.t -> effective_hash
-
-(** Returns the full hash of the metadata, including purely informative
-    fields. *)
-val full_hash: OpamFile.OPAM.t -> full_hash
-*)
