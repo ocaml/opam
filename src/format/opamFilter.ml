@@ -394,7 +394,7 @@ let string_of_filtered_formula =
   OpamFormula.string_of_formula (function
       | n, Empty -> OpamPackage.Name.to_string n
       | n, c ->
-        let paren = match c with Atom _ -> true | _ -> false in
+        let paren = match c with Atom (Constraint _) -> false | _ -> true in
         Printf.sprintf "%s %s%s%s"
           (OpamPackage.Name.to_string n)
           (if paren then "(" else "")
