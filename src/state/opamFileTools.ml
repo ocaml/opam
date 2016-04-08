@@ -90,9 +90,12 @@ let lint t =
     else None
   in
   let names_of_formula flag f =
-    OpamFormula.fold_left
-      (fun acc (name,_) -> OpamPackage.Name.Set.add name acc)
-      OpamPackage.Name.Set.empty f
+    OpamPackageVar.filter_depends_formula
+      ~build:true ~dev:true ~test:flag ~doc:flag ~default:false
+      ~env:OpamStd.Option.none f
+    |> OpamFormula.atoms
+    |> List.map fst
+    |> OpamPackage.Name.Set.of_list
   in
   let all_commands =
     t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
