@@ -61,16 +61,10 @@ if [ "$OPAM_TEST" = "1" ]; then
     echo "Bootstrapping for opam with:"
     opam config report
 
-    # We still have OPAM 1.1 on Homebrew
-    OPAMV=$(opam --version)
-    if [ "${OPAMV%.*}" = "1.1" ]; then
-        opam init https://opam.ocaml.org/1.1
-    else
-        opam init
-    fi
+    opam init
 
     eval `opam config env`
-    opam install ocamlfind lwt cohttp ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
+    opam install ocamlfind lwt.2.5.1 cohttp.0.19.3 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary

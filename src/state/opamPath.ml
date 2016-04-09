@@ -44,7 +44,7 @@ let backup_file =
   let file = lazy Unix.(
       let tm = gmtime (Unix.gettimeofday ()) in
       Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
-        (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+        (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
     ) in
   fun () -> Lazy.force file
 
