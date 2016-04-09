@@ -119,11 +119,13 @@ let edit_raw name temp_file =
           (Printf.sprintf "%s %s"
              (OpamClientConfig.(!r.editor))
              (OpamFile.to_string temp_file))
-        = 0
+        = 0 &&
+        match OpamFilename.read (OpamFile.filename temp_file)
+        with "" | "\n" -> false | _ -> true
       with _ -> false
     in
     if not edited_ok then
-      (OpamConsole.error "Editor returned non-zero code, aborting.";
+      (OpamConsole.error "Empty file or editor error, aborting.";
        None)
     else
     try
