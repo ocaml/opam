@@ -1,3 +1,5 @@
+#compdef opam 
+
 _opam_add()
 {
   _opam_reply="$_opam_reply $1"
