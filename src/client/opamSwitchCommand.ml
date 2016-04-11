@@ -498,3 +498,42 @@ let import gt switch filename =
   in
   OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
   ignore (import_t importfile st)
+
+let guess_compiler_package rt name =
+  let package_index =
+    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+  in
+  let compiler_packages =
+    OpamPackage.Map.filter
+      (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
+      package_index
+    |> OpamPackage.keys
+  in
+  match OpamPackage.of_string_opt name with
+  | Some nv when OpamPackage.Set.mem nv compiler_packages ->
+    [OpamSolution.eq_atom_of_package nv]
+  | _ ->
+    let pkgname =
+      try Some (OpamPackage.Name.of_string name)
+      with Failure _ -> None
+    in
+    match pkgname with
+    | Some pkgname when OpamPackage.has_name compiler_packages pkgname ->
+      [pkgname, None]
+    | _ ->
+      let version = OpamPackage.Version.of_string name in
+      let has_version =
+        OpamPackage.Set.filter (fun nv -> nv.version = version)
+          compiler_packages
+      in
+      try
+        [OpamSolution.eq_atom_of_package
+           (OpamPackage.Set.choose_one has_version)]
+      with
+      | Not_found ->
+        OpamConsole.error_and_exit
+          "No compiler matching '%s' found" name
+      | Failure _ ->
+        OpamConsole.error_and_exit
+          "Compiler selection '%s' is ambiguous. matching packages: %s"
+          name (OpamPackage.Set.to_string has_version)

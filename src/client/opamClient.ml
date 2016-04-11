@@ -703,10 +703,9 @@ let slog = OpamConsole.slog
         OpamEnv.write_static_init_scripts root ~switch_eval:true ~completion:true;
         true
     in
-    let gt = OpamGlobalState.unlock gt in
     if not updated then
       OpamEnv.print_env_warning_at_init gt ~ocamlinit:true ~dot_profile shell;
-    rt
+    gt, rt
 
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)

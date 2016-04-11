@@ -22,7 +22,7 @@ open OpamStateTypes
 (** Initialize the client a consistent state. *)
 val init:
   repository -> shell -> filename -> [`ask|`yes|`no] ->
-  unlocked repos_state
+  rw global_state * unlocked repos_state
 
 (** Install the given list of packages. Second argument, if not None, specifies
     that given packages should be added or removed from the roots.

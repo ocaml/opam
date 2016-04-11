@@ -130,6 +130,14 @@ let init =
     `P "The state of repositories can be synchronized by using $(b,opam update).";
     `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
+  let compiler =
+    mk_opt ["c";"compiler"] "VERSION" "Set the compiler to install"
+      Arg.string "system"
+  in
+  let no_compiler =
+    mk_flag ["bare"]
+      "Initialise the OPAM state, but don't setup any compiler switch yet."
+  in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
@@ -141,7 +149,8 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_url
-      no_setup auto_setup shell dot_profile_o =
+      no_setup auto_setup shell dot_profile_o
+      compiler no_compiler =
     apply_global_options global_options;
     apply_build_options build_options;
     let repo_priority = 0 in
@@ -154,12 +163,17 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    let _rt = OpamClient.init repository shell dot_profile update_config in
-    ()
+    let gt, rt = OpamClient.init repository shell dot_profile update_config in
+    if not no_compiler &&
+       OpamFile.Config.installed_switches gt.config = [] then
+      let packages =
+        OpamSwitchCommand.guess_compiler_package rt compiler
+      in
+      OpamSwitchCommand.switch gt ~packages (OpamSwitch.of_string compiler)
   in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_url
-    $no_setup $auto_setup $shell_opt $dot_profile_flag),
+    $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -956,48 +970,9 @@ let switch =
       | None, true -> Some []
       | packages, _ -> packages
     in
-    let guess_compiler_package gt name =
-      (* Guess the compiler from the switch name: within compiler packages,
-         match [name] against "pkg.version", "pkg", and, as a last resort,
-         "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
-      let rt = OpamRepositoryState.load `Lock_none gt in
-      let package_index =
-        OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
-      in
-      let compiler_packages =
-        OpamPackage.Map.filter
-          (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
-          package_index
-        |> OpamPackage.keys
-      in
-      match OpamPackage.of_string_opt name with
-      | Some nv when OpamPackage.Set.mem nv compiler_packages ->
-        [OpamSolution.eq_atom_of_package nv]
-      | _ ->
-        let pkgname =
-          try Some (OpamPackage.Name.of_string name)
-          with Failure _ -> None
-        in
-        match pkgname with
-        | Some pkgname when OpamPackage.has_name compiler_packages pkgname ->
-          [pkgname, None]
-        | _ ->
-          let version = OpamPackage.Version.of_string name in
-          let has_version =
-            OpamPackage.Set.filter (fun nv -> nv.version = version)
-              compiler_packages
-          in
-          try
-            [OpamSolution.eq_atom_of_package
-               (OpamPackage.Set.choose_one has_version)]
-          with
-          | Not_found ->
-            OpamConsole.error_and_exit
-              "No compiler matching '%s' found" name
-          | Failure _ ->
-            OpamConsole.error_and_exit
-              "Compiler selection '%s' is ambiguous. matching packages: %s"
-              name (OpamPackage.Set.to_string has_version)
+    let guess_compiler_package gt s =
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchCommand.guess_compiler_package rt s
     in
     let compiler_packages gt switch =
       match packages, alias_of with
