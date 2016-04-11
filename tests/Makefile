@@ -98,7 +98,7 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAMBIN) init --no-setup $(REPO) $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAMBIN) init --bare --no-setup $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
 upload: $(ARCHIVES)
 	cp -r packages/ocaml $(OPAM_REPO)/packages
