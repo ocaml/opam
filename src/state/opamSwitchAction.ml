@@ -246,6 +246,41 @@ let add_to_installed st ?(root=false) nv =
     st
 
 let remove_from_installed st nv =
+  let opam = OpamPackage.Map.find nv st.installed_opams in
+  if not OpamStateConfig.(!r.dryrun) &&
+     OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
+     OpamSwitchState.is_switch_globally_set st
+  then
+    (* note: don't remove_metadata just yet *)
+    OpamEnv.write_dynamic_init_scripts st;
+  let st =
+    if OpamPackage.Set.mem nv st.compiler_packages &&
+       List.mem Pkgflag_Compiler (OpamFile.OPAM.flags opam)
+    then
+      (* Remove gobal variables from this compiler package *)
+      let switch_vars = OpamFile.Dot_config.bindings st.switch_config in
+      let pkg_vars =
+        OpamFile.Dot_config.bindings @@
+        OpamFile.Dot_config.safe_read
+          (OpamPath.Switch.config st.switch_global.root st.switch
+             nv.name)
+      in
+      let rev_vars, _ =
+        List.fold_left (fun (vars,to_remove) (v,_ as binding) ->
+            if List.mem_assoc v to_remove
+            then (vars, List.remove_assoc v to_remove)
+            else (binding::vars, to_remove))
+          ([], pkg_vars) switch_vars
+      in
+      let switch_config =
+        OpamFile.Dot_config.with_vars (List.rev rev_vars) st.switch_config
+      in
+      if not OpamStateConfig.(!r.dryrun) then
+        install_global_config st.switch_global.root st.switch switch_config;
+      { st with switch_config }
+    else
+      st
+  in
   let rm = OpamPackage.Set.remove nv in
   let st =
     update_switch_state st
@@ -253,38 +288,4 @@ let remove_from_installed st nv =
       ~installed_roots:(rm st.installed_roots)
       ~reinstall:(rm st.reinstall)
   in
-  let opam = OpamSwitchState.opam st nv in
-  let st =
-    { st with conf_files = OpamPackage.Map.remove nv st.conf_files }
-  in
-  if not OpamStateConfig.(!r.dryrun) &&
-     OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
-     OpamSwitchState.is_switch_globally_set st
-  then
-    (* note: don't remove_metadata just yet *)
-    OpamEnv.write_dynamic_init_scripts st;
-  if OpamPackage.Set.mem nv st.compiler_packages &&
-     List.mem Pkgflag_Compiler (OpamFile.OPAM.flags opam)
-  then
-    (* Remove gobal variables from this compiler package *)
-    let switch_vars = OpamFile.Dot_config.bindings st.switch_config in
-    let pkg_vars =
-      OpamFile.Dot_config.bindings @@
-      OpamFile.Dot_config.safe_read
-        (OpamPath.Switch.config st.switch_global.root st.switch
-           nv.name)
-    in
-    let rev_vars, _ =
-      List.fold_left (fun (vars,to_remove) (v,_ as binding) ->
-          if List.mem_assoc v to_remove then (vars, List.remove_assoc v to_remove)
-          else (binding::vars, to_remove))
-        ([], pkg_vars) switch_vars
-    in
-    let switch_config =
-      OpamFile.Dot_config.with_vars (List.rev rev_vars) st.switch_config
-    in
-    if not OpamStateConfig.(!r.dryrun) then
-      install_global_config st.switch_global.root st.switch switch_config;
-    { st with switch_config }
-  else
-    st
+  { st with conf_files = OpamPackage.Map.remove nv st.conf_files }
