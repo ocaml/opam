@@ -49,7 +49,7 @@ let compilers =
 OpamStd.String.Map.iter (fun c comp_file ->
     let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
     let descr_file =
-      OpamFilename.(opt_file (add_extension (chop_extension comp_file) ".descr"))
+      OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
     in
     let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
     let comp =
