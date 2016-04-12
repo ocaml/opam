@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamStd.Op
 
 module type ACTION = sig
   type package
@@ -127,6 +128,7 @@ module type SIG = sig
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
   val explicit: t -> t
+  val removals_last: t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package = struct
@@ -187,14 +189,47 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
 
   let explicit g0 =
     let g = copy g0 in
+    let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
           let b = `Build p in
-          iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
+          iter_pred (function
+              | `Remove p1 when same_name p p1 -> ()
+              | pred -> remove_edge g pred a; add_edge g pred b)
+            g0 a;
           add_edge g b a
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
     g
+
+  module Set = OpamStd.Set.Make (A)
+
+  (* Adds any unrelated, non-remove action as an antecedent of every remove
+     action, to be sure it's done as late as possible *)
+  let removals_last g0 =
+    let g = copy g0 in
+    let closure = transitive_closure g in
+    let nonremove_actions =
+      fold_vertex (fun a acc -> match a with
+          | `Remove _ -> acc
+          | a -> Set.add a acc)
+        g Set.empty
+    in
+    let rm_list l set =
+      List.fold_left (fun acc x -> Set.remove x acc) set l
+    in
+    iter_vertex (function
+        | `Remove _ as rm ->
+          let unrelated =
+            nonremove_actions
+            |> rm_list (pred closure rm)
+            |> rm_list (succ closure rm)
+          in
+          Set.iter (fun a -> add_edge g a rm) unrelated
+        | _ -> ())
+      g;
+    g
+
 end

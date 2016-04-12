@@ -41,6 +41,11 @@ module type SIG = sig
 
   (** Expand install actions, adding a build action preceding them. *)
   val explicit: t -> t
+
+  (** To minimise the consequences of failures: adds edges to the graph to
+      ensure removals are done as late as possible. Since they're fast, the loss
+      in parallelism is negligible. *)
+  val removals_last: t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package
