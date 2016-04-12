@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>OPAM %{OPAMVERSION}% API and libraries documentation</title>
+    <style type="text/css">
+table {
+  margin: auto;
+  border-collapse: collapse;
+}
+th {
+  text-align: left;
+  font-weight: bold;
+}
+a {
+  text-decoration: none;
+  color: #555;
+  font-family: monospace;
+}
+tr.lib {
+  font-size: 120%;
+  font-weight: bold;
+  background-color: #bbb;
+  border-top: 1ex solid white;
+}
+td.libnote {
+  background-color: #eee;
+}
+td.sublib {
+  border-bottom: 1px solid black;
+}
+    </style>
+  </head>
+<body>
+
+<h1>OPAM %{OPAMVERSION}% API and libraries documentation</h1>
+
+
+<table>
+
+<tr class="lib">
+  <th><code>src/core</code></th>
+  <td><em>opam-core</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Generic standard and system library
+</td></tr>
+
+<tr><th><a href="ocamldoc/OpamVersion.html">opamVersion.ml</a></th>
+  <td>(generated) Current OPAM version</td></tr>
+<tr><th><a href="ocamldoc/OpamCoreConfig.html">opamCoreConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference and setter)</td></tr>
+<tr><th><a href="ocamldoc/OpamVersionCompare.html">opamVersionCompare.ml</a></th>
+  <td>Version comparison function used throughout. From the Dose suite.</td></tr>
+<tr><th><a href="ocamldoc/OpamJson.html">opamJson.ml</a></th>
+  <td>Wrapper on Jsonm; only needed for some debug options</td></tr>
+<tr><th><a href="ocamldoc/OpamStd.html">opamStd.ml</a></th>
+  <td>Generic stdlib functions (String, List, Option, Sys submodules...)</td></tr>
+<tr><th><a href="ocamldoc/OpamConsole.html">opamConsole.ml</a></th>
+  <td>Console output, ANSI color, logging and user querying</td></tr>
+<tr><th><a href="ocamldoc/OpamCompat.html">opamCompat.ml.4.01/4.02</a></th>
+  <td>Compatibility layer (Bytes, etc.) for different OCaml versions</td></tr>
+
+<tr><td colspan="2" class="sublib">System handling</td></tr>
+
+<tr><th><a href="ocamldoc/OpamProcess.html">opamProcess.ml</a></th>
+  <td>Process and job handling, with logs, termination status, etc.</td></tr>
+<tr><th><a href="ocamldoc/OpamSystem.html">opamSystem.ml</a></th>
+  <td>Bindings of lots of filesystem and system operations</td></tr>
+<tr><th><a href="ocamldoc/OpamFilename.html">opamFilename.ml</a></th>
+  <td>Higher level file and directory name manipulation AND file operations,
+    wrappers on OpamSystem using the filename type</td>
+<tr><th><a href="ocamldoc/OpamParallel.html">opamParallel.ml</a></th>
+  <td>Parallel execution of jobs following a directed graph</td></tr>
+<tr><th><a href="ocamldoc/OpamUrl.html">opamUrl.ml</a></th>
+  <td>URL parsing and printing, with support for our different backends</td></tr>
+
+<tr class="lib">
+  <th><code>src/format</code></th>
+  <td><em>opam-format</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Definition of OPAM datastructures and its file interface
+</td></tr>
+
+<tr><th><a href="ocamldoc/OpamFormatConfig.html">opamFormatConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference and setter)</td></tr>
+<tr><th><a href="ocamldoc/OpamTypes.html">opamTypes.mli</a></th>
+  <td>Definitions of many types used throughout</td></tr>
+<tr><th><a href="ocamldoc/OpamTypesBase.html">opamTypesBase.ml</a></th>
+  <td>Helper functions on the base types. Often opened</td></tr>
+
+<tr><td colspan="2" class="sublib">basic types, used as keys</td></tr>
+
+<tr><th><a href="ocamldoc/OpamPackage.html">opamPackage.ml</a></th>
+  <td>The package type, and package name type (name+version, values often called "nv" in the code)</td></tr>
+<tr><th><a href="ocamldoc/OpamRepositoryName.html">opamRepositoryName.ml</a></th>
+  <td>The repository type</td></tr>
+<tr><th><a href="ocamldoc/OpamSwitch.html">opamSwitch.ml</a></th>
+  <td>The switch type</td></tr>
+<tr><th><a href="ocamldoc/OpamVariable.html">opamVariable.ml</a></th>
+  <td>OPAM variables with scope (global or module)</td></tr>
+
+<tr><td colspan="2" class="sublib">more advanced types</td></tr>
+
+<tr><th><a href="ocamldoc/OpamFilter.html">opamFilter.ml</a></th>
+  <td>Formulas on variables, as used in opam files build scripts</td></tr>
+<tr><th><a href="ocamldoc/OpamFormula.html">opamFormula.ml</a></th>
+  <td>Formulas on packages, opt. with sub-formulas on versions, and conversion
+    functions</td></tr>
+
+<tr><td colspan="2" class="sublib">file format</td></tr>
+
+<tr><th><a href="ocamldoc/OpamLineLexer.html">opamLineLexer.mll</a></th>
+  <td>A simple lexer to list of lines, which are lists of words</td></tr>
+<tr><th><a href="ocamldoc/OpamLexer.html">opamLexer.mll</a></th>
+  <td>OPAM config file lexer</td></tr>
+<tr><th><a href="ocamldoc/OpamParser.html">opamParser.mly</a></th>
+  <td>OPAM config file generic type parser</td></tr>
+<tr><th><a href="ocamldoc/OpamFormat.html">opamFormat.ml</a></th>
+  <td>OPAM config files syntax and conversion tools, printing</td></tr>
+<tr><th><a href="ocamldoc/OpamFile.html">opamFile.ml</a></th>
+  <td>Handles all OPAM file formats as record types and submodules, conversion to and from syntax</td></tr>
+
+<tr class="lib">
+  <th><code>src/repository</code></th>
+  <td><em>opam-repository</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Handling of remote sources
+</td></tr>
+
+<tr><th><a href="ocamldoc/OpamRepositoryConfig.html">opamRepositoryConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference, setter, initialisation)</td></tr>
+<tr><th><a href="ocamldoc/OpamRepositoryBackend.html">opamRepositoryBackend.ml</a></th>
+  <td>Signature for repository handlers and some helpers for the repository type</td></tr>
+<tr><th><a href="ocamldoc/OpamRepositoryPath.html">opamRepositoryPath.ml</a></th>
+  <td>Defines the file hierarchy in repositories</td></tr>
+<tr><th><a href="ocamldoc/OpamDownload.html">opamDownload.ml</a></th>
+  <td>Configuration init and handling of downloading commands</td></tr>
+<tr><th><a href="ocamldoc/OpamHTTP.html">opamHTTP.ml</a></th>
+  <td>Main HTTP backend</td></tr>
+<tr><th><a href="ocamldoc/OpamLocal.html">opamLocal.ml</a></th>
+  <td>Rsync backend, for local or ssh sources</td></tr>
+<tr><th><a href="ocamldoc/OpamVCS.html">opamVCS.ml</a></th>
+  <td>Layer for handling version control sources</td></tr>
+<tr><th><a href="ocamldoc/OpamDarcs.html">opamDarcs.ml</a></th>
+  <td>Darcs support (through OpamVCS)</td></tr>
+<tr><th><a href="ocamldoc/OpamGit.html">opamGit.ml</a></th>
+  <td>Git support (through OpamVCS)</td></tr>
+<tr><th><a href="ocamldoc/OpamHg.html">opamHg.ml</a></th>
+  <td>Mercurial support (through OpamVCS)</td></tr>
+<tr><th><a href="ocamldoc/OpamRepository.html">opamRepository.ml</a></th>
+  <td>Operations on repositories (update, fetch...) based on the above backends</td></tr>
+
+<tr class="lib">
+  <th><code>src/solver</code></th>
+  <td><em>opam-solver</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Solver and Cudf interaction
+</td></tr>
+
+<tr><th><a href="ocamldoc/OpamSolverConfig.html">opamSolverConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference, setter, initialisation)</td></tr>
+<tr><th><a href="ocamldoc/OpamActionGraph.html">opamActionGraph.ml</a></th>
+  <td>Handles graphs of actions (package changes), based on ocamlgraph</td></tr>
+<tr><th><a href="ocamldoc/OpamCudf.html">opamCudf.ml</a></th>
+  <td>Solver interaction, conversion of answer to solution</td></tr>
+<tr><th><a href="ocamldoc/OpamHeuristic.html">opamHeuristic.ml</a></th>
+  <td>The "internal solver", brute-force search using Dose's checker</td></tr>
+<tr><th><a href="ocamldoc/OpamSolver.html">opamSolver.ml</a></th>
+  <td>Entry point, conversion of universe to cudf, dependencies computation</td></tr>
+
+<tr class="lib">
+  <th><code>src/state</code></th>
+  <td><em>opam-state</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Handling of the ~/.opam hierarchy and actions on it
+</td></tr>
+
+<tr><th><a href="ocamldoc/OpamStateConfig.html">opamStateConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference, setter, initialisation)</td></tr>
+<tr><th><a href="ocamldoc/OpamPath.html">opamPath.ml</a></th>
+  <td>Defines the file hierarchy in ~/.opam</td></tr>
+<tr><th><a href="ocamldoc/OpamOCaml.html">opamOCaml.ml</a></th>
+  <td>OCaml installation version and specifics detection</td></tr>
+<tr><th><a href="ocamldoc/OpamScript.html">opamScript.ml</a></th>
+  <td>(generated) Shell config scripts as OCaml strings</td></tr>
+<tr><th><a href="ocamldoc/OpamStateTypes.html">opamStateTypes.mli</a></th>
+  <td>Defines the types holding global, repository and switch states</td></tr>
+<tr><th><a href="ocamldoc/OpamGlobalState.html">opamGlobalState.ml</a></th>
+  <td>Loading and handling of the global state of an opam root</td></tr>
+<tr><th><a href="ocamldoc/OpamRepositoryState.html">opamRepositoryState.ml</a></th>
+  <td>loading and handling of the repository state of an opam root (i.e. what is in ~/.opam/repo)</td></tr>
+<tr><th><a href="ocamldoc/OpamSwitchState.html">opamSwitchState.ml</a></th>
+  <td>Loading and querying a switch state</td></tr>
+<tr><th><a href="ocamldoc/OpamPackageVar.html">opamPackageVar.ml</a></th>
+  <td>Resolution and handling of opam variables + filters</td></tr>
+<tr><th><a href="ocamldoc/OpamFileTools.html">opamFileTools.ml</a></th>
+  <td>Generic tools for handling package metadata</td></tr>
+<tr><th><a href="ocamldoc/OpamSwitchAction.html">opamSwitchAction.ml</a></th>
+  <td>Switch-related actions and changes</td></tr>
+<tr><th><a href="ocamldoc/OpamEnv.html">opamEnv.ml</a></th>
+  <td>Process environment setup and handling, shell configuration</td></tr>
+<tr><th><a href="ocamldoc/OpamPinned.html">opamPinned.ml</a></th>
+  <td>Specific query and handling of pinned packages</td></tr>
+<tr><th><a href="ocamldoc/OpamUpdate.html">opamUpdate.ml</a></th>
+  <td>Synchronisation and downloading of repositories and package sources</td></tr>
+<tr><th><a href="ocamldoc/OpamSolution.html">opamSolution.ml</a></th>
+  <td>Interface with the solver, processing of full solutions through actions</td></tr>
+<tr><th><a href="ocamldoc/OpamAction.html">opamAction.ml</a></th>
+  <td>Handles concrete actions on packages, like installations and removals</td></tr>
+
+<tr class="lib">
+  <th><code>src/client</code></th>
+  <td><em>opam-client</em> library and exec</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Everything related to the OPAM state, installation and front-end
+</td></tr>
+
+<tr><td colspan="2" class="sublib"><code>opam-client</code> library</td></tr>
+
+<tr><th><a href="ocamldoc/OpamClientConfig.html">opamClientConfig.ml</a></th>
+  <td>Configuration options for this lib (record, global reference, setter, initialisation), plus helper for global setup</td></tr>
+<tr><th><a href="ocamldoc/OpamConfigCommand.html">opamConfigCommand.ml</a></th>
+  <td>Functions for the "opam config" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamPinCommand.html">opamPinCommand.ml</a></th>
+  <td>Functions for the "opam pin" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamRepositoryCommand.html">opamRepositoryCommand.ml</a></th>
+  <td>Functions for the "opam repository" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamSwitchCommand.html">opamSwitchCommand.ml</a></th>
+  <td>Functions for the "opam switch" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamListCommand.html">opamListCommand.ml</a></th>
+  <td>Functions for the "opam list" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamClient.html">opamClient.ml</a></th>
+  <td>High-level execution of user-facing functions like "upgrade", and wrappers around the *Command modules</td></tr>
+<tr><th><a href="ocamldoc/OpamGitVersion.html">opamGitVersion.mli</a></th>
+  <td>(generated) Current git version of OPAM</td></tr>
+<tr><th><a href="ocamldoc/OpamArg.html">opamArg.ml</a></th>
+  <td>Command-line argument parsers and helpers</td></tr>
+
+<tr><td colspan="2" class="sublib">Main opam CLI</td></tr>
+<tr><th><a href="ocamldoc/OpamMain.html">opamMain.ml</a></th>
+  <td>Main, including cmdliner command handling</td></tr>
+
+<tr class="lib">
+  <th><code>src/tools</code></th>
+  <td>Extra tools and utilities</td>
+</tr>
+
+<tr><td colspan="2" class="sublib">opam-admin tool</td></tr>
+
+<tr><th><a href="ocamldoc/Opam_mk_repo.html">opam_mk_repo.ml</a></th>
+  <td>Repo index and archives generation</td></tr>
+<tr><th><a href="ocamldoc/Opam_depexts_change.html">opam_depexts_change.ml</a></th>
+  <td>Operation on external dependencies in a repo</td></tr>
+<tr><th><a href="ocamldoc/Opam_findlib.html">opam_findlib.ml</a></th>
+  <td>Automatically add some findlib information to a repo</td></tr>
+<tr><th><a href="ocamldoc/Opam_rename.html">opam_rename.ml</a></th>
+  <td>Package renaming</td></tr>
+<tr><th><a href="ocamldoc/Opam_stats.html">opam_stats.ml</a></th>
+  <td>Repo stats & graphs generation</td></tr>
+<tr><th><a href="ocamldoc/Opam_repo_check.html">opam_repo_check.ml</a></th>
+  <td>Check the repo for errors</td></tr>
+<tr><th><a href="ocamldoc/Opam_admin.html">opam_admin.ml</a></th>
+  <td>Source of the opam-admin tool, main</td></tr>
+
+<tr><td colspan="2" class="sublib">other stand-alone tools</td></tr>
+
+<tr><th><a href="ocamldoc/Opam_admin_top.html">opam_admin_top.ml</a></th>
+  <td>Tiny library for admin-scripts, included in opam-admin.top</td></tr>
+<tr><th><a href="ocamldoc/Opam_check.html">opam_check.ml</a></th>
+  <td>Tiny tool used in internal checks ("make tests")</td></tr>
+<tr><th><a href="ocamldoc/Opam_installer.html">opam_installer.ml</a></th>
+  <td>Handles OPAM's ".install" files</td></tr>
+
+</table>
+
+
+<hline>
+<p><a href="ocamldoc/index.html">Raw ocamldoc index</a></p>
+<p><a href="ocamldoc/dependencies.svg">Graph of module dependencies</a></p>
+
+</body>
+</html>

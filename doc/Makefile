@@ -1,3 +1,5 @@
+-include ../Makefile.config
+
 ifndef OPAM
   OPAM = ../src/opam
 endif
@@ -17,7 +19,12 @@ ifndef OPAM_INSTALLER
 endif
 
 SRCEXTDIR = ../src_ext/lib
-INCLUDE = $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
+
+ifneq ($(wildcard $(SRCEXTDIR)),)
+  OCAMLDOC = ocamldoc $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
+else
+  OCAMLDOC = ocamlfind ocamldoc $(patsubst %,-package %,$(PACKS)) $(patsubst %,-I %,$(SRCDIR))
+endif
 
 .PHONY: man html dev-manual pages
 all: man dev html pages
@@ -46,10 +53,15 @@ dev:
 	$(MAKE) -C dev-manual
 
 html:
-	rm -rf html
-	mkdir -p html/
-	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/ || true
-	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -dot -o /dev/stdout | tred >html/deps.dot || true
+	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
+	rm -rf html/ocamldoc
+	mkdir -p html/ocamldoc
+	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -html -d html/ocamldoc || true
+	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -dot -o /dev/stdout | \
+	  tred | \
+	  dot -Tsvg > \
+	    html/ocamldoc/dependencies.svg \
+	|| true
 
 pages/%.html: pages/%.md
 	omd $^ -o $@
@@ -59,5 +71,5 @@ PAGES=$(wildcard pages/*.md)
 pages: $(PAGES:.md=.html)
 
 clean:
-	rm -rf man html man-html pages/*.html
+	rm -rf man html/ocamldoc man-html pages/*.html
 	$(MAKE) -C dev-manual clean

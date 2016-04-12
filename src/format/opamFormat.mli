@@ -39,7 +39,7 @@ val add_pos: pos -> exn -> exn
 (** Get the position out of a value *)
 val value_pos: value -> pos
 
-(** Printers *)
+(** {2 Printers} *)
 
 module Print : sig
 
@@ -53,7 +53,7 @@ module Print : sig
 
 end
 
-(** Normalised output for opam syntax files *)
+(** {2 Normalised output for opam syntax files} *)
 
 module Normalise : sig
   val escape_string : string -> string
@@ -63,7 +63,7 @@ module Normalise : sig
   val items : OpamTypes.opamfile_item list -> string
 end
 
-(** Structures for bidirectional parsing/printing, combiners and converters *)
+(** {2 Structures for bidirectional parsing/printing, combiners and converters} *)
 
 module Pp : sig
 
@@ -107,7 +107,7 @@ module Pp : sig
     ?pos:pos -> ?strict:bool -> ?exn:exn ->
     ('a, unit, string, unit) format4 -> 'a
 
-  (** Various pp constructors *)
+  (** {3 Various pp constructors} *)
 
   module Op : sig
 
@@ -174,7 +174,7 @@ module Pp : sig
   val default : 'a -> ('a option, 'a) t
 
 
-  (** low-level Pps for the Lines parser ([string list list]) *)
+  (** {3 low-level Pps for the Lines parser ([string list list])} *)
 
   type lines = string list list
 
@@ -198,7 +198,7 @@ module Pp : sig
     (string list, 'k * 'v) t ->
     (lines, 'map) t
 
-  (** Pps  for the type [value], used by opam-syntax files ([opamfile]) *)
+  (** {3 Pps for the type [value], used by opam-syntax files ([opamfile])} *)
 
   module V : sig
     (** These base converters raise [Unexpected] when not run on the right input
@@ -301,8 +301,8 @@ module Pp : sig
     val os_constraint : (value, (bool * string) OpamFormula.formula) t
   end
 
-  (** Combinators to parse to a record from a list of (field name, field setter,
-      field getter) *)
+  (** {3 Combinators to parse to a record from a list of (field name, field
+      setter, field getter)} *)
 
   (** Used to parse a single field of a record: ['a] on the left is the
       accumulator, or value of the record parsed so far. *)
@@ -330,7 +330,7 @@ module Pp : sig
   (** A field parser that ignores its argument *)
   val ppacc_ignore : ('a, value) field_parser
 
-  (** Specific Pps for items lists and fields (opamfile) *)
+  (** {3 Specific Pps for items lists and fields (opamfile)} *)
 
   module I :
   sig
