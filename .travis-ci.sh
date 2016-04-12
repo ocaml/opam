@@ -8,7 +8,7 @@ install_on_linux () {
   3.12.1) ppa=avsm/ocaml312+opam12 ;;
   4.00.1) ppa=avsm/ocaml40+opam12 ;;
   4.01.0) ppa=avsm/ocaml41+opam12 ;;
-  4.02.1) ppa=avsm/ocaml42+opam12 ;;
+  4.02.3) ppa=avsm/ocaml42+opam12 ;;
   *) echo Unknown $OCAML_VERSION; exit 1 ;;
   esac
 
@@ -22,7 +22,7 @@ install_on_osx () {
   sudo hdiutil attach XQuartz-2.7.6.dmg
   sudo installer -verbose -pkg /Volumes/XQuartz-2.7.6/XQuartz.pkg -target /
   case "$OCAML_VERSION" in
-  4.02.1) brew update; brew install ocaml;;
+  4.02.3) brew update; brew install ocaml;;
   4.03.0) brew update; brew install ocaml --HEAD ;;
   *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
   esac
