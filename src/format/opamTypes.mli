@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Common types used by other modules *)
+(** Definitions of many types used throughout *)
 
 (** {2 Error and continuation handling} *)
 type 'a success = [ `Successful of 'a ]

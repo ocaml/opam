@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Format of OPAM configuration files. *)
+(** OPAM config files syntax and conversion tools, printing *)
 
 open OpamTypes
 

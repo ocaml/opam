@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the client lib (record, global reference, setter,
+    initialisation), plus helper for global setup *)
+
 type t = private {
   print_stats: bool;
   pin_kind_auto: bool;

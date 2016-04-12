@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Typed filename manipulation *)
+(** Higher level file and directory name manipulation AND file operations,
+    wrappers on OpamSystem using the filename type *)
 
 (** Basenames *)
 module Base: OpamStd.ABSTRACT

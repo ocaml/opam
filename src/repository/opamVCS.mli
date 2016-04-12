@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Generic backend for version-control systems. *)
+(** Layer for handling version control sources through a functor *)
 
 open OpamTypes
 

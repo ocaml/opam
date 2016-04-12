@@ -14,6 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** OPAM variables with scope (global or module), used in "opam" package
+    definition files in "filters" *)
+
 (** {2 Variable names} *)
 
 include OpamStd.ABSTRACT

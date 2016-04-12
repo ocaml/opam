@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Rsync repository backend *)
+(** Rsync repository backend, for local or ssh sources *)
 
 module B: OpamRepositoryBackend.S
 

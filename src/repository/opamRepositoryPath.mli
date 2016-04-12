@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Defines the file hierarchy in repositories *)
+
 open OpamTypes
 
 (** Repository local path: {i $opam/repo/<name>} *)

@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Switch commands. *)
+(** Functions handling the "opam switch" subcommand *)
 
 open OpamTypes
 open OpamStateTypes

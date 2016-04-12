@@ -14,6 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** loading and handling of the repository state of an opam root (i.e. what is
+    in ~/.opam/repo) *)
+
 open OpamTypes
 
 open OpamStateTypes

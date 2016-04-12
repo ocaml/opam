@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** The various paths where OPAM configuration files are stored. *)
+(** Defines the file hierarchy in ~/.opam *)
 
 open OpamTypes
 

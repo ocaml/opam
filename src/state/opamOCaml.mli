@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** OCaml installation version and specifics detection *)
+
 (** Some detection of OCaml version and installation specifics. Base functions
     lookup in the PATH, [system_*] functions extract the OPAMROOT paths before
     looking up*)

@@ -14,6 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Darcs repository backend *)
+(** Darcs repository backend (based on OpamVCS) *)
 
 module B: OpamRepositoryBackend.S

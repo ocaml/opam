@@ -16,6 +16,8 @@
 
 %{
 
+(** OPAM config file generic type parser *)
+
 open OpamTypes
 open OpamTypesBase
 

@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Loading and handling of the global state of an opam root *)
+
 open OpamTypes
 open OpamStateTypes
 

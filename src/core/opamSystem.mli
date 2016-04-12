@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Low-level untyped system operations *)
+(** Bindings of lots of filesystem and system operations *)
 
 (** Exception raised when subprocess fails *)
 exception Process_error of OpamProcess.result

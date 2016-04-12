@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Switch-related actions and changes *)
+
 open OpamTypes
 open OpamStateTypes
 

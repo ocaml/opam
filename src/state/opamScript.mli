@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** (generated) Shell config scripts as OCaml strings *)
+
 val complete : string
 val complete_zsh : string
 val switch_eval : string

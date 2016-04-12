@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Configuration commands *)
+(** Functions handling the "opam config" subcommand *)
 
 open OpamTypes
 open OpamStateTypes

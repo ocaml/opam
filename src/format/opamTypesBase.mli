@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Helper functions on the base types (from [OpamTypes]) *)
+
 (** This module contains basic utility functions and stringifiers for the
     basic OPAM types present in OpamTypes.ml *)
 open OpamTypes

@@ -14,6 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** The package type, and package name type (name+version, values often called
+    "nv" in the code) *)
+
 (** {2 Package name and versions} *)
 
 (** Versions *)

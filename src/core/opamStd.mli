@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Generic stdlib functions (String, List, Option, Sys submodules...) *)
+
 (** {2 Signatures and functors} *)
 
 (** Sets with extended interface and infix operators *)

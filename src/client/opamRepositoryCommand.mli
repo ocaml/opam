@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Repository sub-command functions. *)
+(** Functions handling the "opam repository" subcommand *)
 
 open OpamTypes
 open OpamStateTypes

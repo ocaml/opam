@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Synchronisation and downloading of repositories and package sources *)
+
 open OpamTypes
 open OpamStateTypes
 

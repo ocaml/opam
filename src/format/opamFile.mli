@@ -14,6 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Handles all OPAM file formats as record types and submodules, conversion to
+    and from syntax *)
+
 open OpamTypes
 
 (** Functions to read and write OPAM configuration files in a typed way *)

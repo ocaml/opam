@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM actions *)
+(** Handles concrete actions on packages, like installations and removals *)
 
 open OpamTypes
 open OpamStateTypes

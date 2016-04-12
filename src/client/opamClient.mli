@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Client entry-point. *)
+(** High-level execution of user-facing functions like install and upgrade, and
+    wrappers around the pinning commands *)
 
 open OpamTypes
 open OpamStateTypes

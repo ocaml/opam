@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Process handling *)
+(** Process and job handling, with logs, termination status, etc. *)
 
 (** The type of shell commands *)
 type command

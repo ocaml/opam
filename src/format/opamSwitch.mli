@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compiler switch names *)
+(** The type for switch names *)
 
 include OpamStd.ABSTRACT
 

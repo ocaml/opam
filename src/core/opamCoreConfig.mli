@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the core lib (record, global reference and
+    setter) *)
+
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)

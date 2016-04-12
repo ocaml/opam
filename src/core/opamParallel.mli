@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Parallel execution of jobs following a directed graph *)
+
 module type VERTEX = sig
   include OpamStd.OrderedType
   include Graph.Sig.COMPARABLE with type t := t

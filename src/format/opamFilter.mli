@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Manage filters *)
+(** Formulas on variables, as used in opam files build scripts *)
 
 (** Filters are a small language of formulas over strings and booleans used for
     conditions and text replacements. It has relational operators over strings

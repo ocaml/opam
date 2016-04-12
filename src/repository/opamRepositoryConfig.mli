@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the repository lib (record, global reference,
+    setter, initialisation) *)
+
 (** Toggles parsing of the tool's output to detect errors
     (curl returns 0 on a 404) *)
 type dl_tool_kind = [ `Curl | `Default ]

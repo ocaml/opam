@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** SAT-solver for package dependencies and conflicts *)
+(** Entry point to the solver, conversion of opam package universes to Cudf,
+    dependencies computation. Front-end to Dose. *)
 
 open OpamTypes
 

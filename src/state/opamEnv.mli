@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Process environment setup and handling, shell configuration *)
+
 open OpamTypes
 open OpamStateTypes
 

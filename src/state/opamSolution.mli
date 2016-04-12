@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Applying solver solutions *)
+(** Interface with the solver, processing of full solutions through actions *)
 
 open OpamTypes
 open OpamStateTypes

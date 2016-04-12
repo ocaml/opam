@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Defines the types holding global, repository and switch states *)
+
 open OpamTypes
 
 (** Client state *)

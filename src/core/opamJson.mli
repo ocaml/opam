@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Wrapper on Jsonm; only needed for some debug options *)
+
 type t =
   [ `Null | `Bool of bool | `Float of float| `String of string
   | `A of t list | `O of (string * t) list ]

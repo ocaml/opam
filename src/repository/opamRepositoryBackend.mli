@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Signature for repository handlers and some helpers for the repository
+    type *)
+
 open OpamTypes
 
 (** Backend signature *)

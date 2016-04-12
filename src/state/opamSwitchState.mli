@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Loading and querying a switch state *)
+
 open OpamTypes
 open OpamStateTypes
 

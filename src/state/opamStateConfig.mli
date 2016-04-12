@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the state lib (record, global reference, setter,
+    initialisation) *)
+
 open OpamTypes
 
 type t = private {

@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Pin subcommand. *)
+(** Functions handling the "opam pin" subcommand *)
 
 open OpamTypes
 open OpamStateTypes

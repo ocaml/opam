@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Defines on-disk package repositories, synchronised with an upstream *)
+(** Operations on repositories (update, fetch...) based on the different
+    backends implemented in separate modules *)
 
 open OpamTypes
 

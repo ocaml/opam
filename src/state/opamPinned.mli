@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Specific query and handling of pinned packages *)
+
 open OpamTypes
 open OpamStateTypes
 

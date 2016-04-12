@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** URL parsing and printing, with support for our different backends *)
+
 type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]

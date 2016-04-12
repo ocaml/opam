@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM command-line arguments *)
+(** Command-line argument parsers and helpers *)
 
 open OpamTypes
 open Cmdliner

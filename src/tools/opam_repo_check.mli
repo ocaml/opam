@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Checks a repository for errors. Used by [opam-admin] *)
+
 type args
 val args: args Cmdliner.Term.t
 val process: args -> unit

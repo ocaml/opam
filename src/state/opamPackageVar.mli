@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Resolution and handling of opam variables + filters *)
+
 open OpamTypes
 open OpamStateTypes
 
