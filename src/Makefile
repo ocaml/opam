@@ -16,7 +16,7 @@ all:
 
 OCAMLFLAGS = -g -w +a-4-44-48
 OCAMLLDFLAGS = -g -w +a-4-44-48
-ifeq ($(OCAML_4),true)
+ifeq ($(OCAML_4_01),true)
   OCAMLFLAGS += -bin-annot
   OCAMLLDFLAGS += -bin-annot
 endif
