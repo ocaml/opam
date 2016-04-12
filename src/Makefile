@@ -10,7 +10,6 @@ all:
 	$(MAKE) opam-check
 	$(MAKE) opam-admin
 	$(MAKE) opam-installer
-	$(MAKE) opamlfind
 	$(MAKE) opam-admin.top
 
 # --
@@ -261,7 +260,7 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-TOOLS = opam-check opam-admin opam-installer opamlfind
+TOOLS = opam-check opam-admin opam-installer
 
 $(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)
