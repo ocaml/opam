@@ -53,9 +53,9 @@ dev:
 	$(MAKE) -C dev-manual
 
 html:
-	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 	rm -rf html/ocamldoc
 	mkdir -p html/ocamldoc
+	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -html -d html/ocamldoc || true
 	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -dot -o /dev/stdout | \
 	  tred | \
