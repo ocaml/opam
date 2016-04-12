@@ -188,7 +188,7 @@ type filter =
 (** {2 Filtered formulas (to express conditional dependencies)}
 
     These are first reduced to only the dependency-flag variables build, doc,
-    dev, test defined in [Opam formulas *)
+    dev, test defined in [Opam formulas] *)
 
 type 'a filter_or_constraint =
   | Filter of filter

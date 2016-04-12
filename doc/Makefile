@@ -49,6 +49,7 @@ html:
 	rm -rf html
 	mkdir -p html/
 	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -html -d html/ || true
+	ocamldoc $(INCLUDE) ../src/*/*.mli ../src/*/*.ml -dot -o /dev/stdout | tred >html/deps.dot || true
 
 pages/%.html: pages/%.md
 	omd $^ -o $@

@@ -237,7 +237,7 @@ module Pp : sig
     val map_group : (value, 'a) t -> (value, 'a list) t
 
     (** An expected list depth may be specified to enable removal of extra
-        brackets (never use |~depth] for an inner list) *)
+        brackets (never use [~depth] for an inner list) *)
     val map_list : ?depth:int -> (value, 'a) t -> (value, 'a list) t
 
     (** Normalises to the given list depth when parsing, and removes brackets

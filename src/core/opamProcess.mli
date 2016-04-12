@@ -20,13 +20,13 @@
 type command
 
 (** Builds a shell command for later execution.
-    @param ?env         environment for the command
-    @param ?verbose     force verbosity
-    @param ?name        title, used to name log files, etc.
-    @param ?metadata    additional info to log
-    @param ?dir         CWD for the command
-    @param ?allow_stdin whether to forward stdin
-    @param ?text        Short text that may be displayed in the status-line
+    @param env         environment for the command
+    @param verbose     force verbosity
+    @param name        title, used to name log files, etc.
+    @param metadata    additional info to log
+    @param dir         CWD for the command
+    @param allow_stdin whether to forward stdin
+    @param text        Short text that may be displayed in the status-line
     @param command      The command itself
     @param args         Command-line arguments *)
 val command:

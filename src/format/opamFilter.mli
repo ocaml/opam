@@ -23,7 +23,7 @@
     interpolation. Variables are resolved using a user function returning an
     option, undefined values are propagated.
 
-    String interpolation uses the syntax '%{identifier}%'
+    String interpolation uses the syntax [%{identifier}%]
 
     Identifiers have the form {v[package:]var[?str_if_true:str_if_false_or_undef]v}.
     The last optional part specifies a conversion from boolean to static strings.
@@ -59,7 +59,7 @@ type fident = name list * variable * (string * string) option
     preserves undefined expansions as is *)
 val expand_string: ?default:string -> env -> string -> string
 
-(** Returns the (beginning, end) offsets and substrings of any unclosed '%{'
+(** Returns the (beginning, end) offsets and substrings of any unclosed [%{]
     expansions *)
 val unclosed_expansions: string -> ((int * int) * string) list
 

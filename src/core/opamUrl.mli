@@ -22,7 +22,8 @@ type backend = [ `http | `rsync | version_control ]
 
 val string_of_backend: backend -> string
 
-(** Tolerates lots of backward compatibility names; @raise Failure *)
+(** Tolerates lots of backward compatibility names;
+    @raise Failure on unknown protocol *)
 val backend_of_string: string -> [> backend]
 
 type t = {

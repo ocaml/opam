@@ -66,7 +66,8 @@ val with_write_lock:
 
 val selections: 'a switch_state -> switch_selections
 
-(** Return the OPAM file for the given package. @raise [Not_found] *)
+(** Return the OPAM file for the given package.
+    @raise Not_found when appropriate *)
 val opam: 'a switch_state -> package -> OpamFile.OPAM.t
 
 (** Return the OPAM file, including URL and descr, for the given package, if
@@ -92,7 +93,7 @@ val package_config: 'a switch_state -> name -> OpamFile.Dot_config.t
 val is_name_installed: 'a switch_state -> name -> bool
 
 (** Return the installed package with the right name
-    @raise [Not_found] *)
+    @raise Not_found when appropriate *)
 val find_installed_package_by_name: 'a switch_state -> name -> package
 
 (** Return all packages satisfying one of the given atoms from a state *)
@@ -100,7 +101,7 @@ val packages_of_atoms: 'a switch_state -> atom list -> package_set
 
 (** Gets the current version of package [name]: pinned version, installed
     version, max available version or max existing version, tried in this order.
-    Raises [Not_found] only if there is no package by this name. *)
+    @raise Not_found only if there is no package by this name *)
 val get_package: 'a switch_state -> name -> package
 
 (** "dev packages" are any package with an upstream that isn't the usual HTTP,
