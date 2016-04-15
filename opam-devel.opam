@@ -30,13 +30,12 @@ depends: [
 # Restrict self-upgrade to "official" versions, just in case
 available: [
   opam-version >= "1.2" &
-  (compiler = "3.12.1" |
-   compiler = "4.00.0" |
-   compiler = "4.00.1" |
-   compiler = "4.01.0" |
+  (compiler = "4.01.0" |
    compiler = "4.02.0" |
    compiler = "4.02.1" |
-   (compiler = "system" & ocaml-version >= "3.12.1" & ocaml-version <= "4.02.0"))
+   compiler = "4.02.2" |
+   compiler = "4.02.3" |
+   (compiler = "system" & ocaml-version >= "4.01.0" & ocaml-version <= "4.02.3"))
 ]
 post-messages: [ "
 IMPORTANT: The new version of OPAM has been installed to %{root}%, and it will \

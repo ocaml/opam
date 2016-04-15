@@ -1,4 +1,5 @@
 2.0~alpha
+* Dropped ability to compile opam with OCaml earlier than 4.01.0
 * Version constraints in `depopts:` allowed again, but with consistent semantics
 * Allow mixing filters within dependency constraints
 * More flexible `opam pin` command interface

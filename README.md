@@ -12,7 +12,7 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 ## Compiling this repo
 
 * Make sure you have OCaml and GNU make installed. If you don't have a recent
-  enough version of OCaml (>= 3.12.1) at hand, see the next section.
+  enough version of OCaml (>= 4.01.0) at hand, see the next section.
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed. This will locally take care of all OCaml dependencies

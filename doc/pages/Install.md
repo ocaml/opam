@@ -168,7 +168,7 @@ Sources of the latest stable version of opam are available on Github:
 * [Opam releases on Github](https://github.com/ocaml/opam/releases)
 
 You can also download the full archives, including opam dependencies (these
-don't require any extra downloads, just the OCaml compiler -- 3.12.1 or later):
+don't require any extra downloads, just the OCaml compiler -- 4.01.0 or later):
 
 * [1.2.2](https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz)
   MD5: 7d348c2898795e9f325fb80eaaf5eae8

@@ -608,7 +608,7 @@ module Pp = struct
 
     (** Pps for the [value] type to higher level types *)
 
-    let url = string -| of_module "url" (module OpamUrl: STR with type t = OpamUrl.t)
+    let url = string -| of_module "url" (module OpamUrl)
 
     let url_with_backend backend =
       string -|
@@ -789,9 +789,9 @@ module Pp = struct
 
     let package_atom constraints =
       map_option
-        (string -| of_module "pkg-name" (module OpamPackage.Name: STR with type t = OpamPackage.Name.t))
+        (string -| of_module "pkg-name" (module OpamPackage.Name))
         (constraints
-           (string -| of_module "pkg-version" (module OpamPackage.Version: STR with type t = OpamPackage.Version.t)))
+           (string -| of_module "pkg-version" (module OpamPackage.Version)))
 
     let package_formula kind constraints =
       let split, join = match kind with
@@ -843,7 +843,7 @@ module Pp = struct
       list -| singleton -| pp ~name:"env-binding" parse print
 
     let features =
-      let var = ident -| of_module "variable" (module OpamVariable: STR with type t = OpamVariable.t) in
+      let var = ident -| of_module "variable" (module OpamVariable) in
       let doc_filt = map_option string filter in
       let rec parse_features ~pos = function
         | [] -> []
@@ -1144,7 +1144,7 @@ module Pp = struct
         ()
       =
       let name = "opam-version" in
-      let opam_v = V.string -| of_module "opam-version" (module OpamVersion: STR with type t = OpamVersion.t) in
+      let opam_v = V.string -| of_module "opam-version" (module OpamVersion) in
       let f v =
         OpamFormatConfig.(!r.skip_version_checks) || match v with
         | Some v -> f v
