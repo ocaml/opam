@@ -1,0 +1,243 @@
+From d70345ab13e0b3e405380703a0c85e74ce38ad21 Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 15 Apr 2016 15:38:18 +0900
+Subject: [PATCH] nobytes
+
+---
+ lib/re.ml      | 46 +++++++++++++++++++++++-----------------------
+ lib/re_pcre.ml | 14 +++++++-------
+ lib/re_str.ml  | 12 ++++++------
+ 3 files changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/lib/re.ml b/lib/re.ml
+index bf5ea40..5e0b3a5 100644
+--- a/lib/re.ml
++++ b/lib/re.ml
+@@ -79,9 +79,9 @@ type re =
+         (* The whole regular expression *)
+     mutable initial_states : (int * state) list;
+         (* Initial states, indexed by initial category *)
+-    cols : Bytes.t;
++    cols : String.t;
+         (* Color table *)
+-    col_repr : Bytes.t;
++    col_repr : String.t;
+         (* Table from colors to one character of this color *)
+     ncol : int;
+         (* Number of colors *)
+@@ -101,7 +101,7 @@ let print_re ch re = Automata.print_expr ch re.initial
+ type info =
+   { re : re;
+         (* The automata *)
+-    i_cols : Bytes.t;
++    i_cols : String.t;
+         (* Color table ([x.i_cols = x.re.cols])
+            Sortcut used for performance reasons *)
+     mutable positions : int array;
+@@ -126,7 +126,7 @@ let category re c =
+   if c = -1 then cat_inexistant else
+   (* Special category for the last newline *)
+   if c = re.lnl then cat_lastnewline lor cat_newline lor cat_not_letter else
+-  match Bytes.get re.col_repr c with
++  match String.get re.col_repr c with
+     (* Should match [cword] definition *)
+     'a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '\170' | '\181' | '\186'
+   | '\192'..'\214' | '\216'..'\246' | '\248'..'\255' ->
+@@ -179,7 +179,7 @@ let delta info cat c st =
+   desc
+ 
+ let validate info (s:string) pos st =
+-  let c = Char.code (Bytes.get info.i_cols (Char.code s.[pos])) in
++  let c = Char.code (String.get info.i_cols (Char.code s.[pos])) in
+   let cat = category info.re c in
+   let desc' = delta info cat c st in
+   let st' = find_state info.re desc' in
+@@ -206,7 +206,7 @@ let rec loop info s pos st =
+ 
+ let rec loop info (s:string) pos st =
+   if pos < info.last then
+-    let st' = st.next.(Char.code (Bytes.get info.i_cols (Char.code s.[pos]))) in
++    let st' = st.next.(Char.code (String.get info.i_cols (Char.code s.[pos]))) in
+     loop2 info s pos st st'
+   else
+     st
+@@ -219,7 +219,7 @@ and loop2 info s pos st st' =
+       (* It is important to place these reads before the write *)
+       (* But then, we don't have enough registers left to store the
+          right position.  So, we store the position plus one. *)
+-      let st'' = st'.next.(Char.code (Bytes.get info.i_cols (Char.code s.[pos]))) in
++      let st'' = st'.next.(Char.code (String.get info.i_cols (Char.code s.[pos]))) in
+       info.positions.(idx) <- pos;
+       loop2 info s pos st' st''
+     end else begin
+@@ -236,7 +236,7 @@ and loop2 info s pos st st' =
+ 
+ let rec loop_no_mark info s pos last st =
+   if pos < last then
+-    let st' = st.next.(Char.code (Bytes.get info.i_cols (Char.code s.[pos]))) in
++    let st' = st.next.(Char.code (String.get info.i_cols (Char.code s.[pos]))) in
+     let idx = st'.idx in
+     if idx >= 0 then
+       loop_no_mark info s (pos + 1) last st'
+@@ -276,7 +276,7 @@ let get_color re (s:string) pos =
+   if pos >= slen then -1 else
+   (* Special case for the last newline *)
+   if pos = slen - 1 && re.lnl <> -1 && s.[pos] = '\n' then re.lnl else
+-  Char.code (Bytes.get re.cols (Char.code s.[pos]))
++  Char.code (String.get re.cols (Char.code s.[pos]))
+ 
+ let rec handle_last_newline info pos st groups =
+   let st' = st.next.(info.re.lnl) in
+@@ -289,7 +289,7 @@ let rec handle_last_newline info pos st groups =
+     st'
+   end else begin (* Unknown *)
+     let c = info.re.lnl in
+-    let real_c = Char.code (Bytes.get info.i_cols (Char.code '\n')) in
++    let real_c = Char.code (String.get info.i_cols (Char.code '\n')) in
+     let cat = category info.re c in
+     let desc' = delta info cat real_c st in
+     let st' = find_state info.re desc' in
+@@ -396,7 +396,7 @@ module CSetMap =
+ let trans_set cache cm s =
+   match s with
+     [i, j] when i = j ->
+-      csingle (Bytes.get cm i)
++      csingle (String.get cm i)
+   | _ ->
+       let v = (cset_hash_rec s, s) in
+       try
+@@ -404,7 +404,7 @@ let trans_set cache cm s =
+       with Not_found ->
+         let l =
+           List.fold_right
+-            (fun (i, j) l -> Cset.union (cseq (Bytes.get cm i) (Bytes.get cm j)) l)
++            (fun (i, j) l -> Cset.union (cseq (String.get cm i) (String.get cm j)) l)
+             s Cset.empty
+         in
+         cache := CSetMap.add v l !cache;
+@@ -455,7 +455,7 @@ let rec is_charset r =
+ let rec split s cm =
+   match s with
+     []    -> ()
+-  | (i, j)::r -> Bytes.set cm i '\001'; Bytes.set cm (j + 1) '\001'; split r cm
++  | (i, j)::r -> String.set cm i '\001'; String.set cm (j + 1) '\001'; split r cm
+ 
+ let cupper =
+   Cset.union (cseq 'A' 'Z')
+@@ -494,20 +494,20 @@ let colorize c regexp =
+   colorize regexp;
+   !lnl
+ 
+-let make_cmap () = Bytes.make 257 '\000'
++let make_cmap () = String.make 257 '\000'
+ 
+ let flatten_cmap cm =
+-  let c = Bytes.create 256 in
+-  let col_repr = Bytes.create 256 in
++  let c = String.create 256 in
++  let col_repr = String.create 256 in
+   let v = ref 0 in
+-  Bytes.set c 0 '\000';
+-  Bytes.set col_repr 0 '\000';
++  String.set c 0 '\000';
++  String.set col_repr 0 '\000';
+   for i = 1 to 255 do
+-    if Bytes.get cm i <> '\000' then incr v;
+-    Bytes.set c i (Char.chr !v);
+-    Bytes.set col_repr !v (Char.chr i)
++    if String.get cm i <> '\000' then incr v;
++    String.set c i (Char.chr !v);
++    String.set col_repr !v (Char.chr i)
+   done;
+-  (c, Bytes.sub col_repr 0 (!v + 1), !v + 1)
++  (c, String.sub col_repr 0 (!v + 1), !v + 1)
+ 
+ (**** Compilation ****)
+ 
+@@ -596,7 +596,7 @@ let enforce_kind ids kind kind' cr =
+   |  _               -> cr
+ 
+ (* XXX should probably compute a category mask *)
+-let rec translate ids kind ign_group ign_case greedy pos cache (c:Bytes.t) r =
++let rec translate ids kind ign_group ign_case greedy pos cache (c:String.t) r =
+   match r with
+     Set s ->
+       (A.cst ids (trans_set cache c s), kind)
+diff --git a/lib/re_pcre.ml b/lib/re_pcre.ml
+index 4a5ad5b..3b6bfb0 100644
+--- a/lib/re_pcre.ml
++++ b/lib/re_pcre.ml
+@@ -71,22 +71,22 @@ let split ~rex str =
+ 
+ (* From PCRE *)
+ let string_unsafe_sub s ofs len =
+-  let r = Bytes.create len in
+-  Bytes.unsafe_blit s ofs r 0 len;
+-  Bytes.unsafe_to_string r
++  let r = String.create len in
++  String.unsafe_blit s ofs r 0 len;
++  r
+ 
+ let quote s =
+   let len = String.length s in
+-  let buf = Bytes.create (len lsl 1) in
++  let buf = String.create (len lsl 1) in
+   let pos = ref 0 in
+   for i = 0 to len - 1 do
+     match String.unsafe_get s i with
+     | '\\' | '^' | '$' | '.' | '[' | '|'
+     | '('  | ')' | '?' | '*' | '+' | '{' as c ->
+-      Bytes.unsafe_set buf !pos '\\';
++      String.unsafe_set buf !pos '\\';
+       incr pos;
+-      Bytes.unsafe_set buf !pos c; incr pos
+-    | c -> Bytes.unsafe_set buf !pos c; incr pos
++      String.unsafe_set buf !pos c; incr pos
++    | c -> String.unsafe_set buf !pos c; incr pos
+   done;
+   string_unsafe_sub buf 0 !pos
+ 
+diff --git a/lib/re_str.ml b/lib/re_str.ml
+index ba10eb3..b23417c 100644
+--- a/lib/re_str.ml
++++ b/lib/re_str.ml
+@@ -117,12 +117,12 @@ let rec replace orig repl p res q len =
+   if p < len then begin
+     let c = repl.[p] in
+     if c <> '\\' then begin
+-      Bytes.set res q c;
++      String.set res q c;
+       replace orig repl (p + 1) res (q + 1) len
+     end else begin
+       match repl.[p + 1] with
+         '\\' ->
+-          Bytes.set res q '\\';
++          String.set res q '\\';
+           replace orig repl (p + 2) res (q + 1) len
+       | '0' .. '9' as c ->
+           let d =
+@@ -140,17 +140,17 @@ let rec replace orig repl p res q len =
+           in
+           replace repl orig (p + 2) res (q + d) len
+       | c ->
+-          Bytes.set res q '\\';
+-          Bytes.set res (q + 1) c;
++          String.set res q '\\';
++          String.set res (q + 1) c;
+           replace repl orig (p + 2) res (q + 2) len
+     end
+   end
+ 
+ let replacement_text repl orig =
+   let len = String.length repl in
+-  let res = Bytes.create (repl_length repl 0 0 len) in
++  let res = String.create (repl_length repl 0 0 len) in
+   replace orig repl 0 res 0 (String.length repl);
+-  Bytes.unsafe_to_string res
++  res
+ 
+ let quote s =
+   let len = String.length s in
+-- 
+2.8.0.rc3
+

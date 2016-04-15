@@ -439,7 +439,12 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
       | Some _ -> opam
       | None -> OpamFile.OPAM.with_url_opt urlf opam
     in
-
+    let opam =
+      opam |>
+      OpamFile.OPAM.with_name name |>
+      OpamFile.OPAM.with_version
+        OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
+    in
     OpamFilename.rmdir
       (OpamPath.Switch.Overlay.package st.switch_global.root st.switch nv.name);
 
