@@ -487,6 +487,14 @@ module OPAM: sig
 
   (** Doesn't handle package name encoded in directory name *)
   val pp_raw_fields: (opamfile_item list, t) OpamFormat.Pp.t
+
+  (** Returns the raw print-AST contents of the file *)
+  val contents: ?filename:'a typed_file -> t -> opamfile
+
+  (** Returns all fields of the file as print-AST. Fields within sections are
+      accessed through dot-separated paths (e.g. [url.checksum]) *)
+  val to_list: ?filename:'a typed_file -> t -> (string * value) list
+
 end
 
 (** Compiler aliases: [$opam/aliases]. Deprecated, used only for migration *)

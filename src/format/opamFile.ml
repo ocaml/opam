@@ -1973,6 +1973,26 @@ module OPAMSyntax = struct
     let s = to_string_with_preserved_format ?format_from filename t in
     OpamFilename.write filename s
 
+  let contents ?(filename=dummy_file) t =
+    Pp.print pp (filename, t)
+
+  let to_list ?filename t =
+    let rec aux acc pfx = function
+      | Section (_, {section_kind; section_name=None; section_items}) :: r ->
+        aux (aux acc (section_kind :: pfx) section_items) pfx r
+      | Section (_, {section_kind; section_name=Some n; section_items}) :: r ->
+        aux
+          (aux acc (Printf.sprintf "%s(%s)" section_kind n :: pfx)
+             section_items)
+          pfx r
+      | Variable (_, name, value) :: r ->
+        aux (((name :: pfx), value) :: acc) pfx r
+      | [] -> acc
+    in
+    List.rev_map
+      (fun (pfx, value) -> String.concat "." (List.rev pfx), value)
+      (aux [] [] (contents ?filename t).file_contents)
+
 end
 module OPAM = struct
   include OPAMSyntax
