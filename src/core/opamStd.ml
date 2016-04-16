@@ -715,6 +715,17 @@ module OpamFormat = struct
 
   let visual_length s = visual_length_substring s 0 (String.length s)
 
+  let cut_at_visual s width =
+    let rec aux extra i =
+      try
+        let j = String.index_from s i '\027' in
+        let k = String.index_from s (i+1) 'm' in
+        if j - extra >= width then width + extra
+        else aux (extra + k - j) (k+1)
+      with Not_found | Invalid_argument _ -> width + extra
+    in
+    String.sub s 0 (aux 0 0)
+
   let indent_left s ?(visual=s) nb =
     let nb = nb - String.length visual in
     if nb <= 0 then
@@ -795,10 +806,15 @@ module OpamFormat = struct
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
-  let print_table oc ~sep =
+  let print_table ?cut oc ~sep =
+    let cut = match cut with Some c -> c | None -> oc = stdout || oc = stderr in
     List.iter (fun l ->
-        let l = match l with s::l -> output_string oc s; l | [] -> [] in
-        List.iter (fun s -> output_string oc sep; output_string oc s) l;
+        let str = String.concat sep l in
+        let str =
+          if cut then cut_at_visual str (OpamSys.terminal_columns ())
+          else str
+        in
+        output_string oc str;
         output_char oc '\n')
 
 end

@@ -240,6 +240,9 @@ module Format : sig
 
   (** {4 Text formatting functions} *)
 
+  (** Truncates the string to not visually get over [width] columns *)
+  val cut_at_visual: string -> int -> string
+
   (** left indenting. [~visual] can be used to indent eg. ANSI colored
       strings and should correspond to the visible characters of s *)
   val indent_left: string -> ?visual:string -> int -> string
@@ -261,8 +264,10 @@ module Format : sig
 
   (** {4 Printing} *)
 
-  (** Prints a table *)
-  val print_table: out_channel -> sep:string -> string list list -> unit
+  (** Prints a table. If [cut] is set (the default for stdout and stderr),
+      overflowing lines are truncated. *)
+  val print_table:
+    ?cut:bool -> out_channel -> sep:string -> string list list -> unit
 end
 
 module Exn : sig
