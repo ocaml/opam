@@ -31,11 +31,17 @@ val download_package:
 val extract_package:
   rw switch_state -> generic_file option -> package -> unit
 
-(** [build_package t source pkg] builds the package [pkg] from its
-    already downloaded [source]. Returns [None] on success, [Some exn]
-    on error. See {!download_package} to download the source. *)
+(** [build_package t mode pkg] builds the package [pkg]. If
+    [mode = `Extract generic_file] then the package will be built from its
+    already extracted source. If [mode = `In_place dirname] then the package
+    will be built in-place, indepedent of switch metadata.
+
+    Returns [None] on success, [Some exn] on error. See {!download_package} to
+    download the source. *)
 val build_package:
-  rw switch_state -> generic_file option -> package ->
+  rw switch_state ->
+  [`Extract of generic_file option | `In_place of dirname] ->
+  package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns

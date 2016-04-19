@@ -512,9 +512,17 @@ let remove_package t ?keep_build ?silent nv =
 (* Compiles a package.
    Assumes the package has already been downloaded to [source].
 *)
-let build_package t source nv =
-  extract_package t source nv;
-  let opam = OpamSwitchState.opam t nv in
+let build_package t mode nv =
+  let dir, opam =
+    match mode with
+    | `Extract source ->
+      extract_package t source nv;
+      OpamPath.Switch.build t.switch_global.root t.switch nv,
+      OpamSwitchState.opam t nv
+    | `In_place dir ->
+      let name = OpamPackage.name nv in
+      dir, OpamFile.OPAM.read (Option.get (OpamPinned.find_opam_file_in_source name dir))
+  in
   let commands =
     OpamFile.OPAM.build opam @
     (if OpamStateConfig.(!r.build_test)
@@ -527,7 +535,6 @@ let build_package t source nv =
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
-  let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
   let rec run_commands = function
     | (cmd::args)::commands ->
       let text = OpamProcess.make_command_text name ~args cmd in

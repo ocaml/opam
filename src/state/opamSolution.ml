@@ -433,7 +433,7 @@ let parallel_apply t action action_graph =
       else
       match action with
       | `Build nv ->
-          (OpamAction.build_package t source nv @@+ function
+          (OpamAction.build_package t (`Extract source) nv @@+ function
             | None -> store_time (); Done (`Successful (installed, removed))
             | Some exn -> store_time (); Done (`Exception exn))
       | `Install nv ->
