@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the solver lib (record, global reference, setter,
+    initialisation) *)
+
 type t = private {
   cudf_file: string option;
   solver_timeout: float;

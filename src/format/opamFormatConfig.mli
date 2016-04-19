@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the format lib (record, global reference and
+    setter) *)
+
 type t = private {
   strict : bool;
   (** Fail early with errors in OPAM files *)

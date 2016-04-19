@@ -71,9 +71,8 @@ let process args =
         let depends = OpamFormula.map rename (OpamFile.OPAM.depends opam) in
         let depopts = OpamFormula.map rename (OpamFile.OPAM.depopts opam) in
         let new_opam =
-          OpamFile.OPAM.with_depends
-            (OpamFile.OPAM.with_depopts opam depopts)
-            depends
+          OpamFile.OPAM.with_depends depends
+            (OpamFile.OPAM.with_depopts depopts opam)
         in
 
         if opam <> new_opam then (

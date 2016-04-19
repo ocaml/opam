@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Handles graphs of actions (package changes), based on ocamlgraph *)
+
 open OpamTypes
 
 module type ACTION = sig

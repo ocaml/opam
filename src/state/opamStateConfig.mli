@@ -13,11 +13,14 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the state lib (record, global reference, setter,
+    initialisation) *)
+
 open OpamTypes
 
 type t = private {
   root_dir: OpamFilename.Dir.t;
-  current_switch: OpamSwitch.t;
+  current_switch: OpamSwitch.t option;
   switch_from: [ `Env | `Command_line | `Default ];
   jobs: int Lazy.t;
   dl_jobs: int;
@@ -66,15 +69,13 @@ val load: dirname -> OpamFile.Config.t option
 (** Writes the global configuration file, protecting against concurrent reads *)
 val write: dirname -> OpamFile.Config.t -> unit
 
-(** Filters flagged dependencies in an ext_formula using the currently set
-    options (doc, test). Build dependencies are included *)
-val filter_deps: ?dev:bool -> ext_formula -> formula
-
 (** Loads the config file from the OPAM root and updates default values for all
     related OpamXxxConfig modules. Doesn't read the env yet, the [init]
     functions should still be called afterwards. OpamFormat should be
     initialised beforehand, as it may impact the config file loading.
 
-    Returns true if a config file was found and could be read, false
-    otherwise *)
-val load_defaults: OpamFilename.Dir.t -> bool
+    Returns the config file that was found, if any *)
+val load_defaults: OpamFilename.Dir.t -> OpamFile.Config.t option
+
+(** Returns the current switch, failing with an error message is none is set. *)
+val get_switch: unit -> switch

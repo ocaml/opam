@@ -21,7 +21,8 @@ exception Internal_error of string
 exception Command_not_found of string
 exception File_not_found of string
 
-let log fmt = OpamConsole.log "SYSTEM" fmt
+let log ?level fmt = OpamConsole.log "SYSTEM" ?level fmt
+let slog = OpamConsole.slog
 
 let internal_error fmt =
   Printf.ksprintf (fun str ->
@@ -138,6 +139,7 @@ let read file =
   let ic =
     try open_in_bin file
     with Sys_error _ -> raise (File_not_found file) in
+  Unix.lockf (Unix.descr_of_in_channel ic) Unix.F_RLOCK 0;
   let s = string_of_channel ic in
   close_in ic;
   s
@@ -146,7 +148,9 @@ let write file contents =
   mkdir (Filename.dirname file);
   let oc =
     try open_out_bin file
-    with Sys_error _ -> raise (File_not_found file) in
+    with Sys_error _ -> raise (File_not_found file)
+  in
+  Unix.lockf (Unix.descr_of_out_channel oc) Unix.F_LOCK 0;
   output_string oc contents;
   close_out oc
 
@@ -183,10 +187,10 @@ let list kind dir =
   with File_not_found _ -> []
 
 let files_with_links =
-  list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
+  list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> false)
 
 let files_all_not_dir =
-    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
+    list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> false)
 
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
@@ -595,46 +599,89 @@ let link src dst =
   ) else
     internal_error "link: %s does not exist." src
 
-type lock = Unix.file_descr * string
+type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
 
-let flock ?(read=false) file =
-  let max_tries =
-    if OpamCoreConfig.(!r.safe_mode) then 1 else OpamCoreConfig.(!r.lock_retries) in
-  if not read && OpamCoreConfig.(!r.safe_mode) then
+type lock = {
+  mutable fd: Unix.file_descr option;
+  file: string;
+  mutable kind: lock_flag;
+}
+
+exception Locked
+
+let unix_lock_op ~dontblock = function
+  | `Lock_read -> if dontblock then Unix.F_TRLOCK else Unix.F_RLOCK
+  | `Lock_write ->
+    if OpamCoreConfig.(!r.safe_mode) then
+      OpamConsole.error_and_exit "Write lock attempt in safe mode"
+    else
+    if dontblock then Unix.F_TLOCK else Unix.F_LOCK
+
+let string_of_lock_kind = function
+  | `Lock_none -> "none"
+  | `Lock_read -> "read"
+  | `Lock_write -> "write"
+
+let rec flock_update
+  : 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> lock -> unit
+  = fun flag ?(dontblock=OpamCoreConfig.(!r.safe_mode)) lock ->
+  log "LOCK %s (%a => %a)" ~level:2 lock.file
+    (slog string_of_lock_kind) (lock.kind)
+    (slog string_of_lock_kind) flag;
+  if lock.kind = (flag :> lock_flag) then ()
+  else
+  match flag, lock with
+  | `Lock_none, { fd = Some fd; kind = (`Lock_read | `Lock_write); _ } ->
+    Unix.close fd; (* implies Unix.lockf fd Unix.F_ULOCK 0 *)
+    lock.kind <- (flag :> lock_flag);
+    lock.fd <- None
+  | (`Lock_read | `Lock_write), { fd = None; kind = `Lock_none; file } ->
+    let new_lock = flock flag ~dontblock file in
+    lock.kind <- (flag :> lock_flag);
+    lock.fd <- new_lock.fd
+  | (`Lock_read | `Lock_write) as flag, { fd = Some fd; file; _ } ->
+    (try
+       Unix.lockf fd (unix_lock_op ~dontblock:true flag) 0
+     with Unix.Unix_error (Unix.EAGAIN,_,_) ->
+       if dontblock then raise Locked;
+       OpamConsole.formatted_msg
+         "Another process has locked %s, waiting (C-c to abort)... "
+         file;
+       Unix.lockf fd (unix_lock_op ~dontblock:false flag) 0;
+       OpamConsole.msg "lock acquired.\n");
+    lock.kind <- (flag :> lock_flag)
+  | _ -> assert false
+
+and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
+  fun flag ?dontblock file ->
+  match flag with
+  | `Lock_none -> { fd = None; file; kind = `Lock_none }
+  | `Lock_write when OpamCoreConfig.(!r.safe_mode) ->
     OpamConsole.error_and_exit "Write lock attempt in safe mode";
-  let open_flags, lock_op =
-    if read then [Unix.O_RDONLY], Unix.F_TRLOCK
-    else [Unix.O_RDWR], Unix.F_TLOCK
-  in
-  mkdir (Filename.dirname file);
-  let fd =
-    Unix.openfile file (Unix.O_CREAT::open_flags) 0o666 in
-  let rec loop attempt =
-    try Unix.lockf fd lock_op 0
-    with Unix.Unix_error (Unix.EAGAIN,_,_) ->
-      if max_tries > 0 && attempt > max_tries then
-        OpamConsole.error_and_exit
-          "Timeout trying to acquire %s lock to %S, \
-           is another opam process running ?"
-          (if read then "read" else "write") file;
-      log
-        "Failed to %s-lock %S. (attempt %d/%d)"
-        (if read then "read" else "write")
-        file attempt max_tries;
-      Unix.sleep 1;
-      loop (attempt + 1)
-  in
-  log "locking %s" file;
-  loop 1;
-  fd, file
+  | flag ->
+    mkdir (Filename.dirname file);
+    let fd = Unix.openfile file Unix.([O_CREAT; O_RDWR]) 0o666 in
+    let lock = { fd = Some fd; file; kind = `Lock_none } in
+    flock_update (flag :> lock_flag) ?dontblock lock;
+    lock
 
-let funlock (fd,file) =
-  (try (* Unlink file if write lock can be acquired *)
-     Unix.lockf fd Unix.F_TLOCK 0;
-     Unix.unlink file;
-   with Unix.Unix_error _ -> ());
-  Unix.close fd; (* implies Unix.lockf fd Unix.F_ULOCK 0 *)
-  log "Lock released on %s" file
+let funlock lock = flock_update `Lock_none lock
+
+let get_lock_flag lock = lock.kind
+
+let lock_max flag1 flag2 = match flag1, flag2 with
+  | `Lock_write, _ | _, `Lock_write -> `Lock_write
+  | `Lock_read, _ | _, `Lock_read -> `Lock_read
+  | `Lock_none, `Lock_none -> `Lock_none
+
+let lock_none = {
+  fd = None;
+  file = "";
+  kind = `Lock_none;
+}
+
+let lock_isatleast flag lock =
+  lock_max flag lock.kind = lock.kind
 
 let patch p =
   let max_trying = 5 in

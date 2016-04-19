@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Curl repository backend *)
+(** Main HTTP repository backend, based on Curl *)
 
 module B: OpamRepositoryBackend.S
 

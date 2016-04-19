@@ -50,7 +50,7 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
     | Some vmap ->
       let nvset =
         OpamPackage.Map.filter
-          (fun nv cv -> OpamPackage.name nv = name && cv = v)
+          (fun nv cv -> nv.name = name && cv = v)
           vmap
       in
       fst (OpamPackage.Map.choose nvset)
@@ -174,7 +174,7 @@ let vpkg2atom cudfnv2opam (name,cstr) =
   | Some (relop,v) ->
     try
       let nv = cudfnv2opam (name,v) in
-      OpamPackage.name nv, Some (relop, OpamPackage.version nv)
+      nv.name, Some (relop, nv.version)
     with Not_found -> assert false
 (* Should be unneeded now that we pass a full version_map along
    [{
@@ -626,8 +626,8 @@ let get_final_universe ~version_map univ req =
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
       make_conflicts ~version_map univ r
-    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _} ->
-      fail "inconsistent return value."
+    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
+      (* fail "inconsistent return value." *)
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
       check_request ~version_map univ req

@@ -19,7 +19,7 @@ let opam =
          Re.execp github_re url.OpamUrl.path then
         let substrings = Re.exec github_re url.OpamUrl.path in
         let dev_url =
-          { OpamUrl.transport = "https";
+          { OpamUrl.transport = "git";
             path = Re.get substrings 1;
             hash = None;
             backend = `git }

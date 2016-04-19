@@ -14,7 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Solver heuristics. *)
+(** The "internal solver", brute-force search using Dose's checker *)
+
+(** {2 Solver heuristics.} *)
 
 (** This module tries to turn an efficient solution checker (such as
     the one provided by the dose3 library, writen by J. Vouillon) into

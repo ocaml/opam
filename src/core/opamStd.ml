@@ -24,6 +24,7 @@ module type SET = sig
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
 
   module Op : sig
@@ -38,9 +39,11 @@ module type MAP = sig
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
+  val find_opt: key -> 'a t -> 'a option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
+  val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
 end
 module type ABSTRACT = sig
   type t
@@ -89,6 +92,10 @@ module OpamList = struct
       let pos = prepend pos left in
       assert (pos = 0);
       Bytes.to_string buf
+
+  let rec find_opt f = function
+    | [] -> None
+    | x::r -> if f x then Some x else find_opt f r
 
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
@@ -140,7 +147,7 @@ module Set = struct
       match elements s with
       | [x] -> x
       | [] -> raise Not_found
-      | _  -> invalid_arg "choose_one"
+      | _  -> failwith "choose_one"
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
@@ -155,8 +162,16 @@ module Set = struct
     let map f t =
       S.fold (fun e set -> S.add (f e) set) t S.empty
 
-    let find fn s =
-      choose (filter fn s)
+    exception Found of elt
+
+    let find_opt fn t =
+      try iter (fun x -> if fn x then raise (Found x)) t; None
+      with Found x -> Some x
+
+    let find fn t =
+      match find_opt fn t with
+      | Some x -> x
+      | None -> raise Not_found
 
     let to_json t =
       let elements = S.elements t in
@@ -209,12 +224,11 @@ module Map = struct
       List.rev (M.fold (fun k _ acc -> k :: acc) map [])
 
     let union f m1 m2 =
-      M.fold (fun k v m ->
-        if M.mem k m then
-          M.add k (f v (M.find k m)) (M.remove k m)
-        else
-          M.add k v m
-      ) m1 m2
+      M.merge (fun _ a b -> match a, b with
+          | Some _ as s, None | None, (Some _ as s) -> s
+          | Some v1, Some v2 -> Some (f v1 v2)
+          | None, None -> assert false)
+        m1 m2
 
     let to_string string_of_value m =
       if M.cardinal m > max_print then
@@ -235,10 +249,16 @@ module Map = struct
         ) bindings in
       `A jsons
 
+    let find_opt k map = try Some (find k map) with Not_found -> None
+
     let safe_add k v map =
       if mem k map
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
       else add k v map
+
+    let update k f zero map =
+      let v = try find k map with Not_found -> zero in
+      add k (f v) map
 
   end
 
@@ -352,9 +372,12 @@ module OpamString = struct
     n >= x
     && String.sub s (n - x) x = suffix
 
-  let contains s c =
+  let contains_char s c =
     try let _ = String.index s c in true
     with Not_found -> false
+
+  let contains ~sub =
+    Re.(execp (compile (str sub)))
 
   let exact_match re s =
     try
@@ -502,6 +525,8 @@ module OpamSys = struct
       ignore (Unix.close_process_in ic) ; raise exn
 
   let tty_out = Unix.isatty Unix.stdout
+
+  let tty_in = Unix.isatty Unix.stdin
 
   let default_columns =
     try int_of_string (Env.get "COLUMNS") with
@@ -690,6 +715,17 @@ module OpamFormat = struct
 
   let visual_length s = visual_length_substring s 0 (String.length s)
 
+  let cut_at_visual s width =
+    let rec aux extra i =
+      try
+        let j = String.index_from s i '\027' in
+        let k = String.index_from s (j+1) 'm' in
+        if j - extra >= width then width + extra
+        else aux (extra + k - j + 1) (k+1)
+      with Not_found | Invalid_argument _ -> width + extra
+    in
+    String.sub s 0 (min (String.length s) (aux 0 0))
+
   let indent_left s ?(visual=s) nb =
     let nb = nb - String.length visual in
     if nb <= 0 then
@@ -770,10 +806,15 @@ module OpamFormat = struct
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
-  let print_table oc ~sep =
+  let print_table ?cut oc ~sep =
+    let cut = match cut with Some c -> c | None -> oc = stdout || oc = stderr in
     List.iter (fun l ->
-        let l = match l with s::l -> output_string oc s; l | [] -> [] in
-        List.iter (fun s -> output_string oc sep; output_string oc s) l;
+        let str = String.concat sep l in
+        let str =
+          if cut then cut_at_visual str (OpamSys.terminal_columns ())
+          else str
+        in
+        output_string oc str;
         output_char oc '\n')
 
 end
@@ -917,7 +958,6 @@ module Config = struct
       ?disp_status_line:(env_when "STATUSLINE")
       ?answer
       ?safe_mode:(env_bool "SAFE")
-      ?lock_retries:(env_int "LOCKRETRIES")
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")
       ?errlog_length:(env_int "ERRLOGLEN")

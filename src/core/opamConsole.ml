@@ -154,7 +154,7 @@ let note fmt =
 
 let errmsg fmt =
   flush stdout;
-  Printf.printf (fmt ^^ "%!")
+  Printf.eprintf (fmt ^^ "%!")
 
 let error_and_exit ?(num=66) fmt =
   Printf.ksprintf (fun str ->
@@ -252,7 +252,9 @@ let confirm ?(default=true) fmt =
       in
       if OpamCoreConfig.(!r.answer) = Some true then
         (prompt (); msg "y\n"; true)
-      else if OpamCoreConfig.(!r.answer) = Some false then
+      else if OpamCoreConfig.(!r.answer) = Some false ||
+              OpamStd.Sys.(not tty_in)
+      then
         (prompt (); msg "n\n"; false)
       else if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
         let rec loop () =

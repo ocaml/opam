@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Typed filename manipulation *)
+(** Higher level file and directory name manipulation AND file operations,
+    wrappers on OpamSystem using the filename type *)
 
 (** Basenames *)
 module Base: OpamStd.ABSTRACT
@@ -28,8 +29,11 @@ val cwd: unit -> Dir.t
 (** Remove a directory *)
 val rmdir: Dir.t -> unit
 
-(** Clean the contents of a directory. *)
+(** Cleans the contents of a directory, but keeps the directory in place. *)
 val cleandir: Dir.t -> unit
+
+(** Removes an empty directory, as well as any empty leading path components *)
+val rmdir_cleanup: Dir.t -> unit
 
 (** Create a directory *)
 val mkdir: Dir.t -> unit
@@ -61,8 +65,11 @@ val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 (** Link a directory *)
 val link_dir: src:Dir.t -> dst:Dir.t -> unit
 
-(** Does the directory existsb ? *)
+(** Does the directory exist ? *)
 val exists_dir: Dir.t -> bool
+
+(** Returns the argument as option, if the directory exists *)
+val opt_dir: Dir.t -> Dir.t option
 
 (** Return the parent directory *)
 val dirname_dir: Dir.t -> Dir.t
@@ -129,6 +136,10 @@ val write: t -> string -> unit
 
 (** Returns true if the file exists and is a regular file or a symlink to one *)
 val exists: t -> bool
+
+(** Returns the argument as option if it exists and is either a regular file or
+    a symlink to one *)
+val opt_file: t -> t option
 
 (** Check whether a file has a given suffix *)
 val check_suffix: t -> string -> bool
@@ -222,12 +233,32 @@ val touch: t -> unit
 (** Change file permissions *)
 val chmod: t -> int -> unit
 
-(** File locks *)
-val with_flock: ?read:bool -> t -> ('a -> 'b) -> 'a -> 'b
+(** {2 Locking} *)
+
+(** See [OpamSystem.flock]. Prefer the higher level [with_flock] functions when
+    possible *)
+val flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t -> OpamSystem.lock
+
+(** Calls [f] while holding a lock file. Ensures the lock is properly released
+    on [f] exit. Raises [OpamSystem.Locked] if [dontblock] is set and the lock
+    can't be acquired. *)
+val with_flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t ->
+  (unit -> 'a) -> 'a
+
+(** Calls [f] with the file lock upgraded to at least [flag], then restores the
+    previous lock level. Upgrade to [`Lock_write] should never be used in
+    blocking mode as it would deadlock. Raises [OpamSystem.Locked] (but keeps
+    the lock as is) if [dontblock] is set and the lock can't be upgraded. *)
+val with_flock_upgrade:
+  [< OpamSystem.lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (unit -> 'a) -> 'a
+
+(** Runs first function with a write lock on the given file, then releases it to
+    a read lock and runs the second function. *)
+val with_flock_write_then_read:
+  ?dontblock:bool -> t -> (unit -> 'a) -> ('a -> 'b) -> 'b
 
 (** [copy_if_check t src dst] copies all the files from one directory
-    to another. Do nothing if OPAMDONOTCOPYFILE is set to a non-empty
-    value. *)
+    to another. *)
 val copy_files: src:Dir.t -> dst:Dir.t -> unit
 
 module Op: sig

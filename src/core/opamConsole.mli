@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Console output, ANSI color, logging and user querying *)
+
 (** Global configuration parameters (read from OpamGlobalConfig, and the
     environment when necessary) *)
 

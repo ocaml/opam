@@ -19,59 +19,26 @@ open OpamFilename.Op
 
 type t = dirname
 
-let config t = t // "config"
+(* Returns a generic file, coerced by the .mli *)
+let ( /- ) dir f = OpamFile.make (dir // f)
 
-let state_cache t = t // "state.cache"
+let config t = t /- "config"
 
-let update_cache t = t // "update.cache"
+let state_cache t = t / "repo" // "state.cache"
 
 let lock t = t // "lock"
 
-let aliases t = t // "aliases"
-
-let packages_dir t = t / "packages"
-
-let packages t nv =
-  packages_dir t
-  / OpamPackage.Name.to_string (OpamPackage.name nv)
-  / OpamPackage.to_string nv
-
-let opam t nv = packages t nv // "opam"
-
-let url t nv = packages t nv // "url"
-
-let descr t nv = packages t nv // "descr"
+let config_lock t = t // "config.lock"
 
 let archives_dir t = t / "archives"
 
 let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
-let files t nv = packages t nv / "files"
-
-let compilers_dir t = t / "compilers"
-
-let compilers t c =
-  compilers_dir t
-  / OpamCompiler.Version.to_string (OpamCompiler.version c)
-  / OpamCompiler.to_string c
-
-let compiler_comp t c =
-  compilers t c // (OpamCompiler.to_string c ^ ".comp")
-
-let compiler_descr t c =
-  compilers t c // (OpamCompiler.to_string c ^ ".descr")
-
-let package_index t = t / "repo" // "package-index"
-
-let compiler_index t = t / "repo" // "compiler-index"
+let repos_lock t = t / "repo" // "lock"
 
 let init  t = t / "opam-init"
 
 let log t = t / "log"
-
-let dev_packages_dir t = t / "packages.dev"
-
-let dev_package t nv = dev_packages_dir t / OpamPackage.to_string nv
 
 let backup_file =
   let file = lazy Unix.(
@@ -83,7 +50,7 @@ let backup_file =
 
 let backup_dir t = t / "backup"
 
-let backup t = backup_dir t // backup_file ()
+let backup t = backup_dir t /- backup_file ()
 
 module Switch = struct
 
@@ -91,41 +58,57 @@ module Switch = struct
 
   (** Internal files and dirs with static location *)
 
-  let lock t a = root t a // "lock"
+  let meta t a = root t a / ".opam-switch"
 
-  let backup_dir t a = root t a / "backup"
+  let lock t a = meta t a // "lock"
 
-  let backup t a = backup_dir t a // backup_file ()
+  let backup_dir t a = meta t a / "backup"
 
-  let state t a = root t a // "state"
+  let backup t a = backup_dir t a /- backup_file ()
 
-  let build_dir t a = root t a / "build"
+  let selections t a = meta t a /- "switch-state"
+
+  let build_dir t a = meta t a / "build"
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv
 
   let build_ocaml t a = build_dir t a / "ocaml"
 
   let build_install t a nv =
-    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install")
+    build t a nv /- (OpamPackage.Name.to_string nv.name ^ ".install")
 
   let build_config t a nv =
-    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".config")
+    build t a nv /- (OpamPackage.Name.to_string nv.name ^ ".config")
 
-  let install_dir t a = root t a / "install"
+  let install_dir t a = meta t a / "install"
 
-  let install t a n = install_dir t a // (OpamPackage.Name.to_string n ^ ".install")
+  let install t a n = install_dir t a /- (OpamPackage.Name.to_string n ^ ".install")
 
-  let reinstall t a = root t a // "reinstall"
+  let reinstall t a = meta t a /- "reinstall"
 
-  let config_dir t a = root t a / "config"
+  let config_dir t a = meta t a / "config"
 
-  let global_config t a = config_dir t a // "global-config.config"
+  let global_config t a = config_dir t a /- "global-config.config"
 
-  let dev_packages_dir t a = root t a / "packages.dev"
+  let config t a n =
+    config_dir t a /- (OpamPackage.Name.to_string n ^ ".config")
+
+  let dev_packages_dir t a = meta t a / "packages.dev"
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
-  let environment t a = root t a // "environment"
+  let environment t a = meta t a /- "environment"
+
+  let installed_opams t a = meta t a / "packages"
+
+  let installed_package_dir t a nv =
+    installed_opams t a / OpamPackage.to_string nv
+
+  let installed_opam t a nv =
+    installed_package_dir t a nv /- "opam"
+
+  let installed_opam_files_dir t a nv =
+    installed_package_dir t a nv / "files"
 
   module Default = struct
 
@@ -135,8 +118,6 @@ module Switch = struct
     let lib_dir t a = root t a / "lib"
 
     let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
-
-    let config t a n = lib t a n // "opam.config"
 
     let stublibs t a = lib_dir t a / "stublibs"
 
@@ -179,9 +160,6 @@ module Switch = struct
   let lib t a c n =
     lib_dir t a c / OpamPackage.Name.to_string n
 
-  let config t a c n =
-    lib t a c n // "opam.config"
-
   let stublibs t a c =
     lookup c "stublibs" (lib_dir t a c / "stublibs")
 
@@ -220,17 +198,17 @@ module Switch = struct
 
   module Overlay = struct
 
-    let dir t a = root t a / "overlay"
+    let dir t a = meta t a / "overlay"
 
     let package t a n = dir t a / OpamPackage.Name.to_string n
 
-    let opam t a n = package t a n // "opam"
+    let opam t a n = package t a n /- "opam"
 
-    let tmp_opam t a n = package t a n // "opam_"
+    let tmp_opam t a n = package t a n /- "opam_"
 
-    let url t a n = package t a n // "url"
+    let url t a n = package t a n /- "url"
 
-    let descr t a n = package t a n // "descr"
+    let descr t a n = package t a n /- "descr"
 
     let files t a n = package t a n / "files"
 

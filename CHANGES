@@ -1,3 +1,63 @@
+2.0~alpha
+* Dropped ability to compile opam with OCaml earlier than 4.01.0
+* Version constraints in `depopts:` allowed again, but with consistent semantics
+* Allow mixing filters within dependency constraints
+* More flexible `opam pin` command interface
+* New internal file-lock handling, less obtrusive and safer
+* New `switch export` format, now including local (pinned) package definitions
+* No longer uses insecure arguments of curl/wget (#55, #2006, #2460)
+* Installed package source and metadata are now handled per-switch, which is
+  more reliable
+* `opam pin edit` now allows changing version and even URL; better editor
+  handling
+* Discarded built-in variables based on polling OCaml (they are now defined by
+  the compiler package at installation)
+* Discarded compiler files, `opam switch` now based on packages with the
+  `compiler` flag set
+* Extended package configuration files
+* Allow initialised opam without switch, initialised switch without compiler.
+  Better handling of compiler install failure
+* Large API rework, switch and repository state now handled separately, used in
+  functional style and avoiding many loads
+* Git submodules are now automatically fetched by the git backend
+* Package definition files now prioritize `&` higher than `|`, like is most
+  common
+* `opam list -a` now lists all available packages, even if they can't be
+  installed (missing depends...), which is much faster (#2370)
+* Added ability to reprint files with reduced diffs (#2363)
+* Url and description can now be included within a single package definition
+  `opam` file (#2328)
+* Internal switch state now all below `<switch-dir>/.opam-switch/`, state in a
+  single `switch-state` file (#2340)
+* Add a `setenv:` field to package definitions, allowing to export environment
+  variables (#2337, #2361)
+* Built-in support for alternative solver `mccs` (#2333)
+* `opam upgrade pkg` now prompts to install `pkg` if absent (#2327)
+* Assume plugin package and exec names start with "opam-" (#2316, #2317)
+* Reworked, cleaner and bidirectional file manipulation library (kind of lenses)
+  (#2325)
+* Allow packages to specify extra remote overlay files within their definition
+  files
+* Heuristic to detect bad solutions and print a hint when no solver is available
+* Proper URL handling with version-control + transport handling (e.g.
+  `git+https://`)
+* Allow unescaped strings enclosed between `"""` markers in package definition
+  files
+* Don't rely on '.zip' extension for downloaded archive handling (#2289)
+* `opam config` extended with `set`, `unset`, `expand` subcommands, allows
+  variables in `exec` argument (#2268)
+* `conflict:` field is now handled as a disjunction in all regards (#2267)
+* Better handling of concurrent removal/build/install actions (#2161, #2266,
+  #2370)
+* Allow fields `x-fieldname` in package definition files, for use by external
+  tools (#2265)
+* Extended, more useful JSON output (including full package failure logs)
+  (#2236)
+* Use the switch paths that are defined in the switch configuration file (#2185)
+* Allow package definition files to reference the package's own variables
+  through "%{_:varname}%" (#2184)
+* Initialise number of jobs from host's number of processors (#2180)
+
 1.2.2
 * Fixed wrong locks being taken during `switch reinstall` (#2051)
 * Fixed `config report` that wasn't displaying the external solver (#2059)

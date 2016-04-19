@@ -14,38 +14,33 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compiler names and versions *)
+(** Loading and handling of the global state of an opam root *)
 
-(** OCaml compiler versions *)
-module Version: sig
+open OpamTypes
+open OpamStateTypes
 
-  include OpamStd.ABSTRACT
+(** Loads the global state (from the opam root obtained through
+    [OpamStateConfig.(!r.root)]) *)
+val load: 'a lock -> 'a global_state
 
-  (** Compiler constraint *)
-  type constr = (OpamFormula.relop * t) OpamFormula.formula
+(** Loads the global state as [load], and calls the given function while keeping
+    it locked (as per the [lock] argument), releasing the lock afterwards *)
+val with_: 'a lock -> ('a global_state -> 'b) -> 'b
 
-  (** Compare OCaml versions *)
-  val compare: t -> t -> int
+(** The set of all installed packages, in any switch *)
+val all_installed: 'a global_state -> package_set
 
-  (** Evaluate a relational operator between OCaml versions *)
-  val eval_relop: OpamFormula.relop -> t -> t -> bool
-end
+val fold_switches:
+  (switch -> switch_selections -> 'a -> 'a) -> 'b global_state -> 'a -> 'a
 
-(** Compiler names *)
-include OpamStd.ABSTRACT
+(** Returns the map of installed instances of the package name towards the list
+    of switches they are installed in *)
+val installed_versions: 'a global_state -> name -> switch list package_map
 
-(** Return the compiler version *)
-val version: t -> Version.t
+(** Releases any locks on the given global_state *)
+val unlock: 'a global_state -> unlocked global_state
 
-(** Convert a filename into a compiler name. This function extract
-    [name] from {i /path/to/$name.comp}. *)
-val of_filename: OpamFilename.t -> t option
-
-(** List the compiler available in the global state. *)
-val list: OpamFilename.Dir.t -> Set.t
-
-(** List the compiler available in a directory (and their prefix) *)
-val prefixes: OpamFilename.Dir.t -> string option Map.t
-
-(** System compiler *)
-val system: t
+(** Calls the provided function, ensuring a temporary write lock on the given
+    global state*)
+val with_write_lock:
+  ?dontblock:bool -> 'a global_state -> (rw global_state -> 'c) -> 'c

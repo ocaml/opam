@@ -22,10 +22,9 @@ let true_ _ = true
 
 let repo = OpamRepositoryBackend.local (OpamFilename.cwd ())
 let packages = OpamRepository.packages repo
-let compilers = OpamRepository.compilers repo
 
 let wopt w f = function
-  | None -> OpamFilename.remove f
+  | None -> OpamFilename.remove (OpamFile.filename f)
   | Some contents -> w f contents
 
 let apply f x prefix y =
@@ -59,25 +58,15 @@ let iter_packages_gen ?(quiet=false) f =
       let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
       let descr_file = OpamRepositoryPath.descr repo prefix package in
-      let descr =
-        if OpamFilename.exists descr_file then
-          Some (OpamFile.Descr.read descr_file)
-        else None
-      in
+      let descr = OpamFile.Descr.read_opt descr_file in
       let url_file = OpamRepositoryPath.url repo prefix package in
-      let url =
-        if OpamFilename.exists url_file then
-          Some (OpamFile.URL.read url_file)
-        else None
+      let url = OpamFile.URL.read_opt url_file in
+      let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
+        OpamFile.make
+          (OpamRepositoryPath.files repo prefix package
+           // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
       in
-      let dot_install_file =
-        OpamRepositoryPath.files repo prefix package
-        // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
-      let dot_install =
-        if OpamFilename.exists dot_install_file then
-          Some (OpamFile.Dot_install.read dot_install_file)
-        else None
-      in
+      let dot_install = OpamFile.Dot_install.read_opt dot_install_file in
       let opam2, descr2, url2, dot_install2 =
         f package ~prefix ~opam ~descr ~url ~dot_install
       in
@@ -87,9 +76,7 @@ let iter_packages_gen ?(quiet=false) f =
       let changed = ref false in
       let upd () = changed := true; incr changed_files in
       if opam <> opam2 then
-        (upd ();
-         let s = OpamFile.OPAM.to_string_with_preserved_format opam_file opam2 in
-         OpamFilename.write opam_file s);
+        (upd (); OpamFile.OPAM.write_with_preserved_format opam_file opam2);
       if descr <> descr2 then
         (upd (); wopt OpamFile.Descr.write descr_file descr2);
       if url <> url2 then
@@ -119,48 +106,6 @@ let iter_packages ?quiet
       ) else
         o, `Keep, `Keep, `Keep)
 
-let iter_compilers_gen ?(quiet=false) f =
-  let compilers = OpamRepository.compilers_with_prefixes repo in
-  let changed_comps = ref 0 in
-  let changed_files = ref 0 in
-  OpamCompiler.Map.iter (fun c prefix ->
-      if not quiet then
-        OpamConsole.msg "Processing compiler %s... " (OpamCompiler.to_string c);
-      let comp_file = OpamRepositoryPath.compiler_comp repo prefix c in
-      let comp = OpamFile.Comp.read comp_file in
-      let descr_file = OpamRepositoryPath.compiler_descr repo prefix c in
-      let descr =
-        if OpamFilename.exists descr_file then
-          Some (OpamFile.Descr.read descr_file)
-        else None
-      in
-      let comp2, descr2 = f c ~prefix ~comp ~descr in
-      let descr2 = of_action descr descr2 in
-      let changed = ref false in
-      let upd () = changed := true; incr changed_files in
-      if comp <> comp2 then
-        (upd (); OpamFile.Comp.write comp_file comp2);
-      if descr <> descr2 then
-        (upd (); wopt OpamFile.Descr.write descr_file descr2);
-      if !changed then
-        (incr changed_comps;
-         if not quiet then
-           OpamConsole.msg "\r\027[KUpdated %s\n" (OpamCompiler.to_string c))
-      else if not quiet then
-        OpamConsole.msg "\r\027[K";
-    ) compilers;
-  if not quiet then
-    OpamConsole.msg "Done. Updated %d files in %d compiler descriptions.\n"
-      !changed_files !changed_comps
-
-let iter_compilers ?quiet ?(filter=true_) ?f ?(comp=identity) ?descr () =
-  iter_compilers_gen ?quiet (fun x ~prefix ~comp:c ~descr:d ->
-      if filter x then (
-        apply f x prefix c;
-        comp x c, to_action descr x d
-      ) else
-        c, `Keep)
-
 let regexps_of_patterns patterns =
   let contains_dot str =
     let len = String.length str in
@@ -186,4 +131,3 @@ let filter fn patterns =
       List.exists (fun re -> OpamStd.String.exact_match re str) regexps
 
 let filter_packages = filter OpamPackage.to_string
-let filter_compilers = filter OpamCompiler.to_string

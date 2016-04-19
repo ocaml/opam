@@ -51,18 +51,22 @@ let ocaml_cmd ~system cmd =
     log "%s ocamlc not found" (if system then "system" else "opam");
     None
 
-let exists_alongside_ocamlc name =
+let where_is_ocamlc = lazy (
   let path = try OpamStd.Env.get "PATH" with Not_found -> "" in
   let path = OpamStd.String.split path (OpamStd.Sys.path_sep ()) in
-  let ocamlc_dir =
-    List.fold_left (function
-        | None -> fun d ->
-          if Sys.file_exists (Filename.concat d "ocamlc") then Some d else None
-        | s -> fun _ -> s)
-      None path
-  in
-  match ocamlc_dir with
-  | Some d -> Sys.file_exists (Filename.concat d name)
+  List.fold_left (function
+      | None -> fun d ->
+        let f = Filename.concat d "ocamlc" in
+        if Sys.file_exists f then Some d else None
+      | s -> fun _ -> s)
+    None path
+)
+
+let exists_alongside_ocamlc name =
+  match Lazy.force where_is_ocamlc with
+  | Some ocamlc ->
+    Sys.file_exists
+      (Filename.concat (Filename.dirname ocamlc) name)
   | None -> false
 
 let ocaml_version = lazy (ocaml_cmd ~system:false "-version")
@@ -77,7 +81,4 @@ let ocaml_natdynlink_available = lazy OpamStd.Option.Op.(
 
 let system_ocamlc_version = lazy (ocaml_cmd ~system:true "-version")
 let system_ocamlc_where = lazy (ocaml_cmd ~system:true "-where")
-let system_compiler = lazy (
-  OpamStd.Option.Op.(Lazy.force system_ocamlc_version >>|
-                      OpamCompiler.of_string)
-)
+

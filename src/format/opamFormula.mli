@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Management of formulas *)
+(** Formulas on packages, opt. with sub-formulas on versions, and conversion
+    functions *)
 
 (** binary operations (compatible with the Dose type for Cudf operators !) *)
 type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
@@ -78,6 +79,11 @@ type 'a formula =
 
 (** Eval a formula *)
 val eval: ('a -> bool) -> 'a formula -> bool
+
+val partial_eval:
+  ('a -> [ `Formula of 'b formula | `True | `False ]) ->
+  'a formula ->
+  [ `Formula of 'b formula | `True | `False ]
 
 (** Check a relational operator against an integer from compare *)
 val check_relop: relop -> int -> bool
@@ -182,3 +188,10 @@ type 'a ext_package_formula =
 (** Turns an extended package formula to a normal formula, by filtering out
     the packages on the flags of which [filter] returns [false]. *)
 val formula_of_extended: filter:('a -> bool) -> 'a ext_package_formula -> t
+
+(** Partially evaluates extended formula flags, removing the atom if it has a
+    flag on which [filter] is [Some false], and removing flags on which [filter]
+    is [Some true] *)
+val reduce_extended:
+  filter:('a -> bool option) -> ('a list) ext_package_formula ->
+  ('a list) ext_package_formula

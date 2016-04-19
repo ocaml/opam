@@ -107,7 +107,15 @@ module Git : OpamVCS.VCS= struct
     @@> fun r ->
     if OpamProcess.is_failure r then
       OpamSystem.internal_error "Git error: %s not found." remote_ref
-    else Done ()
+    else
+      if OpamFilename.exists (repo.repo_root // ".gitmodules") then
+        git repo [ "submodule"; "update"; "--init"; "--recursive" ]
+        @@> fun r ->
+        if OpamProcess.is_failure r then
+          OpamConsole.warning "Git submodule update failed in %s"
+            (OpamFilename.Dir.to_string repo.repo_root);
+        Done ()
+      else Done ()
 
   let diff repo =
     git repo [ "diff" ; "--name-only" ; "HEAD"; remote_ref; "--" ]

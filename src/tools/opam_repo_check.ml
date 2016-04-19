@@ -48,32 +48,23 @@ let process args =
 
     (* Descr *)
     let descr = OpamRepositoryPath.descr repo prefix package in
-    if OpamFilename.exists descr then
+    if OpamFile.exists descr then
       write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (* URL *)
     let url = OpamRepositoryPath.url repo prefix package in
-    if OpamFilename.exists url then
+    if OpamFile.exists url then
       write OpamFile.URL.write url (OpamFile.URL.read url);
 
     (* Dot_install *)
-    let dot_install =
-      OpamRepositoryPath.files repo prefix package
-      // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
-    if OpamFilename.exists dot_install then
+    let dot_install : OpamFile.Dot_install.t OpamFile.t =
+      OpamFile.make
+        (OpamRepositoryPath.files repo prefix package
+         // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
+    in
+    if OpamFile.exists dot_install then
       write
         OpamFile.Dot_install.write dot_install
         (OpamFile.Dot_install.read dot_install);
 
-  ) packages;
-
-  (* compilers *)
-  let compilers = OpamRepository.compilers_with_prefixes repo in
-  OpamCompiler.Map.iter (fun c prefix ->
-      let comp = OpamRepositoryPath.compiler_comp repo prefix c in
-      let descr = OpamRepositoryPath.compiler_descr repo prefix c in
-      OpamConsole.msg "Processing compiler %s\n" (OpamCompiler.to_string c);
-      write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
-      if OpamFilename.exists descr then
-        write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
-  ) compilers
+  ) packages

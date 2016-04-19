@@ -23,7 +23,6 @@ type t = {
   disp_status_line: [ `Always | `Never | `Auto ];
   answer: bool option;
   safe_mode: bool;
-  lock_retries: int;
   log_dir: string;
   keep_log_dir: bool;
   errlog_length: int;
@@ -37,7 +36,6 @@ type 'a options_fun =
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
   ?safe_mode:bool ->
-  ?lock_retries:int ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
@@ -51,7 +49,6 @@ let default = {
   disp_status_line = `Auto;
   answer = None;
   safe_mode = false;
-  lock_retries = 5;
   log_dir =
     (let user = try Unix.getlogin() with Unix.Unix_error _ -> "xxx" in
      let base = Printf.sprintf "opam-%s-%d" user (Unix.getpid()) in
@@ -68,7 +65,6 @@ let setk k t
     ?disp_status_line
     ?answer
     ?safe_mode
-    ?lock_retries
     ?log_dir
     ?keep_log_dir
     ?errlog_length
@@ -82,7 +78,6 @@ let setk k t
     disp_status_line = t.disp_status_line + disp_status_line;
     answer = t.answer + answer;
     safe_mode = t.safe_mode + safe_mode;
-    lock_retries = t.lock_retries + lock_retries;
     log_dir = t.log_dir + log_dir;
     keep_log_dir = t.keep_log_dir + keep_log_dir;
     errlog_length = t.errlog_length + errlog_length;

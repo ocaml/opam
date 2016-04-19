@@ -14,13 +14,16 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** URL parsing and printing, with support for our different backends *)
+
 type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]
 
 val string_of_backend: backend -> string
 
-(** Tolerates lots of backward compatibility names; @raise Failure *)
+(** Tolerates lots of backward compatibility names;
+    @raise Failure on unknown protocol *)
 val backend_of_string: string -> [> backend]
 
 type t = {

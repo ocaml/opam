@@ -14,4 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Generations of stats and graphs from an opam git repository *)
+
 val process: unit -> unit

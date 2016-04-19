@@ -38,7 +38,7 @@ let () =
 let () =
   OpamPackage.Map.iter (fun nv prefix ->
       let opam_file = OpamRepositoryPath.opam repo prefix nv in
-      let w, _ = OpamFile.OPAM.validate_file opam_file in
+      let w, _ = OpamFileTools.lint_file opam_file in
       if List.exists (fun (n,_,_) -> List.mem n !excludes) w then () else
       let w =
         if !includes = [] then w

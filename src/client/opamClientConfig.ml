@@ -15,7 +15,6 @@
 
 type t = {
   print_stats: bool;
-  sync_archives: bool;
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -23,7 +22,6 @@ type t = {
 
 let default = {
   print_stats = false;
-  sync_archives = false;
   pin_kind_auto = true;
   autoremove = false;
   editor = "nano";
@@ -31,7 +29,6 @@ let default = {
 
 type 'a options_fun =
   ?print_stats:bool ->
-  ?sync_archives:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -39,7 +36,6 @@ type 'a options_fun =
 
 let setk k t
     ?print_stats
-    ?sync_archives
     ?pin_kind_auto
     ?autoremove
     ?editor
@@ -47,7 +43,6 @@ let setk k t
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     print_stats = t.print_stats + print_stats;
-    sync_archives = t.sync_archives + sync_archives;
     pin_kind_auto = t.pin_kind_auto + pin_kind_auto;
     autoremove = t.autoremove + autoremove;
     editor = t.editor + editor;
@@ -67,7 +62,6 @@ let initk k =
   in
   setk (setk (fun c -> r := c; k)) !r
     ?print_stats:(env_bool "STATS")
-    ?sync_archives:(env_bool "SYNCARCHIVES")
     ?pin_kind_auto:(env_bool "PINKINDAUTO")
     ?autoremove:(env_bool "AUTOREMOVE")
     ?editor
@@ -86,7 +80,9 @@ let opam_init ?root_dir ?strict =
   (* the init for OpamFormat is done in advance since (a) it has an effect on
      loading the global config (b) the global config has no effect on it *)
   OpamFormatConfig.initk ?strict @@ fun ?log_dir ->
-  let initialised = OpamStateConfig.load_defaults root in
+  let initialised = OpamStateConfig.load_defaults root <> None in
+  (* !X fixme: don't drop the loaded config file to reload it afterwards (when
+     loading the global_state) like that... *)
 
   (* (iii) load from env and options using OpamXxxConfig.init *)
   let log_dir =

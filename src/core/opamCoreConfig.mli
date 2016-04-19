@@ -13,6 +13,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the core lib (record, global reference and
+    setter) *)
+
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
@@ -33,7 +36,6 @@ type t = private {
   safe_mode : bool;
   (** Fail on writes or delays, don't ask questions (for quick queries, e.g.
       for shell completion) *)
-  lock_retries : int;
   log_dir : string;
   (** Where to store log and temporary files (output from commands...) *)
   keep_log_dir : bool;
@@ -50,7 +52,6 @@ type 'a options_fun =
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
   ?safe_mode:bool ->
-  ?lock_retries:int ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->

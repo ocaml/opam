@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Common types used by other modules *)
+(** Definitions of many types used throughout *)
 
 (** {2 Error and continuation handling} *)
 type 'a success = [ `Successful of 'a ]
@@ -55,7 +55,10 @@ type 'a download =
 (** {2 Packages} *)
 
 (** Packages are ([name] * [version]) tuple *)
-type package = OpamPackage.t
+type package = OpamPackage.t = private {
+  name: OpamPackage.Name.t;
+  version: OpamPackage.Version.t;
+}
 
 (** Set of packages *)
 type package_set = OpamPackage.Set.t
@@ -78,25 +81,8 @@ type version = OpamPackage.Version.t
 (** Set of package versions *)
 type version_set = OpamPackage.Version.Set.t
 
-(** {2 Compilers} *)
-
-(** Compiler names *)
-type compiler = OpamCompiler.t
-
-(** Set of compiler names *)
-type compiler_set = OpamCompiler.Set.t
-
-(** Maps of compiler names *)
-type 'a compiler_map = 'a OpamCompiler.Map.t
-
-(** Compiler versions *)
-type compiler_version = OpamCompiler.Version.t
-
 (** OPAM versions *)
 type opam_version = OpamVersion.t
-
-(** Compiler constraints *)
-type compiler_constraint = OpamCompiler.Version.constr
 
 (** {2 Variables} *)
 
@@ -124,15 +110,9 @@ type package_flag =
                        [opam-<name>] exec, and may be auto-installed when doing
                        [opam <name>] *)
   | Pkgflag_Compiler (** Package may be used for 'opam switch' *)
+  | Pkgflag_Virtual (** Virtual package: no install or remove instructions,
+                        .install, but likely has depexts *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
-
-(** Flags on dependencies *)
-type package_dep_flag =
-  | Depflag_Build
-  | Depflag_Test
-  | Depflag_Doc
-  | Depflag_Dev
-  | Depflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** At some point we want to abstract so that the same functions can be used
     over CUDF and OPAM packages *)
@@ -157,9 +137,6 @@ type atom = OpamFormula.atom
 
 (** Formula over versionned packages *)
 type formula = OpamFormula.t
-
-(** Formula over versionned packages *)
-type ext_formula = package_dep_flag list OpamFormula.ext_package_formula
 
 (** AND formulat *)
 type 'a conjunction = 'a OpamFormula.conjunction
@@ -189,6 +166,36 @@ type repository = {
   repo_url     : url;
   repo_priority: int;
 }
+
+(** {2 Variable-based filters} *)
+
+type relop = OpamFormula.relop
+type logop = [ `And | `Or ]
+type pfxop = [ `Not ]
+
+type filter =
+  | FBool of bool
+  | FString of string
+  | FIdent of (name list * variable * (string * string) option)
+  (** packages, variable name,
+      string converter (val_if_true, val_if_false_or_undef) *)
+  | FOp of filter * relop * filter
+  | FAnd of filter * filter
+  | FOr of filter * filter
+  | FNot of filter
+  | FUndef of filter
+
+(** {2 Filtered formulas (to express conditional dependencies)}
+
+    These are first reduced to only the dependency-flag variables build, doc,
+    dev, test defined in [Opam formulas] *)
+
+type 'a filter_or_constraint =
+  | Filter of filter
+  | Constraint of (relop * 'a)
+
+type filtered_formula =
+  (name * version filter_or_constraint OpamFormula.formula) OpamFormula.formula
 
 (** {2 Solver} *)
 
@@ -276,18 +283,21 @@ type universe = {
   u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
-  u_depends  : ext_formula package_map;
-  u_depopts  : ext_formula package_map;
+  u_depends  : filtered_formula package_map;
+  u_depopts  : filtered_formula package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
   u_dev      : package_set; (** packages with a version-controlled upstream *)
+  (* NOTE: only needed for the dev depflag, remove and pre-compute instead *)
   u_base     : package_set;
   u_attrs    : (string * package_set) list;
-  (** extra CUDF attributes for the given packages *)
+
+  (* extra CUDF attributes for the given packages *)
   u_test     : bool; (** Test dependencies should be honored *)
   u_doc      : bool; (** Doc dependencies should be honored *)
+  (* NOTE: pre-compute these also *)
 }
 
 (** {2 Command line arguments} *)
@@ -303,36 +313,7 @@ type pin_kind = [ `version | OpamUrl.backend ]
 (** Shell compatibility modes *)
 type shell = [`fish|`csh|`zsh|`sh|`bash]
 
-(** Global configuration option *)
-type global_config = {
-  complete   : bool;
-  switch_eval: bool;
-}
-
-(** User configuration option *)
-type user_config = {
-  shell      : shell;
-  ocamlinit  : bool;
-  dot_profile: filename option;
-}
-
-(** {2 Filtered commands} *)
-
-type relop = OpamFormula.relop
-type logop = [ `And | `Or ]
-type pfxop = [ `Not ]
-
-(** Filter *)
-type filter =
-  | FBool of bool
-  | FString of string
-  | FIdent of (name list * variable * (string * string) option)
-  (** packages, variable name, string converter (val_if_true, val_if_false_or_undef) *)
-  | FOp of filter * relop * filter
-  | FAnd of filter * filter
-  | FOr of filter * filter
-  | FNot of filter
-  | FUndef
+(** {2 Generic command-line definitions with filters} *)
 
 (** A command argument *)
 type simple_arg =
@@ -396,6 +377,14 @@ type switch_set = OpamSwitch.Set.t
 (** Map of compile switches *)
 type 'a switch_map = 'a OpamSwitch.Map.t
 
+type switch_selections = {
+  sel_installed: package_set;
+  sel_roots: package_set;
+  sel_compiler: package_set;
+  sel_pinned: package_set;
+}
+
+
 (** {2 Misc} *)
 
 (** The different kinds of locks *)
@@ -456,11 +445,3 @@ type checksums = string list
 
 (** {2 JSON} *)
 type json = OpamJson.t
-
-(** {2 Updates} *)
-type 'a updates = {
-  created: 'a;
-  updated: 'a;
-  deleted: 'a;
-  changed: 'a;
-}

@@ -14,47 +14,30 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Repository sub-command functions. *)
+(** Functions handling the "opam repository" subcommand *)
 
-open OpamState.Types
 open OpamTypes
-
-(** Update the given repository from its upstream. Returns a concurrency-safe
-    state update function *)
-val update: t -> repository ->
-  (OpamState.state -> OpamState.state) OpamProcess.job
-
-(** Update the package index. *)
-val update_package_index: t -> t
-
-(** Update the compiler index. *)
-val update_compiler_index: t -> t
-
-(** Update the given dev packages. *)
-val update_dev_packages: t -> verbose:bool -> package_set -> package_set
-
-(** Fix the compiler descriptions and display the changes if [verbose]
-    is set. *)
-val fix_compiler_descriptions: t -> verbose:bool -> compiler_set updates
-
-(** Fix the the package descriptions and display the changes if
-    [verbose] is set. *)
-val fix_package_descriptions: t -> verbose:bool -> package_set updates
-
-(** Fix all the package and compiler descriptions. *)
-val fix_descriptions: ?save_cache:bool -> ?verbose:bool -> t -> unit
+open OpamStateTypes
 
 (** List the available repositories. *)
-val list: short:bool -> unit
+val list: 'a global_state -> short:bool -> unit
+
+(* !X FIXME: once switches define their repositories, we should remove the
+   `repositories:` field from ~/.opam/config and rely on the switch priority
+   list, and ~/.opam/repos/*/config only. Then we don't need a lock on
+   global_state anymore. *)
 
 (** Add a new repository. *)
-val add: repository_name -> url -> priority:int option -> unit
+val add:
+  rw global_state -> repository_name -> url -> priority:int option ->
+  rw repos_state
 
 (** Remove a repository. *)
-val remove: repository_name -> unit
+val remove: rw global_state -> repository_name -> rw global_state
 
 (** Set a repository priority. *)
-val priority: repository_name -> priority:int -> unit
+val priority:
+  'a global_state -> repository_name -> priority:int -> rw repos_state
 
 (** Change the registered address of a repo *)
-val set_url: repository_name -> url -> unit
+val set_url: 'a global_state -> repository_name -> url -> rw repos_state

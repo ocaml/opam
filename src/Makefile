@@ -10,20 +10,12 @@ all:
 	$(MAKE) opam-check
 	$(MAKE) opam-admin
 	$(MAKE) opam-installer
-	$(MAKE) opamlfind
 	$(MAKE) opam-admin.top
 
 # --
 
-OCAMLFLAGS = -g -w +a-4-44-48
-OCAMLLDFLAGS = -g -w +a-4-44-48
-ifeq ($(OCAML_4),true)
-  OCAMLFLAGS += -bin-annot
-  OCAMLLDFLAGS += -bin-annot
-endif
-ifeq ($(OCAML_4_01),true)
-  OCAMLFLAGS += -short-paths
-endif
+OCAMLFLAGS = -g -w +a-4-44-48 -bin-annot -short-paths
+OCAMLLDFLAGS = -g -w +a-4-44-48 -bin-annot
 ifeq ($(OCAML_4_02),true)
   OCAMLFLAGS += -safe-string
   OCAMLLDFLAGS += -safe-string
@@ -140,12 +132,11 @@ SRC_format = \
   opamPackage.ml \
   opamVariable.ml \
   opamFormula.ml \
-  opamCompiler.ml \
   opamTypes.mli \
   opamTypesBase.ml \
+  opamFormat.ml \
   opamParser.mly \
   opamLexer.mll \
-  opamFormat.ml \
   opamFilter.ml \
   opamFile.ml
 
@@ -204,7 +195,16 @@ SRC_state = \
   opamStateConfig.ml \
   opamOCaml.ml \
   opamScript.ml \
-  opamState.ml \
+  opamStateTypes.mli \
+  opamPackageVar.ml \
+  opamFileTools.ml \
+  opamGlobalState.ml \
+  opamRepositoryState.ml \
+  opamPinned.ml \
+  opamSwitchState.ml \
+  opamEnv.ml \
+  opamSwitchAction.ml \
+  opamUpdate.ml \
   opamAction.ml \
   opamSolution.ml
 
@@ -253,7 +253,7 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-TOOLS = opam-check opam-admin opam-installer opamlfind
+TOOLS = opam-check opam-admin opam-installer
 
 $(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)

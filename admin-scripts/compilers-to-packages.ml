@@ -21,159 +21,133 @@
 open OpamTypes
 open OpamProcess.Job.Op
 open Opam_admin_top
+open OpamStd.Option.Op
 ;;
 
-let vars_new_1_2 = [ "compiler"; "ocaml-native"; "ocaml-native-tools";
-                     "ocaml-native-dynlink"; "arch" ]
-
-let replace_vars_str = function
-  | "compiler" -> "ocaml:compiler"
-  | "preinstalled" -> "ocaml:preinstalled"
-  | "ocaml-version" -> "ocaml:version"
-  | "ocaml-native" -> "ocaml:native"
-  | "ocaml-native-tools" -> "ocaml:native-tools"
-  | "ocaml-native-dynlink" -> "ocaml:native-dynlink"
-  | v -> v
-
-let replace_vars v = OpamVariable.of_string (replace_vars_str (OpamVariable.to_string v))
-
-let filter_string =
-  let rex =
-    Re.(compile ( seq [
-        str "%{";
-        rep (seq [opt (char '%'); opt (char '}'); diff notnl (set "}%")]);
-        str "}%";
-      ]))
+let () =
+  let error_printer = function
+    | OpamParallel.Errors (_, (_,exc)::_, _) -> Some (Printexc.to_string exc)
+    | _ -> None
   in
-  Re_pcre.substitute ~rex ~subst:(fun s ->
-      "%{" ^ replace_vars_str (String.sub s 2 (String.length s - 4)) ^ "}%")
-
-let rec map_filter = function
-  | FIdent ([],i,df) -> FIdent ([], replace_vars i, df)
-  | FString s -> FString (filter_string s)
-  | FBool _ | FIdent _ | FUndef as f -> f
-  | FOp (f1,op,f2) -> FOp (map_filter f1, op, map_filter f2)
-  | FAnd (f1,f2) -> FAnd (map_filter f1, map_filter f2)
-  | FOr (f1,f2) -> FOr (map_filter f1, map_filter f2)
-  | FNot f -> FNot (map_filter f)
-
-let filter_vars_optlist ol =
-  List.map (fun (x, filter) -> x, OpamStd.Option.Op.(filter >>| map_filter)) ol
-
-let filter_args sl =
-  List.map
-    (fun (s, filter) ->
-       (match s with
-        | CString s -> CString (filter_string s)
-        | CIdent i -> CIdent (replace_vars_str i)),
-       OpamStd.Option.Op.(filter >>| map_filter))
-    sl
-
-let filter_vars_commands ol =
-  List.map
-    (fun (args, filter) -> filter_args args,
-                           OpamStd.Option.Op.(filter >>| map_filter))
-    ol
+  Printexc.register_printer error_printer
 ;;
 
-iter_compilers_gen @@ fun c ~prefix ~comp ~descr ->
-  let version =
-    OpamPackage.Version.of_string
-      (OpamCompiler.to_string (OpamFile.Comp.name comp))
-  in
-  let nv = OpamPackage.create (OpamPackage.Name.of_string "ocaml") version in
-  (* OpamConsole.msg "Processing compiler %s => package %s\n" *)
-  (*   (OpamCompiler.to_string (OpamFile.Comp.name comp)) *)
-  (*   (OpamPackage.to_string nv); *)
-  let nofilter x = x, (None: filter option) in
-  let build =
-    OpamFile.Comp.(
-      match build comp with
-      | [] ->
-        List.map (fun l -> nofilter (List.map nofilter l)) [
-          (List.map (fun s -> CString s) ("./configure" :: configure comp ))
-          @ [ CString "-prefix"; CIdent "prefix"];
-          CIdent "make" :: List.map (fun s -> CString s) (make comp);
-          [ CIdent "make"; CString "install"];
-        ]
-      | cl -> cl)
-  in
-  let prefix = Some (OpamPackage.Name.to_string (OpamPackage.name nv)) in
-  let patches =
-    OpamParallel.map
-      ~jobs:3
-      ~command:(fun f ->
-        OpamDownload.download ~overwrite:true f
-          (OpamRepositoryPath.files repo prefix nv)
-        @@| OpamFilename.basename)
-      (OpamFile.Comp.patches comp)
-  in
-  let (@) f x y = f y x in
-  let opam =
-    let module O = OpamFile.OPAM in
-    O.create nv
-    |> O.with_build @ build
-    |> O.with_maintainer @ [ "contact@ocamlpro.com" ]
-    |> O.with_patches @ List.map nofilter patches
-    |> O.with_env @ OpamFile.Comp.env comp
-    |> O.with_flags @ [Pkgflag_Compiler]
-  in
-  (match OpamFile.Comp.src comp with
-   | None -> ()
-   | Some address ->
-     let url = OpamFile.URL.create address in
-     OpamFile.URL.write (OpamRepositoryPath.url repo prefix nv) url);
-  OpamFile.OPAM.write (OpamRepositoryPath.opam repo prefix nv) opam;
-  OpamStd.Option.iter
-    (OpamFile.Descr.write (OpamRepositoryPath.descr repo prefix nv))
-    descr;
-  let comp =
-    let module C = OpamFile.Comp in
-    comp
-    |> C.with_src @ None
-    |> C.with_patches @ []
-    |> C.with_configure @ []
-    |> C.with_make @ []
-    |> C.with_build @ []
-    |> C.with_packages @
-       OpamFormula.(
-         And (Atom (OpamPackage.name nv, Atom (`Eq, OpamPackage.version nv)),
-              C.packages comp)
-       )
-  in
-  comp, `Keep
+let compilers =
+  let compilers_dir = OpamFilename.Op.(repo.repo_root / "compilers") in
+  if OpamFilename.exists_dir compilers_dir then (
+    List.fold_left (fun map f ->
+        if OpamFilename.check_suffix f ".comp" then
+          let c = OpamFilename.(Base.to_string (basename (chop_extension f))) in
+          OpamStd.String.Map.add c f map
+        else
+          map)
+      OpamStd.String.Map.empty (OpamFilename.rec_files compilers_dir)
+  ) else
+    OpamStd.String.Map.empty
 ;;
 
-module OF = OpamFile.OPAM
+OpamStd.String.Map.iter (fun c comp_file ->
+    let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
+    let descr_file =
+      OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
+    in
+    let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
+    let comp =
+      let drop_names = [ OpamPackage.Name.of_string "base-ocamlbuild" ] in
+      (* ocamlbuild has requirements on variable ocaml-version: it can't be in
+         the dependencies *)
+      OpamFile.Comp.with_packages
+        (OpamFormula.map
+           (fun ((name, _) as atom) ->
+                 if List.mem name drop_names then OpamFormula.Empty
+                 else Atom atom)
+           (OpamFile.Comp.packages comp))
+        comp
+    in
+    let opam =
+      OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
+        comp descr
+    in
+    let nv = OpamFile.OPAM.package opam in
+    let patches = OpamFile.Comp.patches comp in
+    if patches <> [] then
+      OpamConsole.msg "Fetching patches of %s to check their checksums...\n"
+        (OpamPackage.to_string nv);
+    let cache_file : string list list OpamFile.t =
+      OpamFile.make @@
+      OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
+    in
+    let url_md5 =
+      (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
+        | [url; md5] -> OpamUrl.of_string url, md5
+        | _ -> failwith "Bad cache") |>
+      OpamUrl.Map.of_list
+    in
+    let extra_sources =
+      (* Download them just to get their mandatory MD5 *)
+      OpamParallel.map
+        ~jobs:3
+        ~command:(fun url ->
+            try Done (Some (url, OpamUrl.Map.find url url_md5, None))
+            with Not_found ->
+            let err e =
+              OpamConsole.error
+                "Could not get patch file for %s from %s (%s), skipping"
+                (OpamPackage.to_string nv) (OpamUrl.to_string url)
+                (Printexc.to_string e);
+              Done None
+            in
+            OpamFilename.with_tmp_dir_job @@ fun dir ->
+            try
+              OpamProcess.Job.catch err
+                (OpamDownload.download ~overwrite:false url dir @@| fun f ->
+                 Some (url, OpamFilename.digest f, None))
+            with e -> err e)
+        (OpamFile.Comp.patches comp)
+    in
+    List.fold_left
+      (fun url_md5 -> function
+         | Some (url,md5,_) -> OpamUrl.Map.add url md5 url_md5
+         | None -> url_md5)
+      url_md5 extra_sources |>
+    OpamUrl.Map.bindings |>
+    List.map (fun (url,m) -> [OpamUrl.to_string url; m]) |>
+    OpamFile.Lines.write cache_file;
+    if List.mem None extra_sources then ()
+    else
+    let opam =
+      opam |>
+      OpamFile.OPAM.with_extra_sources
+        (OpamStd.List.filter_some extra_sources) |>
+      OpamFile.OPAM.with_substs
+        [OpamFilename.Base.of_string "ocaml.config"]
+    in
+    OpamFile.OPAM.write (OpamRepositoryPath.opam repo (Some "ocaml") nv) opam;
+    let config =
+      OpamFile.Dot_config.create @@
+      List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
+      [ "ocaml-version",
+        S (OpamFile.Comp.version comp);
+        "compiler", S (OpamFile.Comp.name comp);
+        "preinstalled", B false;
+        (* fixme: generate those from build/config artifacts using a script ?
+           Guess from os and arch vars and use static 'features' + variable
+           expansion ?
+           ... or just let them be fixed by hand ? *)
+        "ocaml-native", B true;
+        "ocaml-native-tools", B true;
+        "ocaml-native-dynlink", B true;
+        "ocaml-stubsdir", S "%{lib}%/stublibs"; ]
+    in
+    OpamFile.Dot_config.write
+      (OpamFile.make
+         OpamFilename.Op.(OpamRepositoryPath.files repo (Some "ocaml") nv
+                          // "ocaml.config.in"))
+      config;
+    OpamFilename.remove comp_file;
+    OpamStd.Option.iter OpamFilename.remove descr_file;
+    OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
+    OpamConsole.msg "Compiler %s successfully converted to package %s\n"
+      c (OpamPackage.to_string nv))
+  compilers
 ;;
-
-iter_packages ~opam:(fun nv opam ->
-    if OpamPackage.name_to_string nv <> "ocaml" then
-      let available = map_filter (OF.available opam) in
-      let available =
-        match OF.ocaml_version opam with
-        | None -> available
-        | Some cstr ->
-          let filter = OpamFormula.
-          OpamFormula.ands [cstr; available]
-      in
-      let opam = OpamFile.OPAM.with_ocaml_version opam OpamFormula.Empty in
-      let opam = OF.with_available opam available in
-      let opam =
-        OF.with_build opam (filter_vars_commands (OF.build opam)) in
-      let opam =
-        OF.with_install opam (filter_vars_commands (OF.install opam)) in
-      let opam =
-        OF.with_features opam
-          (List.map (fun (a,b,f) -> a, b, map_filter f) (OF.features opam)) in
-      let opam = OF.with_opam_version opam (OpamVersion.of_string "1.3") in
-      let opam = OF.with_patches opam (filter_vars_optlist (OF.patches opam)) in
-      let opam = OF.with_libraries opam (filter_vars_optlist (OF.libraries opam)) in
-      let opam = OF.with_syntax opam (filter_vars_optlist (OF.syntax opam)) in
-      let opam = OF.with_messages opam (filter_vars_optlist (OF.messages opam)) in
-      let opam = OF.with_post_messages opam (filter_vars_optlist (OF.post_messages opam)) in
-      opam
-    else opam)
-  ()
-;;
-

@@ -146,12 +146,8 @@ module B = struct
       (OpamRepositoryPath.packages_dir repo)
       (OpamRepositoryPath.Remote.packages_url repo)
     @@+ fun res_pkgs ->
-    pull_dir_quiet
-      (OpamRepositoryPath.compilers_dir repo)
-      (OpamRepositoryPath.Remote.compilers_url repo)
-    @@+ fun res_comps ->
-    match res_repo, res_pkgs, res_comps with
-    | Not_available _, Not_available _, Not_available _ ->
+    match res_repo, res_pkgs with
+    | Not_available _, Not_available _ ->
       OpamConsole.error "Could not synchronize %s from %S"
         (OpamRepositoryName.to_string repo.repo_name)
         (OpamUrl.to_string repo.repo_url);

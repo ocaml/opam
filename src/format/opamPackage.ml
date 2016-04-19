@@ -99,7 +99,8 @@ let version t = t.version
 let sep = '.'
 
 let of_string_opt s =
-  if OpamStd.String.contains s ' ' || OpamStd.String.contains s '\n' then
+  if OpamStd.String.contains_char s ' ' ||
+     OpamStd.String.contains_char s '\n' then
     None
   else match OpamStd.String.cut_at s sep with
     | None        -> None
@@ -109,7 +110,7 @@ let of_string_opt s =
 
 let of_string s = match of_string_opt s with
   | Some x -> x
-  | None   -> OpamConsole.error_and_exit "%s is not a valid versioned package name" s
+  | None   -> failwith "OpamPackage.of_string"
 
 let to_string t =
   match Version.to_string t.version with
@@ -168,6 +169,8 @@ let of_dirname f =
 let of_filename f =
   if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
     of_dirname (OpamFilename.dirname f)
+  else if OpamFilename.check_suffix f ".opam" then
+    of_string_opt OpamFilename.(Base.to_string (basename (chop_extension f)))
   else
     None
 
@@ -235,10 +238,17 @@ let names_of_packages nvset =
     Name.Set.empty
 
 let packages_of_name nvset n =
-  Set.fold
-    (fun nv set -> if name nv = n then Set.add nv set else set)
-    nvset
-    Set.empty
+  let inf = {name = String.sub n 0 (String.length n - 1); version= ""} in
+  let sup = {name = n^"\000"; version = ""} in
+  let _, _, nvset = Set.split inf nvset in
+  let nvset, _, _ = Set.split sup nvset in
+  Set.filter (fun nv -> nv.name = n) nvset
+
+let package_of_name nvset n =
+  Set.choose (packages_of_name nvset n)
+
+let package_of_name_opt nvset n =
+  try Some (package_of_name nvset n) with Not_found -> None
 
 let packages_of_names nvset nameset =
   Name.Set.fold
@@ -248,9 +258,10 @@ let packages_of_names nvset nameset =
 
 let versions_of_name packages n =
   versions_of_packages
-    (Set.filter
-       (fun nv -> name nv = n)
-       packages)
+    (packages_of_name packages n)
+
+let filter_name_out packages name =
+  Set.diff packages (packages_of_name packages name)
 
 let max_version set name =
   let versions = versions_of_name set name in

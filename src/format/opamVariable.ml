@@ -26,6 +26,14 @@ let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s
 
+let string str = S str
+
+let bool b = B b
+
+let int i = string (string_of_int i)
+
+let dirname dir = string (OpamFilename.Dir.to_string dir)
+
 module Full = struct
 
   type scope =
@@ -51,6 +59,23 @@ module Full = struct
       else Package package
     in
     { scope; variable }
+
+  (* Read the variables overriden through the environment *)
+  let read_from_env v =
+    let var_str = to_string (variable v) in
+    let undash = OpamStd.String.map (function '-' -> '_' | c -> c) in
+    let var_hook =
+      match package v with
+      | Some n ->
+        Printf.sprintf "%s_%s" (undash (OpamPackage.Name.to_string n))
+          (undash var_str)
+      | None -> undash var_str
+    in
+    try match OpamStd.Env.get ("OPAMVAR_" ^ var_hook) with
+      | "true"  | "1" -> Some (bool true)
+      | "false" | "0" -> Some (bool false)
+      | s             -> Some (string s)
+    with Not_found -> None
 
   let global variable =
     { scope = Global; variable }

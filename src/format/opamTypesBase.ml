@@ -14,8 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamStd.Op
-
 open OpamTypes
 
 include OpamCompat
@@ -64,47 +62,6 @@ let string_of_pos (file,line,col) =
   else ""
 
 (* Command line arguments *)
-
-let url_backend_of_pin_kind = function
-  | `version -> None
-  | #OpamUrl.backend as k -> Some k
-
-let looks_like_version_re =
-  Re.(compile @@
-      seq [bos; digit; rep @@ diff any (set "/\\"); eos])
-
-let pin_option_of_string ?kind ?(guess=false) s =
-  match kind with
-  | Some `version ->
-    Version (OpamPackage.Version.of_string s)
-  | None when Re.execp looks_like_version_re s ->
-    Version (OpamPackage.Version.of_string s)
-  | Some (#OpamUrl.backend as backend) ->
-    Source (OpamUrl.parse ~backend s)
-  | None ->
-    let backend =
-      if guess then OpamUrl.guess_version_control s
-      else None
-    in
-    Source (OpamUrl.parse ?backend ~handle_suffix:guess s)
-
-let string_of_pin_kind = function
-  | `version -> "version"
-  | `rsync   -> "path"
-  | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
-
-let pin_kind_of_string = function
-  | "version" -> `version
-  | "path"    -> `rsync
-  | s -> OpamUrl.backend_of_string s
-
-let string_of_pin_option = function
-  | Version v -> OpamPackage.Version.to_string v
-  | Source url -> OpamUrl.to_string url
-
-let kind_of_pin_option = function
-  | Version _ -> `version
-  | Source url -> (url.OpamUrl.backend :> pin_kind)
 
 let string_of_relop = OpamFormula.string_of_relop
 let relop_of_string = OpamFormula.relop_of_string
@@ -175,37 +132,13 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
-let dep_flag_of_string = function
-  | "build" -> Depflag_Build
-  | "test" -> Depflag_Test
-  | "doc" -> Depflag_Doc
-  | "dev" -> Depflag_Dev
-  | s -> Depflag_Unknown s
-
-let string_of_dep_flag = function
-  | Depflag_Build -> "build"
-  | Depflag_Test -> "test"
-  | Depflag_Doc -> "doc"
-  | Depflag_Dev -> "dev"
-  | Depflag_Unknown s -> s
-
-let filter_deps ~build ~test ~doc ~dev =
-  let filter =
-    List.for_all (function
-        | Depflag_Build -> build
-        | Depflag_Test -> test
-        | Depflag_Doc -> doc
-        | Depflag_Dev -> dev
-        | Depflag_Unknown _ -> true (* ignored *))
-  in
-  OpamFormula.formula_of_extended ~filter
-
 let string_of_pkg_flag = function
   | Pkgflag_LightUninstall -> "light-uninstall"
   | Pkgflag_AllSwitches -> "all-switches"
   | Pkgflag_Verbose -> "verbose"
   | Pkgflag_Plugin -> "plugin"
   | Pkgflag_Compiler -> "compiler"
+  | Pkgflag_Virtual -> "virtual"
   | Pkgflag_Unknown s -> s
 
 let pkg_flag_of_string = function

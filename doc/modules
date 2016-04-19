@@ -5,7 +5,7 @@ src
 │   ├── opamVersion.ml                  (generated) Current OPAM version
 │   ├── opamCoreConfig.ml               Configuration options for this lib (record, global reference and setter)
 │   ├── opamVersionCompare.ml           Version comparison function used throughout. From the Dose suite.
-│   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some (as of now) unused debug options
+│   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some debug options
 │   ├── opamStd.ml                      Generic stdlib functions (String, List, Option, Sys submodules...)
 │   ├── opamConsole.ml                  Console output, ANSI color, logging and user querying
 │   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
@@ -18,6 +18,7 @@ src
 │
 ├── format                              Definition of OPAM datastructures and its file interface
 │   │   [ opam-format lib ]
+│   ├── opamFormatConfig.ml             Configuration options for this lib (record, global reference and setter)
 │   ├── opamTypes.mli                   Definitions of many types used throughout
 │   ├── opamTypesBase.ml                Helper functions on the base types. Often opened
 │   │   # basic types, used as keys
@@ -54,7 +55,6 @@ src
 │   │   [ opam-solver lib ]
 │   ├── opamSolverConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamActionGraph.ml              Handles graphs of actions (package changes), based on ocamlgraph
-│   ├── opamSolverGlobals.ml            Configuration initialisation and accessors
 │   ├── opamCudf.ml                     Solver interaction, conversion of answer to solution
 │   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker
 │   └── opamSolver.ml                   Entry point, conversion of universe to cudf, dependencies computation
@@ -65,7 +65,16 @@ src
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
 │   ├── opamOCaml.ml                    OCaml installation version and specifics detection
 │   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
-│   ├── opamState.ml                    Functions handling a global state corresponding to the on-disk ~/.opam, plus (too) many auxiliary and manipulation functions
+│   ├── opamStateTypes.mli              Defines the types holding global, repository and switch states
+│   ├── opamGlobalState.ml              Loading and handling of the global state of an opam root
+│   ├── opamRepositoryState.ml          loading and handling of the repository state of an opam root (i.e. what is in ~/.opam/repo)
+│   ├── opamSwitchState.ml              Loading and querying a switch state
+│   ├── opamPackageVar.ml               Resolution and handling of opam variables + filters
+│   ├── opamFileTools.ml                Generic tools for handling package metadata
+│   ├── opamSwitchAction.ml             Switch-related actions and changes
+│   ├── opamEnv.ml                      Process environment setup and handling, shell configuration
+│   ├── opamPinned.ml                   Specific query and handling of pinned packages
+│   ├── opamUpdate.ml                   Synchronisation and downloading of repositories and package sources
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
 │   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │

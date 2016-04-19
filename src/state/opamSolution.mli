@@ -14,14 +14,15 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Applying solver solutions *)
+(** Interface with the solver, processing of full solutions through actions *)
 
 open OpamTypes
+open OpamStateTypes
 
 (** Resolve an user request *)
 val resolve:
   ?verbose:bool ->
-  OpamState.state ->
+  'a switch_state ->
   user_action ->
   orphans:package_set ->
   atom request ->
@@ -32,26 +33,28 @@ val resolve:
     obvious from the request *)
 val apply:
   ?ask:bool ->
-  OpamState.state ->
+  rw switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   OpamSolver.solution ->
-  solver_result
+  rw switch_state * solver_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not
     specified, prompts the user whenever the solution isn't obvious from the
     request *)
 val resolve_and_apply:
   ?ask:bool ->
-  OpamState.state ->
+  rw switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   orphans:package_set ->
   atom request ->
-  solver_result
+  rw switch_state * solver_result
 
-(** Raise an error if no solution is found or in case of error. *)
-val check_solution: OpamState.state -> solver_result -> unit
+(** Raise an error if no solution is found or in case of error. Unless [quiet]
+    is set, print a message indicating that nothing was done on an empty
+    solution. *)
+val check_solution: ?quiet:bool -> 'a switch_state -> solver_result -> unit
 
 (** {2 Atoms} *)
 
@@ -75,13 +78,13 @@ val eq_atoms_of_packages: package_set -> atom list
     set. Displays an error and exits otherwise. [permissive] just changes the
     error message. *)
 val check_availability: ?permissive: bool ->
-  OpamState.state -> OpamPackage.Set.t -> atom list -> unit
+  'a switch_state -> OpamPackage.Set.t -> atom list -> unit
 
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on
     non-existing packages, and unavailable ones unless [permissive] is set.
     Exits with a message on error. *)
-val sanitize_atom_list: ?permissive: bool -> OpamState.state -> atom list -> atom list
+val sanitize_atom_list: ?permissive: bool -> 'a switch_state -> atom list -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int

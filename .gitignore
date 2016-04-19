@@ -1,5 +1,6 @@
 _obuild/
 bootstrap/
+tests/tmp/
 .*.swp
 src_ext/cudf/
 src_ext/dose/
@@ -15,6 +16,7 @@ src_ext/*.tar.gz
 *.tar.gz
 *~
 .#*
+\#*#
 ocp-build.root
 ocp-build.root.old
 ocp-get
@@ -55,6 +57,7 @@ src/opam-admin
 src/opam-installer
 src/opam-check
 src/opamlfind
+src/opam-admin.top
 ._d
 ._ncdi
 ._bcdi

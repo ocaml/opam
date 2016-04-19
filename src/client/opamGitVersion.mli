@@ -14,4 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** (generated) Current git version of OPAM *)
+
+(** This is defined only at the client lib level to avoid triggering
+    full recompilations all the time *)
+
 val version: string option

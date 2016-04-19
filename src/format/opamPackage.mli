@@ -14,6 +14,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** The package type, and package name type (name+version, values often called
+    "nv" in the code) *)
+
 (** {2 Package name and versions} *)
 
 (** Versions *)
@@ -34,8 +37,13 @@ module Name: sig
 
 end
 
+type t = private {
+  name: Name.t;
+  version: Version.t;
+}
+
 (** Package (name x version) pairs *)
-include OpamStd.ABSTRACT
+include OpamStd.ABSTRACT with type t := t
 
 (** Return the package name *)
 val name: t -> Name.t
@@ -54,7 +62,8 @@ val name_to_string: t -> string
 val version_to_string: t -> string
 
 (** Guess the package name from a filename. This function extracts
-    [name] and [version] from {i /path/to/$name.$version/opam} *)
+    [name] and [version] from {i /path/to/$name.$version/opam}, or
+    {i /path/to/$name.$version.opam} *)
 val of_filename: OpamFilename.t -> t option
 
 (** Guess the package name from a directory name. This function extracts {i
@@ -87,8 +96,17 @@ val has_name: Set.t -> Name.t -> bool
 (** Return all the packages with the given name *)
 val packages_of_name: Set.t -> Name.t -> Set.t
 
+(** Return a package with the given name *)
+val package_of_name: Set.t -> Name.t -> t
+
+(** Return a package with the given name, if any *)
+val package_of_name_opt: Set.t -> Name.t -> t option
+
 (** Return all the packages with one of the given names *)
 val packages_of_names: Set.t -> Name.Set.t -> Set.t
+
+(** Removes all packages with the given name from a set of packages *)
+val filter_name_out: Set.t -> Name.t -> Set.t
 
 (** Return the maximal available version of a package name from a set.
     Raises [Not_found] if no such package available. *)

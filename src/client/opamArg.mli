@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM command-line arguments *)
+(** Command-line argument parsers and helpers *)
 
 open OpamTypes
 open Cmdliner
@@ -126,9 +126,6 @@ val filename: filename Arg.converter
 
 (** Dirnam converter *)
 val dirname: dirname Arg.converter
-
-(** Compiler converter *)
-val compiler: compiler Arg.converter
 
 (** Package name converter *)
 val package_name: name Arg.converter

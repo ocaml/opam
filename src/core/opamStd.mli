@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Generic stdlib functions (String, List, Option, Sys submodules...) *)
+
 (** {2 Signatures and functors} *)
 
 (** Sets with extended interface and infix operators *)
@@ -23,13 +25,15 @@ module type SET = sig
 
   val map: (elt -> elt) -> t -> t
 
-  (** Return one element. Fail if the set is not a singleton. *)
+  (** Returns one element, assuming the set is a singleton. Raises [Not_found]
+      on an empty set, [Failure] on a non-singleton. *)
   val choose_one : t -> elt
 
   val of_list: elt list -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
   val find: (elt -> bool) -> t -> elt
+  val find_opt: (elt -> bool) -> t -> elt option
 
   (** Raises Failure in case the element is already present *)
   val safe_add: elt -> t -> t
@@ -53,6 +57,7 @@ module type MAP = sig
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
+  val find_opt: key -> 'a t -> 'a option
 
   (** A key will be in the union of [m1] and [m2] if it is appears
       either [m1] or [m2], with the corresponding value. If a key
@@ -65,6 +70,9 @@ module type MAP = sig
   (** Raises Failure in case the element is already present *)
   val safe_add: key -> 'a -> 'a t -> 'a t
 
+  (** [update k f zero map] updates the binding of [k] in [map] using function
+      [f], applied to the current value bound to [k] or [zero] if none *)
+  val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
 end
 
 (** A signature for handling abstract keys and collections thereof *)
@@ -150,6 +158,9 @@ module List : sig
     ?left:string -> ?right:string -> ?nil:string ->
     string -> ('a -> string) -> 'a list -> string
 
+  (** Like [List.find], but returning option instead of raising *)
+  val find_opt: ('a -> bool) -> 'a list -> 'a option
+
   val to_string: ('a -> string) -> 'a list -> string
 
   (** Removes consecutive duplicates in a list *)
@@ -187,7 +198,8 @@ module String : sig
 
   val starts_with: prefix:string -> string -> bool
   val ends_with: suffix:string -> string -> bool
-  val contains: string -> char -> bool
+  val contains_char: string -> char -> bool
+  val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
 
   (** {3 Manipulation} *)
@@ -228,6 +240,9 @@ module Format : sig
 
   (** {4 Text formatting functions} *)
 
+  (** Truncates the string to not visually get over [width] columns *)
+  val cut_at_visual: string -> int -> string
+
   (** left indenting. [~visual] can be used to indent eg. ANSI colored
       strings and should correspond to the visible characters of s *)
   val indent_left: string -> ?visual:string -> int -> string
@@ -249,8 +264,10 @@ module Format : sig
 
   (** {4 Printing} *)
 
-  (** Prints a table *)
-  val print_table: out_channel -> sep:string -> string list list -> unit
+  (** Prints a table. If [cut] is set (the default for stdout and stderr),
+      overflowing lines are truncated. *)
+  val print_table:
+    ?cut:bool -> out_channel -> sep:string -> string list list -> unit
 end
 
 module Exn : sig
@@ -300,6 +317,9 @@ module Sys : sig
 
   (** true if stdout is bound to a terminal *)
   val tty_out : bool
+
+  (** true if stdin is bound to a terminal *)
+  val tty_in : bool
 
   (** Queried lazily, but may change on SIGWINCH *)
   val terminal_columns : unit -> int

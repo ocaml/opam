@@ -50,9 +50,11 @@ let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages
 let installed () =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = OpamFile.Config.read (OpamPath.config root) in
-  let version = OpamFile.Config.switch config in
-  let state = OpamFile.State.safe_read (OpamPath.Switch.state root version) in
-  state.OpamFile.State.installed
+  let version = match OpamFile.Config.switch config with
+    | Some sw -> sw
+    | None -> failwith "No switch set" in
+  let state = OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections root version) in
+  state.OpamTypes.sel_installed
 
 let () =
   let installed = installed () in

@@ -43,7 +43,6 @@ let init repo =
   OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
   OpamFilename.mkdir (OpamRepositoryPath.packages_dir repo);
   OpamFilename.mkdir (OpamRepositoryPath.archives_dir repo);
-  OpamFilename.mkdir (OpamRepositoryPath.compilers_dir repo);
   Done ()
 
 let pull_url package local_dirname checksum remote_url =
@@ -87,7 +86,7 @@ let pull_url_and_fix_digest package dirname checksum file url =
         "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
         (OpamPackage.to_string package) checksum actual;
       let u = OpamFile.URL.read file in
-      OpamFile.URL.write file (OpamFile.URL.with_checksum u actual)
+      OpamFile.URL.write file (OpamFile.URL.with_checksum actual u)
     );
     Done r
 
@@ -126,27 +125,11 @@ let extract_prefix repo dir nv =
   OpamStd.String.remove_prefix ~prefix (OpamStd.String.remove_suffix ~suffix dir)
 *)
 let file f =
+  let f = OpamFile.filename f in
   if OpamFilename.exists f then [f] else []
 
 let dir d =
   if OpamFilename.exists_dir d then OpamFilename.rec_files d else []
-
-(* Compiler updates *)
-
-let compilers_with_prefixes r =
-  OpamCompiler.prefixes (OpamRepositoryPath.compilers_dir r)
-
-let compilers repo =
-OpamCompiler.list (OpamRepositoryPath.compilers_dir repo)
-
-let compiler_files repo prefix c =
-  let comp = OpamRepositoryPath.compiler_comp repo prefix c in
-  let descr = OpamRepositoryPath.compiler_descr repo prefix c in
-  file comp @ file descr
-
-let compiler_state repo prefix c =
-  let fs = compiler_files repo prefix c in
-  List.flatten (List.map OpamFilename.checksum fs)
 
 let packages r =
   OpamPackage.list (OpamRepositoryPath.packages_dir r)
@@ -171,16 +154,17 @@ let package_files repo prefix nv ~archive =
   let url = OpamRepositoryPath.url repo prefix nv in
   let files = OpamRepositoryPath.files repo prefix nv in
   let archive =
-    if archive then file (OpamRepositoryPath.archive repo nv)
+    let f = OpamRepositoryPath.archive repo nv in
+    if archive && OpamFilename.exists f then [f]
     else [] in
   file opam @ file descr @ file url @ dir files @ archive
 
 let package_important_files repo prefix nv ~archive =
   let url = OpamRepositoryPath.url repo prefix nv in
   let files = OpamRepositoryPath.files repo prefix nv in
-  if archive then
-    let archive = OpamRepositoryPath.archive repo nv in
-    file url @ dir files @ file archive
+  let archive_f = OpamRepositoryPath.archive repo nv in
+  if archive && OpamFilename.exists archive_f then
+    file url @ dir files @ [archive_f]
   else
     file url @ dir files
 
@@ -191,41 +175,10 @@ let package_state repo prefix nv all =
   let url = OpamRepositoryPath.url repo prefix nv in
   let l =
     List.map (fun f ->
-        if all <> `all && f = url then url_checksum f
+        if all <> `all && f = OpamFile.filename url then url_checksum url
         else OpamFilename.checksum f)
       fs in
   List.flatten l
-
-let compare_repo r1 r2 =
-  let r = compare r1.repo_priority r2.repo_priority in
-  if r = 0 then compare r1 r2 else ~- r
-
-(* Sort repositories by priority *)
-let sort repositories =
-  let repositories = OpamRepositoryName.Map.values repositories in
-  List.sort compare_repo repositories
-
-let package_index repositories =
-  log "package-index";
-  let repositories = sort repositories in
-  List.fold_left (fun map repo ->
-      let packages = packages_with_prefixes repo in
-      OpamPackage.Map.fold (fun nv prefix map ->
-          if OpamPackage.Map.mem nv map then map
-          else OpamPackage.Map.add nv (repo.repo_name, prefix) map
-        ) packages map
-    ) OpamPackage.Map.empty repositories
-
-let compiler_index repositories =
-  log "compiler-index";
-  let repositories = sort repositories in
-  List.fold_left (fun map repo ->
-      let comps = compilers_with_prefixes repo in
-      OpamCompiler.Map.fold (fun comp prefix map ->
-          if OpamCompiler.Map.mem comp map then map
-          else OpamCompiler.Map.add comp (repo.repo_name, prefix) map
-        ) comps map
-    ) OpamCompiler.Map.empty repositories
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
@@ -242,8 +195,9 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
   (* Download the remote file / fetch the remote repository *)
   let download download_dir =
-    if OpamFilename.exists url_file then (
-      let url = OpamFile.URL.read url_file in
+    match OpamFile.URL.read_opt url_file with
+    | None -> Done None
+    | Some url ->
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
       let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -257,8 +211,6 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       | _ ->
         pull_url nv download_dir checksum mirrors
         @@+ fun f -> Done (Some f)
-    ) else
-      Done None
   in
 
   (* if we've downloaded a file, extract it, otherwise just copy it *)
@@ -281,7 +233,8 @@ let make_archive ?(gener_digest=false) repo prefix nv =
 
     (* Finally create the final archive *)
   let create_archive files extract_root =
-    if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
+    if not (OpamFilename.Set.is_empty files) ||
+       OpamFile.exists url_file then (
       OpamConsole.msg "Creating %s.\n" (OpamFilename.to_string archive);
       OpamFilename.exec extract_root [
         [ "tar" ; "czf" ;
