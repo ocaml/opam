@@ -1295,6 +1295,57 @@ let pin ?(unpin_only=false) () =
           $command $params),
   term_info "pin" ~doc ~man
 
+(* LOCAL *)
+let local_doc = "XXX: Maintainers, fill this in"
+let local =
+  let doc = local_doc in
+  let commands =
+    [ "create", `create, ["SWITCH"], "XXX: Maintainers, fill this in" ] in
+  let man = [
+    `S "DESCRIPTION";
+    `P "XXX: Maintainers, fill this in"
+    ] @ mk_subdoc commands
+  in
+  let alias_of =
+    mk_opt ["A";"alias-of"]
+     "COMP" "The name of the compiler description which will be aliased."
+     Arg.(some string) None in
+  let packages =
+    mk_opt ["packages"] "PKGS"
+      "When installing a switch, explicitely define the set of packages to set \
+       as the switch base (a.k.a. \"compiler\")."
+      Arg.(some (list atom)) None in
+  let command, params = mk_subcommands commands in
+  let local global_options command packages alias_of params =
+    apply_global_options global_options;
+    let path = OpamFilename.raw_dir "." in
+    let guess_compiler_package gt s =
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchCommand.guess_compiler_package rt s
+    in
+    let compiler_packages gt switch =
+      match packages, alias_of with
+      | Some pkgs, None -> pkgs
+      | None, Some al -> guess_compiler_package gt al
+      | None, None -> guess_compiler_package gt switch
+      | Some _, Some _ ->
+        OpamConsole.error_and_exit
+          "Options --alias-of and --packages are incompatible"
+    in
+    match command, params with
+    | Some `create, [switch] ->
+      let switch' = OpamSwitch.of_string switch in
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      `Ok (OpamLocalCommand.create gt path 
+            ~packages:(compiler_packages gt switch)
+            ~update_config:false
+            switch')
+    | _          , _  -> bad_subcommand commands ("local", command, params)
+  in
+  Term.(ret (pure local $ global_options $ command $ packages $ alias_of $ params)),
+  term_info "local" ~doc ~man
+
+
 (* SOURCE *)
 let source_doc = "Get the source of an OPAM package."
 let source =
@@ -1536,11 +1587,12 @@ let default =
       \    config       %s\n\
       \    repository   %s\n\
       \    switch       %s\n\
+      \    local        %s\n\
       \    pin          %s\n\
        \n\
        See 'opam help <command>' for more information on a specific command.\n"
       init_doc list_doc show_doc install_doc remove_doc update_doc
-      upgrade_doc config_doc repository_doc switch_doc pin_doc in
+      upgrade_doc config_doc repository_doc switch_doc local_doc pin_doc in
   Term.(pure usage $global_options),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
@@ -1575,6 +1627,7 @@ let commands = [
   config;
   repository; make_command_alias repository "remote";
   switch;
+  local;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   source;
   lint;
