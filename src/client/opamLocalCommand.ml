@@ -31,48 +31,20 @@
     POSSIBILITY OF SUCH DAMAGE.
   ----------------------------------------------------------------------------*)
 
-type t = {
-  sandbox_dir : OpamTypes.dirname option;
-  local_file : OpamFile.Local.t option
-}
-
-type 'a options_fun =
-  ?sandbox_dir:OpamTypes.dirname option ->
-  ?local_file:OpamFile.Local.t option ->
-  'a
-
-let default =
-  { sandbox_dir = None; local_file = None }
-
-let setk k t
-  ?sandbox_dir
-  ?local_file
-  =
-  let (+) x opt = match opt with Some x -> x | None -> x in
-  k {
-    sandbox_dir = t.sandbox_dir + sandbox_dir;
-    local_file = t.local_file + local_file;
-  }
-
-let set t = setk (fun x () -> x) t
-
-let r = ref default
-
-let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
-
-let initk k =
-  let pred dir = OpamFilename.(exists Op.(dir // ".opamlocal")) in
-  let sandbox_dir = OpamFile.locate_ancestor pred (OpamFilename.cwd ()) in
-  let local_file =
-    match sandbox_dir with
-    | None -> None
-    | Some dir ->
-      let local_file = OpamFilename.Op.(dir // ".opamlocal") in
-      try Some OpamFile.(Local.read (make local_file))
-      with _ -> None
+let create_cont t dir ~update_config ~packages switch =
+  let dir =
+    let pred dir = OpamFilename.(exists Op.(dir // ".opamlocal")) in
+    match OpamFile.locate_ancestor pred dir with
+    | Some _ ->
+      OpamConsole.error "Already in a local sandbox.";
+      OpamStd.Sys.exit 1
+    | None -> dir
   in
-  setk (setk (fun c -> r := c; k)) !r
-    ~sandbox_dir
-    ~local_file
+  let opamlocal = OpamFilename.Op.(dir // ".opamlocal") in
+  let result =
+    OpamSwitchCommand.install_cont t ~update_config ~packages switch in
+  OpamFile.(Local.write (make opamlocal) (Local.create switch));
+  result
 
-let init ?noop:_ = initk (fun () -> ())
+let create t dirname ~update_config ~packages switch =
+  snd (create_cont t dirname ~update_config ~packages switch) ()

@@ -31,48 +31,17 @@
     POSSIBILITY OF SUCH DAMAGE.
   ----------------------------------------------------------------------------*)
 
-type t = {
-  sandbox_dir : OpamTypes.dirname option;
-  local_file : OpamFile.Local.t option
-}
+open OpamTypes
+open OpamStateTypes
 
-type 'a options_fun =
-  ?sandbox_dir:OpamTypes.dirname option ->
-  ?local_file:OpamFile.Local.t option ->
-  'a
+val create_cont:
+  rw global_state -> dirname ->
+  update_config:bool -> packages:atom conjunction -> 
+  switch ->
+  switch * (unit -> unit)
 
-let default =
-  { sandbox_dir = None; local_file = None }
-
-let setk k t
-  ?sandbox_dir
-  ?local_file
-  =
-  let (+) x opt = match opt with Some x -> x | None -> x in
-  k {
-    sandbox_dir = t.sandbox_dir + sandbox_dir;
-    local_file = t.local_file + local_file;
-  }
-
-let set t = setk (fun x () -> x) t
-
-let r = ref default
-
-let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
-
-let initk k =
-  let pred dir = OpamFilename.(exists Op.(dir // ".opamlocal")) in
-  let sandbox_dir = OpamFile.locate_ancestor pred (OpamFilename.cwd ()) in
-  let local_file =
-    match sandbox_dir with
-    | None -> None
-    | Some dir ->
-      let local_file = OpamFilename.Op.(dir // ".opamlocal") in
-      try Some OpamFile.(Local.read (make local_file))
-      with _ -> None
-  in
-  setk (setk (fun c -> r := c; k)) !r
-    ~sandbox_dir
-    ~local_file
-
-let init ?noop:_ = initk (fun () -> ())
+val create :
+  rw global_state -> dirname ->
+  update_config:bool -> packages:atom conjunction ->
+  switch ->
+  unit
