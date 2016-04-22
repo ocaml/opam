@@ -32,10 +32,12 @@ val version_pin: rw switch_state -> name -> version -> rw switch_state
 
     If no target url is given, the url from the installed package or
     repositories, if any, is used and the package is otherwise pinned without
-    target *)
+    target.
+
+    If [force], don't abort even if the source can't be fetched from [target] *)
 val source_pin:
-  rw switch_state -> name -> ?version:version -> ?edit:bool ->  url option ->
-  rw switch_state
+  rw switch_state -> name -> ?version:version -> ?edit:bool -> ?force:bool ->
+  url option -> rw switch_state
 
 (** Let the user edit a pinned package's opam file.
     Writes and returns the updated switch state. *)

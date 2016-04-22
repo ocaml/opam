@@ -41,7 +41,7 @@ let get_source_definition ?version st nv url =
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url srcdir nv @@| function
-  | Not_available _ -> None
+  | Not_available _ -> raise Not_found
   | Up_to_date _ | Result _ ->
     match OpamPinned.find_opam_file_in_source nv.name srcdir with
     | None -> None
@@ -294,7 +294,7 @@ let version_pin st name version =
   OpamSwitchAction.write_selections st;
   st
 
-let source_pin st name ?version ?edit:(need_edit=false) target_url =
+let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_url =
   log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
@@ -390,10 +390,16 @@ let source_pin st name ?version ?edit:(need_edit=false) target_url =
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
-    OpamStd.Option.Op.(
-      urlf >>= fun url ->
-      OpamProcess.Job.run @@ get_source_definition ?version st nv url
-    ) in
+    try
+      OpamStd.Option.Op.(
+        urlf >>= fun url ->
+        OpamProcess.Job.run @@ get_source_definition ?version st nv url
+      )
+    with Not_found ->
+      if force then None else
+        OpamConsole.error_and_exit "Error getting source from %s"
+          (OpamStd.Option.to_string OpamUrl.to_string target_url)
+  in
 
   let nv =
     match version with
