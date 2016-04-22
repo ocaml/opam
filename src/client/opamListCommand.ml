@@ -222,32 +222,49 @@ let disp_header = function
 
 let detail_printer st nv =
   let open OpamStd.Option.Op in
+  let (@) s cols = OpamConsole.colorise' cols s in
+  let root_sty =
+    if OpamPackage.has_name st.installed_roots nv.name then [`underline]
+    else []
+  in
   function
-  | Name -> OpamPackage.Name.to_string nv.name
-  | Package -> OpamPackage.to_string nv
+  | Name -> OpamPackage.Name.to_string nv.name @ (`bold :: root_sty)
+  | Package ->
+    (OpamPackage.name_to_string nv @ (`bold :: root_sty)) ^
+    ("." ^ OpamPackage.version_to_string nv) @ root_sty
   | Synopsis ->
     (OpamSwitchState.opam st nv |>
      OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
     +! ""
   | Synopsis_or_target ->
-    let opam = OpamSwitchState.opam st nv in
-    if OpamPackage.Set.mem nv st.pinned then
-      if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
-        "pinned to version " ^ OpamPackage.Version.to_string nv.version
-      else
-        "pinned: " ^
-        OpamStd.Option.to_string ~none:"to local metadata" OpamUrl.to_string
-          (OpamFile.OPAM.get_url opam)
-    else
-      (OpamFile.OPAM.descr opam >>| OpamFile.Descr.synopsis) +! ""
+    (match OpamPinned.package_opt st nv.name with
+     | Some nv ->
+       let opam = OpamSwitchState.opam st nv in
+       if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
+         Printf.sprintf "pinned to version %s"
+           (OpamPackage.Version.to_string nv.version @ [`blue])
+       else
+         Printf.sprintf "pinned to version %s at %s"
+           (OpamPackage.Version.to_string nv.version @ [`blue])
+           (OpamStd.Option.to_string ~none:"(local metadata only)"
+              (fun u -> OpamUrl.to_string u @ [`underline])
+              (OpamFile.OPAM.get_url opam))
+     | None ->
+       (OpamSwitchState.opam st nv |>
+        OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
+       +! "")
   | Field f ->
     (try List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
          OpamFormat.Print.value
      with Not_found -> "")
   | Installed_version ->
-    (try OpamPackage.package_of_name st.installed nv.name |>
-         OpamPackage.version_to_string
-     with Not_found -> "--")
+    (try OpamPackage.package_of_name st.installed nv.name |> fun inst_nv ->
+         OpamPackage.version_to_string inst_nv |> fun s ->
+         if OpamPackage.Set.mem inst_nv st.pinned then s @ [`blue] else
+         if OpamPackage.has_name st.pinned nv.name then s @ [`bold;`red] else
+         if nv <> inst_nv then s @ [`bold;`yellow] else
+           s @ [`magenta]
+     with Not_found -> "--" @ [`cyan])
   | Pinning_target ->
     if OpamPackage.Set.mem nv st.pinned then
       let opam = OpamSwitchState.opam st nv in
@@ -316,7 +333,8 @@ let list gt
     | Some sw -> OpamSwitchState.load `Lock_none gt rt sw
   in
   let packages = filter st formula in
-  display st ~format:default_list_format ~dependency_order:(order=`depends)
+  let format = if print_short then [Package] else default_list_format in
+  display st ~format ~dependency_order:(order=`depends)
     ~all_versions:false packages
 
 let info gt ~fields ~raw_opam ~where atoms =
