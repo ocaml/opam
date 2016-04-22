@@ -741,6 +741,8 @@ end
 
 (**/**)
 
+val locate_ancestor : (dirname -> bool) -> dirname -> dirname option
+
 module type SyntaxFileArg = sig
   val internal: string
   type t
