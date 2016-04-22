@@ -719,12 +719,23 @@ module OpamFormat = struct
     let rec aux extra i =
       try
         let j = String.index_from s i '\027' in
-        let k = String.index_from s (i+1) 'm' in
-        if j - extra >= width then width + extra
-        else aux (extra + k - j) (k+1)
-      with Not_found | Invalid_argument _ -> width + extra
+        let k = String.index_from s (j+1) 'm' in
+        if j - extra > width then width + extra
+        else aux (extra + k - j + 1) (k + 1)
+      with Not_found -> min (String.length s) (width + extra)
+         | Invalid_argument _ -> String.length s
     in
-    String.sub s 0 (aux 0 0)
+    let cut_at = aux 0 0 in
+    if cut_at = String.length s then s else
+    let sub = String.sub s 0 cut_at in
+    let rec rem_escapes i =
+      try
+        let j = String.index_from s i '\027' in
+        let k = String.index_from s (j+1) 'm' in
+        String.sub s j (k - j + 1) :: rem_escapes (k+1)
+      with Not_found | Invalid_argument _ -> []
+    in
+    String.concat "" (sub :: rem_escapes cut_at)
 
   let indent_left s ?(visual=s) nb =
     let nb = nb - String.length visual in
