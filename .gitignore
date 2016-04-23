@@ -38,7 +38,7 @@ ocp-build.root.old.old
 *.a
 *.o
 META
-opam-lib.install
+opam-lib*.install
 Makefile.config
 config.log
 config.status
@@ -58,6 +58,7 @@ src/opam-installer
 src/opam-check
 src/opamlfind
 src/opam-admin.top
+src/*.META
 ._d
 ._ncdi
 ._bcdi

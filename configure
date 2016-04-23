@@ -594,9 +594,7 @@ OCAML_PKG_ocamlgraph
 OCAML_PKG_cmdliner
 OCAML_PKG_re_glob
 OCAML_PKG_re_pcre
-OCAML_PKG_re_perl
 OCAML_PKG_re_str
-OCAML_PKG_re_emacs
 OCAML_PKG_re
 OCAML_PKG_extlib
 OCAML_PKG_unix
@@ -607,8 +605,6 @@ OCAMLYACC
 OCAMLLEXDOTOPT
 OCAMLLEX
 ocaml_4_02
-ocaml_4_01
-ocaml_4
 AWK
 OCAMLBUILD
 OCAMLDOC
@@ -673,6 +669,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_version_check
+enable_checks
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1304,6 +1301,8 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-version-check Do not check OCaml version
+
+  --disable-checks        Assume OCaml dependencies are OK without checking
 
   --disable-certificate-check
                           Do not check the certificate of OPAM's dependency
@@ -3581,13 +3580,19 @@ else
 fi
 
 
-if test "$OCAMLC" = "no"; then
+if test "x$OCAMLC" = "xno"; then
    as_fn_error $? "You must install the OCaml compiler" "$LINENO" 5
 fi
 
 # Check whether --enable-version_check was given.
 if test "${enable_version_check+set}" = set; then :
   enableval=$enable_version_check;
+fi
+
+
+# Check whether --enable-checks was given.
+if test "${enable_checks+set}" = set; then :
+  enableval=$enable_checks;
 fi
 
 
@@ -3673,80 +3678,6 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 
 fi
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.00.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/true/;s/x${ax_compare_version_B}/false/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-    :
-      fi
-
-ocaml_4="$ax_compare_version"
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.01.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/true/;s/x${ax_compare_version_B}/false/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-    :
-      fi
-
-ocaml_4_01="$ax_compare_version"
 
 
 
@@ -4232,7 +4163,7 @@ if test x"$FETCH" = x"curl" ; then
 elif test x"$FETCH" = x"wget" ; then
   fetch="wget $wget_certificate_check"
 
-else
+elif test x"${enable_checks}" != x"no" ; then
   as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
 fi
 
@@ -4311,30 +4242,6 @@ $as_echo "not found" >&6; }
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package re.emacs" >&5
-$as_echo_n "checking for OCaml findlib package re.emacs... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in re.emacs  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_re_emacs=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_re_emacs=no
-  fi
-
-
-
-
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package re.str" >&5
 $as_echo_n "checking for OCaml findlib package re.str... " >&6; }
 
@@ -4354,30 +4261,6 @@ $as_echo "found" >&6; }
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
     OCAML_PKG_re_str=no
-  fi
-
-
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package re.perl" >&5
-$as_echo_n "checking for OCaml findlib package re.perl... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in re.perl  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_re_perl=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_re_perl=no
   fi
 
 
@@ -4577,30 +4460,36 @@ $as_echo "not found" >&6; }
 
 echo
 
-if test "$OCAML_PKG_extlib" = "no" ||
-   test "$OCAML_PKG_re" = "no" ||
-   test "$OCAML_PKG_cmdliner" = "no" ||
-   test "$OCAML_PKG_ocamlgraph" = "no" ||
-   test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose3" = "no" ||
-   test "$OCAML_PKG_jsonm" = "no"; then
+
+if test "x${enable_checks}" != "xno" && {
+       test "x$OCAML_PKG_extlib" = "xno" ||
+       test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_cmdliner" = "xno" ||
+       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
+       test "x$OCAML_PKG_cudf" = "xno" ||
+       test "x$OCAML_PKG_dose3" = "xno" ||
+       test "x$OCAML_PKG_jsonm" = "xno"; }; then :
+
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "binaries, run 'make lib-ext' to download and include them."
+  echo "'opam' binary, run 'make lib-ext' to download and include them."
   echo "============================================================================"
   echo
   hasalldeps=""
 
+
 else
+
   hasalldeps="true"
+
 
 fi
 
-if test "$prefix" = "NONE"; then
+if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config META src/core/opamVersion.ml"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml META src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5309,8 +5198,15 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
-    "META") CONFIG_FILES="$CONFIG_FILES META" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
+    "META") CONFIG_FILES="$CONFIG_FILES META" ;;
+    "src/core.META") CONFIG_FILES="$CONFIG_FILES src/core.META" ;;
+    "src/format.META") CONFIG_FILES="$CONFIG_FILES src/format.META" ;;
+    "src/repository.META") CONFIG_FILES="$CONFIG_FILES src/repository.META" ;;
+    "src/solver.META") CONFIG_FILES="$CONFIG_FILES src/solver.META" ;;
+    "src/state.META") CONFIG_FILES="$CONFIG_FILES src/state.META" ;;
+    "src/client.META") CONFIG_FILES="$CONFIG_FILES src/client.META" ;;
+    "src/admin.META") CONFIG_FILES="$CONFIG_FILES src/admin.META" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

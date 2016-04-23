@@ -53,8 +53,8 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir $(LIBINSTALL_DIR)
 endif
 
-opam-lib.install:
-	$(MAKE) -C src ../opam-lib.install
+opam-%.install:
+	$(MAKE) -C src ../opam-$*.install
 
 libinstall: opam-lib.install opam-admin.top
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
@@ -121,9 +121,10 @@ rmartefacts: ALWAYS
 	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
 
 prefast: rmartefacts src/client/opamGitVersion.ml src/state/opamScript.ml src/core/opamCompat.ml src/core/opamCompat.mli
-	@ocp-build -init
+	@
 
 fast: prefast
+	@ocp-build init
 	@ocp-build
 	@$(MAKE) fastlink
 

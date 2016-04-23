@@ -273,8 +273,6 @@ SRC_opam-admin = \
   opam_rename.ml \
   opam_admin.ml
 
-# opam_findlib.ml
-
 define PROJ_opam-admin
   SOURCES = $(call addmli,tools,$(SRC_opam-admin))
   RESULT = opam-admin
@@ -310,27 +308,37 @@ export PROJ_opam-admin-top
 
 # --
 
+# Looks for artifacts in sourcedir, _obuild, sourcedir/_obuild
+# The artifacts must be built first
 define lib_inst_files
   $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
   $(foreach f,$(basename $(SRC_$(1))),\
-    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti)))
+    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti))) \
+  $(wildcard $(addprefix ../_obuild/opam-$(1)/*,\
+	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti)) \
+  $(wildcard $(addprefix $(1)/_obuild/opam-$(1)/*,\
+	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti))
 endef
 
-../opam-lib.install: $(OPAMLIB:=.cma)
+../opam-%.install:
 	@echo 'lib: [' >$@
-	@echo '  "META"' >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,\
-	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
-	} >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,\
-	    $(wildcard \
-	      $(addprefix tools/opam_admin_top.,mli cmi cmx cmxs cmti)))\
-	} >>$@
-	@echo ']' >>$@
-	@echo 'bin: [' >>$@
-	@echo '  "src/opam-admin.top"' >>$@
+	@echo '  "src/$*.META" {"META"}' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,$*)) } >>$@
 	@echo ']' >>$@
 
+../opam-admin.install:
+	@echo 'lib: [' >$@
+	@echo '  "src/$*.META" {"META"}' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,tools)) } >>$@
+	@echo ']' >>$@
+	@echo 'bin: [' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo '  "src/opam-admin.top"' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo ']' >>$@
+
+.PHONY: dotinstalls
+dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 

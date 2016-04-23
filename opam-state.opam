@@ -1,6 +1,5 @@
 opam-version: "1.2"
-name: "opam-lib"
-version: "1.3.0~dev"
+version: "2.0~alpha"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -15,20 +14,15 @@ authors: [
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
-build: [
-  ["./configure"]
-  [make "%{ocp-build:installed?fast:all}%"]
-  [make "-C" "src" "../opam-lib.install"]
-]
 depends: [
-  "ocamlgraph"
-  "cmdliner"
-  "dose" {>= "3.2.2+opam"}
-  "cudf"
-  "re" {>= "1.2.0"}
-  "ocamlfind" {build}
-  "jsonm"
+  "opam-core" {= "2.0~alpha"}
+  "opam-solver" {= "2.0~alpha"}
+  "opam-repository" {= "2.0~alpha"}
 ]
-depopts: [
-  "ocp-build" {build}
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  [make "prefast"]
+  ["cp" "src/opam.ocp" "src/state"]
+  ["sh" "-c" "cd src/state && ocp-build init && ocp-build"]
+  [make "opam-state.install"]
 ]

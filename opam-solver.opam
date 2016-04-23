@@ -1,0 +1,28 @@
+opam-version: "1.2"
+version: "2.0~alpha"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Thomas Gazagnaire <thomas@gazagnaire.org>"
+  "Anil Madhavapeddy   <anil@recoil.org>"
+  "Fabrice Le Fessant  <Fabrice.Le_fessant@inria.fr>"
+  "Frederic Tuong      <tuong@users.gforge.inria.fr>"
+  "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+  "Guillem Rieu        <guillem.rieu@ocamlpro.com>"
+  "Vincent Bernardoff  <vb@luminar.eu.org>"
+  "Roberto Di Cosmo    <roberto@dicosmo.org>"
+]
+homepage: "https://opam.ocaml.org/"
+bug-reports: "https://github.com/ocaml/opam/issues"
+dev-repo: "https://github.com/ocaml/opam.git"
+depends: [
+  "opam-core" {= "2.0~alpha"}
+  "opam-format" {= "2.0~alpha"}
+  "dose" {= "3.3"}
+]
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  [make "prefast"]
+  ["cp" "src/opam.ocp" "src/solver"]
+  ["sh" "-c" "cd src/solver && ocp-build init && ocp-build"]
+  [make "opam-solver.install"]
+]

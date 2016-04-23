@@ -1,0 +1,5 @@
+version = "@PACKAGE_VERSION@"
+description = "OCaml Package Manager remote repository handling library"
+archive(byte) = "opam-repository.cma"
+archive(native) = "opam-repository.cmxa"
+requires = "opam-core, opam-format"
