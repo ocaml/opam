@@ -555,20 +555,18 @@ let list st ~short =
     in
     let state, extra =
       try
-        if (OpamSwitchState.find_installed_package_by_name st nv.name).version =
-           nv.version
-        then "",[]
+        let inst = OpamSwitchState.find_installed_package_by_name st nv.name in
+        if inst.version = nv.version then "",[]
         else
-          OpamConsole.colorise `red " (not in sync)",
-          [Printf.sprintf " (installed:%s)"
-             (OpamPackage.version_to_string nv)]
+          OpamConsole.colorise `red "(not in sync)",
+          [Printf.sprintf "(installed:%s)"
+             (OpamConsole.colorise `bold (OpamPackage.version_to_string inst))]
       with Not_found -> OpamConsole.colorise `yellow " (uninstalled)", []
     in
     [ OpamPackage.to_string nv;
       state;
       OpamConsole.colorise `blue kind;
-      target ]
-    @ extra
+      String.concat " " (target::extra) ]
     with Not_found ->
       [ OpamPackage.to_string nv;
         OpamConsole.colorise `red " (no definition found)" ]
