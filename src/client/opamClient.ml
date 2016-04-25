@@ -1066,22 +1066,17 @@ let slog = OpamConsole.slog
       if action then post_pin_action st name else st
 
     let unpin st ?(action=true) names =
-      let packages =
-        OpamStd.List.filter_map (OpamPinned.package_opt st) names
-      in
       let pinned_before = st.pinned in
       let st = unpin st names in
       let available = Lazy.force st.available_packages in
-      if action &&
-         not (OpamPackage.Set.is_empty
-                ((pinned_before -- st.pinned) %% st.installed))
-      then
+      let installed_unpinned = (pinned_before -- st.pinned) %% st.installed in
+      if action && not (OpamPackage.Set.is_empty installed_unpinned) then
         let atoms =
-          List.map (fun nv ->
+          OpamPackage.Set.fold (fun nv acc ->
               if OpamPackage.Set.mem nv available then
-                nv.name, Some (`Eq, nv.version)
-              else nv.name, None)
-            packages
+                (nv.name, Some (`Eq, nv.version)) :: acc
+              else (nv.name, None) :: acc)
+            installed_unpinned []
         in
         upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true atoms st
       else st
