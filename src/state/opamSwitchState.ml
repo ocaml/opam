@@ -467,4 +467,4 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
   let st = load lock gt rt switch in
   let cleanup_backup = do_backup lock st in
   try let r = f st in ignore (unlock st); cleanup_backup true; r
-  with e -> ignore (unlock st); cleanup_backup false; raise e
+  with e -> ignore (unlock st); (* cleanup_backup false; *) raise e

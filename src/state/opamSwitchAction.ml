@@ -183,7 +183,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let st =
     { st with
       installed;
-      installed_roots = (installed_roots +! st.installed_roots) %% installed;
+      installed_roots = installed_roots +! st.installed_roots;
       reinstall;
       pinned = pinned +! st.pinned;
       compiler_packages; }
