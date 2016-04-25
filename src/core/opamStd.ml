@@ -531,7 +531,7 @@ module OpamSys = struct
   let default_columns =
     try int_of_string (Env.get "COLUMNS") with
     | Not_found
-    | Failure _ -> 80
+    | Failure _ -> max_int
 
   let get_terminal_columns () =
     try (* terminfo *)
