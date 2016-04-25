@@ -34,6 +34,7 @@ type text_style =
     [ `black
     | `blue
     | `bold
+    | `crossed
     | `cyan
     | `green
     | `magenta

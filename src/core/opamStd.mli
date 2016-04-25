@@ -264,10 +264,11 @@ module Format : sig
 
   (** {4 Printing} *)
 
-  (** Prints a table. If [cut] is set (the default for stdout and stderr),
-      overflowing lines are truncated. *)
+  (** Prints a table; generally called on tables passed through [align_table].
+      The default [cut] is to wrap on stdout, stderr, keep as-is otherwise *)
   val print_table:
-    ?cut:bool -> out_channel -> sep:string -> string list list -> unit
+    ?cut:[`Wrap | `Truncate | `None] -> out_channel -> sep:string ->
+    string list list -> unit
 end
 
 module Exn : sig

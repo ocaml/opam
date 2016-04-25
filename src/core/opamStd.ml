@@ -818,12 +818,35 @@ module OpamFormat = struct
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
   let print_table ?cut oc ~sep =
-    let cut = match cut with Some c -> c | None -> oc = stdout || oc = stderr in
+    let cut =
+      match cut with
+      | None -> if oc = stdout || oc = stderr then `Wrap else `None
+      | Some c -> c
+    in
     List.iter (fun l ->
-        let str = String.concat sep l in
-        let str =
-          if cut then cut_at_visual str (OpamSys.terminal_columns ())
-          else str
+        let str = match cut with
+          | `None ->
+            String.concat sep l
+          | `Truncate ->
+            cut_at_visual (String.concat sep l) (OpamSys.terminal_columns ())
+          | `Wrap ->
+            let width = OpamSys.terminal_columns () in
+            match List.rev l with
+            | [] -> ""
+            | last::rest ->
+              let startcol =
+                List.fold_left
+                  (fun acc col -> acc + String.length sep + String.length col)
+                  0 rest
+              in
+              let last = OpamString.strip last in
+              let last =
+                if startcol >= width - 20 then
+                  "\n" ^ reformat ~start_column:0 ~indent:10 last
+                else
+                  reformat ~start_column:startcol ~indent:startcol last
+              in
+              String.concat sep (List.rev (last::rest))
         in
         output_string oc str;
         output_char oc '\n')

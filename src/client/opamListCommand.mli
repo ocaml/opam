@@ -52,6 +52,7 @@ type selector =
   | Required_by of dependency_toggles * atom list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
+  | Atoms of atom list
   | Flag of package_flag
 
 (** Applies a formula of selectors to filter the package from a given switch
@@ -68,8 +69,14 @@ type output_format =
   | Installed_version  (** Installed version or "--" if none *)
   | Pinning_target     (** Empty string if not pinned *)
   | Raw                (** The full contents of the opam file (reformatted) *)
-  | Full_summary       (** Multi-line report on the package status (available
-                           versions, switches where installed...) *)
+  | All_installed_versions (** List of the installed versions in all switches
+                               with the corresponding switches in brackets *)
+  | Available_versions (** List of the available versions (currently installed
+                           one in bold if color enabled) *)
+  | All_versions       (** List of the existing package versions (installed,
+                           installed in current switch and unavailable colored
+                           specifically if color enabled) *)
+
 val default_list_format: output_format list
 
 (** Outputs a list of packages as a table according to the formatting options *)

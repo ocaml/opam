@@ -71,6 +71,7 @@ let global_start_time =
 type text_style =
   [ `bold
   | `underline
+  | `crossed
   | `black
   | `red
   | `green
@@ -83,6 +84,7 @@ type text_style =
 let style_code (c: text_style) = match c with
   | `bold      -> "01"
   | `underline -> "04"
+  | `crossed   -> "09"
   | `black     -> "30"
   | `red       -> "31"
   | `green     -> "32"
