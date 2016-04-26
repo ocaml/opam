@@ -64,8 +64,7 @@ AC_CHECK_OCAML_PKG([re.glob])
 AC_CHECK_OCAML_PKG([cmdliner])
 AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG([cudf])
-AC_CHECK_OCAML_PKG(dose3.common,dose.common)
-AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
+AC_CHECK_OCAML_PKG([dose3])
 AC_CHECK_OCAML_PKG([jsonm])
 
 dnl echo

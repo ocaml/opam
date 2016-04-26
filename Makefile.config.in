@@ -7,8 +7,7 @@ version = @PACKAGE_VERSION@
 FETCH = @fetch@
 HAS_PACKAGES = @hasalldeps@
 USE_BYTE := $(if $(subst no,,@OCAMLOPT@),,true)
-
-PACKS = @OCAML_PKG_unix@ @OCAML_PKG_extlib@ @OCAML_PKG_re@ @OCAML_PKG_re_str@ @OCAML_PKG_re_pcre@ @OCAML_PKG_re_glob@ @OCAML_PKG_cmdliner@ @OCAML_PKG_ocamlgraph@ @OCAML_PKG_cudf@ @OCAML_PKG_dose3_common@ @OCAML_PKG_dose3_algo@ @OCAML_PKG_jsonm@
+PACKS = @OCAML_PKG_unix@ @OCAML_PKG_extlib@ @OCAML_PKG_re@ @OCAML_PKG_re_str@ @OCAML_PKG_re_pcre@ @OCAML_PKG_re_glob@ @OCAML_PKG_cmdliner@ @OCAML_PKG_ocamlgraph@ @OCAML_PKG_cudf@ @OCAML_PKG_dose3@ @OCAML_PKG_jsonm@
 
 OCAMLFIND = @OCAMLFIND@
 OCAML = @OCAML@
