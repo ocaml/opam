@@ -92,6 +92,10 @@ module Config: sig
 
   val dl_tool: t -> arg list option
 
+ (* Field "backup-urls": a list of urls from which it is possible
+    to download by checksum, i.e. $URL/9/a/b/9ab48749e8201... *)
+  val backup_urls: t -> string list
+
   (** Return the number of download jobs *)
   val dl_jobs: t -> int
 
