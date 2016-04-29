@@ -80,7 +80,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     OpamSystem.mkdir dst;
     call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
       ( rsync_arg :: args @ exclude_args @
-        [ "--delete"; src; dst; ])
+        [ "--delete"; "--delete-excluded"; src; dst; ])
     @@| function
     | None -> Not_available src
     | Some [] -> Up_to_date []

@@ -59,6 +59,14 @@ module Make (VCS: VCS) = struct
       close_out fd;
       f
     in
+    (* Remove non-versionned files from destination *)
+    (* fixme: doesn't clean directories *)
+    let fset = OpamStd.String.Set.of_list files in
+    List.iter (fun f ->
+        let basename = OpamFilename.remove_prefix source_repo.repo_root f in
+        if not (OpamStd.String.Set.mem basename fset)
+        then OpamFilename.remove f)
+      (OpamFilename.rec_files repo.repo_root);
     OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
       ~exclude_vcdirs:false
       repo.repo_url repo.repo_root
