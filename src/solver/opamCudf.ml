@@ -17,7 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 
-let log fmt = OpamConsole.log "CUDF" fmt
+let log ?level fmt = OpamConsole.log ?level "CUDF" fmt
 let slog = OpamConsole.slog
 
 (* custom cudf field labels *)
@@ -146,9 +146,13 @@ let dose_dummy_request = "dose-dummy-request"
 let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
 
 let filter_dependencies f_direction universe packages =
+  log ~level:3 "filter deps: build graph";
   let graph = f_direction (Graph.of_universe universe) in
   let packages = Set.of_list packages in
-  Graph.close_and_linearize graph packages
+  log ~level:3 "filter deps: close_and_linearize";
+  let r = Graph.close_and_linearize graph packages in
+  log ~level:3 "filter deps: done";
+  r
 
 let dependencies = filter_dependencies (fun x -> x)
 

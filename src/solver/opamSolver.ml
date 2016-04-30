@@ -18,7 +18,7 @@ open OpamTypes
 open OpamTypesBase
 open OpamPackage.Set.Op
 
-let log fmt = OpamConsole.log "SOLVER" fmt
+let log ?level fmt = OpamConsole.log ?level "SOLVER" fmt
 let slog = OpamConsole.slog
 
 module Action = OpamActionGraph.MakeAction(OpamPackage)
@@ -85,7 +85,7 @@ let is_available universe wish_remove (name, _ as c) =
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
 let cudf_versions_map universe packages =
-  log "cudf_versions_map";
+  log ~level:3 "cudf_versions_map";
   let add_referred_to_packages filt acc refmap =
     OpamPackage.Map.fold (fun package deps acc ->
         let dev = OpamPackage.Set.mem package universe.u_dev in
@@ -247,6 +247,7 @@ let load_cudf_universe ?depopts ~build
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
+  log ~level:3 "Load cudf universe: opam2cudf";
   let cudf_universe =
     let cudf_packages =
       (* Doing opam2cudf for every package is inefficient (lots of Set.mem to
@@ -259,6 +260,7 @@ let load_cudf_universe ?depopts ~build
     with Cudf.Constraint_violation s ->
       OpamConsole.error_and_exit "Malformed CUDF universe (%s)" s
   in
+  log ~level:3 "Load cudf universe: done";
   (* We can trim the universe here to get faster results, but we
      choose to keep it bigger to get more precise conflict messages. *)
   (* let universe = Algo.Depsolver.trim universe in *)
@@ -405,6 +407,8 @@ let filter_dependencies
     if installed then universe.u_installed else
     if unavailable then universe.u_packages else
       universe.u_available in
+  log ~level:3 "filter_dependencies packages=%a"
+    (slog OpamPackage.Set.to_string) packages;
   let version_map = cudf_versions_map universe u_packages in
   let cudf_universe =
     load_cudf_universe ~depopts ~build universe ~version_map
@@ -412,10 +416,10 @@ let filter_dependencies
   let cudf_packages =
     List.rev_map (opam2cudf universe ~depopts ~build version_map)
       (OpamPackage.Set.elements packages) in
+  log ~level:3 "filter_dependencies: dependency";
   let topo_packages = f_direction cudf_universe cudf_packages in
   let result = List.rev_map OpamCudf.cudf2opam topo_packages in
-  log "filter_dependencies packages=%a result=%a"
-    (slog OpamPackage.Set.to_string) packages
+  log "filter_dependencies result=%a"
     (slog (OpamStd.List.to_string OpamPackage.to_string)) result;
   result
 
