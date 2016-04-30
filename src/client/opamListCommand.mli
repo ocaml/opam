@@ -62,9 +62,11 @@ val filter: 'a switch_state -> selector OpamFormula.formula -> package_set
 (** Element of package information to be printed *)
 type output_format =
   | Name               (** Name without version *)
+  | Version            (** Version of the currently looked-at package *)
   | Package            (** [name.version] *)
   | Synopsis           (** One-line package description *)
-  | Synopsis_or_target (** pinning target if pinned, synopsis otherwise *)
+  | Synopsis_or_target (** Pinning target if pinned, synopsis otherwise *)
+  | Description        (** The package description, excluding synopsis *)
   | Field of string    (** The value of the given opam-file field *)
   | Installed_version  (** Installed version or "--" if none *)
   | Pinning_target     (** Empty string if not pinned *)
@@ -76,6 +78,8 @@ type output_format =
   | All_versions       (** List of the existing package versions (installed,
                            installed in current switch and unavailable colored
                            specifically if color enabled) *)
+  | Repository         (** The repository the package was found in (may be empty
+                           for pinned packages) *)
 
 val default_list_format: output_format list
 

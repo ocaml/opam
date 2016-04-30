@@ -836,7 +836,7 @@ module OpamFormat = struct
             | last::rest ->
               let startcol =
                 List.fold_left
-                  (fun acc col -> acc + String.length sep + String.length col)
+                  (fun acc col -> acc + visual_length sep + visual_length col)
                   0 rest
               in
               let last = OpamString.strip last in
