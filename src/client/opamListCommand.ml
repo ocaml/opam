@@ -68,28 +68,36 @@ type selector =
   | Atoms of atom list
   | Flag of package_flag
 
-let string_of_selector = function
-  | Installed -> "installed"
-  | Root -> "root"
-  | Available -> "available"
-  | Installable -> "installable"
+let string_of_selector =
+  let (%) s col = OpamConsole.colorise col s in
+  function
+  | Installed -> "installed" % `cyan
+  | Root -> "root" % `cyan
+  | Available -> "available" % `cyan
+  | Installable -> "installable" % `cyan
   | Depends_on (tog,atoms) ->
-    Printf.sprintf "%sdepends-on(%s)"
-      (if tog.recursive then "rec-" else "")
-      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms)
+    Printf.sprintf "%s(%s)"
+      ((if tog.recursive then "rec-depends-on" else "depends-on") % `blue)
+      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
+       % `bold)
   | Required_by (tog,atoms) ->
-    Printf.sprintf "%srequired-by(%s)"
-      (if tog.recursive then "rec-" else "")
-      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms)
+    Printf.sprintf "%s(%s)"
+      ((if tog.recursive then "rec-required-by" else "required-by") % `blue)
+      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
+       % `bold)
   | Solution (_tog,atoms) ->
-    Printf.sprintf "solution(%s)"
-      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms)
-  | Pattern (_,str) -> Printf.sprintf "matches(%S)" str
+    Printf.sprintf "%s(%s)"
+      ("solution" % `blue)
+      (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
+       % `bold)
+  | Pattern (_,str) ->
+    Printf.sprintf "%s(%s)" ("name-matches" % `green) (str % `bold)
   | Atoms atoms ->
     OpamStd.List.concat_map ~left:"(" ~right:")" " | "
-      OpamFormula.short_string_of_atom atoms
+      (fun a -> OpamFormula.short_string_of_atom a % `bold) atoms
   | Flag fl ->
-    Printf.sprintf "has-flag(%s)" (OpamTypesBase.string_of_pkg_flag fl)
+    Printf.sprintf "%s(%s)" ("has-flag" % `green)
+      (OpamTypesBase.string_of_pkg_flag fl % `bold)
 
 let string_of_formula =
   OpamFormula.string_of_formula string_of_selector
@@ -388,6 +396,7 @@ let list gt
     | `roots -> F.Atom Root
     | `installable -> F.Atom Available (* /!\ *)
   in
+  let st = load_maybe gt in
   let filter_deps =
     match depends with
     | None | Some [] -> F.Empty
@@ -400,6 +409,15 @@ let list gt
         doc=false;
         dev
       } in
+      let deps =
+        List.map (function
+            | name, None ->
+              (try
+                 name, Some (`Eq, (OpamSwitchState.get_package st name).version)
+               with Not_found -> name, None)
+            | at -> at)
+          deps
+      in
       let atom =
         if resolve_depends then Solution (tog, deps)
         else if reverse_depends
@@ -422,8 +440,9 @@ let list gt
       patterns
   in
   let formula = F.ands [filter_f; filter_deps; patt_f] in
-  let st = load_maybe gt in
   log "Package selector: %a" (slog string_of_formula) formula;
+  if not print_short then
+    OpamConsole.msg "# Packages matching: %s\n" (string_of_formula formula);
   let packages = filter st formula in
   if OpamPackage.Set.is_empty packages then
     (if not print_short then OpamConsole.error "No matches";
