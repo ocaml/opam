@@ -161,7 +161,7 @@ endif
 	$(OPAMBIN) switch system --packages ocaml.system
 
 list:
-	$(OPAMBIN) list -a
+	$(OPAMBIN) list -A
 
 install-remove:
 	$(CHECK) -l install-remove-1 ocaml.system

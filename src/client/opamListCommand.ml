@@ -57,6 +57,7 @@ let default_pattern_selector = {
 }
 
 type selector =
+  | Any
   | Installed
   | Root
   | Available
@@ -71,6 +72,7 @@ type selector =
 let string_of_selector =
   let (%) s col = OpamConsole.colorise col s in
   function
+  | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
   | Available -> "available" % `cyan
@@ -149,7 +151,8 @@ let rec value_strings value =
     List.fold_left (fun acc v -> SS.union acc (value_strings v))
       (value_strings v) vl
 
-let apply_selector st = function
+let apply_selector ~base st = function
+  | Any -> base
   | Installed -> st.installed
   | Root -> st.installed_roots
   | Available -> Lazy.force st.available_packages
@@ -177,7 +180,7 @@ let apply_selector st = function
         OpamPackage.Set.exists
           (fun nv -> List.exists (fun at -> OpamFormula.check at nv) deps)
           packages)
-      st.packages
+      base
   | Solution (tog, atoms) ->
     let universe = get_universe st tog in
     let universe =
@@ -216,20 +219,20 @@ let apply_selector st = function
     OpamPackage.Set.filter
       (fun nv -> List.exists (OpamStd.String.Set.exists (Re.execp re))
           (content_strings nv))
-      st.packages
+      base
   | Atoms atoms ->
     OpamSwitchState.packages_of_atoms st atoms
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         OpamSwitchState.opam st nv |> OpamFile.OPAM.has_flag f)
-      st.packages
+      base
 
-let rec filter st = function
-  | Empty -> st.packages
-  | Atom select -> apply_selector st select
-  | Block b -> filter st b
-  | And (a, b) -> filter st a %% filter st b
-  | Or (a, b) -> filter st a ++ filter st b
+let rec filter ~base st = function
+  | Empty -> base
+  | Atom select -> apply_selector ~base st select
+  | Block b -> filter ~base st b
+  | And (a, b) -> filter ~base st a %% filter ~base st b
+  | Or (a, b) -> filter ~base st a ++ filter ~base st b
 
 type output_format =
   | Name
@@ -444,7 +447,7 @@ let list gt
   let module F = OpamFormula in
   let filter_f =
     match filter_arg with
-    | `all -> F.Empty
+    | `all -> F.Atom Any
     | `installed -> F.Atom Installed
     | `roots -> F.Atom Root
     | `installable -> F.Atom Available (* /!\ *)
@@ -494,9 +497,9 @@ let list gt
   in
   let formula = F.ands [filter_f; filter_deps; patt_f] in
   log "Package selector: %a" (slog string_of_formula) formula;
-  if not print_short then
+  if not print_short && formula <> OpamFormula.Empty then
     OpamConsole.msg "# Packages matching: %s\n" (string_of_formula formula);
-  let packages = filter st formula in
+  let packages = filter ~base:(st.packages ++ st.installed) st formula in
   if OpamPackage.Set.is_empty packages then
     (if not print_short then OpamConsole.error "No matches";
      OpamStd.Sys.exit 1);

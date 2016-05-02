@@ -44,6 +44,7 @@ val default_pattern_selector: pattern_selector
 
 (** Package selectors used to filter the set of packages *)
 type selector =
+  | Any
   | Installed
   | Root
   | Available
@@ -57,7 +58,9 @@ type selector =
 
 (** Applies a formula of selectors to filter the package from a given switch
     state *)
-val filter: 'a switch_state -> selector OpamFormula.formula -> package_set
+val filter:
+  base:package_set -> 'a switch_state ->
+  selector OpamFormula.formula -> package_set
 
 (** Element of package information to be printed *)
 type output_format =
