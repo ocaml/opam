@@ -298,10 +298,12 @@ let version_color st nv =
     OpamGlobalState.installed_versions st.switch_global nv.name
   in
   let is_available nv = (* Ignore unavailability due to pinning *)
-    OpamFilter.eval_to_bool ~default:false
-      (OpamPackageVar.resolve_switch_raw st.switch_global
-         st.switch st.switch_config)
-      (OpamFile.OPAM.available (OpamSwitchState.opam st nv))
+    try
+      OpamFilter.eval_to_bool ~default:false
+        (OpamPackageVar.resolve_switch_raw st.switch_global
+           st.switch st.switch_config)
+        (OpamFile.OPAM.available (OpamSwitchState.opam st nv))
+    with Not_found -> false
   in
   if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
