@@ -337,6 +337,23 @@ endef
 	@echo '  "src/opam-admin"' >>$@
 	@echo ']' >>$@
 
+# Older, all-inclusive opam-lib with ocamlfind sub-packages (still used by 'make
+# libinstall')
+../opam-lib.install: $(OPAMLIB:=.cma)
+	@echo 'lib: [' >$@
+	@echo '  "META"' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,\
+	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
+	} >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,\
+	    $(wildcard \
+	      $(addprefix tools/opam_admin_top.,mli cmi cmx cmxs cmti)))\
+	} >>$@
+	@echo ']' >>$@
+	@echo 'bin: [' >>$@
+	@echo '  "src/opam-admin.top"' >>$@
+	@echo ']' >>$@
+
 .PHONY: dotinstalls
 dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
 

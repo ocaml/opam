@@ -130,6 +130,7 @@ fast: prefast
 
 fastclean: rmartefacts
 	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null
+	@rm -rf src/*/_obuild
 
 cold:
 	./shell/bootstrap-ocaml.sh
