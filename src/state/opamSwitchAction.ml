@@ -248,12 +248,6 @@ let add_to_installed st ?(root=false) nv =
 
 let remove_from_installed st nv =
   let opam = OpamPackage.Map.find nv st.installed_opams in
-  if not OpamStateConfig.(!r.dryrun) &&
-     OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
-     OpamSwitchState.is_switch_globally_set st
-  then
-    (* note: don't remove_metadata just yet *)
-    OpamEnv.write_dynamic_init_scripts st;
   let st =
     if OpamPackage.Set.mem nv st.compiler_packages &&
        List.mem Pkgflag_Compiler (OpamFile.OPAM.flags opam)
@@ -289,4 +283,10 @@ let remove_from_installed st nv =
       ~installed_roots:(rm st.installed_roots)
       ~reinstall:(rm st.reinstall)
   in
+  if not OpamStateConfig.(!r.dryrun) &&
+     OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
+     OpamSwitchState.is_switch_globally_set st
+  then
+    (* note: don't remove_metadata just yet *)
+    OpamEnv.write_dynamic_init_scripts st;
   { st with conf_files = OpamPackage.Map.remove nv st.conf_files }
