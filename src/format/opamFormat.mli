@@ -168,7 +168,7 @@ module Pp : sig
     string -> (module STR with type t = 'a) -> (string, 'a) t
 
   (** Parses to None on the empty list. Often combined with singleton
-      ([opt -| singleton]) *)
+      ([opt (singleton _)]) *)
   val opt : ('a list, 'b) t -> ('a list, 'b option) t
 
   val default : 'a -> ('a option, 'a) t

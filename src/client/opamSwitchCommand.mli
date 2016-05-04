@@ -47,8 +47,9 @@ val import:
     files) as part of the export. *)
 val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
-(** Remove the given compiler switch. *)
-val remove: rw global_state -> ?confirm:bool -> switch -> unit
+(** Remove the given compiler switch, and returns the updated state (unchanged
+    in case [confirm] is [true] and the user didn't confirm) *)
+val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 
 (** Switch to the given compiler switch, installing it if it doesn't exist
     already (with the given compiler, or empty if unspecified). Returns a

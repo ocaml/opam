@@ -39,7 +39,7 @@ val reinstall:
 
 (** Refresh the available packages. *)
 val update:
-  [< unlocked ] global_state ->
+  'a global_state ->
   repos_only:bool -> dev_only:bool -> ?no_stats:bool ->
   string list ->
   unlocked switch_state

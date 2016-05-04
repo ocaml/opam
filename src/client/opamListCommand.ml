@@ -401,7 +401,7 @@ let detail_printer st nv =
       (OpamPackage.Set.elements pkgs)
   | Repository ->
     OpamRepositoryState.find_package_opt st.switch_repos
-      (OpamRepositoryState.repos_list st.switch_repos) nv |>
+      (OpamGlobalState.repos_list st.switch_global) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
 
 let display st ~format ~dependency_order ~all_versions packages =

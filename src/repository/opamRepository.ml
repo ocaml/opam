@@ -15,7 +15,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
@@ -35,14 +34,11 @@ let url_backend url = find_backend_by_kind url.OpamUrl.backend
 let find_backend r = find_backend_by_kind r.repo_url.OpamUrl.backend
 
 (* initialize the current directory *)
-let init repo =
-  log "init %a" (OpamConsole.slog OpamRepositoryBackend.to_string) repo;
+let init root name =
+  log "init local repo mirror at %s" (OpamRepositoryName.to_string name);
   (* let module B = (val find_backend repo: OpamRepositoryBackend.S) in *)
-  OpamFilename.rmdir repo.repo_root;
-  OpamFilename.mkdir repo.repo_root;
-  OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
-  OpamFilename.mkdir (OpamRepositoryPath.packages_dir repo);
-  OpamFilename.mkdir (OpamRepositoryPath.archives_dir repo);
+  let dir = OpamRepositoryPath.create root name in
+  OpamFilename.cleandir dir;
   Done ()
 
 let pull_url package local_dirname checksum remote_url =
@@ -98,32 +94,6 @@ let pull_archive repo nv =
   let url = OpamRepositoryPath.Remote.archive repo nv in
   B.pull_archive repo url
 
-let check_version repo =
-  let repo_version =
-    repo
-    |> OpamRepositoryPath.repo
-    |> OpamFile.Repo.safe_read
-    |> OpamFile.Repo.opam_version
-  in
-  if not OpamFormatConfig.(!r.skip_version_checks) &&
-     OpamVersion.compare repo_version OpamVersion.current_nopatch > 0 then
-    OpamConsole.error_and_exit
-      "The current version of OPAM cannot read the repository %S. \n\
-       You should upgrade to at least version %s.\n"
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamVersion.to_string repo_version)
-  else Done ()
-(* XXX unused ?
-let extract_prefix repo dir nv =
-  let prefix =
-    let prefix = OpamFilename.Dir.to_string (OpamRepositoryPath.packages_dir repo) in
-    prefix ^ Filename.dir_sep in
-  let suffix =
-    let suffix = OpamPackage.to_string nv in
-    Filename.dir_sep ^ suffix in
-  let dir = OpamFilename.Dir.to_string dir in
-  OpamStd.String.remove_prefix ~prefix (OpamStd.String.remove_suffix ~suffix dir)
-*)
 let file f =
   let f = OpamFile.filename f in
   if OpamFilename.exists f then [f] else []

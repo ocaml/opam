@@ -66,9 +66,6 @@ val opamroot: ?root_dir:dirname -> unit -> dirname
 (** Loads the global configuration file, protecting against concurrent writes *)
 val load: dirname -> OpamFile.Config.t option
 
-(** Writes the global configuration file, protecting against concurrent reads *)
-val write: dirname -> OpamFile.Config.t -> unit
-
 (** Loads the config file from the OPAM root and updates default values for all
     related OpamXxxConfig modules. Doesn't read the env yet, the [init]
     functions should still be called afterwards. OpamFormat should be

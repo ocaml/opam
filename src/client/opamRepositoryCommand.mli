@@ -20,7 +20,7 @@ open OpamTypes
 open OpamStateTypes
 
 (** List the available repositories. *)
-val list: 'a global_state -> short:bool -> unit
+val list: 'a repos_state -> short:bool -> unit
 
 (* !X FIXME: once switches define their repositories, we should remove the
    `repositories:` field from ~/.opam/config and rely on the switch priority
@@ -29,15 +29,19 @@ val list: 'a global_state -> short:bool -> unit
 
 (** Add a new repository. *)
 val add:
-  rw global_state -> repository_name -> url -> priority:int option ->
-  rw repos_state
+  rw global_state -> rw repos_state ->
+  repository_name -> url -> priority:int option ->
+  rw global_state * rw repos_state
 
 (** Remove a repository. *)
-val remove: rw global_state -> repository_name -> rw global_state
+val remove:
+  rw global_state -> rw repos_state -> repository_name ->
+  rw global_state * rw repos_state
 
-(** Set a repository priority. *)
+(** Set a repository priority, i.e. its rank in the configured repos (lower
+    value is higher priority) *)
 val priority:
-  'a global_state -> repository_name -> priority:int -> rw repos_state
+  rw global_state -> repository_name -> priority:int -> rw global_state
 
 (** Change the registered address of a repo *)
-val set_url: 'a global_state -> repository_name -> url -> rw repos_state
+val set_url: rw repos_state -> repository_name -> url -> rw repos_state

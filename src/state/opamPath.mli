@@ -46,6 +46,10 @@ val archive: t -> package -> filename
 (** Global lock file for the repositories mirrors: {i $opam/repo/lock} *)
 val repos_lock: t -> filename
 
+(** Global config file for the repositories mirrors:
+    {i $opam/repo/repos-config} *)
+val repos_config: t -> OpamFile.Repos_config.t OpamFile.t
+
 (** Init scripts *)
 val init: t -> dirname
 

@@ -27,8 +27,8 @@ val repository:
   ('a repos_state -> 'a repos_state) OpamProcess.job
 *)
 
-(** Update the given repositories from their upstream, and returns the
-    updated state. *)
+(** Update the given repositories from their upstream, and returns the updated
+    state. This also saves the updated cached state *)
 val repositories: rw repos_state -> repository list -> rw repos_state
 
 (** [update_dev_packages t] checks for upstream changes for packages

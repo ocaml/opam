@@ -677,12 +677,20 @@ end
 module Package_index: IO_FILE with
   type t = (repository_name * string option) package_map
 
-(** Repository config: [$opam/repo/$repo/config] *)
-module Repo_config: IO_FILE with type t = repository
+(** Repository config: [$opam/repo/$repo/config]. Deprecated, for migration
+    only *)
+module Repo_config_legacy: IO_FILE with type t = repository
+
+module Repos_config: IO_FILE with type t = url option OpamRepositoryName.Map.t
 
 (** Pinned package files (only used for migration from 1.2, the inclusive State
     module is now used instead) *)
-module Pinned_legacy: IO_FILE with type t = pin_option name_map
+module Pinned_legacy: sig
+  type pin_option =
+    | Version of version
+    | Source of url
+  include IO_FILE with type t = pin_option name_map
+end
 
 (** Repository metadata *)
 module Repo: sig

@@ -240,7 +240,7 @@ let download_package st nv =
       OpamUpdate.download_upstream st nv dir @@| of_dl
     | None ->
       OpamRepositoryState.download_archive st.switch_repos
-        (OpamRepositoryState.repos_list st.switch_repos)
+        (OpamGlobalState.repos_list st.switch_global)
         nv
       @@+ function
       | Some f ->

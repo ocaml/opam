@@ -164,7 +164,8 @@ type repository = {
   repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_name    : repository_name;
   repo_url     : url;
-  repo_priority: int;
+  repo_priority: int; (** usage of this field is deprecated, priority is
+                          handled by order of definition *)
 }
 
 (** {2 Variable-based filters} *)
@@ -301,11 +302,6 @@ type universe = {
 }
 
 (** {2 Command line arguments} *)
-
-(** Pinned packages options *)
-type pin_option =
-  | Version of version
-  | Source of url
 
 (** Pin kind *)
 type pin_kind = [ `version | OpamUrl.backend ]

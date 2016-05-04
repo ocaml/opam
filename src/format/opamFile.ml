@@ -436,64 +436,69 @@ module PkgList = LineFile (struct
     <name> <pin-kind> <target>
 
     Backwards-compatibility code, do not use *)
+module Pinned_legacy = struct
+  type pin_option =
+    | Version of version
+    | Source of url
 
-let pp_pin =
-  let looks_like_version_re =
-    Re.(compile @@
-        seq [bos; digit; rep @@ diff any (set "/\\"); eos])
-  in
-  let pin_option_of_string ?kind s =
-    match kind with
-    | Some `version ->
-      Version (OpamPackage.Version.of_string s)
-    | None when Re.execp looks_like_version_re s ->
-      Version (OpamPackage.Version.of_string s)
-    | Some (#OpamUrl.backend as backend) ->
-      Source (OpamUrl.parse ~backend s)
-    | None ->
-      Source (OpamUrl.parse ~handle_suffix:false s)
-  in
-  let string_of_pin_kind = function
-    | `version -> "version"
-    | `rsync   -> "path"
-    | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
-  in
-  let pin_kind_of_string = function
-    | "version" -> `version
-    | "path"    -> `rsync
-    | s -> OpamUrl.backend_of_string s
-  in
-  let string_of_pin_option = function
-    | Version v -> OpamPackage.Version.to_string v
-    | Source url -> OpamUrl.to_string url
-  in
-  let kind_of_pin_option = function
-    | Version _ -> `version
-    | Source url -> (url.OpamUrl.backend :> pin_kind)
-  in
-  Pp.pp
-    ~name:"?pin-kind pin-target"
-    (fun ~pos -> function
-       | [x] -> pin_option_of_string x
-       | [k;x] -> pin_option_of_string ~kind:(pin_kind_of_string k) x
-       | _ -> OpamFormat.bad_format ~pos "Invalid number of fields")
-    (fun x -> [string_of_pin_kind (kind_of_pin_option x);
-               string_of_pin_option x])
+  let pp_pin =
+    let looks_like_version_re =
+      Re.(compile @@
+          seq [bos; digit; rep @@ diff any (set "/\\"); eos])
+    in
+    let pin_option_of_string ?kind s =
+      match kind with
+      | Some `version ->
+        Version (OpamPackage.Version.of_string s)
+      | None when Re.execp looks_like_version_re s ->
+        Version (OpamPackage.Version.of_string s)
+      | Some (#OpamUrl.backend as backend) ->
+        Source (OpamUrl.parse ~backend s)
+      | None ->
+        Source (OpamUrl.parse ~handle_suffix:false s)
+    in
+    let string_of_pin_kind = function
+      | `version -> "version"
+      | `rsync   -> "path"
+      | #OpamUrl.backend as ub -> OpamUrl.string_of_backend ub
+    in
+    let pin_kind_of_string = function
+      | "version" -> `version
+      | "path"    -> `rsync
+      | s -> OpamUrl.backend_of_string s
+    in
+    let string_of_pin_option = function
+      | Version v -> OpamPackage.Version.to_string v
+      | Source url -> OpamUrl.to_string url
+    in
+    let kind_of_pin_option = function
+      | Version _ -> `version
+      | Source url -> (url.OpamUrl.backend :> pin_kind)
+    in
+    Pp.pp
+      ~name:"?pin-kind pin-target"
+      (fun ~pos -> function
+         | [x] -> pin_option_of_string x
+         | [k;x] -> pin_option_of_string ~kind:(pin_kind_of_string k) x
+         | _ -> OpamFormat.bad_format ~pos "Invalid number of fields")
+      (fun x -> [string_of_pin_kind (kind_of_pin_option x);
+                 string_of_pin_option x])
 
-module Pinned_legacy = LineFile(struct
+  include LineFile(struct
 
-    let internal = "pinned"
+      let internal = "pinned"
 
-    type t = pin_option OpamPackage.Name.Map.t
+      type t = pin_option OpamPackage.Name.Map.t
 
-    let empty = OpamPackage.Name.Map.empty
+      let empty = OpamPackage.Name.Map.empty
 
-    let pp =
-      OpamPackage.Name.Map.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
-      Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
-      pp_pin
+      let pp =
+        OpamPackage.Name.Map.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
+        Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
+        pp_pin
 
-  end)
+    end)
+end
 
 
 (** Cached environment updates (<switch>/environment) *)
@@ -589,7 +594,8 @@ module StateTable = struct
     M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
     Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
     Pp.of_module "pkg-version" (module OpamPackage.Version) ^+
-    (Pp.opt (pp_state ^+ Pp.opt pp_pin) -| Pp.default (`Root, None))
+    (Pp.opt (pp_state ^+ Pp.opt Pinned_legacy.pp_pin) -|
+     Pp.default (`Root, None))
 
   (* Convert from one name-map to type t *)
   let pp =
@@ -615,7 +621,7 @@ module StateTable = struct
                     | `Root | `Installed | `Uninstalled ->
                       t.sel_compiler);
                 sel_pinned = (match pin with
-                    | Some (Version v) ->
+                    | Some (Pinned_legacy.Version v) ->
                       OpamPackage.Set.add (OpamPackage.create name v)
                         t.sel_pinned
                     | Some _ ->
@@ -651,7 +657,8 @@ module StateTable = struct
                with Not_found -> `Uninstalled
              in
              (* Incorrect: marks all pins as version. But this is deprecated. *)
-             M.add nv.name (nv.version, (state, Some (Version nv.version))) map)
+             M.add nv.name
+               (nv.version, (state, Some (Pinned_legacy.Version nv.version))) map)
            t.sel_pinned)
 
 end
@@ -972,6 +979,38 @@ module Config = struct
   include SyntaxFile(ConfigSyntax)
 end
 
+module Repos_configSyntax = struct
+
+  let internal = "repos-config"
+
+  type t = url option OpamRepositoryName.Map.t
+
+  let empty = OpamRepositoryName.Map.empty
+
+  let fields = [
+    "repositories",
+    Pp.ppacc (fun x _ -> x) (fun x -> x)
+      (Pp.V.map_list ~depth:1
+         (Pp.V.map_option
+            (Pp.V.string -|
+             Pp.of_module "repository" (module OpamRepositoryName))
+            (Pp.opt @@ Pp.singleton -| Pp.V.url)) -|
+       Pp.of_pair "repository-url-list"
+         OpamRepositoryName.Map.(of_list, bindings));
+  ]
+
+  let pp =
+    let name = internal in
+    Pp.I.map_file @@
+    Pp.I.check_fields ~name fields -|
+    Pp.I.fields ~name ~empty fields
+
+end
+module Repos_config = struct
+  include Repos_configSyntax
+  include SyntaxFile(Repos_configSyntax)
+end
+
 module SwitchSelectionsSyntax = struct
 
   let internal = "switch-state"
@@ -1034,7 +1073,7 @@ end
 
 (** Local repository config file (repo/<repo>/config) *)
 
-module Repo_configSyntax = struct
+module Repo_config_legacySyntax = struct
 
   let internal = "repo-config"
 
@@ -1088,9 +1127,9 @@ module Repo_configSyntax = struct
       ~errmsg:"missing 'name:'"
 
 end
-module Repo_config = struct
-  include Repo_configSyntax
-  include SyntaxFile(Repo_configSyntax)
+module Repo_config_legacy = struct
+  include Repo_config_legacySyntax
+  include SyntaxFile(Repo_config_legacySyntax)
 end
 
 (** Global or package switch-local configuration variables.

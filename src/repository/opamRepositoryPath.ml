@@ -25,11 +25,6 @@ let create root name = root / "repo" / OpamRepositoryName.to_string name
 
 let repo t = root t // "repo" |> OpamFile.make
 
-let raw_config root name =
-  root / "repo" / OpamRepositoryName.to_string name // "config" |> OpamFile.make
-
-let config t = root t // "config" |> OpamFile.make
-
 let packages_dir t = root t / "packages"
 
 let packages t prefix nv =

@@ -38,26 +38,21 @@ let eval_redirect gt repo =
     ) [] redirect in
   match redirect with
   | []         -> None
-  | (r,f) :: _ ->
-    let config_f = OpamRepositoryPath.config repo in
-    let config = OpamFile.Repo_config.read config_f in
-    let repo_url = OpamUrl.of_string r in
-    if repo_url <> config.repo_url then (
-      let config = { config with repo_url } in
-      OpamFile.Repo_config.write config_f config;
-      Some (config, f)
-    ) else
-      None
+  | (redirect, f) :: _ ->
+    let redirect_url = OpamUrl.of_string redirect in
+    if redirect_url = repo.repo_url then None
+    else Some (redirect_url, f)
 
-let repository rt repo =
+let repository gt repo =
   let max_loop = 10 in
+  if repo.repo_url = OpamUrl.empty then Done (fun rt -> rt) else
   (* Recursively traverse redirection links, but stop after 10 steps or if
-     we start to cycle. *)
+     we cycle back to the initial repo. *)
   let rec job r n =
     if n = 0 then
       (OpamConsole.warning "%s: Too many redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
-       Done ())
+       Done r)
     else
       let text =
         OpamProcess.make_command_text ~color:`blue
@@ -69,12 +64,11 @@ let repository rt repo =
       if n <> max_loop && r = repo then
         (OpamConsole.warning "%s: Cyclic redirections, stopping."
            (OpamRepositoryName.to_string repo.repo_name);
-         Done ())
-      else match eval_redirect rt.repos_global r with
-        | None -> Done ()
-        | Some (new_repo, f) ->
-          OpamFilename.rmdir repo.repo_root;
-          OpamFile.Repo_config.write (OpamRepositoryPath.config repo) new_repo;
+         Done r)
+      else match eval_redirect gt r with
+        | None -> Done r
+        | Some (new_url, f) ->
+          OpamFilename.cleandir repo.repo_root;
           let reason = match f with
             | None   -> ""
             | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
@@ -82,19 +76,23 @@ let repository rt repo =
             "The repository '%s' will be *%s* redirected to %s%s"
             (OpamRepositoryName.to_string repo.repo_name)
             (OpamConsole.colorise `bold "permanently")
-            (OpamUrl.to_string new_repo.repo_url)
+            (OpamUrl.to_string new_url)
             reason;
-          job new_repo (n-1)
+          job { r with repo_url = new_url } (n-1)
   in
-  job repo max_loop @@+ fun () ->
-  let repo =
-    repo
-    |> OpamRepositoryPath.config
-    |> OpamFile.Repo_config.safe_read
-  in
-  OpamRepository.check_version repo @@+ fun () ->
+  job repo max_loop @@+ fun repo ->
+  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo) in
+  let repo_vers = OpamFile.Repo.opam_version repo_file in
+  if not OpamFormatConfig.(!r.skip_version_checks) &&
+     OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
+    OpamConsole.error_and_exit
+      "The current version of OPAM cannot read the repository %S. \n\
+       You should upgrade to at least version %s.\n"
+      (OpamRepositoryName.to_string repo.repo_name)
+      (OpamVersion.to_string repo_vers);
   let opams = OpamRepositoryState.load_repo_opams repo in
   Done (
+    (* Return an update function to make parallel execution possible *)
     fun rt ->
       { rt with
         repositories =
@@ -109,7 +107,7 @@ let repositories rt repos =
     OpamProcess.Job.ignore_errors ~default:(fun t -> t)
       ~message:("Could not update repository " ^
                 OpamRepositoryName.to_string repo.repo_name) @@
-    repository rt repo
+    repository rt.repos_global repo
   in
   let rt =
     OpamParallel.reduce

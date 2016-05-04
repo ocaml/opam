@@ -125,6 +125,11 @@ module OpamList = struct
       | l -> x :: l in
     aux l
 
+  let rec insert_at index value = function
+    | [] -> [value]
+    | l when index <= 0 -> value :: l
+    | x::l -> x :: insert_at (index - 1) value l
+
 end
 
 

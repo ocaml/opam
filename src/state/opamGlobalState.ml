@@ -27,7 +27,7 @@ module Format_upgrade = struct
 
   let v1_1 = OpamVersion.of_string "1.1"
 
-  let from_1_0_to_1_1 root =
+  let from_1_0_to_1_1 root _config =
     OpamConsole.error_and_exit
       "You appear to have an opam setup dating back to opam 1.0, which is no \
        longer supported since opam 1.3. Please remove \"%s\" and run \
@@ -36,7 +36,7 @@ module Format_upgrade = struct
 
   let v1_2 = OpamVersion.of_string "1.2"
 
-  let from_1_1_to_1_2 root =
+  let from_1_1_to_1_2 root config =
     log "Upgrade pinned packages format to 1.2";
     let aliases = OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases")) in
     let remove_pinned_suffix d =
@@ -102,11 +102,12 @@ module Format_upgrade = struct
               OpamFilename.move ~src:f ~dst
           )
           (OpamFilename.files (switch_root / "config"))
-      ) aliases
+      ) aliases;
+    config
 
   let v1_3_dev2 = OpamVersion.of_string "1.3~dev2"
 
-  let from_1_2_to_1_3_dev2 root =
+  let from_1_2_to_1_3_dev2 root config =
     log "Upgrade switch state files format to 1.3";
     let aliases =
       OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases"))
@@ -129,8 +130,8 @@ module Format_upgrade = struct
           OpamPackage.Name.Map.mapi (fun name pin ->
               let v =
                 match pin with
-                | Version v -> v
-                | Source _ ->
+                | OpamFile.Pinned_legacy.Version v -> v
+                | OpamFile.Pinned_legacy.Source _ ->
                   let overlay =
                     OpamFile.make (switch_dir / "overlay" /
                                    OpamPackage.Name.to_string name // "opam")
@@ -193,7 +194,8 @@ module Format_upgrade = struct
             if OpamFilename.exists src then
               OpamFilename.move ~src ~dst)
           installed)
-      aliases
+      aliases;
+    config
 
   let v1_3_dev5 = OpamVersion.of_string "1.3~dev5"
 
@@ -345,7 +347,8 @@ module Format_upgrade = struct
             if OpamFilename.exists_dir src then OpamFilename.move_dir ~src ~dst)
           ["backup"; "build"; "install"; "config"; "packages.dev"; "overlay"]
       )
-      (OpamFile.Config.installed_switches conf)
+      (OpamFile.Config.installed_switches conf);
+    conf
 
   let v1_3_dev7 = OpamVersion.of_string "1.3~dev7"
 
@@ -389,9 +392,41 @@ module Format_upgrade = struct
       (OpamFile.Config.installed_switches conf);
     OpamFilename.rmdir (root / "packages");
     OpamFilename.rmdir (root / "packages.dev");
-    OpamFilename.rmdir (root / "state.cache")
+    OpamFilename.rmdir (root / "state.cache");
+    conf
 
-  let latest_version = v1_3_dev7
+  let v2_0_alpha = OpamVersion.of_string "2.0~alpha"
+
+  let from_1_3_dev7_to_2_0_alpha root conf =
+    log "Upgrade switch state files format to 2.0~alpha";
+    (* leftovers from previous upgrades *)
+    OpamFilename.rmdir (root / "compilers");
+    OpamFilename.remove (root / "repo" // "package-index");
+    OpamFilename.remove (root / "repo" // "compiler-index");
+    (* turn repo priorities into an ordered list in ~/.opam/config, repo conf
+       files into a single file repo/repos-config *)
+    let prio_repositories =
+      List.map (fun name ->
+          let conf_file =
+            OpamFile.make
+              (root / "repo" / OpamRepositoryName.to_string name // "config")
+          in
+          let conf = OpamFile.Repo_config_legacy.read conf_file in
+          OpamFilename.remove (OpamFile.filename conf_file);
+          conf.repo_priority, name, conf.repo_url)
+        (OpamFile.Config.repositories conf)
+    in
+    OpamFile.Repos_config.write (OpamPath.repos_config root)
+      (OpamRepositoryName.Map.of_list
+         (List.map (fun (_, r, u) -> r, Some u) prio_repositories));
+    let prio_repositories =
+      List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
+        prio_repositories
+    in
+    let repositories_list = List.map (fun (_, r, _) -> r) prio_repositories in
+    OpamFile.Config.with_repositories repositories_list conf
+
+  let latest_version = v2_0_alpha
 
   let as_necessary global_lock root config =
     let config_version = OpamFile.Config.opam_version config in
@@ -426,24 +461,24 @@ module Format_upgrade = struct
          not is_dev &&
          OpamConsole.confirm "Perform the update and continue ?"
       then
-        let config = OpamFile.Config.with_opam_version latest_version config in
-        if OpamVersion.compare config_version v1_1 < 0 then
-          from_1_0_to_1_1 root;
-        if OpamVersion.compare config_version v1_2 < 0 then
-          from_1_1_to_1_2 root;
-        if OpamVersion.compare config_version v1_3_dev2 < 0 then
-          from_1_2_to_1_3_dev2 root;
-        let config =
-          if OpamVersion.compare config_version v1_3_dev5 < 0 then
-            from_1_3_dev2_to_1_3_dev5 root config
+        let update_to v f config =
+          if OpamVersion.compare config_version v < 0 then
+            let config = f root config in
+            (* save the current version to mitigate damage is the upgrade goes
+               wrong afterwards *)
+            OpamFile.Config.write (OpamPath.config root)
+              (OpamFile.Config.with_opam_version v config);
+            config
           else config
         in
-        if OpamVersion.compare config_version v1_3_dev6 < 0 then
-          from_1_3_dev5_to_1_3_dev6 root config;
-        if OpamVersion.compare config_version v1_3_dev7 < 0 then
-          from_1_3_dev6_to_1_3_dev7 root config;
-        OpamStateConfig.write root config;
-        config
+        config |>
+        update_to v1_1       from_1_0_to_1_1 |>
+        update_to v1_2       from_1_1_to_1_2 |>
+        update_to v1_3_dev2  from_1_2_to_1_3_dev2 |>
+        update_to v1_3_dev5  from_1_3_dev2_to_1_3_dev5 |>
+        update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
+        update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
+        update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha
       else
         OpamConsole.error_and_exit "Aborted"
     with OpamSystem.Locked ->
@@ -502,6 +537,8 @@ let installed_versions gt name =
       with Not_found -> acc)
     gt OpamPackage.Map.empty
 
+let repos_list gt = OpamFile.Config.repositories gt.config
+
 let unlock gt =
   OpamSystem.funlock gt.global_lock;
   (gt :> unlocked global_state)
@@ -516,3 +553,6 @@ let with_ lock f =
   let gt = load lock in
   try let r = f gt in ignore (unlock gt); r
   with e -> ignore (unlock gt); raise e
+
+let write gt =
+  OpamFile.Config.write (OpamPath.config gt.root) gt.config

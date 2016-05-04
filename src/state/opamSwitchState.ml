@@ -112,7 +112,7 @@ let load lock_kind gt rt switch =
       installed OpamPackage.Map.empty
   in
   let repos_package_index =
-    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+    OpamRepositoryState.build_index rt (OpamGlobalState.repos_list gt)
   in
   let opams =
     OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
@@ -200,7 +200,7 @@ let load lock_kind gt rt switch =
 
 let load_virtual gt rt =
   let opams =
-    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+    OpamRepositoryState.build_index rt (OpamGlobalState.repos_list gt)
   in
   let packages = OpamPackage.keys opams in
   {

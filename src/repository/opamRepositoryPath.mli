@@ -27,13 +27,6 @@ val update_cache: repository -> filename
 (** Return the repo file *)
 val repo: repository -> OpamFile.Repo.t OpamFile.t
 
-(** Return the repository config from the opam root and the repo name:
-    {i $opam/repo/$repo/config} *)
-val raw_config: dirname -> repository_name -> repository OpamFile.t
-
-(** Return the repository config: {i $opam/repo/$repo/config} *)
-val config: repository -> repository OpamFile.t
-
 (** Packages folder: {i $opam/repo/$repo/packages} *)
 val packages_dir: repository -> dirname
 

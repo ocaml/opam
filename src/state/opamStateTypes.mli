@@ -65,8 +65,8 @@ type +'lock repos_state = {
   repos_lock: OpamSystem.lock;
 
   repos_global: unlocked global_state;
-
-  repositories: OpamFile.Repo_config.t repository_name_map;
+ 
+  repositories: repository repository_name_map;
   (** The list of repositories *)
 
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
@@ -93,7 +93,7 @@ type +'lock switch_state = {
 
   repos_package_index: OpamFile.OPAM.t package_map;
   (** Metadata of all packages that could be found in the configured
-      repositories *)
+      repositories (ignoring installed or pinned packages) *)
 
   opams: OpamFile.OPAM.t package_map;
   (** The metadata of all packages, gathered from repo, local cache and pinning

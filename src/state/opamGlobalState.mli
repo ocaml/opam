@@ -37,6 +37,11 @@ val fold_switches:
     of switches they are installed in *)
 val installed_versions: 'a global_state -> name -> switch list package_map
 
+(** List of configured repositories ordered by decreasing priority (note: this
+    is at the moment global, but it's planned that switches can define their own
+    subset and order of the repos) *)
+val repos_list: 'a global_state -> repository_name list
+
 (** Releases any locks on the given global_state *)
 val unlock: 'a global_state -> unlocked global_state
 
@@ -44,3 +49,6 @@ val unlock: 'a global_state -> unlocked global_state
     global state*)
 val with_write_lock:
   ?dontblock:bool -> 'a global_state -> (rw global_state -> 'c) -> 'c
+
+(** Writes back the global configuration file ~/.opam/config *)
+val write: rw global_state -> unit

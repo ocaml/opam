@@ -121,12 +121,14 @@ let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE";
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repositories =
-    let names = OpamFile.Config.repositories gt.config in
-    List.fold_left (fun map repo_name ->
-        let repo = OpamFile.Repo_config.read
-            (OpamRepositoryPath.raw_config gt.root repo_name) in
-        OpamRepositoryName.Map.add repo_name repo map
-      ) OpamRepositoryName.Map.empty names
+    OpamRepositoryName.Map.mapi (fun name url ->
+        {
+          repo_root = OpamRepositoryPath.create gt.root name;
+          repo_name = name;
+          repo_url = OpamStd.Option.default OpamUrl.empty url;
+          repo_priority = 0; (* ignored *)
+        })
+      (OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root))
   in
   let make_rt opams =
     { repos_global = (gt :> unlocked global_state);
@@ -150,31 +152,22 @@ let find_package_opt rt repo_list nv =
   List.fold_left (function
       | None ->
         fun repo_name ->
-          let opams = OpamRepositoryName.Map.find repo_name rt.repo_opams in
           OpamStd.Option.Op.(
-            OpamPackage.Map.find_opt nv opams
-            >>| fun opam -> repo_name, opam
+            OpamRepositoryName.Map.find_opt repo_name rt.repo_opams >>=
+            OpamPackage.Map.find_opt nv >>| fun opam ->
+            repo_name, opam
           )
       | some -> fun _ -> some)
     None repo_list
 
 let build_index rt repo_list =
   List.fold_left (fun acc repo_name ->
-      let repo_opams =
-        OpamRepositoryName.Map.find repo_name rt.repo_opams
-      in
+      let repo_opams = OpamRepositoryName.Map.find repo_name rt.repo_opams in
       OpamPackage.Map.union (fun a _ -> a) acc repo_opams)
     OpamPackage.Map.empty
     repo_list
 
-let repos_list rt =
-  let repos = OpamRepositoryName.Map.bindings rt.repositories in
-  let repos =
-    List.sort
-      (fun (_, conf1) (_, conf2) -> conf2.repo_priority - conf1.repo_priority)
-      repos
-  in
-  List.map fst repos
+let get_repo rt name = OpamRepositoryName.Map.find name rt.repositories
 
 (* Try to download $name.$version+opam.tar.gz *)
 let download_archive rt repo_list nv =
@@ -217,3 +210,10 @@ let with_ lock gt f =
   let rt = load lock gt in
   try let r = f rt in ignore (unlock rt); r
   with e -> ignore (unlock rt); raise e
+
+let write_config rt =
+  OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
+    (OpamRepositoryName.Map.map (fun r ->
+         if r.repo_url = OpamUrl.empty then None
+         else Some r.repo_url)
+        rt.repositories)

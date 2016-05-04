@@ -98,8 +98,9 @@ let create_empty_switch gt switch =
         (switch::OpamFile.Config.installed_switches gt.config)
         gt.config
     in
-    OpamStateConfig.write root root_config;
-    { gt with config = root_config }
+    let gt = { gt with config = root_config } in
+    OpamGlobalState.write gt;
+    gt
   with e ->
     if not (OpamConsole.debug ()) then
       OpamFilename.rmdir switch_dir;
@@ -137,7 +138,7 @@ let add_to_reinstall st ~unpinned_only packages =
 let set_current_switch lock gt switch =
   let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
-  OpamStateConfig.write gt.root config;
+  OpamGlobalState.write gt;
   let rt = OpamRepositoryState.load `Lock_none gt in
   let st = OpamSwitchState.load lock gt rt switch in
   OpamEnv.write_dynamic_init_scripts st;

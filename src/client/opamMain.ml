@@ -572,19 +572,17 @@ let config =
             else [] in
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
           print "repositories" "%s"
-            OpamRepositoryName.Map.(
-              let nhttp, nlocal, nvcs =
-                fold (fun _ {repo_url = {OpamUrl.backend = k; _}; _}
-                       (nhttp, nlocal, nvcs) ->
-                       match k with
-                       | `http -> nhttp+1, nlocal, nvcs
-                       | `rsync -> nhttp, nlocal+1, nvcs
-                       | _ -> nhttp, nlocal, nvcs+1)
-                  state.switch_repos.repositories (0,0,0) in
-              let has_default =
-                exists (fun _ {repo_url; _} ->
-                    repo_url = OpamRepositoryBackend.default_url)
-                  state.switch_repos.repositories in
+            (let repos = state.switch_repos.repositories in
+             let has_default, nhttp, nlocal, nvcs =
+               OpamRepositoryName.Map.fold
+                 (fun _ {repo_url = url; _} (dft, nhttp, nlocal, nvcs) ->
+                   let dft = dft || url = OpamRepositoryBackend.default_url in
+                   match url.OpamUrl.backend with
+                   | `http -> dft, nhttp+1, nlocal, nvcs
+                   | `rsync -> dft, nhttp, nlocal+1, nvcs
+                   | _ -> dft, nhttp, nlocal, nvcs+1)
+                 repos (false,0,0,0)
+              in
               String.concat ", "
                 (Printf.sprintf "%d%s (http)" nhttp
                    (if has_default then "*" else "") ::
@@ -769,7 +767,7 @@ let update =
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ();
-    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamGlobalState.with_ `Lock_write @@ fun gt ->
     let st =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
@@ -831,11 +829,14 @@ let repository =
      used by OPAM, under $(i,NAME). It will have highest priority unless \
      $(b,--priority) is specified.";
     "remove", `remove, ["NAME"],
-    "Remove the repository $(i,NAME) from the list of repositories used by OPAM.";
+    "Remove the repository $(i,NAME) from the list of configured repositories";
     "list", `list, [],
     "List all repositories used by OPAM.";
-    "priority", `priority, ["NAME"; "PRIORITY"],
-    "Change the priority of repository named $(i,NAME) to $(i,PRIORITY).";
+    "priority", `priority, ["NAME"; "RANK"],
+    "Change the rank of repository named $(i,NAME) to $(i,RANK). 1 is first, \
+     negative is from the end with -1 being last. When a package with the same \
+     name and version appears in two configured repositories, the definition \
+     from the repository with the lower rank is used.";
     "set-url", `set_url, ["NAME"; "ADDRESS"],
     "Change the URL associated with $(i,NAME)";
   ] in
@@ -849,7 +850,10 @@ let repository =
   let command, params = mk_subcommands commands in
   let priority =
     mk_opt ["p";"priority"]
-      "INT" "Set the repository priority (bigger is better)"
+      "RANK" "In case of conflicting package definitions from multiple \
+              repositories, the definition from the lowest-ranked repository \
+              is used. $(i,RANK) is 1 for first, etc., and -1 for last, -2 for \
+              before last, etc."
       Arg.(some int) None in
 
   let repository global_options command kind priority short params =
@@ -859,29 +863,40 @@ let repository =
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _rt = OpamRepositoryCommand.add gt name url ~priority in
+      OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+      let gt, rt = OpamRepositoryCommand.add gt rt name url ~priority in
+      let _gt = OpamGlobalState.unlock gt in
+      let _rt =
+        OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
+      in
       `Ok ()
     | (None | Some `list), [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      `Ok (OpamRepositoryCommand.list gt ~short)
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      `Ok (OpamRepositoryCommand.list rt ~short)
     | Some `priority, [name; p] ->
       let name = OpamRepositoryName.of_string name in
       let priority =
         try int_of_string p
         with Failure _ -> OpamConsole.error_and_exit "%s is not an integer." p in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let _rt = OpamRepositoryCommand.priority gt name ~priority in
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      let _gt = OpamRepositoryCommand.priority gt name ~priority in
       `Ok ()
     | Some `set_url, [name; url] ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let _rt = OpamRepositoryCommand.set_url gt name url in
+      OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+      let rt = OpamRepositoryCommand.set_url rt name url in
+      let _rt =
+        OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
+      in
       `Ok ()
     | Some `remove, [name] ->
       let name = OpamRepositoryName.of_string name in
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = OpamRepositoryCommand.remove gt name in
+      OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+      let _gt, _rt = OpamRepositoryCommand.remove gt rt name in
       `Ok ()
     | command, params -> bad_subcommand commands ("repository", command, params)
   in
@@ -1010,9 +1025,13 @@ let switch =
       `Ok ()
     | Some `remove, switches ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      List.iter
-        (fun switch -> OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
-        switches;
+      let _gt =
+        List.fold_left
+          (fun gt switch ->
+             OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
+          gt
+          switches
+      in
       `Ok ()
     | Some `reinstall, [switch] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->

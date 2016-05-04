@@ -36,6 +36,8 @@ let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let repos_lock t = t / "repo" // "lock"
 
+let repos_config t = t / "repo" /- "repos-config"
+
 let init  t = t / "opam-init"
 
 let log t = t / "log"

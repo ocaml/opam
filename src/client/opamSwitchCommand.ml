@@ -165,20 +165,21 @@ let clear_switch ?(keep_debug=false) gt switch =
     if C.switch config = Some switch then C.with_switch_opt None config
     else config
   in
-  OpamStateConfig.write gt.root config;
+  let gt = { gt with config } in
+  OpamGlobalState.write gt;
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if keep_debug && (OpamStateConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
-    OpamConsole.note "Keeping %s despite errors (debug mode), \
-                      you may want to remove it by hand"
-      (OpamFilename.Dir.to_string comp_dir)
+    (OpamConsole.note "Keeping %s despite errors (debug mode), \
+                       you may want to remove it by hand"
+       (OpamFilename.Dir.to_string comp_dir);
+     gt)
   else
-  try OpamFilename.rmdir comp_dir
-  with OpamSystem.Internal_error _ -> ()
+  try OpamFilename.rmdir comp_dir; gt
+  with OpamSystem.Internal_error _ -> gt
 
 let remove gt ?(confirm = true) switch =
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;
-  let comp_dir = OpamPath.Switch.root gt.root switch in
-  if not (OpamFilename.exists_dir comp_dir) then (
+  if not (List.mem switch (OpamFile.Config.installed_switches gt.config)) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
     OpamStd.Sys.exit 1;
@@ -189,6 +190,7 @@ let remove gt ?(confirm = true) switch =
        (OpamSwitch.to_string switch)
   then
     clear_switch gt switch
+  else gt
 
 let install_compiler_packages t atoms =
   (* install the compiler packages *)
@@ -501,7 +503,8 @@ let import gt switch filename =
 
 let guess_compiler_package rt name =
   let package_index =
-    OpamRepositoryState.build_index rt (OpamRepositoryState.repos_list rt)
+    OpamRepositoryState.build_index rt
+      (OpamGlobalState.repos_list rt.repos_global)
   in
   let compiler_packages =
     OpamPackage.Map.filter

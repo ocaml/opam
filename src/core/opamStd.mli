@@ -178,6 +178,10 @@ module List : sig
   (** Insert a value in an ordered list *)
   val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
 
+  (** Inserts a value at the given index (starting from 0) in the list (start or
+      end if index < 0 or > length respectively). Not tail-recursive *)
+  val insert_at: int -> 'a -> 'a list -> 'a list
+
 end
 
 module String : sig

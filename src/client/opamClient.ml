@@ -471,9 +471,8 @@ let slog = OpamConsole.slog
       else
       let rt = OpamRepositoryState.load `Lock_write gt in
       let repos =
-        OpamRepositoryName.Map.filter (fun r _ -> List.mem r repo_names)
-          rt.repositories
-        |> OpamRepositoryName.Map.values
+        List.map (fun name -> OpamRepositoryName.Map.find name rt.repositories)
+          repo_names
       in
       OpamConsole.header_msg "Updating package repositories";
       let rt = OpamUpdate.repositories rt repos in
@@ -673,12 +672,17 @@ let slog = OpamConsole.slog
             OpamStateConfig.(Lazy.force default.jobs)
             OpamStateConfig.(default.dl_jobs)
         in
-        OpamStateConfig.write root config;
+        OpamFile.Config.write (OpamPath.config root) config;
 
-        OpamFile.Repo_config.write (OpamRepositoryPath.config repo) repo;
-        OpamProcess.Job.run
-          OpamProcess.Job.Op.(OpamRepository.init repo @@+ fun () ->
-                              OpamRepository.update repo);
+        let repos_config =
+          OpamRepositoryName.Map.singleton repo.repo_name (Some repo.repo_url)
+        in
+        OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config;
+
+        OpamProcess.Job.run OpamProcess.Job.Op.(
+            OpamRepository.init root repo.repo_name @@+ fun () ->
+            OpamRepository.update repo
+          );
 
         log "updating repository state";
         let gt = OpamGlobalState.load `Lock_write in
@@ -1018,33 +1022,30 @@ let slog = OpamConsole.slog
         raise e
 
     let get_upstream t name =
-      try
-        let nv = OpamSwitchState.get_package t name in
-        match OpamSwitchState.opam_opt t nv with
-        | None -> raise Not_found
-        | Some o -> match OpamFile.OPAM.dev_repo o with
-          | None -> raise Not_found
-          | Some pin -> Source pin
-      with Not_found ->
+      match
+        OpamStd.Option.Op.(
+          OpamSwitchState.get_package t name |>
+          OpamSwitchState.opam_opt t >>=
+          OpamFile.OPAM.dev_repo
+        )
+      with
+      | None ->
         OpamConsole.error_and_exit
           "\"dev-repo\" field missing in %s metadata, you'll need to specify \
            the pinning location"
           (OpamPackage.Name.to_string name)
+      | Some url -> url
 
     let pin st name ?(edit=false) ?version ?(action=true) target =
-      let pin_option = match target with
-        | `Source url -> Some (Source url)
-        | `Version v -> Some (Version v)
-        | `Dev_upstream -> Some (get_upstream st name)
-        | `None -> None
-      in
       let st =
-        match pin_option with
-        | Some (Source url) -> source_pin st name ?version ~edit (Some url)
-        | None -> source_pin st name ?version ~edit None
-        | Some (Version v) ->
+        match target with
+        | `Source url -> source_pin st name ?version ~edit (Some url)
+        | `Version v ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st
+        | `Dev_upstream ->
+          source_pin st name ?version ~edit (Some (get_upstream st name))
+        | `None -> source_pin st name ?version ~edit None
       in
       if action then
         (OpamConsole.msg "\n"; post_pin_action st name)

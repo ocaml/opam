@@ -46,10 +46,9 @@ val find_package_opt: 'a repos_state -> repository_name list -> package ->
 val build_index:
   'a repos_state -> repository_name list -> OpamFile.OPAM.t OpamPackage.Map.t
 
-(** List of repos name ordered by decreasing priority (note: this is at the
-    moment included in the repos config, but is intended to move to the switch
-    configs) *)
-val repos_list: 'a repos_state -> repository_name list
+(** Finds a package repository definition from its name (assuming it's in
+    ROOT/repos/) *)
+val get_repo: 'a repos_state -> repository_name -> repository
 
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
@@ -67,3 +66,6 @@ val unlock: 'a repos_state -> unlocked repos_state
     repository state*)
 val with_write_lock:
   ?dontblock:bool -> 'a repos_state -> (rw repos_state -> 'c) -> 'c
+
+(** Writes the repositories config file back to disk *)
+val write_config: rw repos_state -> unit

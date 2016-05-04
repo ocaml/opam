@@ -45,13 +45,10 @@ val package_state: repository -> string option -> package ->
 (** {2 Repository backends} *)
 
 (** Initialize {i $opam/repo/$repo} *)
-val init: repository -> unit OpamProcess.job
+val init: dirname -> repository_name -> unit OpamProcess.job
 
 (** Update {i $opam/repo/$repo}. *)
 val update: repository -> unit OpamProcess.job
-
-(** Error and exit on incompatible version *)
-val check_version: repository -> unit OpamProcess.job
 
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)

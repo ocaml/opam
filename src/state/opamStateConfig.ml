@@ -154,9 +154,6 @@ let opamroot ?root_dir () =
 let load opamroot =
   OpamFile.Config.read_opt (OpamPath.config opamroot)
 
-let write opamroot conf =
-  OpamFile.Config.write (OpamPath.config opamroot) conf
-
 let load_defaults root_dir =
   match load root_dir with
   | None -> None
