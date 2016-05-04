@@ -374,6 +374,13 @@ let safe_wait fallback_pid f x =
       Some (Sys.signal Sys.sigalrm (Sys.Signal_handle hndl))
     else None
   in
+  let cleanup () =
+    match sh with
+    | Some sh ->
+      ignore (Unix.alarm 0); (* cancels the alarm *)
+      Sys.set_signal Sys.sigalrm sh
+    | None -> ()
+  in
   let rec aux () =
     if sh <> None then ignore (Unix.alarm 1);
     match
@@ -388,13 +395,8 @@ let safe_wait fallback_pid f x =
         aux ()
       | r -> r
   in
-  let r = aux () in
-  match sh with
-  | Some sh ->
-    ignore (Unix.alarm 0); (* cancels the alarm *)
-    Sys.set_signal Sys.sigalrm sh;
-    r
-  | None -> r
+  try let r = aux () in cleanup (); r
+  with e -> cleanup (); raise e
 
 let wait p =
   set_verbose_process p;
