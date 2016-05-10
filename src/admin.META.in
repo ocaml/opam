@@ -1,0 +1,5 @@
+version = "@PACKAGE_VERSION@"
+description = "OCaml Package Manager client and CLI library"
+archive(byte) = "opam-admin.cma"
+archive(native) = "opam-admin.cmxa"
+requires = "opam-client"

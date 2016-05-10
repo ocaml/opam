@@ -14,38 +14,29 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compiler names and versions *)
+(** Specific query and handling of pinned packages *)
 
-(** OCaml compiler versions *)
-module Version: sig
+open OpamTypes
+open OpamStateTypes
 
-  include OpamStd.ABSTRACT
+(** Returns the version the package is pinned to.
+    @raise Not_found when appropriate *)
+val version: 'a switch_state -> name -> version
 
-  (** Compiler constraint *)
-  type constr = (OpamFormula.relop * t) OpamFormula.formula
+(** Returns the package with the pinned-to version from a pinned package name.
+    @raise Not_found when appropriate *)
+val package: 'a switch_state -> name -> package
 
-  (** Compare OCaml versions *)
-  val compare: t -> t -> int
+(** Returns the package with the pinned-to version from a package name, if
+    pinned *)
+val package_opt: 'a switch_state -> name -> package option
 
-  (** Evaluate a relational operator between OCaml versions *)
-  val eval_relop: OpamFormula.relop -> t -> t -> bool
-end
+(** The set of all pinned packages with their pinning versions *)
+val packages: 'a switch_state -> package_set
 
-(** Compiler names *)
-include OpamStd.ABSTRACT
+(** Looks up an 'opam' file for the given named package in a source directory *)
+val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t option
 
-(** Return the compiler version *)
-val version: t -> Version.t
-
-(** Convert a filename into a compiler name. This function extract
-    [name] from {i /path/to/$name.comp}. *)
-val of_filename: OpamFilename.t -> t option
-
-(** List the compiler available in the global state. *)
-val list: OpamFilename.Dir.t -> Set.t
-
-(** List the compiler available in a directory (and their prefix) *)
-val prefixes: OpamFilename.Dir.t -> string option Map.t
-
-(** System compiler *)
-val system: t
+(** Finds back the location of the opam file this package definition was loaded
+    from *)
+val orig_opam_file: OpamFile.OPAM.t -> OpamFile.OPAM.t OpamFile.t option

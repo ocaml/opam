@@ -16,9 +16,10 @@
 
 include OpamStd.AbstractString
 
-let system = of_string "system"
+let unset = of_string "#unset#"
 
 let not_installed s =
   OpamConsole.error_and_exit
-    "The compiler switch %s is not installed."
+    "The selected compiler switch %s is not installed. Please choose a \
+     different one using the 'opam switch' command."
     (to_string s)

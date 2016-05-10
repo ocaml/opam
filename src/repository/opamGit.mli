@@ -14,6 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Git repository backend *)
+(** Git repository backend (based on OpamVCS) *)
 
 module B: OpamRepositoryBackend.S

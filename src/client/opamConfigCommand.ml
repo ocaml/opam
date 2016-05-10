@@ -18,11 +18,11 @@ let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
 open OpamTypes
-(* open OpamState.Types *)
+open OpamStateTypes
 
 let help t =
   OpamConsole.msg "# Global OPAM configuration variables\n\n";
-  let global = OpamState.global_config t in
+  let global = t.switch_config in
   let global_vars = OpamFile.Dot_config.variables global in
   List.iter (fun var ->
       OpamConsole.msg "%-20s %s\n"
@@ -38,24 +38,23 @@ let help t =
       if not (List.mem var global_vars) then
         OpamConsole.msg "%-20s %-20s # %s\n"
           varname
-          (OpamFilter.ident_string (OpamState.filter_env t) ~default:""
+          (OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
              ([],var,None))
           doc)
-    OpamState.global_variable_names;
+    OpamPackageVar.global_variable_names;
   OpamConsole.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
   List.iter (fun (var, doc) ->
       OpamConsole.msg "PKG:%-37s # %s\n" var doc)
-    OpamState.package_variable_names
+    OpamPackageVar.package_variable_names
 
 (* List all the available variables *)
-let list ns =
+let list gt ns =
   log "config-list";
-  let t = OpamState.load_state "config-list"
-      OpamStateConfig.(!r.current_switch) in
+  OpamSwitchState.with_ `Lock_none gt @@ fun t ->
   if ns = [] then help t else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
-      let conf = OpamState.global_config t in
+      let conf = t.switch_config in
       List.map (fun (v,c) ->
           OpamVariable.Full.global v,
           OpamVariable.string_of_variable_contents c,
@@ -63,10 +62,10 @@ let list ns =
         (OpamFile.Dot_config.bindings conf)
     else
     try
-      let nv = OpamState.get_package t name in
-      let opam = OpamState.opam t nv in
-      let env = OpamState.filter_env ~opam t in
-      let conf = OpamState.dot_config t name in
+      let nv = OpamSwitchState.get_package t name in
+      let opam = OpamSwitchState.opam t nv in
+      let env = OpamPackageVar.resolve ~opam t in
+      let conf = OpamSwitchState.package_config t name in
       let pkg_vars =
         OpamStd.List.filter_map (fun (vname, desc) ->
             let v = OpamVariable.(Full.create name (of_string vname)) in
@@ -74,7 +73,7 @@ let list ns =
               let c = OpamFilter.ident_string env (OpamFilter.ident_of_var v) in
               Some (v, c, desc)
             with Failure _ -> None)
-          OpamState.package_variable_names
+          OpamPackageVar.package_variable_names
       in
       let feature_vars =
         List.map (fun (v, desc, filt) ->
@@ -138,11 +137,9 @@ let print_fish_env env =
         OpamConsole.msg "set -gx %s %S;\n" k v
     ) env
 
-let env ~csh ~sexp ~fish ~inplace_path =
+let env st ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
-  let t = OpamState.load_state "config-env"
-      OpamStateConfig.(!r.current_switch) in
-  let env = OpamState.get_opam_env ~force_path:(not inplace_path) t in
+  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
   if sexp then
     print_sexp_env env
   else if csh then
@@ -152,30 +149,29 @@ let env ~csh ~sexp ~fish ~inplace_path =
   else
     print_env env
 
-let subst fs =
+let subst gt fs =
   log "config-substitute";
-  let t = OpamState.load_state "config-substitute"
-      OpamStateConfig.(!r.current_switch) in
+  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   List.iter
-    (OpamFilter.expand_interpolations_in_file (OpamState.filter_env t))
+    (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve st))
     fs
 
-let expand str =
+let expand gt str =
   log "config-expand";
-  let t = OpamState.load_state "config-expand"
-      OpamStateConfig.(!r.current_switch) in
+  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   OpamConsole.msg "%s\n"
-    (OpamFilter.expand_string (OpamState.filter_env t) str)
+    (OpamFilter.expand_string ~default:"" (OpamPackageVar.resolve st) str)
 
 let set var value =
   if not (OpamVariable.Full.is_global var) then
     OpamConsole.error_and_exit
       "Only global variables may be set using this command";
+  let root = OpamStateConfig.(!r.root_dir) in
+  let switch = OpamStateConfig.get_switch () in
+  OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock root switch)
+  @@ fun () ->
   let var = OpamVariable.Full.variable var in
-  let config_f =
-    OpamPath.Switch.global_config
-      OpamStateConfig.(!r.root_dir) OpamStateConfig.(!r.current_switch)
-  in
+  let config_f = OpamPath.Switch.global_config root switch in
   let config = OpamFile.Dot_config.read config_f in
   let oldval = OpamFile.Dot_config.variable config var in
   let newval = OpamStd.Option.map (fun s -> S s) value in
@@ -192,37 +188,50 @@ let set var value =
     OpamFile.Dot_config.write config_f
       (OpamFile.Dot_config.set config var newval)
 
-let variable v =
-  let t = lazy (
-    OpamState.load_state "config-variable" OpamStateConfig.(!r.current_switch)
-  ) in
-  let contents = OpamState.contents_of_variable t v in
-  OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+let variable gt v =
+  match OpamPackageVar.resolve_global gt v with
+  | Some c ->
+    OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+  | None ->
+    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+    match OpamPackageVar.resolve st v with
+    | Some c ->
+      OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+    | None ->
+      OpamConsole.error_and_exit "Variable %s not found"
+        (OpamVariable.Full.to_string v)
 
-let setup user global =
+let setup gt ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+  ~user ~global =
   log "config-setup";
-  let t = OpamState.load_state "config-setup"
-      OpamStateConfig.(!r.current_switch) in
-  OpamState.update_setup t user global
+  if user then
+    OpamEnv.update_user_setup gt.root ~ocamlinit ?dot_profile shell;
+  if global then (
+    OpamEnv.write_static_init_scripts gt.root ~switch_eval ~completion;
+    match OpamFile.Config.switch gt.config with
+    | Some sw ->
+      OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
+      OpamEnv.write_dynamic_init_scripts st
+    | None -> ()
+  )
 
 let setup_list shell dot_profile =
   log "config-setup-list";
-  let t = OpamState.load_state "config-setup-list"
-      OpamStateConfig.(!r.current_switch) in
-  OpamState.display_setup t shell dot_profile
+  OpamEnv.display_setup OpamStateConfig.(!r.root_dir) ~dot_profile shell
 
-let exec ~inplace_path command =
+let exec gt ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
-  let t = OpamState.load_state "config-exec"
-      OpamStateConfig.(!r.current_switch) in
+  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   let cmd, args =
-    match List.map (OpamFilter.expand_string (OpamState.filter_env t)) command
+    match
+      List.map (OpamFilter.expand_string ~default:""
+                  (OpamPackageVar.resolve st)) command
     with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   let env =
     OpamTypesBase.env_array
-      (OpamState.get_full_env ~opamswitch ~force_path:(not inplace_path) t)
+      (OpamEnv.get_full ~opamswitch ~force_path:(not inplace_path) st)
   in
   raise (OpamStd.Sys.Exec (cmd, args, env))

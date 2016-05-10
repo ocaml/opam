@@ -13,9 +13,11 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Configuration options for the client lib (record, global reference, setter,
+    initialisation), plus helper for global setup *)
+
 type t = private {
   print_stats: bool;
-  sync_archives: bool;
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -23,7 +25,6 @@ type t = private {
 
 type 'a options_fun =
   ?print_stats:bool ->
-  ?sync_archives:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -47,7 +48,6 @@ val opam_init:
   ?all_parens:bool ->
   ?log_dir:OpamTypes.dirname ->
   ?print_stats:bool ->
-  ?sync_archives:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -81,7 +81,6 @@ val opam_init:
   ?disp_status_line:[ `Always | `Auto | `Never ] ->
   ?answer:bool option ->
   ?safe_mode:bool ->
-  ?lock_retries:int ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   unit -> unit

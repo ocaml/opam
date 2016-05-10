@@ -15,6 +15,7 @@
 (*                                                                            *)
 (******************************************************************************)
 
+(** Version comparison function used throughout. From the Dose suite. *)
 
 (** Functions for manipulating and comparing Debian version strings.
     Compliant with Debian policy version 3.9.2. and Debian developers

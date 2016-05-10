@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Compatibility layer (Bytes, etc.) for different OCaml versions *)
+
 module Bytes = Bytes
 module Buffer = Buffer
 module Filename = Filename

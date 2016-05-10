@@ -71,6 +71,7 @@ let global_start_time =
 type text_style =
   [ `bold
   | `underline
+  | `crossed
   | `black
   | `red
   | `green
@@ -80,22 +81,29 @@ type text_style =
   | `cyan
   | `white ]
 
+let style_code (c: text_style) = match c with
+  | `bold      -> "01"
+  | `underline -> "04"
+  | `crossed   -> "09"
+  | `black     -> "30"
+  | `red       -> "31"
+  | `green     -> "32"
+  | `yellow    -> "33"
+  | `blue      -> "1;34" (* most terminals make blue unreadable unless bold *)
+  | `magenta   -> "35"
+  | `cyan      -> "36"
+  | `white     -> "37"
+
 (* not nestable *)
-let colorise (c: text_style) s =
+let colorise style s =
   if not (color ()) then s else
-    let code = match c with
-      | `bold      -> "01"
-      | `underline -> "04"
-      | `black     -> "30"
-      | `red       -> "31"
-      | `green     -> "32"
-      | `yellow    -> "33"
-      | `blue      -> "1;34"
-      | `magenta   -> "35"
-      | `cyan      -> "36"
-      | `white     -> "37"
-    in
-    Printf.sprintf "\027[%sm%s\027[m" code s
+    Printf.sprintf "\027[%sm%s\027[m" (style_code style) s
+
+let colorise' styles s =
+  if not (color ()) then s else
+    Printf.sprintf "\027[%sm%s\027[m"
+      (String.concat ";" (List.map style_code styles))
+      s
 
 let acolor_with_width width c oc s =
   let str = colorise c s in
@@ -154,7 +162,7 @@ let note fmt =
 
 let errmsg fmt =
   flush stdout;
-  Printf.printf (fmt ^^ "%!")
+  Printf.eprintf (fmt ^^ "%!")
 
 let error_and_exit ?(num=66) fmt =
   Printf.ksprintf (fun str ->
@@ -252,7 +260,9 @@ let confirm ?(default=true) fmt =
       in
       if OpamCoreConfig.(!r.answer) = Some true then
         (prompt (); msg "y\n"; true)
-      else if OpamCoreConfig.(!r.answer) = Some false then
+      else if OpamCoreConfig.(!r.answer) = Some false ||
+              OpamStd.Sys.(not tty_in)
+      then
         (prompt (); msg "n\n"; false)
       else if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
         let rec loop () =

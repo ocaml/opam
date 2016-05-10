@@ -17,7 +17,7 @@
 open OpamTypes
 open OpamTypesBase
 
-let log fmt = OpamConsole.log "CUDF" fmt
+let log ?level fmt = OpamConsole.log ?level "CUDF" fmt
 let slog = OpamConsole.slog
 
 (* custom cudf field labels *)
@@ -50,7 +50,7 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
     | Some vmap ->
       let nvset =
         OpamPackage.Map.filter
-          (fun nv cv -> OpamPackage.name nv = name && cv = v)
+          (fun nv cv -> nv.name = name && cv = v)
           vmap
       in
       fst (OpamPackage.Map.choose nvset)
@@ -146,9 +146,13 @@ let dose_dummy_request = "dose-dummy-request"
 let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
 
 let filter_dependencies f_direction universe packages =
+  log ~level:3 "filter deps: build graph";
   let graph = f_direction (Graph.of_universe universe) in
   let packages = Set.of_list packages in
-  Graph.close_and_linearize graph packages
+  log ~level:3 "filter deps: close_and_linearize";
+  let r = Graph.close_and_linearize graph packages in
+  log ~level:3 "filter deps: done";
+  r
 
 let dependencies = filter_dependencies (fun x -> x)
 
@@ -174,7 +178,7 @@ let vpkg2atom cudfnv2opam (name,cstr) =
   | Some (relop,v) ->
     try
       let nv = cudfnv2opam (name,v) in
-      OpamPackage.name nv, Some (relop, OpamPackage.version nv)
+      nv.name, Some (relop, nv.version)
     with Not_found -> assert false
 (* Should be unneeded now that we pass a full version_map along
    [{
@@ -626,8 +630,8 @@ let get_final_universe ~version_map univ req =
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
       make_conflicts ~version_map univ r
-    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _} ->
-      fail "inconsistent return value."
+    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
+      (* fail "inconsistent return value." *)
     | None ->
       (* External solver did not provide explanations, hopefully this will *)
       check_request ~version_map univ req

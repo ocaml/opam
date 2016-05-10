@@ -30,9 +30,8 @@ let compare r1 r2 =
   | x -> x
 
 let to_string r =
-  Printf.sprintf "%s(%d %s)"
+  Printf.sprintf "%s (%s)"
     (OpamRepositoryName.to_string r.repo_name)
-    r.repo_priority
     (OpamUrl.to_string r.repo_url)
 
 let default_url = {

@@ -62,7 +62,6 @@ let char   = ['-' '_' '+']
 let achar  = (alpha | digit | char)
 let ident  = (alpha achar* (':' achar+)?)
 let relop  = ('!'? '=' | [ '<' '>' ] '='?)
-let logop  = ['|' '&']
 let pfxop  = '!'
 let envop_char = [ '+' ':' ]
 let envop = (envop_char '=' | '=' envop_char '='?)
@@ -87,7 +86,8 @@ rule token = parse
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
 | relop  { RELOP (relop_of_string (Lexing.lexeme lexbuf)) }
-| logop  { LOGOP (logop_of_string (Lexing.lexeme lexbuf)) }
+| '&'    { AND }
+| '|'    { OR }
 | pfxop  { PFXOP (pfxop_of_string (Lexing.lexeme lexbuf)) }
 | envop  { ENVOP (env_update_op_of_string (Lexing.lexeme lexbuf)) }
 | eof    { EOF }

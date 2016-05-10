@@ -11,11 +11,10 @@ begin program "opam-admin"
     "opam_repo_check.ml"
     "opam_stats.ml"
     "opam_depexts_change.ml"
-    (* "opam_findlib.ml" *)
     "opam_rename.ml"
     "opam_admin.ml"
   ]
-  requires = [ "opam-client" ]
+  requires = [ "opam-state" "opam-client" ]
 end
 
 begin program "opam-installer"
@@ -23,13 +22,6 @@ begin program "opam-installer"
     "opam_installer.ml"
   ]
   requires = [ "opam-client" ]
-end
-
-begin program "opamlfind"
-  files = [
-    "opamlfind.ml"
-  ]
-  requires = [ "unix" ]
 end
 
 begin program "opam-admin.top"
@@ -47,3 +39,4 @@ begin program "opam-admin.top"
     "re.glob"
   ]
 end
+

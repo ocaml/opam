@@ -3,6 +3,15 @@
 #directory "+../opam-lib";;
 open Opam_admin_top;;
 
+let contains_neq f =
+  try
+    OpamFormula.iter (function (_,cs) ->
+        OpamFormula.iter (function (`Neq,_) -> raise Exit | _ -> ()) cs)
+      f;
+    false
+  with Exit -> true
+;;
+
 iter_packages ~opam:(fun _ opam ->
     let depopts =
       let formula = OpamFile.OPAM.depopts opam in
@@ -59,6 +68,11 @@ iter_packages ~opam:(fun _ opam ->
     in
     let opam = OpamFile.OPAM.with_depopts opam depopts in
     let opam = OpamFile.OPAM.with_conflicts opam conflicts in
+    let opam =
+      if contains_neq conflicts then
+        OpamFile.OPAM.with_opam_version opam (OpamVersion.of_string "1.2")
+      else opam
+    in
     opam)
   ()
 ;;

@@ -1,11 +1,11 @@
-AC_INIT(opam,1.3.0~dev3)
+AC_INIT(opam,2.0~alpha)
 AC_COPYRIGHT(Copyright 2012-2015 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 
 AC_PROG_OCAML
-if test "$OCAMLC" = "no"; then
+if test "x$OCAMLC" = "xno"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
 
@@ -14,17 +14,18 @@ AC_ARG_ENABLE([version_check],
                  [Do not check OCaml version])
 )
 
-# Check that OCaml version is greater or equal to 3.12.1
+AC_ARG_ENABLE([checks],
+  AS_HELP_STRING([--disable-checks],
+                 [Assume OCaml dependencies are OK without checking])
+)
+
+# Check that OCaml version is greater or equal to 4.01.0
 AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(
-    [$OCAMLVERSION], [lt], [3.12.1],
+    [$OCAMLVERSION], [lt], [4.01.0],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
-AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.00.0])
-AC_SUBST(ocaml_4,"$ax_compare_version")
-AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.01.0])
-AC_SUBST(ocaml_4_01,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
 
@@ -48,7 +49,7 @@ if test x"$FETCH" = x"curl" ; then
   AC_SUBST(fetch, "curl $curl_certificate_check -OL")
 elif test x"$FETCH" = x"wget" ; then
   AC_SUBST(fetch, "wget $wget_certificate_check")
-else
+elif test x"${enable_checks}" != x"no" ; then
   AC_MSG_ERROR([You must have either curl or wget installed.])
 fi
 
@@ -57,9 +58,7 @@ echo
 AC_CHECK_OCAML_PKG([unix])
 AC_CHECK_OCAML_PKG([extlib])
 AC_CHECK_OCAML_PKG([re])
-AC_CHECK_OCAML_PKG([re.emacs])
 AC_CHECK_OCAML_PKG([re.str])
-AC_CHECK_OCAML_PKG([re.perl])
 AC_CHECK_OCAML_PKG([re.pcre])
 AC_CHECK_OCAML_PKG([re.glob])
 AC_CHECK_OCAML_PKG([cmdliner])
@@ -79,31 +78,40 @@ dnl echo "dose3......................... ${OCAML_PKG_dose3}"
 dnl echo "jsonm......................... ${OCAML_PKG_jsonm}"
 echo
 
-if test "$OCAML_PKG_extlib" = "no" ||
-   test "$OCAML_PKG_re" = "no" ||
-   test "$OCAML_PKG_cmdliner" = "no" ||
-   test "$OCAML_PKG_ocamlgraph" = "no" ||
-   test "$OCAML_PKG_cudf" = "no" ||
-   test "$OCAML_PKG_dose3" = "no" ||
-   test "$OCAML_PKG_jsonm" = "no"; then
+
+AS_IF([test "x${enable_checks}" != "xno" && {
+       test "x$OCAML_PKG_extlib" = "xno" ||
+       test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_cmdliner" = "xno" ||
+       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
+       test "x$OCAML_PKG_cudf" = "xno" ||
+       test "x$OCAML_PKG_dose3" = "xno" ||
+       test "x$OCAML_PKG_jsonm" = "xno"; }],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "binaries, run 'make lib-ext' to download and include them."
+  echo "'opam' binary, run 'make lib-ext' to download and include them."
   echo "============================================================================"
   echo
   AC_SUBST(hasalldeps,"")
-else
+],[
   AC_SUBST(hasalldeps,"true")
-fi
+])
 
-if test "$prefix" = "NONE"; then
+if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
 AC_CONFIG_FILES(
   Makefile.config
-  META
   src/core/opamVersion.ml
+  META
+  src/core.META
+  src/format.META
+  src/repository.META
+  src/solver.META
+  src/state.META
+  src/client.META
+  src/admin.META
 )
 AC_OUTPUT
 

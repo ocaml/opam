@@ -16,6 +16,8 @@
 
 %{
 
+(** OPAM config file generic type parser *)
+
 open OpamTypes
 open OpamTypesBase
 
@@ -36,13 +38,15 @@ let get_pos n =
 %token COLON
 %token <int> INT
 %token <OpamTypes.relop> RELOP
-%token <OpamTypes.logop> LOGOP
+%token AND
+%token OR
 %token <OpamTypes.pfxop> PFXOP
 %token <OpamTypes.env_update_op> ENVOP
 
 %left COLON
 %left ATOM
-%left LOGOP
+%left AND
+%left OR
 %nonassoc ENVOP
 %nonassoc PFXOP
 %left LBRACE RBRACE
@@ -82,7 +86,8 @@ value:
 | LPAR values RPAR           { Group (get_pos 1,$2) }
 | LBRACKET values RBRACKET   { List (get_pos 1,$2) }
 | value LBRACE values RBRACE { Option (get_pos 2,$1, $3) }
-| value LOGOP value          { Logop (get_pos 2,$2,$1,$3) }
+| value AND value            { Logop (get_pos 2,`And,$1,$3) }
+| value OR value             { Logop (get_pos 2,`Or,$1,$3) }
 | atom RELOP atom            { Relop (get_pos 2,$2,$1,$3) }
 | atom ENVOP atom            { Env_binding (get_pos 1,$1,$2,$3) }
 | PFXOP value                { Pfxop (get_pos 1,$1,$2) }
@@ -103,17 +108,15 @@ atom:
 
 %%
 
-let error lexbuf exn msg =
+let error lexbuf msg =
   let curr = lexbuf.Lexing.lex_curr_p in
   let start = lexbuf.Lexing.lex_start_p in
-  OpamConsole.error
-      "File %S, line %d, character %d-%d: %s."
-      curr.Lexing.pos_fname
-      start.Lexing.pos_lnum
-      (start.Lexing.pos_cnum - start.Lexing.pos_bol)
-      (curr.Lexing.pos_cnum - curr.Lexing.pos_bol)
-      msg;
-  raise exn
+  let pos =
+    OpamFilename.of_string curr.Lexing.pos_fname,
+    start.Lexing.pos_lnum,
+    start.Lexing.pos_cnum - start.Lexing.pos_bol
+  in
+  raise (OpamFormat.Bad_format (Some pos, msg))
 
 let main t l f =
   try
@@ -121,9 +124,9 @@ let main t l f =
     Parsing.clear_parser ();
     r
   with
-  | Lexer_error msg     as e ->
+  | Lexer_error msg ->
     Parsing.clear_parser ();
-    error l e msg
-  | Parsing.Parse_error as e ->
+    error l msg
+  | Parsing.Parse_error ->
     Parsing.clear_parser ();
-    error l e "parse error"
+    error l "Parse error"

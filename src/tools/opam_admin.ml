@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Source of the opam-admin tool, main *)
+
 open Cmdliner
 
 let default_cmd =

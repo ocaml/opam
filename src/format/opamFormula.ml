@@ -108,23 +108,23 @@ let make_or a b = match a, b with
   | a, b -> Or (a, b)
 
 let string_of_formula string_of_a f =
-  let rec aux ?paren f =
-    let paren = match paren with
-      | Some _ when OpamFormatConfig.(!r.all_parens) -> Some `All
-      | paren -> paren
+  let rec aux ?(in_and=false) f =
+    let paren_if ?(cond=false) s =
+      if cond || OpamFormatConfig.(!r.all_parens)
+      then Printf.sprintf "(%s)" s
+      else s
     in
     match f with
     | Empty    -> "0"
-    | Atom a   ->
-      let s = string_of_a a in
-      if OpamFormatConfig.(!r.all_parens) then Printf.sprintf "(%s)" s else s
+    | Atom a   -> paren_if (string_of_a a)
     | Block x  -> Printf.sprintf "(%s)" (aux x)
-    | And(x,y) -> (* And, Or have the same priority, left-associative *)
-      let lpar, rpar = if paren = Some `Or then "(",")" else "","" in
-      Printf.sprintf "%s%s & %s%s" lpar (aux x) (aux ~paren:`And y) rpar
+    | And(x,y) ->
+      paren_if
+        (Printf.sprintf "%s & %s"
+           (aux ~in_and:true x) (aux ~in_and:true y))
     | Or(x,y)  ->
-      let lpar, rpar = if paren = Some `And then "(",")" else "","" in
-      Printf.sprintf "%s%s | %s%s" lpar (aux x) (aux ~paren:`Or y) rpar
+      paren_if ~cond:in_and
+        (Printf.sprintf "%s | %s" (aux x) (aux y))
   in
   aux f
 
@@ -180,6 +180,21 @@ let rec eval atom = function
   | And(x,y) -> eval atom x && eval atom y
   | Or(x,y)  -> eval atom x || eval atom y
 
+let rec partial_eval atom = function
+  | Empty -> `Formula Empty
+  | Atom x -> atom x
+  | And(x,y) ->
+    (match partial_eval atom x, partial_eval atom y with
+     | `False, _ | _, `False -> `False
+     | `True, f | f, `True -> f
+     | `Formula x, `Formula y -> `Formula (And (x,y)))
+  | Or(x,y) ->
+    (match partial_eval atom x, partial_eval atom y with
+     | `True, _ | _, `True -> `True
+     | `False, f | f, `False -> f
+     | `Formula x, `Formula y -> `Formula (Or (x,y)))
+  | Block x -> partial_eval atom x
+
 let check_relop relop c = match relop with
   | `Eq  -> c =  0
   | `Neq -> c <> 0
@@ -199,7 +214,8 @@ let check (name,cstr) package =
 
 let to_string t =
   let string_of_constraint (relop, version) =
-    Printf.sprintf "%s %s" (string_of_relop relop) (OpamPackage.Version.to_string version) in
+    Printf.sprintf "%s %s" (string_of_relop relop)
+      (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
     | n, (Atom _ as c) ->
@@ -409,3 +425,19 @@ type 'a ext_package_formula =
 
 let formula_of_extended ~filter =
   map (fun (n, (kws,formula)) -> if filter kws then Atom (n, formula) else Empty)
+
+let reduce_extended ~filter =
+  map (fun (n, (kws, formula)) ->
+      let kws =
+        List.fold_left (fun acc kw ->
+            match acc with
+            | None -> None
+            | Some kws -> match filter kw with
+              | Some true -> acc
+              | Some false -> None
+              | None -> Some (kw::kws))
+          (Some []) (List.rev kws)
+      in
+      match kws with
+      | None -> Empty
+      | Some kws -> Atom (n, (kws, formula)))

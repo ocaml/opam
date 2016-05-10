@@ -5,8 +5,8 @@ SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm
 URL_extlib = http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
 MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
 
-URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.2.0.tar.gz
-MD5_re = 5cbfc137683ef2b0e91f931577f2e673
+URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.5.0.tar.gz
+MD5_re = 1e9bff3279648881be31e5ff96219f0a
 
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.7.tbz
 MD5_cmdliner = 46d7553b95f623f811df2a844fb448fb
@@ -120,8 +120,8 @@ define PROJ_extlib
 endef
 export PROJ_extlib
 
-SRC_re = cset.ml automata.ml re.ml re_perl.ml re_pcre.ml re_emacs.ml re_glob.ml	\
-re_str.ml
+SRC_re = re_cset.ml re_automata.ml re.ml re_perl.ml re_pcre.ml re_emacs.ml \
+re_glob.ml re_str.ml
 
 define PROJ_re
   SOURCES = $(call addmli,re/lib,$(SRC_re))

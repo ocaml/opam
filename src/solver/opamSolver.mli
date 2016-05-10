@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** SAT-solver for package dependencies and conflicts *)
+(** Entry point to the solver, conversion of opam package universes to Cudf,
+    dependencies computation. Front-end to Dose. *)
 
 open OpamTypes
 
@@ -24,6 +25,14 @@ module ActionGraph : OpamActionGraph.SIG with type package = package
 type solution
 
 val empty_universe: universe
+
+(** Resolves the build, test, doc, dev flags in a filtered formula (which is
+    supposed to have been pre-processed to remove switch and global variables).
+    [default] determines the behaviour on undefined filters, raising if
+    undefined *)
+val filter_deps:
+  build:bool -> test:bool -> doc:bool -> dev:bool -> ?default:bool ->
+  filtered_formula -> formula
 
 (** {2 Solver} *)
 

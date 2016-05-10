@@ -1,5 +1,6 @@
 _obuild/
 bootstrap/
+tests/tmp/
 .*.swp
 src_ext/cudf/
 src_ext/dose/
@@ -15,6 +16,7 @@ src_ext/*.tar.gz
 *.tar.gz
 *~
 .#*
+\#*#
 ocp-build.root
 ocp-build.root.old
 ocp-get
@@ -36,7 +38,7 @@ ocp-build.root.old.old
 *.a
 *.o
 META
-opam-lib.install
+opam-lib*.install
 Makefile.config
 config.log
 config.status
@@ -55,6 +57,8 @@ src/opam-admin
 src/opam-installer
 src/opam-check
 src/opamlfind
+src/opam-admin.top
+src/*.META
 ._d
 ._ncdi
 ._bcdi

@@ -25,26 +25,38 @@ type env = full_variable -> variable_contents option
 
 type fident = name list * variable * (string * string) option
 
-let rec to_string = function
-  | FBool b    -> string_of_bool b
-  | FString s  -> Printf.sprintf "%S" s
-  | FIdent (pkgs,var,converter) ->
-    OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
-    (if pkgs <> [] then ":" else "") ^
-    OpamVariable.to_string var ^
-    (match converter with
-     | Some (it,ifu) -> "?"^it^":"^ifu
-     | None -> "")
-  | FOp(e,s,f) ->
-    Printf.sprintf "%s %s %s"
-      (to_string e) (string_of_relop s) (to_string f)
-  | FAnd (e,f) -> Printf.sprintf "%s & %s" (to_string e) (to_string f)
-  | FOr (e,f)  -> Printf.sprintf "%s | %s" (to_string e) (to_string f)
-  | FNot (FBool _ | FString _ | FIdent _ as e) ->
-    Printf.sprintf "!%s" (to_string e)
-  | FNot e     ->
-    Printf.sprintf "!(%s)" (to_string e)
-  | FUndef -> "#undefined"
+let to_string t =
+  let rec aux ?(context=`Or) t =
+    let paren ?(cond=false) f =
+      if cond || OpamFormatConfig.(!r.all_parens)
+      then Printf.sprintf "(%s)" f else f
+    in
+    match t with
+    | FBool b    -> string_of_bool b
+    | FString s  -> Printf.sprintf "%S" s
+    | FIdent (pkgs,var,converter) ->
+      OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
+      (if pkgs <> [] then ":" else "") ^
+      OpamVariable.to_string var ^
+      (match converter with
+       | Some (it,ifu) -> "?"^it^":"^ifu
+       | None -> "")
+    | FOp(e,s,f) ->
+      paren ~cond:(context <> `Or && context <> `And)
+        (Printf.sprintf "%s %s %s"
+           (aux ~context:`Relop e) (string_of_relop s) (aux ~context:`Relop f))
+    | FAnd (e,f) ->
+      paren ~cond:(context <> `Or && context <> `And)
+        (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
+    | FOr (e,f)  ->
+      paren ~cond:(context <> `Or)
+        (Printf.sprintf "%s | %s" (aux e) (aux f))
+    | FNot e     ->
+      paren ~cond:(context = `Relop)
+        (Printf.sprintf "!%s" (aux ~context:`Not e))
+    | FUndef f -> Printf.sprintf "#undefined(%s)" (aux f)
+  in
+  aux t
 
 let rec fold_down_left f acc filter = match filter with
   | FOp(l,_,r) | FAnd(l,r) | FOr(l,r) ->
@@ -102,29 +114,29 @@ let variables filter =
 let value ?default = function
   | FBool b -> B b
   | FString s -> S s
-  | FUndef ->
+  | FUndef f ->
     (match default with
      | Some d -> d
-     | None -> failwith "Undefined filter value")
+     | None -> failwith ("Undefined filter value: "^to_string f))
   | e -> raise (Invalid_argument ("filter value: "^to_string e))
 
 let value_string ?default = function
   | FBool b -> string_of_bool b
   | FString s -> s
-  | FUndef ->
+  | FUndef f ->
     (match default with
      | Some d -> d
-     | None -> failwith "Undefined string filter value")
+     | None -> failwith ("Undefined string filter value: "^to_string f))
   | e -> raise (Invalid_argument ("value_string: "^to_string e))
 
 let value_bool ?default = function
   | FBool b -> b
   | FString "true" -> true
   | FString "false" -> false
-  | FUndef ->
+  | FUndef f ->
     (match default with
      | Some d -> d
-     | None -> failwith "Undefined boolean filter value")
+     | None -> failwith ("Undefined boolean filter value: "^to_string f))
   | e ->
     (match default with
      | Some d -> d
@@ -164,7 +176,7 @@ let resolve_ident env fident =
     (match value_opt with
      | Some (B b) -> FBool b
      | Some (S s) -> FString s
-     | None -> FUndef)
+     | None -> FUndef (FIdent fident))
   | Some (iftrue, iffalse) ->
     match value_opt >>= bool_of_value with
     | Some true -> FString iftrue
@@ -172,50 +184,75 @@ let resolve_ident env fident =
     | None -> FString iffalse
 
 (* Resolves ["%{x}%"] string interpolations *)
-let expand_string env text =
+let expand_string ?default env text =
   let subst str =
     if str = "%%" then "%"
     else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
        str)
     else
-    let str = String.sub str 2 (String.length str - 4) in
-    resolve_ident env (filter_ident_of_string str)
-    |> value_string ~default:""
+    let fident = String.sub str 2 (String.length str - 4) in
+    resolve_ident env (filter_ident_of_string fident)
+    |> value_string ~default:(OpamStd.Option.default str default)
   in
   Re_pcre.substitute ~rex:string_interp_regex ~subst text
 
-let logop1 op = function
-  | FUndef -> FUndef
+let unclosed_expansions text =
+  let re =
+    Re.(
+      compile (alt [
+          str "%%";
+          seq [str "%{";
+               group (greedy (rep (diff notnl (char '}'))));
+               opt (group (str "}%"))];
+        ])
+    )
+  in
+  Re.all re text |> OpamStd.List.filter_map @@ fun gr ->
+  if Re.Group.test gr 1 && not (Re.Group.test gr 2) then
+    Some (Re.Group.offset gr 0, Re.Group.get gr 0)
+  else None
+
+let logop1 cstr op = function
+  | FUndef f -> FUndef (cstr f)
   | e ->
     try FBool (op (value_bool e))
-    with Invalid_argument s -> log "ERR: %s" s; FUndef
+    with Invalid_argument s -> log "ERR: %s" s; FUndef (cstr e)
 
-let logop2 op absorb e f = match e, f with
-  | FUndef, x | x, FUndef -> if x = FBool absorb then x else FUndef
+let logop2 cstr op absorb e f = match e, f with
+  | _, FBool x | FBool x, _ when x = absorb -> FBool x
+  | FUndef x, FUndef y | FUndef x, y | x, FUndef y -> FUndef (cstr x y)
   | f, g ->
     try FBool (op (value_bool f) (value_bool g))
-    with Invalid_argument s -> log "ERR: %s" s; FUndef
+    with Invalid_argument s -> log "ERR: %s" s; FUndef (cstr f g)
 
 (* Reduce expressions to values *)
 
-let rec reduce_aux env = function
-  | FUndef -> FUndef
+let rec reduce_aux ~default_str env = function
+  | FUndef x -> FUndef x
   | FBool b -> FBool b
   | FString s -> FString s
   | FIdent i -> resolve_ident env i
   | FOp (e,relop,f) ->
-    (match reduce env e, reduce env f with
-     | FUndef, _ | _, FUndef -> FUndef
+    (match reduce ~default_str env e, reduce ~default_str env f with
+     | FUndef x, FUndef y | FUndef x, y | x, FUndef y ->
+       FUndef (FOp (x, relop, y))
      | e,f ->
        FBool (OpamFormula.check_relop relop
                 (OpamVersionCompare.compare (value_string e) (value_string f))))
-  | FAnd (e,f) -> logop2 (&&) false (reduce env e) (reduce env f)
-  | FOr (e,f) -> logop2 (||) true (reduce env e) (reduce env f)
-  | FNot e -> logop1 not (reduce env e)
+  | FAnd (e,f) ->
+    logop2 (fun e f -> FAnd (e,f)) (&&) false
+      (reduce ~default_str env e) (reduce ~default_str env f)
+  | FOr (e,f) ->
+    logop2 (fun e f -> FOr (e,f)) (||) true
+      (reduce ~default_str env e) (reduce ~default_str env f)
+  | FNot e ->
+    logop1 (fun e -> FNot e) not
+      (reduce ~default_str env e)
 
-and reduce env e = match reduce_aux env e with
-  | FString s -> FString (expand_string env s)
+and reduce ?(default_str=Some "") env e =
+  match reduce_aux ~default_str env e with
+  | FString s -> FString (expand_string ?default:default_str env s)
   | e -> e
 
 let eval ?default env e = value ?default (reduce env e)
@@ -253,7 +290,7 @@ let expand_interpolations_in_file env file =
   let rec aux () =
     match try Some (input_line ic) with End_of_file -> None with
     | Some s ->
-      output_string oc (expand_string env s);
+      output_string oc (expand_string ~default:"" env s);
       output_char oc '\n';
       aux ()
     | None -> ()
@@ -267,7 +304,7 @@ let expand_interpolations_in_file env file =
 let arguments env (a,f) =
   if opt_eval_to_bool env f then
     match a with
-    | CString s -> Some (expand_string env s)
+    | CString s -> Some (expand_string ~default:"" env s)
     | CIdent i  ->
       try
         let fident = filter_ident_of_string i in
@@ -304,3 +341,71 @@ let command_variables (l,f) =
     (filter_opt_variables f) l
 let commands_variables l =
   List.fold_left (fun acc c -> command_variables c @ acc) [] l
+
+let rec of_formula atom_f = function
+  | Empty -> FBool true
+  | Atom at -> atom_f at
+  | Block f -> of_formula atom_f f
+  | And (a, b) -> FAnd (of_formula atom_f a, of_formula atom_f b)
+  | Or (a, b) -> FOr (of_formula atom_f a, of_formula atom_f b)
+
+let filter_constraints ?default env filtered_constraint =
+  OpamFormula.partial_eval
+    (function
+      | Filter flt ->
+        if eval_to_bool ?default env flt then `True else `False
+      | Constraint c -> `Formula (Atom c))
+    filtered_constraint
+
+let partial_filter_constraints env filtered_constraint =
+  OpamFormula.partial_eval
+    (function
+      | Filter flt ->
+        (match reduce ~default_str:None env flt with
+         | FUndef f -> `Formula (Atom (Filter f))
+         | FBool true -> `True
+         | FBool false -> `False
+         | f -> `Formula (Atom (Filter f)))
+      | Constraint c -> `Formula (Atom (Constraint c)))
+    filtered_constraint
+
+let gen_filter_formula constraints filtered_formula =
+  OpamFormula.map
+    (fun (name, fc) -> match constraints fc with
+       | `True -> Atom (name, Empty)
+       | `False -> Empty
+       | `Formula c -> Atom (name, c))
+    filtered_formula
+
+let filter_formula ?default env ff =
+  gen_filter_formula (filter_constraints ?default env) ff
+
+let partial_filter_formula env ff =
+  gen_filter_formula (partial_filter_constraints env) ff
+
+let string_of_filtered_formula =
+  let string_of_constraint =
+    OpamFormula.string_of_formula (function
+        | Constraint (op,v) ->
+          Printf.sprintf "%s %s"
+            (string_of_relop op) (OpamPackage.Version.to_string v)
+        | Filter f -> to_string f)
+  in
+  OpamFormula.string_of_formula (function
+      | n, Empty -> OpamPackage.Name.to_string n
+      | n, c ->
+        let paren = match c with Atom (Constraint _) -> false | _ -> true in
+        Printf.sprintf "%s %s%s%s"
+          (OpamPackage.Name.to_string n)
+          (if paren then "(" else "")
+          (string_of_constraint c)
+          (if paren then ")" else ""))
+
+let variables_of_filtered_formula ff =
+  OpamFormula.fold_left
+    (fun acc (_, f) ->
+       OpamFormula.fold_left (fun acc -> function
+           | Constraint _ -> acc
+           | Filter f -> variables f @ acc)
+         acc f)
+    [] ff

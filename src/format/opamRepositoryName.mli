@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Repository names *)
+(** The type for repository names *)
 
 include OpamStd.ABSTRACT
 

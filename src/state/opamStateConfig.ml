@@ -17,7 +17,7 @@ open OpamTypes
 
 type t = {
   root_dir: OpamFilename.Dir.t;
-  current_switch: OpamSwitch.t;
+  current_switch: OpamSwitch.t option;
   switch_from: [ `Env | `Command_line | `Default ];
   jobs: int Lazy.t;
   dl_jobs: int;
@@ -37,7 +37,7 @@ let default = {
   root_dir = OpamFilename.Op.(
       OpamFilename.Dir.of_string (OpamStd.Sys.home ()) / ".opam"
     );
-  current_switch = OpamSwitch.system;
+  current_switch = None;
   switch_from = `Default;
   jobs = lazy (max 1 (OpamSystem.cpu_count () - 1));
   dl_jobs = 3;
@@ -95,7 +95,8 @@ let setk k t
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     root_dir = t.root_dir + root_dir;
-    current_switch = t.current_switch + current_switch;
+    current_switch =
+      (match current_switch with None -> t.current_switch | s -> s);
     switch_from = t.switch_from + switch_from;
     jobs = t.jobs + jobs;
     dl_jobs = t.dl_jobs + dl_jobs;
@@ -151,30 +152,11 @@ let opamroot ?root_dir () =
   +! default.root_dir
 
 let load opamroot =
-  let f = OpamPath.config opamroot in
-  if OpamFilename.exists f then
-    OpamFilename.with_flock ~read:true
-      (OpamFilename.add_extension f "lock")
-      (fun f -> Some (OpamFile.Config.read f)) f
-  else None
-
-let write opamroot conf =
-  let f = OpamPath.config opamroot in
-  OpamFilename.with_flock ~read:false
-    (OpamFilename.add_extension f "lock")
-    (OpamFile.Config.write f) conf
-
-let filter_deps ?(dev=true) f =
-  OpamTypesBase.filter_deps
-    ~build:true
-    ~test:(!r.build_test)
-    ~doc:(!r.build_doc)
-    ~dev
-    f
+  OpamFile.Config.read_opt (OpamPath.config opamroot)
 
 let load_defaults root_dir =
   match load root_dir with
-  | None -> false
+  | None -> None
   | Some conf ->
     let open OpamStd.Option.Op in
     OpamRepositoryConfig.update
@@ -194,9 +176,17 @@ let load_defaults root_dir =
       ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
       ();
     update
-      ~current_switch:(OpamFile.Config.switch conf)
+      ?current_switch:(OpamFile.Config.switch conf)
       ~switch_from:`Default
       ~jobs:(lazy (OpamFile.Config.jobs conf))
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
-    true
+    Some conf
+
+let get_switch () =
+  match !r.current_switch with
+  | Some s -> s
+  | None ->
+    OpamConsole.error_and_exit
+      "No switch is currently set. Please use 'opam switch' to set or install \
+       a switch"

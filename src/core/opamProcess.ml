@@ -161,7 +161,10 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       let chan = open_out f in
       let env = Array.to_list env in
       (* Remove dubious variables *)
-      let env = List.filter (fun line -> not (OpamStd.String.contains line '$')) env in
+      let env =
+        List.filter (fun line -> not (OpamStd.String.contains_char line '$'))
+          env
+      in
       output_lines chan env;
       close_out chan in
 
@@ -371,6 +374,13 @@ let safe_wait fallback_pid f x =
       Some (Sys.signal Sys.sigalrm (Sys.Signal_handle hndl))
     else None
   in
+  let cleanup () =
+    match sh with
+    | Some sh ->
+      ignore (Unix.alarm 0); (* cancels the alarm *)
+      Sys.set_signal Sys.sigalrm sh
+    | None -> ()
+  in
   let rec aux () =
     if sh <> None then ignore (Unix.alarm 1);
     match
@@ -385,13 +395,8 @@ let safe_wait fallback_pid f x =
         aux ()
       | r -> r
   in
-  let r = aux () in
-  match sh with
-  | Some sh ->
-    ignore (Unix.alarm 0); (* cancels the alarm *)
-    Sys.set_signal Sys.sigalrm sh;
-    r
-  | None -> r
+  try let r = aux () in cleanup (); r
+  with e -> cleanup (); raise e
 
 let wait p =
   set_verbose_process p;

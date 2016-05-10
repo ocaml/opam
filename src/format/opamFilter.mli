@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Manage filters *)
+(** Formulas on variables, as used in opam files build scripts *)
 
 (** Filters are a small language of formulas over strings and booleans used for
     conditions and text replacements. It has relational operators over strings
@@ -23,7 +23,7 @@
     interpolation. Variables are resolved using a user function returning an
     option, undefined values are propagated.
 
-    String interpolation uses the syntax '%{identifier}%'
+    String interpolation uses the syntax [%{identifier}%]
 
     Identifiers have the form {v[package:]var[?str_if_true:str_if_false_or_undef]v}.
     The last optional part specifies a conversion from boolean to static strings.
@@ -55,14 +55,19 @@ type env = full_variable -> variable_contents option
     names and optional string converter *)
 type fident = name list * variable * (string * string) option
 
-(** Rewrites string interpolations within a string *)
-val expand_string: env -> string -> string
+(** Rewrites string interpolations within a string. Without [default],
+    preserves undefined expansions as is *)
+val expand_string: ?default:string -> env -> string -> string
+
+(** Returns the (beginning, end) offsets and substrings of any unclosed [%{]
+    expansions *)
+val unclosed_expansions: string -> ((int * int) * string) list
 
 (** Computes the value of a filter. May raise [Failure] if [default] isn't
     provided *)
 val eval: ?default:variable_contents -> env -> filter -> variable_contents
 
-(** Like [to_value] but casts the result to a bool. Raises [Invalid_argument] if
+(** Like [eval] but casts the result to a bool. Raises [Invalid_argument] if
     not a valid bool and no default supplied. *)
 val eval_to_bool: ?default:bool -> env -> filter -> bool
 
@@ -103,3 +108,17 @@ val single_command: env -> arg list -> string list
 
 (** Extracts variables appearing in a list of commands *)
 val commands_variables: command list -> full_variable list
+
+(** Converts a generic formula to a filter, given a converter for atoms *)
+val of_formula: ('a -> filter) -> 'a generic_formula -> filter
+
+(** [default] indicates the result to assume when a filter is undefined; this is
+    normally [false] when computing the universe. Will raise as other filter
+    functions if undefined and [default] is not given. *)
+val filter_formula: ?default:bool -> env -> filtered_formula -> formula
+
+val partial_filter_formula: env -> filtered_formula -> filtered_formula
+
+val string_of_filtered_formula: filtered_formula -> string
+
+val variables_of_filtered_formula: filtered_formula -> full_variable list

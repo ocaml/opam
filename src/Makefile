@@ -10,20 +10,12 @@ all:
 	$(MAKE) opam-check
 	$(MAKE) opam-admin
 	$(MAKE) opam-installer
-	$(MAKE) opamlfind
 	$(MAKE) opam-admin.top
 
 # --
 
-OCAMLFLAGS = -g -w +a-4-44-48
-OCAMLLDFLAGS = -g -w +a-4-44-48
-ifeq ($(OCAML_4),true)
-  OCAMLFLAGS += -bin-annot
-  OCAMLLDFLAGS += -bin-annot
-endif
-ifeq ($(OCAML_4_01),true)
-  OCAMLFLAGS += -short-paths
-endif
+OCAMLFLAGS = -g -w +a-4-44-48 -bin-annot -short-paths
+OCAMLLDFLAGS = -g -w +a-4-44-48 -bin-annot
 ifeq ($(OCAML_4_02),true)
   OCAMLFLAGS += -safe-string
   OCAMLLDFLAGS += -safe-string
@@ -140,12 +132,11 @@ SRC_format = \
   opamPackage.ml \
   opamVariable.ml \
   opamFormula.ml \
-  opamCompiler.ml \
   opamTypes.mli \
   opamTypesBase.ml \
+  opamFormat.ml \
   opamParser.mly \
   opamLexer.mll \
-  opamFormat.ml \
   opamFilter.ml \
   opamFile.ml
 
@@ -204,7 +195,16 @@ SRC_state = \
   opamStateConfig.ml \
   opamOCaml.ml \
   opamScript.ml \
-  opamState.ml \
+  opamStateTypes.mli \
+  opamPackageVar.ml \
+  opamFileTools.ml \
+  opamGlobalState.ml \
+  opamRepositoryState.ml \
+  opamPinned.ml \
+  opamSwitchState.ml \
+  opamEnv.ml \
+  opamSwitchAction.ml \
+  opamUpdate.ml \
   opamAction.ml \
   opamSolution.ml
 
@@ -253,7 +253,7 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-TOOLS = opam-check opam-admin opam-installer opamlfind
+TOOLS = opam-check opam-admin opam-installer
 
 $(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)
@@ -272,8 +272,6 @@ SRC_opam-admin = \
   opam_depexts_change.ml \
   opam_rename.ml \
   opam_admin.ml
-
-# opam_findlib.ml
 
 define PROJ_opam-admin
   SOURCES = $(call addmli,tools,$(SRC_opam-admin))
@@ -310,12 +308,37 @@ export PROJ_opam-admin-top
 
 # --
 
+# Looks for artifacts in sourcedir, _obuild, sourcedir/_obuild
+# The artifacts must be built first
 define lib_inst_files
   $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
   $(foreach f,$(basename $(SRC_$(1))),\
-    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti)))
+    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti))) \
+  $(wildcard $(addprefix ../_obuild/opam-$(1)/*,\
+	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti)) \
+  $(wildcard $(addprefix $(1)/_obuild/opam-$(1)/*,\
+	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti))
 endef
 
+../opam-%.install:
+	@echo 'lib: [' >$@
+	@echo '  "src/$*.META" {"META"}' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,$*)) } >>$@
+	@echo ']' >>$@
+
+../opam-admin.install:
+	@echo 'lib: [' >$@
+	@echo '  "src/$*.META" {"META"}' >>$@
+	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,tools)) } >>$@
+	@echo ']' >>$@
+	@echo 'bin: [' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo '  "src/opam-admin.top"' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo ']' >>$@
+
+# Older, all-inclusive opam-lib with ocamlfind sub-packages (still used by 'make
+# libinstall')
 ../opam-lib.install: $(OPAMLIB:=.cma)
 	@echo 'lib: [' >$@
 	@echo '  "META"' >>$@
@@ -331,6 +354,8 @@ endef
 	@echo '  "src/opam-admin.top"' >>$@
 	@echo ']' >>$@
 
+.PHONY: dotinstalls
+dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 

@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM versions *)
+(** (generated) Current OPAM version *)
 
 include OpamStd.ABSTRACT
 

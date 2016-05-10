@@ -13,6 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Compatibility layer (Bytes, etc.) for different OCaml versions *)
+
 module Bytes : sig
   include module type of String
   val empty : t

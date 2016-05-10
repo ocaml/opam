@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Defines the file hierarchy in repositories *)
+
 open OpamTypes
 
 (** Repository local path: {i $opam/repo/<name>} *)
@@ -23,14 +25,7 @@ val create: OpamFilename.Dir.t -> repository_name -> dirname
 val update_cache: repository -> filename
 
 (** Return the repo file *)
-val repo: repository -> filename
-
-(** Return the repository config from the opam root and the repo name:
-    {i $opam/repo/$repo/config} *)
-val raw_config: dirname -> repository_name -> filename
-
-(** Return the repository config: {i $opam/repo/$repo/config} *)
-val config: repository -> filename
+val repo: repository -> OpamFile.Repo.t OpamFile.t
 
 (** Packages folder: {i $opam/repo/$repo/packages} *)
 val packages_dir: repository -> dirname
@@ -40,14 +35,14 @@ val packages: repository -> string option -> package -> dirname
 
 (** Return the OPAM file for a given package:
     {i $opam/repo/$repo/packages/XXX/$NAME.$VERSION/opam} *)
-val opam: repository -> string option -> package -> filename
+val opam: repository -> string option -> package -> OpamFile.OPAM.t OpamFile.t
 
 (** Return the description file for a given package:
     {i $opam/repo/$repo/packages/XXX/$NAME.VERSION/descr} *)
-val descr: repository -> string option -> package -> filename
+val descr: repository -> string option -> package -> OpamFile.Descr.t OpamFile.t
 
 (** urls {i $opma/repo/$repo/package/XXX/$NAME.$VERSION/url} *)
-val url: repository -> string option -> package -> filename
+val url: repository -> string option -> package -> OpamFile.URL.t OpamFile.t
 
 (** files {i $opam/repo/$repo/packages/XXX/$NAME.$VERSION/files} *)
 val files: repository -> string option -> package -> dirname
@@ -63,15 +58,6 @@ val archives_dir: repository -> dirname
     {i $opam/repo/$repo/upload/} *)
 val upload_dir: repository -> dirname
 
-(** Compiler files: {i $opam/repo/$repo/compilers/} *)
-val compilers_dir: repository -> dirname
-
-(** Compiler files: {i $opam/repo/$repo/compilers/XXX/$OVERSION.comp} *)
-val compiler_comp: repository -> string option -> compiler -> filename
-
-(** Compiler description files: {i $opam/repo/$repo/compilers/XXX/$OVERSION.descr} *)
-val compiler_descr: repository -> string option -> compiler -> filename
-
 
 (** Url constructor for parts of remote repositories, when applicable (http and
     rsync) *)
@@ -84,7 +70,4 @@ module Remote: sig
 
   (** Remote archive {i $remote/archives/$NAME.$VERSION.tar.gz} *)
   val archive: repository -> package -> url
-
-  (** Remote compiler files: {i $remote/compilers} *)
-  val compilers_url: repository -> url
 end

@@ -10,9 +10,14 @@ primarily of use for packagers, package maintainers and repository maintainers.
 * For a more complete specification, and if you are interested in more details
   on the layout of `~/.opam`, you may want to check the
   [OPAM Developer's Manual](http://opam.ocaml.org/doc/manual/dev-manual.html)
+  (OUTDATED)
+* If you want to hack on opam or build related tools, the API documentation can
+  be browsed [here](api/index.html)
+
 
 This version of the manual documents the version `1.2` of the file formats, with
-some `1.2.1` experimental extensions mentionned.
+some `1.2.1` experimental extensions mentionned. It is **not yet** up-to-date
+with opam `2.0`.
 
 
 ## General file format

@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Console output, ANSI color, logging and user querying *)
+
 (** Global configuration parameters (read from OpamGlobalConfig, and the
     environment when necessary) *)
 
@@ -32,6 +34,7 @@ type text_style =
     [ `black
     | `blue
     | `bold
+    | `crossed
     | `cyan
     | `green
     | `magenta
@@ -43,6 +46,7 @@ type text_style =
 (** Helper coloring functions. Returns the string unchanged if color is
     disabled *)
 val colorise : text_style -> string -> string
+val colorise' : text_style list -> string -> string
 val acolor : text_style -> out_channel -> string -> unit
 val acolor_w : int -> text_style -> out_channel -> string -> unit
 

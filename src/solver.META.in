@@ -1,0 +1,5 @@
+version = "@PACKAGE_VERSION@"
+description = "OCaml Package Manager solver interaction library"
+archive(byte) = "opam-solver.cma"
+archive(native) = "opam-solver.cmxa"
+requires = "opam-core, opam-format, cudf, dose3.common, dose3.algo"

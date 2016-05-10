@@ -30,7 +30,7 @@ type args = {
   resolve: bool;
   debug: bool;
   (* option for resolve *)
-  compiler_version: OpamCompiler.Version.t option;
+  compiler_version: string option;
   switch: OpamSwitch.t option;
   os_string: string;
 }
@@ -95,48 +95,15 @@ let args =
     pure
       (fun index gener_digest dryrun recurse dev names debug resolve
         compiler_version switch ->
-        let compiler_version =
-          Option.map OpamCompiler.Version.of_string compiler_version in
         let switch =
           match switch with
-          | None -> Option.map (fun cv -> OpamSwitch.of_string (OpamCompiler.Version.to_string cv)) compiler_version
+          | None -> Option.map OpamSwitch.of_string compiler_version
           | Some switch -> Some (OpamSwitch.of_string switch) in
          {index; gener_digest; dryrun; recurse; dev; names; debug; resolve;
           compiler_version; switch; os_string = OpamStd.Sys.os_string ()})
     $index $gener_digest $dryrun $recurse $dev $names $debug $resolve
     $compiler_version $switch
   )
-
-let consistent_ocaml_version args opam =
-  match args.compiler_version with
-  | None -> true
-  | Some cv ->
-    let system = OpamCompiler.Version.of_string "system" in
-    let atom (r,v) =
-      match OpamCompiler.Version.to_string v with
-      | "system" ->
-        begin match r with
-          | `Eq  -> OpamCompiler.Version.compare cv system = 0
-          | `Neq -> OpamCompiler.Version.compare cv system <> 0
-          | _    -> OpamSystem.internal_error
-                      "%s is not a valid constraint for the system compiler \
-                       (only '=' and '!=' are valid)."
-                      (OpamFormula.string_of_relop r)
-        end
-      | _ -> OpamCompiler.Version.eval_relop r cv v
-    in
-    match OpamFile.OPAM.ocaml_version opam with
-    | None   -> true
-    | Some c -> OpamFormula.eval atom c
-
-let consistent_os args opam =
-  match OpamFile.OPAM.os opam with
-  | Empty -> true
-  | f ->
-    let atom (b, os) =
-      let ($) = if b then (=) else (<>) in
-      os $ args.os_string in
-    OpamFormula.eval atom f
 
 let string str = Some (S str)
 let bool b = Some (B b)
@@ -150,13 +117,13 @@ let faked_var_resolve args v =
     | "ocaml-version" -> begin
         match args.compiler_version with
         | None -> None
-        | Some cv -> string (OpamCompiler.Version.to_string cv)
+        | Some cv -> string cv
       end
     | "opam-version"  -> string (OpamVersion.to_string OpamVersion.current)
     | "preinstalled"  -> begin
         match args.compiler_version with
         | None -> None
-        | Some cv -> bool (OpamCompiler.Version.to_string cv = "system")
+        | Some cv -> bool (cv = "system")
       end
     | "switch"        -> begin
         match args.switch with
@@ -171,7 +138,7 @@ let faked_var_resolve args v =
         (function None -> (fun (f,v) -> f v) | r -> (fun _ -> r))
         None
         [
-          OpamState.get_env_var, v;
+          OpamVariable.Full.read_from_env, v;
           get_global_var, v;
         ]
     with Exit -> None
@@ -186,14 +153,9 @@ let resolve_deps args index names =
     List.map (fun str ->
         match OpamPackage.of_string_opt str with
         | Some nv ->
-          OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+          OpamSolution.eq_atom nv.name nv.version
         | None -> OpamPackage.Name.of_string str, None)
       names in
-  let consistent opam =
-    consistent_ocaml_version args opam
-    && consistent_os args opam
-    && consistent_available_field args opam
-  in
   let opams =
     List.fold_left
       (fun opams r ->
@@ -202,8 +164,9 @@ let resolve_deps args index names =
          if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
            match OpamPackage.of_dirname (OpamFilename.dirname f) with
            | Some nv ->
-             let opam = OpamFile.OPAM.read f in
-             if consistent opam then OpamPackage.Map.add nv opam opams else opams
+             let opam = OpamFile.OPAM.read (OpamFile.make f) in
+             if consistent_available_field args opam
+             then OpamPackage.Map.add nv opam opams else opams
            | None -> opams
          else opams)
       OpamPackage.Map.empty
@@ -294,7 +257,9 @@ let process
 
   (* Read urls.txt *)
   log "Reading urls.txt";
-  let local_index_file = OpamFilename.of_string "urls.txt" in
+  let local_index_file : file_attribute_set OpamFile.t =
+    OpamFile.make (OpamFilename.of_string "urls.txt")
+  in
   let old_index = OpamFile.File_attributes.safe_read local_index_file in
   let new_index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
@@ -304,17 +269,21 @@ let process
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
     let opam_f = OpamRepositoryPath.opam repo prefix nv in
-    if OpamFilename.exists opam_f then (
-      let opam = OpamFile.OPAM.read opam_f in
-      let deps =
-        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depends opam) in
-      let depopts =
-        OpamStateConfig.filter_deps ~dev (OpamFile.OPAM.depopts opam) in
-      OpamFormula.fold_left (fun accu (n,_) ->
-          OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
-        ) OpamPackage.Set.empty (OpamFormula.ands [deps; depopts])
-    ) else
-      OpamPackage.Set.empty in
+    match OpamFile.OPAM.read_opt opam_f with
+    | Some opam ->
+      OpamFormula.ands OpamFile.OPAM.([depends opam; depopts opam]) |>
+      OpamPackageVar.filter_depends_formula
+        ~build:true ~dev ~default:true
+        ~env:(fun _ -> None) |>
+      OpamFormula.atoms |>
+      List.fold_left (fun acc atom ->
+          (* fixme: this is a vast super-approximation *)
+          OpamPackage.Set.union acc @@
+          OpamPackage.Set.filter (fun nv -> OpamFormula.check atom nv) packages)
+        OpamPackage.Set.empty
+    | None ->
+      OpamPackage.Set.empty
+  in
   let get_transitive_dependencies packages =
     let rec get_transitive_dependencies_aux visited to_visit = 
       match to_visit with 
@@ -403,14 +372,13 @@ let process
         let url_file = OpamRepositoryPath.url repo prefix nv in
         try
           if not dryrun then OpamFilename.remove local_archive;
-          if OpamFilename.exists url_file &&
-             OpamFile.URL.(url (read url_file)).OpamUrl.backend = `http
-          then (
+          match OpamFile.URL.read_opt url_file with
+          | Some urlf when OpamFile.URL.(url urlf).OpamUrl.backend = `http ->
             OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);
             let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
             if dryrun then OpamProcess.Job.dry_run job
             else OpamProcess.Job.run job
-          )
+          | _ -> ()
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;

@@ -50,6 +50,14 @@ let with_tmp_dir_job fjob =
 let rmdir dirname =
   OpamSystem.remove_dir (Dir.to_string dirname)
 
+let rec rmdir_cleanup dirname =
+  let sd = Dir.to_string dirname in
+  if OpamSystem.dir_is_empty sd then (
+    rmdir dirname;
+    let parent = Filename.dirname sd in
+    if parent <> sd then rmdir_cleanup parent
+  )
+
 let cwd () =
   Dir.of_string (Unix.getcwd ())
 
@@ -90,6 +98,9 @@ let move_dir ~src ~dst =
 let exists_dir dirname =
   try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
   with Unix.Unix_error _ -> false
+
+let opt_dir dirname =
+  if exists_dir dirname then Some dirname else None
 
 let copy_dir ~src ~dst =
   if exists_dir dst then
@@ -195,6 +206,9 @@ let remove filename =
 let exists filename =
   try (Unix.stat (to_string filename)).Unix.st_kind = Unix.S_REG
   with Unix.Unix_error _ -> false
+
+let opt_file filename =
+  if exists filename then Some filename else None
 
 let with_contents fn filename =
   fn (read filename)
@@ -309,10 +323,40 @@ let remove_suffix suffix filename =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
-let with_flock ?read file f x =
-  let lock = OpamSystem.flock ?read (to_string file) in
+let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
+
+let with_flock flag ?dontblock file f =
+  let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
-    let r = f x in
+    let r = f () in
+    OpamSystem.funlock lock;
+    r
+  with e ->
+    OpamStd.Exn.register_backtrace e;
+    OpamSystem.funlock lock;
+    raise e
+
+let with_flock_upgrade flag ?dontblock lock f =
+  if OpamSystem.lock_isatleast flag lock then f ()
+  else (
+    let old_flag = OpamSystem.get_lock_flag lock in
+    OpamSystem.flock_update flag ?dontblock lock;
+    try
+      let r = f () in
+      OpamSystem.flock_update old_flag lock;
+      r
+    with e ->
+      OpamStd.Exn.register_backtrace e;
+      OpamSystem.flock_update old_flag lock;
+      raise e
+  )
+
+let with_flock_write_then_read ?dontblock file write read =
+  let lock = OpamSystem.flock `Lock_write ?dontblock (to_string file) in
+  try
+    let r = write () in
+    OpamSystem.flock_update `Lock_read lock;
+    let r = read r in
     OpamSystem.funlock lock;
     r
   with e ->

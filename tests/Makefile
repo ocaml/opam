@@ -9,7 +9,7 @@ REPOKIND ?= local
 # To test GIT repo
 OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
-PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
+PACKAGES  = P1-0 P1-1 P1-2 P2 P3 P4 P5
 
 ifndef OPAM
   OPAM = $(realpath ../src/opam)
@@ -39,19 +39,24 @@ quiet:
 printf = /usr/bin/printf
 
 define RUN
-@$(printf) "\e[1m- %-20s\e[m ..................................... " $(1); \
-if $(MAKE) $(1) >test.log 2>&1; then \
+@COUNT=$$(ls -1 $(REPOKIND)-*.log 2>/dev/null | wc -l); \
+LOG=$$($(printf) "$(REPOKIND)-%02d-$(1).log" $$COUNT); \
+$(printf) "- %02d \e[1m%-20s\e[m ..................................... " \
+  $$COUNT $(1); \
+if $(MAKE) $(1) >$$LOG 2>&1; then \
   $(printf) "\e[32m[ OK ]\e[m\n"; \
 else \
-  $(printf) "\e[31m[FAIL]\e[m\n\n"; \
-  cat test.log; \
-  $(printf) "\n\e[31m>> %s FAILED <<\e[m\n" $(1); \
-  exit 1; \
+  $(printf) "\e[31m$(1) FAILED\e[m\n\n" >>$$LOG; \
+  $(printf) "\e[31m[FAIL]\e[m\n"; \
+  { $(printf) "\e[31m>> %s FAILED <<\e[m\n" $(1); cat $$LOG; } \
+	>> failed-$(REPOKIND).log; \
 fi; \
-cat test.log >> fulltest.log
+cat $$LOG >> fulltest-$(REPOKIND).log
 endef
 
 run:
+	@rm -f failed-$(REPOKIND).log fulltest-$(REPOKIND).log
+	@rm -f $(REPOKIND)-*.log
 	$(call RUN,init)
 	$(call RUN,upload)
 	$(call RUN,install-remove)
@@ -73,7 +78,9 @@ run:
 	$(call RUN,switch-env-packages)
 	$(call RUN,repo)
 	$(call RUN,list)
-	@echo "SUCCESS!"
+	@if [ -e failed-$(REPOKIND).log ]; \
+	then echo "FAILED! Logs in `pwd`/failed-$(REPOKIND).log"; exit 1; \
+	else echo "SUCCESS!"; fi
 
 local:
 	$(MAKE) clean
@@ -91,9 +98,12 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAMBIN) init --no-setup --no-base-packages $(REPO) $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAMBIN) init --bare --no-setup $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
 upload: $(ARCHIVES)
+	cp -r packages/ocaml $(OPAM_REPO)/packages
+	mkdir -p $(OPAM_REPO)/packages/P1.0
+	cp packages/P1-0.opam     $(OPAM_REPO)/packages/P1.0/opam
 	mkdir -p $(OPAM_REPO)/packages/P1.1
 	cp packages/P1-1.opam     $(OPAM_REPO)/packages/P1.1/opam
 	cp packages/P1-1/README   $(OPAM_REPO)/packages/P1.1/descr
@@ -109,9 +119,12 @@ upload: $(ARCHIVES)
 	mkdir -p $(OPAM_REPO)/packages/P5.1
 	cp packages/P5.opam       $(OPAM_REPO)/packages/P5.1/opam
 	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
-	mkdir -p $(OPAM_REPO)/compilers
-	cp compilers/*            $(OPAM_REPO)/compilers/
 ifeq ($(REPOKIND), git)
+	cd $(OPAM_REPO)/packages/ocaml.system && git add * && git commit -a -m "Adding ocaml.system"
+	cd $(OPAM_REPO)/packages/ocaml.20 && git add * && git commit -a -m "Adding ocaml.20"
+	cd $(OPAM_REPO)/packages/ocaml.10+a+b && git add * && git commit -a -m "Adding ocaml.10+a+b"
+	echo 'git: "$(OPAM_GIT)/P1-0"' > $(OPAM_REPO)/packages/P1.0/url
+	cd $(OPAM_REPO)/packages/P1.0/ && git add * && git commit -a -m "Adding P0"
 	echo 'git: "$(OPAM_GIT)/P1-1"' > $(OPAM_REPO)/packages/P1.1/url
 	cd $(OPAM_REPO)/packages/P1.1/ && git add * && git commit -a -m "Adding P1"
 	echo 'git: "$(OPAM_GIT)/P2"'   > $(OPAM_REPO)/packages/P2.1/url
@@ -122,13 +135,14 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_REPO)/packages/P4.1/ && git add * && git commit -a -m "Adding P4"
 	echo 'git: "$(OPAM_GIT)/P5"'   > $(OPAM_REPO)/packages/P5.1/url
 	cd $(OPAM_REPO)/packages/P5.1/ && git add * && git commit -a -m "Adding P5"
-	cd $(OPAM_REPO)/compilers && git add * && git commit -a -m "Adding compilers"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
+	mkdir $(OPAM_GIT)/P1-0 && cp packages/P1-0/* $(OPAM_GIT)/P1-0/
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
 	mkdir $(OPAM_GIT)/P2   && cp packages/P2/*   $(OPAM_GIT)/P2/
 	mkdir $(OPAM_GIT)/P3   && cp packages/P3/*   $(OPAM_GIT)/P3/
 	mkdir $(OPAM_GIT)/P4   && cp packages/P4/*   $(OPAM_GIT)/P4/
 	mkdir $(OPAM_GIT)/P5   && cp packages/P5/*   $(OPAM_GIT)/P5/
+	cd $(OPAM_GIT)/P1-0 && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P1-1 && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P2   && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P3   && git init && git add * && git commit -a -m "initial commit"
@@ -136,6 +150,7 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_GIT)/P5   && git init && git add * && git commit -a -m "initial commit"
 else
 	mkdir -p $(OPAM_REPO)/archives
+	cp packages/P1-0.tar.gz $(OPAM_REPO)/archives/P1.0+opam.tar.gz
 	cp packages/P1-1.tar.gz $(OPAM_REPO)/archives/P1.1+opam.tar.gz
 	cp packages/P2.tar.gz $(OPAM_REPO)/archives/P2.1+opam.tar.gz
 	cp packages/P3.tar.gz $(OPAM_REPO)/archives/P3.1~weird-version.test+opam.tar.gz
@@ -143,61 +158,62 @@ else
 	cp packages/P5.tar.gz $(OPAM_REPO)/archives/P5.1+opam.tar.gz
 endif
 	$(OPAMBIN) update
+	$(OPAMBIN) switch system --packages ocaml.system
 
 list:
-	$(OPAMBIN) list -a
+	$(OPAMBIN) list -A
 
 install-remove:
-	$(CHECK) -l install-remove-1
+	$(CHECK) -l install-remove-1 ocaml.system
 	$(OPAMBIN) install P1
-	$(CHECK) -l install-remove-2 P1.1
+	$(CHECK) -l install-remove-2 ocaml.system P1.1
 	$(OPAMBIN) remove P1
-	$(CHECK) -l install-remove-3
+	$(CHECK) -l install-remove-3 ocaml.system
 
 install-opt:
-	$(CHECK) -l install-opt-1
+	$(CHECK) -l install-opt-1 ocaml.system
 	$(OPAMBIN) install P5
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
-	$(CHECK) -l install-opt-2 P1.1 P5.1
+	$(CHECK) -l install-opt-2 ocaml.system P1.1 P5.1
 	$(OPAMBIN) remove P5
-	$(CHECK) -l install-opt-3 P1.1
+	$(CHECK) -l install-opt-3 ocaml.system P1.1
 	$(OPAMBIN) install P5
-	$(CHECK) -l install-opt-4 P1.1 P5.1
+	$(CHECK) -l install-opt-4 ocaml.system P1.1 P5.1
 	$(OPAMBIN) remove P5 -a
-	$(CHECK) -l install-opt-5
+	$(CHECK) -l install-opt-5 ocaml.system
 	$(OPAMBIN) install P5
-	$(CHECK) -l install-opt-6 P1.1 P5.1
+	$(CHECK) -l install-opt-6 ocaml.system P1.1 P5.1
 	$(OPAMBIN) install P2
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
-	$(CHECK) -l install-opt-7 P1.1 P2.1 P5.1
+	$(CHECK) -l install-opt-7 ocaml.system P1.1 P2.1 P5.1
 	$(OPAMBIN) remove P5 -a
-	$(CHECK) -l install-opt-8 P1.1 P2.1
+	$(CHECK) -l install-opt-8 ocaml.system P1.1 P2.1
 	$(OPAMBIN) remove P2 -a
-	$(CHECK) -l install-opt-9
+	$(CHECK) -l install-opt-9 ocaml.system
 	$(OPAMBIN) install P1 P2 P5
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
-	$(CHECK) -l install-opt-10 P1.1 P2.1 P5.1
+	$(CHECK) -l install-opt-10 ocaml.system P1.1 P2.1 P5.1
 	$(OPAMBIN) remove P2 -a
 	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
-	$(CHECK) -l install-opt-11 P1.1 P5.1
+	$(CHECK) -l install-opt-11 ocaml.system P1.1 P5.1
 	$(OPAMBIN) remove P1
-	$(CHECK) -l install-opt-12
+	$(CHECK) -l install-opt-12 ocaml.system
 
 install:
-	$(CHECK) -l install-1
+	$(CHECK) -l install-1 ocaml.system
 	$(OPAMBIN) install P1
-	$(CHECK) -l install-2 P1.1
+	$(CHECK) -l install-2 ocaml.system P1.1
 	$(OPAMBIN) install P2
-	$(CHECK) -l install-3 P1.1 P2.1
+	$(CHECK) -l install-3 ocaml.system P1.1 P2.1
 	$(OPAMBIN) install P3
-	$(CHECK) -l install-4 P1.1 P2.1 P3.1~weird-version.test
+	$(CHECK) -l install-4 ocaml.system P1.1 P2.1 P3.1~weird-version.test
 	$(OPAMBIN) install P4
-	$(CHECK) -l install-5 P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(CHECK) -l install-5 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.1
 
 reinstall:
-	$(CHECK) -l reinstall-1 P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(CHECK) -l reinstall-1 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.1
 	$(OPAMBIN) reinstall P1
-	$(CHECK) -l reinstall-2 P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(CHECK) -l reinstall-2 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.1
 
 upload-new:
 	mkdir $(OPAM_REPO)/packages/P4.2
@@ -223,50 +239,46 @@ endif
 	$(OPAMBIN) update
 
 upgrade:
-	$(CHECK) -l upgrade-1 P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(CHECK) -l upgrade-1 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.1
 	eval `$(OPAMBIN) config env`; [ "X$$P1" = "Xversion1" ]
 	$(OPAMBIN) upgrade
 ifeq ($(REPOKIND), git)
-	$(CHECK) -l upgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l upgrade-2 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.3
 else
-	$(CHECK) -l upgrade-2 P1.2 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l upgrade-2 ocaml.system P1.2 P2.1 P3.1~weird-version.test P4.3
 	eval `$(OPAMBIN) config env`; [ "X$$P1" = "Xversion2" ]
 endif
 
 downgrade:
 ifeq ($(REPOKIND), git)
-	$(CHECK) -l downgrade-1 P1.1 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l downgrade-1 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.3
 else
-	$(CHECK) -l downgrade-1 P1.2 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l downgrade-1 ocaml.system P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
 	$(OPAMBIN) install P4.2
-	$(CHECK) -l downgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.2
+	$(CHECK) -l downgrade-2 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.2
 
 switch-alias:
-	$(CHECK) -l switch-alias-1 P1.1 P2.1 P3.1~weird-version.test P4.2
+	$(CHECK) -l switch-alias-1 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.2
 	$(OPAMBIN) remove P3.1~weird-version.test P4.2
-	$(CHECK) -l switch-alias-2 P1.1 P2.1
+	$(CHECK) -l switch-alias-2 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch export $(TMP_DIR)/export
-	$(OPAMBIN) switch install test --alias-of system --no-base-packages
-	$(CHECK) -l switch-alias-3
+	$(OPAMBIN) switch install test --alias-of system
+	$(CHECK) -l switch-alias-3 ocaml.system
 	$(OPAMBIN)	switch import $(TMP_DIR)/export
-	$(CHECK) -l switch-alias-4 P1.1 P2.1
+	$(CHECK) -l switch-alias-4 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch install test2 --alias-of 20
-	$(CHECK) -l switch-alias-5
+	$(CHECK) -l switch-alias-5 ocaml.20
 	$(OPAMBIN) install P1
-	$(CHECK) -l switch-alias-6 P1.1
+	$(CHECK) -l switch-alias-6 ocaml.20 P1.1
 	$(OPAMBIN) switch system
-	$(CHECK) -l switch-alias-7 P1.1 P2.1
+	$(CHECK) -l switch-alias-7 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch remove test test2
 
 switch-env-packages:
-	$(CHECK) -l switch-env-packages-1 P1.1 P2.1
+	$(CHECK) -l switch-env-packages-1 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch 10+a+b
-ifeq ($(REPOKIND), git)
-	$(CHECK) -l switch-env-packages-2 P1.1 P2.1 P3.1~weird-version.test P4.3
-else
-	$(CHECK) -l switch-env-packages-2 P1.2 P2.1 P3.1~weird-version.test P4.3
-endif
+	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.0 P2.1 P3.1~weird-version.test P4.3
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
 repo:
@@ -274,8 +286,8 @@ repo:
 	$(OPAMBIN) repo remove $(REPO)2
 	$(OPAMBIN) repo remove $(REPO)
 
-packages/%.tar.gz: packages/% 
-	cd packages && tar czf $*.tar.gz $* 
+packages/%.tar.gz: packages/%
+	cd packages && tar czf $*.tar.gz $*
 
 clean:
 	rm -f test.log fulltest.log

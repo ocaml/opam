@@ -14,7 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Cudf interface *)
+(** Solver interaction through Cudf, conversion of solver answer to an opam
+    solution *)
 
 open OpamTypes
 

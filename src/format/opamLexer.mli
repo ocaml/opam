@@ -14,4 +14,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** OPAM config file lexer *)
+
 val token: Lexing.lexbuf -> OpamParser.token
