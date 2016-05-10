@@ -80,6 +80,12 @@ if [ "$OPAM_TEST" = "1" ]; then
     OPAMEXTERNALSOLVER=$EXTERNAL_SOLVER make KINDS="local git" run
 else
     # Compile OPAM from sources and run the basic tests
+    sudo apt-get install -qq opam
+    apt-cache search findlib
+    opam init
+    eval `opam config env`
+    opam install ocamlfind
+
     ./configure
     make lib-ext
     make
