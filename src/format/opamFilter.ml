@@ -354,7 +354,9 @@ let filter_constraints ?default env filtered_constraint =
     (function
       | Filter flt ->
         if eval_to_bool ?default env flt then `True else `False
-      | Constraint c -> `Formula (Atom c))
+      | Constraint (relop, v) ->
+        let v = OpamPackage.Version.of_string (eval_to_string env v) in
+        `Formula (Atom (relop, v)))
     filtered_constraint
 
 let partial_filter_constraints env filtered_constraint =
@@ -386,9 +388,12 @@ let partial_filter_formula env ff =
 let string_of_filtered_formula =
   let string_of_constraint =
     OpamFormula.string_of_formula (function
-        | Constraint (op,v) ->
-          Printf.sprintf "%s %s"
-            (string_of_relop op) (OpamPackage.Version.to_string v)
+        | Constraint (op, FString s) ->
+          Printf.sprintf "%s \"%s\"" (string_of_relop op) s
+        | Constraint (op, (FIdent _ as v)) ->
+          Printf.sprintf "%s %s" (string_of_relop op) (to_string v)
+        | Constraint (op, v) ->
+          Printf.sprintf "%s (%s)" (string_of_relop op) (to_string v)
         | Filter f -> to_string f)
   in
   OpamFormula.string_of_formula (function

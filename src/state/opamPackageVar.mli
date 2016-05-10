@@ -37,8 +37,12 @@ val predefined_depends_variables: full_variable list
 (** Resolves globally available variables only *)
 val resolve_global: 'a global_state -> full_variable -> variable_contents option
 
-(** Resolves global variables within the context of a switch *)
-val resolve_switch: 'a switch_state -> full_variable -> variable_contents option
+(** Resolves global variables within the context of a switch. If a package is
+    specified, "name" and "version" as taken to exclusively resolve to the
+    current package name and version. *)
+val resolve_switch:
+  ?package:package ->
+  'a switch_state -> full_variable -> variable_contents option
 
 (** Resolves filter variables, including global, switch and package variables ;
     a map of locally defined variables can be supplied, as well as the opam file
@@ -52,6 +56,7 @@ val resolve:
 (** Like [resolve_switch], but takes more specific parameters so that it can be
     used before the switch state is fully loaded *)
 val resolve_switch_raw:
+  ?package:package ->
   'a global_state -> switch -> OpamFile.Dot_config.t -> full_variable ->
   variable_contents option
 

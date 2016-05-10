@@ -303,7 +303,7 @@ let version_color st nv =
   let is_available nv = (* Ignore unavailability due to pinning *)
     try
       OpamFilter.eval_to_bool ~default:false
-        (OpamPackageVar.resolve_switch_raw st.switch_global
+        (OpamPackageVar.resolve_switch_raw ~package:nv st.switch_global
            st.switch st.switch_config)
         (OpamFile.OPAM.available (OpamSwitchState.opam st nv))
     with Not_found -> false

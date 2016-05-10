@@ -107,7 +107,7 @@ let lint t =
     [t.available] @
     OpamFormula.fold_left (fun acc (_, f) ->
         OpamFormula.fold_left (fun acc -> function
-            | Constraint _ -> acc
+            | Constraint (_,f) -> f :: acc
             | Filter f -> f :: acc)
           acc f)
       [] (OpamFormula.ands [t.depends; t.depopts]) @

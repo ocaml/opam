@@ -1771,12 +1771,12 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.string);
 
       "depends", no_cleanup Pp.ppacc with_depends depends
-        (Pp.V.package_formula `Conj Pp.V.filtered_constraints);
+        (Pp.V.package_formula `Conj Pp.V.(filtered_constraints ext_version));
       "depopts", with_cleanup cleanup_depopts Pp.ppacc with_depopts depopts
-        (Pp.V.package_formula `Disj Pp.V.filtered_constraints);
+        (Pp.V.package_formula `Disj Pp.V.(filtered_constraints ext_version));
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
-        (Pp.V.package_formula `Disj Pp.V.constraints);
+        (Pp.V.package_formula `Disj (Pp.V.constraints Pp.V.version));
       "available", no_cleanup Pp.ppacc with_available available
         (Pp.V.list_depth 1 -| Pp.V.list -| Pp.V.filter);
       "flags", with_cleanup cleanup_flags Pp.ppacc add_flags flags
@@ -2450,7 +2450,7 @@ module CompSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.command);
 
       "packages", Pp.ppacc with_packages packages
-        (Pp.V.package_formula `Conj Pp.V.constraints);
+        (Pp.V.package_formula `Conj (Pp.V.constraints Pp.V.version));
       "env", Pp.ppacc with_env env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
       "preinstalled", Pp.ppacc_opt with_preinstalled
@@ -2546,7 +2546,10 @@ module CompSyntax = struct
     let nofilter x = x, (None: filter option) in
     let depends =
       OpamFormula.map (fun (n, formula) ->
-          Atom (n, (OpamFormula.map (fun a -> Atom (Constraint a)) formula)))
+          let cstr (op, v) =
+            Atom (Constraint (op, FString (OpamPackage.Version.to_string v)))
+          in
+          Atom (n, (OpamFormula.map cstr formula)))
         comp.packages
     in
     let url =

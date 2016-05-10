@@ -83,10 +83,14 @@ let resolve_global gt full_var =
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
     field *)
-let resolve_switch_raw gt switch switch_config full_var =
+let resolve_switch_raw ?package gt switch switch_config full_var =
   let module V = OpamVariable in
   if V.Full.(scope full_var <> Global) then None else
   let var = V.Full.variable full_var in
+  match package, V.to_string var with
+  | Some nv, "package" -> Some (S (OpamPackage.Name.to_string nv.name))
+  | Some nv, "version" -> Some (S (OpamPackage.Version.to_string nv.version))
+  | _ ->
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
@@ -102,8 +106,9 @@ let resolve_switch_raw gt switch switch_config full_var =
         | "switch" -> Some (V.string (OpamSwitch.to_string switch))
         | _ -> None
 
-let resolve_switch st full_var =
-  resolve_switch_raw st.switch_global st.switch st.switch_config full_var
+let resolve_switch ?package st full_var =
+  resolve_switch_raw ?package
+    st.switch_global st.switch st.switch_config full_var
 
 open OpamVariable
 
@@ -143,7 +148,7 @@ let all_depends ?build ?test ?doc ?dev ?(filter_default=false)
   in
   filter_depends_formula ?build ?test ?doc ~dev
     ~default:filter_default
-    ~env:(resolve_switch st) deps
+    ~env:(resolve_switch ~package:(OpamFile.OPAM.package opam) st) deps
 
 (* filter handling *)
 let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =

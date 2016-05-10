@@ -48,9 +48,9 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
       opams
   in
   let avail_map =
-    OpamPackage.Map.filter (fun _ opam ->
+    OpamPackage.Map.filter (fun package opam ->
         OpamFilter.eval_to_bool ~default:false
-          (OpamPackageVar.resolve_switch_raw gt switch switch_config)
+          (OpamPackageVar.resolve_switch_raw ~package gt switch switch_config)
           (OpamFile.OPAM.available opam))
       opams
   in
@@ -304,7 +304,7 @@ let dev_packages st =
 let universe st action =
   let env nv v =
     if List.mem v OpamPackageVar.predefined_depends_variables then None else
-    let r = OpamPackageVar.resolve_switch st v in
+    let r = OpamPackageVar.resolve_switch ~package:nv st v in
     if r = None then
       (if OpamFormatConfig.(!r.strict) then
          OpamConsole.error_and_exit
@@ -366,7 +366,7 @@ let unavailable_reason st (name, _ as atom) =
   let nv = OpamPackage.max_version candidates name in
   let avail = OpamFile.OPAM.available (opam st nv) in
   if not (OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch st)
+            (OpamPackageVar.resolve_switch ~package:nv st)
             avail)
   then
     Printf.sprintf "%s has unmet availability conditions: %s"
@@ -388,7 +388,7 @@ let update_package_metadata nv opam st =
     packages = OpamPackage.Set.add nv st.packages;
     available_packages = lazy (
       if OpamFilter.eval_to_bool ~default:false
-          (OpamPackageVar.resolve_switch_raw
+          (OpamPackageVar.resolve_switch_raw ~package:nv
              st.switch_global st.switch st.switch_config)
           (OpamFile.OPAM.available opam)
       then OpamPackage.Set.add nv (Lazy.force st.available_packages)
