@@ -1937,21 +1937,21 @@ module OPAMSyntax = struct
     Pp.pp parse (fun x -> x)
 
   (* Doesn't handle package name encoded in directory name *)
-  let pp_raw_fields =
+  let pp_raw_fields ~strict =
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true
+    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true ~strict
       ~sections fields -|
     Pp.I.partition_fields is_ext_field -| Pp.map_pair
       (Pp.I.items -|
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
-      (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
+      (Pp.I.fields ~name:"opam-file" ~empty ~sections ~strict fields -|
        handle_flags_in_tags -|
        handle_deprecated_available) -|
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions extensions t)
       (fun t -> extensions t, t)
 
-  let pp_raw = Pp.I.map_file @@ pp_raw_fields
+  let pp_raw = Pp.I.map_file @@ pp_raw_fields ~strict:false
 
   let pp =
     pp_raw -|
@@ -2306,7 +2306,7 @@ module SwitchExportSyntax = struct
           Pp.map_pair
             (Pp.map_option
                (Pp.of_module "package-name" (module OpamPackage.Name)))
-            OPAMSyntax.pp_raw_fields -|
+            (OPAMSyntax.pp_raw_fields ~strict:false) -|
           Pp.pp
             (fun ~pos:_ (name, opam) ->
                match name with
