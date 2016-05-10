@@ -404,7 +404,7 @@ let detail_printer st nv =
       (OpamGlobalState.repos_list st.switch_global) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
 
-let display st ~format ~dependency_order ~all_versions packages =
+let display st ~header ~format ~dependency_order ~all_versions packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -426,8 +426,17 @@ let display st ~format ~dependency_order ~all_versions packages =
     else
       OpamPackage.Set.elements packages
   in
+  let add_head l =
+    if header then
+      (match List.map disp_header format with
+       | x :: r -> ("# "^x) :: r
+       | [] -> [])
+      :: l
+    else l
+  in
   List.rev_map (fun nv -> List.map (detail_printer st nv) format) packages |>
   List.rev |>
+  add_head |>
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:" "
 
@@ -507,10 +516,11 @@ let list gt
   match depexts with
   | None ->
     display st ~format ~dependency_order:(order=`depends)
-      ~all_versions:false packages
+      ~header:(not print_short) ~all_versions:false packages
   | Some tags_list ->
     let required_tags = OpamStd.String.Set.of_list tags_list in
-    OpamPackage.Name.Set.fold (fun name acc ->
+    OpamPackage.Name.Set.fold
+      (fun name acc ->
         let nv = OpamSwitchState.get_package st name in
         let nv =
           if OpamPackage.Set.mem nv packages then nv else
