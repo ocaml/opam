@@ -42,8 +42,9 @@ let post_message ?(failed=false) st action =
     let messages =
       let filter_env = OpamPackageVar.resolve ~opam ~local:local_variables st in
       OpamStd.List.filter_map (fun (message,filter) ->
-          if OpamFilter.opt_eval_to_bool filter_env filter
-          then Some (OpamFilter.expand_string ~default:"" filter_env message)
+          if OpamFilter.opt_eval_to_bool filter_env filter then
+            Some (OpamFilter.expand_string ~default:(fun _ -> "")
+                    filter_env message)
           else None)
         messages
     in

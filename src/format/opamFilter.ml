@@ -78,6 +78,12 @@ let string_interp_regex =
       seq [str "%{"; group (greedy notclose); opt (group (str "}%"))];
     ])
 
+let escape_expansions =
+  let rex = Re.(compile @@ char '%') in
+  Re_pcre.substitute ~rex ~subst:(fun s -> "%"^s)
+
+let expansion_string s = Printf.sprintf "%%{%s}%%" s
+
 let fident_variables = function
   | [], var, _ -> [OpamVariable.Full.global var]
   | pkgs, var, _ -> List.map (fun n -> OpamVariable.Full.create n var) pkgs
@@ -193,7 +199,7 @@ let expand_string ?default env text =
     else
     let fident = String.sub str 2 (String.length str - 4) in
     resolve_ident env (filter_ident_of_string fident)
-    |> value_string ~default:(OpamStd.Option.default str default)
+    |> value_string ?default:(OpamStd.Option.map (fun f -> f fident) default)
   in
   Re_pcre.substitute ~rex:string_interp_regex ~subst text
 
@@ -250,9 +256,19 @@ let rec reduce_aux ~default_str env = function
     logop1 (fun e -> FNot e) not
       (reduce ~default_str env e)
 
-and reduce ?(default_str=Some "") env e =
+and reduce ?(default_str = Some (fun _ -> "")) env e =
   match reduce_aux ~default_str env e with
-  | FString s -> FString (expand_string ?default:default_str env s)
+  | FString s ->
+    (try FString (expand_string ?default:default_str env s)
+     with Failure _ ->
+       (* may be raised when default_str is None. Expand what can be, escape it
+          and keep the rest untouched *)
+       let env v =
+         OpamStd.Option.Op.(env v >>| function
+           | S s -> S (escape_expansions s)
+           | x -> x)
+       in
+       FUndef (FString (expand_string ~default:expansion_string env s)))
   | e -> e
 
 let eval ?default env e = value ?default (reduce env e)
@@ -290,7 +306,7 @@ let expand_interpolations_in_file env file =
   let rec aux () =
     match try Some (input_line ic) with End_of_file -> None with
     | Some s ->
-      output_string oc (expand_string ~default:"" env s);
+      output_string oc (expand_string ~default:(fun _ -> "") env s);
       output_char oc '\n';
       aux ()
     | None -> ()
@@ -304,7 +320,7 @@ let expand_interpolations_in_file env file =
 let arguments env (a,f) =
   if opt_eval_to_bool env f then
     match a with
-    | CString s -> Some (expand_string ~default:"" env s)
+    | CString s -> Some (expand_string ~default:(fun _ -> "") env s)
     | CIdent i  ->
       try
         let fident = filter_ident_of_string i in
@@ -355,9 +371,12 @@ let filter_constraints ?default env filtered_constraint =
       | Filter flt ->
         if eval_to_bool ?default env flt then `True else `False
       | Constraint (relop, v) ->
-        let v = OpamPackage.Version.of_string (eval_to_string env v) in
-        `Formula (Atom (relop, v)))
+        let v = eval_to_string ~default:"" env v in
+        `Formula (Atom (relop, OpamPackage.Version.of_string v)))
     filtered_constraint
+
+(* { build & "%{skromuk}%" = "flib%" } *)
+(* { build & "flib%%" = "flib%" } *)
 
 let partial_filter_constraints env filtered_constraint =
   OpamFormula.partial_eval
@@ -368,7 +387,15 @@ let partial_filter_constraints env filtered_constraint =
          | FBool true -> `True
          | FBool false -> `False
          | f -> `Formula (Atom (Filter f)))
-      | Constraint c -> `Formula (Atom (Constraint c)))
+      | Constraint (relop, flt_v) ->
+        (match reduce ~default_str:None env flt_v with
+         | FUndef f ->
+           `Formula (Atom (Constraint (relop, f)))
+         | FString s ->
+           `Formula (Atom (Constraint (relop, FString (escape_expansions s))))
+         | FBool b ->
+           `Formula (Atom (Constraint (relop, FString (string_of_bool b))))
+         | _ -> assert false))
     filtered_constraint
 
 let gen_filter_formula constraints filtered_formula =
