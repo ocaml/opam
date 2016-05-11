@@ -107,7 +107,7 @@ let lint t =
     [t.available] @
     OpamFormula.fold_left (fun acc (_, f) ->
         OpamFormula.fold_left (fun acc -> function
-            | Constraint _ -> acc
+            | Constraint (_,f) -> f :: acc
             | Filter f -> f :: acc)
           acc f)
       [] (OpamFormula.ands [t.depends; t.depopts]) @
@@ -369,7 +369,7 @@ let lint_gen reader filename =
         in
         try
           Some (Pp.parse ~pos:(pos_file (OpamFile.filename filename))
-                  pp_raw_fields good_items),
+                  (pp_raw_fields ~strict:true) good_items),
           warnings
         with
         | OpamFormat.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]

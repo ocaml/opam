@@ -486,7 +486,7 @@ module OPAM: sig
   val sections: (t, opamfile_item list) OpamFormat.Pp.I.fields_def
 
   (** Doesn't handle package name encoded in directory name *)
-  val pp_raw_fields: (opamfile_item list, t) OpamFormat.Pp.t
+  val pp_raw_fields: strict:bool -> (opamfile_item list, t) OpamFormat.Pp.t
 
   (** Returns the raw print-AST contents of the file *)
   val contents: ?filename:'a typed_file -> t -> opamfile

@@ -283,7 +283,8 @@ module Pp = struct
             match exn with
             | None ->
               OpamConsole.warning "%s"
-                (string_of_bad_format (Bad_format (pos, s)))
+                (string_of_bad_format (Bad_format (pos, s)));
+              assert false
             | Some e ->
               OpamConsole.warning "%s" (string_of_bad_format e))
       fmt
@@ -787,11 +788,24 @@ module Pp = struct
       in
       pp ~name:"filtered-constraints" parse_cs print_cs
 
+    let version =
+      string -| of_module "version" (module OpamPackage.Version)
+
+    let ext_version =
+      pp ~name:"version-expr"
+        (fun ~pos:_ -> function
+           | String (_,s) -> FString s
+           | Ident (_,s) -> FIdent (filter_ident_of_string s)
+           | _ -> unexpected ())
+        (function
+          | FString s -> String (pos_null, s)
+          | FIdent id -> Ident (pos_null, string_of_filter_ident id)
+          | _ -> assert false)
+
     let package_atom constraints =
       map_option
         (string -| of_module "pkg-name" (module OpamPackage.Name))
-        (constraints
-           (string -| of_module "pkg-version" (module OpamPackage.Version)))
+        constraints
 
     let package_formula kind constraints =
       let split, join = match kind with

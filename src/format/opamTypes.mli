@@ -196,7 +196,7 @@ type 'a filter_or_constraint =
   | Constraint of (relop * 'a)
 
 type filtered_formula =
-  (name * version filter_or_constraint OpamFormula.formula) OpamFormula.formula
+  (name * filter filter_or_constraint OpamFormula.formula) OpamFormula.formula
 
 (** {2 Solver} *)
 

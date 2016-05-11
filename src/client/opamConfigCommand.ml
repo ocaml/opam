@@ -160,7 +160,8 @@ let expand gt str =
   log "config-expand";
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   OpamConsole.msg "%s\n"
-    (OpamFilter.expand_string ~default:"" (OpamPackageVar.resolve st) str)
+    (OpamFilter.expand_string ~default:(fun _ -> "")
+       (OpamPackageVar.resolve st) str)
 
 let set var value =
   if not (OpamVariable.Full.is_global var) then
@@ -224,7 +225,7 @@ let exec gt ~inplace_path command =
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   let cmd, args =
     match
-      List.map (OpamFilter.expand_string ~default:""
+      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
                   (OpamPackageVar.resolve st)) command
     with
     | []        -> OpamSystem.internal_error "Empty command"
