@@ -415,12 +415,20 @@ let lint_gen reader filename =
 
 let lint_file filename =
   let reader filename =
-    let ic = OpamFilename.open_in (OpamFile.filename filename) in
     try
-      let f = OpamFile.Syntax.of_channel filename ic in
-      close_in ic; f
-    with e -> close_in ic; raise e
+      let ic = OpamFilename.open_in (OpamFile.filename filename) in
+      try
+        let f = OpamFile.Syntax.of_channel filename ic in
+        close_in ic; f
+      with e -> close_in ic; raise e
+    with OpamSystem.File_not_found _ ->
+      OpamConsole.error_and_exit "File %s not found"
+        (OpamFile.to_string filename)
   in
+  lint_gen reader filename
+
+let lint_channel filename ic =
+  let reader filename = OpamFile.Syntax.of_channel filename ic in
   lint_gen reader filename
 
 let lint_string filename string =

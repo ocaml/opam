@@ -1986,7 +1986,7 @@ module OPAMSyntax = struct
          | Some _, None, None -> t
          | None, Some _, Some _ -> t
          | None, _, _ ->
-           OpamConsole.warning
+           OpamConsole.log "FILE(opam)"
              "Outputting opam file %s with unspecified name or version"
              (OpamFilename.to_string filename);
            t

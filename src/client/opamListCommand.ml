@@ -302,7 +302,13 @@ let field_of_string =
       Field (OpamStd.String.remove_suffix ~suffix:":" s)
     else
     try List.assoc s names_fields
-    with Not_found -> OpamConsole.error_and_exit "No printer for %S" s
+    with Not_found ->
+      OpamConsole.error_and_exit "No printer for %S%s" s
+        (if not (OpamStd.String.ends_with ~suffix:":" s) &&
+            List.mem_assoc s (OpamFile.OPAM.fields)
+         then Printf.sprintf ". Did you mean the opam field \"%s:\" \
+                              (with a colon) ?" s
+         else "")
 
 let version_color st nv =
   let installed = (* (in any switch) *)
@@ -320,6 +326,14 @@ let version_color st nv =
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
     (if is_available nv then [] else [`crossed;`red])
 
+let mini_field_printer = function
+  | String (_, s) -> s
+  | List (_, l) as f ->
+    (try OpamStd.List.concat_map ", "
+           (function String (_, s) -> s | _ -> raise Exit)
+           l
+     with Exit -> OpamFormat.Print.value f)
+  | f -> OpamFormat.Print.value f
 
 let detail_printer st nv =
   let open OpamStd.Option.Op in
@@ -361,11 +375,6 @@ let detail_printer st nv =
      OpamFile.Descr.body)
     +! ""
   | Field f ->
-    let rec mini_field_printer = function
-      | String (_, s) -> s
-      | List (_, l) -> String.concat ", " (List.map mini_field_printer l)
-      | f -> OpamFormat.Print.value f
-    in
     (try
        List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
        mini_field_printer

@@ -283,9 +283,40 @@ let filename =
   let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
   parse, print
 
+let existing_filename_or_dash =
+  let parse str =
+    if str = "-" then `Ok None
+    else
+      let f = OpamFilename.of_string str in
+      if OpamFilename.exists f then `Ok (Some f)
+      else
+        `Error (Printf.sprintf "File %s not found" (OpamFilename.to_string f))
+  in
+  let print ppf filename =
+    pr_str ppf OpamStd.Option.Op.((filename >>| OpamFilename.to_string) +! "-") in
+  parse, print
+
 let dirname =
   let parse str = `Ok (OpamFilename.Dir.of_string str) in
   let print ppf dir = pr_str ppf (OpamFilename.prettify_dir dir) in
+  parse, print
+
+let existing_filename_dirname_or_dash =
+  let parse str =
+    if str = "-" then `Ok None else
+    match OpamFilename.opt_file (OpamFilename.of_string str) with
+    | Some f -> `Ok (Some (OpamFilename.F f))
+    | None -> match OpamFilename.opt_dir (OpamFilename.Dir.of_string str) with
+      | Some d -> `Ok (Some (OpamFilename.D d))
+      | None ->
+        `Error (Printf.sprintf "File or directory %s not found" str)
+  in
+  let print ppf gf =
+    pr_str ppf @@ match gf with
+    | None -> "-"
+    | Some (OpamFilename.D d) -> OpamFilename.Dir.to_string d
+    | Some (OpamFilename.F f) -> OpamFilename.to_string f
+  in
   parse, print
 
 let package_name =

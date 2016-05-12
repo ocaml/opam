@@ -113,3 +113,6 @@ val list:
 val info:
   'a global_state ->
   fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
+
+(** Prints the value of an opam field in a shortened way *)
+val mini_field_printer: value -> string
