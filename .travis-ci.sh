@@ -64,7 +64,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     opam init
 
     eval `opam config env`
-    opam install ocamlfind lwt.2.5.1 cohttp.0.19.3 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
+    opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
