@@ -74,14 +74,26 @@ graph-workaround:
 	cp graph/src/sig_pack.mli graph/src/sig_pack.ml
 	cp graph/src/dot_ast.mli graph/src/dot_ast.ml
 
+SRC_cppo = cppo_version.ml cppo_types.ml cppo_parser.mli cppo_parser.ml cppo_lexer.ml \
+					 cppo_command.ml cppo_eval.ml cppo_main.ml
+
 make-cppo:
-	cd cppo && make
+	echo 'let cppo_version = "$(VERSION)"' > cppo/cppo_version.ml
+	ocamllex cppo/cppo_lexer.mll
+	ocamlyacc cppo/cppo_parser.mly
+	ocamlopt -o cppo/cppo -I cppo -dtypes unix.cmxa str.cmxa $(foreach ml,$(SRC_cppo),cppo/$(ml))
+
+ifeq ($(OCAML_4_02),true)
+CPPOVARS=-D OCAML4 -D OCAML_4_02
+else
+CPPOVARS=-D OCAML4
+endif
 
 extlib-cppo: make-cppo
-	cppo/cppo $(shell ocaml extlib/src/configure.ml) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml	
-	cppo/cppo $(shell ocaml extlib/src/configure.ml) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
-	cppo/cppo $(shell ocaml extlib/src/configure.ml) extlib/src/extString.mlpp -o extlib/src/extString.ml
-	cppo/cppo $(shell ocaml extlib/src/configure.ml) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
+	cppo/cppo $(CPPOVARS) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml	
+	cppo/cppo $(CPPOVARS) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
+	cppo/cppo $(CPPOVARS) extlib/src/extString.mlpp -o extlib/src/extString.ml
+	cppo/cppo $(CPPOVARS) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
 
 dose-cppo:
 	for f in `find dose -regex ".*.mli*"`; do\
