@@ -23,41 +23,62 @@ let log fmt = OpamConsole.log "ENV" fmt
 
 (* - Environment and updates handling - *)
 
-let expand_update (ident, op, string, comment) =
-  let prefix = OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir) in
-  let read_env () =
-    try OpamStd.Env.reset_value ~prefix (OpamStd.Sys.path_sep ())
-          (OpamStd.Env.get ident)
-    with Not_found -> [] in
-  let update_env a =
-    let before, after =
-      OpamStd.Env.cut_value
-        ~prefix (OpamStd.Sys.path_sep ()) (OpamStd.Env.get ident)
-    in
-    List.rev_append before (a::after)
+let apply_env_update_op ?remove_prefix op contents getenv =
+  let sep = OpamStd.Sys.path_sep () in
+  let update_env new_item =
+    match remove_prefix with
+    | Some prefix ->
+      (* Changes in place the first value starting with opam_root_prefix *)
+      let before, after = OpamStd.Env.cut_value ~prefix sep (getenv ()) in
+      List.rev_append before (new_item::after)
+    | None ->
+      OpamConsole.error_and_exit
+        "'=+=' environment update operator not allowed in this scope"
   in
-  let cons ~head a b =
-    let c = List.filter ((<>)"") b in
+  let get_prev_value () =
+    match remove_prefix with
+    | Some prefix -> OpamStd.Env.reset_value ~prefix sep (getenv ())
+    | None -> OpamStd.String.split_delim (getenv ()) sep
+  in
+  let colon_eq a b = (* prepend a, but keep ":"s *)
     match b with
-    | []      -> if head then [ ""; a ] else [ a; "" ]
-    | "" :: _ -> "" :: a :: c
-    | _       ->
-      match List.rev b with
-      | "" :: _ -> (a :: c) @ [""]
-      | _       -> a :: c in
-  let c = String.make 1 (OpamStd.Sys.path_sep ()) in
+    | [] -> [a; ""]
+    | "" :: l -> "" :: a :: l (* keep leading colon *)
+    | l -> a :: l
+  in
+  let c = String.make 1 sep in
   match op with
-  | Eq  -> ident, string, comment
-  | PlusEq -> ident, String.concat c (string :: read_env ()), comment
-  | EqPlus -> ident, String.concat c (read_env () @ [string]), comment
-  | EqPlusEq -> ident, String.concat c (update_env string), comment
-  | ColonEq ->
-    ident, String.concat c (cons ~head:true string (read_env())), comment
+  | Eq  -> contents
+  | PlusEq -> String.concat c (contents :: get_prev_value ())
+  | EqPlus -> String.concat c (get_prev_value () @ [contents])
+  | EqPlusEq -> String.concat c (update_env contents)
+  | ColonEq -> String.concat c (colon_eq contents (get_prev_value ()))
   | EqColon ->
-    ident, String.concat c (cons ~head:false string (read_env())), comment
+    String.concat c
+      (List.rev (colon_eq contents (List.rev (get_prev_value ()))))
+
+
+let expand_update ?remove_prefix (ident, op, string, comment) getenv =
+  ident,
+  apply_env_update_op ?remove_prefix op string getenv,
+  comment
 
 let expand (env: env_update list) : env =
-  List.map expand_update env
+  List.fold_left (fun acc ((var, op, contents, comment) as upd) ->
+      try
+        let _, prev_value, _ =
+          List.find (fun (v, _, _) -> v = var) acc
+        in
+        expand_update (var, op, contents, comment) (fun () -> prev_value)
+        :: acc
+      with Not_found ->
+        expand_update
+          ~remove_prefix:(OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir))
+          upd
+          (fun () -> OpamStd.Option.default "" (OpamStd.Env.getopt var))
+        :: acc)
+    [] env
+  |> List.rev
 
 let add (env: env) (updates: env_update list) =
   let env =
@@ -159,12 +180,13 @@ let path ~force_path root switch =
          (OpamPath.Switch.global_config root switch))
   in
   let _, path, _ =
-    expand_update (
-      "PATH",
-      (if force_path then PlusEq else EqPlusEq),
-      OpamFilename.Dir.to_string bindir,
-      Some "Current opam switch binary dir"
-    )
+    expand_update
+      ~remove_prefix:(OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir))
+      ("PATH",
+       (if force_path then PlusEq else EqPlusEq),
+       OpamFilename.Dir.to_string bindir,
+       Some "Current opam switch binary dir")
+      (fun () -> OpamStd.Option.default "" (OpamStd.Env.getopt "PATH"))
   in
   path
 
