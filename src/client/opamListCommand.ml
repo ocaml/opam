@@ -92,8 +92,16 @@ let string_of_selector =
       ("solution" % `blue)
       (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
        % `bold)
-  | Pattern (_,str) ->
-    Printf.sprintf "%s(%s)" ("name-matches" % `green) (str % `bold)
+  | Pattern (sel,str) ->
+    let str = if sel.exact then str else Printf.sprintf "*%s*" str in
+    let fctname = if sel.glob then "match" else "exact-match" in
+    let fctname =
+      match sel.fields with
+      | [] ->  Printf.sprintf "none-%s" fctname
+      | [fld] ->  Printf.sprintf "%s-%s" fld fctname
+      | _ -> fctname
+    in
+    Printf.sprintf "%s(%s)" (fctname % `green) (str % `bold)
   | Atoms atoms ->
     OpamStd.List.concat_map ~left:"(" ~right:")" " | "
       (fun a -> OpamFormula.short_string_of_atom a % `bold) atoms

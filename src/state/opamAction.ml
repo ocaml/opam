@@ -329,7 +329,7 @@ let removal_needs_download st nv =
       (OpamPackage.to_string nv);
     false
   | Some opam ->
-    if OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam then true
+    if OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam then false
     else
     let commands =
       OpamFilter.commands (OpamPackageVar.resolve ~opam st)

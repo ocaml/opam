@@ -22,8 +22,8 @@ install_on_osx () {
   sudo hdiutil attach XQuartz-2.7.6.dmg
   sudo installer -verbose -pkg /Volumes/XQuartz-2.7.6/XQuartz.pkg -target /
   case "$OCAML_VERSION" in
-  4.02.3) brew update; brew install ocaml;;
-  4.03.0) brew update; brew install ocaml --HEAD ;;
+  4.03.0) brew update; brew install ocaml;;
+#  4.03.0) brew update; brew install ocaml --HEAD ;;
   *) echo Skipping $OCAML_VERSION on OSX; exit 0 ;;
   esac
   if [ -n "$EXTERNAL_SOLVER$OPAM_TEST" ]; then
@@ -64,7 +64,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     opam init
 
     eval `opam config env`
-    opam install ocamlfind lwt.2.5.1 cohttp.0.19.3 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
+    opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
