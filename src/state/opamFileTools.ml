@@ -107,7 +107,7 @@ let lint t =
     [t.available] @
     OpamFormula.fold_left (fun acc (_, f) ->
         OpamFormula.fold_left (fun acc -> function
-            | Constraint _ -> acc
+            | Constraint (_,f) -> f :: acc
             | Filter f -> f :: acc)
           acc f)
       [] (OpamFormula.ands [t.depends; t.depopts]) @
@@ -369,7 +369,7 @@ let lint_gen reader filename =
         in
         try
           Some (Pp.parse ~pos:(pos_file (OpamFile.filename filename))
-                  pp_raw_fields good_items),
+                  (pp_raw_fields ~strict:true) good_items),
           warnings
         with
         | OpamFormat.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
@@ -415,12 +415,20 @@ let lint_gen reader filename =
 
 let lint_file filename =
   let reader filename =
-    let ic = OpamFilename.open_in (OpamFile.filename filename) in
     try
-      let f = OpamFile.Syntax.of_channel filename ic in
-      close_in ic; f
-    with e -> close_in ic; raise e
+      let ic = OpamFilename.open_in (OpamFile.filename filename) in
+      try
+        let f = OpamFile.Syntax.of_channel filename ic in
+        close_in ic; f
+      with e -> close_in ic; raise e
+    with OpamSystem.File_not_found _ ->
+      OpamConsole.error_and_exit "File %s not found"
+        (OpamFile.to_string filename)
   in
+  lint_gen reader filename
+
+let lint_channel filename ic =
+  let reader filename = OpamFile.Syntax.of_channel filename ic in
   lint_gen reader filename
 
 let lint_string filename string =

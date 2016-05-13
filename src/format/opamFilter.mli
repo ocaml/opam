@@ -55,9 +55,10 @@ type env = full_variable -> variable_contents option
     names and optional string converter *)
 type fident = name list * variable * (string * string) option
 
-(** Rewrites string interpolations within a string. Without [default],
-    preserves undefined expansions as is *)
-val expand_string: ?default:string -> env -> string -> string
+(** Rewrites string interpolations within a string. [default] is applied to the
+    fident string (e.g. what's between [%{] and [}%]) when the expansion is
+    undefined. If unspecified, this raises [Failure]. *)
+val expand_string: ?default:(string -> string) -> env -> string -> string
 
 (** Returns the (beginning, end) offsets and substrings of any unclosed [%{]
     expansions *)

@@ -361,7 +361,7 @@ module Format_upgrade = struct
         let meta_dir =  switch_dir / ".opam-switch" in
         let installed =
           (OpamFile.SwitchSelections.safe_read
-             (OpamFile.make (switch_dir // "switch-state")))
+             (OpamFile.make (meta_dir // "switch-state")))
           .sel_installed
         in
         OpamFilename.mkdir (meta_dir / "packages");

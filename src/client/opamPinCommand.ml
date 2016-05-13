@@ -111,7 +111,9 @@ let copy_files st opam =
 let edit_raw name temp_file =
   let rec edit () =
     if OpamStd.Sys.tty_in then
-      (OpamConsole.msg "Press enter to start the editor... ";
+      (OpamConsole.msg "Press enter to start \"%s\" (this can be customised by \
+                        setting EDITOR or OPAMEDITOR)... "
+         (Filename.basename OpamClientConfig.(!r.editor));
        ignore (read_line ()));
     let edited_ok =
       try
@@ -167,6 +169,7 @@ let edit_raw name temp_file =
         else edit ()
     with e ->
       OpamStd.Exn.fatal e;
+      log "Editing error: %s" (Printexc.to_string e);
       if OpamConsole.confirm "Errors in %s, retry editing ?"
           (OpamFile.to_string temp_file)
       then edit ()

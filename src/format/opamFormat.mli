@@ -281,15 +281,24 @@ module Pp : sig
       (value, 'version) t ->
       (value list, 'version filter_or_constraint OpamFormula.formula) t
 
-    val package_atom :
-      ((value, version) t -> (value list, 'a) t) -> (value, name * 'a) t
+    (** Package versions *)
+    val version: (value, version) t
+
+    (** Package versions as filters, as they may appear in dependency (may be an
+        expanded string or an ident) *)
+    val ext_version: (value, filter) t
+
+      (** Returns an atom parser ("package" {>= "version"}) from a constraint
+          and a version parser*)
+    val package_atom:
+      (value list, 'a) t -> (value, name * 'a) t
 
     (** Takes a parser for constraints. Lists without operator will be
         understood as conjunctions or disjunctions depending on the first
         argument. *)
     val package_formula :
       [< `Conj | `Disj ] ->
-      ((value, version) t -> (value list, 'a) t) ->
+      (value list, 'a) t ->
       (value, (name * 'a) OpamFormula.formula) t
 
     (** Environment variable updates syntax *)

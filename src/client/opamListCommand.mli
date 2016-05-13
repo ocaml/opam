@@ -89,6 +89,7 @@ val default_list_format: output_format list
 (** Outputs a list of packages as a table according to the formatting options *)
 val display:
   'a switch_state ->
+  header:bool ->
   format:output_format list ->
   dependency_order:bool ->
   all_versions:bool ->
@@ -112,3 +113,6 @@ val list:
 val info:
   'a global_state ->
   fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
+
+(** Prints the value of an opam field in a shortened way *)
+val mini_field_printer: value -> string

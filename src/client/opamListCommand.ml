@@ -92,8 +92,16 @@ let string_of_selector =
       ("solution" % `blue)
       (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
        % `bold)
-  | Pattern (_,str) ->
-    Printf.sprintf "%s(%s)" ("name-matches" % `green) (str % `bold)
+  | Pattern (sel,str) ->
+    let str = if sel.exact then str else Printf.sprintf "*%s*" str in
+    let fctname = if sel.glob then "match" else "exact-match" in
+    let fctname =
+      match sel.fields with
+      | [] ->  Printf.sprintf "none-%s" fctname
+      | [fld] ->  Printf.sprintf "%s-%s" fld fctname
+      | _ -> fctname
+    in
+    Printf.sprintf "%s(%s)" (fctname % `green) (str % `bold)
   | Atoms atoms ->
     OpamStd.List.concat_map ~left:"(" ~right:")" " | "
       (fun a -> OpamFormula.short_string_of_atom a % `bold) atoms
@@ -294,7 +302,13 @@ let field_of_string =
       Field (OpamStd.String.remove_suffix ~suffix:":" s)
     else
     try List.assoc s names_fields
-    with Not_found -> OpamConsole.error_and_exit "No printer for %S" s
+    with Not_found ->
+      OpamConsole.error_and_exit "No printer for %S%s" s
+        (if not (OpamStd.String.ends_with ~suffix:":" s) &&
+            List.mem_assoc s (OpamFile.OPAM.fields)
+         then Printf.sprintf ". Did you mean the opam field \"%s:\" \
+                              (with a colon) ?" s
+         else "")
 
 let version_color st nv =
   let installed = (* (in any switch) *)
@@ -303,7 +317,7 @@ let version_color st nv =
   let is_available nv = (* Ignore unavailability due to pinning *)
     try
       OpamFilter.eval_to_bool ~default:false
-        (OpamPackageVar.resolve_switch_raw st.switch_global
+        (OpamPackageVar.resolve_switch_raw ~package:nv st.switch_global
            st.switch st.switch_config)
         (OpamFile.OPAM.available (OpamSwitchState.opam st nv))
     with Not_found -> false
@@ -312,6 +326,14 @@ let version_color st nv =
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
     (if is_available nv then [] else [`crossed;`red])
 
+let mini_field_printer = function
+  | String (_, s) -> s
+  | List (_, l) as f ->
+    (try OpamStd.List.concat_map ", "
+           (function String (_, s) -> s | _ -> raise Exit)
+           l
+     with Exit -> OpamFormat.Print.value f)
+  | f -> OpamFormat.Print.value f
 
 let detail_printer st nv =
   let open OpamStd.Option.Op in
@@ -353,11 +375,6 @@ let detail_printer st nv =
      OpamFile.Descr.body)
     +! ""
   | Field f ->
-    let rec mini_field_printer = function
-      | String (_, s) -> s
-      | List (_, l) -> String.concat ", " (List.map mini_field_printer l)
-      | f -> OpamFormat.Print.value f
-    in
     (try
        List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
        mini_field_printer
@@ -404,7 +421,7 @@ let detail_printer st nv =
       (OpamGlobalState.repos_list st.switch_global) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
 
-let display st ~format ~dependency_order ~all_versions packages =
+let display st ~header ~format ~dependency_order ~all_versions packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -426,8 +443,17 @@ let display st ~format ~dependency_order ~all_versions packages =
     else
       OpamPackage.Set.elements packages
   in
+  let add_head l =
+    if header then
+      (match List.map disp_header format with
+       | x :: r -> ("# "^x) :: r
+       | [] -> [])
+      :: l
+    else l
+  in
   List.rev_map (fun nv -> List.map (detail_printer st nv) format) packages |>
   List.rev |>
+  add_head |>
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:" "
 
@@ -507,10 +533,11 @@ let list gt
   match depexts with
   | None ->
     display st ~format ~dependency_order:(order=`depends)
-      ~all_versions:false packages
+      ~header:(not print_short) ~all_versions:false packages
   | Some tags_list ->
     let required_tags = OpamStd.String.Set.of_list tags_list in
-    OpamPackage.Name.Set.fold (fun name acc ->
+    OpamPackage.Name.Set.fold
+      (fun name acc ->
         let nv = OpamSwitchState.get_package st name in
         let nv =
           if OpamPackage.Set.mem nv packages then nv else

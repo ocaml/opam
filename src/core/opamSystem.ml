@@ -647,7 +647,8 @@ let rec flock_update
        OpamConsole.formatted_msg
          "Another process has locked %s, waiting (C-c to abort)... "
          file;
-       Unix.lockf fd (unix_lock_op ~dontblock:false flag) 0;
+       (try Unix.lockf fd (unix_lock_op ~dontblock:false flag) 0;
+        with Sys.Break as e -> OpamConsole.msg "\n"; raise e);
        OpamConsole.msg "lock acquired.\n");
     lock.kind <- (flag :> lock_flag)
   | _ -> assert false

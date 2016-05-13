@@ -349,7 +349,10 @@ let show =
     let doc =
       Arg.info
         ~docv:"FIELDS"
-        ~doc:"Only display these fields. You can specify multiple fields by separating them with commas."
+        ~doc:"Only display these fields. You can specify multiple fields by \
+              separating them with commas. In addition, fields from the raw \
+              package definition can be printed by suffixing their names with \
+              ':' character."
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
   let raw =
@@ -357,11 +360,63 @@ let show =
   let where =
     mk_flag ["where"]
       "Print the location of the opam file used for this package" in
-  let pkg_info global_options fields raw where packages =
+  let file =
+    let doc =
+      Arg.info
+        ~docv:"FILE"
+        ~doc:"Get package information from the given FILE instead of from \
+              known packages. This implies $(b,--raw) unless $(b,--fields) \
+              is used. Only raw opam-file fields can be queried."
+        ["file"] in
+    Arg.(value & opt (some existing_filename_or_dash) None & doc) in
+  let pkg_info global_options fields raw where file packages =
     apply_global_options global_options;
-    OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamListCommand.info gt ~fields ~raw_opam:raw ~where packages in
-  Term.(pure pkg_info $global_options $fields $raw $where $nonempty_atom_list),
+    match file, packages with
+    | None, [] ->
+      `Error (true, "required argument PACKAGES is missing")
+    | Some _, _::_ ->
+      `Error (true,
+              "arguments PACKAGES and `--files' can't be specified together")
+    | None, pkgs ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamListCommand.info gt ~fields ~raw_opam:raw ~where pkgs;
+      `Ok ()
+    | Some f, [] ->
+      let opam = match f with
+        | Some f -> OpamFile.OPAM.read (OpamFile.make f)
+        | None -> OpamFile.OPAM.read_from_channel stdin
+      in
+      if where then
+        (OpamConsole.msg "%s\n"
+           (match f with Some f -> OpamFilename.(Dir.to_string (dirname f))
+                       | None -> ".");
+         `Ok ())
+      else
+      let opam_content_list = OpamFile.OPAM.to_list opam in
+      let get_field f =
+        let f = OpamStd.String.remove_suffix ~suffix:":" f in
+        try OpamListCommand.mini_field_printer (List.assoc f opam_content_list)
+        with Not_found -> ""
+      in
+      match fields with
+      | [] ->
+        OpamFile.OPAM.write_to_channel stdout opam; `Ok ()
+      | [f] ->
+        OpamConsole.msg "%s\n" (get_field f); `Ok ()
+      | flds ->
+        let tbl =
+          List.map (fun fld ->
+              [ OpamConsole.colorise `blue
+                  (OpamStd.String.remove_suffix ~suffix:":" fld ^ ":");
+                get_field fld ])
+            flds
+        in
+        OpamStd.Format.align_table tbl |>
+        OpamStd.Format.print_table stdout ~sep:" ";
+        `Ok ()
+  in
+  Term.(ret
+          (pure pkg_info $global_options $fields $raw $where $file $atom_list)),
   term_info "show" ~doc ~man
 
 
@@ -1439,7 +1494,8 @@ let lint =
     `P "Given an $(i,opam) file, performs several quality checks on it and \
         outputs recommendations, warnings or errors on stderr."
   ] in
-  let file = Arg.(value & pos 0 file Filename.current_dir_name &
+  let file = Arg.(value & pos 0 existing_filename_dirname_or_dash
+                    (Some (OpamFilename.D (OpamFilename.cwd ()))) &
                   info ~docv:"FILE" []
                     ~doc:"Name of the opam file to check, or directory \
                           containing it. Current directory if unspecified")
@@ -1454,44 +1510,48 @@ let lint =
   in
   let lint global_options file normalise short =
     apply_global_options global_options;
-    let opam_f : OpamFile.OPAM.t OpamFile.t =
-      if Sys.is_directory file then
-        OpamFile.make
-          OpamFilename.Op.(OpamFilename.Dir.of_string file // "opam")
-      else OpamFile.make (OpamFilename.of_string file)
+    let opam_f = match file with
+      | Some (OpamFilename.D d) ->
+        Some (OpamFile.make OpamFilename.Op.(d // "opam"))
+      | Some (OpamFilename.F f) -> Some (OpamFile.make f)
+      | None -> None
     in
-    if OpamFile.exists opam_f then
-      try
-        let warnings,opam = OpamFileTools.lint_file opam_f in
-        let failed =
-          List.exists (function _,`Error,_ -> true | _ -> false) warnings
-        in
-        if short then
-          (if warnings <> [] then
-             OpamConsole.msg "%s\n"
-               (OpamStd.List.concat_map " " (fun (n,_,_) -> string_of_int n)
-                  warnings))
-        else if warnings = [] then
-          OpamConsole.msg "%s: %s\n"
-            (OpamFile.to_string opam_f)
-            (OpamConsole.colorise `green "Passed.")
-        else
-          OpamConsole.msg "%s found in %s:\n%s\n"
-            (if failed then "Errors" else "Warnings")
-            (OpamFile.to_string opam_f)
-            (OpamFileTools.warns_to_string warnings);
-        if normalise then
-          OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
-        if failed then OpamStd.Sys.exit 1
-      with
-      | Parsing.Parse_error
-      | Lexer_error _
-      | OpamFormat.Bad_format _ ->
-        OpamConsole.msg "File format error\n";
-        OpamStd.Sys.exit 1
-    else
-      (OpamConsole.error_and_exit "No opam file found at %s"
-         (OpamFile.to_string opam_f))
+    try
+      let warnings,opam =
+        match opam_f with
+        | Some f -> OpamFileTools.lint_file f
+        | None ->
+          OpamFileTools.lint_channel
+            (OpamFile.make (OpamFilename.of_string "-")) stdin
+      in
+      let failed =
+        List.exists (function _,`Error,_ -> true | _ -> false) warnings
+      in
+      if short then
+        (if warnings <> [] then
+           OpamConsole.msg "%s\n"
+             (OpamStd.List.concat_map " " (fun (n,_,_) -> string_of_int n)
+                warnings))
+      else if warnings = [] then
+        OpamConsole.msg "%s%s\n"
+          (OpamStd.Option.to_string (fun f -> OpamFile.to_string f ^ ": ")
+             opam_f)
+          (OpamConsole.colorise `green "Passed.")
+      else
+        OpamConsole.msg "%s found%s:\n%s\n"
+          (if failed then "Errors" else "Warnings")
+          (OpamStd.Option.to_string (fun f -> " in "^OpamFile.to_string f)
+             opam_f)
+          (OpamFileTools.warns_to_string warnings);
+      if normalise then
+        OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
+      if failed then OpamStd.Sys.exit 1
+    with
+    | Parsing.Parse_error
+    | Lexer_error _
+    | OpamFormat.Bad_format _ ->
+      OpamConsole.msg "File format error\n";
+      OpamStd.Sys.exit 1
   in
   Term.(pure lint $global_options $file $normalise $short),
   term_info "lint" ~doc ~man
