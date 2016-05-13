@@ -262,7 +262,8 @@ let slog = OpamConsole.slog
     let changes =
       to_upgrade ++ OpamSwitchState.packages_of_atoms t to_install
     in
-    let to_reinstall =
+    let to_reinstall = t.reinstall %% to_upgrade in
+(*
       (* Only treat related reinstalls (i.e. the ones belonging to the
          dependency cone of packages specified to update) *)
       let universe =
@@ -276,7 +277,8 @@ let slog = OpamConsole.slog
       OpamPackage.Set.filter
         (fun nv -> OpamPackage.Name.Set.mem nv.name all_deps)
         t.reinstall
-    in
+      in
+*)
     let t, full_orphans, orphan_versions = orphans ~changes t in
     let to_remove = to_upgrade %% full_orphans in
     let to_upgrade = to_upgrade -- full_orphans in
