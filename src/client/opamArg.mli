@@ -124,8 +124,14 @@ val url: url Arg.converter
 (** Filename converter *)
 val filename: filename Arg.converter
 
+(** Filename converter also accepting "-" for stdin/stdout *)
+val existing_filename_or_dash: filename option Arg.converter
+
 (** Dirnam converter *)
 val dirname: dirname Arg.converter
+
+val existing_filename_dirname_or_dash:
+  OpamFilename.generic_file option Arg.converter
 
 (** Package name converter *)
 val package_name: name Arg.converter

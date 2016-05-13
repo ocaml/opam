@@ -27,12 +27,16 @@ val template: package -> OpamFile.OPAM.t
     this specific warning/error. *)
 val lint: OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
 
-(** Same as [validate], but operates on a file, which allows catching parse
+(** Same as [lint], but operates on a file, which allows catching parse
     errors too. You can specify an expected name and version *)
 val lint_file: OpamFile.OPAM.t OpamFile.typed_file ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Like [validate_file], but takes the file contents as a string *)
+(** Same as [lint_file], but taking input from a channel *)
+val lint_channel: OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
+  (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
+
+(** Like [lint_file], but takes the file contents as a string *)
 val lint_string: OpamFile.OPAM.t OpamFile.typed_file -> string ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
