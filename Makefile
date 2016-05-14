@@ -124,11 +124,19 @@ prefast: rmartefacts src/client/opamGitVersion.ml src/state/opamScript.ml src/co
 	@
 
 fast: prefast
+	@rm -f src/x_build_libs.ocp
 	@ocp-build init
 	@ocp-build
 	@$(MAKE) fastlink
 
+opam-%: prefast
+	@ocp-build init
+	@echo "build_libs = [ \"$*\" ]" > src/x_build_libs.ocp
+	@ocp-build
+	@rm -f src/x_build_libs.ocp
+
 fastclean: rmartefacts
+	@rm -f src/x_build_libs.ocp
 	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null
 	@rm -rf src/*/_obuild
 

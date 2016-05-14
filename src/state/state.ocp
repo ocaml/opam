@@ -1,3 +1,7 @@
+if build_libs = [] ||
+   %mem( string = "state"
+         strings = build_libs )
+then {
 comp += [ "-w" "-48" ]
 
 begin library "opam-state"
@@ -28,3 +32,4 @@ begin library "opam-state"
   ]
 
 end
+}
