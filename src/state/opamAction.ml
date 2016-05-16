@@ -521,7 +521,9 @@ let build_package t mode nv =
       OpamSwitchState.opam t nv
     | `In_place dir ->
       let name = OpamPackage.name nv in
-      dir, OpamFile.OPAM.read (Option.get (OpamPinned.find_opam_file_in_source name dir))
+      match OpamPinned.find_opam_file_in_source name dir with
+      | None      -> raise Not_found
+      | Some file -> dir, OpamFile.OPAM.read file
   in
   let commands =
     OpamFile.OPAM.build opam @
