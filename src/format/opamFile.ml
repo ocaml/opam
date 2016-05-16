@@ -1198,7 +1198,7 @@ module Local = struct
     | _              -> None
 
   let switch t =
-    Option.map OpamSwitch.of_string (str opam_switch t)
+    OpamStd.Option.map OpamSwitch.of_string (str opam_switch t)
 
   let with_switch t switch =
     let open OpamVariable in

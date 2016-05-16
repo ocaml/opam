@@ -73,6 +73,7 @@ let search_files = ["findlib"]
 open OpamStd.Op
 
 let local_override () =
+  let open OpamStd.Option.Op in
   match
     OpamStateConfig.(!r.switch_from),
     OpamLocalConfig.(!r.local_file)
@@ -81,7 +82,7 @@ let local_override () =
     let current_switch = OpamFile.Local.switch opamlocal in
     OpamStateConfig.update
       ?current_switch
-      ?switch_from:(Option.map (fun _ -> `Local) current_switch)
+      ?switch_from:(current_switch >>| fun _ -> `Local)
       ()
   | _, _ -> ()
 
