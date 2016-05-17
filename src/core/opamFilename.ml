@@ -229,8 +229,8 @@ let copy ~src ~dst =
 let copy_dir ~src ~dst =
   if src <> dst then OpamSystem.copy_dir (Dir.to_string src) (Dir.to_string dst)
 
-let install ?exec ~src ~dst () =
-  if src <> dst then OpamSystem.install ?exec (to_string src) (to_string dst)
+let install ?warning ?exec ~src ~dst () =
+  if src <> dst then OpamSystem.install ?warning ?exec (to_string src) (to_string dst)
 
 let move ~src ~dst =
   if src <> dst then

@@ -54,10 +54,24 @@ val copy_dir: string -> string -> unit
 
 val mv: string -> string -> unit
 
+type install_warning = [ `Add_exe          (* [.exe] had to be added *)
+                       | `Install_dll      (* Installation of [.dll] to bin/libexec *)
+                       | `Install_script   (* Installation of script on Windows *)
+                       | `Install_unknown  (* Installation of unknown file to bin/libexec *)
+                       | `Cygwin           (* Installation of a Cygwin-linked executable *)
+                       | `Cygwin_libraries (* Installation of a binary linked to a Cygwin library *)
+                       ]
+(** Warnings which come from {!install} *)
+
+type install_warning_fn = string -> install_warning -> unit
+
+val default_install_warning : install_warning_fn
+(** The default warning function - displays a message on OpamConsole *)
+
 (** [install ?exec src dst] copies file [src] as file [dst] using [install].
     If [exec], make the resulting file executable (otherwise, look at the
     permissions of the original file to decide). *)
-val install: ?exec:bool -> string -> string -> unit
+val install: ?warning:install_warning_fn -> ?exec:bool -> string -> string -> unit
 
 (** Checks if a file is an executable (regular file with execution
     permission) *)
