@@ -23,6 +23,7 @@ let global_variable_names = [
                            configuration";
   "root",                 "The current opam root directory";
   "make",                 "The 'make' command to use";
+  "exe",                  "Suffix needed for executable filenames (Windows)";
 ]
 
 let package_variable_names = [
@@ -67,6 +68,7 @@ let resolve_global gt full_var =
       | "jobs"          -> Some (V.int (OpamStateConfig.(Lazy.force !r.jobs)))
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
+      | "exe"           -> Some (V.string (OpamStd.Sys.executable_name ""))
       | _               -> None
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
