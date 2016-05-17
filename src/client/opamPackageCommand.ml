@@ -40,7 +40,7 @@ let build t ?build_test ?build_doc dir =
   let name = OpamPackage.name default_nv in
   let pred dir = None <> OpamPinned.find_opam_file_in_source name dir in
   let dir = 
-    match OpamFile.locate_ancestor pred dir with
+    match OpamFilename.find_ancestor_dir pred dir with
     | Some dir -> dir
     | None     ->
       OpamConsole.error "Not in a local sandbox";
