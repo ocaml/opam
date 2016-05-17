@@ -69,7 +69,7 @@ let initk k =
     | Some dir ->
       let local_file = OpamFilename.Op.(dir // ".opamlocal") in
       try Some OpamFile.(Local.read (make local_file))
-      with _ -> None
+      with e -> OpamStd.Exn.fatal e; None
   in
   setk (setk (fun c -> r := c; k)) !r
     ~sandbox_dir
