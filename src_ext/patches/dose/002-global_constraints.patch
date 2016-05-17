@@ -1,0 +1,105 @@
+commit edc3d6c06398e3b510fd3d3c2a6894b1f02fd48a
+Author: Pietro Abate <pietro.abate@pps.univ-paris-diderot.fr>
+Date:   Wed May 11 15:33:39 2016 +0200
+
+    API change : add parameter to check_request and check_request_using
+    
+    now we can also pass global_contraints to these functions. Opam does
+    not use global constraints for the moment.
+
+diff --git a/algo/depsolver.ml b/algo/depsolver.ml
+index 6de6778..f436d4b 100644
+--- a/algo/depsolver.ml
++++ b/algo/depsolver.ml
+@@ -362,7 +362,8 @@ let upgrade_constr universe name =
+       let p = List.hd(List.sort ~cmp:Cudf.(>%) pl) 
+       in (name,Some(`Geq,p.Cudf.version))
+ 
+-let check_request_using ?call_solver ?callback ?criteria ?(explain=false) (pre,universe,request) =
++let check_request_using ?call_solver ?(global_constraints=false) 
++  ?callback ?criteria ?(explain=false) (pre,universe,request) =
+   let intSolver ?(explain=false) universe request =
+     let deps = 
+       let k =
+@@ -397,26 +398,27 @@ let check_request_using ?call_solver ?callback ?criteria ?(explain=false) (pre,u
+     (* XXX it should be possible to add a package to a cudf document ! *)
+     let pkglist = Cudf.get_packages universe in
+     let universe = Cudf.load_universe (dummy::pkglist) in
+-    edos_install universe dummy
++    (dummy,edos_install ~global_constraints universe dummy)
+   in
+   match call_solver with
+   | None ->
+-    let d = intSolver universe request in
++    let (dummy,d) = intSolver universe request in
+     if Diagnostic.is_solution d then
+-      let is = Diagnostic.get_installationset d in
++      let is = List.remove (Diagnostic.get_installationset d) dummy in
+       Sat (Some pre,Cudf.load_universe is)
+     else
+       if explain then Unsat (Some d) else Unsat None
+   | Some call_solver ->
+     try Sat(call_solver (pre,universe,request)) with
+     |CudfSolver.Unsat when not explain -> Unsat None
+-    |CudfSolver.Unsat when explain -> Unsat (Some (intSolver ~explain universe request))
++    |CudfSolver.Unsat when explain ->
++        Unsat (Some (snd(intSolver ~explain universe request)))
+     |CudfSolver.Error s -> Error s
+ ;;
+ 
+ (** check if a cudf request is satisfiable. we do not care about
+  * universe consistency . We try to install a dummy package *)
+-let check_request ?cmd ?callback ?criteria ?explain cudf =
++let check_request ?cmd ?(global_constraints=false) ?callback ?criteria ?explain cudf =
+   let call_solver =
+     match cmd with
+     | Some cmd ->
+@@ -424,7 +426,7 @@ let check_request ?cmd ?callback ?criteria ?explain cudf =
+         Some (CudfSolver.execsolver cmd criteria)
+     | None -> None
+   in
+-  check_request_using ?call_solver ?callback ?explain cudf
++  check_request_using ~global_constraints ?call_solver ?callback ?explain cudf
+ ;;
+ 
+ type depclean_result =
+diff --git a/algo/depsolver.mli b/algo/depsolver.mli
+index 6f7099b..707c05b 100644
+--- a/algo/depsolver.mli
++++ b/algo/depsolver.mli
+@@ -139,7 +139,7 @@ val depclean :
+   ?callback : (depclean_result -> unit) -> 
+   Cudf.universe ->
+   Cudf.package list ->
+-  depclean_result list
++    depclean_result list
+ 
+ type solver_result =
+   |Sat of (Cudf.preamble option * Cudf.universe)
+@@ -153,17 +153,23 @@ type solver_result =
+     if ?explain is specified and there is no solution for the give request, the
+     result will contain the failure reason.
+ *)
+-val check_request : ?cmd : string -> ?callback:(int array * Diagnostic.diagnosis -> unit) -> 
+-  ?criteria:string -> ?explain : bool -> Cudf.cudf -> solver_result
++val check_request :
++  ?cmd : string ->
++  ?global_constraints : bool ->
++  ?callback:(int array * Diagnostic.diagnosis -> unit) -> 
++  ?criteria:string ->
++  ?explain : bool ->
++     Cudf.cudf -> solver_result
+ 
+ (** Same as [check_request], but allows to specify any function to call the
+     external solver. It should raise [Depsolver.Unsat] on failure *)
+ val check_request_using:
+   ?call_solver:(Cudf.cudf -> Cudf.preamble option * Cudf.universe) ->
++  ?global_constraints : bool ->
+   ?callback:(int array * Diagnostic.diagnosis -> unit) ->
+   ?criteria:string ->
+   ?explain : bool ->
+-  Cudf.cudf -> solver_result
++    Cudf.cudf -> solver_result
+ 
+ (** Build the installation graph from a cudf solution universe and sets of packages to be 
+     installed/removed (see CudfAdd.make_summary) *)
