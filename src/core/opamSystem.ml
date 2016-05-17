@@ -1292,3 +1292,6 @@ let init () =
   Sys.catch_break true;
   try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
   with Invalid_argument _ -> ()
+
+let () =
+  OpamProcess.set_resolve_command resolve_command

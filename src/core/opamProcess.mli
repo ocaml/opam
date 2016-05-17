@@ -210,3 +210,7 @@ module Job: sig
 end
 
 type 'a job = 'a Job.Op.job
+
+(**/**)
+val set_resolve_command :
+  (?env:string array -> ?dir:string -> string -> string option) -> unit

@@ -9,8 +9,187 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 let log ?level fmt =
   OpamConsole.log "PROC" ?level fmt
+
+let cygwin_create_process_env prog args env fd1 fd2 fd3 =
+  (*
+   * Unix.create_process_env correctly converts arguments to a command line for
+   * native Windows execution, but it does not correctly handle Cygwin's quoting
+   * requirements.
+   *
+   * The process followed here is based on an analysis of the sources for the
+   * Cygwin DLL (git://sourceware.org/git/newlib-cygwin.git,
+   * winsup/cygwin/dcrt0.cc) and a lack of refutation on the Cygwin mailing list
+   * in May 2016!
+   *
+   * In case this seems terminally stupid, it's worth noting that Cygwin's
+   * implementation of the exec system calls do not pass argv using the Windows
+   * command line, these weird and wonderful rules exist for corner cases and,
+   * as here, for invocations from native Windows processes.
+   *
+   * There are two forms of escaping which can apply, controlled by the CYGWIN
+   * environment variable option noglob.
+   *
+   * If none of the strings in argv contains the double-quote character, then
+   * the process should be invoked with the noglob option (to ensure that no
+   * characters are unexpectedly expanded). In this mode of escaping, it is
+   * necessary to protect any whitespace characters (\r, \n, \t, and space
+   * itself) by surrounding sequences of them with double-quotes). Additionally,
+   * if any string in argv begins with the @ sign, this should be double-quoted.
+   *
+   * If any one of the strings in argv does contain a double-quote character,
+   * then the process should be invoked with the glob option (this is the
+   * default). Every string in argv should have double-quotes put around it. Any
+   * double-quote characters within the string should be translated to "'"'".
+   *
+   * The reason for supporting both mechanisms is that the noglob method has
+   * shorter command lines and Windows has an upper limit of 32767 characters
+   * for the command line.
+   *
+   * COMBAK If the command line does exceed 32767 characters, then Cygwin allows
+   *        a parameter beginning @ to refer to a file from which to read the
+   *        rest of the command line. This support is not implemented at this
+   *        time in OPAM.
+   *
+   * [This stray " is here to terminate a previous part of the comment!]
+   *)
+  let make_args argv =
+    let b = Buffer.create 128 in
+    let gen_quote ~quote ~pre ?(post = pre) s =
+      log ~level:3 "gen_quote: %S" s;
+      Buffer.clear b;
+      let l = String.length s in
+      let rec f i =
+        let j =
+          try
+            OpamStd.String.find_from (fun c -> try String.index quote c >= 0 with Not_found -> false) s (succ i)
+          with Not_found ->
+            l in
+        Buffer.add_string b (String.sub s i (j - i));
+        if j < l then begin
+          Buffer.add_string b pre;
+          let i = j in
+          let j =
+            try
+              OpamStd.String.find_from (fun c -> try String.index quote c < 0 with Not_found -> true) s (succ i)
+            with Not_found ->
+              l in
+          Buffer.add_string b (String.sub s i (j - i));
+          Buffer.add_string b post;
+          if j < l then
+            f j
+          else
+            Buffer.contents b
+        end else
+          Buffer.contents b in
+      let r =
+        if s = "" then
+          "\"\""
+        else
+          f 0
+      in
+      log ~level:3 "result: %S" r; r in
+    if List.exists (fun s -> try String.index s '"' >= 0 with Not_found -> false) argv then
+      ("\"" ^ String.concat "\" \"" (List.map (gen_quote ~quote:"\"" ~pre:"\"'" ~post:"'\"") argv) ^ "\"", false)
+    else
+      (String.concat " " (List.map (gen_quote ~quote:"\b\r\n " ~pre:"\"") argv), true) in
+  let (command_line, no_glob) = make_args (Array.to_list args) in
+  log "cygvoke(%sglob): %s" (if no_glob then "no" else "") command_line;
+  let env = Array.to_list env in
+  let set = ref false in
+  let f item =
+    let (key, value) =
+      match OpamStd.String.cut_at item '=' with
+        Some pair -> pair
+      | None -> (item, "") in
+    match String.lowercase_ascii key with
+    | "cygwin" ->
+        let () =
+          if key = "CYGWIN" then
+            set := true in
+        let settings = OpamStd.String.split value ' ' in
+        let set = ref false in
+        let f setting =
+          let setting = String.trim setting in
+          let setting =
+            match OpamStd.String.cut_at setting ':' with
+              Some (setting, _) -> setting
+            | None -> setting in
+          match setting with
+            "glob" ->
+              if no_glob then begin
+                log ~level:2 "Removing glob from %s" key;
+                false
+              end else begin
+                log ~level:2 "Leaving glob in %s" key;
+                set := true;
+                true
+              end
+          | "noglob" ->
+              if no_glob then begin
+                log ~level:2 "Leaving noglob in %s" key;
+                set := true;
+                true
+              end else begin
+                log ~level:2 "Removing noglob from %s" key;
+                false
+              end
+          | _ ->
+              true in
+        let settings = List.filter f settings in
+        let settings =
+          if not !set && no_glob then begin
+            log ~level:2 "Setting noglob in %s" key;
+            "noglob"::settings
+          end else
+            settings in
+        if settings = [] then begin
+          log ~level:2 "Removing %s completely" key;
+          None
+        end else
+          Some (key ^ "=" ^ String.concat " " settings)
+    | "path" ->
+        let path_dirs = OpamStd.Sys.split_path_variable item in
+        let winsys = Filename.concat (OpamStd.Sys.system ()) "." |> String.lowercase_ascii in
+        let rec f prefix suffix = function
+        | dir::dirs ->
+            let contains_cygpath = Sys.file_exists (Filename.concat dir "cygpath.exe") in
+            if suffix = [] then
+              if String.lowercase_ascii (Filename.concat dir ".") = winsys then
+                f prefix [dir] dirs
+              else
+                if contains_cygpath then
+                  path_dirs
+                else
+                  f (dir::prefix) [] dirs
+            else
+              if contains_cygpath then begin
+                log ~level:2 "Moving %s to after %s in PATH" dir (List.hd prefix);
+                List.rev_append prefix (dir::(List.rev_append suffix dirs))
+              end else
+                f prefix (dir::suffix) dirs
+        | [] ->
+            assert false
+        in
+        Some (String.concat ";" (f [] [] path_dirs))
+    | _ ->
+        Some item in
+  let env = OpamStd.List.filter_map f env in
+  let env =
+    if !set then
+      env
+    else
+      if no_glob then begin
+        log ~level:2 "Adding CYGWIN=noglob";
+        "CYGWIN=noglob"::env
+      end else
+        env in
+  OpamStubs.win_create_process prog command_line
+                               (Some(String.concat "\000" env ^ "\000"))
+                               fd1 fd2 fd3
 
 (** Shell commands *)
 type command = {
@@ -127,6 +306,15 @@ let string_of_info ?(color=`yellow) info =
         (OpamConsole.colorise color k) v) info;
   Buffer.contents b
 
+let resolve_command_fn = ref (fun ?env:_ ?dir:_ _ -> None)
+let set_resolve_command =
+  let called = ref false in
+  fun resolve_command ->
+    if !called then invalid_arg "Just what do you think you're doing, Dave?";
+    called := true;
+    resolve_command_fn := resolve_command
+let resolve_command cmd = !resolve_command_fn cmd
+
 (** [create cmd args] create a new process to execute the command
     [cmd] with arguments [args]. If [stdout_file] or [stderr_file] are
     set, the channels are redirected to the corresponding files.  The
@@ -191,8 +379,68 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       close_out chan in
 
   let pid =
+    let cmd, args =
+      if Sys.win32 then
+        try
+          let actual_command =
+            if Sys.file_exists cmd then
+              cmd
+            else if Sys.file_exists (cmd ^ ".exe") then
+              cmd ^ ".exe"
+            else
+              raise Exit in
+          let actual_image, args =
+            let c = open_in actual_command in
+            set_binary_mode_in c true;
+            try
+              if really_input_string c 2 = "#!" then begin
+                (* The input_line will only fail for a 2-byte file consisting of exactly #! (with no \n), which is acceptable! *)
+                let l = String.trim (input_line c) in
+                let cmd, arg =
+                  try
+                    let i = String.index l ' ' in
+                    let cmd = Filename.basename (String.trim (String.sub l 0 i)) in
+                    let arg = String.trim (String.sub l i (String.length l - i)) in
+                    if cmd = "env" then
+                      arg, None
+                    else
+                      cmd, Some arg
+                  with Not_found ->
+                    Filename.basename l, None in
+                close_in c;
+                try
+                  let cmd = OpamStd.Option.default cmd (resolve_command cmd) in
+                  (*Printf.eprintf "Deduced %s => %s to be executed via %s\n%!" cmd actual_command cmd;*)
+                  let args = actual_command::args in
+                  cmd, OpamStd.Option.map_default (fun arg -> arg::args) args arg
+                with Not_found ->
+                  (* Script interpreter isn't available - fall back *)
+                  raise Exit
+              end else begin
+                close_in c;
+                actual_command, args
+              end
+            with End_of_file ->
+              close_in c;
+              (* A two-byte image can't be executable! *)
+              raise Exit in
+          (*Printf.eprintf "Final deduction: %s -> %s\n%!" cmd actual_image;*)
+          actual_image, args
+        with Exit ->
+          (* Fall back to default behaviour if anything went wrong - almost certainly means a broken package *)
+          cmd, args
+      else
+        cmd, args in
+    let create_process, cmd, args =
+      if Sys.win32 then
+        if OpamStd.Sys.is_cygwin_variant cmd = `Cygwin then
+          cygwin_create_process_env, cmd, args
+        else
+          Unix.create_process_env, cmd, args
+      else
+        Unix.create_process_env, cmd, args in
     try
-      Unix.create_process_env
+      create_process
         cmd
         (Array.of_list (cmd :: args))
         env

@@ -224,6 +224,7 @@ module String : sig
   val contains_char: string -> char -> bool
   val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
+  val find_from: (char -> bool) -> string -> int -> int
 
   (** {3 Manipulation} *)
 
@@ -367,6 +368,9 @@ module Sys : sig
 
   (** The /etc directory *)
   val etc: unit -> string
+
+  (** The system directory (Windows only) *)
+  val system: unit -> string
 
   type os = Darwin
           | Linux
