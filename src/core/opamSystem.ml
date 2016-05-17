@@ -548,6 +548,72 @@ let is_exec file =
 
 let file_is_empty f = Unix.((stat f).st_size = 0)
 
+let classify_executable file =
+  let c = open_in file in
+  (* On a 32-bit system, this could fail for a PE image with a 2GB+ DOS header =-o *)
+  let input_int_little c =
+    let b1 = input_byte c in
+    let b2 = input_byte c in
+    let b3 = input_byte c in
+    let b4 = input_byte c in
+    b1 lor (b2 lsl 8) lor (b3 lsl 16) lor (b4 lsl 24) in
+  let input_short_little c =
+    let b1 = input_byte c in
+    let b2 = input_byte c in
+    b1 lor (b2 lsl 8) in
+  set_binary_mode_in c true;
+  try
+    match really_input_string c 2 with
+      "#!" ->
+        close_in c;
+        `Script
+    | "MZ" ->
+        let is_pe =
+          try
+            (* Offset to PE header at 0x3c (but we've already read two bytes) *)
+            ignore (really_input_string c 0x3a);
+            ignore (really_input_string c (input_int_little c - 0x40));
+            let magic = really_input_string c 4 in
+            magic = "PE\000\000"
+          with End_of_file ->
+            close_in c;
+            false in
+        if is_pe then
+          try
+            let arch =
+              (* NB It's not necessary to determine PE/PE+ headers for x64/x86 determination *)
+              match input_short_little c with
+                0x8664 ->
+                  `x86_64
+              | 0x14c ->
+                  `x86
+              | _ ->
+                  raise End_of_file
+            in
+            ignore (really_input_string c 14);
+            let size_of_opt_header = input_short_little c in
+            let characteristics = input_short_little c in
+            (* Executable images must have a PE "optional" header and be marked executable *)
+            (* Could also validate IMAGE_FILE_32BIT_MACHINE (0x100) for x86 and IMAGE_FILE_LARGE_ADDRESS_AWARE (0x20) for x64 *)
+            if size_of_opt_header <= 0 || characteristics land 0x2 = 0 then
+              raise End_of_file;
+            close_in c;
+            if characteristics land 0x2000 <> 0 then
+              `Dll arch
+            else
+              `Exe arch
+          with End_of_file ->
+            close_in c;
+            `Unknown
+        else
+          `Exe `i386
+    | _ ->
+        close_in c;
+        `Unknown
+  with End_of_file ->
+    close_in c;
+    `Unknown
+
 let install ?exec src dst =
   if Sys.is_directory src then
     internal_error "Cannot install %s: it is a directory." src;

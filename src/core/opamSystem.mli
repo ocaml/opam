@@ -286,3 +286,12 @@ val forward_to_back : string -> string
 
 (** On Unix, a no-op. On Windows, convert \ to / *)
 val back_to_forward : string -> string
+
+(** Identifies kinds of executable files. At present, only useful on Windows.
+    Executable or DLLs are recognised based on their content, not on their
+    filename. Any file beginning "#!" is assumed to be a shell script and all
+    files are classified [`Unknown]. *)
+val classify_executable : string -> [ `Exe of [ `i386 | `x86 | `x86_64 ]
+                                    | `Dll of [ `x86 | `x86_64 ]
+                                    | `Script
+                                    | `Unknown ]
