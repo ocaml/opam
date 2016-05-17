@@ -13,7 +13,15 @@
     wrappers on OpamSystem using the filename type *)
 
 (** Basenames *)
-module Base: OpamStd.ABSTRACT
+module Base: sig
+  include OpamStd.ABSTRACT
+
+  (** Check whether a basename has a given suffix *)
+  val check_suffix: t -> string -> bool
+
+  (** Add a file extension *)
+  val add_extension: t -> string -> t
+end
 
 (** Directory names *)
 module Dir: OpamStd.ABSTRACT

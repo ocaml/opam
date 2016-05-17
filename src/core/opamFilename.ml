@@ -9,7 +9,15 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Base = OpamStd.AbstractString
+module Base = struct
+  include OpamStd.AbstractString
+
+  let check_suffix filename s =
+    Filename.check_suffix filename s
+
+  let add_extension filename suffix =
+    filename ^ "." ^ suffix
+end
 
 let log fmt = OpamConsole.log "FILENAME" fmt
 let slog = OpamConsole.slog
