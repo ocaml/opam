@@ -66,10 +66,25 @@ let process_dot_install st nv build_dir =
           OpamFilename.mkdir dst_dir;
         );
         List.iter (fun (base, dst) ->
+            let (base, append) =
+              if exec && not (OpamFilename.exists (OpamFilename.create build_dir base.c)) then
+                let base' =
+                  {base with c = OpamFilename.Base.add_extension base.c "exe"} in
+                if OpamFilename.exists (OpamFilename.create build_dir base'.c) then begin
+                  OpamConsole.warning "Added .exe to %s; .install file should be fixed" (OpamFilename.Base.to_string base.c);
+                  (base', true)
+                end else
+                  (base, false)
+              else
+                (base, false) in
             let src_file = OpamFilename.create build_dir base.c in
             let dst_file = match dst with
               | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
-              | Some d -> OpamFilename.create dst_dir d in
+              | Some d ->
+                  if append && not (OpamFilename.Base.check_suffix d ".exe") then
+                    OpamFilename.create dst_dir (OpamFilename.Base.add_extension d "exe")
+                  else
+                    OpamFilename.create dst_dir d in
             if check ~src:build_dir ~dst:dst_dir base then
               OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
           ) files in
