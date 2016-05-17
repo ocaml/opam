@@ -62,7 +62,7 @@ let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
   let pred dir = OpamFilename.(exists Op.(dir // ".opamlocal")) in
-  let sandbox_dir = OpamFile.locate_ancestor pred (OpamFilename.cwd ()) in
+  let sandbox_dir = OpamFilename.find_ancestor_dir pred (OpamFilename.cwd ()) in
   let local_file =
     match sandbox_dir with
     | None -> None

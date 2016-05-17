@@ -34,7 +34,7 @@
 let create_cont t dir ~update_config ~packages switch =
   let dir =
     let pred dir = OpamFilename.(exists Op.(dir // ".opamlocal")) in
-    match OpamFile.locate_ancestor pred dir with
+    match OpamFilename.find_ancestor_dir pred dir with
     | Some _ ->
       OpamConsole.error "Already in a local sandbox.";
       OpamStd.Sys.exit 1
