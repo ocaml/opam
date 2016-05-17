@@ -43,7 +43,7 @@ let build t ?build_test ?build_doc dir =
     match OpamFilename.find_ancestor_dir pred dir with
     | Some dir -> dir
     | None     ->
-      OpamConsole.error "Not in a local sandbox";
+      OpamConsole.error "No valid package description found.";
       OpamStd.Sys.exit 1
   in
   (* XXX(seliopou): This whole dance is necessary because
