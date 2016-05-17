@@ -2559,16 +2559,3 @@ module Comp = struct
   include CompSyntax
   include SyntaxFile(CompSyntax)
 end
-
-let locate_ancestor pred dir =
-  let open OpamFilename in
-  let root = raw_dir "/" in
-  let rec loop dir =
-    if pred dir then Some dir
-    else if dir = root then None
-    else loop (dirname_dir dir)
-  in
-  if not (exists_dir dir)
-    then None
-    else loop dir
-
