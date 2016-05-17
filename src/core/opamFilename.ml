@@ -123,6 +123,17 @@ let basename_dir dirname =
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
+let find_ancestor_dir pred dir =
+  let root = raw_dir "/" in
+  let rec loop dir =
+    if pred dir then Some dir
+    else if dir = root then None
+    else loop (dirname_dir dir)
+  in
+  if not (exists_dir dir)
+    then None
+    else loop dir
+
 let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
   let rec aux acc dir =

@@ -1314,6 +1314,41 @@ let pin ?(unpin_only=false) () =
           $command $params),
   term_info "pin" ~doc ~man
 
+(* PACKAGE *)
+let package_doc = "XXX: Maintainers, fill this in"
+let package =
+  let doc = package_doc in
+  let commands =
+    [ "build", `build, [], "XXX: Maintainers, fill this in";
+      "test", `test, [], "XXX: Maintainers, fill this in";
+      "doc", `doc, [], "XXX: Maintainers, fill this in" ]
+  in
+  let man = [
+    `S "DESCRIPTION";
+    `P "XXX: Maintainers, fill this in."
+  ] in
+  let command, params = mk_subcommands commands in
+  let package global_options command params =
+    apply_global_options global_options;
+    let path = OpamFilename.raw_dir "." in
+    match command, params with
+    | Some `build, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      `Ok (OpamPackageCommand.build st path)
+    | Some `test , [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      `Ok (OpamPackageCommand.build st ~build_test:true path)
+    | Some `doc  , [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      `Ok (OpamPackageCommand.build st ~build_doc:true path)
+    | _          , _  -> bad_subcommand commands ("package", command, params)
+  in
+  Term.(ret (pure package $ global_options $ command $ params)),
+  term_info "package" ~doc ~man
+
 (* SOURCE *)
 let source_doc = "Get the source of an OPAM package."
 let source =
@@ -1595,6 +1630,7 @@ let commands = [
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
+  package;
   source;
   lint;
   help;
