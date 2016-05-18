@@ -827,13 +827,15 @@ let update =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
         ~dev_only:(dev_only && not repos_only)
-        ~no_stats:upgrade
+        ~no_stats:true
         names
     in
     if upgrade then
       OpamSwitchState.with_write_lock st @@ fun st ->
       OpamConsole.msg "\n";
       ignore @@ OpamClient.upgrade st []
+    else
+      OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n"
   in
   Term.(pure update $global_options $jobs_flag $name_list
         $repos_only $dev_only $upgrade),
