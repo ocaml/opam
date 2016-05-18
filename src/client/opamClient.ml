@@ -498,7 +498,7 @@ let slog = OpamConsole.slog
               let name = OpamPackage.Name.to_string nv.name in
               let pkg = OpamPackage.to_string nv in
               List.exists (fun s -> s = name || s = pkg) names
-            ) st.installed
+            ) packages
       in
       let dev_packages, nondev_packages =
         OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
