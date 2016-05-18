@@ -318,10 +318,6 @@ let compilation_env t opam =
     ("OPAM_PACKAGE_VERSION",
      OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
      None);
-    ("OPAM_SWITCH_PREFIX",
-     OpamFilename.Dir.to_string
-       (OpamPath.Switch.root t.switch_global.root t.switch),
-     None);
   ] @ env0 in
   OpamEnv.add env1 (OpamFile.OPAM.build_env opam)
 

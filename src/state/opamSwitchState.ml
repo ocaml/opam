@@ -165,14 +165,18 @@ let load lock_kind gt rt switch =
                 OpamConsole.error
                   "System file %s, which package %s depends upon, \
                    no longer exists.\n\
-                   The package has been marked for reinstallation, but you \
-                   should reinstall its system dependencies first."
+                   The package has been marked as removed, and opam will \
+                   try to reinstall it if necessary, but you should reinstall \
+                   its system dependencies first."
                   (OpamFilename.to_string file) (OpamPackage.to_string nv)
               else if changed then
                 OpamConsole.warning
-                  "File %s was changed on your system. \
-                   %s has been marked for reinstallation."
-                  (OpamFilename.to_string file) (OpamPackage.to_string nv);
+                  "File %s was, which package %s depends upon, \
+                   was changed on your system. \
+                   %s has been marked as removed, and will be reinstalled if \
+                   necessary."
+                  (OpamFilename.to_string file) (OpamPackage.to_string nv)
+                  (OpamPackage.name_to_string nv);
               changed)
             (OpamFile.Dot_config.file_depends conf)
         then OpamPackage.Set.add nv acc
@@ -180,10 +184,12 @@ let load lock_kind gt rt switch =
       conf_files
       OpamPackage.Set.empty
   in
+  let installed =
+    installed -- ext_files_changed
+  in
   let reinstall =
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
-    changed ++
-    ext_files_changed
+    changed
   in
   let st = {
     switch_global = (gt :> unlocked global_state);

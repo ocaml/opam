@@ -33,7 +33,11 @@ iter_packages ~opam:(fun _ opam ->
              | CString s ->
                Re.(execp (compile (seq [alt (List.map str dests); str "}%"])) s)
            with Not_found -> false)
-        | l, _ -> List.exists (fun (arg,_) -> arg =CString "install") l
+        | l, _ ->
+          List.exists (function
+              | (CString arg, _) -> OpamStd.String.contains ~sub:"install" arg
+              | _ -> false)
+            l
       in
       let install, build =
         rev_split_while [] condition (List.rev (O.build opam))
