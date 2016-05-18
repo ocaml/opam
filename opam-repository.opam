@@ -14,14 +14,12 @@ authors: [
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
-depends: [
-  "opam-core" {= "2.0~alpha"}
-  "opam-format" {= "2.0~alpha"}
-]
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "prefast"]
-  ["cp" "src/opam.ocp" "src/repository"]
-  ["sh" "-c" "cd src/repository && ocp-build init && ocp-build"]
-  [make "opam-repository.install"]
+  [make name]
+  [make "%{name}%.install"]
+]
+depends: [
+  "opam-core" {= version}
+  "opam-format" {= version}
 ]

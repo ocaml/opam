@@ -1,3 +1,7 @@
+if build_libs = [] ||
+   %mem( string = "repository"
+         strings = build_libs )
+then {
 begin library "opam-repository"
 
   files   = [
@@ -20,3 +24,4 @@ begin library "opam-repository"
   ]
 
 end
+}

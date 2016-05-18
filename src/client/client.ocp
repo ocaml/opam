@@ -1,3 +1,8 @@
+if build_libs = [] ||
+   %mem( string = "client"
+         strings = build_libs )
+then {
+
 comp += [ "-w" "-48" ]
 
 begin library "opam-client"
@@ -32,3 +37,5 @@ begin program "opam"
  ]
 
 end
+
+}

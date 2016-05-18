@@ -1,3 +1,7 @@
+if build_libs = [] ||
+   %mem( string = "format"
+         strings = build_libs )
+then {
 begin library "opam-format"
   sort = false
   files   = [
@@ -23,3 +27,4 @@ begin library "opam-format"
   ]
 
 end
+}
