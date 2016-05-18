@@ -348,6 +348,16 @@ let removal_needs_download st nv =
       | _ -> false in
     not (List.for_all use_ocamlfind commands)
 
+let cmd_wrapper t opam getter cmd args =
+  match
+    OpamFilter.commands (OpamPackageVar.resolve ~opam t)
+      [getter t.switch_global.config, None]
+  with
+  | [wrap_cmd::wrap_args] ->
+    wrap_cmd, wrap_args @ (cmd :: args)
+  | [] | [[]] -> cmd, args
+  | _::_::_ -> assert false
+
 (* Remove a given package *)
 let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
@@ -385,6 +395,9 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
             | [] -> None
             | cmd::args ->
               let text = OpamProcess.make_command_text name ~args cmd in
+              let cmd, args =
+                cmd_wrapper t opam OpamFile.Config.wrap_remove cmd args
+              in
               Some
                 (OpamSystem.make_command ?name:nameopt ~text cmd args
                    ~env:(OpamTypesBase.env_array env)
@@ -536,6 +549,7 @@ let build_package t source nv =
     | (cmd::args)::commands ->
       let text = OpamProcess.make_command_text name ~args cmd in
       let dir = OpamFilename.Dir.to_string dir in
+      let cmd, args = cmd_wrapper t opam OpamFile.Config.wrap_build cmd args in
       OpamSystem.make_command ~env ~name ~dir ~text
         ~verbose:(OpamConsole.verbose ()) ~check_existence:false
         cmd args
@@ -568,6 +582,9 @@ let install_package t nv =
     | (cmd::args)::commands ->
       let text = OpamProcess.make_command_text name ~args cmd in
       let dir = OpamFilename.Dir.to_string dir in
+      let cmd, args =
+        cmd_wrapper t opam OpamFile.Config.wrap_install cmd args
+      in
       OpamSystem.make_command ~env ~name ~dir ~text
         ~verbose:(OpamConsole.verbose ()) ~check_existence:false
         cmd args

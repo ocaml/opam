@@ -1028,12 +1028,12 @@ module Pp = struct
         match extra_fields with
         | [] -> items
         | (pos,_) :: _  ->
-          warn ~pos ?strict "Unexpected or duplicate fields or sections%s:%s"
+          warn ~pos ?strict "Unexpected or duplicate fields or sections%s:\n%s"
             in_name
             (OpamStd.Format.itemize
                (fun (pos,k) ->
                   Printf.sprintf "'%s:' at %s" k (string_of_pos pos))
-               extra_fields);
+               (List.rev extra_fields));
           valid_fields
       in
       let print items =

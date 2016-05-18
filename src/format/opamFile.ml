@@ -859,6 +859,9 @@ module ConfigSyntax = struct
     dl_jobs : int;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
+    wrap_build : arg list;
+    wrap_install : arg list;
+    wrap_remove : arg list;
   }
 
   let opam_version t = t.opam_version
@@ -873,6 +876,9 @@ module ConfigSyntax = struct
     try Some (List.assoc kind t.solver_criteria)
     with Not_found -> None
   let solver t = t.solver
+  let wrap_build t = t.wrap_build
+  let wrap_install t = t.wrap_install
+  let wrap_remove t = t.wrap_remove
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -888,6 +894,9 @@ module ConfigSyntax = struct
     { t with solver_criteria =
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver solver t = { t with solver = Some solver }
+  let with_wrap_build wrap_build t = { t with wrap_build }
+  let with_wrap_install wrap_install t = { t with wrap_install }
+  let with_wrap_remove wrap_remove t = { t with wrap_remove }
 
   let create installed_switches switch repositories
       ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
@@ -895,7 +904,8 @@ module ConfigSyntax = struct
       repositories ;
       installed_switches; switch;
       jobs; dl_tool = download_tool; dl_jobs;
-      solver_criteria = criteria; solver }
+      solver_criteria = criteria; solver;
+      wrap_build = []; wrap_install = []; wrap_remove = []; }
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
@@ -907,6 +917,9 @@ module ConfigSyntax = struct
     dl_jobs = 1;
     solver_criteria = [];
     solver = None;
+    wrap_build = [];
+    wrap_install = [];
+    wrap_remove = [];
   }
 
   let fields =
@@ -951,6 +964,15 @@ module ConfigSyntax = struct
         Pp.V.string;
       "solver", Pp.ppacc_opt
         with_solver solver
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-build-commands", Pp.ppacc
+        with_wrap_build wrap_build
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-install-commands", Pp.ppacc
+        with_wrap_install wrap_install
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-remove-commands", Pp.ppacc
+        with_wrap_remove wrap_remove
         (Pp.V.map_list ~depth:1 Pp.V.arg);
 
       (* deprecated fields *)
