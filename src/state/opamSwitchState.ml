@@ -380,7 +380,12 @@ let unavailable_reason st (name, _ as atom) =
       (OpamFormula.short_string_of_atom atom)
       (OpamPackage.to_string nv)
   with Not_found ->
-    not_found_message st atom
+  match OpamPackage.package_of_name_opt st.compiler_packages name with
+  | Some nv ->
+    Printf.sprintf
+      "%s is part of the base for this compiler and can't be changed"
+      (OpamPackage.to_string nv)
+  | None -> not_found_message st atom
 
 let update_package_metadata nv opam st =
   { st with
