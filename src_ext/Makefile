@@ -108,7 +108,7 @@ copy: build
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 
-SRC_extlib = enum.ml extHashtbl.ml extList.ml extString.ml global.ml install.ml	\
+SRC_extlib = enum.ml extHashtbl.ml extList.ml extString.ml global.ml \
 IO.ml option.ml pMap.ml refList.ml std.ml uChar.ml unzip.ml uTF8.ml optParse.ml	\
 dynArray.ml dllist.ml bitSet.ml base64.ml extArray.ml extLib.ml
 
@@ -155,8 +155,8 @@ endef
 export PROJ_graph
 
 SRC_cudf = cudf_types.ml cudf_type_parser.mly cudf_type_lexer.mll cudf_conf.ml	\
-cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml main_cudf_parse_822.ml	\
-cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml main_cudf_check.ml	\
+cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml \
+cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml \
 cudf_c.ml
 
 define PROJ_cudf
