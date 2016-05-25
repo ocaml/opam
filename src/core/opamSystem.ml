@@ -717,6 +717,12 @@ let string_of_lock_kind = function
   | `Lock_read -> "read"
   | `Lock_write -> "write"
 
+let locks = Hashtbl.create 16
+
+let release_all_locks () =
+  Hashtbl.iter (fun fd _ -> Unix.close fd) locks;
+  Hashtbl.clear locks
+
 let rec flock_update
   : 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> lock -> unit
   = fun flag ?(dontblock=OpamCoreConfig.(!r.safe_mode)) lock ->
@@ -727,6 +733,7 @@ let rec flock_update
   else
   match flag, lock with
   | `Lock_none, { fd = Some fd; kind = (`Lock_read | `Lock_write); _ } ->
+    Hashtbl.remove locks fd;
     Unix.close fd; (* implies Unix.lockf fd Unix.F_ULOCK 0 *)
     lock.kind <- (flag :> lock_flag);
     lock.fd <- None
@@ -763,6 +770,7 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
     mkdir (Filename.dirname file);
     let rdflag = if (flag :> lock_flag) = `Lock_write then Unix.O_RDWR else Unix.O_RDONLY in
     let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; rdflag]) 0o666 in
+    Hashtbl.add locks fd ();
     let lock = { fd = Some fd; file; kind = `Lock_none } in
     flock_update flag ?dontblock lock;
     lock
