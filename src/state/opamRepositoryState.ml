@@ -23,9 +23,9 @@ module Cache = struct
     cached_opams: (repository_name * (package * OpamFile.OPAM.t) list) list;
   }
 
-  let check_marshaled_file file =
+  let check_marshaled_file fd =
     try
-    let ic = open_in_bin (OpamFilename.to_string file) in
+    let ic = Unix.in_channel_of_descr fd in
     let this_magic = OpamVersion.magic () in
     let magic_len = String.length this_magic in
     let file_magic =
@@ -34,7 +34,6 @@ module Cache = struct
       Bytes.to_string b in
     if not OpamCoreConfig.developer &&
       file_magic <> this_magic then (
-      close_in ic;
       log "Bad cache: incompatible magic string %S (expected %S)."
         file_magic this_magic;
       None
@@ -44,7 +43,6 @@ module Cache = struct
     let expected_size = magic_len + Marshal.total_size header 0 in
     let current_size = in_channel_length ic in
     if expected_size <> current_size then (
-      close_in ic;
       log "Bad cache: wrong length %d (advertised %d)."
         current_size expected_size;
       None
@@ -57,12 +55,10 @@ module Cache = struct
       log "Bad cache: %s" (Printexc.to_string e);
       None
 
-  let marshal_from_file file =
+  let marshal_from_file file fd =
     let chrono = OpamConsole.timer () in
-    match check_marshaled_file file with
-    | Some ic ->
+    let f ic =
       let (cache: t) = Marshal.from_channel ic in
-      close_in ic;
       log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
       let repofiles_map =
         OpamRepositoryName.Map.of_list cache.cached_repofiles
@@ -71,18 +67,22 @@ module Cache = struct
         OpamRepositoryName.Map.map OpamPackage.Map.of_list
           (OpamRepositoryName.Map.of_list cache.cached_opams)
       in
-      Some (repofiles_map, repo_opams_map)
-    | None ->
-      if not OpamCoreConfig.(!r.safe_mode) then
-        (OpamConsole.note "Rebuilding cache...";
-         OpamFilename.remove file);
-      None
+      (repofiles_map, repo_opams_map)
+    in
+    OpamStd.Option.map f (check_marshaled_file fd)
 
   let load root =
     match OpamFilename.opt_file (OpamPath.state_cache root) with
     | Some file ->
-      OpamFilename.with_flock `Lock_read file @@ fun _ ->
-      marshal_from_file file
+        let r =
+          OpamFilename.with_flock `Lock_read file @@ fun fd ->
+          marshal_from_file file fd
+        in
+        if r = None then begin
+          log "Invalid cache, removing";
+          OpamFilename.remove file
+        end;
+        r
     | None -> None
 
   let save rt =
@@ -91,10 +91,10 @@ module Cache = struct
     else
     let chrono = OpamConsole.timer () in
     let file = OpamPath.state_cache rt.repos_global.root in
-    OpamFilename.with_flock `Lock_write file @@ fun _ ->
+    OpamFilename.with_flock `Lock_write file @@ fun fd ->
     log "Writing the cache of repository metadata to %s ...\n"
       (OpamFilename.prettify file);
-    let oc = open_out_bin (OpamFilename.to_string file) in
+    let oc = Unix.out_channel_of_descr fd in
     output_string oc (OpamVersion.magic ());
     (* Repository without remote are not cached, they are intended to be
        manually edited *)
@@ -117,7 +117,7 @@ module Cache = struct
                (filter_out_nourl rt.repo_opams));
       }
       [Marshal.No_sharing];
-    close_out oc;
+    flush oc;
     log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
 
   let remove () =
