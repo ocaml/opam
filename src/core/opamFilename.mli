@@ -243,21 +243,21 @@ val flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t -> OpamSystem.lock
 
 (** Calls [f] while holding a lock file. Ensures the lock is properly released
     on [f] exit. Raises [OpamSystem.Locked] if [dontblock] is set and the lock
-    can't be acquired. *)
+    can't be acquired. [f] is passed the file_descr of the lock. *)
 val with_flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t ->
-  (unit -> 'a) -> 'a
+  (Unix.file_descr -> 'a) -> 'a
 
 (** Calls [f] with the file lock upgraded to at least [flag], then restores the
     previous lock level. Upgrade to [`Lock_write] should never be used in
     blocking mode as it would deadlock. Raises [OpamSystem.Locked] (but keeps
     the lock as is) if [dontblock] is set and the lock can't be upgraded. *)
 val with_flock_upgrade:
-  [< OpamSystem.lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (unit -> 'a) -> 'a
+  [< OpamSystem.actual_lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (Unix.file_descr -> 'a) -> 'a
 
 (** Runs first function with a write lock on the given file, then releases it to
     a read lock and runs the second function. *)
 val with_flock_write_then_read:
-  ?dontblock:bool -> t -> (unit -> 'a) -> ('a -> 'b) -> 'b
+  ?dontblock:bool -> t -> (Unix.file_descr -> 'a) -> ('a -> 'b) -> 'b
 
 module Op: sig
 

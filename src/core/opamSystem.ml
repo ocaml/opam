@@ -693,7 +693,8 @@ let link src dst =
     else
       copy_file src dst
 
-type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
+type actual_lock_flag = [ `Lock_read | `Lock_write ]
+type lock_flag = [ `Lock_none | actual_lock_flag ]
 
 type lock = {
   mutable fd: Unix.file_descr option;
@@ -769,6 +770,11 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
 let funlock lock = flock_update `Lock_none lock
 
 let get_lock_flag lock = lock.kind
+
+let get_lock_fd lock =
+  match lock.fd with
+    Some fd -> fd
+  | None -> raise Not_found
 
 let lock_max flag1 flag2 = match flag1, flag2 with
   | `Lock_write, _ | _, `Lock_write -> `Lock_write
