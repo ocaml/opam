@@ -10,4 +10,4 @@
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
 
-(ocamllex opamLineLexer)
+(ocamllex opamLineLexer opamInterpLexer)

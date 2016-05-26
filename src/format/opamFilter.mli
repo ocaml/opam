@@ -123,7 +123,11 @@ val ident_string: ?default:string -> env -> fident -> string
 (** Like [ident_value], but casts the result to a bool *)
 val ident_bool: ?default:bool -> env -> fident -> bool
 
-(** Rewrites [basename].in to [basename], expanding interpolations *)
+(** Rewrites [basename].in to [basename], expanding interpolations.
+    If the first line begins ["opam-version:"], assumes that expansion of
+    variables within strings should be properly escaped. In particular, this
+    means that Windows paths should expand correctly when generating .config
+    files. *)
 val expand_interpolations_in_file: env -> basename -> unit
 
 

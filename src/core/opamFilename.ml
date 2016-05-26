@@ -186,8 +186,16 @@ let open_in filename =
   try open_in (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
+let open_in_bin filename =
+  try open_in_bin (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
+
 let open_out filename =
   try open_out (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
+
+let open_out_bin filename =
+  try open_out_bin (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let write filename raw =
