@@ -331,11 +331,11 @@ let version_color st nv =
 
 let mini_field_printer = function
   | String (_, s) -> s
-  | List (_, l) as f ->
+  | List (_, l) ->
     (try OpamStd.List.concat_map ", "
            (function String (_, s) -> s | _ -> raise Exit)
            l
-     with Exit -> OpamFormat.Print.value f)
+     with Exit -> OpamFormat.Print.value_list l)
   | f -> OpamFormat.Print.value f
 
 let detail_printer st nv =
