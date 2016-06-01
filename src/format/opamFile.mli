@@ -648,6 +648,12 @@ module Dot_install: sig
 
 end
 
+(** .changes files, bound to the OpamDirTrack module *)
+module Changes: sig
+  type t = OpamDirTrack.t
+  include IO_FILE with type t := t
+end
+
 (** .config files *)
 module Dot_config: sig
 
@@ -761,7 +767,7 @@ module type SyntaxFileArg = sig
   val internal: string
   type t
   val empty: t
-  val pp: (opamfile, t typed_file * t) OpamFormat.Pp.t
+  val pp: (opamfile, filename * t) OpamFormat.Pp.t
 end
 
 module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t
