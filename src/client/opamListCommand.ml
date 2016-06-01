@@ -257,6 +257,7 @@ type output_format =
   | Available_versions
   | All_versions
   | Repository
+  | Installed_files
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -274,6 +275,7 @@ let disp_header = function
   | Available_versions -> "Available versions"
   | All_versions -> "Versions"
   | Repository -> "Repository"
+  | Installed_files -> "Installed files"
 
 let field_names = [
   Name, "name";
@@ -289,6 +291,7 @@ let field_names = [
   Available_versions, "available-versions";
   All_versions, "all-versions";
   Repository, "repository";
+  Installed_files, "installed-files";
 ]
 
 let field_name = function
@@ -420,6 +423,22 @@ let detail_printer st nv =
     OpamRepositoryState.find_package_opt st.switch_repos
       (OpamGlobalState.repos_list st.switch_global) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
+  | Installed_files ->
+    let changes_f =
+      OpamPath.Switch.changes st.switch_global.root st.switch nv.name
+    in
+    (match OpamFile.Changes.read_opt changes_f with
+     | None -> "n/a"
+     | Some c ->
+       OpamStd.Format.itemize ~bullet:""
+         (fun (file, status) ->
+            OpamFilename.to_string file ^ match status with
+            | `Unchanged -> ""
+            | `Removed -> " (absent)" % [`red]
+            | `Changed -> " (modified since)" % [`yellow])
+         (OpamDirTrack.check
+            (OpamPath.Switch.root st.switch_global.root st.switch)
+            c))
 
 let display st ~header ~format ~dependency_order ~all_versions packages =
   let packages =
@@ -593,6 +612,7 @@ let info gt ~fields ~raw_opam ~where atoms =
     Field "flags";
     Field "depends";
     Field "depopts";
+    Installed_files;
     Synopsis;
     Description;
   ] in
