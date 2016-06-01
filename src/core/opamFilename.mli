@@ -208,6 +208,8 @@ val ends_with: string -> t -> bool
 (** Remove a prefix from a file name *)
 val remove_prefix: Dir.t -> t -> string
 
+val remove_prefix_dir: Dir.t -> Dir.t -> string
+
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
