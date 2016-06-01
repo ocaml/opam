@@ -1,4 +1,12 @@
 2.0~alpha
+* Track files installed by packages for cleaner removal and listing, add `opam
+  search --owns-file` (#502, #1215) *this requires packages to properly separate
+  build and install*, or unrelated files could get removed on package uninstall.
+* Allow command wrappers around package build/install/remove commands to be
+  defined in `~/.opam/config`; include sample Linux wrappers to restrict process
+  permissions (e.g. ensure `build:` doesn't install)
+* Reworked `opam show`, with more fields and the ability to select raw fields
+  from the opam file (#2122)
 * Dropped ability to compile opam with OCaml earlier than 4.01.0
 * Version constraints in `depopts:` allowed again, but with consistent semantics
 * Allow mixing filters within dependency constraints
