@@ -14,7 +14,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let log fmt = OpamConsole.log "ACTION" fmt
+let log ?level fmt = OpamConsole.log ?level "ACTION" fmt
 let slog = OpamConsole.slog
 
 open OpamTypes
@@ -42,7 +42,8 @@ let process_dot_install st nv =
 
       (* .install *)
       let install_f = OpamPath.Switch.install root st.switch name in
-      OpamFile.Dot_install.write install_f install;
+      if install <> OpamFile.Dot_install.empty then
+        OpamFile.Dot_install.write install_f install;
 
       (* .config *)
       (match config with
@@ -66,7 +67,7 @@ let process_dot_install st nv =
       let install_files exec dst_fn files_fn =
         let dst_dir = dst_fn root st.switch name in
         let files = files_fn install in
-        if not (OpamFilename.exists_dir dst_dir) then (
+        if not (OpamFilename.exists_dir dst_dir) && files <> [] then (
           log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
           OpamFilename.mkdir dst_dir;
         );
@@ -355,27 +356,40 @@ let cmd_wrapper t opam getter cmd args =
   | _::_::_ -> assert false
 
 (* Remove a given package *)
-let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
+let remove_package_aux
+    t ?(keep_build=false) ?(silent=false) ?changes ?force nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
   let name = nv.name in
 
+  (* There are three uninstall stages:
+     1. execute the package's remove script
+     2. remove remaining files listed in the .install file
+     3. remove remaining files added in the changes file (or changes parameter)
+
+     The 3. step alone could be sufficient, but:
+     - changes only revert additions, not any file changes, so 1. is needed
+     - the remove script might take extra actions (stop daemon...)
+     - existing installs don't have .changes files yet
+     - 1st and 2nd steps may help recover partial/failed states
+  *)
+
   (* Run the remove script *)
   let opam = OpamSwitchState.opam_opt t nv in
-
   let dot_install =
     OpamPath.Switch.install t.switch_global.root t.switch name
   in
-
-  let remove_job =
+  let changes_file =
+    OpamPath.Switch.changes t.switch_global.root t.switch name
+  in
+  let remove_commands_job =
     match opam with
-    | None      -> OpamConsole.msg "No OPAM file has been found!\n"; Done ()
+    | None ->
+      log "No opam file was found for removing %a\n"
+        (slog OpamPackage.to_string) nv;
+      Done ()
     | Some opam ->
       let env = compilation_env t opam in
       let p_build = OpamPath.Switch.build t.switch_global.root t.switch nv in
-      (* We try to run the remove scripts in the folder where it was
-         extracted If it does not exist, we try to download and
-         extract the archive again, if that fails, we don't really
-         care. *)
       let remove =
         OpamFilter.commands (OpamPackageVar.resolve ~opam t)
           (OpamFile.OPAM.remove opam) in
@@ -384,8 +398,6 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
         if OpamFilename.exists_dir p_build
         then p_build, Some name
         else t.switch_global.root , None in
-      (* if remove <> [] || not (OpamFilename.exists dot_install) then *)
-      (*   OpamConsole.msg "%s\n" (string_of_commands remove); *)
       let commands =
         OpamStd.List.filter_map (function
             | [] -> None
@@ -406,53 +418,37 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
       @@+ function
       | Some (_,err) ->
         if not silent then
-          OpamConsole.warning
-            "failure in package uninstall script, some files may remain:\n%s"
+          OpamConsole.warning "package uninstall script failed:\n%s"
             (OpamProcess.string_of_result err);
         Done ()
       | None -> Done ()
   in
 
-  let install =
-    OpamFile.Dot_install.safe_read dot_install in
-
-  let remove_files dst_fn files =
-    let files = files install in
-    let dst_dir = dst_fn t.switch_global.root t.switch t.switch_config in
-    List.iter (fun (base, dst) ->
-        let dst_file = match dst with
-          | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
-          | Some b -> OpamFilename.create dst_dir b in
-        OpamFilename.remove dst_file
-      ) files in
-
-  let remove_files_and_dir ?(quiet=false) dst_fn files =
-    let dir = dst_fn t.switch_global.root t.switch t.switch_config name in
-    remove_files (fun _ _ _ -> dir) files;
-    if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
-    else if not quiet && OpamFilename.exists_dir dir then
-      OpamConsole.warning "Directory %s is not empty, not removing"
-        (OpamFilename.Dir.to_string dir) in
-
+  (* handle .install file *)
   let uninstall_files () =
-    (* Remove build/<package> *)
-    if not (keep_build || OpamStateConfig.(!r.keep_build_dir)) then
-      OpamFilename.rmdir
-        (OpamPath.Switch.build t.switch_global.root t.switch nv);
-
-    (* Remove .config and .install *)
-    log "Removing config and install files";
-    OpamFilename.remove
-      (OpamFile.filename
-         (OpamPath.Switch.install t.switch_global.root t.switch name));
-    OpamFilename.remove
-      (OpamFile.filename
-         (OpamPath.Switch.config t.switch_global.root t.switch name));
+    let install =
+      OpamFile.Dot_install.safe_read dot_install
+    in
+    let remove_files dst_fn files =
+      let files = files install in
+      let dst_dir = dst_fn t.switch_global.root t.switch t.switch_config in
+      List.iter (fun (base, dst) ->
+          let dst_file = match dst with
+            | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
+            | Some b -> OpamFilename.create dst_dir b in
+          OpamFilename.remove dst_file
+        ) files
+    in
+    let remove_files_and_dir dst_fn files =
+      let dir = dst_fn t.switch_global.root t.switch t.switch_config name in
+      remove_files (fun _ _ _ -> dir) files;
+      if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
+    in
 
     log "Removing files from .install";
     remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
     remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
-    remove_files_and_dir ~quiet:true
+    remove_files_and_dir
       OpamPath.Switch.lib OpamFile.Dot_install.libexec;
     remove_files_and_dir OpamPath.Switch.lib OpamFile.Dot_install.lib;
     remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
@@ -471,11 +467,32 @@ let remove_package_aux t ?(keep_build=false) ?(silent=false) nv =
             OpamFilename.remove dst
         end
       ) (OpamFile.Dot_install.misc install);
-
   in
 
-  remove_job @@+ fun () ->
-  if not OpamStateConfig.(!r.dryrun) then uninstall_files ();
+  let revert_changes () =
+    let changes = match changes with
+      | None -> OpamFile.Changes.read_opt changes_file
+      | some -> some
+    in
+    OpamStd.Option.iter
+      (OpamDirTrack.revert ~verbose:(not silent) ?force
+         (OpamPath.Switch.root t.switch_global.root t.switch))
+      changes
+  in
+
+  remove_commands_job @@+ fun () ->
+  if not OpamStateConfig.(!r.dryrun) then (
+    OpamFilename.remove
+      (OpamFile.filename
+         (OpamPath.Switch.config t.switch_global.root t.switch name));
+    if not (keep_build || OpamStateConfig.(!r.keep_build_dir)) then
+      OpamFilename.rmdir
+        (OpamPath.Switch.build t.switch_global.root t.switch nv);
+    uninstall_files ();
+    OpamFilename.remove (OpamFile.filename dot_install);
+    revert_changes ();
+    OpamFilename.remove (OpamFile.filename changes_file);
+  );
   if not silent then
     OpamConsole.msg "%s removed   %s.%s\n"
       (if not (OpamConsole.utf8 ()) then "->" else
@@ -516,11 +533,11 @@ let sources_needed st g =
       | _ -> assert false)
     g OpamPackage.Set.empty
 
-let remove_package t ?keep_build ?silent nv =
+let remove_package t ?keep_build ?silent ?changes ?force nv =
   if OpamStateConfig.(!r.fake) || OpamStateConfig.(!r.show) then
     Done (OpamConsole.msg "Would remove: %s.\n" (OpamPackage.to_string nv))
   else
-    remove_package_aux t ?keep_build ?silent nv
+    remove_package_aux t ?keep_build ?silent ?changes ?force nv
 
 (* Compiles a package.
    Assumes the package has already been downloaded to [source].
@@ -556,9 +573,6 @@ let build_package t source nv =
         (OpamConsole.error
            "The compilation of %s failed at %S."
            name (String.concat " " (cmd::args));
-         (* FIXME: this shouldn't be needed, but lots of packages still install
-            during this step, so make sure to cleanup *)
-         remove_package t ~keep_build:true ~silent:true nv @@+ fun () ->
          Done (Some (OpamSystem.Process_error result)))
     | []::commands -> run_commands commands
     | [] -> Done None
@@ -593,24 +607,41 @@ let install_package t nv =
         OpamConsole.error
           "The installation of %s failed at %S."
           name (String.concat " " (cmd::args));
-        remove_package t ~keep_build:true ~silent:true nv
-        @@| fun () -> Some (OpamSystem.Process_error result)
+        Done (Some (OpamSystem.Process_error result))
       )
     | []::commands -> run_commands commands
     | [] -> Done None
   in
-  run_commands commands @@+ function
-  | Some _ as err -> Done err
-  | None ->
-    try
-      process_dot_install t nv;
-      OpamConsole.msg "%s installed %s.%s\n"
-        (if not (OpamConsole.utf8 ()) then "->"
-         else OpamActionGraph.
-                (action_color (`Install ()) (action_strings (`Install ()))))
-        (OpamConsole.colorise `bold name)
-        (OpamPackage.version_to_string nv);
-      Done None
-    with e ->
-      remove_package t ~keep_build:true ~silent:true nv
-      @@| fun () -> OpamStd.Exn.fatal e; Some e
+  let install_job () =
+    run_commands commands @@+ function
+    | Some _ as err -> Done err
+    | None ->
+      try
+        process_dot_install t nv;
+        OpamConsole.msg "%s installed %s.%s\n"
+          (if not (OpamConsole.utf8 ()) then "->"
+           else OpamActionGraph.
+                  (action_color (`Install ()) (action_strings (`Install ()))))
+          (OpamConsole.colorise `bold name)
+          (OpamPackage.version_to_string nv);
+        Done None
+      with e -> Done (Some e)
+  in
+  let root = t.switch_global.root in
+  let switch_prefix = OpamPath.Switch.root root t.switch in
+  let rel_meta_dir =
+    OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
+                                    (OpamPath.Switch.meta root t.switch)))
+  in
+  OpamDirTrack.track switch_prefix
+    ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
+    install_job
+  @@+ function
+  | Some e, changes ->
+    remove_package t ~keep_build:true ~silent:true ~changes nv @@| fun () ->
+    OpamStd.Exn.fatal e;
+    Some e
+  | None, changes ->
+    let changes_f = OpamPath.Switch.changes root t.switch nv.name in
+    OpamFile.Changes.write changes_f changes;
+    Done None

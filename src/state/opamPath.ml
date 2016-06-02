@@ -86,6 +86,8 @@ module Switch = struct
 
   let install t a n = install_dir t a /- (OpamPackage.Name.to_string n ^ ".install")
 
+  let changes t a n = install_dir t a /- (OpamPackage.Name.to_string n ^ ".changes")
+
   let reinstall t a = meta t a /- "reinstall"
 
   let config_dir t a = meta t a / "config"

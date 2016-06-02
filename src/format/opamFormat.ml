@@ -133,6 +133,10 @@ module Print = struct
   let value v =
     format_value Format.str_formatter v; Format.flush_str_formatter ()
 
+  let value_list vl =
+    Format.fprintf Format.str_formatter "@[<hv>%a@]" format_values vl;
+    Format.flush_str_formatter ()
+
   let rec format_item fmt = function
     | Variable (_, _, List (_,[])) -> ()
     | Variable (_, _, List (_,[List(_,[])])) -> ()

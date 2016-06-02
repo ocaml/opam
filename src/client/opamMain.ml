@@ -315,18 +315,70 @@ let search =
     mk_flag ["i";"installed"] "Search among installed packages only." in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
-  let search global_options print_short installed installed_roots case_sensitive pkgs =
+  let owns_file =
+    let doc =
+      "Finds installed packages responsible for installing the given file"
+    in
+    Arg.(value & opt (some OpamArg.filename) None & info ~doc ["owns-file"])
+  in
+  let search global_options print_short installed installed_roots
+      case_sensitive owns_file pkgs =
     apply_global_options global_options;
-    let filter = match installed, installed_roots with
-      | _, true -> `roots
-      | true, _ -> `installed
-      | _       -> `all in
-    let order = `normal in
-    OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamListCommand.list gt ~print_short ~filter ~order
-      ~exact_name:false ~case_sensitive pkgs in
+    match owns_file with
+    | None ->
+      let filter = match installed, installed_roots with
+        | _, true -> `roots
+        | true, _ -> `installed
+        | _       -> `all in
+      let order = `normal in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamListCommand.list gt ~print_short ~filter ~order
+        ~exact_name:false ~case_sensitive pkgs;
+      `Ok ();
+    | Some file ->
+      if installed || installed_roots || case_sensitive then
+        `Error (true, "options conflicting with --owns-file")
+      else
+        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        let root = OpamStateConfig.(!r.root_dir) in
+        let switch =
+          try
+            List.find (fun sw ->
+                OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
+                <> OpamFilename.to_string file)
+              (OpamFile.Config.installed_switches gt.config)
+          with Not_found ->
+            OpamConsole.error_and_exit
+              "The specified file does not seem to belong to an opam switch of \
+               the current opam root (%s)"
+              (OpamFilename.Dir.to_string root)
+        in
+        let rel_name =
+          OpamFilename.remove_prefix (OpamPath.Switch.root root switch) file
+        in
+        let matching_change_files =
+          List.filter (fun change_f ->
+              OpamFilename.check_suffix change_f ".changes" &&
+              let changes =
+                OpamFile.Changes.safe_read (OpamFile.make change_f)
+              in
+              OpamStd.String.Map.exists
+                (fun f -> function
+                   | OpamDirTrack.Removed -> false
+                   | _ -> rel_name = f)
+                changes)
+            (OpamFilename.files (OpamPath.Switch.install_dir root switch))
+        in
+        List.iter (fun f ->
+            OpamConsole.msg "%s\n"
+              OpamFilename.(Base.to_string (basename (chop_extension f))))
+          matching_change_files;
+        `Ok ()
+  in
+  Term.ret @@
   Term.(pure search $global_options
     $print_short_flag $installed $installed_roots_flag $case_sensitive
+    $owns_file
     $pattern_list),
   term_info "search" ~doc ~man
 

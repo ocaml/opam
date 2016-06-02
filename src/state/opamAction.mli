@@ -47,9 +47,12 @@ val install_package:
 (** Find out if the package source is needed for uninstall *)
 val removal_needs_download: 'a switch_state -> package -> bool
 
-(** Remove a package. *)
+(** Removes a package. If [changes] is unspecified, it is read from the
+    package's change file. if [force] is specified, remove files marked as added
+    in [changes] even if the files have been modified since. *)
 val remove_package:
   rw switch_state -> ?keep_build:bool -> ?silent:bool ->
+  ?changes:OpamDirTrack.t -> ?force:bool ->
   package -> unit OpamProcess.job
 
 (** Removes auxiliary files related to a package, after checking that

@@ -2296,6 +2296,68 @@ module Dot_install = struct
   include SyntaxFile(Dot_installSyntax)
 end
 
+
+module ChangesSyntax = struct
+  let internal = "changes"
+
+  open OpamDirTrack
+
+  type t = OpamDirTrack.t
+
+  module SM = OpamStd.String.Map
+
+  let empty = SM.empty
+
+  let field kind get_kind =
+    Pp.ppacc
+      (fun files t ->
+         List.fold_left (fun t (f,digest) -> SM.add f (kind digest) t) t files)
+      (fun t ->
+         SM.fold (fun f op acc ->
+             match get_kind op with Some dg -> (f, dg) :: acc | None -> acc)
+           t []
+         |> List.rev)
+      (Pp.V.map_list ~depth:1 @@
+       Pp.V.map_option
+         Pp.V.string
+         (Pp.opt (Pp.singleton -| Pp.V.string -|
+                  Pp.of_pair "digest" (digest_of_string, string_of_digest))))
+
+  let fields = [
+    "added", field
+      (function Some dg -> Added dg
+              | None -> OpamFormat.bad_format "Missing digest")
+      (function Added dg -> Some (Some dg) | _ -> None);
+    "removed", field
+      (function Some _ -> OpamFormat.bad_format "Extra digest"
+              | None -> Removed)
+      (function Removed -> Some None | _ -> None);
+    "contents-changed", field
+      (function Some dg -> Contents_changed dg
+              | None -> OpamFormat.bad_format "Missing digest")
+      (function Contents_changed dg -> Some (Some dg) | _ -> None);
+    "perm-changed", field
+      (function Some dg -> Perm_changed dg
+              | None -> OpamFormat.bad_format "Missing digest")
+      (function Perm_changed dg -> Some (Some dg) | _ -> None);
+    "kind-changed", field
+      (function Some dg -> Kind_changed dg
+              | None -> OpamFormat.bad_format "Missing digest")
+      (function Kind_changed dg -> Some (Some dg) | _ -> None);
+  ]
+
+  let pp_contents =
+    Pp.I.check_fields ~name:internal fields -|
+    Pp.I.fields ~name:internal ~empty fields
+
+  let pp = Pp.I.map_file pp_contents
+end
+
+module Changes = struct
+  type t = OpamDirTrack.t
+  include SyntaxFile(ChangesSyntax)
+end
+
 module SwitchExportSyntax = struct
 
   let internal = "switch-export"
