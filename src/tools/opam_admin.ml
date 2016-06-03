@@ -53,6 +53,14 @@ let rename_cmd =
   Term.(Opam_rename.(pure process $ args)),
   Term.info "rename" ~doc
 
+let upgrade_format_cmd =
+  let doc =
+    Printf.sprintf "Upgrade a repository format from 1.2 to %s."
+      OpamVersion.(to_string (full ()))
+  in
+  Term.(Opam_format_upgrade.(pure process $ args)),
+  Term.info "upgrade-format" ~doc
+
 let () =
   OpamSystem.init ();
   try
@@ -61,6 +69,7 @@ let () =
         default_cmd [
         make_repo_cmd; check_repo_cmd; stats_cmd;
         depexts_cmd; (*findlib_cmd;*) rename_cmd;
+        upgrade_format_cmd
       ]
     with
     | `Error _ -> exit 2
