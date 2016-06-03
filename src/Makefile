@@ -110,6 +110,7 @@ SRC_core = \
   opamSystem.ml \
   opamParallel.ml \
   opamFilename.ml \
+  opamDirTrack.ml \
   opamUrl.ml
 
 define PROJ_core

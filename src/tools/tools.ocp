@@ -1,3 +1,8 @@
+if build_libs = [] ||
+   %mem( string = "tools"
+         strings = build_libs )
+then {
+
 comp += [ "-w" "-48" ]
 
 begin program "opam-check"
@@ -39,4 +44,4 @@ begin program "opam-admin.top"
     "re.glob"
   ]
 end
-
+}

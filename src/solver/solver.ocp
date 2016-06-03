@@ -1,3 +1,7 @@
+if build_libs = [] ||
+   %mem( string = "solver"
+         strings = build_libs )
+then {
 begin library "opam-solver"
 
   files   = [
@@ -16,3 +20,4 @@ begin library "opam-solver"
   ]
 
 end
+}

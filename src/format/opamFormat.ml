@@ -133,6 +133,10 @@ module Print = struct
   let value v =
     format_value Format.str_formatter v; Format.flush_str_formatter ()
 
+  let value_list vl =
+    Format.fprintf Format.str_formatter "@[<hv>%a@]" format_values vl;
+    Format.flush_str_formatter ()
+
   let rec format_item fmt = function
     | Variable (_, _, List (_,[])) -> ()
     | Variable (_, _, List (_,[List(_,[])])) -> ()
@@ -1028,12 +1032,12 @@ module Pp = struct
         match extra_fields with
         | [] -> items
         | (pos,_) :: _  ->
-          warn ~pos ?strict "Unexpected or duplicate fields or sections%s:%s"
+          warn ~pos ?strict "Unexpected or duplicate fields or sections%s:\n%s"
             in_name
             (OpamStd.Format.itemize
                (fun (pos,k) ->
                   Printf.sprintf "'%s:' at %s" k (string_of_pos pos))
-               extra_fields);
+               (List.rev extra_fields));
           valid_fields
       in
       let print items =

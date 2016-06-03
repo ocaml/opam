@@ -1,3 +1,7 @@
+if build_libs = [] ||
+   %mem( string = "core"
+         strings = build_libs )
+then {
 begin library "opam-core"
   sort = false
   files   = [
@@ -12,6 +16,7 @@ begin library "opam-core"
     "opamParallel.ml"
     "opamSystem.ml"
     "opamFilename.ml"
+    "opamDirTrack.ml"
     "opamUrl.ml"
   ]
 
@@ -24,3 +29,4 @@ begin library "opam-core"
   ]
 
 end
+}

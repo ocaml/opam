@@ -110,6 +110,10 @@ module Switch: sig
       $meta/install/$name.install} *)
   val install: t -> switch -> name -> OpamFile.Dot_install.t OpamFile.t
 
+  (** File registering the changes made by the installation of the given package
+      {i $meta/install/$name.changes} *)
+  val changes: t -> switch -> name -> OpamDirTrack.t OpamFile.t
+
   (** Installed files: {i $meta/install/} *)
   val install_dir: t -> switch -> dirname
 

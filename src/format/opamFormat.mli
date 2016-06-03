@@ -45,6 +45,8 @@ module Print : sig
 
   val value : value -> string
 
+  val value_list: value list -> string
+
   val items: opamfile_item list -> string
 
   val opamfile: opamfile -> string

@@ -248,9 +248,20 @@ let load_cudf_universe ?depopts ~build
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
   log ~level:3 "Load cudf universe: opam2cudf";
+  let opam_packages =
+    (* Filter out extra compiler versions, they add too much cost to the solver
+       and are not needed *)
+    opam_packages --
+    (OpamPackage.packages_of_names opam_packages
+       OpamPackage.Name.Set.Op.(
+         OpamPackage.names_of_packages opam_universe.u_base
+         -- OpamPackage.names_of_packages opam_universe.u_pinned)
+     -- opam_universe.u_base)
+  in
   let cudf_universe =
     let cudf_packages =
-      (* Doing opam2cudf for every package is inefficient (lots of Set.mem to
+      (* TODO:
+         Doing opam2cudf for every package is inefficient (lots of Set.mem to
          check if it is installed, etc. Optimise by gathering all info first *)
       OpamPackage.Set.fold
         (fun nv list ->

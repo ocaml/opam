@@ -83,6 +83,8 @@ type output_format =
                            specifically if color enabled) *)
   | Repository         (** The repository the package was found in (may be empty
                            for pinned packages) *)
+  | Installed_files    (** The list of files that the installed package added to
+                           the system *)
 
 val default_list_format: output_format list
 

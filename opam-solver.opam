@@ -14,15 +14,13 @@ authors: [
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
-depends: [
-  "opam-core" {= "2.0~alpha"}
-  "opam-format" {= "2.0~alpha"}
-  "dose3" {= "4.3"}
-]
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "prefast"]
-  ["cp" "src/opam.ocp" "src/solver"]
-  ["sh" "-c" "cd src/solver && ocp-build init && ocp-build"]
-  [make "opam-solver.install"]
+  [make name]
+  [make "%{name}%.install"]
+]
+depends: [
+  "opam-core" {= version}
+  "opam-format" {= version}
+  "dose" {= "4.3"}
 ]
