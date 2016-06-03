@@ -272,6 +272,7 @@ SRC_opam-admin = \
   opam_stats.ml \
   opam_depexts_change.ml \
   opam_rename.ml \
+  opam_format_upgrade.ml \
   opam_admin.ml
 
 define PROJ_opam-admin
