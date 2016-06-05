@@ -202,6 +202,8 @@ let init =
       compiler no_compiler config_file no_config_file bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
+    if compiler <> None && no_compiler then
+      OpamConsole.error_and_exit "Options --bare and --compiler are incompatible";
     let config_files =
       (if no_config_file then []
        else List.filter OpamFile.exists (OpamPath.init_config_files ()))
@@ -1807,6 +1809,8 @@ let switch =
     let packages =
       match packages, empty with
       | None, true -> Some []
+      | Some packages, true when packages <> [] ->
+          OpamConsole.error_and_exit "Options --packages and --empty may not be specified at the same time"
       | packages, _ -> packages
     in
     let compiler_packages rt ?repos switch compiler_opt =
