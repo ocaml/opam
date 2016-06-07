@@ -1,4 +1,5 @@
 2.0~alpha
+* Changed license to LGPL 2.1 with linking exception, like OCaml (#2573)
 * Track files installed by packages for cleaner removal and listing, add `opam
   search --owns-file` (#502, #1215) *this requires packages to properly separate
   build and install*, or unrelated files could get removed on package uninstall.
