@@ -22,5 +22,5 @@ build: [
 depends: [
   "opam-core" {= version}
   "opam-format" {= version}
-  "dose" {= "4.3"}
+  "dose" {= "5.0-rc1"}
 ]
