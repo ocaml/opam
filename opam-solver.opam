@@ -24,3 +24,8 @@ build: [
   [make name]
   [make "%{name}%.install"]
 ]
+depends: [
+  "opam-core" {= version}
+  "opam-format" {= version}
+  "dose3" {= "5.0"}
+]
