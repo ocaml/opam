@@ -3,14 +3,9 @@
 (*    Copyright 2012-2015 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
-(*  All rights reserved.This file is distributed under the terms of the   *)
-(*  GNU Lesser General Public License version 3.0 with linking            *)
-(*  exception.                                                            *)
-(*                                                                        *)
-(*  OPAM is distributed in the hope that it will be useful, but WITHOUT   *)
-(*  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY    *)
-(*  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public        *)
-(*  License for more details.                                             *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
 (*                                                                        *)
 (**************************************************************************)
 
@@ -53,6 +48,14 @@ let rename_cmd =
   Term.(Opam_rename.(pure process $ args)),
   Term.info "rename" ~doc
 
+let upgrade_format_cmd =
+  let doc =
+    Printf.sprintf "Upgrade a repository format from 1.2 to %s."
+      OpamVersion.(to_string (full ()))
+  in
+  Term.(Opam_format_upgrade.(pure process $ args)),
+  Term.info "upgrade-format" ~doc
+
 let () =
   OpamSystem.init ();
   try
@@ -61,6 +64,7 @@ let () =
         default_cmd [
         make_repo_cmd; check_repo_cmd; stats_cmd;
         depexts_cmd; (*findlib_cmd;*) rename_cmd;
+        upgrade_format_cmd
       ]
     with
     | `Error _ -> exit 2

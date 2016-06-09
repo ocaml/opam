@@ -182,8 +182,8 @@ endef
 export PROJ_graph
 
 SRC_cudf = cudf_types.ml cudf_type_parser.mly cudf_type_lexer.mll cudf_conf.ml	\
-cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml main_cudf_parse_822.ml	\
-cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml main_cudf_check.ml	\
+cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml \
+cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml \
 cudf_c.ml
 
 define PROJ_cudf
