@@ -21,7 +21,7 @@ remove: ["rm" "-f" "%{root}%/opam" "%{root}%/opam.version"]
 depends: [
   "ocamlgraph"
   "cmdliner"
-  "dose3" {>= "4.3"}
+  "dose3" {>= "5.0-rc1"}
   "cudf"
   "re" {>= "1.2.0"}
   "ocamlfind"
