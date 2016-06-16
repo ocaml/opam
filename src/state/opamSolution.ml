@@ -152,7 +152,10 @@ let display_error (n, error) =
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
     | OpamSystem.Process_error e -> disp "%s" (OpamProcess.string_of_result e)
-    | e -> disp "%s" (Printexc.to_string e)
+    | e ->
+      disp "%s" (Printexc.to_string e);
+      if OpamConsole.debug () then
+        OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e)
   in
   match n with
   | `Change (`Up, _, nv)   -> f "upgrading to" nv

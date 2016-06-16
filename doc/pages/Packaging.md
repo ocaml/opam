@@ -273,7 +273,7 @@ Don't forget to `opam pin remove <project>` once your project is on the
 repository, if you don't want to continue using your local version. Remember
 that as long as the package is pinned, OPAM will use the metadata found in its
 source if any, but otherwise only what is in the OPAM repository matters. Use
-`git pin list` to list all currently pinned packages.
+`opam pin list` to list all currently pinned packages.
 
 ## Some tricks
 

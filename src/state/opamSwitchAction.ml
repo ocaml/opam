@@ -243,10 +243,13 @@ let add_to_installed st ?(root=false) nv =
     st
 
 let remove_from_installed st nv =
-  let opam = OpamPackage.Map.find nv st.installed_opams in
   let st =
     if OpamPackage.Set.mem nv st.compiler_packages &&
-       List.mem Pkgflag_Compiler (OpamFile.OPAM.flags opam)
+       OpamStd.Option.Op.(
+         OpamPackage.Map.find_opt nv st.installed_opams >>|
+         OpamFile.OPAM.flags >>|
+         List.mem Pkgflag_Compiler
+       ) = Some true
     then
       (* Remove gobal variables from this compiler package *)
       let switch_vars = OpamFile.Dot_config.bindings st.switch_config in

@@ -364,29 +364,33 @@ let unavailable_reason st (name, _ as atom) =
     Printf.sprintf "No package matching \"%s\" found"
       (OpamFormula.short_string_of_atom atom)
   else
-  let nv = OpamPackage.max_version candidates name in
+  let nv =
+    try OpamPinned.package st name
+    with Not_found -> OpamPackage.max_version candidates name
+  in
   let avail = OpamFile.OPAM.available (opam st nv) in
-  if not (OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch ~package:nv st)
-            avail)
+  if not (OpamPackage.Set.mem nv candidates) then
+    Printf.sprintf
+      "%s is not available because the package is pinned to version %s."
+      (OpamFormula.short_string_of_atom atom)
+      (OpamPackage.version_to_string nv)
+  else if not (OpamFilter.eval_to_bool ~default:false
+                 (OpamPackageVar.resolve_switch ~package:nv st)
+                 avail)
   then
     Printf.sprintf "%s has unmet availability conditions: %s"
-      (OpamFormula.short_string_of_atom atom)
+      (OpamPackage.to_string nv)
       (OpamFilter.to_string avail)
   else
-  try
-    let nv = OpamPackage.package_of_name st.pinned name in
-    Printf.sprintf
-      "%s is not available because the package is pinned to %s."
-      (OpamFormula.short_string_of_atom atom)
-      (OpamPackage.to_string nv)
-  with Not_found ->
   match OpamPackage.package_of_name_opt st.compiler_packages name with
   | Some nv ->
     Printf.sprintf
       "%s is part of the base for this compiler and can't be changed"
       (OpamPackage.to_string nv)
-  | None -> not_found_message st atom
+  | None ->
+    Printf.sprintf
+      "something is wrong with %s (this is probably a bug)"
+      (OpamPackage.to_string nv)
 
 let update_package_metadata nv opam st =
   { st with
