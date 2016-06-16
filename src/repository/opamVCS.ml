@@ -58,7 +58,7 @@ module Make (VCS: VCS) = struct
     (* fixme: doesn't clean directories *)
     let fset = OpamStd.String.Set.of_list files in
     List.iter (fun f ->
-        let basename = OpamFilename.remove_prefix source_repo.repo_root f in
+        let basename = OpamFilename.remove_prefix repo.repo_root f in
         if not (OpamStd.String.Set.mem basename fset)
         then OpamFilename.remove f)
       (OpamFilename.rec_files repo.repo_root);
