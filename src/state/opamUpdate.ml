@@ -114,6 +114,7 @@ let repositories rt repos =
       repos
       rt
   in
+  OpamRepositoryState.write_config rt;
   OpamRepositoryState.Cache.save rt;
   rt
 
