@@ -65,48 +65,41 @@ let reverse_env_update ?inplace_holder op arg cur_value =
   in
   let sep = OpamStd.Sys.path_sep () in
   let str_sep = String.make 1 sep in
+  let rec rem_first_instance ?(f=fun x -> x) acc = function
+    | [] -> None
+    | x::r ->
+      if matches_arg x then Some (List.rev_append acc (f r))
+      else rem_first_instance (x::acc) r
+  in
+  let split () = OpamStd.String.split_delim cur_value sep in
   match op with
   | Eq -> if arg = cur_value then None else Some (cur_value)
   | PlusEq ->
-    (match OpamStd.String.cut_at cur_value sep with
-     | Some (l,r) when matches_arg l -> Some r
-     | None when matches_arg cur_value -> None
-     | _ -> Some cur_value)
+    (match rem_first_instance [] (split ()) with
+     | Some [] -> None
+     | Some sl -> Some (String.concat str_sep sl)
+     | None -> Some cur_value)
   | EqPlus ->
-    (match OpamStd.String.rcut_at cur_value sep with
-     | Some (l,r) when matches_arg r  -> Some l
-     | None when matches_arg cur_value -> None
-     | _ -> Some cur_value)
+    (match rem_first_instance [] (List.rev (split ())) with
+     | Some [] -> None
+     | Some sl -> Some (String.concat str_sep (List.rev sl))
+     | None -> Some cur_value)
   | EqPlusEq ->
-    let rec repl acc = function
-      | [] -> List.rev acc
-      | x::r ->
-        if matches_arg x then
-          List.rev_append acc
-            (match inplace_holder with None -> r | Some p -> p::r)
-        else repl (x::acc) r
-    in
-    Some
-      (String.concat str_sep
-         (repl [] (OpamStd.String.split_delim cur_value sep)))
+    let f r = match inplace_holder with None -> r | Some p -> p::r in
+    (match rem_first_instance ~f [] (split ()) with
+     | Some [] -> None
+     | Some sl -> Some (String.concat str_sep sl)
+     | None -> Some cur_value)
   | ColonEq ->
-    (match OpamStd.String.cut_at cur_value sep with
-     | Some ("",r) ->
-       (match OpamStd.String.cut_at r sep with
-        | Some (l,r) when matches_arg l ->
-          if r = "" then None else Some (str_sep^r)
-        | _ -> Some cur_value)
-     | Some (l,r) when matches_arg l -> Some r
-     | _ -> Some cur_value)
+    (match rem_first_instance [] (split ()) with
+     | Some ([] | [""]) -> None
+     | Some sl -> Some (String.concat str_sep sl)
+     | None -> Some cur_value)
   | EqColon ->
-    (match OpamStd.String.rcut_at cur_value sep with
-     | Some (l,"") ->
-       (match OpamStd.String.rcut_at l sep with
-        | Some (l,r) when matches_arg r ->
-          if l = "" then None else Some (l^str_sep)
-        | _ -> Some cur_value)
-     | Some (l,r) when matches_arg r -> Some l
-     | _ -> Some cur_value)
+    (match rem_first_instance [] (List.rev (split ())) with
+     | Some ([] | [""]) -> None
+     | Some sl -> Some (String.concat str_sep (List.rev sl))
+     | None -> Some cur_value)
 
 let expand_update ?inplace_match (ident, op, string, comment) value =
   ident,
@@ -236,10 +229,15 @@ let updates ~opamswitch ?(force_path=false) st =
    we really want to get the environment for this switch. *)
 let get_opam ~force_path st =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
+  (* todo: [updates] reverts the current env. It may be more clever, when
+     switch_from is [`Command_line], to get the previous switch from OPAMSWITCH
+     or the default, load the corresponding env file, and revert that instead,
+     before applying the new updates *)
   add [] (updates ~opamswitch ~force_path st)
 
 let get_full ?(opamswitch=true) ~force_path st =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+  (* todo: see above *)
   add env0 (updates ~opamswitch ~force_path st)
 
 let path ~force_path root switch =
