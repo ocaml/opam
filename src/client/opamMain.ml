@@ -1028,52 +1028,49 @@ let switch =
     "Reinstall the given compiler switch. This will also reinstall all \
      packages.";
     "list", `list, [],
-    "List compilers. \
+    "List compiler packages. \
      By default, lists installed and `standard' compilers. Use `--all' to get \
-     the list of all installable compilers.\n\
-     The first column displays the switch name (if any), the second one \
-     the switch state (C = current, I = installed, -- = not installed), \
-     the third one the compiler name and the last one the compiler \
-     description. To switch to an already installed compiler alias (with \
-     state = I), use $(b,opam switch <name>). If you want to use a new \
-     compiler <comp>, use $(b,opam switch <comp>): this will download, \
-     compile and create a fresh and independent environment where new \
-     packages can be installed. If you want to create a new compiler alias \
-     (for instance because you already have this compiler version installed), \
-     use $(b,opam switch <name> --alias-of <comp>). In case \
-     <name> and <comp> are the same, this is equivalent to $(b,opam switch \
-     <comp>).";
+     the list of all installable compilers. \
+     Note that $(b,--packages) can be used to switch to any packages, not only \
+     the ones with the \"compiler\" flag set that this command shows.";
     "show", `current, [], "Show the current compiler.";
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command allows one to switch between different compiler versions, \
-        installing the compiler if $(b,opam switch) is used to switch to that \
-        compiler for the first time. The different compiler versions are \
-        totally independent from each other, meaning that OPAM maintains a \
-        separate state (e.g. list of installed packages...) for each.";
-    `P "See the documentation of $(b,opam switch list) to see the compilers \
-        which are available, and how to switch or to install a new one."
+    `P "This command allows to switch between different \"switches\", which \
+        are independent installation prefixes with their own compiler and sets \
+        of installed packages. This is typically useful to have different \
+        versions of the compiler available at once.";
+    `P "$(b,opam switch set SWITCH) is used to switch to an instance named \
+        $(b,SWITCH), creating it if it doesn't exist already. The compiler to \
+        use is defined through the $(b,--packages) or $(b,--alias-of) flags, \
+        and $(b,--empty) can also be used to create an empty switch. \
+        Otherwise, a compiler package matching $(b,SWITCH) is looked for.";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
 
   let command, params = mk_subcommands_with_default commands in
   let alias_of =
     mk_opt ["A";"alias-of"]
-      "COMP" "The name of the compiler description which will be aliased."
+      "COMP"
+      "The compiler to use when creating the switch (packages with the \
+       \"compiler\" flag matching this full package, package name of \
+       version are looked for. This is for backwards compatibility, and \
+       use of $(b,--packages) is preferred."
       Arg.(some string) None in
   let no_switch =
     mk_flag ["no-switch"]
       "Only install the compiler switch, without switching to it. If the compiler \
        switch is already installed, then do nothing." in
   let installed =
-    mk_flag ["i";"installed"] "List installed compiler switches only." in
+    mk_flag ["i";"installed"] "When listing, show installed switches only." in
   let all =
     mk_flag ["a";"all"]
-      "List all the compilers which can be installed on the system." in
+      "When listing, show all the available compiler packages, not just the \
+       standard ones." in
   let packages =
     mk_opt ["packages"] "PKGS"
       "When installing a switch, explicitely define the set of packages to set \
-       as the switch base (a.k.a. \"compiler\")."
+       as the compiler."
       Arg.(some (list atom)) None in
   let empty =
     mk_flag ["empty"]
