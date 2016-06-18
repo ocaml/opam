@@ -1543,8 +1543,7 @@ let lint =
     `P "Given an $(i,opam) file, performs several quality checks on it and \
         outputs recommendations, warnings or errors on stderr."
   ] in
-  let file = Arg.(value & pos 0 existing_filename_dirname_or_dash
-                    (Some (OpamFilename.D (OpamFilename.cwd ()))) &
+  let file = Arg.(value & pos 0 (some existing_filename_dirname_or_dash) None &
                   info ~docv:"FILE" []
                     ~doc:"Name of the opam file to check, or directory \
                           containing it. Current directory if unspecified")
@@ -1557,13 +1556,43 @@ let lint =
     mk_flag ["short";"s"]
       "Only print the warning/error numbers, space-separated, if any"
   in
-  let lint global_options file normalise short =
+  let package =
+    mk_opt ["package"] "PKG"
+      "Lint the current definition of the given package instead of specifying \
+       an opam file directly."
+      Arg.(some package) None
+  in
+  let lint global_options file package normalise short =
     apply_global_options global_options;
-    let opam_f = match file with
-      | Some (OpamFilename.D d) ->
+    let opam_f = match file, package with
+      | None, None -> (* Lookup in cwd if nothing was specified *)
+        Some (OpamFile.make OpamFilename.Op.(OpamFilename.cwd () // "opam"))
+      | Some None, None -> (* this means '-' was specified for stdin *)
+        None
+      | Some (Some (OpamFilename.D d)), None ->
         Some (OpamFile.make OpamFilename.Op.(d // "opam"))
-      | Some (OpamFilename.F f) -> Some (OpamFile.make f)
-      | None -> None
+      | Some (Some (OpamFilename.F f)), None ->
+        Some (OpamFile.make f)
+      | None, Some pkg ->
+        (OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+         try
+           let nv = match pkg with
+             | name, Some v -> OpamPackage.create name v
+             | name, None -> OpamSwitchState.get_package st name
+           in
+           let opam = OpamSwitchState.opam st nv in
+           match OpamPinned.orig_opam_file opam with
+           | None -> raise Not_found
+           | some -> some
+         with Not_found ->
+           OpamConsole.error_and_exit "No opam file found for %s%s"
+             (OpamPackage.Name.to_string (fst pkg))
+             (match snd pkg with None -> ""
+                               | Some v -> "."^OpamPackage.Version.to_string v))
+      | Some _, Some _ ->
+        OpamConsole.error_and_exit
+          "--package and a file argument are incompatible"
     in
     try
       let warnings,opam =
@@ -1602,7 +1631,7 @@ let lint =
       OpamConsole.msg "File format error\n";
       OpamStd.Sys.exit 1
   in
-  Term.(pure lint $global_options $file $normalise $short),
+  Term.(pure lint $global_options $file $package $normalise $short),
   term_info "lint" ~doc ~man
 
 
