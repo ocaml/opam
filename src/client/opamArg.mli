@@ -137,6 +137,9 @@ val package: (name * version option) Arg.converter
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
 val atom: atom Arg.converter
 
+(** Warnings string ["+3..10-4"] *)
+val warn_selector: (int * bool) list Arg.converter
+
 type 'a default = [> `default of string] as 'a
 
 (** Enumeration with a default command *)

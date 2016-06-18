@@ -1556,13 +1556,23 @@ let lint =
     mk_flag ["short";"s"]
       "Only print the warning/error numbers, space-separated, if any"
   in
+  let warnings =
+    mk_opt ["warnings";"w"] "WARNS"
+      "Select the warnings to show or hide. $(i,WARNS) should be a \
+       concatenation of $(b,+N), $(b,-N), $(b,+N..M), $(b,-N..M) to \
+       respectively enable or disable warning or error number $(b,N) or \
+       all warnings with numbers between $(b,N) and $(b,M) inclusive.\n\
+       All warnings are enabled by default, unless $(i,WARNS) starts with \
+       $(b,+), which disables all but the selected ones."
+      warn_selector []
+  in
   let package =
     mk_opt ["package"] "PKG"
       "Lint the current definition of the given package instead of specifying \
        an opam file directly."
       Arg.(some package) None
   in
-  let lint global_options file package normalise short =
+  let lint global_options file package normalise short warnings_sel =
     apply_global_options global_options;
     let opam_f = match file, package with
       | None, None -> (* Lookup in cwd if nothing was specified *)
@@ -1602,6 +1612,19 @@ let lint =
           OpamFileTools.lint_channel
             (OpamFile.make (OpamFilename.of_string "-")) stdin
       in
+      let enabled =
+        let default = match warnings_sel with
+          | (_,true) :: _ -> false
+          | _ -> true
+        in
+        let map =
+          List.fold_left
+            (fun acc (wn, enable) -> OpamStd.IntMap.add wn enable acc)
+            OpamStd.IntMap.empty warnings_sel
+        in
+        fun w -> try OpamStd.IntMap.find w map with Not_found -> default
+      in
+      let warnings = List.filter (fun (n, _, _) -> enabled n) warnings in
       let failed =
         List.exists (function _,`Error,_ -> true | _ -> false) warnings
       in
@@ -1631,7 +1654,7 @@ let lint =
       OpamConsole.msg "File format error\n";
       OpamStd.Sys.exit 1
   in
-  Term.(pure lint $global_options $file $package $normalise $short),
+  Term.(pure lint $global_options $file $package $normalise $short $warnings),
   term_info "lint" ~doc ~man
 
 

@@ -387,6 +387,44 @@ let atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
   parse, print
 
+let warn_selector =
+  let parse str =
+    let sep = Re.(compile (set "+-")) in
+    let sel = Re.(compile @@
+                  seq [bos; group (rep1 digit);
+                       opt @@ seq [str ".."; group (rep1 digit)];
+                       eos]) in
+    let rec seq i j =
+      if i = j then [i]
+      else if i < j then i :: seq (i+1) j
+      else j :: seq (j+1) i
+    in
+    let rec aux acc = function
+      | `Delim d :: `Text n :: r ->
+        let nums =
+          let g = Re.exec sel n in
+          let i = int_of_string (Re.Group.get g 1) in
+          try seq i (int_of_string (Re.Group.get g 2))
+          with Not_found -> [i]
+        in
+        let enabled = Re.Group.get d 0 = "+" in
+        let acc = List.fold_left (fun acc n -> (n, enabled) :: acc) acc nums in
+        aux acc r
+      | [] -> acc
+      | _ -> raise Not_found
+    in
+    try `Ok (List.rev (aux [] (Re.split_full sep str)))
+    with Not_found ->
+      `Error "Expected a warning string, e.g. '--warn=-10..21+12-36'"
+  in
+  let print ppf warns =
+    pr_str ppf @@
+    OpamStd.List.concat_map "" (fun (num,enable) ->
+        Printf.sprintf "%c%d" (if enable then '+' else '-') num)
+      warns
+  in
+  parse, print
+
 type 'a default = [> `default of string] as 'a
 
 let enum_with_default sl: 'a Arg.converter =
@@ -650,7 +688,7 @@ let global_options =
       "Save the results of the OPAM run in a computer-readable file. If the \
        filename contains the character `%', it will be replaced by an index \
        that doesn't overwrite an existing file. Similar to setting the \
-       $(b,\\OPAMJSON) variable."
+       $(b,\\$OPAMJSON) variable."
       Arg.(some string) None
   in
   Term.(pure create_global_options
