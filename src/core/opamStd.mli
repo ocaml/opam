@@ -177,6 +177,12 @@ module List : sig
       end if index < 0 or > length respectively). Not tail-recursive *)
   val insert_at: int -> 'a -> 'a list -> 'a list
 
+  (** Like [List.assoc], but as an option, and also returns the list with the
+      binding removed, e.g. equivalent to
+      [(List.assoc_opt x l, List.remove_assoc x l)]
+      (but tail-recursive and more efficient) *)
+  val pick_assoc: 'a -> ('a * 'b) list -> 'b option * ('a * 'b) list
+
 end
 
 module String : sig

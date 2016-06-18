@@ -125,6 +125,15 @@ module OpamList = struct
     | l when index <= 0 -> value :: l
     | x::l -> x :: insert_at (index - 1) value l
 
+  let pick_assoc x l =
+    let rec aux acc = function
+      | [] -> None, l
+      | (k,v) as b::r ->
+        if k = x then Some v, List.rev_append acc r
+        else aux (b::acc) r
+    in
+    aux [] l
+
 end
 
 
