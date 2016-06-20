@@ -495,6 +495,18 @@ let import st filename =
   in
   import_t importfile st
 
+let set_compiler st names =
+  let packages =
+    try List.map (OpamSwitchState.find_installed_package_by_name st) names
+    with Not_found ->
+      OpamConsole.error_and_exit "These packages are not installed: %s"
+        (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
+           (List.filter (not @* OpamSwitchState.is_name_installed st) names))
+  in
+  let st = { st with compiler_packages = OpamPackage.Set.of_list packages } in
+  OpamSwitchAction.write_selections st;
+  st
+
 let guess_compiler_package rt name =
   let package_index =
     OpamRepositoryState.build_index rt

@@ -1038,6 +1038,9 @@ let switch =
      Note that $(b,--packages) can be used to switch to any packages, not only \
      the ones with the \"compiler\" flag set that this command shows.";
     "show", `current, [], "Show the current compiler.";
+    "set-compiler", `set_compiler, ["NAMES"],
+    "Sets the packages forming the immutable base for the selected switch, \
+     overriding the current setting. The packages must be installed already.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1072,7 +1075,7 @@ let switch =
       "When listing, show all the available compiler packages, not just the \
        standard ones." in
   let packages =
-    mk_opt ["packages"] "PKGS"
+    mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
        as the compiler."
       Arg.(some (list atom)) None in
@@ -1192,6 +1195,14 @@ let switch =
         OpamSwitchCommand.switch_with_autoinstall gt ~packages switch_name
         |> ignore;
       `Ok ()
+    | Some `set_compiler, packages ->
+      (try
+         let names = List.map OpamPackage.Name.of_string packages in
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let _st = OpamSwitchCommand.set_compiler st names in
+         `Ok ()
+       with Failure e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
   Term.(ret (pure switch

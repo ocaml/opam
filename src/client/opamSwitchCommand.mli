@@ -53,6 +53,9 @@ val switch_with_autoinstall:
 (** Reinstall the given compiler switch. *)
 val reinstall: rw switch_state -> rw switch_state
 
+(** Sets the packages configured as the current switch compiler base *)
+val set_compiler: rw switch_state -> name list -> rw switch_state
+
 (** Display the current compiler switch. *)
 val show: unit -> unit
 
