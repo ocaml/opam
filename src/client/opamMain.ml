@@ -164,7 +164,9 @@ let init =
       let packages =
         OpamSwitchCommand.guess_compiler_package rt compiler
       in
-      OpamSwitchCommand.switch gt ~packages (OpamSwitch.of_string compiler)
+      OpamSwitchCommand.switch_with_autoinstall
+        gt ~packages (OpamSwitch.of_string compiler)
+      |> ignore
   in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_url
@@ -1023,7 +1025,9 @@ let switch =
     "remove", `remove, ["SWITCH"], "Remove the given compiler.";
     "export", `export, ["FILE"],
     "Save the current switch state to a file.";
-    "import", `import, ["FILE"], "Import a saved switch state.";
+    "import", `import, ["FILE"],
+    "Import a saved switch state. If $(b,--switch) is specified and doesn't \
+     point to an existing switch, the switch will be created for the import.";
     "reinstall", `reinstall, ["SWITCH"],
     "Reinstall the given compiler switch. This will also reinstall all \
      packages.";
@@ -1075,10 +1079,14 @@ let switch =
   let empty =
     mk_flag ["empty"]
       "Allow creating an empty (without compiler) switch." in
+  let no_autoinstall =
+    mk_flag ["no-autoinstall"]
+      "On 'switch set', fail if the switch doesn't exist already rather than \
+       install a new one." in
 
   let switch global_options
       build_options command alias_of print_short installed all
-      no_switch packages empty params =
+      no_switch no_autoinstall packages empty params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1107,10 +1115,13 @@ let switch =
       `Ok ()
     | Some `install, [switch] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      OpamSwitchCommand.install gt
-        ~update_config:(not no_switch)
-        ~packages:(compiler_packages gt switch)
-        (OpamSwitch.of_string switch);
+      let _gt, st =
+        OpamSwitchCommand.install gt
+          ~update_config:(not no_switch)
+          ~packages:(compiler_packages gt switch)
+          (OpamSwitch.of_string switch)
+      in
+      ignore (OpamSwitchState.unlock st);
       `Ok ()
     | Some `export, [filename] ->
       OpamSwitchCommand.export
@@ -1119,10 +1130,26 @@ let switch =
       `Ok ()
     | Some `import, [filename] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.import gt
-        (OpamStateConfig.get_switch ())
-        (if filename = "-" then None
-         else Some (OpamFile.make (OpamFilename.of_string filename)));
+      let switch = OpamStateConfig.get_switch () in
+      let installed_switches = OpamFile.Config.installed_switches gt.config in
+      let gt =
+        if not (List.mem switch installed_switches) then
+          OpamGlobalState.with_write_lock gt @@ fun gt ->
+          OpamSwitchAction.create_empty_switch gt switch
+          |> OpamGlobalState.unlock
+        else gt
+      in
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let _st =
+        try
+          OpamSwitchCommand.import st
+            (if filename = "-" then None
+             else Some (OpamFile.make (OpamFilename.of_string filename)))
+        with e ->
+          OpamConsole.warning "Switch %s may have been left partially installed"
+            (OpamSwitch.to_string switch);
+          raise e
+      in
       `Ok ()
     | Some `remove, switches ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -1135,9 +1162,10 @@ let switch =
       in
       `Ok ()
     | Some `reinstall, [switch] ->
+      let switch = OpamSwitch.of_string switch in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.reinstall gt
-        (OpamSwitch.of_string switch);
+      OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
+      let _st = OpamSwitchCommand.reinstall st in
       `Ok ()
     | Some `current, [] ->
       OpamSwitchCommand.show ();
@@ -1157,16 +1185,20 @@ let switch =
           OpamConsole.msg "Switch already installed, nothing to do.\n"
         else
           OpamSwitchCommand.install gt ~update_config:false
-            ~packages switch_name
+            ~packages switch_name |> ignore
+      else if no_autoinstall then
+        OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore
       else
-        OpamSwitchCommand.switch gt ~packages switch_name;
+        OpamSwitchCommand.switch_with_autoinstall gt ~packages switch_name
+        |> ignore;
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_switch $packages $empty $params)),
+             $installed $all $no_switch $no_autoinstall
+             $packages $empty $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)

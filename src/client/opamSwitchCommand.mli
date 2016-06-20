@@ -14,52 +14,44 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Install a new switch. Returns a continuation that must be run to install the
-    packages, but only needs a switch lock. *)
-val install_cont:
-  rw global_state ->
-  update_config:bool ->
-  packages:atom conjunction ->
-  switch ->
-  switch * (unit -> unit)
-
-(** Like [install_cont] but runs the continuation already *)
+(** Install a new switch, with the given packages set as compiler. The given
+    [global_state] is unlocked as soon as possible, i.e. after registering the
+    existence of the new switch *)
 val install:
   rw global_state -> update_config:bool ->
-  packages:atom conjunction -> switch -> unit
+  packages:atom conjunction -> switch ->
+  unlocked global_state * rw switch_state
 
 (** Install a compiler's base packages *)
 val install_compiler_packages:
   rw switch_state -> atom conjunction -> rw switch_state
 
-(** Import a file which contains the packages to install. *)
+(** Import a file which contains the packages to install.  *)
 val import:
-  'a global_state -> switch ->
-  OpamFile.SwitchExport.t OpamFile.t option -> unit
+  rw switch_state ->
+  OpamFile.SwitchExport.t OpamFile.t option ->
+  rw switch_state
 
 (** Export a file which contains the installed packages. If full is specified
     and true, export metadata of all installed packages (excluding overlay
-    files) as part of the export. *)
+    files) as part of the export. [None] means export to stdout. *)
 val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 
 (** Remove the given compiler switch, and returns the updated state (unchanged
     in case [confirm] is [true] and the user didn't confirm) *)
 val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 
-(** Switch to the given compiler switch, installing it if it doesn't exist
-    already (with the given compiler, or empty if unspecified). Returns a
-    continuation like [install] *)
-val switch_cont:
-  rw global_state -> packages:atom conjunction ->
-  switch -> switch * (unit -> unit)
+(** Changes the currently active switch *)
+val switch: 'a lock -> rw global_state -> switch -> 'a switch_state
 
-(** Like [switch_cont] but runs the continuation already. *)
-val switch:
-  rw global_state -> packages:atom conjunction ->
-  switch -> unit
+(** Switch to the given compiler switch, installing it if it doesn't exist
+    already (with the given compiler, or empty if unspecified). *)
+val switch_with_autoinstall:
+  rw global_state -> packages:atom conjunction -> switch ->
+  unlocked global_state * rw switch_state
 
 (** Reinstall the given compiler switch. *)
-val reinstall: 'a global_state -> switch -> unit
+val reinstall: rw switch_state -> rw switch_state
 
 (** Display the current compiler switch. *)
 val show: unit -> unit
