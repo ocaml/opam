@@ -55,6 +55,7 @@ type selector =
   | Any
   | Installed
   | Root
+  | Compiler
   | Available
   | Installable
   | Depends_on of dependency_toggles * atom list
@@ -70,6 +71,7 @@ let string_of_selector =
   | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
+  | Compiler -> "compiler" % `cyan
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Depends_on (tog,atoms) ->
@@ -158,6 +160,7 @@ let apply_selector ~base st = function
   | Any -> base
   | Installed -> st.installed
   | Root -> st.installed_roots
+  | Compiler -> st.compiler_packages
   | Available -> Lazy.force st.available_packages
   | Installable -> OpamSolver.installable (OpamSwitchState.universe st Depends)
   | (Required_by ({recursive=true; _} as tog, atoms)
@@ -471,7 +474,7 @@ let display st ~header ~format ~dependency_order ~all_versions packages =
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:" "
 
-let load_maybe gt =
+let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in
   match OpamStateConfig.(!r.current_switch) with
   | None -> OpamSwitchState.load_virtual gt rt
@@ -492,7 +495,7 @@ let list gt
     | `roots -> F.Atom Root
     | `installable -> F.Atom Available (* /!\ *)
   in
-  let st = load_maybe gt in
+  let st = get_switch_state gt in
   let filter_deps =
     match depends with
     | None | Some [] -> F.Empty
@@ -579,8 +582,39 @@ let list gt
       OpamStd.String.Set.empty
     |> OpamStd.String.Set.iter print_endline
 
+let print_depexts st packages tags_list =
+  let required_tags = OpamStd.String.Set.of_list tags_list in
+  OpamPackage.Name.Set.fold
+    (fun name acc ->
+       let nv = OpamSwitchState.get_package st name in
+       let nv =
+         if OpamPackage.Set.mem nv packages then nv else
+           OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
+       in
+       let opam = OpamSwitchState.opam st nv in
+       match OpamFile.OPAM.depexts opam with
+       | None -> acc
+       | Some tags ->
+         OpamStd.String.SetMap.fold (fun tags values acc ->
+             if tags_list = [] then
+               let line =
+                 Printf.sprintf "%s: %s"
+                   (String.concat " " (OpamStd.String.Set.elements tags))
+                   (String.concat " " (OpamStd.String.Set.elements values))
+               in
+               OpamStd.String.Set.add line acc
+             else if OpamStd.String.Set.for_all
+                 (fun tag -> OpamStd.String.Set.mem tag required_tags)
+                 tags
+             then OpamStd.String.Set.union acc values
+             else acc)
+           tags acc)
+    (OpamPackage.names_of_packages packages)
+    OpamStd.String.Set.empty
+  |> OpamStd.String.Set.iter print_endline
+
 let info gt ~fields ~raw_opam ~where atoms =
-  let st = load_maybe gt in
+  let st = get_switch_state gt in
   let packages = OpamSwitchState.packages_of_atoms st atoms in
   if OpamPackage.Set.is_empty packages then
     (OpamConsole.error "No package matching %s found"

@@ -42,6 +42,7 @@ type selector =
   | Any
   | Installed
   | Root
+  | Compiler
   | Available
   | Installable
   | Depends_on of dependency_toggles * atom list
@@ -56,6 +57,10 @@ type selector =
 val filter:
   base:package_set -> 'a switch_state ->
   selector OpamFormula.formula -> package_set
+
+(** Lists the external dependencies matching the given flags for the given set
+    of packages *)
+val print_depexts: 'a switch_state -> package_set -> string list -> unit
 
 (** Element of package information to be printed *)
 type output_format =
@@ -82,6 +87,10 @@ type output_format =
                            the system *)
 
 val default_list_format: output_format list
+
+(** Gets either the current switch state, if a switch is selected, or a virtual
+    state corresponding to the configured repos *)
+val get_switch_state: 'a global_state -> unlocked switch_state
 
 (** Outputs a list of packages as a table according to the formatting options *)
 val display:
@@ -113,3 +122,5 @@ val info:
 
 (** Prints the value of an opam field in a shortened way *)
 val mini_field_printer: value -> string
+
+val string_of_formula: selector OpamFormula.formula -> string

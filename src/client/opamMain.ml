@@ -191,18 +191,27 @@ let list =
         You can search through the package descriptions using the $(b,opam search) \
         command."
   ] in
-  let all =
-    mk_flag ["a";"all"]
-      "List all the packages which can be installed on the system. This is \
-       the default when a query argument is supplied." in
-  let installed =
-    mk_flag ["i";"installed"]
-      "List installed packages only. This is the the default when no argument \
-       is supplied. With `--resolve', means \"compute a solution from the \
-       currently installed packages\" instead." in
-  let unavailable =
-    mk_flag ["A";"unavailable"]
-      "List all packages, even those which can't be installed on the system" in
+  let state_selector =
+    Arg.(value & vflag_all [] [
+        OpamListCommand.Any, info ["A";"all"]
+          ~doc:"Include all, even uninstalled or unavailable packages";
+        OpamListCommand.Installed, info ["i";"installed"]
+          ~doc:"List installed packages only. This is the default when no \
+                further arguments are supplied";
+        OpamListCommand.Root, info ["roots";"installed-roots"]
+          ~doc:"List only packages that were explicitely installed, excluding \
+                the ones installed as dependencies";
+        OpamListCommand.Available, info ["a";"available"]
+          ~doc:"List only packages that are available on the current system. \
+                This is the default for non-empty queries.";
+        OpamListCommand.Installable, info ["installable"]
+          ~doc:"List only packages that can be installed on the current switch \
+                (this calls the solver and may be more costly)";
+        OpamListCommand.Compiler, info ["compiler"]
+          ~doc:"List only the immutable base of the current switch (i.e. \
+                compiler packages)";
+      ])
+  in
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
     let doc = "List only packages that depend on one of (comma-separated) $(docv)." in
@@ -250,49 +259,71 @@ let list =
        `depext' plugin, that can infer your system's tags and handle \
        the system installations. Run `opam depext'."
       Arg.(some & list string) None in
-  let list global_options print_short all installed
-      installed_roots unavailable sort
+  (* !x let repos = ... *)
+  let list global_options print_short sort state_selector
       depends_on required_by resolve recursive depopts depexts dev
       packages =
     apply_global_options global_options;
-    let filter =
-      match unavailable, all, installed, installed_roots with
-      | true,  false, false, false -> Some `all
-      | false, true,  false, false -> Some `installable
-      | false, false, true,  false -> Some `installed
-      | false, false, _,     true  -> Some `roots
-      | false, false, false, false ->
+    let state_selector =
+      if state_selector = [] then
         if depends_on = [] && required_by = [] && resolve = [] && packages = []
-        then Some `installed else Some `installable
-      | _ -> None
+        then [OpamListCommand.Installed]
+        else [OpamListCommand.Available]
+      else state_selector
     in
-    let order = if sort then `depends else `normal in
-    match filter, (depends_on, required_by, resolve) with
-    | Some filter, (depends, [], [] | [], depends, [] | [], [], depends) ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.list gt
-        ~print_short ~filter ~order
-        ~exact_name:true ~case_sensitive:false
-        ~depends ~reverse_depends:(depends_on <> [])
-        ~resolve_depends:(resolve <> [])
-        ~recursive_depends:recursive
-        ~depopts ?depexts ~dev
-        packages;
-      `Ok ()
-    | None, _ ->
-      `Error (true, "Conflicting filters: only one of --all, --installed and \
-                     --installed-roots may be given at a time")
-    | _ ->
-      (* That would be fairly doable with a change of interface if needed *)
-      `Error (true, "Sorry, only one of --depends-on, --required-by and \
-                     --resolve are allowed at a time")
+    let dependency_toggles = {
+      OpamListCommand.
+      recursive; depopts; build = true; test = false; doc = false; dev
+    } in
+    let pattern_toggles = {
+      OpamListCommand.
+      exact = true;
+      case_sensitive = false;
+      fields = ["name"];
+      glob = true;
+      ext_fields = false;
+    } in
+    let filter =
+      state_selector @
+      (match depends_on with [] -> [] | deps ->
+          [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+      (match required_by with [] -> [] | rdeps ->
+          [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+      (match resolve with [] -> [] | deps ->
+          [OpamListCommand.Solution (dependency_toggles, deps)]) @
+      List.map (fun patt -> OpamListCommand.Pattern (pattern_toggles, patt))
+        packages
+      |> List.map (fun x -> Atom x)
+      |> OpamFormula.ands
+    in
+    let format =
+      if print_short then [OpamListCommand.Package]
+      else OpamListCommand.default_list_format
+    in
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    let st = OpamListCommand.get_switch_state gt in
+    if not print_short && filter <> OpamFormula.Empty then
+      OpamConsole.msg "# Packages matching: %s\n"
+        (OpamListCommand.string_of_formula filter);
+    let all = OpamPackage.Set.union st.packages st.installed in
+    let results =
+      OpamListCommand.filter ~base:all st filter
+    in
+    match depexts with
+    | None ->
+      OpamListCommand.display st
+        ~format
+        ~dependency_order:sort
+        ~header:(not print_short)
+        ~all_versions:false
+        results
+    | Some tags_list ->
+      OpamListCommand.print_depexts st results tags_list
   in
-  Term.ret
-    Term.(pure list $global_options
-          $print_short_flag $all $installed $installed_roots_flag
-          $unavailable $sort
-          $depends_on $required_by $resolve $recursive $depopts $depexts $dev
-          $pattern_list),
+  Term.(pure list $global_options
+        $print_short_flag $sort $state_selector
+        $depends_on $required_by $resolve $recursive $depopts $depexts $dev
+        $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
