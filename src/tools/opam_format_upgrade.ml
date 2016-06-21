@@ -150,4 +150,67 @@ let process args =
       OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
       OpamConsole.msg "Compiler %s successfully converted to package %s\n"
         c (OpamPackage.to_string nv))
-    compilers
+    compilers;
+
+  let packages = OpamRepository.packages_with_prefixes repo in
+
+  OpamPackage.Map.iter (fun package prefix ->
+      let opam_file = OpamRepositoryPath.opam repo prefix package in
+      let opam0 = OpamFile.OPAM.read opam_file in
+      let opam = opam0 in
+      let nv = OpamFile.OPAM.package opam in
+      let ocaml_version_formula, available =
+        let available = OpamFile.OPAM.available opam in
+        let rec aux = function
+          | FOp (FIdent ([],var,None), op, FString v)
+            when OpamVariable.to_string var = "ocaml-version" ->
+            Atom (Constraint (op, FString v))
+          | FNot f ->
+            OpamFormula.neg (function
+                | Constraint (op,v) -> Constraint (OpamFormula.neg_relop op, v)
+                | Filter _ as f -> f)
+              (aux f)
+          | FAnd (f1,f2) -> OpamFormula.ands [aux f1; aux f2]
+          | FOr (f1,f2) -> OpamFormula.ors [aux f1; aux f2]
+          | _ -> Empty
+        in
+        let ocaml_dep_formula = aux available in
+        let rec aux =
+          function
+          | FOp (FIdent ([],var,None), _op, FString _v)
+            when OpamVariable.to_string var = "ocaml-version" ->
+            None
+          | FNot f -> OpamStd.Option.map (fun f -> FNot f) (aux f)
+          | FAnd (f1,f2) -> (match aux f1, aux f2 with
+              | Some f1, Some f2 -> Some (FAnd (f1,f2))
+              | None, f | f, None -> f)
+          | FOr (f1,f2) -> (match aux f1, aux f2 with
+              | Some f1, Some f2 -> Some (FOr (f1,f2))
+              | None, None -> None
+              | None, f | f, None ->
+                OpamConsole.error "Unconvertible 'available' field in %s"
+                  (OpamFile.to_string opam_file);
+                f)
+          | f -> Some f
+        in
+        let rem_available =
+          OpamStd.Option.default (FBool true) (aux available)
+        in
+        ocaml_dep_formula, rem_available
+      in
+      let depends =
+        OpamFormula.ands [
+          OpamFormula.Atom
+            (OpamPackage.Name.of_string "ocaml",
+             (ocaml_version_formula));
+          OpamFile.OPAM.depends opam;
+        ]
+      in
+      if OpamPackage.name_to_string nv <> "ocaml" then
+        let opam = OpamFile.OPAM.with_depends depends opam in
+        let opam = OpamFile.OPAM.with_available available opam in
+        if opam <> opam0 then
+          (OpamFile.OPAM.write_with_preserved_format opam_file opam;
+           OpamConsole.msg "Updated %s\n" (OpamFile.to_string opam_file))
+    )
+    packages
