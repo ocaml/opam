@@ -191,7 +191,20 @@ let process args =
                 OpamConsole.error "Unconvertible 'available' field in %s"
                   (OpamFile.to_string opam_file);
                 f)
-          | f -> Some f
+          | FOp (f1, op, f2) ->
+            (match aux f1, aux f2 with
+             | Some f1, Some f2 -> Some (FOp (f1, op, f2))
+             | None, None -> None
+             | None, f | f, None ->
+               OpamConsole.error "Unconvertible 'available' field in %s"
+                 (OpamFile.to_string opam_file);
+               f)
+          | FIdent ([],var,r) as id ->
+            if OpamStd.String.starts_with ~prefix:"ocaml-"
+                (OpamVariable.to_string var)
+            then Some (FIdent ([OpamPackage.Name.of_string "ocaml"], var, r))
+            else Some id
+          | (FIdent (_::_,_,_) | FUndef _ | FBool _ | FString _) as f -> Some f
         in
         let rem_available =
           OpamStd.Option.default (FBool true) (aux available)
@@ -199,12 +212,18 @@ let process args =
         ocaml_dep_formula, rem_available
       in
       let depends =
-        OpamFormula.ands [
-          OpamFormula.Atom
-            (OpamPackage.Name.of_string "ocaml",
-             (ocaml_version_formula));
-          OpamFile.OPAM.depends opam;
-        ]
+        let depends = OpamFile.OPAM.depends opam in
+        let pkgname = OpamPackage.Name.of_string "ocaml" in
+        if OpamFormula.fold_left (fun found (name,_) -> found || name = pkgname)
+            false depends
+        then depends
+        else
+          OpamFormula.ands [
+            OpamFormula.Atom
+              (OpamPackage.Name.of_string "ocaml",
+               (ocaml_version_formula));
+            depends;
+          ]
       in
       if OpamPackage.name_to_string nv <> "ocaml" then
         let opam = OpamFile.OPAM.with_depends depends opam in
