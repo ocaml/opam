@@ -34,8 +34,10 @@ val with_:
 
 (** Creates a virtual state with all package available and nothing installed.
     Useful for querying and simulating actions when no switch is yet
-    configured *)
-val load_virtual: 'a global_state -> 'b repos_state -> unlocked switch_state
+    configured, or querying packages directly from the repos *)
+val load_virtual:
+  ?repos_list: repository_name list ->
+  'a global_state -> 'b repos_state -> unlocked switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)

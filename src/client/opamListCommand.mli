@@ -45,12 +45,14 @@ type selector =
   | Compiler
   | Available
   | Installable
+  | Pinned
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | From_repository of repository_name list
 
 (** Applies a formula of selectors to filter the package from a given switch
     state *)
@@ -91,6 +93,14 @@ val default_list_format: output_format list
 (** Gets either the current switch state, if a switch is selected, or a virtual
     state corresponding to the configured repos *)
 val get_switch_state: 'a global_state -> unlocked switch_state
+
+(** For documentation, includes a dummy '<field>:' for the [Field] format *)
+val field_names: (output_format * string) list
+
+val string_of_field: output_format -> string
+
+val field_of_string: string -> output_format
+
 
 (** Outputs a list of packages as a table according to the formatting options *)
 val display:

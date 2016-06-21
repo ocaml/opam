@@ -182,11 +182,9 @@ let list =
     `P "This command displays the list of installed packages when called \
         without argument, or the list of available packages matching the \
         given pattern.";
-    `P "Unless the $(b,--short) switch is used, the output format displays one \
-        package per line, and each line contains the name of the package, the \
-        installed version or -- if the package is not installed, and a short \
-        description. In color mode, root packages (eg. manually installed) are \
-        underlined.";
+    `P "In color mode, root packages (eg. manually installed) are \
+        underlined, and versions are shown in blue instead of magenta \
+        for pinned packages.";
     `P "The full description can be obtained by doing $(b,opam show <package>). \
         You can search through the package descriptions using the $(b,opam search) \
         command."
@@ -210,9 +208,10 @@ let list =
         OpamListCommand.Compiler, info ["compiler"]
           ~doc:"List only the immutable base of the current switch (i.e. \
                 compiler packages)";
+        OpamListCommand.Pinned, info ["pinned"]
+          ~doc:"List only the pinned packages";
       ])
   in
-  let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let depends_on =
     let doc = "List only packages that depend on one of (comma-separated) $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
@@ -247,8 +246,25 @@ let list =
   let dev =
     mk_flag ["dev"] "Include development packages in dependencies."
   in
+  let repos =
+    mk_opt ["repos"] "REPOS"
+      "Include only packages that took their origin from one of the given \
+       repositories (unless $(i,no-switch) is also specified, this excludes \
+       pinned packages)."
+      Arg.(some & list & repository_name) None
+  in
+  let field_match =
+    mk_opt ["field-match"] "FIELD:PATTERN"
+      "Filter packages with a match for $(b,PATTERN) on the given $(b,FIELD)"
+      Arg.(some & pair ~sep:':' string string) None
+  in
+  let no_switch =
+    mk_flag ["no-switch"]
+      "List what is available from the repositories, without consideration for \
+       the current (or any other) switch (installed or pinned packages, etc.)"
+  in
   let depexts =
-    mk_opt ["e";"external"] "TAGS" ~vopt:(Some [])
+    mk_opt ["e";"external"] "TAGS"
       "Instead of displaying the packages, display their external dependencies \
        that are associated with any subset of the given $(i,TAGS) (OS, \
        distribution, etc.). \
@@ -259,14 +275,45 @@ let list =
        `depext' plugin, that can infer your system's tags and handle \
        the system installations. Run `opam depext'."
       Arg.(some & list string) None in
-  (* !x let repos = ... *)
-  let list global_options print_short sort state_selector
-      depends_on required_by resolve recursive depopts depexts dev
+  let print_short =
+    mk_flag ["short";"s"]
+      "Don't print a header, and sets the default columns to $(b,name) only."
+  in
+  let sort =
+    mk_flag ["sort";"S"]
+      "Sort the packages in dependency order (i.e. an order in which they \
+       could be individually installed.)"
+  in
+  let columns =
+    mk_opt ["columns"] "COLUMNS"
+      (Printf.sprintf "Select the columns to display among: %s.\n\
+                       The default is $(b,name) when $(i,--short) is present \
+                       and %s otherwise."
+         (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
+            OpamListCommand.field_names)
+         (OpamStd.List.concat_map ", "
+            (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
+            OpamListCommand.default_list_format))
+      Arg.(some & list opamlist_column) None
+  in
+  let all_versions = mk_flag ["all-versions"]
+      "Print all matching versions, instead of a single version per package"
+  in
+  let list global_options state_selector field_match
+      depends_on required_by resolve recursive depopts no_switch
+      depexts dev repos
+      print_short sort columns all_versions
       packages =
     apply_global_options global_options;
+    let no_switch =
+      no_switch || OpamStateConfig.(!r.current_switch) = None
+    in
     let state_selector =
       if state_selector = [] then
-        if depends_on = [] && required_by = [] && resolve = [] && packages = []
+        if no_switch then []
+        else if
+          depends_on = [] && required_by = [] && resolve = [] &&
+          packages = [] && field_match = None
         then [OpamListCommand.Installed]
         else [OpamListCommand.Available]
       else state_selector
@@ -284,24 +331,43 @@ let list =
       ext_fields = false;
     } in
     let filter =
-      state_selector @
-      (match depends_on with [] -> [] | deps ->
-          [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
-      (match required_by with [] -> [] | rdeps ->
-          [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
-      (match resolve with [] -> [] | deps ->
-          [OpamListCommand.Solution (dependency_toggles, deps)]) @
-      List.map (fun patt -> OpamListCommand.Pattern (pattern_toggles, patt))
-        packages
-      |> List.map (fun x -> Atom x)
-      |> OpamFormula.ands
+      OpamFormula.ands
+        (List.map (fun x -> Atom x)
+           (state_selector @
+            (match depends_on with [] -> [] | deps ->
+                [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+            (match required_by with [] -> [] | rdeps ->
+                [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+            (match resolve with [] -> [] | deps ->
+                [OpamListCommand.Solution (dependency_toggles, deps)]) @
+            (if no_switch then [] else
+             match repos with None -> [] | Some repos ->
+               [OpamListCommand.From_repository repos]) @
+            (match field_match with None -> [] | Some (field,patt) ->
+                [OpamListCommand.Pattern
+                   ({pattern_toggles with OpamListCommand.
+                                       exact = false;
+                                       fields = [field]},
+                    patt)])) @
+         [OpamFormula.ors
+            (List.map (fun patt ->
+                 Atom (OpamListCommand.Pattern (pattern_toggles, patt)))
+                packages)])
     in
     let format =
-      if print_short then [OpamListCommand.Package]
-      else OpamListCommand.default_list_format
+      match columns with
+      | Some c -> c
+      | None ->
+        if print_short then [OpamListCommand.Name]
+        else OpamListCommand.default_list_format
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    let st = OpamListCommand.get_switch_state gt in
+    let st =
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
+      else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
+    in
+
     if not print_short && filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -315,15 +381,15 @@ let list =
         ~format
         ~dependency_order:sort
         ~header:(not print_short)
-        ~all_versions:false
+        ~all_versions
         results
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
   in
-  Term.(pure list $global_options
-        $print_short_flag $sort $state_selector
-        $depends_on $required_by $resolve $recursive $depopts $depexts $dev
-        $pattern_list),
+  Term.(pure list $global_options $state_selector $field_match
+        $depends_on $required_by $resolve $recursive $depopts
+        $no_switch $depexts $dev $repos
+        $print_short $sort $columns $all_versions $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
