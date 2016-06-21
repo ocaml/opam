@@ -299,10 +299,14 @@ let list =
   let all_versions = mk_flag ["all-versions"]
       "Print all matching versions, instead of a single version per package"
   in
+  let separator =
+    Arg.(value & opt string " " & info ["separator"] ~docv:"STRING"
+           ~doc:"Set the column-separator string (the default is a space)")
+  in
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
       depexts dev repos
-      print_short sort columns all_versions
+      print_short sort columns all_versions separator
       packages =
     apply_global_options global_options;
     let no_switch =
@@ -382,6 +386,7 @@ let list =
         ~dependency_order:sort
         ~header:(not print_short)
         ~all_versions
+        ~separator
         results
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
@@ -389,7 +394,7 @@ let list =
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
         $no_switch $depexts $dev $repos
-        $print_short $sort $columns $all_versions $pattern_list),
+        $print_short $sort $columns $all_versions $separator $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)

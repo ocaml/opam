@@ -458,7 +458,9 @@ let detail_printer st nv =
             (OpamPath.Switch.root st.switch_global.root st.switch)
             c))
 
-let display st ~header ~format ~dependency_order ~all_versions packages =
+let display
+    st ~header ~format ~dependency_order ~all_versions ?(separator=" ")
+    packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -492,7 +494,7 @@ let display st ~header ~format ~dependency_order ~all_versions packages =
   List.rev |>
   add_head |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:" "
+  OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:separator
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in

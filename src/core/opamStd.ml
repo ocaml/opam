@@ -771,6 +771,16 @@ module OpamFormat = struct
       in
       List.rev col::transpose (List.rev rest)
     in
+    let explode_newlines line =
+      let cols = List.map (fun s -> OpamString.split s '\n') line in
+      transpose cols
+    in
+    let ll =
+      List.fold_left
+        (fun acc line -> List.rev_append (explode_newlines line) acc)
+        [] ll
+      |> List.rev
+    in
     let columns = transpose ll in
     let pad n s =
       let sn = visual_length s in

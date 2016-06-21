@@ -109,6 +109,7 @@ val display:
   format:output_format list ->
   dependency_order:bool ->
   all_versions:bool ->
+  ?separator:string ->
   package_set -> unit
 
 (** Display all available packages that match any of the regexps. *)
