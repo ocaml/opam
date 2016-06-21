@@ -199,9 +199,13 @@ let load lock_kind gt rt switch =
   log "Switch state loaded in %.3fs" (chrono ());
   st
 
-let load_virtual gt rt =
+let load_virtual ?repos_list gt rt =
+  let repos_list = match repos_list with
+    | Some rl -> rl
+    | None -> OpamGlobalState.repos_list gt
+  in
   let opams =
-    OpamRepositoryState.build_index rt (OpamGlobalState.repos_list gt)
+    OpamRepositoryState.build_index rt repos_list
   in
   let packages = OpamPackage.keys opams in
   {

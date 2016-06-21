@@ -247,7 +247,7 @@ let install_compiler_packages t atoms =
   OpamSolution.check_solution ~quiet:true t result;
   t
 
-let install_cont gt ~update_config ~packages switch =
+let install gt ~update_config ~packages switch =
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
     OpamConsole.error_and_exit
@@ -258,42 +258,43 @@ let install_cont gt ~update_config ~packages switch =
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
   let gt = OpamSwitchAction.create_empty_switch gt switch in
-  (if update_config
-   then fun f ->
-     f (OpamSwitchAction.set_current_switch `Lock_write gt switch)
-   else
-     OpamSwitchState.with_ `Lock_write gt ~switch)
-  @@ fun st ->
-  let _gt = OpamGlobalState.unlock gt in
-  switch,
-  fun () ->
-    try
-      let st = install_compiler_packages st packages in
-      ignore (OpamSwitchState.unlock st)
-    with e ->
-      let _st = OpamSwitchState.unlock st in
-      OpamConsole.warning "Switch %s left partially installed"
-        (OpamSwitch.to_string switch);
-      raise e
-
-let install gt ~update_config ~packages switch =
-  (snd (install_cont gt ~update_config ~packages switch)) ()
-
-let switch_cont gt ~packages switch =
-  log "switch switch=%a" (slog OpamSwitch.to_string) switch;
-  let switch, cont =
-    if List.mem switch (OpamFile.Config.installed_switches gt.config) then
-      let st = OpamSwitchAction.set_current_switch `Lock_none gt switch in
-      OpamEnv.check_and_print_env_warning st;
-      switch, fun () -> ()
+  let st =
+    if update_config then
+      OpamSwitchAction.set_current_switch `Lock_write gt switch
     else
-      install_cont gt ~update_config:true ~packages switch
+    let rt = OpamRepositoryState.load `Lock_none gt in
+    OpamSwitchState.load `Lock_write gt rt switch
   in
-  switch,
-  cont
+  let gt = OpamGlobalState.unlock gt in
+  try gt, install_compiler_packages st packages
+  with e ->
+    OpamConsole.warning "Switch %s left partially installed"
+      (OpamSwitch.to_string switch);
+    raise e
 
-let switch gt ~packages switch =
-  (snd (switch_cont gt ~packages switch)) ()
+let switch lock gt switch =
+  log "switch switch=%a" (slog OpamSwitch.to_string) switch;
+  let installed_switches = OpamFile.Config.installed_switches gt.config in
+  if List.mem switch installed_switches then
+    let st = OpamSwitchAction.set_current_switch lock gt switch in
+    OpamEnv.check_and_print_env_warning st;
+    st
+  else
+    OpamConsole.error_and_exit "No switch %s is currently installed. \
+                                Installed switches are: %s"
+      (OpamSwitch.to_string switch)
+      (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
+
+let switch_with_autoinstall gt ~packages switch =
+  log "switch switch=%a" (slog OpamSwitch.to_string) switch;
+  let installed_switches = OpamFile.Config.installed_switches gt.config in
+  if List.mem switch installed_switches then
+    let st = OpamSwitchAction.set_current_switch `Lock_write gt switch in
+    let gt = OpamGlobalState.unlock gt in
+    OpamEnv.check_and_print_env_warning st;
+    gt, st
+  else
+    install gt ~update_config:true ~packages switch
 
 let import_t importfile t =
   log "import switch";
@@ -452,10 +453,10 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
-let reinstall gt switch =
+let reinstall init_st =
+  let switch = init_st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
-
-  OpamSwitchState.with_ `Lock_write gt ~switch @@ fun init_st ->
+  let gt = init_st.switch_global in
 
   let switch_root = OpamPath.Switch.root gt.root switch in
   let opam_subdir = OpamPath.Switch.meta gt.root switch in
@@ -472,13 +473,12 @@ let reinstall gt switch =
       installed_roots = OpamPackage.Set.empty;
       reinstall = OpamPackage.Set.empty; }
   in
-  ignore @@
   import_t { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections st;
              overlays = OpamPackage.Name.Map.empty; }
     st
 
-let import gt switch filename =
+let import st filename =
   let import_str = match filename with
     | None   -> OpamSystem.string_of_channel stdin
     | Some f -> OpamFilename.read (OpamFile.filename f)
@@ -493,8 +493,19 @@ let import gt switch filename =
           overlays = OpamPackage.Name.Map.empty }
       with e1 -> OpamStd.Exn.fatal e1; raise e
   in
-  OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-  ignore (import_t importfile st)
+  import_t importfile st
+
+let set_compiler st names =
+  let packages =
+    try List.map (OpamSwitchState.find_installed_package_by_name st) names
+    with Not_found ->
+      OpamConsole.error_and_exit "These packages are not installed: %s"
+        (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
+           (List.filter (not @* OpamSwitchState.is_name_installed st) names))
+  in
+  let st = { st with compiler_packages = OpamPackage.Set.of_list packages } in
+  OpamSwitchAction.write_selections st;
+  st
 
 let guess_compiler_package rt name =
   let package_index =

@@ -435,6 +435,28 @@ let enum_with_default sl: 'a Arg.converter =
     | _ -> `Ok (`default s) in
   parse, print
 
+let opamlist_column =
+  let parse str =
+    if OpamStd.String.ends_with ~suffix:":" str then
+      let fld = OpamStd.String.remove_suffix ~suffix:":" str in
+      `Ok (OpamListCommand.Field fld)
+    else
+    try
+      List.find (function (OpamListCommand.Field _), _ -> false
+                        | _, name -> name = str)
+        OpamListCommand.field_names
+      |> fun (f, _) -> `Ok f
+    with Not_found ->
+      `Error (Printf.sprintf
+                "No known printer for column %s. If you meant an opam file \
+                 field, use '%s:' instead (with a trailing colon)."
+                str str)
+  in
+  let print ppf field =
+    Format.pp_print_string ppf (OpamListCommand.string_of_field field)
+  in
+  parse, print
+
 (* Helpers *)
 let mk_flag ?section flags doc =
   let doc = Arg.info ?docs:section ~doc flags in

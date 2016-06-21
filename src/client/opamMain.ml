@@ -164,7 +164,9 @@ let init =
       let packages =
         OpamSwitchCommand.guess_compiler_package rt compiler
       in
-      OpamSwitchCommand.switch gt ~packages (OpamSwitch.of_string compiler)
+      OpamSwitchCommand.switch_with_autoinstall
+        gt ~packages (OpamSwitch.of_string compiler)
+      |> ignore
   in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_url
@@ -180,28 +182,36 @@ let list =
     `P "This command displays the list of installed packages when called \
         without argument, or the list of available packages matching the \
         given pattern.";
-    `P "Unless the $(b,--short) switch is used, the output format displays one \
-        package per line, and each line contains the name of the package, the \
-        installed version or -- if the package is not installed, and a short \
-        description. In color mode, root packages (eg. manually installed) are \
-        underlined.";
+    `P "In color mode, root packages (eg. manually installed) are \
+        underlined, and versions are shown in blue instead of magenta \
+        for pinned packages.";
     `P "The full description can be obtained by doing $(b,opam show <package>). \
         You can search through the package descriptions using the $(b,opam search) \
         command."
   ] in
-  let all =
-    mk_flag ["a";"all"]
-      "List all the packages which can be installed on the system. This is \
-       the default when a query argument is supplied." in
-  let installed =
-    mk_flag ["i";"installed"]
-      "List installed packages only. This is the the default when no argument \
-       is supplied. With `--resolve', means \"compute a solution from the \
-       currently installed packages\" instead." in
-  let unavailable =
-    mk_flag ["A";"unavailable"]
-      "List all packages, even those which can't be installed on the system" in
-  let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
+  let state_selector =
+    Arg.(value & vflag_all [] [
+        OpamListCommand.Any, info ["A";"all"]
+          ~doc:"Include all, even uninstalled or unavailable packages";
+        OpamListCommand.Installed, info ["i";"installed"]
+          ~doc:"List installed packages only. This is the default when no \
+                further arguments are supplied";
+        OpamListCommand.Root, info ["roots";"installed-roots"]
+          ~doc:"List only packages that were explicitely installed, excluding \
+                the ones installed as dependencies";
+        OpamListCommand.Available, info ["a";"available"]
+          ~doc:"List only packages that are available on the current system. \
+                This is the default for non-empty queries.";
+        OpamListCommand.Installable, info ["installable"]
+          ~doc:"List only packages that can be installed on the current switch \
+                (this calls the solver and may be more costly)";
+        OpamListCommand.Compiler, info ["compiler"]
+          ~doc:"List only the immutable base of the current switch (i.e. \
+                compiler packages)";
+        OpamListCommand.Pinned, info ["pinned"]
+          ~doc:"List only the pinned packages";
+      ])
+  in
   let depends_on =
     let doc = "List only packages that depend on one of (comma-separated) $(docv)." in
     Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
@@ -236,8 +246,25 @@ let list =
   let dev =
     mk_flag ["dev"] "Include development packages in dependencies."
   in
+  let repos =
+    mk_opt ["repos"] "REPOS"
+      "Include only packages that took their origin from one of the given \
+       repositories (unless $(i,no-switch) is also specified, this excludes \
+       pinned packages)."
+      Arg.(some & list & repository_name) None
+  in
+  let field_match =
+    mk_opt ["field-match"] "FIELD:PATTERN"
+      "Filter packages with a match for $(b,PATTERN) on the given $(b,FIELD)"
+      Arg.(some & pair ~sep:':' string string) None
+  in
+  let no_switch =
+    mk_flag ["no-switch"]
+      "List what is available from the repositories, without consideration for \
+       the current (or any other) switch (installed or pinned packages, etc.)"
+  in
   let depexts =
-    mk_opt ["e";"external"] "TAGS" ~vopt:(Some [])
+    mk_opt ["e";"external"] "TAGS"
       "Instead of displaying the packages, display their external dependencies \
        that are associated with any subset of the given $(i,TAGS) (OS, \
        distribution, etc.). \
@@ -248,49 +275,127 @@ let list =
        `depext' plugin, that can infer your system's tags and handle \
        the system installations. Run `opam depext'."
       Arg.(some & list string) None in
-  let list global_options print_short all installed
-      installed_roots unavailable sort
-      depends_on required_by resolve recursive depopts depexts dev
+  let print_short =
+    mk_flag ["short";"s"]
+      "Don't print a header, and sets the default columns to $(b,name) only."
+  in
+  let sort =
+    mk_flag ["sort";"S"]
+      "Sort the packages in dependency order (i.e. an order in which they \
+       could be individually installed.)"
+  in
+  let columns =
+    mk_opt ["columns"] "COLUMNS"
+      (Printf.sprintf "Select the columns to display among: %s.\n\
+                       The default is $(b,name) when $(i,--short) is present \
+                       and %s otherwise."
+         (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
+            OpamListCommand.field_names)
+         (OpamStd.List.concat_map ", "
+            (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
+            OpamListCommand.default_list_format))
+      Arg.(some & list opamlist_column) None
+  in
+  let all_versions = mk_flag ["all-versions"]
+      "Print all matching versions, instead of a single version per package"
+  in
+  let separator =
+    Arg.(value & opt string " " & info ["separator"] ~docv:"STRING"
+           ~doc:"Set the column-separator string (the default is a space)")
+  in
+  let list global_options state_selector field_match
+      depends_on required_by resolve recursive depopts no_switch
+      depexts dev repos
+      print_short sort columns all_versions separator
       packages =
     apply_global_options global_options;
-    let filter =
-      match unavailable, all, installed, installed_roots with
-      | true,  false, false, false -> Some `all
-      | false, true,  false, false -> Some `installable
-      | false, false, true,  false -> Some `installed
-      | false, false, _,     true  -> Some `roots
-      | false, false, false, false ->
-        if depends_on = [] && required_by = [] && resolve = [] && packages = []
-        then Some `installed else Some `installable
-      | _ -> None
+    let no_switch =
+      no_switch || OpamStateConfig.(!r.current_switch) = None
     in
-    let order = if sort then `depends else `normal in
-    match filter, (depends_on, required_by, resolve) with
-    | Some filter, (depends, [], [] | [], depends, [] | [], [], depends) ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.list gt
-        ~print_short ~filter ~order
-        ~exact_name:true ~case_sensitive:false
-        ~depends ~reverse_depends:(depends_on <> [])
-        ~resolve_depends:(resolve <> [])
-        ~recursive_depends:recursive
-        ~depopts ?depexts ~dev
-        packages;
-      `Ok ()
-    | None, _ ->
-      `Error (true, "Conflicting filters: only one of --all, --installed and \
-                     --installed-roots may be given at a time")
-    | _ ->
-      (* That would be fairly doable with a change of interface if needed *)
-      `Error (true, "Sorry, only one of --depends-on, --required-by and \
-                     --resolve are allowed at a time")
+    let state_selector =
+      if state_selector = [] then
+        if no_switch then []
+        else if
+          depends_on = [] && required_by = [] && resolve = [] &&
+          packages = [] && field_match = None
+        then [OpamListCommand.Installed]
+        else [OpamListCommand.Available]
+      else state_selector
+    in
+    let dependency_toggles = {
+      OpamListCommand.
+      recursive; depopts; build = true; test = false; doc = false; dev
+    } in
+    let pattern_toggles = {
+      OpamListCommand.
+      exact = true;
+      case_sensitive = false;
+      fields = ["name"];
+      glob = true;
+      ext_fields = false;
+    } in
+    let filter =
+      OpamFormula.ands
+        (List.map (fun x -> Atom x)
+           (state_selector @
+            (match depends_on with [] -> [] | deps ->
+                [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+            (match required_by with [] -> [] | rdeps ->
+                [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+            (match resolve with [] -> [] | deps ->
+                [OpamListCommand.Solution (dependency_toggles, deps)]) @
+            (if no_switch then [] else
+             match repos with None -> [] | Some repos ->
+               [OpamListCommand.From_repository repos]) @
+            (match field_match with None -> [] | Some (field,patt) ->
+                [OpamListCommand.Pattern
+                   ({pattern_toggles with OpamListCommand.
+                                       exact = false;
+                                       fields = [field]},
+                    patt)])) @
+         [OpamFormula.ors
+            (List.map (fun patt ->
+                 Atom (OpamListCommand.Pattern (pattern_toggles, patt)))
+                packages)])
+    in
+    let format =
+      match columns with
+      | Some c -> c
+      | None ->
+        if print_short then [OpamListCommand.Name]
+        else OpamListCommand.default_list_format
+    in
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    let st =
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
+      else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
+    in
+
+    if not print_short && filter <> OpamFormula.Empty then
+      OpamConsole.msg "# Packages matching: %s\n"
+        (OpamListCommand.string_of_formula filter);
+    let all = OpamPackage.Set.union st.packages st.installed in
+    let results =
+      OpamListCommand.filter ~base:all st filter
+    in
+    match depexts with
+    | None ->
+      OpamListCommand.display st
+        ~format
+        ~dependency_order:sort
+        ~header:(not print_short)
+        ~all_versions
+        ~separator
+        ~prettify_fields:false
+        results
+    | Some tags_list ->
+      OpamListCommand.print_depexts st results tags_list
   in
-  Term.ret
-    Term.(pure list $global_options
-          $print_short_flag $all $installed $installed_roots_flag
-          $unavailable $sort
-          $depends_on $required_by $resolve $recursive $depopts $depexts $dev
-          $pattern_list),
+  Term.(pure list $global_options $state_selector $field_match
+        $depends_on $required_by $resolve $recursive $depopts
+        $no_switch $depexts $dev $repos
+        $print_short $sort $columns $all_versions $separator $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -1023,7 +1128,9 @@ let switch =
     "remove", `remove, ["SWITCH"], "Remove the given compiler.";
     "export", `export, ["FILE"],
     "Save the current switch state to a file.";
-    "import", `import, ["FILE"], "Import a saved switch state.";
+    "import", `import, ["FILE"],
+    "Import a saved switch state. If $(b,--switch) is specified and doesn't \
+     point to an existing switch, the switch will be created for the import.";
     "reinstall", `reinstall, ["SWITCH"],
     "Reinstall the given compiler switch. This will also reinstall all \
      packages.";
@@ -1034,6 +1141,9 @@ let switch =
      Note that $(b,--packages) can be used to switch to any packages, not only \
      the ones with the \"compiler\" flag set that this command shows.";
     "show", `current, [], "Show the current compiler.";
+    "set-compiler", `set_compiler, ["NAMES"],
+    "Sets the packages forming the immutable base for the selected switch, \
+     overriding the current setting. The packages must be installed already.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1068,17 +1178,21 @@ let switch =
       "When listing, show all the available compiler packages, not just the \
        standard ones." in
   let packages =
-    mk_opt ["packages"] "PKGS"
+    mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
        as the compiler."
       Arg.(some (list atom)) None in
   let empty =
     mk_flag ["empty"]
       "Allow creating an empty (without compiler) switch." in
+  let no_autoinstall =
+    mk_flag ["no-autoinstall"]
+      "On 'switch set', fail if the switch doesn't exist already rather than \
+       install a new one." in
 
   let switch global_options
       build_options command alias_of print_short installed all
-      no_switch packages empty params =
+      no_switch no_autoinstall packages empty params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1107,10 +1221,13 @@ let switch =
       `Ok ()
     | Some `install, [switch] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      OpamSwitchCommand.install gt
-        ~update_config:(not no_switch)
-        ~packages:(compiler_packages gt switch)
-        (OpamSwitch.of_string switch);
+      let _gt, st =
+        OpamSwitchCommand.install gt
+          ~update_config:(not no_switch)
+          ~packages:(compiler_packages gt switch)
+          (OpamSwitch.of_string switch)
+      in
+      ignore (OpamSwitchState.unlock st);
       `Ok ()
     | Some `export, [filename] ->
       OpamSwitchCommand.export
@@ -1119,10 +1236,26 @@ let switch =
       `Ok ()
     | Some `import, [filename] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.import gt
-        (OpamStateConfig.get_switch ())
-        (if filename = "-" then None
-         else Some (OpamFile.make (OpamFilename.of_string filename)));
+      let switch = OpamStateConfig.get_switch () in
+      let installed_switches = OpamFile.Config.installed_switches gt.config in
+      let gt =
+        if not (List.mem switch installed_switches) then
+          OpamGlobalState.with_write_lock gt @@ fun gt ->
+          OpamSwitchAction.create_empty_switch gt switch
+          |> OpamGlobalState.unlock
+        else gt
+      in
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let _st =
+        try
+          OpamSwitchCommand.import st
+            (if filename = "-" then None
+             else Some (OpamFile.make (OpamFilename.of_string filename)))
+        with e ->
+          OpamConsole.warning "Switch %s may have been left partially installed"
+            (OpamSwitch.to_string switch);
+          raise e
+      in
       `Ok ()
     | Some `remove, switches ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -1135,9 +1268,10 @@ let switch =
       in
       `Ok ()
     | Some `reinstall, [switch] ->
+      let switch = OpamSwitch.of_string switch in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.reinstall gt
-        (OpamSwitch.of_string switch);
+      OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
+      let _st = OpamSwitchCommand.reinstall st in
       `Ok ()
     | Some `current, [] ->
       OpamSwitchCommand.show ();
@@ -1157,16 +1291,28 @@ let switch =
           OpamConsole.msg "Switch already installed, nothing to do.\n"
         else
           OpamSwitchCommand.install gt ~update_config:false
-            ~packages switch_name
+            ~packages switch_name |> ignore
+      else if no_autoinstall then
+        OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore
       else
-        OpamSwitchCommand.switch gt ~packages switch_name;
+        OpamSwitchCommand.switch_with_autoinstall gt ~packages switch_name
+        |> ignore;
       `Ok ()
+    | Some `set_compiler, packages ->
+      (try
+         let names = List.map OpamPackage.Name.of_string packages in
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let _st = OpamSwitchCommand.set_compiler st names in
+         `Ok ()
+       with Failure e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_switch $packages $empty $params)),
+             $installed $all $no_switch $no_autoinstall
+             $packages $empty $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
