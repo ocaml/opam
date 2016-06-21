@@ -1955,12 +1955,7 @@ let check_and_run_external_commands () =
               candidates
           in
           let installed = OpamPackage.Set.inter plugins st.installed in
-          if OpamPackage.Set.is_empty candidates then
-            (* !X FIXME: here we loaded a full switch state and discard it, to go on
-               if the command was a valid _prefix_ of an opam command. We should
-               assume prefixes can't be plugins! Or at least not auto-installable
-               ones *)
-            ()
+          if OpamPackage.Set.is_empty candidates then ()
           else if not OpamPackage.Set.(is_empty installed) then
             (OpamConsole.error
                "Plugin %s is already installed, but no %s command was found.\n\

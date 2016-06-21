@@ -687,7 +687,6 @@ let slog = OpamConsole.slog
         OpamConsole.header_msg "Fetching repository information";
         let rt = OpamUpdate.repositories rt [repo] in
         gt, OpamRepositoryState.unlock rt
-        (* FIXME !X: install a switch already ? *)
       with e ->
         OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
