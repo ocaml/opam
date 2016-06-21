@@ -220,61 +220,9 @@ let add_to_installed st ?(root=false) nv =
     then
       OpamEnv.write_dynamic_init_scripts st;
   );
-  if OpamPackage.Set.mem nv st.compiler_packages &&
-     List.mem Pkgflag_Compiler (OpamFile.OPAM.flags opam)
-  then
-    (* Make package variables global for compiler packages *)
-    (* /!\ !X this can lead to inconsistencies in the 'available:' field of
-       other packages if the values change during e.g. an upgrade of the
-       compiler.
-
-       The only way to avoid this would be to forbid upgrading both the compiler
-       and other packages in one go. But we could at least check 'available:'
-       before preforming the builds and issue a warning when this happens *)
-    let switch_vars = OpamFile.Dot_config.bindings st.switch_config in
-    let pkg_vars = OpamFile.Dot_config.bindings conf in
-    let switch_config =
-      OpamFile.Dot_config.with_vars (pkg_vars @ switch_vars) st.switch_config
-    in
-    if not OpamStateConfig.(!r.dryrun) then
-      install_global_config st.switch_global.root st.switch switch_config;
-    { st with switch_config }
-  else
-    st
+  st
 
 let remove_from_installed st nv =
-  let st =
-    if OpamPackage.Set.mem nv st.compiler_packages &&
-       OpamStd.Option.Op.(
-         OpamPackage.Map.find_opt nv st.installed_opams >>|
-         OpamFile.OPAM.flags >>|
-         List.mem Pkgflag_Compiler
-       ) = Some true
-    then
-      (* Remove gobal variables from this compiler package *)
-      let switch_vars = OpamFile.Dot_config.bindings st.switch_config in
-      let pkg_vars =
-        OpamFile.Dot_config.bindings @@
-        OpamFile.Dot_config.safe_read
-          (OpamPath.Switch.config st.switch_global.root st.switch
-             nv.name)
-      in
-      let rev_vars, _ =
-        List.fold_left (fun (vars,to_remove) (v,_ as binding) ->
-            if List.mem_assoc v to_remove
-            then (vars, List.remove_assoc v to_remove)
-            else (binding::vars, to_remove))
-          ([], pkg_vars) switch_vars
-      in
-      let switch_config =
-        OpamFile.Dot_config.with_vars (List.rev rev_vars) st.switch_config
-      in
-      if not OpamStateConfig.(!r.dryrun) then
-        install_global_config st.switch_global.root st.switch switch_config;
-      { st with switch_config }
-    else
-      st
-  in
   let rm = OpamPackage.Set.remove nv in
   let st =
     update_switch_state st
