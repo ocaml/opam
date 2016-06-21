@@ -110,6 +110,7 @@ val display:
   dependency_order:bool ->
   all_versions:bool ->
   ?separator:string ->
+  ?prettify_fields:bool ->
   package_set -> unit
 
 (** Display all available packages that match any of the regexps. *)
@@ -131,7 +132,8 @@ val info:
   'a global_state ->
   fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
 
-(** Prints the value of an opam field in a shortened way *)
-val mini_field_printer: value -> string
+(** Prints the value of an opam field in a shortened way (with [prettify] -- the
+    default -- puts lists of strings in a format that is easier to read *)
+val mini_field_printer: ?prettify:bool -> value -> string
 
 val string_of_formula: selector OpamFormula.formula -> string

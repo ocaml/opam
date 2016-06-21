@@ -387,6 +387,7 @@ let list =
         ~header:(not print_short)
         ~all_versions
         ~separator
+        ~prettify_fields:false
         results
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list

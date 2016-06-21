@@ -347,16 +347,15 @@ let version_color st nv =
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
     (if is_available nv then [] else [`crossed;`red])
 
-let mini_field_printer = function
+let mini_field_printer ?(prettify=true) = function
   | String (_, s) -> s
-  | List (_, l) ->
-    (try OpamStd.List.concat_map ", "
-           (function String (_, s) -> s | _ -> raise Exit)
-           l
-     with Exit -> OpamFormat.Print.value_list l)
+  | List (_, l) when prettify &&
+                     List.for_all (function String _ -> true | _ -> false) l ->
+    OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
+  | List (_, l) -> OpamFormat.Print.value_list l
   | f -> OpamFormat.Print.value f
 
-let detail_printer st nv =
+let detail_printer ?prettify_fields st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
@@ -398,7 +397,7 @@ let detail_printer st nv =
   | Field f ->
     (try
        List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
-       mini_field_printer
+       mini_field_printer ?prettify:prettify_fields
      with Not_found -> "")
   | Installed_version ->
     (try OpamPackage.package_of_name st.installed nv.name |> fun inst_nv ->
@@ -460,7 +459,7 @@ let detail_printer st nv =
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?(separator=" ")
-    packages =
+    ?prettify_fields packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -490,7 +489,9 @@ let display
       :: l
     else l
   in
-  List.rev_map (fun nv -> List.map (detail_printer st nv) format) packages |>
+  List.rev_map
+    (fun nv -> List.map (detail_printer ?prettify_fields st nv) format)
+    packages |>
   List.rev |>
   add_head |>
   OpamStd.Format.align_table |>
