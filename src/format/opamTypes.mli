@@ -180,6 +180,11 @@ type filter =
   | FOr of filter * filter
   | FNot of filter
   | FUndef of filter
+  (** Returned by reduce functions when the filter could not be resolved to an
+      atom (due to undefined variables or string expansions). The argument
+      contains the partially reduced filter, where strings may still contain
+      expansions (and are otherwise escaped). Used both for partial evaluation,
+      and error messaging. Not allowed as an argument to other filters *)
 
 (** {2 Filtered formulas (to express conditional dependencies)}
 
