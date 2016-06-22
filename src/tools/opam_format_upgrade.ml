@@ -51,6 +51,8 @@ let process args =
       OpamStd.String.Map.empty
   in
 
+  let ocaml_pkgname = OpamPackage.Name.of_string "ocaml" in
+
   OpamStd.String.Map.iter (fun c comp_file ->
       let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
       let descr_file =
@@ -69,10 +71,7 @@ let process args =
              (OpamFile.Comp.packages comp))
           comp
       in
-      let opam =
-        OpamFile.Comp.to_package (OpamPackage.Name.of_string "ocaml")
-          comp descr
-      in
+      let opam = OpamFile.Comp.to_package ocaml_pkgname comp descr in
       let nv = OpamFile.OPAM.package opam in
       let patches = OpamFile.Comp.patches comp in
       if patches <> [] then
@@ -199,12 +198,7 @@ let process args =
                OpamConsole.error "Unconvertible 'available' field in %s"
                  (OpamFile.to_string opam_file);
                f)
-          | FIdent ([],var,r) as id ->
-            if OpamStd.String.starts_with ~prefix:"ocaml-"
-                (OpamVariable.to_string var)
-            then Some (FIdent ([OpamPackage.Name.of_string "ocaml"], var, r))
-            else Some id
-          | (FIdent (_::_,_,_) | FUndef _ | FBool _ | FString _) as f -> Some f
+          | (FIdent _ | FUndef _ | FBool _ | FString _) as f -> Some f
         in
         let rem_available =
           OpamStd.Option.default (FBool true) (aux available)
@@ -213,8 +207,8 @@ let process args =
       in
       let depends =
         let depends = OpamFile.OPAM.depends opam in
-        let pkgname = OpamPackage.Name.of_string "ocaml" in
-        if OpamFormula.fold_left (fun found (name,_) -> found || name = pkgname)
+        if OpamFormula.fold_left
+            (fun found (name,_) -> found || name = ocaml_pkgname)
             false depends
         then depends
         else
@@ -225,11 +219,31 @@ let process args =
             depends;
           ]
       in
+      let rewrite_var v =
+        let mkvar s =
+          OpamVariable.Full.create ocaml_pkgname (OpamVariable.of_string s)
+        in
+        match OpamVariable.Full.scope v with
+        | OpamVariable.Full.Global ->
+          (match OpamVariable.(to_string (Full.variable v)) with
+           | "compiler" -> mkvar "compiler"
+           | "preinstalled" -> mkvar "preinstalled"
+           | "ocaml-version" -> mkvar "version"
+           | "ocaml-native" -> mkvar "native"
+           | "ocaml-native-tools" -> mkvar "native-tools"
+           | "ocaml-native-dynlink" -> mkvar "native-dynlink"
+           | _ -> v)
+        | _ -> v
+      in
+      (* todo: ocaml vars in [available:] *)
       if OpamPackage.name_to_string nv <> "ocaml" then
-        let opam = OpamFile.OPAM.with_depends depends opam in
-        let opam = OpamFile.OPAM.with_available available opam in
-        if opam <> opam0 then
-          (OpamFile.OPAM.write_with_preserved_format opam_file opam;
-           OpamConsole.msg "Updated %s\n" (OpamFile.to_string opam_file))
+        opam |>
+        OpamFile.OPAM.with_depends depends |>
+        OpamFile.OPAM.with_available available |>
+        OpamFileTools.map_all_variables rewrite_var |>
+        fun opam ->
+          if opam <> opam0 then
+            (OpamFile.OPAM.write_with_preserved_format opam_file opam;
+             OpamConsole.msg "Updated %s\n" (OpamFile.to_string opam_file))
     )
     packages

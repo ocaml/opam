@@ -47,3 +47,7 @@ val read_opam: dirname -> OpamFile.OPAM.t option
     the opam file's metadata dir (only files and hashes are included for files
     below files/) *)
 val add_aux_files: ?dir:dirname -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+(** {2 Tools to manipulate the [OpamFile.OPAM.t] contents} *)
+val map_all_variables:
+  (full_variable -> full_variable) -> OpamFile.OPAM.t -> OpamFile.OPAM.t

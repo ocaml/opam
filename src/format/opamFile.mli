@@ -412,6 +412,10 @@ module OPAM: sig
   (** Construct as [build] *)
   val with_build: command list -> t -> t
 
+  val with_build_test: command list -> t -> t
+
+  val with_build_doc: command list -> t -> t
+
   val with_install: command list -> t -> t
 
   (** Construct as [remove] *)

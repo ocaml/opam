@@ -39,6 +39,9 @@ val to_string: filter -> string
 (** Folds on the tree of a filter *)
 val fold_down_left: ('a -> filter -> 'a) -> 'a -> filter -> 'a
 
+(** Maps on all nodes of a filter, bottom-up *)
+val map_up: (filter -> filter) -> filter -> filter
+
 (** Returns all the variables appearing in a filter (including the ones within
     string interpolations *)
 val variables: filter -> full_variable list
@@ -50,10 +53,30 @@ type env = full_variable -> variable_contents option
     names and optional string converter *)
 type fident = name list * variable * (string * string) option
 
+(** Maps on all variables appearing in a filter. The case where package
+    variables are renamed differently and appear in a filter ident of the form
+    [%{pkg1+pkg2:var}%] is not supported and raises [Invalid_argument]. *)
+val map_variables: (full_variable -> full_variable) -> filter -> filter
+
+(** Same limitation as [map_variables] *)
+val map_variables_in_string:
+  (full_variable -> full_variable) -> string -> string
+
+(** Does not handle rewriting the variables to different names (which can't be
+    expressed with a [fident] anymore), and raises [Invalid_argument] *)
+val map_variables_in_fident:
+  (full_variable -> full_variable) -> fident -> fident
+
 (** Rewrites string interpolations within a string. [default] is applied to the
     fident string (e.g. what's between [%{] and [}%]) when the expansion is
-    undefined. If unspecified, this raises [Failure]. *)
-val expand_string: ?default:(string -> string) -> env -> string -> string
+    undefined. If unspecified, this raises [Failure].
+
+    With [partial], [default] defaults to the identity, and is otherwise
+    expected to return a fident. In this case, the returned string is supposed
+    to be expanded again (expansion results are escaped, escapes are otherwise
+    kept). This makes the function idempotent *)
+val expand_string:
+  ?partial:bool -> ?default:(string -> string) -> env -> string -> string
 
 (** Returns the (beginning, end) offsets and substrings of any unclosed [%{]
     expansions *)
@@ -74,6 +97,9 @@ val opt_eval_to_bool: env -> filter option -> bool
 
 (** Like [to_value] but casts the result to a string *)
 val eval_to_string: ?default:string -> env -> filter -> string
+
+(** Reduces what can be, keeps the rest unchanged *)
+val partial_eval: env -> filter -> filter
 
 (** Wraps a full_variable into a fident accessor *)
 val ident_of_var: full_variable -> fident
@@ -113,6 +139,8 @@ val of_formula: ('a -> filter) -> 'a generic_formula -> filter
     functions if undefined and [default] is not given. *)
 val filter_formula: ?default:bool -> env -> filtered_formula -> formula
 
+(** Reduces according to what is defined in [env], and returns the simplified
+    formula *)
 val partial_filter_formula: env -> filtered_formula -> filtered_formula
 
 val string_of_filtered_formula: filtered_formula -> string

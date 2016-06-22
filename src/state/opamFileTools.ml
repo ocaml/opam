@@ -14,10 +14,121 @@ open OpamTypesBase
 
 let log fmt = OpamConsole.log "opam-file" fmt
 
+open OpamFile.OPAM
+
+(** manipulation utilities *)
+
+let names_of_formula flag f =
+  OpamPackageVar.filter_depends_formula
+    ~build:true ~dev:true ~test:flag ~doc:flag ~default:false
+    ~env:OpamStd.Option.none f
+  |> OpamFormula.atoms
+  |> List.map fst
+  |> OpamPackage.Name.Set.of_list
+
+let all_commands t =
+  t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
+
+let all_filters t =
+  OpamStd.List.filter_map snd t.patches @
+  OpamStd.List.filter_map snd t.messages @
+  OpamStd.List.filter_map snd t.post_messages @
+  [t.available] @
+  OpamFormula.fold_left (fun acc (_, f) ->
+      OpamFormula.fold_left (fun acc -> function
+          | Constraint (_,f) -> f :: acc
+          | Filter f -> f :: acc)
+        acc f)
+    [] (OpamFormula.ands [t.depends; t.depopts]) @
+  List.map (fun (_,_,f) -> f) t.features
+
+let all_variables t =
+  OpamFilter.commands_variables (all_commands t) @
+  List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
+    [] (all_filters t)
+
+let map_all_variables f t =
+  let map_optfld = function
+    | x, Some flt -> x, Some (OpamFilter.map_variables f flt)
+    | _, None as optfld -> optfld
+  in
+  let map_commands =
+    let map_args =
+      List.map
+        (fun (s, filter) ->
+           (match s with
+            | CString s -> CString (OpamFilter.map_variables_in_string f s)
+            | CIdent id ->
+              let id =
+                try filter_ident_of_string id |>
+                    OpamFilter.map_variables_in_fident f |>
+                    string_of_filter_ident
+                with Failure _ -> id
+              in
+              CIdent id),
+           OpamStd.Option.Op.(filter >>| OpamFilter.map_variables f))
+    in
+    List.map
+      (fun (args, filter) ->
+         map_args args,
+         OpamStd.Option.Op.(filter >>| OpamFilter.map_variables f))
+  in
+  let map_filtered_formula =
+    OpamFormula.map (fun (name, fc) ->
+        let fc =
+          OpamFormula.map (function
+              | Filter flt ->
+                Atom (Filter (OpamFilter.map_variables f flt))
+              | Constraint (relop, flt) ->
+                Atom (Constraint (relop, (OpamFilter.map_variables f flt))))
+            fc
+        in
+        Atom (name, fc)
+      )
+  in
+  let map_features =
+    List.map (fun (var, doc, filter) ->
+        let var = f (OpamVariable.Full.self var) in
+        assert OpamVariable.Full.(scope var = Self);
+        OpamVariable.Full.variable var,
+        doc,
+        OpamFilter.map_variables f filter)
+  in
+  t |>
+  with_patches (List.map map_optfld t.patches) |>
+  with_messages (List.map map_optfld t.messages) |>
+  with_post_messages (List.map map_optfld t.post_messages) |>
+  with_build (map_commands t.build) |>
+  with_build_test (map_commands t.build_test) |>
+  with_build_doc (map_commands t.build_doc) |>
+  with_install (map_commands t.install) |>
+  with_remove (map_commands t.remove) |>
+  with_depends (map_filtered_formula t.depends) |>
+  with_depopts (map_filtered_formula t.depopts) |>
+  with_available (OpamFilter.map_variables f t.available) |>
+  with_features (map_features t.features)
+
+let all_expanded_strings t =
+  List.map fst t.messages @
+  List.map fst t.post_messages @
+  List.fold_left (fun acc (args, _) ->
+      List.fold_left
+        (fun acc -> function CString s, _ -> s :: acc | _ -> acc)
+        acc args)
+    [] (all_commands t) @
+  List.fold_left
+    (OpamFilter.fold_down_left
+       (fun acc -> function FString s -> s :: acc | _ -> acc))
+    [] (all_filters t)
+
+let all_depends t =
+  OpamPackage.Name.Set.union
+    (names_of_formula true t.depends)
+    (names_of_formula true t.depopts)
+
 (* Templating & linting *)
 
 let template nv =
-  let open OpamFile.OPAM in
   let maintainer =
     let from_git = try
         match
@@ -73,7 +184,6 @@ let template nv =
   |> with_bug_reports [""]
 
 let lint t =
-  let open OpamFile.OPAM in
   let cond num level msg ?detail cd =
     if cd then
       let msg = match detail with
@@ -84,53 +194,10 @@ let lint t =
       Some (num, level, msg)
     else None
   in
-  let names_of_formula flag f =
-    OpamPackageVar.filter_depends_formula
-      ~build:true ~dev:true ~test:flag ~doc:flag ~default:false
-      ~env:OpamStd.Option.none f
-    |> OpamFormula.atoms
-    |> List.map fst
-    |> OpamPackage.Name.Set.of_list
-  in
-  let all_commands =
-    t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
-  in
-  let all_filters =
-    OpamStd.List.filter_map snd t.patches @
-    OpamStd.List.filter_map snd t.messages @
-    OpamStd.List.filter_map snd t.post_messages @
-    [t.available] @
-    OpamFormula.fold_left (fun acc (_, f) ->
-        OpamFormula.fold_left (fun acc -> function
-            | Constraint (_,f) -> f :: acc
-            | Filter f -> f :: acc)
-          acc f)
-      [] (OpamFormula.ands [t.depends; t.depopts]) @
-    List.map (fun (_,_,f) -> f) t.features
-  in
-  let all_variables =
-    OpamFilter.commands_variables all_commands @
-    List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
-      [] all_filters
-  in
-  let all_expanded_strings =
-    List.map fst t.messages @
-    List.map fst t.post_messages @
-    List.fold_left (fun acc (args, _) ->
-        List.fold_left
-          (fun acc -> function CString s, _ -> s :: acc | _ -> acc)
-          acc args)
-      [] all_commands @
-    List.fold_left
-      (OpamFilter.fold_down_left
-         (fun acc -> function FString s -> s :: acc | _ -> acc))
-      [] all_filters
-  in
-  let all_depends =
-    OpamPackage.Name.Set.union
-      (names_of_formula true t.depends)
-      (names_of_formula true t.depopts)
-  in
+  let all_commands = all_commands t in
+  let all_variables = all_variables t in
+  let all_expanded_strings = all_expanded_strings t in
+  let all_depends = all_depends t in
   let warnings = [
     cond 20 `Warning
       "Field 'opam-version' refers to the patch version of opam, it \
