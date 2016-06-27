@@ -162,8 +162,10 @@ let process args =
         let available = OpamFile.OPAM.available opam in
         let rec aux = function
           | FOp (FIdent ([],var,None), op, FString v)
-            when OpamVariable.to_string var = "ocaml-version" ->
-            Atom (Constraint (op, FString v))
+          | FOp (FString v; op, FIdent ([],var,None)) ->
+            (match OpamVariable.to_string var with
+             | "ocaml-version" -> Atom (Constraint (op, FString v))
+             | _ -> Empty)
           | FNot f ->
             OpamFormula.neg (function
                 | Constraint (op,v) -> Constraint (OpamFormula.neg_relop op, v)
