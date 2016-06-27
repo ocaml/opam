@@ -92,7 +92,10 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
           f 0
       in
       log ~level:3 "result: %S" r; r in
-    if List.exists (fun s -> try String.index s '"' >= 0 with Not_found -> false) argv then
+    (* Setting noglob is causing some problems for ocamlbuild invoking Cygwin's
+       find. The reason for using it is to try to keep command line lengths
+       below the maximum, but for now disable the use of noglob. *)
+    if true || List.exists (fun s -> try String.index s '"' >= 0 with Not_found -> false) argv then
       ("\"" ^ String.concat "\" \"" (List.map (gen_quote ~quote:"\"" ~pre:"\"'" ~post:"'\"") argv) ^ "\"", false)
     else
       (String.concat " " (List.map (gen_quote ~quote:"\b\r\n " ~pre:"\"") argv), true) in
