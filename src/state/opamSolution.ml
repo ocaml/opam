@@ -385,6 +385,14 @@ let parallel_apply t action action_graph =
     PackageActionGraph.explicit action_graph
   in
 
+  let minimal_switch_state =
+    PackageActionGraph.fold_vertex
+      (fun a acc ->
+         match a with
+         | `Remove nv -> OpamSwitchAction.remove_from_installed acc nv
+         | _ -> acc)
+      action_graph t in
+
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
   let job ~pred action =
@@ -405,11 +413,13 @@ let parallel_apply t action action_graph =
         let t0 = Unix.gettimeofday () in
         fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
       in
-      let visible_installed =
-        OpamPackage.Set.Op.(t.installed -- removed ++ installed)
-      in
-      let t = (* Local state for this process, only prerequisites are visible *)
-        { t with installed = visible_installed; }
+      let t =
+        (* Local state for this process, only prerequisites are visible *)
+        OpamPackage.Set.fold
+          (fun nv acc ->
+             let root = OpamPackage.Name.Set.mem nv.name root_installs in
+             OpamSwitchAction.add_to_installed acc ~root nv)
+          installed minimal_switch_state
         (* !X note : t.switch_config.bindings should be updated as well to
            handle compiler upgrades better *)
       in
