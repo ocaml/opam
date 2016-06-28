@@ -45,7 +45,7 @@ module Make (A: ACTION) : SIG with type package = A.package
 (** Some messages that may be used for displaying actions. Single utf8 chars if
     the corresponding option is set, otherwise words. *)
 val action_strings:
-  ?utf8:bool -> 'a highlevel_action -> string
+  ?utf8:bool -> [ 'a highlevel_action | `Build of 'a ] -> string
 
 (** Colorise string according to the action *)
-val action_color: 'a highlevel_action -> string -> string
+val action_color:  [ 'a highlevel_action | `Build of 'a ] -> string -> string

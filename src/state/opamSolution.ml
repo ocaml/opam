@@ -446,7 +446,10 @@ let parallel_apply t action action_graph =
             Done (`Exception exn))
       | `Remove nv ->
         if OpamAction.removal_needs_download t nv then
-          (try OpamAction.extract_package t source nv
+          (try
+             let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+             OpamFilename.rmdir d;
+             OpamAction.extract_package t source nv d
            with e -> OpamStd.Exn.fatal e);
         OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
           (OpamAction.remove_package t nv) @@| fun () ->
@@ -524,6 +527,12 @@ let parallel_apply t action action_graph =
           when not (OpamPackage.has_name t.pinned nv.name) ->
           OpamAction.cleanup_package_artefacts t nv
           (* if reinstalled, only removes build dir *)
+        | `Install nv
+          when not (OpamPackage.has_name t.pinned nv.name) ->
+          let build_dir =
+            OpamPath.Switch.build t.switch_global.root t.switch nv in
+          if not OpamStateConfig.(!r.keep_build_dir) then
+            OpamFilename.rmdir build_dir
         | `Remove _ | `Install _ | `Build _ -> ()
         | _ -> assert false)
       graph

@@ -24,7 +24,7 @@ val download_package:
     downloaded [source] of the package [pkg]. See {!download_package}
     to download the sources. *)
 val extract_package:
-  rw switch_state -> generic_file option -> package -> unit
+  rw switch_state -> generic_file option -> package -> dirname -> unit
 
 (** [build_package t source pkg] builds the package [pkg] from its
     already downloaded [source]. Returns [None] on success, [Some exn]
@@ -46,7 +46,7 @@ val removal_needs_download: 'a switch_state -> package -> bool
     package's change file. if [force] is specified, remove files marked as added
     in [changes] even if the files have been modified since. *)
 val remove_package:
-  rw switch_state -> ?keep_build:bool -> ?silent:bool ->
+  rw switch_state -> ?silent:bool ->
   ?changes:OpamDirTrack.t -> ?force:bool ->
   package -> unit OpamProcess.job
 

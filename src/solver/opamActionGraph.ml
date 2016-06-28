@@ -130,6 +130,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
   include OpamParallel.MakeGraph(A)
 
   module Map = OpamStd.Map.Make (A.Pkg)
+  module Set = OpamStd.Set.Make (A.Pkg)
 
   (* Turn concrete actions (only install, remove and build) to higher-level
      actions (install, remove, up/downgrade, recompile). Builds are removed when
@@ -180,16 +181,59 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
+  let get_dependent_base_package g =
+    let closed_g = copy g in
+    transitive_closure closed_g;
+    let base_packages =
+      fold_vertex (fun a acc ->
+          match a with
+          | `Build p ->
+            if pred g a = [] then Set.add p acc else acc
+          | _ -> acc) g Set.empty
+    in
+    let dependent_base_packages =
+      fold_vertex (fun a acc ->
+          match a with
+          | `Install p | `Reinstall p | `Change (_,_,p) ->
+            let preds =
+              List.filter
+                (function
+                  | `Build p -> Set.mem p base_packages
+                  | _ -> false)
+                (pred closed_g a) in
+            OpamStd.String.Map.add (A.Pkg.name_to_string p) preds acc
+          | _ -> acc) g OpamStd.String.Map.empty in
+    function p ->
+    match
+      OpamStd.String.Map.find_opt
+        (A.Pkg.name_to_string p)
+        dependent_base_packages
+    with
+    | None -> []
+    | Some pred -> pred
+
   let explicit g0 =
     let g = copy g0 in
+    let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
           let b = `Build p in
-          iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
+          iter_pred (function
+              | `Remove p1 when same_name p p1 -> ()
+              | pred -> remove_edge g pred a; add_edge g pred b)
+            g0 a;
           add_edge g b a
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
+    let get_dependent_base_package = get_dependent_base_package g in
+    iter_vertex (function
+        | `Remove p as a ->
+          List.iter
+            (fun b -> add_edge g b a)
+            (get_dependent_base_package p)
+        | `Install _ | `Reinstall _ | `Change _ | `Build _ -> ())
+      g;
     g
 end
