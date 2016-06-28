@@ -50,6 +50,10 @@ val remove_package:
   ?changes:OpamDirTrack.t -> ?force:bool ->
   package -> unit OpamProcess.job
 
+(** Returns [true] whenever [remove_package] is a no-op. *)
+val noop_remove_package:
+  rw switch_state -> package -> bool
+
 (** Removes auxiliary files related to a package, after checking that
     they're not needed (even in other switches) *)
 val cleanup_package_artefacts: rw switch_state -> package -> unit

@@ -36,16 +36,18 @@ module type SIG = sig
       There is no guarantee however that the resulting graph is acyclic. *)
   val reduce: t -> t
 
-  (** Expand install actions, adding a build action preceding them. *)
-  val explicit: t -> t
-end
+  (** Expand install actions, adding a build action preceding them.
+      The argument [noop_remove] is a function that should return `true`
+      for package where the `remove` action is known not to modify the
+      filesystem (such as `conf-*` package). *)
+  val explicit: ?noop_remove:(package -> bool) -> t -> t end
 
 module Make (A: ACTION) : SIG with type package = A.package
 
 (** Some messages that may be used for displaying actions. Single utf8 chars if
     the corresponding option is set, otherwise words. *)
 val action_strings:
-  ?utf8:bool -> [ 'a highlevel_action | `Build of 'a ] -> string
+  ?utf8:bool -> 'a action -> string
 
 (** Colorise string according to the action *)
-val action_color:  [ 'a highlevel_action | `Build of 'a ] -> string -> string
+val action_color: 'a action -> string -> string

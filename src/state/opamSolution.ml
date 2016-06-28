@@ -382,7 +382,9 @@ let parallel_apply t action action_graph =
   (* 2/ process the package actions (installations and removals) *)
 
   let action_graph = (* Add build actions *)
-    PackageActionGraph.explicit action_graph
+    let noop_remove nv =
+      OpamAction.noop_remove_package t nv in
+    PackageActionGraph.explicit ~noop_remove action_graph
   in
 
   let minimal_switch_state =

@@ -121,7 +121,7 @@ module type SIG = sig
   type package
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
-  val explicit: t -> t
+  val explicit: ?noop_remove:(package -> bool) -> t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package = struct
@@ -181,14 +181,29 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
-  let get_dependent_base_package g =
+  let pkg (action: vertex) =
+    match action with
+    | `Build pkg
+    | `Change (_,pkg,_)
+    | `Install pkg
+    | `Reinstall pkg
+    | `Remove pkg -> pkg
+
+  let compute_closed_predecessors noop_remove g =
     let closed_g = copy g in
     transitive_closure closed_g;
-    let base_packages =
+    let closed_packages =
+      (* The set of package that do not have dependencies
+         (in the action graph). *)
       fold_vertex (fun a acc ->
           match a with
           | `Build p ->
-            if pred g a = [] then Set.add p acc else acc
+            let pred =
+              (* We ignore predecessors that do not modify the prefix *)
+              List.filter
+                (fun nv -> not (noop_remove (pkg nv)))
+                (pred closed_g a) in
+            if pred = [] then Set.add p acc else acc
           | _ -> acc) g Set.empty
     in
     let dependent_base_packages =
@@ -198,7 +213,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
             let preds =
               List.filter
                 (function
-                  | `Build p -> Set.mem p base_packages
+                  | `Build p -> Set.mem p closed_packages
                   | _ -> false)
                 (pred closed_g a) in
             OpamStd.String.Map.add (A.Pkg.name_to_string p) preds acc
@@ -212,7 +227,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     | None -> []
     | Some pred -> pred
 
-  let explicit g0 =
+  let explicit ?(noop_remove = (fun _ -> false)) g0 =
     let g = copy g0 in
     let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     iter_vertex (fun a ->
@@ -227,12 +242,12 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
-    let get_dependent_base_package = get_dependent_base_package g in
+    let closed_predecessors = compute_closed_predecessors noop_remove g in
     iter_vertex (function
         | `Remove p as a ->
           List.iter
             (fun b -> add_edge g b a)
-            (get_dependent_base_package p)
+            (closed_predecessors p)
         | `Install _ | `Reinstall _ | `Change _ | `Build _ -> ())
       g;
     g
