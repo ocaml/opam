@@ -181,7 +181,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
-  let get_dependend_base_package g =
+  let get_dependent_base_package g =
     let closed_g = copy g in
     transitive_closure closed_g;
     let base_packages =
@@ -191,7 +191,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
             if pred g a = [] then Set.add p acc else acc
           | _ -> acc) g Set.empty
     in
-    let dependend_base_packages =
+    let dependent_base_packages =
       fold_vertex (fun a acc ->
           match a with
           | `Install p | `Reinstall p | `Change (_,_,p) ->
@@ -207,10 +207,10 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     match
       OpamStd.String.Map.find_opt
         (A.Pkg.name_to_string p)
-        dependend_base_packages
+        dependent_base_packages
     with
-      | None -> []
-      | Some pred -> pred
+    | None -> []
+    | Some pred -> pred
 
   let explicit g0 =
     let g = copy g0 in
@@ -223,12 +223,12 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
-    let get_dependend_base_package = get_dependend_base_package g in
+    let get_dependent_base_package = get_dependent_base_package g in
     iter_vertex (function
         | `Remove p as a ->
           List.iter
             (fun b -> add_edge g b a)
-            (get_dependend_base_package p)
+            (get_dependent_base_package p)
         | `Install _ | `Reinstall _ | `Change _ | `Build _ -> ())
       g;
     g

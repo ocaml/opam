@@ -86,6 +86,10 @@ module Switch: sig
       {i $meta/build/$packages} *)
   val build: t -> switch -> package -> dirname
 
+  (** Temporary folders used to decompress the corresponding archives, used only
+      for package removal {i $meta/remove/$packages} *)
+  val remove: t -> switch -> package -> dirname
+
   (** Temporary folders used to decompress and compile the OCaml
       compiler: {i $meta/build/ocaml} *)
   val build_ocaml: t -> switch -> dirname

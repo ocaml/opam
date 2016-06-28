@@ -145,10 +145,10 @@ let process_dot_install st nv =
 (* Prepare the package build:
    * apply the patches
    * substitute the files *)
-let prepare_package_build st nv =
+let prepare_package_build st nv dir =
   let opam = OpamSwitchState.opam st nv in
 
-  (* Substitute the patched files.*)
+  (* Substitute the patched files. *)
   let patches = OpamFile.OPAM.patches opam in
 
   let iter_patches f =
@@ -173,10 +173,8 @@ let prepare_package_build st nv =
     ignore (iter_patches print_apply)
   else
 
-  let p_build = OpamPath.Switch.build st.switch_global.root st.switch nv in
-
-  OpamFilename.mkdir p_build;
-  OpamFilename.in_dir p_build (fun () ->
+  OpamFilename.mkdir dir;
+  OpamFilename.in_dir dir (fun () ->
     let all = OpamFile.OPAM.substs opam in
     let patches =
       OpamStd.List.filter_map (fun (f,_) ->
@@ -193,14 +191,14 @@ let prepare_package_build st nv =
       let root = OpamPath.Switch.build st.switch_global.root st.switch nv in
       let patch = root // OpamFilename.Base.to_string base in
       print_apply base;
-      OpamFilename.patch patch p_build)
+      OpamFilename.patch patch dir)
   in
 
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the
      substitution files (see [substitute_file] and
      [OpamFilename.of_basename]. *)
-  OpamFilename.in_dir p_build (fun () ->
+  OpamFilename.in_dir dir (fun () ->
     List.iter
       (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve ~opam st))
       (OpamFile.OPAM.substs opam)
@@ -249,19 +247,17 @@ let download_package st nv =
   in
   OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
 
-let extract_package st source nv =
+let extract_package st source nv destdir =
   log "extract_package: %a from %a"
     (slog OpamPackage.to_string) nv
     (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
     source;
   if OpamStateConfig.(!r.dryrun) then () else
-  let build_dir = OpamPath.Switch.build st.switch_global.root st.switch nv in
-  OpamFilename.rmdir build_dir;
   let () =
     match source with
     | None -> ()
-    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:build_dir
-    | Some (F archive) -> OpamFilename.extract archive build_dir
+    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:destdir
+    | Some (F archive) -> OpamFilename.extract archive destdir
   in
   let is_repackaged_archive =
     Some (F (OpamPath.archive st.switch_global.root nv)) = source
@@ -281,17 +277,17 @@ let extract_package st source nv =
           OpamDownload.download_as
             ~overwrite:true
             ~checksum url
-            (OpamFilename.create build_dir fname))
+            (OpamFilename.create destdir fname))
       (OpamFile.OPAM.extra_sources opam);
 
     List.iter (fun (src,base,hash) ->
         if OpamFilename.digest src <> hash then
           OpamConsole.error_and_exit "Bad hash for %s"
             (OpamFilename.to_string src);
-        OpamFilename.copy ~src ~dst:(OpamFilename.create build_dir base))
+        OpamFilename.copy ~src ~dst:(OpamFilename.create destdir base))
       (OpamFile.OPAM.get_extra_files opam)
   );
-  prepare_package_build st nv
+  prepare_package_build st nv destdir
 
 (* unused ?
 let string_of_commands commands =
@@ -482,7 +478,7 @@ let remove_package_aux
          (OpamPath.Switch.config t.switch_global.root t.switch name));
     if not (keep_build || OpamStateConfig.(!r.keep_build_dir)) then
       OpamFilename.rmdir
-        (OpamPath.Switch.build t.switch_global.root t.switch nv);
+        (OpamPath.Switch.remove t.switch_global.root t.switch nv);
     uninstall_files ();
     OpamFilename.remove (OpamFile.filename dot_install);
     revert_changes ();
@@ -538,7 +534,9 @@ let remove_package t ?keep_build ?silent ?changes ?force nv =
    Assumes the package has already been downloaded to [source].
 *)
 let build_package t source nv =
-  extract_package t source nv;
+  let build_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+  OpamFilename.rmdir build_dir;
+  extract_package t source nv build_dir;
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFile.OPAM.build opam @
