@@ -352,15 +352,10 @@ let remove_commands t nv =
     None
   | Some opam ->
     let env = compilation_env t opam in
-    let p_build = OpamPath.Switch.build t.switch_global.root t.switch nv in
     let remove =
       OpamFilter.commands (OpamPackageVar.resolve ~opam t)
         (OpamFile.OPAM.remove opam) in
     let name = OpamPackage.Name.to_string nv.name in
-    let exec_dir, nameopt =
-      if OpamFilename.exists_dir p_build
-      then p_build, Some name
-      else t.switch_global.root , None in
     let commands =
       OpamStd.List.filter_map (function
           | [] -> None
@@ -369,12 +364,7 @@ let remove_commands t nv =
             let cmd, args =
               cmd_wrapper t opam OpamFile.Config.wrap_remove cmd args
             in
-            Some
-              (OpamSystem.make_command ?name:nameopt ~text cmd args
-                 ~env:(OpamTypesBase.env_array env)
-                 ~dir:(OpamFilename.Dir.to_string exec_dir)
-                 ~verbose:(OpamConsole.verbose ())
-                 ~check_existence:false))
+            Some (text, cmd, args, env))
         remove
     in
     Some commands
@@ -430,6 +420,22 @@ let remove_package_aux
     | None ->
       Done ()
     | Some commands ->
+        let remove_dir =
+          OpamPath.Switch.remove t.switch_global.root t.switch nv in
+        let name = OpamPackage.Name.to_string nv.name in
+        let exec_dir, nameopt =
+          if OpamFilename.exists_dir remove_dir
+          then remove_dir, Some name
+          else t.switch_global.root , None in
+        let commands =
+          List.map (fun (text, cmd, args, env) ->
+            (OpamSystem.make_command ?name:nameopt ~text cmd args
+               ~env:(OpamTypesBase.env_array env)
+               ~dir:(OpamFilename.Dir.to_string exec_dir)
+               ~verbose:(OpamConsole.verbose ())
+               ~check_existence:false))
+            commands
+        in
       OpamProcess.Job.of_list ~keep_going:true commands
       @@+ function
       | Some (_,err) ->
