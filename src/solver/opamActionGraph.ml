@@ -230,6 +230,9 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
   let explicit ?(noop_remove = (fun _ -> false)) g0 =
     let g = copy g0 in
     let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
+    (* We insert a "build" action before any "install" action.
+       Except, between the removal and installation of the same package
+       (the removal might be postponed after a succesfull build. *)
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
@@ -242,6 +245,12 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
+    (* For delaying removal a little bit, for each action "remove A" we add
+       a constraint "build B -> remove A" for transitive predecessors
+       of "A" that do not have dependencies.
+
+       For adding a little bit more delay, we ignore dependencies that do not
+       modify the prefix (see [OpamAction.noop_remove]) *)
     let closed_predecessors = compute_closed_predecessors noop_remove g in
     iter_vertex (function
         | `Remove p as a ->
