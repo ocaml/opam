@@ -15,10 +15,8 @@ primarily of use for packagers, package maintainers and repository maintainers.
   be browsed [here](api/index.html)
 
 
-This version of the manual documents the version `1.2` of the file formats, with
-some `1.2.1` experimental extensions mentionned. It is **not yet** up-to-date
-with opam `2.0`.
-
+This version of the manual documents the version `1.2` of the file formats, and
+is progressively being updated with the new features of opam `2.0`.
 
 ## General file format
 
@@ -127,12 +125,8 @@ when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
 empty string and `false`, unless specified otherwise).
 
-> **1.2.1 experimental feature**: boolean-to-string conversion specifiers
->
-> In 1.2.1, the additional syntax
-> `"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to insert
-> different strings depending on the boolean value of a variable. This is not
-> allowed yet in the main repository.
+The syntax`"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to
+insert different strings depending on the boolean value of a variable.
 
 Additionally, boolean package variables may be combined using the following
 form: `name1+name2+name3:var` is the conjunction of `var` for each of `name1`,
@@ -681,6 +675,11 @@ recommended to check the validity and quality of your `opam` files.
     `depexts` information can be retrieved through the `opam list --external`
     command.
 
+    The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
+    packages, which make the dependencies clearer and avoids duplicating the
+    efforts of documenting the appropriate system packages on the various
+    OSes available.
+
 - <a id="opamfield-messages">`messages: [ <string> { <filter> } ... ]`</a>:
   used to display an additional (one-line) message when prompting a solution
   implying the given package. The typical use-case is to tell the user that some
@@ -723,13 +722,16 @@ recommended to check the validity and quality of your `opam` files.
       auto-installed and run with `opam <name>` (since OPAM 1.2.2 ; the use is
       discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
       instead)
-    - <a id="opamflag-compiler">`compiler`</a>:
-      the package is to be treated as a compiler, and available through the
-      `opam switch` command. This has several consequences:
-      - when installed this way, the package and all its dependencies will be
-        immutable and excluded from `opam switch rebuild`
-      - the package _must_ include or generate a `global-config.config` file at its root
-      - 
+    - <a id="opamflag-compiler">`compiler`</a>: the package is to be treated as
+      a compiler, and will be advertised for installing as a `compiler` package
+      through the `opam switch` command.
+    - <a id="opamflag-conf">`conf`</a>: this is a "`conf`" package, that is
+      intended to document capabilities of the system, or the presence of
+      software installed outside of opam. As such, the package may not
+      include a source URL or install anything, but just do some checks, and
+      fail to install if they don't pass. `conf` packages should have a name
+      starting with `conf-`, and include the appropriate
+      [`depexts:`](#opamfield-depexts) field.
 
 - <a id="opamfield-features">
   `features: [ <ident> <string> { <filter> } ... ]`</a> (EXPERIMENTAL):

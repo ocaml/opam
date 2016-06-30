@@ -133,7 +133,7 @@ let string_of_pkg_flag = function
   | Pkgflag_Verbose -> "verbose"
   | Pkgflag_Plugin -> "plugin"
   | Pkgflag_Compiler -> "compiler"
-  | Pkgflag_Virtual -> "virtual"
+  | Pkgflag_Conf -> "conf"
   | Pkgflag_Unknown s -> s
 
 let pkg_flag_of_string = function
@@ -142,6 +142,7 @@ let pkg_flag_of_string = function
   | "verbose" -> Pkgflag_Verbose
   | "plugin" -> Pkgflag_Plugin
   | "compiler" -> Pkgflag_Compiler
+  | "conf" -> Pkgflag_Conf
   | s -> Pkgflag_Unknown s
 
 let action_contents = function

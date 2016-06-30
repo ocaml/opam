@@ -105,8 +105,8 @@ type package_flag =
                        [opam-<name>] exec, and may be auto-installed when doing
                        [opam <name>] *)
   | Pkgflag_Compiler (** Package may be used for 'opam switch' *)
-  | Pkgflag_Virtual (** Virtual package: no install or remove instructions,
-                        .install, but likely has depexts *)
+  | Pkgflag_Conf (** Virtual package: no source, no install or remove instructions,
+                     .install, but likely has depexts *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** At some point we want to abstract so that the same functions can be used
