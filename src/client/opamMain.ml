@@ -299,6 +299,9 @@ let list =
   let all_versions = mk_flag ["all-versions"]
       "Print all matching versions, instead of a single version per package"
   in
+  let normalise = mk_flag ["normalise"]
+      "Print the values of opam fields normalised"
+  in
   let separator =
     Arg.(value & opt string " " & info ["separator"] ~docv:"STRING"
            ~doc:"Set the column-separator string (the default is a space)")
@@ -306,7 +309,7 @@ let list =
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
       depexts dev repos
-      print_short sort columns all_versions separator
+      print_short sort columns all_versions normalise separator
       packages =
     apply_global_options global_options;
     let no_switch =
@@ -387,7 +390,7 @@ let list =
         ~header:(not print_short)
         ~all_versions
         ~separator
-        ~prettify_fields:false
+        ~normalise
         results
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
@@ -395,7 +398,8 @@ let list =
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
         $no_switch $depexts $dev $repos
-        $print_short $sort $columns $all_versions $separator $pattern_list),
+        $print_short $sort $columns $all_versions $normalise $separator
+        $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -521,7 +525,11 @@ let show =
               is used. Only raw opam-file fields can be queried."
         ["file"] in
     Arg.(value & opt (some existing_filename_or_dash) None & doc) in
-  let pkg_info global_options fields raw where file packages =
+  let normalise = mk_flag ["normalise"]
+      "Print the values of opam fields normalised (no newlines, no implicit \
+       brackets)"
+  in
+  let pkg_info global_options fields raw where normalise file packages =
     apply_global_options global_options;
     match file, packages with
     | None, [] ->
@@ -531,7 +539,7 @@ let show =
               "arguments PACKAGES and `--files' can't be specified together")
     | None, pkgs ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.info gt ~fields ~raw_opam:raw ~where pkgs;
+      OpamListCommand.info gt ~fields ~raw_opam:raw ~where ~normalise pkgs;
       `Ok ()
     | Some f, [] ->
       let opam = match f with
@@ -547,7 +555,8 @@ let show =
       let opam_content_list = OpamFile.OPAM.to_list opam in
       let get_field f =
         let f = OpamStd.String.remove_suffix ~suffix:":" f in
-        try OpamListCommand.mini_field_printer (List.assoc f opam_content_list)
+        try OpamListCommand.mini_field_printer ~prettify:true ~normalise
+              (List.assoc f opam_content_list)
         with Not_found -> ""
       in
       match fields with
@@ -568,7 +577,8 @@ let show =
         `Ok ()
   in
   Term.(ret
-          (pure pkg_info $global_options $fields $raw $where $file $atom_list)),
+          (pure pkg_info $global_options $fields $raw $where $normalise
+           $file $atom_list)),
   term_info "show" ~doc ~man
 
 

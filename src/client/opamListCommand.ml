@@ -347,15 +347,17 @@ let version_color st nv =
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
     (if is_available nv then [] else [`crossed;`red])
 
-let mini_field_printer ?(prettify=true) = function
+let mini_field_printer ?(prettify=false) ?(normalise=false) =
+  if normalise then OpamFormat.Normalise.value else
+  function
   | String (_, s) -> s
   | List (_, l) when prettify &&
                      List.for_all (function String _ -> true | _ -> false) l ->
     OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
   | List (_, l) -> OpamFormat.Print.value_list l
-  | f -> OpamFormat.Print.value f
+  | f -> OpamFormat.Normalise.value f
 
-let detail_printer ?prettify_fields st nv =
+let detail_printer ?prettify ?normalise st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
@@ -397,7 +399,7 @@ let detail_printer ?prettify_fields st nv =
   | Field f ->
     (try
        List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
-       mini_field_printer ?prettify:prettify_fields
+       mini_field_printer ?prettify ?normalise
      with Not_found -> "")
   | Installed_version ->
     (try OpamPackage.package_of_name st.installed nv.name |> fun inst_nv ->
@@ -459,7 +461,7 @@ let detail_printer ?prettify_fields st nv =
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?(separator=" ")
-    ?prettify_fields packages =
+    ?prettify ?normalise packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -490,7 +492,7 @@ let display
     else l
   in
   List.rev_map
-    (fun nv -> List.map (detail_printer ?prettify_fields st nv) format)
+    (fun nv -> List.map (detail_printer ?prettify ?normalise st nv) format)
     packages |>
   List.rev |>
   add_head |>
@@ -608,7 +610,7 @@ let list gt
   | Some tags_list ->
     print_depexts st packages tags_list
 
-let info gt ~fields ~raw_opam ~where atoms =
+let info gt ~fields ~raw_opam ~where ?normalise atoms =
   let st = get_switch_state gt in
   let packages = OpamSwitchState.packages_of_atoms st atoms in
   if OpamPackage.Set.is_empty packages then
@@ -644,7 +646,7 @@ let info gt ~fields ~raw_opam ~where atoms =
     let tbl =
       List.map (fun item ->
           [ OpamConsole.colorise `blue (string_of_field item);
-            detail_printer st nv item ])
+            detail_printer ?normalise st nv item ])
         fields
     in
     OpamStd.Format.align_table tbl |>
@@ -677,6 +679,6 @@ let info gt ~fields ~raw_opam ~where atoms =
         output_table all_versions_fields choose;
         OpamConsole.header_msg "Version-specific details";
         output_table one_version_fields choose
-      | [f] -> OpamConsole.msg "%s\n" (detail_printer st choose f)
+      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st choose f)
       | fields -> output_table fields choose
     )

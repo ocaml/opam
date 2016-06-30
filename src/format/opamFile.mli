@@ -498,6 +498,10 @@ module OPAM: sig
       accessed through dot-separated paths (e.g. [url.checksum]) *)
   val to_list: ?filename:'a typed_file -> t -> (string * value) list
 
+  (** Gets the print-AST for a single field in the file structure. Fields within
+      sections can be accessed through [section.field]. *)
+  val print_field_as_syntax: string -> t -> value option
+
 end
 
 (** Compiler aliases: [$opam/aliases]. Deprecated, used only for migration *)

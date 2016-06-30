@@ -2049,6 +2049,19 @@ module OPAMSyntax = struct
       (fun (pfx, value) -> String.concat "." (List.rev pfx), value)
       (aux [] [] (contents ?filename t).file_contents)
 
+  let print_field_as_syntax field t =
+    match OpamStd.String.cut_at field '.' with
+    | None ->
+      snd (Pp.print (List.assoc field fields) t)
+    | Some (sec, field) ->
+      match snd (Pp.print (List.assoc sec sections) t) with
+      | None -> None
+      | Some items ->
+        Some (OpamStd.List.find_map (function
+            | Variable (_, f, contents) when f = field -> Some contents
+            | _ -> None)
+            items)
+
 end
 module OPAM = struct
   include OPAMSyntax

@@ -113,6 +113,12 @@ module OpamList = struct
 
   let filter_some l = filter_map (fun x -> x) l
 
+  let rec find_map f = function
+    | [] -> raise Not_found
+    | x::r -> match f x with
+      | Some r -> r
+      | None -> find_map f r
+
   let insert comp x l =
     let rec aux = function
       | [] -> [x]
