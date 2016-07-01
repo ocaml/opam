@@ -596,13 +596,14 @@ let build_package t source nv =
          Done (Some (OpamSystem.Process_error result)))
     | []::commands -> run_commands commands
     | [] ->
-      OpamConsole.msg "%s compiled  %s.%s\n"
+      if commands <> [] then
+        OpamConsole.msg "%s compiled  %s.%s\n"
           (if not (OpamConsole.utf8 ()) then "->"
            else OpamActionGraph.
                   (action_color (`Build ()) (action_strings (`Build ()))))
           (OpamConsole.colorise `bold name)
           (OpamPackage.version_to_string nv);
-        Done None
+      Done None
   in
   run_commands commands
 
