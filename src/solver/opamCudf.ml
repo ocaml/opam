@@ -254,7 +254,8 @@ let strings_of_reason cudfnv2opam (unav_reasons: atom -> string) r =
             (OpamPackage.name_to_string nvb) in
         [str]
       else
-      let str = Printf.sprintf "Conflicting version constraints for %s"
+      let str = Printf.sprintf "No available version of %s satisfies the \
+                                constraints"
           (OpamPackage.name_to_string nva) in
       [str]
     else
