@@ -382,8 +382,18 @@ let parallel_apply t action action_graph =
   (* 2/ process the package actions (installations and removals) *)
 
   let action_graph = (* Add build actions *)
-    PackageActionGraph.explicit action_graph
+    let noop_remove nv =
+      OpamAction.noop_remove_package t nv in
+    PackageActionGraph.explicit ~noop_remove action_graph
   in
+
+  let minimal_switch_state =
+    PackageActionGraph.fold_vertex
+      (fun a acc ->
+         match a with
+         | `Remove nv -> OpamSwitchAction.remove_from_installed acc nv
+         | _ -> acc)
+      action_graph t in
 
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
@@ -405,11 +415,13 @@ let parallel_apply t action action_graph =
         let t0 = Unix.gettimeofday () in
         fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
       in
-      let visible_installed =
-        OpamPackage.Set.Op.(t.installed -- removed ++ installed)
-      in
-      let t = (* Local state for this process, only prerequisites are visible *)
-        { t with installed = visible_installed; }
+      let t =
+        (* Local state for this process, only prerequisites are visible *)
+        OpamPackage.Set.fold
+          (fun nv acc ->
+             let root = OpamPackage.Name.Set.mem nv.name root_installs in
+             OpamSwitchAction.add_to_installed acc ~root nv)
+          installed minimal_switch_state
         (* !X note : t.switch_config.bindings should be updated as well to
            handle compiler upgrades better *)
       in
@@ -446,7 +458,10 @@ let parallel_apply t action action_graph =
             Done (`Exception exn))
       | `Remove nv ->
         if OpamAction.removal_needs_download t nv then
-          (try OpamAction.extract_package t source nv
+          (try
+             let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+             OpamFilename.rmdir d;
+             OpamAction.extract_package t source nv d
            with e -> OpamStd.Exn.fatal e);
         OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
           (OpamAction.remove_package t nv) @@| fun () ->
@@ -524,6 +539,12 @@ let parallel_apply t action action_graph =
           when not (OpamPackage.has_name t.pinned nv.name) ->
           OpamAction.cleanup_package_artefacts t nv
           (* if reinstalled, only removes build dir *)
+        | `Install nv
+          when not (OpamPackage.has_name t.pinned nv.name) ->
+          let build_dir =
+            OpamPath.Switch.build t.switch_global.root t.switch nv in
+          if not OpamStateConfig.(!r.keep_build_dir) then
+            OpamFilename.rmdir build_dir
         | `Remove _ | `Install _ | `Build _ -> ()
         | _ -> assert false)
       graph

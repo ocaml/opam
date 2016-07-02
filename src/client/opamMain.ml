@@ -1642,10 +1642,7 @@ let source =
       match OpamProcess.Job.run (OpamAction.download_package t nv) with
       | `Error _ -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
-        (try OpamAction.extract_package t s nv with Failure _ -> ());
-        move_dir
-          ~src:(OpamPath.Switch.build t.switch_global.root t.switch nv)
-          ~dst:dir;
+        (try OpamAction.extract_package t s nv dir with Failure _ -> ());
         OpamConsole.formatted_msg "Successfully extracted to %s\n"
           (Dir.to_string dir);
         if OpamPinned.find_opam_file_in_source nv.name dir = None

@@ -121,7 +121,7 @@ module type SIG = sig
   type package
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
-  val explicit: t -> t
+  val explicit: ?noop_remove:(package -> bool) -> t -> t
 end
 
 module Make (A: ACTION) : SIG with type package = A.package = struct
@@ -130,6 +130,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
   include OpamParallel.MakeGraph(A)
 
   module Map = OpamStd.Map.Make (A.Pkg)
+  module Set = OpamStd.Set.Make (A.Pkg)
 
   (* Turn concrete actions (only install, remove and build) to higher-level
      actions (install, remove, up/downgrade, recompile). Builds are removed when
@@ -180,16 +181,83 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
-  let explicit g0 =
+  let pkg (action: vertex) =
+    match action with
+    | `Build pkg
+    | `Change (_,pkg,_)
+    | `Install pkg
+    | `Reinstall pkg
+    | `Remove pkg -> pkg
+
+  let compute_closed_predecessors noop_remove g =
+    let closed_g = copy g in
+    transitive_closure closed_g;
+    let closed_packages =
+      (* The set of package that do not have dependencies
+         (in the action graph). *)
+      fold_vertex (fun a acc ->
+          match a with
+          | `Build p ->
+            let pred =
+              (* We ignore predecessors that do not modify the prefix *)
+              List.filter
+                (fun nv -> not (noop_remove (pkg nv)))
+                (pred closed_g a) in
+            if pred = [] then Set.add p acc else acc
+          | _ -> acc) g Set.empty
+    in
+    let dependent_base_packages =
+      fold_vertex (fun a acc ->
+          match a with
+          | `Install p | `Reinstall p | `Change (_,_,p) ->
+            let preds =
+              List.filter
+                (function
+                  | `Build p -> Set.mem p closed_packages
+                  | _ -> false)
+                (pred closed_g a) in
+            OpamStd.String.Map.add (A.Pkg.name_to_string p) preds acc
+          | _ -> acc) g OpamStd.String.Map.empty in
+    function p ->
+    match
+      OpamStd.String.Map.find_opt
+        (A.Pkg.name_to_string p)
+        dependent_base_packages
+    with
+    | None -> []
+    | Some pred -> pred
+
+  let explicit ?(noop_remove = (fun _ -> false)) g0 =
     let g = copy g0 in
+    let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
+    (* We insert a "build" action before any "install" action.
+       Except, between the removal and installation of the same package
+       (the removal might be postponed after a succesfull build. *)
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
           let b = `Build p in
-          iter_pred (fun pred -> remove_edge g pred a; add_edge g pred b) g a;
+          iter_pred (function
+              | `Remove p1 when same_name p p1 -> ()
+              | pred -> remove_edge g pred a; add_edge g pred b)
+            g0 a;
           add_edge g b a
         | `Remove _ -> ()
         | `Build _ -> assert false)
       g0;
+    (* For delaying removal a little bit, for each action "remove A" we add
+       a constraint "build B -> remove A" for transitive predecessors
+       of "A" that do not have dependencies.
+
+       For adding a little bit more delay, we ignore dependencies that do not
+       modify the prefix (see [OpamAction.noop_remove]) *)
+    let closed_predecessors = compute_closed_predecessors noop_remove g in
+    iter_vertex (function
+        | `Remove p as a ->
+          List.iter
+            (fun b -> add_edge g b a)
+            (closed_predecessors p)
+        | `Install _ | `Reinstall _ | `Change _ | `Build _ -> ())
+      g;
     g
 end

@@ -265,6 +265,7 @@ module type GRAPH = sig
   module Parallel : SIG with type G.t = t
                          and type G.V.t = vertex
   module Dot : sig val output_graph : out_channel -> t -> unit end
+  val transitive_closure:  ?reflexive:bool -> t -> unit
 end
 
 module MakeGraph (X: VERTEX) = struct
@@ -292,6 +293,8 @@ module MakeGraph (X: VERTEX) = struct
     end)
   include PG
   include Graph.Oper.I (PG)
+  let transitive_closure ?reflexive g =
+    ignore (add_transitive_closure ?reflexive g)
 end
 
 (* Simple polymorphic implem on lists when we don't need full graphs.

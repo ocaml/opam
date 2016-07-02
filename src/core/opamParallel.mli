@@ -95,6 +95,7 @@ module type GRAPH = sig
   module Parallel : SIG with type G.t = t
                          and type G.V.t = vertex
   module Dot : sig val output_graph : out_channel -> t -> unit end
+  val transitive_closure:  ?reflexive:bool -> t -> unit
 end
 
 module MakeGraph (V: VERTEX) : GRAPH with type V.t = V.t
