@@ -1,9 +1,12 @@
 -include ../Makefile.config
 
-SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm
+SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm
 
-URL_extlib = http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
-MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
+URL_cppo = http://mjambon.com/releases/cppo/cppo-1.1.2.tar.gz
+MD5_cppo = f1a551639c0c667ee8840d95ea5b2ab7
+
+URL_extlib = https://github.com/ygrek/ocaml-extlib/archive/1.7.0.tar.gz
+MD5_extlib = b50b02d9e40d35cc20c82d9c881a1bf6 
 
 URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.5.0.tar.gz
 MD5_re = 1e9bff3279648881be31e5ff96219f0a
@@ -11,14 +14,14 @@ MD5_re = 1e9bff3279648881be31e5ff96219f0a
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.7.tbz
 MD5_cmdliner = 46d7553b95f623f811df2a844fb448fb
 
-URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.5.tar.gz
-MD5_graph = 75dde65bfc3f9b07e795343d369aa84d
+URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.6.tar.gz
+MD5_graph = afbc24f0e0eb72c2d3eda64b68513e73
 
 URL_cudf = https://gforge.inria.fr/frs/download.php/33593/cudf-0.7.tar.gz
 MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/34277/dose3-3.3.tar.gz
-MD5_dose = ea947804c636059bb8b64dbda5c1df08
+URL_dose = https://gforge.inria.fr/frs/download.php/file/35975/dose3-5.0.tar.gz
+MD5_dose = 228c6a73a0759783fd01181047046610
 
 URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
 MD5_uutf = 708c0421e158b390c7cc341f37b40add
@@ -41,7 +44,7 @@ build: clone
 
 all: bcl ncl
 
-clone: $(SRC_EXTS:=.stamp) graph-workaround
+clone: $(SRC_EXTS:=.stamp) graph-workaround extlib-cppo dose-cppo
 	@
 
 archives: $(SRC_EXTS:=.download)
@@ -71,6 +74,32 @@ graph-workaround:
 	cp graph/src/sig_pack.mli graph/src/sig_pack.ml
 	cp graph/src/dot_ast.mli graph/src/dot_ast.ml
 
+SRC_cppo = cppo_version.ml cppo_types.ml cppo_parser.mli cppo_parser.ml cppo_lexer.ml \
+					 cppo_command.ml cppo_eval.ml cppo_main.ml
+
+make-cppo:
+	echo 'let cppo_version = "$(VERSION)"' > cppo/cppo_version.ml
+	ocamllex cppo/cppo_lexer.mll
+	ocamlyacc cppo/cppo_parser.mly
+	ocamlopt -o cppo/cppo -I cppo -dtypes unix.cmxa str.cmxa $(foreach ml,$(SRC_cppo),cppo/$(ml))
+
+ifeq ($(OCAML_4_02),true)
+CPPOVARS=-D OCAML4 -D OCAML_4_02
+else
+CPPOVARS=-D OCAML4
+endif
+
+extlib-cppo: make-cppo
+	cppo/cppo $(CPPOVARS) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml	
+	cppo/cppo $(CPPOVARS) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
+	cppo/cppo $(CPPOVARS) extlib/src/extString.mlpp -o extlib/src/extString.ml
+	cppo/cppo $(CPPOVARS) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
+
+dose-cppo:
+	for f in `find dose -regex ".*.mli*"`; do\
+		echo "(*pp cppo/cppo -V OCAML:$(OCAMLVERSION) -D 'OCAMLGRAPHVERSION 186' *)"|cat - $$f > /tmp/out && mv /tmp/out $$f;\
+	done
+
 clean:
 	rm -rf lib
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
@@ -82,7 +111,7 @@ distclean:
 	rm -f *.cm* *.o *.a *.lib
 	rm -rf lib
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_debian dose_algo uutf jsonm
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo uutf jsonm
 
 inst_objs = cp $(1)/*.cm*i lib
 
@@ -92,13 +121,11 @@ copy: build
 	cp *.cmxa lib || true
 	cp *.a lib || true
 	cp *.lib lib || true
-	$(call inst_objs,extlib)
+	$(call inst_objs,extlib/src)
 	$(call inst_objs,re/lib)
 	$(call inst_objs,cmdliner/src)
 	$(call inst_objs,graph/src)
 	$(call inst_objs,cudf)
-	$(call inst_objs,dose/common)
-	$(call inst_objs,dose/deb)
 	$(call inst_objs,dose/algo)
 	$(call inst_objs,uutf/src)
 	$(call inst_objs,jsonm/src)
@@ -108,12 +135,12 @@ copy: build
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 
-SRC_extlib = enum.ml extHashtbl.ml extList.ml extString.ml global.ml \
+SRC_extlib = extBytes.ml extBuffer.ml enum.ml extHashtbl.ml extList.ml extString.ml global.ml install.ml	\
 IO.ml option.ml pMap.ml refList.ml std.ml uChar.ml unzip.ml uTF8.ml optParse.ml	\
 dynArray.ml dllist.ml bitSet.ml base64.ml extArray.ml extLib.ml
 
 define PROJ_extlib
-  SOURCES = $(call addmli,extlib,$(SRC_extlib))
+  SOURCES = $(call addmli,extlib/src,$(SRC_extlib))
   RESULT = extlib
   # Don't omit !! it leaks between subprojs...
   LIB_PACK_NAME =
@@ -163,43 +190,65 @@ define PROJ_cudf
   SOURCES = $(call addmli,cudf,$(SRC_cudf))
   RESULT = cudf
   LIB_PACK_NAME =
-  INCDIRS = extlib
+  INCDIRS = extlib/src
 endef
 export PROJ_cudf
 
-SRC_dose_common = util.ml url.ml input.ml edosSolver.ml cudfSolver.ml	\
-cudfAdd.ml cudfDiff.ml
+SRC_dose_common = shell_lexer.mll util.ml url.ml input.ml\
+									format822.ml format822_parser.mly format822_lexer.mll \
+									criteria_parser.mly criteria_lexer.mll criteria_types.ml criteria.ml\
+									edosSolver.ml cudfSolver.ml	cudfAdd.ml cudfDiff.ml
 
 define PROJ_dose_common
   SOURCES = $(call addmli,dose/common,$(SRC_dose_common))
   RESULT = dose_common
   LIB_PACK_NAME = common
-  INCDIRS = extlib cudf re/lib
+  INCDIRS = extlib/src cudf re/lib
 endef
 export PROJ_dose_common
 
-SRC_dose_debian = architecture.ml format822.ml format822_parser.mly		\
-packages_parser.mly version.ml packages_lexer.mll format822_lexer.mll		\
-packages.ml release.ml sources.ml printer.ml evolution.ml debutil.ml debcudf.ml \
-apt.ml edsp.ml
+SRC_dose_versioning = debian.ml semverNode.ml semver.ml utils.ml
 
-define PROJ_dose_debian
-  SOURCES = $(call addmli,dose/deb,$(SRC_dose_debian))
-  RESULT = dose_debian
-  LIB_PACK_NAME = debian
-  INCDIRS = extlib cudf re/lib
+define PROJ_dose_versioning
+  SOURCES = $(call addmli,dose/versioning,$(SRC_dose_versioning))
+  RESULT = dose_versioning
+  LIB_PACK_NAME = versioning
+  INCDIRS = extlib/src cudf re/lib
 endef
-export PROJ_dose_debian
+export PROJ_dose_versioning
 
-SRC_dose_algo = defaultgraphs.ml diagnostic_int.ml diagnostic.ml		\
-dominators.ml flatten.ml statistics.ml depsolver_int.ml depsolver.ml		\
-strongconflicts_int.ml strongconflicts.ml strongdeps_int.ml strongdeps.ml
+SRC_dose_pef = packages_types.ml packages_parser.mly packages_lexer.mll printer.ml packages.ml \
+							 pefcudf.ml 
+
+#SOURCES = $(SRC_dose_pef)
+
+define PROJ_dose_pef
+  SOURCES = $(call addmli,dose/pef,$(SRC_dose_pef))
+  RESULT = dose_pef
+  LIB_PACK_NAME = pef
+  INCDIRS = extlib/src cudf re/lib
+endef
+export PROJ_dose_pef
+
+SRC_dose_opam = opamcudf.ml packages.ml
+
+define PROJ_dose_opam
+  SOURCES = $(call addmli,dose/opam,$(SRC_dose_opam))
+  RESULT = dose_opam
+  LIB_PACK_NAME = opam
+  INCDIRS = extlib/src cudf re/lib
+endef
+export PROJ_dose_opam
+
+SRC_dose_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
+								statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
+								strongconflicts.ml strongdeps.ml
 
 define PROJ_dose_algo
   SOURCES = $(call addmli,dose/algo,$(SRC_dose_algo))
   RESULT = dose_algo
   LIB_PACK_NAME = algo
-  INCDIRS = extlib graph/src dose/common dose/deb cudf
+  INCDIRS = extlib/src graph/src cudf
 endef
 export PROJ_dose_algo
 

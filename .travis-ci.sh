@@ -14,7 +14,7 @@ install_on_linux () {
 
   echo "yes" | sudo add-apt-repository ppa:$ppa
   sudo apt-get update -qq
-  sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra time $EXTERNAL_SOLVER ${OPAM_TEST:+opam}
+  sudo apt-get install -qq ocaml ocaml-native-compilers time $EXTERNAL_SOLVER ${OPAM_TEST:+opam}
 }
 
 install_on_osx () {
@@ -64,7 +64,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     opam init
 
     eval `opam config env`
-    opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner ocamlgraph dose.3.3 cudf re jsonm
+    opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner dose3.5.0 jsonm
     ./configure
     make
     # overwrite the previous install of OPAM with the new binary
