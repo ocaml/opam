@@ -2642,9 +2642,13 @@ module CompSyntax = struct
                t.name version (OpamFilename.to_string filename);
            { t with name = empty.name })
 
-  let to_package pkg_name comp descr_opt =
-    let version =
-      OpamPackage.Version.of_string (name comp)
+  let to_package ?package comp descr_opt =
+    let package = match package with
+      | Some p -> p
+      | None ->
+        OpamPackage.create
+          (OpamPackage.Name.of_string "ocaml")
+          (OpamPackage.Version.of_string (name comp))
     in
     let nofilter x = x, (None: filter option) in
     let depends =
@@ -2684,13 +2688,13 @@ module CompSyntax = struct
         (fun u -> nofilter (OpamFilename.Base.of_string (OpamUrl.basename u)))
         comp.patches
     in
-    let pkg = OPAM.create (OpamPackage.create pkg_name version) in
+    let pkg = OPAM.create package in
     { pkg with
       OPAM.
       depends;
       build;
       install;
-      maintainer = [ "contact@ocamlpro.com" ];
+      maintainer = [ "platform@lists.ocaml.org" ];
       extra_sources;
       patches;
       env = comp.env;

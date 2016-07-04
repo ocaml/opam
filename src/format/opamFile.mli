@@ -603,8 +603,14 @@ module Comp: sig
   val with_build: command list -> t -> t
   val with_packages: formula -> t -> t
 
-  (** Converts a compiler definition to package metadata. For compat. *)
-  val to_package: name -> t -> Descr.t option -> OPAM.t
+  (** Converts a compiler definition to package metadata. For compat. If
+      [package] is unspecified, a package named "ocaml" is created for
+      "standard" compilers (when the compiler name doesn't contain a "+" and is
+      equal to the compiler version); otherwise, a package "ocaml-VARIANT" is
+      created with "VARIANT" the part of the compiler name on the right of the
+      "+". In both case, the version corresponds to the OCaml version and is
+      [version comp]. *)
+  val to_package: ?package:package -> t -> Descr.t option -> OPAM.t
 
 end
 

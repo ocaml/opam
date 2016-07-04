@@ -278,6 +278,23 @@ let map_variables f =
   | FString s -> FString (map_variables_in_string f s)
   | flt -> flt
 
+let rec distribute_negations ?(neg=false) = function
+  | FAnd (f1, f2) ->
+    let f1 = distribute_negations ~neg f1 in
+    let f2 = distribute_negations ~neg f2 in
+    if neg then FOr (f1, f2) else FAnd (f1, f2)
+  | FOr (f1, f2) ->
+    let f1 = distribute_negations ~neg f1 in
+    let f2 = distribute_negations ~neg f2 in
+    if neg then FAnd (f1, f2) else FOr (f1, f2)
+  | FBool b -> FBool (if neg then not b else b)
+  | FOp (f1, op, f2) ->
+    FOp (distribute_negations ~neg:false f1,
+         (if neg then OpamFormula.neg_relop op else op),
+         distribute_negations ~neg:false f2)
+  | FNot f -> distribute_negations ~neg:(not neg) f
+  | f -> if neg then FNot f else f
+
 let logop1 cstr op = function
   | FUndef f -> FUndef (cstr f)
   | e ->

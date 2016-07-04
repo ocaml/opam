@@ -213,7 +213,6 @@ module Format_upgrade = struct
         (* Change comp file to a package *)
         let selections =
           if comp_name <> "empty" then
-            let name = OpamPackage.Name.of_string "ocaml" in
             let comp_f =
               OpamFile.make (root / "compilers" / comp_version /
                              comp_name // (comp_name ^ ".comp"))
@@ -230,9 +229,10 @@ module Format_upgrade = struct
                 (OpamFile.Descr.read_opt descr_f)
             in
             let comp_opam =
-              OpamFile.Comp.to_package name comp (Some descr)
+              OpamFile.Comp.to_package comp (Some descr)
             in
             let nv = OpamFile.OPAM.package comp_opam in
+            let name = nv.name in
             let switch_config_f =
               OpamFile.make
                 (switch_dir / "config" // "global-config.config")

@@ -67,6 +67,9 @@ val map_variables_in_string:
 val map_variables_in_fident:
   (full_variable -> full_variable) -> fident -> fident
 
+(** Distributes the negations to apply only to atoms *)
+val distribute_negations: ?neg:bool -> filter -> filter
+
 (** Rewrites string interpolations within a string. [default] is applied to the
     fident string (e.g. what's between [%{] and [}%]) when the expansion is
     undefined. If unspecified, this raises [Failure].
