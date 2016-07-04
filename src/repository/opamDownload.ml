@@ -14,6 +14,9 @@ open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "CURL" fmt
 
+let user_agent =
+  FString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
+
 let curl_args = [
   CString "--write-out", None;
   CString "%%{http_code}\\n", None;
@@ -21,6 +24,7 @@ let curl_args = [
   CString "--retry-delay", None; CString "2", None;
   CString "--compressed",
   Some (FIdent (OpamFilter.ident_of_string "compressed"));
+  CString "--user-agent", Some user_agent;
   CString "-L", None;
   CString "-o", None; CIdent "out", None;
   CIdent "url", None;
@@ -31,6 +35,7 @@ let wget_args = [
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
   CIdent "url", None;
+  CString "-U", Some user_agent
 ]
 
 let download_args ~url ~out ~retry ?checksum ~compress =
