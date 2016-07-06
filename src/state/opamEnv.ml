@@ -201,12 +201,7 @@ let compute_updates st =
 
 let updates ~opamswitch ?(force_path=false) st =
   let root = st.switch_global.root in
-  let update =
-    let fn = OpamPath.Switch.environment root st.switch in
-    match OpamFile.Environment.read_opt fn with
-    | Some env -> env
-    | None -> compute_updates st
-  in
+  let update = compute_updates st in
   let add_to_path = OpamPath.Switch.bin root st.switch st.switch_config in
   let new_path =
     "PATH",
