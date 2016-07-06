@@ -2675,7 +2675,10 @@ module CompSyntax = struct
         List.map (fun l -> nofilter (List.map nofilter l)) [
           [ CIdent "make"; CString "install" ];
         ]
-      | cl -> cl, []
+      | cl ->
+        match List.rev cl with
+        | install::cl -> List.rev cl, [install]
+        | [] -> assert false
     in
     let extra_sources =
       List.map (fun url ->
