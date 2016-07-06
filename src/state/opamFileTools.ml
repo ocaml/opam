@@ -57,12 +57,6 @@ let template nv =
      [CIdent "make", None], None]
   |> with_install
     [[CIdent "make", None; CString "install", None], None]
-  |> with_remove
-    [[CString "ocamlfind", None; CString "remove", None;
-      CString
-        (OpamPackage.Name.to_string (nv.OpamPackage.name)),
-      None],
-     None]
   |> with_depends
     (Atom (OpamPackage.Name.of_string "ocamlfind",
            (Atom (OpamFilter.(Filter (FIdent (ident_of_string "build")))))))
