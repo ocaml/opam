@@ -387,13 +387,15 @@ let parallel_apply t action action_graph =
     PackageActionGraph.explicit ~noop_remove action_graph
   in
 
-  let minimal_switch_state =
+  (* the core set of installed packages that won't change *)
+  let minimal_install =
     PackageActionGraph.fold_vertex
       (fun a acc ->
          match a with
-         | `Remove nv -> OpamSwitchAction.remove_from_installed acc nv
+         | `Remove nv -> OpamPackage.Set.remove nv acc
          | _ -> acc)
-      action_graph t in
+      action_graph t.installed
+  in
 
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
@@ -417,13 +419,7 @@ let parallel_apply t action action_graph =
       in
       let t =
         (* Local state for this process, only prerequisites are visible *)
-        OpamPackage.Set.fold
-          (fun nv acc ->
-             let root = OpamPackage.Name.Set.mem nv.name root_installs in
-             OpamSwitchAction.add_to_installed acc ~root nv)
-          installed minimal_switch_state
-        (* !X note : t.switch_config.bindings should be updated as well to
-           handle compiler upgrades better *)
+        { t with installed = OpamPackage.Set.union minimal_install installed }
       in
       let nv = action_contents action in
       let source =
