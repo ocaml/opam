@@ -654,9 +654,7 @@ let global_options =
       Arg.(some string) None in
   let yes =
     mk_flag ~section ["y";"yes"]
-      "Disable interactive mode and answer yes \
-       to all questions that would otherwise be \
-       asked to the user. \
+      "Answer yes to all yes/no questions without prompting. \
        This is equivalent to setting $(b,\\$OPAMYES) to \"true\"." in
   let strict =
     mk_flag ~section ["strict"]

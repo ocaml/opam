@@ -57,12 +57,6 @@ let template nv =
      [CIdent "make", None], None]
   |> with_install
     [[CIdent "make", None; CString "install", None], None]
-  |> with_remove
-    [[CString "ocamlfind", None; CString "remove", None;
-      CString
-        (OpamPackage.Name.to_string (nv.OpamPackage.name)),
-      None],
-     None]
   |> with_depends
     (Atom (OpamPackage.Name.of_string "ocamlfind",
            (Atom (OpamFilter.(Filter (FIdent (ident_of_string "build")))))))
@@ -325,6 +319,12 @@ let lint t =
        "Unclosed variable interpolations in strings"
        ~detail:(List.map snd unclosed)
        (unclosed <> []));
+    cond 46 `Error
+      "Package is flagged \"conf\" but has source, install or remove \
+       instructions"
+      (has_flag Pkgflag_Conf t &&
+       (t.install <> [] || t.remove <> [] || t.url <> None ||
+        t.extra_sources <> []))
   ]
   in
   OpamStd.List.filter_map (fun x -> x) warnings

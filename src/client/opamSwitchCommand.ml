@@ -268,8 +268,13 @@ let install gt ~update_config ~packages switch =
   let gt = OpamGlobalState.unlock gt in
   try gt, install_compiler_packages st packages
   with e ->
-    OpamConsole.warning "Switch %s left partially installed"
-      (OpamSwitch.to_string switch);
+    (try OpamStd.Exn.fatal e with e ->
+       OpamConsole.warning "Switch %s left partially installed"
+         (OpamSwitch.to_string switch);
+       raise e);
+    if OpamConsole.confirm "Switch initialisation failed, clean up ? \
+                            ('n' will leave the switch partially installed)"
+    then ignore (clear_switch gt switch);
     raise e
 
 let switch lock gt switch =

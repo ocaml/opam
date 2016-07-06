@@ -102,7 +102,10 @@ val string_of_field: output_format -> string
 val field_of_string: string -> output_format
 
 
-(** Outputs a list of packages as a table according to the formatting options *)
+(** Outputs a list of packages as a table according to the formatting options.
+    [normalise] supersedes [prettify] and uses a canonical way of displaying
+    package definition file fields. [prettify] uses a nicer to read format for the
+    package definition file fields. *)
 val display:
   'a switch_state ->
   header:bool ->
@@ -110,7 +113,8 @@ val display:
   dependency_order:bool ->
   all_versions:bool ->
   ?separator:string ->
-  ?prettify_fields:bool ->
+  ?prettify:bool ->
+  ?normalise:bool ->
   package_set -> unit
 
 (** Display all available packages that match any of the regexps. *)
@@ -130,10 +134,11 @@ val list:
 (** Display a general summary of a collection of packages. *)
 val info:
   'a global_state ->
-  fields:string list -> raw_opam:bool -> where:bool -> atom list -> unit
+  fields:string list -> raw_opam:bool -> where:bool -> ?normalise:bool ->
+  atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the
     default -- puts lists of strings in a format that is easier to read *)
-val mini_field_printer: ?prettify:bool -> value -> string
+val mini_field_printer: ?prettify:bool -> ?normalise:bool -> value -> string
 
 val string_of_formula: selector OpamFormula.formula -> string

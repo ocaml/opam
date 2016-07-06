@@ -170,6 +170,11 @@ module List : sig
   (** Retrieves [Some] values from a list *)
   val filter_some: 'a option list -> 'a list
 
+  (** Returns the first non-[None] value returned by the passed function on the
+      elements of the passed list. @raise [Not_found] if all of them yield
+      [None] *)
+  val find_map: ('a -> 'b option) -> 'a list -> 'b
+
   (** Insert a value in an ordered list *)
   val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
 

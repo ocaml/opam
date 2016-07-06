@@ -15,10 +15,8 @@ primarily of use for packagers, package maintainers and repository maintainers.
   be browsed [here](api/index.html)
 
 
-This version of the manual documents the version `1.2` of the file formats, with
-some `1.2.1` experimental extensions mentionned. It is **not yet** up-to-date
-with opam `2.0`.
-
+This version of the manual documents the version `1.2` of the file formats, and
+is progressively being updated with the new features of opam `2.0`.
 
 ## General file format
 
@@ -127,12 +125,8 @@ when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
 empty string and `false`, unless specified otherwise).
 
-> **1.2.1 experimental feature**: boolean-to-string conversion specifiers
->
-> In 1.2.1, the additional syntax
-> `"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to insert
-> different strings depending on the boolean value of a variable. This is not
-> allowed yet in the main repository.
+The syntax`"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to
+insert different strings depending on the boolean value of a variable.
 
 Additionally, boolean package variables may be combined using the following
 form: `name1+name2+name3:var` is the conjunction of `var` for each of `name1`,
@@ -350,66 +344,6 @@ Furthermore, the metadata of pinned package is then stored within the switch (at
 > more than one OPAM package.
 
 
-## Compiler specification
-
-Compilers are specified by
-
-- a file `compiler-name.descr`, similar to the package `descr` files: raw utf8
-  file starting with a one-line description.
-
-- a file `compiler-name.comp` specifying the source and details of the compiler.
-
-The `compiler-name.comp` file has the following fields:
-
-- <a id="compfield-opam-version">`opam-version: <string>`</a>:
-  File format version, should be `1.2` as of writing.
-
-- <a id="compfield-name">`name: <string>`</a>:
-  the compiler name, should be of the form `base-version+patch`, and the same
-  used in the filename.
-
-- <a id="compfield-version">`version: <string>`</a>:
-  the base OCaml compiler version this is based on, e.g. `4.02.1`
-
-- <a id="compfield-src">`src: <string>`</a> or
-  <a id="compfield-archive">`archive: <string>`</a>:
-  as for package `url` files, the URL where the compiler source can be
-  retrieved. Older, more specific URL fields are deprecated.
-
-- <a id="compfield-patches">`patches: [ <string> ... ]`</a>:
-  URLs of patches that will be retrieved and applied to the source from `src:`
-  or `archive:`.
-
-- <a id="compfield-build">
-  `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
-  commands that will be run from the compiler source root to build and install
-  the compiler.
-
-- <a id="compfield-configure">`configure: [ <string> ... ]`</a> and
-  <a id="compfield-make">`make: [ <string> ... ]`</a>:
-  alternatively, this will build using `./configure` and `make`, with the given
-  flags (`--prefix` is automatically appended to the configure command)
-
-- <a id="compfield-packages">`packages: [ <package-formula> ... ]`</a>:
-  these packages will be installed right after the `build:` or `make:` steps
-  have been run. They must be self-contained (no external dependencies), and the
-  user won't be able to change or remove them in this switch (except via
-  explicit pinning).
-
-- <a id="compfield-env">`env: [ <ident> <update-op> <string> ]`</a>:
-  specifies environment variables updates that will be performed whenever in
-  this switch.
-
-- <a id="compfield-preinstalled">`preinstalled: <bool>`</a>:
-  should not be set by hand, specifies that the `.comp` file refers to an
-  OCaml installation that lies outside of OPAM (files using this are normally
-  auto-generated).
-
-Note that, since OPAM `1.2.1` all build instructions can be omitted, and that it
-is therefore possible to delegate all the build process to the packages in
-`packages:`.
-
-
 ## Package specification
 
 Metadata for a single package is made of all the following files, and should be
@@ -581,31 +515,32 @@ recommended to check the validity and quality of your `opam` files.
     arguments) ; individual terms as well as full commands can be made
     conditional by adding filters: they will be ignored if the filter evaluates
     to `false` or is undefined. Variable interpolations are also evaluated.
-    These commands will be executed in sequence, from the root of the package
-    source.
+    These commands will be executed in sequence, from the root of a fresh
+    package source tree.
 
-    Any command is allowed, but these should write exclusively to the package's
-    source directory, be non-interactive and perform no network i/o. All
-    libraries, syntax extensions, binaries, platform-specific configuration and
-    `package-name.install` files should be produced within the source directory
-    subtree during this step. (**NOTE**: installation instructions used to be
-    included in this step, so you may find examples of older packages that do
-    not respect the above. This behaviour is deprecated)
+    The commands executed during the `build:` stage may write exclusively to
+    this source tree, should be non-interactive and should perform no network
+    i/o. All libraries, syntax extensions, binaries, platform-specific
+    configuration and `package-name.config` or `package-name.install` files are
+    expected to be produced within the source directory subtree, _i.e._ below
+    `$PWD`, during this step.
 
 - <a id="opamfield-install">
   `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands that will be run in order to install the package.
 
-    This field follows the exact same format as `build:`, but should only be used
-    to move products of `build:` from the build directory to their final
-    destination under the current `prefix`, and adjust some configuration files
-    there when needed. Commands in `install:` are executed sequentially after the
-    build is finished. These commands should only write to subdirectories of
-    `prefix`, without altering the source directory itself.
+    This field follows the exact same format as `build:`. It is used to move
+    products of `build:` from the build directory to their final destination
+    under the current `prefix`, and do any required additional setup. Commands
+    in `install:` are executed sequentially, from the root of the source tree
+    from where the `build:` commands have been run. These commands should only
+    write to subdirectories of `prefix`, without altering the source directory
+    itself.
 
-    This field contains typically just `[make "install"]`. It is recommended,
-    though, to prefer the usage of a static or generated `package-name.install`
-    file and omit the `install:` field.
+    This field contains typically just `[make "install"]`. If a
+    `package-name.install` is found at the source of the build directory, opam
+    will install files from there to the prefix according to its instructions
+    after calling the commands specified in the `install:` field have been run.
 
 - <a id="opamfield-build-doc">
   `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
@@ -615,11 +550,19 @@ recommended to check the validity and quality of your `opam` files.
   after the build phase when documentation or tests have been requested. These
   follow the same specification as the `build:` field.
 
-- <a id="opamfield-remove">
-  `remove: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
-  the commands used to uninstall the package. It should be the reverse operation
-  of `install:`, and absent when `install:` is. It follows the same format as
-  `build:`.
+- <a id="opamfield-remove"> `remove: [ [ <string> { <filter> } ... ] { <filter>
+  } ... ]`</a>: commands to run before removing the package, in the same format
+  as `build:` and `install:`.
+  As of `2.0`, opam tracks the files added to the prefix during package
+  installation, and automatically removes them on package removal, so this
+  should not be needed anymore in most cases (and may even be harmful if files
+  from different packages overlap, which remove scripts generally don't handle).
+  Use it for special actions, like reverting updates to files, or stopping
+  daemons: removing what was just added is alredy taken care of.
+
+    The commands are run from the root of a fresh copy of the package source,
+    unless the [`light-uninstall`](opamflag-light-uninstall) package flag is
+    present, in which case they are run from the prefix.
 
 - <a id="opamfield-depends">`depends: [ <package-formula> ... ]`</a>:
   the package dependencies. This describes the requirements on other packages
@@ -681,9 +624,14 @@ recommended to check the validity and quality of your `opam` files.
     `depexts` information can be retrieved through the `opam list --external`
     command.
 
+    The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
+    packages, which make the dependencies clearer and avoids duplicating the
+    efforts of documenting the appropriate system packages on the various
+    OSes available.
+
 - <a id="opamfield-messages">`messages: [ <string> { <filter> } ... ]`</a>:
   used to display an additional (one-line) message when prompting a solution
-  implying the given package. The typical use-case is to tell the user that some
+  implying the given package. A typical use-case is to tell the user that some
   functionality will not be available as some optional dependencies are not
   installed.
 
@@ -712,24 +660,24 @@ recommended to check the validity and quality of your `opam` files.
 
     - <a id="opamflag-light-uninstall">`light-uninstall`</a>:
       the package's uninstall instructions don't require
-      the package source. This is currently inferred when the only uninstall
-      instructions have the form `ocamlfind remove...`, but making it explicit
-      is preferred (since OPAM 1.2.0).
+      the package source.
     - <a id="opamflag-verbose">`verbose`</a>:
       when this is present, the stdout of the package's build and
-      install instructions will be printed to the user (since OPAM 1.2.1).
+      install instructions will be printed to the user.
     - <a id="opamflag-plugin">`plugin`</a>:
       the package installs a program named `opam-<name>` and may be
-      auto-installed and run with `opam <name>` (since OPAM 1.2.2 ; the use is
-      discouraged in the 1.2 branch for compatibility, use `tag: "flags:plugin"`
-      instead)
-    - <a id="opamflag-compiler">`compiler`</a>:
-      the package is to be treated as a compiler, and available through the
-      `opam switch` command. This has several consequences:
-      - when installed this way, the package and all its dependencies will be
-        immutable and excluded from `opam switch rebuild`
-      - the package _must_ include or generate a `global-config.config` file at its root
-      - 
+      auto-installed and run with `opam <name>`.
+      The convention is to name the plugin package `opam-<name>`.
+    - <a id="opamflag-compiler">`compiler`</a>: the package is to be treated as
+      a compiler, and will be advertised for installing as a `compiler` package
+      when creating a fresh prefix through the `opam switch` command.
+    - <a id="opamflag-conf">`conf`</a>: this is a "`conf`" package, that is
+      intended to document capabilities of the system, or the presence of
+      software installed outside of opam. As such, the package may not
+      include a source URL or install anything, but just do some checks, and
+      fail to install if they don't pass. `conf` packages should have a name
+      starting with `conf-`, and include the appropriate
+      [`depexts:`](#opamfield-depexts) field.
 
 - <a id="opamfield-features">
   `features: [ <ident> <string> { <filter> } ... ]`</a> (EXPERIMENTAL):

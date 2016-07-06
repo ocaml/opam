@@ -113,7 +113,7 @@ module Make (VCS: VCS) = struct
       (OpamConsole.colorise `green (OpamPackage.name_to_string package))
       (OpamUrl.to_string remote_url)
       (match r with
-       | Result _ -> "updated"
+       | Result _ -> "changed"
        | Up_to_date _ -> "already up-to-date"
        | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done (download_dir r)
@@ -125,7 +125,7 @@ module Make (VCS: VCS) = struct
          (OpamRepositoryName.to_string repo.repo_name))
       (OpamUrl.to_string repo.repo_url)
       (match r with
-       | Result _ -> "updated"
+       | Result _ -> "changed"
        | Up_to_date _ -> "already up-to-date"
        | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done ()
