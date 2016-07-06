@@ -89,14 +89,16 @@ let wrapper_conf_script =
 
 let system_conf_script =
   "let () =\n\
+  \  let ocamlc = Sys.executable_name ^ \"c\" in\n\
   \  if Sys.ocaml_version <> \"%{_:version}%\" then\n\
   \    (Printf.eprintf\n\
-  \       \"OCaml version mismatch: %%s, expected %{_:version}%.\\n\\\n\
-  \        You should install '%{_:name}%.%{_:version}%' instead.\"\n\
+  \       \"ERROR: The compiler found at %%s has version %%s,\n\\\n\
+  \        and this package requires %{_:version}%.\\n\\\n\
+  \        You should use e.g. 'opam switch %{_:name}%.%{_:version}%' \\\n\
+  \        instead.\"\n\
   \       Sys.ocaml_version;\n\
   \     exit 1)\n\
   \  else\n\
-  \  let ocamlc = Sys.executable_name ^ \"c\" in\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
   \  Printf.fprintf oc \"opam-version: \\\"2.0~alpha\\\"\\n\\\n\
   \                     file-depends: [ %%S %%S ]\\n\"\n\
@@ -308,6 +310,7 @@ let process args =
                  (OpamPackage.Name.to_string ocaml_official_pkgname) str_version
                  (OpamPackage.Name.to_string ocaml_variants_pkgname));
           ]
+          (* add depexts ? *)
         in
         write_opam ~add_files:[conf_script_name^".in", wrapper_conf_script]
           wrapper_opam;
