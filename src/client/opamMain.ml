@@ -681,9 +681,10 @@ let config =
     match command, params with
     | Some `env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      `Ok (OpamConfigCommand.env st
-             ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
+      if OpamStateConfig.(!r.current_switch) = None then `Ok () else
+        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+        `Ok (OpamConfigCommand.env st
+               ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | Some `setup, [] ->
       let user        = all || user in
       let global      = all || global in
