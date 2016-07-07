@@ -1,7 +1,7 @@
 opam-version: "1"
 name: "P1"
 version: "2"
-ocaml-version: [ < "20" ]
+depends: [ "ocaml" {<= "10" | = "system"} ]
 maintainer: "contact@ocamlpro.com"
 substs:     [ "P1.config" ]
 libraries:  [ "p1" ]

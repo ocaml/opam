@@ -277,8 +277,8 @@ switch-alias:
 
 switch-env-packages:
 	$(CHECK) -l switch-env-packages-1 ocaml.system P1.1 P2.1
-	$(OPAMBIN) switch 10+a+b
-	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.0 P2.1 P3.1~weird-version.test P4.3
+	$(OPAMBIN) switch 10+a+b --packages=ocaml.10+a+b,P1,P2,P3,P4
+	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.1 P2.1 P3.1~weird-version.test P4.3
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
 repo:

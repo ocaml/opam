@@ -3,6 +3,6 @@ name: "P2"
 version:    "1"
 maintainer: "contact@ocamlpro.com"
 substs:     [ "config" "P2.config" ]
-depends:    [ "P1" ]
+depends: ["ocaml" "P1"]
 libraries:  [ "p2" ]
 build: [ "./build.sh" ]
