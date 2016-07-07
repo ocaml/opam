@@ -180,8 +180,8 @@ let list =
   let man = [
     `S "DESCRIPTION";
     `P "This command displays the list of installed packages when called \
-        without argument, or the list of available packages matching the \
-        given pattern.";
+        without argument, or the list of installed or available packages \
+        matching the given pattern.";
     `P "In color mode, root packages (eg. manually installed) are \
         underlined, and versions are shown in blue instead of magenta \
         for pinned packages.";
@@ -200,8 +200,7 @@ let list =
           ~doc:"List only packages that were explicitely installed, excluding \
                 the ones installed as dependencies";
         OpamListCommand.Available, info ["a";"available"]
-          ~doc:"List only packages that are available on the current system. \
-                This is the default for non-empty queries.";
+          ~doc:"List only packages that are available on the current system.";
         OpamListCommand.Installable, info ["installable"]
           ~doc:"List only packages that can be installed on the current switch \
                 (this calls the solver and may be more costly)";
@@ -317,13 +316,14 @@ let list =
     in
     let state_selector =
       if state_selector = [] then
-        if no_switch then []
+        if no_switch then Empty
         else if
           depends_on = [] && required_by = [] && resolve = [] &&
           packages = [] && field_match = None
-        then [OpamListCommand.Installed]
-        else [OpamListCommand.Available]
-      else state_selector
+        then Atom OpamListCommand.Installed
+        else Or (Atom OpamListCommand.Installed,
+                 Atom OpamListCommand.Available)
+      else OpamFormula.ands (List.map (fun x -> Atom x) state_selector)
     in
     let dependency_toggles = {
       OpamListCommand.
@@ -339,9 +339,9 @@ let list =
     } in
     let filter =
       OpamFormula.ands
-        (List.map (fun x -> Atom x)
-           (state_selector @
-            (match depends_on with [] -> [] | deps ->
+        (state_selector ::
+         List.map (fun x -> Atom x)
+           ((match depends_on with [] -> [] | deps ->
                 [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
             (match required_by with [] -> [] | rdeps ->
                 [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
