@@ -40,13 +40,6 @@ let ocaml_package_names =
    ocaml_variants_pkgname;
    ocaml_system_pkgname]
 
-let all_base_packages =
-  ref (OpamPackage.Name.Set.of_list (List.map OpamPackage.Name.of_string [
-      "base-bigarray";
-      "base-threads";
-      "base-unix";
-    ]))
-
 (* OCaml script that generates the .config file for a given ocaml compiler *)
 let wrapper_conf_script =
   "let () =\n\
@@ -106,6 +99,14 @@ let system_conf_script =
   \  close_out oc\n\
   "
 
+let conf_script_name = "gen_ocaml_config.ml"
+
+let all_base_packages =
+  OpamPackage.Name.Set.of_list (List.map OpamPackage.Name.of_string [
+      "base-bigarray";
+      "base-threads";
+      "base-unix";
+    ])
 
 let process args =
 
@@ -119,6 +120,16 @@ let process args =
   else
 
   let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
+
+  let write_opam ?(add_files=[]) opam =
+    let nv = O.package opam in
+    let pfx = Some (OpamPackage.name_to_string nv) in
+    let files_dir = OpamRepositoryPath.files repo pfx nv in
+    O.write (OpamRepositoryPath.opam repo pfx nv) opam;
+    List.iter (fun (base,contents) ->
+        OpamFilename.(write Op.(files_dir // base) contents))
+      add_files
+  in
 
   let compilers =
     let compilers_dir = OpamFilename.Op.(repo.repo_root / "compilers") in
@@ -134,7 +145,8 @@ let process args =
       OpamStd.String.Map.empty
   in
 
-  OpamStd.String.Map.iter (fun c comp_file ->
+  let ocaml_versions =
+    OpamStd.String.Map.fold (fun c comp_file ocaml_versions ->
       let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
       let descr_file =
         OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
@@ -153,35 +165,27 @@ let process args =
           comp
       in
 
-      let nv, variant =
+      let nv, ocaml_version, variant =
         match OpamStd.String.cut_at c '+' with
         | None ->
           OpamPackage.create ocaml_official_pkgname
             (OpamPackage.Version.of_string c),
-          None
+          c, None
         | Some (version,variant) ->
           OpamPackage.create ocaml_variants_pkgname
             (OpamPackage.Version.of_string (version^"+"^variant)),
-          Some variant
+          version, Some variant
       in
 
-(*
-      List.iter (fun (name, _) ->
-          all_base_packages := OpamPackage.Name.Set.add name !all_base_packages)
-        (OpamFormula.atoms (OpamFile.Comp.packages comp));
-*)
+      (* (Some exotic compiler variants have e.g. 'lwt' as base package, which
+         won't work in our current setup. They'll need to be rewritten, but
+         break the following detection of all base packages, which isn't
+         idempotent anyway...)
 
-      let write_opam ?(add_files=[]) opam =
-        let nv = O.package opam in
-        let pfx = Some (OpamPackage.name_to_string nv) in
-        let files_dir = OpamRepositoryPath.files repo pfx nv in
-        O.write (OpamRepositoryPath.opam repo pfx nv) opam;
-        List.iter (fun (base,contents) ->
-            OpamFilename.(write Op.(files_dir // base) contents))
-          add_files
-      in
-
-      let conf_script_name = "gen_ocaml_config.ml" in
+         List.iter (fun (name, _) ->
+             all_base_packages := OpamPackage.Name.Set.add name !all_base_packages)
+           (OpamFormula.atoms (OpamFile.Comp.packages comp));
+      *)
 
       let opam = OpamFile.Comp.to_package ~package:nv comp descr in
       let opam =
@@ -233,7 +237,7 @@ let process args =
       OpamUrl.Map.bindings |>
       List.map (fun (url,m) -> [OpamUrl.to_string url; m]) |>
       OpamFile.Lines.write cache_file;
-      if List.mem None extra_sources then ()
+      if List.mem None extra_sources then ocaml_versions
       else
       let opam =
         opam |>
@@ -243,79 +247,7 @@ let process args =
       write_opam opam;
 
       if variant = None then begin
-        (* "official" compiler release: generate wrapper and system compiler package *)
-
-        let wrapper_nv = OpamPackage.create ocaml_wrapper_pkgname nv.version in
-        let str_version = OpamPackage.Version.to_string nv.version in
-        let upper_bound_v =
-          let g = Re.(exec @@ compile @@ seq [rep digit; eos]) str_version in
-          try
-            let sn = Re.Group.get g 0 in
-            String.sub str_version 0 (fst (Re.Group.offset g 0)) ^
-            (string_of_int (1 + int_of_string sn)) ^ "~"
-          with Not_found -> str_version ^ "a"
-        in
-        let wrapper_opam =
-          O.create wrapper_nv |>
-          O.with_substs [OpamFilename.Base.of_string conf_script_name] |>
-          O.with_build [
-            List.map (fun s -> CString s, None)
-              [ "ocaml"; "unix.cma"; conf_script_name ],
-            None
-          ] |>
-          O.with_maintainer [ "platform@lists.ocaml.org" ] |>
-          O.with_env [
-            "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
-            "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%", None
-          ] |>
-          (* leave the Compiler flag to the implementations (since the user
-             needs to select one)
-             O.with_flags [Pkgflag_Compiler] |> *)
-          O.with_descr
-            (OpamFile.Descr.create
-               "The OCaml compiler (virtual package)\n\
-                This package requires a matching implementation of OCaml,\n\
-                and polls it to initialise specific variables like \
-                `ocaml:native-dynlink`") |>
-          O.with_depends
-            (OpamFormula.ors [
-                Atom (
-                  ocaml_official_pkgname,
-                  Atom (Constraint (`Eq, FString str_version))
-                );
-                Atom (
-                  ocaml_variants_pkgname,
-                  OpamFormula.ands [
-                    Atom (Constraint (`Geq, FString str_version));
-                    Atom (Constraint (`Lt, FString upper_bound_v));
-                  ]
-                );
-                Atom (
-                  ocaml_system_pkgname,
-                  Atom (Constraint (`Eq, FString str_version))
-                )
-              ]) |>
-          O.with_features [
-            OpamVariable.of_string "preinstalled",
-            "The concrete compiler was installed outside of opam",
-            FIdent ([ocaml_system_pkgname], OpamVariable.of_string "installed",
-                    None);
-            OpamVariable.of_string "compiler",
-            "Detailed OCaml or variant compiler name",
-            FString
-              (Printf.sprintf "%%{%s:installed?system:}%%\
-                               %%{%s:installed?%s:}%%\
-                               %%{%s:version}%%"
-                 (OpamPackage.Name.to_string ocaml_system_pkgname)
-                 (OpamPackage.Name.to_string ocaml_official_pkgname) str_version
-                 (OpamPackage.Name.to_string ocaml_variants_pkgname));
-          ]
-          (* add depexts ? *)
-        in
-        write_opam ~add_files:[conf_script_name^".in", wrapper_conf_script]
-          wrapper_opam;
-
-
+        (* "official" compiler release: generate a system compiler package *)
         let sys_nv = OpamPackage.create ocaml_system_pkgname nv.version in
         let system_opam =
           O.create sys_nv |>
@@ -334,6 +266,7 @@ let process args =
           O.with_descr
             (OpamFile.Descr.create
                  "The OCaml compiler (system version, from outside of opam)")
+            (* add depext towards an 'ocaml' package ? *)
         in
         write_opam ~add_files:[conf_script_name^".in", system_conf_script]
           system_opam
@@ -345,13 +278,90 @@ let process args =
       OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
       OpamConsole.status_line
         "Compiler %s successfully converted to package %s"
-        c (OpamPackage.to_string nv))
-    compilers;
+        c (OpamPackage.to_string nv);
+      OpamStd.String.Set.add ocaml_version ocaml_versions
+      )
+    compilers OpamStd.String.Set.empty
+  in
+
+  (* Generate "ocaml" package wrappers depending on one of the implementations
+     at the appropriate version *)
+  let gen_ocaml_wrapper str_version =
+    let version = OpamPackage.Version.of_string str_version in
+    let wrapper_nv = OpamPackage.create ocaml_wrapper_pkgname version in
+    let upper_bound_v =
+      let g = Re.(exec @@ compile @@ seq [rep digit; eos]) str_version in
+      try
+        let sn = Re.Group.get g 0 in
+        String.sub str_version 0 (fst (Re.Group.offset g 0)) ^
+        (string_of_int (1 + int_of_string sn)) ^ "~"
+      with Not_found -> str_version ^ "a"
+    in
+    let wrapper_opam =
+      O.create wrapper_nv |>
+      O.with_substs [OpamFilename.Base.of_string conf_script_name] |>
+      O.with_build [
+        List.map (fun s -> CString s, None)
+          [ "ocaml"; "unix.cma"; conf_script_name ],
+        None
+      ] |>
+      O.with_maintainer [ "platform@lists.ocaml.org" ] |>
+      O.with_env [
+        "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
+        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%", None
+      ] |>
+      (* leave the Compiler flag to the implementations (since the user
+         needs to select one)
+         O.with_flags [Pkgflag_Compiler] |> *)
+      O.with_descr
+        (OpamFile.Descr.create
+           "The OCaml compiler (virtual package)\n\
+            This package requires a matching implementation of OCaml,\n\
+            and polls it to initialise specific variables like \
+            `ocaml:native-dynlink`") |>
+      O.with_depends
+        (OpamFormula.ors [
+            Atom (
+              ocaml_official_pkgname,
+              Atom (Constraint (`Eq, FString str_version))
+            );
+            Atom (
+              ocaml_variants_pkgname,
+              OpamFormula.ands [
+                Atom (Constraint (`Geq, FString str_version));
+                Atom (Constraint (`Lt, FString upper_bound_v));
+              ]
+            );
+            Atom (
+              ocaml_system_pkgname,
+              Atom (Constraint (`Eq, FString str_version))
+            )
+          ]) |>
+      O.with_features [
+        OpamVariable.of_string "preinstalled",
+        "The concrete compiler was installed outside of opam",
+        FIdent ([ocaml_system_pkgname], OpamVariable.of_string "installed",
+                None);
+        OpamVariable.of_string "compiler",
+        "Detailed OCaml or variant compiler name",
+        FString
+          (Printf.sprintf "%%{%s:installed?system:}%%\
+                           %%{%s:installed?%s:}%%\
+                           %%{%s:version}%%"
+             (OpamPackage.Name.to_string ocaml_system_pkgname)
+             (OpamPackage.Name.to_string ocaml_official_pkgname) str_version
+             (OpamPackage.Name.to_string ocaml_variants_pkgname));
+      ]
+    in
+    write_opam ~add_files:[conf_script_name^".in", wrapper_conf_script]
+      wrapper_opam
+  in
+  OpamStd.String.Set.iter gen_ocaml_wrapper ocaml_versions;
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
   OpamConsole.msg "Will not update base packages: %s\n"
-    (OpamPackage.Name.Set.to_string !all_base_packages);
+    (OpamPackage.Name.Set.to_string all_base_packages);
 
   OpamPackage.Map.iter (fun package prefix ->
       let opam_file = OpamRepositoryPath.opam repo prefix package in
@@ -514,7 +524,7 @@ let process args =
         | _ -> v
       in
       if not (List.mem nv.name ocaml_package_names) &&
-         not (OpamPackage.Name.Set.mem nv.name !all_base_packages) then
+         not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
         opam |>
         OpamFile.OPAM.with_depends depends |>
         OpamFile.OPAM.with_conflicts conflicts |>
