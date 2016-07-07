@@ -174,7 +174,10 @@ let vpkg2atom cudfnv2opam (name,cstr) =
     try
       let nv = cudfnv2opam (name,v) in
       nv.name, Some (relop, nv.version)
-    with Not_found -> assert false
+    with Not_found ->
+      OpamConsole.error "Translation error for package %s"
+        (string_of_atom (name, cstr));
+      assert false
 (* Should be unneeded now that we pass a full version_map along
    [{
       log "Could not find corresponding version in cudf universe: %a"

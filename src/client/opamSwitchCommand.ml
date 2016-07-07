@@ -278,6 +278,7 @@ let install gt ~update_config ~packages switch =
       { st with switch; available_packages }
   in
   let gt = OpamGlobalState.unlock gt in
+  let packages = OpamSolution.sanitize_atom_list st packages in
   try gt, install_compiler_packages st packages
   with e ->
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
