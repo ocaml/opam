@@ -241,10 +241,10 @@ let install_compiler_packages t atoms =
                                 as switch base.";
   let t = { t with compiler_packages = to_install_pkgs } in
   let t, result =
-    OpamSolution.apply ~ask:false t (Switch roots)
+    OpamSolution.apply ~ask:OpamStateConfig.(!r.show) t (Switch roots)
       ~requested:roots
       solution in
-  OpamSolution.check_solution ~quiet:true t result;
+  OpamSolution.check_solution ~quiet:OpamStateConfig.(not !r.show) t result;
   t
 
 let install gt ~update_config ~packages switch =
@@ -257,31 +257,51 @@ let install gt ~update_config ~packages switch =
     OpamConsole.error_and_exit
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
-  let gt = OpamSwitchAction.create_empty_switch gt switch in
-  let st =
-    if update_config then
-      OpamSwitchAction.set_current_switch `Lock_write gt switch
+  let gt, st =
+    if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+      let gt = OpamSwitchAction.create_empty_switch gt switch in
+      if update_config then
+        gt, OpamSwitchAction.set_current_switch `Lock_write gt switch
+      else
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      gt, OpamSwitchState.load `Lock_write gt rt switch
     else
-    let rt = OpamRepositoryState.load `Lock_none gt in
-    OpamSwitchState.load `Lock_write gt rt switch
+      gt,
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      let st = OpamSwitchState.load_virtual gt rt in
+      let available_packages =
+        lazy (OpamSwitchState.compute_available_packages gt switch
+                (OpamSwitchAction.gen_global_config gt.root switch)
+                ~pinned:OpamPackage.Set.empty
+                ~opams:st.opams)
+      in
+      { st with switch; available_packages }
   in
   let gt = OpamGlobalState.unlock gt in
+  let packages = OpamSolution.sanitize_atom_list st packages in
   try gt, install_compiler_packages st packages
   with e ->
-    (try OpamStd.Exn.fatal e with e ->
-       OpamConsole.warning "Switch %s left partially installed"
-         (OpamSwitch.to_string switch);
-       raise e);
-    if OpamConsole.confirm "Switch initialisation failed, clean up ? \
-                            ('n' will leave the switch partially installed)"
-    then ignore (clear_switch gt switch);
+    if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+      ((try OpamStd.Exn.fatal e with e ->
+           OpamConsole.warning "Switch %s left partially installed"
+             (OpamSwitch.to_string switch);
+           raise e);
+       if OpamConsole.confirm "Switch initialisation failed, clean up ? \
+                               ('n' will leave the switch partially installed)"
+       then ignore (clear_switch gt switch));
     raise e
 
 let switch lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
-    let st = OpamSwitchAction.set_current_switch lock gt switch in
+    let st =
+      if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+        OpamSwitchAction.set_current_switch lock gt switch
+      else
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      OpamSwitchState.load lock gt rt switch
+    in
     OpamEnv.check_and_print_env_warning st;
     st
   else
@@ -294,7 +314,13 @@ let switch_with_autoinstall gt ~packages switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
-    let st = OpamSwitchAction.set_current_switch `Lock_write gt switch in
+    let st =
+      if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+        OpamSwitchAction.set_current_switch `Lock_write gt switch
+      else
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      OpamSwitchState.load `Lock_write gt rt switch
+    in
     let gt = OpamGlobalState.unlock gt in
     OpamEnv.check_and_print_env_warning st;
     gt, st
