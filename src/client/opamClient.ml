@@ -325,7 +325,7 @@ let slog = OpamConsole.slog
         OpamConsole.errmsg "%s" (OpamStd.Format.itemize (fun x -> x) reasons);
         if chains <> [] then
           OpamConsole.errmsg
-            "The following dependencies are in cause:\n%s"
+            "The following dependencies are the cause:\n%s"
             (OpamStd.Format.itemize (fun x -> x) chains);
         if OpamCudf.external_solver_available () then
           OpamConsole.errmsg
@@ -543,7 +543,7 @@ let slog = OpamConsole.slog
          installed packages:\n%s"
         (OpamStd.Format.itemize (fun x -> x) reasons);
       if chains <> [] then (
-        OpamConsole.formatted_msg "The following dependencies are in cause:\n";
+        OpamConsole.formatted_msg "The following dependencies are the cause:\n";
         List.iter (OpamConsole.msg "  - %s\n") chains);
       OpamConsole.formatted_msg
         "\nYou should run \"opam upgrade%s\" to resolve the situation.\n"
