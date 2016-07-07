@@ -118,7 +118,7 @@ let string_of_formula =
 let packages_of_atoms st atoms =
   atoms |>
   OpamSolution.sanitize_atom_list ~permissive:true st |>
-  OpamSwitchState.packages_of_atoms st
+  OpamFormula.packages_of_atoms (st.packages ++ st.installed)
 
 let package_dependencies st tog nv =
   OpamSwitchState.opam st nv |>
@@ -129,7 +129,7 @@ let package_dependencies st tog nv =
 
 let atom_dependencies st tog atoms =
   atoms |>
-  OpamSwitchState.packages_of_atoms st |> fun pkgs ->
+  OpamFormula.packages_of_atoms (st.packages ++ st.installed) |> fun pkgs ->
   OpamPackage.Set.fold (fun nv acc ->
       OpamFormula.ors [acc; package_dependencies st tog nv])
     pkgs OpamFormula.Empty
@@ -185,7 +185,7 @@ let apply_selector ~base st = function
   | Required_by (tog, atoms) ->
     atom_dependencies st tog atoms |>
     OpamFormula.atoms |>
-    OpamSwitchState.packages_of_atoms st
+    OpamFormula.packages_of_atoms base
   | Depends_on (tog, atoms) ->
     let packages = packages_of_atoms st atoms in
     OpamPackage.Set.filter (fun nv ->
@@ -234,7 +234,7 @@ let apply_selector ~base st = function
           (content_strings nv))
       base
   | Atoms atoms ->
-    OpamSwitchState.packages_of_atoms st atoms
+    OpamFormula.packages_of_atoms base atoms
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         OpamSwitchState.opam st nv |> OpamFile.OPAM.has_flag f)
@@ -612,7 +612,9 @@ let list gt
 
 let info gt ~fields ~raw_opam ~where ?normalise atoms =
   let st = get_switch_state gt in
-  let packages = OpamSwitchState.packages_of_atoms st atoms in
+  let packages =
+    OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
+  in
   if OpamPackage.Set.is_empty packages then
     (OpamConsole.error "No package matching %s found"
        (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
