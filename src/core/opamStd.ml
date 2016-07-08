@@ -718,15 +718,22 @@ end
 module OpamFormat = struct
 
   let visual_length_substring s ofs len =
-    let rec aux s i =
-      try
-        let i = String.index_from s i '\027' in
-        let j = String.index_from s (i+1) 'm' in
-        if j > ofs + len then 0 else
-          j - i + 1 + aux s (j+1)
-      with Not_found | Invalid_argument _ -> 0
+    let rec aux acc i =
+      if i >= len then acc
+      else match s.[i] with
+        | '\xc2'..'\xdf' -> aux (acc + (min 1 (len - i))) (i + 2)
+        | '\xe0'..'\xef' -> aux (acc + (min 2 (len - i))) (i + 3)
+        | '\xf0'..'\xf4' -> aux (acc + (min 3 (len - i))) (i + 4)
+        | '\027' ->
+          (try
+             let j = String.index_from s (i+1) 'm' in
+             if j > ofs + len then acc + len - i else
+               aux (acc + j - i + 1) (j + 1)
+           with Not_found | Invalid_argument _ ->
+             acc + len - i)
+        | _ -> aux acc (i + 1)
     in
-    len - aux s ofs
+    len - aux 0 ofs
 
   let visual_length s = visual_length_substring s 0 (String.length s)
 
