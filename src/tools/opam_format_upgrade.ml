@@ -85,17 +85,18 @@ let system_conf_script =
   \  let ocamlc = Sys.executable_name ^ \"c\" in\n\
   \  if Sys.ocaml_version <> \"%{_:version}%\" then\n\
   \    (Printf.eprintf\n\
-  \       \"ERROR: The compiler found at %%s has version %%s,\n\\\n\
+  \       \"ERROR: The compiler found at %%s has version %%s,\\n\\\n\
   \        and this package requires %{_:version}%.\\n\\\n\
-  \        You should use e.g. 'opam switch %{_:name}%.%{_:version}%' \\\n\
+  \        You should use e.g. 'opam switch %{_:name}%.%%s' \\\n\
   \        instead.\"\n\
-  \       Sys.ocaml_version;\n\
+  \       ocamlc Sys.ocaml_version Sys.ocaml_version;\n\
   \     exit 1)\n\
   \  else\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
   \  Printf.fprintf oc \"opam-version: \\\"2.0~alpha\\\"\\n\\\n\
-  \                     file-depends: [ %%S %%S ]\\n\"\n\
-  \    ocamlc (Digest.to_hex (Digest.file ocamlc));\n\
+  \                     file-depends: [ %%S %%S ]\\n\\\n\
+  \                     variables { path: %%S }\\n\"\n\
+  \    ocamlc (Digest.to_hex (Digest.file ocamlc)) (Filename.dirname ocamlc);\n\
   \  close_out oc\n\
   "
 
