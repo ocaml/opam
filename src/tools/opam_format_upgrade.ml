@@ -66,7 +66,7 @@ let wrapper_conf_script =
   \    String.concat \":\" lines\n\
   \  in\n\
   \  let p fmt = Printf.fprintf oc (fmt ^^ \"\\n\") in\n\
-  \  p \"opam-version: \\\"2.0~alpha\\\"\";\n\
+  \  p \"opam-version: \\\"2.0~alpha2\\\"\";\n\
   \  p \"variables {\";\n\
   \  p \"  native: %%b\"\n\
   \    (Sys.file_exists (ocaml^\"opt\"));\n\
@@ -93,7 +93,7 @@ let system_conf_script =
   \     exit 1)\n\
   \  else\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
-  \  Printf.fprintf oc \"opam-version: \\\"2.0~alpha\\\"\\n\\\n\
+  \  Printf.fprintf oc \"opam-version: \\\"2.0~alpha2\\\"\\n\\\n\
   \                     file-depends: [ %%S %%S ]\\n\\\n\
   \                     variables { path: %%S }\\n\"\n\
   \    ocamlc (Digest.to_hex (Digest.file ocamlc)) (Filename.dirname ocamlc);\n\

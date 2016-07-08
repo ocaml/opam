@@ -1,3 +1,16 @@
+2.0~alpha2
+* Extended the `opam lint` command-line options (package descriptions from opam
+  metadata, warnings selection)
+* Allow to create a new switch with `opam switch import`
+* Rewritten, much more flexible `opam list` command, with composable filters and
+  output selection
+* Delay the removals of packages as much as possible, avoiding most cases of
+  mass uninstalled packages after a build failure
+* Use a specific `opam` user-agent for downloads
+* Remove globalisation of compiler package variables and support for
+  `available:` constraints depending on those. Rewrite the repository
+  accordingly to use explicit dependencies towards the compiler version.
+
 2.0~alpha
 * Changed license to LGPL 2.1 with linking exception, like OCaml (#2573)
 * Track files installed by packages for cleaner removal and listing, add `opam
