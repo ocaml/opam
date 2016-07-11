@@ -127,7 +127,7 @@ let init =
   ] in
   let compiler =
     mk_opt ["c";"compiler"] "VERSION" "Set the compiler to install"
-      Arg.string "system"
+      Arg.(some string) None
   in
   let no_compiler =
     mk_flag ["bare"]
@@ -142,12 +142,24 @@ let init =
            (OpamUrl.to_string OpamRepositoryBackend.default_url) & doc) in
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
+  let config_file =
+    mk_opt ["config"] "FILE"
+      "Use the given init config file (default is ~/.opamrc or /etc/opam, \
+       if present)"
+      Arg.(some & OpamArg.filename) None
+  in
   let init global_options
       build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o
-      compiler no_compiler =
+      compiler no_compiler config_file =
     apply_global_options global_options;
     apply_build_options build_options;
+    let init_config =
+      OpamStd.Option.Op.(config_file >>| OpamFile.make >>+
+                         OpamPath.init_config_file >>=
+                         OpamFile.Config.read_opt)
+    in
+    (* todo: specific format for the config file allowing to describe repos *)
     let repo_priority = 0 in
     let repo_url = OpamUrl.parse ?backend:repo_kind repo_url in
     let repository = {
@@ -158,19 +170,29 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    let gt, rt = OpamClient.init repository shell dot_profile update_config in
+    let gt, rt =
+      OpamClient.init
+        ?init_config repository shell dot_profile update_config
+    in
     if not no_compiler &&
        OpamFile.Config.installed_switches gt.config = [] then
-      let packages =
-        OpamSwitchCommand.guess_compiler_package rt compiler
-      in
-      OpamSwitchCommand.switch_with_autoinstall
-        gt ~packages (OpamSwitch.of_string compiler)
-      |> ignore
+      match compiler with
+      | Some comp ->
+        let packages =
+          OpamSwitchCommand.guess_compiler_package rt comp
+        in
+        OpamSwitchCommand.switch_with_autoinstall
+          gt ~packages (OpamSwitch.of_string comp)
+        |> ignore
+      | None ->
+        OpamConsole.note
+          "No compiler selected, no switch has been created.\n\
+           Use 'opam switch <compiler>' to get started."
   in
   Term.(pure init
-    $global_options $build_options $repo_kind_flag $repo_name $repo_url
-    $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler),
+        $global_options $build_options $repo_kind_flag $repo_name $repo_url
+        $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
+        $config_file),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -1170,8 +1192,8 @@ let switch =
     mk_opt ["A";"alias-of"]
       "COMP"
       "The compiler to use when creating the switch (packages with the \
-       \"compiler\" flag matching this full package, package name of \
-       version are looked for. This is for backwards compatibility, and \
+       \"compiler\" flag matching this full package, package name or \
+       version are looked for). This is for backwards compatibility, and \
        use of $(b,--packages) is preferred."
       Arg.(some string) None in
   let no_switch =

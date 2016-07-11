@@ -577,7 +577,7 @@ let slog = OpamConsole.slog
         broken_state_message ~need_fixup:true cs;
         st
 
-  let init repo shell dot_profile update_config =
+  let init ?init_config repo shell dot_profile update_config =
     log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
@@ -665,9 +665,14 @@ let slog = OpamConsole.slog
 
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create [] None [repo.repo_name]
-            OpamStateConfig.(Lazy.force default.jobs)
-            OpamStateConfig.(default.dl_jobs)
+          match init_config with
+          | Some c ->
+            OpamFile.Config.with_repositories [repo.repo_name] c |>
+            OpamFile.Config.with_opam_version OpamVersion.current_nopatch
+          | None ->
+            OpamFile.Config.create [] None [repo.repo_name]
+              OpamStateConfig.(Lazy.force default.jobs)
+              OpamStateConfig.(default.dl_jobs)
         in
         OpamFile.Config.write (OpamPath.config root) config;
 
