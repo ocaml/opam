@@ -381,7 +381,7 @@ let noop_remove_package t nv =
       OpamPath.Switch.changes t.switch_global.root t.switch name
     in
     match OpamFile.Changes.read_opt changes_file with
-    | Some map -> map <> OpamStd.String.Map.empty
+    | Some map -> not (OpamStd.String.Map.is_empty map)
     | None ->
       let install_file =
         OpamPath.Switch.install t.switch_global.root t.switch name
