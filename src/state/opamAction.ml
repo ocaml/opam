@@ -501,8 +501,9 @@ let remove_package_aux
       | None -> OpamFile.Changes.read_opt changes_file
       | some -> some
     in
+    let title = Printf.sprintf "While removing %s" (OpamPackage.to_string nv) in
     OpamStd.Option.iter
-      (OpamDirTrack.revert ~verbose:(not silent) ?force
+      (OpamDirTrack.revert ~title ~verbose:(not silent) ?force
          (OpamPath.Switch.root t.switch_global.root t.switch))
       changes
   in
