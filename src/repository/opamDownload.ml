@@ -112,6 +112,13 @@ let really_download ~overwrite ?(compress=false) ?checksum ~url ~dst =
        OpamSystem.internal_error "Downloaded file not found"
      else if Sys.file_exists dst && not overwrite then
        OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
+     if OpamRepositoryConfig.(!r.force_checksums <> Some false) then
+       OpamStd.Option.iter (fun cksum ->
+         let dl_sum = OpamFilename.digest (OpamFilename.of_string tmp_dst) in
+         if dl_sum <> cksum then
+           failwith (Printf.sprintf "Bad checksum for %s (expected %s, got %s)"
+                       (OpamUrl.to_string url) cksum dl_sum))
+         checksum;
      OpamSystem.mv tmp_dst dst;
      Done ())
 
