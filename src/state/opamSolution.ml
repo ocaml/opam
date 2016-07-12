@@ -426,9 +426,7 @@ let parallel_apply t action action_graph =
               t.conf_files; }
       in
       let nv = action_contents action in
-      let source =
-        try Some (OpamPackage.Map.find nv package_sources)
-        with Not_found -> None in
+      let source = OpamPackage.Map.find_opt nv package_sources in
       if OpamStateConfig.(!r.fake) then
         match action with
         | `Build _ -> Done (`Successful (installed, removed))
@@ -460,9 +458,8 @@ let parallel_apply t action action_graph =
         (if OpamAction.removal_needs_download t nv then
            let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
            OpamFilename.rmdir d;
-           OpamProcess.Job.ignore_errors ~default:()
-             (OpamAction.extract_package t source nv d)
-         else Done()) @@+ fun () ->
+           OpamAction.extract_package t source nv d
+         else Done None) @@+ fun _ ->
         OpamProcess.Job.ignore_errors ~default:()
           (OpamAction.remove_package t nv) @@| fun () ->
         remove_from_install nv;

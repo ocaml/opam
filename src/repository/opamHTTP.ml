@@ -228,7 +228,12 @@ module B = struct
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
-         Done (Not_available (OpamUrl.to_string remote_url))) @@
+         let msg = match e with
+           | Failure msg ->
+             Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) msg
+           | _ -> OpamUrl.to_string remote_url
+         in
+         Done (Not_available msg)) @@
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file ->
     if OpamRepositoryBackend.check_digest local_file checksum then

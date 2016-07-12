@@ -166,14 +166,17 @@ val read_command_output: ?verbose:bool -> ?env:string array ->
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
 
-(** [extract filename dirname] extracts the archive [filename] into
+(** [extract ~dir:dirname filename] extracts the archive [filename] into
     [dirname]. [dirname] should not exists and [filename] should
     contain only one top-level directory.*)
-val extract: string -> string -> unit
+val extract: dir:string -> string -> unit
 
-(** [extract_in filename dirname] extracts the archive [filename] into
+(** Same as [extract], but as an OpamProcess.job *)
+val extract_job: dir:string -> string -> exn option OpamProcess.job
+
+(** [extract_in ~dir:dirname filename] extracts the archive [filename] into
     [dirname]. [dirname] should already exists. *)
-val extract_in: string -> string -> unit
+val extract_in: dir:string -> string -> unit
 
 (** Create a directory. Do not fail if the directory already
     exist. *)

@@ -188,6 +188,9 @@ val link: src:t -> dst:t -> unit
     match [Dir.t] dir if needed) *)
 val extract: t -> Dir.t -> unit
 
+(** Same as [extract], as an OpamProcess.job *)
+val extract_job: t -> Dir.t -> exn option OpamProcess.job
+
 (** Extract an archive in a given directory (which should already exists) *)
 val extract_in: t -> Dir.t -> unit
 

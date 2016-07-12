@@ -474,6 +474,8 @@ let cpu_count () =
     int_of_string (List.hd ans)
   with Not_found | Process_error _ | Failure _ -> 1
 
+open OpamProcess.Job.Op
+
 module Tar = struct
 
   let extensions =
@@ -503,10 +505,10 @@ module Tar = struct
       (fun suff -> Filename.check_suffix f suff)
       (List.concat (List.rev_map fst extensions))
 
-  let extract_function file =
+  let extract_command file =
     let command c dir =
-      command [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
-
+      make_command "tar" [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
+    in
     let ext =
       List.fold_left
         (fun acc (ext, c) -> match acc with
@@ -538,47 +540,69 @@ module Zip = struct
     | '\x50', '\x4b', '\x03', '\x04' -> true
     | _ -> false
 
-  let extract_function file =
-    Some (fun dir -> command [ "unzip" ; file; "-d"; dir ])
+  let extract_command file =
+    Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
 end
 
 let is_tar_archive = Tar.is_archive
 
-let extract file dst =
-  let _, extract_function =
-    if Zip.is_archive file then "zip", Zip.extract_function
-    else "tar", Tar.extract_function
+let extract_job ~dir file =
+  if not (Sys.file_exists file) then
+    Done (Some (File_not_found file))
+  else
+  let extract_command =
+    if Zip.is_archive file then Zip.extract_command
+    else Tar.extract_command
   in
-  with_tmp_dir (fun tmp_dir ->
-    match extract_function file with
-    | None   ->
-      mkdir dst;
-      copy file (dst/Filename.basename file)
-    | Some f ->
-      f tmp_dir;
-      if Sys.file_exists dst then
-        internal_error "Extracting the archive will overwrite %s." dst;
-      match files_all_not_dir tmp_dir with
-      | [] ->
-        begin match directories_strict tmp_dir with
+  with_tmp_dir_job @@ fun tmp_dir ->
+  match extract_command file with
+  | None   ->
+    (try
+       mkdir dir;
+       copy file (dir/Filename.basename file);
+       Done None
+     with e -> Done (Some e))
+  | Some cmd ->
+    cmd tmp_dir @@> fun r ->
+    if not (OpamProcess.is_success r) then
+      Done (Some (Process_error r))
+    else if Sys.file_exists dir then
+      internal_error "Extracting the archive will overwrite %s." dir
+    else
+    match files_all_not_dir tmp_dir with
+    | [] ->
+      begin match directories_strict tmp_dir with
         | [x] ->
-          mkdir (Filename.dirname dst);
-          command [ "mv"; x; dst]
+          mkdir (Filename.dirname dir);
+          make_command "mv" [ x; dir ] @@> fun r ->
+          if OpamProcess.is_success r then Done None
+          else Done (Some (Process_error r))
         | _ ->
           internal_error "The archive %S contains multiple root directories."
             file
-        end
-      | _   ->
-        mkdir (Filename.dirname dst);
-        command [ "mv"; tmp_dir; dst]
-  )
+      end
+    | _   ->
+      mkdir (Filename.dirname dir);
+      make_command "mv" [ tmp_dir; dir] @@> fun r ->
+      if OpamProcess.is_success r then Done None
+      else Done (Some (Process_error r))
 
-let extract_in file dst =
-  if not (Sys.file_exists dst) then
+let extract ~dir file =
+  match OpamProcess.Job.run (extract_job ~dir file) with
+  | Some e -> raise e
+  | None -> ()
+
+let extract_in ~dir file =
+  if not (Sys.file_exists dir) then
     internal_error "%s does not exist." file;
-  match Tar.extract_function file with
+  match Tar.extract_command file with
   | None   -> internal_error "%s is not a valid tar archive." file
-  | Some f -> f dst
+  | Some cmd ->
+    let r = OpamProcess.Job.run (cmd dir @@> fun r -> Done r) in
+    if not (OpamProcess.is_success r) then
+      failwith (Printf.sprintf "Failed to extract archive %s: %s" file
+                  (OpamProcess.result_summary r))
+
 
 let link src dst =
   if Sys.file_exists src then (
@@ -698,7 +722,6 @@ let patch ~dir p =
       (("-p" ^ string_of_int n) :: "-i" :: p :: opts)
   in
   let rec aux n =
-    let open OpamProcess.Job.Op in
     if n = max_trying then Done false
     else
       patch_cmd ~dryrun:true n @@> fun r ->

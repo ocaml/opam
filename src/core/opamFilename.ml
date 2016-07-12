@@ -290,10 +290,13 @@ let copy_in ?root = process_in ?root copy
 let link_in = process_in link
 
 let extract filename dirname =
-  OpamSystem.extract (to_string filename) (Dir.to_string dirname)
+  OpamSystem.extract (to_string filename) ~dir:(Dir.to_string dirname)
+
+let extract_job filename dirname =
+  OpamSystem.extract_job (to_string filename) ~dir:(Dir.to_string dirname)
 
 let extract_in filename dirname =
-  OpamSystem.extract_in (to_string filename) (Dir.to_string dirname)
+  OpamSystem.extract_in (to_string filename) ~dir:(Dir.to_string dirname)
 
 type generic_file =
   | D of Dir.t

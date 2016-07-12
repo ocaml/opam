@@ -1656,11 +1656,13 @@ let source =
       match OpamProcess.Job.run (OpamAction.download_package t nv) with
       | `Error _ -> OpamConsole.error_and_exit "Download failed"
       | `Successful s ->
-        OpamProcess.Job.run @@
-        OpamProcess.Job.ignore_errors ~default:()
-          (OpamAction.extract_package t s nv dir);
-        OpamConsole.formatted_msg "Successfully extracted to %s\n"
-          (Dir.to_string dir);
+        (match OpamProcess.Job.run (OpamAction.extract_package t s nv dir) with
+         | None ->
+           OpamConsole.formatted_msg "Successfully extracted to %s\n"
+             (Dir.to_string dir);
+         | Some e ->
+           OpamConsole.warning "Some errors extracting to %s: %s\n"
+             (Dir.to_string dir) (Printexc.to_string e));
         if OpamPinned.find_opam_file_in_source nv.name dir = None
         then
           let f =

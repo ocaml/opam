@@ -158,8 +158,8 @@ let prepare_package_build st nv dir =
         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
         @@+ fun success ->
         iter_patches f rest @@| fun errs ->
-        if success then OpamFilename.Base.to_string patchname :: errs
-        else errs
+        if success then errs
+        else OpamFilename.Base.to_string patchname :: errs
       else iter_patches f rest
   in
   let print_apply basename =
@@ -172,7 +172,7 @@ let prepare_package_build st nv dir =
   in
 
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
-    iter_patches print_apply patches @@| fun _ -> ()
+    iter_patches print_apply patches @@| fun _ -> None
   else
 
   let subst_patches, subst_others =
@@ -187,6 +187,11 @@ let prepare_package_build st nv dir =
     );
 
   (* Apply the patches *)
+  let text =
+    OpamProcess.make_command_text (OpamPackage.Name.to_string nv.name) "patch"
+  in
+
+  OpamProcess.Job.with_text text @@
   iter_patches (fun base ->
       let patch = dir // OpamFilename.Base.to_string base in
       print_apply base;
@@ -204,15 +209,15 @@ let prepare_package_build st nv dir =
          (OpamPackageVar.resolve ~opam st))
       subst_others
   );
-  if patching_errors <> [] then (
+  if patching_errors <> [] then
     let msg =
       Printf.sprintf "These patches didn't apply at %s:\n%s"
         (OpamFilename.Dir.to_string dir)
         (OpamStd.Format.itemize (fun x -> x) patching_errors)
     in
-    failwith msg
-  );
-  Done ()
+    Done (Some (Failure msg))
+  else
+    Done None
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
@@ -253,44 +258,56 @@ let extract_package st source nv destdir =
     (slog OpamPackage.to_string) nv
     (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
     source;
-  if OpamStateConfig.(!r.dryrun) then Done () else
-  let () =
-    match source with
-    | None -> ()
-    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:destdir
-    | Some (F archive) -> OpamFilename.extract archive destdir
-  in
+  if OpamStateConfig.(!r.dryrun) then Done None else
+  (match source with
+    | None -> Done None
+    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:destdir; Done None
+    | Some (F archive) -> OpamFilename.extract_job archive destdir)
+  @@+ function
+  | Some _ as some_err -> Done some_err
+  | None ->
   let is_repackaged_archive =
     Some (F (OpamPath.archive st.switch_global.root nv)) = source
   in
-  let get_extra_files_job =
-    if is_repackaged_archive then Done () else
+  let opam = OpamSwitchState.opam st nv in
+  let get_extra_sources_job =
+    if is_repackaged_archive then Done None else
     (* !X this should be done during the download phase, but at
        the moment it assumes a single file *)
-    let opam = OpamSwitchState.opam st nv in
     let dl_file_job (url,checksum,fname) =
       let fname =
         OpamStd.Option.default
           (OpamFilename.Base.of_string (OpamUrl.basename url))
           fname
       in
+      OpamProcess.Job.catch (fun e -> Done (Some e)) @@
       OpamDownload.download_as
         ~overwrite:true
         ~checksum url
         (OpamFilename.create destdir fname)
+      @@+ fun () -> Done None
     in
-    List.fold_left (fun job dl -> job @@+ fun () -> dl_file_job dl)
-      (Done ()) (OpamFile.OPAM.extra_sources opam)
-    @@| fun () ->
-    List.iter (fun (src,base,hash) ->
-        if OpamFilename.digest src <> hash then
-          OpamConsole.error_and_exit "Bad hash for %s"
-            (OpamFilename.to_string src);
-        OpamFilename.copy ~src ~dst:(OpamFilename.create destdir base))
-      (OpamFile.OPAM.get_extra_files opam)
+    List.fold_left (fun job dl ->
+        job @@+ function
+        | None -> dl_file_job dl
+        | some_err -> Done some_err)
+      (Done None) (OpamFile.OPAM.extra_sources opam)
   in
-  get_extra_files_job @@+ fun () ->
-  prepare_package_build st nv destdir
+  let check_extra_files =
+    try
+      List.iter (fun (src,base,hash) ->
+          if OpamFilename.digest src <> hash then
+            failwith
+              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
+          else
+            OpamFilename.copy ~src ~dst:(OpamFilename.create destdir base))
+        (OpamFile.OPAM.get_extra_files opam);
+      None
+    with e -> Some e
+  in
+  get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
+    check_extra_files |> function Some _ as err -> Done err | None ->
+      prepare_package_build st nv destdir
 
 (* unused ?
 let string_of_commands commands =
@@ -570,7 +587,9 @@ let remove_package t ?silent ?changes ?force nv =
 let build_package t source nv =
   let build_dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
   OpamFilename.rmdir build_dir;
-  extract_package t source nv build_dir @@+ fun () ->
+  extract_package t source nv build_dir @@+ fun r ->
+  if r <> None then Done r
+  else
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFile.OPAM.build opam @
@@ -647,7 +666,9 @@ let install_package t nv =
     | [] -> Done None
   in
   let install_job () =
-    run_commands commands @@+ function
+    let text = OpamProcess.make_command_text name "install" in
+    OpamProcess.Job.with_text text
+      (run_commands commands) @@+ function
     | Some _ as err -> Done err
     | None ->
       try
