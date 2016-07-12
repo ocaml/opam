@@ -679,12 +679,12 @@ let lock_none = {
 let lock_isatleast flag lock =
   lock_max flag lock.kind = lock.kind
 
-let patch p =
+let patch ~dir p =
   let max_trying = 5 in
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  let patch ~dryrun n =
+  let patch_cmd ~dryrun n =
     let opts = if dryrun then
         let open OpamStd.Sys in
         match os () with
@@ -694,16 +694,19 @@ let patch p =
         | Other _               -> [ "--dry-run" ]
       else [] in
     let verbose = if dryrun then Some false else None in
-    command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
+    make_command ?verbose ~dir "patch"
+      (("-p" ^ string_of_int n) :: "-i" :: p :: opts)
+  in
   let rec aux n =
-    if n = max_trying then
-      internal_error "Patch %s does not apply." p
-    else if None =
-            try Some (patch ~dryrun:true n)
-            with e -> OpamStd.Exn.fatal e; None then
-      aux (succ n)
+    let open OpamProcess.Job.Op in
+    if n = max_trying then Done false
     else
-      patch ~dryrun:false n in
+      patch_cmd ~dryrun:true n @@> fun r ->
+      if OpamProcess.is_success r then
+        patch_cmd ~dryrun:false n @@> fun p -> Done (OpamProcess.is_success p)
+      else
+        aux (succ n)
+  in
   aux 0
 
 let register_printer () =

@@ -323,7 +323,7 @@ let remove_suffix suffix filename =
   OpamStd.String.remove_suffix ~suffix filename
 
 let patch filename dirname =
-  in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
+  OpamSystem.patch ~dir:(Dir.to_string dirname) (to_string filename)
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 

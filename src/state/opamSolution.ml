@@ -457,13 +457,13 @@ let parallel_apply t action action_graph =
             store_time ();
             Done (`Exception exn))
       | `Remove nv ->
-        if OpamAction.removal_needs_download t nv then
-          (try
-             let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
-             OpamFilename.rmdir d;
-             OpamAction.extract_package t source nv d
-           with e -> OpamStd.Exn.fatal e);
-        OpamProcess.Job.catch (fun e -> OpamStd.Exn.fatal e; Done ())
+        (if OpamAction.removal_needs_download t nv then
+           let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+           OpamFilename.rmdir d;
+           OpamProcess.Job.ignore_errors ~default:()
+             (OpamAction.extract_package t source nv d)
+         else Done()) @@+ fun () ->
+        OpamProcess.Job.ignore_errors ~default:()
           (OpamAction.remove_package t nv) @@| fun () ->
         remove_from_install nv;
         store_time ();

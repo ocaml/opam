@@ -208,8 +208,8 @@ val remove_prefix_dir: Dir.t -> Dir.t -> string
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
-(** Apply a patch to a directory *)
-val patch: t -> Dir.t -> unit
+(** Apply a patch in a directory. Returns [true] on success *)
+val patch: t -> Dir.t -> bool OpamProcess.job
 
 (** Compute the MD5 digest of a file *)
 val digest: t -> string
