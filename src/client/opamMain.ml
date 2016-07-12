@@ -1249,8 +1249,9 @@ let switch =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let switch = OpamStateConfig.get_switch () in
       let installed_switches = OpamFile.Config.installed_switches gt.config in
+      let is_new_switch = not (List.mem switch installed_switches) in
       let gt =
-        if not (List.mem switch installed_switches) then
+        if is_new_switch then
           OpamGlobalState.with_write_lock gt @@ fun gt ->
           OpamSwitchAction.create_empty_switch gt switch
           |> OpamGlobalState.unlock
@@ -1263,8 +1264,10 @@ let switch =
             (if filename = "-" then None
              else Some (OpamFile.make (OpamFilename.of_string filename)))
         with e ->
-          OpamConsole.warning "Switch %s may have been left partially installed"
-            (OpamSwitch.to_string switch);
+          if is_new_switch then
+            OpamConsole.warning
+              "Switch %s may have been left partially installed"
+              (OpamSwitch.to_string switch);
           raise e
       in
       `Ok ()
