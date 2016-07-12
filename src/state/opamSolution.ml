@@ -601,7 +601,7 @@ let parallel_apply t action action_graph =
       cleanup_artefacts successful;
       let successful = PackageActionGraph.reduce successful in
       let failed = PackageActionGraph.reduce (filter_graph failed) in
-      let print_actions filter header ?empty actions =
+      let print_actions filter color header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
               if filter v then v::acc else acc)
@@ -609,25 +609,44 @@ let parallel_apply t action action_graph =
         in
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
-          OpamConsole.msg "%s\n%s" header
-            (OpamStd.Format.itemize ~bullet:"  " (fun x -> x)
+          OpamConsole.msg "%s%s\n%s%s\n"
+            (OpamConsole.colorise color
+               (if OpamConsole.utf8 ()
+                then "\xe2\x94\x8c\xe2\x94\x80 " (* U+250C U+2500 *)
+                else "+- "))
+            header
+            (OpamStd.Format.itemize
+               ~bullet:(OpamConsole.colorise color
+                          (if OpamConsole.utf8 ()
+                           then "\xe2\x94\x82 " (* U+2503 *) else "| "))
+               (fun x -> x)
                (PackageAction.to_aligned_strings actions))
+            (OpamConsole.colorise color
+               (if OpamConsole.utf8 ()
+                then "\xe2\x94\x94\xe2\x94\x80 " (* U+2514 U+2500 *)
+                else "+- "))
         else match empty with
-          | Some s -> OpamConsole.msg "%s\n" s
+          | Some s ->
+            OpamConsole.msg "%s%s\n"
+              (OpamConsole.colorise color
+                 (if OpamConsole.utf8 ()
+                  then "\xe2\x95\xb6\xe2\x94\x80 " (* U+2576 U+2500 *)
+                  else "- "))
+              s
           | None -> ()
       in
       OpamConsole.msg "\n";
       OpamConsole.header_msg "Error report";
-      print_actions (fun _ -> true)
+      print_actions (fun _ -> true) `yellow
         (Printf.sprintf "The following actions were %s"
            (OpamConsole.colorise `yellow "aborted"))
         (PackageActionGraph.reduce (filter_graph remaining));
-      print_actions (fun _ -> true)
+      print_actions (fun _ -> true) `red
         (Printf.sprintf "The following actions %s"
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function _ -> true)
+        (function `Build _ -> false | _ -> true) `cyan
         "The following changes have been performed"
         ~empty:"No changes have been performed"
         successful;
