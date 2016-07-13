@@ -195,6 +195,16 @@ Undefined values are propagated through relational operators, and logical
 operators unless absorbed (`undef & false` is `false`, `undef | true` is
 `true`).
 
+### Filtered package formulas
+
+Some package formulas additionally allow to mix filters with dependency
+constraints. These are resolved as a first pass, reducing the formula to a pure
+package formula depending on the values the variables. If the version formula is
+reduced to `false`, that part of the package formula is simply ignored.
+
+For example, `"foo" { >= "3.12" & build }` is the empty formula if `build` is
+false, and `"foo" { >= "3.12" }` otherwise.
+
 ### Interpolation
 
 Some files can be rewritten using variable interpolation expansion: when looking
@@ -462,7 +472,7 @@ recommended to check the validity and quality of your `opam` files.
   the name and version of the package. Both fields are optional when they can be
   inferred from the directory name (e.g. when the file sits in the repository).
 
-- <a id="opamfield-maintainer">`maintainer: <string>`</a> (mandatory):
+- <a id="opamfield-maintainer">`maintainer: [ <string> ... ]`</a> (mandatory):
   A contact address for the package maintainer (the format `"name <email>"` is
   allowed).
 
@@ -473,9 +483,9 @@ recommended to check the validity and quality of your `opam` files.
   the abbreviated name(s) of the license(s) under which the source software is
   available.
 
-- <a id="opamfield-homepage">`homepage: <string>`</a>,
-  <a id="opamfield-doc">`doc: <string>`</a>,
-  <a id="opamfield-bug-reports">`bug-reports: <string>`</a>:
+- <a id="opamfield-homepage">`homepage: [ <string> ... ]`</a>,
+  <a id="opamfield-doc">`doc: [ <string> ... ]`</a>,
+  <a id="opamfield-bug-reports">`bug-reports: [ <string> ... ]`</a>:
   URLs pointing to the related pages for the package, for user information
 
 - <a id="opamfield-dev-repo">`dev-repo: <string>`</a>:
@@ -548,7 +558,7 @@ recommended to check the validity and quality of your `opam` files.
   `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands to build documentation and tests. They are processed
   after the build phase when documentation or tests have been requested. These
-  follow the same specification as the `build:` field.
+  follow the same specification as the [`build:`](#opamfield-build) field.
 
 - <a id="opamfield-remove"> `remove: [ [ <string> { <filter> } ... ] { <filter>
   } ... ]`</a>: commands to run before removing the package, in the same format
@@ -561,45 +571,42 @@ recommended to check the validity and quality of your `opam` files.
   daemons: removing what was just added is alredy taken care of.
 
     The commands are run from the root of a fresh copy of the package source,
-    unless the [`light-uninstall`](opamflag-light-uninstall) package flag is
+    unless the [`light-uninstall`](#opamflag-light-uninstall) package flag is
     present, in which case they are run from the prefix.
 
-- <a id="opamfield-depends">`depends: [ <package-formula> ... ]`</a>:
+- <a id="opamfield-depends">`depends: [ <filtered-package-formula> ... ]`</a>:
   the package dependencies. This describes the requirements on other packages
   for this package to be built and installed. It contains a list of package
   formulas, understood as a conjunction.
 
-    As an addition to the package formula format, the version constraints may be
-    prefixed by _dependency flags_. These are one of `build`, `test` and `doc`
-    and limit the meaning of the dependency:
+    The filtered package formula can access the global and switch variables, but
+    not variables from other packages. Additionally, special boolean variables
+    `build`, `test` and `doc` are defined to allow limiting the scope of the
+    dependency.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
       recompilations of your package.
     * `test` dependencies are only needed when building tests (_i.e._ by
-      instructions in the `build-test` field)
+      instructions in the [`build-test:`](#opamfield-build-test) field)
     * likewise, `doc` dependecies are only required when building the package
       documentation
 
-    Dependency flags must be first, and linked by `&`:
-
-        depends: [
-          "foo" {build}
-          "bar" {build & doc}
-          "baz" {build & >= "3.14"}
-        ]
-
 - <a id="opamfield-depopts">
-  `depopts: [ <string> { <dependency-flags> } ... ]`</a>:
-  the package optional dependencies. This flag is similar to `depends:` in
-  format, but with some restrictions. It contains packages that will be _used_,
-  if present, by the package being defined, either during build or runtime, but
-  that are not _required_ for its installation. The implementation uses this
-  information to define build order and trigger recompilations, but won't
-  automatically install _depopts_ when installing the package.
+  `depopts: [ <string> { <filtered-package-formula> } ... ]`</a>:
+  the package optional dependencies. This flag is similar to
+  [`depends:`](#opamfield-depends) in format. It contains packages that will be
+  _used_, if present, by the package being defined, either during build or
+  runtime, but that are not _required_ for its installation. The implementation
+  uses this information to define build order and trigger recompilations, but
+  won't automatically install _depopts_ when installing the package.
 
-    The optional dependencies may have _dependency flags_, but they may not
-    specify version constraints nor formulas. `depopts:` can be combined with
-    `conflicts:` to add version constraints on the optional dependencies.
+    Variables in the filtered package formula are evaluated as for
+    [`depends:`](#opamfield-depends).
+
+    Note that `depopts: [ "foo" { = "3" } ]` means that the optional dependency
+    only applies for `foo` version `3`, not that your package can't be installed
+    with other versions of `foo`: for that, use the
+    [`conflicts:`](#opamfield-conflicts) field.
 
 - <a id="opamfield-conflicts">
   `conflicts: [ <string> { <version-constraint> } ... ]`</a>:
