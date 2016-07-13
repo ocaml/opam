@@ -54,11 +54,23 @@ type item_value =
 
 type item = perms * item_value
 
+let cached_digest =
+  let item_cache = Hashtbl.create 749 in
+  fun f size mtime ->
+    try
+      let csize, cmtime, digest = Hashtbl.find item_cache f in
+      if csize = size || mtime = cmtime then digest
+      else raise Not_found
+    with Not_found ->
+      let digest = Digest.file f in
+      Hashtbl.replace item_cache f (size, mtime, digest);
+      digest
+
 let item_of_filename f : item =
   let stats = Unix.stat f in
   Unix.(stats.st_uid, stats.st_gid, stats.st_perm),
   match stats.Unix.st_kind with
-  | Unix.S_REG -> File (Digest.file f)
+  | Unix.S_REG -> File (cached_digest f stats.Unix.st_size stats.Unix.st_mtime)
   | Unix.S_DIR -> Dir
   | Unix.S_LNK -> Link (Unix.readlink f)
   | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO | Unix.S_SOCK ->
