@@ -673,12 +673,6 @@ let install_package t nv =
     | None ->
       try
         process_dot_install t nv;
-        OpamConsole.msg "%s installed %s.%s\n"
-          (if not (OpamConsole.utf8 ()) then "->"
-           else OpamActionGraph.
-                  (action_color (`Install ()) (action_strings (`Install ()))))
-          (OpamConsole.colorise `bold name)
-          (OpamPackage.version_to_string nv);
         Done None
       with e -> Done (Some e)
   in
@@ -699,4 +693,10 @@ let install_package t nv =
   | None, changes ->
     let changes_f = OpamPath.Switch.changes root t.switch nv.name in
     OpamFile.Changes.write changes_f changes;
+    OpamConsole.msg "%s installed %s.%s\n"
+      (if not (OpamConsole.utf8 ()) then "->"
+       else OpamActionGraph.
+              (action_color (`Install ()) (action_strings (`Install ()))))
+      (OpamConsole.colorise `bold name)
+      (OpamPackage.version_to_string nv);
     Done None
