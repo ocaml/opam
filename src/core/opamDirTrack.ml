@@ -97,10 +97,12 @@ let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
       acc files
   in
   let str_dir = OpamFilename.Dir.to_string dir in
+  let scan_timer = OpamConsole.timer () in
   let before = make_index SM.empty str_dir "" in
-  log ~level:2 "before install: %a elements"
-    (slog @@ string_of_int @* SM.cardinal) before;
+  log ~level:2 "before install: %a elements scanned in %.3fs"
+    (slog @@ string_of_int @* SM.cardinal) before (scan_timer ());
   job_f () @@| fun result ->
+  let scan_timer = OpamConsole.timer () in
   let after = make_index SM.empty str_dir "" in
   let diff =
     SM.merge (fun _ before after ->
@@ -120,11 +122,11 @@ let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
           | _ -> Some (Kind_changed (item_digest item)))
       before after
   in
-  log "after install: %a elements, %a added"
+  log "after install: %a elements, %a added, scanned in %.3fs"
     (slog @@ string_of_int @* SM.cardinal) after
     (slog @@ string_of_int @* SM.cardinal @*
              SM.filter (fun _ -> function Added _ -> true | _ -> false))
-    diff;
+    diff (scan_timer ());
   result, diff
 
 let check prefix changes =
