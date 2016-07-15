@@ -55,11 +55,14 @@ let resolve_global gt full_var =
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
-    match V.to_string var with
-    | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
-    | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
-    | "arch"          -> Some (V.string (OpamStd.Sys.arch ()))
-    | _               -> None
+    match OpamVariable.Map.find_opt var gt.global_variables with
+    | Some (lazy (Some _ as some)) -> some
+    | _ ->
+      match V.to_string var with
+      | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
+      | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
+      | "arch"          -> Some (V.string (OpamStd.Sys.arch ()))
+      | _               -> None
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
     field *)

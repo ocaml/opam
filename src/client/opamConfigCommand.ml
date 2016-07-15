@@ -16,7 +16,28 @@ open OpamTypes
 open OpamStateTypes
 
 let help t =
-  OpamConsole.msg "# Global OPAM configuration variables\n\n";
+  OpamConsole.msg "# Global opam variables\n\n";
+  let all_global_vars =
+    List.fold_left (fun acc (v,doc) ->
+        OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
+      OpamVariable.Map.empty
+      OpamPackageVar.global_variable_names
+  in
+  let all_global_vars =
+    List.fold_left (fun acc (v,cmd) ->
+        OpamVariable.Map.add v (String.concat " " cmd) acc)
+      all_global_vars
+      (OpamFile.Config.eval_variables t.switch_global.config)
+  in
+  OpamVariable.Map.iter (fun var doc ->
+      OpamConsole.msg "%-20s %-20s # %s\n"
+        (OpamVariable.to_string var)
+        (OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
+           ([],var,None))
+        doc)
+    all_global_vars;
+
+  OpamConsole.msg "\n# Configuration variables from the current switch\n\n";
   let global = t.switch_config in
   let global_vars = OpamFile.Dot_config.variables global in
   List.iter (fun var ->

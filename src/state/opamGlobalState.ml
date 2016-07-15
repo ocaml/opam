@@ -17,6 +17,7 @@ open OpamFilename.Op
 open OpamStateTypes
 
 let log fmt = OpamConsole.log "GSTATE" fmt
+let slog = OpamConsole.slog
 
 module Format_upgrade = struct
 
@@ -505,7 +506,8 @@ let load lock_kind =
   let config = load_config global_lock root in
   { global_lock = config_lock;
     root;
-    config; }
+    config;
+    global_variables = OpamVariable.Map.empty; }
 
 let fold_switches f gt acc =
   List.fold_left (fun acc switch ->
