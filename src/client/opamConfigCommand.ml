@@ -16,7 +16,8 @@ open OpamTypes
 open OpamStateTypes
 
 let help t =
-  OpamConsole.msg "# Global opam variables\n\n";
+  let (%) s col = OpamConsole.colorise col s in
+  OpamConsole.header_msg "Global opam variables";
   let all_global_vars =
     List.fold_left (fun acc (v,doc) ->
         OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
@@ -25,43 +26,42 @@ let help t =
   in
   let all_global_vars =
     List.fold_left (fun acc (v,cmd) ->
-        OpamVariable.Map.add v (String.concat " " cmd) acc)
+        OpamVariable.Map.add v ("As returned by '"^String.concat " " cmd^"'") acc)
       all_global_vars
       (OpamFile.Config.eval_variables t.switch_global.config)
   in
-  OpamVariable.Map.iter (fun var doc ->
-      OpamConsole.msg "%-20s %-20s # %s\n"
-        (OpamVariable.to_string var)
-        (OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
-           ([],var,None))
-        doc)
-    all_global_vars;
+  List.map (fun (var, doc) -> [
+        OpamVariable.to_string var % `bold;
+        OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
+          ([],var,None) % `blue;
+        "#"; doc
+      ])
+    (OpamVariable.Map.bindings all_global_vars) |>
+  OpamStd.Format.align_table |>
+  OpamStd.Format.print_table stdout ~sep:" ";
 
-  OpamConsole.msg "\n# Configuration variables from the current switch\n\n";
+  OpamConsole.header_msg "Configuration variables from the current switch";
   let global = t.switch_config in
   let global_vars = OpamFile.Dot_config.variables global in
-  List.iter (fun var ->
-      OpamConsole.msg "%-20s %s\n"
-        (OpamVariable.to_string var)
-        (match OpamFile.Dot_config.variable global var with
+  List.map (fun var -> [
+      OpamVariable.to_string var % `bold;
+      (match OpamFile.Dot_config.variable global var with
          | Some c -> OpamVariable.string_of_variable_contents c
-         | None -> "")
-    )
-    global_vars;
-  OpamConsole.msg "\n# Global variables from the environment\n\n";
-  List.iter (fun (varname, doc) ->
-      let var = OpamVariable.of_string varname in
-      if not (List.mem var global_vars) then
-        OpamConsole.msg "%-20s %-20s # %s\n"
-          varname
-          (OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
-             ([],var,None))
-          doc)
-    OpamPackageVar.global_variable_names;
-  OpamConsole.msg "\n# Package variables ('opam config list PKG' to show)\n\n";
-  List.iter (fun (var, doc) ->
-      OpamConsole.msg "PKG:%-37s # %s\n" var doc)
-    OpamPackageVar.package_variable_names
+         | None -> "") % `blue;
+      ])
+    global_vars |>
+  OpamStd.Format.align_table |>
+  OpamStd.Format.print_table stdout ~sep:" ";
+
+  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
+  List.map (fun (var, doc) -> [
+        ("PKG:"^var) % `bold;
+        "";
+        "#";doc
+      ])
+    OpamPackageVar.package_variable_names |>
+  OpamStd.Format.align_table |>
+  OpamStd.Format.print_table stdout ~sep:" "
 
 (* List all the available variables *)
 let list gt ns =
@@ -109,12 +109,15 @@ let list gt ns =
     with Not_found -> []
   in
   let vars = List.flatten (List.map list_vars ns) in
-  List.iter (fun (variable, value, descr) ->
-      OpamConsole.msg "%-20s %-40s %s\n"
-        (OpamVariable.Full.to_string variable)
-        value
-        (if descr <> "" then "# "^descr else "")
-    ) vars
+  let (%) s col = OpamConsole.colorise col s in
+  List.map (fun (variable, value, descr) -> [
+        OpamVariable.Full.to_string variable % `bold;
+        value % `blue;
+        if descr <> "" then "#" else "";
+        descr;
+      ]) vars |>
+  OpamStd.Format.align_table |>
+  OpamStd.Format.print_table stdout ~sep:" "
 
 let print_env env =
   List.iter (fun (k,v,comment) ->
