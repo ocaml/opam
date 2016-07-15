@@ -577,8 +577,9 @@ let slog = OpamConsole.slog
         broken_state_message ~need_fixup:true cs;
         st
 
-  let init ?init_config repo shell dot_profile update_config =
-    log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
+  let init ?init_config ?repo shell dot_profile update_config =
+    log "INIT %a"
+      (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
     let root_empty =
@@ -661,36 +662,49 @@ let slog = OpamConsole.slog
            OpamConsole.error_and_exit
              "Missing dependencies -- \
               the following commands are required for OPAM to operate:\n%s"
-             (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
+             (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
+                missing));
 
         (* Create ~/.opam/config *)
         let config =
-          match init_config with
-          | Some c ->
-            OpamFile.Config.with_repositories [repo.repo_name] c |>
-            OpamFile.Config.with_opam_version OpamVersion.current_nopatch
+          (match init_config with None -> OpamInitDefaults.init_config ()
+                                | Some c -> c)
+          |> OpamFile.Config.with_opam_version OpamVersion.current_nopatch
+        in
+        let repos =
+          match repo with
+          | Some r -> [r.repo_name, r.repo_url]
           | None ->
-            OpamFile.Config.create [] None [repo.repo_name]
-              OpamStateConfig.(Lazy.force default.jobs)
-              OpamStateConfig.(default.dl_jobs)
+            List.mapi (fun i contents ->
+                OpamRepositoryName.of_string
+                  (if i = 0 then "default" else
+                     Printf.sprintf "default_%d" (i+1)),
+                OpamUrl.of_string (OpamRepositoryName.to_string contents))
+              (OpamFile.Config.repositories config)
+        in
+        let config =
+          OpamFile.Config.with_repositories (List.map fst repos) config
         in
         OpamFile.Config.write (OpamPath.config root) config;
 
         let repos_config =
-          OpamRepositoryName.Map.singleton repo.repo_name (Some repo.repo_url)
+          OpamRepositoryName.Map.of_list repos |>
+          OpamRepositoryName.Map.map OpamStd.Option.some
         in
-        OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config;
-
-        OpamProcess.Job.run OpamProcess.Job.Op.(
-            OpamRepository.init root repo.repo_name @@+ fun () ->
-            OpamRepository.update repo
-          );
+        OpamFile.Repos_config.write (OpamPath.repos_config root)
+          repos_config;
 
         log "updating repository state";
         let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
-        let rt = OpamUpdate.repositories rt [repo] in
+        let rt =
+          OpamUpdate.repositories rt
+            (List.mapi (fun repo_priority (repo_name, repo_url) ->
+                 { repo_root = OpamRepositoryPath.create root repo_name;
+                   repo_name; repo_url; repo_priority; })
+                repos)
+        in
         gt, OpamRepositoryState.unlock rt
       with e ->
         OpamStd.Exn.register_backtrace e;

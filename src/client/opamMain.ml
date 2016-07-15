@@ -138,8 +138,7 @@ let init =
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
   let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
-    Arg.(value & pos ~rev:true 0 string
-           (OpamUrl.to_string OpamRepositoryBackend.default_url) & doc) in
+    Arg.(value & pos ~rev:true 0 (some string) None & doc) in
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let config_file =
@@ -160,11 +159,16 @@ let init =
                          OpamFile.Config.read_opt)
     in
     (* todo: specific format for the config file allowing to describe repos *)
-    let repo_priority = 0 in
-    let repo_url = OpamUrl.parse ?backend:repo_kind repo_url in
-    let repository = {
-      repo_root = OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir)) repo_name;
-      repo_name; repo_url; repo_priority } in
+    let repo =
+      OpamStd.Option.map (fun url ->
+          let repo_url = OpamUrl.parse ?backend:repo_kind url in
+          let repo_root =
+            OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
+              repo_name
+          in
+          { repo_root; repo_name; repo_url; repo_priority = 0 })
+        repo_url
+    in
     let update_config =
       if no_setup then `no
       else if auto_setup then `yes
@@ -172,7 +176,8 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt =
       OpamClient.init
-        ?init_config repository shell dot_profile update_config
+        ?init_config ?repo
+        shell dot_profile update_config
     in
     if not no_compiler &&
        OpamFile.Config.installed_switches gt.config = [] then

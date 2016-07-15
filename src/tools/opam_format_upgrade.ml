@@ -266,7 +266,11 @@ let process args =
           O.with_flags [Pkgflag_Compiler] |>
           O.with_descr
             (OpamFile.Descr.create
-                 "The OCaml compiler (system version, from outside of opam)")
+                 "The OCaml compiler (system version, from outside of opam)") |>
+          O.with_available
+            (FOp (FIdent ([],OpamVariable.of_string "sys-ocaml-version",None),
+                  `Eq,
+                  FString (OpamPackage.Version.to_string nv.version)))
             (* add depext towards an 'ocaml' package ? *)
         in
         write_opam ~add_files:[conf_script_name^".in", system_conf_script]
