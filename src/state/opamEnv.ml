@@ -471,6 +471,13 @@ let write_dynamic_init_scripts st =
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
 
+let clear_dynamic_init_scripts gt =
+  List.iter (fun f -> OpamFilename.remove (OpamPath.init gt.root // f)) [
+    variables_sh;
+    variables_csh;
+    variables_fish;
+  ]
+
 let status_of_init_file root init_sh =
   let init_sh = OpamPath.init root // init_sh in
   if OpamFilename.exists init_sh then (
