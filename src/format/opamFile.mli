@@ -96,6 +96,7 @@ module Config: sig
   val with_wrap_build: arg list -> t -> t
   val with_wrap_install: arg list -> t -> t
   val with_wrap_remove: arg list -> t -> t
+  val with_eval_variables: (variable * string list) list -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -123,6 +124,7 @@ module Config: sig
   val wrap_build: t -> arg list
   val wrap_install: t -> arg list
   val wrap_remove: t -> arg list
+  val eval_variables: t -> (variable * string list) list
 
 end
 

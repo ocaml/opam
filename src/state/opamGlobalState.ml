@@ -504,10 +504,55 @@ let load lock_kind =
      currently installed shell init scripts) *)
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
+  let eval_variables = OpamFile.Config.eval_variables config in
+  let global_variables =
+    let env =
+      (* Remove opam environment settings from the env where eval_variables
+         commands are run, since those are switch specific; the switch or its
+         environment changes are not known at this point though, so approximate
+         by removing anything starting with the opamroot from any [*PATH]
+         variable *)
+      lazy (
+        let path_sep = OpamStd.Sys.path_sep () in
+        Array.map
+          (fun bnd ->
+             match OpamStd.String.cut_at bnd '=' with
+             | None -> bnd
+             | Some (var, value) ->
+               if OpamStd.String.ends_with ~suffix:"PATH" var then
+                 Printf.sprintf "%s=%s" var
+                   (String.concat (String.make 1 path_sep)
+                      (OpamStd.Env.reset_value
+                         ~prefix:(OpamFilename.Dir.to_string root)
+                         (OpamStd.Sys.path_sep ())
+                         value))
+               else bnd)
+          (Unix.environment ())
+      ) in
+    List.fold_left (fun acc (v,cmd) ->
+        OpamVariable.Map.add v
+          (lazy
+            (try
+               let ret =
+                 OpamSystem.read_command_output
+                   ~env:(Lazy.force env)
+                   ~allow_stdin:false
+                   cmd
+               in
+               Some (S (OpamStd.String.strip (String.concat "\n" ret)))
+             with e ->
+               OpamStd.Exn.fatal e;
+               log "Failed to evaluate global variable %a: %a"
+                 (slog OpamVariable.to_string) v
+                 (slog Printexc.to_string) e;
+               None))
+          acc)
+      OpamVariable.Map.empty eval_variables
+  in
   { global_lock = config_lock;
     root;
     config;
-    global_variables = OpamVariable.Map.empty; }
+    global_variables; }
 
 let fold_switches f gt acc =
   List.fold_left (fun acc switch ->
