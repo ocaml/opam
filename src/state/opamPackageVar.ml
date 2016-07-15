@@ -24,21 +24,6 @@ let global_variable_names = [
   "arch",                 "The current arch, as returned by \"uname -m\"";
 ]
 
-(* Obsolete ocaml variables, for compat *)
-let ocaml_variable_names = [
-  "ocaml-version",        "The version of the currently used OCaml compiler";
-  "preinstalled",         "Whether the compiler was preinstalled on the system, \
-                           or installed by OPAM";
-  "compiler",             "The name of the current OCaml compiler (may be more \
-                           specific than the version, eg: \"4.01.0+fp\", or \
-                           \"system\")";
-  "ocaml-native",         "Whether the OCaml native compilers are available";
-  "ocaml-native-tools",   "Whether the native \".opt\" version of the OCaml \
-                           toolchain is available";
-  "ocaml-native-dynlink", "Whether native dynlink is available on this \
-                           installation";
-]
-
 let package_variable_names = [
   "name",      "Name of the package";
   "version",   "Version of the package";

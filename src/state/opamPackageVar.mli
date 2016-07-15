@@ -20,13 +20,10 @@ val global_variable_names: (string * string) list
 (** Lists of predefined package variables and their description *)
 val package_variable_names: (string * string) list
 
-(** Obsolete ocaml variables (for compat) and their description *)
-val ocaml_variable_names: (string * string) list
-
 (** Variables that are pre-defined in the dependency filtered-formula scope, and
     which resolution is delayed to after the universe is computed (these are the
     only ones allowed in the universe, and resolved by
-    [OpamSolver.filter_deps] *)
+    [OpamSolver.filter_deps]) *)
 val predefined_depends_variables: full_variable list
 
 (** Resolves globally available variables only *)
