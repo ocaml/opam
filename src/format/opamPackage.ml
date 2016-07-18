@@ -233,6 +233,7 @@ let names_of_packages nvset =
     Name.Set.empty
 
 let packages_of_name nvset n =
+  if n = "" then Set.empty else
   let inf = {name = String.sub n 0 (String.length n - 1); version= ""} in
   let sup = {name = n^"\000"; version = ""} in
   let _, _, nvset = Set.split inf nvset in
