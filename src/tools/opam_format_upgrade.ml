@@ -43,10 +43,14 @@ let ocaml_package_names =
 (* OCaml script that generates the .config file for a given ocaml compiler *)
 let wrapper_conf_script =
   "let () =\n\
-  \  if Sys.ocaml_version <> \"%{_:version}%\" then\n\
+  \  let ocaml_version =\n\
+  \    let v = Sys.ocaml_version in\n\
+  \    try String.sub v 0 (String.index v '+') with Not_found -> v\n\
+  \  in\n\
+  \  if ocaml_version <> \"%{_:version}%\" then\n\
   \    (Printf.eprintf\n\
   \       \"OCaml version mismatch: %%s, expected %{_:version}%\"\n\
-  \       Sys.ocaml_version;\n\
+  \       ocaml_version;\n\
   \     exit 1)\n\
   \  else\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
@@ -67,7 +71,7 @@ let wrapper_conf_script =
   \    String.concat \":\" lines\n\
   \  in\n\
   \  let p fmt = Printf.fprintf oc (fmt ^^ \"\\n\") in\n\
-  \  p \"opam-version: \\\"2.0~alpha2\\\"\";\n\
+  \  p \"opam-version: \\\"2.0\\\"\";\n\
   \  p \"variables {\";\n\
   \  p \"  native: %%b\"\n\
   \    (Sys.file_exists (ocaml^\"opt\"));\n\
@@ -94,7 +98,7 @@ let system_conf_script =
   \     exit 1)\n\
   \  else\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
-  \  Printf.fprintf oc \"opam-version: \\\"2.0~alpha2\\\"\\n\\\n\
+  \  Printf.fprintf oc \"opam-version: \\\"2.0\\\"\\n\\\n\
   \                     file-depends: [ %%S %%S ]\\n\\\n\
   \                     variables { path: %%S }\\n\"\n\
   \    ocamlc (Digest.to_hex (Digest.file ocamlc)) (Filename.dirname ocamlc);\n\
