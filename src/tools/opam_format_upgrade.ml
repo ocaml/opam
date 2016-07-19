@@ -55,7 +55,8 @@ let wrapper_conf_script =
   \  let libdir =\n\
   \    let ic = Unix.open_process_in (ocamlc^\" -where\") in\n\
   \    let r = input_line ic in\n\
-  \    Unix.close_process_in ic;\n\
+  \    if Unix.close_process_in ic <> Unix.WEXITED 0 then \n\
+  \      failwith \"Bad return from 'ocamlc -where'\";\n\
   \    r\n\
   \  in\n\
   \  let stubsdir =\n\
