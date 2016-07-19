@@ -577,7 +577,9 @@ let slog = OpamConsole.slog
         broken_state_message ~need_fixup:true cs;
         st
 
-  let init ?init_config ?repo shell dot_profile update_config =
+  let init
+      ?init_config ?repo ?(bypass_checks=false)
+      shell dot_profile update_config =
     log "INIT %a"
       (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
@@ -596,6 +598,8 @@ let slog = OpamConsole.slog
           (OpamFilename.Dir.to_string root);
         if not (OpamConsole.confirm "Proceed ?") then OpamStd.Sys.exit 1);
       try
+
+        if bypass_checks then () else (
 
         (* Check for the external dependencies *)
         let check_external_dep name =
@@ -663,7 +667,7 @@ let slog = OpamConsole.slog
              "Missing dependencies -- \
               the following commands are required for OPAM to operate:\n%s"
              (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
-                missing));
+                missing)));
 
         (* Create ~/.opam/config *)
         let config =

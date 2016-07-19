@@ -147,10 +147,15 @@ let init =
        if present)"
       Arg.(some & OpamArg.filename) None
   in
+  let bypass_checks =
+    mk_flag ["bypass-checks"]
+      "Skip checks on required or recommended tools, \
+       and assume everything is fine"
+  in
   let init global_options
       build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o
-      compiler no_compiler config_file =
+      compiler no_compiler config_file bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
     let init_config =
@@ -176,7 +181,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt =
       OpamClient.init
-        ?init_config ?repo
+        ?init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&
@@ -197,7 +202,7 @@ let init =
   Term.(pure init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
         $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
-        $config_file),
+        $config_file $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)
