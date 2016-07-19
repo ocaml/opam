@@ -699,7 +699,7 @@ let config =
         let dot_profile = if profile then Some dot_profile else None in
         OpamGlobalState.with_ `Lock_write @@ fun gt ->
         `Ok (OpamConfigCommand.setup gt
-               ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+               ?dot_profile ~switch_eval ~completion ~shell
                ~user ~global)
       else
         `Ok (OpamConsole.msg

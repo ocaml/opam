@@ -695,16 +695,14 @@ let slog = OpamConsole.slog
           OpamFilename.rmdir root;
         raise e)
     in
-    let updated = match update_config with
+    let _updated = match update_config with
       | `no  -> false
       | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
       | `yes ->
-        OpamEnv.update_user_setup root ~ocamlinit:true ~dot_profile shell;
+        OpamEnv.update_user_setup root ~dot_profile shell;
         OpamEnv.write_static_init_scripts root ~switch_eval:true ~completion:true;
         true
     in
-    if not updated then
-      OpamEnv.print_env_warning_at_init gt ~ocamlinit:true ~dot_profile shell;
     gt, rt
 
 
