@@ -178,14 +178,16 @@ let compute_updates st =
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        let opam = OpamSwitchState.opam st nv in
-        List.map (fun (name,op,str,cmt) ->
-            let s =
-              OpamFilter.expand_string ~default:(fun _ -> "") (fenv ~opam) str
-            in
-            name, op, s, cmt)
-          (OpamFile.OPAM.env opam)
-        @ acc)
+        match OpamSwitchState.opam_opt st nv with
+        | Some opam ->
+          List.map (fun (name,op,str,cmt) ->
+              let s =
+                OpamFilter.expand_string ~default:(fun _ -> "") (fenv ~opam) str
+              in
+              name, op, s, cmt)
+            (OpamFile.OPAM.env opam)
+          @ acc
+        | None -> acc)
       st.installed []
   in
   let root =

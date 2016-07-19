@@ -115,13 +115,18 @@ let string_of_selector =
 let string_of_formula =
   OpamFormula.string_of_formula string_of_selector
 
+let get_opam st nv =
+  match OpamSwitchState.opam_opt st nv with
+  | Some o -> o
+  | None -> OpamFile.OPAM.create nv
+
 let packages_of_atoms st atoms =
   atoms |>
   OpamSolution.sanitize_atom_list ~permissive:true st |>
   OpamFormula.packages_of_atoms (st.packages ++ st.installed)
 
 let package_dependencies st tog nv =
-  OpamSwitchState.opam st nv |>
+  get_opam st nv |>
   OpamPackageVar.all_depends
     ~build:tog.build ~test:tog.test ~doc:tog.doc ~dev:tog.dev
     ~depopts:tog.depopts
@@ -220,7 +225,7 @@ let apply_selector ~base st = function
     let re = if psel.exact then Re.seq [Re.bos; re; Re.eos] else re in
     let re = Re.compile re in
     let content_strings nv =
-      OpamSwitchState.opam st nv |>
+      get_opam st nv |>
       OpamFile.OPAM.to_list |>
       OpamStd.List.filter_map (fun (f, v) ->
           if psel.fields = [] ||
@@ -237,7 +242,7 @@ let apply_selector ~base st = function
     OpamFormula.packages_of_atoms base atoms
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
-        OpamSwitchState.opam st nv |> OpamFile.OPAM.has_flag f)
+        get_opam st nv |> OpamFile.OPAM.has_flag f)
       base
   | From_repository repos ->
     let rt = st.switch_repos in
@@ -340,7 +345,7 @@ let version_color st nv =
       OpamFilter.eval_to_bool ~default:false
         (OpamPackageVar.resolve_switch_raw ~package:nv st.switch_global
            st.switch st.switch_config)
-        (OpamFile.OPAM.available (OpamSwitchState.opam st nv))
+        (OpamFile.OPAM.available (get_opam st nv))
     with Not_found -> false
   in
   if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
@@ -371,13 +376,13 @@ let detail_printer ?prettify ?normalise st nv =
     (OpamPackage.name_to_string nv % (`bold :: root_sty)) ^
     ("." ^ OpamPackage.version_to_string nv) % root_sty
   | Synopsis ->
-    (OpamSwitchState.opam st nv |>
+    (get_opam st nv |>
      OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
     +! ""
   | Synopsis_or_target ->
     (match OpamPinned.package_opt st nv.name with
      | Some nv ->
-       let opam = OpamSwitchState.opam st nv in
+       let opam = get_opam st nv in
        if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
          Printf.sprintf "pinned to version %s"
            (OpamPackage.Version.to_string nv.version % [`blue])
@@ -388,17 +393,17 @@ let detail_printer ?prettify ?normalise st nv =
               (fun u -> OpamUrl.to_string u % [`underline])
               (OpamFile.OPAM.get_url opam))
      | None ->
-       (OpamSwitchState.opam st nv |>
+       (get_opam st nv |>
         OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
        +! "")
   | Description ->
-    (OpamSwitchState.opam st nv |>
+    (get_opam st nv |>
      OpamFile.OPAM.descr >>|
      OpamFile.Descr.body)
     +! ""
   | Field f ->
     (try
-       List.assoc f (OpamFile.OPAM.to_list (OpamSwitchState.opam st nv)) |>
+       List.assoc f (OpamFile.OPAM.to_list (get_opam st nv)) |>
        mini_field_printer ?prettify ?normalise
      with Not_found -> "")
   | Installed_version ->
@@ -413,11 +418,11 @@ let detail_printer ?prettify ?normalise st nv =
      with Not_found -> "--" % [`cyan])
   | Pinning_target ->
     if OpamPackage.Set.mem nv st.pinned then
-      let opam = OpamSwitchState.opam st nv in
+      let opam = get_opam st nv in
       OpamStd.Option.to_string ~none:"--" OpamUrl.to_string
         (OpamFile.OPAM.get_url opam)
     else ""
-  | Raw -> OpamFile.OPAM.write_to_string (OpamSwitchState.opam st nv)
+  | Raw -> OpamFile.OPAM.write_to_string (get_opam st nv)
   | All_installed_versions ->
     OpamGlobalState.installed_versions st.switch_global nv.name |>
     OpamPackage.Map.mapi (fun nv switches ->
@@ -514,7 +519,7 @@ let print_depexts st packages tags_list =
          if OpamPackage.Set.mem nv packages then nv else
            OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
        in
-       let opam = OpamSwitchState.opam st nv in
+       let opam = get_opam st nv in
        match OpamFile.OPAM.depexts opam with
        | None -> acc
        | Some tags ->
@@ -664,7 +669,7 @@ let info gt ~fields ~raw_opam ~where ?normalise atoms =
         with Not_found ->
           OpamPackage.Set.max_elt nvs
       in
-      let opam = OpamSwitchState.opam st choose in
+      let opam = get_opam st choose in
       if where then
         OpamConsole.msg "%s\n"
           (match OpamFile.OPAM.metadata_dir opam with

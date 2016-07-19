@@ -122,6 +122,26 @@ let load lock_kind gt rt switch =
        computing availability *)
     OpamPackage.Map.union (fun _ x -> x) installed_opams opams
   in
+  let installed_without_def =
+    OpamPackage.Set.fold (fun nv nodef ->
+        if OpamPackage.Map.mem nv installed_opams then nodef else
+        try
+          let o = OpamPackage.Map.find nv opams in
+          if lock_kind = `Lock_write then (* auto-repair *)
+            (log "Definition missing for installed package %s, \
+                  copying from repo"
+               (OpamPackage.to_string nv);
+             OpamFile.OPAM.write
+               (OpamPath.Switch.installed_opam gt.root switch nv) o);
+          nodef
+        with Not_found -> OpamPackage.Set.add nv nodef)
+      installed OpamPackage.Set.empty
+  in
+  if not (OpamPackage.Set.is_empty installed_without_def) then
+    OpamConsole.error
+      "No definition found for the following installed packages: %s\n\
+       This switch may need to be reinstalled"
+      (OpamPackage.Set.to_string installed_without_def);
   let changed =
     (* Note: This doesn't detect changed _dev_ packages, since it's based on the
        metadata or the archive hash changing and they don't have an archive
