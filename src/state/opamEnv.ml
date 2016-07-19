@@ -310,7 +310,6 @@ let eval_string gt switch =
 
 (* -- Shell and init scripts handling -- *)
 
-let switch_eval_sh = "switch_eval.sh"
 let complete_sh    = "complete.sh"
 let complete_zsh   = "complete.zsh"
 let variables_sh   = "variables.sh"
@@ -410,16 +409,10 @@ let string_of_update st shell updates =
     export (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
 
-let init_script root ~switch_eval ~completion ~shell
-    (variables_sh, switch_eval_sh, complete_sh) =
+let init_script root ~completion ~shell
+    (variables_sh, complete_sh) =
   let variables =
     Some (source root ~shell variables_sh) in
-  let switch_eval =
-    if switch_eval then
-      OpamStd.Option.map (source root ~shell ~interactive_only:true)
-        switch_eval_sh
-    else
-      None in
   let complete =
     if completion then
       OpamStd.Option.map (source root ~shell ~interactive_only:true) complete_sh
@@ -432,7 +425,6 @@ let init_script root ~switch_eval ~completion ~shell
       Printf.bprintf buf "# %s\n%s\n" name c in
   append "Load the environment variables" variables;
   append "Load the auto-complete scripts" complete;
-  append "Load the opam-switch-eval script" switch_eval;
   Buffer.contents buf
 
 let write_script root (name, body) =
@@ -442,18 +434,17 @@ let write_script root (name, body) =
     OpamStd.Exn.fatal e;
     OpamConsole.error "Could not write %s" (OpamFilename.to_string file)
 
-let write_static_init_scripts root ~switch_eval ~completion =
+let write_static_init_scripts root ~completion =
   let scripts =
     List.map (fun (shell, init, scripts) ->
-        init, init_script root ~shell ~switch_eval ~completion scripts) [
-      `sh, init_sh, (variables_sh, Some switch_eval_sh, Some complete_sh);
-      `zsh, init_zsh, (variables_sh, Some switch_eval_sh, Some complete_zsh);
-      `csh, init_csh, (variables_csh, None, None);
-      `fish, init_fish, (variables_fish, None, None);
+        init, init_script root ~shell ~completion scripts) [
+      `sh, init_sh, (variables_sh, Some complete_sh);
+      `zsh, init_zsh, (variables_sh, Some complete_zsh);
+      `csh, init_csh, (variables_csh, None);
+      `fish, init_fish, (variables_fish, None);
     ] @ [
       complete_sh, OpamScript.complete;
       complete_zsh, OpamScript.complete_zsh;
-      switch_eval_sh, OpamScript.switch_eval;
     ]
   in
   List.iter (write_script root) scripts
@@ -487,8 +478,7 @@ let status_of_init_file root init_sh =
     if OpamFilename.exists init_sh then
       let complete_sh = OpamStd.String.contains ~sub:complete_sh init in
       let complete_zsh = OpamStd.String.contains ~sub:complete_zsh init in
-      let switch_eval_sh = OpamStd.String.contains ~sub:switch_eval_sh init in
-      Some (complete_sh, complete_zsh, switch_eval_sh)
+      Some (complete_sh, complete_zsh)
     else
       None
   ) else
@@ -560,20 +550,14 @@ let display_setup root ~dot_profile shell =
   let global_setup =
     match status_of_init_file root init_file with
     | None -> [pretty_init_file, not_set ]
-    | Some(complete_sh, complete_zsh, switch_eval_sh) ->
+    | Some(complete_sh, complete_zsh) ->
       let completion =
         if not complete_sh
         && not complete_zsh then
           not_set
         else ok in
-      let switch_eval =
-        if switch_eval_sh then
-          ok
-        else
-          not_set in
       [ ("init-script"     , Printf.sprintf "%s" pretty_init_file);
         ("auto-completion" , completion);
-        ("opam-switch-eval", switch_eval);
       ]
   in
   OpamConsole.msg "User configuration:\n";
@@ -594,7 +578,7 @@ let setup_interactive root ~dot_profile shell =
   let update dot_profile =
     OpamConsole.msg "\n";
     update_user_setup root ?dot_profile shell;
-    write_static_init_scripts root ~switch_eval:true ~completion:true;
+    write_static_init_scripts root ~completion:true;
     dot_profile <> None in
 
   OpamConsole.msg "\n";

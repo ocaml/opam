@@ -653,7 +653,6 @@ let config =
   let profile_doc     = "Modify ~/.profile (or ~/.zshrc, etc., depending on your shell) to \
                          setup an OPAM-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
-  let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
   let sexp_doc        = "Display environment variables as an s-expression" in
@@ -664,7 +663,6 @@ let config =
   let profile         = mk_flag ["profile"]        profile_doc in
   let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
-  let no_switch_eval  = mk_flag ["no-switch-eval"] no_eval_doc in
   let all             = mk_flag ["a";"all"]        all_doc in
   let user            = mk_flag ["u";"user"]       user_doc in
   let global          = mk_flag ["g";"global"]     global_doc in
@@ -675,7 +673,7 @@ let config =
   let config global_options
       command shell sexp inplace_path
       dot_profile_o list all global user
-      profile ocamlinit no_complete no_switch_eval
+      profile ocamlinit no_complete
       params =
     apply_global_options global_options;
     match command, params with
@@ -691,15 +689,14 @@ let config =
       let profile     = user  || profile in
       let ocamlinit   = user  || ocamlinit in
       let completion    = global && not no_complete in
-      let switch_eval = global && not no_switch_eval in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         `Ok (OpamConfigCommand.setup_list shell dot_profile)
-      else if profile || ocamlinit || completion || switch_eval then
+      else if profile || ocamlinit || completion then
         let dot_profile = if profile then Some dot_profile else None in
         OpamGlobalState.with_ `Lock_write @@ fun gt ->
         `Ok (OpamConfigCommand.setup gt
-               ?dot_profile ~switch_eval ~completion ~shell
+               ?dot_profile ~completion ~shell
                ~user ~global)
       else
         `Ok (OpamConsole.msg
@@ -719,11 +716,10 @@ let config =
                 \n\
                 Global configuration\n\
                \    -g,--global          %s\n\
-               \    --no-complete        %s\n\
-               \    --no-switch-eval     %s\n\n"
+               \    --no-complete        %s\n\n"
                list_doc all_doc
                user_doc ocamlinit_doc profile_doc dot_profile_doc
-               global_doc no_complete_doc no_eval_doc)
+               global_doc no_complete_doc)
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec gt ~inplace_path c)
@@ -849,7 +845,7 @@ let config =
           $global_options $command $shell_opt $sexp
           $inplace_path
           $dot_profile_flag $list $all $global $user
-          $profile $ocamlinit $no_complete $no_switch_eval
+          $profile $ocamlinit $no_complete
           $params)
   ),
   term_info "config" ~doc ~man

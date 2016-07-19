@@ -43,7 +43,7 @@ val set: full_variable -> string option -> unit
 val setup:
   rw global_state ->
   ?dot_profile:OpamTypes.filename ->
-  switch_eval:bool -> completion:bool ->
+  completion:bool ->
   shell:OpamTypes.shell ->
   user:bool -> global:bool -> unit
 

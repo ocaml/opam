@@ -86,7 +86,6 @@ opam-core.cma opam-core.cmxa: state/opamScript.ml core/opamCompat.ml core/opamCo
 state/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
 	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
-	ocaml ../shell/crunch.ml "switch_eval"  < ../shell/opam_switch_eval.sh >> $@
 	ocaml ../shell/crunch.ml "prompt"       < ../shell/opam_prompt.sh >> $@
 
 ifeq ($(OCAML_4_02),true)

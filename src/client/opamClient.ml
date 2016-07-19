@@ -700,7 +700,7 @@ let slog = OpamConsole.slog
       | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
       | `yes ->
         OpamEnv.update_user_setup root ~dot_profile shell;
-        OpamEnv.write_static_init_scripts root ~switch_eval:true ~completion:true;
+        OpamEnv.write_static_init_scripts root ~completion:true;
         true
     in
     gt, rt
