@@ -95,7 +95,18 @@ let env_update_op_of_string = function
   | _ -> raise (Invalid_argument "env_update_op_of_string")
 
 let env_array l =
-  Array.of_list (List.rev_map (fun (k,v, _) -> k^"="^v) l)
+  (* The env list may contain successive bindings of the same variable, make
+     sure to keep only the last *)
+  let bindings =
+    List.fold_left (fun acc (k,v,_) -> OpamStd.String.Map.add k v acc)
+      OpamStd.String.Map.empty l
+  in
+  let a = Array.make (OpamStd.String.Map.cardinal bindings) "" in
+  OpamStd.String.Map.fold
+    (fun k v i -> a.(i) <- String.concat "=" [k;v]; succ i)
+    bindings 0
+  |> ignore;
+  a
 
 
 let string_of_filter_ident (pkgs,var,converter) =

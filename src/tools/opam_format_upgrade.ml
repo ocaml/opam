@@ -318,7 +318,7 @@ let process args =
       O.with_maintainer [ "platform@lists.ocaml.org" ] |>
       O.with_env [
         "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
-        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%", None
+        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%/stublibs", None
       ] |>
       (* leave the Compiler flag to the implementations (since the user
          needs to select one)
