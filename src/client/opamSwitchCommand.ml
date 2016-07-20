@@ -557,7 +557,11 @@ let guess_compiler_package rt name =
   in
   let compiler_packages =
     OpamPackage.Map.filter
-      (fun _ opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
+      (fun _ opam ->
+         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+         OpamFilter.eval_to_bool ~default:false
+           (OpamPackageVar.resolve_global rt.repos_global)
+           (OpamFile.OPAM.available opam))
       package_index
     |> OpamPackage.keys
   in

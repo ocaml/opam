@@ -171,8 +171,8 @@ module List : sig
   val filter_some: 'a option list -> 'a list
 
   (** Returns the first non-[None] value returned by the passed function on the
-      elements of the passed list. @raise [Not_found] if all of them yield
-      [None] *)
+      elements of the passed list.
+      @raise Not_found if all of them yield [None] *)
   val find_map: ('a -> 'b option) -> 'a list -> 'b
 
   (** Insert a value in an ordered list *)
@@ -303,7 +303,7 @@ end
 (** {2 Manipulation and query of environment variables} *)
 
 module Env : sig
-  (** Remove from a c-separated list of string the one with the given prefix *)
+  (** Remove from a c-separated list of string the ones with the given prefix *)
   val reset_value: prefix:string -> char -> string -> string list
 
   (** split a c-separated list of string in two according to the first

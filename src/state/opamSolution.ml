@@ -423,7 +423,7 @@ let parallel_apply t action action_graph =
           installed = visible_installed;
           conf_files = OpamPackage.Map.filter
               (fun nv _ -> OpamPackage.Set.mem nv visible_installed)
-              t.conf_files; }
+              !t_ref.conf_files; }
       in
       let nv = action_contents action in
       let source = OpamPackage.Map.find_opt nv package_sources in

@@ -97,10 +97,17 @@ let exists_dir dirname =
 let opt_dir dirname =
   if exists_dir dirname then Some dirname else None
 
+let basename_dir dirname =
+  Base.of_string (Filename.basename (Dir.to_string dirname))
+
+let dirname_dir dirname =
+  Dir.to_string (Filename.dirname (Dir.of_string dirname))
+
 let copy_dir ~src ~dst =
-  if exists_dir dst then
+  if Sys.file_exists (Dir.to_string dst) then
     OpamSystem.internal_error
-      "Cannot create %s as the directory already exists." (Dir.to_string dst);
+      "Cannot create %s as it already exists." (Dir.to_string dst);
+  mkdir (dirname_dir dst);
   OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
     [ "cp"; "-PR"; Dir.to_string src; Dir.to_string dst ]
 
@@ -111,12 +118,6 @@ let link_dir ~src ~dst =
     mkdir (Filename.dirname dst);
     OpamSystem.link (Dir.to_string src) (Dir.to_string dst)
   )
-
-let basename_dir dirname =
-  Base.of_string (Filename.basename (Dir.to_string dirname))
-
-let dirname_dir dirname =
-  Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
 let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
