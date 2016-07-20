@@ -335,7 +335,7 @@ let source root ~shell ?(interactive_only=false) f =
     | `fish ->
       Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
     | _ ->
-      Printf.sprintf "test -x %s && . %s > /dev/null 2> /dev/null || true\n"
+      Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
         (file f) (file f)
   in
   if interactive_only then
