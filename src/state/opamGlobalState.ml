@@ -529,7 +529,10 @@ module Format_upgrade = struct
 
       )
       (OpamFile.Config.installed_switches conf);
-    conf
+    OpamFile.Config.with_eval_variables [
+      OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
+      "OCaml version present on your system indenpendently of opam, if any";
+    ] conf
 
   let latest_version = v2_0_alpha2
 
