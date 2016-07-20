@@ -56,7 +56,7 @@ let resolve_global gt full_var =
   | Some _ as c -> c
   | None ->
     match OpamVariable.Map.find_opt var gt.global_variables with
-    | Some (lazy (Some _ as some)) -> some
+    | Some (lazy (Some _ as some), _) -> some
     | _ ->
       match V.to_string var with
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))

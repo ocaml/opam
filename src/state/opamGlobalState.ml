@@ -614,6 +614,12 @@ let load lock_kind =
      currently installed shell init scripts) *)
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
+  let global_variables =
+    List.fold_left (fun acc (v,value,doc) ->
+        OpamVariable.Map.add v (lazy (Some value), doc) acc)
+      OpamVariable.Map.empty
+      (OpamFile.Config.global_variables config)
+  in
   let eval_variables = OpamFile.Config.eval_variables config in
   let global_variables =
     let env =
@@ -639,25 +645,28 @@ let load lock_kind =
                else bnd)
           (Unix.environment ())
       ) in
-    List.fold_left (fun acc (v,cmd) ->
-        OpamVariable.Map.add v
-          (lazy
-            (try
-               let ret =
-                 OpamSystem.read_command_output
-                   ~env:(Lazy.force env)
-                   ~allow_stdin:false
-                   cmd
-               in
-               Some (S (OpamStd.String.strip (String.concat "\n" ret)))
-             with e ->
-               OpamStd.Exn.fatal e;
-               log "Failed to evaluate global variable %a: %a"
-                 (slog OpamVariable.to_string) v
-                 (slog Printexc.to_string) e;
-               None))
+    List.fold_left (fun acc (v, cmd, doc) ->
+        OpamVariable.Map.update v
+          (fun previous_value ->
+             (lazy
+               (try
+                  let ret =
+                    OpamSystem.read_command_output
+                      ~env:(Lazy.force env)
+                      ~allow_stdin:false
+                      cmd
+                  in
+                  Some (S (OpamStd.String.strip (String.concat "\n" ret)))
+                with e ->
+                  OpamStd.Exn.fatal e;
+                  log "Failed to evaluate global variable %a: %a"
+                    (slog OpamVariable.to_string) v
+                    (slog Printexc.to_string) e;
+                  Lazy.force (fst previous_value))),
+             doc)
+          (lazy None, "")
           acc)
-      OpamVariable.Map.empty eval_variables
+      global_variables eval_variables
   in
   { global_lock = config_lock;
     root;

@@ -17,7 +17,8 @@ let repository_url = {
 }
 
 let eval_variables = [
-  OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"];
+  OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
+  "OCaml version present on your system indenpendently of opam, if any";
 ]
 
 let init_config () =

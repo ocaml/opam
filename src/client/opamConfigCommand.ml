@@ -25,10 +25,9 @@ let help t =
       OpamPackageVar.global_variable_names
   in
   let all_global_vars =
-    List.fold_left (fun acc (v,cmd) ->
-        OpamVariable.Map.add v ("As returned by '"^String.concat " " cmd^"'") acc)
+    OpamVariable.Map.union (fun _ x -> x)
       all_global_vars
-      (OpamFile.Config.eval_variables t.switch_global.config)
+      (OpamVariable.Map.map snd t.switch_global.global_variables)
   in
   List.map (fun (var, doc) -> [
         OpamVariable.to_string var % `bold;

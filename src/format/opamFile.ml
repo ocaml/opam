@@ -857,7 +857,8 @@ module ConfigSyntax = struct
     wrap_build : arg list;
     wrap_install : arg list;
     wrap_remove : arg list;
-    eval_variables : (variable * string list) list;
+    global_variables : (variable * variable_contents * string) list;
+    eval_variables : (variable * string list * string) list;
   }
 
   let opam_version t = t.opam_version
@@ -875,6 +876,7 @@ module ConfigSyntax = struct
   let wrap_build t = t.wrap_build
   let wrap_install t = t.wrap_install
   let wrap_remove t = t.wrap_remove
+  let global_variables t = t.global_variables
   let eval_variables t = t.eval_variables
 
   let with_opam_version opam_version t = { t with opam_version }
@@ -894,6 +896,7 @@ module ConfigSyntax = struct
   let with_wrap_build wrap_build t = { t with wrap_build }
   let with_wrap_install wrap_install t = { t with wrap_install }
   let with_wrap_remove wrap_remove t = { t with wrap_remove }
+  let with_global_variables global_variables t = { t with global_variables }
   let with_eval_variables eval_variables t = { t with eval_variables }
 
   let create installed_switches switch repositories
@@ -904,7 +907,7 @@ module ConfigSyntax = struct
       jobs; dl_tool = download_tool; dl_jobs;
       solver_criteria = criteria; solver;
       wrap_build = []; wrap_install = []; wrap_remove = [];
-      eval_variables = []; }
+      global_variables = []; eval_variables = []; }
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
@@ -919,6 +922,7 @@ module ConfigSyntax = struct
     wrap_build = [];
     wrap_install = [];
     wrap_remove = [];
+    global_variables = [];
     eval_variables = [];
   }
 
@@ -974,12 +978,20 @@ module ConfigSyntax = struct
       "wrap-remove-commands", Pp.ppacc
         with_wrap_remove wrap_remove
         (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "global-variables", Pp.ppacc
+        with_global_variables global_variables
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_triple
+              (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+              Pp.V.variable_contents
+              Pp.V.string));
       "eval-variables", Pp.ppacc
         with_eval_variables eval_variables
-        (Pp.V.map_list ~depth:1 @@
-         Pp.V.map_option
-           (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
-           (Pp.map_list Pp.V.string));
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_triple
+              (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+              (Pp.V.map_list Pp.V.string)
+              Pp.V.string));
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt

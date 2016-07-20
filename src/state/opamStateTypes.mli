@@ -53,9 +53,11 @@ type +'lock global_state = {
       may be overriden through the command-line or environment, see
       OpamStateConfig *)
 
-  global_variables: variable_contents option Lazy.t OpamVariable.Map.t;
+  global_variables:
+    (variable_contents option Lazy.t * string) OpamVariable.Map.t;
   (** A map of variables that have been defined globally, e.g. through
-      `.opam/config`. They may need evaluation so are stored as lazy values. *)
+      `.opam/config`. They may need evaluation so are stored as lazy values.
+      The extra string is the supplied variable documentation *)
 } constraint 'lock = 'lock lock
 
 (** State corresponding to the repo/ subdir: all available packages and

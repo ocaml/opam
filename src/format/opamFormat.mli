@@ -248,6 +248,12 @@ module Pp : sig
       (value, 'a) t ->
       (value, 'b) t -> (value, 'a * 'b) t
 
+    (** A triple is simply a list with three elements in the [value] type *)
+    val map_triple :
+      (value, 'a) t ->
+      (value, 'b) t ->
+      (value, 'c) t -> (value, 'a * 'b * 'c) t
+
     val url : (value, url) t
 
     (** Specialised url parser when the backend is already known *)
