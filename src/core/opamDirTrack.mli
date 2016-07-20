@@ -40,8 +40,11 @@ val track:
 
 (** Removes the added and kind-changed items unless their contents changed and
     [force] isn't set, and prints warnings for other changes unless [verbose] is
-    set to [false]. Ignores non-existing files. *)
-val revert: ?verbose:bool -> ?force:bool -> OpamFilename.Dir.t -> t -> unit
+    set to [false]. Ignores non-existing files.
+    [title] is used to prefix messages if specified. *)
+val revert:
+  ?title:string -> ?verbose:bool -> ?force:bool ->
+  OpamFilename.Dir.t -> t -> unit
 
 (** Checks the items that were added or kind-changed in the given diff, and
     returns their status *)

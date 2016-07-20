@@ -13,7 +13,7 @@
 
 (** downloads a file from an URL, using Curl, Wget, or a custom configured
     tool, to the given directory. Returns the downloaded filename.
-    FIXME: The source OpamFilename.t is indeed a URL. *)
+    @raise Failure if the checksum is specified and doesn't match*)
 val download:
   overwrite:bool -> ?compress:bool -> ?checksum:string ->
   OpamUrl.t -> OpamFilename.Dir.t ->

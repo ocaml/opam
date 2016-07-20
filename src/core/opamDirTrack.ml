@@ -54,11 +54,23 @@ type item_value =
 
 type item = perms * item_value
 
+let cached_digest =
+  let item_cache = Hashtbl.create 749 in
+  fun f size mtime ->
+    try
+      let csize, cmtime, digest = Hashtbl.find item_cache f in
+      if csize = size || mtime = cmtime then digest
+      else raise Not_found
+    with Not_found ->
+      let digest = Digest.file f in
+      Hashtbl.replace item_cache f (size, mtime, digest);
+      digest
+
 let item_of_filename f : item =
   let stats = Unix.stat f in
   Unix.(stats.st_uid, stats.st_gid, stats.st_perm),
   match stats.Unix.st_kind with
-  | Unix.S_REG -> File (Digest.file f)
+  | Unix.S_REG -> File (cached_digest f stats.Unix.st_size stats.Unix.st_mtime)
   | Unix.S_DIR -> Dir
   | Unix.S_LNK -> Link (Unix.readlink f)
   | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO | Unix.S_SOCK ->
@@ -97,10 +109,12 @@ let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
       acc files
   in
   let str_dir = OpamFilename.Dir.to_string dir in
+  let scan_timer = OpamConsole.timer () in
   let before = make_index SM.empty str_dir "" in
-  log ~level:2 "before install: %a elements"
-    (slog @@ string_of_int @* SM.cardinal) before;
+  log ~level:2 "before install: %a elements scanned in %.3fs"
+    (slog @@ string_of_int @* SM.cardinal) before (scan_timer ());
   job_f () @@| fun result ->
+  let scan_timer = OpamConsole.timer () in
   let after = make_index SM.empty str_dir "" in
   let diff =
     SM.merge (fun _ before after ->
@@ -120,11 +134,11 @@ let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
           | _ -> Some (Kind_changed (item_digest item)))
       before after
   in
-  log "after install: %a elements, %a added"
+  log "after install: %a elements, %a added, scanned in %.3fs"
     (slog @@ string_of_int @* SM.cardinal) after
     (slog @@ string_of_int @* SM.cardinal @*
              SM.filter (fun _ -> function Added _ -> true | _ -> false))
-    diff;
+    diff (scan_timer ());
   result, diff
 
 let check prefix changes =
@@ -145,38 +159,54 @@ let check prefix changes =
     changes []
   |> List.rev
 
-let revert ?(verbose=true) ?(force=false) prefix changes =
+let revert ?title ?(verbose=true) ?(force=false) prefix changes =
+  let title = match title with
+    | None -> ""
+    | Some t -> t ^ ": "
+  in
   let changes =
     (* Reverse the list so that dirnames come after the files they contain *)
     List.rev (OpamStd.String.Map.bindings changes)
   in
-  List.iter (fun (fname,op) ->
-      let f = Filename.concat (OpamFilename.Dir.to_string prefix) fname in
-      match op with
-      | Added dg | Kind_changed dg ->
-        let cur_item_ct, cur_dg =
-          try
-            let item = item_of_filename f in
-            Some (snd item), Some (item_digest item)
-          with Unix.Unix_error _ -> None, None
-        in
-        if cur_dg = None then
-          log ~level:2 "file %s was already removed" f
-        else if cur_dg <> Some dg && not force then
-          (if verbose then
-             OpamConsole.warning "%s has been modified, not removing" f)
-        else if cur_item_ct = Some Dir then
-          (let d = OpamFilename.Dir.of_string f in
-           if OpamFilename.dir_is_empty d then
-             OpamFilename.rmdir d
-           else if verbose then
-             OpamConsole.warning "Not removing non-empty directory %s"
-               (OpamFilename.Dir.to_string d))
-        else
-        let f = OpamFilename.of_string f in
-        OpamFilename.remove f
-      | (Removed | Perm_changed _ | Contents_changed _ as op) ->
-        if verbose then
-          OpamConsole.warning "Cannot revert %s of %s"
-            (string_of_change op) fname)
-    changes
+  let already, modified, nonempty, cannot =
+    List.fold_left (fun (already,modified,nonempty,cannot as acc) (fname,op) ->
+        let f = Filename.concat (OpamFilename.Dir.to_string prefix) fname in
+        match op with
+        | Added dg | Kind_changed dg ->
+          let cur_item_ct, cur_dg =
+            try
+              let item = item_of_filename f in
+              Some (snd item), Some (item_digest item)
+            with Unix.Unix_error _ -> None, None
+          in
+          if cur_dg = None then (fname::already, modified, nonempty, cannot)
+          else if cur_dg <> Some dg && not force then
+            (already, fname::modified, nonempty, cannot)
+          else if cur_item_ct = Some Dir then
+            let d = OpamFilename.Dir.of_string f in
+            if OpamFilename.dir_is_empty d then
+              (OpamFilename.rmdir d; acc)
+            else
+              (already, modified, fname::nonempty, cannot)
+          else
+          let f = OpamFilename.of_string f in
+          OpamFilename.remove f;
+          acc
+        | (Removed | Perm_changed _ | Contents_changed _ as op) ->
+          (already, modified, nonempty, (op,fname)::cannot))
+      ([], [], [], []) changes
+  in
+  if already <> [] then
+    log ~level:2 "%sfiles %s were already removed" title
+      (String.concat ", " (List.rev already));
+  if modified <> [] && verbose then
+    OpamConsole.warning "%snot removing files that changed since:\n%s" title
+      (OpamStd.Format.itemize (fun s -> s) (List.rev modified));
+  if nonempty <> [] && verbose then
+    OpamConsole.note "%snot removing non-empty directories:\n%s" title
+      (OpamStd.Format.itemize (fun s -> s) (List.rev nonempty));
+  if cannot <> [] && verbose then
+    OpamConsole.warning "%scannot revert:\n%s" title
+      (OpamStd.Format.itemize
+         (fun (op,f) -> string_of_change op ^" of "^ f)
+         (List.rev cannot))

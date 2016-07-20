@@ -33,7 +33,7 @@ let symbol_of_action = function
   | `Change (`Up,_,_) -> "\xe2\x86\x97 " (* U+2197 *)
   | `Change (`Down,_,_) -> "\xe2\x86\x98 " (* U+2198 *)
   | `Reinstall _ -> "\xe2\x86\xbb " (* U+21BB *)
-  | `Build _ -> "\xce\xbb " (* U+039B *)
+  | `Build _ -> "\xce\xbb " (* U+03BB *)
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
@@ -44,7 +44,8 @@ let action_color c =
   OpamConsole.colorise (match c with
       | `Install _ | `Change (`Up,_,_) -> `green
       | `Remove _ | `Change (`Down,_,_) -> `red
-      | `Reinstall _ | `Build _ -> `yellow)
+      | `Reinstall _ -> `yellow
+      | `Build _ -> `cyan)
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t
 = struct

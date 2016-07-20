@@ -188,6 +188,9 @@ val link: src:t -> dst:t -> unit
     match [Dir.t] dir if needed) *)
 val extract: t -> Dir.t -> unit
 
+(** Same as [extract], as an OpamProcess.job *)
+val extract_job: t -> Dir.t -> exn option OpamProcess.job
+
 (** Extract an archive in a given directory (which should already exists) *)
 val extract_in: t -> Dir.t -> unit
 
@@ -208,8 +211,8 @@ val remove_prefix_dir: Dir.t -> Dir.t -> string
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
-(** Apply a patch to a directory *)
-val patch: t -> Dir.t -> unit
+(** Apply a patch in a directory. Returns [true] on success *)
+val patch: t -> Dir.t -> bool OpamProcess.job
 
 (** Compute the MD5 digest of a file *)
 val digest: t -> string

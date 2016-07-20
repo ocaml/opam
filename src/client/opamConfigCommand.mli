@@ -42,8 +42,8 @@ val set: full_variable -> string option -> unit
 (** Update the global and user configuration to use OPAM. *)
 val setup:
   rw global_state ->
-  ?dot_profile:OpamTypes.filename -> ocamlinit:bool ->
-  switch_eval:bool -> completion:bool ->
+  ?dot_profile:OpamTypes.filename ->
+  completion:bool ->
   shell:OpamTypes.shell ->
   user:bool -> global:bool -> unit
 

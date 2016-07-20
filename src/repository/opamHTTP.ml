@@ -207,15 +207,20 @@ module B = struct
     in
     let files = OpamFilename.files dirname in
     let uptodate =
-      let found, extra =
+      let found, _extra =
         List.partition (fun f -> f = local_file && check_sum f) files
       in
+      (* For removals, multiple versions of the same pkg may be needed.
+         This breaks this case by removing what was just downloaded.
+         !X fixme: if the package was switched from e.g. http to git this may
+         still be broken, it would be best to have per-version dirs
       if extra <> [] then
         (log "Removing stale files in download dir: %a"
            (slog @@ List.map OpamFilename.to_string @>
                     OpamStd.Format.pretty_list ?last:None)
            extra;
          List.iter OpamFilename.remove extra);
+      *)
       found <> []
     in
     if uptodate then Done (Result (F local_file))
@@ -223,7 +228,12 @@ module B = struct
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
-         Done (Not_available (OpamUrl.to_string remote_url))) @@
+         let msg = match e with
+           | Failure msg ->
+             Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) msg
+           | _ -> OpamUrl.to_string remote_url
+         in
+         Done (Not_available msg)) @@
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file ->
     if OpamRepositoryBackend.check_digest local_file checksum then

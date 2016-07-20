@@ -52,9 +52,6 @@ val full_with_path: force_path:bool -> dirname -> switch -> env
 
 (** {2 Shell and initialisation support} *)
 
-(** NOTE: besides shell init, this still includes a bit of OCaml-specific code
-    to register use of [$OCAML_TOPLEVEL_PATH] in [~/.ocamlinit]. *)
-
 (** Details the process to the user, and interactively update the global and
     user configurations. Returns [true] if the update was confirmed and
     successful *)
@@ -65,12 +62,11 @@ val display_setup: dirname -> dot_profile:filename -> shell -> unit
 
 (** Update the user configuration in $HOME for good opam integration. *)
 val update_user_setup:
-  dirname -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit
+  dirname -> ?dot_profile:filename -> shell -> unit
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells *)
-val write_static_init_scripts:
-  dirname -> switch_eval:bool -> completion:bool -> unit
+val write_static_init_scripts: dirname -> completion:bool -> unit
 
 (** Update the shell scripts containing the current switch configuration in
     ~/.opam/opam-init ; prints a warning and skips if a write lock on the global
@@ -79,12 +75,10 @@ val write_static_init_scripts:
     ~/.opam/config) *)
 val write_dynamic_init_scripts: 'a switch_state -> unit
 
+(** Removes the dynamic init scripts setting the variables for any given
+    switch. *)
+val clear_dynamic_init_scripts: rw global_state -> unit
+
 (** Print a warning if the environment is not set-up properly.
     (General message) *)
 val check_and_print_env_warning: 'a switch_state -> unit
-
-(** Print a long message with explanations if the environment is not set-up
-    properly, and advises to update user's file depending on what has already
-    been done automatically according to [user_config] *)
-val print_env_warning_at_init:
-  'a global_state -> ocamlinit:bool -> ?dot_profile:filename -> shell -> unit

@@ -178,14 +178,16 @@ let compute_updates st =
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        let opam = OpamSwitchState.opam st nv in
-        List.map (fun (name,op,str,cmt) ->
-            let s =
-              OpamFilter.expand_string ~default:(fun _ -> "") (fenv ~opam) str
-            in
-            name, op, s, cmt)
-          (OpamFile.OPAM.env opam)
-        @ acc)
+        match OpamSwitchState.opam_opt st nv with
+        | Some opam ->
+          List.map (fun (name,op,str,cmt) ->
+              let s =
+                OpamFilter.expand_string ~default:(fun _ -> "") (fenv ~opam) str
+              in
+              name, op, s, cmt)
+            (OpamFile.OPAM.env opam)
+          @ acc
+        | None -> acc)
       st.installed []
   in
   let root =
@@ -308,7 +310,6 @@ let eval_string gt switch =
 
 (* -- Shell and init scripts handling -- *)
 
-let switch_eval_sh = "switch_eval.sh"
 let complete_sh    = "complete.sh"
 let complete_zsh   = "complete.zsh"
 let variables_sh   = "variables.sh"
@@ -334,7 +335,7 @@ let source root ~shell ?(interactive_only=false) f =
     | `fish ->
       Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
     | _ ->
-      Printf.sprintf "test -x %s && . %s > /dev/null 2> /dev/null || true\n"
+      Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
         (file f) (file f)
   in
   if interactive_only then
@@ -408,16 +409,10 @@ let string_of_update st shell updates =
     export (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
 
-let init_script root ~switch_eval ~completion ~shell
-    (variables_sh, switch_eval_sh, complete_sh) =
+let init_script root ~completion ~shell
+    (variables_sh, complete_sh) =
   let variables =
     Some (source root ~shell variables_sh) in
-  let switch_eval =
-    if switch_eval then
-      OpamStd.Option.map (source root ~shell ~interactive_only:true)
-        switch_eval_sh
-    else
-      None in
   let complete =
     if completion then
       OpamStd.Option.map (source root ~shell ~interactive_only:true) complete_sh
@@ -430,7 +425,6 @@ let init_script root ~switch_eval ~completion ~shell
       Printf.bprintf buf "# %s\n%s\n" name c in
   append "Load the environment variables" variables;
   append "Load the auto-complete scripts" complete;
-  append "Load the opam-switch-eval script" switch_eval;
   Buffer.contents buf
 
 let write_script root (name, body) =
@@ -440,18 +434,17 @@ let write_script root (name, body) =
     OpamStd.Exn.fatal e;
     OpamConsole.error "Could not write %s" (OpamFilename.to_string file)
 
-let write_static_init_scripts root ~switch_eval ~completion =
+let write_static_init_scripts root ~completion =
   let scripts =
     List.map (fun (shell, init, scripts) ->
-        init, init_script root ~shell ~switch_eval ~completion scripts) [
-      `sh, init_sh, (variables_sh, Some switch_eval_sh, Some complete_sh);
-      `zsh, init_zsh, (variables_sh, Some switch_eval_sh, Some complete_zsh);
-      `csh, init_csh, (variables_csh, None, None);
-      `fish, init_fish, (variables_fish, None, None);
+        init, init_script root ~shell ~completion scripts) [
+      `sh, init_sh, (variables_sh, Some complete_sh);
+      `zsh, init_zsh, (variables_sh, Some complete_zsh);
+      `csh, init_csh, (variables_csh, None);
+      `fish, init_fish, (variables_fish, None);
     ] @ [
       complete_sh, OpamScript.complete;
       complete_zsh, OpamScript.complete_zsh;
-      switch_eval_sh, OpamScript.switch_eval;
     ]
   in
   List.iter (write_script root) scripts
@@ -471,6 +464,13 @@ let write_dynamic_init_scripts st =
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
 
+let clear_dynamic_init_scripts gt =
+  List.iter (fun f -> OpamFilename.remove (OpamPath.init gt.root // f)) [
+    variables_sh;
+    variables_csh;
+    variables_fish;
+  ]
+
 let status_of_init_file root init_sh =
   let init_sh = OpamPath.init root // init_sh in
   if OpamFilename.exists init_sh then (
@@ -478,8 +478,7 @@ let status_of_init_file root init_sh =
     if OpamFilename.exists init_sh then
       let complete_sh = OpamStd.String.contains ~sub:complete_sh init in
       let complete_zsh = OpamStd.String.contains ~sub:complete_zsh init in
-      let switch_eval_sh = OpamStd.String.contains ~sub:switch_eval_sh init in
-      Some (complete_sh, complete_zsh, switch_eval_sh)
+      Some (complete_sh, complete_zsh)
     else
       None
   ) else
@@ -508,7 +507,7 @@ let update_dot_profile root dot_profile shell =
   | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile
   | `otherroot ->
     OpamConsole.msg
-      "  %s is already configured for another OPAM root.\n"
+      "  %s is already configured for another opam root.\n"
       pretty_dot_profile
   | `yes       ->
     let init_file = init_file shell in
@@ -521,62 +520,15 @@ let update_dot_profile root dot_profile shell =
     let body =
       Printf.sprintf
         "%s\n\n\
-         # OPAM configuration\n\
+         # opam configuration\n\
          %s"
         (OpamStd.String.strip body) (source root ~shell init_file) in
     OpamFilename.write dot_profile body
 
-(* A little bit of remaining OCaml specific stuff. Can we find another way ? *)
-let ocamlinit () =
-  try
-    let file = Filename.concat (OpamStd.Env.get "HOME") ".ocamlinit" in
-    Some (OpamFilename.of_string file)
-  with Not_found ->
-    None
 
-let ocamlinit_needs_update () =
-  match ocamlinit () with
-  | None      -> true
-  | Some file ->
-    if OpamFilename.exists file then (
-      let body = OpamFilename.read file in
-      let sub = "OCAML_TOPLEVEL_PATH" in
-      not (OpamStd.String.contains ~sub body)
-    ) else
-      true
-
-let update_ocamlinit () =
-  if ocamlinit_needs_update () then (
-    match ocamlinit () with
-    | None      -> ()
-    | Some file ->
-      let body =
-        if not (OpamFilename.exists file) then ""
-        else OpamFilename.read file in
-      if body = "" then
-        OpamConsole.msg "  Generating ~/.ocamlinit.\n"
-      else
-        OpamConsole.msg "  Updating ~/.ocamlinit.\n";
-      try
-        let header =
-          "(* Added by OPAM. *)\n\
-           let () =\n\
-          \  try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
-          \  with Not_found -> ()\n\
-           ;;\n\n" in
-        let oc = open_out_bin (OpamFilename.to_string file) in
-        output_string oc (header ^ body);
-        close_out oc;
-      with e ->
-        OpamStd.Exn.fatal e;
-        OpamSystem.internal_error "Cannot write ~/.ocamlinit."
-  ) else
-    OpamConsole.msg "  ~/.ocamlinit is already up-to-date.\n"
-
-let update_user_setup root ~ocamlinit ?dot_profile shell =
-  if ocamlinit || dot_profile <> None then (
+let update_user_setup root ?dot_profile shell =
+  if dot_profile <> None then (
     OpamConsole.msg "User configuration:\n";
-    if ocamlinit then update_ocamlinit ();
     OpamStd.Option.iter (fun f -> update_dot_profile root f shell) dot_profile
   )
 
@@ -586,83 +538,32 @@ let display_setup root ~dot_profile shell =
   let ok      = "string is already present so file unchanged" in
   let error   = "error" in
   let user_setup =
-    let ocamlinit_status =
-      if ocamlinit_needs_update () then not_set else ok in
     let dot_profile_status =
       match dot_profile_needs_update root dot_profile with
       | `no        -> ok
       | `yes       -> not_set
       | `otherroot -> error in
-    [ ("~/.ocamlinit"                   , ocamlinit_status);
-      (OpamFilename.prettify dot_profile, dot_profile_status); ]
+    [ (OpamFilename.prettify dot_profile, dot_profile_status); ]
   in
   let init_file = init_file shell in
   let pretty_init_file = OpamFilename.prettify (OpamPath.init root // init_file) in
   let global_setup =
     match status_of_init_file root init_file with
     | None -> [pretty_init_file, not_set ]
-    | Some(complete_sh, complete_zsh, switch_eval_sh) ->
+    | Some(complete_sh, complete_zsh) ->
       let completion =
         if not complete_sh
         && not complete_zsh then
           not_set
         else ok in
-      let switch_eval =
-        if switch_eval_sh then
-          ok
-        else
-          not_set in
       [ ("init-script"     , Printf.sprintf "%s" pretty_init_file);
         ("auto-completion" , completion);
-        ("opam-switch-eval", switch_eval);
       ]
   in
   OpamConsole.msg "User configuration:\n";
   List.iter print user_setup;
   OpamConsole.msg "Global configuration:\n";
   List.iter print global_setup
-
-let print_env_warning_at_init gt ~ocamlinit ?dot_profile shell =
-  let profile_string = match dot_profile with
-    | None -> ""
-    | Some f ->
-      Printf.sprintf
-        "%s To correctly configure OPAM for subsequent use, add the following\n\
-        \   line to your profile file (for instance %s):\n\
-         \n\
-        \      %s\n"
-        (OpamConsole.colorise `yellow "2.")
-        (OpamFilename.prettify f)
-        (source gt.root ~shell (init_file shell))
-  in
-  let ocamlinit_string =
-    if not ocamlinit then "" else
-      OpamConsole.colorise `yellow "3." ^
-      " To avoid issues related to non-system installations of `ocamlfind`\n\
-      \   add the following lines to ~/.ocamlinit (create it if necessary):\n\
-       \n\
-      \      let () =\n\
-      \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
-      \        with Not_found -> ()\n\
-      \      ;;\n\n"
-  in
-  let line =
-    OpamConsole.colorise `cyan
-      "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\
-       =-=-="
-  in
-  OpamConsole.msg
-    "\n%s\n\n\
-     %s To configure OPAM in the current shell session, you need to run:\n\
-     \n\
-    \      %s\n\
-     \n\
-     %s%s%s\n\n"
-    line
-    (OpamConsole.colorise `yellow "1.")
-    (eval_string gt None)
-    profile_string ocamlinit_string
-    line
 
 let check_and_print_env_warning st =
   if (OpamSwitchState.is_switch_globally_set st ||
@@ -676,53 +577,48 @@ let check_and_print_env_warning st =
 let setup_interactive root ~dot_profile shell =
   let update dot_profile =
     OpamConsole.msg "\n";
-    update_user_setup root ~ocamlinit:(dot_profile <> None) ?dot_profile shell;
-    write_static_init_scripts root ~switch_eval:true ~completion:true;
+    update_user_setup root ?dot_profile shell;
+    write_static_init_scripts root ~completion:true;
     dot_profile <> None in
 
   OpamConsole.msg "\n";
 
-  match OpamConsole.read
-      "In normal operation, OPAM only alters files within ~/.opam.\n\
-       \n\
-       During this initialisation, you can allow OPAM to add information to two\n\
-       other files for best results. You can also make these additions manually\n\
-       if you wish.\n\
-       \n\
-       If you agree, OPAM will modify:\n\n\
-      \  - %s (or a file you specify) to set the right environment\n\
-      \    variables and to load the auto-completion scripts for your shell (%s)\n\
-      \    on startup. Specifically, it checks for and appends the following line:\n\
-      \n\
-      \    %s\n\
-      \n\
-      \  - %s to ensure that non-system installations of `ocamlfind`\n\
-      \    (i.e. those installed by OPAM) will work correctly when running the\n\
-      \    OCaml toplevel. It does this by adding $OCAML_TOPLEVEL_PATH to the list\n\
-      \    of include directories.\n\
-      \n\
-       If you choose to not configure your system now, you can either configure\n\
-       OPAM manually (instructions will be displayed) or launch the automatic setup\n\
-       later by running:\n\
-      \n\
-       \   opam config setup -a\n\
-       \n\
-      \n\
-       Do you want OPAM to modify %s and ~/.ocamlinit?\n\
-       (default is 'no', use 'f' to name a file other than %s)\n\
-      \    [N/y/f]"
-      (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
-      (OpamConsole.colorise `bold @@ string_of_shell shell)
-      (source root ~shell (init_file shell))
-      (OpamConsole.colorise `cyan @@ "~/.ocamlinit")
-      (OpamFilename.prettify dot_profile)
+  OpamConsole.header_msg "Required setup - please read";
+  OpamConsole.msg
+    "\n\
+    \  In normal operation, opam only alters files within ~/.opam.\n\
+     \n\
+    \  However, to best integrate with your system, some environment variables\n\
+    \  should be set. If you allow it to, this initialisation step will update\n\
+    \  your shell configuration in ~/ automatically to do that on startup.\n\
+     \n\
+    \  Specifically, to setup environment and completion of %s, the following\n\
+    \  line will be added to %s:\n\
+     \n\
+    \    %s\
+     \n\
+    \  In case you choose not to do this, every time you want to access the\n\
+    \  contents of your opam installation, you will need to run:\n\
+     \n\
+    \    %s\n\
+     \n\
+    \  You can always re-run this setup with 'opam init' later.\n\n"
+    (OpamConsole.colorise `bold @@ string_of_shell shell)
+    (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
+    (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
+    (OpamConsole.colorise `bold @@ "eval `opam config env`");
+  match
+    OpamConsole.read
+      "Do you want opam to modify %s ? [N/y/f]\n\
+       (default is 'no', use 'f' to choose a different file)"
       (OpamFilename.prettify dot_profile)
   with
   | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
   | Some ("f" | "F" | "file" | "FILE") ->
     begin match OpamConsole.read "  Enter the name of the file to update:" with
       | None   ->
-        OpamConsole.msg "-- No filename: skipping the auto-configuration step --\n";
+        OpamConsole.msg "Alright, assuming you changed your mind, \
+                         not performing any changes.\n";
         false
       | Some f -> update (Some (OpamFilename.of_string f))
     end

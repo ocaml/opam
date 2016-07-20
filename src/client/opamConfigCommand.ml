@@ -197,13 +197,13 @@ let variable gt v =
       OpamConsole.error_and_exit "Variable %s not found"
         (OpamVariable.Full.to_string v)
 
-let setup gt ?dot_profile ~ocamlinit ~switch_eval ~completion ~shell
+let setup gt ?dot_profile ~completion ~shell
   ~user ~global =
   log "config-setup";
   if user then
-    OpamEnv.update_user_setup gt.root ~ocamlinit ?dot_profile shell;
+    OpamEnv.update_user_setup gt.root ?dot_profile shell;
   if global then (
-    OpamEnv.write_static_init_scripts gt.root ~switch_eval ~completion;
+    OpamEnv.write_static_init_scripts gt.root ~completion;
     match OpamFile.Config.switch gt.config with
     | Some sw ->
       OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->

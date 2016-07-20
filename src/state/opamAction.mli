@@ -24,7 +24,8 @@ val download_package:
     downloaded [source] of the package [pkg]. See {!download_package}
     to download the sources. *)
 val extract_package:
-  rw switch_state -> generic_file option -> package -> dirname -> unit
+  rw switch_state -> generic_file option -> package -> dirname ->
+  exn option OpamProcess.job
 
 (** [build_package t source pkg] builds the package [pkg] from its
     already downloaded [source]. Returns [None] on success, [Some exn]

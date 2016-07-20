@@ -474,6 +474,8 @@ let cpu_count () =
     int_of_string (List.hd ans)
   with Not_found | Process_error _ | Failure _ -> 1
 
+open OpamProcess.Job.Op
+
 module Tar = struct
 
   let extensions =
@@ -484,16 +486,18 @@ module Tar = struct
     ]
 
   let guess_type f =
-    let ic = open_in f in
-    let c1 = input_char ic in
-    let c2 = input_char ic in
-    close_in ic;
-    match c1, c2 with
-    | '\031', '\139' -> Some 'z'
-    | 'B'   , 'Z'    -> Some 'j'
-    | '\xfd', '\x37' -> Some 'J'
-    | '\x5d', '\x00' -> Some 'Y'
-    | _              -> None
+    try
+      let ic = open_in f in
+      let c1 = input_char ic in
+      let c2 = input_char ic in
+      close_in ic;
+      match c1, c2 with
+      | '\031', '\139' -> Some 'z'
+      | 'B'   , 'Z'    -> Some 'j'
+      | '\xfd', '\x37' -> Some 'J'
+      | '\x5d', '\x00' -> Some 'Y'
+      | _              -> None
+    with Sys_error _ -> None
 
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
@@ -503,10 +507,10 @@ module Tar = struct
       (fun suff -> Filename.check_suffix f suff)
       (List.concat (List.rev_map fst extensions))
 
-  let extract_function file =
+  let extract_command file =
     let command c dir =
-      command [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
-
+      make_command "tar" [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
+    in
     let ext =
       List.fold_left
         (fun acc (ext, c) -> match acc with
@@ -528,57 +532,81 @@ end
 
 module Zip = struct
   let is_archive f =
-    let ic = open_in f in
-    let c1 = input_char ic in
-    let c2 = input_char ic in
-    let c3 = input_char ic in
-    let c4 = input_char ic in
-    close_in ic;
-    match c1, c2, c3, c4 with
-    | '\x50', '\x4b', '\x03', '\x04' -> true
-    | _ -> false
+    try
+      let ic = open_in f in
+      let c1 = input_char ic in
+      let c2 = input_char ic in
+      let c3 = input_char ic in
+      let c4 = input_char ic in
+      close_in ic;
+      match c1, c2, c3, c4 with
+      | '\x50', '\x4b', '\x03', '\x04' -> true
+      | _ -> false
+    with Sys_error _ -> false
 
-  let extract_function file =
-    Some (fun dir -> command [ "unzip" ; file; "-d"; dir ])
+  let extract_command file =
+    Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
 end
 
 let is_tar_archive = Tar.is_archive
 
-let extract file dst =
-  let _, extract_function =
-    if Zip.is_archive file then "zip", Zip.extract_function
-    else "tar", Tar.extract_function
+let extract_job ~dir file =
+  if not (Sys.file_exists file) then
+    Done (Some (File_not_found file))
+  else
+  let extract_command =
+    if Zip.is_archive file then Zip.extract_command
+    else Tar.extract_command
   in
-  with_tmp_dir (fun tmp_dir ->
-    match extract_function file with
-    | None   ->
-      mkdir dst;
-      copy file (dst/Filename.basename file)
-    | Some f ->
-      f tmp_dir;
-      if Sys.file_exists dst then
-        internal_error "Extracting the archive will overwrite %s." dst;
-      match files_all_not_dir tmp_dir with
-      | [] ->
-        begin match directories_strict tmp_dir with
+  with_tmp_dir_job @@ fun tmp_dir ->
+  match extract_command file with
+  | None   ->
+    (try
+       mkdir dir;
+       copy file (dir/Filename.basename file);
+       Done None
+     with e -> Done (Some e))
+  | Some cmd ->
+    cmd tmp_dir @@> fun r ->
+    if not (OpamProcess.is_success r) then
+      Done (Some (Process_error r))
+    else if Sys.file_exists dir then
+      internal_error "Extracting the archive will overwrite %s." dir
+    else
+    match files_all_not_dir tmp_dir with
+    | [] ->
+      begin match directories_strict tmp_dir with
         | [x] ->
-          mkdir (Filename.dirname dst);
-          command [ "mv"; x; dst]
+          mkdir (Filename.dirname dir);
+          make_command "mv" [ x; dir ] @@> fun r ->
+          if OpamProcess.is_success r then Done None
+          else Done (Some (Process_error r))
         | _ ->
           internal_error "The archive %S contains multiple root directories."
             file
-        end
-      | _   ->
-        mkdir (Filename.dirname dst);
-        command [ "mv"; tmp_dir; dst]
-  )
+      end
+    | _   ->
+      mkdir (Filename.dirname dir);
+      make_command "mv" [ tmp_dir; dir] @@> fun r ->
+      if OpamProcess.is_success r then Done None
+      else Done (Some (Process_error r))
 
-let extract_in file dst =
-  if not (Sys.file_exists dst) then
+let extract ~dir file =
+  match OpamProcess.Job.run (extract_job ~dir file) with
+  | Some e -> raise e
+  | None -> ()
+
+let extract_in ~dir file =
+  if not (Sys.file_exists dir) then
     internal_error "%s does not exist." file;
-  match Tar.extract_function file with
+  match Tar.extract_command file with
   | None   -> internal_error "%s is not a valid tar archive." file
-  | Some f -> f dst
+  | Some cmd ->
+    let r = OpamProcess.Job.run (cmd dir @@> fun r -> Done r) in
+    if not (OpamProcess.is_success r) then
+      failwith (Printf.sprintf "Failed to extract archive %s: %s" file
+                  (OpamProcess.result_summary r))
+
 
 let link src dst =
   if Sys.file_exists src then (
@@ -679,12 +707,12 @@ let lock_none = {
 let lock_isatleast flag lock =
   lock_max flag lock.kind = lock.kind
 
-let patch p =
+let patch ~dir p =
   let max_trying = 5 in
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  let patch ~dryrun n =
+  let patch_cmd ~dryrun n =
     let opts = if dryrun then
         let open OpamStd.Sys in
         match os () with
@@ -694,16 +722,18 @@ let patch p =
         | Other _               -> [ "--dry-run" ]
       else [] in
     let verbose = if dryrun then Some false else None in
-    command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
+    make_command ?verbose ~dir "patch"
+      (("-p" ^ string_of_int n) :: "-i" :: p :: opts)
+  in
   let rec aux n =
-    if n = max_trying then
-      internal_error "Patch %s does not apply." p
-    else if None =
-            try Some (patch ~dryrun:true n)
-            with e -> OpamStd.Exn.fatal e; None then
-      aux (succ n)
+    if n = max_trying then Done false
     else
-      patch ~dryrun:false n in
+      patch_cmd ~dryrun:true n @@> fun r ->
+      if OpamProcess.is_success r then
+        patch_cmd ~dryrun:false n @@> fun p -> Done (OpamProcess.is_success p)
+      else
+        aux (succ n)
+  in
   aux 0
 
 let register_printer () =

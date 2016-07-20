@@ -248,6 +248,7 @@ let install_compiler_packages t atoms =
   t
 
 let install gt ~update_config ~packages switch =
+  let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
     OpamConsole.error_and_exit
@@ -277,9 +278,20 @@ let install gt ~update_config ~packages switch =
       in
       { st with switch; available_packages }
   in
+  let packages =
+    try OpamSolution.sanitize_atom_list st packages
+    with e ->
+      if update_config then
+        (OpamEnv.clear_dynamic_init_scripts gt;
+         OpamStd.Option.iter
+           (ignore @* OpamSwitchAction.set_current_switch `Lock_write gt)
+           old_switch_opt);
+      ignore (clear_switch gt switch);
+      raise e
+  in
   let gt = OpamGlobalState.unlock gt in
-  let packages = OpamSolution.sanitize_atom_list st packages in
-  try gt, install_compiler_packages st packages
+  try
+    gt, install_compiler_packages st packages
   with e ->
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
       ((try OpamStd.Exn.fatal e with e ->

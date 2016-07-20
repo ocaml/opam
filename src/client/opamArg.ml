@@ -205,6 +205,9 @@ let help_sections = [
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
+  `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
+      and some backups. This skips some finalisers and may also help to get \
+      more reliable backtraces";
   `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
       acquiring its lock and fails. <= 0 means infinite wait.";
   `P "$(i,OPAMNO) answer no to any question asked.";
