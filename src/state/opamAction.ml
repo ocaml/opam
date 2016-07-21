@@ -336,25 +336,15 @@ let compilation_env t opam =
 let removal_needs_download st nv =
   match OpamSwitchState.opam_opt st nv with
   | None ->
-    OpamConsole.warning
-      "No opam file found to remove package %s. Stale files may remain."
-      (OpamPackage.to_string nv);
+    if not (OpamFile.exists
+              (OpamPath.Switch.changes st.switch_global.root st.switch nv.name))
+    then
+      OpamConsole.warning
+        "No opam or changes file found to remove package %s. Stale files may \
+         remain."
+        (OpamPackage.to_string nv);
     false
-  | Some opam ->
-    if OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam then false
-    else
-    let commands =
-      OpamFilter.commands (OpamPackageVar.resolve ~opam st)
-        (OpamFile.OPAM.remove opam) in
-    (* We use a small hack: if the remove command is simply
-       'ocamlfind remove xxx' then, no need to extract the archive
-       again. *)
-    let use_ocamlfind = function
-      | [] -> true
-      | "ocamlfind" :: _ -> true
-      | "rm" :: _ -> true
-      | _ -> false in
-    not (List.for_all use_ocamlfind commands)
+  | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam)
 
 let cmd_wrapper t opam getter cmd args =
   match

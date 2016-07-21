@@ -580,6 +580,8 @@ module OpamSys = struct
     let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in
     fun () -> Lazy.force home
 
+  let etc () = "/etc"
+
   let uname_s () =
     try
       with_process_in "uname" "-s"

@@ -64,6 +64,9 @@ module Full: sig
   (** Create a global variable *)
   val global: variable -> t
 
+  (** Create a variable in the [Self] scope *)
+  val self: variable -> t
+
   (** Looks up for an environment override through the environment, by means of
       [OPAMVAR_glovar] or [OPAMVAR_pkg_pkgvar] *)
   val read_from_env: t -> variable_contents option

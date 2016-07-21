@@ -18,12 +18,10 @@ cat >ocaml.config <<EOF
 opam-version: "1.3.0~dev4"
 file-depends: ["$OCAMLC" "$(md5sum "$OCAMLC" | cut -d' ' -f1)"]
 variables {
-    ocaml-version: "$("$OCAMLC" -version)"
     compiler: "system"
-    preinstalled: true
-    ocaml-native: $(bool [ -x "$(dirname "$OCAMLC")"/ocamlopt ])
-    ocaml-native-tools: $(bool [ -x "$OCAMLC".opt ])
-    ocaml-native-dynlink: $(bool [ -e "$LIBDIR"/dynlink.cmxa ])
-    ocaml-stublibs: "$STUBLIBS"
+    native: $(bool [ -x "$(dirname "$OCAMLC")"/ocamlopt ])
+    native-tools: $(bool [ -x "$OCAMLC".opt ])
+    native-dynlink: $(bool [ -e "$LIBDIR"/dynlink.cmxa ])
+    stublibs: "$STUBLIBS"
 }
 EOF

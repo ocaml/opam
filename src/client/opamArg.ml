@@ -247,7 +247,7 @@ let help_sections = [
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";
-  `P (Printf.sprintf "See https://opam.ocaml.org.");
+  `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
 
   `S "AUTHORS";
   `P "Thomas Gazagnaire   <thomas@gazagnaire.org>"; `Noblank;

@@ -17,6 +17,7 @@ open OpamFilename.Op
 open OpamStateTypes
 
 let log fmt = OpamConsole.log "GSTATE" fmt
+let slog = OpamConsole.slog
 
 module Format_upgrade = struct
 
@@ -212,7 +213,6 @@ module Format_upgrade = struct
         (* Change comp file to a package *)
         let selections =
           if comp_name <> "empty" then
-            let name = OpamPackage.Name.of_string "ocaml" in
             let comp_f =
               OpamFile.make (root / "compilers" / comp_version /
                              comp_name // (comp_name ^ ".comp"))
@@ -229,9 +229,10 @@ module Format_upgrade = struct
                 (OpamFile.Descr.read_opt descr_f)
             in
             let comp_opam =
-              OpamFile.Comp.to_package name comp (Some descr)
+              OpamFile.Comp.to_package comp (Some descr)
             in
             let nv = OpamFile.OPAM.package comp_opam in
+            let name = nv.name in
             let switch_config_f =
               OpamFile.make
                 (switch_dir / "config" // "global-config.config")
@@ -305,10 +306,10 @@ module Format_upgrade = struct
                  (OpamFile.Dot_config.bindings switch_config @
                   OpamFile.Dot_config.bindings config)
                  switch_config);
-            {selections with
-             sel_installed = OpamPackage.Set.add nv selections.sel_installed;
-             sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
-             sel_roots = OpamPackage.Set.add nv selections.sel_roots; }
+            { selections with
+              sel_installed = OpamPackage.Set.add nv selections.sel_installed;
+              sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
+              sel_roots = OpamPackage.Set.add nv selections.sel_roots; }
           else selections
         in
         OpamFile.SwitchSelections.write selections_f selections;
@@ -421,7 +422,119 @@ module Format_upgrade = struct
     let repositories_list = List.map (fun (_, r, _) -> r) prio_repositories in
     OpamFile.Config.with_repositories repositories_list conf
 
-  let latest_version = v2_0_alpha
+  let v2_0_alpha2 = OpamVersion.of_string "2.0~alpha2"
+
+  let from_2_0_alpha_to_2_0_alpha2 root conf =
+    List.iter (fun switch ->
+        let switch_dir = root / OpamSwitch.to_string switch in
+        let meta_dir =  switch_dir / ".opam-switch" in
+
+        (* Cleanup exported variables from the switch config (they are now
+           defined in wrapper package 'ocaml', and accessed as e.g.
+           'ocaml:native-dynlink') *)
+        let to_remove_vars = List.map OpamVariable.of_string [
+            "ocaml-version";
+            "compiler";
+            "preinstalled";
+            "ocaml-native";
+            "ocaml-native-tools";
+            "ocaml-native-dynlink";
+            "ocaml-stubsdir";
+          ] in
+        let remove_vars config =
+          OpamFile.Dot_config.with_vars
+            (List.filter (fun (var, _) -> not (List.mem var to_remove_vars))
+               (OpamFile.Dot_config.bindings config))
+            config
+        in
+        let switch_config_f =
+          OpamFile.make
+            (meta_dir / "config" // "global-config.config")
+        in
+        let switch_config = OpamFile.Dot_config.safe_read switch_config_f in
+        OpamFile.Dot_config.write switch_config_f (remove_vars switch_config);
+
+        (* Rename the 'ocaml' compiler packages to their proper instance (and
+           let the wrapper 'ocaml' package be pulled from the repository later
+           on to detect and set the 'ocaml:*' variables *)
+        let selections_file = OpamFile.make (meta_dir // "switch-state") in
+        let selections = OpamFile.SwitchSelections.safe_read selections_file in
+        let new_compilers =
+          OpamPackage.Set.map (fun nv ->
+              if nv.name <> OpamPackage.Name.of_string "ocaml" then nv else
+              let config_f nv =
+                OpamFile.make (meta_dir / "config" //
+                               (OpamPackage.Name.to_string nv.name ^ ".config"))
+              in
+              let config = OpamFile.Dot_config.safe_read (config_f nv) in
+              let ocaml_version_var = OpamVariable.of_string "ocaml-version" in
+              let ocaml_version =
+                match
+                  OpamFile.Dot_config.variable switch_config ocaml_version_var
+                with
+                | Some (S v) -> OpamPackage.Version.of_string v
+                | _ ->
+                  match
+                    OpamFile.Dot_config.variable config ocaml_version_var
+                  with
+                  | Some (S v) -> OpamPackage.Version.of_string v
+                  | _ -> nv.version
+              in
+              let full_version = OpamPackage.Version.to_string nv.version in
+              let name, version =
+                match OpamStd.String.cut_at full_version '+' with
+                | None when full_version = "system" ->
+                  OpamPackage.Name.of_string "ocaml-system", ocaml_version
+                | None ->
+                  OpamPackage.Name.of_string "ocaml-base-compiler",
+                  ocaml_version
+                | Some (_version, _variant) ->
+                  OpamPackage.Name.of_string "ocaml-variants",
+                  OpamPackage.Version.of_string full_version
+              in
+              let new_nv = OpamPackage.create name version in
+              let pkgdir nv = meta_dir / "packages" / OpamPackage.to_string nv in
+              if OpamFilename.exists_dir (pkgdir nv) then
+                OpamFilename.move_dir ~src:(pkgdir nv) ~dst:(pkgdir new_nv);
+              if OpamFile.exists (config_f nv) then
+                (OpamFile.Dot_config.write (config_f new_nv)
+                   (remove_vars config);
+                 OpamFilename.remove (OpamFile.filename (config_f nv)));
+              let install_f nv =
+                meta_dir / "install" //
+                (OpamPackage.Name.to_string nv.name ^ ".install")
+              in
+              if OpamFilename.exists (install_f nv) then
+                OpamFilename.move ~src:(install_f nv) ~dst:(install_f new_nv);
+              let changes_f nv =
+                meta_dir / "install" //
+                (OpamPackage.Name.to_string nv.name ^ ".changes")
+              in
+              if OpamFilename.exists (changes_f nv) then
+                OpamFilename.move ~src:(changes_f nv) ~dst:(changes_f new_nv);
+              new_nv
+            )
+            selections.sel_compiler
+        in
+        let selections =
+          let open OpamPackage.Set.Op in
+          { selections with
+            sel_installed = selections.sel_installed
+                            -- selections.sel_compiler ++ new_compilers;
+            sel_roots = selections.sel_roots
+                        -- selections.sel_compiler ++ new_compilers;
+            sel_compiler = new_compilers }
+        in
+        OpamFile.SwitchSelections.write selections_file selections;
+
+      )
+      (OpamFile.Config.installed_switches conf);
+    OpamFile.Config.with_eval_variables [
+      OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
+      "OCaml version present on your system independently of opam, if any";
+    ] conf
+
+  let latest_version = v2_0_alpha2
 
   let as_necessary global_lock root config =
     let config_version = OpamFile.Config.opam_version config in
@@ -473,7 +586,8 @@ module Format_upgrade = struct
         update_to v1_3_dev5  from_1_3_dev2_to_1_3_dev5 |>
         update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
         update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
-        update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha
+        update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
+        update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2
       else
         OpamConsole.error_and_exit "Aborted"
     with OpamSystem.Locked ->
@@ -503,9 +617,64 @@ let load lock_kind =
      currently installed shell init scripts) *)
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
+  let global_variables =
+    List.fold_left (fun acc (v,value,doc) ->
+        OpamVariable.Map.add v (lazy (Some value), doc) acc)
+      OpamVariable.Map.empty
+      (OpamFile.Config.global_variables config)
+  in
+  let eval_variables = OpamFile.Config.eval_variables config in
+  let global_variables =
+    let env =
+      (* Remove opam environment settings from the env where eval_variables
+         commands are run, since those are switch specific; the switch or its
+         environment changes are not known at this point though, so approximate
+         by removing anything starting with the opamroot from any [*PATH]
+         variable *)
+      lazy (
+        let path_sep = OpamStd.Sys.path_sep () in
+        Array.map
+          (fun bnd ->
+             match OpamStd.String.cut_at bnd '=' with
+             | None -> bnd
+             | Some (var, value) ->
+               if OpamStd.String.ends_with ~suffix:"PATH" var then
+                 Printf.sprintf "%s=%s" var
+                   (String.concat (String.make 1 path_sep)
+                      (OpamStd.Env.reset_value
+                         ~prefix:(OpamFilename.Dir.to_string root)
+                         (OpamStd.Sys.path_sep ())
+                         value))
+               else bnd)
+          (Unix.environment ())
+      ) in
+    List.fold_left (fun acc (v, cmd, doc) ->
+        OpamVariable.Map.update v
+          (fun previous_value ->
+             (lazy
+               (try
+                  let ret =
+                    OpamSystem.read_command_output
+                      ~env:(Lazy.force env)
+                      ~allow_stdin:false
+                      cmd
+                  in
+                  Some (S (OpamStd.String.strip (String.concat "\n" ret)))
+                with e ->
+                  OpamStd.Exn.fatal e;
+                  log "Failed to evaluate global variable %a: %a"
+                    (slog OpamVariable.to_string) v
+                    (slog Printexc.to_string) e;
+                  Lazy.force (fst previous_value))),
+             doc)
+          (lazy None, "")
+          acc)
+      global_variables eval_variables
+  in
   { global_lock = config_lock;
     root;
-    config; }
+    config;
+    global_variables; }
 
 let fold_switches f gt acc =
   List.fold_left (fun acc switch ->

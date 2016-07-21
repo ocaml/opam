@@ -338,6 +338,9 @@ module Sys : sig
   (** The user's home directory. Queried lazily *)
   val home: unit -> string
 
+  (** The /etc directory *)
+  val etc: unit -> string
+
   type os = Darwin
           | Linux
           | FreeBSD

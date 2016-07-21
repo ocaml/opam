@@ -13,18 +13,14 @@ maintainer: "contact@ocamlpro.com"
 
 (* The command to run *)
 build: [
- [ "./build.sh" ] # HAHAH
- [ "this" "should" "never" "run" ] { ocaml-version > "100" }
- [ make "this" ocaml-version "also" ] { os = "NO" }
- [ "echo" "HAHA!" ] { ocaml-version = "10" }
- [ "echo" make share ocaml-version ]
- [ "this as well" { os = "myOS" } ]
+  ["./build.sh"] # HAHAH
+  ["this" "should" "never" "run"] {ocaml:version > "z100"}
+  [make "this" ocaml:version "also"] {os = "NO"}
+  ["echo" "HAHA!"] {ocaml:version = "10"}
+  ["echo" make share ocaml:version]
+  ["this as well" {os = "myOS"}]
 ]
-
-os: [ !"NO" | ( !"NO" & !"YES") ]
-ocaml-version: [ !="20" | !="10" ]
-
-available: [ ocaml-version = "20" | ocaml-version = "10" | preinstalled ]
+available: os != "NO" | os != "NO" & os != "YES"
 
 (* List of files to substitute env variables *)
 substs: [ "P1.config" ]
@@ -47,3 +43,6 @@ post-messages: [ "Thanks SO MUCH for installing this humble package"
 bug-reports: "TEST.com"
 
 setenv: [P1 = "version1"]
+depends: [
+  "ocaml" {(!= "20" | != "10") & (= "20" | = "10" | = "10+a+b" | = "system")}
+]

@@ -282,8 +282,7 @@ module Pp = struct
             match exn with
             | None ->
               OpamConsole.warning "%s"
-                (string_of_bad_format (Bad_format (pos, s)));
-              assert false
+                (string_of_bad_format (Bad_format (pos, s)))
             | Some e ->
               OpamConsole.warning "%s" (string_of_bad_format e))
       fmt
@@ -605,6 +604,17 @@ module Pp = struct
             parse pp1 ~pos:(value_pos a) a, parse pp2 ~pos:(value_pos b) b
           | _ -> unexpected ())
         (fun (a, b) -> List (pos_null, [pp1.print a; pp2.print b]))
+
+    let map_triple pp1 pp2 pp3 =
+      pp ~name:(Printf.sprintf "[%s %s %s]" pp1.ppname pp2.ppname pp3.ppname)
+        (fun ~pos:_ -> function
+          | List (_,[a; b; c]) ->
+            parse pp1 ~pos:(value_pos a) a,
+            parse pp2 ~pos:(value_pos b) b,
+            parse pp3 ~pos:(value_pos c) c
+          | _ -> unexpected ())
+        (fun (a, b, c) ->
+           List (pos_null, [pp1.print a; pp2.print b; pp3.print c]))
 
     (** Pps for the [value] type to higher level types *)
 

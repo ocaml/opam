@@ -65,18 +65,6 @@ module Config: sig
 
   include IO_FILE
 
-  (** Creation *)
-  val create:
-    switch list ->
-    switch option ->
-    repository_name list ->
-    ?criteria:(OpamTypes.solver_criteria * string) list ->
-    ?solver:(arg list) ->
-    int ->
-    ?download_tool:(arg list) ->
-    int ->
-    t
-
   (** OCaml switch updates *)
   val with_switch: switch -> t -> t
   val with_switch_opt: switch option -> t -> t
@@ -92,10 +80,20 @@ module Config: sig
   val with_criteria: (solver_criteria * string) list -> t -> t
 
   val with_solver: arg list -> t -> t
+  val with_solver_opt: arg list option -> t -> t
+
+  val with_jobs: int -> t -> t
+  val with_dl_tool: arg list -> t -> t
+  val with_dl_tool_opt: arg list option -> t -> t
+  val with_dl_jobs: int -> t -> t
 
   val with_wrap_build: arg list -> t -> t
   val with_wrap_install: arg list -> t -> t
   val with_wrap_remove: arg list -> t -> t
+  val with_global_variables:
+    (variable * variable_contents * string) list -> t -> t
+  val with_eval_variables:
+    (variable * string list * string) list -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -124,6 +122,49 @@ module Config: sig
   val wrap_install: t -> arg list
   val wrap_remove: t -> arg list
 
+  (** variable, value, docstring *)
+  val global_variables: t -> (variable * variable_contents * string) list
+
+  (** variable, command, docstring *)
+  val eval_variables: t -> (variable * string list * string) list
+
+end
+
+(** Init config file [/etc/opamrc] *)
+module InitConfig: sig
+  include IO_FILE
+
+  val opam_version: t -> opam_version
+  val repositories: t -> (repository_name * url) list
+  val default_compiler: t -> formula
+  val jobs: t -> int option
+  val dl_tool: t -> arg list option
+  val dl_jobs: t -> int option
+  val solver_criteria: t -> (solver_criteria * string) list
+  val solver: t -> arg list option
+  val wrap_build: t -> arg list
+  val wrap_install: t -> arg list
+  val wrap_remove: t -> arg list
+  val global_variables: t -> (variable * variable_contents * string) list
+  val eval_variables: t -> (variable * string list * string) list
+
+  val with_opam_version: opam_version -> t -> t
+  val with_repositories: (repository_name * url) list -> t -> t
+  val with_default_compiler: formula -> t -> t
+  val with_jobs: int option -> t -> t
+  val with_dl_tool: arg list option -> t -> t
+  val with_dl_jobs: int option -> t -> t
+  val with_solver_criteria: (solver_criteria * string) list -> t -> t
+  val with_solver: arg list option -> t -> t
+  val with_wrap_build: arg list -> t -> t
+  val with_wrap_install: arg list -> t -> t
+  val with_wrap_remove: arg list -> t -> t
+  val with_global_variables: (variable * variable_contents * string) list -> t -> t
+  val with_eval_variables: (variable * string list * string) list -> t -> t
+
+  (** [add t1 t2] is [t2], with the field values falling back to those of [t1]
+      when not set in [t2] *)
+  val add: t -> t -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)
@@ -412,6 +453,10 @@ module OPAM: sig
   (** Construct as [build] *)
   val with_build: command list -> t -> t
 
+  val with_build_test: command list -> t -> t
+
+  val with_build_doc: command list -> t -> t
+
   val with_install: command list -> t -> t
 
   (** Construct as [remove] *)
@@ -425,6 +470,8 @@ module OPAM: sig
 
   (** Construct as [substs] *)
   val with_substs: basename list -> t -> t
+
+  val with_build_env: env_update list -> t -> t
 
   val with_available: filter -> t -> t
 
@@ -447,6 +494,8 @@ module OPAM: sig
   val with_depexts: tags -> t -> t
 
   val with_flags: package_flag list -> t -> t
+
+  val add_flags: package_flag list -> t -> t
 
   val with_env: env_update list -> t -> t
 
@@ -597,8 +646,14 @@ module Comp: sig
   val with_build: command list -> t -> t
   val with_packages: formula -> t -> t
 
-  (** Converts a compiler definition to package metadata. For compat. *)
-  val to_package: name -> t -> Descr.t option -> OPAM.t
+  (** Converts a compiler definition to package metadata. For compat. If
+      [package] is unspecified, a package named "ocaml" is created for
+      "standard" compilers (when the compiler name doesn't contain a "+" and is
+      equal to the compiler version); otherwise, a package "ocaml-VARIANT" is
+      created with "VARIANT" the part of the compiler name on the right of the
+      "+". In both case, the version corresponds to the OCaml version and is
+      [version comp]. *)
+  val to_package: ?package:package -> t -> Descr.t option -> OPAM.t
 
 end
 

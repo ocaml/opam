@@ -590,15 +590,12 @@ let setup_interactive root ~dot_profile shell =
      \n\
     \  However, to best integrate with your system, some environment variables\n\
     \  should be set. If you allow it to, this initialisation step will update\n\
-    \  your shell configuration in ~/ automatically to do that on startup.\n\
-     \n\
-    \  Specifically, to setup environment and completion of %s, the following\n\
-    \  line will be added to %s:\n\
+    \  your %s configuration by adding the following line to %s:\n\
      \n\
     \    %s\
      \n\
-    \  In case you choose not to do this, every time you want to access the\n\
-    \  contents of your opam installation, you will need to run:\n\
+    \  Otherwise, every time you want to access your opam installation, you will\n\
+    \  need to run:\n\
      \n\
     \    %s\n\
      \n\

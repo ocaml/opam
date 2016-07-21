@@ -577,24 +577,29 @@ let slog = OpamConsole.slog
         broken_state_message ~need_fixup:true cs;
         st
 
-  let init repo shell dot_profile update_config =
-    log "INIT %a" (slog OpamRepositoryBackend.to_string) repo;
+  let init
+      ?init_config ?repo ?(bypass_checks=false)
+      shell dot_profile update_config =
+    log "INIT %a"
+      (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
     let root_empty =
       not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
-    let gt, rt =
+    let gt, rt, default_compiler =
     if OpamFile.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
-      gt, OpamRepositoryState.load `Lock_none gt
+      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
           (OpamFilename.Dir.to_string root);
         if not (OpamConsole.confirm "Proceed ?") then OpamStd.Sys.exit 1);
       try
+
+        if bypass_checks then () else (
 
         (* Check for the external dependencies *)
         let check_external_dep name =
@@ -661,32 +666,65 @@ let slog = OpamConsole.slog
            OpamConsole.error_and_exit
              "Missing dependencies -- \
               the following commands are required for OPAM to operate:\n%s"
-             (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst) missing));
+             (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
+                missing)));
 
         (* Create ~/.opam/config *)
+        let init_config =
+          match init_config with
+          | None ->
+            OpamInitDefaults.init_config
+          | Some ic ->
+            OpamFile.InitConfig.add OpamInitDefaults.init_config ic
+        in
+        let repos = match repo with
+          | Some r -> [r.repo_name, r.repo_url]
+          | None -> OpamFile.InitConfig.repositories init_config
+        in
         let config =
-          OpamFile.Config.create [] None [repo.repo_name]
-            OpamStateConfig.(Lazy.force default.jobs)
-            OpamStateConfig.(default.dl_jobs)
+          let module I = OpamFile.InitConfig in
+          let module C = OpamFile.Config in
+          C.empty |>
+          C.with_repositories (List.map fst repos) |>
+          C.with_jobs (match I.jobs init_config with
+              | Some j -> j
+              | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
+          C.with_dl_tool_opt (I.dl_tool init_config) |>
+          C.with_dl_jobs
+            (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
+               (I.dl_jobs init_config)) |>
+          C.with_criteria (I.solver_criteria init_config) |>
+          C.with_solver_opt (I.solver init_config) |>
+          C.with_wrap_build (I.wrap_build init_config) |>
+          C.with_wrap_install (I.wrap_install init_config) |>
+          C.with_wrap_remove (I.wrap_remove init_config) |>
+          C.with_global_variables
+            (I.global_variables init_config) |>
+          C.with_eval_variables
+            (I.eval_variables init_config)
         in
         OpamFile.Config.write (OpamPath.config root) config;
 
         let repos_config =
-          OpamRepositoryName.Map.singleton repo.repo_name (Some repo.repo_url)
+          OpamRepositoryName.Map.of_list repos |>
+          OpamRepositoryName.Map.map OpamStd.Option.some
         in
-        OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config;
-
-        OpamProcess.Job.run OpamProcess.Job.Op.(
-            OpamRepository.init root repo.repo_name @@+ fun () ->
-            OpamRepository.update repo
-          );
+        OpamFile.Repos_config.write (OpamPath.repos_config root)
+          repos_config;
 
         log "updating repository state";
         let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
-        let rt = OpamUpdate.repositories rt [repo] in
-        gt, OpamRepositoryState.unlock rt
+        let rt =
+          OpamUpdate.repositories rt
+            (List.mapi (fun repo_priority (repo_name, repo_url) ->
+                 { repo_root = OpamRepositoryPath.create root repo_name;
+                   repo_name; repo_url; repo_priority; })
+                repos)
+        in
+        gt, OpamRepositoryState.unlock rt,
+        OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
@@ -703,7 +741,7 @@ let slog = OpamConsole.slog
         OpamEnv.write_static_init_scripts root ~completion:true;
         true
     in
-    gt, rt
+    gt, rt, default_compiler
 
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)

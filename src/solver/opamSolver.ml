@@ -159,6 +159,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
           ~default:false
           (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
+(*
   let base_depends =
     if OpamPackage.has_name universe.u_base name then Empty else
       OpamFormula.ands
@@ -166,6 +167,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
            (OpamPackage.names_of_packages universe.u_base) [])
   in
   let depends = OpamFormula.ands [base_depends; depends] in
+*)
   let depends =
     let opts = depopts_of_package ~build universe package in
     if depopts then

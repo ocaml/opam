@@ -75,6 +75,9 @@ module Full = struct
   let global variable =
     { scope = Global; variable }
 
+  let self variable =
+    { scope = Self; variable }
+
   let is_global variable = match variable.scope with
     | Global -> true
     | Self | Package _ -> false
