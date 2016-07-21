@@ -533,6 +533,17 @@ let process args =
            | _ -> v)
         | _ -> v
       in
+      let auto_add_flags opam =
+        (* Automatically add light-uninstall for trivial commands that won't
+           need the source *)
+        if List.for_all
+            (fun (cmd, _filter) -> match cmd with
+               | [] | (CString ("ocamlfind" | "rm"), _) :: _ -> true
+               | _ -> false)
+            (OpamFile.OPAM.remove opam)
+        then OpamFile.OPAM.add_flags [Pkgflag_LightUninstall] opam
+        else opam
+      in
       if not (List.mem nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
         opam |>
@@ -540,6 +551,7 @@ let process args =
         OpamFile.OPAM.with_conflicts conflicts |>
         OpamFile.OPAM.with_available available |>
         OpamFileTools.map_all_variables rewrite_var |>
+        auto_add_flags |>
         fun opam ->
           if opam <> opam0 then
             (OpamFile.OPAM.write_with_preserved_format opam_file opam;
