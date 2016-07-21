@@ -587,11 +587,11 @@ let slog = OpamConsole.slog
     let root_empty =
       not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
-    let gt, rt =
+    let gt, rt, default_compiler =
     if OpamFile.exists config_f then (
       OpamConsole.msg "OPAM has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
-      gt, OpamRepositoryState.load `Lock_none gt
+      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -670,24 +670,38 @@ let slog = OpamConsole.slog
                 missing)));
 
         (* Create ~/.opam/config *)
-        let config =
-          (match init_config with None -> OpamInitDefaults.init_config ()
-                                | Some c -> c)
-          |> OpamFile.Config.with_opam_version OpamVersion.current_nopatch
-        in
-        let repos =
-          match repo with
-          | Some r -> [r.repo_name, r.repo_url]
+        let init_config =
+          match init_config with
           | None ->
-            List.mapi (fun i contents ->
-                OpamRepositoryName.of_string
-                  (if i = 0 then "default" else
-                     Printf.sprintf "default_%d" (i+1)),
-                OpamUrl.of_string (OpamRepositoryName.to_string contents))
-              (OpamFile.Config.repositories config)
+            OpamInitDefaults.init_config
+          | Some ic ->
+            OpamFile.InitConfig.add OpamInitDefaults.init_config ic
+        in
+        let repos = match repo with
+          | Some r -> [r.repo_name, r.repo_url]
+          | None -> OpamFile.InitConfig.repositories init_config
         in
         let config =
-          OpamFile.Config.with_repositories (List.map fst repos) config
+          let module I = OpamFile.InitConfig in
+          let module C = OpamFile.Config in
+          C.empty |>
+          C.with_repositories (List.map fst repos) |>
+          C.with_jobs (match I.jobs init_config with
+              | Some j -> j
+              | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
+          C.with_dl_tool_opt (I.dl_tool init_config) |>
+          C.with_dl_jobs
+            (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
+               (I.dl_jobs init_config)) |>
+          C.with_criteria (I.solver_criteria init_config) |>
+          C.with_solver_opt (I.solver init_config) |>
+          C.with_wrap_build (I.wrap_build init_config) |>
+          C.with_wrap_install (I.wrap_install init_config) |>
+          C.with_wrap_remove (I.wrap_remove init_config) |>
+          C.with_global_variables
+            (I.global_variables init_config) |>
+          C.with_eval_variables
+            (I.eval_variables init_config)
         in
         OpamFile.Config.write (OpamPath.config root) config;
 
@@ -709,7 +723,8 @@ let slog = OpamConsole.slog
                    repo_name; repo_url; repo_priority; })
                 repos)
         in
-        gt, OpamRepositoryState.unlock rt
+        gt, OpamRepositoryState.unlock rt,
+        OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.register_backtrace e;
         OpamConsole.error "Initialisation failed";
@@ -726,7 +741,7 @@ let slog = OpamConsole.slog
         OpamEnv.write_static_init_scripts root ~completion:true;
         true
     in
-    gt, rt
+    gt, rt, default_compiler
 
 
   (* Checks a request for [atoms] for conflicts with the orphan packages *)

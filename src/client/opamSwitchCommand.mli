@@ -63,8 +63,11 @@ val show: unit -> unit
 val list:
   'a global_state -> print_short:bool -> installed:bool -> all:bool -> unit
 
-(* Guess the compiler from the switch name: within compiler packages,
-   match [name] against "pkg.version", "pkg", and, as a last resort,
-   "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
+(** Returns all available compiler packages from a repo state *)
+val get_compiler_packages: 'a repos_state -> package_set
+
+(** Guess the compiler from the switch name: within compiler packages,
+    match [name] against "pkg.version", "pkg", and, as a last resort,
+    "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
 val guess_compiler_package:
   'a repos_state -> string -> atom list

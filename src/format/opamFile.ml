@@ -887,27 +887,19 @@ module ConfigSyntax = struct
   let with_switch switch t = { t with switch = Some switch }
   let with_jobs jobs t = { t with jobs }
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
+  let with_dl_tool_opt dl_tool t = { t with dl_tool }
   let with_dl_jobs dl_jobs t = { t with dl_jobs }
   let with_criteria solver_criteria t = { t with solver_criteria }
   let with_criterion kind criterion t =
     { t with solver_criteria =
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver solver t = { t with solver = Some solver }
+  let with_solver_opt solver t = { t with solver = solver }
   let with_wrap_build wrap_build t = { t with wrap_build }
   let with_wrap_install wrap_install t = { t with wrap_install }
   let with_wrap_remove wrap_remove t = { t with wrap_remove }
   let with_global_variables global_variables t = { t with global_variables }
   let with_eval_variables eval_variables t = { t with eval_variables }
-
-  let create installed_switches switch repositories
-      ?(criteria=[]) ?solver jobs ?download_tool dl_jobs =
-    { opam_version = OpamVersion.current;
-      repositories ;
-      installed_switches; switch;
-      jobs; dl_tool = download_tool; dl_jobs;
-      solver_criteria = criteria; solver;
-      wrap_build = []; wrap_install = []; wrap_remove = [];
-      global_variables = []; eval_variables = []; }
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
@@ -1017,6 +1009,176 @@ end
 module Config = struct
   include ConfigSyntax
   include SyntaxFile(ConfigSyntax)
+end
+
+module InitConfigSyntax = struct
+  let internal = "init-config"
+
+  type t = {
+    opam_version : opam_version;
+    repositories : (repository_name * url) list;
+    default_compiler : formula;
+    jobs : int option;
+    dl_tool : arg list option;
+    dl_jobs : int option;
+    solver_criteria : (solver_criteria * string) list;
+    solver : arg list option;
+    wrap_build : arg list;
+    wrap_install : arg list;
+    wrap_remove : arg list;
+    global_variables : (variable * variable_contents * string) list;
+    eval_variables : (variable * string list * string) list;
+  }
+
+  let opam_version t = t.opam_version
+  let repositories t = t.repositories
+  let default_compiler t = t.default_compiler
+  let jobs t = t.jobs
+  let dl_tool t = t.dl_tool
+  let dl_jobs t = t.dl_jobs
+  let solver_criteria t = t.solver_criteria
+  let solver t = t.solver
+  let wrap_build t = t.wrap_build
+  let wrap_install t = t.wrap_install
+  let wrap_remove t = t.wrap_remove
+  let global_variables t = t.global_variables
+  let eval_variables t = t.eval_variables
+
+  let with_opam_version opam_version t = {t with opam_version}
+  let with_repositories repositories t = {t with repositories}
+  let with_default_compiler default_compiler t = {t with default_compiler}
+  let with_jobs jobs t = {t with jobs}
+  let with_dl_tool dl_tool t = {t with dl_tool}
+  let with_dl_jobs dl_jobs t = {t with dl_jobs}
+  let with_solver_criteria solver_criteria t = {t with solver_criteria}
+  let with_solver solver t = {t with solver}
+  let with_wrap_build wrap_build t = {t with wrap_build}
+  let with_wrap_install wrap_install t = {t with wrap_install}
+  let with_wrap_remove wrap_remove t = {t with wrap_remove}
+  let with_global_variables global_variables t = {t with global_variables}
+  let with_eval_variables eval_variables t = {t with eval_variables}
+
+  let criterion kind t =
+    try Some (List.assoc kind t.solver_criteria)
+    with Not_found -> None
+
+  let with_criterion kind criterion t =
+    { t with solver_criteria =
+               (kind,criterion)::List.remove_assoc kind t.solver_criteria }
+
+  let empty = {
+    opam_version = OpamVersion.current_nopatch;
+    repositories = [];
+    default_compiler = OpamFormula.Empty;
+    jobs = None;
+    dl_tool = None;
+    dl_jobs = None;
+    solver_criteria = [];
+    solver = None;
+    wrap_build = [];
+    wrap_install = [];
+    wrap_remove = [];
+    global_variables = [];
+    eval_variables = [];
+  }
+
+  let fields =
+    [
+      "opam-version", Pp.ppacc
+        with_opam_version opam_version
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+      "repositories", Pp.ppacc
+        with_repositories repositories
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_pair
+              (Pp.V.string -|
+               Pp.of_module "repository" (module OpamRepositoryName))
+              Pp.V.url ));
+      "default-compiler", Pp.ppacc
+        with_default_compiler default_compiler
+        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+      "jobs", Pp.ppacc_opt
+        (with_jobs @* OpamStd.Option.some) jobs
+        Pp.V.pos_int;
+      "download-command", Pp.ppacc_opt
+        (with_dl_tool @* OpamStd.Option.some) dl_tool
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "download-jobs", Pp.ppacc_opt
+        (with_dl_jobs @* OpamStd.Option.some) dl_jobs
+        Pp.V.pos_int;
+      "solver-criteria", Pp.ppacc_opt
+        (with_criterion `Default) (criterion `Default)
+        Pp.V.string;
+      "solver-upgrade-criteria", Pp.ppacc_opt
+        (with_criterion `Upgrade) (criterion `Upgrade)
+        Pp.V.string;
+      "solver-fixup-criteria", Pp.ppacc_opt
+        (with_criterion `Fixup) (criterion `Fixup)
+        Pp.V.string;
+      "solver", Pp.ppacc_opt
+        (with_solver @* OpamStd.Option.some) solver
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-build-commands", Pp.ppacc
+        with_wrap_build wrap_build
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-install-commands", Pp.ppacc
+        with_wrap_install wrap_install
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "wrap-remove-commands", Pp.ppacc
+        with_wrap_remove wrap_remove
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "global-variables", Pp.ppacc
+        with_global_variables global_variables
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_triple
+              (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+              Pp.V.variable_contents
+              Pp.V.string));
+      "eval-variables", Pp.ppacc
+        with_eval_variables eval_variables
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_triple
+              (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+              (Pp.V.map_list Pp.V.string)
+              Pp.V.string));
+    ]
+
+  let pp =
+    let name = internal in
+    Pp.I.map_file @@
+    Pp.I.check_fields ~strict:true ~name fields -|
+    Pp.I.fields ~strict:true ~name ~empty fields
+
+  let add t1 t2 =
+    let opt = function None -> fun o -> o | some -> fun _ -> some in
+    let list = function [] -> fun l -> l | l -> fun _ -> l in
+    {
+      opam_version = t2.opam_version;
+      repositories = list t2.repositories t1.repositories;
+      default_compiler =
+        if t2.default_compiler <> Empty
+        then t2.default_compiler else t1.default_compiler;
+      jobs = opt t2.jobs t1.jobs;
+      dl_tool = opt t2.dl_tool t1.dl_tool;
+      dl_jobs = opt t2.dl_jobs t1.dl_jobs;
+      solver_criteria =
+        List.fold_left (fun acc c ->
+            try (c, List.assoc c t2.solver_criteria) :: acc with Not_found ->
+            try (c, List.assoc c t1.solver_criteria) :: acc with Not_found ->
+              acc)
+          [] [`Fixup; `Upgrade; `Default];
+      solver = opt t2.solver t1.solver;
+      wrap_build = list t2.wrap_build t1.wrap_build;
+      wrap_install = list t2.wrap_install t1.wrap_install;
+      wrap_remove = list t2.wrap_remove t1.wrap_remove;
+      global_variables = list t2.global_variables t1.global_variables;
+      eval_variables = list t2.eval_variables t1.eval_variables;
+    }
+
+end
+module InitConfig = struct
+  include InitConfigSyntax
+  include SyntaxFile(InitConfigSyntax)
 end
 
 module Repos_configSyntax = struct

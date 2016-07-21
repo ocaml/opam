@@ -112,18 +112,29 @@ let init =
   let doc = init_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "The $(b,init) command creates a fresh client state. This initializes OPAM \
-        configuration in $(i,~/.opam) (or the given $(b,--root)) and configures \
-        the initial remote package repository.";
-    `P "Once the fresh client has been created, OPAM will ask the user if he wants \
-        $(i,~/.profile) (or $(i,~/.zshrc), etc. depending on his shell) and $(i,~/.ocamlinit) \
-        to be updated. \
-        If $(b,--auto-setup) is used, OPAM will modify the configuration files automatically, \
-        without asking the user. If $(b,--no-setup) is used, OPAM will *NOT* modify \
-        anything outside of $(i,~/.opam).";
-    `P "Additional repositories can be added later by using the $(b,opam repository) command.";
-    `P "The state of repositories can be synchronized by using $(b,opam update).";
-    `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
+    `P "The $(b,init) command initialises a local \"opam root\" (by default, \
+        $(i,~/.opam/)) that holds opam's data and packages. This is a \
+        necessary step for normal operation of opam.";
+    `P "Additionally, it prompts the user with the option to add a \
+        configuration hook in their shell init files. The initial software \
+        repositories are fetched, and an initial 'switch' can also be \
+        installed, according to the configuration and options.";
+    `P "The initial repository and defaults can be set through a \
+        configuration file found at $(i,~/.opamrc) or $(i,/etc/opamrc).";
+    `P "For further customisation once opam has been initialised, see \
+        $(b,opam switch) and $(b,opam repository).";
+    `S "CONFIGURATION FILE";
+    `P "Any field from the built-in initial configuration can be overriden \
+        through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
+        $(i,--config). The default configuration for this version of opam is:";
+    `Pre (OpamFile.InitConfig.write_to_string (OpamInitDefaults.init_config));
+    `P "Additional fields in the same format as for the $(i,~/.opam/config) \
+        file are also supported: $(b,jobs:), $(b,download-command:), \
+        $(b,download-jobs:), $(b,solver-criteria:), \
+        $(b,solver-upgrade-criteria:), \
+        $(b,solver-fixup-criteria:), $(b,solver:), $(b,wrap-build-commands:), \
+        $(b,wrap-install-commands:), $(b,wrap-remove-commands:), \
+        $(b,global-variables:)."
   ] in
   let compiler =
     mk_opt ["c";"compiler"] "VERSION" "Set the compiler to install"
@@ -147,6 +158,11 @@ let init =
        if present)"
       Arg.(some & OpamArg.filename) None
   in
+  let no_config_file =
+    mk_flag ["default-config"]
+      "Use the built-in default configuration, bypassing any opamrc file found \
+       on the system"
+  in
   let bypass_checks =
     mk_flag ["bypass-checks"]
       "Skip checks on required or recommended tools, \
@@ -155,23 +171,38 @@ let init =
   let init global_options
       build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o
-      compiler no_compiler config_file bypass_checks =
+      compiler no_compiler config_file no_config_file bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
-    let init_config =
-      OpamStd.Option.Op.(config_file >>| OpamFile.make >>+
-                         OpamPath.init_config_file >>=
-                         OpamFile.Config.read_opt)
+    let config_file =
+      if no_config_file then None else
+        match config_file with
+        | Some f -> Some (OpamFile.make f)
+        | None -> OpamPath.init_config_file ()
     in
-    (* todo: specific format for the config file allowing to describe repos *)
+    let init_config = match config_file with
+      | None -> None
+      | Some cf ->
+         try
+           let r = OpamFile.InitConfig.read cf in
+           OpamConsole.note "Will configure defaults from %s"
+             (OpamFile.to_string cf);
+           Some r
+         with e ->
+           OpamConsole.error
+             "Error in configuration file, fix it or use '--default-config' or \
+             '--config FILE':";
+           OpamConsole.errmsg "%s" (Printexc.to_string e);
+           OpamStd.Sys.exit 10
+    in
     let repo =
       OpamStd.Option.map (fun url ->
-          let repo_url = OpamUrl.parse ?backend:repo_kind url in
-          let repo_root =
-            OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
-              repo_name
-          in
-          { repo_root; repo_name; repo_url; repo_priority = 0 })
+        let repo_url = OpamUrl.parse ?backend:repo_kind url in
+        let repo_root =
+          OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
+            repo_name
+        in
+        { repo_root; repo_name; repo_url; repo_priority = 0 })
         repo_url
     in
     let update_config =
@@ -179,30 +210,48 @@ let init =
       else if auto_setup then `yes
       else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
-    let gt, rt =
+    let gt, rt, default_compiler =
       OpamClient.init
         ?init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&
-       OpamFile.Config.installed_switches gt.config = [] then
+      OpamFile.Config.installed_switches gt.config = [] then
       match compiler with
       | Some comp ->
-        let packages =
-          OpamSwitchCommand.guess_compiler_package rt comp
-        in
-        OpamSwitchCommand.switch_with_autoinstall
-          gt ~packages (OpamSwitch.of_string comp)
-        |> ignore
+         let packages =
+           OpamSwitchCommand.guess_compiler_package rt comp
+         in
+         OpamSwitchCommand.switch_with_autoinstall
+           gt ~packages (OpamSwitch.of_string comp)
+      |> ignore
       | None ->
-        OpamConsole.note
-          "No compiler selected, no switch has been created.\n\
-           Use 'opam switch <compiler>' to get started."
+         let candidates = OpamFormula.to_dnf default_compiler in
+         let all_packages = OpamSwitchCommand.get_compiler_packages rt in
+         let compiler_packages =
+           try
+             Some (List.find (fun atoms ->
+               let names = List.map fst atoms in
+               let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
+               List.for_all (OpamPackage.has_name pkgs) names)
+                     candidates)
+           with Not_found -> None
+         in
+         match compiler_packages with
+         | Some packages ->
+            OpamSwitchCommand.switch_with_autoinstall
+              gt ~packages (OpamSwitch.of_string "default")
+         |> ignore
+         | None ->
+            OpamConsole.note
+              "No compiler selected, and no available default switch found: \
+             no switch has been created.\n\
+             Use 'opam switch <compiler>' to get started."
   in
   Term.(pure init
-        $global_options $build_options $repo_kind_flag $repo_name $repo_url
-        $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
-        $config_file $bypass_checks),
+          $global_options $build_options $repo_kind_flag $repo_name $repo_url
+          $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
+          $config_file $no_config_file $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)

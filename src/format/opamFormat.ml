@@ -282,8 +282,7 @@ module Pp = struct
             match exn with
             | None ->
               OpamConsole.warning "%s"
-                (string_of_bad_format (Bad_format (pos, s)));
-              assert false
+                (string_of_bad_format (Bad_format (pos, s)))
             | Some e ->
               OpamConsole.warning "%s" (string_of_bad_format e))
       fmt

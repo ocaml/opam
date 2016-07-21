@@ -65,18 +65,6 @@ module Config: sig
 
   include IO_FILE
 
-  (** Creation *)
-  val create:
-    switch list ->
-    switch option ->
-    repository_name list ->
-    ?criteria:(OpamTypes.solver_criteria * string) list ->
-    ?solver:(arg list) ->
-    int ->
-    ?download_tool:(arg list) ->
-    int ->
-    t
-
   (** OCaml switch updates *)
   val with_switch: switch -> t -> t
   val with_switch_opt: switch option -> t -> t
@@ -92,6 +80,12 @@ module Config: sig
   val with_criteria: (solver_criteria * string) list -> t -> t
 
   val with_solver: arg list -> t -> t
+  val with_solver_opt: arg list option -> t -> t
+
+  val with_jobs: int -> t -> t
+  val with_dl_tool: arg list -> t -> t
+  val with_dl_tool_opt: arg list option -> t -> t
+  val with_dl_jobs: int -> t -> t
 
   val with_wrap_build: arg list -> t -> t
   val with_wrap_install: arg list -> t -> t
@@ -134,6 +128,43 @@ module Config: sig
   (** variable, command, docstring *)
   val eval_variables: t -> (variable * string list * string) list
 
+end
+
+(** Init config file [/etc/opamrc] *)
+module InitConfig: sig
+  include IO_FILE
+
+  val opam_version: t -> opam_version
+  val repositories: t -> (repository_name * url) list
+  val default_compiler: t -> formula
+  val jobs: t -> int option
+  val dl_tool: t -> arg list option
+  val dl_jobs: t -> int option
+  val solver_criteria: t -> (solver_criteria * string) list
+  val solver: t -> arg list option
+  val wrap_build: t -> arg list
+  val wrap_install: t -> arg list
+  val wrap_remove: t -> arg list
+  val global_variables: t -> (variable * variable_contents * string) list
+  val eval_variables: t -> (variable * string list * string) list
+
+  val with_opam_version: opam_version -> t -> t
+  val with_repositories: (repository_name * url) list -> t -> t
+  val with_default_compiler: formula -> t -> t
+  val with_jobs: int option -> t -> t
+  val with_dl_tool: arg list option -> t -> t
+  val with_dl_jobs: int option -> t -> t
+  val with_solver_criteria: (solver_criteria * string) list -> t -> t
+  val with_solver: arg list option -> t -> t
+  val with_wrap_build: arg list -> t -> t
+  val with_wrap_install: arg list -> t -> t
+  val with_wrap_remove: arg list -> t -> t
+  val with_global_variables: (variable * variable_contents * string) list -> t -> t
+  val with_eval_variables: (variable * string list * string) list -> t -> t
+
+  (** [add t1 t2] is [t2], with the field values falling back to those of [t1]
+      when not set in [t2] *)
+  val add: t -> t -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)

@@ -30,7 +30,7 @@ val config: t -> OpamFile.Config.t OpamFile.t
 
 (** Gets an opam init config file, if present on the system (either
     {i ~/.opamrc} or {i /etc/opamrc} *)
-val init_config_file: unit -> OpamFile.Config.t OpamFile.t option
+val init_config_file: unit -> OpamFile.InitConfig.t OpamFile.t option
 
 (** Lock for updates on the main config file (write lock when changes to
     switches, repositories lists are expected. No lock needed otherwise) *)

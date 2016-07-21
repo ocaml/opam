@@ -16,14 +16,25 @@ let repository_url = {
   backend = `http;
 }
 
+let default_compiler =
+  OpamFormula.ors [
+    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
+                      OpamFormula.Atom
+                        (`Geq, OpamPackage.Version.of_string "4.01.0"));
+    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
+                      OpamFormula.Empty);
+  ]
+
 let eval_variables = [
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
-  "OCaml version present on your system indenpendently of opam, if any";
+  "OCaml version present on your system independently of opam, if any";
 ]
 
-let init_config () =
-  OpamFile.Config.create
-    [] None [OpamRepositoryName.of_string (OpamUrl.to_string repository_url)]
-    OpamStateConfig.(Lazy.force default.jobs)
-    OpamStateConfig.(default.dl_jobs)
-  |> OpamFile.Config.with_eval_variables eval_variables
+module I = OpamFile.InitConfig
+
+let init_config =
+  I.empty |>
+  I.with_repositories
+    [OpamRepositoryName.of_string "default", repository_url] |>
+  I.with_default_compiler default_compiler |>
+  I.with_eval_variables eval_variables

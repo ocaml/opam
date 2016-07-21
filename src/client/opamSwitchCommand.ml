@@ -550,21 +550,23 @@ let set_compiler st names =
   OpamSwitchAction.write_selections st;
   st
 
-let guess_compiler_package rt name =
+let get_compiler_packages rt =
   let package_index =
     OpamRepositoryState.build_index rt
       (OpamGlobalState.repos_list rt.repos_global)
   in
-  let compiler_packages =
-    OpamPackage.Map.filter
-      (fun _ opam ->
-         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
-         OpamFilter.eval_to_bool ~default:false
-           (OpamPackageVar.resolve_global rt.repos_global)
-           (OpamFile.OPAM.available opam))
-      package_index
-    |> OpamPackage.keys
-  in
+  OpamPackage.Map.filter
+    (fun _ opam ->
+       OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+       OpamFilter.eval_to_bool ~default:false
+         (OpamPackageVar.resolve_global rt.repos_global)
+         (OpamFile.OPAM.available opam))
+    package_index
+  |> OpamPackage.keys
+
+
+let guess_compiler_package rt name =
+  let compiler_packages = get_compiler_packages rt in
   match OpamPackage.of_string_opt name with
   | Some nv when OpamPackage.Set.mem nv compiler_packages ->
     [OpamSolution.eq_atom_of_package nv]
