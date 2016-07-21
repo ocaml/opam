@@ -20,7 +20,7 @@ install: [
 remove: ["rm" "-f" "%{root}%/opam" "%{root}%/opam.version"]
 depends: [
   "ocamlgraph"
-  "cmdliner"
+  "cmdliner" {>= "0.9.8"}
   "dose3" {>= "5.0"}
   "cudf"
   "re" {>= "1.2.0"}
