@@ -169,8 +169,8 @@ let template nv =
   |> with_install
     [[CIdent "make", None; CString "install", None], None]
   |> with_depends
-    (Atom (OpamPackage.Name.of_string "ocamlfind",
-           (Atom (OpamFilter.(Filter (FIdent (ident_of_string "build")))))))
+    (Atom (OpamPackage.Name.of_string "compiler",
+           (Atom (Constraint (`Geq, FString "1.0")))))
   |> with_author maintainer
   |> with_homepage [""]
   |> with_license [""]
