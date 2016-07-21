@@ -316,6 +316,7 @@ let process args =
         None
       ] |>
       O.with_maintainer [ "platform@lists.ocaml.org" ] |>
+      O.with_build_env ["CAML_LD_LIBRARY_PATH", Eq, "", None] |>
       O.with_env [
         "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
         "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%/stublibs", None

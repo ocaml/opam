@@ -471,6 +471,8 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs: basename list -> t -> t
 
+  val with_build_env: env_update list -> t -> t
+
   val with_available: filter -> t -> t
 
   (** Construct as [maintainer] *)
