@@ -95,11 +95,11 @@ module Make (VCS: VCS) = struct
          Done (Result repo.repo_root))
 
   let repo dirname url =
-    let repo = OpamRepositoryBackend.default () in
     {
-      repo with
       repo_root = dirname;
       repo_url = url;
+      repo_priority = 0;
+      repo_name = OpamRepositoryName.default;
     }
 
   let pull_url package dirname checksum remote_url =

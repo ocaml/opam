@@ -43,14 +43,6 @@ val to_json: repository -> json
 (** Compare repositories *)
 val compare: repository -> repository -> int
 
-(** The address for the default OPAM repository (currently:
-    https://opam.ocaml.org/) *)
-val default_url: url
-
-(** The default OPAM repository (named "default", upstream at
-    [default_address]) *)
-val default: unit -> repository
-
 (** Create a local repository on a given path, without remote (only for external
     tools, not to be mistaken for an opam repo with a local url) *)
 val local: dirname -> repository

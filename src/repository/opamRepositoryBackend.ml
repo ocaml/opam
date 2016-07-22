@@ -29,22 +29,6 @@ let to_string r =
     (OpamRepositoryName.to_string r.repo_name)
     (OpamUrl.to_string r.repo_url)
 
-let default_url = {
-  OpamUrl.
-  transport = "https";
-  path = "opam.ocaml.org";
-  hash = None;
-  backend = `http;
-}
-
-let default () = {
-  repo_name = OpamRepositoryName.default;
-  repo_url = default_url;
-  repo_priority = 0;
-  repo_root =
-    OpamFilename.Dir.of_string OpamRepositoryName.(to_string default);
-}
-
 let local dirname = {
   repo_name     = OpamRepositoryName.of_string "local";
   repo_root     = dirname;

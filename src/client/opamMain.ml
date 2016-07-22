@@ -669,20 +669,22 @@ let config =
   let doc = config_doc in
   let commands = [
     "env", `env, [],
-    "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
-     and CAML_LD_LIBRARY_PATH according to the currently selected \
-     compiler. The output of this command is meant to be evaluated by a \
-     shell, for example by doing $(b,eval `opam config env`).";
+    "Returns the bindings for the environment variables set in the current \
+     switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
+     $(i,-v), add comments documenting the reason or package of origin for \
+     eachbinding. This is most usefully used as $(b,eval `opam config env`) to \
+     have further shell commands be evaluated in the proper opam context.";
     "setup", `setup, [],
-    "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
-     to display more options. Use $(b,--list) to display the current configuration \
-     options. You can use this command to automatically update: (i) user-configuration \
-     files such as ~/.profile and ~/.ocamlinit; and (ii) global-configuration files \
-     controlling which shell scripts are loaded on startup, such as auto-completion. \
-     These configuration options can be updated using: $(b,opam config setup --global) \
-     to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
-     $(b,opam config setup --user) to setup the user ones. \
-     To modify both the global and user configuration, use $(b,opam config setup --all).";
+    "Configure global and user parameters for OPAM. Use $(b, opam config \
+     setup) to display more options. Use $(b,--list) to display the current \
+     configuration options. You can use this command to automatically update: \
+     (i) user-configuration files such as ~/.profile; and (ii) \
+     global-configuration files controlling which shell scripts are loaded on \
+     startup, such as auto-completion. These configuration options can be \
+     updated using $(b,opam config setup --global) to setup the global \
+     configuration files stored in $(b,~/.opam/opam-init/) and $(b,opam config \
+     setup --user) to setup the user ones. To modify both the global and user \
+     configuration, use $(b,opam config setup --all).";
     "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. \
      This command can be used to cross-compile between switches using \
@@ -730,7 +732,6 @@ let config =
   let all_doc         = "Enable all the global and user configuration options." in
   let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
-  let ocamlinit_doc   = "Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel." in
   let profile_doc     = "Modify ~/.profile (or ~/.zshrc, etc., depending on your shell) to \
                          setup an OPAM-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
@@ -742,7 +743,6 @@ let config =
                          installed in OPAM that were shadowed will remain so after \
                          $(b,opam config env)" in
   let profile         = mk_flag ["profile"]        profile_doc in
-  let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
   let all             = mk_flag ["a";"all"]        all_doc in
   let user            = mk_flag ["u";"user"]       user_doc in
@@ -754,8 +754,7 @@ let config =
   let config global_options
       command shell sexp inplace_path
       dot_profile_o list all global user
-      profile ocamlinit no_complete
-      params =
+      profile no_complete params =
     apply_global_options global_options;
     match command, params with
     | Some `env, [] ->
@@ -768,12 +767,11 @@ let config =
       let user        = all || user in
       let global      = all || global in
       let profile     = user  || profile in
-      let ocamlinit   = user  || ocamlinit in
       let completion    = global && not no_complete in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         `Ok (OpamConfigCommand.setup_list shell dot_profile)
-      else if profile || ocamlinit || completion then
+      else if profile || completion then
         let dot_profile = if profile then Some dot_profile else None in
         OpamGlobalState.with_ `Lock_write @@ fun gt ->
         `Ok (OpamConfigCommand.setup gt
@@ -791,7 +789,6 @@ let config =
                 \n\
                 User configuration\n\
                \    -u, --user           %s\n\
-               \    --ocamlinit          %s\n\
                \    --profile            %s\n\
                \    --dot-profile FILE   %s\n\
                 \n\
@@ -799,7 +796,7 @@ let config =
                \    -g,--global          %s\n\
                \    --no-complete        %s\n\n"
                list_doc all_doc
-               user_doc ocamlinit_doc profile_doc dot_profile_doc
+               user_doc profile_doc dot_profile_doc
                global_doc no_complete_doc)
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -871,7 +868,7 @@ let config =
              let has_default, nhttp, nlocal, nvcs =
                OpamRepositoryName.Map.fold
                  (fun _ {repo_url = url; _} (dft, nhttp, nlocal, nvcs) ->
-                   let dft = dft || url = OpamRepositoryBackend.default_url in
+                   let dft = dft || url = OpamInitDefaults.repository_url in
                    match url.OpamUrl.backend with
                    | `http -> dft, nhttp+1, nlocal, nvcs
                    | `rsync -> dft, nhttp, nlocal+1, nvcs
@@ -926,7 +923,7 @@ let config =
           $global_options $command $shell_opt $sexp
           $inplace_path
           $dot_profile_flag $list $all $global $user
-          $profile $ocamlinit $no_complete
+          $profile $no_complete
           $params)
   ),
   term_info "config" ~doc ~man
@@ -1919,16 +1916,17 @@ let help =
   Term.info "help" ~doc ~man
 
 let default =
-  let doc = "source-based OCaml package management" in
+  let doc = "source-based package management" in
   let man = [
     `S "DESCRIPTION";
-    `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi \
-        tools to handle dependencies, including support for version \
-        constraints, optional dependencies, and conflict management.";
-    `P "It has support for different remote repositories such as HTTP, rsync, git, \
-        darcs and mercurial. It handles multiple OCaml versions concurrently, and is \
-        flexible enough to allow you to use your own repositories and packages \
-        in addition to the central ones it provides.";
+    `P "Opam is a package manager. It uses the powerful mancoosi tools to \
+        handle dependencies, including support for version constraints, \
+        optional dependencies, and conflict management. The default \
+        configuration binds it to the official package repository for OCaml.";
+    `P "It has support for different remote repositories such as HTTP, rsync, \
+        git, darcs and mercurial. Everything is installed within a local opam \
+        directory, that can include multiple installation prefixes with \
+        different sets of intalled packages.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
   ] @  help_sections
