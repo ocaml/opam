@@ -192,7 +192,16 @@ let revert ?title ?(verbose=true) ?(force=false) prefix changes =
           let f = OpamFilename.of_string f in
           OpamFilename.remove f;
           acc
-        | (Removed | Perm_changed _ | Contents_changed _ as op) ->
+        | Contents_changed dg ->
+          let unreverted =
+            try item_digest (item_of_filename fname) <> dg
+            with Unix.Unix_error _ -> false
+          in
+          if unreverted then
+            (already, modified, nonempty, (op,fname)::cannot)
+          else
+            acc (* File has changed, assume the removal script reverted it *)
+        | (Removed | Perm_changed _) ->
           (already, modified, nonempty, (op,fname)::cannot))
       ([], [], [], []) changes
   in
