@@ -233,9 +233,12 @@ let remove_from_installed ?(keep_as_root=false) st nv =
                         else Some (rm st.installed_roots))
       ~reinstall:(rm st.reinstall)
   in
+  let has_setenv =
+    match OpamStd.Option.map OpamFile.OPAM.env (OpamSwitchState.opam_opt st nv)
+    with Some (_::_) -> true | _ -> false
+  in
   if not OpamStateConfig.(!r.dryrun) &&
-     OpamFile.OPAM.env (OpamSwitchState.opam st nv) <> [] &&
-     OpamSwitchState.is_switch_globally_set st
+     has_setenv && OpamSwitchState.is_switch_globally_set st
   then
     (* note: don't remove_metadata just yet *)
     OpamEnv.write_dynamic_init_scripts st;
