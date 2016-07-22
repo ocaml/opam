@@ -140,6 +140,15 @@ module OpamList = struct
     in
     aux [] l
 
+  let update_assoc k v l =
+    let rec aux acc = function
+      | [] -> List.rev ((k,v)::acc)
+      | (k1,_) as b::r ->
+        if k1 = k then List.rev_append acc ((k,v)::r)
+        else aux (b::acc) r
+    in
+    aux [] l
+
 end
 
 

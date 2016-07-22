@@ -700,12 +700,17 @@ let config =
      $(i,PACKAGE), lists all the variables available for these packages. Use \
      $(i,-) to include global configuration variables for this switch.";
     "set", `set, ["VAR";"VALUE"],
-    "Set the given global opam variable for the current switch. Warning: \
-     changing a configured path will not move any files! This command does \
-     not perform any variable expansion.";
+    "Set the given opam variable for the current switch. Warning: changing a \
+     configured path will not move any files! This command does not perform \
+     anyvariable expansion.";
     "unset", `unset, ["VAR"],
-    "Unset the given global opam variable for the current switch. Warning: \
+    "Unset the given opam variable for the current switch. Warning: \
      unsetting built-in configuration variables can cause problems!";
+    "set-global", `set_global, ["VAR";"VALUE"],
+    "Set the given variable globally in the opam root, to be visible in all \
+     switches";
+    "unset-global", `unset_global, ["VAR"],
+    "Unset the given global variable";
     "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
     "subst", `subst, ["FILE..."],
@@ -809,6 +814,12 @@ let config =
       `Ok (OpamConfigCommand.set (OpamVariable.Full.of_string var) (Some value))
     | Some `unset, [var] ->
       `Ok (OpamConfigCommand.set (OpamVariable.Full.of_string var) None)
+    | Some `set_global, [var; value] ->
+      `Ok (OpamConfigCommand.set_global
+             (OpamVariable.Full.of_string var) (Some value))
+    | Some `unset_global, [var] ->
+      `Ok (OpamConfigCommand.set_global
+             (OpamVariable.Full.of_string var) None)
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
