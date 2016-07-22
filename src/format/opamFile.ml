@@ -1753,6 +1753,10 @@ module OPAMSyntax = struct
 
   let url t = t.url
   let descr t = t.descr
+  let synopsis t = OpamStd.Option.map Descr.synopsis t.descr
+  let descr_body t = match t.descr with
+    | None | Some (_, "") -> None
+    | Some (_, text) -> Some text
   let get_url t = match url t with Some u -> Some (URL.url u) | None -> None
 
   let metadata_dir t = t.metadata_dir
@@ -1820,6 +1824,12 @@ module OPAMSyntax = struct
   let with_url_opt url t = { t with url }
   let with_descr descr t = { t with descr = Some descr }
   let with_descr_opt descr t = { t with descr }
+  let with_synopsis synopsis t =
+    { t with descr =
+               Some (synopsis, OpamStd.Option.default "" (descr_body t)) }
+  let with_descr_body text t =
+    { t with descr =
+               Some (OpamStd.Option.default "" (synopsis t), text) }
 
   let with_metadata_dir metadata_dir t = { t with metadata_dir }
   let with_extra_files extra_files t = { t with extra_files = Some extra_files }
@@ -1945,11 +1955,12 @@ module OPAMSyntax = struct
         (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name));
       "version", with_cleanup cleanup_version
         Pp.ppacc_opt with_version version_opt
-        (Pp.V.string -| Pp.of_module "version" (module OpamPackage.Version));
+        (Pp.V.string_tr -| Pp.of_module "version" (module OpamPackage.Version));
 
-      "descr", no_cleanup Pp.ppacc_opt with_descr descr
-        (Pp.V.string_tr -|
-         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+      "synopsis", no_cleanup Pp.ppacc_opt with_synopsis synopsis
+        Pp.V.string_tr;
+      "description", no_cleanup Pp.ppacc_opt with_descr_body descr_body
+        Pp.V.string_tr;
 
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
         (Pp.V.map_list ~depth:1 Pp.V.string);
@@ -2064,6 +2075,9 @@ module OPAMSyntax = struct
          Pp.V.constraints Pp.V.compiler_version);
       "os", no_cleanup Pp.ppacc_opt with_os OpamStd.Option.none
         Pp.V.os_constraint;
+      "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
+        (Pp.V.string_tr -|
+         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
     ]
 
   let fields =

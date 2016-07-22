@@ -176,6 +176,7 @@ let template nv =
   |> with_license [""]
   |> with_dev_repo (OpamUrl.of_string "git+https://")
   |> with_bug_reports [""]
+  |> with_synopsis ""
 
 let lint t =
   let cond num level msg ?detail cd =

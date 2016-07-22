@@ -291,8 +291,8 @@ module Pp : sig
         expanded string or an ident) *)
     val ext_version: (value, filter) t
 
-      (** Returns an atom parser ("package" {>= "version"}) from a constraint
-          and a version parser*)
+    (** Returns an atom parser [("package" {>= "version"})] from a constraint
+        and a version parser*)
     val package_atom:
       (value list, 'a) t -> (value, name * 'a) t
 

@@ -410,6 +410,9 @@ module OPAM: sig
 
   val descr: t -> Descr.t option
 
+  val synopsis: t -> string option
+  val descr_body: t -> string option
+
   val url: t -> URL.t option
 
   val get_url: t -> url option
@@ -509,6 +512,12 @@ module OPAM: sig
 
   val with_descr: Descr.t -> t -> t
   val with_descr_opt: Descr.t option -> t -> t
+  val with_synopsis: string -> t -> t
+
+  (** If [synopsis] is not already set, split the string and use the first line
+      as synopsis. *)
+  val with_descr_body: string -> t -> t
+
   val with_url: URL.t -> t -> t
   val with_url_opt: URL.t option -> t -> t
 
