@@ -1828,11 +1828,8 @@ module OPAMSyntax = struct
     { t with descr =
                Some (synopsis, OpamStd.Option.default "" (descr_body t)) }
   let with_descr_body text t =
-    let descr = match synopsis t with
-      | None -> Descr.of_string () text
-      | Some syn -> syn, text
-    in
-    { t with descr = Some descr }
+    { t with descr =
+               Some (OpamStd.Option.default "" (synopsis t), text) }
 
   let with_metadata_dir metadata_dir t = { t with metadata_dir }
   let with_extra_files extra_files t = { t with extra_files = Some extra_files }
@@ -1962,7 +1959,7 @@ module OPAMSyntax = struct
 
       "synopsis", no_cleanup Pp.ppacc_opt with_synopsis synopsis
         Pp.V.string_tr;
-      "descr", no_cleanup Pp.ppacc_opt with_descr_body descr_body
+      "description", no_cleanup Pp.ppacc_opt with_descr_body descr_body
         Pp.V.string_tr;
 
       "maintainer", no_cleanup Pp.ppacc with_maintainer maintainer
@@ -2078,6 +2075,9 @@ module OPAMSyntax = struct
          Pp.V.constraints Pp.V.compiler_version);
       "os", no_cleanup Pp.ppacc_opt with_os OpamStd.Option.none
         Pp.V.os_constraint;
+      "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
+        (Pp.V.string_tr -|
+         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
     ]
 
   let fields =
