@@ -124,8 +124,9 @@ type +'lock switch_state = {
       that is in [opams] for updated packages) *)
 
   installed_roots: package_set;
-  (** The set of packages explicitly installed by the user (subset of
-      [installed]) *)
+  (** The set of packages explicitly installed by the user. Some of them may
+      happen not to be installed at some point, but this indicates that the
+      user would like them installed. *)
 
   reinstall: package_set;
   (** The set of packages which needs to be reinstalled *)

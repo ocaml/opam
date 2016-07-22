@@ -417,12 +417,13 @@ let slog = OpamConsole.slog
     let requested, solution =
       let s =
         log "fixup-1/ keep installed packages with orphaned versions and roots";
-        resolve (t.installed_roots -- full_orphans ++ orphan_versions)
+        resolve (t.installed_roots %% t.installed
+                 -- full_orphans ++ orphan_versions)
       in
       if is_success s then s else
       let s =
         log "fixup-2/ keep just roots";
-        resolve (t.installed_roots -- full_orphans)
+        resolve (t.installed_roots %% t.installed -- full_orphans)
       in
       if is_success s then s else
       let s =
@@ -950,7 +951,7 @@ let slog = OpamConsole.slog
           (OpamSolver.reverse_dependencies ~build:true
              ~depopts:false ~installed:true universe packages) in
       let to_keep =
-        (if autoremove then t.installed_roots else t.installed)
+        (if autoremove then t.installed_roots %% t.installed else t.installed)
         -- to_remove -- full_orphans -- orphan_versions
       in
       let to_keep =

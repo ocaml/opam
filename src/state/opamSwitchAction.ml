@@ -183,7 +183,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let st =
     { st with
       installed;
-      installed_roots = (installed_roots +! st.installed_roots) %% installed;
+      installed_roots = installed_roots +! st.installed_roots;
       reinstall;
       pinned = pinned +! st.pinned;
       compiler_packages; }
@@ -203,9 +203,11 @@ let add_to_installed st ?(root=false) nv =
       ~installed:(OpamPackage.Set.add nv st.installed)
       ~reinstall:(OpamPackage.Set.remove nv st.reinstall)
       ~installed_roots:
-        (if root
-         then OpamPackage.Set.add nv st.installed_roots
-         else st.installed_roots)
+        (let roots =
+           OpamPackage.Set.filter (fun nv1 -> nv1.name <> nv.name)
+             st.installed_roots
+         in
+         if root then OpamPackage.Set.add nv roots else st.installed_roots)
   in
   let opam = OpamSwitchState.opam st nv in
   let conf =
@@ -222,12 +224,13 @@ let add_to_installed st ?(root=false) nv =
   );
   st
 
-let remove_from_installed st nv =
+let remove_from_installed ?(keep_as_root=false) st nv =
   let rm = OpamPackage.Set.remove nv in
   let st =
     update_switch_state st
       ~installed:(rm st.installed)
-      ~installed_roots:(rm st.installed_roots)
+      ?installed_roots:(if keep_as_root then None
+                        else Some (rm st.installed_roots))
       ~reinstall:(rm st.reinstall)
   in
   if not OpamStateConfig.(!r.dryrun) &&

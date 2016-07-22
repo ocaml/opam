@@ -326,8 +326,8 @@ let parallel_apply t action action_graph =
     t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv
   in
 
-  let remove_from_install nv =
-    t_ref := OpamSwitchAction.remove_from_installed !t_ref nv
+  let remove_from_install ?keep_as_root nv =
+    t_ref := OpamSwitchAction.remove_from_installed ?keep_as_root !t_ref nv
   in
 
   (* 1/ fetch needed package archives *)
@@ -387,12 +387,29 @@ let parallel_apply t action action_graph =
     PackageActionGraph.explicit ~noop_remove action_graph
   in
 
+  let remove_action_packages =
+    PackageActionGraph.fold_vertex
+      (function `Remove nv -> OpamPackage.Set.add nv
+              | _ -> fun acc -> acc)
+      action_graph OpamPackage.Set.empty
+  in
+
+  let install_action_packages =
+    PackageActionGraph.fold_vertex
+      (function `Install nv -> OpamPackage.Set.add nv
+              | _ -> fun acc -> acc)
+      action_graph OpamPackage.Set.empty
+  in
+
   (* the core set of installed packages that won't change *)
   let minimal_install =
-    PackageActionGraph.fold_vertex
-      (function `Remove nv -> OpamPackage.Set.remove nv
-              | _ -> fun acc -> acc)
-      action_graph t.installed
+    OpamPackage.Set.Op.(t.installed -- remove_action_packages)
+  in
+
+  let wished_removed =
+    OpamPackage.Set.filter
+      (fun nv -> not (OpamPackage.has_name install_action_packages nv.name))
+      remove_action_packages
   in
 
   let timings = Hashtbl.create 17 in
@@ -462,7 +479,9 @@ let parallel_apply t action action_graph =
          else Done None) @@+ fun _ ->
         OpamProcess.Job.ignore_errors ~default:()
           (OpamAction.remove_package t nv) @@| fun () ->
-        remove_from_install nv;
+        remove_from_install
+          ~keep_as_root:(not (OpamPackage.Set.mem nv wished_removed))
+          nv;
         store_time ();
         `Successful (installed, OpamPackage.Set.add nv removed)
       | _ -> assert false
