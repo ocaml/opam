@@ -22,3 +22,9 @@ val latest_version: OpamVersion.t
     root at the given directory. A global write lock must be supplied, and the
     updated global config is returned. *)
 val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> OpamFile.Config.t
+
+(** Converts the opam file format, including rewriting availabillity conditions
+    based on OCaml-related variables into dependencies. The filename is used to
+    report errors *)
+val opam_file_from_1_2_to_2_0:
+  ?filename:OpamFile.OPAM.t OpamFile.t -> OpamFile.OPAM.t -> OpamFile.OPAM.t
