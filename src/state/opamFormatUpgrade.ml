@@ -687,6 +687,13 @@ let from_2_0_alpha_to_2_0_alpha2 root conf =
             let pkgdir nv = meta_dir / "packages" / OpamPackage.to_string nv in
             if OpamFilename.exists_dir (pkgdir nv) then
               OpamFilename.move_dir ~src:(pkgdir nv) ~dst:(pkgdir new_nv);
+            OpamStd.Option.Op.(
+              OpamFilename.opt_file (pkgdir new_nv // "opam") >>|
+              OpamFile.make >>= fun f ->
+              OpamFile.OPAM.read_opt f >>|
+              opam_file_from_1_2_to_2_0 ~filename:f >>|
+              OpamFile.OPAM.write_with_preserved_format f
+            ) |> ignore;
             if OpamFile.exists (config_f nv) then
               (OpamFile.Dot_config.write (config_f new_nv)
                  (remove_vars config);
