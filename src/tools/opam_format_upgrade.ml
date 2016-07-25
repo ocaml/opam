@@ -387,4 +387,9 @@ let process args =
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
-    packages
+    packages;
+
+  let repo_file = OpamRepositoryPath.repo repo in
+  OpamFile.Repo.write repo_file
+    (OpamFile.Repo.with_opam_version (OpamVersion.of_string "2.0")
+       (OpamFile.Repo.safe_read repo_file))

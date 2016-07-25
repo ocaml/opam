@@ -790,6 +790,14 @@ module Repo: sig
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
 
+  val with_opam_version : OpamVersion.t -> t -> t
+
+  val with_browse: string -> t -> t
+
+  val with_upstream: string -> t -> t
+
+  val with_redirect: (string * filter option) list -> t -> t
+
 end
 
 (** {2 urls.txt file *} *)
