@@ -188,6 +188,11 @@ module List : sig
       (but tail-recursive and more efficient) *)
   val pick_assoc: 'a -> ('a * 'b) list -> 'b option * ('a * 'b) list
 
+  (** [update_assoc key value list] updates the first value bound to [key] in
+      the associative list [list], or appends [(key, value)] if the key is not
+      bound. *)
+  val update_assoc: 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+
 end
 
 module String : sig

@@ -1246,7 +1246,7 @@ module SwitchSelectionsSyntax = struct
       pp_pkglist;
     "installed", Pp.ppacc
       (fun installed t ->
-         {t with sel_installed = OpamPackage.Set.union t.sel_roots installed})
+         {t with sel_installed = installed})
       (fun t -> t.sel_installed)
       pp_pkglist;
     "pinned", Pp.ppacc

@@ -700,12 +700,17 @@ let config =
      $(i,PACKAGE), lists all the variables available for these packages. Use \
      $(i,-) to include global configuration variables for this switch.";
     "set", `set, ["VAR";"VALUE"],
-    "Set the given global opam variable for the current switch. Warning: \
-     changing a configured path will not move any files! This command does \
-     not perform any variable expansion.";
+    "Set the given opam variable for the current switch. Warning: changing a \
+     configured path will not move any files! This command does not perform \
+     anyvariable expansion.";
     "unset", `unset, ["VAR"],
-    "Unset the given global opam variable for the current switch. Warning: \
+    "Unset the given opam variable for the current switch. Warning: \
      unsetting built-in configuration variables can cause problems!";
+    "set-global", `set_global, ["VAR";"VALUE"],
+    "Set the given variable globally in the opam root, to be visible in all \
+     switches";
+    "unset-global", `unset_global, ["VAR"],
+    "Unset the given global variable";
     "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
     "subst", `subst, ["FILE..."],
@@ -809,6 +814,12 @@ let config =
       `Ok (OpamConfigCommand.set (OpamVariable.Full.of_string var) (Some value))
     | Some `unset, [var] ->
       `Ok (OpamConfigCommand.set (OpamVariable.Full.of_string var) None)
+    | Some `set_global, [var; value] ->
+      `Ok (OpamConfigCommand.set_global
+             (OpamVariable.Full.of_string var) (Some value))
+    | Some `unset_global, [var] ->
+      `Ok (OpamConfigCommand.set_global
+             (OpamVariable.Full.of_string var) None)
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
@@ -964,16 +975,41 @@ let install =
     Arg.(value & flag & info ["u";"upgrade"]
            ~doc:"Upgrade the packages if already installed, rather than \
                  ignoring them") in
+  let restore =
+    Arg.(value & flag & info ["restore"]
+           ~doc:"Attempt to restore packages that were marked for installation \
+                 but have been removed due to errors") in
   let install
-      global_options build_options add_to_roots deps_only upgrade atoms =
+      global_options build_options add_to_roots deps_only upgrade restore
+      atoms =
     apply_global_options global_options;
     apply_build_options build_options;
+    if atoms = [] && not restore then
+      `Error (true, "required argument PACKAGES is missing")
+    else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-    ignore @@ OpamClient.install st atoms add_to_roots ~deps_only ~upgrade
+    let atoms =
+      if restore then
+        let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
+        if OpamPackage.Set.is_empty to_restore then
+          OpamConsole.msg "No packages to restore found\n"
+        else
+          OpamConsole.msg "Packages to be restored: %s\n"
+            (OpamPackage.Name.Set.to_string
+               (OpamPackage.names_of_packages to_restore));
+        atoms @
+        List.map OpamSolution.atom_of_package
+          (OpamPackage.Set.elements to_restore)
+      else atoms
+    in
+    if atoms = [] then `Ok () else
+      (ignore @@ OpamClient.install st atoms add_to_roots ~deps_only ~upgrade;
+       `Ok ())
   in
-  Term.(pure install $global_options $build_options
-        $add_to_roots $deps_only $upgrade $nonempty_atom_list),
+  Term.ret
+    Term.(pure install $global_options $build_options
+          $add_to_roots $deps_only $upgrade $restore $atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)

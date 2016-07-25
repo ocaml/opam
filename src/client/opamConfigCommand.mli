@@ -39,6 +39,9 @@ val expand: 'a global_state -> string -> unit
 (** Sets or unsets switch config variables *)
 val set: full_variable -> string option -> unit
 
+(** Sets or unsets global config variables *)
+val set_global: full_variable -> string option -> unit
+
 (** Update the global and user configuration to use OPAM. *)
 val setup:
   rw global_state ->

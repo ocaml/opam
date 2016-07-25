@@ -207,6 +207,28 @@ let set var value =
     OpamFile.Dot_config.write config_f
       (OpamFile.Dot_config.set config var newval)
 
+let set_global var value =
+  if not (OpamVariable.Full.is_global var) then
+    OpamConsole.error_and_exit
+      "Only global variables may be set using this command";
+  OpamGlobalState.with_ `Lock_write @@ fun gt ->
+  let var = OpamVariable.Full.variable var in
+  let config =
+    gt.config |>
+    OpamFile.Config.with_global_variables
+      (let vars =
+         List.filter (fun (k,_,_) -> k <> var)
+           (OpamFile.Config.global_variables gt.config)
+       in
+       match value with
+       | Some v -> (var, S v, "Set through 'opam config set-global'") :: vars
+       | None -> vars) |>
+    OpamFile.Config.with_eval_variables
+      (List.filter (fun (k,_,_) -> k <> var)
+         (OpamFile.Config.eval_variables gt.config))
+  in
+  OpamGlobalState.write { gt with config }
+
 let variable gt v =
   match OpamPackageVar.resolve_global gt v with
   | Some c ->
