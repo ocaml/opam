@@ -82,7 +82,7 @@ let repository gt repo =
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
     OpamConsole.error_and_exit
       "The current version of OPAM cannot read the repository %S. \n\
-       You should upgrade to at least version %s.\n"
+       You should upgrade to at least version %s."
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_vers);
   let opams = OpamRepositoryState.load_repo_opams repo in
