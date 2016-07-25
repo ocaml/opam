@@ -548,6 +548,7 @@ let process args =
       if not (List.mem nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
         opam |>
+        OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
         OpamFile.OPAM.with_depends depends |>
         OpamFile.OPAM.with_conflicts conflicts |>
         OpamFile.OPAM.with_available available |>
