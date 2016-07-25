@@ -198,6 +198,7 @@ SRC_state = \
   opamStateTypes.mli \
   opamPackageVar.ml \
   opamFileTools.ml \
+  opamFormatUpgrade.ml \
   opamGlobalState.ml \
   opamRepositoryState.ml \
   opamPinned.ml \
