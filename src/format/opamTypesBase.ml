@@ -138,6 +138,16 @@ let filter_ident_of_string s =
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
 
+let all_package_flags = [
+  Pkgflag_LightUninstall;
+  (* Pkgflag_AllSwitches; This has no "official" existence yet and does
+     nothing *)
+  Pkgflag_Verbose;
+  Pkgflag_Plugin;
+  Pkgflag_Compiler;
+  Pkgflag_Conf;
+]
+
 let string_of_pkg_flag = function
   | Pkgflag_LightUninstall -> "light-uninstall"
   | Pkgflag_AllSwitches -> "all-switches"

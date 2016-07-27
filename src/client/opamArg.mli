@@ -22,6 +22,11 @@ val mk_opt:
   ?section:string -> ?vopt:'a -> string list -> string -> string ->
   'a Arg.converter -> 'a -> 'a Term.t
 
+val mk_opt_all:
+  ?section:string -> ?vopt:'a -> ?default:'a list ->
+  string list -> string -> string ->
+  'a Arg.converter -> 'a list Term.t
+
 (** {2 Flags} *)
 
 (** --short *)

@@ -258,47 +258,55 @@ let init =
 let list_doc = "Display the list of available packages."
 let list =
   let doc = list_doc in
+  let selection_docs = "PACKAGE SELECTION" in
+  let display_docs = "OUTPUT FORMAT" in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of installed packages when called \
-        without argument, or the list of installed or available packages \
-        matching the given pattern.";
-    `P "In color mode, root packages (eg. manually installed) are \
-        underlined, and versions are shown in blue instead of magenta \
-        for pinned packages.";
-    `P "The full description can be obtained by doing $(b,opam show <package>). \
-        You can search through the package descriptions using the $(b,opam search) \
-        command."
+    `P "List selections of opam packages.";
+    `P "Without argument, the command displays the list of currently installed \
+        packages. With pattern arguments, lists all available packages \
+        matching one of the patterns.";
+    `P ("See section $(b,"^selection_docs^") for all the ways to select the \
+         packages to be displayed, and section $(b,"^display_docs^") to \
+         customise the output format.");
+    `P "For a more detailed description of packages, see $(b,opam show). For \
+        extended search capabilities within the packages' metadata, see \
+        $(b,opam search)."
   ] in
   let state_selector =
+    let docs = selection_docs in
     Arg.(value & vflag_all [] [
-        OpamListCommand.Any, info ["A";"all"]
+        OpamListCommand.Any, info ~docs ["A";"all"]
           ~doc:"Include all, even uninstalled or unavailable packages";
-        OpamListCommand.Installed, info ["i";"installed"]
+        OpamListCommand.Installed, info ~docs ["i";"installed"]
           ~doc:"List installed packages only. This is the default when no \
                 further arguments are supplied";
-        OpamListCommand.Root, info ["roots";"installed-roots"]
+        OpamListCommand.Root, info ~docs ["roots";"installed-roots"]
           ~doc:"List only packages that were explicitely installed, excluding \
                 the ones installed as dependencies";
-        OpamListCommand.Available, info ["a";"available"]
-          ~doc:"List only packages that are available on the current system.";
-        OpamListCommand.Installable, info ["installable"]
+        OpamListCommand.Available, info ~docs ["a";"available"]
+          ~doc:"List only packages that are available on the current system";
+        OpamListCommand.Installable, info ~docs ["installable"]
           ~doc:"List only packages that can be installed on the current switch \
                 (this calls the solver and may be more costly)";
-        OpamListCommand.Compiler, info ["compiler"]
+        OpamListCommand.Compiler, info ~docs ["base"]
           ~doc:"List only the immutable base of the current switch (i.e. \
                 compiler packages)";
-        OpamListCommand.Pinned, info ["pinned"]
+        OpamListCommand.Pinned, info ~docs ["pinned"]
           ~doc:"List only the pinned packages";
       ])
   in
   let depends_on =
-    let doc = "List only packages that depend on one of (comma-separated) $(docv)." in
-    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["depends-on"])
+    let doc =
+      "List only packages that depend on one of (comma-separated) $(docv)."
+    in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["depends-on"])
   in
   let required_by =
     let doc = "List only the dependencies of (comma-separated) $(docv)." in
-    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["required-by"])
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["required-by"])
   in
   let resolve =
     let doc =
@@ -310,44 +318,68 @@ let list =
        Without `--installed`, the answer is self-contained and independent of \
        the current installation. With `--installed', it's computed from the \
        set of currently installed packages. \
-       `--unavailable` further makes the solution independent from the \
+       `--no-switch` further makes the solution independent from the \
        currently pinned packages, architecture, and compiler version. \
        The combination with `--depopts' is not supported."
     in
-    Arg.(value & opt (list atom) [] & info ~doc ~docv:"PACKAGES" ["resolve"])
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["resolve"])
   in
   let recursive =
-    mk_flag ["recursive"]
+    mk_flag ["recursive"] ~section:selection_docs
       "With `--depends-on' and `--required-by', display all transitive \
        dependencies rather than just direct dependencies." in
   let depopts =
-    mk_flag ["depopts"] "Include optional dependencies in dependency requests."
+    mk_flag ["depopts"]  ~section:selection_docs
+      "Include optional dependencies in dependency requests."
   in
   let dev =
-    mk_flag ["dev"] "Include development packages in dependencies."
+    mk_flag ["dev"]  ~section:selection_docs
+      "Include development packages in dependencies."
   in
   let repos =
-    mk_opt ["repos"] "REPOS"
+    mk_opt ["repos"] "REPOS" ~section:selection_docs
       "Include only packages that took their origin from one of the given \
        repositories (unless $(i,no-switch) is also specified, this excludes \
        pinned packages)."
       Arg.(some & list & repository_name) None
   in
   let field_match =
-    mk_opt ["field-match"] "FIELD:PATTERN"
-      "Filter packages with a match for $(b,PATTERN) on the given $(b,FIELD)"
-      Arg.(some & pair ~sep:':' string string) None
+    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section:selection_docs
+      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
+      Arg.(pair ~sep:':' string string)
+  in
+  let has_flag =
+    mk_opt_all ["has-flag"] "FLAG" ~section:selection_docs
+      ("Only include packages which have the given flag set. Package flags are \
+        one of: "^
+       (OpamStd.List.concat_map " "
+          (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
+          all_package_flags))
+      ((fun s -> match pkg_flag_of_string s with
+          | Pkgflag_Unknown s ->
+            `Error ("Invalid package flag "^s^", must be one of "^
+                    OpamStd.List.concat_map " " string_of_pkg_flag
+                      all_package_flags)
+          | f -> `Ok f),
+       fun fmt flag ->
+         Format.pp_print_string fmt (string_of_pkg_flag flag))
+  in
+  let has_tag =
+    mk_opt_all ["has-tag"] "TAG" ~section:selection_docs
+      "Only includes packages which have the given tag set"
+      Arg.string
   in
   let no_switch =
-    mk_flag ["no-switch"]
+    mk_flag ["no-switch"] ~section:selection_docs
       "List what is available from the repositories, without consideration for \
        the current (or any other) switch (installed or pinned packages, etc.)"
   in
   let depexts =
-    mk_opt ["e";"external"] "TAGS"
+    mk_opt ["e";"external"] "TAGS" ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
        that are associated with any subset of the given $(i,TAGS) (OS, \
-       distribution, etc.). \
+       distribution, etc.). This excludes other display options. \
        Common tags include `debian', `x86', `osx', `homebrew', `source'... \
        Without $(i,TAGS), display the tags and all associated external \
        dependencies. \
@@ -356,16 +388,18 @@ let list =
        the system installations. Run `opam depext'."
       Arg.(some & list string) None in
   let print_short =
-    mk_flag ["short";"s"]
-      "Don't print a header, and sets the default columns to $(b,name) only."
+    mk_flag ["short";"s"] ~section:display_docs
+      "Don't print a header, and sets the default columns to $(b,name) only. \
+       If you need package versions included, use $(b,--columns=package) \
+       instead"
   in
   let sort =
-    mk_flag ["sort";"S"]
+    mk_flag ["sort";"S"] ~section:display_docs
       "Sort the packages in dependency order (i.e. an order in which they \
        could be individually installed.)"
   in
   let columns =
-    mk_opt ["columns"] "COLUMNS"
+    mk_opt ["columns"] "COLUMNS" ~section:display_docs
       (Printf.sprintf "Select the columns to display among: %s.\n\
                        The default is $(b,name) when $(i,--short) is present \
                        and %s otherwise."
@@ -376,19 +410,25 @@ let list =
             OpamListCommand.default_list_format))
       Arg.(some & list opamlist_column) None
   in
-  let all_versions = mk_flag ["all-versions"]
-      "Print all matching versions, instead of a single version per package"
+  let all_versions = mk_flag ["all-versions"] ~section:selection_docs
+      "Normally, when multiple versions of a package match, only one is shown \
+       in the output (the installed one, the pinned-to one, or, failing that, \
+       the highest one available or the highest one). This flag disables this \
+       behaviour and shows all matching versions. This also changes the \
+       default display format to include package versions instead of just \
+       package names (including when --short is set)."
   in
-  let normalise = mk_flag ["normalise"]
+  let normalise = mk_flag ["normalise"] ~section:display_docs
       "Print the values of opam fields normalised"
   in
   let separator =
-    Arg.(value & opt string " " & info ["separator"] ~docv:"STRING"
-           ~doc:"Set the column-separator string (the default is a space)")
+    Arg.(value & opt string " " & info ["separator"]
+           ~docv:"STRING" ~docs:display_docs
+           ~doc:"Set the column-separator string")
   in
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
-      depexts dev repos
+      depexts dev repos has_flag has_tag
       print_short sort columns all_versions normalise separator
       packages =
     apply_global_options global_options;
@@ -400,7 +440,7 @@ let list =
         if no_switch then Empty
         else if
           depends_on = [] && required_by = [] && resolve = [] &&
-          packages = [] && field_match = None
+          packages = [] && field_match = [] && has_flag = [] && has_tag = []
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
@@ -431,12 +471,15 @@ let list =
             (if no_switch then [] else
              match repos with None -> [] | Some repos ->
                [OpamListCommand.From_repository repos]) @
-            (match field_match with None -> [] | Some (field,patt) ->
-                [OpamListCommand.Pattern
+            (List.map (fun (field,patt) ->
+                 OpamListCommand.Pattern
                    ({pattern_toggles with OpamListCommand.
                                        exact = false;
                                        fields = [field]},
-                    patt)])) @
+                    patt))
+                field_match) @
+            (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
+            (List.map (fun tag -> OpamListCommand.Tag tag) has_tag)) @
          [OpamFormula.ors
             (List.map (fun patt ->
                  Atom (OpamListCommand.Pattern (pattern_toggles, patt)))
@@ -446,8 +489,16 @@ let list =
       match columns with
       | Some c -> c
       | None ->
-        if print_short then [OpamListCommand.Name]
-        else OpamListCommand.default_list_format
+        let cols =
+          if print_short then [OpamListCommand.Name]
+          else OpamListCommand.default_list_format
+        in
+        if all_versions then
+          List.map (function
+              | OpamListCommand.Name -> OpamListCommand.Package
+              | c -> c)
+            cols
+        else cols
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let st =
@@ -478,7 +529,7 @@ let list =
   in
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
-        $no_switch $depexts $dev $repos
+        $no_switch $depexts $dev $repos $has_flag $has_tag
         $print_short $sort $columns $all_versions $normalise $separator
         $pattern_list),
   term_info "list" ~doc ~man
@@ -586,17 +637,32 @@ let show =
     let doc =
       Arg.info
         ~docv:"FIELDS"
-        ~doc:"Only display these fields. You can specify multiple fields by \
-              separating them with commas. In addition, fields from the raw \
-              package definition can be printed by suffixing their names with \
-              ':' character."
+        ~doc:("Only display the values of these fields. Fields can be selected \
+               among "^
+              OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
+                OpamListCommand.field_names
+              ^". Multiple fields can be separated with commas, in which case \
+                field titles will be printed; the raw value of any opam-file \
+                field can be queried by suffixing a colon character (:), e.g. \
+                $(b,--field=depopts:).")
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
+  let show_empty =
+    mk_flag ["empty-fields"]
+      "Show fields that are empty. This is implied when $(b,--field) is \
+       given."
+  in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
   let where =
     mk_flag ["where"]
       "Print the location of the opam file used for this package" in
+  let list_files =
+    mk_flag ["list-files"]
+      "List the files installed by the package. Equivalent to \
+       $(b,--field=installed-files), and only available for installed \
+       packages"
+  in
   let file =
     let doc =
       Arg.info
@@ -610,7 +676,8 @@ let show =
       "Print the values of opam fields normalised (no newlines, no implicit \
        brackets)"
   in
-  let pkg_info global_options fields raw where normalise file packages =
+  let pkg_info global_options fields show_empty raw where
+      list_files file normalise packages =
     apply_global_options global_options;
     match file, packages with
     | None, [] ->
@@ -619,8 +686,15 @@ let show =
       `Error (true,
               "arguments PACKAGES and `--files' can't be specified together")
     | None, pkgs ->
+      let fields, show_empty =
+        if list_files then
+          fields @ [OpamListCommand.(string_of_field Installed_files)],
+          show_empty
+        else fields, show_empty || fields <> []
+      in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.info gt ~fields ~raw_opam:raw ~where ~normalise pkgs;
+      OpamListCommand.info gt
+        ~fields ~raw_opam:raw ~where ~normalise ~show_empty pkgs;
       `Ok ()
     | Some f, [] ->
       let opam = match f with
@@ -658,8 +732,8 @@ let show =
         `Ok ()
   in
   Term.(ret
-          (pure pkg_info $global_options $fields $raw $where $normalise
-           $file $atom_list)),
+          (pure pkg_info $global_options $fields $show_empty $raw $where $list_files
+           $file $normalise $atom_list)),
   term_info "show" ~doc ~man
 
 

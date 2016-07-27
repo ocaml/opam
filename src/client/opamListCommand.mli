@@ -52,6 +52,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | Tag of string
   | From_repository of repository_name list
 
 (** Applies a formula of selectors to filter the package from a given switch
@@ -134,7 +135,8 @@ val list:
 (** Display a general summary of a collection of packages. *)
 val info:
   'a global_state ->
-  fields:string list -> raw_opam:bool -> where:bool -> ?normalise:bool ->
+  fields:string list -> raw_opam:bool -> where:bool ->
+  ?normalise:bool -> ?show_empty:bool ->
   atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the

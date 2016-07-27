@@ -65,6 +65,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | Tag of string
   | From_repository of repository_name list
 
 let string_of_selector =
@@ -73,7 +74,7 @@ let string_of_selector =
   | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
-  | Compiler -> "compiler" % `cyan
+  | Compiler -> "base" % `cyan
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Pinned -> "pinned" % `cyan
@@ -108,6 +109,8 @@ let string_of_selector =
   | Flag fl ->
     Printf.sprintf "%s(%s)" ("has-flag" % `green)
       (OpamTypesBase.string_of_pkg_flag fl % `bold)
+  | Tag t ->
+    Printf.sprintf "%s(%s)" ("has-tag" % `green) (t % `bold)
   | From_repository r ->
     Printf.sprintf "%s(%s)" ("from-repository" % `magenta)
       (OpamStd.List.concat_map " " OpamRepositoryName.to_string r % `bold)
@@ -243,6 +246,10 @@ let apply_selector ~base st = function
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         get_opam st nv |> OpamFile.OPAM.has_flag f)
+      base
+  | Tag t ->
+    OpamPackage.Set.filter (fun nv ->
+        get_opam st nv |> List.mem t @* OpamFile.OPAM.tags)
       base
   | From_repository repos ->
     let rt = st.switch_repos in
@@ -615,7 +622,7 @@ let list gt
   | Some tags_list ->
     print_depexts st packages tags_list
 
-let info gt ~fields ~raw_opam ~where ?normalise atoms =
+let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   let st = get_switch_state gt in
   let packages =
     OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
@@ -651,10 +658,13 @@ let info gt ~fields ~raw_opam ~where ?normalise atoms =
   ] in
   let output_table fields nv =
     let tbl =
-      List.map (fun item ->
-          [ OpamConsole.colorise `blue (string_of_field item);
-            detail_printer ?normalise st nv item ])
-        fields
+      List.fold_left (fun acc item ->
+          let contents = detail_printer ?normalise st nv item in
+          if show_empty || contents <> "" then
+            [ OpamConsole.colorise `blue (string_of_field item); contents ]
+            :: acc
+          else acc)
+        [] (List.rev fields)
     in
     OpamStd.Format.align_table tbl |>
     OpamStd.Format.print_table stdout ~sep:" ";
