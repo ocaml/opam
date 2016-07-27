@@ -586,17 +586,32 @@ let show =
     let doc =
       Arg.info
         ~docv:"FIELDS"
-        ~doc:"Only display these fields. You can specify multiple fields by \
-              separating them with commas. In addition, fields from the raw \
-              package definition can be printed by suffixing their names with \
-              ':' character."
+        ~doc:("Only display the values of these fields. Fields can be selected \
+               among "^
+              OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
+                OpamListCommand.field_names
+              ^". Multiple fields can be separated with commas, in which case \
+                field titles will be printed; the raw value of any opam-file \
+                field can be queried by suffixing a colon character (:), e.g. \
+                $(b,--field=depopts:).")
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
+  let show_empty =
+    mk_flag ["empty-fields"]
+      "Show fields that are empty. This is implied when $(b,--field) is \
+       given."
+  in
   let raw =
     mk_flag ["raw"] "Print the raw opam file for this package" in
   let where =
     mk_flag ["where"]
       "Print the location of the opam file used for this package" in
+  let list_files =
+    mk_flag ["list-files"]
+      "List the files installed by the package. Equivalent to \
+       $(b,--field=installed-files), and only available for installed \
+       packages"
+  in
   let file =
     let doc =
       Arg.info
@@ -610,7 +625,8 @@ let show =
       "Print the values of opam fields normalised (no newlines, no implicit \
        brackets)"
   in
-  let pkg_info global_options fields raw where normalise file packages =
+  let pkg_info global_options fields show_empty raw where
+      list_files file normalise packages =
     apply_global_options global_options;
     match file, packages with
     | None, [] ->
@@ -619,8 +635,15 @@ let show =
       `Error (true,
               "arguments PACKAGES and `--files' can't be specified together")
     | None, pkgs ->
+      let fields, show_empty =
+        if list_files then
+          fields @ [OpamListCommand.(string_of_field Installed_files)],
+          show_empty
+        else fields, show_empty || fields <> []
+      in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.info gt ~fields ~raw_opam:raw ~where ~normalise pkgs;
+      OpamListCommand.info gt
+        ~fields ~raw_opam:raw ~where ~normalise ~show_empty pkgs;
       `Ok ()
     | Some f, [] ->
       let opam = match f with
@@ -658,8 +681,8 @@ let show =
         `Ok ()
   in
   Term.(ret
-          (pure pkg_info $global_options $fields $raw $where $normalise
-           $file $atom_list)),
+          (pure pkg_info $global_options $fields $show_empty $raw $where $list_files
+           $file $normalise $atom_list)),
   term_info "show" ~doc ~man
 
 

@@ -615,7 +615,7 @@ let list gt
   | Some tags_list ->
     print_depexts st packages tags_list
 
-let info gt ~fields ~raw_opam ~where ?normalise atoms =
+let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   let st = get_switch_state gt in
   let packages =
     OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
@@ -651,10 +651,13 @@ let info gt ~fields ~raw_opam ~where ?normalise atoms =
   ] in
   let output_table fields nv =
     let tbl =
-      List.map (fun item ->
-          [ OpamConsole.colorise `blue (string_of_field item);
-            detail_printer ?normalise st nv item ])
-        fields
+      List.fold_left (fun acc item ->
+          let contents = detail_printer ?normalise st nv item in
+          if show_empty || contents <> "" then
+            [ OpamConsole.colorise `blue (string_of_field item); contents ]
+            :: acc
+          else acc)
+        [] (List.rev fields)
     in
     OpamStd.Format.align_table tbl |>
     OpamStd.Format.print_table stdout ~sep:" ";

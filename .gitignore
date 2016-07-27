@@ -3,6 +3,7 @@ bootstrap/
 tests/tmp/
 .*.swp
 src_ext/cudf/
+src_ext/cppo/
 src_ext/dose/
 src_ext/cmdliner/
 src_ext/extlib/

@@ -134,7 +134,8 @@ val list:
 (** Display a general summary of a collection of packages. *)
 val info:
   'a global_state ->
-  fields:string list -> raw_opam:bool -> where:bool -> ?normalise:bool ->
+  fields:string list -> raw_opam:bool -> where:bool ->
+  ?normalise:bool -> ?show_empty:bool ->
   atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the
