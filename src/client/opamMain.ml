@@ -289,7 +289,7 @@ let list =
         OpamListCommand.Installable, info ~docs ["installable"]
           ~doc:"List only packages that can be installed on the current switch \
                 (this calls the solver and may be more costly)";
-        OpamListCommand.Compiler, info ~docs ["compiler"]
+        OpamListCommand.Compiler, info ~docs ["base"]
           ~doc:"List only the immutable base of the current switch (i.e. \
                 compiler packages)";
         OpamListCommand.Pinned, info ~docs ["pinned"]

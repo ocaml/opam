@@ -74,7 +74,7 @@ let string_of_selector =
   | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
-  | Compiler -> "compiler" % `cyan
+  | Compiler -> "base" % `cyan
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Pinned -> "pinned" % `cyan
