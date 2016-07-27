@@ -345,9 +345,30 @@ let list =
       Arg.(some & list & repository_name) None
   in
   let field_match =
-    mk_opt ["field-match"] "FIELD:PATTERN" ~section:selection_docs
-      "Filter packages with a match for $(b,PATTERN) on the given $(b,FIELD)"
-      Arg.(some & pair ~sep:':' string string) None
+    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section:selection_docs
+      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
+      Arg.(pair ~sep:':' string string)
+  in
+  let has_flag =
+    mk_opt_all ["has-flag"] "FLAG" ~section:selection_docs
+      ("Only include packages which have the given flag set. Package flags are \
+        one of: "^
+       (OpamStd.List.concat_map " "
+          (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
+          all_package_flags))
+      ((fun s -> match pkg_flag_of_string s with
+          | Pkgflag_Unknown s ->
+            `Error ("Invalid package flag "^s^", must be one of "^
+                    OpamStd.List.concat_map " " string_of_pkg_flag
+                      all_package_flags)
+          | f -> `Ok f),
+       fun fmt flag ->
+         Format.pp_print_string fmt (string_of_pkg_flag flag))
+  in
+  let has_tag =
+    mk_opt_all ["has-tag"] "TAG" ~section:selection_docs
+      "Only includes packages which have the given tag set"
+      Arg.string
   in
   let no_switch =
     mk_flag ["no-switch"] ~section:selection_docs
@@ -393,7 +414,9 @@ let list =
       "Normally, when multiple versions of a package match, only one is shown \
        in the output (the installed one, the pinned-to one, or, failing that, \
        the highest one available or the highest one). This flag disables this \
-       behaviour and shows all matching versions."
+       behaviour and shows all matching versions. This also changes the \
+       default display format to include package versions instead of just \
+       package names (including when --short is set)."
   in
   let normalise = mk_flag ["normalise"] ~section:display_docs
       "Print the values of opam fields normalised"
@@ -405,7 +428,7 @@ let list =
   in
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
-      depexts dev repos
+      depexts dev repos has_flag has_tag
       print_short sort columns all_versions normalise separator
       packages =
     apply_global_options global_options;
@@ -417,7 +440,7 @@ let list =
         if no_switch then Empty
         else if
           depends_on = [] && required_by = [] && resolve = [] &&
-          packages = [] && field_match = None
+          packages = [] && field_match = [] && has_flag = [] && has_tag = []
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
@@ -448,12 +471,15 @@ let list =
             (if no_switch then [] else
              match repos with None -> [] | Some repos ->
                [OpamListCommand.From_repository repos]) @
-            (match field_match with None -> [] | Some (field,patt) ->
-                [OpamListCommand.Pattern
+            (List.map (fun (field,patt) ->
+                 OpamListCommand.Pattern
                    ({pattern_toggles with OpamListCommand.
                                        exact = false;
                                        fields = [field]},
-                    patt)])) @
+                    patt))
+                field_match) @
+            (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
+            (List.map (fun tag -> OpamListCommand.Tag tag) has_tag)) @
          [OpamFormula.ors
             (List.map (fun patt ->
                  Atom (OpamListCommand.Pattern (pattern_toggles, patt)))
@@ -463,8 +489,16 @@ let list =
       match columns with
       | Some c -> c
       | None ->
-        if print_short then [OpamListCommand.Name]
-        else OpamListCommand.default_list_format
+        let cols =
+          if print_short then [OpamListCommand.Name]
+          else OpamListCommand.default_list_format
+        in
+        if all_versions then
+          List.map (function
+              | OpamListCommand.Name -> OpamListCommand.Package
+              | c -> c)
+            cols
+        else cols
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let st =
@@ -495,7 +529,7 @@ let list =
   in
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
-        $no_switch $depexts $dev $repos
+        $no_switch $depexts $dev $repos $has_flag $has_tag
         $print_short $sort $columns $all_versions $normalise $separator
         $pattern_list),
   term_info "list" ~doc ~man

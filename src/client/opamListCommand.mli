@@ -52,6 +52,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | Tag of string
   | From_repository of repository_name list
 
 (** Applies a formula of selectors to filter the package from a given switch

@@ -92,5 +92,7 @@ val pkg_flag_of_string: string -> package_flag
 
 val string_of_pkg_flag: package_flag -> string
 
+val all_package_flags: package_flag list
+
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result

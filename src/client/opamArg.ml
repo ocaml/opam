@@ -469,6 +469,10 @@ let mk_opt ?section ?vopt flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt ?vopt conv default & doc)
 
+let mk_opt_all ?section ?vopt ?(default=[]) flags value doc conv =
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  Arg.(value & opt_all ?vopt conv default & doc)
+
 let mk_tristate_opt ?section flags value doc =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt (some (enum when_enum)) None & doc)

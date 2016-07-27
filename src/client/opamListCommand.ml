@@ -65,6 +65,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | Tag of string
   | From_repository of repository_name list
 
 let string_of_selector =
@@ -108,6 +109,8 @@ let string_of_selector =
   | Flag fl ->
     Printf.sprintf "%s(%s)" ("has-flag" % `green)
       (OpamTypesBase.string_of_pkg_flag fl % `bold)
+  | Tag t ->
+    Printf.sprintf "%s(%s)" ("has-tag" % `green) (t % `bold)
   | From_repository r ->
     Printf.sprintf "%s(%s)" ("from-repository" % `magenta)
       (OpamStd.List.concat_map " " OpamRepositoryName.to_string r % `bold)
@@ -243,6 +246,10 @@ let apply_selector ~base st = function
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         get_opam st nv |> OpamFile.OPAM.has_flag f)
+      base
+  | Tag t ->
+    OpamPackage.Set.filter (fun nv ->
+        get_opam st nv |> List.mem t @* OpamFile.OPAM.tags)
       base
   | From_repository repos ->
     let rt = st.switch_repos in
