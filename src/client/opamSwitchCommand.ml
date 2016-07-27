@@ -135,17 +135,12 @@ let list gt ~print_short ~installed ~all =
          (OpamStd.Option.to_string ~none:"unset"
             (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
   | Some switch, `Default ->
-    let up_to_date =
-      match OpamStd.Env.getopt "PATH" with
-      | None -> false
-      | Some path -> path = OpamEnv.path ~force_path:false gt.root switch
-    in
-     if not up_to_date then
-       (OpamConsole.msg "\n";
-        OpamConsole.warning
-          "The environment is not in sync with the current switch.\n\
-           You should run: %s"
-          (OpamEnv.eval_string gt (Some switch)))
+    if not (OpamEnv.is_up_to_date_switch gt.root switch) then
+      (OpamConsole.msg "\n";
+       OpamConsole.warning
+         "The environment is not in sync with the current switch.\n\
+          You should run: %s"
+         (OpamEnv.eval_string gt (Some switch)))
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) gt switch =

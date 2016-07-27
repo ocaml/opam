@@ -12,129 +12,142 @@
 open OpamTypes
 open OpamStateTypes
 open OpamTypesBase
+open OpamStd.Op
 open OpamFilename.Op
 
 let log fmt = OpamConsole.log "ENV" fmt
+let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 
-let apply_env_update_op ?(inplace_match = fun _ -> false) op arg prev_value =
+let split_var v =
   let sep = OpamStd.Sys.path_sep () in
-  let split_value () = OpamStd.String.split_delim prev_value sep in
-  let join_value = String.concat (String.make 1 sep) in
+  OpamStd.String.split_delim v sep
+
+let join_var l =
+  String.concat (String.make 1 (OpamStd.Sys.path_sep ())) l
+
+(* To allow in-place updates, we store intermediate values of path-like as a
+   pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
+   the place where the new value should be inserted is in front of [l2] *)
+let unzip_to elt =
+  let rec aux acc = function
+    | [] -> None
+    | x::r ->
+      if x = elt then Some (acc, r)
+      else aux (x::acc) r
+  in
+  aux []
+
+let rezip ?insert (l1, l2) =
+  List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
+
+let rezip_to_string ?insert z =
+  join_var (rezip ?insert z)
+
+let apply_op_zip op arg (rl1,l2 as zip) =
   let colon_eq = function (* prepend a, but keep ":"s *)
-    | [] -> [arg; ""]
-    | "" :: l -> "" :: arg :: l (* keep leading colon *)
-    | l -> arg :: l
+    | [] | [""] -> [], [arg; ""]
+    | "" :: l -> l, [""; arg] (* keep leading colon *)
+    | l -> l, [arg]
   in
   match op with
-  | Eq -> arg
-  | PlusEq -> join_value (arg :: split_value ())
-  | EqPlus -> join_value (split_value () @ [arg])
-  | EqPlusEq ->
-    let l = split_value () in
-    let rec update acc = function
-      | [] -> arg :: l (* prepend by default *)
-      | x::r ->
-        if inplace_match x then List.rev_append acc (arg::r)
-        else update (x::acc) r
-    in
-    join_value (update [] l)
-  | ColonEq -> join_value (colon_eq (split_value ()))
-  | EqColon -> join_value (List.rev (colon_eq (List.rev (split_value ()))))
+  | Eq -> [],[arg]
+  | PlusEq -> [], arg :: rezip zip
+  | EqPlus -> List.rev_append l2 rl1, [arg]
+  | EqPlusEq -> rl1, arg::l2
+  | ColonEq ->
+    let l, add = colon_eq (rezip zip) in [], add @ l
+  | EqColon ->
+    let l, add = colon_eq (List.rev_append l2 rl1) in
+    l, List.rev add
 
 (** Undoes previous updates done by opam, useful for not duplicating already
     done updates; this is obviously not perfect, as all operators are not
     reversible.
 
-    Arguments starting with OPAMROOT are treated as corresponding, to allow
-    reverting updates with different paths (e.g. PATH updated for different
-    switches.
+    [cur_value] is provided as a list split at path_sep.
 
-    None is returned if the variable should be unset (or has a previously
-    unknown value anyway); not correspondig reverts are ignored. If [=+=] is
-    used and a matching value is found, it is replaced by [inplace_holder], or
-    removed if unset. *)
-let reverse_env_update ?inplace_holder op arg cur_value =
-  let matches_arg =
-    let root = OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir) in
-    if OpamStd.String.starts_with ~prefix:root arg then
-      OpamStd.String.starts_with ~prefix:root
-    else
-    fun s -> s = arg
-  in
-  let sep = OpamStd.Sys.path_sep () in
-  let str_sep = String.make 1 sep in
-  let rec rem_first_instance ?(f=fun x -> x) acc = function
-    | [] -> None
-    | x::r ->
-      if matches_arg x then Some (List.rev_append acc (f r))
-      else rem_first_instance (x::acc) r
-  in
-  let split () = OpamStd.String.split_delim cur_value sep in
+    None is returned if the revert doesn't match. Otherwise, a zip (pair of lists
+    [(preceding_elements_reverted, following_elements)]) is returned, to keep the
+    position of the matching element and allow [=+=] to be applied later. A pair
+    or empty lists is returned if the variable should be unset or has an unknown
+    previous value. *)
+let reverse_env_update op arg cur_value =
   match op with
-  | Eq -> if arg = cur_value then None else Some (cur_value)
-  | PlusEq ->
-    (match rem_first_instance [] (split ()) with
-     | Some [] -> None
-     | Some sl -> Some (String.concat str_sep sl)
-     | None -> Some cur_value)
+  | Eq ->
+    if arg = join_var cur_value
+    then Some ([],[]) else None
+  | PlusEq | EqPlusEq -> unzip_to arg cur_value
   | EqPlus ->
-    (match rem_first_instance [] (List.rev (split ())) with
-     | Some [] -> None
-     | Some sl -> Some (String.concat str_sep (List.rev sl))
-     | None -> Some cur_value)
-  | EqPlusEq ->
-    let f r = match inplace_holder with None -> r | Some p -> p::r in
-    (match rem_first_instance ~f [] (split ()) with
-     | Some [] -> None
-     | Some sl -> Some (String.concat str_sep sl)
-     | None -> Some cur_value)
+    (match unzip_to arg (List.rev cur_value) with
+     | None -> None
+     | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))
   | ColonEq ->
-    (match rem_first_instance [] (split ()) with
-     | Some ([] | [""]) -> None
-     | Some sl -> Some (String.concat str_sep sl)
-     | None -> Some cur_value)
+    (match unzip_to arg cur_value with
+     | Some ([], [""]) -> Some ([], [])
+     | r -> r)
   | EqColon ->
-    (match rem_first_instance [] (List.rev (split ())) with
-     | Some ([] | [""]) -> None
-     | Some sl -> Some (String.concat str_sep (List.rev sl))
-     | None -> Some cur_value)
+    (match unzip_to arg (List.rev cur_value) with
+     | Some ([], [""]) -> Some ([], [])
+     | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
+     | None -> None)
 
-let expand_update ?inplace_match (ident, op, string, comment) value =
-  ident,
-  apply_env_update_op ?inplace_match op string value,
-  comment
+let updates_from_previous_instance = lazy (
+  match OpamStd.Env.getopt "OPAM_SWITCH_PREFIX" with
+  | None -> None
+  | Some pfx ->
+    let env_file =
+      OpamPath.Switch.env_relative_to_prefix (OpamFilename.Dir.of_string pfx)
+    in
+    try OpamFile.Environment.read_opt env_file
+    with e -> OpamStd.Exn.fatal e; None
+)
 
 let expand (updates: env_update list) : env =
-  let inplace_holder =
-    Printf.sprintf "placeholder_%Ld" (Random.int64 Int64.max_int)
+  (* Reverse all previous updates, in reverse order, on current environment *)
+  let reverts =
+    match Lazy.force updates_from_previous_instance with
+    | None -> []
+    | Some updates ->
+      List.fold_right (fun (var, op, arg, _) defs0 ->
+          let v_opt, defs = OpamStd.List.pick_assoc var defs0 in
+          let v =
+            OpamStd.Option.Op.((v_opt >>| rezip >>+ fun () ->
+                                OpamStd.Env.getopt var >>| split_var) +! [])
+          in
+          match reverse_env_update op arg v with
+          | Some v -> (var, v)::defs
+          | None -> defs0)
+        updates []
   in
-  (* Reverse all updates, in reverse order, on current environment *)
-  let defs =
-    List.fold_right (fun (var, op, arg, _) defs ->
-        let v_opt, defs = OpamStd.List.pick_assoc var defs in
-        let v =
-          OpamStd.Option.Op.((v_opt >>+ fun () -> OpamStd.Env.getopt var) +! "")
-        in
-        match reverse_env_update ~inplace_holder op arg v with
-        | Some v -> (var, v)::defs
-        | None -> defs)
-      updates []
+  (* And apply the new ones *)
+  let rec apply_updates reverts acc = function
+    | (var, op, arg, doc) :: updates ->
+      let zip, reverts =
+        match OpamStd.List.find_opt (fun (v, _, _) -> v = var) acc with
+        | Some (_, z, _doc) -> z, reverts
+        | None ->
+          match OpamStd.List.pick_assoc var reverts with
+          | Some z, reverts -> z, reverts
+          | None, _ ->
+            match OpamStd.Env.getopt var with
+            | Some s -> ([], split_var s), reverts
+            | None -> ([], []), reverts
+      in
+      apply_updates
+        reverts
+        ((var, apply_op_zip op arg zip, doc) :: acc)
+        updates
+    | [] ->
+      List.rev @@
+      List.rev_append
+        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string z, doc) acc) @@
+      List.rev_map (fun (var, z) ->
+          var, rezip_to_string z, Some "Reverting previous opam update")
+        reverts
   in
-  (* And re-apply them *)
-  let env =
-    List.fold_left (fun env ((var, _, _, _) as upd) ->
-        let v =
-          try List.find (fun (v, _, _) -> v = var) env |> fun (_, v, _) -> v
-          with Not_found ->
-          try List.assoc var defs
-          with Not_found -> ""
-        in
-        expand_update ~inplace_match:(fun s -> s = inplace_holder) upd v :: env)
-      [] updates
-  in
-  List.rev env
+  apply_updates reverts [] updates
 
 let add (env: env) (updates: env_update list) =
   let env =
@@ -143,7 +156,7 @@ let add (env: env) (updates: env_update list) =
   in
   env @ expand updates
 
-let compute_updates st =
+let compute_updates ?(force_path=false) st =
   (* Todo: put these back into their packages !
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -157,6 +170,15 @@ let compute_updates st =
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
+  in
+  let bindir =
+    OpamPath.Switch.bin st.switch_global.root st.switch st.switch_config
+  in
+  let path =
+    "PATH",
+    (if force_path then PlusEq else EqPlusEq),
+    OpamFilename.Dir.to_string bindir,
+    Some ("Binary dir for opam switch "^OpamSwitch.to_string st.switch)
   in
   let man_path =
     let open OpamStd.Sys in
@@ -196,25 +218,18 @@ let compute_updates st =
     let current_string = OpamFilename.Dir.to_string current in
     let env = OpamStd.Env.getopt "OPAMROOT" in
     if current <> default || (env <> None && env <> Some current_string)
-    then [ "OPAMROOT", Eq, current_string, None ]
+    then [ "OPAMROOT", Eq, current_string, Some "Opam root in use" ]
     else []
   in
-  man_path @ root @ switch_pfx :: pkg_env
+  path :: man_path @ root @ switch_pfx :: pkg_env
 
-let updates ~opamswitch ?(force_path=false) st =
-  let root = st.switch_global.root in
-  let update = compute_updates st in
-  let add_to_path = OpamPath.Switch.bin root st.switch st.switch_config in
-  let new_path =
-    "PATH",
-    (if force_path then PlusEq else EqPlusEq),
-    OpamFilename.Dir.to_string add_to_path,
-    Some "Current opam switch binary dir" in
+let updates ~opamswitch ?force_path st =
+  let update = compute_updates ?force_path st in
   let switch =
     if opamswitch then
       [ "OPAMSWITCH", Eq, OpamSwitch.to_string st.switch, None ]
     else [] in
-  new_path :: switch @ update
+  switch @ update
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
@@ -226,10 +241,6 @@ let updates ~opamswitch ?(force_path=false) st =
    we really want to get the environment for this switch. *)
 let get_opam ~force_path st =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
-  (* todo: [updates] reverts the current env. It may be more clever, when
-     switch_from is [`Command_line], to get the previous switch from OPAMSWITCH
-     or the default, load the corresponding env file, and revert that instead,
-     before applying the new updates *)
   add [] (updates ~opamswitch ~force_path st)
 
 let get_full ?(opamswitch=true) ~force_path st =
@@ -237,42 +248,53 @@ let get_full ?(opamswitch=true) ~force_path st =
   (* todo: see above *)
   add env0 (updates ~opamswitch ~force_path st)
 
-let path ~force_path root switch =
+let is_up_to_date_raw updates =
+  let not_utd =
+    List.filter (fun (var, op, arg, _doc) ->
+        match OpamStd.Env.getopt var with
+        | None -> true
+        | Some v -> reverse_env_update op arg (split_var v) = None)
+      updates
+  in
+  let r = not_utd = [] in
+  if not r then
+    log "Not up-to-date env variables: [%a]"
+      (slog @@ String.concat " " @* List.map (fun (v, _, _, _) -> v)) not_utd;
+  r
+
+let is_up_to_date_switch root switch =
+  let env_file = OpamPath.Switch.environment root switch in
+  try
+    match OpamFile.Environment.read_opt env_file with
+    | Some upd -> is_up_to_date_raw upd
+    | None -> true
+  with e -> OpamStd.Exn.fatal e; true
+
+let switch_path_update ~force_path root switch =
   let bindir =
     OpamPath.Switch.bin root switch
       (OpamFile.Dot_config.safe_read
          (OpamPath.Switch.global_config root switch))
   in
-  let _, path, _ =
-    let prefix = OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir) in
-    expand_update
-      ~inplace_match:(OpamStd.String.starts_with ~prefix)
-      ("PATH",
-       (if force_path then PlusEq else EqPlusEq),
-       OpamFilename.Dir.to_string bindir,
-       Some "Current opam switch binary dir")
-      (OpamStd.Option.default "" (OpamStd.Env.getopt "PATH"))
-  in
-  path
+  [
+    "PATH",
+    (if force_path then PlusEq else EqPlusEq),
+    OpamFilename.Dir.to_string bindir,
+    Some "Current opam switch binary dir"
+  ]
+
+let path ~force_path root switch =
+  let env = expand (switch_path_update ~force_path root switch) in
+  let (_, path_value, _) = List.find (fun (v, _, _) -> v = "PATH") env in
+  path_value
 
 let full_with_path ~force_path root switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env0 [
-    "PATH",
-    (if force_path then PlusEq else EqPlusEq),
-    path ~force_path root switch,
-    None
-  ]
+  add env0 (switch_path_update ~force_path root switch)
 
 let is_up_to_date st =
-  let changes =
-    List.filter
-      (fun (s, v, _) -> Some v <>
-                        try Some (OpamStd.Env.get s) with Not_found -> None)
-      (get_opam ~force_path:false st) in
-  log "Not up-to-date env variables: [%s]"
-    (String.concat " " (List.map (fun (v, _, _) -> v) changes));
-  changes = []
+  let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
+  is_up_to_date_raw (updates ~opamswitch ~force_path:false st)
 
 let eval_string gt switch =
   let root =

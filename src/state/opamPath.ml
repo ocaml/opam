@@ -64,7 +64,9 @@ module Switch = struct
 
   (** Internal files and dirs with static location *)
 
-  let meta t a = root t a / ".opam-switch"
+  let meta_dirname = ".opam-switch"
+
+  let meta t a = root t a / meta_dirname
 
   let lock t a = meta t a // "lock"
 
@@ -107,7 +109,11 @@ module Switch = struct
 
   let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
 
-  let environment t a = meta t a /- "environment"
+  let env_filename = "environment"
+
+  let environment t a = meta t a /- env_filename
+
+  let env_relative_to_prefix pfx = pfx / meta_dirname /- env_filename
 
   let installed_opams t a = meta t a / "packages"
 
