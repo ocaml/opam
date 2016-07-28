@@ -496,7 +496,7 @@ module Pinned_legacy = struct
 end
 
 
-(** Cached environment updates (<switch>/environment) *)
+(** Cached environment updates (<switch>/.opam-switch/environment) *)
 
 module Environment = LineFile(struct
 
@@ -507,12 +507,14 @@ module Environment = LineFile(struct
     let empty = []
 
     let pp =
-      Pp.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
-      Pp.identity ^+
-      Pp.of_pair "env_update_op"
-        (env_update_op_of_string, string_of_env_update_op) ^+
-      Pp.identity ^+
-      Pp.opt Pp.singleton
+      (Pp.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
+       Pp.identity ^+
+       Pp.of_pair "env_update_op"
+         (env_update_op_of_string, string_of_env_update_op) ^+
+       Pp.identity ^+
+       Pp.opt Pp.singleton)
+      -| Pp.pp (fun ~pos:_ -> List.rev) List.rev
+
 
     let pp =
        pp -|
