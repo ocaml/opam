@@ -22,6 +22,10 @@ val env:
   'a switch_state -> csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool ->
   unit
 
+(** Like [env] but allows to specify the precise env to print rather than
+    compute it from a switch state *)
+val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
+
 (** Display the content of all available variables; global summary if the list
     is empty, package name "-" is understood as global configuration *)
 val list:

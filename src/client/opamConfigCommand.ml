@@ -155,9 +155,7 @@ let print_fish_env env =
         OpamConsole.msg "set -gx %s %S;\n" k v
     ) env
 
-let env st ~csh ~sexp ~fish ~inplace_path =
-  log "config-env";
-  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
+let print_eval_env ~csh ~sexp ~fish env =
   if sexp then
     print_sexp_env env
   else if csh then
@@ -166,6 +164,11 @@ let env st ~csh ~sexp ~fish ~inplace_path =
     print_fish_env env
   else
     print_env env
+
+let env st ~csh ~sexp ~fish ~inplace_path =
+  log "config-env";
+  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
+  print_eval_env ~csh ~sexp ~fish env
 
 let subst gt fs =
   log "config-substitute";
