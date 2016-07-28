@@ -125,14 +125,16 @@ let print_env env =
          ':' is not supported by fish, just ignore comments there. *)
       if OpamConsole.verbose () then
         OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
-      OpamConsole.msg "%s=%S; export %s;\n" k v k;
+      OpamConsole.msg "%s='%s'; export %s;\n"
+        k (OpamStd.Env.escape_single_quotes v) k;
   ) env
 
 let print_csh_env env =
   List.iter (fun (k,v,comment) ->
       if OpamConsole.verbose () then
         OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
-      OpamConsole.msg "setenv %s %S;\n" k v;
+      OpamConsole.msg "setenv %s '%s';\n"
+        k (OpamStd.Env.escape_single_quotes v);
   ) env
 
 let print_sexp_env env =
@@ -150,14 +152,17 @@ let print_fish_env env =
          * and that the directory names are written in full. See the opamState.ml for details *)
         let v = OpamStd.String.split_delim v ':' in
         OpamConsole.msg "set -gx %s %s;\n" k
-          (OpamStd.List.concat_map " " (Printf.sprintf "%S") v)
+          (OpamStd.List.concat_map " "
+             (fun v ->
+               Printf.sprintf "'%s'"
+                 (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
+             v)
       | _ ->
-        OpamConsole.msg "set -gx %s %S;\n" k v
+        OpamConsole.msg "set -gx %s '%s';\n"
+          k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v)
     ) env
 
-let env st ~csh ~sexp ~fish ~inplace_path =
-  log "config-env";
-  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
+let print_eval_env ~csh ~sexp ~fish env =
   if sexp then
     print_sexp_env env
   else if csh then
@@ -166,6 +171,11 @@ let env st ~csh ~sexp ~fish ~inplace_path =
     print_fish_env env
   else
     print_env env
+
+let env st ~csh ~sexp ~fish ~inplace_path =
+  log "config-env";
+  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
+  print_eval_env ~csh ~sexp ~fish env
 
 let subst gt fs =
   log "config-substitute";

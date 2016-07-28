@@ -47,29 +47,7 @@ let load lock_kind =
   in
   let eval_variables = OpamFile.Config.eval_variables config in
   let global_variables =
-    let env =
-      (* Remove opam environment settings from the env where eval_variables
-         commands are run, since those are switch specific; the switch or its
-         environment changes are not known at this point though, so approximate
-         by removing anything starting with the opamroot from any [*PATH]
-         variable *)
-      lazy (
-        let path_sep = OpamStd.Sys.path_sep () in
-        Array.map
-          (fun bnd ->
-             match OpamStd.String.cut_at bnd '=' with
-             | None -> bnd
-             | Some (var, value) ->
-               if OpamStd.String.ends_with ~suffix:"PATH" var then
-                 Printf.sprintf "%s=%s" var
-                   (String.concat (String.make 1 path_sep)
-                      (OpamStd.Env.reset_value
-                         ~prefix:(OpamFilename.Dir.to_string root)
-                         (OpamStd.Sys.path_sep ())
-                         value))
-               else bnd)
-          (Unix.environment ())
-      ) in
+    let env = lazy (OpamEnv.get_pure () |> OpamTypesBase.env_array) in
     List.fold_left (fun acc (v, cmd, doc) ->
         OpamVariable.Map.update v
           (fun previous_value ->

@@ -25,17 +25,23 @@ val get_full: ?opamswitch:bool -> force_path:bool -> 'a switch_state -> env
     to ensure opam dirs are leading. *)
 val get_opam: force_path:bool -> 'a switch_state -> env
 
-(** Update an environment. (Note: depends on the currently defined
-    [OpamStateConfig.(!r.root_dir)] to detect existing OPAM-added paths and
-    replace them when using the +=, =:, etc. update operators *)
+(** Returns the running environment, with any opam modifications cleaned out *)
+val get_pure: unit -> env
+
+(** Update an environment, including reverting opam changes that could have been
+    previously applied *)
 val add: env -> env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)
 val is_up_to_date: 'a switch_state -> bool
 
+(** Check if the shell environment is in sync with the given opam root and
+    switch *)
+val is_up_to_date_switch: dirname -> switch -> bool
+
 (** Returns the current environment updates to configure the current switch with
     its set of installed packages *)
-val compute_updates: 'a switch_state -> env_update list
+val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
 
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current environment (OPAMROOT, OPAMSWITCH variables) and shell (as

@@ -69,6 +69,10 @@ module Switch: sig
   (** The switch prefix: {i $opam/$switch} *)
   val root: t -> switch -> dirname
 
+  (** The name of the subdir of the switch prefix where opam data is stored
+      (".opam-switch") *)
+  val meta_dirname: string
+
   (** The subdirectory of the prefix where opam data lives:
       {i $opam/$switch/.opam-switch}*)
   val meta: t -> switch -> dirname
@@ -141,6 +145,9 @@ module Switch: sig
 
   (** Cached environment updates. *)
   val environment: t -> switch -> OpamFile.Environment.t OpamFile.t
+
+  (** Like [environment], but from the switch prefix dir *)
+  val env_relative_to_prefix: dirname -> OpamFile.Environment.t OpamFile.t
 
   (** Directory where the metadata of installed packages is mirrored.
       {i $meta/packages/} *)

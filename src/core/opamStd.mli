@@ -323,6 +323,15 @@ module Env : sig
   val getopt: string -> string option
 
   val list: unit -> (string * string) list
+
+  (** Utility function for shell single-quoted strings. In most shells,
+      backslash escapes are not allowed and a single quote needs to be replaced
+      by [quote double-quote quote double-quote quote] (close the single-quoted
+      literal, put the single quote in a double-quoted literal, and reopen a
+      single-quoted literal). fish is the exception and should set
+      [using_backslashes] to escape both quotes and backslashes using
+      backslashes *)
+  val escape_single_quotes: ?using_backslashes:bool -> string -> string
 end
 
 (** {2 System query and exit handling} *)

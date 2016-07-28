@@ -476,5 +476,5 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
   try let r = f st in ignore (unlock st); cleanup_backup true; r
   with e ->
     ignore (unlock st);
-    if OpamCoreConfig.(!r.keep_log_dir) then cleanup_backup false;
+    if not OpamCoreConfig.(!r.keep_log_dir) then cleanup_backup false;
     raise e

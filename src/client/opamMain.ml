@@ -748,6 +748,9 @@ let config =
      $(i,-v), add comments documenting the reason or package of origin for \
      eachbinding. This is most usefully used as $(b,eval `opam config env`) to \
      have further shell commands be evaluated in the proper opam context.";
+    "revert-env", `revert_env, [],
+    "Reverts environment changes made by opam, e.g. $(b,eval `opam config \
+     revert-env`) undoes what $(b,eval `opam config env`) did.";
     "setup", `setup, [],
     "Configure global and user parameters for OPAM. Use $(b, opam config \
      setup) to display more options. Use $(b,--list) to display the current \
@@ -842,6 +845,10 @@ let config =
         OpamSwitchState.with_ `Lock_none gt @@ fun st ->
         `Ok (OpamConfigCommand.env st
                ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
+    | Some `revert_env, [] ->
+       `Ok (OpamConfigCommand.print_eval_env
+              ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
+              (OpamEnv.add [] []))
     | Some `setup, [] ->
       let user        = all || user in
       let global      = all || global in

@@ -72,12 +72,14 @@ module Git : OpamVCS.VCS= struct
     check_and_fix_remote @@+ fun () ->
     let branch = OpamStd.Option.default "HEAD" repo.repo_url.OpamUrl.hash in
     let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
-    git repo [ "fetch" ; "-q"; "origin"; refspec ]
+    git repo [ "fetch" ; "-q"; "origin"; "--update-shallow"; refspec ]
     @@> fun r ->
     if OpamProcess.is_success r then Done ()
     else
       (* fallback to fetching all first (workaround, git 2.1 fails silently
-         on 'fetch HASH' when HASH isn't available locally already) *)
+         on 'fetch HASH' when HASH isn't available locally already).
+         Also, remove the [--update-shallow] option in case git is so old that
+         it didn't exist yet, as that is not needed in the general case *)
       OpamProcess.Job.of_list
         [ git repo [ "fetch" ; "-q"; "origin" ];
           git repo [ "fetch" ; "-q"; "origin"; refspec ] ]

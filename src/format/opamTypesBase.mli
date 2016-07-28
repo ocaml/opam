@@ -78,6 +78,8 @@ val string_of_env_update_op: env_update_op -> string
 
 val env_update_op_of_string: string -> env_update_op
 
+(** Makes sure to keep only the last binding for a given variable; doesn't
+    preserve order *)
 val env_array: env -> string array
 
 (** Parses the data suitable for a filter.FIdent from a string. May
