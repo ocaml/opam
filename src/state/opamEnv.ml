@@ -200,7 +200,7 @@ let compute_updates ?(force_path=false) st =
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
-        match OpamSwitchState.opam_opt st nv with
+        match OpamPackage.Map.find_opt nv st.opams with
         | Some opam ->
           List.map (fun (name,op,str,cmt) ->
               let s =
@@ -231,6 +231,10 @@ let updates ~opamswitch ?force_path st =
     else [] in
   switch @ update
 
+let get_pure () =
+  let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+  add env []
+
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
    OPAMSWITCH is always the one being reported in '~/.opam/config'
@@ -245,7 +249,6 @@ let get_opam ~force_path st =
 
 let get_full ?(opamswitch=true) ~force_path st =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  (* todo: see above *)
   add env0 (updates ~opamswitch ~force_path st)
 
 let is_up_to_date_raw updates =
@@ -598,7 +601,7 @@ let display_setup root ~dot_profile shell =
   List.iter print global_setup
 
 let check_and_print_env_warning st =
-  if (OpamSwitchState.is_switch_globally_set st ||
+  if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
      not (is_up_to_date st) then
     OpamConsole.formatted_msg
