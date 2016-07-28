@@ -428,10 +428,7 @@ let string_of_update st shell updates =
   let aux (ident, symbol, string, comment) =
     let string =
       OpamFilter.expand_string ~default:(fun _ -> "") fenv string |>
-      if shell = `fish then
-        Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
-      else
-        Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
+      OpamStd.Env.escape_single_quotes ~using_backslashes:(shell = `fish)
     in
     let key, value =
       ident, match symbol with

@@ -530,6 +530,11 @@ module Env = struct
 
   let getopt n = try Some (get n) with Not_found -> None
 
+  let escape_single_quotes ?(using_backslashes=false) =
+    if using_backslashes then
+      Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
+    else
+      Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
 end
 
 
