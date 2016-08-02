@@ -268,7 +268,8 @@ module Format : sig
   val align_table: string list list -> string list list
 
   (** Cut long lines in string according to the terminal width *)
-  val reformat: ?start_column:int -> ?indent:int -> string -> string
+  val reformat:
+    ?start_column:int -> ?indent:int -> ?width:int -> string -> string
 
   (** Convert a list of items to string as a dashed list *)
   val itemize: ?bullet:string -> ('a -> string) -> 'a list -> string
@@ -280,9 +281,10 @@ module Format : sig
   (** {4 Printing} *)
 
   (** Prints a table; generally called on tables passed through [align_table].
-      The default [cut] is to wrap on stdout, stderr, keep as-is otherwise *)
+      The default [cut] is to wrap on stdout, stderr, keep as-is otherwise.
+      [`Wrap sep] prepends [sep] on wrapped lines *)
   val print_table:
-    ?cut:[`Wrap | `Truncate | `None] -> out_channel -> sep:string ->
+    ?cut:[`Wrap of string | `Truncate | `None] -> out_channel -> sep:string ->
     string list list -> unit
 end
 

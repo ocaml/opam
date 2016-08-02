@@ -419,21 +419,31 @@ module OpamString = struct
     for i = 0 to len - 1 do Bytes.set b i (f s.[i]) done;
     Bytes.to_string b
 
+  let is_whitespace = function
+    | ' ' | '\t' | '\r' | '\n' -> true
+    | _ -> false
+
   let strip str =
     let p = ref 0 in
     let l = String.length str in
-    let fn = function
-      | ' ' | '\t' | '\r' | '\n' -> true
-      | _ -> false in
-    while !p < l && fn (String.unsafe_get str !p) do
+    while !p < l && is_whitespace (String.unsafe_get str !p) do
       incr p;
     done;
     let p = !p in
     let l = ref (l - 1) in
-    while !l >= p && fn (String.unsafe_get str !l) do
+    while !l >= p && is_whitespace (String.unsafe_get str !l) do
       decr l;
     done;
     String.sub str p (!l - p + 1)
+
+  let strip_right str =
+    let rec aux i =
+      if i < 0 || not (is_whitespace str.[i]) then i else aux (i-1)
+    in
+    let l = String.length str in
+    let i = aux (l-1) in
+    if i = l - 1 then str
+    else String.sub str 0 (i+1)
 
   let sub_at n s =
     if String.length s <= n then
@@ -753,6 +763,9 @@ module OpamFormat = struct
 
   let visual_length s = visual_length_substring s 0 (String.length s)
 
+  let visual_width s =
+    List.fold_left max 0 (List.map visual_length (OpamString.split s '\n'))
+
   let cut_at_visual s width =
     let rec aux extra i =
       try
@@ -800,29 +813,30 @@ module OpamFormat = struct
       in
       List.rev col::transpose (List.rev rest)
     in
-    let explode_newlines line =
-      let cols = List.map (fun s -> OpamString.split s '\n') line in
-      transpose cols
-    in
-    let ll =
-      List.fold_left
-        (fun acc line -> List.rev_append (explode_newlines line) acc)
-        [] ll
-      |> List.rev
-    in
     let columns = transpose ll in
     let pad n s =
       let sn = visual_length s in
       if sn >= n then s
       else s ^ (String.make (n - sn) ' ')
     in
+    let pad_multi n s =
+      match OpamString.split_delim s '\n' with
+      | [] | [_] -> pad n s ^"\n"
+      | ls -> String.concat "\n" (List.map (pad n) ls)
+    in
     let align sl =
-      let len = List.fold_left (fun m s -> max m (visual_length s)) 0 sl in
-      List.map (pad len) sl
+      let (len, multiline) =
+        List.fold_left (fun (len,ml) s ->
+            if String.contains s '\n' then max len (visual_width s), true
+            else max len (visual_length s), ml)
+          (0, false) sl
+      in
+      List.map (if multiline then pad_multi len else pad len) sl
     in
     transpose (List.map align columns)
 
-  let reformat ?(start_column=0) ?(indent=0) s =
+  let reformat
+      ?(start_column=0) ?(indent=0) ?(width=OpamSys.terminal_columns ()) s =
     let slen = String.length s in
     let buf = Buffer.create 1024 in
     let rec find_nonsp i =
@@ -844,7 +858,7 @@ module OpamFormat = struct
       let j = find_nonsp i in
       let k = find_split j in
       let len_visual = visual_length_substring s i (k - i) in
-      if col + len_visual >= OpamSys.terminal_columns () && col > indent then
+      if col + len_visual >= width && col > indent then
         (newline i;
          Buffer.add_substring buf s j (k - j);
          print k (indent + len_visual - j + i))
@@ -865,39 +879,96 @@ module OpamFormat = struct
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
-  let print_table ?cut oc ~sep =
+  let print_table ?cut oc ~sep table =
     let cut =
       match cut with
-      | None -> if oc = stdout || oc = stderr then `Wrap else `None
+      | None -> if oc = stdout || oc = stderr then `Wrap "" else `None
       | Some c -> c
     in
-    List.iter (fun l ->
-        let str = match cut with
-          | `None ->
-            String.concat sep l
-          | `Truncate ->
-            cut_at_visual (String.concat sep l) (OpamSys.terminal_columns ())
-          | `Wrap ->
-            let width = OpamSys.terminal_columns () in
-            match List.rev l with
-            | [] -> ""
-            | last::rest ->
-              let startcol =
-                List.fold_left
-                  (fun acc col -> acc + visual_length sep + visual_length col)
-                  0 rest
+    let replace_newlines by =
+      Re.(replace_string (compile (char '\n')) ~by)
+    in
+    let print_line l = match cut with
+      | `None ->
+        let s = List.map (replace_newlines "\\n") l |> String.concat sep in
+        output_string oc s;
+        output_char oc '\n'
+      | `Truncate ->
+        let s = List.map (replace_newlines " ") l |> String.concat sep in
+        output_string oc (cut_at_visual s (OpamSys.terminal_columns ()));
+        output_char oc '\n'
+      | `Wrap wrap_sep ->
+        let width = OpamSys.terminal_columns () in
+        let base_indent = 10 in
+        let sep_len = visual_length sep in
+        let wrap_sep_len = visual_length wrap_sep in
+        let max_sep_len = max sep_len wrap_sep_len in
+        let indent_string =
+          String.make (max 0 (base_indent - wrap_sep_len)) ' ' ^ wrap_sep
+        in
+        let margin = visual_length indent_string in
+        let min_reformat_width = 30 in
+        let rec split_at_overflows start_col acc cur =
+          let append = function
+            | [] -> acc
+            | last::r -> List.rev (OpamString.strip last :: r) :: acc
+          in
+          function
+          | [] -> List.rev (append cur)
+          | cell::rest ->
+            let multiline = String.contains cell '\n' in
+            let cell_width =
+              List.fold_left max 0
+                (List.map visual_length (OpamString.split cell '\n'))
+            in
+            let end_col = start_col + sep_len + cell_width in
+            let indent ~sep n cell =
+              let spc =
+                if sep then
+                  String.make (max 0 (if sep then n - wrap_sep_len else n)) ' ' ^ wrap_sep
+                else String.make n ' '
               in
-              let last = OpamString.strip last in
-              let last =
-                if startcol >= width - 20 then
-                  "\n" ^ reformat ~start_column:0 ~indent:10 last
-                else
-                  reformat ~start_column:startcol ~indent:startcol last
+              OpamList.concat_map ("\n"^spc)
+                OpamString.strip_right
+                (OpamString.split cell '\n')
+            in
+            if end_col < width then
+              if multiline then
+                let cell = indent ~sep:true start_col (OpamString.strip cell) in
+                split_at_overflows margin (append (cell::cur)) [] rest
+              else
+                split_at_overflows end_col acc (cell::cur) rest
+            else if rest = [] && acc = [] && not multiline &&
+                    width - start_col - max_sep_len >= min_reformat_width
+            then
+              let cell =
+                OpamString.strip cell |> fun cell ->
+                reformat ~width:(width - start_col - max_sep_len) cell |>
+                indent ~sep:true start_col
               in
-              String.concat sep (List.rev (last::rest))
+              split_at_overflows margin acc (cell::cur) []
+            else if multiline || margin + cell_width >= width then
+              let cell =
+                OpamString.strip cell |> fun cell ->
+                reformat ~width:(width - margin) cell |> fun cell ->
+                OpamString.split cell '\n' |>
+                OpamList.concat_map ("\n"^indent_string) OpamString.strip_right
+              in
+              split_at_overflows margin ([cell]::append cur) [] rest
+            else
+              split_at_overflows (margin + cell_width) (append cur) [cell] rest
+        in
+        let splits = split_at_overflows 0 [] [] l in
+        let str =
+          OpamList.concat_map
+            ("\n" ^ String.make base_indent ' ')
+            (String.concat sep)
+            splits
         in
         output_string oc str;
-        output_char oc '\n')
+        output_char oc '\n'
+    in
+    List.iter print_line table
 
 end
 

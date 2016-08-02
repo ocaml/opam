@@ -112,8 +112,7 @@ let list gt ns =
   List.map (fun (variable, value, descr) -> [
         OpamVariable.Full.to_string variable % `bold;
         value % `blue;
-        if descr <> "" then "#" else "";
-        descr;
+        if descr = "" then "" else "# "^descr;
       ]) vars |>
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table stdout ~sep:" "
