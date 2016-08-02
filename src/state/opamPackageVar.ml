@@ -41,6 +41,7 @@ let package_variable_names = [
   "etc",       "Etc directory for this package";
   "build",     "Directory where the package was built";
   "hash",      "Hash of the package archive";
+  "dev",       "True if this is a development package";
 ]
 
 let predefined_depends_variables =
@@ -265,6 +266,7 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
          if OpamFilename.exists f then Some (string (OpamFilename.digest f))
          else Some (string "")
        with Not_found -> Some (string ""))
+    | "dev", Some opam -> Some (bool (is_dev_package st opam))
     | _, _ -> None
   in
   let make_package_local v =
