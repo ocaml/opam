@@ -78,7 +78,14 @@ let resolve_switch_raw ?package gt switch switch_config full_var =
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
-    match OpamFile.Dot_config.variable switch_config var with
+    try
+      let stdpath = OpamTypesBase.std_path_of_string (V.to_string var) in
+      let dir =
+        OpamPath.Switch.get_stdpath gt.root switch switch_config stdpath
+      in
+      Some (V.string (OpamFilename.Dir.to_string dir))
+    with Failure _ ->
+    match OpamFile.Switch_config.variable switch_config var with
     | Some _ as c -> c
     | None ->
       match resolve_global gt full_var with

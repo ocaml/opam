@@ -98,9 +98,9 @@ module Switch = struct
 
   let reinstall t a = meta t a /- "reinstall"
 
-  let config_dir t a = meta t a / "config"
+  let switch_config t a = meta t a /- "switch-config"
 
-  let global_config t a = config_dir t a /- "global-config.config"
+  let config_dir t a = meta t a / "config"
 
   let config t a n =
     config_dir t a /- (OpamPackage.Name.to_string n ^ ".config")
@@ -162,55 +162,58 @@ module Switch = struct
 
   end
 
-  let lookup c var dft =
-    match OpamFile.Dot_config.variable c (OpamVariable.of_string var) with
-    | Some (S f) -> OpamFilename.Dir.of_string f
-    | None | Some (B _) -> dft
+  let lookup stdpath relative_to default config =
+    let dir =
+      OpamStd.Option.default default
+        (OpamFile.Switch_config.path config stdpath)
+    in
+    if Filename.is_relative dir then
+      if dir = "" then relative_to else relative_to / dir
+    else OpamFilename.Dir.of_string dir
 
-  let prefix t a c =
-    lookup c "prefix" (root t a)
+  let prefix t a c = lookup Prefix (root t a) "" c
 
-  let lib_dir t a c =
-    lookup c "lib" (prefix t a c / "lib")
+  let lib_dir t a c = lookup Lib (prefix t a c) "lib" c
 
-  let lib t a c n =
-    lib_dir t a c / OpamPackage.Name.to_string n
+  let lib t a c n = lib_dir t a c / OpamPackage.Name.to_string n
 
-  let stublibs t a c =
-    lookup c "stublibs" (lib_dir t a c / "stublibs")
+  let stublibs t a c = lookup Stublibs (lib_dir t a c) "stublibs" c
 
-  let toplevel t a c =
-    lookup c "toplevel" (lib_dir t a c / "toplevel")
+  let toplevel t a c = lookup Toplevel (lib_dir t a c) "toplevel" c
 
-  let doc_dir t a c =
-    lookup c "doc" (prefix t a c / "doc")
+  let doc_dir t a c = lookup Doc (prefix t a c) "doc" c
+
+  let doc t a c n = doc_dir t a c / OpamPackage.Name.to_string n
 
   let man_dir ?num t a c =
-    let base = lookup c "man" (prefix t a c / "man") in
+    let base = lookup Man (prefix t a c) "man" c in
     match num with
     | None -> base
     | Some n -> base / ("man" ^ n)
 
-  let share_dir t a c =
-    lookup c "share" (prefix t a c / "share")
+  let share_dir t a c = lookup Share (prefix t a c) "share" c
 
-  let share t a c n =
-    share_dir t a c / OpamPackage.Name.to_string n
+  let share t a c n = share_dir t a c / OpamPackage.Name.to_string n
 
-  let etc_dir t a c =
-    lookup c "etc" (prefix t a c / "etc")
+  let etc_dir t a c = lookup Etc (prefix t a c) "etc" c
 
-  let etc t a c n =
-    etc_dir t a c / OpamPackage.Name.to_string n
+  let etc t a c n = etc_dir t a c / OpamPackage.Name.to_string n
 
-  let doc t a c n =
-    doc_dir t a c / OpamPackage.Name.to_string n
+  let bin t a c = lookup Bin (prefix t a c) "bin" c
 
-  let bin t a c =
-    lookup c "bin" (prefix t a c / "bin")
+  let sbin t a c = lookup Sbin (prefix t a c) "sbin" c
 
-  let sbin t a c =
-    lookup c "sbin" (prefix t a c / "sbin")
+  let get_stdpath t a c = function
+    | Prefix -> prefix t a c
+    | Lib -> lib_dir t a c
+    | Bin -> bin t a c
+    | Sbin -> sbin t a c
+    | Share -> share_dir t a c
+    | Doc -> doc_dir t a c
+    | Etc -> etc_dir t a c
+    | Man -> man_dir t a c
+    | Toplevel -> toplevel t a c
+    | Stublibs -> stublibs t a c
 
   module Overlay = struct
 

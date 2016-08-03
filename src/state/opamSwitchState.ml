@@ -23,14 +23,14 @@ let load_selections gt switch =
   OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections gt.root switch)
 
 let load_switch_config gt switch =
-  let f = OpamPath.Switch.global_config gt.root switch in
-  match OpamFile.Dot_config.read_opt f with
+  let f = OpamPath.Switch.switch_config gt.root switch in
+  match OpamFile.Switch_config.read_opt f with
   | Some c -> c
   | None ->
     OpamConsole.error
-      "No global config file found for switch %s. Switch broken ?"
+      "No config file found for switch %s. Switch broken ?"
       (OpamSwitch.to_string switch);
-    OpamFile.Dot_config.empty
+    OpamFile.Switch_config.empty
 
 let compute_available_packages gt switch switch_config ~pinned ~opams =
   (* remove all versions of pinned packages, but the pinned-to version *)
@@ -234,7 +234,7 @@ let load_virtual ?repos_list gt rt =
     switch_lock = OpamSystem.lock_none;
     switch = OpamSwitch.of_string "none";
     compiler_packages = OpamPackage.Set.empty;
-    switch_config = OpamFile.Dot_config.empty;
+    switch_config = OpamFile.Switch_config.empty;
     installed = OpamPackage.Set.empty;
     installed_opams = OpamPackage.Map.empty;
     pinned = OpamPackage.Set.empty;

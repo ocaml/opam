@@ -276,8 +276,8 @@ let is_up_to_date_switch root switch =
 let switch_path_update ~force_path root switch =
   let bindir =
     OpamPath.Switch.bin root switch
-      (OpamFile.Dot_config.safe_read
-         (OpamPath.Switch.global_config root switch))
+      (OpamFile.Switch_config.safe_read
+         (OpamPath.Switch.switch_config root switch))
   in
   [
     "PATH",

@@ -16,13 +16,9 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "SWACT" fmt
 let slog = OpamConsole.slog
 
-let gen_global_config root switch =
-  let map f l =
-    List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l
-  in
-  let id x = x in
+let gen_switch_config root switch =
   let vars =
-    map id [
+    List.map (fun (s,p) -> OpamVariable.of_string s, S p) [
       ("user" ,
        try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name
        with Not_found -> "user");
@@ -31,29 +27,23 @@ let gen_global_config root switch =
        with Not_found -> "group");
       ("make" , OpamStateConfig.(Lazy.force !r.makecmd));
       ("os"   , OpamStd.Sys.os_string ());
-    ] @
-    map OpamFilename.Dir.to_string
-      [
-        ("root", root);
-        ("prefix", OpamPath.Switch.root root switch);
-        ("lib", OpamPath.Switch.Default.lib_dir root switch);
-        ("bin", OpamPath.Switch.Default.bin root switch);
-        ("sbin", OpamPath.Switch.Default.sbin root switch);
-        ("doc", OpamPath.Switch.Default.doc_dir root switch);
-        ("stublibs", OpamPath.Switch.Default.stublibs root switch);
-        ("toplevel", OpamPath.Switch.Default.toplevel root switch);
-        ("man", OpamPath.Switch.Default.man_dir root switch);
-        ("share", OpamPath.Switch.Default.share_dir root switch);
-        ("etc", OpamPath.Switch.Default.etc_dir root switch);
-      ]
+    ]
   in
-  OpamFile.Dot_config.create vars
+  let paths = [
+    (Prefix, OpamFilename.Dir.to_string (OpamPath.Switch.root root switch));
+  ]
+  in
+  { OpamFile.Switch_config.empty with
+    OpamFile.Switch_config.
+    variables = vars;
+    paths;
+    opam_root = Some root;
+  }
 
-let install_global_config root switch config =
-  log "install_global_config switch=%a" (slog OpamSwitch.to_string) switch;
-
-  OpamFile.Dot_config.write
-    (OpamPath.Switch.global_config root switch)
+let install_switch_config root switch config =
+  log "install_switch_config switch=%a" (slog OpamSwitch.to_string) switch;
+  OpamFile.Switch_config.write
+    (OpamPath.Switch.switch_config root switch)
     config
 
 let create_empty_switch gt switch =
@@ -70,7 +60,7 @@ let create_empty_switch gt switch =
     (* Create base directories *)
     OpamFilename.mkdir switch_dir;
 
-    let config = gen_global_config root switch in
+    let config = gen_switch_config root switch in
 
     OpamFilename.mkdir (OpamPath.Switch.lib_dir root switch config);
     OpamFilename.mkdir (OpamPath.Switch.stublibs root switch config);
@@ -86,7 +76,7 @@ let create_empty_switch gt switch =
         OpamFilename.mkdir (OpamPath.Switch.man_dir ~num root switch config)
       ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
-    install_global_config root switch config;
+    install_switch_config root switch config;
 
     let root_config =
       OpamFile.Config.with_installed_switches

@@ -41,14 +41,19 @@ let help t =
 
   OpamConsole.header_msg "Configuration variables from the current switch";
   let global = t.switch_config in
-  let global_vars = OpamFile.Dot_config.variables global in
-  List.map (fun var -> [
-      OpamVariable.to_string var % `bold;
-      (match OpamFile.Dot_config.variable global var with
-         | Some c -> OpamVariable.string_of_variable_contents c
-         | None -> "") % `blue;
+  List.map (fun stdpath -> [
+        OpamTypesBase.string_of_std_path stdpath % `bold;
+        OpamPath.Switch.get_stdpath
+          t.switch_global.root t.switch global stdpath |>
+        OpamFilename.Dir.to_string |>
+        OpamConsole.colorise `blue
       ])
-    global_vars |>
+    OpamTypesBase.all_std_paths @
+  List.map (fun (var,value) -> [
+        OpamVariable.to_string var % `bold;
+        OpamVariable.string_of_variable_contents value % `blue;
+      ])
+    (global.OpamFile.Switch_config.variables) |>
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table stdout ~sep:" ";
 
@@ -74,7 +79,7 @@ let list gt ns =
           OpamVariable.Full.global v,
           OpamVariable.string_of_variable_contents c,
           "")
-        (OpamFile.Dot_config.bindings conf)
+        (conf.OpamFile.Switch_config.variables)
     else
     try
       let nv = OpamSwitchState.get_package t name in
@@ -199,9 +204,9 @@ let set var value =
   OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock root switch)
   @@ fun () ->
   let var = OpamVariable.Full.variable var in
-  let config_f = OpamPath.Switch.global_config root switch in
-  let config = OpamFile.Dot_config.read config_f in
-  let oldval = OpamFile.Dot_config.variable config var in
+  let config_f = OpamPath.Switch.switch_config root switch in
+  let config = OpamFile.Switch_config.read config_f in
+  let oldval = OpamFile.Switch_config.variable config var in
   let newval = OpamStd.Option.map (fun s -> S s) value in
   if oldval = newval then
     OpamConsole.note "No change for \"%s\"" (OpamVariable.to_string var)
@@ -213,8 +218,14 @@ let set var value =
           (OpamVariable.string_of_variable_contents old)
       | _ -> ()
     in
-    OpamFile.Dot_config.write config_f
-      (OpamFile.Dot_config.set config var newval)
+    let variables = config.OpamFile.Switch_config.variables in
+    let variables =
+      match newval with
+      | None -> List.remove_assoc var variables
+      | Some v -> OpamStd.List.update_assoc var v variables
+    in
+    OpamFile.Switch_config.write config_f
+      {config with OpamFile.Switch_config.variables}
 
 let set_global var value =
   if not (OpamVariable.Full.is_global var) then

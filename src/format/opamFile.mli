@@ -760,6 +760,18 @@ module Repo_config_legacy: IO_FILE with type t = repository
 
 module Repos_config: IO_FILE with type t = url option OpamRepositoryName.Map.t
 
+module Switch_config: sig
+  type t = {
+    repos: repository_name list option;
+    paths: (std_path * string) list;
+    variables: (variable * variable_contents) list;
+    opam_root: dirname option;
+  }
+  val variable: t -> variable -> variable_contents option
+  val path: t -> std_path -> string option
+  include IO_FILE with type t := t
+end
+
 (** Pinned package files (only used for migration from 1.2, the inclusive State
     module is now used instead) *)
 module Pinned_legacy: sig

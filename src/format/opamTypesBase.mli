@@ -29,6 +29,10 @@ val download_file: filename download -> generic_file download
 (** Corresponding user message *)
 val string_of_download: _ download -> string
 
+val string_of_std_path: std_path -> string
+val std_path_of_string: string -> std_path
+val all_std_paths: std_path list
+
 val string_of_generic_file: generic_file -> string
 
 (** Extract a package from a package action. *)
