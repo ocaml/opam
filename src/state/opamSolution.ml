@@ -601,7 +601,7 @@ let parallel_apply t action action_graph =
       in
       let remaining =
         List.filter (function
-            | `Install p when List.mem (`Build p) failed -> false
+            | `Remove p | `Install p when List.mem (`Build p) failed -> false
             | _ -> true)
           remaining
       in
