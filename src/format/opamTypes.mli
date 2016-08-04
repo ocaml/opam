@@ -36,6 +36,12 @@ type filename_set = OpamFilename.Set.t
 (** Map of files *)
 type 'a filename_map = 'a OpamFilename.Map.t
 
+(** Predefined installation directories within a switch *)
+type std_path =
+  | Prefix
+  | Lib | Bin | Sbin | Share | Doc | Etc | Man
+  | Toplevel | Stublibs
+
 (** Generalized file type *)
 type generic_file = OpamFilename.generic_file =
   | D of dirname

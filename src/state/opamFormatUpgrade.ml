@@ -457,6 +457,14 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
                   config
               | None -> config
             else
+              let get_dir d =
+                match OpamFile.Dot_config.variable switch_config
+                        (OpamVariable.of_string d)
+                with
+                | Some (S d) -> OpamFilename.Dir.of_string d
+                | _ -> OpamPath.Switch.get_stdpath root switch
+                         OpamFile.Switch_config.empty (std_path_of_string d)
+              in
               OpamFile.Dot_config.create @@
               List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
               [ "ocaml-version",
@@ -464,20 +472,15 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
                 "compiler", S comp_name;
                 "preinstalled", B false;
                 "ocaml-native",
-                B (OpamFilename.exists
-                     (OpamPath.Switch.bin root switch switch_config
-                      // "ocamlopt"));
+                B (OpamFilename.exists (get_dir "bin" // "ocamlopt"));
                 "ocaml-native-tools",
-                B (OpamFilename.exists
-                     (OpamPath.Switch.bin root switch switch_config
-                      // "ocamlc.opt"));
+                B (OpamFilename.exists (get_dir "bin" // "ocamlc.opt"));
                 "ocaml-native-dynlink",
                 B (OpamFilename.exists
-                     (OpamPath.Switch.lib_dir root switch switch_config
-                      / "ocaml" // "dynlink.cmxa"));
+                     (get_dir "lib" / "ocaml" // "dynlink.cmxa"));
                 "ocaml-stubsdir",
                 S (OpamFilename.Dir.to_string
-                     (OpamPath.Switch.stublibs root switch switch_config));
+                     (get_dir "stublibs"));
               ]
           in
           let config_f =
@@ -732,7 +735,44 @@ let from_2_0_alpha_to_2_0_alpha2 root conf =
     "OCaml version present on your system independently of opam, if any";
   ] conf
 
-let latest_version = v2_0_alpha2
+let v2_0_alpha3 = OpamVersion.of_string "2.0~alpha3"
+
+let from_2_0_alpha2_to_2_0_alpha3 root conf =
+  List.iter (fun switch ->
+      let switch_dir = root / OpamSwitch.to_string switch in
+      let old_global_config =
+        switch_dir / ".opam-switch" / "config" // "global-config.config"
+      in
+      match OpamFile.Dot_config.read_opt (OpamFile.make old_global_config) with
+      | None -> ()
+      | Some oldconf ->
+        let new_config_file = switch_dir / ".opam-switch" // "switch-config" in
+        let opam_root, paths, variables =
+          List.fold_left (fun (root, paths, variables) (var, value) ->
+              match OpamVariable.to_string var, value with
+              | "root", S r ->
+                (Some (OpamFilename.Dir.of_string r), paths, variables)
+              | stdpath, S d when
+                  (try ignore (std_path_of_string stdpath); true
+                   with Failure _ -> false) ->
+                root, (std_path_of_string stdpath, d) :: paths, variables
+              | _, value -> root, paths, (var, value) :: variables)
+            (None, [], [])
+            (OpamFile.Dot_config.bindings oldconf)
+        in
+        let new_config =
+          { OpamFile.Switch_config.
+            repos = None;
+            opam_root; paths; variables;
+          }
+        in
+        OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;
+        OpamFilename.remove old_global_config
+    )
+    (OpamFile.Config.installed_switches conf);
+  conf
+
+let latest_version = v2_0_alpha3
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
@@ -785,7 +825,8 @@ let as_necessary global_lock root config =
       update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
       update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
       update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
-      update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2
+      update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
+      update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3
     else
       OpamConsole.error_and_exit "Aborted"
   with OpamSystem.Locked ->

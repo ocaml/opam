@@ -472,7 +472,7 @@ let detail_printer ?prettify ?normalise st nv =
             c))
 
 let display
-    st ~header ~format ~dependency_order ~all_versions ?(separator=" ")
+    st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
     ?prettify ?normalise packages =
   let packages =
     if all_versions then packages else
@@ -497,9 +497,7 @@ let display
   in
   let add_head l =
     if header then
-      (match List.map disp_header format with
-       | x :: r -> ("# "^x) :: r
-       | [] -> [])
+      (List.map (fun f -> "# "^disp_header f) format)
       :: l
     else l
   in
@@ -509,7 +507,7 @@ let display
   List.rev |>
   add_head |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table ~cut:`Truncate stdout ~sep:separator
+  OpamStd.Format.print_table ?cut:wrap stdout ~sep:separator
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in

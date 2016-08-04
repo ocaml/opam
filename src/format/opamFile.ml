@@ -1215,6 +1215,74 @@ module Repos_config = struct
   include SyntaxFile(Repos_configSyntax)
 end
 
+module Switch_configSyntax = struct
+
+  let internal = "switch-config"
+
+  type t = {
+    repos: repository_name list option;
+    paths: (std_path * string) list;
+    variables: (variable * variable_contents) list;
+    opam_root: dirname option;
+  }
+
+  let empty = {
+    repos = None;
+    paths = [];
+    variables = [];
+    opam_root = None;
+  }
+
+  let sections = [
+    "paths", Pp.ppacc
+      (fun paths t -> {t with paths}) (fun t -> t.paths)
+      (Pp.I.items -|
+       Pp.map_list
+         (Pp.map_pair
+            (Pp.of_pair "std-path" (std_path_of_string, string_of_std_path))
+            Pp.V.string));
+    "variables", Pp.ppacc
+      (fun variables t -> {t with variables}) (fun t -> t.variables)
+      (Pp.I.items -|
+       Pp.map_list
+         (Pp.map_pair
+            (Pp.of_module "variable" (module OpamVariable))
+            Pp.V.variable_contents));
+  ]
+
+  let fields = [
+    "opam-version", Pp.ppacc
+      (fun _ t -> t) (fun _ -> OpamVersion.current_nopatch)
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+    "repos",
+    Pp.ppacc_opt (fun r t -> {t with repos = Some r}) (fun t -> t.repos)
+      (Pp.V.map_list ~depth:1 @@
+       Pp.V.string -| Pp.of_module "repo" (module OpamRepositoryName));
+    "opam-root", Pp.ppacc_opt
+      (fun r t -> {t with opam_root = Some r}) (fun t -> t.opam_root)
+      (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
+  ]
+
+  let pp =
+    let name = internal in
+    Pp.I.map_file @@
+    Pp.I.check_fields ~name ~sections fields -|
+    Pp.I.fields ~name ~empty ~sections fields
+
+  let variable t s =
+    try Some (List.assoc s t.variables)
+    with Not_found -> None
+
+  let path t p =
+    try Some (List.assoc p t.paths)
+    with Not_found -> None
+
+end
+module Switch_config = struct
+  include Switch_configSyntax
+  include SyntaxFile(Switch_configSyntax)
+end
+
 module SwitchSelectionsSyntax = struct
 
   let internal = "switch-state"

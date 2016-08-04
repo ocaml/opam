@@ -49,7 +49,7 @@ val resolve:
     used before the switch state is fully loaded *)
 val resolve_switch_raw:
   ?package:package ->
-  'a global_state -> switch -> OpamFile.Dot_config.t -> full_variable ->
+  'a global_state -> switch -> OpamFile.Switch_config.t -> full_variable ->
   variable_contents option
 
 val is_dev_package: 'a switch_state -> OpamFile.OPAM.t -> bool

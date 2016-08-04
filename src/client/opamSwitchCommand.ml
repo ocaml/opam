@@ -267,7 +267,7 @@ let install gt ~update_config ~packages switch =
       let st = OpamSwitchState.load_virtual gt rt in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch
-                (OpamSwitchAction.gen_global_config gt.root switch)
+                (OpamSwitchAction.gen_switch_config gt.root switch)
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in

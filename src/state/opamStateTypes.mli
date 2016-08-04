@@ -88,9 +88,8 @@ type +'lock switch_state = {
   compiler_packages: package_set;
   (** The packages that form the base of the current compiler *)
 
-  switch_config: OpamFile.Dot_config.t;
-  (** The contents of the global configuration file for this
-      switch *)
+  switch_config: OpamFile.Switch_config.t;
+  (** The configuration file for this switch *)
 
   repos_package_index: OpamFile.OPAM.t package_map;
   (** Metadata of all packages that could be found in the configured

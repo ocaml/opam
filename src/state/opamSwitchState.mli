@@ -47,7 +47,7 @@ val load_selections: 'a global_state -> switch -> switch_selections
     the switch configuration and the set of pinned packages. (The result is
     precomputed in global_state.available_packages once the state is loaded) *)
 val compute_available_packages:
-  'a global_state -> switch -> OpamFile.Dot_config.t ->
+  'a global_state -> switch -> OpamFile.Switch_config.t ->
   pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
   package_set
 

@@ -113,6 +113,7 @@ val display:
   format:output_format list ->
   dependency_order:bool ->
   all_versions:bool ->
+  ?wrap:[`Wrap of string | `Truncate | `None] ->
   ?separator:string ->
   ?prettify:bool ->
   ?normalise:bool ->

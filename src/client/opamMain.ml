@@ -421,6 +421,10 @@ let list =
   let normalise = mk_flag ["normalise"] ~section:display_docs
       "Print the values of opam fields normalised"
   in
+  let wrap = mk_flag ["wrap"] ~section:display_docs
+      "Wrap long lines, the default being to truncate when displaying on a \
+       terminal, or to keep as is otherwise"
+  in
   let separator =
     Arg.(value & opt string " " & info ["separator"]
            ~docv:"STRING" ~docs:display_docs
@@ -429,7 +433,7 @@ let list =
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
       depexts dev repos has_flag has_tag
-      print_short sort columns all_versions normalise separator
+      print_short sort columns all_versions normalise wrap separator
       packages =
     apply_global_options global_options;
     let no_switch =
@@ -521,6 +525,7 @@ let list =
         ~dependency_order:sort
         ~header:(not print_short)
         ~all_versions
+        ~wrap:(if wrap then `Wrap "\\ " else `Truncate)
         ~separator
         ~normalise
         results
@@ -530,7 +535,8 @@ let list =
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
         $no_switch $depexts $dev $repos $has_flag $has_tag
-        $print_short $sort $columns $all_versions $normalise $separator
+        $print_short $sort $columns $all_versions
+        $normalise $wrap $separator
         $pattern_list),
   term_info "list" ~doc ~man
 

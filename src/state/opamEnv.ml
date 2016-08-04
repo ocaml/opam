@@ -247,9 +247,10 @@ let get_opam ~force_path st =
   let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   add [] (updates ~opamswitch ~force_path st)
 
-let get_full ?(opamswitch=true) ~force_path st =
+let get_full ?(opamswitch=true) ~force_path ?updates:(u=[]) st =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env0 (updates ~opamswitch ~force_path st)
+  let updates = u @ updates ~opamswitch ~force_path st in
+  add env0 updates
 
 let is_up_to_date_raw updates =
   let not_utd =
@@ -276,8 +277,8 @@ let is_up_to_date_switch root switch =
 let switch_path_update ~force_path root switch =
   let bindir =
     OpamPath.Switch.bin root switch
-      (OpamFile.Dot_config.safe_read
-         (OpamPath.Switch.global_config root switch))
+      (OpamFile.Switch_config.safe_read
+         (OpamPath.Switch.switch_config root switch))
   in
   [
     "PATH",

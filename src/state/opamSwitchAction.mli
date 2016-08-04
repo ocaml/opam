@@ -28,10 +28,10 @@ val set_current_switch:
 
 (** Create the default global_config structure for a switch, including default
     paths (lib, bin, etc.) *)
-val gen_global_config: dirname -> switch -> OpamFile.Dot_config.t
+val gen_switch_config: dirname -> switch -> OpamFile.Switch_config.t
 
 (** (Re-)install the configuration for a given root and switch *)
-val install_global_config: dirname -> switch -> OpamFile.Dot_config.t -> unit
+val install_switch_config: dirname -> switch -> OpamFile.Switch_config.t -> unit
 
 (** Add the package metadata to the switch-local cache of installed packages *)
 val install_metadata: rw switch_state -> package -> unit

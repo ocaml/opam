@@ -127,9 +127,8 @@ module Switch: sig
   (** Configuration folder: {i $meta/config} *)
   val config_dir: t -> switch -> dirname
 
-  (** Global config for the switch: {i
-      $meta/config/global-config.config} *)
-  val global_config: t -> switch -> OpamFile.Dot_config.t OpamFile.t
+  (** Global config for the switch: {i $meta/switch-config} *)
+  val switch_config: t -> switch -> OpamFile.Switch_config.t OpamFile.t
 
   (** Package-specific configuration file for installed packages: {i
       $meta/config/$name.config} *)
@@ -219,51 +218,54 @@ module Switch: sig
 
   (** Package-independent dirs *)
 
+  val get_stdpath:
+    t -> switch -> OpamFile.Switch_config.t -> std_path -> dirname
+
   (** Library path: {i $prefix/lib} *)
-  val lib_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val lib_dir: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** DLL paths *)
-  val stublibs: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val stublibs: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** toplevel path: {i $prefix/lib/toplevel} *)
-  val toplevel: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val toplevel: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Documentation path: {i $prefix/doc/} *)
-  val doc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val doc_dir: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Shared directory: {i $prefix/share} *)
-  val share_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val share_dir: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Etc directory: {i $prefix/etc} *)
-  val etc_dir: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val etc_dir: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Man pages path: {i $prefix/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
-  val man_dir: ?num:string -> t -> switch -> OpamFile.Dot_config.t -> dirname
+  val man_dir: ?num:string -> t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Installed binaries: {i $prefix/bin} *)
-  val bin: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val bin: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Installed system binaries: {i $prefix/sbin} *)
-  val sbin: t -> switch -> OpamFile.Dot_config.t -> dirname
+  val sbin: t -> switch -> OpamFile.Switch_config.t -> dirname
 
   (** Package dependent dirs *)
 
   (** Library path for a given package:
       {i $prefix/lib/$name} *)
-  val lib: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+  val lib: t -> switch -> OpamFile.Switch_config.t -> name -> dirname
 
   (** Documentation path for a given package:
       {i $prefix/doc/$name} *)
-  val doc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+  val doc: t -> switch -> OpamFile.Switch_config.t -> name -> dirname
 
   (** Share directory for a given package: {i
       $prefix/share/$package} *)
-  val share: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+  val share: t -> switch -> OpamFile.Switch_config.t -> name -> dirname
 
   (** Etc directory for a given package: {i
       $prefix/etc/$package} *)
-  val etc: t -> switch -> OpamFile.Dot_config.t -> name -> dirname
+  val etc: t -> switch -> OpamFile.Switch_config.t -> name -> dirname
 
   module Overlay: sig
     (** Switch metadata overlay (over the global metadata): {i

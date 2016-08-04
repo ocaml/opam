@@ -27,6 +27,34 @@ let string_of_download = function
   | Result _ -> "synchronized"
   | Not_available _ -> OpamConsole.colorise `red "unavailable"
 
+let std_path_of_string = function
+  | "prefix" -> Prefix
+  | "lib" -> Lib
+  | "bin" -> Bin
+  | "sbin" -> Sbin
+  | "share" -> Share
+  | "doc" -> Doc
+  | "etc" -> Etc
+  | "man" -> Man
+  | "toplevel" -> Toplevel
+  | "stublibs" -> Stublibs
+  | _ -> failwith "Wrong standard path"
+
+let string_of_std_path = function
+  | Prefix -> "prefix"
+  | Lib -> "lib"
+  | Bin -> "bin"
+  | Sbin -> "sbin"
+  | Share -> "share"
+  | Doc -> "doc"
+  | Etc -> "etc"
+  | Man -> "man"
+  | Toplevel -> "toplevel"
+  | Stublibs -> "stublibs"
+
+let all_std_paths =
+  [ Prefix; Lib; Bin; Sbin; Share; Doc; Etc; Man; Toplevel; Stublibs ]
+
 let string_of_generic_file = function
   | D d -> OpamFilename.Dir.to_string d
   | F f -> OpamFilename.to_string f
