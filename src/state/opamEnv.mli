@@ -19,7 +19,9 @@ open OpamStateTypes
 (** Get the current environment with OPAM specific additions. If [force_path],
     the PATH is modified to ensure opam dirs are leading. If [opamswitch],
     the OPAMSWITCH environment variable is included (default true). *)
-val get_full: ?opamswitch:bool -> force_path:bool -> 'a switch_state -> env
+val get_full:
+  ?opamswitch:bool -> force_path:bool -> ?updates:env_update list ->
+  'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. *)
@@ -29,7 +31,8 @@ val get_opam: force_path:bool -> 'a switch_state -> env
 val get_pure: unit -> env
 
 (** Update an environment, including reverting opam changes that could have been
-    previously applied *)
+    previously applied (therefore, don't apply to an already updated env as
+    returned by e.g. [get_full] !) *)
 val add: env -> env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)

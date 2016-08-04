@@ -320,18 +320,16 @@ let string_of_commands commands =
 *)
 
 let compilation_env t opam =
-  let env0 = OpamEnv.get_full ~force_path:true t in
-  let env1 = [
-    ("MAKEFLAGS", "", None);
-    ("MAKELEVEL", "", None);
-    ("OPAM_PACKAGE_NAME",
-     OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
-     None);
-    ("OPAM_PACKAGE_VERSION",
-     OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
-     None);
-  ] @ env0 in
-  OpamEnv.add env1 (OpamFile.OPAM.build_env opam)
+  OpamEnv.get_full ~force_path:true t ~updates:[
+    "MAKEFLAGS", Eq, "", Some "make env sanitization";
+    "MAKELEVEL", Eq, "", Some "make env sanitization";
+    "OPAM_PACKAGE_NAME", Eq,
+    OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
+    Some "build environment definition";
+    "OPAM_PACKAGE_VERSION", Eq,
+    OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
+    Some "build environment definition";
+  ]
 
 let removal_needs_download st nv =
   match OpamSwitchState.opam_opt st nv with
