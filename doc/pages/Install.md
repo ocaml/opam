@@ -226,7 +226,8 @@ should have one of those solvers on your system:
 
 We recommend installing one through your packaging system whenever
 possible: this should already have been taken care of if you installed
-opam through your packaging system. If you have trouble installing an
+opam through your packaging system (see https://github.com/ocaml/opam/wiki/Distributions
+for details for each distribution). If you have trouble installing an
 external solver and have reliable network connectivity,
 [Irill](http://www.irill.org/) kindly provides a ["Solver
 farm"](http://cudf-solvers.irill.org/) which can be used as a remote
