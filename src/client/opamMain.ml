@@ -1713,6 +1713,7 @@ let pin ?(unpin_only=false) () =
        | `Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let name = OpamSolution.fuzzy_name st name in
          ignore @@ OpamClient.PIN.pin st name ~edit ?version ~action
            `Dev_upstream;
          `Ok ()

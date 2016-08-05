@@ -75,6 +75,10 @@ val eq_atoms_of_packages: package_set -> atom list
 val check_availability: ?permissive: bool ->
   'a switch_state -> OpamPackage.Set.t -> atom list -> unit
 
+(** Matches package names to their existing counterparts, up to capitalisation.
+    If no match exists, returns the name unchanged. *)
+val fuzzy_name: 'a switch_state -> name -> name
+
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on
     non-existing packages, and unavailable ones unless [permissive] is set.
