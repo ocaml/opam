@@ -51,10 +51,10 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
   in
   OpamPackage.keys avail_map
 
-let repos_list_raw gt rt switch_config =
+let repos_list_raw rt switch_config =
   let global, repos =
     match switch_config.OpamFile.Switch_config.repos with
-    | None -> true, OpamGlobalState.repos_list gt
+    | None -> true, OpamGlobalState.repos_list rt.repos_global
     | Some repos -> false, repos
   in
   let found, notfound =
@@ -71,7 +71,7 @@ let repos_list_raw gt rt switch_config =
   found
 
 let repos_list st =
-  repos_list_raw st.switch_global st.switch_repos st.switch_config
+  repos_list_raw st.switch_repos st.switch_config
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -129,7 +129,7 @@ let load lock_kind gt rt switch =
       installed OpamPackage.Map.empty
   in
   let repos_package_index =
-    OpamRepositoryState.build_index rt (repos_list_raw gt rt switch_config)
+    OpamRepositoryState.build_index rt (repos_list_raw rt switch_config)
   in
   let opams =
     OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
@@ -502,3 +502,20 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
     ignore (unlock st);
     if not OpamCoreConfig.(!r.keep_log_dir) then cleanup_backup false;
     raise e
+
+let update_repositories gt update_fun switch =
+  OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock gt.root switch)
+  @@ fun () ->
+  let conf = load_switch_config gt switch in
+  let repos =
+    match conf.OpamFile.Switch_config.repos with
+    | None -> OpamGlobalState.repos_list gt
+    | Some repos -> repos
+  in
+  let conf =
+    { conf with
+      OpamFile.Switch_config.repos = Some (update_fun repos) }
+  in
+  OpamFile.Switch_config.write
+    (OpamPath.Switch.switch_config gt.root switch)
+    conf

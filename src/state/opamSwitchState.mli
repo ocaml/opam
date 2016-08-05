@@ -134,6 +134,14 @@ val remove_package_metadata: package -> 'a switch_state -> 'a switch_state
     the given version. Also marks it for reinstall if changed. *)
 val update_pin: package -> OpamFile.OPAM.t -> 'a switch_state -> 'a switch_state
 
+(** Updates the selected repositories in the given switch (does not load the
+    full switch state, but takes a transient write lock on the switch, so make
+    sure not to hold other locks to avoid deadlocks). Sets the switch
+    repositories in any case, even if unchanged from the defaults. *)
+val update_repositories:
+  'a global_state -> (repository_name list -> repository_name list) ->
+  switch -> unit
+
 (** {2 User interaction and reporting } *)
 
 (** Returns [true] if the switch of the state is the one set in

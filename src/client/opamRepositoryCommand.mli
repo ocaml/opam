@@ -14,29 +14,34 @@
 open OpamTypes
 open OpamStateTypes
 
-(** List the available repositories. *)
-val list: 'a repos_state -> short:bool -> unit
+(** List the selected repositories in the global default and/or selected
+    switches. *)
+val list:
+  'a repos_state -> global:bool -> switches:switch list ->
+  short:bool -> unit
 
-(* !X FIXME: once switches define their repositories, we should remove the
-   `repositories:` field from ~/.opam/config and rely on the switch priority
-   list, and ~/.opam/repos/*/config only. Then we don't need a lock on
-   global_state anymore. *)
+(** Lists all configured repositories, and, if not [short], the switches they
+    are selected in. *)
+val list_all: 'a repos_state -> short:bool -> unit
 
-(** Add a new repository. *)
-val add:
-  rw global_state -> rw repos_state ->
-  repository_name -> url -> priority:int option ->
-  rw global_state * rw repos_state
+(** Add a new repository to ~/.opam/repos, without updating any selections *)
+val add: rw repos_state -> repository_name -> url -> rw repos_state
 
-(** Remove a repository. *)
-val remove:
-  rw global_state -> rw repos_state -> repository_name ->
-  rw global_state * rw repos_state
+(** Remove a repository from ~/.opam/repos, without updating any selections *)
+val remove: rw repos_state -> repository_name -> rw repos_state
 
-(** Set a repository priority, i.e. its rank in the configured repos (lower
-    value is higher priority) *)
-val priority:
-  rw global_state -> repository_name -> priority:int -> rw global_state
+(** Updates the global switch selection, used as default for switches that don't
+    specify their selections (e.g. newly created switches) *)
+val update_global_selection:
+  rw global_state -> (repository_name list -> repository_name list) ->
+  rw global_state
+
+(** Updates the specified selections using the given functions, taking locks as
+    required *)
+val update_selection:
+  'a global_state -> global:bool -> switches:switch list ->
+  (repository_name list -> repository_name list) ->
+  'a global_state
 
 (** Change the registered address of a repo *)
 val set_url: rw repos_state -> repository_name -> url -> rw repos_state
