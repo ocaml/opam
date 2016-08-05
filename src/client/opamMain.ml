@@ -1176,29 +1176,34 @@ let update =
     arg_list "NAMES"
       "List of repository or development package names to update."
       Arg.string in
-  let update global_options jobs names repos_only dev_only upgrade =
+  let all =
+    mk_flag ["a"; "all"]
+      "Update all configured repositories, not only what is set in the current \
+       switch" in
+  let update global_options jobs names repos_only dev_only all upgrade =
     apply_global_options global_options;
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ();
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
-    let st =
+    let rt =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
         ~dev_only:(dev_only && not repos_only)
+        ~all
         ~no_stats:true
         names
     in
     if upgrade then
-      OpamSwitchState.with_write_lock st @@ fun st ->
+      OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
       ignore @@ OpamClient.upgrade st []
     else
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n"
   in
   Term.(pure update $global_options $jobs_flag $name_list
-        $repos_only $dev_only $upgrade),
+        $repos_only $dev_only $all $upgrade),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
