@@ -61,6 +61,10 @@ val with_write_lock:
 
 (** {2 Helpers to access state data} *)
 
+(** Returns the repositories configured in the current switch or, if none, the
+    globally set default. highest priority first. *)
+val repos_list: 'a switch_state -> repository_name list
+
 val selections: 'a switch_state -> switch_selections
 
 (** Return the OPAM file for the given package.

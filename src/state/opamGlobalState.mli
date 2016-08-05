@@ -32,9 +32,9 @@ val fold_switches:
     of switches they are installed in *)
 val installed_versions: 'a global_state -> name -> switch list package_map
 
-(** List of configured repositories ordered by decreasing priority (note: this
-    is at the moment global, but it's planned that switches can define their own
-    subset and order of the repos) *)
+(** Default list of repositories to get packages from, ordered by decreasing
+    priority. This can be overriden by switch-specific selections, and does not
+    have to include all configured repositories. *)
 val repos_list: 'a global_state -> repository_name list
 
 (** Releases any locks on the given global_state *)

@@ -267,7 +267,7 @@ let apply_selector ~base st = function
         if List.mem r repos then OpamPackage.Set.union packages (aux rl)
         else OpamPackage.Set.diff (aux rl) packages
     in
-    aux (OpamGlobalState.repos_list st.switch_global)
+    aux (OpamSwitchState.repos_list st)
 
 let rec filter ~base st = function
   | Empty -> base
@@ -457,7 +457,7 @@ let detail_printer ?prettify ?normalise st nv =
       (OpamPackage.Set.elements pkgs)
   | Repository ->
     OpamRepositoryState.find_package_opt st.switch_repos
-      (OpamGlobalState.repos_list st.switch_global) nv |>
+      (OpamSwitchState.repos_list st) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
   | Installed_files ->
     let changes_f =

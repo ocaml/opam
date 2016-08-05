@@ -66,7 +66,7 @@ type +'lock repos_state = {
   repos_lock: OpamSystem.lock;
 
   repos_global: unlocked global_state;
- 
+
   repositories: repository repository_name_map;
   (** The list of repositories *)
 

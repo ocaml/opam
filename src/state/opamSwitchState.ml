@@ -51,6 +51,28 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
   in
   OpamPackage.keys avail_map
 
+let repos_list_raw gt rt switch_config =
+  let global, repos =
+    match switch_config.OpamFile.Switch_config.repos with
+    | None -> true, OpamGlobalState.repos_list gt
+    | Some repos -> false, repos
+  in
+  let found, notfound =
+    List.partition (fun r ->
+        OpamRepositoryName.Map.mem r rt.repositories)
+      repos
+  in
+  List.iter (fun r ->
+      log "Ignoring %s-selected repository %S, no configured repository by \
+           this name found"
+        (if global then "globally" else "switch")
+        (OpamRepositoryName.to_string r))
+    notfound;
+  found
+
+let repos_list st =
+  repos_list_raw st.switch_global st.switch_repos st.switch_config
+
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
@@ -107,7 +129,7 @@ let load lock_kind gt rt switch =
       installed OpamPackage.Map.empty
   in
   let repos_package_index =
-    OpamRepositoryState.build_index rt (OpamGlobalState.repos_list gt)
+    OpamRepositoryState.build_index rt (repos_list_raw gt rt switch_config)
   in
   let opams =
     OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
