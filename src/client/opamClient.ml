@@ -516,13 +516,10 @@ let slog = OpamConsole.slog
       if repo_names = [] then rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
       OpamConsole.header_msg "Updating package repositories";
-      let rt =
-        OpamUpdate.repositories rt
-          (List.map
-             (fun r -> OpamRepositoryName.Map.find r rt.repositories)
-             repo_names)
-      in
-      OpamRepositoryState.unlock rt
+      OpamUpdate.repositories rt
+        (List.map
+           (fun r -> OpamRepositoryName.Map.find r rt.repositories)
+           repo_names)
     in
 
     (* st is still based on the old rt, it's not a problem at this point, but
@@ -535,7 +532,7 @@ let slog = OpamConsole.slog
         if OpamStateConfig.(!r.json_out <> None) then
           OpamJson.append "dev-packages-updates"
             (OpamPackage.Set.to_json updates);
-        OpamSwitchState.unlock st
+        st
     in
     rt
 

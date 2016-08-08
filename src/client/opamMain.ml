@@ -1455,7 +1455,6 @@ let switch =
         if is_new_switch then
           OpamGlobalState.with_write_lock gt @@ fun gt ->
           OpamSwitchAction.create_empty_switch gt switch
-          |> OpamGlobalState.unlock
         else gt
       in
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->

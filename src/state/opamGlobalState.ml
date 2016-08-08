@@ -108,10 +108,13 @@ let unlock gt =
   (gt :> unlocked global_state)
 
 let with_write_lock ?dontblock gt f =
-  OpamFilename.with_flock_upgrade `Lock_write ?dontblock gt.global_lock @@ fun () ->
-  f ({ gt with global_lock = gt.global_lock } : rw global_state)
-(* We don't actually change the field value, but this makes restricting the
-   phantom lock type possible*)
+  let gt =
+    OpamFilename.with_flock_upgrade `Lock_write ?dontblock gt.global_lock
+    @@ fun () -> f ({ gt with global_lock = gt.global_lock } : rw global_state)
+    (* We don't actually change the field value, but this makes restricting the
+       phantom lock type possible*)
+  in
+  { gt with global_lock = gt.global_lock }
 
 let with_ lock f =
   let gt = load lock in

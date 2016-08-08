@@ -57,7 +57,8 @@ val unlock: 'a switch_state -> unlocked switch_state
 (** Calls the provided function, ensuring a temporary write lock on the given
     switch state *)
 val with_write_lock:
-  ?dontblock:bool -> 'a switch_state -> (rw switch_state -> 'c) -> 'c
+  ?dontblock:bool -> 'a switch_state -> (rw switch_state -> rw switch_state) ->
+  'a switch_state
 
 (** {2 Helpers to access state data} *)
 

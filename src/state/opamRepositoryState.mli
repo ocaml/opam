@@ -60,7 +60,8 @@ val unlock: 'a repos_state -> unlocked repos_state
 (** Calls the provided function, ensuring a temporary write lock on the given
     repository state*)
 val with_write_lock:
-  ?dontblock:bool -> 'a repos_state -> (rw repos_state -> 'c) -> 'c
+  ?dontblock:bool -> 'a repos_state -> (rw repos_state -> rw repos_state) ->
+  'a repos_state
 
 (** Writes the repositories config file back to disk *)
 val write_config: rw repos_state -> unit
