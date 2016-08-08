@@ -2150,6 +2150,20 @@ module OPAMSyntax = struct
          Pp.of_pair "descr" Descr.(of_string (), to_string ()));
     ]
 
+  (* These don't have a printer and their info is stored in new fields *)
+  let alias_fields = [
+    "author", "authors";
+    "descr", "description";
+  ]
+
+  (* These don't have a printer and their info can't be retrievec in the same
+     format anymore *)
+  let deprecated_fields = [
+    "ocaml-version";
+    "os";
+    "configure-style";
+  ]
+
   let fields =
     List.map (fun (name, (_, cleaned_up_pp)) -> name, cleaned_up_pp)
       fields_gen
@@ -2319,9 +2333,15 @@ module OPAMSyntax = struct
       (aux [] [] (contents ?filename t).file_contents)
 
   let print_field_as_syntax field t =
+    let field = try List.assoc field alias_fields with Not_found -> field in
+    if List.mem field deprecated_fields then raise Not_found;
     match OpamStd.String.cut_at field '.' with
     | None ->
-      snd (Pp.print (List.assoc field fields) t)
+      if is_ext_field field
+      then
+        OpamStd.Option.map snd
+          (OpamStd.String.Map.find_opt field t.extensions)
+      else snd (Pp.print (List.assoc field fields) t)
     | Some (sec, field) ->
       match snd (Pp.print (List.assoc sec sections) t) with
       | None -> None

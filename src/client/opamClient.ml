@@ -1055,19 +1055,23 @@ let slog = OpamConsole.slog
         raise e
 
     let get_upstream t name =
-      match
-        OpamStd.Option.Op.(
-          OpamSwitchState.get_package t name |>
-          OpamSwitchState.opam_opt t >>=
-          OpamFile.OPAM.dev_repo
-        )
-      with
-      | None ->
+      try match
+          OpamStd.Option.Op.(
+            OpamSwitchState.get_package t name |>
+            OpamSwitchState.opam_opt t >>=
+            OpamFile.OPAM.dev_repo
+          )
+        with
+        | None ->
+          OpamConsole.error_and_exit
+            "\"dev-repo\" field missing in %s metadata, you'll need to specify \
+             the pinning location"
+            (OpamPackage.Name.to_string name)
+        | Some url -> url
+      with Not_found ->
         OpamConsole.error_and_exit
-          "\"dev-repo\" field missing in %s metadata, you'll need to specify \
-           the pinning location"
+          "No package named %S found"
           (OpamPackage.Name.to_string name)
-      | Some url -> url
 
     let pin st name ?(edit=false) ?version ?(action=true) target =
       let st =

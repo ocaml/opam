@@ -122,18 +122,23 @@ let check_availability ?permissive t set atoms =
     (List.iter (OpamConsole.error "%s") errors;
      OpamStd.Sys.exit 66)
 
-let sanitize_atom_list ?(permissive=false) t atoms =
-  let packages =
-    OpamPackage.to_map (OpamPackage.Set.union t.packages t.installed) in
-  (* gets back the original capitalization of the package name *)
-  let realname name =
-    let lc_name name = String.lowercase (OpamPackage.Name.to_string name) in
-    let m =
-      OpamPackage.Name.Map.filter (fun p _ -> lc_name name = lc_name p)
-        packages in
-    match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
+let fuzzy_name t name =
+  let lname = String.lowercase (OpamPackage.Name.to_string name) in
+  let match_name nv =
+    lname = String.lowercase (OpamPackage.name_to_string nv)
   in
-  let atoms = List.rev_map (fun (name,cstr) -> realname name, cstr) atoms in
+  let matches =
+    OpamPackage.Set.union
+      (OpamPackage.Set.filter match_name t.installed)
+      (OpamPackage.Set.filter match_name t.packages)
+  in
+  let names = OpamPackage.names_of_packages matches in
+  match OpamPackage.Name.Set.elements names with
+  | [name] -> name
+  | _ -> name
+
+let sanitize_atom_list ?(permissive=false) t atoms =
+  let atoms = List.map (fun (name,cstr) -> fuzzy_name t name, cstr) atoms in
   if permissive then
     check_availability ~permissive t
       (OpamPackage.Set.union t.packages t.installed) atoms
@@ -601,7 +606,7 @@ let parallel_apply t action action_graph =
       in
       let remaining =
         List.filter (function
-            | `Install p when List.mem (`Build p) failed -> false
+            | `Remove p | `Install p when List.mem (`Build p) failed -> false
             | _ -> true)
           remaining
       in

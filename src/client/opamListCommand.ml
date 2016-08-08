@@ -228,14 +228,19 @@ let apply_selector ~base st = function
     let re = if psel.exact then Re.seq [Re.bos; re; Re.eos] else re in
     let re = Re.compile re in
     let content_strings nv =
-      get_opam st nv |>
-      OpamFile.OPAM.to_list |>
-      OpamStd.List.filter_map (fun (f, v) ->
-          if psel.fields = [] ||
-             List.mem f psel.fields ||
-             psel.ext_fields && OpamStd.String.starts_with ~prefix:"x-" f
-          then Some (value_strings v)
-          else None)
+      let opam = get_opam st nv in
+      if psel.fields = [] then
+        List.map (fun (_,v) -> value_strings v) (OpamFile.OPAM.to_list opam)
+      else
+      try
+        List.map
+          (fun f -> match OpamFile.OPAM.print_field_as_syntax f opam with
+             | None -> OpamStd.String.Set.empty
+             | Some v -> value_strings v)
+          psel.fields
+      with Not_found ->
+        OpamConsole.error_and_exit "Unrecognised field in selection %s"
+          (String.concat ", " psel.fields)
     in
     OpamPackage.Set.filter
       (fun nv -> List.exists (OpamStd.String.Set.exists (Re.execp re))
