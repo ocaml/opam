@@ -1192,7 +1192,6 @@ let update =
         ~repos_only:(repos_only && not dev_only)
         ~dev_only:(dev_only && not repos_only)
         ~all
-        ~no_stats:true
         names
     in
     if upgrade then

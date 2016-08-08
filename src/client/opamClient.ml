@@ -454,7 +454,7 @@ let slog = OpamConsole.slog
     t
 
   let update
-      gt ~repos_only ~dev_only ?(no_stats=false) ?(all=false) names =
+      gt ~repos_only ~dev_only ?(all=false) names =
     log "UPDATE %a" (slog @@ String.concat ", ") names;
     let rt = OpamRepositoryState.load `Lock_none gt in
     let st, repos_only =

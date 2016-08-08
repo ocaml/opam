@@ -38,7 +38,7 @@ val reinstall:
 (** Update the local mirrors for the repositories and/or development packages *)
 val update:
   'a global_state ->
-  repos_only:bool -> dev_only:bool -> ?no_stats:bool -> ?all:bool ->
+  repos_only:bool -> dev_only:bool -> ?all:bool ->
   string list ->
   unlocked repos_state
 
