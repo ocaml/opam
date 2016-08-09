@@ -655,7 +655,6 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     Field "flags";
     Field "depends";
     Field "depopts";
-    Installed_files;
     Synopsis;
     Description;
   ] in
