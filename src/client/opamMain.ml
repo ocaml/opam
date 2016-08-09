@@ -1531,10 +1531,18 @@ let switch =
     mk_flag ["no-autoinstall"]
       "On 'switch set', fail if the switch doesn't exist already rather than \
        install a new one." in
-
+  let repos =
+    mk_opt ["repositories"] "REPOS"
+      "When creating a new switch, use the given selection of repositories \
+       instead of the default. You can configure new repositories in advance \
+       using $(i,opam repository add --no-select) and then create a switch \
+       using them with this option. See $(i,opam repository) for more \
+       details."
+      Arg.(some (list repository_name)) None
+  in
   let switch global_options
       build_options command alias_of print_short installed all
-      no_switch no_autoinstall packages empty params =
+      no_switch no_autoinstall packages empty repos params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1544,7 +1552,7 @@ let switch =
     in
     let guess_compiler_package gt s =
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      OpamSwitchCommand.guess_compiler_package rt s
+      OpamSwitchCommand.guess_compiler_package ?repos rt s
     in
     let compiler_packages gt switch =
       match packages, alias_of with
@@ -1565,6 +1573,7 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let _gt, st =
         OpamSwitchCommand.install gt
+          ?repos
           ~update_config:(not no_switch)
           ~packages:(compiler_packages gt switch)
           (OpamSwitch.of_string switch)
@@ -1584,7 +1593,7 @@ let switch =
       let gt =
         if is_new_switch then
           OpamGlobalState.with_write_lock gt @@ fun gt ->
-          OpamSwitchAction.create_empty_switch gt switch
+          OpamSwitchAction.create_empty_switch gt ?repos switch
         else gt
       in
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1634,7 +1643,7 @@ let switch =
         if is_installed then
           OpamConsole.msg "Switch already installed, nothing to do.\n"
         else
-          OpamSwitchCommand.install gt ~update_config:false
+          OpamSwitchCommand.install gt ?repos ~update_config:false
             ~packages switch_name |> ignore
       else if no_autoinstall then
         OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore
@@ -1656,7 +1665,7 @@ let switch =
              $global_options $build_options $command
              $alias_of $print_short_flag
              $installed $all $no_switch $no_autoinstall
-             $packages $empty $params)),
+             $packages $empty $repos $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)

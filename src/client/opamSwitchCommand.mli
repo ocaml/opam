@@ -18,7 +18,9 @@ open OpamStateTypes
     [global_state] is unlocked as soon as possible, i.e. after registering the
     existence of the new switch *)
 val install:
-  rw global_state -> update_config:bool ->
+  rw global_state ->
+  ?repos:repository_name list ->
+  update_config:bool ->
   packages:atom conjunction -> switch ->
   unlocked global_state * rw switch_state
 
@@ -47,7 +49,8 @@ val switch: 'a lock -> rw global_state -> switch -> 'a switch_state
 (** Switch to the given compiler switch, installing it if it doesn't exist
     already (with the given compiler, or empty if unspecified). *)
 val switch_with_autoinstall:
-  rw global_state -> packages:atom conjunction -> switch ->
+  rw global_state -> ?repos:repository_name list ->
+  packages:atom conjunction -> switch ->
   unlocked global_state * rw switch_state
 
 (** Reinstall the given compiler switch. *)
@@ -64,10 +67,11 @@ val list:
   'a global_state -> print_short:bool -> installed:bool -> all:bool -> unit
 
 (** Returns all available compiler packages from a repo state *)
-val get_compiler_packages: 'a repos_state -> package_set
+val get_compiler_packages:
+  ?repos:repository_name list -> 'a repos_state -> package_set
 
 (** Guess the compiler from the switch name: within compiler packages,
     match [name] against "pkg.version", "pkg", and, as a last resort,
     "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
 val guess_compiler_package:
-  'a repos_state -> string -> atom list
+  ?repos:repository_name list -> 'a repos_state -> string -> atom list
