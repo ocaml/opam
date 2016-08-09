@@ -22,6 +22,7 @@ let global_variable_names = [
   "jobs",                 "The number of parallel jobs set up in OPAM \
                            configuration";
   "arch",                 "The current arch, as returned by \"uname -m\"";
+  "root",                 "The current opam root directory";
 ]
 
 let package_variable_names = [
@@ -63,6 +64,7 @@ let resolve_global gt full_var =
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
       | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
       | "arch"          -> Some (V.string (OpamStd.Sys.arch ()))
+      | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | _               -> None
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
