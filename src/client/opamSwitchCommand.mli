@@ -63,8 +63,7 @@ val set_compiler: rw switch_state -> name list -> rw switch_state
 val show: unit -> unit
 
 (** List all the available compiler switches. *)
-val list:
-  'a global_state -> print_short:bool -> installed:bool -> all:bool -> unit
+val list: 'a global_state -> print_short:bool -> unit
 
 (** Returns all available compiler packages from a repo state *)
 val get_compiler_packages:

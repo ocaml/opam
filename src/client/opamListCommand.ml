@@ -478,7 +478,7 @@ let detail_printer ?prettify ?normalise st nv =
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
-    ?prettify ?normalise packages =
+    ?prettify ?normalise ?order packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -497,8 +497,9 @@ let display
           universe packages
       in
       List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages
-    else
-      OpamPackage.Set.elements packages
+    else match order with
+      | None -> OpamPackage.Set.elements packages
+      | Some o -> List.sort o (OpamPackage.Set.elements packages)
   in
   let add_head l =
     if header then

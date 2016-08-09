@@ -1477,11 +1477,11 @@ let switch =
     "Reinstall the given compiler switch. This will also reinstall all \
      packages.";
     "list", `list, [],
-    "List compiler packages. \
-     By default, lists installed and `standard' compilers. Use `--all' to get \
-     the list of all installable compilers. \
-     Note that $(b,--packages) can be used to switch to any packages, not only \
-     the ones with the \"compiler\" flag set that this command shows.";
+    "Lists installed switches.";
+    "list-available", `list_available, [],
+    "Lists base packages that can be used to create a new switch, i.e. \
+     packages with the $(i,compiler) flag set. Only standard versions are \
+     shown by default, use $(b,--all) to show all.";
     "show", `current, [], "Show the current compiler.";
     "set-compiler", `set_compiler, ["NAMES"],
     "Sets the packages forming the immutable base for the selected switch, \
@@ -1513,8 +1513,6 @@ let switch =
     mk_flag ["no-switch"]
       "Only install the compiler switch, without switching to it. If the compiler \
        switch is already installed, then do nothing." in
-  let installed =
-    mk_flag ["i";"installed"] "When listing, show installed switches only." in
   let all =
     mk_flag ["a";"all"]
       "When listing, show all the available compiler packages, not just the \
@@ -1537,11 +1535,11 @@ let switch =
        instead of the default. You can configure new repositories in advance \
        using $(i,opam repository add --no-select) and then create a switch \
        using them with this option. See $(i,opam repository) for more \
-       details."
+       details. This also affects $(i,list-available)."
       Arg.(some (list repository_name)) None
   in
   let switch global_options
-      build_options command alias_of print_short installed all
+      build_options command alias_of print_short all
       no_switch no_autoinstall packages empty repos params =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1567,7 +1565,31 @@ let switch =
     | None      , []
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.list gt ~print_short ~installed ~all;
+      OpamSwitchCommand.list gt ~print_short;
+      `Ok ()
+    | Some `list_available, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
+      let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
+      let compilers =
+        if all then compilers else
+        let is_main_comp_re =
+          Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
+        in
+        OpamPackage.Set.filter
+          (fun nv ->
+             Re.(execp is_main_comp_re (OpamPackage.version_to_string nv)))
+          compilers
+      in
+      let format = OpamListCommand.([ Name; Version; Synopsis; ]) in
+      let order nv1 nv2 =
+        if nv1.version = nv2.version
+        then OpamPackage.Name.compare nv1.name nv2.name
+        else OpamPackage.Version.compare nv1.version nv2.version
+      in
+      OpamListCommand.display st ~header:false ~format ~dependency_order:false
+        ~all_versions:true ~order compilers;
       `Ok ()
     | Some `install, [switch] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -1664,7 +1686,7 @@ let switch =
   Term.(ret (pure switch
              $global_options $build_options $command
              $alias_of $print_short_flag
-             $installed $all $no_switch $no_autoinstall
+             $all $no_switch $no_autoinstall
              $packages $empty $repos $params)),
   term_info "switch" ~doc ~man
 

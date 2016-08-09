@@ -19,11 +19,12 @@ module S = OpamFile.SwitchSelections
 let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
-(* name + state + compiler + description *)
-(* TODO: add repo *)
-let list gt ~print_short ~installed ~all =
+let list gt ~print_short =
   log "list";
-
+  if print_short then
+    List.iter (OpamConsole.msg "%s\n" @* OpamSwitch.to_string)
+      (List.sort compare (OpamFile.Config.installed_switches gt.config))
+  else
   let installed_switches =
     OpamGlobalState.fold_switches (fun sw sel acc ->
         let opams =
@@ -55,25 +56,6 @@ let list gt ~print_short ~installed ~all =
       gt
       OpamSwitch.Map.empty
   in
-  let available, notshown =
-    if installed then OpamPackage.Map.empty, 0 else
-    let rt = OpamRepositoryState.load `Lock_none gt in
-    let st = OpamSwitchState.load_virtual gt rt in
-    let is_main_comp_re =
-      Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
-    in
-    OpamPackage.Map.fold
-      (fun nv opam (acc,notshown) ->
-         if OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
-            OpamPackage.Set.mem nv (Lazy.force st.available_packages)
-         then
-           if all ||
-              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv))
-           then OpamPackage.Map.add nv opam acc, notshown
-           else acc, notshown + 1
-         else acc, notshown)
-      st.opams (OpamPackage.Map.empty, 0)
-  in
   let list =
     OpamSwitch.Map.fold (fun sw opams acc ->
         let descr =
@@ -83,17 +65,6 @@ let list gt ~print_short ~installed ~all =
         in
         (Some sw, OpamPackage.keys opams, descr) :: acc)
       installed_switches []
-  in
-  let list =
-    OpamPackage.Map.fold (fun nv opam acc ->
-        let packages = OpamPackage.Set.singleton nv in
-        if
-          List.exists
-            (fun (_, nvs, _) -> OpamPackage.Set.equal nvs packages)
-            list
-        then acc
-        else (None, packages, OpamFile.OPAM.descr opam) :: acc)
-      available list
   in
   let list = List.sort compare list in
 
@@ -114,11 +85,6 @@ let list gt ~print_short ~installed ~all =
   OpamStd.Format.print_table stdout ~sep:"  "
     (OpamStd.Format.align_table table);
 
-  if not print_short && notshown > 0 then
-    OpamConsole.msg "# %d more patched or experimental compilers, \
-                     use '--all' to show\n"
-      notshown;
-  if not print_short then
   match OpamStateConfig.(!r.current_switch), OpamStateConfig.(!r.switch_from)
   with
   | None, _ when OpamFile.Config.installed_switches gt.config <> [] ->
