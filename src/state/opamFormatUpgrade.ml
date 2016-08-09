@@ -45,13 +45,13 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     | `Leq -> `Geq
   in
   let mk_constraint op v = Atom (Constraint (op, FString v)) in
-  let get_atom v =
+  let get_atom ?(op=`Eq) v =
     if v = "system" then
       ocaml_system_pkgname, Empty
     else
       (if String.contains v '+' then ocaml_variants_pkgname
        else ocaml_official_pkgname),
-      mk_constraint `Eq v
+      mk_constraint op v
   in
   let module NMap = OpamPackage.Name.Map in
   let pkg_deps, pkg_conflicts, available_opt =
@@ -64,10 +64,10 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
            NMap.singleton ocaml_wrapper_pkgname (mk_constraint op v),
            NMap.empty,
            None
-         | "compiler", `Eq ->
-           NMap.of_list [get_atom v], NMap.empty, None
          | "compiler", `Neq ->
            NMap.empty, NMap.of_list [get_atom v], None
+         | "compiler", op ->
+           NMap.of_list [get_atom ~op v], NMap.empty, None
          | _ -> NMap.empty, NMap.empty, Some avail)
       | FIdent ([], v, None) when
           OpamVariable.to_string v = "preinstalled" ->
