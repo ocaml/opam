@@ -1254,7 +1254,7 @@ module Switch_configSyntax = struct
     "opam-version", Pp.ppacc
       (fun _ t -> t) (fun _ -> OpamVersion.current_nopatch)
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
-    "repos",
+    "repositories",
     Pp.ppacc_opt (fun r t -> {t with repos = Some r}) (fun t -> t.repos)
       (Pp.V.map_list ~depth:1 @@
        Pp.V.string -| Pp.of_module "repo" (module OpamRepositoryName));

@@ -57,9 +57,14 @@ val unlock: 'a switch_state -> unlocked switch_state
 (** Calls the provided function, ensuring a temporary write lock on the given
     switch state *)
 val with_write_lock:
-  ?dontblock:bool -> 'a switch_state -> (rw switch_state -> 'c) -> 'c
+  ?dontblock:bool -> 'a switch_state -> (rw switch_state -> rw switch_state) ->
+  'a switch_state
 
 (** {2 Helpers to access state data} *)
+
+(** Returns the repositories configured in the current switch or, if none, the
+    globally set default. highest priority first. *)
+val repos_list: 'a switch_state -> repository_name list
 
 val selections: 'a switch_state -> switch_selections
 
@@ -128,6 +133,14 @@ val remove_package_metadata: package -> 'a switch_state -> 'a switch_state
 (** Like [update_package_metadata], but also ensures the package is pinned to
     the given version. Also marks it for reinstall if changed. *)
 val update_pin: package -> OpamFile.OPAM.t -> 'a switch_state -> 'a switch_state
+
+(** Updates the selected repositories in the given switch (does not load the
+    full switch state, but takes a transient write lock on the switch, so make
+    sure not to hold other locks to avoid deadlocks). Sets the switch
+    repositories in any case, even if unchanged from the defaults. *)
+val update_repositories:
+  'a global_state -> (repository_name list -> repository_name list) ->
+  switch -> unit
 
 (** {2 User interaction and reporting } *)
 

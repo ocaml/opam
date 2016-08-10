@@ -267,7 +267,7 @@ let apply_selector ~base st = function
         if List.mem r repos then OpamPackage.Set.union packages (aux rl)
         else OpamPackage.Set.diff (aux rl) packages
     in
-    aux (OpamGlobalState.repos_list st.switch_global)
+    aux (OpamSwitchState.repos_list st)
 
 let rec filter ~base st = function
   | Empty -> base
@@ -457,7 +457,7 @@ let detail_printer ?prettify ?normalise st nv =
       (OpamPackage.Set.elements pkgs)
   | Repository ->
     OpamRepositoryState.find_package_opt st.switch_repos
-      (OpamGlobalState.repos_list st.switch_global) nv |>
+      (OpamSwitchState.repos_list st) nv |>
     OpamStd.Option.to_string (fun (r, _) -> OpamRepositoryName.to_string r)
   | Installed_files ->
     let changes_f =
@@ -478,7 +478,7 @@ let detail_printer ?prettify ?normalise st nv =
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
-    ?prettify ?normalise packages =
+    ?prettify ?normalise ?order packages =
   let packages =
     if all_versions then packages else
       OpamPackage.Name.Map.fold (fun n vs acc ->
@@ -497,8 +497,9 @@ let display
           universe packages
       in
       List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages
-    else
-      OpamPackage.Set.elements packages
+    else match order with
+      | None -> OpamPackage.Set.elements packages
+      | Some o -> List.sort o (OpamPackage.Set.elements packages)
   in
   let add_head l =
     if header then
@@ -655,7 +656,6 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     Field "flags";
     Field "depends";
     Field "depopts";
-    Installed_files;
     Synopsis;
     Description;
   ] in

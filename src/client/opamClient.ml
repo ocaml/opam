@@ -453,40 +453,29 @@ let slog = OpamConsole.slog
     OpamSolution.check_solution t result;
     t
 
-  let update gt ~repos_only ~dev_only ?(no_stats=false) names =
+  let update
+      gt ~repos_only ~dev_only ?(all=false) names =
     log "UPDATE %a" (slog @@ String.concat ", ") names;
-    let rt, repo_names =
-      let all_repos = OpamFile.Config.repositories gt.config in
-      let repo_names =
-        if dev_only then [] else
-        if names = [] then all_repos else
-          List.filter
-            (fun r -> List.mem (OpamRepositoryName.to_string r) names)
-            all_repos
-      in
-      if repo_names = [] then
-        OpamRepositoryState.load `Lock_none gt, []
-      else
-      let rt = OpamRepositoryState.load `Lock_write gt in
-      let repos =
-        List.map (fun name -> OpamRepositoryName.Map.find name rt.repositories)
-          repo_names
-      in
-      OpamConsole.header_msg "Updating package repositories";
-      let rt = OpamUpdate.repositories rt repos in
-      OpamRepositoryState.unlock rt, repo_names
-    in
-    let st, packages =
+    let rt = OpamRepositoryState.load `Lock_none gt in
+    let st, repos_only =
       if OpamStateConfig.(!r.current_switch) = None then
-        OpamSwitchState.load_virtual gt rt,
-        OpamPackage.Set.empty
-      else if repos_only then
-        OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ()),
-        OpamPackage.Set.empty
+        OpamSwitchState.load_virtual gt rt, true
       else
-      let st =
-        OpamSwitchState.load `Lock_write gt rt (OpamStateConfig.get_switch ())
-      in
+        OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ()),
+        repos_only
+    in
+    let repo_names =
+      let all_repos = OpamRepositoryName.Map.keys rt.repositories in
+      if dev_only then []
+      else if names <> [] then
+        List.filter
+          (fun r -> List.mem (OpamRepositoryName.to_string r) names)
+          all_repos
+      else if all then all_repos
+      else OpamSwitchState.repos_list st
+    in
+    let packages =
+      if repos_only then OpamPackage.Set.empty else
       let packages = st.installed ++ st.pinned in
       let packages =
         if names = [] then packages else
@@ -505,18 +494,9 @@ let slog = OpamConsole.slog
            controlled upstream) and can't be updated individually. What you \
            want is probably to update your repositories: %s"
           (OpamPackage.Set.to_string nondev_packages);
-      let st =
-        if OpamPackage.Set.is_empty dev_packages then st else (
-          OpamConsole.header_msg "Synchronizing development packages";
-          let st, updates = OpamUpdate.dev_packages st dev_packages in
-          if OpamStateConfig.(!r.json_out <> None) then
-            OpamJson.append "dev-packages-updates"
-              (OpamPackage.Set.to_json updates);
-          st
-        )
-      in
-      OpamSwitchState.unlock st, packages
+      dev_packages
     in
+
     let remaining =
       List.filter (fun n -> not (
           List.mem (OpamRepositoryName.of_string n) repo_names ||
@@ -526,57 +506,35 @@ let slog = OpamConsole.slog
            with Failure _ -> false)
         )) names
     in
-
     if remaining <> [] then
       OpamConsole.error
         "Unknown repositories or installed packages: %s"
         (String.concat ", " remaining);
 
-    if no_stats then st else
-    let broken_state_message ~need_fixup conflicts =
-      let reasons, chains, _cycles =
-        OpamCudf.strings_of_conflict (OpamSwitchState.unavailable_reason st)
-          conflicts
-      in
-      OpamConsole.warning
-        "A conflict was detected in your installation. \
-         This can be caused by updated constraints or conflicts in your \
-         installed packages:\n%s"
-        (OpamStd.Format.itemize (fun x -> x) reasons);
-      if chains <> [] then (
-        OpamConsole.formatted_msg "The following dependencies are the cause:\n";
-        List.iter (OpamConsole.msg "  - %s\n") chains);
-      OpamConsole.formatted_msg
-        "\nYou should run \"opam upgrade%s\" to resolve the situation.\n"
-        (if need_fixup && OpamCudf.external_solver_available () then " --fixup"
-         else "")
+    (* Do the updates *)
+    let rt =
+      if repo_names = [] then rt else
+      OpamRepositoryState.with_write_lock rt @@ fun rt ->
+      OpamConsole.header_msg "Updating package repositories";
+      OpamUpdate.repositories rt
+        (List.map
+           (fun r -> OpamRepositoryName.Map.find r rt.repositories)
+           repo_names)
     in
-    log "dry-upgrade";
-    let universe =
-      OpamSwitchState.universe st (Upgrade OpamPackage.Set.empty)
+
+    (* st is still based on the old rt, it's not a problem at this point, but
+       don't return it *)
+    let _st =
+      if OpamPackage.Set.is_empty packages then st else
+        OpamSwitchState.with_write_lock st @@ fun st ->
+        OpamConsole.header_msg "Synchronizing development packages";
+        let st, updates = OpamUpdate.dev_packages st packages in
+        if OpamStateConfig.(!r.json_out <> None) then
+          OpamJson.append "dev-packages-updates"
+            (OpamPackage.Set.to_json updates);
+        st
     in
-    match OpamSolver.check_for_conflicts universe with
-    | Some cs ->
-      let need_fixup = match compute_upgrade_t [] st with
-        | _, _, Success _ -> false
-        | _, _, Conflicts _ -> true
-      in
-      broken_state_message ~need_fixup cs; st
-    | None ->
-      match compute_upgrade_t [] st with
-      | _, _, Success upgrade ->
-        let stats = OpamSolver.stats upgrade in
-        if OpamSolution.sum stats > 0 then
-          OpamConsole.msg
-            "\nUpdates available for %s, apply them with 'opam upgrade':\n\
-             ===== %s =====\n"
-            (OpamSwitch.to_string st.switch)
-            (OpamSolver.string_of_stats stats);
-        st
-      | _, _, Conflicts cs ->
-        log "State isn't broken but upgrade fails: something might be wrong.";
-        broken_state_message ~need_fixup:true cs;
-        st
+    rt
 
   let init
       ?init_config ?repo ?(bypass_checks=false)

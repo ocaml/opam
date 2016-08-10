@@ -35,12 +35,12 @@ val install:
 val reinstall:
   rw switch_state -> atom list -> rw switch_state
 
-(** Refresh the available packages. *)
+(** Update the local mirrors for the repositories and/or development packages *)
 val update:
   'a global_state ->
-  repos_only:bool -> dev_only:bool -> ?no_stats:bool ->
+  repos_only:bool -> dev_only:bool -> ?all:bool ->
   string list ->
-  unlocked switch_state
+  unlocked repos_state
 
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version, within the given constraints.

@@ -200,10 +200,13 @@ let unlock rt =
   (rt :> unlocked repos_state)
 
 let with_write_lock ?dontblock rt f =
-  OpamFilename.with_flock_upgrade `Lock_write ?dontblock rt.repos_lock @@ fun () ->
-  f ({ rt with repos_lock = rt.repos_lock } : rw repos_state)
-(* We don't actually change the field value, but this makes restricting the
-   phantom lock type possible*)
+  let rt =
+    OpamFilename.with_flock_upgrade `Lock_write ?dontblock rt.repos_lock
+    @@ fun () -> f ({ rt with repos_lock = rt.repos_lock } : rw repos_state)
+    (* We don't actually change the field value, but this makes restricting the
+       phantom lock type possible*)
+  in
+  { rt with repos_lock = rt.repos_lock }
 
 let with_ lock gt f =
   let rt = load lock gt in

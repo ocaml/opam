@@ -19,11 +19,12 @@ module S = OpamFile.SwitchSelections
 let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
-(* name + state + compiler + description *)
-(* TODO: add repo *)
-let list gt ~print_short ~installed ~all =
+let list gt ~print_short =
   log "list";
-
+  if print_short then
+    List.iter (OpamConsole.msg "%s\n" @* OpamSwitch.to_string)
+      (List.sort compare (OpamFile.Config.installed_switches gt.config))
+  else
   let installed_switches =
     OpamGlobalState.fold_switches (fun sw sel acc ->
         let opams =
@@ -55,25 +56,6 @@ let list gt ~print_short ~installed ~all =
       gt
       OpamSwitch.Map.empty
   in
-  let available, notshown =
-    if installed then OpamPackage.Map.empty, 0 else
-    let rt = OpamRepositoryState.load `Lock_none gt in
-    let st = OpamSwitchState.load_virtual gt rt in
-    let is_main_comp_re =
-      Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
-    in
-    OpamPackage.Map.fold
-      (fun nv opam (acc,notshown) ->
-         if OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
-            OpamPackage.Set.mem nv (Lazy.force st.available_packages)
-         then
-           if all ||
-              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv))
-           then OpamPackage.Map.add nv opam acc, notshown
-           else acc, notshown + 1
-         else acc, notshown)
-      st.opams (OpamPackage.Map.empty, 0)
-  in
   let list =
     OpamSwitch.Map.fold (fun sw opams acc ->
         let descr =
@@ -83,17 +65,6 @@ let list gt ~print_short ~installed ~all =
         in
         (Some sw, OpamPackage.keys opams, descr) :: acc)
       installed_switches []
-  in
-  let list =
-    OpamPackage.Map.fold (fun nv opam acc ->
-        let packages = OpamPackage.Set.singleton nv in
-        if
-          List.exists
-            (fun (_, nvs, _) -> OpamPackage.Set.equal nvs packages)
-            list
-        then acc
-        else (None, packages, OpamFile.OPAM.descr opam) :: acc)
-      available list
   in
   let list = List.sort compare list in
 
@@ -114,11 +85,6 @@ let list gt ~print_short ~installed ~all =
   OpamStd.Format.print_table stdout ~sep:"  "
     (OpamStd.Format.align_table table);
 
-  if not print_short && notshown > 0 then
-    OpamConsole.msg "# %d more patched or experimental compilers, \
-                     use '--all' to show\n"
-      notshown;
-  if not print_short then
   match OpamStateConfig.(!r.current_switch), OpamStateConfig.(!r.switch_from)
   with
   | None, _ when OpamFile.Config.installed_switches gt.config <> [] ->
@@ -242,7 +208,7 @@ let install_compiler_packages t atoms =
   OpamSolution.check_solution ~quiet:OpamStateConfig.(not !r.show) t result;
   t
 
-let install gt ~update_config ~packages switch =
+let install gt ?repos ~update_config ~packages switch =
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
@@ -255,7 +221,7 @@ let install gt ~update_config ~packages switch =
       (OpamFilename.Dir.to_string comp_dir);
   let gt, st =
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
-      let gt = OpamSwitchAction.create_empty_switch gt switch in
+      let gt = OpamSwitchAction.create_empty_switch gt ?repos switch in
       if update_config then
         gt, OpamSwitchAction.set_current_switch `Lock_write gt switch
       else
@@ -264,10 +230,10 @@ let install gt ~update_config ~packages switch =
     else
       gt,
       let rt = OpamRepositoryState.load `Lock_none gt in
-      let st = OpamSwitchState.load_virtual gt rt in
+      let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch
-                (OpamSwitchAction.gen_switch_config gt.root switch)
+                (OpamSwitchAction.gen_switch_config gt.root ?repos switch)
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in
@@ -317,7 +283,7 @@ let switch lock gt switch =
       (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
-let switch_with_autoinstall gt ~packages switch =
+let switch_with_autoinstall gt ?repos ~packages switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
@@ -332,7 +298,7 @@ let switch_with_autoinstall gt ~packages switch =
     OpamEnv.check_and_print_env_warning st;
     gt, st
   else
-    install gt ~update_config:true ~packages switch
+    install gt ?repos ~update_config:true ~packages switch
 
 let import_t importfile t =
   log "import switch";
@@ -545,11 +511,12 @@ let set_compiler st names =
   OpamSwitchAction.write_selections st;
   st
 
-let get_compiler_packages rt =
-  let package_index =
-    OpamRepositoryState.build_index rt
-      (OpamGlobalState.repos_list rt.repos_global)
+let get_compiler_packages ?repos rt =
+  let repos = match repos with
+    | None -> OpamGlobalState.repos_list rt.repos_global
+    | Some r -> r
   in
+  let package_index = OpamRepositoryState.build_index rt repos in
   OpamPackage.Map.filter
     (fun _ opam ->
        OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
@@ -559,9 +526,8 @@ let get_compiler_packages rt =
     package_index
   |> OpamPackage.keys
 
-
-let guess_compiler_package rt name =
-  let compiler_packages = get_compiler_packages rt in
+let guess_compiler_package ?repos rt name =
+  let compiler_packages = get_compiler_packages ?repos rt in
   match OpamPackage.of_string_opt name with
   | Some nv when OpamPackage.Set.mem nv compiler_packages ->
     [OpamSolution.eq_atom_of_package nv]

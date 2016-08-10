@@ -51,6 +51,28 @@ let compute_available_packages gt switch switch_config ~pinned ~opams =
   in
   OpamPackage.keys avail_map
 
+let repos_list_raw rt switch_config =
+  let global, repos =
+    match switch_config.OpamFile.Switch_config.repos with
+    | None -> true, OpamGlobalState.repos_list rt.repos_global
+    | Some repos -> false, repos
+  in
+  let found, notfound =
+    List.partition (fun r ->
+        OpamRepositoryName.Map.mem r rt.repositories)
+      repos
+  in
+  List.iter (fun r ->
+      log "Ignoring %s-selected repository %S, no configured repository by \
+           this name found"
+        (if global then "globally" else "switch")
+        (OpamRepositoryName.to_string r))
+    notfound;
+  found
+
+let repos_list st =
+  repos_list_raw st.switch_repos st.switch_config
+
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE";
@@ -107,7 +129,7 @@ let load lock_kind gt rt switch =
       installed OpamPackage.Map.empty
   in
   let repos_package_index =
-    OpamRepositoryState.build_index rt (OpamGlobalState.repos_list gt)
+    OpamRepositoryState.build_index rt (repos_list_raw rt switch_config)
   in
   let opams =
     OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
@@ -258,11 +280,13 @@ let unlock st =
   (st :> unlocked switch_state)
 
 let with_write_lock ?dontblock st f =
-  OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock @@ fun () ->
-  f ({ st with switch_lock = st.switch_lock } : rw switch_state)
-(* We don't actually change the field value, but this makes restricting the
-   phantom lock type possible*)
-
+  let st =
+    OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock
+    @@ fun () -> f ({ st with switch_lock = st.switch_lock } : rw switch_state)
+    (* We don't actually change the field value, but this makes restricting the
+       phantom lock type possible*)
+  in
+  { st with switch_lock = st.switch_lock }
 
 let opam st nv = OpamPackage.Map.find nv st.opams
 
@@ -478,3 +502,20 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
     ignore (unlock st);
     if not OpamCoreConfig.(!r.keep_log_dir) then cleanup_backup false;
     raise e
+
+let update_repositories gt update_fun switch =
+  OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock gt.root switch)
+  @@ fun () ->
+  let conf = load_switch_config gt switch in
+  let repos =
+    match conf.OpamFile.Switch_config.repos with
+    | None -> OpamGlobalState.repos_list gt
+    | Some repos -> repos
+  in
+  let conf =
+    { conf with
+      OpamFile.Switch_config.repos = Some (update_fun repos) }
+  in
+  OpamFile.Switch_config.write
+    (OpamPath.Switch.switch_config gt.root switch)
+    conf

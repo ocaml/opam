@@ -117,6 +117,7 @@ val display:
   ?separator:string ->
   ?prettify:bool ->
   ?normalise:bool ->
+  ?order:(package -> package -> int) ->
   package_set -> unit
 
 (** Display all available packages that match any of the regexps. *)
