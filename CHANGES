@@ -1,3 +1,19 @@
+2.0~alpha3
+* Refactored 'opam switch' command, creation of new switches no longer implicit
+* Allow per-switch selection of repositories
+* Better update of the environment variables across switches or opam roots
+* Add `opam install --restore` to recover packages that got removed due to
+  errors or interruptions
+* Added `synopsis:` and `description:` fields to integrate package descriptions
+  in a single package definition file
+* Removed the clever hack to skip downloads when uninstalling packages with
+  `ocamlfind remove`; this now needs to be explicit through the
+  `light-uninstall` flag.
+* Provide `opam admin upgrade-format` to migrate package repositories to the new
+  format, and create the proper OCaml compiler package wrappers
+* Allow initialisation parameters from a .opamrc file, possibly completely
+  overriding OCaml and opam.ocaml.org repository defaults
+
 2.0~alpha2
 * Extended the `opam lint` command-line options (package descriptions from opam
   metadata, warnings selection)
