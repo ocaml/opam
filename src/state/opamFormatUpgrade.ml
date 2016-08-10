@@ -513,8 +513,6 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
     OpamFile.Config.with_installed_switches (OpamSwitch.Map.keys aliases) conf
   in
   OpamFilename.remove (OpamFile.filename aliases_f);
-  OpamConsole.note "Opam root update successful. You should run 'opam \
-                    update' to sync with the new format repositories.";
   conf
 
 let v1_3_dev6 = OpamVersion.of_string "1.3~dev6"
@@ -817,16 +815,21 @@ let as_necessary global_lock root config =
           config
         else config
       in
-      config |>
-      update_to v1_1       from_1_0_to_1_1 |>
-      update_to v1_2       from_1_1_to_1_2 |>
-      update_to v1_3_dev2  from_1_2_to_1_3_dev2 |>
-      update_to v1_3_dev5  from_1_3_dev2_to_1_3_dev5 |>
-      update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
-      update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
-      update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
-      update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
-      update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3
+      let _config =
+        config |>
+        update_to v1_1       from_1_0_to_1_1 |>
+        update_to v1_2       from_1_1_to_1_2 |>
+        update_to v1_3_dev2  from_1_2_to_1_3_dev2 |>
+        update_to v1_3_dev5  from_1_3_dev2_to_1_3_dev5 |>
+        update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
+        update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
+        update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
+        update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
+        update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3
+      in
+      OpamConsole.msg
+        "Update done, please run 'opam update' and retry your command\n";
+      OpamStd.Sys.exit 0;
     else
       OpamConsole.error_and_exit "Aborted"
   with OpamSystem.Locked ->
