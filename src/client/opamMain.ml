@@ -1570,17 +1570,17 @@ let switch =
     | Some `list_available, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
+      let all_compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let compilers =
-        if all then compilers else
+        if all then all_compilers else
         let is_main_comp_re =
           Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
         in
         OpamPackage.Set.filter
           (fun nv ->
              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv)))
-          compilers
+          all_compilers
       in
       let format = OpamListCommand.([ Name; Version; Synopsis; ]) in
       let order nv1 nv2 =
@@ -1588,8 +1588,14 @@ let switch =
         then OpamPackage.Name.compare nv1.name nv2.name
         else OpamPackage.Version.compare nv1.version nv2.version
       in
-      OpamListCommand.display st ~header:false ~format ~dependency_order:false
+      OpamListCommand.display st ~header:true ~format ~dependency_order:false
         ~all_versions:true ~order compilers;
+      if all then `Ok () else
+      let unshown  = OpamPackage.Set.Op.(all_compilers -- compilers) in
+      if not (OpamPackage.Set.is_empty unshown) then
+        OpamConsole.msg "# %d more patched or experimental compilers, use \
+                         '--all' to show\n"
+          (OpamPackage.Set.cardinal unshown);
       `Ok ()
     | Some `install, [switch] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
