@@ -551,7 +551,9 @@ let guess_compiler_package ?repos rt name =
       with
       | Not_found ->
         OpamConsole.error_and_exit
-          "No compiler matching '%s' found" name
+          "No compiler matching '%s' founf, use 'opam switch list-available' \
+           to see what is available"
+          name
       | Failure _ ->
         OpamConsole.error_and_exit
           "Compiler selection '%s' is ambiguous. matching packages: %s"

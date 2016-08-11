@@ -609,7 +609,7 @@ let build_package t source nv =
          Done (Some (OpamSystem.Process_error result)))
     | []::commands -> run_commands commands
     | [] ->
-      if commands <> [] then
+      if commands <> [] && OpamConsole.verbose () then
         OpamConsole.msg "%s compiled  %s.%s\n"
           (if not (OpamConsole.utf8 ()) then "->"
            else OpamActionGraph.
