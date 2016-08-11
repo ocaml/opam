@@ -92,7 +92,7 @@ let system_conf_script =
   \    (Printf.eprintf\n\
   \       \"ERROR: The compiler found at %%s has version %%s,\\n\\\n\
   \        and this package requires %{_:version}%.\\n\\\n\
-  \        You should use e.g. 'opam switch %{_:name}%.%%s' \\\n\
+  \        You should use e.g. 'opam switch create %{_:name}%.%%s' \\\n\
   \        instead.\"\n\
   \       ocamlc Sys.ocaml_version Sys.ocaml_version;\n\
   \     exit 1)\n\

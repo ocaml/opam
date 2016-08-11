@@ -246,7 +246,7 @@ let init =
             OpamConsole.note
               "No compiler selected, and no available default switch found: \
              no switch has been created.\n\
-             Use 'opam switch <compiler>' to get started."
+             Use 'opam switch create <compiler>' to get started."
   in
   Term.(pure init
           $global_options $build_options $repo_kind_flag $repo_name $repo_url
@@ -1461,62 +1461,57 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    "install", `install, ["SWITCH"],
-    "Install the given compiler. The command fails if the switch is \
-     already installed (e.g. it will not transparently switch to the \
-     installed compiler switch, as with $(b,set)).";
+    "create", `install, ["SWITCH"; "[COMPILER]"],
+    "Create a new switch with the given name, and install the given compiler \
+     there. $(i,COMPILER), if omitted, defaults to $(i,SWITCH) unless \
+     $(b,--packages) or $(b,--empty) is specified.";
     "set", `set, ["SWITCH"],
-    "Set the currently active switch, installing it if needed.";
-    "remove", `remove, ["SWITCH"], "Remove the given compiler.";
+    "Set the currently active switch, among the installed switches.";
+    "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
     "export", `export, ["FILE"],
     "Save the current switch state to a file.";
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
     "reinstall", `reinstall, ["SWITCH"],
-    "Reinstall the given compiler switch. This will also reinstall all \
-     packages.";
+    "Reinstall the given compiler switch and all its packages.";
     "list", `list, [],
     "Lists installed switches.";
     "list-available", `list_available, [],
     "Lists base packages that can be used to create a new switch, i.e. \
      packages with the $(i,compiler) flag set. Only standard versions are \
      shown by default, use $(b,--all) to show all.";
-    "show", `current, [], "Show the current compiler.";
-    "set-compiler", `set_compiler, ["NAMES"],
+    "show", `current, [], "Prints the name of the current switch.";
+    "set-base", `set_compiler, ["NAMES"],
     "Sets the packages forming the immutable base for the selected switch, \
      overriding the current setting. The packages must be installed already.";
+    "install", `install, ["SWITCH"],
+    "Deprecated alias for 'create'."
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command allows to switch between different \"switches\", which \
-        are independent installation prefixes with their own compiler and sets \
-        of installed packages. This is typically useful to have different \
+    `P "This command is used to manage \"switches\", which are independent \
+        installation prefixes with their own compiler and sets of installed \
+        and pinned packages. This is typically useful to have different \
         versions of the compiler available at once.";
-    `P "$(b,opam switch set SWITCH) is used to switch to an instance named \
-        $(b,SWITCH), creating it if it doesn't exist already. The compiler to \
-        use is defined through the $(b,--packages) or $(b,--alias-of) flags, \
-        and $(b,--empty) can also be used to create an empty switch. \
-        Otherwise, a compiler package matching $(b,SWITCH) is looked for.";
+    `P "Use $(b,opam switch create) to create a new switch, and $(b,opam \
+        switch set) to set the currently active switch. Without argument, \
+        lists installed switches, with one switch argument, defaults to \
+        $(b,set).";
+    `P "$(b,opam switch set) sets the default switch globally, but it is also \
+        possible to select a switch in a given shell session, using the \
+        environment. For that, use $(i,eval `opam config env \
+        --switch=SWITCH`).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
 
   let command, params = mk_subcommands_with_default commands in
-  let alias_of =
-    mk_opt ["A";"alias-of"]
-      "COMP"
-      "The compiler to use when creating the switch (packages with the \
-       \"compiler\" flag matching this full package, package name or \
-       version are looked for). This is for backwards compatibility, and \
-       use of $(b,--packages) is preferred."
-      Arg.(some string) None in
   let no_switch =
     mk_flag ["no-switch"]
-      "Only install the compiler switch, without switching to it. If the compiler \
-       switch is already installed, then do nothing." in
+      "Don't automatically select newly installed switches" in
   let all =
     mk_flag ["a";"all"]
-      "When listing, show all the available compiler packages, not just the \
-       standard ones." in
+      "With $(b,list-available), show all available compilers, not only \
+       official releases" in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1525,22 +1520,18 @@ let switch =
   let empty =
     mk_flag ["empty"]
       "Allow creating an empty (without compiler) switch." in
-  let no_autoinstall =
-    mk_flag ["no-autoinstall"]
-      "On 'switch set', fail if the switch doesn't exist already rather than \
-       install a new one." in
   let repos =
     mk_opt ["repositories"] "REPOS"
       "When creating a new switch, use the given selection of repositories \
        instead of the default. You can configure new repositories in advance \
        using $(i,opam repository add --no-select) and then create a switch \
        using them with this option. See $(i,opam repository) for more \
-       details. This also affects $(i,list-available)."
+       details. This option also affects $(i,list-available)."
       Arg.(some (list repository_name)) None
   in
-  let switch global_options
-      build_options command alias_of print_short all
-      no_switch no_autoinstall packages empty repos params =
+  let switch
+      global_options build_options command print_short all
+      no_switch packages empty repos params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1552,14 +1543,20 @@ let switch =
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       OpamSwitchCommand.guess_compiler_package ?repos rt s
     in
-    let compiler_packages gt switch =
-      match packages, alias_of with
-      | Some pkgs, None -> pkgs
-      | None, Some al -> guess_compiler_package gt al
+    let compiler_packages gt switch compiler_opt =
+      match packages, compiler_opt with
       | None, None -> guess_compiler_package gt switch
-      | Some _, Some _ ->
-        OpamConsole.error_and_exit
-          "Options --alias-of and --packages are incompatible"
+      | _ ->
+        OpamStd.Option.Op.(
+          ((compiler_opt >>| guess_compiler_package gt) +! []) @
+          packages +! [])
+    in
+    let param_compiler = function
+      | [] -> None
+      | [comp] -> Some comp
+      | args ->
+        OpamConsole.error_and_exit "Invalid extra arguments %s"
+          (String.concat " " args)
     in
     match command, params with
     | None      , []
@@ -1597,13 +1594,14 @@ let switch =
                          '--all' to show\n"
           (OpamPackage.Set.cardinal unshown);
       `Ok ()
-    | Some `install, [switch] ->
+    | Some `install, switch::params
+    | None, switch::(_::_ as  params) ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let _gt, st =
         OpamSwitchCommand.install gt
           ?repos
           ~update_config:(not no_switch)
-          ~packages:(compiler_packages gt switch)
+          ~packages:(compiler_packages gt switch (param_compiler params))
           (OpamSwitch.of_string switch)
       in
       ignore (OpamSwitchState.unlock st);
@@ -1664,20 +1662,11 @@ let switch =
       let is_installed =
         List.mem switch_name (OpamFile.Config.installed_switches gt.config)
       in
-      let packages =
-        if is_installed then [] else compiler_packages gt switch
-      in
-      if no_switch then
-        if is_installed then
-          OpamConsole.msg "Switch already installed, nothing to do.\n"
-        else
-          OpamSwitchCommand.install gt ?repos ~update_config:false
-            ~packages switch_name |> ignore
-      else if no_autoinstall then
-        OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore
-      else
-        OpamSwitchCommand.switch_with_autoinstall gt ~packages switch_name
-        |> ignore;
+      if not is_installed then
+        OpamConsole.error_and_exit
+          "No switch '%s' found. Did you mean 'opam switch create %s' ?"
+          switch switch;
+      OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore;
       `Ok ()
     | Some `set_compiler, packages ->
       (try
@@ -1691,8 +1680,8 @@ let switch =
   in
   Term.(ret (pure switch
              $global_options $build_options $command
-             $alias_of $print_short_flag
-             $all $no_switch $no_autoinstall
+             $print_short_flag
+             $all $no_switch
              $packages $empty $repos $params)),
   term_info "switch" ~doc ~man
 
