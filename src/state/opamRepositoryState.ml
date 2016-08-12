@@ -84,11 +84,16 @@ module Cache = struct
       (OpamFilename.prettify file);
     let oc = open_out_bin (OpamFilename.to_string file) in
     output_string oc (OpamVersion.magic ());
+    (* Repository without remote are not cached, they are intended to be
+       manually edited *)
     Marshal.to_channel oc
       { cached_opams =
-          List.map
-            (fun (repo_name, opams) ->
-               repo_name, OpamPackage.Map.bindings opams)
+          OpamStd.List.filter_map
+            (fun (name, opams) ->
+               let repo = OpamRepositoryName.Map.find name rt.repositories in
+               if repo.repo_url <> OpamUrl.empty
+               then Some (name, OpamPackage.Map.bindings opams)
+               else None)
             (OpamRepositoryName.Map.bindings rt.repo_opams) }
       [Marshal.No_sharing];
     close_out oc;
@@ -115,30 +120,45 @@ let load_repo_opams repo =
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE";
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
-  let repositories =
-    OpamRepositoryName.Map.mapi (fun name url ->
-        {
-          repo_root = OpamRepositoryPath.create gt.root name;
-          repo_name = name;
-          repo_url = OpamStd.Option.default OpamUrl.empty url;
-          repo_priority = 0; (* ignored *)
-        })
-      (OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root))
+  let repos_map =
+    OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+  in
+  let mk_repo name url_opt = {
+    repo_root = OpamRepositoryPath.create gt.root name;
+    repo_name = name;
+    repo_url = OpamStd.Option.default OpamUrl.empty url_opt;
+    repo_priority = 0; (* ignored *)
+  } in
+  let uncached =
+    (* Don't cache repositories without remote, as they should be editable
+       in-place *)
+    OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
   let make_rt opams =
     { repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
-      repositories;
+      repositories = OpamRepositoryName.Map.mapi mk_repo repos_map;
       repo_opams = opams; }
   in
   match Cache.load gt.root with
-  | Some opams ->
+  | Some opams when OpamRepositoryName.Map.is_empty uncached ->
     log "Cache found";
     make_rt opams
+  | Some opams ->
+    log "Cache found, loading repositories without remote only";
+    OpamFilename.with_flock_upgrade `Lock_read lock @@ fun () ->
+    let uncached_opams =
+      OpamRepositoryName.Map.map load_repo_opams
+        (OpamRepositoryName.Map.mapi mk_repo uncached)
+    in
+    make_rt @@
+    OpamRepositoryName.Map.union (fun _ x -> x) opams uncached_opams
   | None ->
+    log "No cache found";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun () ->
     let rt =
-      make_rt (OpamRepositoryName.Map.map load_repo_opams repositories)
+      make_rt (OpamRepositoryName.Map.map load_repo_opams
+                 (OpamRepositoryName.Map.mapi mk_repo repos_map))
     in
     Cache.save rt;
     rt
