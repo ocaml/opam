@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~alpha2"
+version: "2.0~alpha3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -14,18 +14,13 @@ authors: [
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
-depends: [
-  "opam-core" {= version}
-  "opam-format" {= version}
-  "dose3" {= "4.3"}
-]
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
   [make name]
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-core" {= version}
-  "opam-format" {= version}
-  "dose3" {= "5.0"}
+  "opam-core" {= "2.0~alpha3"}
+  "opam-format" {= "2.0~alpha3"}
+  "dose" {>= "3.3"}
 ]
