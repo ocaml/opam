@@ -145,7 +145,7 @@ let create dirname basename =
     { dirname = dirname / b1; basename = b2 }
 
 let of_basename basename =
-  let dirname = Dir.of_string "." in
+  let dirname = Dir.of_string Filename.current_dir_name in
   { dirname; basename }
 
 let raw str =

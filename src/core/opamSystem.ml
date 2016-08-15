@@ -256,7 +256,14 @@ let normalize s =
 let real_path p =
   if Filename.is_relative p then
     match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
-    | None -> p
+    | None ->
+      let rec resolve dir =
+        if Sys.file_exists dir then normalize dir else
+        let parent = Filename.dirname dir in
+        if dir = parent then dir
+        else Filename.concat (resolve parent) (Filename.basename dir)
+      in
+      resolve (Filename.concat (Sys.getcwd ()) p)
     | Some true -> normalize p
     | Some false ->
       let dir = normalize (Filename.dirname p) in

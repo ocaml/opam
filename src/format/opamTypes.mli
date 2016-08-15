@@ -24,7 +24,7 @@ type ('a,'b) status = [ 'a success | 'b error ]
 (** Basenames *)
 type basename = OpamFilename.Base.t
 
-(** Directory names *)
+(** Directory names (translated to absolute) *)
 type dirname = OpamFilename.Dir.t
 
 (** Filenames *)
