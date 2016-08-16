@@ -37,7 +37,8 @@ let gen_switch_config root ?repos switch =
     variables = vars;
     paths;
     opam_root = Some root;
-    repos; }
+    repos;
+    wrappers = OpamFile.Wrappers.empty; }
 
 let install_switch_config root switch config =
   log "install_switch_config switch=%a" (slog OpamSwitch.to_string) switch;

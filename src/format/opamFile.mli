@@ -60,6 +60,35 @@ end
 (** Lines of space-separated words. *)
 module Lines: IO_FILE with type t = string list list
 
+(** Command wrappers for package scripts *)
+module Wrappers: sig
+  type t = {
+    pre_build : arg list list;
+    wrap_build : arg list;
+    post_build : arg list list;
+    pre_install : arg list list;
+    wrap_install : arg list;
+    post_install : arg list list;
+    pre_remove : arg list list;
+    wrap_remove : arg list;
+    post_remove : arg list list;
+  }
+
+  val pre_build: t -> arg list list
+  val wrap_build: t -> arg list
+  val post_build: t -> arg list list
+  val pre_install: t -> arg list list
+  val wrap_install: t -> arg list
+  val post_install: t -> arg list list
+  val pre_remove: t -> arg list list
+  val wrap_remove: t -> arg list
+  val post_remove: t -> arg list list
+
+  val empty : t
+
+  val add: outer:t -> inner:t -> t
+end
+
 (** Configuration file: [$opam/config] *)
 module Config: sig
 
@@ -87,9 +116,7 @@ module Config: sig
   val with_dl_tool_opt: arg list option -> t -> t
   val with_dl_jobs: int -> t -> t
 
-  val with_wrap_build: arg list -> t -> t
-  val with_wrap_install: arg list -> t -> t
-  val with_wrap_remove: arg list -> t -> t
+  val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables:
     (variable * variable_contents * string) list -> t -> t
   val with_eval_variables:
@@ -118,9 +145,7 @@ module Config: sig
 
   val solver: t -> arg list option
 
-  val wrap_build: t -> arg list
-  val wrap_install: t -> arg list
-  val wrap_remove: t -> arg list
+  val wrappers: t -> Wrappers.t
 
   (** variable, value, docstring *)
   val global_variables: t -> (variable * variable_contents * string) list
@@ -142,9 +167,7 @@ module InitConfig: sig
   val dl_jobs: t -> int option
   val solver_criteria: t -> (solver_criteria * string) list
   val solver: t -> arg list option
-  val wrap_build: t -> arg list
-  val wrap_install: t -> arg list
-  val wrap_remove: t -> arg list
+  val wrappers: t -> Wrappers.t
   val global_variables: t -> (variable * variable_contents * string) list
   val eval_variables: t -> (variable * string list * string) list
 
@@ -156,9 +179,7 @@ module InitConfig: sig
   val with_dl_jobs: int option -> t -> t
   val with_solver_criteria: (solver_criteria * string) list -> t -> t
   val with_solver: arg list option -> t -> t
-  val with_wrap_build: arg list -> t -> t
-  val with_wrap_install: arg list -> t -> t
-  val with_wrap_remove: arg list -> t -> t
+  val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables: (variable * variable_contents * string) list -> t -> t
   val with_eval_variables: (variable * string list * string) list -> t -> t
 
@@ -766,9 +787,11 @@ module Switch_config: sig
     paths: (std_path * string) list;
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
+    wrappers: Wrappers.t;
   }
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option
+  val wrappers: t -> Wrappers.t
   include IO_FILE with type t := t
 end
 

@@ -652,9 +652,7 @@ let slog = OpamConsole.slog
                (I.dl_jobs init_config)) |>
           C.with_criteria (I.solver_criteria init_config) |>
           C.with_solver_opt (I.solver init_config) |>
-          C.with_wrap_build (I.wrap_build init_config) |>
-          C.with_wrap_install (I.wrap_install init_config) |>
-          C.with_wrap_remove (I.wrap_remove init_config) |>
+          C.with_wrappers (I.wrappers init_config) |>
           C.with_global_variables
             (I.global_variables init_config) |>
           C.with_eval_variables

@@ -344,11 +344,17 @@ let removal_needs_download st nv =
     false
   | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam)
 
-let cmd_wrapper t opam getter cmd args =
-  match
-    OpamFilter.commands (OpamPackageVar.resolve ~opam t)
-      [getter t.switch_global.config, None]
-  with
+let get_wrappers t =
+  OpamFile.Wrappers.add
+    ~outer:(OpamFile.Config.wrappers t.switch_global.config)
+    ~inner:(OpamFile.Switch_config.wrappers t.switch_config)
+
+let get_wrapper t opam wrappers getter =
+  OpamFilter.commands (OpamPackageVar.resolve ~opam t)
+    (List.map (fun x -> x, None) (getter wrappers))
+
+let cmd_wrapper t opam wrappers getter cmd args =
+  match get_wrapper t opam wrappers (fun w -> [getter w]) with
   | [wrap_cmd::wrap_args] ->
     wrap_cmd, wrap_args @ (cmd :: args)
   | [] | [[]] -> cmd, args
@@ -366,18 +372,29 @@ let remove_commands t nv =
       OpamFilter.commands (OpamPackageVar.resolve ~opam t)
         (OpamFile.OPAM.remove opam) in
     let name = OpamPackage.Name.to_string nv.name in
+    let wrappers = get_wrappers t in
     let commands =
       OpamStd.List.filter_map (function
           | [] -> None
           | cmd::args ->
             let text = OpamProcess.make_command_text name ~args cmd in
             let cmd, args =
-              cmd_wrapper t opam OpamFile.Config.wrap_remove cmd args
+              cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_remove cmd args
             in
             Some (text, cmd, args, env))
         remove
     in
-    Some commands
+    let prepost =
+      OpamStd.List.filter_map (function
+          | [] -> None
+          | cmd::args ->
+            let text = OpamProcess.make_command_text name ~args cmd in
+            Some (text, cmd, args, env))
+    in
+    Some
+      ((get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove |> prepost) @
+       commands @
+       (get_wrapper t opam wrappers OpamFile.Wrappers.post_remove |> prepost))
 
 (* Testing wheter a package removal will be a NOOP. *)
 let noop_remove_package t nv =
@@ -591,11 +608,33 @@ let build_package t source nv =
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
+  let wrappers = get_wrappers t in
+  let commands =
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          Some (text, cmd, args))
+      (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          let cmd, args =
+            cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args
+          in
+          Some (text, cmd, args))
+      commands @
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          Some (text, cmd, args))
+      (get_wrapper t opam wrappers OpamFile.Wrappers.post_build)
+  in
   let rec run_commands = function
-    | (cmd::args)::commands ->
-      let text = OpamProcess.make_command_text name ~args cmd in
+    | (text, cmd, args)::commands ->
       let dir = OpamFilename.Dir.to_string build_dir in
-      let cmd, args = cmd_wrapper t opam OpamFile.Config.wrap_build cmd args in
       OpamSystem.make_command ~env ~name ~dir ~text
         ~verbose:(OpamConsole.verbose ()) ~check_existence:false
         cmd args
@@ -607,7 +646,6 @@ let build_package t source nv =
            "The compilation of %s failed at %S."
            name (String.concat " " (cmd::args));
          Done (Some (OpamSystem.Process_error result)))
-    | []::commands -> run_commands commands
     | [] ->
       if commands <> [] && OpamConsole.verbose () then
         OpamConsole.msg "%s compiled  %s.%s\n"
@@ -629,13 +667,35 @@ let install_package t nv =
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
+  let wrappers = get_wrappers t in
+  let commands =
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          Some (text, cmd, args))
+      (get_wrapper t opam wrappers OpamFile.Wrappers.pre_install) @
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          let cmd, args =
+            cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_install cmd args
+          in
+          Some (text, cmd, args))
+      commands
+  in
+  let post_commands =
+    OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args ->
+          let text = OpamProcess.make_command_text name ~args cmd in
+          Some (text, cmd, args))
+      (get_wrapper t opam wrappers OpamFile.Wrappers.post_install)
+  in
   let rec run_commands = function
-    | (cmd::args)::commands ->
-      let text = OpamProcess.make_command_text name ~args cmd in
+    | (text,cmd,args)::commands ->
       let dir = OpamFilename.Dir.to_string dir in
-      let cmd, args =
-        cmd_wrapper t opam OpamFile.Config.wrap_install cmd args
-      in
       OpamSystem.make_command ~env ~name ~dir ~text
         ~verbose:(OpamConsole.verbose ()) ~check_existence:false
         cmd args
@@ -650,18 +710,17 @@ let install_package t nv =
           name (String.concat " " (cmd::args));
         Done (Some (OpamSystem.Process_error result))
       )
-    | []::commands -> run_commands commands
     | [] -> Done None
   in
   let install_job () =
-    let text = OpamProcess.make_command_text name "install" in
-    OpamProcess.Job.with_text text
-      (run_commands commands) @@+ function
+    (* let text = OpamProcess.make_command_text name "install" in
+     * OpamProcess.Job.with_text text *)
+    (run_commands commands) @@+ function
     | Some _ as err -> Done err
     | None ->
       try
         process_dot_install t nv;
-        Done None
+        run_commands post_commands
       with e -> Done (Some e)
   in
   let root = t.switch_global.root in

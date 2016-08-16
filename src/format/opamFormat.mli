@@ -342,6 +342,10 @@ module Pp : sig
   (** A field parser that ignores its argument *)
   val ppacc_ignore : ('a, value) field_parser
 
+  val embed :
+    ('a -> 'acc -> 'acc) -> ('acc -> 'a) -> ('a, 'value) field_parser ->
+    ('acc, 'value) field_parser
+
   (** {3 Specific Pps for items lists and fields (opamfile)} *)
 
   module I :
