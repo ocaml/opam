@@ -55,8 +55,8 @@ let utf8, utf8_extended =
 
 let timer () =
   if debug () then
-    let t = Sys.time () in
-    fun () -> Sys.time () -. t
+    let t = Unix.time () in
+    fun () -> Unix.time () -. t
   else
     fun () -> 0.
 

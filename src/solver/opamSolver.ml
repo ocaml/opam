@@ -247,6 +247,7 @@ let load_cudf_universe ?depopts ~build
   log "Load cudf universe (depopts:%b, build:%b)"
     (OpamStd.Option.default false depopts)
     build;
+  let chrono = OpamConsole.timer () in
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
@@ -278,7 +279,7 @@ let load_cudf_universe ?depopts ~build
     with Cudf.Constraint_violation s ->
       OpamConsole.error_and_exit "Malformed CUDF universe (%s)" s
   in
-  log ~level:3 "Load cudf universe: done";
+  log ~level:3 "Load cudf universe: done in %.3fs" (chrono ());
   (* We can trim the universe here to get faster results, but we
      choose to keep it bigger to get more precise conflict messages. *)
   (* let universe = Algo.Depsolver.trim universe in *)
