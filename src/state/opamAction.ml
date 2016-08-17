@@ -349,60 +349,53 @@ let get_wrappers t =
     ~outer:(OpamFile.Config.wrappers t.switch_global.config)
     ~inner:(OpamFile.Switch_config.wrappers t.switch_config)
 
-let get_wrapper t opam wrappers getter =
-  OpamFilter.commands (OpamPackageVar.resolve ~opam t)
-    (List.map (fun x -> x, None) (getter wrappers))
+let get_wrapper t opam wrappers ?local getter =
+  OpamFilter.commands (OpamPackageVar.resolve ?local ~opam t)
+    (List.map (fun x -> x, None) (getter wrappers)) |>
+  OpamStd.List.filter_map (function
+      | [] -> None
+      | cmd::args -> Some (cmd, args))
 
 let cmd_wrapper t opam wrappers getter cmd args =
   match get_wrapper t opam wrappers (fun w -> [getter w]) with
-  | [wrap_cmd::wrap_args] ->
+  | [wrap_cmd,wrap_args] ->
     wrap_cmd, wrap_args @ (cmd :: args)
-  | [] | [[]] -> cmd, args
+  | [] -> cmd, args
   | _::_::_ -> assert false
+
+let opam_local_env_of_status ret =
+  OpamVariable.Map.singleton
+    (OpamVariable.of_string "error-code")
+    (Some (S (match ret with
+         | None -> "0"
+         | Some r -> string_of_int r.OpamProcess.r_code)))
+
+let make_command ~env ~name ~dir ?text_command (cmd, args) =
+  let dir = OpamFilename.Dir.to_string dir in
+  let text =
+    let cmd, args = OpamStd.Option.default (cmd, args) text_command in
+    OpamProcess.make_command_text name ~args cmd
+  in
+  OpamSystem.make_command ~env ~name ~dir ~text
+    ~verbose:(OpamConsole.verbose ()) ~check_existence:false
+    cmd args
 
 let remove_commands t nv =
   match OpamSwitchState.opam_opt t nv with
   | None ->
     log "No opam file was found for removing %a\n"
       (slog OpamPackage.to_string) nv;
-    None
+    []
   | Some opam ->
-    let env = compilation_env t opam in
-    let remove =
-      OpamFilter.commands (OpamPackageVar.resolve ~opam t)
-        (OpamFile.OPAM.remove opam) in
-    let name = OpamPackage.Name.to_string nv.name in
-    let wrappers = get_wrappers t in
-    let commands =
-      OpamStd.List.filter_map (function
-          | [] -> None
-          | cmd::args ->
-            let text = OpamProcess.make_command_text name ~args cmd in
-            let cmd, args =
-              cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_remove cmd args
-            in
-            Some (text, cmd, args, env))
-        remove
-    in
-    let prepost =
-      OpamStd.List.filter_map (function
-          | [] -> None
-          | cmd::args ->
-            let text = OpamProcess.make_command_text name ~args cmd in
-            Some (text, cmd, args, env))
-    in
-    Some
-      ((get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove |> prepost) @
-       commands @
-       (get_wrapper t opam wrappers OpamFile.Wrappers.post_remove |> prepost))
+    OpamFilter.commands (OpamPackageVar.resolve ~opam t)
+      (OpamFile.OPAM.remove opam) |>
+    OpamStd.List.filter_map
+      (function [] -> None | cmd::args -> Some (cmd,args))
 
-(* Testing wheter a package removal will be a NOOP. *)
+(* Testing wether a package removal will be a NOOP. *)
 let noop_remove_package t nv =
   let name = nv.name in
-  let has_remove_commands =
-    match remove_commands t nv with
-    | None | Some [] -> false
-    | Some (_::_) -> true in
+  let has_remove_commands = remove_commands t nv <> [] in
   let has_tracked_files =
     let changes_file =
       OpamPath.Switch.changes t.switch_global.root t.switch name
@@ -435,42 +428,11 @@ let remove_package_aux
      - 1st and 2nd steps may help recover partial/failed states
   *)
 
-  (* Run the remove script *)
   let dot_install =
     OpamPath.Switch.install t.switch_global.root t.switch name
   in
   let changes_file =
     OpamPath.Switch.changes t.switch_global.root t.switch name
-  in
-  let remove_commands_job =
-    match remove_commands t nv with
-    | None ->
-      Done ()
-    | Some commands ->
-        let remove_dir =
-          OpamPath.Switch.remove t.switch_global.root t.switch nv in
-        let name = OpamPackage.Name.to_string nv.name in
-        let exec_dir, nameopt =
-          if OpamFilename.exists_dir remove_dir
-          then remove_dir, Some name
-          else t.switch_global.root , None in
-        let commands =
-          List.map (fun (text, cmd, args, env) ->
-            (OpamSystem.make_command ?name:nameopt ~text cmd args
-               ~env:(OpamTypesBase.env_array env)
-               ~dir:(OpamFilename.Dir.to_string exec_dir)
-               ~verbose:(OpamConsole.verbose ())
-               ~check_existence:false))
-            commands
-        in
-      OpamProcess.Job.of_list ~keep_going:true commands
-      @@+ function
-      | Some (_,err) ->
-        if not silent then
-          OpamConsole.warning "package uninstall script failed:\n%s"
-            (OpamProcess.string_of_result err);
-        Done ()
-      | None -> Done ()
   in
 
   (* handle .install file *)
@@ -530,24 +492,66 @@ let remove_package_aux
       changes
   in
 
-  remove_commands_job @@+ fun () ->
+  (* Run the remove script *)
+  let opam =
+    try OpamSwitchState.opam t nv
+    with Not_found -> OpamFile.OPAM.create nv
+  in
+  let env = OpamTypesBase.env_array (compilation_env t opam) in
+  let name = OpamPackage.name_to_string nv in
+  let build_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+  let wrappers = get_wrappers t in
+  let mk_cmd = make_command ~env ~name ~dir:build_dir in
+  OpamProcess.Job.of_list ~keep_going:true
+    (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
+  @@+ fun error_pre ->
+  OpamProcess.Job.of_list ~keep_going:true
+    (List.map (fun ((cmd,args) as ca) ->
+         mk_cmd ~text_command:ca @@
+         cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_remove cmd args)
+        (remove_commands t nv))
+  @@+ fun error ->
+
+  (* Remove according to the .install file *)
   if not OpamStateConfig.(!r.dryrun) then (
     OpamFilename.remove
       (OpamFile.filename
-         (OpamPath.Switch.config t.switch_global.root t.switch name));
+         (OpamPath.Switch.config t.switch_global.root t.switch nv.name));
     uninstall_files ();
-    OpamFilename.remove (OpamFile.filename dot_install);
+    OpamFilename.remove (OpamFile.filename dot_install)
+  );
+
+  (* Run the post-remove commands *)
+  let local =
+    opam_local_env_of_status
+      OpamStd.Option.Op.(error_pre ++ error >>| snd)
+  in
+  OpamProcess.Job.of_list ~keep_going:true
+    (List.map mk_cmd
+       (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_remove))
+  @@+ fun error_post ->
+
+  (* Revert remaining changes *)
+  if not OpamStateConfig.(!r.dryrun) then (
     revert_changes ();
     OpamFilename.remove (OpamFile.filename changes_file);
   );
-  if not silent then
+  if silent then Done ()
+  else
+  match OpamStd.Option.Op.(error_pre ++ error ++ error_post) with
+  | Some (cmd, e) ->
+    OpamConsole.warning "package uninstall script failed at %s:\n%s"
+      (OpamProcess.string_of_command cmd)
+      (OpamProcess.string_of_result e);
+    Done ()
+  | None ->
     OpamConsole.msg "%s removed   %s.%s\n"
       (if not (OpamConsole.utf8 ()) then "->" else
          OpamActionGraph.(action_color (`Remove ())
                             (action_strings (`Remove ()))))
       (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
       (OpamPackage.version_to_string nv);
-  Done ()
+    Done ()
 
 
 (* Removes build dir and source cache of package if unneeded *)
@@ -604,59 +608,43 @@ let build_package t source nv =
      then OpamFile.OPAM.build_doc opam else [])
   in
   let commands =
-    OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands
+    OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands |>
+    OpamStd.List.filter_map
+      (function [] -> None | cmd::args -> Some (cmd, args))
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let wrappers = get_wrappers t in
-  let commands =
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          Some (text, cmd, args))
-      (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          let cmd, args =
-            cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args
-          in
-          Some (text, cmd, args))
-      commands @
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          Some (text, cmd, args))
-      (get_wrapper t opam wrappers OpamFile.Wrappers.post_build)
+  let mk_cmd = make_command ~env ~name ~dir:build_dir in
+  OpamProcess.Job.of_list
+    (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
+     List.map (fun ((cmd,args) as ca) ->
+         mk_cmd ~text_command:ca @@
+         cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args)
+       commands)
+  @@+ fun result ->
+  let local =
+    opam_local_env_of_status OpamStd.Option.Op.(result >>| snd)
   in
-  let rec run_commands = function
-    | (text, cmd, args)::commands ->
-      let dir = OpamFilename.Dir.to_string build_dir in
-      OpamSystem.make_command ~env ~name ~dir ~text
-        ~verbose:(OpamConsole.verbose ()) ~check_existence:false
-        cmd args
-      @@> fun result ->
-      if OpamProcess.is_success result then
-        run_commands commands
-      else
-        (OpamConsole.error
-           "The compilation of %s failed at %S."
-           name (String.concat " " (cmd::args));
-         Done (Some (OpamSystem.Process_error result)))
-    | [] ->
-      if commands <> [] && OpamConsole.verbose () then
-        OpamConsole.msg "%s compiled  %s.%s\n"
-          (if not (OpamConsole.utf8 ()) then "->"
-           else OpamActionGraph.
-                  (action_color (`Build ()) (action_strings (`Build ()))))
-          (OpamConsole.colorise `bold name)
-          (OpamPackage.version_to_string nv);
-      Done None
-  in
-  run_commands commands
+  OpamProcess.Job.of_list ~keep_going:true
+    (List.map mk_cmd
+       (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_build))
+  @@+ fun post_result ->
+  match result, post_result with
+  | Some (cmd, result), _ | None, Some (cmd, result) ->
+    OpamConsole.error
+      "The compilation of %s failed at %S."
+      name (OpamProcess.string_of_command cmd);
+    Done (Some (OpamSystem.Process_error result))
+  | None, None ->
+    if commands <> [] && OpamConsole.verbose () then
+      OpamConsole.msg "%s compiled  %s.%s\n"
+        (if not (OpamConsole.utf8 ()) then "->"
+         else OpamActionGraph.
+                (action_color (`Build ()) (action_strings (`Build ()))))
+        (OpamConsole.colorise `bold name)
+        (OpamPackage.version_to_string nv);
+    Done None
 
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
@@ -664,41 +652,20 @@ let install_package t nv =
   let opam = OpamSwitchState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
   let commands = OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands in
+  let commands =
+    OpamStd.List.filter_map
+      (function [] -> None | cmd::args -> Some (cmd, args))
+      commands
+  in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
   let wrappers = get_wrappers t in
-  let commands =
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          Some (text, cmd, args))
-      (get_wrapper t opam wrappers OpamFile.Wrappers.pre_install) @
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          let cmd, args =
-            cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_install cmd args
-          in
-          Some (text, cmd, args))
-      commands
-  in
-  let post_commands =
-    OpamStd.List.filter_map (function
-        | [] -> None
-        | cmd::args ->
-          let text = OpamProcess.make_command_text name ~args cmd in
-          Some (text, cmd, args))
-      (get_wrapper t opam wrappers OpamFile.Wrappers.post_install)
-  in
+  let mk_cmd = make_command ~env ~name ~dir in
   let rec run_commands = function
-    | (text,cmd,args)::commands ->
-      let dir = OpamFilename.Dir.to_string dir in
-      OpamSystem.make_command ~env ~name ~dir ~text
-        ~verbose:(OpamConsole.verbose ()) ~check_existence:false
-        cmd args
+    | (cmd,args as ca)::commands ->
+      mk_cmd ~text_command:ca
+        (cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_install cmd args)
       @@> fun result ->
       if OpamFile.OPAM.has_flag Pkgflag_Verbose opam then
         List.iter (OpamConsole.msg "%s\n") result.OpamProcess.r_stdout;
@@ -715,13 +682,32 @@ let install_package t nv =
   let install_job () =
     (* let text = OpamProcess.make_command_text name "install" in
      * OpamProcess.Job.with_text text *)
-    (run_commands commands) @@+ function
-    | Some _ as err -> Done err
-    | None ->
-      try
-        process_dot_install t nv;
-        run_commands post_commands
-      with e -> Done (Some e)
+    OpamProcess.Job.of_list
+      (List.map mk_cmd
+         (get_wrapper t opam wrappers OpamFile.Wrappers.pre_install))
+    @@+ fun error ->
+    (match error with
+     | None -> run_commands commands
+     | Some (_, result) -> Done (Some (OpamSystem.Process_error result)))
+    @@+ fun error ->
+    let local =
+      opam_local_env_of_status (match error with
+          | Some (OpamSystem.Process_error r) -> Some r
+          | _ -> None)
+    in
+    let error =
+      if error = None then
+        try process_dot_install t nv; None with e -> Some e
+      else error
+    in
+    OpamProcess.Job.of_list ~keep_going:true
+      (List.map mk_cmd
+         (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
+    @@+ fun error_post ->
+    match error, error_post with
+    | Some err, _ -> Done (Some err)
+    | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r))
+    | None, None -> Done None
   in
   let root = t.switch_global.root in
   let switch_prefix = OpamPath.Switch.root root t.switch in
