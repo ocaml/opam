@@ -254,10 +254,13 @@ let get_full ?(opamswitch=true) ~force_path ?updates:(u=[]) st =
 
 let is_up_to_date_raw updates =
   let not_utd =
-    List.filter (fun (var, op, arg, _doc) ->
+    List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
         match OpamStd.Env.getopt var with
-        | None -> true
-        | Some v -> reverse_env_update op arg (split_var v) = None)
+        | None -> upd::notutd
+        | Some v ->
+          if reverse_env_update op arg (split_var v) = None then upd::notutd
+          else List.filter (fun (v, _, _, _) -> v <> var) notutd)
+      []
       updates
   in
   let r = not_utd = [] in
