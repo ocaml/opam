@@ -394,14 +394,44 @@ let universe st
         OpamFilter.partial_filter_formula (env nv) (f opam)
       ) opams
   in
+  let u_depends = get_deps OpamFile.OPAM.depends st.opams in
+  let u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams in
+  let available = Lazy.force st.available_packages in
+  let u_available =
+    (* Remove all packages conflicting with the current compiler, or relying on
+       an incompatible version of it *)
+    OpamPackage.Set.filter
+      (fun nv ->
+         List.for_all (function
+             | Atom (name, vformula) ->
+               (try
+                  let comp =
+                    OpamPackage.package_of_name st.compiler_packages name
+                  in
+                  OpamFormula.eval (fun (relop,v) ->
+                      OpamFormula.eval_relop relop comp.version v)
+                    vformula
+                with Not_found -> true)
+             | _ -> true)
+           (OpamFormula.ands_to_list
+              (OpamFilter.filter_formula ~default:false (fun _ -> None)
+                 (OpamPackage.Map.find nv u_depends)))
+         &&
+         OpamPackage.Set.is_empty
+           (OpamFormula.packages_of_atoms st.compiler_packages
+              (OpamFormula.to_disjunction
+                 (OpamPackage.Map.find nv u_conflicts))))
+      available
+  in
+  let u =
 {
   u_packages  = st.packages;
   u_action    = action;
   u_installed = st.installed;
-  u_available = Lazy.force st.available_packages;
-  u_depends   = get_deps OpamFile.OPAM.depends st.opams;
+  u_available (* = Lazy.force st.available_packages *);
+  u_depends;
   u_depopts   = get_deps OpamFile.OPAM.depopts st.opams;
-  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
+  u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
   u_dev       = dev_packages st;
@@ -414,6 +444,9 @@ let universe st
     if doc then OpamPackage.packages_of_names st.packages requested
     else OpamPackage.Set.empty;
 }
+  in
+  log "Universe loaded, %d/%d available packages filtered" (OpamPackage.Set.cardinal u_available) (OpamPackage.Set.cardinal available);
+  u
 
 
 

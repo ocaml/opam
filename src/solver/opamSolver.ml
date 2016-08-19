@@ -329,16 +329,6 @@ let cleanup_request universe (req:atom request) =
   let wish_install =
     List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
       req.wish_install in
-  let wish_install = (* Always add compiler packages *)
-    OpamStd.List.filter_map (fun nv ->
-        let n = nv.name in
-        if List.mem_assoc n req.wish_install ||
-           List.mem_assoc n req.wish_upgrade
-        then None
-        else Some (n, Some (`Eq, nv.version)))
-      (OpamPackage.Set.elements universe.u_base)
-    @ wish_install
-  in
   let wish_upgrade =
     List.rev_map (fun (n,c as pkg) ->
         if c = None
