@@ -470,16 +470,13 @@ let update_pin nv opam st =
 let do_backup lock st = match lock with
   | `Lock_write ->
     let file = OpamPath.Switch.backup st.switch_global.root st.switch in
-    OpamFile.SwitchSelections.write file (selections st);
+    let previous_selections = selections st in
+    OpamFile.SwitchSelections.write file previous_selections;
     (function
       | true -> OpamFilename.remove (OpamFile.filename file)
       | false ->
         (* Reload, in order to skip the message if there were no changes *)
-        let st1 = load `Lock_none st.switch_global st.switch_repos st.switch in
-        if OpamPackage.Set.equal st.installed st1.installed &&
-           OpamPackage.Set.equal st.installed_roots st1.installed_roots &&
-           OpamPackage.Set.equal st.compiler_packages st1.compiler_packages &&
-           OpamPackage.Set.equal st.pinned st1.pinned
+        if load_selections st.switch_global st.switch = previous_selections
         then OpamFilename.remove (OpamFile.filename file)
         else
           prerr_string

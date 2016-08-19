@@ -507,13 +507,16 @@ let display
       :: l
     else l
   in
-  List.rev_map
-    (fun nv -> List.map (detail_printer ?prettify ?normalise st nv) format)
-    packages |>
-  List.rev |>
-  add_head |>
-  OpamStd.Format.align_table |>
-  OpamStd.Format.print_table ?cut:wrap stdout ~sep:separator
+  if packages = [] then
+    OpamConsole.msg "%s\n" (OpamConsole.colorise `red "# No matches found")
+  else
+    List.rev_map
+      (fun nv -> List.map (detail_printer ?prettify ?normalise st nv) format)
+      packages |>
+    List.rev |>
+    add_head |>
+    OpamStd.Format.align_table |>
+    OpamStd.Format.print_table ?cut:wrap stdout ~sep:separator
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in

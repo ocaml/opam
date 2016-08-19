@@ -96,7 +96,20 @@ let global_options =
   in
   Term.(pure self_upgrade $ no_self_upgrade $ global_options)
 
-let apply_global_options (options,_self_upgrade) = apply_global_options options
+let apply_global_options (options,self_upgrade) =
+  apply_global_options options;
+  try
+    let argv0 = OpamFilename.of_string Sys.executable_name in
+    if self_upgrade <> `Running &&
+       OpamFilename.starts_with OpamStateConfig.(!r.root_dir) argv0 &&
+       not !OpamCoreConfig.r.OpamCoreConfig.safe_mode
+    then
+      OpamConsole.warning "You should not be running opam from within %s. \
+                           Copying %s to your PATH first is advised."
+        (OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir))
+        (OpamFilename.to_string argv0)
+  with e -> OpamStd.Exn.fatal e
+
 let self_upgrade_status global_options = snd global_options
 
 let init_dot_profile shell dot_profile =
@@ -2407,6 +2420,8 @@ let run default commands =
       | Sys.Break
       | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
         exit_code := 130
+      | Sys_error "Broken pipe" ->
+        exit_code := 141
       | Failure msg ->
         Printf.eprintf "Fatal error: %s\n" msg;
         Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);

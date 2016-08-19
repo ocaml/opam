@@ -88,11 +88,6 @@ else
     # Let's see basic tasks works
     sudo make install
     opam init
-    # Workaround, only needed while the repository is not yet migrated to
-    # 2.0~alpha2 format (set ocaml-version and compiler by hand)
-    opam config set ocaml-version "$OCAML_VERSION"
-    opam config set compiler "system"
-    opam config set preinstalled "true"
     opam install lwt
     opam list
 fi

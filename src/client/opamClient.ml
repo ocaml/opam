@@ -199,8 +199,7 @@ let slog = OpamConsole.slog
     if atoms = [] then
       let to_reinstall = t.reinstall %% t.installed in
       let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-      let to_upgrade = t.installed -- full_orphans -- orphan_versions in
-      let to_install = t.installed -- full_orphans in
+      let to_upgrade = t.installed -- full_orphans in
       let requested = OpamPackage.Name.Set.empty in
       let action = Upgrade to_reinstall in
       requested,
@@ -208,7 +207,6 @@ let slog = OpamConsole.slog
       OpamSolution.resolve t action
         ~orphans:(full_orphans ++ orphan_versions)
         (preprocessed_request t full_orphans orphan_versions
-           ~wish_install:(OpamSolution.atoms_of_packages to_install)
            ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
            ~criteria:`Upgrade ())
     else
