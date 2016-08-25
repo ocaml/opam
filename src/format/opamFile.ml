@@ -840,6 +840,111 @@ end
 
 (** (1) Internal files *)
 
+(** Structure shared by a few file formats *)
+module Wrappers = struct
+
+  type t = {
+    pre_build : arg list list;
+    wrap_build : arg list;
+    post_build : arg list list;
+    pre_install : arg list list;
+    wrap_install : arg list;
+    post_install : arg list list;
+    pre_remove : arg list list;
+    wrap_remove : arg list;
+    post_remove : arg list list;
+  }
+
+  let empty = {
+    pre_build = [];
+    wrap_build = [];
+    post_build = [];
+    pre_install = [];
+    wrap_install = [];
+    post_install = [];
+    pre_remove = [];
+    wrap_remove = [];
+    post_remove = [];
+  }
+
+  let pre_build t = t.pre_build
+  let wrap_build t = t.wrap_build
+  let post_build t = t.post_build
+  let pre_install t = t.pre_install
+  let wrap_install t = t.wrap_install
+  let post_install t = t.post_install
+  let pre_remove t = t.pre_remove
+  let wrap_remove t = t.wrap_remove
+  let post_remove t = t.post_remove
+
+  let with_pre_build pre_build t = { t with pre_build }
+  let with_wrap_build wrap_build t = { t with wrap_build }
+  let with_post_build post_build t = { t with post_build }
+  let with_pre_install pre_install t = { t with pre_install }
+  let with_wrap_install wrap_install t = { t with wrap_install }
+  let with_post_install post_install t = { t with post_install }
+  let with_pre_remove pre_remove t = { t with pre_remove }
+  let with_wrap_remove wrap_remove t = { t with wrap_remove }
+  let with_post_remove post_remove t = { t with post_remove }
+
+  let fields = [
+    "pre-build-commands", Pp.ppacc
+      with_pre_build pre_build
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+    "pre-install-commands", Pp.ppacc
+      with_pre_install pre_install
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+    "pre-remove-commands", Pp.ppacc
+      with_pre_remove pre_remove
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+    "wrap-build-commands", Pp.ppacc
+      with_wrap_build wrap_build
+      (Pp.V.map_list ~depth:1 Pp.V.arg);
+    "wrap-install-commands", Pp.ppacc
+      with_wrap_install wrap_install
+      (Pp.V.map_list ~depth:1 Pp.V.arg);
+    "wrap-remove-commands", Pp.ppacc
+      with_wrap_remove wrap_remove
+      (Pp.V.map_list ~depth:1 Pp.V.arg);
+    "post-build-commands", Pp.ppacc
+      with_post_build post_build
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+    "post-install-commands", Pp.ppacc
+      with_post_install post_install
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+    "post-remove-commands", Pp.ppacc
+      with_post_remove post_remove
+      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+  ]
+
+  let with_default ~default t =
+    let f = function [] -> fun l -> l | l -> fun _ -> l in
+    {
+      pre_build = f t.pre_build default.pre_build;
+      wrap_build = f t.wrap_build default.wrap_build;
+      post_build = f t.post_build default.post_build;
+      pre_install = f t.pre_install default.pre_install;
+      wrap_install = f t.wrap_install default.wrap_install;
+      post_install = f t.post_install default.post_install;
+      pre_remove = f t.pre_remove default.pre_remove;
+      wrap_remove = f t.wrap_remove default.wrap_remove;
+      post_remove = f t.post_remove default.post_remove;
+    }
+
+  let add ~outer ~inner = {
+    pre_build = outer.pre_build @ inner.pre_build;
+    wrap_build = outer.wrap_build @ inner.wrap_build;
+    post_build = inner.post_build @ outer.post_build;
+    pre_install = outer.pre_install @ inner.pre_install;
+    wrap_install = outer.wrap_install @ inner.wrap_install;
+    post_install = inner.post_install @ outer.post_install;
+    pre_remove = outer.pre_remove @ inner.pre_remove;
+    wrap_remove = outer.wrap_remove @ inner.wrap_remove;
+    post_remove = inner.post_remove @ outer.post_remove;
+  }
+
+end
+
 (** General opam configuration (config) *)
 
 module ConfigSyntax = struct
@@ -854,11 +959,9 @@ module ConfigSyntax = struct
     jobs : int;
     dl_tool : arg list option;
     dl_jobs : int;
+    wrappers : Wrappers.t;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
-    wrap_build : arg list;
-    wrap_install : arg list;
-    wrap_remove : arg list;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
   }
@@ -875,9 +978,8 @@ module ConfigSyntax = struct
     try Some (List.assoc kind t.solver_criteria)
     with Not_found -> None
   let solver t = t.solver
-  let wrap_build t = t.wrap_build
-  let wrap_install t = t.wrap_install
-  let wrap_remove t = t.wrap_remove
+  let wrappers t = t.wrappers
+
   let global_variables t = t.global_variables
   let eval_variables t = t.eval_variables
 
@@ -897,9 +999,7 @@ module ConfigSyntax = struct
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_solver solver t = { t with solver = Some solver }
   let with_solver_opt solver t = { t with solver = solver }
-  let with_wrap_build wrap_build t = { t with wrap_build }
-  let with_wrap_install wrap_install t = { t with wrap_install }
-  let with_wrap_remove wrap_remove t = { t with wrap_remove }
+  let with_wrappers wrappers t = { t with wrappers }
   let with_global_variables global_variables t = { t with global_variables }
   let with_eval_variables eval_variables t = { t with eval_variables }
 
@@ -913,9 +1013,7 @@ module ConfigSyntax = struct
     dl_jobs = 1;
     solver_criteria = [];
     solver = None;
-    wrap_build = [];
-    wrap_install = [];
-    wrap_remove = [];
+    wrappers = Wrappers.empty;
     global_variables = [];
     eval_variables = [];
   }
@@ -963,15 +1061,6 @@ module ConfigSyntax = struct
       "solver", Pp.ppacc_opt
         with_solver solver
         (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-build-commands", Pp.ppacc
-        with_wrap_build wrap_build
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-install-commands", Pp.ppacc
-        with_wrap_install wrap_install
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-remove-commands", Pp.ppacc
-        with_wrap_remove wrap_remove
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
       "global-variables", Pp.ppacc
         with_global_variables global_variables
         (Pp.V.map_list ~depth:2
@@ -999,7 +1088,10 @@ module ConfigSyntax = struct
         Pp.V.pos_int;
       "system_ocaml-version", Pp.ppacc_ignore;
       "system-ocaml-version", Pp.ppacc_ignore;
-    ]
+    ] @
+    List.map
+      (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
+      Wrappers.fields
 
   let pp =
     let name = internal in
@@ -1025,9 +1117,7 @@ module InitConfigSyntax = struct
     dl_jobs : int option;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
-    wrap_build : arg list;
-    wrap_install : arg list;
-    wrap_remove : arg list;
+    wrappers : Wrappers.t;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
   }
@@ -1040,9 +1130,7 @@ module InitConfigSyntax = struct
   let dl_jobs t = t.dl_jobs
   let solver_criteria t = t.solver_criteria
   let solver t = t.solver
-  let wrap_build t = t.wrap_build
-  let wrap_install t = t.wrap_install
-  let wrap_remove t = t.wrap_remove
+  let wrappers t = t.wrappers
   let global_variables t = t.global_variables
   let eval_variables t = t.eval_variables
 
@@ -1054,9 +1142,7 @@ module InitConfigSyntax = struct
   let with_dl_jobs dl_jobs t = {t with dl_jobs}
   let with_solver_criteria solver_criteria t = {t with solver_criteria}
   let with_solver solver t = {t with solver}
-  let with_wrap_build wrap_build t = {t with wrap_build}
-  let with_wrap_install wrap_install t = {t with wrap_install}
-  let with_wrap_remove wrap_remove t = {t with wrap_remove}
+  let with_wrappers wrappers t = {t with wrappers}
   let with_global_variables global_variables t = {t with global_variables}
   let with_eval_variables eval_variables t = {t with eval_variables}
 
@@ -1077,9 +1163,7 @@ module InitConfigSyntax = struct
     dl_jobs = None;
     solver_criteria = [];
     solver = None;
-    wrap_build = [];
-    wrap_install = [];
-    wrap_remove = [];
+    wrappers = Wrappers.empty;
     global_variables = [];
     eval_variables = [];
   }
@@ -1120,15 +1204,6 @@ module InitConfigSyntax = struct
       "solver", Pp.ppacc_opt
         (with_solver @* OpamStd.Option.some) solver
         (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-build-commands", Pp.ppacc
-        with_wrap_build wrap_build
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-install-commands", Pp.ppacc
-        with_wrap_install wrap_install
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
-      "wrap-remove-commands", Pp.ppacc
-        with_wrap_remove wrap_remove
-        (Pp.V.map_list ~depth:1 Pp.V.arg);
       "global-variables", Pp.ppacc
         with_global_variables global_variables
         (Pp.V.map_list ~depth:2
@@ -1143,7 +1218,11 @@ module InitConfigSyntax = struct
               (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
               (Pp.V.map_list Pp.V.string)
               Pp.V.string));
-    ]
+    ] @
+    List.map
+      (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
+      Wrappers.fields
+
 
   let pp =
     let name = internal in
@@ -1170,9 +1249,7 @@ module InitConfigSyntax = struct
               acc)
           [] [`Fixup; `Upgrade; `Default];
       solver = opt t2.solver t1.solver;
-      wrap_build = list t2.wrap_build t1.wrap_build;
-      wrap_install = list t2.wrap_install t1.wrap_install;
-      wrap_remove = list t2.wrap_remove t1.wrap_remove;
+      wrappers = Wrappers.with_default ~default:t1.wrappers t2.wrappers;
       global_variables = list t2.global_variables t1.global_variables;
       eval_variables = list t2.eval_variables t1.eval_variables;
     }
@@ -1224,6 +1301,7 @@ module Switch_configSyntax = struct
     paths: (std_path * string) list;
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
+    wrappers: Wrappers.t;
   }
 
   let empty = {
@@ -1231,6 +1309,7 @@ module Switch_configSyntax = struct
     paths = [];
     variables = [];
     opam_root = None;
+    wrappers = Wrappers.empty;
   }
 
   let sections = [
@@ -1261,7 +1340,11 @@ module Switch_configSyntax = struct
     "opam-root", Pp.ppacc_opt
       (fun r t -> {t with opam_root = Some r}) (fun t -> t.opam_root)
       (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
-  ]
+  ] @
+    List.map
+      (fun (fld, ppacc) ->
+         fld, Pp.embed (fun wrappers t -> {t with wrappers}) (fun t -> t.wrappers) ppacc)
+      Wrappers.fields
 
   let pp =
     let name = internal in
@@ -1276,6 +1359,8 @@ module Switch_configSyntax = struct
   let path t p =
     try Some (List.assoc p t.paths)
     with Not_found -> None
+
+  let wrappers t = t.wrappers
 
 end
 module Switch_config = struct

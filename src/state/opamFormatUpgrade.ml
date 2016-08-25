@@ -763,7 +763,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
         let new_config =
           { OpamFile.Switch_config.
             repos = None;
-            opam_root; paths; variables;
+            opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
           }
         in
         OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;

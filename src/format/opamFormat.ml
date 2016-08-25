@@ -946,6 +946,13 @@ module Pp = struct
     name_constr = (fun _ -> "<ignored>");
   }
 
+  let embed set get ppacc = {
+    parse = (fun ~pos (acc, x) -> set (ppacc.parse ~pos (get acc, x)) acc);
+    print = (fun s -> let s1, v = ppacc.print (get s) in set s1 s, v);
+    ppname = ppacc.ppname;
+    name_constr = ppacc.name_constr;
+  }
+
   (** Parsers for item lists (standard opam file contents: list of field
       bindings). *)
   module I = struct
