@@ -2225,6 +2225,9 @@ let default =
         different sets of intalled packages.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
+    `S "COMMANDS";
+    `S "COMMAND ALIASES";
+    `S "OPTIONS";
   ] @  help_sections
   in
   let usage global_options =
@@ -2267,7 +2270,9 @@ let make_command_alias cmd ?(options="") name =
           name orig options);
     `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
           orig);
-  ] in
+    `S "OPTIONS";
+  ] @ help_sections
+  in
   term,
   Term.info name
     ~docs:"COMMAND ALIASES"
