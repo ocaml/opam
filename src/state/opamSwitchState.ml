@@ -482,9 +482,11 @@ let do_backup lock st = match lock with
           prerr_string
             (OpamStd.Format.reformat
                (Printf.sprintf
-                  "\nThe former state can be restored with:\n    \
-                   %s switch import %S\n%!"
-                  Sys.argv.(0) (OpamFile.to_string file))))
+                  "\nThe former state can be restored with:\n\
+                  \    %s switch import %S\n\
+                   Or you can retry to install your package selection with:\n\
+                  \    %s install --restore%!"
+                  Sys.argv.(0) (OpamFile.to_string file) Sys.argv.(0))))
   | _ -> fun _ -> ()
 
 let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =

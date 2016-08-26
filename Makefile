@@ -129,9 +129,9 @@ fast: prefast
 	@ocp-build
 	@$(MAKE) fastlink
 
-opam-core opam-format opam-solver opam-repository opam-state opam-client opam-tools: prefast
+opam-core opam-format opam-solver opam-repository opam-state opam-client opam-devel opam-tools: prefast ALWAYS
 	@ocp-build init
-	@echo "build_libs = [ \"$*\" ]" > src/x_build_libs.ocp
+	@echo "build_libs = [ \"$@\" ]" > src/x_build_libs.ocp
 	@ocp-build
 	@rm -f src/x_build_libs.ocp
 

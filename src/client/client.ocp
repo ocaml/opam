@@ -1,5 +1,5 @@
 if build_libs = [] ||
-   %mem( string = "client"
+   %mem( string = "opam-client"
          strings = build_libs )
 then {
 
@@ -27,6 +27,12 @@ begin library "opam-client"
   ]
 
 end
+}
+
+if build_libs = [] ||
+   %mem( string = "opam-devel"
+         strings = build_libs )
+then {
 
 begin program "opam"
 
@@ -35,7 +41,7 @@ begin program "opam"
   ]
   requires = [
     "opam-client"
- ]
+  ]
 
 end
 

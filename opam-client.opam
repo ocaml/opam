@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~alpha2"
+version: "2.0~alpha3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -20,6 +20,6 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-state" {= version}
+  "opam-state" {= "2.0~alpha3"}
   "cmdliner" {>= "0.9.8"}
 ]

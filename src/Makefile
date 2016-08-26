@@ -337,7 +337,6 @@ endef
 	@echo 'bin: [' >>$@
 	@echo '  "src/opam-admin"' >>$@
 	@echo '  "src/opam-admin.top"' >>$@
-	@echo '  "src/opam-admin"' >>$@
 	@echo ']' >>$@
 
 # Older, all-inclusive opam-lib with ocamlfind sub-packages (still used by 'make

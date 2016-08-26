@@ -1,5 +1,7 @@
 if build_libs = [] ||
-   %mem( string = "tools"
+   %mem( string = "opam-tools"
+         strings = build_libs ) ||
+   %mem( string = "opam-devel"
          strings = build_libs )
 then {
 

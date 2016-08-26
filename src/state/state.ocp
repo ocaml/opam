@@ -1,5 +1,5 @@
 if build_libs = [] ||
-   %mem( string = "state"
+   %mem( string = "opam-state"
          strings = build_libs )
 then {
 comp += [ "-w" "-48" ]
