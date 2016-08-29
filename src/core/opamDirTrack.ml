@@ -187,7 +187,12 @@ let revert ?title ?(verbose=true) ?(force=false) prefix changes =
             if OpamFilename.dir_is_empty d then
               (OpamFilename.rmdir d; acc)
             else
-              (already, modified, fname::nonempty, cannot)
+              let nonempty =
+                if List.exists
+                    (OpamStd.String.starts_with ~prefix:fname) nonempty
+                then nonempty else fname::nonempty
+              in
+              (already, modified, nonempty, cannot)
           else
           let f = OpamFilename.of_string f in
           OpamFilename.remove f;
