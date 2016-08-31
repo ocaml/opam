@@ -87,8 +87,11 @@ let is_remote url = url.OpamUrl.transport <> "file"
 let rsync_dirs ?args ?exclude_vcdirs url dst =
   let src_s = OpamUrl.(Op.(url / "").path) in (* Ensure trailing '/' *)
   let dst_s = OpamFilename.Dir.to_string dst in
-  if not (is_remote url) then
-    OpamFilename.mkdir (OpamFilename.Dir.of_string src_s);
+  if not (is_remote url) &&
+     not (OpamFilename.exists_dir (OpamFilename.Dir.of_string src_s))
+  then
+    Done (Not_available (Printf.sprintf "Directory %s does not exist" src_s))
+  else
   rsync ?args ?exclude_vcdirs src_s dst_s @@| function
   | Not_available s -> Not_available s
   | Result _ ->

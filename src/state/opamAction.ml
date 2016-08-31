@@ -331,8 +331,14 @@ let compilation_env t opam =
     Some "build environment definition";
   ]
 
+let installed_opam_opt st nv =
+  OpamStd.Option.Op.(
+    OpamPackage.Map.find_opt nv st.installed_opams >>+ fun () ->
+    OpamSwitchState.opam_opt st nv
+  )
+
 let removal_needs_download st nv =
-  match OpamSwitchState.opam_opt st nv with
+  match installed_opam_opt st nv with
   | None ->
     if not (OpamFile.exists
               (OpamPath.Switch.changes st.switch_global.root st.switch nv.name))
@@ -342,7 +348,11 @@ let removal_needs_download st nv =
          remain."
         (OpamPackage.to_string nv);
     false
-  | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam)
+  | Some opam ->
+    not (OpamFile.OPAM.has_flag Pkgflag_LightUninstall opam ||
+         OpamFilter.commands (OpamPackageVar.resolve ~opam st)
+           (OpamFile.OPAM.remove opam)
+         = [])
 
 let get_wrappers t =
   OpamFile.Wrappers.add
@@ -381,7 +391,7 @@ let make_command ~env ~name ~dir ?text_command (cmd, args) =
     cmd args
 
 let remove_commands t nv =
-  match OpamSwitchState.opam_opt t nv with
+  match installed_opam_opt t nv with
   | None ->
     log "No opam file was found for removing %a\n"
       (slog OpamPackage.to_string) nv;
@@ -494,8 +504,9 @@ let remove_package_aux
 
   (* Run the remove script *)
   let opam =
-    try OpamSwitchState.opam t nv
-    with Not_found -> OpamFile.OPAM.create nv
+    match installed_opam_opt t nv with
+    | Some o -> o
+    | None -> OpamFile.OPAM.create nv
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
