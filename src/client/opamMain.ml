@@ -467,11 +467,11 @@ let list =
       OpamListCommand.
       recursive; depopts; build = true; test = false; doc = false; dev
     } in
-    let pattern_toggles = {
+    let pattern_toggles ?(exact=true) field = {
       OpamListCommand.
-      exact = true;
+      exact;
       case_sensitive = false;
-      fields = ["name"];
+      fields = [field];
       glob = true;
       ext_fields = false;
     } in
@@ -490,16 +490,21 @@ let list =
                [OpamListCommand.From_repository repos]) @
             (List.map (fun (field,patt) ->
                  OpamListCommand.Pattern
-                   ({pattern_toggles with OpamListCommand.
-                                       exact = false;
-                                       fields = [field]},
-                    patt))
+                   (pattern_toggles ~exact:false field, patt))
                 field_match) @
             (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
             (List.map (fun tag -> OpamListCommand.Tag tag) has_tag)) @
          [OpamFormula.ors
             (List.map (fun patt ->
-                 Atom (OpamListCommand.Pattern (pattern_toggles, patt)))
+                 match OpamStd.String.cut_at patt '.' with
+                 | None ->
+                   Atom (OpamListCommand.Pattern (pattern_toggles "name", patt))
+                 | Some (name, version) ->
+                   OpamFormula.ands
+                     [Atom (OpamListCommand.Pattern
+                              (pattern_toggles "name", name));
+                      Atom (OpamListCommand.Pattern
+                              (pattern_toggles "version", version))])
                 packages)])
     in
     let format =
