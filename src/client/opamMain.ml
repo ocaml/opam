@@ -1490,10 +1490,10 @@ let switch =
     "Reinstall the given compiler switch and all its packages.";
     "list", `list, [],
     "Lists installed switches.";
-    "list-available", `list_available, [],
+    "list-available", `list_available, ["[PATTERN]"],
     "Lists base packages that can be used to create a new switch, i.e. \
      packages with the $(i,compiler) flag set. Only standard versions are \
-     shown by default, use $(b,--all) to show all.";
+     shown by default if no pattern is supplied, use $(b,--all) to show all.";
     "show", `current, [], "Prints the name of the current switch.";
     "set-base", `set_compiler, ["NAMES"],
     "Sets the packages forming the immutable base for the selected switch, \
@@ -1524,7 +1524,7 @@ let switch =
   let all =
     mk_flag ["a";"all"]
       "With $(b,list-available), show all available compilers, not only \
-       official releases" in
+       official releases. This is the default if a pattern is supplied" in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1577,13 +1577,13 @@ let switch =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchCommand.list gt ~print_short;
       `Ok ()
-    | Some `list_available, [] ->
+    | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       let all_compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let compilers =
-        if all then all_compilers else
+        if all || pattlist <> [] then all_compilers else
         let is_main_comp_re =
           Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
         in
@@ -1591,6 +1591,18 @@ let switch =
           (fun nv ->
              Re.(execp is_main_comp_re (OpamPackage.version_to_string nv)))
           all_compilers
+      in
+      let filters =
+        List.map (fun patt ->
+            OpamListCommand.Pattern
+              ({ OpamListCommand.default_pattern_selector with
+                 OpamListCommand.fields = ["name"; "version"] },
+               patt))
+          pattlist
+      in
+      let compilers =
+        OpamListCommand.filter ~base:compilers st
+          (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
       in
       let format = OpamListCommand.([ Name; Version; Synopsis; ]) in
       let order nv1 nv2 =
@@ -1600,7 +1612,7 @@ let switch =
       in
       OpamListCommand.display st ~header:true ~format ~dependency_order:false
         ~all_versions:true ~order compilers;
-      if all then `Ok () else
+      if all || pattlist <> [] then `Ok () else
       let unshown  = OpamPackage.Set.Op.(all_compilers -- compilers) in
       if not (OpamPackage.Set.is_empty unshown) then
         OpamConsole.msg "# %d more patched or experimental compilers, use \
