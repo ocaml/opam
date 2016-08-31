@@ -28,3 +28,9 @@ val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> OpamFile.Co
     report errors *)
 val opam_file_from_1_2_to_2_0:
   ?filename:OpamFile.OPAM.t OpamFile.t -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+(** Runs the opam file format from the file's format to current. Supplying
+    [filename] enables additional notification messages *)
+val opam_file:
+  ?filename:OpamFile.OPAM.t OpamFile.t ->
+  OpamFile.OPAM.t -> OpamFile.OPAM.t
