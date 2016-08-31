@@ -18,3 +18,13 @@ let not_installed s =
     "The selected compiler switch %s is not installed. Please choose a \
      different one using the 'opam switch' command."
     (to_string s)
+
+let is_external s = OpamStd.String.contains ~sub:Filename.dir_sep s
+
+let of_string s =
+  if is_external s then OpamFilename.Dir.(to_string (of_string s))
+  else s
+
+let get_root root s =
+  if is_external s then OpamFilename.Dir.of_string s
+  else OpamFilename.Op.(root / s)

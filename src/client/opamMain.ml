@@ -1479,10 +1479,11 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    "create", `install, ["SWITCH"; "[COMPILER]"],
+    "create", `install, ["SWITCH|DIR"; "[COMPILER]"],
     "Create a new switch with the given name, and install the given compiler \
      there. $(i,COMPILER), if omitted, defaults to $(i,SWITCH) unless \
-     $(b,--packages) or $(b,--empty) is specified.";
+     $(b,--packages) or $(b,--empty) is specified. If a directory name is \
+     specified instead of a name, the switch will be created there.";
     "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
