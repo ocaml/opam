@@ -302,7 +302,8 @@ let logop1 cstr op = function
     with Invalid_argument s -> log "ERR: %s" s; FUndef (cstr e)
 
 let logop2 cstr op absorb e f = match e, f with
-  | _, FBool x | FBool x, _ when x = absorb -> FBool x
+  | _, FBool x when x = absorb -> FBool x
+  | FBool x, _ when x = absorb -> FBool x
   | FUndef x, FUndef y | FUndef x, y | x, FUndef y -> FUndef (cstr x y)
   | f, g ->
     try FBool (op (value_bool f) (value_bool g))

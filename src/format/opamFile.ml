@@ -217,10 +217,11 @@ module Descr = struct
   include MakeIO(DescrIO)
 end
 
-module Comp_descr = Descr
+(* module Comp_descr = Descr *)
 
 (** Raw file interface used for variable expansions ( *.in ) *)
 
+(*
 module SubstIO = struct
 
   let internal = "subst"
@@ -244,7 +245,7 @@ module Subst = struct
   include SubstIO
   include MakeIO(SubstIO)
 end
-
+*)
 
 (** II - Base word list list parser and associated file types *)
 
