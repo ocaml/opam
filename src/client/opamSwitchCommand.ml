@@ -209,6 +209,7 @@ let install_compiler_packages t atoms =
   t
 
 let install gt ?repos ~update_config ~packages switch =
+  let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
