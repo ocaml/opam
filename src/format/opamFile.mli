@@ -783,6 +783,7 @@ module Repos_config: IO_FILE with type t = url option OpamRepositoryName.Map.t
 
 module Switch_config: sig
   type t = {
+    opam_version: OpamVersion.t;
     repos: repository_name list option;
     paths: (std_path * string) list;
     variables: (variable * variable_contents) list;

@@ -378,7 +378,7 @@ let detail_printer ?prettify ?normalise st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
-    if OpamPackage.has_name st.installed_roots nv.name then [`underline]
+    if OpamPackage.Set.mem nv st.installed_roots then [`underline]
     else []
   in
   function
@@ -481,11 +481,17 @@ let display
     ?prettify ?normalise ?order packages =
   let packages =
     if all_versions then packages else
-      OpamPackage.Name.Map.fold (fun n vs acc ->
-          OpamPackage.Set.add
-            (OpamPackage.create n (OpamPackage.Version.Set.max_elt vs))
-            acc)
-        (OpamPackage.to_map packages)
+      OpamPackage.Name.Set.fold (fun name ->
+          let pkgs = OpamPackage.packages_of_name packages name in
+          let nv =
+            let get = OpamPackage.Set.max_elt in
+            try get (pkgs %% st.installed) with Not_found ->
+            try get (pkgs %% st.pinned) with Not_found ->
+            try get (pkgs %% Lazy.force st.available_packages) with Not_found ->
+              get pkgs
+          in
+          OpamPackage.Set.add nv)
+        (OpamPackage.names_of_packages packages)
         OpamPackage.Set.empty
   in
   let packages =

@@ -54,14 +54,16 @@ let get_source_definition ?version st nv url =
         in
         OpamFilename.copy ~src:(OpamFile.filename f) ~dst;
         None
-      | [], Some opam -> Some (fix opam)
-      | warns, Some opam ->
-        OpamConsole.warning
-          "Failed checks on %s package definition from source at %s \
-           (fix with 'opam pin edit'):"
-          (OpamPackage.to_string nv)
-          (OpamUrl.to_string (OpamFile.URL.url url));
-        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns);
+      | warns, Some opam0 ->
+        let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
+        let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
+        if warns <> [] then
+          (OpamConsole.warning
+             "Failed checks on %s package definition from source at %s \
+              (fix with 'opam pin edit'):"
+             (OpamPackage.to_string nv)
+             (OpamUrl.to_string (OpamFile.URL.url url));
+           OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
         Some (fix opam)
 
 let copy_files st opam =

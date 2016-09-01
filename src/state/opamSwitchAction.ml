@@ -34,6 +34,7 @@ let gen_switch_config root ?repos switch =
   ]
   in
   { OpamFile.Switch_config.
+    opam_version = OpamVersion.current_nopatch;
     variables = vars;
     paths;
     opam_root = Some root;
