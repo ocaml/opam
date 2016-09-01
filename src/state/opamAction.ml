@@ -321,6 +321,7 @@ let string_of_commands commands =
 
 let compilation_env t opam =
   OpamEnv.get_full ~force_path:true t ~updates:[
+    "CDPATH", Eq, "", Some "shell env sanitization";
     "MAKEFLAGS", Eq, "", Some "make env sanitization";
     "MAKELEVEL", Eq, "", Some "make env sanitization";
     "OPAM_PACKAGE_NAME", Eq,
