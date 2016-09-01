@@ -19,12 +19,14 @@ let not_installed s =
      different one using the 'opam switch' command."
     (to_string s)
 
-let is_external s = OpamStd.String.contains ~sub:Filename.dir_sep s
+let is_external s =
+  OpamStd.String.starts_with ~prefix:"." s ||
+  OpamStd.String.contains ~sub:Filename.dir_sep s
 
 let of_string s =
   if is_external s then OpamFilename.Dir.(to_string (of_string s))
   else s
 
 let get_root root s =
-  if is_external s then OpamFilename.Dir.of_string s
+  if is_external s then OpamFilename.Op.(OpamFilename.Dir.of_string s / "_opam")
   else OpamFilename.Op.(root / s)
