@@ -278,6 +278,12 @@ let switch lock gt switch =
     in
     OpamEnv.check_and_print_env_warning st;
     st
+  else if OpamSwitch.is_external switch &&
+          OpamFilename.exists_dir (OpamSwitch.get_root gt.root switch) then
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      let st = OpamSwitchState.load lock gt rt switch in
+      OpamEnv.check_and_print_env_warning st;
+      st
   else
     OpamConsole.error_and_exit "No switch %s is currently installed. \
                                 Installed switches are: %s"
