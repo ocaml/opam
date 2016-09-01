@@ -233,6 +233,10 @@ val touch: t -> unit
 (** Change file permissions *)
 val chmod: t -> int -> unit
 
+(** Returns the closest parent of a directory (including itself) for which the
+    predicate holds, if any *)
+val find_in_parents: (Dir.t -> bool) ->  Dir.t -> Dir.t option
+
 (** {2 Locking} *)
 
 (** See [OpamSystem.flock]. Prefer the higher level [with_flock] functions when

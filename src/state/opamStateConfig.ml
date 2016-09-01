@@ -118,7 +118,20 @@ let initk k =
   let open OpamStd.Option.Op in
   let current_switch, switch_from =
     match env_string "SWITCH" with
-    | Some "" | None -> None, None
+    | Some "" | None ->
+      OpamFilename.(
+        match
+          find_in_parents
+            (fun d -> exists_dir
+                Op.(d / OpamSwitch.external_dirname /
+                    OpamPath.Switch.meta_dirname))
+            (cwd ())
+        with
+        | None -> None, None
+        | Some dir ->
+          Some (OpamSwitch.of_string (OpamFilename.Dir.to_string dir)),
+          Some `Default
+      )
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
   setk (setk (fun c -> r := c; k)) !r

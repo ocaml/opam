@@ -100,6 +100,19 @@ let list gt ~print_short =
           The current global system switch is %s."
          (OpamStd.Option.to_string ~none:"unset"
             (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
+  | Some switch, `Default when OpamSwitch.is_external switch ->
+    OpamConsole.msg "\n";
+    OpamConsole.note
+      "Current switch has been selected based on the current directory.\n\
+       The current global system switch is %s."
+      (OpamStd.Option.to_string ~none:"unset"
+         (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s))
+         (OpamFile.Config.switch gt.config));
+    if not (OpamEnv.is_up_to_date_switch gt.root switch) then
+      OpamConsole.warning
+        "The environment is not in sync with the current switch.\n\
+         You should run: %s"
+        (OpamEnv.eval_string gt (Some switch))
   | Some switch, `Default ->
     if not (OpamEnv.is_up_to_date_switch gt.root switch) then
       (OpamConsole.msg "\n";
