@@ -118,20 +118,7 @@ let initk k =
   let open OpamStd.Option.Op in
   let current_switch, switch_from =
     match env_string "SWITCH" with
-    | Some "" | None ->
-      OpamFilename.(
-        match
-          find_in_parents
-            (fun d -> exists_dir
-                Op.(d / OpamSwitch.external_dirname /
-                    OpamPath.Switch.meta_dirname))
-            (cwd ())
-        with
-        | None -> None, None
-        | Some dir ->
-          Some (OpamSwitch.of_string (OpamFilename.Dir.to_string dir)),
-          Some `Default
-      )
+    | Some "" | None -> None, None
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
   setk (setk (fun c -> r := c; k)) !r
@@ -162,9 +149,28 @@ let opamroot ?root_dir () =
 let load opamroot =
   OpamFile.Config.read_opt (OpamPath.config opamroot)
 
+let get_current_switch_from_cwd root =
+  let open OpamStd.Option.Op in
+  OpamFilename.find_in_parents
+    (fun d ->
+       OpamSwitch.of_dirname d |>
+       OpamPath.Switch.switch_config root |>
+       OpamFile.Switch_config.read_opt |> function
+       | None -> false
+       | Some conf -> conf.OpamFile.Switch_config.opam_root = Some root)
+    (OpamFilename.cwd ())
+  >>| OpamSwitch.of_dirname
+
 let load_defaults root_dir =
+  let current_switch =
+    match OpamStd.Config.env_string "SWITCH" with
+    | Some "" | None -> get_current_switch_from_cwd root_dir
+    | _ -> (* OPAMSWITCH is set, no need to lookup *) None
+  in
   match load root_dir with
-  | None -> None
+  | None ->
+    update ?current_switch ();
+    None
   | Some conf ->
     let open OpamStd.Option.Op in
     OpamRepositoryConfig.update
@@ -189,6 +195,7 @@ let load_defaults root_dir =
       ~jobs:(lazy (OpamFile.Config.jobs conf))
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
+    update ?current_switch ();
     Some conf
 
 let get_switch () =

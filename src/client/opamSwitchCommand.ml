@@ -100,6 +100,15 @@ let list gt ~print_short =
           The current global system switch is %s."
          (OpamStd.Option.to_string ~none:"unset"
             (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
+    else
+      (match OpamStateConfig.get_current_switch_from_cwd gt.root with
+       | None -> ()
+       | Some sw ->
+         OpamConsole.msg "\n";
+         OpamConsole.note
+           "Current switch is set globally and through the OPAMSWITCH variable.\n\
+            Thus, the local switch found at %s was ignored."
+           (OpamConsole.colorise `bold (OpamSwitch.to_string sw)))
   | Some switch, `Default when OpamSwitch.is_external switch ->
     OpamConsole.msg "\n";
     OpamConsole.note

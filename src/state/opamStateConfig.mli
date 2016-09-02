@@ -71,3 +71,8 @@ val load_defaults: OpamFilename.Dir.t -> OpamFile.Config.t option
 
 (** Returns the current switch, failing with an error message is none is set. *)
 val get_switch: unit -> switch
+
+(** The function used to locate an external switch from parents of the current
+    directory. Takes the opam root as parameter, and rejects any external switch
+    configured with a different root *)
+val get_current_switch_from_cwd: OpamFilename.Dir.t -> switch option
