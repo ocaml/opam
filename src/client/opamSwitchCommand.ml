@@ -52,34 +52,32 @@ let list gt ~print_short =
             comp
           |> ifempty comp
         in
-        OpamSwitch.Map.add sw comp acc)
+        let conf =
+          OpamFile.Switch_config.read_opt
+            (OpamPath.Switch.switch_config gt.root sw)
+        in
+        let descr = match conf with
+          | Some c -> c.OpamFile.Switch_config.synopsis
+          | None -> OpamConsole.colorise `red "Missing config file"
+        in
+        OpamSwitch.Map.add sw (OpamPackage.keys comp, descr) acc)
       gt
       OpamSwitch.Map.empty
   in
-  let list =
-    OpamSwitch.Map.fold (fun sw opams acc ->
-        let descr =
-          match OpamPackage.Map.values opams with
-          | [opam] -> OpamFile.OPAM.descr opam
-          | _ -> None
-        in
-        (Some sw, OpamPackage.keys opams, descr) :: acc)
-      installed_switches []
-  in
-  let list = List.sort compare list in
+  let list = OpamSwitch.Map.bindings installed_switches in
 
   let table =
     List.map (OpamConsole.colorise `blue)
       ["# switch"; "compiler"; "description" ] ::
-    List.map (fun (swopt, packages, descr) ->
+    List.map (fun (switch, (packages, descr)) ->
         List.map
-          (if swopt <> None && swopt = OpamStateConfig.(!r.current_switch)
+          (if Some switch = OpamStateConfig.(!r.current_switch)
            then OpamConsole.colorise `bold else fun s -> s)
-          [ OpamStd.Option.to_string ~none:"-" OpamSwitch.to_string swopt;
+          [ OpamSwitch.to_string switch;
             OpamStd.List.concat_map ","
               (OpamConsole.colorise `yellow @* OpamPackage.to_string)
               (OpamPackage.Set.elements packages);
-            OpamStd.Option.to_string ~none:"" OpamFile.Descr.synopsis descr ])
+            descr ])
       list
   in
   OpamStd.Format.print_table stdout ~sep:"  "
@@ -222,6 +220,25 @@ let install_compiler_packages t atoms =
   then
     OpamConsole.error_and_exit "Aborted installation of non-compiler packages \
                                 as switch base.";
+  let t =
+    if t.switch_config.OpamFile.Switch_config.synopsis = "" then
+      let synopsis =
+        match OpamPackage.Set.elements base_comp with
+        | [] -> OpamSwitch.to_string t.switch
+        | [pkg] ->
+          let open OpamStd.Option.Op in
+          (OpamSwitchState.opam_opt t pkg >>= OpamFile.OPAM.synopsis) +!
+          OpamPackage.to_string pkg
+        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
+      in
+      let switch_config =
+        { t.switch_config with OpamFile.Switch_config.synopsis }
+      in
+      OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+        switch_config;
+      { t with switch_config }
+    else t
+  in
   let t = { t with compiler_packages = to_install_pkgs } in
   let t, result =
     OpamSolution.apply ~ask:OpamStateConfig.(!r.show) t (Switch roots)
@@ -230,7 +247,7 @@ let install_compiler_packages t atoms =
   OpamSolution.check_solution ~quiet:OpamStateConfig.(not !r.show) t result;
   t
 
-let install gt ?repos ~update_config ~packages switch =
+let install gt ?synopsis ?repos ~update_config ~packages switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -244,7 +261,9 @@ let install gt ?repos ~update_config ~packages switch =
       (OpamFilename.Dir.to_string comp_dir);
   let gt, st =
     if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
-      let gt = OpamSwitchAction.create_empty_switch gt ?repos switch in
+      let gt =
+        OpamSwitchAction.create_empty_switch gt ?synopsis ?repos switch
+      in
       if update_config then
         gt, OpamSwitchAction.set_current_switch `Lock_write gt switch
       else
@@ -300,16 +319,12 @@ let switch lock gt switch =
     in
     OpamEnv.check_and_print_env_warning st;
     st
-  else if OpamSwitch.is_external switch &&
-          OpamFilename.exists_dir (OpamSwitch.get_root gt.root switch) then
-      let rt = OpamRepositoryState.load `Lock_none gt in
-      let st = OpamSwitchState.load lock gt rt switch in
-      OpamEnv.check_and_print_env_warning st;
-      st
   else
-    OpamConsole.error_and_exit "No switch %s is currently installed. \
-                                Installed switches are: %s"
-      (OpamSwitch.to_string switch)
+    OpamConsole.error_and_exit
+      "No switch %s is currently installed. Did you mean \
+       'opam switch create %s' ?\n\
+       Installed switches are: %s"
+      (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
 let switch_with_autoinstall gt ?repos ~packages switch =
@@ -359,9 +374,6 @@ let import_t importfile t =
 
   let compiler_packages, to_install =
     if OpamPackage.Set.is_empty t.compiler_packages then
-      (* fixme: the install should be two step, since the installation of the
-         compiler defines variables that are later needed to decide
-         availabillity of packages *)
       import_sel.sel_compiler %% available,
       import_sel.sel_installed
     else

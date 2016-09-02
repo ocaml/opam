@@ -761,6 +761,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
         let new_config =
           { OpamFile.Switch_config.
             opam_version = OpamVersion.nopatch v2_0_alpha3;
+            synopsis = "";
             repos = None;
             opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
           }

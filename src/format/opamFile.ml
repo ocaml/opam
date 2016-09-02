@@ -1299,6 +1299,7 @@ module Switch_configSyntax = struct
 
   type t = {
     opam_version: OpamVersion.t;
+    synopsis: string;
     repos: repository_name list option;
     paths: (std_path * string) list;
     variables: (variable * variable_contents) list;
@@ -1308,6 +1309,7 @@ module Switch_configSyntax = struct
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
+    synopsis = "";
     repos = None;
     paths = [];
     variables = [];
@@ -1336,6 +1338,9 @@ module Switch_configSyntax = struct
     "opam-version", Pp.ppacc
       (fun opam_version t -> {t with opam_version}) (fun t -> t.opam_version)
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+    "synopsis", Pp.ppacc
+      (fun synopsis t -> {t with synopsis}) (fun t -> t.synopsis)
+      Pp.V.string;
     "repositories",
     Pp.ppacc_opt (fun r t -> {t with repos = Some r}) (fun t -> t.repos)
       (Pp.V.map_list ~depth:1 @@

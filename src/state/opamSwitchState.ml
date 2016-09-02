@@ -195,6 +195,28 @@ let load lock_kind gt rt switch =
   in
   log "Detected changed packages (marked for reinstall): %a"
     (slog OpamPackage.Set.to_string) changed;
+  (* Detect and initialise missing switch description *)
+  let switch_config =
+    if switch_config <> OpamFile.Switch_config.empty &&
+       switch_config.OpamFile.Switch_config.synopsis = "" then
+      let synopsis =
+        match OpamPackage.Set.elements (compiler_packages %% installed_roots)
+        with
+        | [] -> OpamSwitch.to_string switch
+        | [nv] ->
+          let open OpamStd.Option.Op in
+          (OpamPackage.Map.find_opt nv opams >>= OpamFile.OPAM.synopsis) +!
+          OpamPackage.to_string nv
+        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
+      in
+      let conf = { switch_config with OpamFile.Switch_config.synopsis } in
+      if lock_kind = `Lock_write then (* auto-repair *)
+        OpamFile.Switch_config.write
+          (OpamPath.Switch.switch_config gt.root switch)
+          conf;
+      conf
+    else switch_config
+  in
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
         OpamPackage.Map.add nv
@@ -265,7 +287,7 @@ let load_virtual ?repos_list gt rt =
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
     switch_lock = OpamSystem.lock_none;
-    switch = OpamSwitch.of_string "none";
+    switch = OpamSwitch.unset;
     compiler_packages = OpamPackage.Set.empty;
     switch_config = OpamFile.Switch_config.empty;
     installed = OpamPackage.Set.empty;

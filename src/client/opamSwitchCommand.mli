@@ -20,6 +20,7 @@ open OpamStateTypes
     globally, unless it is external *)
 val install:
   rw global_state ->
+  ?synopsis:string ->
   ?repos:repository_name list ->
   update_config:bool ->
   packages:atom conjunction -> switch ->
