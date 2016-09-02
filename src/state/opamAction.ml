@@ -320,16 +320,18 @@ let string_of_commands commands =
 *)
 
 let compilation_env t opam =
-  OpamEnv.get_full ~force_path:true t ~updates:[
-    "MAKEFLAGS", Eq, "", Some "make env sanitization";
-    "MAKELEVEL", Eq, "", Some "make env sanitization";
-    "OPAM_PACKAGE_NAME", Eq,
-    OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
-    Some "build environment definition";
-    "OPAM_PACKAGE_VERSION", Eq,
-    OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
-    Some "build environment definition";
-  ]
+  OpamEnv.get_full ~force_path:true t ~updates:([
+      "CDPATH", Eq, "", Some "shell env sanitization";
+      "MAKEFLAGS", Eq, "", Some "make env sanitization";
+      "MAKELEVEL", Eq, "", Some "make env sanitization";
+      "OPAM_PACKAGE_NAME", Eq,
+      OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
+      Some "build environment definition";
+      "OPAM_PACKAGE_VERSION", Eq,
+      OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
+      Some "build environment definition";
+    ] @
+      OpamFile.OPAM.build_env opam)
 
 let installed_opam_opt st nv =
   OpamStd.Option.Op.(

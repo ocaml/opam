@@ -53,13 +53,21 @@ let update_repos_config rt repositories =
 let add rt name url =
   log "repository-add";
   let root = rt.repos_global.root in
-  if OpamRepositoryName.Map.mem name rt.repositories then
-    OpamConsole.error_and_exit
-      "Repository %s is already set up to %s. \
-       Maybe you meant 'opam repository select' ?"
-      (OpamRepositoryName.to_string name)
-      (OpamUrl.to_string
-         (OpamRepositoryName.Map.find name rt.repositories).repo_url);
+  (try
+     let r = OpamRepositoryName.Map.find name rt.repositories in
+     if r.repo_url = url then
+       (OpamConsole.note
+          "Repository %s is already configured to that URL. \
+           Maybe what you wanted was 'opam repository select' ?"
+          (OpamRepositoryName.to_string name);
+        OpamStd.Sys.exit 0)
+     else
+       OpamConsole.error_and_exit
+         "Repository %s is already set up and points to %s. Maybe you meant \
+          'opam repository set-url' or 'opam repository select' ?"
+         (OpamRepositoryName.to_string name)
+         (OpamUrl.to_string r.repo_url)
+   with Not_found -> ());
   let repo = { repo_name = name; repo_url = url;
                repo_root = OpamRepositoryPath.create root name;
                repo_priority = 0; }
