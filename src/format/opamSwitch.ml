@@ -29,6 +29,9 @@ let of_string s =
   if is_external s then OpamFilename.Dir.(to_string (of_string s))
   else s
 
+let of_dirname d =
+  OpamFilename.Dir.to_string d
+
 let get_root root s =
   if is_external s
   then OpamFilename.Op.(OpamFilename.Dir.of_string s / external_dirname)

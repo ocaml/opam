@@ -31,3 +31,6 @@ val get_root: OpamFilename.Dir.t -> t -> OpamFilename.Dir.t
 (** The relative dirname in which the opam switch prefix sits for external
     switches ("_opam") *)
 val external_dirname: string
+
+(** Returns an external switch handle from a directory name *)
+val of_dirname: OpamFilename.Dir.t -> t

@@ -1504,6 +1504,8 @@ let switch =
     "set-base", `set_compiler, ["NAMES"],
     "Sets the packages forming the immutable base for the selected switch, \
      overriding the current setting. The packages must be installed already.";
+    "set-description", `set_description, ["STRING"],
+    "Sets the description for the selected switch";
     "install", `install, ["SWITCH"],
     "Deprecated alias for 'create'."
   ] in
@@ -1555,9 +1557,16 @@ let switch =
        details. This option also affects $(i,list-available)."
       Arg.(some (list repository_name)) None
   in
+  let descr =
+    mk_opt ["description"] "STRING"
+      "Attach the given description to a switch when creating it. Use the \
+       $(i,set-description) subcommand to modify the description of an \
+       existing switch."
+      Arg.(some string) None
+  in
   let switch
       global_options build_options command print_short all
-      no_switch packages empty repos params =
+      no_switch packages empty descr repos params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1632,12 +1641,11 @@ let switch =
                          '--all' to show\n"
           (OpamPackage.Set.cardinal unshown);
       `Ok ()
-    | Some `install, switch::params
-    | None, switch::(_::_ as  params) ->
+    | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let _gt, st =
         OpamSwitchCommand.install gt
-          ?repos
+          ?synopsis:descr ?repos
           ~update_config:(not no_switch)
           ~packages:(compiler_packages gt switch (param_compiler params))
           (OpamSwitch.of_string switch)
@@ -1697,13 +1705,6 @@ let switch =
     | Some `default switch, [] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let switch_name = OpamSwitch.of_string switch in
-      let is_installed =
-        List.mem switch_name (OpamFile.Config.installed_switches gt.config)
-      in
-      if not is_installed then
-        OpamConsole.error_and_exit
-          "No switch '%s' found. Did you mean 'opam switch create %s' ?"
-          switch switch;
       OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore;
       `Ok ()
     | Some `set_compiler, packages ->
@@ -1714,13 +1715,22 @@ let switch =
          let _st = OpamSwitchCommand.set_compiler st names in
          `Ok ()
        with Failure e -> `Error (false, e))
+    | Some `set_description, text ->
+      let synopsis = String.concat " " text in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let config =
+        { st.switch_config with OpamFile.Switch_config.synopsis }
+      in
+      OpamSwitchAction.install_switch_config gt.root st.switch config;
+      `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
   Term.(ret (pure switch
              $global_options $build_options $command
              $print_short_flag
              $all $no_switch
-             $packages $empty $repos $params)),
+             $packages $empty $descr $repos $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
