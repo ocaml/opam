@@ -60,7 +60,7 @@ let backup t = backup_dir t /- backup_file ()
 
 module Switch = struct
 
-  let root t a = t / OpamSwitch.to_string a
+  let root t a = OpamSwitch.get_root t a
 
   (** Internal files and dirs with static location *)
 

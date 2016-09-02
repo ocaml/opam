@@ -16,7 +16,8 @@ open OpamStateTypes
 
 (** Install a new switch, with the given packages set as compiler. The given
     [global_state] is unlocked as soon as possible, i.e. after registering the
-    existence of the new switch *)
+    existence of the new switch. [update_config] sets the switch as current
+    globally, unless it is external *)
 val install:
   rw global_state ->
   ?repos:repository_name list ->

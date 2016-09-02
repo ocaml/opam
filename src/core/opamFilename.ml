@@ -326,6 +326,12 @@ let remove_suffix suffix filename =
   let filename = to_string filename in
   OpamStd.String.remove_suffix ~suffix filename
 
+let rec find_in_parents f dir =
+  if f dir then Some dir else
+  let parent = dirname_dir dir in
+  if parent = dir then None
+  else find_in_parents f parent
+
 let patch filename dirname =
   OpamSystem.patch ~dir:(Dir.to_string dirname) (to_string filename)
 

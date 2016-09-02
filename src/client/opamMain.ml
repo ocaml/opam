@@ -787,12 +787,12 @@ let config =
      setup --user) to setup the user ones. To modify both the global and user \
      configuration, use $(b,opam config setup --all).";
     "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
-    "Execute $(i,COMMAND) with the correct environment variables. \
-     This command can be used to cross-compile between switches using \
-     $(b,opam config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). \
-     Opam expansion takes place in command and args. If no switch is \
-     present on the command line or in the OPAMSWITCH environment \
-     variable, OPAMSWITCH is not set in $(i,COMMAND)'s environment.";
+    "Execute $(i,COMMAND) with the correct environment variables. This command \
+     can be used to cross-compile between switches using $(b,opam config exec \
+     --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
+     command and args. If no switch is present on the command line or in the \
+     $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
+     $(i,COMMAND)'s environment.";
     "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
      be accessed with the syntax $(i,pkg:var).";
@@ -1480,9 +1480,10 @@ let switch =
   let doc = switch_doc in
   let commands = [
     "create", `install, ["SWITCH"; "[COMPILER]"],
-    "Create a new switch with the given name, and install the given compiler \
-     there. $(i,COMPILER), if omitted, defaults to $(i,SWITCH) unless \
-     $(b,--packages) or $(b,--empty) is specified.";
+    "Create a new switch, and install the given compiler there. $(i,SWITCH) \
+     can be a plain name, or a directory, absolute or relative. $(i,COMPILER), \
+     if omitted, defaults to $(i,SWITCH) unless $(b,--packages) or \
+     $(b,--empty) is specified.";
     "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
@@ -1516,6 +1517,13 @@ let switch =
         switch set) to set the currently active switch. Without argument, \
         lists installed switches, with one switch argument, defaults to \
         $(b,set).";
+    `P ("Switch handles $(i,SWITCH) can be either a plain name, for switches \
+         that will be held inside $(i,~/.opam), or a directory name, which in \
+         that case is the directory where the switch prefix will be installed, as "
+        ^ OpamSwitch.external_dirname ^
+        ". Opam will automatically select a switch by that name found in the \
+         current directory or its parents, unless $(i,OPAMSWITCH) is set or \
+         $(b,--switch) is specified.");
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval `opam config env \

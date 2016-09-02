@@ -100,6 +100,19 @@ let list gt ~print_short =
           The current global system switch is %s."
          (OpamStd.Option.to_string ~none:"unset"
             (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s)) sys))
+  | Some switch, `Default when OpamSwitch.is_external switch ->
+    OpamConsole.msg "\n";
+    OpamConsole.note
+      "Current switch has been selected based on the current directory.\n\
+       The current global system switch is %s."
+      (OpamStd.Option.to_string ~none:"unset"
+         (fun s -> OpamConsole.colorise `bold (OpamSwitch.to_string s))
+         (OpamFile.Config.switch gt.config));
+    if not (OpamEnv.is_up_to_date_switch gt.root switch) then
+      OpamConsole.warning
+        "The environment is not in sync with the current switch.\n\
+         You should run: %s"
+        (OpamEnv.eval_string gt (Some switch))
   | Some switch, `Default ->
     if not (OpamEnv.is_up_to_date_switch gt.root switch) then
       (OpamConsole.msg "\n";
@@ -209,6 +222,7 @@ let install_compiler_packages t atoms =
   t
 
 let install gt ?repos ~update_config ~packages switch =
+  let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
@@ -277,6 +291,12 @@ let switch lock gt switch =
     in
     OpamEnv.check_and_print_env_warning st;
     st
+  else if OpamSwitch.is_external switch &&
+          OpamFilename.exists_dir (OpamSwitch.get_root gt.root switch) then
+      let rt = OpamRepositoryState.load `Lock_none gt in
+      let st = OpamSwitchState.load lock gt rt switch in
+      OpamEnv.check_and_print_env_warning st;
+      st
   else
     OpamConsole.error_and_exit "No switch %s is currently installed. \
                                 Installed switches are: %s"

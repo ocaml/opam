@@ -39,6 +39,13 @@ let load lock_kind =
      currently installed shell init scripts) *)
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
+  let switches =
+    List.filter
+      (fun sw -> not (OpamSwitch.is_external sw) ||
+                 OpamFilename.exists_dir (OpamSwitch.get_root root sw))
+      (OpamFile.Config.installed_switches config)
+  in
+  let config = OpamFile.Config.with_installed_switches switches config in
   let global_variables =
     List.fold_left (fun acc (v,value,doc) ->
         OpamVariable.Map.add v (lazy (Some value), doc) acc)

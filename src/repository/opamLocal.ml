@@ -50,25 +50,32 @@ let call_rsync check args =
 let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
   log "rsync: src=%s dst=%s" src dst;
   let remote = String.contains src ':' in
-  let norm d = Filename.concat d "" in
+  let overlap src dst =
+    let norm d = Filename.concat d "" in
+    OpamStd.String.starts_with ~prefix:(norm src) (norm dst) &&
+    not (OpamStd.String.starts_with
+           ~prefix:(norm (Filename.concat src OpamSwitch.external_dirname))
+           (norm dst)) ||
+    OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
+  in
   let exclude_args =
     if exclude_vcdirs then [
       "--exclude"; ".git";
       "--exclude"; "_darcs";
       "--exclude"; ".hg";
       "--exclude"; ".#*";
+      "--exclude"; OpamSwitch.external_dirname;
     ]
     else [
       "--exclude"; ".#*";
+      "--exclude"; OpamSwitch.external_dirname;
     ]
   in
   if not(remote || Sys.file_exists src) then
     Done (Not_available src)
   else if src = dst then
     Done (Up_to_date [])
-  else if OpamStd.String.starts_with ~prefix:(norm src) (norm dst) ||
-          OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
-  then
+  else if overlap src dst then
     (OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
      Done (Not_available src))
   else (
