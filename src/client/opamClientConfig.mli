@@ -52,6 +52,7 @@ val opam_init:
   ?dl_jobs:int ->
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
+  ?reuse_build_dir:bool ->
   ?no_base_packages:bool ->
   ?build_test:bool ->
   ?build_doc:bool ->
