@@ -346,9 +346,21 @@ let list =
     mk_flag ["depopts"]  ~section:selection_docs
       "Include optional dependencies in dependency requests."
   in
+  let nobuild =
+    mk_flag ["nobuild"]  ~section:selection_docs
+      "Exclude build dependencies (they are included by default)."
+  in
   let dev =
     mk_flag ["dev"]  ~section:selection_docs
       "Include development packages in dependencies."
+  in
+  let doc_flag =
+    mk_flag ["doc"] ~section:selection_docs
+      "Include doc-only dependencies."
+  in
+  let test =
+    mk_flag ["t";"test"] ~section:selection_docs
+      "Include test-only dependencies."
   in
   let repos =
     mk_opt ["repos"] "REPOS" ~section:selection_docs
@@ -445,7 +457,7 @@ let list =
   in
   let list global_options state_selector field_match
       depends_on required_by resolve recursive depopts no_switch
-      depexts dev repos has_flag has_tag
+      depexts nobuild dev doc test repos has_flag has_tag
       print_short sort columns all_versions normalise wrap separator
       packages =
     apply_global_options global_options;
@@ -465,7 +477,7 @@ let list =
     in
     let dependency_toggles = {
       OpamListCommand.
-      recursive; depopts; build = true; test = false; doc = false; dev
+      recursive; depopts; build = not nobuild; test; doc; dev
     } in
     let pattern_toggles ?(exact=true) field = {
       OpamListCommand.
@@ -552,7 +564,8 @@ let list =
   in
   Term.(pure list $global_options $state_selector $field_match
         $depends_on $required_by $resolve $recursive $depopts
-        $no_switch $depexts $dev $repos $has_flag $has_tag
+        $no_switch $depexts $nobuild $dev $doc_flag $test $repos
+        $has_flag $has_tag
         $print_short $sort $columns $all_versions
         $normalise $wrap $separator
         $pattern_list),
@@ -949,7 +962,11 @@ let config =
     | Some `cudf, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun opam_state ->
-      let opam_univ = OpamSwitchState.universe opam_state Depends in
+      let opam_univ =
+        OpamSwitchState.universe opam_state
+          ~requested:(OpamPackage.names_of_packages opam_state.packages)
+          Depends
+      in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
        | [] -> `Ok (dump stdout)

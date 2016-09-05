@@ -20,6 +20,7 @@ val resolve:
   'a switch_state ->
   user_action ->
   orphans:package_set ->
+  requested:name_set ->
   atom request ->
   (OpamSolver.solution, OpamCudf.conflict) result
 

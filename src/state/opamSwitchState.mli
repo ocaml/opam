@@ -116,8 +116,15 @@ val is_dev_package: 'a switch_state -> package -> bool
 val dev_packages: 'a switch_state -> package_set
 
 (** Put the package data in a form suitable for the solver, pre-computing some
-    maps and sets *)
-val universe: 'a switch_state -> user_action -> universe
+    maps and sets. Packages in the [requested] set are the ones that will get
+    affected by the global [build_test] and [build_doc] flags.
+    [test] and [doc], if unspecified, are taken from [OpamStateConfig.r] *)
+val universe:
+  'a switch_state ->
+  ?test:bool ->
+  ?doc:bool ->
+  requested:name_set ->
+  user_action -> universe
 
 (** {2 Updating} *)
 

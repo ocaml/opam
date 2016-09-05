@@ -307,7 +307,7 @@ end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
-let parallel_apply t action action_graph =
+let parallel_apply t action ~requested action_graph =
   log "parallel_apply";
 
   (* We keep an imperative state up-to-date and flush it to disk as soon
@@ -788,12 +788,12 @@ let apply ?ask t action ~requested solution =
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)
-      parallel_apply t action action_graph
+      parallel_apply t action ~requested action_graph
     ) else
       t, Aborted
   )
 
-let resolve ?(verbose=true) t action ~orphans request =
+let resolve ?(verbose=true) t action ~orphans ~requested request =
   if OpamStateConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
@@ -802,13 +802,14 @@ let resolve ?(verbose=true) t action ~orphans request =
   );
   Json.output_request request action;
   let r =
-    OpamSolver.resolve ~verbose (OpamSwitchState.universe t action) ~orphans request
+    OpamSolver.resolve ~verbose
+      (OpamSwitchState.universe t ~requested action) ~orphans request
   in
   Json.output_solution t r;
   r
 
 let resolve_and_apply ?ask t action ~requested ~orphans request =
-  match resolve t action ~orphans request with
+  match resolve t action ~orphans ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"

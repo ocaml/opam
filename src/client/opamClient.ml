@@ -33,7 +33,8 @@ let slog = OpamConsole.slog
     let all = t.packages ++ t.installed in
     let allnames = OpamPackage.names_of_packages all in
     let universe =
-      OpamSwitchState.universe t (Reinstall OpamPackage.Set.empty)
+      OpamSwitchState.universe t ~requested:OpamPackage.Name.Set.empty
+        (Reinstall OpamPackage.Set.empty)
     in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
@@ -206,6 +207,7 @@ let slog = OpamConsole.slog
       action,
       OpamSolution.resolve t action
         ~orphans:(full_orphans ++ orphan_versions)
+        ~requested
         (preprocessed_request t full_orphans orphan_versions
            ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
            ~criteria:`Upgrade ())
@@ -289,6 +291,7 @@ let slog = OpamConsole.slog
     action,
     OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
+      ~requested
       (preprocessed_request t full_orphans orphan_versions
          ~wish_install:to_install
          ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
@@ -398,7 +401,9 @@ let slog = OpamConsole.slog
     let all_orphans = full_orphans ++ orphan_versions in
     let resolve pkgs =
       pkgs,
-      OpamSolution.resolve t action ~orphans:all_orphans
+      OpamSolution.resolve t action
+        ~orphans:all_orphans
+        ~requested:(OpamPackage.names_of_packages pkgs)
         (OpamSolver.request
            ~install:(OpamSolution.atoms_of_packages pkgs)
            ~criteria:`Fixup
@@ -840,6 +845,7 @@ let slog = OpamConsole.slog
       let solution =
         OpamSolution.resolve t action
           ~orphans:(full_orphans ++ orphan_versions)
+          ~requested:names
           request in
       let t, solution = match solution with
         | Conflicts cs ->
@@ -903,7 +909,11 @@ let slog = OpamConsole.slog
 
     if autoremove || packages <> [] then (
       let packages = OpamPackage.Set.of_list packages in
-      let universe = OpamSwitchState.universe t Remove in
+      let universe =
+        OpamSwitchState.universe t
+          ~requested:(OpamPackage.names_of_packages packages)
+          Remove
+      in
       let to_remove =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies ~build:true
