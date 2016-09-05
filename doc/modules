@@ -66,7 +66,6 @@ src
 │   │   [ opam-state lib ]
 │   ├── opamStateConfig.ml              Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamPath.ml                     Defines the file hierarchy in ~/.opam
-│   ├── opamOCaml.ml                    OCaml installation version and specifics detection
 │   ├── opamScript.ml                   (generated) Shell config scripts as OCaml strings
 │   ├── opamStateTypes.mli              Defines the types holding global, repository and switch states
 │   ├── opamGlobalState.ml              Loading and handling of the global state of an opam root

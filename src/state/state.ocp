@@ -9,7 +9,6 @@ begin library "opam-state"
   files   = [
     "opamPath.ml"
     "opamStateConfig.ml"
-    "opamOCaml.ml"
     "opamScript.ml"
     "opamStateTypes.mli"
     "opamPackageVar.ml"

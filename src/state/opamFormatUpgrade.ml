@@ -434,27 +434,41 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
               let config =
                 OpamFile.Dot_config.create @@
                 List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
-                [ "ocaml-version",
-                  S (OpamStd.Option.default "unknown"
-                       (Lazy.force OpamOCaml.system_ocamlc_version));
-                  "compiler", S comp_name;
+                [ "compiler", S comp_name;
                   "preinstalled", B true;
-                  "ocaml-native", B (Lazy.force OpamOCaml.ocaml_native_available);
-                  "ocaml-native-tools", B (Lazy.force OpamOCaml.ocaml_opt_available);
-                  "ocaml-native-dynlink", B (Lazy.force OpamOCaml.ocaml_natdynlink_available);
-                  "ocaml-stubsdir",
-                  S (Filename.concat
-                       (OpamStd.Option.default "/usr/lib/ocaml"
-                          (Lazy.force OpamOCaml.system_ocamlc_where))
-                       "stublibs")
                 ]
               in
-              match Lazy.force OpamOCaml.where_is_ocamlc with
+              let ocamlc =
+                try
+                  let path =
+                    OpamStd.Env.get "PATH" |> fun p ->
+                    OpamStd.String.split p (OpamStd.Sys.path_sep ()) |>
+                    List.filter (fun s ->
+                        not (OpamStd.String.starts_with
+                               ~prefix:(OpamFilename.Dir.to_string root) s))
+                  in
+                  List.fold_left (function
+                      | None -> fun d ->
+                        let f = Filename.concat d "ocamlc" in
+                        if Sys.file_exists f
+                        then Some (OpamFilename.of_string f)
+                        else None
+                      | s -> fun _ -> s)
+                    None path
+                with Not_found -> None
+              in
+              match ocamlc with
               | Some ocamlc ->
-                let f = OpamFilename.Dir.of_string ocamlc // "ocamlc" in
+                let vnum =
+                  OpamSystem.read_command_output ~verbose:false
+                    [ OpamFilename.to_string ocamlc ; "-vnum" ]
+                in
+                config |>
                 OpamFile.Dot_config.with_file_depends
-                  [f, OpamFilename.digest f]
-                  config
+                  [ocamlc, OpamFilename.digest ocamlc] |>
+                OpamFile.Dot_config.set
+                  (OpamVariable.of_string "ocaml-version")
+                  (Some (S (String.concat "" vnum)))
               | None -> config
             else
               let get_dir d =
