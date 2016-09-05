@@ -182,7 +182,15 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     (name, None) :: (* prevents install of multiple versions of the same pkg *)
     OpamFormula.to_disjunction conflicts in
   let installed = OpamPackage.Set.mem package universe.u_installed in
-  let base = OpamPackage.Set.mem package universe.u_base in
+  let keep =
+    if OpamPackage.Set.mem package universe.u_base then
+      if OpamPackage.Set.mem package universe.u_available
+      then `Keep_version
+      else if OpamPackage.has_name universe.u_available package.name
+      then `Keep_package
+      else `Keep_none
+    else `Keep_none
+  in
   let reinstall = match universe.u_action with
     | Upgrade reinstall | Reinstall reinstall ->
       OpamPackage.Set.mem package reinstall
@@ -229,7 +237,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
         (OpamFormula.to_cnf depends);
     conflicts = List.rev_map (atom2cudf universe version_map) conflicts;
     installed;
-    keep = if base then `Keep_version else `Keep_none;
+    keep;
     (* was_installed: reserved for the solver; *)
     (* provides: unused atm *)
     pkg_extra = extras;
@@ -246,14 +254,18 @@ let load_cudf_universe ?depopts ~build
     | None -> cudf_versions_map opam_universe opam_packages in
   log ~level:3 "Load cudf universe: opam2cudf";
   let opam_packages =
-    (* Filter out extra compiler versions, they add too much cost to the solver
-       and are not needed *)
-    opam_packages --
-    (OpamPackage.packages_of_names opam_packages
-       OpamPackage.Name.Set.Op.(
-         OpamPackage.names_of_packages opam_universe.u_base
-         -- OpamPackage.names_of_packages opam_universe.u_pinned)
-     -- opam_universe.u_base)
+    if OpamPackage.Set.is_empty
+        (opam_universe.u_base -- opam_universe.u_available)
+    then
+      (* Filter out extra compiler versions, they add too much cost to the
+         solver and are not needed *)
+      opam_packages --
+      (OpamPackage.packages_of_names opam_packages
+         OpamPackage.Name.Set.Op.(
+           OpamPackage.names_of_packages opam_universe.u_base
+           -- OpamPackage.names_of_packages opam_universe.u_pinned)
+       -- opam_universe.u_base)
+    else opam_packages
   in
   let cudf_universe =
     let cudf_packages =

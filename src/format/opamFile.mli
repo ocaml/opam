@@ -765,7 +765,7 @@ module Dot_config: sig
 
   (** Sets the given variable, overriding any previous definition.
       With [None], unsets the variable*)
-  val set: t -> variable -> variable_contents option -> t
+  val set: variable -> variable_contents option -> t -> t
 
 end
 

@@ -1569,7 +1569,7 @@ module Dot_configSyntax = struct
     try Some (List.assoc s t.vars)
     with Not_found -> None
 
-  let set t k v =
+  let set k v t =
     let vars = List.remove_assoc k t.vars in
     let vars =
       match v with

@@ -193,7 +193,6 @@ opam-state.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repositor
 SRC_state = \
   opamPath.ml \
   opamStateConfig.ml \
-  opamOCaml.ml \
   opamScript.ml \
   opamStateTypes.mli \
   opamPackageVar.ml \
