@@ -439,7 +439,11 @@ let slog = OpamConsole.slog
     in
     let t, result = match solution with
       | Conflicts cs -> (* ouch... *)
-        OpamConsole.msg "%s"
+        OpamConsole.error
+          "It appears that the base packages for this switch are no longer \
+           available. Either fix their prerequisites or change them through \
+           'opam list --base' and 'opam switch set-base'.";
+        OpamConsole.errmsg "%s"
           (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
         t, No_solution
       | Success solution ->
