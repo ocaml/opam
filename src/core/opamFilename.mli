@@ -54,7 +54,8 @@ val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
 (** Move a directory *)
 val move_dir: src:Dir.t -> dst:Dir.t -> unit
 
-(** Copy a directory *)
+(** Copy directory [src] to [dst], that is, recursively copy the contents of
+    [src] into [dst], overwriting any existing files. *)
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)
@@ -260,10 +261,6 @@ val with_flock_upgrade:
     a read lock and runs the second function. *)
 val with_flock_write_then_read:
   ?dontblock:bool -> t -> (unit -> 'a) -> ('a -> 'b) -> 'b
-
-(** [copy_if_check t src dst] copies all the files from one directory
-    to another. *)
-val copy_files: src:Dir.t -> dst:Dir.t -> unit
 
 module Op: sig
 

@@ -18,6 +18,7 @@ type t = {
   dl_jobs: int;
   external_tags: string list;
   keep_build_dir: bool;
+  reuse_build_dir: bool;
   no_base_packages: bool;
   build_test: bool;
   build_doc: bool;
@@ -38,6 +39,7 @@ let default = {
   dl_jobs = 3;
   external_tags = [];
   keep_build_dir = false;
+  reuse_build_dir = false;
   no_base_packages = false;
   build_test = false;
   build_doc = false;
@@ -60,6 +62,7 @@ type 'a options_fun =
   ?dl_jobs:int ->
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
+  ?reuse_build_dir:bool ->
   ?no_base_packages:bool ->
   ?build_test:bool ->
   ?build_doc:bool ->
@@ -78,6 +81,7 @@ let setk k t
     ?dl_jobs
     ?external_tags
     ?keep_build_dir
+    ?reuse_build_dir
     ?no_base_packages
     ?build_test
     ?build_doc
@@ -97,6 +101,7 @@ let setk k t
     dl_jobs = t.dl_jobs + dl_jobs;
     external_tags = t.external_tags + external_tags;
     keep_build_dir = t.keep_build_dir + keep_build_dir;
+    reuse_build_dir = t.reuse_build_dir + reuse_build_dir;
     no_base_packages = t.no_base_packages + no_base_packages;
     build_test = t.build_test + build_test;
     build_doc = t.build_doc + build_doc;
@@ -129,6 +134,7 @@ let initk k =
     ?dl_jobs:(env_int "DOWNLOADJOBS")
     ?external_tags:None
     ?keep_build_dir:(env_bool "KEEPBUILDDIR")
+    ?reuse_build_dir:(env_bool "REUSEBUILDDIR")
     ?no_base_packages:(env_bool "NOBASEPACKAGES")
     ?build_test:(env_bool "BUILDTEST")
     ?build_doc:(env_bool "BUILDDOC")

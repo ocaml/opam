@@ -183,6 +183,7 @@ let install_compiler_packages t atoms =
   let solution =
     OpamSolution.resolve t (Switch roots)
       ~orphans:OpamPackage.Set.empty
+      ~requested:roots
       { wish_install = [];
         wish_remove  = [];
         wish_upgrade = atoms;

@@ -103,14 +103,6 @@ let basename_dir dirname =
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
-let copy_dir ~src ~dst =
-  if Sys.file_exists (Dir.to_string dst) then
-    OpamSystem.internal_error
-      "Cannot create %s as it already exists." (Dir.to_string dst);
-  mkdir (dirname_dir dst);
-  OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
-    [ "cp"; "-PR"; Dir.to_string src; Dir.to_string dst ]
-
 let link_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error "Cannot link: %s already exists." (Dir.to_string dst)
@@ -227,7 +219,10 @@ let files d =
   List.rev_map of_string fs
 
 let copy ~src ~dst =
-  if src <> dst then OpamSystem.copy (to_string src) (to_string dst)
+  if src <> dst then OpamSystem.copy_file (to_string src) (to_string dst)
+
+let copy_dir ~src ~dst =
+  if src <> dst then OpamSystem.copy_dir (Dir.to_string src) (Dir.to_string dst)
 
 let install ?exec ~src ~dst () =
   if src <> dst then OpamSystem.install ?exec (to_string src) (to_string dst)
@@ -420,19 +415,6 @@ end
 
 module Map = OpamStd.Map.Make(O)
 module Set = OpamStd.Set.Make(O)
-
-let copy_files ~src ~dst =
-  let files = rec_files src in
-  List.iter (fun file ->
-      let base = remove_prefix src file in
-      let dst_file = create dst (Base.of_string base) in
-      if OpamCoreConfig.(!r.verbose_level >= 2) then
-        OpamConsole.msg "Copying %s %s %s/\n"
-          (prettify file)
-          (if exists dst_file then "over" else "to")
-          (prettify_dir dst);
-      copy ~src:file ~dst:dst_file
-    ) files
 
 module Op = struct
 

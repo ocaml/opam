@@ -261,7 +261,8 @@ let extract_package st source nv destdir =
   if OpamStateConfig.(!r.dryrun) then Done None else
   (match source with
     | None -> Done None
-    | Some (D dir) -> OpamFilename.copy_dir ~src:dir ~dst:destdir; Done None
+    | Some (D dir) ->
+      OpamFilename.copy_dir ~src:dir ~dst:destdir; Done None
     | Some (F archive) -> OpamFilename.extract_job archive destdir)
   @@+ function
   | Some _ as some_err -> Done some_err
@@ -608,7 +609,8 @@ let remove_package t ?silent ?changes ?force nv =
 *)
 let build_package t source nv =
   let build_dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-  OpamFilename.rmdir build_dir;
+  if not OpamStateConfig.(!r.reuse_build_dir) then
+    OpamFilename.rmdir build_dir;
   extract_package t source nv build_dir @@+ fun r ->
   if r <> None then Done r
   else

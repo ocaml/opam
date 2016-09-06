@@ -302,8 +302,8 @@ type universe = {
   u_attrs    : (string * package_set) list;
 
   (* extra CUDF attributes for the given packages *)
-  u_test     : bool; (** Test dependencies should be honored *)
-  u_doc      : bool; (** Doc dependencies should be honored *)
+  u_test     : package_set; (** Test dependencies should be honored *)
+  u_doc      : package_set; (** Doc dependencies should be honored *)
   (* NOTE: pre-compute these also *)
 }
 

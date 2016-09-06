@@ -34,8 +34,8 @@ let empty_universe =
     u_dev = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
     u_attrs = [];
-    u_test = false;
-    u_doc = false;
+    u_test = OpamPackage.Set.empty;
+    u_doc = OpamPackage.Set.empty;
   }
 
 let filter_deps ~build ~test ~doc ~dev ?default deps =
@@ -54,7 +54,10 @@ let depopts_of_package universe ~build package =
   let opts =
     try
       let dev = OpamPackage.Set.mem package universe.u_dev in
-      filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
+      filter_deps ~build
+        ~test:(OpamPackage.Set.mem package universe.u_test)
+        ~doc:(OpamPackage.Set.mem package universe.u_doc)
+        ~dev
         ~default:false
         (OpamPackage.Map.find package universe.u_depopts)
     with Not_found -> Empty in
@@ -155,9 +158,13 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
   let version = OpamPackage.version package in
   let dev = OpamPackage.Set.mem package universe.u_dev in
   let depends =
-    try filter_deps ~build ~test:universe.u_test ~doc:universe.u_doc ~dev
-          ~default:false
-          (OpamPackage.Map.find package universe.u_depends)
+    try
+      filter_deps ~build
+        ~test:(OpamPackage.Set.mem package universe.u_test)
+        ~doc:(OpamPackage.Set.mem package universe.u_doc)
+        ~dev
+        ~default:false
+        (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
 (*
   let base_depends =

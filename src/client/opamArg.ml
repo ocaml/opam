@@ -126,6 +126,7 @@ let apply_global_options o =
 (* Build options *)
 type build_options = {
   keep_build_dir: bool;
+  reuse_build_dir: bool;
   make          : string option;
   no_checksums  : bool;
   req_checksums : bool;
@@ -139,10 +140,10 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir make no_checksums req_checksums build_test
+    keep_build_dir reuse_build_dir make no_checksums req_checksums build_test
     build_doc show dryrun external_tags fake
     jobs = {
-  keep_build_dir; make; no_checksums; req_checksums;
+  keep_build_dir; reuse_build_dir; make; no_checksums; req_checksums;
   build_test; build_doc; show; dryrun; external_tags;
   fake; jobs;
 }
@@ -162,6 +163,7 @@ let apply_build_options b =
     (* ?dl_jobs:int *)
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
+    ?reuse_build_dir:(flag b.reuse_build_dir)
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
@@ -728,8 +730,16 @@ let global_options =
 let build_options =
   let keep_build_dir =
     mk_flag ["b";"keep-build-dir"]
-      "Keep the build directory. \
+      "Keep the build directories after compiling packages. \
        This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to \"true\"." in
+  let reuse_build_dir =
+    mk_flag ["reuse-build-dir"]
+      "Reuse existing build directories (kept by using $(b,--keep-build-dir)), \
+       instead of compiling from a fresh clone of the source. This can be \
+       faster but lead to failures if the build system of the packages doesn't \
+       handle upgrades of dependencies well. \
+       This is equivalent to setting $(b,\\$OPAMREUSEBUILDDIR) to \"true\"."
+  in
   let no_checksums =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
@@ -768,6 +778,6 @@ let build_options =
        WARNING: This option is dangerous and likely to break your OPAM \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
-    $keep_build_dir $make $no_checksums $req_checksums $build_test
+    $keep_build_dir $reuse_build_dir $make $no_checksums $req_checksums $build_test
     $build_doc $show $dryrun $external_tags $fake
     $jobs_flag)

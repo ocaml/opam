@@ -370,7 +370,11 @@ let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
-let universe st action =
+let universe st
+    ?(test=OpamStateConfig.(!r.build_test))
+    ?(doc=OpamStateConfig.(!r.build_doc))
+    ~requested
+    action =
   let env nv v =
     if List.mem v OpamPackageVar.predefined_depends_variables then None else
     let r = OpamPackageVar.resolve_switch ~package:nv st v in
@@ -402,8 +406,12 @@ let universe st action =
   u_dev       = dev_packages st;
   u_base      = st.compiler_packages;
   u_attrs     = [];
-  u_test      = OpamStateConfig.(!r.build_test);
-  u_doc       = OpamStateConfig.(!r.build_doc);
+  u_test      =
+    if test then OpamPackage.packages_of_names st.packages requested
+    else OpamPackage.Set.empty;
+  u_doc       =
+    if doc then OpamPackage.packages_of_names st.packages requested
+    else OpamPackage.Set.empty;
 }
 
 

@@ -143,11 +143,14 @@ let atom_dependencies st tog atoms =
     pkgs OpamFormula.Empty
 
 let get_universe st tog =
-  let universe = OpamSwitchState.universe st Depends in
-  { universe with
-    u_test = tog.test;
-    u_doc = tog.doc;
-    u_dev = st.packages }
+  let universe =
+    OpamSwitchState.universe st
+      ~test:tog.test ~doc:tog.doc
+      ~requested:(OpamPackage.names_of_packages st.packages)
+      Depends
+  in
+  if tog.dev then { universe with u_dev = st.packages }
+  else universe
 
 let rec value_strings value =
   let module SS = OpamStd.String.Set in
@@ -176,7 +179,10 @@ let apply_selector ~base st = function
   | Root -> st.installed_roots
   | Compiler -> st.compiler_packages
   | Available -> Lazy.force st.available_packages
-  | Installable -> OpamSolver.installable (OpamSwitchState.universe st Depends)
+  | Installable ->
+    OpamSolver.installable
+      (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty
+         Depends)
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
@@ -496,7 +502,11 @@ let display
   in
   let packages =
     if dependency_order then
-      let universe = OpamSwitchState.universe st Depends in
+      let universe =
+        OpamSwitchState.universe st
+          ~requested:(OpamPackage.names_of_packages packages)
+          Depends
+      in
       let deps_packages =
         OpamSolver.dependencies
           ~depopts:true ~installed:false ~unavailable:true ~build:true

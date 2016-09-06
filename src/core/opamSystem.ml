@@ -181,6 +181,8 @@ let list kind dir =
     )
   with File_not_found _ -> []
 
+let ls dir = list (fun _ -> true) dir
+
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> false)
 
@@ -434,7 +436,7 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
 let verbose_for_base_commands () =
   OpamCoreConfig.(!r.verbose_level) >= 3
 
-let copy src dst =
+let copy_file src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
   then internal_error "Cannot copy %s: it is a directory." src;
@@ -444,6 +446,18 @@ let copy src dst =
   then remove_file dst;
   mkdir (Filename.dirname dst);
   command ~verbose:(verbose_for_base_commands ()) ["cp"; src; dst ]
+
+let copy_dir src dst =
+  if Sys.file_exists dst then
+    if Sys.is_directory dst then
+      command ~verbose:(verbose_for_base_commands ())
+        ([ "cp"; "-PR" ] @ ls src @ [ dst ])
+    else internal_error "Can not copy dir %s to %s, which is not a directory"
+        src dst
+  else
+    (mkdir (Filename.dirname dst);
+     command ~verbose:(verbose_for_base_commands ())
+       [ "cp"; "-PR"; src; dst ])
 
 let mv src dst =
   if Sys.file_exists dst then remove_file dst;
@@ -570,33 +584,33 @@ let extract_job ~dir file =
   | None   ->
     (try
        mkdir dir;
-       copy file (dir/Filename.basename file);
+       copy_file file (dir/Filename.basename file);
        Done None
      with e -> Done (Some e))
   | Some cmd ->
     cmd tmp_dir @@> fun r ->
     if not (OpamProcess.is_success r) then
       Done (Some (Process_error r))
-    else if Sys.file_exists dir then
-      internal_error "Extracting the archive will overwrite %s." dir
+    else if try not (Sys.is_directory dir) with Sys_error _ -> false then
+      internal_error "Extracting the archive would overwrite %s." dir
     else
     match files_all_not_dir tmp_dir with
     | [] ->
       begin match directories_strict tmp_dir with
         | [x] ->
-          mkdir (Filename.dirname dir);
-          make_command "mv" [ x; dir ] @@> fun r ->
-          if OpamProcess.is_success r then Done None
-          else Done (Some (Process_error r))
+          (try
+             mkdir (Filename.dirname dir);
+             copy_dir x dir;
+             Done None
+           with e -> OpamStd.Exn.fatal e; Done (Some e))
         | _ ->
           internal_error "The archive %S contains multiple root directories."
             file
       end
     | _   ->
       mkdir (Filename.dirname dir);
-      make_command "mv" [ tmp_dir; dir] @@> fun r ->
-      if OpamProcess.is_success r then Done None
-      else Done (Some (Process_error r))
+      try copy_dir tmp_dir dir; Done None
+      with e -> OpamStd.Exn.fatal e; Done (Some e)
 
 let extract ~dir file =
   match OpamProcess.Job.run (extract_job ~dir file) with
@@ -624,8 +638,8 @@ let link src dst =
       log "ln -s %s %s" src dst;
       Unix.symlink src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
-      (* Fall back to copy if hard links are not supported *)
-      copy src dst
+      (* Fall back to copy if symlinks are not supported *)
+      copy_file src dst
   ) else
     internal_error "link: %s does not exist." src
 
