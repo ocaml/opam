@@ -191,7 +191,7 @@ let make_archive ?(gener_digest=false) repo prefix nv =
     if OpamFilename.exists_dir files_dir then (
       if not (OpamFilename.exists_dir extract_dir) then
         OpamFilename.mkdir extract_dir;
-      OpamFilename.copy_files ~src:files_dir ~dst:extract_dir;
+      OpamFilename.copy_dir ~src:files_dir ~dst:extract_dir;
       OpamFilename.Set.of_list (OpamFilename.rec_files extract_dir)
     ) else
       OpamFilename.Set.empty in

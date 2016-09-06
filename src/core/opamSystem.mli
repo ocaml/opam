@@ -39,9 +39,14 @@ val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
     is reached *)
 val verbose_for_base_commands: unit -> bool
 
-(** [copy src dst] copies [src] to [dst]. Remove [dst] before the copy
+(** [copy_file src dst] copies [src] to [dst]. Remove [dst] before the copy
     if it is a link. *)
-val copy: string -> string -> unit
+val copy_file: string -> string -> unit
+
+(** [copy_dir src dst] copies the contents of directory [src] into directory
+    [dst], creating it if necessary, merging directory contents and ovewriting
+    files otherwise *)
+val copy_dir: string -> string -> unit
 
 val mv: string -> string -> unit
 
@@ -94,6 +99,10 @@ val chdir: string -> unit
 
 (** [in_dir dir fn] evaluates [fn] in the directory [dir] *)
 val in_dir: string -> (unit -> 'a) -> 'a
+
+(** Returns the list of files and directories in the given directory (full
+    names) *)
+val ls: string -> string list
 
 (** [files_with_links dir] returns the files in the directory [dir].
     Links simulating directory are ignored, others links are returned. *)
