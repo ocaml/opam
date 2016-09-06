@@ -607,17 +607,15 @@ let remove_package t ?silent ?changes ?force nv =
 (* Compiles a package.
    Assumes the package has already been downloaded to [source].
 *)
-let build_package t source build_dir nv =
+let build_package t ?(test=false) ?(doc=false) source build_dir nv =
   extract_package t source nv build_dir @@+ fun r ->
   if r <> None then Done r
   else
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFile.OPAM.build opam @
-    (if OpamStateConfig.(!r.build_test)
-     then OpamFile.OPAM.build_test opam else []) @
-    (if OpamStateConfig.(!r.build_doc)
-     then OpamFile.OPAM.build_doc opam else [])
+    (if test then OpamFile.OPAM.build_test opam else []) @
+    (if doc then OpamFile.OPAM.build_doc opam else [])
   in
   let commands =
     OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands |>

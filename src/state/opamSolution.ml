@@ -489,7 +489,13 @@ let parallel_apply t action ~requested action_graph =
               OpamFilename.rmdir dir;
             dir
         in
-        (OpamAction.build_package t source build_dir nv @@+ function
+        let test =
+          OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
+        in
+        let doc =
+          OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
+        in
+        (OpamAction.build_package t ~test ~doc source build_dir nv @@+ function
           | None -> store_time (); Done (`Successful (installed, removed))
           | Some exn -> store_time (); Done (`Exception exn))
       | `Install nv ->

@@ -33,7 +33,8 @@ val extract_package:
     Returns [None] on success, [Some exn] on error.
     See {!download_package} to download the source. *)
 val build_package:
-  rw switch_state -> generic_file option -> dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool ->
+  generic_file option -> dirname -> package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
