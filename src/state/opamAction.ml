@@ -607,10 +607,7 @@ let remove_package t ?silent ?changes ?force nv =
 (* Compiles a package.
    Assumes the package has already been downloaded to [source].
 *)
-let build_package t source nv =
-  let build_dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-  if not OpamStateConfig.(!r.reuse_build_dir) then
-    OpamFilename.rmdir build_dir;
+let build_package t source build_dir nv =
   extract_package t source nv build_dir @@+ fun r ->
   if r <> None then Done r
   else
