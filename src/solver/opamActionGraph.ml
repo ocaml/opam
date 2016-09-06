@@ -182,14 +182,6 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
-  let pkg (action: vertex) =
-    match action with
-    | `Build pkg
-    | `Change (_,pkg,_)
-    | `Install pkg
-    | `Reinstall pkg
-    | `Remove pkg -> pkg
-
   let compute_closed_predecessors noop_remove g =
     let closed_g = copy g in
     transitive_closure closed_g;
@@ -202,7 +194,9 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
             let pred =
               (* We ignore predecessors that do not modify the prefix *)
               List.filter
-                (fun nv -> not (noop_remove (pkg nv)))
+                (function
+                  | `Remove nv -> not (noop_remove nv)
+                  | _ -> true)
                 (pred closed_g a) in
             if pred = [] then Set.add p acc else acc
           | _ -> acc) g Set.empty
