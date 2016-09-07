@@ -18,6 +18,7 @@ build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
   [make "opam-devel"]
 ]
+build-test: [make "tests"]
 depends: [
   "opam-client" {= "2.0~alpha3"}
   "cmdliner" {>= "0.9.8"}

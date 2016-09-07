@@ -127,6 +127,7 @@ let apply_global_options o =
 type build_options = {
   keep_build_dir: bool;
   reuse_build_dir: bool;
+  inplace_build : bool;
   make          : string option;
   no_checksums  : bool;
   req_checksums : bool;
@@ -140,11 +141,11 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir make no_checksums req_checksums build_test
-    build_doc show dryrun external_tags fake
+    keep_build_dir reuse_build_dir inplace_build make no_checksums req_checksums
+    build_test build_doc show dryrun external_tags fake
     jobs = {
-  keep_build_dir; reuse_build_dir; make; no_checksums; req_checksums;
-  build_test; build_doc; show; dryrun; external_tags;
+  keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
+  req_checksums; build_test; build_doc; show; dryrun; external_tags;
   fake; jobs;
 }
 
@@ -164,6 +165,7 @@ let apply_build_options b =
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
+    ?inplace_build:(flag b.inplace_build)
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
@@ -736,9 +738,17 @@ let build_options =
     mk_flag ["reuse-build-dir"]
       "Reuse existing build directories (kept by using $(b,--keep-build-dir)), \
        instead of compiling from a fresh clone of the source. This can be \
-       faster but lead to failures if the build system of the packages doesn't \
-       handle upgrades of dependencies well. \
-       This is equivalent to setting $(b,\\$OPAMREUSEBUILDDIR) to \"true\"."
+       faster, but also lead to failures if the build systems of the packages \
+       don't handle upgrades of dependencies well. This is equivalent to \
+       setting $(b,\\$OPAMREUSEBUILDDIR) to \"true\"."
+  in
+  let inplace_build =
+    mk_flag ["inplace-build"]
+      "When compiling a package which has its source bound to a local \
+       directory, process the build and install actions directly in that \
+       directory, rather than in a clean copy handled by opam. This only \
+       affects packages that are explicitely listed on the command-line. \
+       This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
   let no_checksums =
     mk_flag ["no-checksums"]
@@ -751,10 +761,12 @@ let build_options =
   let build_test =
     mk_flag ["t";"build-test"]
       "Build and $(b,run) the package unit-tests. \
+       This only affects packages listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMBUILDTEST) to \"true\"." in
   let build_doc =
     mk_flag ["d";"build-doc"]
       "Build the package documentation. \
+       This only affects packages listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMBUILDDOC) to \"true\"." in
   let make =
     mk_opt ["m";"make"] "MAKE"
@@ -778,6 +790,6 @@ let build_options =
        WARNING: This option is dangerous and likely to break your OPAM \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
-    $keep_build_dir $reuse_build_dir $make $no_checksums $req_checksums $build_test
-    $build_doc $show $dryrun $external_tags $fake
+    $keep_build_dir $reuse_build_dir $inplace_build $make $no_checksums
+    $req_checksums $build_test $build_doc $show $dryrun $external_tags $fake
     $jobs_flag)

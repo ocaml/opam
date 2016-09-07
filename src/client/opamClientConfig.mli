@@ -53,6 +53,7 @@ val opam_init:
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
+  ?inplace_build:bool ->
   ?no_base_packages:bool ->
   ?build_test:bool ->
   ?build_doc:bool ->

@@ -27,11 +27,14 @@ val extract_package:
   rw switch_state -> generic_file option -> package -> dirname ->
   exn option OpamProcess.job
 
-(** [build_package t source pkg] builds the package [pkg] from its
-    already downloaded [source]. Returns [None] on success, [Some exn]
-    on error. See {!download_package} to download the source. *)
+(** [build_package t source build_dir pkg] builds the package [pkg] within
+    [build_dir].
+    If [source] is specified, it is first extracted or copied into [build_dir].
+    Returns [None] on success, [Some exn] on error.
+    See {!download_package} to download the source. *)
 val build_package:
-  rw switch_state -> generic_file option -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool ->
+  generic_file option -> dirname -> package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns

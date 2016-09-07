@@ -335,10 +335,27 @@ let parallel_apply t action ~requested action_graph =
     t_ref := OpamSwitchAction.remove_from_installed ?keep_as_root !t_ref nv
   in
 
+  let inplace =
+    if OpamStateConfig.(!r.inplace_build) then
+      OpamPackage.Set.fold (fun nv acc ->
+          match
+            OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>=
+                               OpamUrl.local_dir)
+          with
+          | None -> acc
+          | Some path -> OpamPackage.Map.add nv path acc)
+        requested
+        OpamPackage.Map.empty
+    else OpamPackage.Map.empty
+  in
+
   (* 1/ fetch needed package archives *)
 
   let package_sources, failed_downloads =
-    let sources_needed = OpamAction.sources_needed t action_graph in
+    let sources_needed =
+      OpamPackage.Set.Op.
+        (OpamAction.sources_needed t action_graph -- OpamPackage.keys inplace)
+    in
     let sources_list = OpamPackage.Set.elements sources_needed in
     if sources_list <> [] then
       OpamConsole.header_msg "Gathering sources";
@@ -471,9 +488,23 @@ let parallel_apply t action ~requested action_graph =
       else
       match action with
       | `Build nv ->
-          (OpamAction.build_package t source nv @@+ function
-            | None -> store_time (); Done (`Successful (installed, removed))
-            | Some exn -> store_time (); Done (`Exception exn))
+        let build_dir =
+          try OpamPackage.Map.find nv inplace
+          with Not_found ->
+            let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
+            if not OpamStateConfig.(!r.reuse_build_dir) then
+              OpamFilename.rmdir dir;
+            dir
+        in
+        let test =
+          OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
+        in
+        let doc =
+          OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
+        in
+        (OpamAction.build_package t ~test ~doc source build_dir nv @@+ function
+          | None -> store_time (); Done (`Successful (installed, removed))
+          | Some exn -> store_time (); Done (`Exception exn))
       | `Install nv ->
         (OpamAction.install_package t nv @@+ function
           | None ->
@@ -748,6 +779,7 @@ let apply ?ask t action ~requested solution =
     let show_solution = ask <> Some false &&
                         OpamStateConfig.(!r.external_tags) = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
+    let new_state = simulate_new_state t action_graph in
     if show_solution then (
       OpamConsole.msg
         "The following actions %s be %s:\n"
@@ -755,7 +787,6 @@ let apply ?ask t action ~requested solution =
         (if OpamStateConfig.(!r.dryrun) then "simulated" else
          if OpamStateConfig.(!r.fake) then "faked"
          else "performed");
-      let new_state = simulate_new_state t action_graph in
       let messages p =
         let opam = OpamSwitchState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
@@ -795,6 +826,9 @@ let apply ?ask t action ~requested solution =
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)
+      let requested =
+        OpamPackage.packages_of_names new_state.installed requested
+      in
       parallel_apply t action ~requested action_graph
     ) else
       t, Aborted
