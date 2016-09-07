@@ -72,6 +72,11 @@ let add rt name url =
                repo_root = OpamRepositoryPath.create root name;
                repo_priority = 0; }
   in
+  if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
+  then
+    OpamConsole.error_and_exit
+      "Invalid repository name, %s exists"
+      (OpamFilename.Dir.to_string repo.repo_root);
   if OpamUrl.local_dir url <> None &&
      OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo) = None &&
      not (OpamConsole.confirm
