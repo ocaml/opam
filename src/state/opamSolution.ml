@@ -391,6 +391,13 @@ let parallel_apply t action ~requested action_graph =
       OpamAction.noop_remove_package t nv in
     PackageActionGraph.explicit ~noop_remove action_graph
   in
+  (match OpamSolverConfig.(!r.cudf_file) with
+   | None -> ()
+   | Some f ->
+     let filename = Printf.sprintf "%s-actions-explicit.dot" f in
+     let oc = open_out filename in
+     OpamSolver.ActionGraph.Dot.output_graph oc action_graph;
+     close_out oc);
 
   let remove_action_packages =
     PackageActionGraph.fold_vertex

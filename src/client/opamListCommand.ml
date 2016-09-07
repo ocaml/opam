@@ -512,7 +512,8 @@ let display
           ~depopts:true ~installed:false ~unavailable:true ~build:true
           universe packages
       in
-      List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages
+      List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages |>
+      List.rev
     else match order with
       | None -> OpamPackage.Set.elements packages
       | Some o -> List.sort o (OpamPackage.Set.elements packages)
