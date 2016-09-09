@@ -165,7 +165,7 @@ let get_current_switch_from_cwd root =
   let open OpamStd.Option.Op in
   OpamFilename.find_in_parents
     (fun d ->
-       OpamSwitch.of_dirname d |>
+       OpamSwitch.of_string (OpamFilename.Dir.to_string d) |>
        OpamPath.Switch.switch_config root |>
        OpamFile.Switch_config.read_opt |> function
        | None -> false

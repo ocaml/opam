@@ -30,7 +30,12 @@ let of_string s =
   else s
 
 let of_dirname d =
-  OpamFilename.Dir.to_string d
+  let s = OpamFilename.Dir.to_string d in
+  try
+    let swdir = Filename.concat s external_dirname in
+    let r = OpamSystem.real_path Filename.(concat s (Unix.readlink swdir)) in
+    if Filename.basename r = external_dirname then Filename.dirname r else s
+  with Unix.Unix_error _ -> s
 
 let get_root root s =
   if is_external s
