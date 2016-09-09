@@ -149,3 +149,11 @@ val partial_filter_formula: env -> filtered_formula -> filtered_formula
 val string_of_filtered_formula: filtered_formula -> string
 
 val variables_of_filtered_formula: filtered_formula -> full_variable list
+
+(** Resolves the build, test, doc, dev flags in a filtered formula (which is
+    supposed to have been pre-processed to remove switch and global variables).
+    [default] determines the behaviour on undefined filters, raising if
+    undefined *)
+val filter_deps:
+  build:bool -> test:bool -> doc:bool -> dev:bool -> ?default:bool ->
+  filtered_formula -> formula

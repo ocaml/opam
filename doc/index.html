@@ -185,7 +185,7 @@ td.sublib {
 </tr>
 
 <tr><td colspan="2" class="libnote">
-    Handling of the ~/.opam hierarchy and actions on it
+    Handling of the ~/.opam hierarchy, repository and switch states
 </td></tr>
 
 <tr><th><a href="ocamldoc/OpamStateConfig.html">opamStateConfig.ml</a></th>
@@ -216,10 +216,6 @@ td.sublib {
   <td>Specific query and handling of pinned packages</td></tr>
 <tr><th><a href="ocamldoc/OpamUpdate.html">opamUpdate.ml</a></th>
   <td>Synchronisation and downloading of repositories and package sources</td></tr>
-<tr><th><a href="ocamldoc/OpamSolution.html">opamSolution.ml</a></th>
-  <td>Interface with the solver, processing of full solutions through actions</td></tr>
-<tr><th><a href="ocamldoc/OpamAction.html">opamAction.ml</a></th>
-  <td>Handles concrete actions on packages, like installations and removals</td></tr>
 
 <tr class="lib">
   <th><code>src/client</code></th>
@@ -227,13 +223,17 @@ td.sublib {
 </tr>
 
 <tr><td colspan="2" class="libnote">
-    Everything related to the OPAM state, installation and front-end
+    Actions on the opam root, switches, installations, and front-end
 </td></tr>
 
 <tr><td colspan="2" class="sublib"><code>opam-client</code> library</td></tr>
 
 <tr><th><a href="ocamldoc/OpamClientConfig.html">opamClientConfig.ml</a></th>
   <td>Configuration options for this lib (record, global reference, setter, initialisation), plus helper for global setup</td></tr>
+<tr><th><a href="ocamldoc/OpamSolution.html">opamSolution.ml</a></th>
+  <td>Interface with the solver, processing of full solutions through actions</td></tr>
+<tr><th><a href="ocamldoc/OpamAction.html">opamAction.ml</a></th>
+  <td>Handles concrete actions on packages, like installations and removals</td></tr>
 <tr><th><a href="ocamldoc/OpamConfigCommand.html">opamConfigCommand.ml</a></th>
   <td>Functions for the "opam config" subcommand</td></tr>
 <tr><th><a href="ocamldoc/OpamPinCommand.html">opamPinCommand.ml</a></th>

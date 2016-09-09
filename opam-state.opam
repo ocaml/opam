@@ -21,6 +21,6 @@ build: [
 ]
 depends: [
   "opam-core" {= "2.0~alpha3"}
-  "opam-solver" {= "2.0~alpha3"}
+  "opam-format" {= "2.0~alpha3"}
   "opam-repository" {= "2.0~alpha3"}
 ]

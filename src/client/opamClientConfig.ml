@@ -68,6 +68,8 @@ let search_files = ["findlib"]
 open OpamStd.Op
 
 let opam_init ?root_dir ?strict =
+  let open OpamStd.Option.Op in
+
   (* (i) get root dir *)
   let root = OpamStateConfig.opamroot ?root_dir () in
 
@@ -75,9 +77,25 @@ let opam_init ?root_dir ?strict =
   (* the init for OpamFormat is done in advance since (a) it has an effect on
      loading the global config (b) the global config has no effect on it *)
   OpamFormatConfig.initk ?strict @@ fun ?log_dir ->
-  let initialised = OpamStateConfig.load_defaults root <> None in
+  let config = OpamStateConfig.load_defaults root in
+  let initialised = config <> None in
   (* !X fixme: don't drop the loaded config file to reload it afterwards (when
      loading the global_state) like that... *)
+
+  begin match config with
+    | None -> ()
+    | Some conf ->
+      let criteria kind =
+        let c = OpamFile.Config.criteria conf in
+        try Some (List.assoc kind c) with Not_found -> None
+      in
+      OpamSolverConfig.update
+        ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
+        ?solver_preferences_default:(criteria `Default >>| fun s-> Some(lazy s))
+        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
+        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
+        ()
+  end;
 
   (* (iii) load from env and options using OpamXxxConfig.init *)
   let log_dir =

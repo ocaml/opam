@@ -511,3 +511,14 @@ let variables_of_filtered_formula ff =
            | Filter f -> variables f @ acc)
          acc f)
     [] ff
+
+let filter_deps ~build ~test ~doc ~dev ?default deps =
+  let env var =
+    match OpamVariable.Full.to_string var with
+    | "build" -> Some (B build)
+    | "test" -> Some (B test)
+    | "doc" -> Some (B doc)
+    | "dev" -> Some (B dev)
+    | _ -> None
+  in
+  filter_formula ?default env deps
