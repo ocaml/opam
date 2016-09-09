@@ -21,14 +21,12 @@ begin library "opam-state"
     "opamSwitchState.ml"
     "opamSwitchAction.ml"
     "opamUpdate.ml"
-    "opamAction.ml"
-    "opamSolution.ml"
   ]
 
   requires = [
     "opam-core"
-    "opam-solver"
     "opam-repository"
+    "opam-format"
   ]
 
 end

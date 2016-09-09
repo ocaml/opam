@@ -187,8 +187,8 @@ endef
 export PROJ_repository
 
 # -- opam-state -- #
-opam-state.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.cma ALWAYS
-opam-state.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa ALWAYS
+opam-state.cma: opam-core.cma opam-format.cma opam-repository.cma ALWAYS
+opam-state.cmxa: opam-core.cmxa opam-format.cmxa opam-repository.cmxa ALWAYS
 
 SRC_state = \
   opamPath.ml \
@@ -204,9 +204,7 @@ SRC_state = \
   opamPinned.ml \
   opamSwitchState.ml \
   opamSwitchAction.ml \
-  opamUpdate.ml \
-  opamAction.ml \
-  opamSolution.ml
+  opamUpdate.ml
 
 define PROJ_state
   SOURCES = $(call addmli,state,$(SRC_state))
@@ -220,6 +218,8 @@ opam-client.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-reposito
 
 SRC_client = \
   opamClientConfig.ml \
+  opamAction.ml \
+  opamSolution.ml \
   opamSwitchCommand.ml \
   opamConfigCommand.ml \
   opamRepositoryCommand.ml \

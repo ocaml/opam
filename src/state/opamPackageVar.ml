@@ -127,7 +127,7 @@ let filter_depends_formula
   OpamFilter.partial_filter_formula (fun v ->
       if List.mem v predefined_depends_variables then None
       else env v) |>
-  OpamSolver.filter_deps ~build ~test ~doc ~dev ?default
+  OpamFilter.filter_deps ~build ~test ~doc ~dev ?default
 
 let all_depends ?build ?test ?doc ?dev ?(filter_default=false)
     ?(depopts=true) st opam =
