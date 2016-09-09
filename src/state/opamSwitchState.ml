@@ -526,7 +526,7 @@ let do_backup lock st = match lock with
                   "\nThe former state can be restored with:\n\
                   \    %s switch import %S\n\
                    Or you can retry to install your package selection with:\n\
-                  \    %s install --restore%!"
+                  \    %s install --restore\n%!"
                   Sys.argv.(0) (OpamFile.to_string file) Sys.argv.(0))))
   | _ -> fun _ -> ()
 
