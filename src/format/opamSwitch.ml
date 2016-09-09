@@ -15,7 +15,7 @@ let unset = of_string "#unset#"
 
 let not_installed s =
   OpamConsole.error_and_exit
-    "The selected compiler switch %s is not installed. Please choose a \
+    "The selected switch %s is not installed. Please choose a \
      different one using the 'opam switch' command."
     (to_string s)
 
