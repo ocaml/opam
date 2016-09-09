@@ -351,7 +351,7 @@ let lint t =
          OpamPackage.Name.Set.empty all_variables
      in
      cond 41 `Warning
-       "Some packages are mentionned in package scripts of features, but \
+       "Some packages are mentioned in package scripts of features, but \
         there is no dependency or depopt toward them"
        ~detail:OpamPackage.Name.
                  (List.map to_string (Set.elements undep_pkgs))
