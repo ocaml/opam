@@ -253,10 +253,10 @@ let getchdir s =
   p
 
 let normalize s =
-  getchdir (getchdir s)
+  try getchdir (getchdir s) with File_not_found _ -> s
 
 let real_path p =
-  if Filename.is_relative p then
+  (* if Filename.is_relative p then *)
     match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
     | None ->
       let rec resolve dir =
@@ -265,14 +265,18 @@ let real_path p =
         if dir = parent then dir
         else Filename.concat (resolve parent) (Filename.basename dir)
       in
-      resolve (Filename.concat (Sys.getcwd ()) p)
+      let p =
+        if Filename.is_relative p then Filename.concat (Sys.getcwd ()) p
+        else p
+      in
+      resolve p
     | Some true -> normalize p
     | Some false ->
       let dir = normalize (Filename.dirname p) in
       match Filename.basename p with
       | "." -> dir
       | base -> dir / base
-  else p
+  (* else p *)
 
 type command = string list
 
