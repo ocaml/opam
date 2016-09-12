@@ -1,46 +1,50 @@
-# The OPAM manual
+<style type="text/css"><!--
+  .opam {font-family: Tahoma,Verdana,sans-serif; font-size: 110%; font-weight: lighter; line-height: 90.9%}
+--></style>
 
-This manual gathers reference information on OPAM and its file formats. It is
+# The <span class="opam">opam</span> manual
+
+This manual gathers reference information on <span class="opam">opam</span> and its file formats. It is
 primarily of use for packagers, package maintainers and repository maintainers.
 
-* For simple usage of OPAM, see the [Usage](Usage.html) page, and the
+* For simple usage of <span class="opam">opam</span>, see the [Usage](Usage.html) page, and the
   comprehensive built-in documentation `opam [command] --help`.
 * For a gentler introduction to packaging, see the
   [Packaging guide](Packaging.html)
-* If you want to hack on opam or build related tools, the API documentation can
+* If you want to hack on <span class="opam">opam</span> or build related tools, the API documentation can
   be browsed [here](api/index.html)
 
-## Base concepts
+## File hierarchies
 
-### Opam root
+### opam root
 
-Opam holds its configuration, metadata, logs, temporary directories and caches
+<span class="opam">opam</span> holds its configuration, metadata, logs, temporary directories and caches
 within a directory that we will call _opam root_. By default, this is `~/.opam`,
 and we may refer to it by this name in this manual for the sake of simplicity,
 but this can be changed using the `OPAMROOT` environment variable or the
 `--root` command-line argument.
 
-An existing opam root is required for opam to operate normally, and one is
+An existing <span class="opam">opam</span> root is required for <span class="opam">opam</span> to operate normally, and one is
 created upon running `opam init`. The initial configuration can be defined
 through a configuration file at `~/.opamrc`, `/etc/opam` or at a location
-specified through the `--config` command-line option. If none is present, opam
+specified through the `--config` command-line option. If none is present, <span class="opam">opam</span>
 defaults to its built-in configuration that binds to the OCaml repository at
 `https://opam.ocaml.org`.
 
-Except in explicit cases, opam only alters files within its opam root. It is
+Except in explicit cases, <span class="opam">opam</span> only alters files within its <span class="opam">opam</span> root. It is
 organised as follows:
-- [`~/.opam/config`](#config): the global opam configuration file
+- [`~/.opam/config`](#config): the global <span class="opam">opam</span> configuration file
 - `~/.opam/repo/`: contains the mirrors of the configured package repositories
 - [`~/.opam/repo/repos-config`](#reposconfig): lists the configured package repositories and their URLs
 - `~/.opam/repo/<repo>`: mirror of the given repository
-- `~/.opam/opam-init/`: contains opam configuration scripts for the outside world, e.g. shell environment initialisation
+- `~/.opam/opam-init/`: contains <span class="opam">opam</span> configuration scripts for the outside world, e.g. shell environment initialisation
 - `~/.opam/cache/`: caches of downloaded files
 - `~/.opam/plugins/<plugin>`: reserved for plugins
 - `~/.opam/<switch>`: prefixes of named [switches](#switches)
 
 ### Repositories
 
-Repositories are collection of opam package definitions. They respect the
+Repositories are collection of <span class="opam">opam</span> package definitions. They respect the
 following hierarchy:
 - [`/repo`](#repo): repository configuration file
 - [`/packages/<pkgname>/<pkgname>.<version>/opam`](#opam): holds the metadata
@@ -53,7 +57,7 @@ following hierarchy:
 - `/urls.txt`, `/index.tar.gz`: index files useful when serving over HTTP, they
   can be generated using `opam-admin make --index`
 
-Opam can be configured to use repositories at local or remote (ssh) paths, HTTP
+<span class="opam">opam</span> can be configured to use repositories at local or remote (ssh) paths, HTTP
 URLs, or on version control systems. A repository is set up using
 
 ```
@@ -71,14 +75,14 @@ using the `opam update` command.
 
 ### Switches
 
-Opam is designed to hold any number of concurrent installation prefixes, called
+<span class="opam">opam</span> is designed to hold any number of concurrent installation prefixes, called
 _switches_. Switches are isolated from each other and have their own set of
 installed packages, selection of repositories, and configuration options. All
 package-related commands operate on a single switch, and require one to be
 selected.
 
 The current switch can be selected in the following ways:
-- globally, using `opam switch <switch>`. Opam will use that switch for all
+- globally, using `opam switch <switch>`. <span class="opam">opam</span> will use that switch for all
   further commands, except when overriden in one of the following ways.
 - for local switches, which are external to the opam root, when in the directory
   where the switch resides or a descendant.
@@ -94,7 +98,7 @@ visible, that directory needs to be added to `PATH`, but individual packages can
 define their own settings as well.
 
 Command `opam config env` returns the environment updates corresponding to the
-current switch, in a format readable by your shell, and when needed opam will
+current switch, in a format readable by your shell, and when needed <span class="opam">opam</span> will
 prompt you to run:
 
 ```
@@ -107,7 +111,7 @@ A switch is created using `opam switch create <switch> (<compiler>|--empty)`.
   being held at `~/.opam/<switch>`, it will be created in the given directory,
   as a `_opam` subdirectory. Local switches are automatically selected depending
   on the current directory, see above.
-- If a `<compiler>` is selected, opam will install the corresponding packages
+- If a `<compiler>` is selected, <span class="opam">opam</span> will install the corresponding packages
   and their dependencies in the new switch. These packages will be marked as
   _base_, protected against removal and unaffected by upgrade commands.
   `<compiler>` can be selected among packages which have the `compiler` flag
@@ -123,7 +127,7 @@ Switches are laid out thusly:
 - `<switch-prefix>/`: prefix of the switch, holding the installation hierarchy
   in the UNIX `/usr` standard (with subdirectories `bin`, `lib`, `share`, `man`,
   `doc`, `etc`...)
-- `<switch-prefix>/.opam-switch/`: holds all opam data regarding this switch
+- `<switch-prefix>/.opam-switch/`: holds all <span class="opam">opam</span> data regarding this switch
 - [`<switch-prefix>/.opam-switch/switch-config`](#switchconfig): switch-specific
   configuration
 - [`<switch-prefix>/.opam-switch/switch-state`](#switchstate): stores the sets
@@ -137,7 +141,7 @@ Switches are laid out thusly:
 - [`<switch-prefix>/.opam-switch/install/<pkgname>.install`](#ltpkgnamegtinstall):
   `.install` files used to install the given package
 - `<switch-prefix>/.opam-switch/install/<pkgname>.changes`: file changes done by
-  the installation of the given package, as tracked by opam
+  the installation of the given package, as tracked by <span class="opam">opam</span>
 - `<switch-prefix>/.opam-switch/packages/<pkgname>.<version>/`: metadata of the
   given package as it has been used for its installation
 - `<switch-prefix>/.opam-switch/packages.dev/<pkgname>/`: sources (archives or
@@ -170,10 +174,10 @@ or `opam/` directory, a matching `<pkgname>.opam` or `opam` file, that will be
 used as the initial package metadata.
 
 Whenever an install, reinstall or upgrade command-line refers to a pinned
-package, opam first fetches its latest source. `opam update` otherwise updates
+package, <span class="opam">opam</span> first fetches its latest source. `opam update` otherwise updates
 its cache of all the packages pinned in the current switch.
 
-## File formats
+## Common file format
 
 ### Conventions
 
@@ -215,10 +219,10 @@ and _options_:
 <comment>       ::= ( "(*" { <char> }* "*)" ) | ( "#" { <char\newline> }* <newline> )
 ```
 
-The OPAM file formats share a common base syntax. The files are utf8 encoded and
+The <span class="opam">opam</span> file formats share a common base syntax. The files are utf8 encoded and
 define a list of _fields_ and _sections_.
 
-Opam uses a range of different files, each allowing their own set of fields and
+<span class="opam">opam</span> uses a range of different files, each allowing their own set of fields and
 sections, in a specific format.
 
 Base values can be literal booleans, integers or strings, identifiers, and
@@ -245,10 +249,10 @@ sub-expressions.
 </table>
 
 Comments may be either enclosed in `(*` and `*)`, or `#` and newline. They are
-ignored by OPAM.
+ignored by <span class="opam">opam</span>.
 
 
-#### Package Formulas
+### Package Formulas
 
 Package formulas are used to express requirements on the set of installed
 packages.
@@ -319,11 +323,11 @@ Here is a full example:
 "foo" { >= "3.12" } & ("bar" | "baz" { !(> "2" & < "3.5") & != "5.1" })
 ```
 
-#### Variables
+### Variables
 
-##### Usage
+#### Usage
 
-Variables may appear at a few different places in OPAM files and configuration.
+Variables may appear at a few different places in <span class="opam">opam</span> files and configuration.
 They can be used in two forms:
 
 - raw idents: `foo < bar`
@@ -347,19 +351,19 @@ form: `name1+name2+name3:var` is the conjunction of `var` for each of `name1`,
 `name2` and `name3`, _i.e_ it is equivalent to `name1:var & name2:var &
 name3:var`
 
-##### Scopes
+#### Scopes
 
 The defined variables depend on the specific fields being defined. There are
 three scopes:
 
 1. Global variables correspond to the general current configuration, or to the
-   current switch settings (system setup, OPAM configuration, current switch
+   current switch settings (system setup, <span class="opam">opam</span> configuration, current switch
    name, etc.). For example `opam-version`, `arch`, or `make`.
 2. Package variables have the form `package-name:var-name` and contain values
    specific to a given package, for example `foo:installed` is a boolean
    variable that can be used to check if package `foo` is installed, and
    `foo:lib` is its library installation directory. The prefix `package-name:`
-   can be replaced by `_:` within the package's own OPAM file, or simply omitted
+   can be replaced by `_:` within the package's own <span class="opam">opam</span> file, or simply omitted
    when not shadowed by another variable. In this case, the variable always
    relates to the version of the package being defined. Otherwise, `foo:bar`
    always refers to `bar` in the installed version of `foo`, and may be
@@ -374,7 +378,7 @@ values, run:
 opam config list
 ```
 
-#### Filters
+### Filters
 
 _Filters_ are formulas based on variables. Their main use is as optional
 conditions to commands or command arguments, using the postfix-braces syntax:
@@ -414,7 +418,7 @@ Undefined values are propagated through relational operators, and logical
 operators unless absorbed (`undef & false` is `false`, `undef | true` is
 `true`).
 
-#### Filtered package formulas
+### Filtered package formulas
 
 This extension to package formulas allows variables to be referenced within
 version constraints, and parts of the formula to be made optional. This is
@@ -447,7 +451,7 @@ which makes the dependency dependent on the boolean value of the variable
 When the version formula reduces to `false`, as would be the case here when
 `build=false`, the dependency is removed from the formula.
 
-#### Interpolation
+### Interpolation
 
 Some files can be rewritten using variable interpolation expansion: in cases
 where this is available, when looking for `file` and `file.in` is found, any
@@ -456,7 +460,7 @@ the results are written back to `file`.
 
 This can also be done explicitly using the command `opam config subst "file"`.
 
-#### Environment updates
+### Environment updates
 
 Some fields define updates to environment variables in the form:
 
@@ -472,7 +476,7 @@ environment variable:
 - `:=` prepend (or set to if undefined) `<string>:`
 - `=:` append (or set to if undefined) `:<string>`
 
-#### URLs
+### URLs
 
 URLs are provided as strings. They can refer to:
 - raw local filesystem paths
@@ -482,10 +486,10 @@ URLs are provided as strings. They can refer to:
   `darcs://`. This assumes http transport for `hg` and `darcs`, _i.e._
   `hg://` is short for `hg+http://`
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g. `git://`,
-  `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in OPAM 1.2.1)
+  `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in <span class="opam">opam</span> 1.2.1)
 
 > Backwards-compatibility note: to allow unambiguous urls, e.g. for the
-> `dev-repo` field, without triggering a failure on OPAM 1.2.0, you should use
+> `dev-repo` field, without triggering a failure on <span class="opam">opam</span> 1.2.0, you should use
 > the compatible syntax `<vc>://<scheme>://`, e.g. `hg://https://` at the
 > moment. This will get rewritten to the nicer `<vc>+<scheme>://` in the next
 > repository format upgrade.
@@ -497,13 +501,21 @@ reference name (branch, commit, HEAD...): `git://foo.com/git/bar#master`,
 The URLs given for user information (e.g. package homepages and bugtrackers) are
 not concerned and should just load nice in common browsers.
 
-### Specifications of the formats of all files
+## Specific file formats
+
+This section describes the precise file formats of the different kinds of files
+used by <span class="opam">opam</span>.
+
+### Public configuration files
+
+These files are intended to be publicly distributed as part of public
+repositories or initial distributions or packages.
 
 #### repo
 <a id="Repospecification"></a>
 
-The `repo` file, placed at the root of a repository, has the following optional
-fields:
+The `repo` file is placed at the root of a repository, and allows to specify
+some specifics of the repository. It has the following optional fields:
 
 * <a id="repofield-opam-version">`opam-version: <string>`</a>:
   File format and repository format version, should be `2.0` as of writing.
@@ -515,126 +527,91 @@ fields:
 * <a id="repofield-redirect">`redirect: [ <string> { <filter> } ... ]`</a>:
   List of URLs to (permanently) redirect to if their filters evaluate to `true`.
   Can be used to serve different repositories for different OSes or different
-  versions of OPAM.
+  versions of <span class="opam">opam</span>.
 
-#### descr
+#### opamrc
 
-Descr is a plain utf8 text file without specific syntactic constraints. The
-first line of the file defines the package's synopsis, while the rest defines
-its long description.
+This file has a format close to that of [config](#config), and can be used to
+define an initial setup for <span class="opam">opam</span>. When running `opam init`, if `~/.opamrc` or
+`/etc/opam` is present, or if `--config` was specified, the configuration
+options from that file will be used, overriding the defaults.
 
-This information can be embedded in `opam` package definition files using the
-[`synopsis:`](#opamfield-synopsis) and [`description:`](#opamfield-description)
-fields since opam version 2.0, but if a `descr` file is present, it takes
-precedence.
+The default, built-in initial config of <span class="opam">opam</span> can be seen with `opam init
+--help`.
 
-#### url
+- <a id="opamrcfield-opam-version">`opam-version: <string>`</a>:
+  the file format version.
+- <a id="opamrcfield-repositories">`repositories: [ "[" <string> <url> "]" ... ]`</a>:
+  preconfigured repository names and their corresponding URLs.
+- <a id="opamrcfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
+  a list of compiler package choices. On `opam init`, the first available
+  compiler in the list will be chosen for creating the initial switch if
+  `--bare` wasn't specified.
+- [`jobs:`](#configfield-jobs),
+  [`download-command:`](#configfield-download-command),
+  [`download-jobs:`](#configfield-download-jobs),
+  [`solver-criteria:`](#configfield-solver-criteria),
+  [`solver-upgrade-criteria:`](#configfield-solver-upgrade-criteria),
+  [`solver-fixup-criteria:`](#configfield-solver-fixup-criteria),
+  [`solver:`](#configfield-solver),
+  [`global-variables:`](#configfield-global-variables):
+  these have the same format as the same-named fields in the [config](#config)
+  file, and will be imported to that file on `opam init`.
 
-The `url` file describes the source of the package and how it may be obtained.
-It has the following fields:
+#### switch-config
 
-- One of <a id="urlfield-src">`src: <string>`</a> or
-  <a id="urlfield-archive">`archive: <string>`</a>,
-  specifying the URL where the package can be downloaded from. When using HTTP
-  or FTP, this should be an archive. The older alternative field names
-  <a id="urlfield-http">`http:`</a>,
-  <a id="urlfield-local">`local:`</a>,
-  <a id="urlfield-git">`git:`</a>,
-  <a id="urlfield-hg">`hg:`</a> and
-  <a id="urlfield-darcs">`darcs:`</a>
-  are deprecated, prefer explicit URLs.
+This file is located in `<switch-prefix>/.opam-switch/switch-config` and
+contains configuration options specific to that switch:
 
-    On the official repository, this should always point to a stable archive
-    over HTTP or FTP.
-- <a id="urlfield-checksum">`checksum: <string>`</a>:
-  the MD5 of the referred-to archive, to warrant integrity. Mandatory on the
-  official repository.
-- <a id="urlfield-mirrors">`mirrors: [ <string> ... ]`</a>:
-  an optional list of mirrors. They must use the same protocol as the main URL.
+- <a id="switchconfigfield-opam-version">`opam-version: <string>`</a>:
+  the file format version.
+- <a id="switchconfigfield-synopsis">`synopsis: <string>`</a>:
+  a short description for the switch, shown when listing. By default, this is
+  initialised to the synopsis of the chosen compiler package.
+- <a id="switchconfigfield-repos">`repositories: [ <string> ... ]`</a>:
+  lists the repositories in use in this switch, higher priority first. The
+  repository names should correspond to configured repositories in
+  `~/.opam/repo` (they are otherwise ignored). If unset, the
+  [set of repositories](#configfield-repositories) from the global configuration
+  is used.
+- <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
+  the opam root the switch belongs to. Used for local switches, to avoid
+  automatically selecting a switch belonging to a different opam root.
+- [`pre-build-commands:`](#configfield-pre-build-commands),
+  [`pre-install-commands:`](#configfield-pre-install-commands),
+  [`pre-remove-commands:`](#configfield-pre-remove-commands):
+  as the corresponding [global config](#config) fields.
+- [`wrap-build-commands:`](#configfield-pre-build-commands),
+  [`wrap-install-commands:`](#configfield-pre-install-commands),
+  [`wrap-remove-commands:`](#configfield-pre-remove-commands):
+  as the corresponding [global config](#config) fields.
+- [`post-build-commands:`](#configfield-pre-build-commands),
+  [`post-install-commands:`](#configfield-pre-install-commands),
+  [`post-remove-commands:`](#configfield-pre-remove-commands):
+  as the corresponding [global config](#config) fields.
+- <a id="switchconfigsection-paths">`paths: "{" { <ident>: <string> ... } "}"`</a>:
+  defines the standard paths within the switch: recognised fields include
+  `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
+  `stublibs:`, `toplevel:`.
+- <a id="switchconfigsection-variables">`variables: "{" { <ident>: <string> ... } "}"`</a>:
+  allows the definition of variables local to the switch.
 
-These contents can be embedded within the [`url {}`](#opamsection-url) section
-of an `opam` file; however, if an `url` file is present besides the `opam` file,
-its contents take precedence.
+### Package definitions
 
-#### files/
+Package definitions can be a single [`opam`](#opam) file, with optional
+[`descr`](#descr) and [`url`](#url) files besides it. A [`files/`](#files)
+subdirectory can also be used to add files over the package source.
 
-A special subdirectory that can appear in package definition directories,
-alongside the `opam` file.
-
-This subdirectory may contain any files or directories (of reasonable size) that
-will be copied over the root of the package source. [`opam`](#opam) file fields
-like [`patches:`](#opamfield-patches) refer to files at that same root, so
-patches specific to opam are typically included in this subdirectory.
-
-Note that repository archives generated by `opam-admin make` in `archives/`
-already include these overlay files.
-
-#### <pkgname>.install
-<a id="packagenameinstall"></a>
-
-This file format describes the installation from a source directory to an
-installation prefix. It will be used by opam if present in the package's source
-directory after the `build:` instructions have been run: it can thus be
-generated by the build system, be static in the package source, or be added by
-opam through the [`files/`](#files) mechanism.
-
-To avoid duplicating efforts for managing installations, a stand-alone
-`opam-installer` tool is provided with opam that can perform installations and
-uninstallations from these files, or even generate corresponding shell scripts,
-without requiring OPAM.
-
-All the fields have the form
-
-```
-field: [ <string> { <string> } ]
-```
-
-The following take a list of filenames (relative to the root of the package
-source) to be installed to the field's respective directory. An optional
-relative path and destination filename can be given using the postfix braces
-syntax. A leading `?` in the origin filename is stripped and informs OPAM to
-continue silently when the file is not found.
-
-Absolute paths, or paths referencing the parent directory (`..`), are not
-allowed.
-
-- <a id="installfield-lib">`lib:`</a>
-  installs to `<prefix>/lib/<pkgname>/`
-- <a id="installfield-libexec">`libexec:`</a>
-  installs to `<prefix>/lib/<pkgname>/`, but the `exec` bit is set (since
-  OPAM 1.2.1)
-- <a id="installfield-bin">`bin:`</a>
-  installs to `<prefix>/bin/`, with the `exec` bit set
-- <a id="installfield-sbin">`sbin:`</a>
-  installs to `<prefix>/sbin/`, with the `exec` bit set
-- <a id="installfield-toplevel">`toplevel:`</a>
-  installs to `<prefix>/lib/toplevel/`
-- <a id="installfield-share">`share:`</a>
-  installs to `<prefix>/share/<pkgname>/`
-- <a id="installfield-share_root">`share_root:`</a>
-  installs relative to `<prefix>/share/` (since OPAM 1.2.0)
-- <a id="installfield-etc">`etc:`</a>
-  installs to `<prefix>/etc/<pkgname>/`
-- <a id="installfield-doc">`doc:`</a>
-  installs to `<prefix>/doc/<pkgname>/`
-- <a id="installfield-stublibs">`stublibs:`</a>
-  installs to `<prefix>/lib/stublibs/`, with the `exec` bit set
-
-The following are treated slightly differently:
-
-- <a id="installfield-man">`man:`</a>
-  installs relative to `<prefix>/man`, with the exception that when the
-  destination is unspecified, the proper destination directory is extracted from
-  the extension of the source file (so that `man: [ "foo.1" ]` is equivalent to
-  `man: [ "foo.1" {"man1/foo.1"} ]`
-- <a id="installfield-misc">`misc:`</a>
-  requires files to specify an absolute destination, and the user will be
-  prompted before the installation is done.
+[`<pkgname>.install`](#ltpkgnamegtinstall) and
+[`<pkgname>.config`](#ltpkgnamegtconfig), on the other hand, are metadata files
+used by opam but that are found in the package source directory, after it has
+been built.
 
 #### opam
 
-The main file specifying a package's metadata. Usage of the `opam lint` command
-is recommended to check the validity and quality of your `opam` files.
+Package definition files, specifying a package's metadata. Usage of the `opam
+lint` command is recommended to check the validity and quality of your `opam`
+files.
 
 `opam` files allow the following fields and sections:
 
@@ -718,7 +695,7 @@ is recommended to check the validity and quality of your `opam` files.
     itself.
 
     This field contains typically just `[make "install"]`. If a
-    `package-name.install` is found at the source of the build directory, opam
+    `package-name.install` is found at the source of the build directory, <span class="opam">opam</span>
     will install files from there to the prefix according to its instructions
     after calling the commands specified in the `install:` field have been run.
 
@@ -733,7 +710,7 @@ is recommended to check the validity and quality of your `opam` files.
 - <a id="opamfield-remove"> `remove: [ [ <string> { <filter> } ... ] { <filter>
   } ... ]`</a>: commands to run before removing the package, in the same format
   as `build:` and `install:`.
-  As of `2.0`, opam tracks the files added to the prefix during package
+  As of `2.0`, <span class="opam">opam</span> tracks the files added to the prefix during package
   installation, and automatically removes them on package removal, so this
   should not be needed anymore in most cases (and may even be harmful if files
   from different packages overlap, which remove scripts generally don't handle).
@@ -787,7 +764,7 @@ is recommended to check the validity and quality of your `opam` files.
   `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`</a>:
   the package external dependencies. This field is a list that can be used for
   describing the dependencies of the package toward software or packages
-  external to the OPAM ecosystem, for various systems. It contains pairs of
+  external to the <span class="opam">opam</span> ecosystem, for various systems. It contains pairs of
   lists of the form `[ predicates ext-packages ]`. `predicates` is used to
   select the element of the list based on the current system: it is a list of
   tags (strings) that can correspond to the OS, architecture or distribution.
@@ -848,7 +825,7 @@ is recommended to check the validity and quality of your `opam` files.
       when creating a fresh prefix through the `opam switch` command.
     - <a id="opamflag-conf">`conf`</a>: this is a "`conf`" package, that is
       intended to document capabilities of the system, or the presence of
-      software installed outside of opam. As such, the package may not
+      software installed outside of <span class="opam">opam</span>. As such, the package may not
       include a source URL or install anything, but just do some checks, and
       fail to install if they don't pass. `conf` packages should have a name
       starting with `conf-`, and include the appropriate
@@ -901,13 +878,155 @@ is recommended to check the validity and quality of your `opam` files.
   internally for integrity verifications.
 
 - <a id="opamfield-extra-fields">`x-*:`</a>:
-  extra fields prefixed with `x-` can be defined for use by external tools. Opam
+  extra fields prefixed with `x-` can be defined for use by external tools. <span class="opam">opam</span>
   will ignore them except for some search operations.
+
+#### descr
+
+Descr is a plain utf8 text file without specific syntactic constraints. The
+first line of the file defines the package's synopsis, while the rest defines
+its long description.
+
+This information can be embedded in `opam` package definition files using the
+[`synopsis:`](#opamfield-synopsis) and [`description:`](#opamfield-description)
+fields since <span class="opam">opam</span> version 2.0. However, if a `descr` file is present alongside
+the `opam` file, it takes precedence.
+
+#### url
+
+The `url` file describes the source of the package and how it may be obtained.
+It has the following fields:
+
+- One of <a id="urlfield-src">`src: <string>`</a> or
+  <a id="urlfield-archive">`archive: <string>`</a>,
+  specifying the URL where the package can be downloaded from. When using HTTP
+  or FTP, this should be an archive. The older alternative field names
+  <a id="urlfield-http">`http:`</a>,
+  <a id="urlfield-local">`local:`</a>,
+  <a id="urlfield-git">`git:`</a>,
+  <a id="urlfield-hg">`hg:`</a> and
+  <a id="urlfield-darcs">`darcs:`</a>
+  are deprecated, prefer explicit URLs.
+
+    On the official repository, this should always point to a stable archive
+    over HTTP or FTP.
+- <a id="urlfield-checksum">`checksum: <string>`</a>:
+  the MD5 of the referred-to archive, to warrant integrity. Mandatory on the
+  official repository.
+- <a id="urlfield-mirrors">`mirrors: [ <string> ... ]`</a>:
+  an optional list of mirrors. They must use the same protocol as the main URL.
+
+These contents can be embedded within the [`url {}`](#opamsection-url) section
+of an `opam` file; however, if an `url` file is present alongside the `opam`
+file, its contents take precedence.
+
+#### files/
+
+A special subdirectory that can appear in package definition directories,
+alongside the `opam` file.
+
+This subdirectory may contain any files or directories (of reasonable size) that
+will be copied over the root of the package source. [`opam`](#opam) file fields
+like [`patches:`](#opamfield-patches) refer to files at that same root, so
+patches specific to <span class="opam">opam</span> are typically included in this subdirectory.
+
+Note that repository archives generated by `opam-admin make` in `archives/`
+already include these overlay files.
+
+#### <pkgname>.install
+<a id="packagenameinstall"></a>
+
+This file format describes the installation from a source directory to an
+installation prefix. It will be used by <span class="opam">opam</span> if present in the package's source
+directory after the `build:` instructions have been run: it can thus be
+generated by the build system, be static in the package source, or be added by
+<span class="opam">opam</span> through the [`files/`](#files) mechanism.
+
+To avoid duplicating efforts for managing installations, a stand-alone
+`opam-installer` tool is provided with <span class="opam">opam</span> that can perform installations and
+uninstallations from these files, or even generate corresponding shell scripts,
+without requiring <span class="opam">opam</span>.
+
+All the fields have the form
+
+```
+field: [ <string> { <string> } ]
+```
+
+The following take a list of filenames (relative to the root of the package
+source) to be installed to the field's respective directory. An optional
+relative path and destination filename can be given using the postfix braces
+syntax. A leading `?` in the origin filename is stripped and informs <span class="opam">opam</span> to
+continue silently when the file is not found.
+
+Absolute paths, or paths referencing the parent directory (`..`), are not
+allowed.
+
+- <a id="installfield-lib">`lib:`</a>
+  installs to `<prefix>/lib/<pkgname>/`
+- <a id="installfield-libexec">`libexec:`</a>
+  installs to `<prefix>/lib/<pkgname>/`, but the `exec` bit is set (since
+  <span class="opam">opam</span> 1.2.1)
+- <a id="installfield-bin">`bin:`</a>
+  installs to `<prefix>/bin/`, with the `exec` bit set
+- <a id="installfield-sbin">`sbin:`</a>
+  installs to `<prefix>/sbin/`, with the `exec` bit set
+- <a id="installfield-toplevel">`toplevel:`</a>
+  installs to `<prefix>/lib/toplevel/`
+- <a id="installfield-share">`share:`</a>
+  installs to `<prefix>/share/<pkgname>/`
+- <a id="installfield-share_root">`share_root:`</a>
+  installs relative to `<prefix>/share/` (since <span class="opam">opam</span> 1.2.0)
+- <a id="installfield-etc">`etc:`</a>
+  installs to `<prefix>/etc/<pkgname>/`
+- <a id="installfield-doc">`doc:`</a>
+  installs to `<prefix>/doc/<pkgname>/`
+- <a id="installfield-stublibs">`stublibs:`</a>
+  installs to `<prefix>/lib/stublibs/`, with the `exec` bit set
+
+The following are treated slightly differently:
+
+- <a id="installfield-man">`man:`</a>
+  installs relative to `<prefix>/man`, with the exception that when the
+  destination is unspecified, the proper destination directory is extracted from
+  the extension of the source file (so that `man: [ "foo.1" ]` is equivalent to
+  `man: [ "foo.1" {"man1/foo.1"} ]`
+- <a id="installfield-misc">`misc:`</a>
+  requires files to specify an absolute destination, and the user will be
+  prompted before the installation is done.
+
+#### <pkgname>.config
+
+This file is used by packages to give <span class="opam">opam</span> specific options upon
+installation. A file with this name will be installed by <span class="opam">opam</span> into
+`<switch-prefix>/.opam-switch/config/` if found at the root of the package
+source tree after its installation instructions have been run.
+
+- <a id="dotconfigfield-opam-version">`opam-version: <string>`</a>:
+  the file format version.
+- <a id="dotconfigfield-file-depends">`file-depends: [ "[" <string> <string> "]" ... ]`</a>:
+  when a package defines `absolute-filename` - `hash` bindings using this field,
+  on state-changing operations, <span class="opam">opam</span> will check that the file at the given path
+  still exists and has the given hash. This can be used to guarantee the
+  consistency of packages that rely on system-wide files or system packages when
+  those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
+  file was removed, and the package marked for reinstallation if it was changed.
+- <a id="dotconfigsection-variables">`variables: "{" { <ident>: <string> ... }
+  "}"`</a>: allows the definition of package variables, that will be available
+  as `<pkgname>:<varname>` to dependent packages.
+
+### Local configuration files
+
+These files are local to the opam root, and managed by <span class="opam">opam</span>. [`config`](#config)
+and [`switch-config`](#switchconfig) can be manually edited to set configuration
+options when <span class="opam">opam</span> isn't running. [`switch-state`](#switchstate) and
+[`repos-config`](#reposconfig) store internal state and are documented here, but
+shouldn't be edited except by <span class="opam">opam</span>.
 
 #### config
 
 This file is stored as `~/.opam/config` and defines global configuration options
-for opam.
+for <span class="opam">opam</span>.
 
 - <a id="configfield-opam-version">`opam-version: <string>`</a>:
   the version of the format of this opam root, used in particular to trigger
@@ -918,9 +1037,9 @@ for opam.
   [repos-config](#reposconfigfield-repositories) file.
 - <a id="configfield-installed-switches">`installed-switches: [ <string> ... ]`</a>:
   lists the switches configured in this opam root, either internal or local.
-  Deleted local switches are collected by opam automatically, and it is possible
+  Deleted local switches are collected by <span class="opam">opam</span> automatically, and it is possible
   to use local switches that are not recorded in this field. It remains useful
-  for cross-switch listings, repository configuration updates, or opam format
+  for cross-switch listings, repository configuration updates, or <span class="opam">opam</span> format
   migrations.
 - <a id="configfield-switch">`switch: <string>`</a>:
   the currently globally selected switch.
@@ -986,77 +1105,10 @@ for opam.
   the package commands, with the addition of the variable `error-code`, which is
   the return value of the package script.
 
-#### opamrc
-
-This file has a format close to that of [config](#config), and can be used to
-define an initial setup for opam. When running `opam init`, if `~/.opamrc` or
-`/etc/opam` is present, or if `--config` was specified, the configuration
-options from that file will be used, overriding the defaults.
-
-The default, built-in initial config of opam can be seen with `opam init
---help`.
-
-- <a id="opamrcfield-opam-version">`opam-version: <string>`</a>:
-  the file format version.
-- <a id="opamrcfield-repositories">`repositories: [ "[" <string> <url> "]" ... ]`</a>:
-  preconfigured repository names and their corresponding URLs.
-- <a id="opamrcfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
-  a list of compiler package choices. On `opam init`, the first available
-  compiler in the list will be chosen for creating the initial switch if
-  `--bare` wasn't specified.
-- [`jobs:`](#configfield-jobs),
-  [`download-command:`](#configfield-download-command),
-  [`download-jobs:`](#configfield-download-jobs),
-  [`solver-criteria:`](#configfield-solver-criteria),
-  [`solver-upgrade-criteria:`](#configfield-solver-upgrade-criteria),
-  [`solver-fixup-criteria:`](#configfield-solver-fixup-criteria),
-  [`solver:`](#configfield-solver),
-  [`global-variables:`](#configfield-global-variables):
-  these have the same format as the same-named fields in the [config](#config)
-  file, and will be imported to that file on `opam init`.
-
-#### switch-config
-
-This file is located in `<switch-prefix>/.opam-switch/switch-config` and
-contains configuration options specific to that switch:
-
-- <a id="switchconfigfield-opam-version">`opam-version: <string>`</a>:
-  the file format version.
-- <a id="switchconfigfield-synopsis">`synopsis: <string>`</a>:
-  a short description for the switch, shown when listing. By default, this is
-  initialised to the synopsis of the chosen compiler package.
-- <a id="switchconfigfield-repos">`repositories: [ <string> ... ]`</a>:
-  lists the repositories in use in this switch, higher priority first. The
-  repository names should correspond to configured repositories in
-  `~/.opam/repo` (they are otherwise ignored). If unset, the
-  [set of repositories](#configfield-repositories) from the global configuration
-  is used.
-- <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
-  the opam root the switch belongs to. Used for local switches, to avoid
-  automatically selecting a switch belonging to a different opam root.
-- [`pre-build-commands:`](#configfield-pre-build-commands),
-  [`pre-install-commands:`](#configfield-pre-install-commands),
-  [`pre-remove-commands:`](#configfield-pre-remove-commands):
-  as the corresponding [global config](#config) fields.
-- [`wrap-build-commands:`](#configfield-pre-build-commands),
-  [`wrap-install-commands:`](#configfield-pre-install-commands),
-  [`wrap-remove-commands:`](#configfield-pre-remove-commands):
-  as the corresponding [global config](#config) fields.
-- [`post-build-commands:`](#configfield-pre-build-commands),
-  [`post-install-commands:`](#configfield-pre-install-commands),
-  [`post-remove-commands:`](#configfield-pre-remove-commands):
-  as the corresponding [global config](#config) fields.
-- <a id="switchconfigsection-paths">`paths: "{" { <ident>: <string> ... } "}"`</a>:
-  defines the standard paths within the switch: recognised fields include
-  `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
-  `stublibs:`, `toplevel:`.
-- <a id="switchconfigsection-variables">`variables: "{" { <ident>: <string> ... } "}"`</a>:
-  allows the definition of variables local to the switch.
-
 #### switch-state
 
 This file, located at `<switch-prefix>/.opam-switch/switch-state`, is used by
-opam to store the current state of a switch. All fields are lists of packages
+<span class="opam">opam</span> to store the current state of a switch. All fields are lists of packages
 specified as strings in the format `<package>.<version>`.
 
 - <a id="switchstatefield-opam-version">`opam-version: <string>`</a>:
@@ -1087,27 +1139,8 @@ configured on the system, and their source URLs.
   lists the configured repository idents and their URLs.
 
 Note that repositories without URLs can be used. In that case, the data in the
-corresponding directory will be used but never updated by opam ; also, caching
+corresponding directory will be used but never updated by <span class="opam">opam</span> ; also, caching
 will be disabled for that repository, so that manual modifications will always
 be taken into account.
 
-#### <pkgname>.config
-
-This file is used by packages to specify opam specific options upon
-installation. A file with this name will be installed by opam into
-`<switch-prefix>/.opam-switch/config/` if found at the root of the package
-source tree after its installation instructions have been run.
-
-- <a id="dotconfigfield-opam-version">`opam-version: <string>`</a>:
-  the file format version.
-- <a id="dotconfigfield-file-depends">`file-depends: [ "[" <string> <string> "]" ... ]`</a>:
-  when a package defines `absolute-filename` - `hash` bindings using this field,
-  on state-changing operations, opam will check that the file at the given path
-  still exists and has the given hash. This can be used to guarantee the
-  consistency of packages that rely on system-wide files or system packages when
-  those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
-  file was removed, and the package marked for reinstallation if it was changed.
-- <a id="dotconfigsection-variables">`variables: "{" { <ident>: <string> ... }
-  "}"`</a>: allows the definition of package variables, that will be available
-  as `<pkgname>:<varname>` to dependent packages.
 
