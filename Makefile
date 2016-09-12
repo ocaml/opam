@@ -37,6 +37,7 @@ clean-ext:
 clean:
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
+	rm -f META *.install *.env *.err *.info *.out
 
 OPAMINSTALLER_FLAGS = --prefix $(DESTDIR)$(prefix)
 OPAMINSTALLER_FLAGS += --mandir $(DESTDIR)$(mandir)
@@ -56,17 +57,34 @@ endif
 opam-%.install:
 	$(MAKE) -C src ../opam-$*.install
 
+opam.install:
+	@echo 'bin: [' >$@
+	@echo '  "src/opam"' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo '  "src/opam-installer"' >>$@
+	@echo ']' >>$@
+	@echo 'man: [' >>$@
+	@{ $(patsubst %,echo '  "'%'"';,$(wildcard doc/man/*.1)) } >>$@
+	@echo ']' >>$@
+
+opam-devel.install:
+	@echo 'libexec: [' >$@
+	@echo '  "_obuild/opam/opam.asm" {"opam"}' >>$@
+	@echo '  "_obuild/opam-admin/opam-admin.asm" {"opam-admin"}' >>$@
+	@echo '  "_obuild/opam-installer/opam-installer.asm" {"opam-installer"}' >>$@
+	@echo ']' >>$@
+
 libinstall: opam-lib.install opam-admin.top
 	$(if $(wildcard src_ext/lib/*),$(error Installing the opam libraries is incompatible with embedding the dependencies. Run 'make clean-ext' and try again))
 	src/opam-installer $(OPAMINSTALLER_FLAGS) opam-lib.install
 
-install:
-	src/opam-installer $(OPAMINSTALLER_FLAGS) opam.install
+install: opam.install
+	src/opam-installer $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall:
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam-lib.install
 
-uninstall:
+uninstall: opam.install
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
 
 .PHONY: tests tests-local tests-git
@@ -134,6 +152,8 @@ opam-core opam-format opam-solver opam-repository opam-state opam-client opam-de
 	@echo "build_libs = [ \"$@\" ]" > src/x_build_libs.ocp
 	@ocp-build
 	@rm -f src/x_build_libs.ocp
+
+opam-devel: opam-devel.install
 
 fastclean: rmartefacts
 	@rm -f src/x_build_libs.ocp
