@@ -354,6 +354,10 @@ endef
 	@echo 'bin: [' >>$@
 	@echo '  "src/opam-admin.top"' >>$@
 	@echo ']' >>$@
+	@echo 'doc: [' >>$@
+	@$(foreach x,$(wildcard ../doc/html/*.html ../doc/html/ocamldoc/*.html),\
+	  echo '  "$(patsubst ../%,%,$x)" {"$(patsubst ../doc/html/%,%,$x)"}' >>$@;)
+	@echo ']' >>$@
 
 .PHONY: dotinstalls
 dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
