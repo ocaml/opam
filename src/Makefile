@@ -354,6 +354,10 @@ endef
 	@echo 'bin: [' >>$@
 	@echo '  "src/opam-admin.top"' >>$@
 	@echo ']' >>$@
+	@echo 'doc: [' >>$@
+	@$(foreach x,$(wildcard ../doc/html/*.html ../doc/html/ocamldoc/*.html),\
+	  echo '  "$(patsubst ../%,%,$x)" {"$(patsubst ../doc/html/%,%,$x)"}' >>$@;)
+	@echo ']' >>$@
 
 .PHONY: dotinstalls
 dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
@@ -372,6 +376,7 @@ clean-aux:
 	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
 	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
 	rm -f $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
+	rm -f *.META
 
 clean: clean-aux
 

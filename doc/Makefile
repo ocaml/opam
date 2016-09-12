@@ -4,7 +4,7 @@ ifndef OPAM
   OPAM = ../src/opam
 endif
 BINDIR = $(dir $(OPAM))
-SRCDIR = $(wildcard ../src/*)
+SRCDIR = $(sort $(foreach x,$(wildcard ../src/*/*),$(dir $x)))
 
 TOPICS  = $(shell $(OPAM) help topics)
 
@@ -56,8 +56,8 @@ html:
 	rm -rf html/ocamldoc
 	mkdir -p html/ocamldoc
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
-	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -html -d html/ocamldoc || true
-	$(OCAMLDOC) ../src/*/*.mli ../src/*/*.ml -dot -o /dev/stdout | \
+	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -html -d html/ocamldoc || true
+	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -dot -o /dev/stdout | \
 	  tred | \
 	  dot -Tsvg > \
 	    html/ocamldoc/dependencies.svg \
