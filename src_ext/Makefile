@@ -2,7 +2,7 @@
 
 SRC_EXTS = extlib re cmdliner graph cudf dose uutf jsonm
 
-URL_extlib = http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
+URL_extlib = http://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/ocaml-extlib/extlib-1.5.3.tar.gz
 MD5_extlib = 3de5f4e0a95fda7b2f3819c4a655b17c
 
 URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.2.0.tar.gz
