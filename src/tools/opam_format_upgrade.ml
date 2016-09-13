@@ -16,7 +16,11 @@ module O = OpamFile.OPAM
 
 type args = {
   clear_cache: bool;
+  create_mirror: OpamUrl.t option;
 }
+
+(* /!\ this is hardcoded in the verbatim scripts below *)
+let upgradeto_version = OpamVersion.of_string "2.0"
 
 let args =
   let open Cmdliner in
@@ -24,7 +28,15 @@ let args =
     let doc = "Remove the cache of compiler archive hashes" in
     Arg.(value & flag & info ["clear-cache"] ~doc)
   in
-  Term.(pure (fun clear_cache -> { clear_cache; }) $ clear_cache)
+  let create_mirror =
+    let doc =
+      "Don't overwrite the current repository, but put an upgraded mirror in \
+       place in a subdirectory, with proper redirections. Needs the URL this \
+       will be served at to put in the redirects"
+    in
+    Arg.(value & opt (some OpamArg.url) None & info ["m"; "mirror"] ~doc)
+  in
+  Term.(pure (fun clear_cache create_mirror -> { clear_cache; create_mirror; }) $ clear_cache $ create_mirror)
 
 
 let ocaml_pkgname = OpamPackage.Name.of_string "ocaml"
@@ -114,17 +126,11 @@ let all_base_packages =
       "base-unix";
     ])
 
-let process args =
+let cache_file : string list list OpamFile.t =
+  OpamFile.make @@
+  OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
 
-  let cache_file : string list list OpamFile.t =
-    OpamFile.make @@
-    OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
-  in
-
-  if args.clear_cache then
-    OpamFilename.remove (OpamFile.filename cache_file)
-  else
-
+let do_upgrade () =
   let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
 
   let write_opam ?(add_files=[]) opam =
@@ -391,5 +397,53 @@ let process args =
 
   let repo_file = OpamRepositoryPath.repo repo in
   OpamFile.Repo.write repo_file
-    (OpamFile.Repo.with_opam_version (OpamVersion.of_string "2.0")
+    (OpamFile.Repo.with_opam_version upgradeto_version
        (OpamFile.Repo.safe_read repo_file))
+
+let process args =
+  if args.clear_cache then
+    OpamFilename.remove (OpamFile.filename cache_file)
+  else
+    match args.create_mirror with
+    | None -> do_upgrade ()
+    | Some base_url ->
+      OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
+      OpamFilename.copy_dir ~src:(OpamFilename.cwd ()) ~dst:tmp_mirror_dir;
+      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / "2.0");
+      OpamFilename.in_dir tmp_mirror_dir do_upgrade;
+      let repo_file = OpamFile.make (OpamFilename.of_string "repo") in
+      let repo0 = OpamFile.Repo.safe_read repo_file in
+      let opam_version_fid =
+        FIdent ([], OpamVariable.of_string "opam-version", None)
+      in
+      let redir = (OpamUrl.to_string base_url ^ "/2.0",
+                   Some (FOp (opam_version_fid, `Geq, FString "2.0~")))
+      in
+      let repo0 =
+        if OpamFile.Repo.opam_version repo0 = OpamVersion.current_nopatch
+        then OpamFile.Repo.with_opam_version (OpamVersion.of_string "1.2") repo0
+        else repo0
+      in
+      let repo0 =
+        OpamFile.Repo.with_redirect
+          (List.filter (fun r -> r <> redir) (OpamFile.Repo.redirect repo0))
+          repo0
+      in
+      let repo_12 =
+        OpamFile.Repo.with_redirect (redir :: OpamFile.Repo.redirect repo0)
+          repo0
+      in
+      let repo_20 =
+        let redir = (OpamUrl.to_string base_url,
+                     Some (FOp (opam_version_fid, `Lt, FString "2.0~")))
+        in
+        OpamFile.Repo.with_redirect (redir :: OpamFile.Repo.redirect repo0)
+          repo0
+      in
+      OpamFile.Repo.write repo_file repo_12;
+      OpamFile.Repo.write
+        (OpamFile.make OpamFilename.Op.(tmp_mirror_dir // "repo"))
+        repo_20;
+      let dir20 = OpamFilename.Dir.of_string "2.0" in
+      OpamFilename.rmdir dir20;
+      OpamFilename.move_dir ~src:tmp_mirror_dir ~dst:dir20
