@@ -1,3 +1,16 @@
+2.0~beta
+* Added pre and post hooks for package command sections; allowed per-switch
+  configuration
+* Re-packaged the libraries and opam into 7 individual packages
+* Convert opam 1.2 files on the fly when pinning
+* `opam list` can now match patterns on versions
+* Allow switches to be created below arbitrary directories using `opam switch
+  create <dir>`. Automatically select a switch found in `$PWD`
+* Add `install --reuse-build-dir` to be used together with `--keep-build-dir`
+  and allow incremental recompilations
+* Add `install --inplace-build` to build locally pinned packages directly in
+  their source directory
+
 2.0~alpha3
 * Refactored 'opam switch' command, creation of new switches no longer implicit
 * Allow per-switch selection of repositories
