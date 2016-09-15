@@ -789,7 +789,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
 let latest_version = v2_0_alpha3
 
 (* Advertise this on upgrades, although it's synonym with 2.0~alpha3 *)
-let v2_0_beta = OpamVersion.of_string "2.0~beta"
+let v2_0_alpha4 = OpamVersion.of_string "2.0~alpha4"
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
@@ -845,7 +845,7 @@ let as_necessary global_lock root config =
         update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
         update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
         update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
-        update_to v2_0_beta (fun _ c -> c)
+        update_to v2_0_alpha4 (fun _ c -> c)
       in
       OpamConsole.msg
         "Update done, please run 'opam update' and retry your command\n";

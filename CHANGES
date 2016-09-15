@@ -1,4 +1,4 @@
-2.0~beta
+2.0~alpha4
 * Added pre and post hooks for package command sections; allowed per-switch
   configuration
 * Re-packaged the libraries and opam into 7 individual packages
