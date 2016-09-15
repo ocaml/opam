@@ -1,4 +1,9 @@
-comp += [ "-g" "-w" "+a-4-44" "-safe-string" ]
-link += [ "-g" "-w" "+a-4-44" "-safe-string" ]
+comp += [ "-g" "-w" "+a-4-44" ]
+link += [ "-g" "-w" "+a-4-44" ]
+
+if ( ocaml_major_version >= "4" && ocaml_minor_version >= "02" ) then {
+  comp += [ "-safe-string" ]
+  link += [ "-safe-string" ]
+}
 
 build_libs = []

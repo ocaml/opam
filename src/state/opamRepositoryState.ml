@@ -77,6 +77,9 @@ module Cache = struct
     | None -> None
 
   let save rt =
+    if OpamCoreConfig.(!r.safe_mode) then
+      log "Running in safe mode, not upgrading the repository cache"
+    else
     let chrono = OpamConsole.timer () in
     let file = OpamPath.state_cache rt.repos_global.root in
     OpamFilename.with_flock `Lock_write file @@ fun () ->

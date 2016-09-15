@@ -21,5 +21,6 @@ build: [
 ]
 depends: [
   "opam-state" {= "2.0~alpha3"}
+  "opam-solver" {= "2.0~alpha3"}
   "cmdliner" {>= "0.9.8"}
 ]
