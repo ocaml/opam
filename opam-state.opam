@@ -24,3 +24,4 @@ depends: [
   "opam-format" {= "2.0~alpha4"}
   "opam-repository" {= "2.0~alpha4"}
 ]
+available: ocaml-version >= "4.01.0"

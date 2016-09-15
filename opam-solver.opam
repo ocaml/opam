@@ -24,3 +24,4 @@ depends: [
   "opam-format" {= "2.0~alpha4"}
   "dose" {>= "3.3"}
 ]
+available: ocaml-version >= "4.01.0"

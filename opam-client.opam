@@ -24,3 +24,4 @@ depends: [
   "opam-solver" {= "2.0~alpha4"}
   "cmdliner" {>= "0.9.8"}
 ]
+available: ocaml-version >= "4.01.0"
