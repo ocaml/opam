@@ -3,9 +3,9 @@
 set -ue
 
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
-# (c) Copyright Louis Gesbert OCamlPro 2014-2015
+# (c) Copyright Louis Gesbert OCamlPro 2014-2016
 
-VERSION='1.2.2'
+VERSION='2.0-alpha4'
 
 default_ocaml=4.02.1
 
@@ -13,16 +13,12 @@ usage() {
 cat <<EOF
 
 Usage:
-    ./opam_install BINDIR [COMP]
+    ./opam_install BINDIR
 
     Download and installs the latest binary version of OPAM
 
     BINDIR is the directory where it should be installed, e.g. /usr/local/bin
     (it should be in your PATH).
-
-    COMP is an optional argument, specifying the initial version of OCaml you
-    want to use ($default_ocaml by default. You may use 'system' if you want to
-    use an ocaml compiler already present on your system).
 EOF
     exit 1
 }
@@ -62,7 +58,6 @@ if [ $# -lt 1 ] || [ $# -gt 2 ] || [ "${1#-}" != "$1" ]; then
 fi
 
 BINDIR=$1
-COMP=${2:-$default_ocaml}
 
 file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 
@@ -83,17 +78,11 @@ OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then
     echo "WARNING: you have a different version of OPAM installed at $OPAM"
     echo "It is highly recommended that you remove it."
-    read -p "[press enter to continue]" x
+    echo
     OPAM="$BINDIR/opam"
-fi
-
-if [ "$(id -u)" = "0" ]; then
-    echo "Running as super-user: not running OPAM initialization."
-    echo "You'll want to run \"$OPAM init --comp $COMP\" as user"
-else
-    echo "Initializing with compiler $COMP"
-    "$OPAM" init --comp "$COMP"
 fi
 
 echo "Installation done. If you need to uninstall, simply remove $BINDIR/opam"
 echo "and ~/.opam"
+echo
+echo "Now run 'opam init' to setup opam for the current user."
