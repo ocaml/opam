@@ -708,7 +708,7 @@ let global_options =
        $(docv)-<n>.cudf."
       Arg.(some string) None in
   let safe_mode =
-    mk_flag ~section ["safe"]
+    mk_flag ~section ["readonly"; "safe"]
       "Make sure nothing will be automatically updated or rewritten. Useful \
        for calling from completion scripts, for example. Will fail whenever \
        such an operation is needed ; also avoids waiting for locks, skips \
