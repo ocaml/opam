@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~beta"
+version: "2.0~alpha4"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -20,13 +20,12 @@ build: [
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.0~beta"}
+  "opam-client" {= "2.0~alpha4"}
   "cmdliner" {>= "0.9.8"}
 ]
 post-messages: [
-"The development version of opam has been successfuly compiled into \
-%{lib}%/%{name}%. You should not run it from there, please install the \
-binaries to your PATH, e.g. with
+"The development version of opam has been successfuly compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with
     sudo cp %{lib}%/%{name}%/* /usr/local/bin"
   {success}
 ]
+available: ocaml-version >= "4.01.0"

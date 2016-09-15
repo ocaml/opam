@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~beta"
+version: "2.0~alpha4"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -20,7 +20,8 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-core" {= "2.0~beta"}
-  "opam-format" {= "2.0~beta"}
+  "opam-core" {= "2.0~alpha4"}
+  "opam-format" {= "2.0~alpha4"}
   "dose" {>= "3.3"}
 ]
+available: ocaml-version >= "4.01.0"
