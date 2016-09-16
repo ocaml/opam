@@ -195,7 +195,7 @@ let resolve_deps args index names =
               (OpamFormula.string_of_atom atom))
          cs)
 
-let process
+let rec process
     ({index; gener_digest; dryrun; recurse;
       names; debug; resolve; dev;_} as args) =
   OpamStd.Config.init
@@ -410,4 +410,14 @@ let process
     OpamConsole.error "Got some errors while processing: %s"
       (OpamStd.List.concat_map ", " OpamPackage.to_string all_errors);
     List.iter display_error !errors
+  );
+  let subdir = OpamFilename.Dir.of_string "2.0" in
+  if OpamFilename.exists (subdir // "repo") then (
+    OpamConsole.header_msg "Now processing within subdir 2.0/";
+    let archives = OpamFilename.Dir.of_string "archives" in
+    if OpamFilename.exists_dir archives then
+      OpamFilename.copy_dir
+        ~src:archives
+        ~dst:(subdir / "archives");
+    OpamFilename.in_dir subdir (fun () -> process args)
   )

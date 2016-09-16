@@ -410,6 +410,7 @@ let process args =
       OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
       OpamFilename.copy_dir ~src:(OpamFilename.cwd ()) ~dst:tmp_mirror_dir;
       OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / "2.0");
+      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / ".git");
       OpamFilename.in_dir tmp_mirror_dir do_upgrade;
       let repo_file = OpamFile.make (OpamFilename.of_string "repo") in
       let repo0 = OpamFile.Repo.safe_read repo_file in
@@ -446,4 +447,7 @@ let process args =
         repo_20;
       let dir20 = OpamFilename.Dir.of_string "2.0" in
       OpamFilename.rmdir dir20;
-      OpamFilename.move_dir ~src:tmp_mirror_dir ~dst:dir20
+      OpamFilename.move_dir ~src:tmp_mirror_dir ~dst:dir20;
+      if OpamFilename.exists (OpamFilename.of_string "urls.txt") then
+        OpamConsole.note
+          "Indexes need updating: remember to re-run `opam-admin make`"
