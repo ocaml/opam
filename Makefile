@@ -58,20 +58,20 @@ opam-%.install:
 	$(MAKE) -C src ../opam-$*.install
 
 opam.install:
-	echo 'bin: [' >$@
-	echo '  "src/opam"' >>$@
-	echo '  "src/opam-admin"' >>$@
-	echo '  "src/opam-installer"' >>$@
-	echo ']' >>$@
-	echo 'man: [' >>$@
-	$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
-	echo ']' >>$@
-	echo 'doc: [' >>$@
-	$(foreach x,$(wildcard doc/man-html/*.html),\
+	@echo 'bin: [' >$@
+	@echo '  "src/opam"' >>$@
+	@echo '  "src/opam-admin"' >>$@
+	@echo '  "src/opam-installer"' >>$@
+	@echo ']' >>$@
+	@echo 'man: [' >>$@
+	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
+	@echo ']' >>$@
+	@echo 'doc: [' >>$@
+	@$(foreach x,$(wildcard doc/man-html/*.html),\
 	  echo '  "$x" {"man/$(notdir $x)"}' >>$@;)
-	$(foreach x,$(wildcard doc/pages/*.html),\
+	@$(foreach x,$(wildcard doc/pages/*.html),\
 	  echo '  "$x" {"$(notdir $x)"}' >>$@;)
-	echo ']' >>$@
+	@echo ']' >>$@
 
 opam-devel.install:
 	@echo 'libexec: [' >$@
