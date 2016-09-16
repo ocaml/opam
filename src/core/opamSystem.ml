@@ -454,8 +454,11 @@ let copy_file src dst =
 let copy_dir src dst =
   if Sys.file_exists dst then
     if Sys.is_directory dst then
-      command ~verbose:(verbose_for_base_commands ())
-        ([ "cp"; "-PR" ] @ ls src @ [ dst ])
+      match ls src with
+      | [] -> ()
+      | srcfiles ->
+        command ~verbose:(verbose_for_base_commands ())
+          ([ "cp"; "-PR" ] @ srcfiles @ [ dst ])
     else internal_error "Can not copy dir %s to %s, which is not a directory"
         src dst
   else
