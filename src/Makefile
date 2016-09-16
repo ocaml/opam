@@ -213,8 +213,8 @@ endef
 export PROJ_state
 
 # -- opam-client -- #
-opam-client.cma: opam-core.cma opam-format.cma opam-solver.cma opam-repository.cma opam-state.cma ALWAYS
-opam-client.cmxa: opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa opam-state.cmxa ALWAYS
+opam-client.cma: client/opamGitVersion.ml opam-core.cma opam-format.cma opam-solver.cma opam-repository.cma opam-state.cma ALWAYS
+opam-client.cmxa: client/opamGitVersion.ml opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa opam-state.cmxa ALWAYS
 
 SRC_client = \
   opamClientConfig.ml \
@@ -242,7 +242,7 @@ client/opamGitVersion.ml: ALWAYS
 	cd .. && ocaml shell/get-git-id.ml src/$@
 	touch $@
 
-opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) client/opamGitVersion.ml ALWAYS
+opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
 
 define PROJ_opam
