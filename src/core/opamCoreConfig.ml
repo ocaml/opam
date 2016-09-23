@@ -21,6 +21,7 @@ type t = {
   log_dir: string;
   keep_log_dir: bool;
   errlog_length: int;
+  merged_output: bool;
 }
 
 type 'a options_fun =
@@ -34,6 +35,7 @@ type 'a options_fun =
   ?log_dir:string ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
+  ?merged_output:bool ->
   'a
 
 let default = {
@@ -50,6 +52,7 @@ let default = {
      Filename.(concat (get_temp_dir_name ()) base));
   keep_log_dir = false;
   errlog_length = 12;
+  merged_output = true;
 }
 
 let setk k t
@@ -63,6 +66,7 @@ let setk k t
     ?log_dir
     ?keep_log_dir
     ?errlog_length
+    ?merged_output
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -76,6 +80,7 @@ let setk k t
     log_dir = t.log_dir + log_dir;
     keep_log_dir = t.keep_log_dir + keep_log_dir;
     errlog_length = t.errlog_length + errlog_length;
+    merged_output = t.merged_output + merged_output;
   }
 
 let set t = setk (fun x () -> x) t

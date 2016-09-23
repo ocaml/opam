@@ -142,7 +142,10 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     | Some f -> tee f in
   let stderr_fd, close_stderr = match stderr_file with
     | None   -> Unix.stderr, nothing
-    | Some f -> tee f in
+    | Some f ->
+      if stdout_file = Some f then stdout_fd, nothing
+      else tee f
+  in
   let env = match env with
     | None   -> Unix.environment ()
     | Some e -> e in
@@ -252,7 +255,9 @@ let run_background command =
       Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
   in
   let stdout_file = file "out" in
-  let stderr_file = file "err" in
+  let stderr_file =
+    if OpamCoreConfig.(!r.merged_output) then file "out" else file "err"
+  in
   let env_file    = file "env" in
   let info_file   = file "info" in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
