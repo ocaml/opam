@@ -765,30 +765,16 @@ let patch ~dir p =
   aux 0
 
 let register_printer () =
-  let with_opam_info m =
-    let git_version = match OpamVersion.git () with
-      | None   -> ""
-      | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
-    let opam_version =
-      Printf.sprintf "%s%s" (OpamVersion.to_string OpamVersion.current) git_version in
-    let os = OpamStd.Sys.os_string () in
-    Printf.sprintf
-      "# %-15s %s\n\
-       # %-15s %s\n\
-       %s"
-      "opam-version" opam_version
-      "os" os
-      m in
   Printexc.register_printer (function
     | Process_error r     -> Some (OpamProcess.result_summary r)
-    | Internal_error m    -> Some (with_opam_info m)
+    | Internal_error m    -> Some m
     | Command_not_found c -> Some (Printf.sprintf "%S: command not found." c)
     | Sys.Break           -> Some "User interruption"
     | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
       let error = Printf.sprintf "%s: %S failed%s: %s"
           Sys.argv.(0) fn msg (Unix.error_message e) in
-      Some (with_opam_info error)
+      Some error
     | _ -> None
   )
 

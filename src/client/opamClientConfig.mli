@@ -80,4 +80,5 @@ val opam_init:
   ?safe_mode:bool ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
+  ?merged_output:bool ->
   unit -> unit

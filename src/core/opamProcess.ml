@@ -93,16 +93,18 @@ let make_info ?code ?signal
     | None   -> ()
     | Some s -> print name s in
 
-  print     "opam-version" (OpamVersion.to_string (OpamVersion.full ()));
-  print     "os"           (OpamStd.Sys.os_string ());
   print     "command"      (String.concat " " (cmd :: args));
   print     "path"         cwd;
   List.iter (fun (k,v) -> print k v) metadata;
   print_opt "exit-code"    (option_map string_of_int code);
   print_opt "signalled"    (option_map string_of_int signal);
   print_opt "env-file"     env_file;
-  print_opt "stdout-file"  stdout_file;
-  print_opt "stderr-file"  stderr_file;
+  if stderr_file = stdout_file then
+    print_opt "output-file"  stdout_file
+  else (
+    print_opt "stdout-file"  stdout_file;
+    print_opt "stderr-file"  stderr_file;
+  );
 
   List.rev !b
 
@@ -142,7 +144,10 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     | Some f -> tee f in
   let stderr_fd, close_stderr = match stderr_file with
     | None   -> Unix.stderr, nothing
-    | Some f -> tee f in
+    | Some f ->
+      if stdout_file = Some f then stdout_fd, nothing
+      else tee f
+  in
   let env = match env with
     | None   -> Unix.environment ()
     | Some e -> e in
@@ -252,7 +257,9 @@ let run_background command =
       Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
   in
   let stdout_file = file "out" in
-  let stderr_file = file "err" in
+  let stderr_file =
+    if OpamCoreConfig.(!r.merged_output) then file "out" else file "err"
+  in
   let env_file    = file "env" in
   let info_file   = file "info" in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
@@ -509,18 +516,22 @@ let string_of_result ?(color=`yellow) r =
   print (string_of_info ~color r.r_info);
 
   if r.r_stdout <> [] then
-    print (OpamConsole.colorise color "### stdout ###\n");
+    if r.r_stderr = r.r_stdout then
+      print (OpamConsole.colorise color "### output ###\n")
+    else
+      print (OpamConsole.colorise color "### stdout ###\n");
   List.iter (fun s ->
       print (OpamConsole.colorise color "# ");
       println s)
     (truncate r.r_stdout);
 
-  if r.r_stderr <> [] then
+  if r.r_stderr <> [] && r.r_stderr <> r.r_stdout then (
     print (OpamConsole.colorise color "### stderr ###\n");
-  List.iter (fun s ->
-      print (OpamConsole.colorise color "# ");
-      println s)
-    (truncate r.r_stderr);
+    List.iter (fun s ->
+        print (OpamConsole.colorise color "# ");
+        println s)
+      (truncate r.r_stderr)
+  );
 
   Buffer.contents b
 
