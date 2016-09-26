@@ -400,28 +400,24 @@ let universe st
   let u_available =
     (* Remove all packages conflicting with the current compiler, or relying on
        an incompatible version of it *)
+    let conflict_with_base =
+      st.compiler_packages |>
+      OpamPackage.Set.elements |>
+      List.map (fun nv -> OpamPackage.Map.find nv u_conflicts) |>
+      OpamFormula.ors |>
+      OpamFormula.to_atom_formula
+    in
+    available |>
     OpamPackage.Set.filter
       (fun nv ->
-         List.for_all (function
-             | Atom (name, vformula) ->
-               (try
-                  let comp =
-                    OpamPackage.package_of_name st.compiler_packages name
-                  in
-                  OpamFormula.eval (fun (relop,v) ->
-                      OpamFormula.eval_relop relop comp.version v)
-                    vformula
-                with Not_found -> true)
-             | _ -> true)
-           (OpamFormula.ands_to_list
-              (OpamFilter.filter_formula ~default:false (fun _ -> None)
-                 (OpamPackage.Map.find nv u_depends)))
-         &&
-         OpamPackage.Set.is_empty
-           (OpamFormula.packages_of_atoms st.compiler_packages
-              (OpamFormula.to_disjunction
-                 (OpamPackage.Map.find nv u_conflicts))))
-      available
+         not @@
+         OpamFormula.eval (fun at -> OpamFormula.check at nv)
+           conflict_with_base) |>
+    OpamPackage.Set.filter (* handle reverse conflicts *)
+      OpamPackage.Set.is_empty
+      (OpamFormula.packages_of_atoms st.compiler_packages
+         (OpamFormula.to_disjunction
+            (OpamPackage.Map.find nv u_conflicts)))
   in
   let u =
 {
