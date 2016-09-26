@@ -42,7 +42,7 @@ val check: atom -> OpamPackage.t -> bool
 
 (** Return all packages satisfying the given atoms from a set (i.e. name
     matching at least one of the atoms, version matching all atoms with the
-    appropriate name)*)
+    appropriate name) *)
 val packages_of_atoms: OpamPackage.Set.t -> atom list -> OpamPackage.Set.t
 
 (** AND formulas *)

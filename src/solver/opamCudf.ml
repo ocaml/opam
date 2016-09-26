@@ -583,13 +583,18 @@ let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
+    let chrono = OpamConsole.timer () in
     log "Calling external solver with criteria %s" criteria;
     ignore (dump_cudf_request ~version_map cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try
-      Algo.Depsolver.check_request_using
-        ~call_solver:(dose_solver_callback ~criteria)
-        ~criteria ~explain:true cudf_request
+      let r =
+        Algo.Depsolver.check_request_using
+          ~call_solver:(dose_solver_callback ~criteria)
+          ~criteria ~explain:true cudf_request
+      in
+      log "External solver call done in %.3f" (chrono ());
+      r
     with e ->
       OpamStd.Exn.fatal e;
       OpamConsole.warning "External solver failed:";

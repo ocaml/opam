@@ -318,6 +318,7 @@ let lint t =
            | (CString "make", _)::_, _ -> true
            | _ -> false
          ) all_commands);
+(*
     cond 40 `Warning
       "Field 'features' is still experimental and not yet to be used on \
        the official repo"
@@ -337,6 +338,7 @@ let lint t =
         instead for compatibility"
        ~detail:alpha_flags
        (alpha_flags <> []));
+*)
     (let undep_pkgs =
        List.fold_left
          (fun acc v ->

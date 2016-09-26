@@ -371,6 +371,28 @@ let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
+let remove_conflicts st subset =
+  let conflicts nv =
+    OpamFile.OPAM.conflicts (OpamPackage.Map.find nv st.opams)
+  in
+  let forward_conflicts =
+    subset |>
+    OpamPackage.Set.elements |>
+    List.map conflicts |>
+    OpamFormula.ors |>
+    OpamFormula.to_atom_formula
+  in
+  let verifies formula nv =
+    OpamFormula.eval (fun at -> OpamFormula.check at nv) formula
+  in
+  OpamPackage.Set.filter
+    (fun nv ->
+       (forward_conflicts = OpamFormula.Empty ||
+        not (verifies forward_conflicts nv)) &&
+       let backwards_conflicts = OpamFormula.to_atom_formula (conflicts nv) in
+       backwards_conflicts = OpamFormula.Empty ||
+       not (OpamPackage.Set.exists (verifies backwards_conflicts) subset))
+
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
@@ -394,14 +416,20 @@ let universe st
         OpamFilter.partial_filter_formula (env nv) (f opam)
       ) opams
   in
+  let u_depends = get_deps OpamFile.OPAM.depends st.opams in
+  let u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams in
+  let u_available =
+    remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
+  in
+  let u =
 {
   u_packages  = st.packages;
   u_action    = action;
   u_installed = st.installed;
-  u_available = Lazy.force st.available_packages;
-  u_depends   = get_deps OpamFile.OPAM.depends st.opams;
+  u_available (* = Lazy.force st.available_packages *);
+  u_depends;
   u_depopts   = get_deps OpamFile.OPAM.depopts st.opams;
-  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams;
+  u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
   u_dev       = dev_packages st;
@@ -414,6 +442,8 @@ let universe st
     if doc then OpamPackage.packages_of_names st.packages requested
     else OpamPackage.Set.empty;
 }
+  in
+  u
 
 
 
@@ -458,6 +488,14 @@ let unavailable_reason st (name, _ as atom) =
     Printf.sprintf "%s has unmet availability conditions: %s"
       (OpamPackage.to_string nv)
       (OpamFilter.to_string avail)
+  else if OpamPackage.has_name
+            (Lazy.force st.available_packages --
+             remove_conflicts st (Lazy.force st.available_packages)
+               st.compiler_packages)
+            name
+  then
+    Printf.sprintf "%s is in conflict with the base packages of this switch"
+      (OpamFormula.short_string_of_atom atom)
   else
   match OpamPackage.package_of_name_opt st.compiler_packages name with
   | Some nv ->
