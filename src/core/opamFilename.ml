@@ -148,14 +148,6 @@ let raw str =
 let to_string t =
   Filename.concat (Dir.to_string t.dirname) (Base.to_string t.basename)
 
-let digest t =
-  Digest.to_hex (Digest.file (to_string t))
-
-let digest_regex = Re.(compile (repn xdigit 32 (Some 32)))
-
-let valid_digest s =
-  OpamStd.String.exact_match digest_regex s
-
 let touch t =
   OpamSystem.write (to_string t) ""
 
@@ -371,18 +363,6 @@ let with_flock_write_then_read ?dontblock file write read =
     OpamSystem.funlock lock;
     raise e
 
-let checksum f =
-  if exists f then
-    [digest f]
-  else
-    []
-
-let checksum_dir d =
-  if exists_dir d then
-    List.map digest (rec_files d)
-  else
-    []
-
 let prettify_path s =
   let aux ~short ~prefix =
     let prefix = Filename.concat prefix "" in
@@ -434,7 +414,7 @@ module Attribute = struct
 
   type t = {
     base: Base.t;
-    md5 : string;
+    md5 : OpamHash.t;
     perm: int option;
   }
 
@@ -451,12 +431,15 @@ module Attribute = struct
     let perm = match t.perm with
       | None   -> []
       | Some p -> [Printf.sprintf "0o%o" p] in
-    Base.to_string t.base :: t.md5 :: perm
+    Base.to_string t.base :: OpamHash.to_string t.md5 :: perm
 
   let of_string_list = function
-    | [base; md5]      -> { base=Base.of_string base; md5; perm=None }
-    | [base;md5; perm] -> { base=Base.of_string base; md5;
-                            perm=Some (int_of_string perm) }
+    | [base; md5]      ->
+      { base=Base.of_string base; md5=OpamHash.of_string md5; perm=None }
+    | [base;md5; perm] ->
+      { base=Base.of_string base;
+        md5=OpamHash.of_string md5;
+        perm=Some (int_of_string perm) }
     | k                -> OpamSystem.internal_error
                             "remote_file: '%s' is not a valid line."
                             (String.concat " " k)
@@ -466,7 +449,7 @@ module Attribute = struct
 
   let to_json x =
     `O ([ ("base" , Base.to_json x.base);
-          ("md5"  , `String x.md5)]
+          ("md5"  , `String (OpamHash.to_string x.md5))]
         @ match x. perm with
           | None   -> []
           | Some p -> ["perm", `String (string_of_int p)])
@@ -490,5 +473,5 @@ let to_attribute root file =
   let perm =
     let s = Unix.stat (to_string file) in
     s.Unix.st_perm in
-  let digest = digest file in
+  let digest = OpamHash.compute ~kind:`MD5 (to_string file) in
   Attribute.create basename digest (Some perm)

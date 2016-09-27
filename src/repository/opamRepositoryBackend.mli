@@ -21,7 +21,7 @@ module type S = sig
   (** [pull_url package local_dir checksum remote_url] pull the contents of
       [remote_url] into [local_dir]. Can return either a file or a
       directory. [checksum] is the optional expected checksum. *)
-  val pull_url: package -> dirname -> string option -> url -> generic_file download OpamProcess.job
+  val pull_url: package -> dirname -> OpamHash.t option -> url -> generic_file download OpamProcess.job
 
   (** [pull_repo] pull the contents of a repository. *)
   val pull_repo: repository -> unit OpamProcess.job
@@ -49,4 +49,4 @@ val local: dirname -> repository
 
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
-val check_digest: filename -> string option -> bool
+val check_digest: filename -> OpamHash.t option -> bool

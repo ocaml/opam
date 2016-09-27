@@ -89,17 +89,22 @@ let copy_files st opam =
              (OpamFilename.to_string src);
            acc)
         else
-        let actual_hash = OpamFilename.digest src in
-        if actual_hash <> hash then
-          (if OpamFormatConfig.(!r.strict) then
-             OpamConsole.error_and_exit "Hash mismatch on %s %s (strict mode)"
-           else
-             OpamConsole.warning
-               "Hash doesn't match for overlay file of %s %s, adjusted")
-            (OpamPackage.Name.to_string name)
-            (OpamFilename.to_string src);
+        let hash =
+          if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
+            if OpamFormatConfig.(!r.strict) then
+              OpamConsole.error_and_exit "Hash mismatch on %s %s (strict mode)"
+                (OpamPackage.Name.to_string name)
+                (OpamFilename.to_string src)
+            else
+              (OpamConsole.warning
+                 "Hash doesn't match for overlay file of %s %s, adjusted"
+                 (OpamPackage.Name.to_string name)
+                 (OpamFilename.to_string src);
+               OpamHash.compute (OpamFilename.to_string src))
+          else hash
+        in
         OpamFilename.copy ~src ~dst:(OpamFilename.create destdir rel_file);
-        (rel_file, actual_hash) :: acc)
+        (rel_file, hash) :: acc)
       [] files
   in
   OpamFile.OPAM.with_extra_files (List.rev files) opam

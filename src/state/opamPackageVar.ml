@@ -272,7 +272,10 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       (try
          let nv = get_nv opam in
          let f = OpamPath.archive root nv in
-         if OpamFilename.exists f then Some (string (OpamFilename.digest f))
+         if OpamFilename.exists f then
+           Some (string (OpamHash.to_string
+                           (OpamHash.compute ~kind:`MD5
+                              (OpamFilename.to_string f))))
          else Some (string "")
        with Not_found -> Some (string ""))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
