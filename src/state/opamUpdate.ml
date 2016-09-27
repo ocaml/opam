@@ -132,7 +132,7 @@ let fetch_dev_package url srcdir nv =
   OpamProcess.Job.with_text text @@
   OpamRepository.pull_url nv srcdir checksum mirrors
 
-let pinned_package st ?fixed_version name =
+let pinned_package st ?version name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
@@ -142,7 +142,11 @@ let pinned_package st ?fixed_version name =
   | None | Some (_, None) -> Done ((fun st -> st), false)
   | Some (opam, Some urlf) ->
   let url = OpamFile.URL.url urlf in
-  let version = fixed_version +! OpamFile.OPAM.version opam in
+  let version =
+    OpamFile.OPAM.version_opt opam ++
+    version +!
+    OpamPackage.Version.of_string "dev"
+  in
   let nv = OpamPackage.create name version in
   let srcdir = OpamPath.Switch.dev_package root st.switch name in
   (* Four versions of the metadata: from the old and new versions
@@ -219,10 +223,7 @@ let pinned_package st ?fixed_version name =
     OpamFilename.rmdir files_dir;
     let opam =
       OpamFile.OPAM.with_url urlf @@
-      OpamFile.OPAM.with_name name @@
-      match fixed_version with
-      | Some v -> OpamFile.OPAM.with_version v opam
-      | None -> opam
+      OpamFile.OPAM.with_name name opam
     in
     List.iter (fun (file, rel_file, hash) ->
         if OpamFilename.digest file = hash then
@@ -282,7 +283,7 @@ let pinned_package st ?fixed_version name =
 let dev_package st nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
   if OpamPackage.Set.mem nv st.pinned then
-    pinned_package st nv.name
+    pinned_package st ~version:nv.version nv.name
   else
   match OpamSwitchState.url st nv with
   | None     -> Done ((fun st -> st), false)
