@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM config files syntax and conversion tools, printing *)
+(** OPAM config files syntax and conversion tools *)
 
 open OpamTypes
 
@@ -33,32 +33,6 @@ val add_pos: pos -> exn -> exn
 
 (** Get the position out of a value *)
 val value_pos: value -> pos
-
-(** {2 Printers} *)
-
-module Print : sig
-
-  val value : value -> string
-
-  val value_list: value list -> string
-
-  val items: opamfile_item list -> string
-
-  val opamfile: opamfile -> string
-
-  val format_opamfile: Format.formatter -> opamfile -> unit
-
-end
-
-(** {2 Normalised output for opam syntax files} *)
-
-module Normalise : sig
-  val escape_string : string -> string
-  val value : OpamTypes.value -> string
-  val item : OpamTypes.opamfile_item -> string
-  val item_order : OpamTypes.opamfile_item -> OpamTypes.opamfile_item -> int
-  val items : OpamTypes.opamfile_item list -> string
-end
 
 (** {2 Structures for bidirectional parsing/printing, combiners and converters} *)
 

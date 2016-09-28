@@ -685,7 +685,7 @@ module Syntax = struct
          OpamParser.main OpamLexer.token lexbuf filename)
       (fun file ->
          let fmt = Format.formatter_of_out_channel oc in
-         OpamFormat.Print.format_opamfile fmt file)
+         OpamPrinter.format_opamfile fmt file)
 
   let of_channel (filename:filename) (ic:in_channel) =
     Pp.parse ~pos:(pos_file filename) (pp_channel filename ic stdout) ()
@@ -701,7 +701,7 @@ module Syntax = struct
     OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string _file_name t =
-    OpamFormat.Print.opamfile t
+    OpamPrinter.opamfile t
 
   let to_string_with_preserved_format
       filename ?(format_from=filename) ~empty ?(sections=[]) ~fields pp t =
@@ -771,7 +771,7 @@ module Syntax = struct
                    let f =
                      List.find (fun i -> it_name i = name) syn_t.file_contents
                    in
-                   OpamFormat.Print.items [f] :: strs
+                   OpamPrinter.items [f] :: strs
                  with Not_found -> strs
              with Not_found ->
                if OpamStd.String.starts_with ~prefix:"x-" name then
@@ -792,7 +792,7 @@ module Syntax = struct
                  let f =
                    List.find (fun i -> it_name i = name) syn_t.file_contents
                  in
-                 OpamFormat.Print.items [f] :: strs
+                 OpamPrinter.items [f] :: strs
                with Not_found -> strs
              with Not_found -> strs)
         )
@@ -800,7 +800,7 @@ module Syntax = struct
     in
     String.concat "\n"
       (List.rev_append strs
-         (if rem = [] then [""] else [OpamFormat.Print.items rem;""]))
+         (if rem = [] then [""] else [OpamPrinter.items rem;""]))
 
 end
 

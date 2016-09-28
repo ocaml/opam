@@ -67,188 +67,6 @@ let values_pos = function
   | [] -> None
   | x::_ -> Some (value_pos x)
 
-(* Printing *)
-
-module Print = struct
-
-  let escape_string ?(triple=false) s =
-    let len = String.length s in
-    let buf = Buffer.create (len * 2) in
-    for i = 0 to len -1 do
-      let c = s.[i] in
-      (match c with
-       | '"'
-         when not triple
-           || (i < len - 2 && s.[i+1] = '"' && s.[i+2] = '"')
-           || i = len - 1 ->
-         Buffer.add_char buf '\\'
-       | '\\' -> Buffer.add_char buf '\\'
-       | _ -> ());
-      Buffer.add_char buf c
-    done;
-    Buffer.contents buf
-
-  let rec format_value fmt = function
-    | Relop (_,op,l,r) ->
-      Format.fprintf fmt "@[<h>%a %s@ %a@]"
-        format_value l (string_of_relop op) format_value r
-    | Logop (_,op,l,r) ->
-      Format.fprintf fmt "@[<hv>%a %s@ %a@]"
-        format_value l (string_of_logop op) format_value r
-    | Pfxop (_,op,r) ->
-      Format.fprintf fmt "@[<h>%s%a@]" (string_of_pfxop op) format_value r
-    | Prefix_relop (_,op,r) ->
-      Format.fprintf fmt "@[<h>%s@ %a@]"
-        (string_of_relop op) format_value r
-    | Ident (_,s)     -> Format.fprintf fmt "%s" s
-    | Int (_,i)       -> Format.fprintf fmt "%d" i
-    | Bool (_,b)      -> Format.fprintf fmt "%b" b
-    | String (_,s)    ->
-      if String.contains s '\n'
-      then Format.fprintf fmt "\"\"\"\n%s\"\"\""
-          (escape_string ~triple:true s)
-      else Format.fprintf fmt "\"%s\"" (escape_string s)
-    | List (_, l) ->
-      Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
-    | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
-    | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
-                           format_value v format_values l
-    | Env_binding (_,id,op,v) ->
-      Format.fprintf fmt "@[<h>%a %s@ %a@]"
-        format_value id (string_of_env_update_op op) format_value v
-
-  and format_values fmt = function
-    | [] -> ()
-    | [v] -> format_value fmt v
-    | v::r ->
-      format_value fmt v;
-      Format.pp_print_space fmt ();
-      format_values fmt r
-
-  let value v =
-    format_value Format.str_formatter v; Format.flush_str_formatter ()
-
-  let value_list vl =
-    Format.fprintf Format.str_formatter "@[<hv>%a@]" format_values vl;
-    Format.flush_str_formatter ()
-
-  let rec format_item fmt = function
-    | Variable (_, _, List (_,[])) -> ()
-    | Variable (_, _, List (_,[List(_,[])])) -> ()
-    | Variable (_, i, List (_,l)) ->
-      if List.exists
-          (function List _ | Option (_,_,_::_) -> true | _ -> false)
-          l
-      then Format.fprintf fmt "@[<v>%s: [@;<0 2>@[<v>%a@]@,]@]"
-          i format_values l
-      else Format.fprintf fmt "@[<hv>%s: [@;<0 2>@[<hv>%a@]@,]@]"
-          i format_values l
-    | Variable (_, i, (String (_,s) as v)) when String.contains s '\n' ->
-      Format.fprintf fmt "@[<hov 0>%s: %a@]" i format_value v
-    | Variable (_, i, v) ->
-      Format.fprintf fmt "@[<hov 2>%s:@ %a@]" i format_value v
-    | Section (_,s) ->
-      Format.fprintf fmt "@[<v 0>%s %s{@;<0 2>@[<v>%a@]@,}@]"
-        s.section_kind
-        (match s.section_name with
-         | Some s -> Printf.sprintf "\"%s\" " (escape_string s)
-         | None -> "")
-        format_items s.section_items
-  and format_items fmt is =
-    Format.pp_open_vbox fmt 0;
-    (match is with
-     | [] -> ()
-     | i::r ->
-       format_item fmt i;
-       List.iter (fun i -> Format.pp_print_cut fmt (); format_item fmt i) r);
-    Format.pp_close_box fmt ()
-
-  let format_opamfile fmt f =
-    format_items fmt f.file_contents;
-    Format.pp_print_newline fmt ()
-
-  let items l =
-    format_items Format.str_formatter l; Format.flush_str_formatter ()
-
-  let opamfile f =
-    items f.file_contents
-end
-
-module Normalise = struct
-  (** OPAM normalised file format, for signatures:
-      - each top-level field on a single line
-      - file ends with a newline
-      - spaces only after [fieldname:], between elements in lists, before braced
-        options, between operators and their operands
-      - fields are sorted lexicographically by field name (using [String.compare])
-      - newlines in strings turned to ['\n'], backslashes and double quotes
-        escaped
-      - no comments (they don't appear in the internal file format anyway)
-      - fields containing an empty list, or a singleton list containing an empty
-        list, are not printed at all
-  *)
-
-  let escape_string s =
-    let len = String.length s in
-    let buf = Buffer.create (len * 2) in
-    Buffer.add_char buf '"';
-    for i = 0 to len -1 do
-      match s.[i] with
-      | '\\' | '"' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
-      | '\n' -> Buffer.add_string buf "\\n"
-      | c -> Buffer.add_char buf c
-    done;
-    Buffer.add_char buf '"';
-    Buffer.contents buf
-
-  let rec value = function
-    | Relop (_,op,l,r) ->
-      String.concat " " [value l; OpamFormula.string_of_relop op; value r]
-    | Logop (_,op,l,r) ->
-      String.concat " " [value l; string_of_logop op; value r]
-    | Pfxop (_,op,r) ->
-      String.concat " " [string_of_pfxop op; value r]
-    | Prefix_relop (_,op,r) ->
-      String.concat " " [string_of_relop op; value r]
-    | Ident (_,s) -> s
-    | Int (_,i) -> string_of_int i
-    | Bool (_,b) -> string_of_bool b
-    | String (_,s) -> escape_string s
-    | List (_, l) -> OpamStd.List.concat_map ~left:"[" ~right:"]" " " value l
-    | Group (_,g) -> OpamStd.List.concat_map ~left:"(" ~right:")" " " value g
-    | Option(_,v,l) ->
-      OpamStd.List.concat_map ~left:(value v ^ " {") ~right: "}"
-        " " value l
-    | Env_binding (_,id,op,v) ->
-      String.concat " "
-        [value id; string_of_env_update_op op; value v]
-
-  let rec item = function
-    | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
-    | Variable (_, i, List (_,l)) ->
-      OpamStd.List.concat_map ~left:(i ^ ": [") ~right:"]" " "
-        value l
-    | Variable (_, i, v) -> String.concat ": " [i; value v]
-    | Section (_,s) ->
-      Printf.sprintf "%s %s{\n%s\n}"
-        s.section_kind
-        (match s.section_name with
-         | Some s -> escape_string s ^ " "
-         | None -> "")
-        (OpamStd.List.concat_map "\n" item s.section_items)
-
-  let item_order a b = match a,b with
-    | Section _, Variable _ -> 1
-    | Variable _, Section _ -> -1
-    | Variable (_,i,_), Variable (_,j,_) -> String.compare i j
-    | Section (_,s), Section (_,t) ->
-      OpamStd.Option.compare String.compare s.section_name t.section_name
-
-  let items its =
-    let its = List.sort item_order its in
-    OpamStd.List.concat_map ~right:"\n" "\n" item its
-end
-
 module Pp = struct
 
   type ('a,'b) t = {
@@ -1203,14 +1021,14 @@ module Pp = struct
         (fun ~pos -> function
           | Some sgs, items ->
             let sgs = parse ~pos pp_sig sgs in
-            let str = Normalise.items items in
+            let str = OpamPrinter.Normalise.items items in
             if not (check sgs str) then
               raise (Invalid_signature (pos, Some sgs))
             else (sgs, items)
           | None, _ ->
             raise (Invalid_signature (pos, None)))
         (fun (sgs, items) ->
-           assert (check sgs (Normalise.items items));
+           assert (check sgs (OpamPrinter.Normalise.items items));
            Some (print pp_sig sgs),
            items)
 

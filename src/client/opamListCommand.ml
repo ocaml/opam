@@ -371,14 +371,14 @@ let version_color st nv =
     (if is_available nv then [] else [`crossed;`red])
 
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
-  if normalise then OpamFormat.Normalise.value else
+  if normalise then OpamPrinter.Normalise.value else
   function
   | String (_, s) -> s
   | List (_, l) when prettify &&
                      List.for_all (function String _ -> true | _ -> false) l ->
     OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
-  | List (_, l) -> OpamFormat.Print.value_list l
-  | f -> OpamFormat.Normalise.value f
+  | List (_, l) -> OpamPrinter.value_list l
+  | f -> OpamPrinter.Normalise.value f
 
 let detail_printer ?prettify ?normalise st nv =
   let open OpamStd.Option.Op in
