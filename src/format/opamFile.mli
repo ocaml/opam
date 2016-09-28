@@ -26,7 +26,7 @@ val filename: 'a t -> filename
 val to_string: 'a t -> string
 val exists: 'a t -> bool
 
-(** All Configuration files satisfies this signature *)
+(** All Configuration files satisfy this signature *)
 module type IO_FILE = sig
 
   (** File contents *)
@@ -563,12 +563,12 @@ module OPAM: sig
   (** Allow 'flag:xxx' tags as flags, for compat *)
   val flag_of_tag: string -> package_flag option
 
-  val fields: (t, value) OpamFormat.Pp.I.fields_def
+  val fields: (t, value) OpamFormat.I.fields_def
 
-  val sections: (t, opamfile_item list) OpamFormat.Pp.I.fields_def
+  val sections: (t, opamfile_item list) OpamFormat.I.fields_def
 
   (** Doesn't handle package name encoded in directory name *)
-  val pp_raw_fields: strict:bool -> (opamfile_item list, t) OpamFormat.Pp.t
+  val pp_raw_fields: strict:bool -> (opamfile_item list, t) OpamPp.t
 
   (** Returns the raw print-AST contents of the file *)
   val contents: ?filename:'a typed_file -> t -> opamfile
@@ -589,7 +589,7 @@ module Aliases: IO_FILE with type t = string switch_map
 (** Switch state file as table, also used for import/export. This includes
     compiler and root packages information, as well as pinned packages and their
     target (but not their local metadata). *)
-module State: sig
+module LegacyState: sig
   type t = switch_selections
   include IO_FILE with type t := t
 end
@@ -853,7 +853,7 @@ module Syntax : sig
 
   val pp_channel:
     'a typed_file -> in_channel -> out_channel ->
-    (unit, opamfile) OpamFormat.Pp.t
+    (unit, opamfile) OpamPp.t
 
   val of_channel: 'a typed_file -> in_channel  -> opamfile
   val to_channel: 'a typed_file -> out_channel -> opamfile -> unit
@@ -862,9 +862,9 @@ module Syntax : sig
   val to_string_with_preserved_format:
     'a typed_file -> ?format_from:'a typed_file ->
     empty:'a ->
-    ?sections: ('a, opamfile_item list) OpamFormat.Pp.I.fields_def ->
-    fields:('a, value) OpamFormat.Pp.I.fields_def ->
-    (opamfile, filename * 'a) OpamFormat.Pp.t ->
+    ?sections: ('a, opamfile_item list) OpamFormat.I.fields_def ->
+    fields:('a, value) OpamFormat.I.fields_def ->
+    (opamfile, filename * 'a) OpamPp.t ->
     'a -> string
 
 end
@@ -875,7 +875,7 @@ module type SyntaxFileArg = sig
   val internal: string
   type t
   val empty: t
-  val pp: (opamfile, filename * t) OpamFormat.Pp.t
+  val pp: (opamfile, filename * t) OpamPp.t
 end
 
 module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t
@@ -884,7 +884,7 @@ module type LineFileArg = sig
   val internal: string
   type t
   val empty: t
-  val pp: (string list list, t) OpamFormat.Pp.t
+  val pp: (string list list, t) OpamPp.t
 end
 
 module LineFile (X: LineFileArg) : IO_FILE with type t := X.t

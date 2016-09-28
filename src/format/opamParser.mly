@@ -111,7 +111,7 @@ let error lexbuf msg =
     start.Lexing.pos_lnum,
     start.Lexing.pos_cnum - start.Lexing.pos_bol
   in
-  raise (OpamFormat.Bad_format (Some pos, msg))
+  raise (OpamPp.Bad_format (Some pos, msg))
 
 let main t l f =
   try

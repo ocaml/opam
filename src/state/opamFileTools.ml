@@ -401,13 +401,12 @@ let lint t =
 
 let lint_gen reader filename =
   let open OpamFile.OPAM in
-  let module Pp = OpamFormat.Pp in
   let warnings, t =
     try
       let f = reader filename in
       let _, _, good_items, invalid_items =
-        Pp.parse ~pos:(pos_file (OpamFile.filename filename))
-          (Pp.I.good_fields ~name:"opam-file" ~allow_extensions:true
+        OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
+          (OpamFormat.I.good_fields ~name:"opam-file" ~allow_extensions:true
              ~sections fields)
           f.file_contents
       in
@@ -433,12 +432,12 @@ let lint_gen reader filename =
             msg
         in
         try
-          Some (Pp.parse ~pos:(pos_file (OpamFile.filename filename))
+          Some (OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
                   (pp_raw_fields ~strict:true) good_items),
           warnings
         with
-        | OpamFormat.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
-        | OpamFormat.Bad_format_list bfl ->
+        | OpamPp.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
+        | OpamPp.Bad_format_list bfl ->
           None, warnings @ List.map warn_of_bad_format bfl
       in
       let warnings =
@@ -528,7 +527,7 @@ let try_read rd f =
          "Could not read file %s: %s. Skipping.")
       (OpamFile.to_string f) (Printexc.to_string exc);
     None
-  | OpamFormat.Bad_format _ as exc ->
+  | OpamPp.Bad_format _ as exc ->
     (if OpamFormatConfig.(!r.strict) then
        OpamConsole.error_and_exit
          "Errors while parsing %s: %s.\nAborting (strict mode)."

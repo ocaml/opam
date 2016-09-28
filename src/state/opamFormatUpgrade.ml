@@ -359,7 +359,7 @@ let from_1_2_to_1_3_dev2 root config =
             OpamPackage.Set.add nv acc)
           OpamPackage.Set.empty atoms
       in
-      OpamFile.State.write (OpamFile.make (switch_dir // "state"))
+      OpamFile.LegacyState.write (OpamFile.make (switch_dir // "state"))
         { sel_installed = installed;
           sel_roots = installed_roots;
           sel_pinned;
@@ -395,7 +395,7 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
          format *)
       let switch_dir = root / OpamSwitch.to_string switch in
       let state_f = OpamFile.make (switch_dir // "state") in
-      let selections = OpamFile.State.safe_read state_f in
+      let selections = OpamFile.LegacyState.safe_read state_f in
       let selections_f = OpamFile.make (switch_dir // "switch-state") in
       let comp_version = match OpamStd.String.cut_at comp_name '+' with
         | Some (v,_) -> v

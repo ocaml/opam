@@ -2230,7 +2230,7 @@ let lint =
     with
     | Parsing.Parse_error
     | Lexer_error _
-    | OpamFormat.Bad_format _ ->
+    | OpamPp.Bad_format _ ->
       OpamConsole.msg "File format error\n";
       OpamStd.Sys.exit 1
   in

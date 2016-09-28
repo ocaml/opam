@@ -23,7 +23,12 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 
-module Pp = OpamFormat.Pp
+module Pp = struct
+  include OpamPp
+  module V = OpamFormat.V
+  module I = OpamFormat.I
+end
+
 open Pp.Op
 
 type 'a t = filename
@@ -115,7 +120,7 @@ module MakeIO (F : IO_Arg) = struct
     | e ->
       OpamStd.Exn.fatal e;
       if OpamFormatConfig.(!r.strict) then
-        (OpamConsole.error "%s" (OpamFormat.string_of_bad_format ~file:f e);
+        (OpamConsole.error "%s" (Pp.string_of_bad_format ~file:f e);
          OpamConsole.error_and_exit "Strict mode: aborting")
       else raise e
 
@@ -134,16 +139,16 @@ module MakeIO (F : IO_Arg) = struct
         log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
         F.empty
     with
-    | OpamFormat.Bad_format _ as e->
+    | Pp.Bad_format _ as e->
       OpamConsole.error "%s [skipped]\n"
-        (OpamFormat.string_of_bad_format ~file:f e);
+        (Pp.string_of_bad_format ~file:f e);
       F.empty
 
   let read_from_f f input =
     try f input with
-    | OpamFormat.Bad_format _ as e ->
+    | Pp.Bad_format _ as e ->
       if OpamFormatConfig.(!r.strict) then
-        (OpamConsole.error "%s" (OpamFormat.string_of_bad_format e);
+        (OpamConsole.error "%s" (Pp.string_of_bad_format e);
          OpamConsole.error_and_exit "Strict mode: aborting")
       else raise e
 
@@ -380,7 +385,7 @@ module Aliases = LineFile(struct
     let empty = OpamSwitch.Map.empty
 
     let pp =
-      OpamSwitch.Map.(Pp.lines_map ~empty ~add ~fold) @@
+      OpamSwitch.Map.(OpamFormat.lines_map ~empty ~add ~fold) @@
       Pp.of_module "switch-name" (module OpamSwitch) ^+
       Pp.last
 
@@ -398,7 +403,7 @@ module Repo_index (A : OpamStd.ABSTRACT) = LineFile(struct
     let empty = A.Map.empty
 
     let pp =
-      Pp.lines_map ~empty ~add:A.Map.safe_add ~fold:A.Map.fold @@
+      OpamFormat.lines_map ~empty ~add:A.Map.safe_add ~fold:A.Map.fold @@
       Pp.of_module "name" (module A) ^+
       Pp.of_module "repository" (module OpamRepositoryName) ^+
       Pp.opt Pp.last
@@ -419,7 +424,7 @@ module PkgList = LineFile (struct
     let empty = OpamPackage.Set.empty
 
     let pp =
-      OpamPackage.Set.(Pp.lines_set ~empty ~add ~fold) @@
+      OpamPackage.Set.(OpamFormat.lines_set ~empty ~add ~fold) @@
       (Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
        Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version))
       -| Pp.pp
@@ -476,7 +481,7 @@ module Pinned_legacy = struct
       (fun ~pos -> function
          | [x] -> pin_option_of_string x
          | [k;x] -> pin_option_of_string ~kind:(pin_kind_of_string k) x
-         | _ -> OpamFormat.bad_format ~pos "Invalid number of fields")
+         | _ -> Pp.bad_format ~pos "Invalid number of fields")
       (fun x -> [string_of_pin_kind (kind_of_pin_option x);
                  string_of_pin_option x])
 
@@ -489,7 +494,7 @@ module Pinned_legacy = struct
       let empty = OpamPackage.Name.Map.empty
 
       let pp =
-        OpamPackage.Name.Map.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
+        OpamPackage.Name.Map.(OpamFormat.lines_map ~empty ~add:safe_add ~fold) @@
         Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
         pp_pin
 
@@ -508,7 +513,7 @@ module Environment = LineFile(struct
     let empty = []
 
     let pp =
-      (Pp.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
+      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
        Pp.identity ^+
        Pp.of_pair "env_update_op"
          (env_update_op_of_string, string_of_env_update_op) ^+
@@ -540,7 +545,7 @@ module File_attributes = LineFile(struct
     let empty = OpamFilename.Attribute.Set.empty
 
     let pp =
-      OpamFilename.Attribute.Set.(Pp.lines_set ~empty ~add ~fold) @@
+      OpamFilename.Attribute.Set.(OpamFormat.lines_set ~empty ~add ~fold) @@
       (Pp.of_module "file" (module OpamFilename.Base) ^+
        Pp.check ~name:"md5" OpamFilename.valid_digest ^+
        Pp.opt (Pp.last -| Pp.of_pair "perm" (int_of_string, string_of_int))
@@ -589,7 +594,7 @@ module StateTable = struct
         | `Uninstalled_compiler -> "uninstalled-compiler")
 
   let pp_lines =
-    M.(Pp.lines_map ~empty ~add:safe_add ~fold) @@
+    M.(OpamFormat.lines_map ~empty ~add:safe_add ~fold) @@
     Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
     Pp.of_module "pkg-version" (module OpamPackage.Version) ^+
     (Pp.opt (pp_state ^+ Pp.opt Pinned_legacy.pp_pin) -|
@@ -661,7 +666,7 @@ module StateTable = struct
 
 end
 
-module State = struct
+module LegacyState = struct
   type t = switch_selections
   include (LineFile (StateTable) : IO_FILE with type t := t)
 end
@@ -1022,7 +1027,7 @@ module ConfigSyntax = struct
   let fields =
     let with_switch sw t =
       if t.switch = None then with_switch sw t
-      else OpamFormat.bad_format "Multiple switch specifications"
+      else Pp.bad_format "Multiple switch specifications"
     in
     [
       "opam-version", Pp.ppacc
@@ -1674,7 +1679,7 @@ module URLSyntax = struct
 
   let fields =
     let with_url url t =
-      if t.url <> OpamUrl.empty then OpamFormat.bad_format "Too many URLS"
+      if t.url <> OpamUrl.empty then Pp.bad_format "Too many URLS"
       else with_url url t
     in
     [
@@ -1848,7 +1853,7 @@ module OPAMSyntax = struct
         OpamStd.Option.Op.(OpamFilename.Op.(
             t.metadata_dir >>| fun d -> pos_file (d // "opam")))
       in
-      OpamFormat.bad_format ?pos "Field '%s:' is required" name
+      Pp.bad_format ?pos "Field '%s:' is required" name
     | Some n -> n
 
   let ext_field_prefix = "x-"
@@ -1911,7 +1916,7 @@ module OPAMSyntax = struct
     try
       let pos, s = OpamStd.String.Map.find fld t.extensions in
       (try Some (parse s) with
-       | OpamFormat.Bad_format _ as e -> raise (OpamFormat.add_pos pos e))
+       | Pp.Bad_format _ as e -> raise (Pp.add_pos pos e))
     with Not_found -> None
 
   let url t = t.url
@@ -2132,7 +2137,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "author", no_cleanup Pp.ppacc
         (fun a t -> if t.author = [] then with_author a t else
-            OpamFormat.bad_format "multiple \"authors:\" fields" author)
+            Pp.bad_format "multiple \"authors:\" fields" author)
         (fun _ -> [])
         (Pp.V.map_list ~depth:1 Pp.V.string);
       "license", no_cleanup Pp.ppacc with_license license
@@ -2648,7 +2653,7 @@ module Dot_installSyntax = struct
         (Pp.singleton -| Pp.V.string -| Pp.pp ~name:"abs-filename"
            (fun ~pos s ->
               if not (Filename.is_relative s) then OpamFilename.of_string s
-              else OpamFormat.bad_format ~pos
+              else Pp.bad_format ~pos
                   "%s is not an absolute filename." s)
            OpamFilename.to_string)
     in
@@ -2716,23 +2721,23 @@ module ChangesSyntax = struct
   let fields = [
     "added", field
       (function Some dg -> Added dg
-              | None -> OpamFormat.bad_format "Missing digest")
+              | None -> Pp.bad_format "Missing digest")
       (function Added dg -> Some (Some dg) | _ -> None);
     "removed", field
-      (function Some _ -> OpamFormat.bad_format "Extra digest"
+      (function Some _ -> Pp.bad_format "Extra digest"
               | None -> Removed)
       (function Removed -> Some None | _ -> None);
     "contents-changed", field
       (function Some dg -> Contents_changed dg
-              | None -> OpamFormat.bad_format "Missing digest")
+              | None -> Pp.bad_format "Missing digest")
       (function Contents_changed dg -> Some (Some dg) | _ -> None);
     "perm-changed", field
       (function Some dg -> Perm_changed dg
-              | None -> OpamFormat.bad_format "Missing digest")
+              | None -> Pp.bad_format "Missing digest")
       (function Perm_changed dg -> Some (Some dg) | _ -> None);
     "kind-changed", field
       (function Some dg -> Kind_changed dg
-              | None -> OpamFormat.bad_format "Missing digest")
+              | None -> Pp.bad_format "Missing digest")
       (function Kind_changed dg -> Some (Some dg) | _ -> None);
   ]
 
@@ -2884,7 +2889,7 @@ module CompSyntax = struct
 
   let fields =
     let with_src url t =
-      if t.src <> None then OpamFormat.bad_format "Too many URLS"
+      if t.src <> None then Pp.bad_format "Too many URLS"
       else with_src (Some url) t
     in
     [
@@ -2970,7 +2975,7 @@ module CompSyntax = struct
            if t.name = empty.name ||
               t.name <> "system" && t.version = empty.version
            then
-             OpamFormat.bad_format ~pos
+             Pp.bad_format ~pos
                "File name not in the form <name>.<version>, and missing 'name:' \
                 or 'version:' fields"
            else
