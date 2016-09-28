@@ -9,15 +9,15 @@
 (**************************************************************************)
 
 (** Stored as hexadecimal strings *)
-type kind = [ `MD5 | `SHA1 | `SHA256 ]
+type kind = [ `MD5 | `SHA256 | `SHA512 ]
 
 type t
 
 val kind: t -> kind
 
 val md5: string -> t
-val sha1: string -> t
 val sha256: string -> t
+val sha512: string -> t
 
 include OpamStd.ABSTRACT with type t := t
 

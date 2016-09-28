@@ -8,7 +8,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-type kind = [ `MD5 | `SHA1 | `SHA256 ]
+type kind = [ `MD5 | `SHA256 | `SHA512 ]
 
 let default_kind = `MD5
 
@@ -21,13 +21,13 @@ let pfx_sep_str = String.make 1 pfx_sep_char
 
 let string_of_kind = function
   | `MD5 -> "md5"
-  | `SHA1 -> "sha1"
   | `SHA256 -> "sha256"
+  | `SHA512 -> "sha512"
 
 let kind_of_string s = match String.lowercase s with
   | "md5" -> `MD5
-  | "sha1" -> `SHA1
   | "sha256" -> `SHA256
+  | "sha512" -> `SHA512
   | _ -> invalid_arg "OpamHash.kind_of_string"
 
 let is_hex_str len =
@@ -35,8 +35,8 @@ let is_hex_str len =
 
 let len = function
   | `MD5 -> 32
-  | `SHA1 -> 40
   | `SHA256 -> 64
+  | `SHA512 -> 128
 
 let valid kind = is_hex_str (len kind)
 
@@ -45,8 +45,8 @@ let make kind s =
   else invalid_arg ("OpamHash.make_"^string_of_kind kind)
 
 let md5 = make `MD5
-let sha1 = make `SHA1
 let sha256 = make `SHA256
+let sha512 = make `SHA512
 
 let of_string_opt s =
   try
@@ -74,7 +74,7 @@ let to_path (kind,s) =
 
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
-  | `SHA1 | `SHA256 ->
+  | `SHA256 | `SHA512 ->
     match
       OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
     with
