@@ -1061,6 +1061,36 @@ let config =
   ),
   term_info "config" ~doc ~man
 
+(* VAR *)
+let var_doc = "Prints the value associated with a given variable"
+let var =
+  let doc = var_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "With a $(i,VAR) argument, prints the value associated with $(i,VAR). \
+        Without argument, lists the opam variables currently defined. This \
+        command is a shortcut to `opam config var` and `opam config list`.";
+  ] in
+  let varname =
+    Arg.(value & pos 0 (some string) None & info ~docv:"VAR" [])
+  in
+  let print_var global_options var =
+    apply_global_options global_options;
+    match var with
+    | None ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (try `Ok (OpamConfigCommand.list gt [])
+       with Failure msg -> `Error (false, msg))
+    | Some v ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (try `Ok (OpamConfigCommand.variable gt (OpamVariable.Full.of_string v))
+       with Failure msg -> `Error (false, msg))
+  in
+  Term.ret (
+    Term.(pure print_var $global_options $varname)
+  ),
+  term_info "var" ~doc ~man
+
 (* INSTALL *)
 let install_doc = "Install a list of packages."
 let install =
@@ -2339,6 +2369,7 @@ let commands = [
   reinstall;
   update; upgrade;
   config;
+  var;
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
