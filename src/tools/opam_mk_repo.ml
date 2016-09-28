@@ -394,9 +394,14 @@ let process
     OpamPackage.Set.iter (fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
         let local_archive = OpamPath.Repository.archive repo nv in
+        let local_virtual_archive =
+          OpamFilename.add_extension local_archive "virtual" in
         let url_file = OpamPath.Repository.url repo prefix nv in
         try
-          if not dryrun then OpamFilename.remove local_archive;
+          if not dryrun then begin
+            OpamFilename.remove local_archive;
+            OpamFilename.remove local_virtual_archive;
+          end;
           if OpamFilename.exists url_file &&
              OpamFile.URL.kind (OpamFile.URL.read url_file) = `http
           then (
@@ -405,6 +410,12 @@ let process
             if dryrun then OpamProcess.Job.dry_run job
             else OpamProcess.Job.run job
           )
+          else begin
+            (** If the package is virtual we still create an empty file *)
+            OpamGlobals.msg "Virtual package %s\n"
+              (OpamFilename.to_string local_archive);
+            if not dryrun then OpamFilename.touch local_virtual_archive;
+          end
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;
