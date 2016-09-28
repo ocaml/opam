@@ -86,7 +86,8 @@ let compute ?(kind=default_kind) file = match kind with
 let check_file f (kind, _ as h) = compute ~kind f = h
 
 module O = struct
-  type nonrec t = t
+  type _t = t
+  type t = _t
   let to_string = to_string
   let to_json = to_json
   let compare = compare
