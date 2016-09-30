@@ -531,10 +531,10 @@ let import st filename =
   in
   let importfile =
     try OpamFile.SwitchExport.read_from_string ?filename import_str
-    with OpamFormat.Bad_format _ as e ->
+    with OpamPp.Bad_format _ as e ->
       log "Error loading export file, trying the old file format";
       try
-        let selections = OpamFile.State.read_from_string import_str in
+        let selections = OpamFile.LegacyState.read_from_string import_str in
         { OpamFile.SwitchExport.selections;
           overlays = OpamPackage.Name.Map.empty }
       with e1 -> OpamStd.Exn.fatal e1; raise e
