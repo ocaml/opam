@@ -618,7 +618,13 @@ let build_package t ?(test=false) ?(doc=false) source build_dir nv =
     (if doc then OpamFile.OPAM.build_doc opam else [])
   in
   let commands =
-    OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands |>
+    let local =
+      OpamVariable.Map.of_list [
+        OpamVariable.of_string "build-test", Some (B test);
+        OpamVariable.of_string "build-doc", Some (B doc);
+      ]
+    in
+    OpamFilter.commands (OpamPackageVar.resolve ~opam ~local t) commands |>
     OpamStd.List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))
   in
@@ -658,10 +664,16 @@ let build_package t ?(test=false) ?(doc=false) source build_dir nv =
 
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
-let install_package t nv =
+let install_package t ?(doc=false) nv =
   let opam = OpamSwitchState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
-  let commands = OpamFilter.commands (OpamPackageVar.resolve ~opam t) commands in
+  let commands =
+    let local =
+      OpamVariable.Map.singleton
+        (OpamVariable.of_string "build-doc") (Some (B doc))
+    in
+    OpamFilter.commands (OpamPackageVar.resolve ~opam ~local t) commands
+  in
   let commands =
     OpamStd.List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))

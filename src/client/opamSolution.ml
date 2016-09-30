@@ -506,7 +506,10 @@ let parallel_apply t action ~requested action_graph =
           | None -> store_time (); Done (`Successful (installed, removed))
           | Some exn -> store_time (); Done (`Exception exn))
       | `Install nv ->
-        (OpamAction.install_package t nv @@+ function
+        let doc =
+          OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
+        in
+        (OpamAction.install_package t ~doc nv @@+ function
           | None ->
             add_to_install nv;
             store_time ();

@@ -53,7 +53,7 @@ val pinned_packages:
     false otherwise, and a switch_state update function that applies possible
     changes in packages metadata. Updates the on-disk overlay *)
 val pinned_package:
-  rw switch_state -> ?fixed_version:version -> name ->
+  rw switch_state -> ?version:version -> name ->
   ((rw switch_state -> rw switch_state) * bool) OpamProcess.job
 
 (** Download or synchronise the upstream source for the given package into the
