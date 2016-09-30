@@ -50,7 +50,7 @@ module Name = struct
 
   let of_string x =
     String.iter (function
-        | '"'..'~' as c when not (String.contains "!./<=>\\" c) -> ()
+        | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '+' -> ()
         | c ->
           failwith
             (Printf.sprintf "Invalid character %c in package name %S" c x))
