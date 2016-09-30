@@ -52,6 +52,7 @@ let rec format_value fmt = function
   | List (_, l) ->
     Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
   | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
+  | Option(_,v,[])  -> Format.fprintf fmt "%a" format_value v
   | Option(_,v,l)   -> Format.fprintf fmt "@[<hov 2>%a@ {@[<hv>%a@]}@]"
                          format_value v format_values l
   | Env_binding (_,id,op,v) ->
