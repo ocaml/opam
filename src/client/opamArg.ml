@@ -715,7 +715,7 @@ let global_options =
        interactive questions and overrides the $(b,\\$OPAMDEBUG) variable."
   in
   let json_flag =
-    mk_opt ["json"] "FILENAME"
+    mk_opt ~section ["json"] "FILENAME"
       "Save the results of the OPAM run in a computer-readable file. If the \
        filename contains the character `%', it will be replaced by an index \
        that doesn't overwrite an existing file. Similar to setting the \
