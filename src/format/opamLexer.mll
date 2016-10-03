@@ -60,7 +60,7 @@ let relop  = ('!'? '=' | [ '<' '>' ] '='?)
 let pfxop  = '!'
 let envop_char = [ '+' ':' ]
 let envop = (envop_char '=' | '=' envop_char '='?)
-let int    = ('-'? ['0'-'9']+)
+let int    = ('-'? ['0'-'9' '_']+)
 
 rule token = parse
 | space  { token lexbuf }
