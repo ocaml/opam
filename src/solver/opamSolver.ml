@@ -508,7 +508,7 @@ let string_of_stats stats =
 let solution_is_empty t =
   OpamCudf.ActionGraph.is_empty t
 
-let print_solution ~messages ~rewrite ~requested t =
+let print_solution ~messages ~append ~requested t =
   let dump_cudf sfx t = match OpamSolverConfig.(!r.cudf_file) with
     | None -> ()
     | Some f ->
@@ -526,9 +526,7 @@ let print_solution ~messages ~rewrite ~requested t =
         let cause =
           try OpamCudf.Map.find (action_contents a) causes
           with Not_found -> Unknown in
-        let action =
-          map_action (fun p -> rewrite (OpamCudf.cudf2opam p)) a
-        in
+        let action = map_action OpamCudf.cudf2opam a in
         let cudf_name p = OpamPackage.name_to_string (OpamCudf.cudf2opam p) in
         let cause = string_of_cause cudf_name cause in
         let messages =
@@ -541,7 +539,7 @@ let print_solution ~messages ~rewrite ~requested t =
       ) t ([],[])
   in
   let actions, details = List.rev actions, List.rev details in
-  let actions_str = Action.to_aligned_strings actions in
+  let actions_str = Action.to_aligned_strings ~append actions in
   List.iter2 (fun act (cause,messages) ->
       if cause <> "" then OpamConsole.msg "  %-60s  [%s]\n" act cause
       else OpamConsole.msg "  %s\n" act;
