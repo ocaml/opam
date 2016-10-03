@@ -19,6 +19,10 @@ type 'a error = [
 ]
 type ('a,'b) status = [ 'a success | 'b error ]
 
+(** {2 Untyped generic file format} *)
+
+include module type of struct include OpamParserTypes end
+
 (** {2 Filenames} *)
 
 (** Basenames *)
@@ -170,10 +174,6 @@ type repository = {
 }
 
 (** {2 Variable-based filters} *)
-
-type relop = OpamFormula.relop
-type logop = [ `And | `Or ]
-type pfxop = [ `Not ]
 
 type filter =
   | FBool of bool
@@ -327,46 +327,6 @@ type arg = simple_arg * filter option
 
 (** Command *)
 type command = arg list * filter option
-
-(** {2 Untyped generic file format} *)
-
-(** Source file positions: filename, line, column *)
-type pos = filename * int * int
-
-type env_update_op = Eq | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq
-
-(** Base values *)
-type value =
-  | Bool of pos * bool
-  | Int of pos * int
-  | String of pos * string
-  | Relop of pos * relop * value * value
-  | Prefix_relop of pos * relop * value
-  | Logop of pos * logop * value * value
-  | Pfxop of pos * pfxop * value
-  | Ident of pos * string
-  | List of pos * value list
-  | Group of pos * value list
-  | Option of pos * value * value list
-  | Env_binding of pos * value * env_update_op * value
-
-(** An opamfile section *)
-type opamfile_section = {
-  section_kind  : string;
-  section_name  : string option;
-  section_items : opamfile_item list;
-}
-
-(** An opamfile is composed of sections and variable definitions *)
-and opamfile_item =
-  | Section of pos * opamfile_section
-  | Variable of pos * string * value
-
-(** A file is a list of items and the filename *)
-type opamfile = {
-  file_contents: opamfile_item list;
-  file_name    : string;
-}
 
 (** {2 Switches} *)
 

@@ -11,13 +11,41 @@
 
 {
 
+open OpamParserTypes
 open OpamParser
-open OpamTypesBase
+
+exception Error of string
 
 let newline lexbuf = Lexing.new_line lexbuf
 let error fmt =
-  Printf.kprintf (fun msg -> raise (Lexer_error msg)) fmt
+  Printf.kprintf (fun msg -> raise (Error msg)) fmt
 
+let relop = function
+  | "="  -> `Eq
+  | "!=" -> `Neq
+  | ">=" -> `Geq
+  | ">"  -> `Gt
+  | "<=" -> `Leq
+  | "<"  -> `Lt
+  | x    -> error "%S is not a valid comparison operator" x
+
+let logop = function
+  | "&" -> `And
+  | "|" -> `Or
+  | x -> error "%S is not a valid logical operator" x
+
+let pfxop = function
+  | "!" -> `Not
+  | x -> error "%S is not a valid prefix operator" x
+
+let env_update_op = function
+  | "=" -> Eq
+  | "+=" -> PlusEq
+  | "=+" -> EqPlus
+  | "=+=" -> EqPlusEq
+  | ":=" -> ColonEq
+  | "=:" -> EqColon
+  | x -> error "%S is not a valid environment update operator" x
 
 let char_for_backslash = function
   | 'n' -> '\010'
@@ -80,11 +108,11 @@ rule token = parse
 | "false"{ BOOL false }
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
-| relop  { RELOP (relop_of_string (Lexing.lexeme lexbuf)) }
+| relop  { RELOP (relop (Lexing.lexeme lexbuf)) }
 | '&'    { AND }
 | '|'    { OR }
-| pfxop  { PFXOP (pfxop_of_string (Lexing.lexeme lexbuf)) }
-| envop  { ENVOP (env_update_op_of_string (Lexing.lexeme lexbuf)) }
+| pfxop  { PFXOP (pfxop (Lexing.lexeme lexbuf)) }
+| envop  { ENVOP (env_update_op (Lexing.lexeme lexbuf)) }
 | eof    { EOF }
 | _      { let token = Lexing.lexeme lexbuf in
            error "'%s' is not a valid token" token }

@@ -11,14 +11,13 @@
 
 %{
 
-(** OPAM config file generic type parser *)
+open OpamParserTypes
 
-open OpamTypes
-open OpamTypesBase
+(** OPAM config file generic type parser *)
 
 let get_pos n =
   let pos = Parsing.rhs_start_pos n in
-  Lexing.(OpamFilename.of_string pos.pos_fname,
+  Lexing.(pos.pos_fname,
           pos.pos_lnum,
           pos.pos_cnum - pos.pos_bol)
 
@@ -32,11 +31,11 @@ let get_pos n =
 %token LBRACE RBRACE
 %token COLON
 %token <int> INT
-%token <OpamTypes.relop> RELOP
+%token <OpamParserTypes.relop> RELOP
 %token AND
 %token OR
-%token <OpamTypes.pfxop> PFXOP
-%token <OpamTypes.env_update_op> ENVOP
+%token <OpamParserTypes.pfxop> PFXOP
+%token <OpamParserTypes.env_update_op> ENVOP
 
 %left COLON
 %left ATOM
@@ -49,8 +48,8 @@ let get_pos n =
 %nonassoc URELOP
 
 %start main value
-%type <string -> OpamTypes.opamfile> main
-%type <OpamTypes.value> value
+%type <string -> OpamParserTypes.opamfile> main
+%type <OpamParserTypes.value> value
 
 %%
 
@@ -103,25 +102,12 @@ atom:
 
 %%
 
-let error lexbuf msg =
-  let curr = lexbuf.Lexing.lex_curr_p in
-  let start = lexbuf.Lexing.lex_start_p in
-  let pos =
-    OpamFilename.of_string curr.Lexing.pos_fname,
-    start.Lexing.pos_lnum,
-    start.Lexing.pos_cnum - start.Lexing.pos_bol
-  in
-  raise (OpamPp.Bad_format (Some pos, msg))
-
 let main t l f =
   try
     let r = main t l f in
     Parsing.clear_parser ();
     r
   with
-  | Lexer_error msg ->
+  | e ->
     Parsing.clear_parser ();
-    error l msg
-  | Parsing.Parse_error ->
-    Parsing.clear_parser ();
-    error l "Parse error"
+    raise e

@@ -120,7 +120,8 @@ module MakeIO (F : IO_Arg) = struct
     | e ->
       OpamStd.Exn.fatal e;
       if OpamFormatConfig.(!r.strict) then
-        (OpamConsole.error "%s" (Pp.string_of_bad_format ~file:f e);
+        (OpamConsole.error "%s"
+           (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
          OpamConsole.error_and_exit "Strict mode: aborting")
       else raise e
 
@@ -141,7 +142,7 @@ module MakeIO (F : IO_Arg) = struct
     with
     | Pp.Bad_format _ as e->
       OpamConsole.error "%s [skipped]\n"
-        (Pp.string_of_bad_format ~file:f e);
+        (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
       F.empty
 
   let read_from_f f input =
@@ -364,7 +365,9 @@ module LineFile (X: LineFileArg) = struct
       Pp.parse (Lines.pp_channel ic stdout -| pp) ~pos:(pos_file filename) ()
 
     let of_string filename str =
-      Pp.parse (Lines.pp_string -| pp) ~pos:(filename,0,0) str
+      Pp.parse (Lines.pp_string -| pp)
+        ~pos:(OpamFilename.to_string filename,0,0)
+        str
   end
 
   include IO
@@ -516,7 +519,7 @@ module Environment = LineFile(struct
       (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
        Pp.identity ^+
        Pp.of_pair "env_update_op"
-         (env_update_op_of_string, string_of_env_update_op) ^+
+         (OpamLexer.env_update_op, OpamPrinter.env_update_op) ^+
        Pp.identity ^+
        Pp.opt Pp.singleton)
       -| Pp.pp (fun ~pos:_ -> List.rev) List.rev
@@ -680,14 +683,30 @@ module Syntax = struct
      re-writing files with a guarantee that it hasn't been rewritten in the
      meantime *)
 
+  let parser_main lexbuf filename =
+    let error msg =
+      let curr = lexbuf.Lexing.lex_curr_p in
+      let start = lexbuf.Lexing.lex_start_p in
+      let pos =
+        curr.Lexing.pos_fname,
+        start.Lexing.pos_lnum,
+        start.Lexing.pos_cnum - start.Lexing.pos_bol
+      in
+      raise (OpamPp.Bad_format (Some pos, msg))
+    in
+    let filename = OpamFilename.to_string filename in
+    lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
+                                  Lexing.pos_fname = filename };
+    try OpamParser.main OpamLexer.token lexbuf filename with
+    | OpamLexer.Error msg -> error msg
+    | Parsing.Parse_error -> error "Parse error"
+
+
   let pp_channel filename ic oc =
     Pp.pp
       (fun ~pos:_ () ->
          let lexbuf = Lexing.from_channel ic in
-         let filename = OpamFilename.to_string filename in
-         lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
-                                       Lexing.pos_fname = filename };
-         OpamParser.main OpamLexer.token lexbuf filename)
+         parser_main lexbuf filename)
       (fun file ->
          let fmt = Format.formatter_of_out_channel oc in
          OpamPrinter.format_opamfile fmt file)
@@ -700,10 +719,7 @@ module Syntax = struct
 
   let of_string (filename:filename) str =
     let lexbuf = Lexing.from_string str in
-    let filename = OpamFilename.to_string filename in
-    lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
-                                  Lexing.pos_fname = filename };
-    OpamParser.main OpamLexer.token lexbuf filename
+    parser_main lexbuf filename
 
   let to_string _file_name t =
     OpamPrinter.opamfile t
@@ -2020,7 +2036,7 @@ module OPAMSyntax = struct
     else None
 
   let cleanup_name _opam_version ~pos:(file,_,_ as pos) name =
-    match OpamPackage.of_filename file with
+    match OpamPackage.of_filename (OpamFilename.of_string file) with
     | Some nv when nv.OpamPackage.name <> name ->
       Pp.warn ~pos "This file is for package '%s' but its 'name:' field \
                     advertises '%s'."
@@ -2029,7 +2045,7 @@ module OPAMSyntax = struct
     | _ -> name
 
   let cleanup_version _opam_version ~pos:(file,_,_ as pos) version =
-    match OpamPackage.of_filename file with
+    match OpamPackage.of_filename (OpamFilename.of_string file) with
     | Some nv when nv.OpamPackage.version <> version ->
       Pp.warn ~pos "This file is for version '%s' but its 'version:' field \
                     advertises '%s'."

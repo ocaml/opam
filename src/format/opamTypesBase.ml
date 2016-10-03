@@ -13,8 +13,6 @@ open OpamTypes
 
 include OpamCompat
 
-exception Lexer_error of string
-
 let download_map fn = function
   | Up_to_date f    -> Up_to_date (fn f)
   | Result  f       -> Result (fn f)
@@ -66,9 +64,9 @@ let string_of_shell = function
   | `sh   -> "sh"
   | `bash -> "bash"
 
-let file_null = OpamFilename.of_string ""
-let pos_file filename = filename, -1, -1
-let pos_null = pos_file file_null
+let file_null = ""
+let pos_file filename = OpamFilename.to_string filename, -1, -1
+let pos_null = file_null, -1, -1
 
 let pos_best (f1,_li1,col1 as pos1) (f2,_li2,_col2 as pos2) =
   if f1 = file_null then pos2
@@ -77,7 +75,7 @@ let pos_best (f1,_li1,col1 as pos1) (f2,_li2,_col2 as pos2) =
   else pos1
 
 let string_of_pos (file,line,col) =
-  OpamFilename.prettify file ^
+  file ^
   if line >= 0 then
     ":" ^ string_of_int line ^
     if col >= 0 then ":" ^ string_of_int col
@@ -85,42 +83,6 @@ let string_of_pos (file,line,col) =
   else ""
 
 (* Command line arguments *)
-
-let string_of_relop = OpamFormula.string_of_relop
-let relop_of_string = OpamFormula.relop_of_string
-
-let string_of_logop = function
-  | `And -> "&"
-  | `Or -> "|"
-
-let logop_of_string = function
-  | "&" -> `And
-  | "|" -> `Or
-  | _ -> raise (Invalid_argument "logop_of_string")
-
-let string_of_pfxop = function
-  | `Not -> "!"
-
-let pfxop_of_string = function
-  | "!" -> `Not
-  | _ -> raise (Invalid_argument "pfxop_of_string")
-
-let string_of_env_update_op = function
-  | Eq -> "="
-  | PlusEq -> "+="
-  | EqPlus -> "=+"
-  | EqPlusEq -> "=+="
-  | ColonEq -> ":="
-  | EqColon -> "=:"
-
-let env_update_op_of_string = function
-  | "=" -> Eq
-  | "+=" -> PlusEq
-  | "=+" -> EqPlus
-  | "=+=" -> EqPlusEq
-  | ":=" -> ColonEq
-  | "=:" -> EqColon
-  | _ -> raise (Invalid_argument "env_update_op_of_string")
 
 let env_array l =
   (* The env list may contain successive bindings of the same variable, make

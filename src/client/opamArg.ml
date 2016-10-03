@@ -383,10 +383,10 @@ let atom =
       let sversion = Re.get sub 3 in
       let name = OpamPackage.Name.of_string sname in
       let sop = if sop = "." then "=" else sop in
-      let op = OpamFormula.relop_of_string sop in (* may raise Invalid_argument *)
+      let op = OpamLexer.relop sop in
       let version = OpamPackage.Version.of_string sversion in
       `Ok (name, Some (op, version))
-    with Not_found | Failure _ | Invalid_argument _ ->
+    with Not_found | Failure _ | OpamLexer.Error _ ->
       try `Ok (OpamPackage.Name.of_string str, None)
       with Failure msg -> `Error msg
   in

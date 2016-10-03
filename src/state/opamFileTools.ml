@@ -471,7 +471,7 @@ let lint_gen reader filename =
     | OpamSystem.File_not_found _ ->
       OpamConsole.error "%s not found" (OpamFile.to_string filename);
       [0, `Error, "File does not exist"], None
-    | Lexer_error _ | Parsing.Parse_error ->
+    | OpamLexer.Error _ | Parsing.Parse_error ->
       [1, `Error, "File does not parse"], None
   in
   warnings @ (match t with Some t -> lint t | None -> []),

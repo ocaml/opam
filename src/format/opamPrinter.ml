@@ -9,8 +9,30 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-open OpamTypesBase
+open OpamParserTypes
+
+let relop = function
+  | `Eq  -> "="
+  | `Neq -> "!="
+  | `Geq -> ">="
+  | `Gt  -> ">"
+  | `Leq -> "<="
+  | `Lt  -> "<"
+
+let logop = function
+  | `And -> "&"
+  | `Or -> "|"
+
+let pfxop = function
+  | `Not -> "!"
+
+let env_update_op = function
+  | Eq -> "="
+  | PlusEq -> "+="
+  | EqPlus -> "=+"
+  | EqPlusEq -> "=+="
+  | ColonEq -> ":="
+  | EqColon -> "=:"
 
 let escape_string ?(triple=false) s =
   let len = String.length s in
@@ -32,15 +54,15 @@ let escape_string ?(triple=false) s =
 let rec format_value fmt = function
   | Relop (_,op,l,r) ->
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
-      format_value l (string_of_relop op) format_value r
+      format_value l (relop op) format_value r
   | Logop (_,op,l,r) ->
     Format.fprintf fmt "@[<hv>%a %s@ %a@]"
-      format_value l (string_of_logop op) format_value r
+      format_value l (logop op) format_value r
   | Pfxop (_,op,r) ->
-    Format.fprintf fmt "@[<h>%s%a@]" (string_of_pfxop op) format_value r
+    Format.fprintf fmt "@[<h>%s%a@]" (pfxop op) format_value r
   | Prefix_relop (_,op,r) ->
     Format.fprintf fmt "@[<h>%s@ %a@]"
-      (string_of_relop op) format_value r
+      (relop op) format_value r
   | Ident (_,s)     -> Format.fprintf fmt "%s" s
   | Int (_,i)       -> Format.fprintf fmt "%d" i
   | Bool (_,b)      -> Format.fprintf fmt "%b" b
@@ -56,7 +78,7 @@ let rec format_value fmt = function
                          format_value v format_values l
   | Env_binding (_,id,op,v) ->
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
-      format_value id (string_of_env_update_op op) format_value v
+      format_value id (env_update_op op) format_value v
 
 and format_values fmt = function
   | [] -> ()
@@ -143,13 +165,13 @@ module Normalise = struct
 
   let rec value = function
     | Relop (_,op,l,r) ->
-      String.concat " " [value l; OpamFormula.string_of_relop op; value r]
+      String.concat " " [value l; relop op; value r]
     | Logop (_,op,l,r) ->
-      String.concat " " [value l; string_of_logop op; value r]
+      String.concat " " [value l; logop op; value r]
     | Pfxop (_,op,r) ->
-      String.concat " " [string_of_pfxop op; value r]
+      String.concat " " [pfxop op; value r]
     | Prefix_relop (_,op,r) ->
-      String.concat " " [string_of_relop op; value r]
+      String.concat " " [relop op; value r]
     | Ident (_,s) -> s
     | Int (_,i) -> string_of_int i
     | Bool (_,b) -> string_of_bool b
@@ -161,7 +183,7 @@ module Normalise = struct
         " " value l
     | Env_binding (_,id,op,v) ->
       String.concat " "
-        [value id; string_of_env_update_op op; value v]
+        [value id; env_update_op op; value v]
 
   let rec item = function
     | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
