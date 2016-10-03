@@ -15,7 +15,7 @@ init:
 
 install:
   - 'appveyor DownloadFile http://cygwin.com/setup-%CYG_ARCH%.exe -FileName setup.exe'
-  - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P make -P git -P gcc-core -P ocaml -P ocaml-camlp4 -P ocaml-compiler-libs -P curl -P libncurses-devel -P m4 -P unzip >NUL'
+  - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P make -P git -P gcc-core -P ocaml -P ocaml-camlp4 -P ocaml-compiler-libs -P libncurses-devel -P m4 -P unzip >NUL'
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P libmpfr-devel -P patch -P flexdll >NUL'
   - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
 
