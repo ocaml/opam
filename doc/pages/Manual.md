@@ -189,12 +189,13 @@ Syntax is given in a BNF-like notation. Non-terminals are written `<like this>`,
 terminals are either plain text or written in double-quotes (`"terminal"`),
 curly brackets denote zero or more repetitions when suffixed with `*`, or one or
 more when suffixed with `+`, and square brackets denote zero or one occurence.
-Parentheses are for grouping.
+Parentheses are for grouping. `(")` and `(""")` respectively mean one and three
+quotation mark characters.
 
 As a special case, and for readability, we add simplified notations for _lists_
 and _options_:
 - `[ <list-contents> ... ]` means
-  `"[" { <list-contents> } "]" | <list-contents>`.
+  `"[" { <list-contents> }* "]" | <list-contents>`.
   It corresponds to a case of the `<list>` non-terminal and is a list of
   `<list-contents>` repeated any number of times. The square brackets can be
   omitted when `<list-contents>` occurs just once.
@@ -216,7 +217,7 @@ and _options_:
 <value>         ::= <bool> | <int> | <string> | <ident> | <varident> | <operator> | <list> | <option> | "(" <value> ")"
 <bool>          ::= true | false
 <int>           ::= [ "-" ] { <digit> }+
-<string>        ::= ( " { <char> }* " ) | ( """ { <char> }* """ )
+<string>        ::= ( (") { <char> }* (") ) | ( (""") { <char> }* (""") )
 <operator>      ::= { "!" | "=" | "<" | ">" | "|" | "&" }+ | [ ":" ] <operator> [ ":" ]
 <list>          ::= "[" { <value> }* "]"
 <option>        ::= <value> "{" { <value> }* "}"
@@ -266,18 +267,19 @@ packages.
                     | ( <package-formula> )
                     | <pkgname> { { <version-formula> }* }
 <logop>           ::= "&" | "|"
-<pkgname>         ::= <string>
+<pkgname>         ::= (") { <letter> | <digit> | "-" | "_" | "+" }* (")
 <version-formula> ::= <version-formula> <logop> <version-formula>
                     | "!" <version-formula>
                     | "(" <version-formula> ")"
                     | <relop> <version>
 <relop>           ::= "=" | "!=" | "<" | "<=" | ">" | ">="
-<version>         ::= <string>
+<version>         ::= (") { <letter> | <digit> | "-" | "_" | "+" | "." | "~" }* (")
 ```
 
-Both package names and versions are encoded as strings. We are using logic
-formulas with the operators `&` and `|` for AND and OR, over package names. `&`
-is higher priority than `|`, so the parentheses in this example are required:
+Both package names and versions are encoded as strings, with some restrictions
+on the characters allowed. We are using logic formulas with the operators `&`
+and `|` for AND and OR, over package names. `&` is higher priority than `|`, so
+the parentheses in this example are required:
 
 ```
 ("neat_package" | "also_neat_package") & "required_package"

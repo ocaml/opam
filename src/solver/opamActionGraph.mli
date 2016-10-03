@@ -18,7 +18,8 @@ module type ACTION = sig
   module Pkg: GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
   val to_string: [< t ] -> string
-  val to_aligned_strings: [< t ] list -> string list
+  val to_aligned_strings:
+    ?append:(package -> string) -> [< t ] list -> string list
 end
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t and type t = P.t OpamTypes.action

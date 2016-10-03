@@ -799,14 +799,12 @@ let apply ?ask t action ~requested solution =
           then Some s
           else None
         )  messages in
-      let rewrite nv =
+      let append nv =
         (* mark pinned packages with a star *)
-        if OpamPackage.Set.mem nv t.pinned then
-          OpamPackage.create nv.name
-            OpamPackage.Version.(of_string ((to_string nv.version) ^ "*"))
-        else nv
+        if OpamPackage.Set.mem nv t.pinned then "*"
+        else ""
       in
-      OpamSolver.print_solution ~messages ~rewrite ~requested solution;
+      OpamSolver.print_solution ~messages ~append ~requested solution;
       let total_actions = sum stats in
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);

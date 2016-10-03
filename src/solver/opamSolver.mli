@@ -41,7 +41,7 @@ val solution_is_empty: solution -> bool
 (** Display a solution *)
 val print_solution:
   messages:(package -> string list) ->
-  rewrite:(package -> package) ->
+  append:(package -> string) ->
   requested:name_set ->
   solution -> unit
 

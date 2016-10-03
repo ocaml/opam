@@ -16,7 +16,8 @@ module type ACTION = sig
   module Pkg : GenericPackage with type t = package
   include OpamParallel.VERTEX with type t = package action
   val to_string: [< t ] -> string
-  val to_aligned_strings: [< t ] list -> string list
+  val to_aligned_strings:
+    ?append:(package -> string) -> [< t ] list -> string list
 end
 
 let name_of_action = function
@@ -87,7 +88,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
         (action_strings a)
         (P.version_to_string p)
 
-  let to_aligned_strings l =
+  let to_aligned_strings ?(append=(fun _ -> "")) l =
     let tbl =
       List.map (fun a ->
           let a = (a :> package action) in
@@ -99,10 +100,11 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
             (P.name_to_string (OpamTypesBase.action_contents a))
           :: match a with
           | `Remove p | `Install p | `Reinstall p | `Build p ->
-            P.version_to_string p :: []
+            (P.version_to_string p ^ append p) :: []
           | `Change (_,p0,p) ->
             Printf.sprintf "%s to %s"
-              (P.version_to_string p0) (P.version_to_string p)
+              (P.version_to_string p0 ^ append p0)
+              (P.version_to_string p ^ append p)
             :: [])
         l
     in
