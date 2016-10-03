@@ -176,11 +176,10 @@ module Normalise = struct
     | Int (_,i) -> string_of_int i
     | Bool (_,b) -> string_of_bool b
     | String (_,s) -> escape_string s
-    | List (_, l) -> OpamStd.List.concat_map ~left:"[" ~right:"]" " " value l
-    | Group (_,g) -> OpamStd.List.concat_map ~left:"(" ~right:")" " " value g
+    | List (_, l) -> Printf.sprintf "[%s]" (String.concat " " (List.map value l))
+    | Group (_,g) -> Printf.sprintf "(%s)" (String.concat " " (List.map value g))
     | Option(_,v,l) ->
-      OpamStd.List.concat_map ~left:(value v ^ " {") ~right: "}"
-        " " value l
+      Printf.sprintf "%s {%s}" (value v) (String.concat " " (List.map value l))
     | Env_binding (_,id,op,v) ->
       String.concat " "
         [value id; env_update_op op; value v]
@@ -188,8 +187,7 @@ module Normalise = struct
   let rec item = function
     | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
     | Variable (_, i, List (_,l)) ->
-      OpamStd.List.concat_map ~left:(i ^ ": [") ~right:"]" " "
-        value l
+      Printf.sprintf "%s: [%s]" i (String.concat " " (List.map value l))
     | Variable (_, i, v) -> String.concat ": " [i; value v]
     | Section (_,s) ->
       Printf.sprintf "%s %s{\n%s\n}"
@@ -197,17 +195,19 @@ module Normalise = struct
         (match s.section_name with
          | Some s -> escape_string s ^ " "
          | None -> "")
-        (OpamStd.List.concat_map "\n" item s.section_items)
+        (String.concat "\n" (List.map item s.section_items))
 
   let item_order a b = match a,b with
     | Section _, Variable _ -> 1
     | Variable _, Section _ -> -1
     | Variable (_,i,_), Variable (_,j,_) -> String.compare i j
     | Section (_,s), Section (_,t) ->
-      OpamStd.Option.compare String.compare s.section_name t.section_name
+      let r = String.compare s.section_kind t.section_kind in
+      if r <> 0 then r
+      else compare s.section_name t.section_name
 
   let items its =
     let its = List.sort item_order its in
-    OpamStd.List.concat_map ~right:"\n" "\n" item its
+    String.concat "\n" (List.map item its) ^ "\n"
 end
 
