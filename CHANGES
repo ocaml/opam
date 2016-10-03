@@ -1,3 +1,9 @@
+2.0~alpha5
+* Merge stdout and stderr of child processes by default
+* Fixed regression on solver call times
+* Added `opam var` as an alias for `opam config var`
+* Restrict package names and versions to a reasonable character set
+
 2.0~alpha4
 * Added pre and post hooks for package command sections; allowed per-switch
   configuration
