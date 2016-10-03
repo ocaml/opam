@@ -297,7 +297,7 @@ let extract_package st source nv destdir =
   let check_extra_files =
     try
       List.iter (fun (src,base,hash) ->
-          if OpamFilename.digest src <> hash then
+          if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
             failwith
               (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
           else

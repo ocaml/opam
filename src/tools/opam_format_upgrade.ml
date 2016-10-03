@@ -215,7 +215,7 @@ let do_upgrade () =
           (OpamPackage.to_string nv);
       let url_md5 =
         (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
-          | [url; md5] -> OpamUrl.of_string url, md5
+          | [url; md5] -> OpamUrl.of_string url, OpamHash.of_string md5
           | _ -> failwith "Bad cache") |>
         OpamUrl.Map.of_list
       in
@@ -237,7 +237,7 @@ let do_upgrade () =
                 try
                   OpamProcess.Job.catch err
                     (OpamDownload.download ~overwrite:false url dir @@| fun f ->
-                     Some (url, OpamFilename.digest f, None))
+                     Some (url, OpamHash.compute (OpamFilename.to_string f), None))
                 with e -> err e)
           (OpamFile.Comp.patches comp)
       in
@@ -247,7 +247,7 @@ let do_upgrade () =
            | None -> url_md5)
         url_md5 extra_sources |>
       OpamUrl.Map.bindings |>
-      List.map (fun (url,m) -> [OpamUrl.to_string url; m]) |>
+      List.map (fun (url,m) -> [OpamUrl.to_string url; OpamHash.to_string m]) |>
       OpamFile.Lines.write cache_file;
       if List.mem None extra_sources then ocaml_versions
       else

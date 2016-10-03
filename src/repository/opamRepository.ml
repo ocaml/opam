@@ -71,11 +71,12 @@ let pull_url_and_fix_digest package dirname checksum file url =
   | Up_to_date _
   | Result (D _) as r -> Done r
   | Result (F f) as r ->
-    let actual = OpamFilename.digest f in
-    if checksum <> actual then (
+    if not (OpamHash.check_file (OpamFilename.to_string f) checksum) then (
+      let actual = OpamHash.compute (OpamFilename.to_string f) in
       OpamConsole.msg
         "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
-        (OpamPackage.to_string package) checksum actual;
+        (OpamPackage.to_string package) (OpamHash.to_string checksum)
+        (OpamHash.to_string actual);
       let u = OpamFile.URL.read file in
       OpamFile.URL.write file (OpamFile.URL.with_checksum actual u)
     );
@@ -89,61 +90,11 @@ let pull_archive repo nv =
   let url = OpamRepositoryPath.Remote.archive repo nv in
   B.pull_archive repo url
 
-let file f =
-  let f = OpamFile.filename f in
-  if OpamFilename.exists f then [f] else []
-
-let dir d =
-  if OpamFilename.exists_dir d then OpamFilename.rec_files d else []
-
 let packages r =
   OpamPackage.list (OpamRepositoryPath.packages_dir r)
 
 let packages_with_prefixes r =
   OpamPackage.prefixes (OpamRepositoryPath.packages_dir r)
-
-(* Returns the meaningful checksum of a url file. Uses the hash of the remote
-   archive if present, or its address, not the hash of the url file itself which
-   doesn't really matter *)
-let url_checksum url =
-  let u = OpamFile.URL.safe_read url in
-  if u = OpamFile.URL.empty then []
-  else match OpamFile.URL.checksum u with
-    | Some cksum -> [cksum]
-    | None ->
-      [Digest.string (OpamUrl.to_string (OpamFile.URL.url u))]
-
-let package_files repo prefix nv ~archive =
-  let opam = OpamRepositoryPath.opam repo prefix nv in
-  let descr = OpamRepositoryPath.descr repo prefix nv in
-  let url = OpamRepositoryPath.url repo prefix nv in
-  let files = OpamRepositoryPath.files repo prefix nv in
-  let archive =
-    let f = OpamRepositoryPath.archive repo nv in
-    if archive && OpamFilename.exists f then [f]
-    else [] in
-  file opam @ file descr @ file url @ dir files @ archive
-
-let package_important_files repo prefix nv ~archive =
-  let url = OpamRepositoryPath.url repo prefix nv in
-  let files = OpamRepositoryPath.files repo prefix nv in
-  let archive_f = OpamRepositoryPath.archive repo nv in
-  if archive && OpamFilename.exists archive_f then
-    file url @ dir files @ [archive_f]
-  else
-    file url @ dir files
-
-let package_state repo prefix nv all =
-  let fs = match all with
-    | `all       -> package_files repo prefix nv ~archive:true
-    | `partial b -> package_important_files repo prefix nv ~archive:b in
-  let url = OpamRepositoryPath.url repo prefix nv in
-  let l =
-    List.map (fun f ->
-        if all <> `all && f = OpamFile.filename url then url_checksum url
-        else OpamFilename.checksum f)
-      fs in
-  List.flatten l
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;

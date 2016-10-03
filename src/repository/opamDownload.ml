@@ -55,7 +55,8 @@ let download_args ~url ~out ~retry ?checksum ~compress =
       | "out" -> Some (S out)
       | "retry" -> Some (S (string_of_int retry))
       | "compress" -> Some (B compress)
-      | "checksum" -> OpamStd.Option.map (fun c -> S c) checksum
+      | "checksum" ->
+        OpamStd.Option.map (fun c -> S (OpamHash.to_string c)) checksum
       | _ -> None)
     cmd
 
@@ -114,10 +115,9 @@ let really_download ~overwrite ?(compress=false) ?checksum ~url ~dst =
        OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
      if OpamRepositoryConfig.(!r.force_checksums <> Some false) then
        OpamStd.Option.iter (fun cksum ->
-         let dl_sum = OpamFilename.digest (OpamFilename.of_string tmp_dst) in
-         if dl_sum <> cksum then
-           failwith (Printf.sprintf "Bad checksum for %s (expected %s, got %s)"
-                       (OpamUrl.to_string url) cksum dl_sum))
+         if not (OpamHash.check_file tmp_dst cksum) then
+           failwith (Printf.sprintf "Bad checksum for %s (expected %s)"
+                       (OpamUrl.to_string url) (OpamHash.to_string cksum)))
          checksum;
      OpamSystem.mv tmp_dst dst;
      Done ())

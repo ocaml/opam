@@ -231,7 +231,10 @@ let load lock_kind gt rt switch =
         if
           List.exists (fun (file, hash) ->
               let deleted = not (OpamFilename.exists file) in
-              let changed = deleted || OpamFilename.digest file <> hash in
+              let changed =
+                deleted ||
+                not (OpamHash.check_file (OpamFilename.to_string file) hash)
+              in
               if deleted then
                 OpamConsole.error
                   "System file %s, which package %s depends upon, \

@@ -17,7 +17,7 @@ let log msg = OpamConsole.log "CURL" msg
 let slog = OpamConsole.slog
 
 type state = {
-  local_remote : (url * int * string) filename_map;
+  local_remote : (url * int * OpamHash.t) filename_map;
   (* map of local files to address, perms, md5 *)
   remote_local : filename OpamUrl.Map.t;
   (* reverse map of addresses to local files *)
@@ -164,7 +164,7 @@ let is_up_to_date state local_file =
     let _,_,md5 = OpamFilename.Map.find local_file state.local_remote in
     OpamFilename.exists local_file &&
     not (Sys.is_directory (OpamFilename.to_string local_file))
-    && md5 = OpamFilename.digest local_file
+    && OpamHash.check_file (OpamFilename.to_string local_file) md5
   with Not_found -> false
 (* XXX unused ?
 let get_checksum state local_file =
@@ -203,7 +203,7 @@ module B = struct
     in
     let check_sum f = match checksum with
       | None   -> false
-      | Some c -> OpamFilename.digest f = c
+      | Some c -> OpamHash.check_file (OpamFilename.to_string f) c
     in
     let files = OpamFilename.files dirname in
     let uptodate =

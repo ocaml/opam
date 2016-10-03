@@ -222,10 +222,10 @@ module URL: sig
   val mirrors: t -> url list
 
   (** Archive checksum *)
-  val checksum: t -> string option
+  val checksum: t -> OpamHash.t option
 
   (** Constructor *)
-  val with_checksum: string -> t -> t
+  val with_checksum: OpamHash.t -> t -> t
 
 end
 
@@ -259,7 +259,7 @@ module OPAM: sig
     patches    : (basename * filter option) list;
     build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (url * string * basename option) list;
+    extra_sources: (url * OpamHash.t * basename option) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -290,7 +290,7 @@ module OPAM: sig
     metadata_dir: dirname option;
 
     (* Names and hashes of the files below files/ *)
-    extra_files: (OpamFilename.Base.t * string) list option;
+    extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
 
     (* Deprecated, for compat and proper linting *)
@@ -362,7 +362,7 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
-  val extra_sources: t -> (url * string * basename option) list
+  val extra_sources: t -> (url * OpamHash.t * basename option) list
 
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
@@ -444,11 +444,11 @@ module OPAM: sig
   val metadata_dir: t -> dirname option
 
   (** Names and hashes of the files below files/ *)
-  val extra_files: t -> (OpamFilename.Base.t * string) list option
+  val extra_files: t -> (OpamFilename.Base.t * OpamHash.t) list option
 
   (** Looks up the extra files, and returns their full paths, relative path to
       the package source, and hash. Doesn't check the hashes. *)
-  val get_extra_files: t -> (filename * basename * string) list
+  val get_extra_files: t -> (filename * basename * OpamHash.t) list
 
   (** Sets the opam version *)
   val with_opam_version: opam_version -> t -> t
@@ -525,7 +525,7 @@ module OPAM: sig
 
   val with_dev_repo: url -> t -> t
 
-  val with_extra_sources: (url * string * basename option) list -> t -> t
+  val with_extra_sources: (url * OpamHash.t * basename option) list -> t -> t
 
   val with_extensions: value OpamStd.String.Map.t -> t -> t
 
@@ -544,8 +544,8 @@ module OPAM: sig
 
   val with_metadata_dir: dirname option -> t -> t
 
-  val with_extra_files: (OpamFilename.Base.t * string) list -> t -> t
-  val with_extra_files_opt: (OpamFilename.Base.t * string) list option -> t -> t
+  val with_extra_files: (OpamFilename.Base.t * OpamHash.t) list -> t -> t
+  val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.t) list option -> t -> t
 
   (** Prints to a string, while keeping the format of the original file as much
       as possible *)
@@ -747,9 +747,9 @@ module Dot_config: sig
   val create: (variable * variable_contents) list -> t
 
   (** Dependency towards file-system paths and their hashes *)
-  val file_depends: t -> (filename * string) list
+  val file_depends: t -> (filename * OpamHash.t) list
 
-  val with_file_depends: (filename * string) list -> t -> t
+  val with_file_depends: (filename * OpamHash.t) list -> t -> t
 
   (** Sets all bindings in the file *)
   val with_vars: (variable * variable_contents) list -> t -> t

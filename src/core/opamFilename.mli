@@ -215,19 +215,6 @@ val remove_suffix: Base.t -> t -> string
 (** Apply a patch in a directory. Returns [true] on success *)
 val patch: t -> Dir.t -> bool OpamProcess.job
 
-(** Compute the MD5 digest of a file *)
-val digest: t -> string
-
-(** Check whether an MD5 digest is correctly formatted *)
-val valid_digest: string -> bool
-
-(** Compute the MD5 digest a file. Return the empty list if the file
-    does not exist. *)
-val checksum: t -> string list
-
-(** Compute the MD5 digest for all files in a directory. *)
-val checksum_dir: Dir.t -> string list
-
 (** Create an empty file *)
 val touch: t -> unit
 
@@ -285,13 +272,13 @@ module Attribute: sig
   val base: t -> Base.t
 
   (** MD5 digest of the remote file *)
-  val md5: t -> string
+  val md5: t -> OpamHash.t
 
   (** File permission *)
   val perm: t -> int option
 
   (** Constructor*)
-  val create: Base.t -> string -> int option -> t
+  val create: Base.t -> OpamHash.t -> int option -> t
 
 end
 

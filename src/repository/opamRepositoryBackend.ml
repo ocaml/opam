@@ -12,7 +12,7 @@ open OpamTypes
 
 module type S = sig
   val name: OpamUrl.backend
-  val pull_url: package -> dirname -> string option -> url ->
+  val pull_url: package -> dirname -> OpamHash.t option -> url ->
     generic_file download OpamProcess.job
   val pull_repo: repository -> unit OpamProcess.job
   val pull_archive: repository -> url -> filename download OpamProcess.job
@@ -44,14 +44,11 @@ let to_json r =
 let check_digest filename = function
   | Some expected
     when OpamRepositoryConfig.(!r.force_checksums) <> Some false ->
-    let actual = OpamFilename.digest filename in
-    if actual = expected then true
+    if OpamHash.check_file (OpamFilename.to_string filename) expected then true
     else
       (OpamConsole.error
-         "Bad checksum for %s:\n\
-         \  - %s [expected result]\n\
-         \  - %s [actual result]\n\
-          Metadata might be out of date, in this case run `opam update`.\n"
-         (OpamFilename.to_string filename) expected actual;
+         "Bad checksum for %s: expected %s\n\
+          Metadata might be out of date, in this case run `opam update`."
+         (OpamFilename.to_string filename) (OpamHash.to_string expected);
        false)
   | _ -> true

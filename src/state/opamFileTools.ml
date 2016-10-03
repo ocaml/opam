@@ -579,7 +579,7 @@ let add_aux_files ?dir opam =
       List.map
         (fun f ->
            OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
-           OpamFilename.digest f)
+           OpamHash.compute (OpamFilename.to_string f))
         (OpamFilename.rec_files dir)
     in
     let opam =

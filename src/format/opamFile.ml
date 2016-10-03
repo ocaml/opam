@@ -547,12 +547,12 @@ module File_attributes = LineFile(struct
     let pp =
       OpamFilename.Attribute.Set.(OpamFormat.lines_set ~empty ~add ~fold) @@
       (Pp.of_module "file" (module OpamFilename.Base) ^+
-       Pp.check ~name:"md5" OpamFilename.valid_digest ^+
+       Pp.of_module "checksum" (module OpamHash) ^+
        Pp.opt (Pp.last -| Pp.of_pair "perm" (int_of_string, string_of_int))
       ) -|
       Pp.pp
-        (fun ~pos:_ (base,(md5,perm)) ->
-           OpamFilename.Attribute.create base md5 perm)
+        (fun ~pos:_ (base,(hash,perm)) ->
+           OpamFilename.Attribute.create base hash perm)
         (fun att -> OpamFilename.Attribute.(base att, (md5 att, perm att)))
 
   end)
@@ -1512,7 +1512,7 @@ module Dot_configSyntax = struct
 
   type t = {
     vars: (variable * variable_contents) list;
-    file_depends: (filename * string) list;
+    file_depends: (filename * OpamHash.t) list;
   }
 
   let empty = {
@@ -1546,7 +1546,7 @@ module Dot_configSyntax = struct
         "file-depends", Pp.ppacc with_file_depends file_depends
           (Pp.V.map_list ~depth:2 @@ Pp.V.map_pair
              (Pp.V.string -| Pp.of_module "path" (module OpamFilename))
-             (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest))
+             (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)))
       ]
 
   (* Files with the variables at toplevel and no other fields are allowed for
@@ -1655,7 +1655,7 @@ module URLSyntax = struct
   type t = {
     url     : url;
     mirrors : url list;
-    checksum: string option;
+    checksum: OpamHash.t option;
   }
 
   let create ?(mirrors=[]) url =
@@ -1698,7 +1698,7 @@ module URLSyntax = struct
       "local",  Pp.ppacc_opt with_url OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
       "checksum", Pp.ppacc_opt with_checksum checksum
-        (Pp.V.string -| Pp.check ~name:"checksum" OpamFilename.valid_digest);
+        (Pp.V.string -| Pp.of_module "checksum" (module OpamHash));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
     ]
@@ -1752,7 +1752,7 @@ module OPAMSyntax = struct
     patches    : (basename * filter option) list;
     build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (url * string * basename option) list;
+    extra_sources: (url * OpamHash.t * basename option) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -1783,7 +1783,7 @@ module OPAMSyntax = struct
     metadata_dir: dirname option;
 
     (* Names and hashes of the files below files/ *)
-    extra_files: (OpamFilename.Base.t * string) list option;
+    extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
 
     (* Deprecated, for compat and proper linting *)
@@ -2193,7 +2193,7 @@ module OPAMSyntax = struct
            (Pp.V.map_option
               Pp.V.url
               (Pp.opt @@ Pp.singleton -| pp_basename))
-           (Pp.V.string -| Pp.check ~name:"md5" OpamFilename.valid_digest)
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash))
          -| Pp.pp
            (fun ~pos:_ ((u,md5),f) -> u,f,md5)
            (fun (u,f,md5) -> (u,md5),f));
@@ -2232,7 +2232,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:2 @@
          Pp.V.map_pair
            pp_basename
-           (Pp.V.string (* -| Pp.check ~name:"md5" OpamFilename.valid_digest *)));
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
 
       (* deprecated fields, here for compat *)
       "configure-style", (Pp.ppacc_ignore, Pp.ppacc_ignore);
@@ -3057,10 +3057,13 @@ module CompSyntax = struct
         | [] -> assert false
     in
     let extra_sources =
-      List.map (fun url ->
-          url, Digest.to_hex (Digest.string "") (* no hash !? *), None
-        )
-        comp.patches
+      let dummy_hash =
+        (* opam 1.2 used those without any checksum; conversion puts a dummy
+           value, to be fixed by the tools afterwards (we can't download the
+           files at this stage) *)
+        OpamHash.md5 (String.make 40 '0')
+      in
+      List.map (fun url -> url, dummy_hash, None) comp.patches
     in
     let patches =
       List.map

@@ -15,12 +15,12 @@
     tool, to the given directory. Returns the downloaded filename.
     @raise Failure if the checksum is specified and doesn't match*)
 val download:
-  overwrite:bool -> ?compress:bool -> ?checksum:string ->
+  overwrite:bool -> ?compress:bool -> ?checksum:OpamHash.t ->
   OpamUrl.t -> OpamFilename.Dir.t ->
   OpamFilename.t OpamProcess.job
 
 (** As [download], but with a specified output filename. *)
 val download_as:
-  overwrite:bool -> ?compress:bool -> ?checksum:string ->
+  overwrite:bool -> ?compress:bool -> ?checksum:OpamHash.t ->
   OpamUrl.t -> OpamFilename.t ->
   unit OpamProcess.job

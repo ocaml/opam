@@ -161,7 +161,7 @@ let pinned_package st ?version name =
     match OpamPinned.find_opam_file_in_source name srcdir with
     | None -> None, None
     | Some f ->
-      Some (OpamFilename.digest (OpamFile.filename f)),
+      Some (OpamHash.compute (OpamFile.to_string f)),
       try
         Some (OpamFile.OPAM.read f |> OpamFile.OPAM.with_name name |>
               add_extra_files srcdir f)
@@ -186,7 +186,9 @@ let pinned_package st ?version name =
     OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
     let warns, opam_opt = OpamFileTools.lint_file f in
     if warns <> [] &&
-       Some (OpamFilename.digest (OpamFile.filename f)) <> old_source_opam_hash
+       match old_source_opam_hash with
+       | None -> true
+       | Some h -> not (OpamHash.check_file (OpamFile.to_string f) h)
     then
       (OpamConsole.warning
          "%s opam file from upstream of %s:"
@@ -226,7 +228,7 @@ let pinned_package st ?version name =
       OpamFile.OPAM.with_name name opam
     in
     List.iter (fun (file, rel_file, hash) ->
-        if OpamFilename.digest file = hash then
+        if OpamHash.check_file (OpamFilename.to_string file) hash then
           OpamFilename.copy ~src:file
             ~dst:(OpamFilename.create files_dir rel_file)
         else

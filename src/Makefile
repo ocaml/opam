@@ -108,6 +108,7 @@ SRC_core = \
   opamProcess.ml \
   opamSystem.ml \
   opamParallel.ml \
+  opamHash.ml \
   opamFilename.ml \
   opamDirTrack.ml \
   opamUrl.ml

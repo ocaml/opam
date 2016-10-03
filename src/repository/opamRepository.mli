@@ -20,23 +20,6 @@ val packages: repository -> package_set
 (** Get the list of packages (and their possible prefix) *)
 val packages_with_prefixes: repository -> string option package_map
 
-(** {2 State} *)
-
-(** Get the package archive checksum off an url file *)
-val url_checksum: OpamFile.URL.t OpamFile.t -> checksums
-
-(** Get all the package files *)
-val package_files: repository -> string option -> package -> archive:bool ->
-  filename list
-
-(** Compute a package state (ie. a list of checksums). If [`partial archive],
-    only the checksum of the archive within the url file (instead of the file
-    itself), of the files/ subdirectory, and of the archive if set are
-    returned. *)
-val package_state: repository -> string option -> package ->
-  [`all|`partial of bool]
-  -> checksums
-
 (** {2 Repository backends} *)
 
 (** Initialize {i $opam/repo/$repo} *)
@@ -48,12 +31,12 @@ val update: repository -> unit OpamProcess.job
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)
 val pull_url:
-  package -> dirname -> string option -> url list ->
+  package -> dirname -> OpamHash.t option -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull and fix the resulting digest *)
 val pull_url_and_fix_digest:
-  package -> dirname -> string -> OpamFile.URL.t OpamFile.t -> url list ->
+  package -> dirname -> OpamHash.t -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull an archive in a repository *)
