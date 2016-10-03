@@ -124,6 +124,7 @@ let all_base_packages =
       "base-bigarray";
       "base-threads";
       "base-unix";
+      "base-metaocaml-ocamlfind";
     ])
 
 let cache_file : string list list OpamFile.t =
