@@ -9,8 +9,30 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-open OpamTypesBase
+open OpamParserTypes
+
+let relop = function
+  | `Eq  -> "="
+  | `Neq -> "!="
+  | `Geq -> ">="
+  | `Gt  -> ">"
+  | `Leq -> "<="
+  | `Lt  -> "<"
+
+let logop = function
+  | `And -> "&"
+  | `Or -> "|"
+
+let pfxop = function
+  | `Not -> "!"
+
+let env_update_op = function
+  | Eq -> "="
+  | PlusEq -> "+="
+  | EqPlus -> "=+"
+  | EqPlusEq -> "=+="
+  | ColonEq -> ":="
+  | EqColon -> "=:"
 
 let escape_string ?(triple=false) s =
   let len = String.length s in
@@ -32,15 +54,15 @@ let escape_string ?(triple=false) s =
 let rec format_value fmt = function
   | Relop (_,op,l,r) ->
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
-      format_value l (string_of_relop op) format_value r
+      format_value l (relop op) format_value r
   | Logop (_,op,l,r) ->
     Format.fprintf fmt "@[<hv>%a %s@ %a@]"
-      format_value l (string_of_logop op) format_value r
+      format_value l (logop op) format_value r
   | Pfxop (_,op,r) ->
-    Format.fprintf fmt "@[<h>%s%a@]" (string_of_pfxop op) format_value r
+    Format.fprintf fmt "@[<h>%s%a@]" (pfxop op) format_value r
   | Prefix_relop (_,op,r) ->
     Format.fprintf fmt "@[<h>%s@ %a@]"
-      (string_of_relop op) format_value r
+      (relop op) format_value r
   | Ident (_,s)     -> Format.fprintf fmt "%s" s
   | Int (_,i)       -> Format.fprintf fmt "%d" i
   | Bool (_,b)      -> Format.fprintf fmt "%b" b
@@ -56,7 +78,7 @@ let rec format_value fmt = function
                          format_value v format_values l
   | Env_binding (_,id,op,v) ->
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
-      format_value id (string_of_env_update_op op) format_value v
+      format_value id (env_update_op op) format_value v
 
 and format_values fmt = function
   | [] -> ()
@@ -143,31 +165,29 @@ module Normalise = struct
 
   let rec value = function
     | Relop (_,op,l,r) ->
-      String.concat " " [value l; OpamFormula.string_of_relop op; value r]
+      String.concat " " [value l; relop op; value r]
     | Logop (_,op,l,r) ->
-      String.concat " " [value l; string_of_logop op; value r]
+      String.concat " " [value l; logop op; value r]
     | Pfxop (_,op,r) ->
-      String.concat " " [string_of_pfxop op; value r]
+      String.concat " " [pfxop op; value r]
     | Prefix_relop (_,op,r) ->
-      String.concat " " [string_of_relop op; value r]
+      String.concat " " [relop op; value r]
     | Ident (_,s) -> s
     | Int (_,i) -> string_of_int i
     | Bool (_,b) -> string_of_bool b
     | String (_,s) -> escape_string s
-    | List (_, l) -> OpamStd.List.concat_map ~left:"[" ~right:"]" " " value l
-    | Group (_,g) -> OpamStd.List.concat_map ~left:"(" ~right:")" " " value g
+    | List (_, l) -> Printf.sprintf "[%s]" (String.concat " " (List.map value l))
+    | Group (_,g) -> Printf.sprintf "(%s)" (String.concat " " (List.map value g))
     | Option(_,v,l) ->
-      OpamStd.List.concat_map ~left:(value v ^ " {") ~right: "}"
-        " " value l
+      Printf.sprintf "%s {%s}" (value v) (String.concat " " (List.map value l))
     | Env_binding (_,id,op,v) ->
       String.concat " "
-        [value id; string_of_env_update_op op; value v]
+        [value id; env_update_op op; value v]
 
   let rec item = function
     | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
     | Variable (_, i, List (_,l)) ->
-      OpamStd.List.concat_map ~left:(i ^ ": [") ~right:"]" " "
-        value l
+      Printf.sprintf "%s: [%s]" i (String.concat " " (List.map value l))
     | Variable (_, i, v) -> String.concat ": " [i; value v]
     | Section (_,s) ->
       Printf.sprintf "%s %s{\n%s\n}"
@@ -175,17 +195,19 @@ module Normalise = struct
         (match s.section_name with
          | Some s -> escape_string s ^ " "
          | None -> "")
-        (OpamStd.List.concat_map "\n" item s.section_items)
+        (String.concat "\n" (List.map item s.section_items))
 
   let item_order a b = match a,b with
     | Section _, Variable _ -> 1
     | Variable _, Section _ -> -1
     | Variable (_,i,_), Variable (_,j,_) -> String.compare i j
     | Section (_,s), Section (_,t) ->
-      OpamStd.Option.compare String.compare s.section_name t.section_name
+      let r = String.compare s.section_kind t.section_kind in
+      if r <> 0 then r
+      else compare s.section_name t.section_name
 
   let items its =
     let its = List.sort item_order its in
-    OpamStd.List.concat_map ~right:"\n" "\n" item its
+    String.concat "\n" (List.map item its) ^ "\n"
 end
 

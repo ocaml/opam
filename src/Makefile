@@ -126,6 +126,10 @@ opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
 opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_format = \
+  opamParserTypes.mli \
+  opamParser.mly \
+  opamLexer.mll \
+  opamPrinter.ml \
   opamFormatConfig.ml \
   opamLineLexer.mll \
   opamRepositoryName.ml \
@@ -135,11 +139,8 @@ SRC_format = \
   opamFormula.ml \
   opamTypes.mli \
   opamTypesBase.ml \
-  opamPrinter.ml \
   opamPp.ml \
   opamFormat.ml \
-  opamParser.mly \
-  opamLexer.mll \
   opamFilter.ml \
   opamFile.ml
 

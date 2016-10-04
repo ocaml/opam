@@ -26,7 +26,7 @@ exception Bad_format_list of bad_format list
 (** Raise [Bad_format]. *)
 val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
 
-val string_of_bad_format: ?file:filename -> exn -> string
+val string_of_bad_format: ?file:string -> exn -> string
 
 (** Adds a position to a Bad_format exception if it doesn't have one yet *)
 val add_pos: pos -> exn -> exn

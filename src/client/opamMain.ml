@@ -2259,7 +2259,7 @@ let lint =
       if failed then OpamStd.Sys.exit 1
     with
     | Parsing.Parse_error
-    | Lexer_error _
+    | OpamLexer.Error _
     | OpamPp.Bad_format _ ->
       OpamConsole.msg "File format error\n";
       OpamStd.Sys.exit 1

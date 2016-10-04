@@ -11,23 +11,6 @@
 
 type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
 
-let string_of_relop = function
-  | `Eq  -> "="
-  | `Neq -> "!="
-  | `Geq -> ">="
-  | `Gt  -> ">"
-  | `Leq -> "<="
-  | `Lt  -> "<"
-
-let relop_of_string = function
-  | "="  -> `Eq
-  | "!=" -> `Neq
-  | ">=" -> `Geq
-  | ">"  -> `Gt
-  | "<=" -> `Leq
-  | "<"  -> `Lt
-  | x    -> raise (Invalid_argument (x ^ " is not a valid relop"))
-
 let neg_relop = function
   | `Eq -> `Neq
   | `Neq -> `Eq
@@ -45,7 +28,7 @@ let string_of_atom = function
   | n, Some (r,c) ->
     Printf.sprintf "%s (%s %s)"
       (OpamPackage.Name.to_string n)
-      (string_of_relop r)
+      (OpamPrinter.relop r)
       (OpamPackage.Version.to_string c)
 
 let short_string_of_atom = function
@@ -57,7 +40,7 @@ let short_string_of_atom = function
   | n, Some (r,c) ->
     Printf.sprintf "%s%s%s"
       (OpamPackage.Name.to_string n)
-      (string_of_relop r)
+      (OpamPrinter.relop r)
       (OpamPackage.Version.to_string c)
 
 let string_of_atoms atoms =
@@ -224,7 +207,7 @@ let packages_of_atoms pkgset atoms =
 
 let to_string t =
   let string_of_constraint (relop, version) =
-    Printf.sprintf "%s %s" (string_of_relop relop)
+    Printf.sprintf "%s %s" (OpamPrinter.relop relop)
       (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n

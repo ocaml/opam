@@ -11,7 +11,15 @@
 
 (** {2 Printers for the [value] and [opamfile] formats} *)
 
-open OpamTypes
+open OpamParserTypes
+
+val relop: relop -> string
+
+val logop: logop -> string
+
+val pfxop: pfxop -> string
+
+val env_update_op: env_update_op -> string
 
 val value : value -> string
 

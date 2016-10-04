@@ -39,7 +39,7 @@ let to_string t =
     | FOp(e,s,f) ->
       paren ~cond:(context <> `Or && context <> `And)
         (Printf.sprintf "%s %s %s"
-           (aux ~context:`Relop e) (string_of_relop s) (aux ~context:`Relop f))
+           (aux ~context:`Relop e) (OpamPrinter.relop s) (aux ~context:`Relop f))
     | FAnd (e,f) ->
       paren ~cond:(context <> `Or && context <> `And)
         (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
@@ -486,11 +486,11 @@ let string_of_filtered_formula =
   let string_of_constraint =
     OpamFormula.string_of_formula (function
         | Constraint (op, FString s) ->
-          Printf.sprintf "%s \"%s\"" (string_of_relop op) s
+          Printf.sprintf "%s \"%s\"" (OpamPrinter.relop op) s
         | Constraint (op, (FIdent _ as v)) ->
-          Printf.sprintf "%s %s" (string_of_relop op) (to_string v)
+          Printf.sprintf "%s %s" (OpamPrinter.relop op) (to_string v)
         | Constraint (op, v) ->
-          Printf.sprintf "%s (%s)" (string_of_relop op) (to_string v)
+          Printf.sprintf "%s (%s)" (OpamPrinter.relop op) (to_string v)
         | Filter f -> to_string f)
   in
   OpamFormula.string_of_formula (function

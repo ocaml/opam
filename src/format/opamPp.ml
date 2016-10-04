@@ -35,11 +35,9 @@ let rec string_of_bad_format ?file e =
   match e, file with
   | Bad_format (None, msg), Some f
   | Bad_format (Some (f, -1, -1), msg), _ ->
-    Printf.sprintf "In %s:\n%s"
-      (OpamFilename.to_string f) msg
+    Printf.sprintf "In %s:\n%s" f msg
   | Bad_format (Some pos, msg), _ ->
-    Printf.sprintf "At %s:\n%s"
-      (string_of_pos pos) msg
+    Printf.sprintf "At %s:\n%s" (string_of_pos pos) msg
   | Bad_format (None, msg), None ->
     Printf.sprintf "Input error:\n%s" msg
   | Bad_format_list bfl, _ ->

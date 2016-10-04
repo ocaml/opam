@@ -11,4 +11,17 @@
 
 (** OPAM config file lexer *)
 
+open OpamParserTypes
+
+exception Error of string
+
+val relop: string -> relop
+
+val logop: string -> logop
+
+val pfxop: string -> pfxop
+
+val env_update_op: string -> env_update_op
+
+
 val token: Lexing.lexbuf -> OpamParser.token

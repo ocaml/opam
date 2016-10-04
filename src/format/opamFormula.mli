@@ -13,13 +13,7 @@
     functions *)
 
 (** binary operations (compatible with the Dose type for Cudf operators !) *)
-type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
-
-(** Pretty-printing of relops *)
-val string_of_relop: relop -> string
-
-(** Parsing relops *)
-val relop_of_string: string -> relop
+type relop = OpamParserTypes.relop (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
 
 (** Version constraints for OPAM *)
 type version_constraint = relop * OpamPackage.Version.t

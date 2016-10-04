@@ -17,9 +17,6 @@ open OpamTypes
 
 include module type of OpamCompat
 
-(** {2 Exceptions} *)
-exception Lexer_error of string
-
 (** Upcast a downloaded directory. *)
 val download_dir: dirname download -> generic_file download
 
@@ -65,22 +62,6 @@ val pos_file: filename -> pos
 
 (** Prints a file position *)
 val string_of_pos: pos -> string
-
-val string_of_relop: relop -> string
-
-val relop_of_string: string -> relop (** Raises Invalid_argument*)
-
-val string_of_logop: logop -> string
-
-val logop_of_string: string -> logop (** Raises Invalid_argument*)
-
-val string_of_pfxop: pfxop -> string
-
-val pfxop_of_string: string -> pfxop (** Raises Invalid_argument*)
-
-val string_of_env_update_op: env_update_op -> string
-
-val env_update_op_of_string: string -> env_update_op
 
 (** Makes sure to keep only the last binding for a given variable; doesn't
     preserve order *)
