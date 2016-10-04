@@ -23,7 +23,7 @@ let curl_args = [
   CString "--retry", None; CIdent "retry", None;
   CString "--retry-delay", None; CString "2", None;
   CString "--compressed",
-  Some (FIdent (OpamFilter.ident_of_string "compressed"));
+  Some (FIdent (OpamFilter.ident_of_string "compress"));
   CString "--user-agent", Some user_agent;
   CString "-L", None;
   CString "-o", None; CIdent "out", None;
