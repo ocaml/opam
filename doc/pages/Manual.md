@@ -26,7 +26,7 @@ but this can be changed using the `OPAMROOT` environment variable or the
 
 An existing <span class="opam">opam</span> root is required for <span class="opam">opam</span> to operate normally, and one is
 created upon running `opam init`. The initial configuration can be defined
-through a configuration file at `~/.opamrc`, `/etc/opam` or at a location
+through a configuration file at `~/.opamrc`, `/etc/opamrc` or at a location
 specified through the `--config` command-line option. If none is present, <span class="opam">opam</span>
 defaults to its built-in configuration that binds to the OCaml repository at
 `https://opam.ocaml.org`.
@@ -480,12 +480,15 @@ Some fields define updates to environment variables in the form:
 ```
 
 The allowed update operators `update-op` denote how the string is applied to the
-environment variable:
+environment variable. Prepend and append operators assume list of elements
+separated by an OS-specific character (`;` on Windows, `:` on Cygwin or any
+other system).
 - `=` override (or set if undefined)
-- `+=` prepend (or set if undefined)
-- `=+` append (or set if undefined)
-- `:=` prepend (or set to if undefined) `<string>:`
-- `=:` append (or set to if undefined) `:<string>`
+- `+=` or `:=` prepend. They differ when the variable is unset of empty, where `:=` adds a trailing separator.
+- `=+` or `=:` append. They differ when the variable is unset of empty, where `=:` adds a leading separator.
+- `=+=` is similar to `+=`, except that when the variable was previously altered
+  by opam, the new value will replace the old one at the same position instead
+  of being put in front.
 
 ### URLs
 
@@ -499,18 +502,30 @@ URLs are provided as strings. They can refer to:
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g. `git://`,
   `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in <span class="opam">opam</span> 1.2.1)
 
-> Backwards-compatibility note: to allow unambiguous urls, e.g. for the
-> `dev-repo` field, without triggering a failure on <span class="opam">opam</span> 1.2.0, you should use
-> the compatible syntax `<vc>://<scheme>://`, e.g. `hg://https://` at the
-> moment. This will get rewritten to the nicer `<vc>+<scheme>://` in the next
-> repository format upgrade.
-
 In addition, version control URLs may be suffixed with the `#` character and a
 reference name (branch, commit, HEAD...): `git://foo.com/git/bar#master`,
 `hg+file://foo.com/hg/bar#dev1`
 
 The URLs given for user information (e.g. package homepages and bugtrackers) are
 not concerned and should just load nice in common browsers.
+
+### Checksums
+
+```
+<checksum> ::= (") [ "md5=" | "sha256=" | "sha512=" ] { <hexchar> }+ (")
+<hexchar>  ::= "a".."f" | "A".."F" | "0".."9"
+```
+
+Checksums are specified as strings, in hexadecimal form, and should be prefixed
+by the name of the hashing algorithm (when unspecified, MD5 is assumed, for
+backwards compatibility only).
+
+Additionally, the number of hexadecimal chars must match exactly what is
+expected by the corresponding algorithm (resp. 32, 64 and 128 for MD5, SHA256
+and SHA512).
+
+At the moment, use of SHA256 and SHA512 requires `openssl` to be installed on
+the system.
 
 ## Specific file formats
 
@@ -544,7 +559,7 @@ some specifics of the repository. It has the following optional fields:
 
 This file has a format close to that of [config](#config), and can be used to
 define an initial setup for <span class="opam">opam</span>. When running `opam init`, if `~/.opamrc` or
-`/etc/opam` is present, or if `--config` was specified, the configuration
+`/etc/opamrc` is present, or if `--config` was specified, the configuration
 options from that file will be used, overriding the defaults.
 
 The default, built-in initial config of <span class="opam">opam</span> can be seen with `opam init
@@ -878,13 +893,13 @@ files.
   defines environment updates that will be applied when running the package's
   build, install and remove scripts.
 
-- <a id="opamfield-extra-sources">`extra-sources: [ [ <string> { <string> } string ] ... ]`</a>:
+- <a id="opamfield-extra-sources">`extra-sources: [ [ <URL> { <checksum> } <string> ] ... ]`</a>:
   allows the definition of extra files that need downloading into the source tree
   before the package can be patched (if necessary) and built. The format is
   `[ "URL" { "checksum" } "filename" ]`, where `filename` is the target file,
   relative to the root of the source tree.
 
-- <a id="opamfield-extra-files">`extra-files: [ [ <string> <string> ] ... ]`</a>:
+- <a id="opamfield-extra-files">`extra-files: [ [ <string> <checksum> ] ... ]`</a>:
   optionally lists the files below `files/` with their checksums. Used
   internally for integrity verifications.
 
@@ -921,8 +936,8 @@ It has the following fields:
 
     On the official repository, this should always point to a stable archive
     over HTTP or FTP.
-- <a id="urlfield-checksum">`checksum: <string>`</a>:
-  the MD5 of the referred-to archive, to warrant integrity. Mandatory on the
+- <a id="urlfield-checksum">`checksum: <checksum>`</a>:
+  the checksum of the referred-to archive, to warrant integrity. Mandatory on the
   official repository.
 - <a id="urlfield-mirrors">`mirrors: [ <string> ... ]`</a>:
   an optional list of mirrors. They must use the same protocol as the main URL.
@@ -1022,7 +1037,7 @@ source tree after its installation instructions have been run.
 
 - <a id="dotconfigfield-opam-version">`opam-version: <string>`</a>:
   the file format version.
-- <a id="dotconfigfield-file-depends">`file-depends: [ "[" <string> <string> "]" ... ]`</a>:
+- <a id="dotconfigfield-file-depends">`file-depends: [ "[" <string> <checksum> "]" ... ]`</a>:
   when a package defines `absolute-filename` - `hash` bindings using this field,
   on state-changing operations, <span class="opam">opam</span> will check that the file at the given path
   still exists and has the given hash. This can be used to guarantee the
@@ -1074,7 +1089,8 @@ for <span class="opam">opam</span>.
     - `out` is the expected output file
     - `retry` is the number of retries allowed
     - `compress` is whether HTTP compression should be enabled
-    - `checksum` is the expected checksum of the file
+    - `checksum` is the expected checksum of the file, including the
+      `md5=`/`sha256=`/`sha512=` prefix
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
   depend on the external solver used, see the

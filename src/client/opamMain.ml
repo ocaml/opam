@@ -167,7 +167,7 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let config_file =
     mk_opt ["config"] "FILE"
-      "Use the given init config file (default is ~/.opamrc or /etc/opam, \
+      "Use the given init config file (default is ~/.opamrc or /etc/opamrc, \
        if present)"
       Arg.(some & OpamArg.filename) None
   in
