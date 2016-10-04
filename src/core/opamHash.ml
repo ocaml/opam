@@ -15,6 +15,7 @@ let default_kind = `MD5
 type t = kind * string
 
 let kind = fst
+let contents = snd
 
 let pfx_sep_char = '='
 let pfx_sep_str = String.make 1 pfx_sep_char

@@ -1084,13 +1084,19 @@ for <span class="opam">opam</span>.
   the command to use for downloading packages. If set to a single element, will
   use the `curl` and `wget` presets if set to those idents, and use the named
   executable with a curl-compatible command-line otherwise. Should otherwise be
-  a full command, and in this scope, the following variables are defined:
+  a full command, and in this scope, the following variables (only) are defined:
+    - `opam-version` is the current opam version
     - `url` is the remote URL to fetch from
     - `out` is the expected output file
     - `retry` is the number of retries allowed
     - `compress` is whether HTTP compression should be enabled
     - `checksum` is the expected checksum of the file, including the
       `md5=`/`sha256=`/`sha512=` prefix
+    - `hashalgo` is the hashing algorithm used (`md5`, `sha256` or `sha512`)
+    - `hashvalue` is the raw value of the hash, in hexa, without prefix
+    - `hashpath` is a relative path that can be used for per-hash caching,
+      containing hashing algorithm, two-digit prefix and full hash value, _e.g._
+      `md5/d4/d41d8cd98f00b204e9800998ecf8427e`.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
   depend on the external solver used, see the
