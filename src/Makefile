@@ -129,6 +129,7 @@ SRC_format = \
   opamParserTypes.mli \
   opamParser.mly \
   opamLexer.mll \
+  opamPrinter.ml \
   opamFormatConfig.ml \
   opamLineLexer.mll \
   opamRepositoryName.ml \
@@ -138,7 +139,6 @@ SRC_format = \
   opamFormula.ml \
   opamTypes.mli \
   opamTypesBase.ml \
-  opamPrinter.ml \
   opamPp.ml \
   opamFormat.ml \
   opamFilter.ml \
