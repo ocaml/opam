@@ -308,6 +308,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
     if OpamStd.Sys.(os () = Win32) then () else
+    let files = OpamStd.List.sort_nodup compare files in
     let ics =
       List.map
         (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
