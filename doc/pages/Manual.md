@@ -26,7 +26,7 @@ but this can be changed using the `OPAMROOT` environment variable or the
 
 An existing <span class="opam">opam</span> root is required for <span class="opam">opam</span> to operate normally, and one is
 created upon running `opam init`. The initial configuration can be defined
-through a configuration file at `~/.opamrc`, `/etc/opam` or at a location
+through a configuration file at `~/.opamrc`, `/etc/opamrc` or at a location
 specified through the `--config` command-line option. If none is present, <span class="opam">opam</span>
 defaults to its built-in configuration that binds to the OCaml repository at
 `https://opam.ocaml.org`.
@@ -544,7 +544,7 @@ some specifics of the repository. It has the following optional fields:
 
 This file has a format close to that of [config](#config), and can be used to
 define an initial setup for <span class="opam">opam</span>. When running `opam init`, if `~/.opamrc` or
-`/etc/opam` is present, or if `--config` was specified, the configuration
+`/etc/opamrc` is present, or if `--config` was specified, the configuration
 options from that file will be used, overriding the defaults.
 
 The default, built-in initial config of <span class="opam">opam</span> can be seen with `opam init
