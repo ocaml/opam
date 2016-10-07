@@ -783,8 +783,9 @@ let config =
     "Returns the bindings for the environment variables set in the current \
      switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
      $(i,-v), add comments documenting the reason or package of origin for \
-     eachbinding. This is most usefully used as $(b,eval `opam config env`) to \
-     have further shell commands be evaluated in the proper opam context.";
+     each binding. This is most usefully used as $(b,eval `opam config env`) \
+     to have further shell commands be evaluated in the proper opam context. \
+     Can also be accessed through $(b,opam env).";
     "revert-env", `revert_env, [],
     "Reverts environment changes made by opam, e.g. $(b,eval `opam config \
      revert-env`) undoes what $(b,eval `opam config env`) did.";
@@ -1135,6 +1136,53 @@ let exec =
   in
   Term.(pure exec $global_options $inplace_path $cmd),
   term_info "exec" ~doc ~man
+
+(* ENV *)
+let env_doc = "Executes a command in the proper opam environment"
+let env =
+  let doc = env_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Returns the bindings for the environment variables set in the current \
+        switch, e.g. PATH, in a format intended to be evaluated by a shell. \
+        With $(i,-v), add comments documenting the reason or package of origin \
+        for each binding. This is most usefully used as $(b,eval `opam env`) \
+        to have further shell commands be evaluated in the proper opam \
+        context.";
+    `P "This is a shortcut, and equivalent to $(b,opam config env).";
+  ] in
+  let revert =
+    mk_flag ["revert"]
+      "Output the environment with updates done by opam reverted instead."
+  in
+  let inplace_path_doc=
+    "When updating the PATH variable, replace any \
+     pre-existing OPAM path in-place rather than putting \
+     the new path in front. This means programs installed \
+     in OPAM that were shadowed will remain so after \
+     $(b,opam config env)" in
+  let inplace_path = mk_flag ["inplace-path"] inplace_path_doc in
+  let sexp =
+    mk_flag ["sexp"]
+      "Display environment variables as an s-expression rather than in shell \
+       format"
+  in
+  let env global_options shell sexp inplace_path revert =
+    apply_global_options global_options;
+    match revert with
+    | false ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      if OpamStateConfig.(!r.current_switch) <> None then
+        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+        OpamConfigCommand.env st
+          ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path
+    | true ->
+      OpamConfigCommand.print_eval_env
+        ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
+        (OpamEnv.add [] [])
+  in
+  Term.(pure env $global_options $shell_opt $sexp $inplace_path $revert),
+  term_info "env" ~doc ~man
 
 (* INSTALL *)
 let install_doc = "Install a list of packages."
@@ -2413,9 +2461,7 @@ let commands = [
   remove; make_command_alias remove "uninstall";
   reinstall;
   update; upgrade;
-  config;
-  var;
-  exec;
+  config; var; exec; env;
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
