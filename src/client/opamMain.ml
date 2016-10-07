@@ -1404,67 +1404,61 @@ let repository =
   let doc = repository_doc in
   let scope_section = "SCOPE SPECIFICATION" in
   let commands = [
-    "add", `add, ["NAME"; "ADDRESS"; "[RANK]"],
+    "add", `add, ["NAME"; "[ADDRESS]"],
     "Adds under $(i,NAME) the repository at address $(i,ADDRESS) to the list \
-     of configured repositories , and selects it with the given $(i,RANK) \
-     according to $(b,"^scope_section^").";
+     of configured repositories, if not already registerd, and sets this \
+     repository for use in the current switch (or the specified scope). \
+     $(i,ADDRESS) is required if the repository name is not already \
+     registered, and is otherwise an error if different from the registered \
+     address.";
     "remove", `remove, ["NAME..."],
-    "Removes the repositories registered under $(i,NAME...) from configured \
-     repositories, and unselects them everywhere.";
-    "select", `select, ["NAME"; "[RANK]"],
-    "Selects the given, registered repository to be used with priority \
-     determined by $(i,RANK).";
-    "unselect", `unselect, ["NAME..."],
-    "Unselects the given repositories, so that thet will no longer be used for \
-     looking up package definitions.";
+    "Unselects the given repositories so that they will not be used to get \
+     package definitions anymore. With $(b,--all), makes opam forget about \
+     these repositories completely.";
     "set-repos", `set_repos, ["NAME..."],
     "Explicitely selects the list of repositories to look up package \
-     definitions from, in the specified priority order";
+     definitions from, in the specified priority order (overriding previous \
+     selection and ranks), according to the specified scope.";
     "set-url", `set_url, ["NAME"; "ADDRESS"],
     "Updates the URL associated with a given repository name";
     "list", `list, [],
     "Lists the currently selected repositories in priority order from rank 1. \
      With $(b,--all), lists all configured repositories and the switches where \
      they are active.";
-    "priority", `select, ["NAME"; "RANK"], "A deprecated alias for $(b,select)."
+    "priority", `priority, ["NAME"; "RANK"],
+    "Synonym to $(b,add NAME --rank RANK)";
   ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command is used to manage package repositories. Repositories can \
         be registered through subcommands $(b,add), $(b,remove) and \
-        $(b,set-url), and are updated from their URLs using $(b,opam update).";
-    `P ("The current set of repositories in use can additionally be changed, \
-         using the subcommands $(b,select), $(b,unselect) and $(b,set-repos). \
-         This won't affect existing switches but the current one by default, \
-         see $(b,"^scope_section^") for other options.");
-    `P "When adding or selecting a repository, an optional rank can be \
-        specified, 1 for first being the default. -1 can be used to select the \
-        lowest priority, and so on. Package definitions are looked in the \
-        repositories in increasing rank order. $(b,set-repos) can otherwise be \
-        used to explicitely set the repositories to use and priority order.";
+        $(b,set-url), and are updated from their URLs using $(b,opam update). \
+        Their names are global for all switches, and each switch has its own \
+        selection of repositories where it gets package definitions from.";
+    `P ("Main commands $(b,add), $(b,remove) and $(b,set-repos) act only on \
+         the current switch, unless differently specified using options \
+         explained in $(b,"^scope_section^").");
     `P "Without a subcommand, or with the subcommand $(b,list), lists selected \
         repositories, or all configured repositories with $(b,--all).";
     `S scope_section;
     `P "These flags allow to choose what selections are changed by $(b,add), \
-        $(b,select), $(b,unselect) and $(b,set-repos). If no flag in this \
-        section is specified the updated selections default to \
-        $(b,--this-switch --default), or to the switch selected through \
-        $(b,--switch) if any."
+        $(b,remove), $(b,set-repos). If no flag in this section is specified \
+        the updated selections default to the current switch. Multiple scopes \
+        can be selected, e.g. $(b,--this-switch --set-default)."
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params = mk_subcommands commands in
   let scope =
     let scope_info flags doc = Arg.info ~docs:scope_section ~doc flags in
     let flags =
       Arg.vflag_all [] [
-        `No_selection, scope_info ["no-selection"]
-          "Don't update any selections: use this to override the default e.g. \
-           with $(b,add)";
+        `No_selection, scope_info ["dont-select"]
+          "Don't update any selections";
         `Current_switch, scope_info ["this-switch"]
-          "Act on the selections for the current switch";
-        `Default, scope_info ["default"]
-          "Act on the default repository selection, to be used for newly \
+          "Act on the selections for the current switch (this is the default)";
+        `Default, scope_info ["set-default"]
+          "Act on the default repository selection that is used for newly \
            created switches";
-        `All, scope_info ["all";"a"]
+        `All, scope_info ["all-switches";"a"]
           "Act on the selections of all configured switches";
       ]
     in
@@ -1477,27 +1471,32 @@ let repository =
       Term.(pure (List.map (fun s -> `Switch (OpamSwitch.of_string s)))
             $ Arg.value switches)
     in
-    Term.(pure List.append $ Arg.value flags $ switches)
+    Term.(pure (fun l1 l2 -> match l1@l2 with [] -> [`Current_switch] | l -> l)
+          $ Arg.value flags $ switches)
   in
-  let repository global_options command kind short scope0 params =
+  let rank =
+    Arg.(value & opt int 1 & info ~docv:"RANK" ["rank"] ~doc:
+           "Set the rank of the repository in the list of configured \
+            repositories. Package definitions are looked in the repositories \
+            in increasing rank order, therefore 1 is the highest priority. \
+            Negative ints can be used to select from the lowest priority, -1 \
+            being last. $(b,set-repos) can otherwise be used to explicitely \
+            set the repository list at once.")
+  in
+  let repository global_options command kind short scope rank params =
     apply_global_options global_options;
-    let scope = match scope0, (fst global_options).opt_switch with
-      | [], Some _ -> [`Current_switch]
-      | [], None -> [`Default; `Current_switch]
-      | scope, _ -> scope
-    in
     let global = List.mem `Default scope in
-    let prio = function
-      | [] -> 1
-      | _::(_::_ as l) ->
-        OpamConsole.error_and_exit "Extra arguments %s" (String.concat " " l)
-      | [i] ->
-        try int_of_string i with Failure _ ->
-          OpamConsole.error_and_exit "Invalid rank specification %s" i
+    let command, rank = match command, params, rank with
+      | Some `priority, [rank], 1 ->
+        (try Some `add, int_of_string rank
+         with Failure _ ->
+           OpamConsole.error_and_exit "Invalid rank specification %S" rank)
+      | Some `priority, [], rank -> Some `add, rank
+      | command, _, rank -> command, rank
     in
-    let update_repos new_repo prio repos =
+    let update_repos new_repo repos =
       let rank =
-        if prio < 0 then List.length repos + prio + 1 else prio - 1
+        if rank < 0 then List.length repos + rank + 1 else rank - 1
       in
       OpamStd.List.insert_at rank new_repo
         (List.filter (( <> ) new_repo ) repos)
@@ -1518,24 +1517,28 @@ let repository =
           | `Default | `No_selection -> acc
           | `All -> all_switches
           | `Switch sw ->
-            if not (OpamSwitch.Set.mem sw all) then
+            if not (OpamSwitch.Set.mem sw all) &&
+               not (OpamSwitch.is_external sw)
+            then
               OpamConsole.error_and_exit "No switch %s found"
                 (OpamSwitch.to_string sw)
             else if List.mem sw acc then acc
             else acc @ [sw]
           | `Current_switch ->
             match OpamStateConfig.(!r.current_switch) with
-            | None -> acc
+            | None ->
+              OpamConsole.warning "No switch is currently set, maybe you meant \
+                                   '--set-default' ?";
+              acc
             | Some sw ->
               if List.mem sw acc then acc
               else acc @ [sw])
         [] scope
     in
     match command, params with
-    | Some `add, (name :: url :: params) ->
+    | Some `add, [name; url] ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
-      let prio = prio params in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url in
           let _rt =
@@ -1543,39 +1546,36 @@ let repository =
           in ());
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name prio)
+          (update_repos name)
       in
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
       let rm = List.filter (fun n -> not (List.mem n names)) in
+      let full_wipe = List.mem `All scope in
+      let global = global || full_wipe in
       let gt =
         OpamRepositoryCommand.update_selection gt
-          ~global:true ~switches:all_switches rm
+          ~global ~switches:switches rm
       in
-      OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
-      check_for_repos rt names
-        (OpamConsole.warning
-           "No configured repositories by these names found: %s");
-      let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
-      `Ok ()
-    | Some `select, name :: params ->
+      if full_wipe then
+        OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+        check_for_repos rt names
+          (OpamConsole.warning
+             "No configured repositories by these names found: %s");
+        let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
+        `Ok ()
+      else
+        `Ok ()
+    | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
-      let priority = prio params in
       OpamRepositoryState.with_ `Lock_none gt (fun rt ->
           check_for_repos rt [name]
             (OpamConsole.error_and_exit
-               "No configured repository '%s' found"));
+               "No configured repository '%s' found, you must specify an URL"));
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name priority)
-      in
-      `Ok ()
-    | Some `unselect, names ->
-      let names = List.map OpamRepositoryName.of_string names in
-      let rm = List.filter (fun n -> not (List.mem n names)) in
-      let _gt =
-        OpamRepositoryCommand.update_selection gt ~global ~switches rm
+          (update_repos name)
       in
       `Ok ()
     | Some `set_url, [name; url] ->
@@ -1590,18 +1590,18 @@ let repository =
       `Ok ()
     | (None | Some `list), [] ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      if List.mem `All scope0 then
+      if List.mem `All scope then
         OpamRepositoryCommand.list_all rt ~short;
-      let global = List.mem `Default scope0 in
+      let global = List.mem `Default scope in
       let switches =
-        if scope0 = [] ||
+        if scope = [] ||
            List.exists (function `Current_switch | `Switch _ -> true
                                | _ -> false)
-             scope0
+             scope
         then switches
         else []
       in
-      if not short && scope0 = [] then
+      if not short && scope = [] then
         OpamConsole.note
           "Use '--all' to see all configured repositories independently of \
            what is selected in the current switch";
@@ -1611,7 +1611,7 @@ let repository =
   in
   Term.ret
     Term.(pure repository $global_options $command $repo_kind_flag
-          $print_short_flag $scope $params),
+          $print_short_flag $scope $rank $params),
   term_info "repository" ~doc ~man
 
 (* SWITCH *)
