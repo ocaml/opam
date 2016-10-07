@@ -808,7 +808,8 @@ let config =
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
     "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
-     be accessed with the syntax $(i,pkg:var).";
+     be accessed with the syntax $(i,pkg:var). Can also be accessed through \
+     $(b,opam var)";
     "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. With \
      $(i,PACKAGE), lists all the variables available for these packages. Use \
@@ -1074,20 +1075,32 @@ let var =
   let varname =
     Arg.(value & pos 0 (some string) None & info ~docv:"VAR" [])
   in
-  let print_var global_options var =
+  let package =
+    Arg.(value & opt (some package_name) None &
+         info ~docv:"PACKAGE" ["package"]
+           ~doc:"List all variables defined for the given package")
+  in
+  let print_var global_options package var =
     apply_global_options global_options;
-    match var with
-    | None ->
+    match var, package with
+    | None, None ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.list gt [])
        with Failure msg -> `Error (false, msg))
-    | Some v ->
+    | None, Some pkg ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (try `Ok (OpamConfigCommand.list gt [pkg])
+       with Failure msg -> `Error (false, msg))
+    | Some v, None ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.variable gt (OpamVariable.Full.of_string v))
        with Failure msg -> `Error (false, msg))
+    | Some _, Some _ ->
+      `Error (true, "--package can't be specified with a var argument, use \
+                     'pkg:var' instead.")
   in
   Term.ret (
-    Term.(pure print_var $global_options $varname)
+    Term.(pure print_var $global_options $package $varname)
   ),
   term_info "var" ~doc ~man
 
