@@ -805,7 +805,7 @@ let config =
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
-     $(i,COMMAND)'s environment.";
+     $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
     "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
      be accessed with the syntax $(i,pkg:var).";
@@ -1090,6 +1090,38 @@ let var =
     Term.(pure print_var $global_options $varname)
   ),
   term_info "var" ~doc ~man
+
+(* EXEC *)
+let exec_doc = "Executes a command in the proper opam environment"
+let exec =
+  let doc = exec_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Execute $(i,COMMAND) with the correct environment variables. This \
+        command can be used to cross-compile between switches using $(b,opam \
+        config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion \
+        takes place in command and args. If no switch is present on the \
+        command line or in the $(i,OPAMSWITCH) environment variable, \
+        $(i,OPAMSWITCH) is not set in $(i,COMMAND)'s environment.";
+    `P "This is a shortcut, and equivalent to $(b,opam config exec).";
+  ] in
+  let cmd =
+    Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
+  in
+  let inplace_path_doc=
+    "When updating the PATH variable, replace any \
+     pre-existing OPAM path in-place rather than putting \
+     the new path in front. This means programs installed \
+     in OPAM that were shadowed will remain so after \
+     $(b,opam config env)" in
+  let inplace_path    = mk_flag ["inplace-path"] inplace_path_doc in
+  let exec global_options inplace_path cmd =
+    apply_global_options global_options;
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamConfigCommand.exec gt ~inplace_path cmd
+  in
+  Term.(pure exec $global_options $inplace_path $cmd),
+  term_info "exec" ~doc ~man
 
 (* INSTALL *)
 let install_doc = "Install a list of packages."
@@ -2370,6 +2402,7 @@ let commands = [
   update; upgrade;
   config;
   var;
+  exec;
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
