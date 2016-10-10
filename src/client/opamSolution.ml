@@ -11,6 +11,7 @@
 
 let log fmt = OpamConsole.log "SOLUTION" fmt
 
+open OpamCompat
 open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
@@ -66,7 +67,7 @@ let check_solution ?(quiet=false) st = function
   | No_solution ->
     OpamConsole.msg "No solution found, exiting\n";
     OpamStd.Sys.exit 3
-  | Error (success, failed, _remaining) ->
+  | Partial_error (success, failed, _remaining) ->
     List.iter (post_message st) success;
     List.iter (post_message ~failed:true st) failed;
     OpamEnv.check_and_print_env_warning st;
@@ -123,9 +124,9 @@ let check_availability ?permissive t set atoms =
      OpamStd.Sys.exit 66)
 
 let fuzzy_name t name =
-  let lname = String.lowercase (OpamPackage.Name.to_string name) in
+  let lname = String.lowercase_ascii (OpamPackage.Name.to_string name) in
   let match_name nv =
-    lname = String.lowercase (OpamPackage.name_to_string nv)
+    lname = String.lowercase_ascii (OpamPackage.name_to_string nv)
   in
   let matches =
     OpamPackage.Set.union
@@ -583,12 +584,12 @@ let parallel_apply t action ~requested action_graph =
       if failure = [] && aborted = [] then `Successful ()
       else (
         List.iter display_error failure;
-        `Error (Error (success, List.map fst failure, aborted))
+        `Error (Partial_error (success, List.map fst failure, aborted))
       )
     with
     | PackageActionGraph.Parallel.Errors (success, errors, remaining) ->
       List.iter display_error errors;
-      `Error (Error (success, List.map fst errors, remaining))
+      `Error (Partial_error (success, List.map fst errors, remaining))
     | e -> `Exception e
   in
   let t = !t_ref in
@@ -636,7 +637,7 @@ let parallel_apply t action ~requested action_graph =
   | `Error err ->
     match err with
     | Aborted -> t, err
-    | Error (successful, failed, remaining) ->
+    | Partial_error (successful, failed, remaining) ->
       (* Cleanup build/install actions when one of them failed, it's verbose and
          doesn't add information *)
       let successful =

@@ -8,17 +8,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(** Compatibility layer (Bytes, etc.) for different OCaml versions *)
+
 module Bytes = Bytes
 module Buffer = Buffer
 module Filename = Filename
-
-module String = struct
-  include String
-  let lowercase_ascii = lowercase
-  let capitalize_ascii = capitalize
-end
-
-module Char = struct
-  include Char
-  let lowercase_ascii = lowercase
-end
+module String = String
+module Char = Char

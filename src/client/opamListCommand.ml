@@ -9,6 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
@@ -307,7 +308,7 @@ let disp_header = function
   | Package -> "Package"
   | Synopsis | Synopsis_or_target -> "Synopsis"
   | Description -> "Description"
-  | Field s -> String.capitalize s
+  | Field s -> String.capitalize_ascii s
   | Installed_version -> "Installed"
   | Pinning_target -> "Pin"
   | Raw -> "Metadata"

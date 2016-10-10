@@ -88,10 +88,14 @@ state/opamScript.ml: ../shell core/opamVersion.ml
 	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
 	ocaml ../shell/crunch.ml "prompt"       < ../shell/opam_prompt.sh >> $@
 
-ifeq ($(OCAML_4_02),true)
-  COMPATV = 4.02
+ifeq ($(OCAML_4_03),true)
+  COMPATV = 4.03
 else
-  COMPATV = 4.01
+  ifeq ($(OCAML_4_02),true)
+    COMPATV = 4.02
+  else
+    COMPATV = 4.01
+  endif
 endif
 
 core/opamCompat.%: core/opamCompat.%.$(COMPATV)

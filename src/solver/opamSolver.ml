@@ -369,7 +369,7 @@ let resolve ?(verbose=true) universe ~orphans request =
       try
         let resp = OpamCudf.resolve ~extern:true ~version_map u req in
         OpamCudf.to_actions add_orphan_packages u resp
-      with Failure "opamSolver" ->
+      with OpamCudf.Solver_failure ->
         OpamConsole.error_and_exit
           "External solver failure, please fix your installation and check \
            $OPAMROOT/config and variable $OPAMEXTERNALSOLVER.\n\

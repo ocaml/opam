@@ -262,7 +262,7 @@ let confirm ?(default=true) fmt =
       else if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
         let rec loop () =
           prompt ();
-          match String.lowercase (read_line ()) with
+          match String.lowercase_ascii (read_line ()) with
           | "y" | "yes" -> true
           | "n" | "no" -> false
           | "" -> default
@@ -276,7 +276,7 @@ let confirm ?(default=true) fmt =
         let ans =
           try
             if read stdin buf 0 1 = 0 then raise End_of_file
-            else Some (Char.lowercase (Bytes.get buf 0))
+            else Some (Char.lowercase_ascii (Bytes.get buf 0))
           with
           | Unix.Unix_error (Unix.EINTR,_,_) -> None
           | Unix.Unix_error _ -> raise End_of_file

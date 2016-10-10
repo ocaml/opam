@@ -84,6 +84,7 @@ let string_of_action = Action.to_string
 let string_of_actions l =
   OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
 
+exception Solver_failure
 exception Cyclic_actions of Action.t list list
 
 type conflict_case =
@@ -599,7 +600,7 @@ let call_external_solver ~version_map univ req =
       OpamStd.Exn.fatal e;
       OpamConsole.warning "External solver failed:";
       OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-      failwith "opamSolver"
+      raise Solver_failure
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
@@ -613,7 +614,7 @@ let check_request ?(explain=true) ~version_map univ req =
     let f = dump_cudf_error ~version_map univ req in
     OpamConsole.error "Internal solver failed with %s Request saved to %S"
       msg f;
-    failwith "opamSolver"
+    raise Solver_failure
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
     conflict_empty ~version_map univ
 
@@ -623,7 +624,7 @@ let get_final_universe ~version_map univ req =
     let f = dump_cudf_error ~version_map univ req in
     OpamConsole.warning "External solver failed with %s Request saved to %S"
       msg f;
-    failwith "opamSolver" in
+    raise Solver_failure in
   match call_external_solver ~version_map univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->

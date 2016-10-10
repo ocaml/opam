@@ -254,7 +254,7 @@ type solver_result =
   | OK of package action list (** List of successful actions *)
   | Aborted
   | No_solution
-  | Error of package action list * package action list * package action list
+  | Partial_error of package action list * package action list * package action list
   (** List of successful actions, list of actions with errors,
       list of remaining undone actions *)
 

@@ -101,6 +101,8 @@ val atomic_actions:
 val compute_root_causes: ActionGraph.t -> OpamPackage.Name.Set.t ->
   Cudf.package cause Map.t
 
+exception Solver_failure
+
 (** Resolve a CUDF request. The result is either a conflict holding
     an explanation of the error, or a resulting universe.
     [~extern] specifies whether the external solver should be used *)

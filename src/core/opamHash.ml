@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 type kind = [ `MD5 | `SHA256 | `SHA512 ]
 
 let default_kind = `MD5
@@ -25,7 +27,7 @@ let string_of_kind = function
   | `SHA256 -> "sha256"
   | `SHA512 -> "sha512"
 
-let kind_of_string s = match String.lowercase s with
+let kind_of_string s = match String.lowercase_ascii s with
   | "md5" -> `MD5
   | "sha256" -> `SHA256
   | "sha512" -> `SHA512
@@ -42,7 +44,7 @@ let len = function
 let valid kind = is_hex_str (len kind)
 
 let make kind s =
-  if valid kind s then kind, String.lowercase s
+  if valid kind s then kind, String.lowercase_ascii s
   else invalid_arg ("OpamHash.make_"^string_of_kind kind)
 
 let md5 = make `MD5
@@ -56,7 +58,7 @@ let of_string_opt s =
       | None -> `MD5, s
       | Some (skind, s) -> kind_of_string skind, s
     in
-    if valid kind s then Some (kind, String.lowercase s)
+    if valid kind s then Some (kind, String.lowercase_ascii s)
     else None
   with Invalid_argument _ -> None
 

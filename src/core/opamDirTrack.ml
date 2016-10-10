@@ -8,6 +8,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
 open OpamStd.Op
 open OpamProcess.Job.Op
 
@@ -40,7 +41,7 @@ let string_of_change = function
 let to_string t =
   OpamStd.Format.itemize (fun (f, change) ->
       Printf.sprintf "%s of %s"
-        (String.capitalize (string_of_change change)) f)
+        (String.capitalize_ascii (string_of_change change)) f)
     (SM.bindings t)
 
 (** uid, gid, perm *)
