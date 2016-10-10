@@ -720,6 +720,6 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
         output_table all_versions_fields choose;
         OpamConsole.header_msg "Version-specific details";
         output_table one_version_fields choose
-      | [f] -> OpamConsole.msg "%s" (detail_printer ?normalise st choose f)
+      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st choose f)
       | fields -> output_table fields choose
     )

@@ -324,7 +324,7 @@ let switch lock gt switch =
     OpamConsole.error_and_exit
       "No switch %s is currently installed. Did you mean \
        'opam switch create %s' ?\n\
-       Installed switches are: %s"
+       Installed switches are:\n%s"
       (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
