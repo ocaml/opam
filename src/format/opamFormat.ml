@@ -388,7 +388,7 @@ module V = struct
   let ext_version =
     pp ~name:"version-expr"
       (fun ~pos:_ -> function
-         | String (_,s) -> FString s
+         | String (_,s) -> FString OpamPackage.Version.(to_string (of_string s))
          | Ident (_,s) -> FIdent (filter_ident_of_string s)
          | _ -> unexpected ())
       (function
