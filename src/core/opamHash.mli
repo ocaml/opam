@@ -15,6 +15,11 @@ type t
 
 val kind: t -> kind
 
+(** The value of the hash, as a string of hexadecimal characters *)
+val contents: t -> string
+
+val string_of_kind: kind -> string
+
 val md5: string -> t
 val sha256: string -> t
 val sha512: string -> t

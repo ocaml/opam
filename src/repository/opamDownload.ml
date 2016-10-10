@@ -23,7 +23,7 @@ let curl_args = [
   CString "--retry", None; CIdent "retry", None;
   CString "--retry-delay", None; CString "2", None;
   CString "--compressed",
-  Some (FIdent (OpamFilter.ident_of_string "compressed"));
+  Some (FIdent (OpamFilter.ident_of_string "compress"));
   CString "--user-agent", Some user_agent;
   CString "-L", None;
   CString "-o", None; CIdent "out", None;
@@ -55,8 +55,18 @@ let download_args ~url ~out ~retry ?checksum ~compress =
       | "out" -> Some (S out)
       | "retry" -> Some (S (string_of_int retry))
       | "compress" -> Some (B compress)
+      | "opam-version" -> Some (S OpamVersion.(to_string current))
       | "checksum" ->
-        OpamStd.Option.map (fun c -> S (OpamHash.to_string c)) checksum
+        OpamStd.Option.map (fun c -> S OpamHash.(to_string c)) checksum
+      | "hashalgo" ->
+        OpamStd.Option.map (fun c -> S OpamHash.(string_of_kind (kind c)))
+          checksum
+      | "hashpath" ->
+        OpamStd.Option.map
+          (fun c -> S (String.concat Filename.dir_sep OpamHash.(to_path c)))
+          checksum
+      | "hashvalue" ->
+        OpamStd.Option.map (fun c -> S OpamHash.(contents c)) checksum
       | _ -> None)
     cmd
 
