@@ -783,8 +783,9 @@ let config =
     "Returns the bindings for the environment variables set in the current \
      switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
      $(i,-v), add comments documenting the reason or package of origin for \
-     eachbinding. This is most usefully used as $(b,eval `opam config env`) to \
-     have further shell commands be evaluated in the proper opam context.";
+     each binding. This is most usefully used as $(b,eval `opam config env`) \
+     to have further shell commands be evaluated in the proper opam context. \
+     Can also be accessed through $(b,opam env).";
     "revert-env", `revert_env, [],
     "Reverts environment changes made by opam, e.g. $(b,eval `opam config \
      revert-env`) undoes what $(b,eval `opam config env`) did.";
@@ -805,10 +806,11 @@ let config =
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
-     $(i,COMMAND)'s environment.";
+     $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
     "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR). Package variables can \
-     be accessed with the syntax $(i,pkg:var).";
+     be accessed with the syntax $(i,pkg:var). Can also be accessed through \
+     $(b,opam var)";
     "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. With \
      $(i,PACKAGE), lists all the variables available for these packages. Use \
@@ -1074,22 +1076,113 @@ let var =
   let varname =
     Arg.(value & pos 0 (some string) None & info ~docv:"VAR" [])
   in
-  let print_var global_options var =
+  let package =
+    Arg.(value & opt (some package_name) None &
+         info ~docv:"PACKAGE" ["package"]
+           ~doc:"List all variables defined for the given package")
+  in
+  let print_var global_options package var =
     apply_global_options global_options;
-    match var with
-    | None ->
+    match var, package with
+    | None, None ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.list gt [])
        with Failure msg -> `Error (false, msg))
-    | Some v ->
+    | None, Some pkg ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (try `Ok (OpamConfigCommand.list gt [pkg])
+       with Failure msg -> `Error (false, msg))
+    | Some v, None ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.variable gt (OpamVariable.Full.of_string v))
        with Failure msg -> `Error (false, msg))
+    | Some _, Some _ ->
+      `Error (true, "--package can't be specified with a var argument, use \
+                     'pkg:var' instead.")
   in
   Term.ret (
-    Term.(pure print_var $global_options $varname)
+    Term.(pure print_var $global_options $package $varname)
   ),
   term_info "var" ~doc ~man
+
+(* EXEC *)
+let exec_doc = "Executes a command in the proper opam environment"
+let exec =
+  let doc = exec_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Execute $(i,COMMAND) with the correct environment variables. This \
+        command can be used to cross-compile between switches using $(b,opam \
+        config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion \
+        takes place in command and args. If no switch is present on the \
+        command line or in the $(i,OPAMSWITCH) environment variable, \
+        $(i,OPAMSWITCH) is not set in $(i,COMMAND)'s environment.";
+    `P "This is a shortcut, and equivalent to $(b,opam config exec).";
+  ] in
+  let cmd =
+    Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
+  in
+  let inplace_path_doc=
+    "When updating the PATH variable, replace any \
+     pre-existing OPAM path in-place rather than putting \
+     the new path in front. This means programs installed \
+     in OPAM that were shadowed will remain so after \
+     $(b,opam config env)" in
+  let inplace_path    = mk_flag ["inplace-path"] inplace_path_doc in
+  let exec global_options inplace_path cmd =
+    apply_global_options global_options;
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamConfigCommand.exec gt ~inplace_path cmd
+  in
+  Term.(pure exec $global_options $inplace_path $cmd),
+  term_info "exec" ~doc ~man
+
+(* ENV *)
+let env_doc = "Executes a command in the proper opam environment"
+let env =
+  let doc = env_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Returns the bindings for the environment variables set in the current \
+        switch, e.g. PATH, in a format intended to be evaluated by a shell. \
+        With $(i,-v), add comments documenting the reason or package of origin \
+        for each binding. This is most usefully used as $(b,eval `opam env`) \
+        to have further shell commands be evaluated in the proper opam \
+        context.";
+    `P "This is a shortcut, and equivalent to $(b,opam config env).";
+  ] in
+  let revert =
+    mk_flag ["revert"]
+      "Output the environment with updates done by opam reverted instead."
+  in
+  let inplace_path_doc=
+    "When updating the PATH variable, replace any \
+     pre-existing OPAM path in-place rather than putting \
+     the new path in front. This means programs installed \
+     in OPAM that were shadowed will remain so after \
+     $(b,opam config env)" in
+  let inplace_path = mk_flag ["inplace-path"] inplace_path_doc in
+  let sexp =
+    mk_flag ["sexp"]
+      "Display environment variables as an s-expression rather than in shell \
+       format"
+  in
+  let env global_options shell sexp inplace_path revert =
+    apply_global_options global_options;
+    match revert with
+    | false ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      if OpamStateConfig.(!r.current_switch) <> None then
+        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+        OpamConfigCommand.env st
+          ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path
+    | true ->
+      OpamConfigCommand.print_eval_env
+        ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
+        (OpamEnv.add [] [])
+  in
+  Term.(pure env $global_options $shell_opt $sexp $inplace_path $revert),
+  term_info "env" ~doc ~man
 
 (* INSTALL *)
 let install_doc = "Install a list of packages."
@@ -1311,67 +1404,61 @@ let repository =
   let doc = repository_doc in
   let scope_section = "SCOPE SPECIFICATION" in
   let commands = [
-    "add", `add, ["NAME"; "ADDRESS"; "[RANK]"],
+    "add", `add, ["NAME"; "[ADDRESS]"],
     "Adds under $(i,NAME) the repository at address $(i,ADDRESS) to the list \
-     of configured repositories , and selects it with the given $(i,RANK) \
-     according to $(b,"^scope_section^").";
+     of configured repositories, if not already registerd, and sets this \
+     repository for use in the current switch (or the specified scope). \
+     $(i,ADDRESS) is required if the repository name is not already \
+     registered, and is otherwise an error if different from the registered \
+     address.";
     "remove", `remove, ["NAME..."],
-    "Removes the repositories registered under $(i,NAME...) from configured \
-     repositories, and unselects them everywhere.";
-    "select", `select, ["NAME"; "[RANK]"],
-    "Selects the given, registered repository to be used with priority \
-     determined by $(i,RANK).";
-    "unselect", `unselect, ["NAME..."],
-    "Unselects the given repositories, so that thet will no longer be used for \
-     looking up package definitions.";
+    "Unselects the given repositories so that they will not be used to get \
+     package definitions anymore. With $(b,--all), makes opam forget about \
+     these repositories completely.";
     "set-repos", `set_repos, ["NAME..."],
     "Explicitely selects the list of repositories to look up package \
-     definitions from, in the specified priority order";
+     definitions from, in the specified priority order (overriding previous \
+     selection and ranks), according to the specified scope.";
     "set-url", `set_url, ["NAME"; "ADDRESS"],
     "Updates the URL associated with a given repository name";
     "list", `list, [],
     "Lists the currently selected repositories in priority order from rank 1. \
      With $(b,--all), lists all configured repositories and the switches where \
      they are active.";
-    "priority", `select, ["NAME"; "RANK"], "A deprecated alias for $(b,select)."
+    "priority", `priority, ["NAME"; "RANK"],
+    "Synonym to $(b,add NAME --rank RANK)";
   ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command is used to manage package repositories. Repositories can \
         be registered through subcommands $(b,add), $(b,remove) and \
-        $(b,set-url), and are updated from their URLs using $(b,opam update).";
-    `P ("The current set of repositories in use can additionally be changed, \
-         using the subcommands $(b,select), $(b,unselect) and $(b,set-repos). \
-         This won't affect existing switches but the current one by default, \
-         see $(b,"^scope_section^") for other options.");
-    `P "When adding or selecting a repository, an optional rank can be \
-        specified, 1 for first being the default. -1 can be used to select the \
-        lowest priority, and so on. Package definitions are looked in the \
-        repositories in increasing rank order. $(b,set-repos) can otherwise be \
-        used to explicitely set the repositories to use and priority order.";
+        $(b,set-url), and are updated from their URLs using $(b,opam update). \
+        Their names are global for all switches, and each switch has its own \
+        selection of repositories where it gets package definitions from.";
+    `P ("Main commands $(b,add), $(b,remove) and $(b,set-repos) act only on \
+         the current switch, unless differently specified using options \
+         explained in $(b,"^scope_section^").");
     `P "Without a subcommand, or with the subcommand $(b,list), lists selected \
         repositories, or all configured repositories with $(b,--all).";
     `S scope_section;
     `P "These flags allow to choose what selections are changed by $(b,add), \
-        $(b,select), $(b,unselect) and $(b,set-repos). If no flag in this \
-        section is specified the updated selections default to \
-        $(b,--this-switch --default), or to the switch selected through \
-        $(b,--switch) if any."
+        $(b,remove), $(b,set-repos). If no flag in this section is specified \
+        the updated selections default to the current switch. Multiple scopes \
+        can be selected, e.g. $(b,--this-switch --set-default)."
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params = mk_subcommands commands in
   let scope =
     let scope_info flags doc = Arg.info ~docs:scope_section ~doc flags in
     let flags =
       Arg.vflag_all [] [
-        `No_selection, scope_info ["no-selection"]
-          "Don't update any selections: use this to override the default e.g. \
-           with $(b,add)";
+        `No_selection, scope_info ["dont-select"]
+          "Don't update any selections";
         `Current_switch, scope_info ["this-switch"]
-          "Act on the selections for the current switch";
-        `Default, scope_info ["default"]
-          "Act on the default repository selection, to be used for newly \
+          "Act on the selections for the current switch (this is the default)";
+        `Default, scope_info ["set-default"]
+          "Act on the default repository selection that is used for newly \
            created switches";
-        `All, scope_info ["all";"a"]
+        `All, scope_info ["all-switches";"a"]
           "Act on the selections of all configured switches";
       ]
     in
@@ -1384,27 +1471,32 @@ let repository =
       Term.(pure (List.map (fun s -> `Switch (OpamSwitch.of_string s)))
             $ Arg.value switches)
     in
-    Term.(pure List.append $ Arg.value flags $ switches)
+    Term.(pure (fun l1 l2 -> match l1@l2 with [] -> [`Current_switch] | l -> l)
+          $ Arg.value flags $ switches)
   in
-  let repository global_options command kind short scope0 params =
+  let rank =
+    Arg.(value & opt int 1 & info ~docv:"RANK" ["rank"] ~doc:
+           "Set the rank of the repository in the list of configured \
+            repositories. Package definitions are looked in the repositories \
+            in increasing rank order, therefore 1 is the highest priority. \
+            Negative ints can be used to select from the lowest priority, -1 \
+            being last. $(b,set-repos) can otherwise be used to explicitely \
+            set the repository list at once.")
+  in
+  let repository global_options command kind short scope rank params =
     apply_global_options global_options;
-    let scope = match scope0, (fst global_options).opt_switch with
-      | [], Some _ -> [`Current_switch]
-      | [], None -> [`Default; `Current_switch]
-      | scope, _ -> scope
-    in
     let global = List.mem `Default scope in
-    let prio = function
-      | [] -> 1
-      | _::(_::_ as l) ->
-        OpamConsole.error_and_exit "Extra arguments %s" (String.concat " " l)
-      | [i] ->
-        try int_of_string i with Failure _ ->
-          OpamConsole.error_and_exit "Invalid rank specification %s" i
+    let command, rank = match command, params, rank with
+      | Some `priority, [rank], 1 ->
+        (try Some `add, int_of_string rank
+         with Failure _ ->
+           OpamConsole.error_and_exit "Invalid rank specification %S" rank)
+      | Some `priority, [], rank -> Some `add, rank
+      | command, _, rank -> command, rank
     in
-    let update_repos new_repo prio repos =
+    let update_repos new_repo repos =
       let rank =
-        if prio < 0 then List.length repos + prio + 1 else prio - 1
+        if rank < 0 then List.length repos + rank + 1 else rank - 1
       in
       OpamStd.List.insert_at rank new_repo
         (List.filter (( <> ) new_repo ) repos)
@@ -1425,24 +1517,28 @@ let repository =
           | `Default | `No_selection -> acc
           | `All -> all_switches
           | `Switch sw ->
-            if not (OpamSwitch.Set.mem sw all) then
+            if not (OpamSwitch.Set.mem sw all) &&
+               not (OpamSwitch.is_external sw)
+            then
               OpamConsole.error_and_exit "No switch %s found"
                 (OpamSwitch.to_string sw)
             else if List.mem sw acc then acc
             else acc @ [sw]
           | `Current_switch ->
             match OpamStateConfig.(!r.current_switch) with
-            | None -> acc
+            | None ->
+              OpamConsole.warning "No switch is currently set, maybe you meant \
+                                   '--set-default' ?";
+              acc
             | Some sw ->
               if List.mem sw acc then acc
               else acc @ [sw])
         [] scope
     in
     match command, params with
-    | Some `add, (name :: url :: params) ->
+    | Some `add, [name; url] ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
-      let prio = prio params in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url in
           let _rt =
@@ -1450,39 +1546,36 @@ let repository =
           in ());
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name prio)
+          (update_repos name)
       in
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
       let rm = List.filter (fun n -> not (List.mem n names)) in
+      let full_wipe = List.mem `All scope in
+      let global = global || full_wipe in
       let gt =
         OpamRepositoryCommand.update_selection gt
-          ~global:true ~switches:all_switches rm
+          ~global ~switches:switches rm
       in
-      OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
-      check_for_repos rt names
-        (OpamConsole.warning
-           "No configured repositories by these names found: %s");
-      let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
-      `Ok ()
-    | Some `select, name :: params ->
+      if full_wipe then
+        OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+        check_for_repos rt names
+          (OpamConsole.warning
+             "No configured repositories by these names found: %s");
+        let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
+        `Ok ()
+      else
+        `Ok ()
+    | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
-      let priority = prio params in
       OpamRepositoryState.with_ `Lock_none gt (fun rt ->
           check_for_repos rt [name]
             (OpamConsole.error_and_exit
-               "No configured repository '%s' found"));
+               "No configured repository '%s' found, you must specify an URL"));
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name priority)
-      in
-      `Ok ()
-    | Some `unselect, names ->
-      let names = List.map OpamRepositoryName.of_string names in
-      let rm = List.filter (fun n -> not (List.mem n names)) in
-      let _gt =
-        OpamRepositoryCommand.update_selection gt ~global ~switches rm
+          (update_repos name)
       in
       `Ok ()
     | Some `set_url, [name; url] ->
@@ -1497,18 +1590,18 @@ let repository =
       `Ok ()
     | (None | Some `list), [] ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      if List.mem `All scope0 then
+      if List.mem `All scope then
         OpamRepositoryCommand.list_all rt ~short;
-      let global = List.mem `Default scope0 in
+      let global = List.mem `Default scope in
       let switches =
-        if scope0 = [] ||
+        if scope = [] ||
            List.exists (function `Current_switch | `Switch _ -> true
                                | _ -> false)
-             scope0
+             scope
         then switches
         else []
       in
-      if not short && scope0 = [] then
+      if not short && scope = [] then
         OpamConsole.note
           "Use '--all' to see all configured repositories independently of \
            what is selected in the current switch";
@@ -1518,7 +1611,7 @@ let repository =
   in
   Term.ret
     Term.(pure repository $global_options $command $repo_kind_flag
-          $print_short_flag $scope $params),
+          $print_short_flag $scope $rank $params),
   term_info "repository" ~doc ~man
 
 (* SWITCH *)
@@ -2368,8 +2461,7 @@ let commands = [
   remove; make_command_alias remove "uninstall";
   reinstall;
   update; upgrade;
-  config;
-  var;
+  config; var; exec; env;
   repository; make_command_alias repository "remote";
   switch;
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
