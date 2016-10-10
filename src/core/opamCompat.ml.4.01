@@ -19,6 +19,17 @@ module Bytes = struct
   external unsafe_of_string : string -> t = "%identity"
 end
 
+module String = struct
+  include String
+  let lowercase_ascii = lowercase
+  let capitalize_ascii = capitalize
+end
+
+module Char = struct
+  include Char
+  let lowercase_ascii = lowercase
+end
+
 module Buffer = struct
   include Buffer
   let add_subbytes = add_substring

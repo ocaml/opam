@@ -9,6 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
 open OpamStd.Op
 
 let log fmt = OpamConsole.log "PACKAGE" fmt
@@ -66,7 +67,7 @@ module Name = struct
     x
 
   let compare n1 n2 =
-    match compare (String.lowercase n1) (String.lowercase n2) with
+    match compare (String.lowercase_ascii n1) (String.lowercase_ascii n2) with
     | 0 -> compare n1 n2
     | i -> i
 

@@ -1048,7 +1048,7 @@ module Config = struct
       None
 
   let env_bool var =
-    env (fun s -> match String.lowercase s with
+    env (fun s -> match String.lowercase_ascii s with
         | "" | "0" | "no" | "false" -> false
         | "1" | "yes" | "true" -> true
         | _ -> failwith "env_bool")
@@ -1057,7 +1057,7 @@ module Config = struct
   let env_int var = env int_of_string var
 
   let env_level var =
-    env (fun s -> match String.lowercase s with
+    env (fun s -> match String.lowercase_ascii s with
         | "" | "no" | "false" -> 0
         | "yes" | "true" -> 1
         | s -> int_of_string s)
@@ -1070,7 +1070,7 @@ module Config = struct
     env float_of_string var
 
   let when_ext s =
-    match String.lowercase s with
+    match String.lowercase_ascii s with
     | "extended" -> `Extended
     | "always" -> `Always
     | "never" -> `Never

@@ -21,6 +21,17 @@ module Bytes : sig
   external unsafe_of_string : string -> t = "%identity"
 end
 
+module String : sig
+  include module type of String
+  val lowercase_ascii : string -> string
+  val capitalize_ascii : string -> string
+end
+
+module Char : sig
+  include module type of Char
+  val lowercase_ascii: char -> char
+end
+
 module Buffer : sig
   include module type of Buffer with type t = Buffer.t
   val add_subbytes : t -> Bytes.t -> int -> int -> unit

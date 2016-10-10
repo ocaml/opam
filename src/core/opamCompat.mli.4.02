@@ -13,3 +13,15 @@
 module Bytes = Bytes
 module Buffer = Buffer
 module Filename = Filename
+
+module String : sig
+  include module type of String
+  val lowercase_ascii : string -> string
+  val capitalize_ascii : string -> string
+end
+
+module Char : sig
+  include module type of Char
+  val lowercase_ascii: char -> char
+end
+
