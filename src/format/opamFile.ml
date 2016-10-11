@@ -27,6 +27,22 @@ module Pp = struct
   include OpamPp
   module V = OpamFormat.V
   module I = OpamFormat.I
+
+  let warn ?pos ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
+    if strict then
+      match exn with
+      | Some e -> raise e
+      | None -> bad_format ?pos fmt
+    else
+      Printf.ksprintf (fun s ->
+          if OpamConsole.verbose () then
+            match exn with
+            | None ->
+              OpamConsole.warning "%s"
+                (OpamPp.string_of_bad_format (Bad_format (pos, s)))
+            | Some e ->
+              OpamConsole.warning "%s" (OpamPp.string_of_bad_format e))
+        fmt
 end
 
 open Pp.Op
@@ -1118,8 +1134,8 @@ module ConfigSyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields ~name fields -|
-    Pp.I.fields ~name ~empty fields
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ~strict:true ()
 
 end
 module Config = struct
@@ -1249,8 +1265,8 @@ module InitConfigSyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields ~strict:true ~name fields -|
-    Pp.I.fields ~strict:true ~name ~empty fields
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ~strict:true ()
 
   let add t1 t2 =
     let opt = function None -> fun o -> o | some -> fun _ -> some in
@@ -1305,8 +1321,8 @@ module Repos_configSyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields ~name fields -|
-    Pp.I.fields ~name ~empty fields
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ()
 
 end
 module Repos_config = struct
@@ -1378,8 +1394,8 @@ module Switch_configSyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields ~name ~sections fields -|
-    Pp.I.fields ~name ~empty ~sections fields
+    Pp.I.fields ~name ~empty ~sections fields -|
+    Pp.I.show_errors ~name ()
 
   let variable t s =
     try Some (List.assoc s t.variables)
@@ -1445,10 +1461,11 @@ module SwitchSelectionsSyntax = struct
   ]
 
   let pp =
+    let name = "switch-state" in
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name:"switch-state" fields -|
-    Pp.I.fields ~name:"switch-state" ~empty fields
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ()
 
 end
 
@@ -1461,7 +1478,7 @@ end
 
 module Repo_config_legacySyntax = struct
 
-  let internal = "repo-config"
+  let internal = "repo-file"
 
   type t = repository
 
@@ -1503,14 +1520,9 @@ module Repo_config_legacySyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields fields -|
-    Pp.I.fields ~name:"repo-file" ~empty fields -|
-    Pp.check ~name (fun r -> r.repo_root <> empty.repo_root)
-      ~errmsg:"missing 'root:'" -|
-    Pp.check ~name (fun r -> r.repo_url <> OpamUrl.empty)
-      ~errmsg:"missing 'address:'" -|
-    Pp.check ~name (fun r -> r.repo_name <> empty.repo_name)
-      ~errmsg:"missing 'name:'"
+    Pp.I.fields ~name ~empty ~mandatory_fields:["root";"address";"name"]
+      fields -|
+    Pp.I.show_errors ~name ~strict:true ()
 
 end
 module Repo_config_legacy = struct
@@ -1564,6 +1576,7 @@ module Dot_configSyntax = struct
              (Pp.V.string -| Pp.of_module "path" (module OpamFilename))
              (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)))
       ]
+    -| Pp.I.show_errors ~name:internal ()
 
   (* Files with the variables at toplevel and no other fields are allowed for
      backwards-compat, when opam-version is unset or too old *)
@@ -1652,8 +1665,8 @@ module RepoSyntax = struct
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.check_fields ~name fields -|
-    Pp.I.fields ~name ~empty fields
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ()
 
 end
 module Repo = struct
@@ -1672,17 +1685,19 @@ module URLSyntax = struct
     url     : url;
     mirrors : url list;
     checksum: OpamHash.t option;
+    errors  : (string * Pp.bad_format) list;
   }
 
   let create ?(mirrors=[]) url =
     {
-      url; mirrors; checksum = None;
+      url; mirrors; checksum = None; errors = [];
     }
 
   let empty = {
     url     = OpamUrl.empty;
     mirrors = [];
     checksum= None;
+    errors  = [];
   }
 
   let url t = t.url
@@ -1721,8 +1736,8 @@ module URLSyntax = struct
 
   let pp_contents =
     let name = internal in
-    Pp.I.check_fields ~name fields -|
     Pp.I.fields ~name ~empty fields -|
+    Pp.I.on_errors ~name (fun t e -> {t with errors = e::t.errors}) -|
     Pp.check ~name (fun t -> t.url <> OpamUrl.empty) ~errmsg:"missing URL"
 
   let pp = Pp.I.map_file pp_contents
@@ -1801,6 +1816,8 @@ module OPAMSyntax = struct
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
+    (* Stores any file errors for printing them later *)
+    format_errors: (string * Pp.bad_format) list;
 
     (* Deprecated, for compat and proper linting *)
     ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
@@ -1853,6 +1870,8 @@ module OPAMSyntax = struct
 
     metadata_dir = None;
     extra_files = None;
+
+    format_errors = [];
 
     ocaml_version = None;
     os         = Empty;
@@ -2351,21 +2370,20 @@ module OPAMSyntax = struct
     Pp.pp parse (fun x -> x)
 
   (* Doesn't handle package name encoded in directory name *)
-  let pp_raw_fields ~strict =
+  let pp_raw_fields =
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name:"opam-file" ~allow_extensions:true ~strict
-      ~sections fields -|
     Pp.I.partition_fields is_ext_field -| Pp.map_pair
       (Pp.I.items -|
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
-      (Pp.I.fields ~name:"opam-file" ~empty ~sections ~strict fields -|
+      (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
+       Pp.I.on_errors (fun t e -> {t with format_errors=e::t.format_errors}) -|
        handle_flags_in_tags -|
        handle_deprecated_available) -|
     Pp.pp
       (fun ~pos:_ (extensions, t) -> with_extensions extensions t)
       (fun t -> extensions t, t)
 
-  let pp_raw = Pp.I.map_file @@ pp_raw_fields ~strict:false
+  let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
   let pp =
     pp_raw -|
@@ -2526,6 +2544,8 @@ module OPAM = struct
       metadata_dir = empty.metadata_dir;
       extra_files = OpamStd.Option.Op.(t.extra_files ++ Some []);
 
+      format_errors = empty.format_errors;
+
       ocaml_version = empty.ocaml_version;
       os         = empty.os;
     }
@@ -2546,6 +2566,26 @@ module OPAM = struct
       +! []
     )
 
+  let print_errors ?file o =
+    if o.format_errors <> [] then
+      OpamConsole.error "In the opam file%s:\n%s\
+                         %s %s been %s."
+        (match o.name, o.version, file, o.metadata_dir with
+         | Some n, Some v, _, _ ->
+           Printf.sprintf " for %s"
+             (OpamPackage.to_string (OpamPackage.create n v))
+         | _, _, Some f, _ ->
+           Printf.sprintf " at %s" (to_string f)
+         | _, _, _, Some dir ->
+           Printf.sprintf " in %s" (OpamFilename.Dir.to_string dir)
+         | _ -> "")
+        (OpamStd.Format.itemize
+           (fun (_, bf) -> Pp.string_of_bad_format (OpamPp.Bad_format bf))
+           o.format_errors)
+        (OpamStd.List.concat_map ", " (fun (f,_) -> Printf.sprintf "'%s'" f)
+           o.format_errors)
+        (match o.format_errors with [_] -> "has" | _ -> "have")
+        (OpamConsole.colorise `bold "ignored")
 end
 
 
@@ -2692,8 +2732,8 @@ module Dot_installSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~optional:true () -|
-    Pp.I.check_fields ~name fields -|
     Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name () -|
     Pp.check ~errmsg:"man file without destination or recognised suffix"
       (fun t ->
          List.for_all (function
@@ -2758,8 +2798,8 @@ module ChangesSyntax = struct
   ]
 
   let pp_contents =
-    Pp.I.check_fields ~name:internal fields -|
-    Pp.I.fields ~name:internal ~empty fields
+    Pp.I.fields ~name:internal ~empty fields -|
+    Pp.I.show_errors ~name:internal ()
 
   let pp = Pp.I.map_file pp_contents
 end
@@ -2786,6 +2826,7 @@ module SwitchExportSyntax = struct
   let fields = SwitchSelectionsSyntax.fields
 
   let pp =
+    let name = "export-file" in
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
     Pp.I.partition (function
@@ -2793,15 +2834,15 @@ module SwitchExportSyntax = struct
           false
         | _ -> true) -|
     Pp.map_pair
-      (Pp.I.check_fields ~name:"export-file" fields -|
-       Pp.I.fields ~name:"export-file"
-         ~empty:SwitchSelectionsSyntax.empty fields)
+      (Pp.I.fields ~name
+         ~empty:SwitchSelectionsSyntax.empty fields -|
+       Pp.I.show_errors ~name ())
       (Pp.map_list
          (Pp.I.section "package" -|
           Pp.map_pair
             (Pp.map_option
                (Pp.of_module "package-name" (module OpamPackage.Name)))
-            (OPAMSyntax.pp_raw_fields ~strict:false) -|
+            OPAMSyntax.pp_raw_fields -|
           Pp.pp
             (fun ~pos:_ (name, opam) ->
                match name with
@@ -2966,8 +3007,8 @@ module CompSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
-    Pp.I.check_fields ~name fields -|
     Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name () -|
     Pp.check ~errmsg:"fields 'build:' and 'configure:'+'make:' are mutually \
                       exclusive "
       (fun t -> t.build = [] || t.configure = [] && t.make = [])

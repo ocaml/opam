@@ -704,6 +704,7 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
           OpamPackage.Set.max_elt nvs
       in
       let opam = get_opam st choose in
+      OpamFile.OPAM.print_errors opam;
       if where then
         OpamConsole.msg "%s\n"
           (match OpamFile.OPAM.metadata_dir opam with

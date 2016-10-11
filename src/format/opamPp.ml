@@ -70,22 +70,6 @@ let of_pair name (simple_parse, print) =
 exception Unexpected of pos option
 let unexpected ?pos () = raise (Unexpected pos)
 
-let warn ?pos ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
-  if strict then
-    match exn with
-    | Some e -> raise e
-    | None -> bad_format ?pos fmt
-  else
-    Printf.ksprintf (fun s ->
-        if OpamConsole.verbose () then
-          match exn with
-          | None ->
-            OpamConsole.warning "%s"
-              (string_of_bad_format (Bad_format (pos, s)))
-          | Some e ->
-            OpamConsole.warning "%s" (string_of_bad_format e))
-      fmt
-
 (** Basic pp usage *)
 
 let parse pp ~pos x = try pp.parse ~pos x with

@@ -738,6 +738,7 @@ let show =
         | Some f -> OpamFile.OPAM.read (OpamFile.make f)
         | None -> OpamFile.OPAM.read_from_channel stdin
       in
+      OpamFile.OPAM.print_errors opam;
       if where then
         (OpamConsole.msg "%s\n"
            (match f with Some f -> OpamFilename.(Dir.to_string (dirname f))

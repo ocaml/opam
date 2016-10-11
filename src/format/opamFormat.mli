@@ -173,14 +173,34 @@ sig
 
   type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
-  (** Parses an item list into a record using a fields_def *)
+  (** Parses an item list into a record using a fields_def; errors in a field
+      cause the field to be ignored, and are aggregated into the returned
+      [field, bad_format] list. Errors are ignored when printing back. *)
   val fields :
     ?name:string ->
-    ?strict:bool ->
     empty:'a ->
     ?sections:(('a, opamfile_item list) fields_def) ->
+    ?mandatory_fields:string list ->
     ('a, value) fields_def ->
-    (opamfile_item list, 'a) t
+    (opamfile_item list, 'a * (string * bad_format) list) t
+
+  (** Intended to be piped after [fields]. If the errors list is non-empty, this
+      raises [Bad_format_list] if [strict], and otherwise prints warnings for
+      all the errors. The errors are then dropped when parsing, and initialised
+      to empty when printing. [strict] is taken from the global
+      settings if unspecified. *)
+  val show_errors :
+    ?name:string ->
+    ?strict:bool ->
+    unit ->
+    ('a * (string * bad_format) list, 'a) t
+
+  (** Intended to be piped after [fields], this processes the given function on
+      the errors, then drops them when parsing. When printing, just sets empty
+      errors. *)
+  val on_errors :
+    ?name:string -> ('a -> string * bad_format -> 'a) ->
+    ('a * (string * bad_format) list, 'a) t
 
   (** Partitions a file's items into the ones that are known but not defined
       in the file, the ones that are defined, and the ones that are in the
@@ -194,16 +214,6 @@ sig
     (opamfile_item list,
      ('a, value) fields_def * ('a, opamfile_item list) fields_def *
      opamfile_item list * opamfile_item list) t
-
-  (** Filters out any unrecognised items from the file during parsing, warning
-      in debug and failing in strict mode in case of mismatches *)
-  val check_fields :
-    ?name:string ->
-    ?allow_extensions:bool ->
-    ?strict:bool ->
-    ?sections:(('a, opamfile_item list) fields_def) ->
-    ('a, value) fields_def ->
-    (opamfile_item list, opamfile_item list) t
 
   (** Partitions items in an opamfile base on a condition on the variable
       names *)

@@ -292,6 +292,7 @@ module OPAM: sig
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
+    format_errors: (string * OpamPp.bad_format) list;
 
     (* Deprecated, for compat and proper linting *)
     ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
@@ -317,6 +318,9 @@ module OPAM: sig
   (** Compares two package definitions, ignoring the virtual fields bound to
       file location ([metadata_dir]...) *)
   val equal: t -> t -> bool
+
+  (** Prints the format errors that were found when the file was read *)
+  val print_errors: ?file:t typed_file -> t -> unit
 
   (** Get OPAM version. *)
   val opam_version: t -> opam_version
@@ -568,7 +572,7 @@ module OPAM: sig
   val sections: (t, opamfile_item list) OpamFormat.I.fields_def
 
   (** Doesn't handle package name encoded in directory name *)
-  val pp_raw_fields: strict:bool -> (opamfile_item list, t) OpamPp.t
+  val pp_raw_fields: (opamfile_item list, t) OpamPp.t
 
   (** Returns the raw print-AST contents of the file *)
   val contents: ?filename:'a typed_file -> t -> opamfile

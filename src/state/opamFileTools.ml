@@ -400,7 +400,6 @@ let lint t =
   OpamStd.List.filter_map (fun x -> x) warnings
 
 let lint_gen reader filename =
-  let open OpamFile.OPAM in
   let warnings, t =
     try
       let f = reader filename in
@@ -432,9 +431,20 @@ let lint_gen reader filename =
             msg
         in
         try
-          Some (OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
-                  (pp_raw_fields ~strict:true) good_items),
-          warnings
+          let opam =
+            OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
+              pp_raw_fields good_items
+          in
+          Some opam,
+          List.map (fun (_, (pos, msg)) ->
+              2, `Error, Printf.sprintf "File format error%s: %s"
+                (match pos with
+                 | Some (_,li,col) when li >= 0 && col >= 0 ->
+                   Printf.sprintf " at line %d, column %d" li col
+                 | _ -> "")
+                msg)
+            opam.format_errors
+          @ warnings
         with
         | OpamPp.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
         | OpamPp.Bad_format_list bfl ->
