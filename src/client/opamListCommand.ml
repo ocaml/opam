@@ -121,7 +121,9 @@ let string_of_formula =
 
 let get_opam st nv =
   match OpamSwitchState.opam_opt st nv with
-  | Some o -> o
+  | Some o ->
+    OpamFile.OPAM.(with_name nv.OpamPackage.name
+                     (with_version nv.OpamPackage.version o))
   | None -> OpamFile.OPAM.create nv
 
 let packages_of_atoms st atoms =
