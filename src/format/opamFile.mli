@@ -454,6 +454,10 @@ module OPAM: sig
       the package source, and hash. Doesn't check the hashes. *)
   val get_extra_files: t -> (filename * basename * OpamHash.t) list
 
+  (** Returns the errors that were found when parsing the file, associated to
+      their fields (that were consequently ignored) *)
+  val format_errors: t -> (string * OpamPp.bad_format) list
+
   (** Sets the opam version *)
   val with_opam_version: opam_version -> t -> t
 
@@ -550,6 +554,8 @@ module OPAM: sig
 
   val with_extra_files: (OpamFilename.Base.t * OpamHash.t) list -> t -> t
   val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.t) list option -> t -> t
+
+  val with_format_errors: (string * OpamPp.bad_format) list -> t -> t
 
   (** Prints to a string, while keeping the format of the original file as much
       as possible *)

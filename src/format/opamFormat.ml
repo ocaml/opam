@@ -651,13 +651,13 @@ module I = struct
       () =
     let parse ~pos:(file,_,_) (t, errs) =
       if errs = [] then t
-      else if strict then raise (Bad_format_list (List.map snd errs))
+      else if strict then raise (Bad_format_list (List.rev_map snd errs))
       else
         (OpamConsole.warning "Errors in %s, some fields have been ignored:\n%s"
            file
            (OpamStd.Format.itemize
               (fun e -> OpamPp.string_of_bad_format (Bad_format e))
-              (List.map snd errs));
+              (List.rev_map snd errs));
          t)
     in
     let print t = t, [] in

@@ -1962,6 +1962,8 @@ module OPAMSyntax = struct
     | Some (_, text) -> Some text
   let get_url t = match url t with Some u -> Some (URL.url u) | None -> None
 
+  let format_errors t = t.format_errors
+
   let metadata_dir t = t.metadata_dir
   let extra_files t = t.extra_files
 
@@ -2023,8 +2025,20 @@ module OPAMSyntax = struct
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
 
-  let with_url url t = { t with url = Some url }
-  let with_url_opt url t = { t with url }
+  let with_url url t =
+    let format_errors =
+      List.map (fun (name,bf) -> "url."^name, bf) url.URL.errors
+    in
+    { t with url = Some url;
+             format_errors = format_errors @ t.format_errors }
+  let with_url_opt url t =
+    let format_errors = match url with
+      | None -> []
+      | Some u -> List.map (fun (name,bf) -> "url."^name, bf) u.URL.errors
+    in
+    { t with url;
+             format_errors = format_errors @ t.format_errors }
+
   let with_descr descr t = { t with descr = Some descr }
   let with_descr_opt descr t = { t with descr }
   let with_synopsis synopsis t =
@@ -2037,6 +2051,8 @@ module OPAMSyntax = struct
   let with_metadata_dir metadata_dir t = { t with metadata_dir }
   let with_extra_files extra_files t = { t with extra_files = Some extra_files }
   let with_extra_files_opt extra_files t = { t with extra_files }
+
+  let with_format_errors format_errors t = { t with format_errors }
 
   let with_ocaml_version ocaml_version t =
     { t with ocaml_version = Some ocaml_version }

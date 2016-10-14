@@ -527,25 +527,24 @@ open OpamStd.Option.Op
 
 
 let try_read rd f =
-  try rd f with
+  try rd f, None with
   | (OpamSystem.Internal_error _ | Not_found) as exc ->
-    (if OpamFormatConfig.(!r.strict) then
-       OpamConsole.error_and_exit
-         "Could not read file %s: %s.\nAborting (strict mode)."
-     else
-       OpamConsole.warning
-         "Could not read file %s: %s. Skipping.")
-      (OpamFile.to_string f) (Printexc.to_string exc);
-    None
-  | OpamPp.Bad_format _ as exc ->
-    (if OpamFormatConfig.(!r.strict) then
-       OpamConsole.error_and_exit
-         "Errors while parsing %s: %s.\nAborting (strict mode)."
-     else
-       OpamConsole.warning
-         "Errors while parsing  %s: %s. Skipping.")
-      (OpamFile.to_string f) (Printexc.to_string exc);
-    None
+    if OpamFormatConfig.(!r.strict) then
+      OpamConsole.error_and_exit
+        "Could not read file %s: %s.\nAborting (strict mode)."
+        (OpamFile.to_string f) (Printexc.to_string exc);
+    None,
+    let f = OpamFile.filename f in
+    Some (OpamFilename.(Base.to_string (basename f)),
+          (Some (pos_file f), Printexc.to_string exc))
+  | OpamPp.Bad_format bf as exc ->
+    if OpamFormatConfig.(!r.strict) then
+      OpamConsole.error_and_exit
+        "Errors while parsing %s: %s.\nAborting (strict mode)."
+        (OpamFile.to_string f) (Printexc.to_string exc);
+    None,
+    let f = OpamFile.filename f in
+    Some (OpamFilename.(Base.to_string (basename f)), bf)
 
 let add_aux_files ?dir opam =
   let dir = match dir with
@@ -566,23 +565,27 @@ let add_aux_files ?dir opam =
     in
     let opam =
       match try_read OpamFile.URL.read_opt url_file with
-      | Some url ->
+      | Some url, None ->
         if OpamFile.OPAM.url opam <> None then
           log "Overriding url of %s through external url file at %s"
             (OpamPackage.to_string (OpamFile.OPAM.package opam))
             (OpamFilename.Dir.to_string dir);
         OpamFile.OPAM.with_url url opam
-      | None -> opam
+      | _, Some err ->
+        OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
+      | None, None -> opam
     in
     let opam =
       match try_read OpamFile.Descr.read_opt descr_file with
-      | Some descr ->
+      | Some descr, None ->
         if OpamFile.OPAM.descr opam <> None then
-          log "Overriding descr of %s through external descr fileat %s"
+          log "Overriding descr of %s through external descr file at %s"
             (OpamPackage.to_string (OpamFile.OPAM.package opam))
             (OpamFilename.Dir.to_string dir);
         OpamFile.OPAM.with_descr descr opam
-      | None -> opam
+      | _, Some err ->
+        OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
+      | None, None  -> opam
     in
     let extra_files =
       OpamFilename.opt_dir files_dir >>| fun dir ->
@@ -614,5 +617,12 @@ let read_opam dir =
   let (opam_file: OpamFile.OPAM.t OpamFile.t) =
     OpamFile.make (dir // "opam")
   in
-  try_read OpamFile.OPAM.read_opt opam_file >>| fun opam ->
-  add_aux_files ~dir opam
+  match try_read OpamFile.OPAM.read_opt opam_file with
+  | Some opam, None -> Some (add_aux_files ~dir opam)
+  | _, Some err ->
+    OpamConsole.warning
+      "Could not read file %s. skipping:\n%s"
+      (OpamFile.to_string opam_file)
+      (OpamPp.string_of_bad_format (OpamPp.Bad_format (snd err)));
+    None
+  | None, None -> None

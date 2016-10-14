@@ -384,6 +384,7 @@ let do_upgrade () =
   OpamPackage.Map.iter (fun package prefix ->
       let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam0 = OpamFile.OPAM.read opam_file in
+      OpamFile.OPAM.print_errors ~file:opam_file opam0;
       let nv = OpamFile.OPAM.package opam0 in
       if not (List.mem nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
