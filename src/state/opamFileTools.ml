@@ -179,6 +179,18 @@ let template nv =
   |> with_synopsis ""
 
 let lint t =
+  let format_errors =
+    List.map (fun (field, (pos, msg)) ->
+        3, `Error,
+        Printf.sprintf "File format error in '%s'%s: %s"
+          field
+          (match pos with
+           | Some (_,li,col) when li >= 0 && col >= 0 ->
+             Printf.sprintf " at line %d, column %d" li col
+           | _ -> "")
+          msg)
+      (OpamFile.OPAM.format_errors t)
+  in
   let cond num level msg ?detail cd =
     if cd then
       let msg = match detail with
@@ -397,66 +409,32 @@ let lint t =
         t.extra_sources <> []))
   ]
   in
+  format_errors @
   OpamStd.List.filter_map (fun x -> x) warnings
 
 let lint_gen reader filename =
   let warnings, t =
+    let warn_of_bad_format (pos, msg) =
+      2, `Error, Printf.sprintf "File format error%s: %s"
+        (match pos with
+         | Some (_,li,col) when li >= 0 && col >= 0 ->
+           Printf.sprintf " at line %d, column %d" li col
+         | _ -> "")
+        msg
+    in
     try
       let f = reader filename in
-      let _, _, good_items, invalid_items =
+
+      let _, t =
         OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
-          (OpamFormat.I.good_fields ~name:"opam-file" ~allow_extensions:true
-             ~sections fields)
-          f.file_contents
+          (OpamFormat.I.map_file OpamFile.OPAM.pp_raw_fields) f
       in
       let warnings =
-        List.map (function
-            | Section (pos, s) ->
-              3, `Error,
-              Printf.sprintf "Invalid or duplicate section: '%s' at %s"
-                s.section_kind (string_of_pos pos)
-            | Variable (pos, f, _) ->
-              3, `Error,
-              Printf.sprintf "Invalid or duplicate field: '%s:' at %s"
-                f (string_of_pos pos))
-          invalid_items
-      in
-      let t, warnings =
-        let warn_of_bad_format (pos, msg) =
-          2, `Error, Printf.sprintf "File format error%s: %s"
-            (match pos with
-             | Some (_,li,col) when li >= 0 && col >= 0 ->
-               Printf.sprintf " at line %d, column %d" li col
-             | _ -> "")
-            msg
-        in
-        try
-          let opam =
-            OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
-              pp_raw_fields good_items
-          in
-          Some opam,
-          List.map (fun (_, (pos, msg)) ->
-              2, `Error, Printf.sprintf "File format error%s: %s"
-                (match pos with
-                 | Some (_,li,col) when li >= 0 && col >= 0 ->
-                   Printf.sprintf " at line %d, column %d" li col
-                 | _ -> "")
-                msg)
-            opam.format_errors
-          @ warnings
-        with
-        | OpamPp.Bad_format bf -> None, warnings @ [warn_of_bad_format bf]
-        | OpamPp.Bad_format_list bfl ->
-          None, warnings @ List.map warn_of_bad_format bfl
-      in
-      let warnings =
-        match OpamPackage.of_filename (OpamFile.filename filename), t with
-        | None, _ | _, None -> warnings
-        | Some nv, Some t ->
+        match OpamPackage.of_filename (OpamFile.filename filename) with
+        | None -> []
+        | Some nv ->
           let name = nv.OpamPackage.name in
           let version = nv.OpamPackage.version in
-          warnings @
           (match t.OpamFile.OPAM.name with
            | Some tname when tname <> name ->
              [ 4, `Warning,
@@ -476,13 +454,15 @@ let lint_gen reader filename =
                  (OpamPackage.Version.to_string version) ]
            | _ -> [])
       in
-      warnings, t
+      warnings, Some t
     with
     | OpamSystem.File_not_found _ ->
       OpamConsole.error "%s not found" (OpamFile.to_string filename);
       [0, `Error, "File does not exist"], None
     | OpamLexer.Error _ | Parsing.Parse_error ->
       [1, `Error, "File does not parse"], None
+    | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
+    | OpamPp.Bad_format_list bfl -> List.map warn_of_bad_format bfl, None
   in
   warnings @ (match t with Some t -> lint t | None -> []),
   t
