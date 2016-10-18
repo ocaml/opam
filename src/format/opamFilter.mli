@@ -50,8 +50,9 @@ val variables: filter -> full_variable list
 type env = full_variable -> variable_contents option
 
 (** The type of filter idents with (optionally multiple) qualifying package
-    names and optional string converter *)
-type fident = name list * variable * (string * string) option
+    names and optional string converter. Package name [None] encodes the
+    self-reference [_] *)
+type fident = name option list * variable * (string * string) option
 
 (** Maps on all variables appearing in a filter. The case where package
     variables are renamed differently and appear in a filter ident of the form

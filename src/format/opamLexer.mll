@@ -79,11 +79,14 @@ let buffer_rule r lb =
 }
 
 let space  = [' ' '\t' '\r']
-let alpha  = ['a'-'z' 'A'-'Z' '_']
+
+let alpha  = ['a'-'z' 'A'-'Z']
 let digit  = ['0'-'9']
-let char   = ['-' '_' '+']
-let achar  = (alpha | digit | char)
-let ident  = (alpha achar* (':' achar+)?)
+
+let ichar  = alpha | digit | ['_' '-']
+let id     = ichar* alpha ichar*
+let ident  = (id | '_') ('+' (id | '_'))* (':' id)?
+
 let relop  = ('!'? '=' | [ '<' '>' ] '='?)
 let pfxop  = '!'
 let envop_char = [ '+' ':' ]

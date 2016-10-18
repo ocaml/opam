@@ -109,7 +109,7 @@ module V : sig
 
   val filter_ident :
     (value,
-     name list * variable *
+     name option list * variable *
      (string * string) option)
       t
 
@@ -136,6 +136,9 @@ module V : sig
   (** Package versions as filters, as they may appear in dependency (may be an
       expanded string or an ident) *)
   val ext_version: (value, filter) t
+
+  (** A package name, encoded as a string, but with restrictions *)
+  val pkgname: (value, name) t
 
   (** Returns an atom parser [("package" {>= "version"})] from a constraint
       and a version parser*)

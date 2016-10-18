@@ -396,10 +396,11 @@ module V = struct
         | FIdent id -> Ident (pos_null, string_of_filter_ident id)
         | _ -> assert false)
 
+  let pkgname =
+    string -| of_module "pkg-name" (module OpamPackage.Name)
+
   let package_atom constraints =
-    map_option
-      (string -| of_module "pkg-name" (module OpamPackage.Name))
-      constraints
+    map_option pkgname constraints
 
   let package_formula kind constraints =
     let split, join = match kind with

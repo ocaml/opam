@@ -2171,7 +2171,7 @@ module OPAMSyntax = struct
       "opam-version", no_cleanup Pp.ppacc with_opam_version opam_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "name", with_cleanup cleanup_name Pp.ppacc_opt with_name name_opt
-        (Pp.V.string -| Pp.of_module "name" (module OpamPackage.Name));
+        Pp.V.pkgname;
       "version", with_cleanup cleanup_version
         Pp.ppacc_opt with_version version_opt
         (Pp.V.string_tr -| Pp.of_module "version" (module OpamPackage.Version));
