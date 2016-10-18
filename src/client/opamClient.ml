@@ -1057,16 +1057,16 @@ let slog = OpamConsole.slog
         (OpamConsole.msg "\n"; post_pin_action st name)
       else st
 
-    let edit st ?(action=true) name =
+    let edit st ?(action=true) ?version name =
       let st =
         if OpamPackage.has_name st.pinned name then
-          edit st name
+          edit st ?version name
         else if
           OpamConsole.confirm
             "Package %s is not pinned. Edit as a new pinning ?"
             (OpamPackage.Name.to_string name)
         then
-          source_pin st name ~edit:true None
+          source_pin st name ~edit:true ?version None
         else
           OpamConsole.error_and_exit "Aborted"
       in

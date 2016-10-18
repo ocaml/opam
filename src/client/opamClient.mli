@@ -67,7 +67,8 @@ module PIN: sig
     rw switch_state
 
   val edit:
-    rw switch_state -> ?action:bool -> OpamPackage.Name.t -> rw switch_state
+    rw switch_state -> ?action:bool -> ?version:version -> OpamPackage.Name.t ->
+    rw switch_state
 
   val unpin:
     rw switch_state ->

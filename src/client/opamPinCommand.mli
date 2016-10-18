@@ -34,9 +34,10 @@ val source_pin:
   rw switch_state -> name -> ?version:version -> ?edit:bool -> ?force:bool ->
   url option -> rw switch_state
 
-(** Let the user edit a pinned package's opam file.
-    Writes and returns the updated switch state. *)
-val edit: rw switch_state -> name -> rw switch_state
+(** Let the user edit a pinned package's opam file. If given, the version is put
+    into the template in advance. Writes and returns the updated switch
+    state. *)
+val edit: rw switch_state -> ?version:version -> name -> rw switch_state
 
 (** Unpin packages *)
 val unpin: rw switch_state -> name list -> rw switch_state
