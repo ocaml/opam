@@ -32,6 +32,9 @@ val stats: solution -> stats
 (** Return the new packages in the solution *)
 val new_packages: solution -> package_set
 
+(** Return all packages appearing in the solution *)
+val all_packages: solution -> package_set
+
 (** Pretty-printing of statistics *)
 val string_of_stats: stats -> string
 

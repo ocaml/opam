@@ -1078,7 +1078,7 @@ for <span class="opam">opam</span>.
   the currently globally selected switch.
 - <a id="configfield-jobs">`jobs: <int>`</a>:
   the number of concurrent jobs to run for build processes.
-- <a id="configfield-download_jobs">`download_jobs: <int>`</a>:
+- <a id="configfield-download-jobs">`download-jobs: <int>`</a>:
   the maximum number of concurrent downloads.
 - <a id="configfield-download-command">`download-command: [ ( <string> | <ident> ) { <filter> } ... ]`</a>:
   the command to use for downloading packages. If set to a single element, will

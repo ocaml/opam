@@ -57,5 +57,5 @@ let () =
         else
           OpamConsole.msg "\r\027[KIn %s:\n%s\n"
             (OpamPackage.to_string nv)
-            (OpamFile.OPAM.warns_to_string w))
+            (OpamFileTools.warns_to_string w))
     (OpamRepository.packages_with_prefixes repo)

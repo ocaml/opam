@@ -461,6 +461,13 @@ let new_packages sol =
       | `Reinstall _ | `Remove _ | `Build _ -> packages
   ) sol OpamPackage.Set.empty
 
+let all_packages sol =
+  OpamCudf.ActionGraph.fold_vertex (fun action packages ->
+      List.fold_left
+        (fun packages p -> OpamPackage.Set.add (OpamCudf.cudf2opam p) packages)
+        packages (full_action_contents action))
+    sol OpamPackage.Set.empty
+
 let stats sol =
   OpamCudf.ActionGraph.fold_vertex (fun action stats ->
       match action with

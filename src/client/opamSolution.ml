@@ -784,6 +784,9 @@ let apply ?ask t action ~requested solution =
                         OpamStateConfig.(!r.external_tags) = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
+    OpamPackage.Set.iter
+      (fun p -> OpamFile.OPAM.print_errors (OpamSwitchState.opam new_state p))
+      (OpamSolver.all_packages solution);
     if show_solution then (
       OpamConsole.msg
         "The following actions %s be %s:\n"

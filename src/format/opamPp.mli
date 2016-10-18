@@ -73,11 +73,6 @@ val print : ('a, 'b) t -> 'b -> 'a
 (** Raises an exception handled by parser calls *)
 val unexpected : ?pos:pos -> unit -> 'a
 
-(** Warns in debug, fails with strict_mode or when [strict] is set to true *)
-val warn :
-  ?pos:pos -> ?strict:bool -> ?exn:exn ->
-  ('a, unit, string, unit) format4 -> 'a
-
 (** {3 Various pp constructors} *)
 
 module Op : sig

@@ -121,7 +121,9 @@ let string_of_formula =
 
 let get_opam st nv =
   match OpamSwitchState.opam_opt st nv with
-  | Some o -> o
+  | Some o ->
+    OpamFile.OPAM.(with_name nv.OpamPackage.name
+                     (with_version nv.OpamPackage.version o))
   | None -> OpamFile.OPAM.create nv
 
 let packages_of_atoms st atoms =
@@ -704,6 +706,7 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
           OpamPackage.Set.max_elt nvs
       in
       let opam = get_opam st choose in
+      OpamFile.OPAM.print_errors opam;
       if where then
         OpamConsole.msg "%s\n"
           (match OpamFile.OPAM.metadata_dir opam with
@@ -720,6 +723,6 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
         output_table all_versions_fields choose;
         OpamConsole.header_msg "Version-specific details";
         output_table one_version_fields choose
-      | [f] -> OpamConsole.msg "%s" (detail_printer ?normalise st choose f)
+      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st choose f)
       | fields -> output_table fields choose
     )
