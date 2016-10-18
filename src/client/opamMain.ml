@@ -2047,12 +2047,12 @@ let pin ?(unpin_only=false) () =
          ignore @@ OpamClient.PIN.unpin st ~action names;
          `Ok ()
        | es -> `Error (false, String.concat "\n" es))
-    | Some `edit, [n]  ->
-      (match (fst package_name) n with
-       | `Ok name ->
+    | Some `edit, [nv]  ->
+      (match (fst package) nv with
+       | `Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.edit st ~action name;
+         ignore @@ OpamClient.PIN.edit st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
     | Some `add, [nv] | Some `default nv, [] when dev_repo ->

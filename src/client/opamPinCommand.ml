@@ -129,7 +129,8 @@ let edit_raw name temp_file =
       with _ -> false
     in
     if not edited_ok then
-      (OpamConsole.error "Empty file or editor error, aborting.";
+      (OpamFilename.remove (OpamFile.filename temp_file);
+       OpamConsole.error "Empty file or editor error, aborting.";
        None)
     else
     try
@@ -181,7 +182,7 @@ let edit_raw name temp_file =
   | None -> None
   | Some new_opam -> Some new_opam
 
-let edit st name =
+let edit st ?version name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
   let nv =
     try OpamPinned.package st name
@@ -189,14 +190,18 @@ let edit st name =
       OpamConsole.error_and_exit "%s is not pinned"
         (OpamPackage.Name.to_string name)
   in
+  let new_nv = match version with
+    | None -> nv
+    | Some v -> OpamPackage.create name v
+  in
   let path f = f st.switch_global.root st.switch name in
   let overlay_file = path OpamPath.Switch.Overlay.opam in
   let temp_file = path OpamPath.Switch.Overlay.tmp_opam in
   let current_opam = OpamSwitchState.opam_opt st nv in
   if not (OpamFile.exists temp_file) then
     (let base_opam = match current_opam with
-        | None -> OpamFileTools.template nv
-        | Some o -> o
+        | None -> OpamFileTools.template new_nv
+        | Some o -> OpamFile.OPAM.with_version new_nv.version o
      in
      OpamFile.OPAM.write_with_preserved_format
        ?format_from:(OpamPinned.orig_opam_file base_opam)
