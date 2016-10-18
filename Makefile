@@ -130,13 +130,13 @@ fastlink:
 	   ln -sf ../_obuild/$b/$b.asm src/$b;)
 	@$(foreach l,core format solver repository state client,\
 	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
-	   ln -sf $(addprefix ../../,\
-	        $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard _obuild/opam-$l/*.$e)))\
-	      src/$l/;)
+	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,\
+	       $(foreach f,$(wildcard _obuild/opam-$l/*.$e),\
+		   ln -sf ../../$f src/$l;)))
 	@ln -sf ../_obuild/opam-admin.top/opam-admin.top.byte src/opam-admin.top
-	@ln -sf  $(addprefix ../../,\
-	      $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard _obuild/opam-admin.top/*.$e)))\
-	      src/tools/;
+	@$(foreach e,o cmo cmx cmxs cmi cmt cmti,\
+	   $(foreach f,$(wildcard _obuild/opam-admin.top/*.$e),\
+	       ln -sf ../../$f src/tools/;))
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
