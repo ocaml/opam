@@ -41,7 +41,7 @@ printf = /usr/bin/printf
 define RUN
 @COUNT=$$(ls -1 $(REPOKIND)-*.log 2>/dev/null | wc -l); \
 LOG=$$($(printf) "$(REPOKIND)-%02d-$(1).log" $$COUNT); \
-$(printf) "- %02d \e[1m%-20s\e[m ..................................... " \
+$(printf) "  %02d \e[1m%-20s\e[m ..................................... " \
   $$COUNT $(1); \
 if $(MAKE) $(1) >$$LOG 2>&1; then \
   $(printf) "\e[32m[ OK ]\e[m\n"; \

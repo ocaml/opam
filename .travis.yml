@@ -1,11 +1,31 @@
 language: c
-script: bash -ex .travis-ci.sh
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - aspcud
+
+before_install:
+    - bash -ex .travis-ci.sh prepare
+install:
+    - bash -ex .travis-ci.sh install
+
+cache:
+    directories:
+    - $HOME/.opam.bootstrap
+
+script:
+    - bash -ex .travis-ci.sh build
+
 matrix:
   include:
     - os: linux
-      env: OCAML_VERSION=4.02.3 OPAM_TEST=1 EXTERNAL_SOLVER=
+      env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: linux
-      env: OCAML_VERSION=4.02.3 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+      env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+    - os: linux
+      env: OCAML_VERSION=4.03.0 OPAM_TEST=
     - os: linux
       env: OCAML_VERSION=4.02.3 OPAM_TEST=
     - os: linux
@@ -14,9 +34,6 @@ matrix:
       env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: osx
       env: OCAML_VERSION=4.03.0 OPAM_TEST=
-  allow_failures:
-    - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
 notifications:
   email:
     - opam-commits@lists.ocaml.org

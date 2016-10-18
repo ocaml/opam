@@ -1,5 +1,7 @@
 -include ../Makefile.config
 
+.NOTPARALLEL:
+
 ifndef version
   $(error Please run ./configure)
 endif
