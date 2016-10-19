@@ -18,7 +18,7 @@ let log ?level fmt =
 
 type env = full_variable -> variable_contents option
 
-type fident = name list * variable * (string * string) option
+type fident = name option list * variable * (string * string) option
 
 let to_string t =
   let rec aux ?(context=`Or) t =
@@ -30,7 +30,8 @@ let to_string t =
     | FBool b    -> string_of_bool b
     | FString s  -> Printf.sprintf "%S" s
     | FIdent (pkgs,var,converter) ->
-      OpamStd.List.concat_map "+" OpamPackage.Name.to_string pkgs ^
+      OpamStd.List.concat_map "+"
+        (function None -> "_" | Some p -> OpamPackage.Name.to_string p) pkgs ^
       (if pkgs <> [] then ":" else "") ^
       OpamVariable.to_string var ^
       (match converter with
@@ -91,7 +92,10 @@ let escape_strings = map_up @@ function
 
 let fident_variables = function
   | [], var, _ -> [OpamVariable.Full.global var]
-  | pkgs, var, _ -> List.map (fun n -> OpamVariable.Full.create n var) pkgs
+  | pkgs, var, _ ->
+    List.map (function
+        | Some n -> OpamVariable.Full.create n var
+        | None -> OpamVariable.Full.self var) pkgs
 
 (* extracts variables appearing in interpolations in a string*)
 let string_variables s =
@@ -169,7 +173,13 @@ let resolve_ident ?(no_undef_expand=false) env fident =
     | B b -> Some b
     | S s -> try Some (bool_of_string s) with Invalid_argument _ -> None
   in
-  let resolve name = env (OpamVariable.Full.create name var) in
+  let resolve name =
+    let var = match name with
+      | Some n -> OpamVariable.Full.create n var
+      | None -> OpamVariable.Full.self var
+    in
+    env var
+  in
   let value_opt : variable_contents option = match packages with
   | [] -> env (OpamVariable.Full.global var)
   | [name] -> resolve name
@@ -252,8 +262,8 @@ let map_variables_in_fident f (_,_,conv as fid) =
             vars)
       then invalid_arg "OpamFilter.map_variables";
       List.map (fun v -> match OpamVariable.Full.scope v with
-          | OpamVariable.Full.Package name -> name
-          | OpamVariable.Full.Self -> OpamPackage.Name.of_string "_"
+          | OpamVariable.Full.Package name -> Some name
+          | OpamVariable.Full.Self -> None
           | OpamVariable.Full.Global ->
             invalid_arg "OpamFilter.map_variables")
         (v::vars),
@@ -357,9 +367,10 @@ let partial_eval env flt =
   | f -> escape_strings f
 
 let ident_of_var v =
-  (match OpamVariable.Full.package v with
-   | Some p -> [p]
-   | None -> []),
+  (match OpamVariable.Full.scope v with
+   | OpamVariable.Full.Global -> []
+   | OpamVariable.Full.Self -> [None]
+   | OpamVariable.Full.Package p -> [Some p]),
   OpamVariable.Full.variable v, None
 
 let ident_of_string s =

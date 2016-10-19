@@ -358,7 +358,7 @@ let do_upgrade () =
       O.with_features [
         OpamVariable.of_string "preinstalled",
         "The concrete compiler was installed outside of opam",
-        FIdent ([ocaml_system_pkgname], OpamVariable.of_string "installed",
+        FIdent ([Some ocaml_system_pkgname], OpamVariable.of_string "installed",
                 None);
         OpamVariable.of_string "compiler",
         "Detailed OCaml or variant compiler name",

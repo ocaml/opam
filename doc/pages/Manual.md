@@ -210,8 +210,9 @@ and _options_:
 <file-item>     ::= <field-binding> | <section>
 <field-binding> ::= <ident> : <value>
 <section>       ::= <ident> [ <string> ] "{" <file-contents> "}"
-<ident>         ::= ( <letter> | "_" ) { <letter> | <digit> | "_" | "-" }*
-<varident>      ::= [ <ident> { "+" <ident> }* : ] <ident>
+<ident>         ::= { <identchar> }* <letter> { <identchar> }*
+<varident>      ::= [ ( <ident> | "_" ) { "+" ( <ident> | "_" ) }* : ] <ident>
+<identchar>     ::= <letter> | <digit>  | "_" | "-"
 <letter>        ::= "a".."z" | "A".."Z"
 <digit>         ::= "0".."9"
 <value>         ::= <bool> | <int> | <string> | <ident> | <varident> | <operator> | <list> | <option> | "(" <value> ")"
@@ -239,20 +240,6 @@ must be enclosed in square brackets unless they contain a single element. Values
 can be followed by an argument in braces. Parentheses may be used to group
 sub-expressions.
 
-<table class="table">
-<thead><tr> <th>type</th> <th>format</th> <th>example</th> </tr></thead>
-<tbody>
-  <tr> <td>bool</td> <td><code>true|false</code></td> <td><code>true</code></td> </tr>
-  <tr> <td>int</td> <td><code>-?[0-9]+</code></td> <td><code>42</code></td> </tr>
-  <tr> <td>string</td> <td><code>"..."</code></td> <td><code>"a string"</code></td> </tr>
-  <tr> <td>ident</td> <td><code>[a-zA-Z_][a-zA-Z0-9:_+-]*</code></td> <td><code>foo</code></td> </tr>
-  <tr> <td>operator</td> <td><code>[!=&lt;&gt;|&amp;+:]+</code></td> <td><code>&gt;=</code></td> </tr>
-  <tr> <td>list</td> <td> <code>&lt;value&gt;</code> or <code>[ &lt;value&gt; &lt;value&gt; ... ]</code> </td> <td><code>[ foo "bar" ]</code></td> </tr>
-  <tr> <td>option</td> <td> <code>&lt;value&gt;</code> or <code>&lt;value&gt; { &lt;value&gt; &lt;value&gt; ... }</code> </td> <td><code>foo { &gt; "0" }</code></td> </tr>
-  <tr> <td>parens</td> <td><code>(&lt;value&gt;)</code></td> <td><code>(foo &amp; bar)</code></td> </tr>
-</tbody>
-</table>
-
 Comments may be either enclosed in `(*` and `*)`, or `#` and newline. They are
 ignored by <span class="opam">opam</span>.
 
@@ -267,19 +254,23 @@ packages.
                     | ( <package-formula> )
                     | <pkgname> { { <version-formula> }* }
 <logop>           ::= "&" | "|"
-<pkgname>         ::= (") { <letter> | <digit> | "-" | "_" | "+" }* (")
+<pkgname>         ::= (") <ident> (")
 <version-formula> ::= <version-formula> <logop> <version-formula>
                     | "!" <version-formula>
                     | "(" <version-formula> ")"
                     | <relop> <version>
 <relop>           ::= "=" | "!=" | "<" | "<=" | ">" | ">="
-<version>         ::= (") { <letter> | <digit> | "-" | "_" | "+" | "." | "~" }* (")
+<version>         ::= (") { <identchar> | "+" | "." | "~" }+ (")
 ```
 
-Both package names and versions are encoded as strings, with some restrictions
-on the characters allowed. We are using logic formulas with the operators `&`
-and `|` for AND and OR, over package names. `&` is higher priority than `|`, so
-the parentheses in this example are required:
+Package names have the same restrictions as idents — only letter, digits, dash
+and underscore, and contain at least one letter — but must be enclosed in
+quotes. Versions are non-empty strings, with some restrictions on the characters
+allowed.
+
+We are using logic formulas with the operators `&` and `|` for AND and OR, over
+package names. `&` is higher priority than `|`, so the parentheses in this
+example are required:
 
 ```
 ("neat_package" | "also_neat_package") & "required_package"

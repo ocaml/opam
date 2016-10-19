@@ -67,13 +67,13 @@ val string_of_pos: pos -> string
     preserve order *)
 val env_array: env -> string array
 
-(** Parses the data suitable for a filter.FIdent from a string. May
-    raise [Failure msg] on bad package names *)
+(** Parses the data suitable for a filter.FIdent from a string. May raise
+    [Failure msg] on bad package names. A self-reference [_] parses to [None] *)
 val filter_ident_of_string:
-  string -> name list * variable * (string * string) option
+  string -> name option list * variable * (string * string) option
 
 val string_of_filter_ident:
-  name list * variable * (string * string) option -> string
+  name option list * variable * (string * string) option -> string
 
 val pkg_flag_of_string: string -> package_flag
 

@@ -101,7 +101,7 @@ let env_array l =
 
 let string_of_filter_ident (pkgs,var,converter) =
   OpamStd.List.concat_map ~nil:"" "+" ~right:":"
-    OpamPackage.Name.to_string pkgs ^
+    (function None -> "_" | Some n -> OpamPackage.Name.to_string n) pkgs ^
   OpamVariable.to_string var ^
   (match converter with
    | Some (it,ifu) -> "?"^it^":"^ifu
@@ -112,9 +112,8 @@ let filter_ident_of_string s =
   | None -> [], OpamVariable.of_string s, None
   | Some (p,last) ->
     let get_names s =
-      List.map (fun n ->
-          try OpamPackage.Name.of_string n
-          with Failure _ -> failwith ("Invalid package name "^n))
+      List.map
+        (function "_" -> None | s -> Some (OpamPackage.Name.of_string s))
         (OpamStd.String.split s '+')
     in
     match OpamStd.String.rcut_at p '?' with

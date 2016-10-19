@@ -24,6 +24,7 @@ module Version = struct
   let to_string x = x
 
   let of_string x =
+    if String.length x = 0 then failwith "Package version can't be empty";
     String.iter (function
         | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '+' | '.' | '~' -> ()
         | c ->
@@ -58,13 +59,22 @@ module Name = struct
   let to_string x = x
 
   let of_string x =
-    String.iter (function
-        | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '+' -> ()
-        | c ->
-          failwith
-            (Printf.sprintf "Invalid character '%c' in package name %S" c x))
-      x;
-    x
+    match
+      OpamStd.String.fold_left (fun acc c ->
+          if acc = Some false then acc else match c with
+            | 'a'..'z' | 'A'..'Z' -> Some true
+            | '0'..'9' | '-' | '_' | '+' -> acc
+            | _ -> Some false)
+        None x
+    with
+    | Some false ->
+      failwith
+        (Printf.sprintf "Invalid character in package name %S" x)
+    | None ->
+      failwith
+        (Printf.sprintf "Package name %S should contain at least one letter" x)
+    | Some true ->
+      x
 
   let compare n1 n2 =
     match compare (String.lowercase_ascii n1) (String.lowercase_ascii n2) with

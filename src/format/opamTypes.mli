@@ -178,8 +178,8 @@ type repository = {
 type filter =
   | FBool of bool
   | FString of string
-  | FIdent of (name list * variable * (string * string) option)
-  (** packages, variable name,
+  | FIdent of (name option list * variable * (string * string) option)
+  (** packages (or None for self-ref through "_"), variable name,
       string converter (val_if_true, val_if_false_or_undef) *)
   | FOp of filter * relop * filter
   | FAnd of filter * filter
