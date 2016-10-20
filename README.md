@@ -28,7 +28,7 @@ easier to already have a working opam installation in this case, so you can do
 it as a second step.
 
 * Make sure to have ocamlfind, ocamlgraph, cmdliner >= 0.9.8, jsonm, cudf,
-  dose 3.2.2+opam and re >= 1.2.0 installed. Or run `opam install
+  dose3 and re >= 1.2.0 installed. Or run `opam install
   opam-lib --deps-only` if you already have a working instance. Re-run
   `./configure` once done
 * Run `make libinstall` at the end
