@@ -68,16 +68,22 @@ let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let download_tool =
-    env_string "FETCH" >>| (fun s ->
+    env_string "FETCH" >>= (fun s ->
         let args = OpamStd.String.split s ' ' in
-        let c = List.map (fun a -> OpamTypes.CString a, None) args in
-        let kind = match c with
-          | (CIdent "curl", None)::_ -> `Curl
-          | (CString s, None)::_
-            when OpamStd.String.ends_with ~suffix:"curl" s -> `Curl
-          | _ -> `Default
-        in
-        lazy (c, kind)
+        match args with
+        | cmd::a ->
+          let cmd, kind =
+            if OpamStd.String.ends_with ~suffix:"curl" cmd then
+              (CIdent "curl", None), `Curl
+            else if cmd = "wget" then
+              (CIdent "wget", None), `Default
+            else
+              (CString cmd, None), `Default
+          in
+          let c = cmd :: List.map (fun a -> OpamTypes.CString a, None) a in
+          Some (lazy (c, kind))
+        | [] ->
+          None
       )
     >>+ fun () ->
     env_string "CURL" >>| (fun s ->
