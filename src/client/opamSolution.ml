@@ -11,7 +11,6 @@
 
 let log fmt = OpamConsole.log "SOLUTION" fmt
 
-open OpamCompat
 open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
