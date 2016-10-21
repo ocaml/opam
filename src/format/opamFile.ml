@@ -566,7 +566,7 @@ module File_attributes = LineFile(struct
     let pp =
       OpamFilename.Attribute.Set.(OpamFormat.lines_set ~empty ~add ~fold) @@
       (Pp.of_module "file" (module OpamFilename.Base) ^+
-       Pp.of_module "checksum" (module OpamHash) ^+
+       Pp.of_pair "checksum" OpamHash.(of_string, contents) ^+
        Pp.opt (Pp.last -| Pp.of_pair "perm" (int_of_string, string_of_int))
       ) -|
       Pp.pp
