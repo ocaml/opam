@@ -664,7 +664,7 @@ let build_package t ?(test=false) ?(doc=false) source build_dir nv =
 
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
-let install_package t ?(doc=false) nv =
+let install_package t ?(doc=false) ?build_dir nv =
   let opam = OpamSwitchState.opam t nv in
   let commands = OpamFile.OPAM.install opam in
   let commands =
@@ -681,7 +681,10 @@ let install_package t ?(doc=false) nv =
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
-  let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
+  let dir = match build_dir with
+    | None -> OpamPath.Switch.build t.switch_global.root t.switch nv
+    | Some d -> d
+  in
   let wrappers = get_wrappers t in
   let mk_cmd = make_command ~env ~name ~dir in
   let rec run_commands = function

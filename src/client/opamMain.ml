@@ -1589,6 +1589,14 @@ let repository =
         OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
       in
       `Ok ()
+    | Some `set_repos, names ->
+      let names = List.map OpamRepositoryName.of_string names in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      let _gt =
+        OpamRepositoryCommand.update_selection gt ~global ~switches
+          (fun _ -> names)
+      in
+      `Ok ()
     | (None | Some `list), [] ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       if List.mem `All scope then

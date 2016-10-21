@@ -22,6 +22,6 @@ build: [
 depends: [
   "opam-core" {= "2.0~alpha4"}
   "opam-format" {= "2.0~alpha4"}
-  "dose" {>= "3.3"}
+  ("dose" {>= "3.3"} | "dose3" {>= "5"})
 ]
 available: ocaml-version >= "4.01.0"

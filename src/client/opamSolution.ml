@@ -510,7 +510,8 @@ let parallel_apply t action ~requested action_graph =
         let doc =
           OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
         in
-        (OpamAction.install_package t ~doc nv @@+ function
+        let build_dir = OpamPackage.Map.find_opt nv inplace in
+        (OpamAction.install_package t ~doc ?build_dir nv @@+ function
           | None ->
             add_to_install nv;
             store_time ();
