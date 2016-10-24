@@ -77,14 +77,18 @@ let to_path (kind,s) =
 
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
-  | `SHA256 | `SHA512 ->
-    match
-      OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
-    with
-    | [l] ->
-      let len = len kind in
-      make kind (String.sub l (String.length l - len) len)
-    | _ -> failwith "openssl error"
+  | (`SHA256 | `SHA512) as kind ->
+    try
+      if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
+      match
+        OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
+      with
+      | [l] ->
+        let len = len kind in
+        make kind (String.sub l (String.length l - len) len)
+      | _ -> failwith "openssl error"
+    with OpamSystem.Command_not_found _ | Exit ->
+      make kind (OpamSHA.hash kind file)
 
 let check_file f (kind, _ as h) = compute ~kind f = h
 

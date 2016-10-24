@@ -1115,6 +1115,7 @@ module Config = struct
       ?keep_log_dir:(env_bool "KEEPLOGS")
       ?errlog_length:(env_int "ERRLOGLEN")
       ?merged_output:(env_bool "MERGEOUT")
+      ?use_openssl:(env_bool "USEOPENSSL")
 
   let init ?noop:_ = initk (fun () -> ())
 end

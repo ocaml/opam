@@ -35,7 +35,6 @@ val search_files: string list
 
 (** Load the global configuration file (opamroot/config) and initialise all opam
     sub-libraries, overriding the given arguments *)
-
 val opam_init:
   ?root_dir:OpamTypes.dirname ->
   ?strict:bool ->
@@ -81,4 +80,5 @@ val opam_init:
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
+  ?use_openssl:bool ->
   unit -> unit

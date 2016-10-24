@@ -58,6 +58,7 @@ fi
 echo
 
 AC_CHECK_OCAML_PKG([unix])
+AC_CHECK_OCAML_PKG([bigarray])
 AC_CHECK_OCAML_PKG([extlib])
 AC_CHECK_OCAML_PKG([re])
 AC_CHECK_OCAML_PKG([re.str])

@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamCompat
+
 module SHA256 = struct
 
   open Int32
@@ -106,17 +108,12 @@ module SHA256 = struct
     let sz = (Unix.fstat fd).Unix.st_size in
     let blocks = sz / 64 in
     let rem = sz mod 64 in
-    let a =
-      Bigarray.Array2.map_file fd
-        Bigarray.Int32 Bigarray.C_layout false blocks 16
-    in
+    let a = Bigarray.(Array2.map_file fd int32 c_layout false blocks 16) in
     let h = ref sha_init in
     for i = 0 to blocks - 1 do
       h := hash_block !h (Bigarray.Array2.slice_left a i)
     done;
-    let lastblock =
-      Bigarray.Array1.create Bigarray.Int32 Bigarray.C_layout 16
-    in
+    let lastblock = Bigarray.(Array1.create int32 c_layout 16) in
     let buf = Bytes.create rem in
     ignore (Unix.lseek fd (blocks * 64) Unix.SEEK_SET);
     let rec readn i =
@@ -279,17 +276,12 @@ module SHA512 = struct
     let sz = (Unix.fstat fd).Unix.st_size in
     let blocks = sz / 128 in
     let rem = sz mod 128 in
-    let a =
-      Bigarray.Array2.map_file fd
-        Bigarray.Int64 Bigarray.C_layout false blocks 16
-    in
+    let a = Bigarray.(Array2.map_file fd int64 c_layout false blocks 16) in
     let h = ref sha_init in
     for i = 0 to blocks - 1 do
       h := hash_block !h (Bigarray.Array2.slice_left a i)
     done;
-    let lastblock =
-      Bigarray.Array1.create Bigarray.Int64 Bigarray.C_layout 16
-    in
+    let lastblock = Bigarray.(Array1.create int64 c_layout 16) in
     let buf = Bytes.create rem in
     ignore (Unix.lseek fd (blocks * 128) Unix.SEEK_SET);
     let rec readn i =
