@@ -22,6 +22,7 @@ type t = {
   keep_log_dir: bool;
   errlog_length: int;
   merged_output: bool;
+  use_openssl: bool;
 }
 
 type 'a options_fun =
@@ -36,6 +37,7 @@ type 'a options_fun =
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
+  ?use_openssl:bool ->
   'a
 
 let default = {
@@ -53,6 +55,7 @@ let default = {
   keep_log_dir = false;
   errlog_length = 12;
   merged_output = true;
+  use_openssl = true;
 }
 
 let setk k t
@@ -67,6 +70,7 @@ let setk k t
     ?keep_log_dir
     ?errlog_length
     ?merged_output
+    ?use_openssl
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -81,6 +85,7 @@ let setk k t
     keep_log_dir = t.keep_log_dir + keep_log_dir;
     errlog_length = t.errlog_length + errlog_length;
     merged_output = t.merged_output + merged_output;
+    use_openssl = t.use_openssl + use_openssl
   }
 
 let set t = setk (fun x () -> x) t
