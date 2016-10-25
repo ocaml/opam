@@ -447,6 +447,56 @@ let universe st
   in
   u
 
+let dump_pef_state st oc =
+  let print_def nv opam =
+    Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string nv);
+    Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string nv);
+    let installed = OpamPackage.Set.mem nv st.installed in
+    (* let root = OpamPackage.Set.mem nv st.installed_roots in *)
+    let base = OpamPackage.Set.mem nv st.compiler_packages in
+    let pinned = OpamPackage.Set.mem nv st.pinned in
+    let available = OpamPackage.Set.mem nv (Lazy.force st.available_packages) in
+    let reinstall = OpamPackage.Set.mem nv st.reinstall in
+    let dev =
+      (pinned || installed) && OpamPackageVar.is_dev_package st opam
+    in
+    (* current state *)
+    Printf.fprintf oc "available: %b\n" available;
+    if installed then output_string oc "installed: true\n";
+    if pinned then output_string oc "pinned: true\n";
+    if base then output_string oc "base: true\n";
+    if reinstall then output_string oc "reinstall: true\n";
+
+    (* metadata (resolved for the current switch) *)
+    OpamStd.List.concat_map ~left:"maintainer: " ~right:"\n" ~nil:"" " , "
+      String.escaped (OpamFile.OPAM.maintainer opam) |>
+    output_string oc;
+
+    OpamFile.OPAM.depends opam |>
+    OpamPackageVar.filter_depends_formula ~default:false ~dev
+      ~env:(OpamPackageVar.resolve_switch ~package:nv st) |>
+    OpamFormula.to_cnf |>
+    OpamStd.List.concat_map ~left:"depends: " ~right:"\n" ~nil:"" " , "
+      (OpamStd.List.concat_map " | " OpamFormula.string_of_atom) |>
+    output_string oc;
+
+    OpamFile.OPAM.depopts opam |>
+    OpamPackageVar.filter_depends_formula ~default:false ~dev
+      ~env:(OpamPackageVar.resolve_switch ~package:nv st) |>
+    OpamFormula.to_cnf |>
+    OpamStd.List.concat_map ~left:"recommends: " ~right:"\n" ~nil:"" " , "
+      (OpamStd.List.concat_map " | " OpamFormula.string_of_atom) |>
+    output_string oc;
+
+    OpamFormula.ors [Atom (nv.name, Empty); OpamFile.OPAM.conflicts opam] |>
+    OpamFormula.to_disjunction |>
+    OpamStd.List.concat_map ~left:"conflicts: " ~right:"\n" ~nil:"" " , "
+      OpamFormula.string_of_atom |>
+    output_string oc;
+
+    output_string oc "\n";
+  in
+  OpamPackage.Map.iter print_def st.opams
 
 
 (* User-directed helpers *)

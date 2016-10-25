@@ -838,7 +838,7 @@ let config =
     "cudf-universe",`cudf, ["[FILE]"],
     "Outputs the current available package universe in CUDF format.";
     "pef-universe", `pef, ["[FILE]"],
-    "Outputs the current available package universe in PEF format.";
+    "Outputs the current package universe in PEF format.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -951,17 +951,17 @@ let config =
     | Some `subst, (_::_ as files) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.subst gt (List.map OpamFilename.Base.of_string files))
-    | Some `pef, _params ->
-      failwith "!X todo"
-(*
-      let opam_state = OpamSwitchState.load_full_compat "config-universe"
-          (OpamStateConfig.get_switch ()) in
-      let dump oc = OpamState.dump_state opam_state oc in
+    | Some `pef, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (match params with
-       | [] -> `Ok (dump stdout)
-       | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
+       | [] | ["-"] -> OpamSwitchState.dump_pef_state st stdout; `Ok ()
+       | [file] ->
+         let oc = open_out file in
+         OpamSwitchState.dump_pef_state st oc;
+         close_out oc;
+         `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
-*)
     | Some `cudf, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun opam_state ->
