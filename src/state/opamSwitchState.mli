@@ -126,6 +126,10 @@ val universe:
   requested:name_set ->
   user_action -> universe
 
+(** Dumps the current switch state in PEF format, for interaction with Dose
+    tools *)
+val dump_pef_state: 'a switch_state -> out_channel -> unit
+
 (** {2 Updating} *)
 
 (** Sets the given opam file for the given package, updating the other related
