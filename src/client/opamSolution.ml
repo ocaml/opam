@@ -449,14 +449,15 @@ let parallel_apply t action ~requested action_graph =
           | _, `Successful (inst1, rem1) ->
             OpamPackage.Set.Op.(inst ++ inst1, rem ++ rem1, fail)
           | _, `Error (`Aborted a) ->
-            inst, rem, a @ fail
+            inst, rem, PackageAction.Set.Op.(a ++ fail)
           | a, (`Exception _ | `Error _) ->
-            inst, rem, a :: fail)
-        OpamPackage.Set.(empty, empty, []) pred
+            inst, rem, PackageAction.Set.add a fail)
+        (OpamPackage.Set.empty, OpamPackage.Set.empty, PackageAction.Set.empty)
+        pred
     in
-    match failed with
-    | _::_ -> Done (`Error (`Aborted failed)) (* prerequisite failed *)
-    | [] ->
+    if not (PackageAction.Set.is_empty failed) then
+      Done (`Error (`Aborted failed)) (* prerequisite failed *)
+    else
       let store_time =
         let t0 = Unix.gettimeofday () in
         fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
@@ -578,9 +579,7 @@ let parallel_apply t action ~requested action_graph =
                  | `Successful _ -> `String "OK"
                  | `Exception e -> Json.exc e
                  | `Error (`Aborted deps) ->
-                   let deps =
-                     OpamStd.List.sort_nodup OpamSolver.Action.compare deps
-                   in
+                   let deps = OpamSolver.Action.Set.elements deps in
                    `O ["aborted", `A (List.map OpamSolver.Action.to_json deps)]
                in
                let duration =
