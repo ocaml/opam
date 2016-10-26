@@ -736,33 +736,12 @@ let lock_isatleast flag lock =
   lock_max flag lock.kind = lock.kind
 
 let patch ~dir p =
-  let max_trying = 5 in
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  let patch_cmd ~dryrun n =
-    let opts = if dryrun then
-        let open OpamStd.Sys in
-        match os () with
-        | FreeBSD | OpenBSD | NetBSD | DragonFly -> [ "-t"; "-C" ]
-        | Unix | Linux | Darwin -> [ "--dry-run" ]
-        | Win32 | Cygwin (* this is probably broken *)
-        | Other _               -> [ "--dry-run" ]
-      else [] in
-    let verbose = if dryrun then Some false else None in
-    make_command ?verbose ~dir "patch"
-      (("-p" ^ string_of_int n) :: "-i" :: p :: opts)
-  in
-  let rec aux n =
-    if n = max_trying then Done false
-    else
-      patch_cmd ~dryrun:true n @@> fun r ->
-      if OpamProcess.is_success r then
-        patch_cmd ~dryrun:false n @@> fun p -> Done (OpamProcess.is_success p)
-      else
-        aux (succ n)
-  in
-  aux 0
+  make_command ~dir "patch" ["-p1"; "-i"; p] @@> fun r ->
+  if OpamProcess.is_success r then Done None
+  else Done (Some (Process_error r))
 
 let register_printer () =
   Printexc.register_printer (function

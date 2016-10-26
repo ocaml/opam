@@ -667,12 +667,13 @@ files.
   `"org:foo"` tag is reserved for packages officially distributed by
   organization ``foo''.
 
-- <a id="opamfield-patches">`patches: [ <string> { <filter> } ... ]`</a>:
-  a list of files relative to the project source root (often added through the
-  `files/` metadata subdirectory). The listed patch files will be applied
-  sequentially to the source as with the `patch` command. Variable interpolation
-  is available, so you can specify `patches: [ "file" ]` to have the patch
-  processed from `file.in`.
+- <a id="opamfield-patches">`patches: [ <string> { <filter> } ... ]`</a>: a list
+  of files relative to the project source root (often added through the `files/`
+  metadata subdirectory). The listed patch files will be applied sequentially to
+  the source as with the `patch` command, stripping one level of leading
+  directories (`-p1`) -- which is what version control systems generally use .
+  Variable interpolation is available, so you can specify `patches: [ "file" ]`
+  to have the patch processed from `file.in`.
 
     Patches may be applied conditionally by adding _filters_.
 
