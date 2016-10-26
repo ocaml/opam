@@ -543,12 +543,32 @@ let parallel_apply t action ~requested action_graph =
                                    | _ -> acc)
           action_graph []
       in
+      let same_inplace_source =
+        OpamPackage.Map.fold (fun nv dir acc ->
+            OpamFilename.Dir.Map.update dir (fun l -> nv::l) [] acc)
+          inplace OpamFilename.Dir.Map.empty |>
+        OpamFilename.Dir.Map.values
+      in
+      let mutually_exclusive =
+        installs_removes ::
+        OpamStd.List.filter_map
+          (fun excl ->
+             match
+               OpamStd.List.filter_map
+                 (fun nv ->
+                    let act = `Build nv in
+                    if PackageActionGraph.mem_vertex action_graph act
+                    then Some act else None)
+                 excl
+             with [] | [_] -> None | l -> Some l)
+          same_inplace_source
+      in
       let results =
         PackageActionGraph.Parallel.map
           ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
           ~command:job
           ~dry_run:OpamStateConfig.(!r.dryrun)
-          ~mutually_exclusive:[installs_removes]
+          ~mutually_exclusive
           action_graph
       in
       if OpamStateConfig.(!r.json_out <> None) then
