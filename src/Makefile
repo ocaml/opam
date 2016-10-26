@@ -37,7 +37,7 @@ endif
 
 ifneq ($(HAS_LIBEXT),)
   EXT_INCDIRS = ../src_ext/lib
-  LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm
+  LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm opam-file-format
 else
   ifeq ($(HAS_PACKAGES),)
     $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
@@ -133,10 +133,6 @@ opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
 opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_format = \
-  opamParserTypes.mli \
-  opamParser.mly \
-  opamLexer.mll \
-  opamPrinter.ml \
   opamFormatConfig.ml \
   opamLineLexer.mll \
   opamRepositoryName.ml \
