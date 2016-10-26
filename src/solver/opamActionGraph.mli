@@ -20,6 +20,8 @@ module type ACTION = sig
   val to_string: [< t ] -> string
   val to_aligned_strings:
     ?append:(package -> string) -> [< t ] list -> string list
+  module Set: OpamStd.SET with type elt = package action
+  module Map: OpamStd.MAP with type key = package action
 end
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t and type t = P.t OpamTypes.action

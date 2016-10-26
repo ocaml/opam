@@ -18,6 +18,8 @@ module type ACTION = sig
   val to_string: [< t ] -> string
   val to_aligned_strings:
     ?append:(package -> string) -> [< t ] list -> string list
+  module Set: OpamStd.SET with type elt = package action
+  module Map: OpamStd.MAP with type key = package action
 end
 
 let name_of_action = function
@@ -117,6 +119,16 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
       `O ["change", `A [P.to_json o;P.to_json p]]
     | `Reinstall p -> `O ["recompile", P.to_json p]
     | `Build p -> `O ["build", P.to_json p]
+
+  module O = struct
+      type t = package action
+      let compare = compare
+      let to_string = to_string
+      let to_json = to_json
+    end
+
+  module Set = OpamStd.Set.Make(O)
+  module Map = OpamStd.Map.Make(O)
 
 end
 

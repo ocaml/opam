@@ -455,11 +455,14 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
       | Some _ -> opam
       | None -> OpamFile.OPAM.with_url_opt urlf opam
     in
+    let version =
+      OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
+    in
+    let nv = OpamPackage.create nv.name version in
     let opam =
       opam |>
       OpamFile.OPAM.with_name name |>
-      OpamFile.OPAM.with_version
-        OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
+      OpamFile.OPAM.with_version version
     in
     OpamFilename.rmdir
       (OpamPath.Switch.Overlay.package st.switch_global.root st.switch nv.name);
