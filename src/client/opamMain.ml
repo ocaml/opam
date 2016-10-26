@@ -2638,7 +2638,9 @@ let run default commands =
       | Sys.Break
       | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
         exit_code := 130
-      | Sys_error "Broken pipe" ->
+      | Sys_error e when e = "Broken pipe" ->
+        (* workaround warning 52, this is a fallback (we already handle the
+           signal) and there is no way around at the moment *)
         exit_code := 141
       | Failure msg ->
         Printf.eprintf "Fatal error: %s\n" msg;
