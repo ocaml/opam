@@ -19,7 +19,7 @@ case "$TARGET" in
         opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
         eval $(opam config env --root=$OPAMBSROOT)
         if [ "$OPAM_TEST" = "1" ]; then
-            opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner dose3 jsonm --yes
+            opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner dose3 jsonm opam-file-format --yes
             # Allow use of ocamlfind packages in ~/local/lib
             FINDCONF=$(ocamlfind printconf conf)
             sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
