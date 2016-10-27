@@ -156,10 +156,10 @@ let prepare_package_build st nv dir =
       if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve ~opam st) filter
       then
         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
-        @@+ fun success ->
-        iter_patches f rest @@| fun errs ->
-        if success then errs
-        else OpamFilename.Base.to_string patchname :: errs
+        @@+ function
+        | None -> iter_patches f rest
+        | Some err ->
+          iter_patches f rest @@| fun e -> (patchname, err) :: e
       else iter_patches f rest
   in
   let print_apply basename =
@@ -213,7 +213,11 @@ let prepare_package_build st nv dir =
     let msg =
       Printf.sprintf "These patches didn't apply at %s:\n%s"
         (OpamFilename.Dir.to_string dir)
-        (OpamStd.Format.itemize (fun x -> x) patching_errors)
+        (OpamStd.Format.itemize
+           (fun (f,err) ->
+              Printf.sprintf "%s: %s"
+                (OpamFilename.Base.to_string f) (Printexc.to_string err))
+           patching_errors)
     in
     Done (Some (Failure msg))
   else

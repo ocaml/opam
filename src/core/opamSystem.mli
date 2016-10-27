@@ -234,9 +234,9 @@ val get_lock_flag: lock -> lock_flag
 
 (** {2 Misc} *)
 
-(** Apply a patch file in the current directory. Returns false if the patch
-    didn't apply *)
-val patch: dir:string -> string -> bool OpamProcess.job
+(** Apply a patch file in the current directory. Returns the error if the patch
+    didn't apply. *)
+val patch: dir:string -> string -> exn option OpamProcess.job
 
 (** Create a tempory file in {i ~/.opam/logs/<name>XXX} *)
 val temp_file: ?dir:string -> string -> string
