@@ -4565,7 +4565,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml META src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5275,7 +5275,6 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
-    "META") CONFIG_FILES="$CONFIG_FILES META" ;;
     "src/core.META") CONFIG_FILES="$CONFIG_FILES src/core.META" ;;
     "src/format.META") CONFIG_FILES="$CONFIG_FILES src/format.META" ;;
     "src/repository.META") CONFIG_FILES="$CONFIG_FILES src/repository.META" ;;

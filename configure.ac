@@ -108,7 +108,6 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
-  META
   src/core.META
   src/format.META
   src/repository.META
