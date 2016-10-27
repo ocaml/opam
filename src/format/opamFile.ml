@@ -2404,30 +2404,16 @@ module OPAMSyntax = struct
   let pp =
     pp_raw -|
     Pp.pp
-      (fun ~pos (filename, t) ->
+      (fun ~pos:_ (filename, t) ->
          filename,
          let metadata_dir =
            if filename <> dummy_file then Some (OpamFilename.dirname filename)
            else None
          in
          let t = { t with metadata_dir } in
-         match OpamPackage.of_filename filename, t.name, t.version with
-         | Some nv, Some tname, _ when nv.OpamPackage.name <> tname ->
-           Pp.warn ~pos
-             "Field 'name: %S' doesn't match the name %S implied by the \
-              file name"
-             (OpamPackage.Name.to_string tname)
-             (OpamPackage.name_to_string nv);
-           with_nv nv t
-         | Some nv, _, Some tversion when nv.OpamPackage.version <> tversion ->
-           Pp.warn ~pos
-             "Field 'version: %S' doesn't match the version %S implied by the \
-              file name"
-             (OpamPackage.Version.to_string tversion)
-             (OpamPackage.version_to_string nv);
-           with_nv nv t
-         | Some nv, _, _ -> with_nv nv t
-         | None, _, _ -> t)
+         match OpamPackage.of_filename filename with
+         | Some nv -> with_nv nv t
+         | None -> t)
       (fun (filename, t) ->
          filename,
          match OpamPackage.of_filename filename, t.name, t.version with

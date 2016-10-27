@@ -32,6 +32,10 @@ val packages: 'a switch_state -> package_set
 (** Looks up an 'opam' file for the given named package in a source directory *)
 val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t option
 
+(** Finds all package definition files in a given source dir [opam],
+    [pkgname.opam/opam], etc. *)
+val files_in_source: dirname -> (name option * OpamFile.OPAM.t OpamFile.t) list
+
 (** Finds back the location of the opam file this package definition was loaded
     from *)
 val orig_opam_file: OpamFile.OPAM.t -> OpamFile.OPAM.t OpamFile.t option
