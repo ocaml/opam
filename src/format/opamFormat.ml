@@ -137,9 +137,7 @@ module V = struct
       (fun ~pos:_ -> function
          | Option (_,k,l) -> k, l
          | k -> k, [])
-      (function
-        | (v, []) -> v
-        | (v, l) -> Option (pos_null, v, l))
+      (function (v, l) -> Option (pos_null, v, l))
 
   let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
@@ -161,7 +159,7 @@ module V = struct
     in
     pp
       (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
-      (fun v -> lift expected_depth v)
+      (fun v -> v (*lift expected_depth v*))
 
   let map_list ?(depth=0) pp1 =
     list_depth depth -|
