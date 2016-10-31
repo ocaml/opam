@@ -1910,9 +1910,10 @@ let pin ?(unpin_only=false) () =
      The package version may be specified by using the format \
      $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
      $(b,edit).";
-    "remove", `remove, ["NAMES"],
+    "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
-     repository, if any.";
+     repository, if any. With a $(b,TARGET), unpins everything that is \
+     currently pinned to that target.";
     "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the package definition that OPAM will locally use for package \
@@ -1987,30 +1988,12 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_name path =
-    let open OpamFilename.Op in
-    if not (OpamFilename.exists_dir path) then raise Not_found else
-    let opamf = OpamFile.make (path / "opam" // "opam") in
-    let opamf : OpamFile.OPAM.t OpamFile.t =
-      if OpamFile.exists opamf then opamf else OpamFile.make (path // "opam")
-    in
-    if OpamFile.exists opamf then
-      try match OpamFile.OPAM.(name_opt (read opamf)) with
-        | Some name -> name
-        | None -> raise Not_found
-      with e -> OpamStd.Exn.fatal e; raise Not_found
-    else
-    match
-      Array.fold_left (fun acc f ->
-          if OpamStd.String.ends_with ~suffix:".opam" f then
-            if acc = None then
-              Some (OpamStd.String.remove_suffix ~suffix:".opam" f)
-            else raise Not_found (* multiple .opam files *)
-          else acc)
-        None (Sys.readdir (OpamFilename.Dir.to_string path))
-    with
-    | Some base -> OpamPackage.Name.of_string base
-    | None -> raise Not_found
+  let guess_names path =
+    OpamStd.List.filter_map
+      (fun (nameopt, f) -> match nameopt with
+         | None -> OpamFile.OPAM.(name_opt (read f))
+         | some -> some)
+      (OpamPinned.files_in_source path)
   in
   let pin_target kind target =
     let looks_like_version_re =
@@ -2042,18 +2025,34 @@ let pin ?(unpin_only=false) () =
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamClient.PIN.list st ~short:print_short;
       `Ok ()
-    | Some `remove, names ->
-      let names,errs =
-        List.fold_left (fun (names,errs) n -> match (fst package_name) n with
-            | `Ok name -> name::names,errs
-            | `Error e -> names,e::errs)
-          ([],[]) names
+    | Some `remove, arg ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let to_unpin = match arg with
+        | [target] ->
+          let url = OpamUrl.of_string target in
+          OpamPackage.Set.filter
+            (fun nv ->
+               match OpamSwitchState.url st nv with
+               | Some u ->
+                 let u = OpamFile.URL.url u in
+                 OpamUrl.(u.transport = url.transport && u.path = url.path)
+               | None -> false)
+            st.pinned |>
+          OpamPackage.names_of_packages |>
+          OpamPackage.Name.Set.elements
+        | _ -> []
+      in
+      let to_unpin, errs =
+        if to_unpin <> [] then to_unpin, [] else
+          List.fold_left (fun (names,errs) n -> match (fst package_name) n with
+              | `Ok name -> name::names,errs
+              | `Error e -> names,e::errs)
+            ([],[]) arg
       in
       (match errs with
        | [] ->
-         OpamGlobalState.with_ `Lock_none @@ fun gt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.unpin st ~action names;
+         ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ()
        | es -> `Error (false, String.concat "\n" es))
     | Some `edit, [nv]  ->
@@ -2080,18 +2079,36 @@ let pin ?(unpin_only=false) () =
       (match pin_target kind arg with
        | `Source url when OpamUrl.local_dir url <> None ->
          (* arg is a directory, lookup an opam file *)
-         (try
-            let name = guess_name (OpamFilename.Dir.of_string arg) in
-            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-            OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-            ignore @@ OpamClient.PIN.pin st name ~edit ~action (`Source url);
-            `Ok ()
-          with Not_found ->
+         (match guess_names (OpamFilename.Dir.of_string arg) with
+          | [] ->
             `Error (false, Printf.sprintf
                       "No valid package description found at path %s.\n\
                        Please supply a package name \
                        (e.g. `opam pin add NAME PATH')"
-                      (OpamUrl.base_url url)))
+                      (OpamUrl.base_url url))
+          | names ->
+            match names with
+            | _::_::_ as n when
+                not @@
+                OpamConsole.confirm
+                  "This will pin the following packages: %s. Continue ?"
+                  (OpamStd.List.concat_map ", " OpamPackage.Name.to_string n)
+              -> OpamStd.Sys.exit 2
+            | names ->
+              OpamGlobalState.with_ `Lock_none @@ fun gt ->
+              OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+              let st =
+                List.fold_left (fun st name ->
+                    OpamPinCommand.source_pin st name ~edit (Some url))
+                  st names
+              in
+              if action then
+                (OpamConsole.msg "\n";
+                 ignore @@
+                 OpamClient.upgrade_t
+                   ~strict_upgrade:false ~auto_install:true ~ask:true
+                   (List.map (fun n -> n, None) names) st);
+              `Ok ())
        | _ ->
          (* arg is a package, guess target *)
          match (fst package) arg with
@@ -2288,23 +2305,13 @@ let lint =
   let lint global_options files package normalise short warnings_sel =
     apply_global_options global_options;
     let opam_files_in_dir d =
-      let files =
-        List.filter (fun f ->
-            OpamFilename.(basename f = Base.of_string "opam") ||
-            OpamFilename.check_suffix f ".opam")
-          (OpamFilename.files d) @
-        OpamStd.List.filter_map (fun d ->
-            if OpamFilename.(basename_dir d = Base.of_string "opam") ||
-               OpamStd.String.ends_with ~suffix:".opam"
-                 (OpamFilename.Dir.to_string d)
-            then OpamFilename.opt_file OpamFilename.Op.(d//"opam")
-            else None)
-          (OpamFilename.dirs d)
-      in
-      if files = [] then
+      match OpamPinned.files_in_source d with
+      | [] ->
         OpamConsole.warning "No opam files found in %s"
           (OpamFilename.Dir.to_string d);
-      List.map (fun f -> Some (OpamFile.make f)) files
+        []
+      | l ->
+        List.map (fun (_name,f) -> Some f) l
     in
     let files = match files, package with
       | [], None -> (* Lookup in cwd if nothing was specified *)
