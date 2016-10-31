@@ -1910,9 +1910,10 @@ let pin ?(unpin_only=false) () =
      The package version may be specified by using the format \
      $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
      $(b,edit).";
-    "remove", `remove, ["NAMES"],
+    "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(b,NAMES), restoring their definition from the \
-     repository, if any.";
+     repository, if any. With a $(b,TARGET), unpins everything that is \
+     currently pinned to that target.";
     "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to \
      change the package definition that OPAM will locally use for package \
@@ -2024,18 +2025,34 @@ let pin ?(unpin_only=false) () =
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamClient.PIN.list st ~short:print_short;
       `Ok ()
-    | Some `remove, names ->
-      let names,errs =
-        List.fold_left (fun (names,errs) n -> match (fst package_name) n with
-            | `Ok name -> name::names,errs
-            | `Error e -> names,e::errs)
-          ([],[]) names
+    | Some `remove, arg ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let to_unpin = match arg with
+        | [target] ->
+          let url = OpamUrl.of_string target in
+          OpamPackage.Set.filter
+            (fun nv ->
+               match OpamSwitchState.url st nv with
+               | Some u ->
+                 let u = OpamFile.URL.url u in
+                 OpamUrl.(u.transport = url.transport && u.path = url.path)
+               | None -> false)
+            st.pinned |>
+          OpamPackage.names_of_packages |>
+          OpamPackage.Name.Set.elements
+        | _ -> []
+      in
+      let to_unpin, errs =
+        if to_unpin <> [] then to_unpin, [] else
+          List.fold_left (fun (names,errs) n -> match (fst package_name) n with
+              | `Ok name -> name::names,errs
+              | `Error e -> names,e::errs)
+            ([],[]) arg
       in
       (match errs with
        | [] ->
-         OpamGlobalState.with_ `Lock_none @@ fun gt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.unpin st ~action names;
+         ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ()
        | es -> `Error (false, String.concat "\n" es))
     | Some `edit, [nv]  ->
