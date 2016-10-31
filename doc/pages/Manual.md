@@ -515,8 +515,8 @@ Additionally, the number of hexadecimal chars must match exactly what is
 expected by the corresponding algorithm (resp. 32, 64 and 128 for MD5, SHA256
 and SHA512).
 
-At the moment, use of SHA256 and SHA512 requires `openssl` to be installed on
-the system.
+If `openssl` is installed on the system, it will be used for faster computation
+of SHA hashes.
 
 ## Specific file formats
 
