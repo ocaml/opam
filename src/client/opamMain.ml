@@ -441,7 +441,9 @@ let list =
        the highest one available or the highest one). This flag disables this \
        behaviour and shows all matching versions. This also changes the \
        default display format to include package versions instead of just \
-       package names (including when --short is set)."
+       package names (including when --short is set). This is automatically \
+       turned on when a single non-pattern package name is provided on the \
+       command-line."
   in
   let normalise = mk_flag ["normalise"] ~section:display_docs
       "Print the values of opam fields normalised"
@@ -463,6 +465,14 @@ let list =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.(!r.current_switch) = None
+    in
+    let all_versions =
+      all_versions ||
+      state_selector = [] && match packages with
+      | [single] ->
+        (try ignore (OpamPackage.Name.of_string single); true
+         with Failure _ -> false)
+      | _ -> false
     in
     let state_selector =
       if state_selector = [] then
