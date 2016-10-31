@@ -6,6 +6,23 @@ PATH=~/local/bin:$PATH; export PATH
 
 TARGET="$1"; shift
 
+# Install the build requirements into $OPAMBSROOT using the opam binary from the
+# prepare step
+install-bootstrap () {
+    opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
+    eval $(opam config env --root=$OPAMBSROOT)
+    if [ "$OPAM_TEST" = "1" ]; then
+        opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner dose3 jsonm opam-file-format --yes
+        # Allow use of ocamlfind packages in ~/local/lib
+        FINDCONF=$(ocamlfind printconf conf)
+        sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
+        mv $FINDCONF.1 $FINDCONF
+    else
+        opam install ocamlbuild --yes
+    fi
+    rm -f "$OPAMBSROOT"/log/*
+}
+
 case "$TARGET" in
     prepare)
         mkdir -p ~/local/bin
@@ -16,20 +33,10 @@ case "$TARGET" in
         ;;
     install)
         # Note: this part is cached, and must be idempotent
-        if [ -d "$OPAMBSROOT" ]; then
-            opam update --root=$OPAMBSROOT
-        else
-            opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
-        fi
-        eval $(opam config env --root=$OPAMBSROOT)
-        if [ "$OPAM_TEST" = "1" ]; then
-            opam install ocamlfind lwt.2.5.2 cohttp.0.20.2 ssl cmdliner dose3 jsonm opam-file-format --yes
-            # Allow use of ocamlfind packages in ~/local/lib
-            FINDCONF=$(ocamlfind printconf conf)
-            sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
-            mv $FINDCONF.1 $FINDCONF
-        else
-            opam install ocamlbuild --yes
+        # Re-init opam from scratch if the install fails
+        if [ -d $OPAMBSROOT ]
+        then install-bootstrap || { rm -rf $OPAMBSROOT; install-bootstrap; }
+        else install-bootstrap
         fi
         exit 0
         ;;
