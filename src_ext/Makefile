@@ -1,6 +1,6 @@
 -include ../Makefile.config
 
-SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm
+SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm opam-file-format
 
 URL_cppo = http://mjambon.com/releases/cppo/cppo-1.1.2.tar.gz
 MD5_cppo = f1a551639c0c667ee8840d95ea5b2ab7
@@ -28,6 +28,9 @@ MD5_uutf = 708c0421e158b390c7cc341f37b40add
 
 URL_jsonm = http://erratique.ch/software/jsonm/releases/jsonm-0.9.1.tbz
 MD5_jsonm = 631a5dabdada83236c83056f60e42685
+
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0-alpha5.tar.gz
+MD5_opam-file-format = 2ccdf87e2bd8ed8541dda1d3369b3199
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
@@ -105,13 +108,13 @@ clean:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
 
 distclean:
-	rm -rf cudf extlib re graph dose cmdliner uutf jsonm
+	rm -rf cudf extlib re graph dose cmdliner uutf jsonm opam-file-format
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp
 	rm -f *.cm* *.o *.a *.lib
 	rm -rf lib
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo uutf jsonm
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo uutf jsonm opam-file-format
 
 inst_objs = cp $(1)/*.cm*i lib
 
@@ -129,6 +132,7 @@ copy: build
 	$(call inst_objs,dose/algo)
 	$(call inst_objs,uutf/src)
 	$(call inst_objs,jsonm/src)
+	$(call inst_objs,opam-file-format/src)
 	$(call inst_objs,.)
 
 # --
@@ -266,6 +270,19 @@ define PROJ_jsonm
   INCDIRS = uutf/src
 endef
 export PROJ_jsonm
+
+SRC_opam-file-format = \
+  opamParserTypes.mli \
+  opamLexer.mli opamLexer.mll \
+  opamParser.mly \
+  opamPrinter.mli  opamPrinter.ml
+
+define PROJ_opam-file-format
+  SOURCES = $(call addmli,opam-file-format/src,$(SRC_opam-file-format))
+  RESULT = opam-file-format
+  LIB_PACK_NAME =
+endef
+export PROJ_opam-file-format
 
 # --
 

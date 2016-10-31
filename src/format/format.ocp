@@ -5,10 +5,6 @@ then {
 begin library "opam-format"
   sort = false
   files   = [
-    "opamParserTypes.mli"
-    "opamParser.mly"
-    "opamLexer.mll"
-    "opamPrinter.ml"
     "opamFormatConfig.ml"
     "opamSwitch.ml"
     "opamPackage.ml"
@@ -25,6 +21,7 @@ begin library "opam-format"
   ]
 
   requires = [
+    "opam-file-format"
     "opam-core"
     "re.pcre"
   ]

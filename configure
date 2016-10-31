@@ -586,6 +586,7 @@ PACKAGE_URL=''
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
+OCAML_PKG_opam_file_format
 OCAML_PKG_jsonm
 OCAML_PKG_dose3_algo
 OCAML_PKG_dose3_common
@@ -4509,6 +4510,30 @@ $as_echo "not found" >&6; }
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-file-format" >&5
+$as_echo_n "checking for OCaml findlib package opam-file-format... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in opam-file-format  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_opam_file_format=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_opam_file_format=no
+  fi
+
+
+
+
 echo
 
 
@@ -4540,7 +4565,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml META src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5250,7 +5275,6 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
-    "META") CONFIG_FILES="$CONFIG_FILES META" ;;
     "src/core.META") CONFIG_FILES="$CONFIG_FILES src/core.META" ;;
     "src/format.META") CONFIG_FILES="$CONFIG_FILES src/format.META" ;;
     "src/repository.META") CONFIG_FILES="$CONFIG_FILES src/repository.META" ;;

@@ -1,7 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
-(*    Copyright 2012 INRIA                                                *)
+(*    Copyright 2016 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -9,19 +8,11 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM config file lexer *)
+(** Pure OCaml implementation of SHA256/512 hashing functions. Functions take a
+    filename and return the hash as an hex string. *)
 
-open OpamParserTypes
+val sha256: string -> string
 
-exception Error of string
+val sha512: string -> string
 
-val relop: string -> relop
-
-val logop: string -> logop
-
-val pfxop: string -> pfxop
-
-val env_update_op: string -> env_update_op
-
-
-val token: Lexing.lexbuf -> OpamParser.token
+val hash: [< `SHA256 | `SHA512 ] -> string -> string

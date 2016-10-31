@@ -70,6 +70,7 @@ AC_CHECK_OCAML_PKG([cudf])
 AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([jsonm])
+AC_CHECK_OCAML_PKG([opam-file-format])
 
 dnl echo
 dnl echo "extlib........................ ${OCAML_PKG_extlib}"
@@ -107,7 +108,6 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
-  META
   src/core.META
   src/format.META
   src/repository.META

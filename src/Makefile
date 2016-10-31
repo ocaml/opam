@@ -25,8 +25,6 @@ endif
 
 export OCAMLFLAGS OCAMLLDFLAGS
 
-USE_BYTE ?=
-LIBEXT = $(if $(USE_BYTE),.cma,.cmxa)
 BINTARGET = $(if $(USE_BYTE),byte-code,native-code)
 
 # --
@@ -37,7 +35,7 @@ endif
 
 ifneq ($(HAS_LIBEXT),)
   EXT_INCDIRS = ../src_ext/lib
-  LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm
+  LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo uutf jsonm opam-file-format
 else
   ifeq ($(HAS_PACKAGES),)
     $(error Dependencies missing. Either run 'make lib-ext' or install them and re-run './configure')
@@ -63,10 +61,10 @@ INCDIRS = $(EXT_INCDIRS) $(SUBS)
 
 export INCDIRS
 
-opam-lib.byte: client/opamGitVersion.ml
+opam-lib.byte:
 	$(MAKE) $(OPAMLIB:=.cma)
 
-opam-lib.native: client/opamGitVersion.ml
+opam-lib.native:
 	$(MAKE) $(OPAMLIB:=.cmxa)
 
 opam-lib: opam-lib.byte $(if $(USE_BYTE),,opam-lib.native) opam-admin.top
@@ -133,10 +131,6 @@ opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
 opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_format = \
-  opamParserTypes.mli \
-  opamParser.mly \
-  opamLexer.mll \
-  opamPrinter.ml \
   opamFormatConfig.ml \
   opamLineLexer.mll \
   opamRepositoryName.ml \
@@ -296,7 +290,7 @@ export PROJ_opam-admin
 define PROJ_opam-installer
   SOURCES = tools/opam_installer.ml
   RESULT = opam-installer
-  LIBS = $(LIBS) $(OPAMLIB)
+  LIBS = $(LIBS) opam-core opam-format opam-state
 endef
 export PROJ_opam-installer
 
@@ -333,7 +327,7 @@ define lib_inst_files
 	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti))
 endef
 
-../opam-%.install:
+../opam-%.install: opam-%$(LIBEXT)
 	@echo 'lib: [' >$@
 	@echo '  "src/$*.META" {"META"}' >>$@
 	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,$*)) } >>$@
@@ -349,8 +343,7 @@ endef
 	@echo '  "src/opam-admin.top"' >>$@
 	@echo ']' >>$@
 
-# Older, all-inclusive opam-lib with ocamlfind sub-packages (still used by 'make
-# libinstall')
+# Older, all-inclusive opam-lib with ocamlfind sub-packages
 ../opam-lib.install: $(OPAMLIB:=.cma)
 	@echo 'lib: [' >$@
 	@echo '  "META"' >>$@
@@ -387,7 +380,6 @@ clean-aux:
 	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
 	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
 	rm -f $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
-	rm -f *.META
 
 clean: clean-aux
 
