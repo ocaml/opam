@@ -142,28 +142,29 @@ module B = struct
   let pull_dir_quiet local_dirname url =
     rsync_dirs url local_dirname
 
-  let pull_repo repo =
+  let pull_repo repo_name repo_root repo_url =
     log "pull-repo";
-    pull_file_quiet repo.repo_root
-      (OpamRepositoryPath.Remote.repo repo)
+    pull_file_quiet repo_root (OpamRepositoryPath.Remote.repo repo_url)
     @@+ fun res_repo ->
     pull_dir_quiet
-      (OpamRepositoryPath.packages_dir repo)
-      (OpamRepositoryPath.Remote.packages_url repo)
+      (OpamRepositoryPath.packages_dir repo_root)
+      (OpamRepositoryPath.Remote.packages_url repo_url)
     @@+ fun res_pkgs ->
     match res_repo, res_pkgs with
     | Not_available _, Not_available _ ->
       OpamConsole.error "Could not synchronize %s from %S"
-        (OpamRepositoryName.to_string repo.repo_name)
-        (OpamUrl.to_string repo.repo_url);
+        (OpamRepositoryName.to_string repo_name)
+        (OpamUrl.to_string repo_url);
       OpamConsole.msg "[%s] %s %s\n"
         (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo.repo_name))
-        (OpamUrl.to_string repo.repo_url)
+           (OpamRepositoryName.to_string repo_name))
+        (OpamUrl.to_string repo_url)
         (OpamConsole.colorise `red "unavailable");
       Done ()
     | _ ->
-    let archives = OpamFilename.files (OpamRepositoryPath.archives_dir repo) in
+    let archives =
+      OpamFilename.files (OpamRepositoryPath.archives_dir repo_root)
+    in
     log "archives: %a"
       (slog (OpamStd.List.to_string OpamFilename.to_string)) archives;
     let rec dl_archives = function
@@ -175,7 +176,7 @@ module B = struct
           OpamFilename.remove archive;
           dl_archives archives
         | Some nv ->
-          let remote_url = OpamRepositoryPath.Remote.archive repo nv in
+          let remote_url = OpamRepositoryPath.Remote.archive repo_url nv in
           rsync_file remote_url archive @@+ function
           | Not_available _ -> OpamFilename.remove archive; dl_archives archives
           | _ -> dl_archives archives
@@ -183,8 +184,8 @@ module B = struct
     dl_archives archives @@| fun () ->
     OpamConsole.msg "[%s] %s synchronized\n"
       (OpamConsole.colorise `blue
-         (OpamRepositoryName.to_string repo.repo_name))
-      (OpamUrl.to_string repo.repo_url)
+         (OpamRepositoryName.to_string repo_name))
+      (OpamUrl.to_string repo_url)
 
   let pull_url package local_dirname checksum remote_url =
     OpamFilename.mkdir local_dirname;
@@ -224,15 +225,15 @@ module B = struct
       (string_of_download r);
     r
 
-  let pull_archive repo url =
-    let local_dir = OpamRepositoryPath.archives_dir repo in
+  let pull_archive repo_name repo_root url =
+    let local_dir = OpamRepositoryPath.archives_dir repo_root in
     OpamFilename.mkdir local_dir;
     pull_file_quiet local_dir url @@| function
     | Not_available _ as r when OpamCoreConfig.(!r.verbose_level) < 2 -> r
     | r ->
       OpamConsole.msg "[%s] %s %s\n"
         (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo.repo_name))
+           (OpamRepositoryName.to_string repo_name))
         (OpamUrl.to_string url)
         (string_of_download r);
       r

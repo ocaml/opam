@@ -137,8 +137,8 @@ let do_upgrade () =
   let write_opam ?(add_files=[]) opam =
     let nv = O.package opam in
     let pfx = Some (OpamPackage.name_to_string nv) in
-    let files_dir = OpamRepositoryPath.files repo pfx nv in
-    O.write (OpamRepositoryPath.opam repo pfx nv) opam;
+    let files_dir = OpamRepositoryPath.files repo.repo_root pfx nv in
+    O.write (OpamRepositoryPath.opam repo.repo_root pfx nv) opam;
     List.iter (fun (base,contents) ->
         OpamFilename.(write Op.(files_dir // base) contents))
       add_files
@@ -387,7 +387,7 @@ let do_upgrade () =
     (OpamPackage.Name.Set.to_string all_base_packages);
 
   OpamPackage.Map.iter (fun package prefix ->
-      let opam_file = OpamRepositoryPath.opam repo prefix package in
+      let opam_file = OpamRepositoryPath.opam repo.repo_root prefix package in
       let opam0 = OpamFile.OPAM.read opam_file in
       OpamFile.OPAM.print_errors ~file:opam_file opam0;
       let nv = OpamFile.OPAM.package opam0 in
@@ -402,7 +402,7 @@ let do_upgrade () =
     )
     packages;
 
-  let repo_file = OpamRepositoryPath.repo repo in
+  let repo_file = OpamRepositoryPath.repo repo.repo_root in
   OpamFile.Repo.write repo_file
     (OpamFile.Repo.with_opam_version upgradeto_version
        (OpamFile.Repo.safe_read repo_file))

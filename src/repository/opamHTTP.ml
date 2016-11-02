@@ -25,39 +25,46 @@ type state = {
 
 let state_cache = ref []
 
-let index_file = "urls.txt"
+let index_file_name = "urls.txt"
 let index_file_new = "urls.txt.1"
-let index_archive = "index.tar.gz"
+let index_archive_name = "index.tar.gz"
 
-let local_files repo =
+let local_index_file repo_root : file_attribute_set OpamFile.t =
+  OpamFile.make OpamFilename.Op.(repo_root // index_file_name)
+let remote_index_file url = OpamUrl.Op.(url / index_file_name)
+
+let local_index_file_new repo_root : file_attribute_set OpamFile.t =
+  OpamFile.make OpamFilename.Op.(repo_root // index_file_new)
+
+let local_index_archive repo_root =
+  OpamFilename.Op.(repo_root // index_archive_name)
+let remote_index_archive url = OpamUrl.Op.(url / index_archive_name)
+
+let local_files repo_root =
   let all =
-    (OpamFile.filename (OpamRepositoryPath.repo repo)) ::
-      OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo) @
-      OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo) in
+    (OpamFile.filename (OpamRepositoryPath.repo repo_root)) ::
+      OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root) @
+      OpamFilename.rec_files (OpamRepositoryPath.archives_dir repo_root) in
   List.filter OpamFilename.exists all
-
-let as_index_file f = (OpamFile.make f : file_attribute_set OpamFile.t)
 
 (* Generate urls.txt (for opam-admin, or rebuilding if interrupted during
    update *)
-let rebuild_local_state ~write repo =
-  let local_index_file =
-    as_index_file OpamFilename.Op.(repo.repo_root // index_file)
-  in
+let rebuild_local_state ~write repo_root =
   log "Rebuilding urls.txt at %a" (slog OpamFilename.Dir.to_string)
-    repo.repo_root;
+    repo_root;
   let index =
     List.fold_left (fun set f ->
       if not (OpamFilename.exists f) then set
       else
-        let attr = OpamFilename.to_attribute repo.repo_root f in
+        let attr = OpamFilename.to_attribute repo_root f in
         OpamFilename.Attribute.Set.add attr set
-    ) OpamFilename.Attribute.Set.empty (local_files repo)
+    ) OpamFilename.Attribute.Set.empty (local_files repo_root)
   in
-  if write then OpamFile.File_attributes.write local_index_file index;
+  if write then
+    OpamFile.File_attributes.write (local_index_file repo_root) index;
   index
 
-let state_of_index_file repo index_file =
+let state_of_index_file repo_root url index_file =
   OpamFilename.Attribute.Set.fold (fun r state ->
       let base = OpamFilename.Attribute.base r in
       let perm = match OpamFilename.Attribute.perm r with
@@ -65,9 +72,9 @@ let state_of_index_file repo index_file =
         | Some p -> p in
       let digest = OpamFilename.Attribute.md5 r in
       let remote =
-        OpamUrl.Op.(repo.repo_url / OpamFilename.Base.to_string base)
+        OpamUrl.Op.(url / OpamFilename.Base.to_string base)
       in
-      let local = OpamFilename.create repo.repo_root base in
+      let local = OpamFilename.create repo_root base in
       { remote_local =
           OpamUrl.Map.add remote local state.remote_local;
         local_remote =
@@ -77,31 +84,23 @@ let state_of_index_file repo index_file =
     { local_remote = OpamFilename.Map.empty;
       remote_local = OpamUrl.Map.empty; }
 
-let get_state repo =
-  try List.assoc repo.repo_url !state_cache with Not_found ->
+let get_state repo_root url =
+  try List.assoc repo_root !state_cache with Not_found ->
     let urls =
-      try OpamFile.File_attributes.read
-            (as_index_file OpamFilename.Op.(repo.repo_root // index_file))
-      with e -> OpamStd.Exn.fatal e; rebuild_local_state ~write:true repo
+      try OpamFile.File_attributes.read (local_index_file repo_root)
+      with e -> OpamStd.Exn.fatal e; rebuild_local_state ~write:true repo_root
     in
-    let state = state_of_index_file repo urls in
-    state_cache := (repo.repo_url, state) :: !state_cache;
+    let state = state_of_index_file repo_root url urls in
+    state_cache := (repo_root, state) :: !state_cache;
     state
 
-let sync_state repo =
-  let old_state = get_state repo in
-  let remote_index_file = OpamUrl.Op.(repo.repo_url / index_file) in
-  let remote_index_archive = OpamUrl.Op.(repo.repo_url / index_archive) in
-  let index_file =
-    as_index_file OpamFilename.Op.(repo.repo_root // index_file) in
-  let index_file_new =
-    as_index_file OpamFilename.Op.(repo.repo_root // index_file_new) in
-  let index_archive = OpamFilename.Op.(repo.repo_root // index_archive) in
+let sync_state name repo_root url =
+  let old_state = get_state repo_root url in
   OpamDownload.download_as ~compress:true ~overwrite:true
-    remote_index_file (OpamFile.filename index_file_new)
+    (remote_index_file url) (OpamFile.filename (local_index_file_new repo_root))
   @@+ fun () ->
-  let urls = OpamFile.File_attributes.read index_file_new in
-  let new_state = state_of_index_file repo urls in
+  let urls = OpamFile.File_attributes.read (local_index_file_new repo_root) in
+  let new_state = state_of_index_file repo_root url urls in
   let changed_files =
     OpamFilename.Map.merge (fun _ oldf newf -> match oldf, newf with
         | Some (_,_,oldck), Some (rem,_,newck) ->
@@ -116,7 +115,7 @@ let sync_state repo =
     changed_files;
   (* Remove the index before making changes, so that it'll be consistently
      rebuilt in case of interruption *)
-  OpamFilename.remove (OpamFile.filename index_file);
+  OpamFilename.remove (OpamFile.filename (local_index_file repo_root));
   (if OpamFilename.Map.cardinal changed_files > 4 then (
       log "-> downloading the full archive";
       OpamProcess.Job.catch
@@ -127,13 +126,13 @@ let sync_state repo =
               Initialisation may take some time.\n";
            Done false) @@
       OpamDownload.download_as ~overwrite:true
-        remote_index_archive index_archive
+        (remote_index_archive url) (local_index_archive repo_root)
       @@+ fun () ->
       OpamFilename.Map.iter (fun f _ ->
           if OpamFilename.Map.mem f old_state.local_remote
           then OpamFilename.remove f)
         changed_files;
-      OpamFilename.extract_in index_archive repo.repo_root;
+      OpamFilename.extract_in (local_index_archive repo_root) repo_root;
       Done true
     ) else
      Done false)
@@ -149,14 +148,14 @@ let sync_state repo =
    else Done ())
   @@+ fun () ->
   OpamFilename.move
-    ~src:(OpamFile.filename index_file_new)
-    ~dst:(OpamFile.filename index_file);
-  state_cache := (repo.repo_url, new_state) ::
-                 (List.remove_assoc repo.repo_url !state_cache);
+    ~src:(OpamFile.filename (local_index_file_new repo_root))
+    ~dst:(OpamFile.filename (local_index_file repo_root));
+  state_cache := (repo_root, new_state) ::
+                 (List.remove_assoc repo_root !state_cache);
   OpamConsole.msg "[%s] synchronized from %s\n"
     (OpamConsole.colorise `blue
-       (OpamRepositoryName.to_string repo.repo_name))
-    (OpamUrl.to_string repo.repo_url);
+       (OpamRepositoryName.to_string name))
+    (OpamUrl.to_string url);
   Done ()
 
 let is_up_to_date state local_file =
@@ -189,9 +188,9 @@ module B = struct
     repo_root; repo_address;
   }
 *)
-  let pull_repo repo =
+  let pull_repo repo_name repo_root url =
     log "pull-repo";
-    sync_state repo
+    sync_state repo_name repo_root url
 
   let pull_url package dirname checksum remote_url =
     log "pull-file into %a: %a"
@@ -245,9 +244,9 @@ module B = struct
       (OpamFilename.remove local_file;
        Done (Not_available (OpamUrl.to_string remote_url)))
 
-  let pull_archive repo url =
+  let pull_archive name repo_root url =
     log "pull-archive";
-    let state = get_state repo in
+    let state = get_state repo_root url in
     match OpamUrl.Map.find_opt url state.remote_local with
     | None -> Done (Not_available (OpamUrl.to_string url))
     | Some local_file ->
@@ -263,7 +262,7 @@ module B = struct
       @@+ fun () ->
       OpamConsole.msg "[%s] %s downloaded\n"
         (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo.repo_name))
+           (OpamRepositoryName.to_string name))
         (OpamUrl.to_string url);
       Done (Result local_file)
 
@@ -275,12 +274,7 @@ end
 (* Helper functions used by opam-admin *)
 
 let make_urls_txt ~write repo_root =
-  rebuild_local_state ~write {
-    repo_name = OpamRepositoryName.of_string "local";
-    repo_root;
-    repo_url = OpamUrl.empty;
-    repo_priority = 0;
-  }
+  rebuild_local_state ~write repo_root
 
 let make_index_tar_gz repo_root =
   OpamFilename.in_dir repo_root (fun () ->

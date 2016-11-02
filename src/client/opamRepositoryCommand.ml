@@ -76,7 +76,7 @@ let add rt name url =
       "Invalid repository name, %s exists"
       (OpamFilename.Dir.to_string repo.repo_root);
   if OpamUrl.local_dir url <> None &&
-     OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo) = None &&
+     OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo.repo_url) = None &&
      not (OpamConsole.confirm
             "%S doesn't contain a \"packages\" directory.\n\
              Is it really the directory of your repo ?"

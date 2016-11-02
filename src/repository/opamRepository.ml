@@ -26,7 +26,7 @@ let find_backend_by_kind = function
 
 let url_backend url = find_backend_by_kind url.OpamUrl.backend
 
-let find_backend r = find_backend_by_kind r.repo_url.OpamUrl.backend
+let find_backend r = url_backend r.repo_url
 
 (* initialize the current directory *)
 let init root name =
@@ -63,7 +63,7 @@ let pull_url package local_dirname checksum remote_url =
 let revision repo =
   let kind = repo.repo_url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
-  B.revision repo
+  B.revision repo.repo_root
 
 let pull_url_and_fix_digest package dirname checksum file url =
   pull_url package dirname None url @@+ function
@@ -87,25 +87,25 @@ let pull_archive repo nv =
     (val find_backend_by_kind repo.repo_url.OpamUrl.backend:
       OpamRepositoryBackend.S)
   in
-  let url = OpamRepositoryPath.Remote.archive repo nv in
-  B.pull_archive repo url
+  let url = OpamRepositoryPath.Remote.archive repo.repo_url nv in
+  B.pull_archive repo.repo_name repo.repo_root url
 
 let packages r =
-  OpamPackage.list (OpamRepositoryPath.packages_dir r)
+  OpamPackage.list (OpamRepositoryPath.packages_dir r.repo_root)
 
 let packages_with_prefixes r =
-  OpamPackage.prefixes (OpamRepositoryPath.packages_dir r)
+  OpamPackage.prefixes (OpamRepositoryPath.packages_dir r.repo_root)
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
-  B.pull_repo repo
+  B.pull_repo repo.repo_name repo.repo_root repo.repo_url
 
 let make_archive ?(gener_digest=false) repo prefix nv =
-  let url_file = OpamRepositoryPath.url repo prefix nv in
-  let files_dir = OpamRepositoryPath.files repo prefix nv in
-  let archive = OpamRepositoryPath.archive repo nv in
-  let archive_dir = OpamRepositoryPath.archives_dir repo in
+  let url_file = OpamRepositoryPath.url repo.repo_root prefix nv in
+  let files_dir = OpamRepositoryPath.files repo.repo_root prefix nv in
+  let archive = OpamRepositoryPath.archive repo.repo_root nv in
+  let archive_dir = OpamRepositoryPath.archives_dir repo.repo_root in
   if not (OpamFilename.exists_dir archive_dir) then
     OpamFilename.mkdir archive_dir;
 

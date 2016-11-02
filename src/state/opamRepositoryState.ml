@@ -114,11 +114,11 @@ let load_repo_opams repo =
     (fun nv prefix ->
        match
          OpamFileTools.read_opam
-           (OpamRepositoryPath.packages repo prefix nv)
+           (OpamRepositoryPath.packages repo.repo_root prefix nv)
        with
        | None -> assert false
        | Some o -> o)
-    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo))
+    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo.repo_root))
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE";

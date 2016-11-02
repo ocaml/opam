@@ -263,7 +263,7 @@ let rec process
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
-    let opam_f = OpamRepositoryPath.opam repo prefix nv in
+    let opam_f = OpamRepositoryPath.opam repo.repo_root prefix nv in
     match OpamFile.OPAM.read_opt opam_f with
     | Some opam ->
       OpamFormula.ands OpamFile.OPAM.([depends opam; depopts opam]) |>
@@ -331,7 +331,7 @@ let rec process
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
-        let archive = OpamRepositoryPath.archive repo nv in
+        let archive = OpamRepositoryPath.archive repo.repo_root nv in
         not (OpamFilename.exists archive)
       ) new_index in
   let to_add =
@@ -352,7 +352,7 @@ let rec process
     if not (OpamPackage.Set.is_empty to_remove) then
       OpamConsole.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
     OpamPackage.Set.iter (fun nv ->
-        let archive = OpamRepositoryPath.archive repo nv in
+        let archive = OpamRepositoryPath.archive repo.repo_root nv in
         OpamConsole.msg "Removing %s ...\n" (OpamFilename.to_string archive);
         if not dryrun then
           OpamFilename.remove archive
@@ -363,8 +363,8 @@ let rec process
       OpamConsole.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
     OpamPackage.Set.iter (fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
-        let local_archive = OpamRepositoryPath.archive repo nv in
-        let url_file = OpamRepositoryPath.url repo prefix nv in
+        let local_archive = OpamRepositoryPath.archive repo.repo_root nv in
+        let url_file = OpamRepositoryPath.url repo.repo_root prefix nv in
         try
           if not dryrun then OpamFilename.remove local_archive;
           match OpamFile.URL.read_opt url_file with

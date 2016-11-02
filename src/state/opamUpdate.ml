@@ -21,7 +21,7 @@ let slog = OpamConsole.slog
 let eval_redirect gt repo =
   if repo.repo_url.OpamUrl.backend <> `http then None else
   let redirect =
-    repo
+    repo.repo_root
     |> OpamRepositoryPath.repo
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.redirect
@@ -76,7 +76,7 @@ let repository gt repo =
           job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
-  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo) in
+  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo.repo_root) in
   let repo_vers = OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then

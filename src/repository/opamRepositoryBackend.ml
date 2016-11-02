@@ -14,9 +14,10 @@ module type S = sig
   val name: OpamUrl.backend
   val pull_url: package -> dirname -> OpamHash.t option -> url ->
     generic_file download OpamProcess.job
-  val pull_repo: repository -> unit OpamProcess.job
-  val pull_archive: repository -> url -> filename download OpamProcess.job
-  val revision: repository -> version option OpamProcess.job
+  val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
+  val pull_archive:
+    repository_name -> dirname -> url -> filename download OpamProcess.job
+  val revision: dirname -> version option OpamProcess.job
 end
 
 let compare r1 r2 =

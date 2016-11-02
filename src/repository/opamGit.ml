@@ -19,15 +19,15 @@ module Git : OpamVCS.VCS= struct
 
   let name = `git
 
-  let exists repo =
-    OpamFilename.exists_dir (repo.repo_root / ".git")
+  let exists repo_root =
+    OpamFilename.exists_dir (repo_root / ".git")
 
-  let git repo =
-    let dir = OpamFilename.Dir.to_string repo.repo_root in
+  let git repo_root =
+    let dir = OpamFilename.Dir.to_string repo_root in
     fun ?verbose ?env args ->
       OpamSystem.make_command ~dir ?verbose ?env "git" args
 
-  let init repo =
+  let init repo_root repo_url =
     let env =
       Array.append (Unix.environment ()) [|
         "GIT_AUTHOR_NAME=Opam";
@@ -36,33 +36,33 @@ module Git : OpamVCS.VCS= struct
         "GIT_COMMITTER_EMAIL=opam@ocaml.org"
       |] in
     OpamProcess.Job.of_list [
-      git repo ~env [ "init" ];
-      git repo ~env [ "remote" ; "add" ; "origin" ;
-                      OpamUrl.base_url repo.repo_url ];
-      git repo ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
+      git repo_root ~env [ "init" ];
+      git repo_root ~env [ "remote" ; "add" ; "origin" ;
+                      OpamUrl.base_url repo_url ];
+      git repo_root ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
     ] @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
 
   let remote_ref = "refs/remotes/opam-ref"
 
-  let fetch repo =
+  let fetch repo_root repo_url =
     let check_and_fix_remote =
-      git repo ~verbose:false [ "config" ; "--get"; "remote.origin.url" ]
+      git repo_root ~verbose:false [ "config" ; "--get"; "remote.origin.url" ]
       @@> fun r ->
       OpamSystem.raise_on_process_error r;
       let current_remote = match r.OpamProcess.r_stdout with
         | [url] -> Some url
         | _ -> None
       in
-      if current_remote <> Some (OpamUrl.base_url repo.repo_url) then (
-        log "Git remote for %s needs updating (was: %s)"
-          (OpamRepositoryBackend.to_string repo)
+      if current_remote <> Some (OpamUrl.base_url repo_url) then (
+        log "Git remote %s needs updating (was: %s)"
+          (OpamUrl.to_string repo_url)
           (OpamStd.Option.default "<none>" current_remote);
         OpamProcess.Job.of_list [
-          git repo ~verbose:false [ "remote" ; "rm" ; "origin" ];
-          git repo ~verbose:false
-            [ "remote" ; "add" ; "origin"; OpamUrl.base_url repo.repo_url ]
+          git repo_root ~verbose:false [ "remote" ; "rm" ; "origin" ];
+          git repo_root ~verbose:false
+            [ "remote" ; "add" ; "origin"; OpamUrl.base_url repo_url ]
         ] @@+ function
         | None -> Done ()
         | Some (_,err) -> OpamSystem.process_error err
@@ -70,9 +70,9 @@ module Git : OpamVCS.VCS= struct
         Done ()
     in
     check_and_fix_remote @@+ fun () ->
-    let branch = OpamStd.Option.default "HEAD" repo.repo_url.OpamUrl.hash in
+    let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
     let refspec = Printf.sprintf "+%s:%s" branch remote_ref in
-    git repo [ "fetch" ; "-q"; "origin"; "--update-shallow"; refspec ]
+    git repo_root [ "fetch" ; "-q"; "origin"; "--update-shallow"; refspec ]
     @@> fun r ->
     if OpamProcess.is_success r then Done ()
     else
@@ -81,14 +81,14 @@ module Git : OpamVCS.VCS= struct
          Also, remove the [--update-shallow] option in case git is so old that
          it didn't exist yet, as that is not needed in the general case *)
       OpamProcess.Job.of_list
-        [ git repo [ "fetch" ; "-q"; "origin" ];
-          git repo [ "fetch" ; "-q"; "origin"; refspec ] ]
+        [ git repo_root [ "fetch" ; "-q"; "origin" ];
+          git repo_root [ "fetch" ; "-q"; "origin"; refspec ] ]
       @@+ function
       | None -> Done ()
       | Some (_,err) -> OpamSystem.process_error err
 
-  let revision repo =
-    git repo ~verbose:false [ "rev-parse"; "HEAD" ] @@>
+  let revision repo_root =
+    git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
     fun r ->
     OpamSystem.raise_on_process_error r;
     match r.OpamProcess.r_stdout with
@@ -99,35 +99,35 @@ module Git : OpamVCS.VCS= struct
       else
         Done full
 
-  let reset repo =
-    git repo [ "reset" ; "--hard"; remote_ref; "--" ]
+  let reset repo_root _repo_url =
+    git repo_root [ "reset" ; "--hard"; remote_ref; "--" ]
     @@> fun r ->
     if OpamProcess.is_failure r then
       OpamSystem.internal_error "Git error: %s not found." remote_ref
     else
-      if OpamFilename.exists (repo.repo_root // ".gitmodules") then
-        git repo [ "submodule"; "update"; "--init"; "--recursive" ]
+      if OpamFilename.exists (repo_root // ".gitmodules") then
+        git repo_root [ "submodule"; "update"; "--init"; "--recursive" ]
         @@> fun r ->
         if OpamProcess.is_failure r then
           OpamConsole.warning "Git submodule update failed in %s"
-            (OpamFilename.Dir.to_string repo.repo_root);
+            (OpamFilename.Dir.to_string repo_root);
         Done ()
       else Done ()
 
-  let diff repo =
-    git repo [ "diff" ; "--name-only" ; "HEAD"; remote_ref; "--" ]
+  let diff repo_root _repo_url =
+    git repo_root [ "diff" ; "--name-only" ; "HEAD"; remote_ref; "--" ]
     @@> fun r ->
     if OpamProcess.is_failure r then
       OpamSystem.internal_error "Git error: %s not found." remote_ref
     else
       Done (r.OpamProcess.r_stdout <> [])
 
-  let versionned_files repo =
-    git repo ~verbose:false [ "ls-files" ] @@> fun r ->
+  let versionned_files repo_root =
+    git repo_root ~verbose:false [ "ls-files" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout
 
-  let vc_dir repo = OpamFilename.Op.(repo.repo_root / ".git")
+  let vc_dir repo_root = OpamFilename.Op.(repo_root / ".git")
 
 end
 

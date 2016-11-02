@@ -46,19 +46,19 @@ let process args =
             (OpamPackage.to_string package) (OpamPackage.to_string new_pkg);
         ) else (
           OpamConsole.msg "Processing %s\n" (OpamPackage.to_string package);
-          let path = OpamRepositoryPath.packages repo prefix package in
+          let path = OpamRepositoryPath.packages repo.repo_root prefix package in
           let new_path =
             let prefix = match prefix with
               | None   -> None
               | Some _ -> Some (OpamPackage.Name.to_string args.dst)
             in
-            OpamRepositoryPath.packages repo prefix new_pkg
+            OpamRepositoryPath.packages repo.repo_root prefix new_pkg
           in
           OpamFilename.move_dir ~src:path ~dst:new_path;
           (* XXX: do we want to rename the findlib packages as well ?? *)
         )
       ) else (
-        let opam_f = OpamRepositoryPath.opam repo prefix package in
+        let opam_f = OpamRepositoryPath.opam repo.repo_root prefix package in
         let opam = OpamFile.OPAM.read opam_f in
         let rename (n, c) =
           if n = args.src then Atom (args.dst, c) else Atom (n, c)

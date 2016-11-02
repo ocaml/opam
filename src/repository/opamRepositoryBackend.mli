@@ -23,16 +23,17 @@ module type S = sig
       directory. [checksum] is the optional expected checksum. *)
   val pull_url: package -> dirname -> OpamHash.t option -> url -> generic_file download OpamProcess.job
 
-  (** [pull_repo] pull the contents of a repository. *)
-  val pull_repo: repository -> unit OpamProcess.job
+  (** [pull_repo] pulls the contents of a repository, creating or updating the
+      contents of the given directory. *)
+  val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
 
-  (** [pull_archive repo archive] pull [archive] in the given
-      repository. *)
-  val pull_archive: repository -> url -> filename download OpamProcess.job
+  (** [pull_archive repo repo_root archive_url] pulls [archive] assuming it
+      belongs to the given repository. *)
+  val pull_archive: repository_name -> dirname -> url -> filename download OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful
       for VCS backends. *)
-  val revision: repository -> version option OpamProcess.job
+  val revision: dirname -> version option OpamProcess.job
 
 end
 
