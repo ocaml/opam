@@ -1631,12 +1631,13 @@ module RepoSyntax = struct
     browse       : string option;
     upstream     : string option;
     redirect     : (string * filter option) list;
+    archives     : url list;
   }
 
   let create
       ?browse ?upstream ?(opam_version=OpamVersion.current_nopatch)
-      ?(redirect=[]) () =
-    { opam_version; browse; upstream; redirect; }
+      ?(redirect=[]) ?(archives=[]) () =
+    { opam_version; browse; upstream; redirect; archives; }
 
   let empty = create ()
 
@@ -1644,11 +1645,13 @@ module RepoSyntax = struct
   let browse t = t.browse
   let upstream t = t.upstream
   let redirect t = t.redirect
+  let archives t = t.archives
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_browse browse t = { t with browse = Some browse }
   let with_upstream upstream t = { t with upstream = Some upstream }
   let with_redirect redirect t = { t with redirect }
+  let with_archives archives t = { t with archives }
 
   let fields = [
     "opam-version", Pp.ppacc
@@ -1660,6 +1663,9 @@ module RepoSyntax = struct
       with_redirect redirect
       (Pp.V.map_list ~depth:1
          (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+    "archive-mirrors", Pp.ppacc
+      with_archives archives
+      (Pp.V.map_list Pp.V.url)
   ]
 
   let pp =

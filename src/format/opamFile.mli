@@ -823,7 +823,9 @@ module Repo: sig
 
   val create:
     ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
-    ?redirect:(string * filter option) list -> unit -> t
+    ?redirect:(string * filter option) list ->
+    ?archives:url list ->
+    unit -> t
 
   (** The minimum OPAM version required for this repository *)
   val opam_version : t -> OpamVersion.t
@@ -837,6 +839,8 @@ module Repo: sig
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
 
+  val archives: t -> url list
+
   val with_opam_version : OpamVersion.t -> t -> t
 
   val with_browse: string -> t -> t
@@ -845,6 +849,7 @@ module Repo: sig
 
   val with_redirect: (string * filter option) list -> t -> t
 
+  val with_archives: url list -> t -> t
 end
 
 (** {2 urls.txt file *} *)
