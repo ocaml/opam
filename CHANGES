@@ -1,8 +1,23 @@
 2.0~alpha5
 * Merge stdout and stderr of child processes by default
 * Fixed regression on solver call times
-* Added `opam var` as an alias for `opam config var`
+* Added a few shorter command aliases: `opam var` `opam exec`, `opam env` for
+  the corresponding `opam config` commands
+* Simplified `opam repo` to only use `add` and `remove` in normal use, always
+  meaning the current switch (only) if not specified otherwise
 * Restrict package names and versions to a reasonable character set
+* Added support for SHA256 and SHA512 checksums
+* Separated the opam format lexer/parser/printers into a separate
+  `opam-file-format` library
+* Reporting on package definition file errors only when the file will be used,
+  and on by default (rather than all-off by default, and optionally all-on)
+* `opam lint` now accept multiple input files
+* `opam pin` interface yet improved, allow pinning all at once when a source
+  directory contains multiple packages. `opam unpin <dir>` now allowed to cancel
+  `opam pin <dir>`
+* Updated version of the dose lib dependency
+* All patch files used in package definitions are now assumed to apply with
+  `-p1`.
 
 2.0~alpha4
 * Added pre and post hooks for package command sections; allowed per-switch
