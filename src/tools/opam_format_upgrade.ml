@@ -274,6 +274,10 @@ let do_upgrade () =
               Atom (ocaml_official_pkgname, Empty);
               Atom (ocaml_variants_pkgname, Empty);
             ]) |>
+          O.with_depends (OpamFormula.ands (
+              List.map (fun name -> Atom (OpamPackage.Name.of_string name, Empty))
+                ["base-unix"; "base-threads"; "base-bigarray"]
+            )) |>
           O.with_maintainer [ "platform@lists.ocaml.org" ] |>
           O.with_flags [Pkgflag_Compiler] |>
           O.with_descr
@@ -326,7 +330,8 @@ let do_upgrade () =
       O.with_build_env ["CAML_LD_LIBRARY_PATH", Eq, "", None] |>
       O.with_env [
         "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
-        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%/stublibs", None
+        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%/stublibs", None;
+        "OCAML_TOPLEVEL_PATH", Eq, "%{toplevel}%", None;
       ] |>
       (* leave the Compiler flag to the implementations (since the user
          needs to select one)
