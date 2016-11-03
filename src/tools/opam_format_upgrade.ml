@@ -274,6 +274,10 @@ let do_upgrade () =
               Atom (ocaml_official_pkgname, Empty);
               Atom (ocaml_variants_pkgname, Empty);
             ]) |>
+          O.with_depends (OpamFormula.ands (
+              List.map (fun name -> Atom (OpamPackage.Name.of_string name, Empty))
+                ["base-unix"; "base-threads"; "base-bigarray"]
+            )) |>
           O.with_maintainer [ "platform@lists.ocaml.org" ] |>
           O.with_flags [Pkgflag_Compiler] |>
           O.with_descr
