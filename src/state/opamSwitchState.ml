@@ -608,17 +608,23 @@ let do_backup lock st = match lock with
       | true -> OpamFilename.remove (OpamFile.filename file)
       | false ->
         (* Reload, in order to skip the message if there were no changes *)
-        if load_selections st.switch_global st.switch = previous_selections
+        let new_selections = load_selections st.switch_global st.switch in
+        if new_selections.sel_installed = previous_selections.sel_installed
         then OpamFilename.remove (OpamFile.filename file)
         else
-          prerr_string
+          OpamConsole.errmsg "%s"
             (OpamStd.Format.reformat
                (Printf.sprintf
                   "\nThe former state can be restored with:\n\
-                  \    %s switch import %S\n\
-                   Or you can retry to install your package selection with:\n\
-                  \    %s install --restore\n%!"
-                  Sys.argv.(0) (OpamFile.to_string file) Sys.argv.(0))))
+                  \    %s switch import %S\n"
+                  Sys.argv.(0) (OpamFile.to_string file) ^
+                if OpamPackage.Set.is_empty
+                    (new_selections.sel_roots -- new_selections.sel_installed)
+                then "" else
+                  Printf.sprintf
+                    "Or you can retry to install your package selection with:\n\
+                    \    %s install --restore\n"
+                  Sys.argv.(0))))
   | _ -> fun _ -> ()
 
 let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
