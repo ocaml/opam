@@ -161,9 +161,6 @@ let compute_updates ?(force_path=false) st =
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
-  let toplevel_dir =
-    "OCAML_TOPLEVEL_PATH", "=",
-    OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch t.switch_config) in
 *)
   let fenv ?opam v =
     try OpamPackageVar.resolve st ?opam v
