@@ -885,10 +885,10 @@ files.
   defines environment updates that will be applied when running the package's
   build, install and remove scripts.
 
-- <a id="opamfield-extra-sources">`extra-sources: [ [ <URL> { <checksum> } <string> ] ... ]`</a>:
+- <a id="opamfield-extra-sources">`extra-sources: [ [ <URL> { <string> } <checksum> ] ... ]`</a>:
   allows the definition of extra files that need downloading into the source tree
   before the package can be patched (if necessary) and built. The format is
-  `[ "URL" { "checksum" } "filename" ]`, where `filename` is the target file,
+  `[ "URL" { "filename" } "checksum" ]`, where `filename` is the target file,
   relative to the root of the source tree.
 
 - <a id="opamfield-extra-files">`extra-files: [ [ <string> <checksum> ] ... ]`</a>:
