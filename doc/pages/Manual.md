@@ -928,9 +928,9 @@ It has the following fields:
 
     On the official repository, this should always point to a stable archive
     over HTTP or FTP.
-- <a id="urlfield-checksum">`checksum: <checksum>`</a>:
-  the checksum of the referred-to archive, to warrant integrity. Mandatory on the
-  official repository.
+- <a id="urlfield-checksum">`checksum: [ <checksum> ... ]`</a>:
+  the checksums of the referred-to archive, to warrant integrity. At least one
+  is mandatory on the official repository.
 - <a id="urlfield-mirrors">`mirrors: [ <string> ... ]`</a>:
   an optional list of mirrors. They must use the same protocol as the main URL.
 

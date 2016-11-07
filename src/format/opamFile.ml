@@ -1690,19 +1690,19 @@ module URLSyntax = struct
   type t = {
     url     : url;
     mirrors : url list;
-    checksum: OpamHash.t option;
+    checksum: OpamHash.t list;
     errors  : (string * Pp.bad_format) list;
   }
 
   let create ?(mirrors=[]) url =
     {
-      url; mirrors; checksum = None; errors = [];
+      url; mirrors; checksum = []; errors = [];
     }
 
   let empty = {
     url     = OpamUrl.empty;
     mirrors = [];
-    checksum= None;
+    checksum= [];
     errors  = [];
   }
 
@@ -1712,7 +1712,7 @@ module URLSyntax = struct
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
-  let with_checksum checksum t = { t with checksum = Some checksum }
+  let with_checksum checksum t = { t with checksum = checksum }
 
   let fields =
     let with_url url t =
@@ -1735,7 +1735,8 @@ module URLSyntax = struct
       "local",  Pp.ppacc_opt with_url OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
       "checksum", Pp.ppacc_opt with_checksum checksum
-        (Pp.V.string -| Pp.of_module "checksum" (module OpamHash));
+        (Pp.V.map_list
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
     ]
@@ -2544,9 +2545,10 @@ module OPAM = struct
         (match t.url with
          | None -> None
          | Some u -> match URL.checksum u with
-           | None -> Some (URL.create (URL.url u)) (* ignore mirrors *)
-           | Some cksum ->
-             Some (URL.with_checksum cksum URL.empty)); (* ignore actual url *)
+           | [] -> Some (URL.create (URL.url u)) (* ignore mirrors *)
+           | cksum::_ ->
+             Some (URL.with_checksum [cksum] URL.empty));
+             (* ignore actual url and extra checksums *)
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;

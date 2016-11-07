@@ -222,10 +222,10 @@ module URL: sig
   val mirrors: t -> url list
 
   (** Archive checksum *)
-  val checksum: t -> OpamHash.t option
+  val checksum: t -> OpamHash.t list
 
   (** Constructor *)
-  val with_checksum: OpamHash.t -> t -> t
+  val with_checksum: OpamHash.t list -> t -> t
 
 end
 

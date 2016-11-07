@@ -36,7 +36,7 @@ let init root name =
   OpamFilename.cleandir dir;
   Done ()
 
-let pull_url package local_dirname checksum remote_url =
+let pull_url package local_dirname checksums remote_url =
   if OpamRepositoryConfig.(!r.force_checksums = Some true) && checksum = None
   then
     OpamConsole.error_and_exit
@@ -47,7 +47,7 @@ let pull_url package local_dirname checksum remote_url =
       (OpamPackage.to_string package);
   let pull url =
     let module B = (val url_backend url: OpamRepositoryBackend.S) in
-    B.pull_url package local_dirname checksum url in
+    B.pull_url package local_dirname checksums url in
   let rec attempt = function
     | [] -> assert false
     | [url] -> pull url

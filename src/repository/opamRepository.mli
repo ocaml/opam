@@ -31,7 +31,7 @@ val update: repository -> unit OpamProcess.job
 (** Download an url. Several mirrors can be provided, in which case they will be
     tried in order in case of an error. *)
 val pull_url:
-  package -> dirname -> OpamHash.t option -> url list ->
+  package -> dirname -> OpamHash.t list -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull and fix the resulting digest *)
