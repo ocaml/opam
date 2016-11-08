@@ -11,7 +11,6 @@ Options:
   publish	Send generated files to github releases page
   -t TAG	Git tag of the release
   -f FILE	Add file to be pushed
-  -n NAME	Your github name (default \$gitname)
   -v VERSION    Make opam advertise as this version (instead of TAG)
 EOF
     exit $#
@@ -40,9 +39,6 @@ while [ $# -gt 0 ]; do
             F=$1
             [ "${F#/}" != "$F" ] || VAR="$PWD/$F" # make absolute
             UPLOAD_FILES+=("$F");;
-        -n)
-            shift; [ $# -gt 0 ] || help "Option $A requires an argument"
-            gitname=$1;;
         -v)
             shift; [ $# -gt 0 ] || help "Option $A requires an argument"
             VERSION=$1;;
@@ -103,8 +99,8 @@ if [ -z "${NAME:-}" ]; then NAME=opam-full-"$TAG"; fi
 if [ -z "${TARBALL:-}" ]; then TARBALL="$NAME".tar.gz; fi
 
 if [[ " ${ACTIONS[@]} " =~ " binary " ]]; then
-    if [ "$(ocaml -vnum)" != "4.02.1" ]; then
-        echo "Error: you should use OCaml 4.02.1 for building the release"
+    if [ "$(ocaml -vnum)" != "4.03.0" ]; then
+        echo "Error: you should use OCaml 4.03.0 for building the release"
         exit 1
     fi
 
@@ -128,29 +124,12 @@ fi
 if [[ " ${ACTIONS[@]} " =~ " publish " ]]; then
     echo -e "\n\033[43;30mUploading ${UPLOAD_FILES[@]} from $TMP to github...\033[m"
     if type git-upload-release >&/dev/null; then
-        if [ -z "${gitname:-}" ]; then
-            echo "Please enter your github name: "
-            read gitname
-        fi
         for f in "${UPLOAD_FILES[@]}"; do
             echo "Uploading $(basename "$f"), please be patient..."
-            git-upload-release "$gitname" ocaml/opam "$TAG" "$f"
-        done
-    elif type jq >&/dev/null; then
-        url=$(curl "https://api.github.com/repos/ocaml/opam/releases" \
-            | jq '.[] | select(.tag_name == "'"$TAG"'") | .upload_url' \
-            | sed 's%"\([^"{?]*\).*"%\1%')
-        for f in "${UPLOAD_FILES[@]}"; do
-            base=$(basename "$f")
-            echo "Uploading $base, please be patient..."
-            curl -u "$gitname" \
-                -H "name: $base" \
-                -H "Content-Type: application/gzip" \
-                --data-binary "@$f" \
-                "$url?name=$base" | jq ".message"
+            (cd "$(dirname "$f")" && git-upload-release ocaml opam "$TAG" "$(basename "$f")")
         done
     else
-        echo "Neither 'jq' nor 'git-upload-release' found, can't automatically"
+        echo "'git-upload-release' not found, can't automatically"
         echo "upload to github. You can manually upload the following files to"
         echo "https://github.com/ocaml/opam/releases/tag/$TAG"
         echo
