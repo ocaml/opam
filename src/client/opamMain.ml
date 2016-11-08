@@ -2224,7 +2224,7 @@ let source =
         match
           OpamProcess.Job.run
             (OpamProcess.Job.with_text text
-               (OpamRepository.pull_url nv dir None [url]))
+               (OpamRepository.pull_url nv dir [] [url]))
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ ->

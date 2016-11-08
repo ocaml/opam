@@ -28,15 +28,22 @@ val init: dirname -> repository_name -> unit OpamProcess.job
 (** Update {i $opam/repo/$repo}. *)
 val update: repository -> unit OpamProcess.job
 
-(** Download an url. Several mirrors can be provided, in which case they will be
-    tried in order in case of an error. *)
+(** Fetch an URL into a directory: if a single file, it will be put in that
+    directory, otherwise the given directory is synchronised with the remote
+    one. Several mirrors can be provided, in which case they will be tried in
+    order, in case of an error.
+    All provided hashes are checked in case of a single file; if the hash list
+    is non-empty, and a directory is obtained, an error message is printed and
+    Not_available returned.
+    The [package] argument is only for status message printing. *)
 val pull_url:
-  package -> dirname -> OpamHash.t list -> url list ->
+  package -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
+  dirname -> OpamHash.t list -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull and fix the resulting digest *)
 val pull_url_and_fix_digest:
-  package -> dirname -> OpamHash.t -> OpamFile.URL.t OpamFile.t -> url list ->
+  package -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull an archive in a repository *)

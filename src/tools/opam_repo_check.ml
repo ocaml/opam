@@ -10,6 +10,7 @@
 (**************************************************************************)
 
 (* Script to check that a given repository is well-typed (or well-parsed) *)
+open OpamTypes
 open OpamFilename.Op
 
 type args = {

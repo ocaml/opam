@@ -115,6 +115,7 @@ module Config: sig
   val with_dl_tool: arg list -> t -> t
   val with_dl_tool_opt: arg list option -> t -> t
   val with_dl_jobs: int -> t -> t
+  val with_dl_cache: url list -> t -> t
 
   val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables:
@@ -141,6 +142,8 @@ module Config: sig
   (** Return the number of download jobs *)
   val dl_jobs: t -> int
 
+  val dl_cache: t -> url list
+
   val criteria: t -> (solver_criteria * string) list
 
   val solver: t -> arg list option
@@ -165,6 +168,7 @@ module InitConfig: sig
   val jobs: t -> int option
   val dl_tool: t -> arg list option
   val dl_jobs: t -> int option
+  val dl_cache: t -> url list
   val solver_criteria: t -> (solver_criteria * string) list
   val solver: t -> arg list option
   val wrappers: t -> Wrappers.t
@@ -177,6 +181,7 @@ module InitConfig: sig
   val with_jobs: int option -> t -> t
   val with_dl_tool: arg list option -> t -> t
   val with_dl_jobs: int option -> t -> t
+  val with_dl_cache: url list -> t -> t
   val with_solver_criteria: (solver_criteria * string) list -> t -> t
   val with_solver: arg list option -> t -> t
   val with_wrappers: Wrappers.t -> t -> t
@@ -824,7 +829,7 @@ module Repo: sig
   val create:
     ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
     ?redirect:(string * filter option) list ->
-    ?archives:url list ->
+    ?dl_cache:url list ->
     unit -> t
 
   (** The minimum OPAM version required for this repository *)
@@ -839,7 +844,7 @@ module Repo: sig
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
 
-  val archives: t -> url list
+  val dl_cache: t -> url list
 
   val with_opam_version : OpamVersion.t -> t -> t
 
@@ -849,7 +854,7 @@ module Repo: sig
 
   val with_redirect: (string * filter option) list -> t -> t
 
-  val with_archives: url list -> t -> t
+  val with_dl_cache: url list -> t -> t
 end
 
 (** {2 urls.txt file *} *)

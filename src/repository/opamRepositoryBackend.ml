@@ -12,7 +12,7 @@ open OpamTypes
 
 module type S = sig
   val name: OpamUrl.backend
-  val pull_url: package -> dirname -> OpamHash.t option -> url ->
+  val pull_url: dirname -> OpamHash.t option -> url ->
     generic_file download OpamProcess.job
   val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
   val pull_archive:

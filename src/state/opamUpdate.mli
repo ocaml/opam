@@ -59,7 +59,7 @@ val pinned_package:
 (** Download or synchronise the upstream source for the given package into the
     given directory.
     For non-VC remotes, verifies the checksum if any *)
-val download_upstream:
+val download_package_source:
   'a switch_state -> package -> dirname ->
   generic_file download option OpamProcess.job
 

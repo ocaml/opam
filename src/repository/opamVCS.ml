@@ -79,7 +79,7 @@ module Make (VCS: VCS) = struct
              (OpamUrl.to_string repo_url)
              (Printexc.to_string e);
            Done (Not_available (Printexc.to_string e)))
-      @@
+      @@ fun () ->
       if VCS.exists repo_root then
         VCS.fetch repo_root repo_url @@+ fun () ->
         VCS.diff repo_root repo_url @@+ fun diff ->
@@ -93,19 +93,8 @@ module Make (VCS: VCS) = struct
          VCS.reset repo_root repo_url @@+ fun () ->
          Done (Result repo_root))
 
-  let pull_url package dirname checksum remote_url =
-    let () = match checksum with
-      | None   -> ()
-      | Some _ -> OpamConsole.note "Skipping checksum for dev package %s"
-                    (OpamPackage.to_string package) in
+  let pull_url dirname _checksum remote_url =
     pull_repo_raw OpamRepositoryName.default dirname remote_url @@+ fun r ->
-    OpamConsole.msg "[%s] %s %s\n"
-      (OpamConsole.colorise `green (OpamPackage.name_to_string package))
-      (OpamUrl.to_string remote_url)
-      (match r with
-       | Result _ -> "changed"
-       | Up_to_date _ -> "already up-to-date"
-       | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done (download_dir r)
 
   let pull_repo repo_name repo_root repo_url =

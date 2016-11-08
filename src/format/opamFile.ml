@@ -997,6 +997,7 @@ module ConfigSyntax = struct
     jobs : int;
     dl_tool : arg list option;
     dl_jobs : int;
+    dl_cache : url list option;
     wrappers : Wrappers.t;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
@@ -1011,6 +1012,7 @@ module ConfigSyntax = struct
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let criteria t = t.solver_criteria
   let criterion kind t =
     try Some (List.assoc kind t.solver_criteria)
@@ -1031,6 +1033,7 @@ module ConfigSyntax = struct
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
   let with_dl_tool_opt dl_tool t = { t with dl_tool }
   let with_dl_jobs dl_jobs t = { t with dl_jobs }
+  let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
   let with_criteria solver_criteria t = { t with solver_criteria }
   let with_criterion kind criterion t =
     { t with solver_criteria =
@@ -1049,6 +1052,7 @@ module ConfigSyntax = struct
     jobs = 1;
     dl_tool = None;
     dl_jobs = 1;
+    dl_cache = None;
     solver_criteria = [];
     solver = None;
     wrappers = Wrappers.empty;
@@ -1087,6 +1091,9 @@ module ConfigSyntax = struct
       "download-jobs", Pp.ppacc
         with_dl_jobs dl_jobs
         Pp.V.pos_int;
+      "archive-mirrors", Pp.ppacc_opt
+        with_dl_cache (fun t -> t.dl_cache)
+        (Pp.V.map_list ~depth:1 Pp.V.url);
       "solver-criteria", Pp.ppacc_opt
         (with_criterion `Default) (criterion `Default)
         Pp.V.string;
@@ -1153,6 +1160,7 @@ module InitConfigSyntax = struct
     jobs : int option;
     dl_tool : arg list option;
     dl_jobs : int option;
+    dl_cache : url list option;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
     wrappers : Wrappers.t;
@@ -1166,6 +1174,7 @@ module InitConfigSyntax = struct
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let solver_criteria t = t.solver_criteria
   let solver t = t.solver
   let wrappers t = t.wrappers
@@ -1178,6 +1187,7 @@ module InitConfigSyntax = struct
   let with_jobs jobs t = {t with jobs}
   let with_dl_tool dl_tool t = {t with dl_tool}
   let with_dl_jobs dl_jobs t = {t with dl_jobs}
+  let with_dl_cache dl_cache t = {t with dl_cache = Some dl_cache}
   let with_solver_criteria solver_criteria t = {t with solver_criteria}
   let with_solver solver t = {t with solver}
   let with_wrappers wrappers t = {t with wrappers}
@@ -1199,6 +1209,7 @@ module InitConfigSyntax = struct
     jobs = None;
     dl_tool = None;
     dl_jobs = None;
+    dl_cache = None;
     solver_criteria = [];
     solver = None;
     wrappers = Wrappers.empty;
@@ -1230,6 +1241,9 @@ module InitConfigSyntax = struct
       "download-jobs", Pp.ppacc_opt
         (with_dl_jobs @* OpamStd.Option.some) dl_jobs
         Pp.V.pos_int;
+      "archive-mirrors", Pp.ppacc
+        with_dl_cache dl_cache
+        (Pp.V.map_list ~depth:1 Pp.V.url);
       "solver-criteria", Pp.ppacc_opt
         (with_criterion `Default) (criterion `Default)
         Pp.V.string;
@@ -1280,6 +1294,7 @@ module InitConfigSyntax = struct
       jobs = opt t2.jobs t1.jobs;
       dl_tool = opt t2.dl_tool t1.dl_tool;
       dl_jobs = opt t2.dl_jobs t1.dl_jobs;
+      dl_cache = opt t2.dl_cache t1.dl_cache;
       solver_criteria =
         List.fold_left (fun acc c ->
             try (c, List.assoc c t2.solver_criteria) :: acc with Not_found ->
@@ -1631,13 +1646,13 @@ module RepoSyntax = struct
     browse       : string option;
     upstream     : string option;
     redirect     : (string * filter option) list;
-    archives     : url list;
+    dl_cache     : url list option;
   }
 
   let create
       ?browse ?upstream ?(opam_version=OpamVersion.current_nopatch)
-      ?(redirect=[]) ?(archives=[]) () =
-    { opam_version; browse; upstream; redirect; archives; }
+      ?(redirect=[]) ?dl_cache () =
+    { opam_version; browse; upstream; redirect; dl_cache; }
 
   let empty = create ()
 
@@ -1645,13 +1660,13 @@ module RepoSyntax = struct
   let browse t = t.browse
   let upstream t = t.upstream
   let redirect t = t.redirect
-  let archives t = t.archives
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_browse browse t = { t with browse = Some browse }
   let with_upstream upstream t = { t with upstream = Some upstream }
   let with_redirect redirect t = { t with redirect }
-  let with_archives archives t = { t with archives }
+  let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
 
   let fields = [
     "opam-version", Pp.ppacc
@@ -1664,8 +1679,8 @@ module RepoSyntax = struct
       (Pp.V.map_list ~depth:1
          (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
     "archive-mirrors", Pp.ppacc
-      with_archives archives
-      (Pp.V.map_list Pp.V.url)
+      with_dl_cache dl_cache
+      (Pp.V.map_list ~depth:1 Pp.V.url)
   ]
 
   let pp =
@@ -1734,8 +1749,8 @@ module URLSyntax = struct
         (Pp.V.url_with_backend `hg);
       "local",  Pp.ppacc_opt with_url OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
-      "checksum", Pp.ppacc_opt with_checksum checksum
-        (Pp.V.map_list
+      "checksum", Pp.ppacc with_checksum checksum
+        (Pp.V.map_list ~depth:1
            (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);

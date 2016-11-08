@@ -13,7 +13,6 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 open OpamStateTypes
-open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "RSTATE" fmt
 let slog = OpamConsole.slog
@@ -137,10 +136,18 @@ let load lock_kind gt =
        in-place *)
     OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
+  let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
+  let repos_definitions =
+    OpamRepositoryName.Map.map (fun r ->
+        lazy (OpamFile.Repo.safe_read
+                OpamRepositoryPath.(repo (create gt.root r.repo_name))))
+      repositories
+  in
   let make_rt opams =
     { repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
-      repositories = OpamRepositoryName.Map.mapi mk_repo repos_map;
+      repositories;
+      repos_definitions;
       repo_opams = opams; }
   in
   match Cache.load gt.root with
@@ -190,33 +197,6 @@ let build_index rt repo_list =
     repo_list
 
 let get_repo rt name = OpamRepositoryName.Map.find name rt.repositories
-
-(* Try to download $name.$version+opam.tar.gz *)
-let download_archive rt repo_list nv =
-  log "get_archive %a" (slog OpamPackage.to_string) nv;
-  match find_package_opt rt repo_list nv with
-  | None -> Done None
-  | Some (repo_name, _) ->
-    let repo = OpamRepositoryName.Map.find repo_name rt.repositories in
-    let text =
-      OpamProcess.make_command_text
-        (OpamPackage.name_to_string nv)
-        ~args:[OpamRepositoryName.to_string repo.repo_name]
-        "from"
-    in
-    OpamProcess.Job.with_text text @@
-    OpamRepository.pull_archive repo nv
-    @@+ function
-    | Not_available _ ->
-      if OpamCoreConfig.(!r.verbose_level) >= 2 then
-        OpamConsole.msg "%s Repo archive not found\n" text;
-      Done None
-    | Up_to_date f ->
-      OpamConsole.msg "[%s] Archive in cache\n"
-        (OpamConsole.colorise `green (OpamPackage.name_to_string nv));
-      Done (Some f)
-    | Result f ->
-      Done (Some f)
 
 let unlock rt =
   OpamSystem.funlock rt.repos_lock;

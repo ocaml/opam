@@ -9,7 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
 open OpamFilename.Op
 open OpamProcess.Job.Op
 

@@ -43,38 +43,10 @@ module B = struct
     log "pull-repo";
     sync_state repo_name repo_root url
 
-  let pull_url package dirname checksum remote_url =
+  let pull_url dirname checksum remote_url =
     log "pull-file into %a: %a"
       (slog OpamFilename.Dir.to_string) dirname
       (slog OpamUrl.to_string) remote_url;
-    let local_file =
-      OpamFilename.create dirname
-        (OpamFilename.Base.of_string (OpamUrl.basename remote_url))
-    in
-    let check_sum f = match checksum with
-      | None   -> false
-      | Some c -> OpamHash.check_file (OpamFilename.to_string f) c
-    in
-    let files = OpamFilename.files dirname in
-    let uptodate =
-      let found, _extra =
-        List.partition (fun f -> f = local_file && check_sum f) files
-      in
-      (* For removals, multiple versions of the same pkg may be needed.
-         This breaks this case by removing what was just downloaded.
-         !X fixme: if the package was switched from e.g. http to git this may
-         still be broken, it would be best to have per-version dirs
-      if extra <> [] then
-        (log "Removing stale files in download dir: %a"
-           (slog @@ List.map OpamFilename.to_string @>
-                    OpamStd.Format.pretty_list ?last:None)
-           extra;
-         List.iter OpamFilename.remove extra);
-      *)
-      found <> []
-    in
-    if uptodate then Done (Result (F local_file))
-    else
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
@@ -86,15 +58,7 @@ module B = struct
          Done (Not_available msg))
     @@ fun () ->
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
-    @@+ fun local_file ->
-    if OpamRepositoryBackend.check_digest local_file checksum then
-      (OpamConsole.msg "[%s] %s downloaded\n"
-         (OpamConsole.colorise `green (OpamPackage.to_string package))
-         (OpamUrl.to_string remote_url);
-       Done (Result (F local_file)))
-    else
-      (OpamFilename.remove local_file;
-       Done (Not_available (OpamUrl.to_string remote_url)))
+    @@+ fun local_file -> Done (Result (F local_file))
 
   let pull_archive _name _repo_root url =
     log "pull-archive";
@@ -109,8 +73,8 @@ end
 
 let make_index_tar_gz repo_root =
   OpamFilename.in_dir repo_root (fun () ->
-    let dirs = [ "version"; "compilers"; "packages"; "repo" ] in
-    match List.filter Sys.file_exists dirs with
+    let to_include = [ "version"; "packages"; "repo" ] in
+    match List.filter Sys.file_exists to_include with
     | [] -> ()
     | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: d)
   )

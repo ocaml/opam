@@ -11,9 +11,7 @@
 
 open OpamTypes
 open OpamFilename.Op
-open OpamPackage.Set.Op
-
-let log fmt = OpamConsole.log "OPAM-MK-REPO" fmt
+open OpamProcess.Job.Op
 
 type args = {
   index: bool;
@@ -143,7 +141,7 @@ let consistent_available_field args opam =
   OpamFilter.eval_to_bool ~default:false (faked_var_resolve args)
     (OpamFile.OPAM.available opam)
 
-let resolve_deps args index names =
+let resolve_deps args dir names =
   let atoms =
     List.map (fun str ->
         match OpamPackage.of_string_opt str with
@@ -153,9 +151,7 @@ let resolve_deps args index names =
       names in
   let opams =
     List.fold_left
-      (fun opams r ->
-         let f =
-           OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
+      (fun opams f ->
          if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
            match OpamPackage.of_dirname (OpamFilename.dirname f) with
            | Some nv ->
@@ -165,7 +161,7 @@ let resolve_deps args index names =
            | None -> opams
          else opams)
       OpamPackage.Map.empty
-      (OpamFilename.Attribute.Set.elements index) in
+      (OpamFilename.rec_files dir) in
   let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let requested = OpamPackage.Name.Set.of_list (List.map fst atoms) in
   let universe = {
@@ -250,16 +246,6 @@ let rec process
     exit 0
   );
 
-  (* Read urls.txt *)
-  log "Reading urls.txt";
-  let local_index_file : file_attribute_set OpamFile.t =
-    OpamFile.make (OpamFilename.of_string "urls.txt")
-  in
-  let old_index = OpamFile.File_attributes.safe_read local_index_file in
-  let new_index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
-  let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
-  let to_add = OpamFilename.Attribute.Set.diff new_index old_index in
-
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
@@ -299,105 +285,73 @@ let rec process
       OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
     if resolve then
-      resolve_deps args new_index names
+      resolve_deps args repo.repo_root names
     else if recurse then
       get_transitive_dependencies new_packages
     else
-      new_packages in
-
-  let nv_set_of_remotes remotes =
-    let aux r =
-      OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
-    let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list (OpamStd.List.filter_map OpamPackage.of_filename list) in
-
-  let packages_of_attrs attrs =
-    OpamFilename.Attribute.Set.fold (fun attr nvs ->
-        let f =
-          OpamFilename.raw_dir
-            (OpamFilename.Base.to_string (OpamFilename.Attribute.base attr))
-        in
-        let path = OpamFilename.to_list_dir f in
-        let rec get_nv = function
-          | [_] | [] -> nvs
-          | pkgdir::(f::_ as subpath)-> match OpamPackage.of_dirname pkgdir with
-            | None -> get_nv subpath
-            | Some nv -> match OpamFilename.Dir.to_string f with
-              | "url" | "files" -> OpamPackage.Set.add nv nvs
-              | _ -> nvs
-        in
-        get_nv path)
-      attrs OpamPackage.Set.empty in
-  let new_index = nv_set_of_remotes new_index in
-  let missing_archive =
-    OpamPackage.Set.filter (fun nv ->
-        let archive = OpamRepositoryPath.archive repo.repo_root nv in
-        not (OpamFilename.exists archive)
-      ) new_index in
-  let to_add =
-    let open OpamPackage.Set.Op in
-    let added_changed = packages_of_attrs to_add in
-    let files_removed = new_index %% packages_of_attrs to_remove in
-    missing_archive ++ added_changed  ++ files_removed in
-  let to_remove = nv_set_of_remotes to_remove in
-  let to_add =
-    if OpamPackage.Set.is_empty packages then to_add
-    else packages %% to_add in
-  let to_remove = to_remove -- to_add in
+      packages in
+  OpamConsole.msg "Packages: %s\n" (OpamPackage.Set.to_string packages);
 
   let errors = ref [] in
-  if not index then (
-
-    (* Remove the old archive files *)
-    if not (OpamPackage.Set.is_empty to_remove) then
-      OpamConsole.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
-    OpamPackage.Set.iter (fun nv ->
-        let archive = OpamRepositoryPath.archive repo.repo_root nv in
-        OpamConsole.msg "Removing %s ...\n" (OpamFilename.to_string archive);
-        if not dryrun then
-          OpamFilename.remove archive
-      ) to_remove;
-
-    (* build the new archives *)
-    if not (OpamPackage.Set.is_empty to_add) then
-      OpamConsole.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
-    OpamPackage.Set.iter (fun nv ->
+  OpamParallel.iter ~jobs:8 ~dry_run:dryrun
+    ~command:(fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
-        let local_archive = OpamRepositoryPath.archive repo.repo_root nv in
-        let url_file = OpamRepositoryPath.url repo.repo_root prefix nv in
-        try
-          if not dryrun then OpamFilename.remove local_archive;
-          match OpamFile.URL.read_opt url_file with
-          | Some urlf when OpamFile.URL.(url urlf).OpamUrl.backend = `http ->
-            OpamConsole.msg "Building %s\n" (OpamFilename.to_string local_archive);
-            let job = OpamRepository.make_archive ~gener_digest repo prefix nv in
-            if dryrun then OpamProcess.Job.dry_run job
-            else OpamProcess.Job.run job
-          | _ -> ()
-        with e ->
-          OpamFilename.remove local_archive;
-          errors := (nv, e) :: !errors;
-          OpamStd.Exn.fatal e
-      ) to_add;
-  );
+        match
+          OpamFileTools.read_opam
+            (OpamRepositoryPath.packages repo.repo_root prefix nv)
+        with
+        | None -> Done ()
+        | Some opam ->
+          match OpamFile.OPAM.url opam with None -> Done () | Some urlf ->
+            (match OpamFile.URL.checksum urlf with
+             | [] ->
+               OpamConsole.warning "[%s] no checksum, not caching"
+                 (OpamConsole.colorise `green (OpamPackage.to_string nv));
+               Done ()
+             | checksums ->
+               OpamFilename.with_tmp_dir_job @@ fun tmp ->
+               OpamProcess.Job.with_text ("["^OpamPackage.to_string nv^"]") @@
+               OpamRepository.pull_url nv
+                 ~cache_dir:(repo.repo_root / "cache") tmp
+                 ~silent_hits:true
+                 checksums
+                 (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
+               @@| (function Not_available m -> errors := (nv, m) :: !errors
+                           | _ -> ()))
+            @@+ fun () ->
+            List.fold_left (fun job (url, checksum, basename) ->
+                job @@+ fun () ->
+                OpamFilename.with_tmp_dir_job @@ fun tmp ->
+                OpamProcess.Job.with_text
+                  (Printf.sprintf "[%s%s]"
+                     (OpamPackage.to_string nv)
+                     (OpamStd.Option.to_string
+                        (fun b -> "/"^OpamFilename.Base.to_string b) basename))
+                @@
+                OpamRepository.pull_url nv
+                  ~cache_dir:(repo.repo_root / "cache") tmp
+                  ~silent_hits:true
+                  [checksum]
+                  [url]
+                @@| (function Not_available m -> errors := (nv, m) :: !errors
+                            | _ -> ()))
+              (Done ()) (OpamFile.OPAM.extra_sources opam)
+      )
+    (List.sort (fun nv1 nv2 ->
+         match compare (Hashtbl.hash nv1) (Hashtbl.hash nv2) with
+         | 0 -> compare nv1 nv2
+         | n -> n)
+        (OpamPackage.Set.elements packages));
 
   (* Create index.tar.gz *)
-  if not (OpamFilename.exists (repo.repo_root // "index.tar.gz"))
-  || not (OpamPackage.Set.is_empty to_add)
-  || not (OpamPackage.Set.is_empty to_remove) then (
-    OpamConsole.msg "Rebuilding index.tar.gz ...\n";
-    if not dryrun then (
-      OpamHTTP.make_index_tar_gz repo.repo_root;
-    )
-  ) else
-    OpamConsole.msg "OPAM Repository already up-to-date.\n";
+  OpamConsole.msg "Rebuilding index.tar.gz ...\n";
+  if not dryrun then (
+    OpamHTTP.make_index_tar_gz repo.repo_root;
+  );
 
   if not dryrun then
     List.iter OpamSystem.remove tmp_dirs;
 
-  (* Rebuild urls.txt now the archives have been updated *)
-  OpamConsole.msg "Rebuilding urls.txt\n";
-  let _index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
   if !errors <> [] then (
     let display_error (nv, error) =
       let disp = OpamConsole.header_error "%s" (OpamPackage.to_string nv) in
@@ -409,7 +363,10 @@ let rec process
     let all_errors = List.map fst !errors in
     OpamConsole.error "Got some errors while processing: %s"
       (OpamStd.List.concat_map ", " OpamPackage.to_string all_errors);
-    List.iter display_error !errors
+    OpamConsole.errmsg "%s"
+      (OpamStd.Format.itemize
+         (fun (nv,e) -> Printf.sprintf "[%s] %s" (OpamPackage.to_string nv) e)
+         !errors)
   );
   let subdir = OpamFilename.Dir.of_string "2.0" in
   if OpamFilename.exists (subdir // "repo") then (

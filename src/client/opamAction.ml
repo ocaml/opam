@@ -225,37 +225,18 @@ let prepare_package_build st nv dir =
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-  let name = nv.name in
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
     Done (`Successful None)
   else
-  let dev_dir =
-    if OpamSwitchState.is_dev_package st nv then
-      Some (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
-    else None
+  let dir =
+    OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
   in
-  let of_dl = function
-    | Some (Up_to_date f | Result f) -> `Successful (Some f)
-    | Some (Not_available s) -> `Error s
-    | None -> `Successful None
-  in
-  let job () = match dev_dir with
-    | Some dir ->
-      OpamUpdate.download_upstream st nv dir @@| of_dl
-    | None ->
-      OpamRepositoryState.download_archive st.switch_repos
-        (OpamSwitchState.repos_list st)
-        nv
-      @@+ function
-      | Some f ->
-        Done (`Successful (Some (F f)))
-      | None ->
-        let dir =
-          OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
-        in
-        OpamUpdate.download_upstream st nv dir @@| of_dl
-  in
-  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
+  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) @@
+  fun () ->
+  OpamUpdate.download_package_source st nv dir @@| function
+  | Some (Up_to_date f | Result f) -> `Successful (Some f)
+  | Some (Not_available s) -> `Error s
+  | None -> `Successful None
 
 let extract_package st source nv destdir =
   log "extract_package: %a from %a"

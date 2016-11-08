@@ -46,6 +46,8 @@ let init  t = t / "opam-init"
 
 let log t = t / "log"
 
+let download_cache t = t / "download-cache"
+
 let backup_file =
   let file = lazy Unix.(
       let tm = gmtime (Unix.gettimeofday ()) in

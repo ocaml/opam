@@ -115,18 +115,19 @@ let rsync_file ?(args=[]) url dst =
   else if src_s = dst_s then
     Done (Up_to_date dst)
   else
-  call_rsync (fun () -> Sys.file_exists dst_s)
-    ( rsync_arg :: args @ [ src_s; dst_s ])
-  @@| function
-  | None -> Not_available src_s
-  | Some [] -> Up_to_date dst
-  | Some [_] ->
-    if OpamFilename.exists dst then Result dst
-    else Not_available src_s
-  | Some l ->
-    OpamSystem.internal_error
-      "unknown rsync output: {%s}"
-      (String.concat ", " l)
+    (OpamFilename.mkdir (OpamFilename.dirname dst);
+     call_rsync (fun () -> Sys.file_exists dst_s)
+       ( rsync_arg :: args @ [ src_s; dst_s ])
+     @@| function
+     | None -> Not_available src_s
+     | Some [] -> Up_to_date dst
+     | Some [_] ->
+       if OpamFilename.exists dst then Result dst
+       else Not_available src_s
+     | Some l ->
+       OpamSystem.internal_error
+         "unknown rsync output: {%s}"
+         (String.concat ", " l))
 
 module B = struct
 
@@ -187,7 +188,7 @@ module B = struct
          (OpamRepositoryName.to_string repo_name))
       (OpamUrl.to_string repo_url)
 
-  let pull_url package local_dirname checksum remote_url =
+  let pull_url local_dirname checksum remote_url =
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
     let remote_url =
@@ -198,32 +199,25 @@ module B = struct
       | None -> remote_url
     in
     rsync remote_url.OpamUrl.path dir
-    @@| fun r ->
-    let r = match r with
-      | Not_available d -> Not_available d
-      | Result _ | Up_to_date _ ->
-        let res x = match r with
-          | Result _ -> Result x
-          | Up_to_date _ -> Up_to_date x
-          | _ -> assert false
-        in
-        if OpamUrl.has_trailing_slash remote_url then res (D local_dirname)
-        else match Sys.readdir dir with
-          | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
-            let filename = OpamFilename.Op.(local_dirname // f) in
-            if OpamRepositoryBackend.check_digest filename checksum
-            then
-              res (F filename)
-            else
-              (OpamFilename.remove filename;
-               Not_available (OpamUrl.to_string remote_url))
-          | _ -> res (D local_dirname)
-    in
-    OpamConsole.msg "[%s] %s %s\n"
-      (OpamConsole.colorise `green (OpamPackage.to_string package))
-      (OpamUrl.to_string remote_url)
-      (string_of_download r);
-    r
+    @@| function
+    | Not_available d -> Not_available d
+    | (Result _ | Up_to_date _) as r ->
+      let res x = match r with
+        | Result _ -> Result x
+        | Up_to_date _ -> Up_to_date x
+        | _ -> assert false
+      in
+      if OpamUrl.has_trailing_slash remote_url then res (D local_dirname)
+      else match Sys.readdir dir with
+        | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
+          let filename = OpamFilename.Op.(local_dirname // f) in
+          if OpamRepositoryBackend.check_digest filename checksum
+          then
+            res (F filename)
+          else
+            (OpamFilename.remove filename;
+             Not_available (OpamUrl.to_string remote_url))
+        | _ -> res (D local_dirname)
 
   let pull_archive repo_name repo_root url =
     let local_dir = OpamRepositoryPath.archives_dir repo_root in

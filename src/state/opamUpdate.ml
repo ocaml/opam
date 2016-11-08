@@ -359,9 +359,22 @@ let pinned_packages st names =
   OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates,
   updates
 
-(* Download a package from its upstream source, using 'cache_dir' as cache
-   directory. *)
-let download_upstream st nv dirname =
+let active_caches st nv =
+  let global_cache = OpamFile.Config.dl_cache st.switch_global.config in
+  let rt = st.switch_repos in
+  let repo_cache =
+    match OpamRepositoryState.find_package_opt rt
+            (OpamSwitchState.repos_list st) nv
+    with
+    | Some (repo, _) ->
+      OpamFile.Repo.dl_cache
+        (Lazy.force
+           (OpamRepositoryName.Map.find repo rt.repos_definitions))
+    | None -> []
+  in
+  repo_cache @ global_cache
+
+let download_package_source st nv dirname =
   match OpamSwitchState.url st nv with
   | None   -> Done None
   | Some u ->
@@ -373,5 +386,8 @@ let download_upstream st nv dirname =
         (OpamUrl.string_of_backend remote_url.OpamUrl.backend)
     in
     OpamProcess.Job.with_text text @@
-    OpamRepository.pull_url nv dirname checksum mirrors
+    OpamRepository.pull_url nv
+      ~cache_dir:(OpamPath.download_cache st.switch_global.root)
+      ~cache_urls:(active_caches st nv)
+      dirname checksum mirrors
     @@| OpamStd.Option.some
