@@ -115,7 +115,7 @@ module MakeIO (F : IO_Arg) = struct
       close_out oc;
       Stats.write_files := filename :: !Stats.write_files;
       log "Wrote %s in %.3fs" filename (chrono ())
-    with e -> close_out oc; raise e
+    with e -> close_out oc; OpamFilename.remove f; raise e
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
