@@ -239,7 +239,7 @@ let download_package st nv =
     | Some (Not_available s) -> `Error s
     | None -> `Successful None
   in
-  let job = match dev_dir with
+  let job () = match dev_dir with
     | Some dir ->
       OpamUpdate.download_upstream st nv dir @@| of_dl
     | None ->
@@ -285,7 +285,7 @@ let extract_package st source nv destdir =
           (OpamFilename.Base.of_string (OpamUrl.basename url))
           fname
       in
-      OpamProcess.Job.catch (fun e -> Done (Some e)) @@
+      OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
       OpamDownload.download_as
         ~overwrite:true
         ~checksum url

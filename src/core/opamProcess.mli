@@ -166,10 +166,11 @@ module Job: sig
   val dry_run: 'a Op.job -> 'a
 
   (** Catch exceptions raised within a job *)
-  val catch: (exn -> 'a Op.job) -> 'a Op.job -> 'a Op.job
+  val catch: (exn -> 'a Op.job) -> (unit -> 'a Op.job) -> 'a Op.job
 
   (** Ignore all non-fatal exceptions raised by job and return default *)
-  val ignore_errors: default:'a -> ?message:string -> 'a Op.job -> 'a Op.job
+  val ignore_errors: default:'a -> ?message:string ->
+    (unit -> 'a Op.job) -> 'a Op.job
 
   (** Register an exception-safe finaliser in a job.
       [finally job fin] is equivalent to

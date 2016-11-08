@@ -235,11 +235,10 @@ let do_upgrade () =
                   Done None
                 in
                 OpamFilename.with_tmp_dir_job @@ fun dir ->
-                try
-                  OpamProcess.Job.catch err
-                    (OpamDownload.download ~overwrite:false url dir @@| fun f ->
-                     Some (url, OpamHash.compute (OpamFilename.to_string f), None))
-                with e -> err e)
+                OpamProcess.Job.catch err
+                  (fun () ->
+                     OpamDownload.download ~overwrite:false url dir @@| fun f ->
+                     Some (url, OpamHash.compute (OpamFilename.to_string f), None)))
           (OpamFile.Comp.patches comp)
       in
       List.fold_left

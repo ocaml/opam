@@ -83,7 +83,8 @@ module B = struct
              Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) msg
            | _ -> OpamUrl.to_string remote_url
          in
-         Done (Not_available msg)) @@
+         Done (Not_available msg))
+    @@ fun () ->
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file ->
     if OpamRepositoryBackend.check_digest local_file checksum then

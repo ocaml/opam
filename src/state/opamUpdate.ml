@@ -102,7 +102,7 @@ let repositories rt repos =
     OpamProcess.Job.ignore_errors ~default:(fun t -> t)
       ~message:("Could not update repository " ^
                 OpamRepositoryName.to_string repo.repo_name) @@
-    repository rt.repos_global repo
+    fun () -> repository rt.repos_global repo
   in
   let rt =
     OpamParallel.reduce
@@ -302,7 +302,8 @@ let dev_packages st packages =
   log "update-dev-packages";
   let command nv =
     OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Set.empty) @@
+      ~default:((fun st -> st), OpamPackage.Set.empty)
+    @@ fun () ->
     dev_package st nv @@| fun (st_update, changed) ->
     st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
@@ -329,7 +330,8 @@ let pinned_packages st names =
   log "update-pinned-packages";
   let command name =
     OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Name.Set.empty) @@
+      ~default:((fun st -> st), OpamPackage.Name.Set.empty)
+    @@ fun () ->
     pinned_package st name @@| fun (st_update, changed) ->
     st_update,
     match changed with

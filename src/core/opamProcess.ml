@@ -602,17 +602,19 @@ module Job = struct
                      r_cleanup = []; }
       in dry_run (cont result)
 
-  let rec catch handler = function
-    | Done x -> Done x
-    | Run (cmd,cont) ->
-      let cont r =
-        match
-          try `Cont (cont r) with e -> `Hndl (handler e)
-        with
-        | `Cont job -> catch handler job
-        | `Hndl job -> job
-      in
-      Run (cmd, cont)
+  let rec catch handler fjob =
+    try match fjob () with
+      | Done x -> Done x
+      | Run (cmd,cont) ->
+        let cont r =
+          match
+            try `Cont (cont r) with e -> `Hndl (handler e)
+          with
+          | `Cont job -> catch handler (fun () -> job)
+          | `Hndl job -> job
+        in
+        Run (cmd, cont)
+    with e -> handler e
 
   let ignore_errors ~default ?message job =
     catch (fun e ->
