@@ -111,21 +111,88 @@ let fetch_from_cache cache_dir cache_urls checksums =
       in
       try_cache_dl cache_urls
 
-let pull_url package ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
+let validate_and_add_to_cache label url cache_dir file checksums =
+  try
+    let mismatch, expected =
+      OpamStd.List.find_map (fun c ->
+          match OpamHash.mismatch (OpamFilename.to_string file) c with
+          | Some found -> Some (found, c)
+          | None -> None)
+        checksums
+    in
+    OpamConsole.error "%s: Checksum mismatch for %s:\n\
+                      \  expected %s\n\
+                      \  got      %s"
+      label (OpamUrl.to_string url)
+      (OpamHash.to_string expected)
+      (OpamHash.to_string mismatch);
+    OpamFilename.remove file;
+    false
+  with Not_found ->
+    (match cache_dir, checksums with
+     | Some dir, ck::_ ->
+       OpamFilename.copy ~src:file ~dst:(cache_file dir ck)
+       (* idea: hardlink to the other checksums ? *)
+     | _ -> ());
+    true
+
+let pull_from_upstream label cache_dir destdir checksums url =
+  let module B = (val url_backend url: OpamRepositoryBackend.S) in
+  let cksum = match checksums with [] -> None | c::_ -> Some c in
+  let text =
+    OpamProcess.make_command_text label
+      (OpamUrl.string_of_backend url.OpamUrl.backend)
+  in
+  OpamProcess.Job.with_text text @@
+  B.pull_url destdir cksum url
+  @@| function
+  | (Result (F file) | Up_to_date (F file)) as ret ->
+    if validate_and_add_to_cache label url cache_dir file checksums then
+      (OpamConsole.msg "[%s] %s %s\n"
+         (OpamConsole.colorise `green label)
+         (if url.OpamUrl.backend = `http then "downloaded from"
+          else "synchronised with")
+         (OpamUrl.to_string url);
+       ret)
+    else
+      Not_available "Checksum mismatch"
+  | Result (D dir) | Up_to_date (D dir) ->
+    if checksums = [] then Result (D dir) else
+      (OpamConsole.error "%s: file checksum specified, but a directory was \
+                          retrieved from %s"
+         label (OpamUrl.to_string url);
+       OpamFilename.rmdir dir;
+       Not_available "can't check directory checksum")
+  | Not_available r -> Not_available r
+
+let rec pull_from_mirrors label cache_dir destdir checksums = function
+  | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
+  | [url] -> pull_from_upstream label cache_dir destdir checksums url
+  | url::mirrors ->
+    pull_from_upstream label cache_dir destdir checksums url @@+ function
+    | Not_available s ->
+      OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
+        label (OpamUrl.to_string url) s;
+      pull_from_mirrors label cache_dir destdir checksums mirrors
+    | r -> Done r
+
+let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
     local_dirname checksums remote_urls =
   (match cache_dir with
    | Some cache_dir ->
+     let text = OpamProcess.make_command_text label "dl" in
+     OpamProcess.Job.with_text text @@
      fetch_from_cache cache_dir cache_urls checksums
    | None -> Done (Not_available "no cache"))
   @@+ function
   | Up_to_date (f, _) ->
     if not silent_hits then
       OpamConsole.msg "[%s] found in cache\n"
-        (OpamConsole.colorise `green (OpamPackage.to_string package));
+        (OpamConsole.colorise `green label);
     Done (Up_to_date (F f))
   | Result (f, url) ->
     OpamConsole.msg "[%s] downloaded from %s\n"
-      (OpamConsole.colorise `green (OpamPackage.to_string package))
+      (OpamConsole.colorise `green label)
       (OpamUrl.to_string url);
     Done (Result (F f))
   | Not_available _ ->
@@ -133,70 +200,16 @@ let pull_url package ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
     then
       OpamConsole.error_and_exit
         "%s: Missing checksum, and `--require-checksums` was set."
-        (OpamPackage.to_string package);
-    let pull_and_validate url =
-      let module B = (val url_backend url: OpamRepositoryBackend.S) in
-      let cksum = match checksums with [] -> None | c::_ -> Some c in
-      B.pull_url local_dirname cksum url
-      @@| function
-      | Result (F file) | Up_to_date (F file) ->
-        (try
-           let mismatch, expected =
-             OpamStd.List.find_map (fun c ->
-                 match OpamHash.mismatch (OpamFilename.to_string file) c with
-                 | Some found -> Some (found, c)
-                 | None -> None)
-               checksums
-           in
-           OpamConsole.error "%s: Checksum mismatch for %s:\n\
-                             \  expected %s\n\
-                             \  got      %s"
-             (OpamPackage.to_string package) (OpamUrl.to_string url)
-             (OpamHash.to_string expected)
-             (OpamHash.to_string mismatch);
-           OpamFilename.remove file;
-           Not_available "Checksum mismatch"
-         with Not_found ->
-           (match cache_dir, checksums with
-            | Some dir, ck::_ ->
-              OpamFilename.copy ~src:file ~dst:(cache_file dir ck)
-            | _ -> ());
-           OpamConsole.msg "[%s] %s %s\n"
-             (OpamConsole.colorise `green (OpamPackage.to_string package))
-             (if url.OpamUrl.backend = `http then "downloaded from"
-              else "synchronised with")
-             (OpamUrl.to_string url);
-           Result (F file))
-      | Result (D dir) | Up_to_date (D dir) ->
-        if checksums = [] then Result (D dir) else
-          (OpamConsole.error "%s: file checksum specified, but a directory was \
-                              retrieved from %s"
-             (OpamPackage.to_string package) (OpamUrl.to_string url);
-           OpamFilename.rmdir dir;
-           Not_available "can't check directory checksum")
-      | Not_available r -> Not_available r
-    in
-    let rec attempt = function
-      | [] -> invalid_arg "pull_url: empty url list"
-      | [url] -> pull_and_validate url
-      | url::mirrors ->
-        pull_and_validate url @@+ function
-        | Not_available s ->
-          OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
-            (OpamPackage.to_string package)
-            (OpamUrl.to_string url) s;
-          attempt mirrors
-        | r -> Done r
-    in
-    attempt remote_urls
+        label;
+    pull_from_mirrors label cache_dir local_dirname checksums remote_urls
 
 let revision repo =
   let kind = repo.repo_url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
   B.revision repo.repo_root
 
-let pull_url_and_fix_digest package dirname checksums file url =
-  pull_url package dirname [] url @@+ function
+let pull_url_and_fix_digest label dirname checksums file url =
+  pull_url label dirname [] url @@+ function
   | Not_available _
   | Up_to_date _
   | Result (D _) as r -> Done r
@@ -208,8 +221,7 @@ let pull_url_and_fix_digest package dirname checksums file url =
             OpamConsole.msg
               "Fixing wrong checksum for %s: current value is %s, setting it \
                to %s.\n"
-              (OpamPackage.to_string package) (OpamHash.to_string c)
-              (OpamHash.to_string actual);
+              label (OpamHash.to_string c) (OpamHash.to_string actual);
             actual
           | None -> c)
         checksums
@@ -218,6 +230,41 @@ let pull_url_and_fix_digest package dirname checksums file url =
        let u = OpamFile.URL.read file in
        OpamFile.URL.write file (OpamFile.URL.with_checksum fixed_checksums u));
     Done r
+
+let pull_file label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
+    file checksums remote_urls =
+  (match cache_dir with
+   | Some cache_dir ->
+     let text = OpamProcess.make_command_text label "dl" in
+     OpamProcess.Job.with_text text @@
+     fetch_from_cache cache_dir cache_urls checksums
+   | None -> Done (Not_available "no cache"))
+  @@+ function
+  | Up_to_date (f, _) ->
+    if not silent_hits then
+      OpamConsole.msg "[%s] found in cache\n"
+        (OpamConsole.colorise `green label);
+    OpamFilename.copy ~src:f ~dst:file;
+    Done (Result ())
+  | Result (f, url) ->
+    OpamConsole.msg "[%s] downloaded from %s\n"
+      (OpamConsole.colorise `green label)
+      (OpamUrl.to_string url);
+    OpamFilename.copy ~src:f ~dst:file;
+    Done (Result ())
+  | Not_available _ ->
+    if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
+    then
+      OpamConsole.error_and_exit
+        "%s: Missing checksum, and `--require-checksums` was set."
+        label;
+    OpamFilename.with_tmp_dir_job (fun tmpdir ->
+        pull_from_mirrors label cache_dir tmpdir checksums remote_urls
+        @@| function
+        | Up_to_date _ -> assert false
+        | Result (F f) -> OpamFilename.move ~src:f ~dst:file; Result ()
+        | Result (D _) -> Not_available "is a directory"
+        | Not_available _ as na -> na)
 
 let pull_archive repo nv =
   let module B =
@@ -259,10 +306,11 @@ let make_archive ?(gener_digest=false) repo prefix nv =
         OpamFilename.mkdir download_dir;
       match checksum with
       | _::_ when gener_digest ->
-        pull_url_and_fix_digest nv download_dir checksum url_file mirrors
+        pull_url_and_fix_digest (OpamPackage.to_string nv)
+          download_dir checksum url_file mirrors
         @@+ fun f -> Done (Some f)
       | _ ->
-        pull_url nv download_dir checksum mirrors
+        pull_url (OpamPackage.to_string nv) download_dir checksum mirrors
         @@+ fun f -> Done (Some f)
   in
 

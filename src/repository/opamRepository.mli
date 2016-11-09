@@ -35,15 +35,22 @@ val update: repository -> unit OpamProcess.job
     All provided hashes are checked in case of a single file; if the hash list
     is non-empty, and a directory is obtained, an error message is printed and
     Not_available returned.
-    The [package] argument is only for status message printing. *)
+    The first argument, [label] is only for status message printing. *)
 val pull_url:
-  package -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
+  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
   dirname -> OpamHash.t list -> url list ->
   generic_file download OpamProcess.job
 
-(** Pull and fix the resulting digest *)
+(** Same as [pull_url], but for fetching a single file. *)
+val pull_file:
+  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
+  filename -> OpamHash.t list -> url list ->
+  unit download OpamProcess.job
+
+(** As [pull_url], but doesn't check hashes, and instead patches the given url
+    file to match the actual file hashes, as downloaded *)
 val pull_url_and_fix_digest:
-  package -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
+  string -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
 (** Pull an archive in a repository *)

@@ -129,8 +129,8 @@ let really_download ~overwrite ?(compress=false) ?checksum ?(validate=true)
        OpamRepositoryConfig.(!r.force_checksums <> Some false) then
       OpamStd.Option.iter (fun cksum ->
           if not (OpamHash.check_file tmp_dst cksum) then
-            failwith (Printf.sprintf "Bad checksum for %s (expected %s)"
-                        (OpamUrl.to_string url) (OpamHash.to_string cksum)))
+            failwith (Printf.sprintf "Bad checksum, expected %s"
+                        (OpamHash.to_string cksum)))
         checksum;
     OpamSystem.mv tmp_dst dst;
     Done ()

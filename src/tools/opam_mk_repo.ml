@@ -14,9 +14,7 @@ open OpamFilename.Op
 open OpamProcess.Job.Op
 
 type args = {
-  index: bool;
   names: string list;
-  gener_digest: bool;
   dryrun: bool;
   recurse: bool;
   dev: bool;
@@ -30,20 +28,6 @@ type args = {
 
 let args =
   let open Cmdliner in
-  (*{[
-       let all =
-         let doc = "Build all package archives (this is the default unless -i)" in
-         Arg.(value & flag & info ["a";"all"] ~doc)
-       in
-     ]}*)
-  let index =
-    let doc = "Only build indexes, not package archives." in
-    Arg.(value & flag & info ["i";"index"] ~doc)
-  in
-  let gener_digest =
-    let doc = "Automatically correct the wrong archive checksums." in
-    Arg.(value & flag & info ["g";"generate-checksums"] ~doc)
-  in
   let dryrun =
     let doc = "Simply display the possible actions instead of executing them." in
     Arg.(value & flag & info ["d";"dryrun"] ~doc)
@@ -86,15 +70,15 @@ let args =
   in
   Term.(
     pure
-      (fun index gener_digest dryrun recurse dev names debug resolve
+      (fun dryrun recurse dev names debug resolve
         compiler_version switch ->
         let switch =
           match switch with
           | None -> Option.map OpamSwitch.of_string compiler_version
           | Some switch -> Some (OpamSwitch.of_string switch) in
-         {index; gener_digest; dryrun; recurse; dev; names; debug; resolve;
+         {dryrun; recurse; dev; names; debug; resolve;
           compiler_version; switch; os_string = OpamStd.Sys.os_string ()})
-    $index $gener_digest $dryrun $recurse $dev $names $debug $resolve
+    $dryrun $recurse $dev $names $debug $resolve
     $compiler_version $switch
   )
 
@@ -192,8 +176,7 @@ let resolve_deps args dir names =
          cs)
 
 let rec process
-    ({index; gener_digest; dryrun; recurse;
-      names; debug; resolve; dev;_} as args) =
+    ({dryrun; recurse; names; debug; resolve; dev;_} as args) =
   OpamStd.Config.init
     ?debug_level:(if debug then Some 1 else None)
     ();
@@ -290,58 +273,58 @@ let rec process
       get_transitive_dependencies new_packages
     else
       packages in
-  OpamConsole.msg "Packages: %s\n" (OpamPackage.Set.to_string packages);
 
-  let errors = ref [] in
-  OpamParallel.iter ~jobs:8 ~dry_run:dryrun
-    ~command:(fun nv ->
-        let prefix = OpamPackage.Map.find nv prefixes in
-        match
-          OpamFileTools.read_opam
-            (OpamRepositoryPath.packages repo.repo_root prefix nv)
-        with
-        | None -> Done ()
-        | Some opam ->
-          match OpamFile.OPAM.url opam with None -> Done () | Some urlf ->
-            (match OpamFile.URL.checksum urlf with
-             | [] ->
-               OpamConsole.warning "[%s] no checksum, not caching"
-                 (OpamConsole.colorise `green (OpamPackage.to_string nv));
-               Done ()
-             | checksums ->
-               OpamFilename.with_tmp_dir_job @@ fun tmp ->
-               OpamProcess.Job.with_text ("["^OpamPackage.to_string nv^"]") @@
-               OpamRepository.pull_url nv
-                 ~cache_dir:(repo.repo_root / "cache") tmp
-                 ~silent_hits:true
-                 checksums
-                 (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
-               @@| (function Not_available m -> errors := (nv, m) :: !errors
-                           | _ -> ()))
-            @@+ fun () ->
-            List.fold_left (fun job (url, checksum, basename) ->
-                job @@+ fun () ->
+  let errors =
+    OpamParallel.reduce ~jobs:8 ~dry_run:dryrun
+      ~nil:OpamPackage.Map.empty
+      ~merge:(OpamPackage.Map.union (fun a _ -> a))
+      ~command:(fun nv ->
+          let prefix = OpamPackage.Map.find nv prefixes in
+          match
+            OpamFileTools.read_opam
+              (OpamRepositoryPath.packages repo.repo_root prefix nv)
+          with
+          | None -> Done (OpamPackage.Map.empty)
+          | Some opam ->
+            let add_to_cache ?name urlf errors =
+              let label =
+                OpamPackage.to_string nv ^
+                OpamStd.Option.to_string ((^) "/") name
+              in
+              match OpamFile.URL.checksum urlf with
+              | [] ->
+                OpamConsole.warning "[%s] no checksum, not caching"
+                  (OpamConsole.colorise `green label);
+                Done errors
+              | checksums ->
                 OpamFilename.with_tmp_dir_job @@ fun tmp ->
-                OpamProcess.Job.with_text
-                  (Printf.sprintf "[%s%s]"
-                     (OpamPackage.to_string nv)
-                     (OpamStd.Option.to_string
-                        (fun b -> "/"^OpamFilename.Base.to_string b) basename))
-                @@
-                OpamRepository.pull_url nv
-                  ~cache_dir:(repo.repo_root / "cache") tmp
+                OpamRepository.pull_url label
+                  ~cache_dir:(repo.repo_root / "cache")
                   ~silent_hits:true
-                  [checksum]
-                  [url]
-                @@| (function Not_available m -> errors := (nv, m) :: !errors
-                            | _ -> ()))
-              (Done ()) (OpamFile.OPAM.extra_sources opam)
-      )
-    (List.sort (fun nv1 nv2 ->
+                  tmp
+                  checksums
+                  (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
+                @@| function
+                | Not_available m -> OpamPackage.Map.add nv m errors
+                | _ -> errors
+            in
+            let urls =
+              (match OpamFile.OPAM.url opam with
+               | None -> []
+               | Some urlf -> [add_to_cache urlf]) @
+              (List.map (fun (name,urlf) ->
+                   add_to_cache ~name:(OpamFilename.Base.to_string name) urlf)
+                  (OpamFile.OPAM.extra_sources opam))
+            in
+            OpamProcess.Job.seq OpamPackage.Map.empty urls)
+      (List.sort (fun nv1 nv2 ->
+           (* Some pseudo-randomisation to avoid downloading all files from the
+              same host simultaneously *)
          match compare (Hashtbl.hash nv1) (Hashtbl.hash nv2) with
          | 0 -> compare nv1 nv2
          | n -> n)
-        (OpamPackage.Set.elements packages));
+        (OpamPackage.Set.elements packages))
+  in
 
   (* Create index.tar.gz *)
   OpamConsole.msg "Rebuilding index.tar.gz ...\n";
@@ -352,21 +335,14 @@ let rec process
   if not dryrun then
     List.iter OpamSystem.remove tmp_dirs;
 
-  if !errors <> [] then (
-    let display_error (nv, error) =
-      let disp = OpamConsole.header_error "%s" (OpamPackage.to_string nv) in
-      match error with
-      | OpamSystem.Process_error r  ->
-        disp "%s" (OpamProcess.string_of_result ~color:`red r)
-      | OpamSystem.Internal_error s -> OpamConsole.error "  %s" s
-      | _ -> disp "%s" (Printexc.to_string error) in
-    let all_errors = List.map fst !errors in
+  if not (OpamPackage.Map.is_empty errors) then (
     OpamConsole.error "Got some errors while processing: %s"
-      (OpamStd.List.concat_map ", " OpamPackage.to_string all_errors);
+      (OpamStd.List.concat_map ", " OpamPackage.to_string
+         (OpamPackage.Map.keys errors));
     OpamConsole.errmsg "%s"
       (OpamStd.Format.itemize
          (fun (nv,e) -> Printf.sprintf "[%s] %s" (OpamPackage.to_string nv) e)
-         !errors)
+         (OpamPackage.Map.bindings errors))
   );
   let subdir = OpamFilename.Dir.of_string "2.0" in
   if OpamFilename.exists (subdir // "repo") then (

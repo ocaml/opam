@@ -525,6 +525,18 @@ module I = struct
 
   let items = map_list ~posf:item_pos item
 
+  let anonymous_section pp1 =
+    pp ~name:pp1.ppname
+      (fun ~pos -> function
+         | [None, contents] -> pp1.parse ~pos contents
+         | [Some _, _] ->
+           bad_format ~pos "Unexpected section title"
+         | [] ->
+           bad_format ~pos "Missing section"
+         | _::_::_ ->
+           bad_format ~pos "Duplicate section")
+      (fun l -> [None, pp1.print l])
+
   let section kind =
     pp ~name:"file-section"
       (fun ~pos:_ -> function
@@ -539,44 +551,28 @@ module I = struct
 
   type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
-  let good_fields ?name ?(allow_extensions=false) ?(sections=[]) fields =
-    let parse ~pos:_ items =
-      let rem_fields, rem_sections, ok_items, extra_items =
-        List.fold_left (fun (fields,sections,ok,extra) -> function
-            | Section (_, {section_kind = k; _}) as s ->
-              if List.mem_assoc k sections
-              then fields, List.remove_assoc k sections, s::ok, extra
-              else fields, sections, ok, s :: extra
-            | Variable (_,k,_) as v ->
-              if List.mem_assoc k fields
-              then List.remove_assoc k fields, sections, v::ok, extra
-              else if
-                allow_extensions &&
-                OpamStd.String.starts_with ~prefix:"x-" k &&
-                not @@ List.exists
-                  (function Variable (_,k1,_) -> k1 = k | _ -> false)
-                  ok
-              then fields, sections, v::ok, extra
-              else fields, sections, ok, v :: extra)
-          (fields,sections,[],[]) items
-      in
-      rem_fields, rem_sections, List.rev ok_items, List.rev extra_items
-    in
-    let print (_, _, valid_items, _invalid) = valid_items in
-    pp ?name parse print
-
   let fields ?name ~empty ?(sections=[]) ?(mandatory_fields=[]) ppas =
     let parse ~pos items =
       (* For consistency, always read fields in ppa order, ignoring file
          order. Some parsers may depend on it. *)
+      let module SEM = OpamStd.Map.Make(struct
+          type t = string * string option
+          let compare = compare
+          let to_string (s,o) = s ^ OpamStd.Option.to_string ((^) "^") o
+          let to_json (s,o) =
+            `O (("kind", `String s) ::
+                match o with None -> [] | Some s -> ["name", `String s])
+        end)
+      in
       let errs, section_map, field_map =
         List.fold_left
           (fun (errs, section_map, field_map) -> function
-             | Section (pos, {section_kind=k; section_items=v; _}) ->
+             | Section
+                 (pos, {section_kind=k; section_name=n; section_items=v}) ->
                if List.mem_assoc k sections then
                  try
                    errs,
-                   OpamStd.String.Map.safe_add k (pos,v) section_map, field_map
+                   SEM.safe_add (k,n) (pos,v) section_map, field_map
                  with Failure _ ->
                    (k,(Some pos,"Duplicate section "^k)) :: errs,
                    section_map, field_map
@@ -594,7 +590,7 @@ module I = struct
                else
                  (k,(Some pos,"Invalid field "^k))::errs,
                  section_map, field_map)
-          OpamStd.String.Map.([], empty, empty) items
+          ([], SEM.empty, OpamStd.String.Map.empty) items
       in
       let errs, r =
         List.fold_left
@@ -613,14 +609,18 @@ module I = struct
       in
       let errs, r =
         List.fold_left
-          (fun (errs,acc) (section,ppa) ->
-             try
-               let pos, v = OpamStd.String.Map.find section section_map in
-               try errs, parse ppa ~pos (acc, Some v) with
-               | Bad_format (pos,msg) ->
-                 (section,(pos, msg)) :: errs, acc
-             with
-             | Not_found -> errs, acc)
+          (fun (errs,acc) (section_kind, ppa) ->
+             let secs =
+               SEM.fold
+                 (fun (kind, name) (_, items) acc ->
+                    if kind = section_kind then (name, items) :: acc else acc)
+                 section_map [] |>
+               List.rev
+             in
+             if secs = [] then errs, acc else
+             try errs, parse ppa ~pos (acc, Some secs) with
+             | Bad_format (pos, msg) ->
+               (section_kind,(pos, msg)) :: errs, acc)
           (errs, r) sections
       in
       r, errs
@@ -633,17 +633,13 @@ module I = struct
            | Some value -> Some (Variable (pos_null, field, value)))
         ppas
       @
-      OpamStd.List.filter_map
-        (fun (section, ppa) ->
-           match snd (ppa.print acc) with
-           | None | Some [] -> None
-           | Some items ->
-             Some (Section (pos_null, {
-                 section_kind = section;
-                 section_name = None;
-                 section_items = items;
-               })))
-        sections
+      (List.flatten @@ List.map
+         (fun (section_kind, ppa) ->
+            OpamStd.Option.default [] (snd (ppa.print acc)) |>
+            List.map (fun (section_name, section_items) ->
+                Section
+                  (pos_null, { section_kind; section_name; section_items })))
+         sections)
     in
     pp ?name parse print
 

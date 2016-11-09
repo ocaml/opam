@@ -50,10 +50,11 @@ module B = struct
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
-         let msg = match e with
-           | Failure msg ->
-             Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) msg
-           | _ -> OpamUrl.to_string remote_url
+         let msg =
+           Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url)
+             (match e with
+              | Failure msg -> msg
+              | _ -> "download failed")
          in
          Done (Not_available msg))
     @@ fun () ->

@@ -219,7 +219,7 @@ module URL: sig
 
   include IO_FILE
 
-  val create: ?mirrors:url list -> url -> t
+  val create: ?mirrors:url list -> ?checksum:OpamHash.t list -> url -> t
 
   (** URL address *)
   val url: t -> url
@@ -264,7 +264,7 @@ module OPAM: sig
     patches    : (basename * filter option) list;
     build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (url * OpamHash.t * basename option) list;
+    extra_sources: (basename * URL.t) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -371,7 +371,7 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
-  val extra_sources: t -> (url * OpamHash.t * basename option) list
+  val extra_sources: t -> (basename * URL.t) list
 
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
@@ -538,7 +538,7 @@ module OPAM: sig
 
   val with_dev_repo: url -> t -> t
 
-  val with_extra_sources: (url * OpamHash.t * basename option) list -> t -> t
+  val with_extra_sources: (basename * URL.t) list -> t -> t
 
   val with_extensions: value OpamStd.String.Map.t -> t -> t
 
@@ -580,7 +580,8 @@ module OPAM: sig
 
   val fields: (t, value) OpamFormat.I.fields_def
 
-  val sections: (t, opamfile_item list) OpamFormat.I.fields_def
+  val sections:
+    (t, (string option * opamfile_item list) list) OpamFormat.I.fields_def
 
   (** Doesn't handle package name encoded in directory name *)
   val pp_raw_fields: (opamfile_item list, t) OpamPp.t
@@ -882,7 +883,8 @@ module Syntax : sig
   val to_string_with_preserved_format:
     'a typed_file -> ?format_from:'a typed_file ->
     empty:'a ->
-    ?sections: ('a, opamfile_item list) OpamFormat.I.fields_def ->
+    ?sections:('a, (string option * opamfile_item list) list)
+      OpamFormat.I.fields_def ->
     fields:('a, value) OpamFormat.I.fields_def ->
     (opamfile, filename * 'a) OpamPp.t ->
     'a -> string

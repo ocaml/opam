@@ -2217,14 +2217,10 @@ let source =
           (OpamPackage.to_string nv)
       | Some url ->
         mkdir dir;
-        let text =
-          OpamProcess.make_command_text (OpamPackage.name_to_string nv)
-            (OpamUrl.string_of_backend (url.OpamUrl.backend))
-        in
         match
           OpamProcess.Job.run
-            (OpamProcess.Job.with_text text
-               (OpamRepository.pull_url nv dir [] [url]))
+            (OpamRepository.pull_url (OpamPackage.to_string nv) dir []
+               [url])
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
         | Result _ | Up_to_date _ ->

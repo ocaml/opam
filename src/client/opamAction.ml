@@ -260,18 +260,16 @@ let extract_package st source nv destdir =
     if is_repackaged_archive then Done None else
     (* !X this should be done during the download phase, but at
        the moment it assumes a single file *)
-    let dl_file_job (url,checksum,fname) =
-      let fname =
-        OpamStd.Option.default
-          (OpamFilename.Base.of_string (OpamUrl.basename url))
-          fname
-      in
+    let dl_file_job (basename, urlf) =
       OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
-      OpamDownload.download_as
-        ~overwrite:true
-        ~checksum url
-        (OpamFilename.create destdir fname)
-      @@+ fun () -> Done None
+      OpamRepository.pull_file
+        (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
+        (OpamFilename.create destdir basename)
+        (OpamFile.URL.checksum urlf)
+        (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
+      @@| function
+      | Result () | Up_to_date () -> None
+      | Not_available msg -> Some (Failure msg)
     in
     List.fold_left (fun job dl ->
         job @@+ function

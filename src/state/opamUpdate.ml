@@ -125,12 +125,7 @@ let fetch_dev_package url srcdir nv =
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
-  let text =
-    OpamProcess.make_command_text
-      (OpamPackage.Name.to_string nv.name)
-      (OpamUrl.string_of_backend remote_url.OpamUrl.backend) in
-  OpamProcess.Job.with_text text @@
-  OpamRepository.pull_url nv srcdir checksum mirrors
+  OpamRepository.pull_url (OpamPackage.to_string nv) srcdir checksum mirrors
 
 let pinned_package st ?version name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
@@ -381,12 +376,7 @@ let download_package_source st nv dirname =
     let remote_url = OpamFile.URL.url u in
     let mirrors = remote_url :: OpamFile.URL.mirrors u in
     let checksum = OpamFile.URL.checksum u in
-    let text =
-      OpamProcess.make_command_text (OpamPackage.name_to_string nv)
-        (OpamUrl.string_of_backend remote_url.OpamUrl.backend)
-    in
-    OpamProcess.Job.with_text text @@
-    OpamRepository.pull_url nv
+    OpamRepository.pull_url (OpamPackage.to_string nv)
       ~cache_dir:(OpamPath.download_cache st.switch_global.root)
       ~cache_urls:(active_caches st nv)
       dirname checksum mirrors

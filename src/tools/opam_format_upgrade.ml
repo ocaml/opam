@@ -212,7 +212,7 @@ let do_upgrade () =
       in
       let patches = OpamFile.Comp.patches comp in
       if patches <> [] then
-        OpamConsole.msg "Fetching patches of %s to check their checksums...\n"
+        OpamConsole.msg "Fetching patches of %s to check their hashes...\n"
           (OpamPackage.to_string nv);
       let url_md5 =
         (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
@@ -221,7 +221,7 @@ let do_upgrade () =
         OpamUrl.Map.of_list
       in
       let extra_sources =
-        (* Download them just to get their mandatory MD5 *)
+        (* Download them just to get their MD5 *)
         OpamParallel.map
           ~jobs:3
           ~command:(fun url ->
@@ -254,7 +254,10 @@ let do_upgrade () =
       let opam =
         opam |>
         OpamFile.OPAM.with_extra_sources
-          (OpamStd.List.filter_some extra_sources)
+          (List.map (fun (url, hash, _) ->
+               OpamFilename.Base.of_string (OpamUrl.basename url),
+               OpamFile.URL.create ~checksum:[hash] url)
+              (OpamStd.List.filter_some extra_sources))
       in
       write_opam opam;
 

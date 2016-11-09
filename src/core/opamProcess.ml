@@ -642,6 +642,8 @@ module Job = struct
     in
     aux None l
 
+  let seq start = List.fold_left (@@+) (Done start)
+
   let rec with_text text = function
     | Done _ as j -> j
     | Run (cmd, cont) ->
