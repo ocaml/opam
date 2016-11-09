@@ -266,14 +266,6 @@ let pull_file label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
         | Result (D _) -> Not_available "is a directory"
         | Not_available _ as na -> na)
 
-let pull_archive repo nv =
-  let module B =
-    (val find_backend_by_kind repo.repo_url.OpamUrl.backend:
-      OpamRepositoryBackend.S)
-  in
-  let url = OpamRepositoryPath.Remote.archive repo.repo_url nv in
-  B.pull_archive repo.repo_name repo.repo_root url
-
 let packages r =
   OpamPackage.list (OpamRepositoryPath.packages_dir r.repo_root)
 

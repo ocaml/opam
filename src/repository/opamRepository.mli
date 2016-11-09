@@ -53,9 +53,6 @@ val pull_url_and_fix_digest:
   string -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
-(** Pull an archive in a repository *)
-val pull_archive: repository -> package -> filename download OpamProcess.job
-
 (** Get the optional revision associated to a backend. *)
 val revision: repository -> version option OpamProcess.job
 

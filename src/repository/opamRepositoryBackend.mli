@@ -31,10 +31,6 @@ module type S = sig
       contents of the given directory. *)
   val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
 
-  (** [pull_archive repo repo_root archive_url] pulls [archive] assuming it
-      belongs to the given repository. *)
-  val pull_archive: repository_name -> dirname -> url -> filename download OpamProcess.job
-
   (** Return the (optional) revision of a given repository. Only useful
       for VCS backends. *)
   val revision: dirname -> version option OpamProcess.job

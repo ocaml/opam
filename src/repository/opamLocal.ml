@@ -219,19 +219,6 @@ module B = struct
              Not_available (OpamUrl.to_string remote_url))
         | _ -> res (D local_dirname)
 
-  let pull_archive repo_name repo_root url =
-    let local_dir = OpamRepositoryPath.archives_dir repo_root in
-    OpamFilename.mkdir local_dir;
-    pull_file_quiet local_dir url @@| function
-    | Not_available _ as r when OpamCoreConfig.(!r.verbose_level) < 2 -> r
-    | r ->
-      OpamConsole.msg "[%s] %s %s\n"
-        (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo_name))
-        (OpamUrl.to_string url)
-        (string_of_download r);
-      r
-
   let revision _ =
     Done None
 

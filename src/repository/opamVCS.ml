@@ -109,21 +109,6 @@ module Make (VCS: VCS) = struct
        | Not_available _ -> OpamConsole.colorise `red "unavailable");
     Done ()
 
-  let pull_archive repo_name repo_root url =
-    let dirname = OpamRepositoryPath.archives_dir repo_root in
-    let local_file =
-      OpamFilename.create dirname
-        (OpamFilename.Base.of_string (OpamUrl.basename url))
-    in
-    if OpamFilename.exists local_file then (
-      OpamConsole.msg "[%s] Using %s\n"
-        (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo_name))
-        (OpamFilename.prettify local_file);
-      Done (Up_to_date local_file)
-    ) else
-      Done (Not_available (OpamUrl.to_string url))
-
   let revision repo_root =
     VCS.revision repo_root @@+ fun r ->
     Done (Some (OpamPackage.Version.of_string r))

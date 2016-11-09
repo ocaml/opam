@@ -61,10 +61,6 @@ module B = struct
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file -> Done (Result (F local_file))
 
-  let pull_archive _name _repo_root url =
-    log "pull-archive";
-    Done (Not_available (OpamUrl.to_string url))
-
   let revision _ =
     Done None
 
