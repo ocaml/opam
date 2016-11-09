@@ -93,14 +93,17 @@ installlib-%: opam-installer opam-%.install src/opam-%$(LIBEXT)
 	          the dependencies. Run 'make clean-ext' and try again))
 	src/opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
 
+uninstalllib-%: opam-installer opam-%.install src/opam-%$(LIBEXT)
+	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
+
 libinstall: opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 install: opam.install
 	src/opam-installer $(OPAMINSTALLER_FLAGS) $<
 
-libuninstall:
-	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam-lib.install
+libuninstall: $(OPAMLIBS:%=uninstalllib-%)
+	@
 
 uninstall: opam.install
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
