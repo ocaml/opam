@@ -47,6 +47,12 @@ val pull_file:
   filename -> OpamHash.t list -> url list ->
   unit download OpamProcess.job
 
+(** Same as [pull_file], but without a destination file: just ensures the file
+    is present in the cache. *)
+val pull_file_to_cache:
+  string -> cache_dir:dirname -> ?cache_urls:url list ->
+  OpamHash.t list -> url list -> unit download OpamProcess.job
+
 (** As [pull_url], but doesn't check hashes, and instead patches the given url
     file to match the actual file hashes, as downloaded *)
 val pull_url_and_fix_digest:

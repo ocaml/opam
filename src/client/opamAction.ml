@@ -252,17 +252,15 @@ let extract_package st source nv destdir =
   @@+ function
   | Some _ as some_err -> Done some_err
   | None ->
-  let is_repackaged_archive =
-    Some (F (OpamPath.archive st.switch_global.root nv)) = source
-  in
   let opam = OpamSwitchState.opam st nv in
   let get_extra_sources_job =
-    if is_repackaged_archive then Done None else
-    (* !X this should be done during the download phase, but at
-       the moment it assumes a single file *)
+    (* !X The extra sources have normally been prefetched during the dl phase;
+       this is, assuming their metadata contains a hash though. *)
     let dl_file_job (basename, urlf) =
       OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
       OpamRepository.pull_file
+        ~cache_dir:(OpamPath.download_cache st.switch_global.root)
+        ~silent_hits:true
         (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
         (OpamFilename.create destdir basename)
         (OpamFile.URL.checksum urlf)
@@ -292,16 +290,6 @@ let extract_package st source nv destdir =
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
       prepare_package_build st nv destdir
-
-(* unused ?
-let string_of_commands commands =
-  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  "  "
-  ^ if commands_s <> [] then
-    String.concat "\n  " commands_s
-  else
-    "Nothing to do."
-*)
 
 let compilation_env t opam =
   OpamEnv.get_full ~force_path:true t ~updates:([

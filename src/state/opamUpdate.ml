@@ -370,14 +370,34 @@ let active_caches st nv =
   repo_cache @ global_cache
 
 let download_package_source st nv dirname =
-  match OpamSwitchState.url st nv with
-  | None   -> Done None
-  | Some u ->
-    let remote_url = OpamFile.URL.url u in
-    let mirrors = remote_url :: OpamFile.URL.mirrors u in
-    let checksum = OpamFile.URL.checksum u in
-    OpamRepository.pull_url (OpamPackage.to_string nv)
-      ~cache_dir:(OpamPath.download_cache st.switch_global.root)
-      ~cache_urls:(active_caches st nv)
-      dirname checksum mirrors
-    @@| OpamStd.Option.some
+  let opam = OpamSwitchState.opam st nv in
+  let cache_dir = OpamPath.download_cache st.switch_global.root in
+  let cache_urls = active_caches st nv in
+
+  let fetch_source_job =
+    match OpamFile.OPAM.url opam with
+    | None   -> Done None
+    | Some u ->
+      OpamRepository.pull_url (OpamPackage.to_string nv)
+        ~cache_dir ~cache_urls
+        dirname
+        (OpamFile.URL.checksum u)
+        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+      @@| OpamStd.Option.some
+  in
+  let fetch_extra_source_job (name, u) = function
+    | Some (Not_available _) as err -> Done err
+    | ret ->
+      OpamRepository.pull_file_to_cache
+        (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
+        ~cache_dir ~cache_urls
+        (OpamFile.URL.checksum u)
+        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+      @@| function
+      | Not_available _ as na -> Some na
+      | _ -> ret
+  in
+  fetch_source_job @@+
+  OpamProcess.Job.seq
+    (List.map fetch_extra_source_job
+       (OpamFile.OPAM.extra_sources opam))

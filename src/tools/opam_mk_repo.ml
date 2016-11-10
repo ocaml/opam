@@ -297,11 +297,8 @@ let rec process
                   (OpamConsole.colorise `green label);
                 Done errors
               | checksums ->
-                OpamFilename.with_tmp_dir_job @@ fun tmp ->
-                OpamRepository.pull_url label
+                OpamRepository.pull_file_to_cache label
                   ~cache_dir:(repo.repo_root / "cache")
-                  ~silent_hits:true
-                  tmp
                   checksums
                   (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
                 @@| function
@@ -316,7 +313,7 @@ let rec process
                    add_to_cache ~name:(OpamFilename.Base.to_string name) urlf)
                   (OpamFile.OPAM.extra_sources opam))
             in
-            OpamProcess.Job.seq OpamPackage.Map.empty urls)
+            OpamProcess.Job.seq urls OpamPackage.Map.empty)
       (List.sort (fun nv1 nv2 ->
            (* Some pseudo-randomisation to avoid downloading all files from the
               same host simultaneously *)

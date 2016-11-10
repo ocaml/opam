@@ -183,7 +183,9 @@ let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
      let text = OpamProcess.make_command_text label "dl" in
      OpamProcess.Job.with_text text @@
      fetch_from_cache cache_dir cache_urls checksums
-   | None -> Done (Not_available "no cache"))
+   | None ->
+     assert (cache_urls = []);
+     Done (Not_available "no cache"))
   @@+ function
   | Up_to_date (f, _) ->
     if not silent_hits then
@@ -231,14 +233,16 @@ let pull_url_and_fix_digest label dirname checksums file url =
        OpamFile.URL.write file (OpamFile.URL.with_checksum fixed_checksums u));
     Done r
 
-let pull_file label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
+let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
     file checksums remote_urls =
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
      OpamProcess.Job.with_text text @@
      fetch_from_cache cache_dir cache_urls checksums
-   | None -> Done (Not_available "no cache"))
+   | None ->
+     assert (cache_urls = []);
+     Done (Not_available "no cache"))
   @@+ function
   | Up_to_date (f, _) ->
     if not silent_hits then
@@ -263,6 +267,25 @@ let pull_file label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
         @@| function
         | Up_to_date _ -> assert false
         | Result (F f) -> OpamFilename.move ~src:f ~dst:file; Result ()
+        | Result (D _) -> Not_available "is a directory"
+        | Not_available _ as na -> na)
+
+let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
+  let text = OpamProcess.make_command_text label "dl" in
+  OpamProcess.Job.with_text text @@
+  fetch_from_cache cache_dir cache_urls checksums @@+ function
+  | Up_to_date _ -> Done (Up_to_date ())
+  | Result (_, url) ->
+    OpamConsole.msg "[%s] downloaded from %s\n"
+      (OpamConsole.colorise `green label)
+      (OpamUrl.to_string url);
+    Done (Result ())
+  | Not_available _ ->
+    OpamFilename.with_tmp_dir_job (fun tmpdir ->
+        pull_from_mirrors label (Some cache_dir) tmpdir checksums remote_urls
+        @@| function
+        | Up_to_date _ -> assert false
+        | Result (F _) -> Result ()
         | Result (D _) -> Not_available "is a directory"
         | Not_available _ as na -> na)
 

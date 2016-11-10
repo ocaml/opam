@@ -184,7 +184,7 @@ module Job: sig
     (command * result) option Op.job
 
   (** Returns the job made of the the given homogeneous jobs run sequentially *)
-  val seq: 'a -> ('a -> 'a Op.job) list -> 'a Op.job
+  val seq: ('a -> 'a Op.job) list -> 'a -> 'a Op.job
 
   (** Sets and overrides text of the underlying commands *)
   val with_text: string -> 'a Op.job -> 'a Op.job
