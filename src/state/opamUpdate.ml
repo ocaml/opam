@@ -363,8 +363,7 @@ let active_caches st nv =
     with
     | Some (repo, _) ->
       OpamFile.Repo.dl_cache
-        (Lazy.force
-           (OpamRepositoryName.Map.find repo rt.repos_definitions))
+        (OpamRepositoryName.Map.find repo rt.repos_definitions)
     | None -> []
   in
   repo_cache @ global_cache

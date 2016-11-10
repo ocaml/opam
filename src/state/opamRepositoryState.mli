@@ -19,7 +19,11 @@ open OpamStateTypes
 (** Caching of repository loading (marshall of all parsed opam files) *)
 module Cache: sig
   val save: [< rw] repos_state -> unit
-  val load: dirname -> OpamFile.OPAM.t package_map repository_name_map option
+  val load:
+    dirname ->
+    (OpamFile.Repo.t repository_name_map *
+     OpamFile.OPAM.t package_map repository_name_map)
+      option
   val remove: unit -> unit
 end
 
