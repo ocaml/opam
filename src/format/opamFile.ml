@@ -2321,6 +2321,21 @@ module OPAMSyntax = struct
       "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
         (Pp.V.string_tr -|
          Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+      "extra-sources", no_cleanup Pp.ppacc_opt
+        with_extra_sources OpamStd.Option.none
+        (Pp.V.map_list ~depth:2 @@
+         Pp.V.map_pair
+           (Pp.V.map_option
+              Pp.V.url
+              (Pp.opt @@ Pp.singleton -| pp_basename))
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash))
+         -| Pp.pp
+           (fun ~pos:_ ((u,b),md5) ->
+              OpamStd.Option.default
+                (OpamFilename.Base.of_string (OpamUrl.basename u)) b,
+              URL.create ~checksum:[md5] u)
+           (fun (f, urlf) ->
+              URL.((url urlf, Some f), List.hd (checksum urlf))));
     ]
 
   (* These don't have a printer and their info is stored in new fields *)
@@ -2329,12 +2344,13 @@ module OPAMSyntax = struct
     "descr", "description";
   ]
 
-  (* These don't have a printer and their info can't be retrievec in the same
+  (* These don't have a printer and their info can't be retrieved in the same
      format anymore *)
   let deprecated_fields = [
     "ocaml-version";
     "os";
     "configure-style";
+    "extra-sources";
   ]
 
   let fields =
