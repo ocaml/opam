@@ -92,6 +92,9 @@ let repository gt repo =
       { rt with
         repositories =
           OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
+        repos_definitions =
+          OpamRepositoryName.Map.add repo.repo_name repo_file
+            rt.repos_definitions;
         repo_opams =
           OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
       }
