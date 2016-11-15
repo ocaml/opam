@@ -59,7 +59,7 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir $(LIBINSTALL_DIR)
 endif
 
-opam-%.install:
+opam-%.install: ALWAYS
 	$(MAKE) -C src ../opam-$*.install
 
 opam.install:
