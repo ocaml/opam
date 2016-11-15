@@ -327,7 +327,7 @@ define lib_inst_files
 	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti))
 endef
 
-../opam-%.install: opam-%$(LIBEXT)
+../opam-%.install: ALWAYS
 	@echo 'lib: [' >$@
 	@echo '  "src/$*.META" {"META"}' >>$@
 	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,$*)) } >>$@
