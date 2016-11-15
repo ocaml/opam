@@ -21,7 +21,7 @@ let slog = OpamConsole.slog
 let eval_redirect gt repo =
   if repo.repo_url.OpamUrl.backend <> `http then None else
   let redirect =
-    repo
+    repo.repo_root
     |> OpamRepositoryPath.repo
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.redirect
@@ -76,7 +76,7 @@ let repository gt repo =
           job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
-  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo) in
+  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo.repo_root) in
   let repo_vers = OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
@@ -92,6 +92,9 @@ let repository gt repo =
       { rt with
         repositories =
           OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
+        repos_definitions =
+          OpamRepositoryName.Map.add repo.repo_name repo_file
+            rt.repos_definitions;
         repo_opams =
           OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
       }
@@ -102,7 +105,7 @@ let repositories rt repos =
     OpamProcess.Job.ignore_errors ~default:(fun t -> t)
       ~message:("Could not update repository " ^
                 OpamRepositoryName.to_string repo.repo_name) @@
-    repository rt.repos_global repo
+    fun () -> repository rt.repos_global repo
   in
   let rt =
     OpamParallel.reduce
@@ -125,12 +128,7 @@ let fetch_dev_package url srcdir nv =
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
-  let text =
-    OpamProcess.make_command_text
-      (OpamPackage.Name.to_string nv.name)
-      (OpamUrl.string_of_backend remote_url.OpamUrl.backend) in
-  OpamProcess.Job.with_text text @@
-  OpamRepository.pull_url nv srcdir checksum mirrors
+  OpamRepository.pull_url (OpamPackage.to_string nv) srcdir checksum mirrors
 
 let pinned_package st ?version name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
@@ -302,7 +300,8 @@ let dev_packages st packages =
   log "update-dev-packages";
   let command nv =
     OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Set.empty) @@
+      ~default:((fun st -> st), OpamPackage.Set.empty)
+    @@ fun () ->
     dev_package st nv @@| fun (st_update, changed) ->
     st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
@@ -329,7 +328,8 @@ let pinned_packages st names =
   log "update-pinned-packages";
   let command name =
     OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Name.Set.empty) @@
+      ~default:((fun st -> st), OpamPackage.Name.Set.empty)
+    @@ fun () ->
     pinned_package st name @@| fun (st_update, changed) ->
     st_update,
     match changed with
@@ -357,19 +357,49 @@ let pinned_packages st names =
   OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates,
   updates
 
-(* Download a package from its upstream source, using 'cache_dir' as cache
-   directory. *)
-let download_upstream st nv dirname =
-  match OpamSwitchState.url st nv with
-  | None   -> Done None
-  | Some u ->
-    let remote_url = OpamFile.URL.url u in
-    let mirrors = remote_url :: OpamFile.URL.mirrors u in
-    let checksum = OpamFile.URL.checksum u in
-    let text =
-      OpamProcess.make_command_text (OpamPackage.name_to_string nv)
-        (OpamUrl.string_of_backend remote_url.OpamUrl.backend)
-    in
-    OpamProcess.Job.with_text text @@
-    OpamRepository.pull_url nv dirname checksum mirrors
-    @@| OpamStd.Option.some
+let active_caches st nv =
+  let global_cache = OpamFile.Config.dl_cache st.switch_global.config in
+  let rt = st.switch_repos in
+  let repo_cache =
+    match OpamRepositoryState.find_package_opt rt
+            (OpamSwitchState.repos_list st) nv
+    with
+    | Some (repo, _) ->
+      OpamFile.Repo.dl_cache
+        (OpamRepositoryName.Map.find repo rt.repos_definitions)
+    | None -> []
+  in
+  repo_cache @ global_cache
+
+let download_package_source st nv dirname =
+  let opam = OpamSwitchState.opam st nv in
+  let cache_dir = OpamPath.download_cache st.switch_global.root in
+  let cache_urls = active_caches st nv in
+
+  let fetch_source_job =
+    match OpamFile.OPAM.url opam with
+    | None   -> Done None
+    | Some u ->
+      OpamRepository.pull_url (OpamPackage.to_string nv)
+        ~cache_dir ~cache_urls
+        dirname
+        (OpamFile.URL.checksum u)
+        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+      @@| OpamStd.Option.some
+  in
+  let fetch_extra_source_job (name, u) = function
+    | Some (Not_available _) as err -> Done err
+    | ret ->
+      OpamRepository.pull_file_to_cache
+        (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
+        ~cache_dir ~cache_urls
+        (OpamFile.URL.checksum u)
+        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+      @@| function
+      | Not_available _ as na -> Some na
+      | _ -> ret
+  in
+  fetch_source_job @@+
+  OpamProcess.Job.seq
+    (List.map fetch_extra_source_job
+       (OpamFile.OPAM.extra_sources opam))

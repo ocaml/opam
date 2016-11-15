@@ -70,6 +70,9 @@ type +'lock repos_state = {
   repositories: repository repository_name_map;
   (** The list of repositories *)
 
+  repos_definitions: OpamFile.Repo.t repository_name_map;
+  (** The contents of each repo's [repo] file *)
+
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 } constraint 'lock = 'lock lock

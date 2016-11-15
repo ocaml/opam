@@ -526,7 +526,7 @@ let parallel_apply t action ~requested action_graph =
            OpamAction.extract_package t source nv d
          else Done None) @@+ fun _ ->
         OpamProcess.Job.ignore_errors ~default:()
-          (OpamAction.remove_package t nv) @@| fun () ->
+          (fun () -> OpamAction.remove_package t nv) @@| fun () ->
         remove_from_install
           ~keep_as_root:(not (OpamPackage.Set.mem nv wished_removed))
           nv;

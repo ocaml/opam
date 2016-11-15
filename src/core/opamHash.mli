@@ -34,4 +34,8 @@ val to_path: t -> string list
 
 val check_file: string -> t -> bool
 
+(** Like [check_file], but returns the actual mismatching hash of the file, or
+    [None] in case of match *)
+val mismatch: string -> t -> t option
+
 val compute: ?kind:kind -> string -> t

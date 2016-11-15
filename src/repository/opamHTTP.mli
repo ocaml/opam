@@ -16,5 +16,3 @@ module B: OpamRepositoryBackend.S
 open OpamTypes
 
 val make_index_tar_gz: dirname -> unit
-
-val make_urls_txt: write:bool -> dirname -> file_attribute_set

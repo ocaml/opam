@@ -18,21 +18,22 @@ module type S = sig
 
   val name: OpamUrl.backend
 
-  (** [pull_url package local_dir checksum remote_url] pull the contents of
-      [remote_url] into [local_dir]. Can return either a file or a
-      directory. [checksum] is the optional expected checksum. *)
-  val pull_url: package -> dirname -> OpamHash.t option -> url -> generic_file download OpamProcess.job
+  (** [pull_url local_dir checksum remote_url] pulls the contents of
+      [remote_url] into [local_dir]. Can return either a file or a directory.
+      [checksum] is the optional expected checksum, and is here in case it is
+      useful for retrieval, but is not expected to be verified by this
+      function (and it doesn't apply to directories). *)
+  val pull_url:
+    dirname -> OpamHash.t option -> url ->
+    generic_file download OpamProcess.job
 
-  (** [pull_repo] pull the contents of a repository. *)
-  val pull_repo: repository -> unit OpamProcess.job
-
-  (** [pull_archive repo archive] pull [archive] in the given
-      repository. *)
-  val pull_archive: repository -> url -> filename download OpamProcess.job
+  (** [pull_repo] pulls the contents of a repository, creating or updating the
+      contents of the given directory. *)
+  val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful
       for VCS backends. *)
-  val revision: repository -> version option OpamProcess.job
+  val revision: dirname -> version option OpamProcess.job
 
 end
 

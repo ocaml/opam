@@ -9,48 +9,49 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
 open OpamFilename.Op
-
-let root t = t.repo_root
-
-let update_cache t = root t // "update.cache"
 
 let create root name = root / "repo" / OpamRepositoryName.to_string name
 
-let repo t = root t // "repo" |> OpamFile.make
+let update_cache repo_root = repo_root // "update.cache"
 
-let packages_dir t = root t / "packages"
+let repo repo_root = repo_root // "repo" |> OpamFile.make
 
-let packages t prefix nv =
+let packages_dir repo_root = repo_root / "packages"
+
+let packages repo_root prefix nv =
   match prefix with
-  | None   -> packages_dir t / OpamPackage.to_string nv
-  | Some p -> packages_dir t / p / OpamPackage.to_string nv
+  | None   -> packages_dir repo_root / OpamPackage.to_string nv
+  | Some p -> packages_dir repo_root / p / OpamPackage.to_string nv
 
-let opam t prefix nv = packages t prefix nv // "opam" |> OpamFile.make
+let opam repo_root prefix nv =
+  packages repo_root prefix nv // "opam" |> OpamFile.make
 
-let descr t prefix nv = packages t prefix nv // "descr" |> OpamFile.make
+let descr repo_root prefix nv =
+  packages repo_root prefix nv // "descr" |> OpamFile.make
 
-let url t prefix nv = packages t prefix nv // "url" |> OpamFile.make
+let url repo_root prefix nv =
+  packages repo_root prefix nv // "url" |> OpamFile.make
 
-let files t prefix nv = packages t prefix nv / "files"
+let files repo_root prefix nv =
+  packages repo_root prefix nv / "files"
 
-let archives_dir t = root t / "archives"
+let archives_dir repo_root =
+  repo_root / "archives"
 
-let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
-
-let upload_dir t = root t / "upload"
+let archive repo_root nv =
+  archives_dir repo_root // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 module Remote = struct
   (** URL, not FS paths *)
   open OpamUrl.Op
 
-  let repo t =
-    t.repo_url / "repo"
+  let repo root_url =
+    root_url / "repo"
 
-  let packages_url t =
-    t.repo_url / "packages"
+  let packages_url root_url =
+    root_url / "packages"
 
-  let archive t nv =
-    t.repo_url / "archives" / (OpamPackage.to_string nv ^ "+opam.tar.gz")
+  let archive root_url nv =
+    root_url / "archives" / (OpamPackage.to_string nv ^ "+opam.tar.gz")
 end

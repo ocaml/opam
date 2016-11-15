@@ -115,7 +115,7 @@ module MakeIO (F : IO_Arg) = struct
       close_out oc;
       Stats.write_files := filename :: !Stats.write_files;
       log "Wrote %s in %.3fs" filename (chrono ())
-    with e -> close_out oc; raise e
+    with e -> close_out oc; OpamFilename.remove f; raise e
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -751,8 +751,9 @@ module Syntax = struct
     | Some str ->
     let syn_file = of_string filename str in
     let syn_t = Pp.print pp (filename, t) in
-    let it_name = function
-      | Variable (_, f, _) | Section (_, {section_kind = f; _}) -> f
+    let it_ident = function
+      | Variable (_, f, _) -> `Var f
+      | Section (_, {section_kind = k; section_name = n; _}) -> `Sec (k,n)
     in
     let it_pos = function
       | Section (pos,_) | Variable (pos,_,_) -> pos
@@ -770,9 +771,9 @@ module Syntax = struct
       aux [0] str
     in
     let pos_index (_file, li, col) = lines_index.(li - 1) + col in
-    let field_str name =
+    let field_str ident =
       let rec aux = function
-        | it1 :: r when it_name it1 = name ->
+        | it1 :: r when it_ident it1 = ident ->
           let start = pos_index (it_pos it1) in
           let stop = match r with
             | it2 :: _ -> pos_index (it_pos it2) - 1
@@ -789,7 +790,7 @@ module Syntax = struct
     in
     let rem, strs =
       List.fold_left (fun (rem, strs) item ->
-          List.filter (fun i -> it_name i <> it_name item) rem,
+          List.filter (fun i -> it_ident i <> it_ident item) rem,
           match item with
           | Variable (pos, name, v) ->
             (try
@@ -802,36 +803,46 @@ module Syntax = struct
                    snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
                  ->
                  (* unchanged *)
-                 field_str name :: strs
+                 field_str (`Var name) :: strs
                | _ ->
                  try
                    let f =
-                     List.find (fun i -> it_name i = name) syn_t.file_contents
+                     List.find (fun i -> it_ident i = `Var name) syn_t.file_contents
                    in
                    OpamPrinter.items [f] :: strs
                  with Not_found -> strs
              with Not_found | OpamPp.Bad_format _ ->
                if OpamStd.String.starts_with ~prefix:"x-" name then
-                 field_str name :: strs
+                 field_str (`Var name) :: strs
                else strs)
-          | Section (pos, {section_kind = name; section_items = v;_}) ->
+          | Section (pos, {section_kind; section_name; section_items}) ->
             (try
-               let ppa = List.assoc name sections in
-               let sec_field_t = snd (Pp.print ppa t) in
+               let ppa = List.assoc section_kind sections in
+               let print_sec ppa t =
+                 match snd (Pp.print ppa t) with
+                 | None -> None
+                 | Some v ->
+                   try Some (List.assoc section_name v) with Not_found -> None
+               in
+               let sec_field_t = print_sec ppa t in
                if sec_field_t <> None &&
-                  sec_field_t = snd
-                    (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
+                  sec_field_t =
+                  print_sec ppa
+                    (Pp.parse ppa ~pos
+                       (empty, Some [section_name, section_items]))
                then
                  (* unchanged *)
-                 field_str name :: strs
+                 field_str (`Sec (section_kind, section_name)) :: strs
                else
                try
                  let f =
-                   List.find (fun i -> it_name i = name) syn_t.file_contents
+                   List.filter
+                     (fun i -> it_ident i = `Sec (section_kind, section_name))
+                     syn_t.file_contents
                  in
-                 OpamPrinter.items [f] :: strs
+                 OpamPrinter.items f :: strs
                with Not_found -> strs
-             with Not_found -> strs)
+             with Not_found | OpamPp.Bad_format _ -> strs)
         )
         (syn_t.file_contents, []) syn_file.file_contents
     in
@@ -997,6 +1008,7 @@ module ConfigSyntax = struct
     jobs : int;
     dl_tool : arg list option;
     dl_jobs : int;
+    dl_cache : url list option;
     wrappers : Wrappers.t;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
@@ -1011,6 +1023,7 @@ module ConfigSyntax = struct
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let criteria t = t.solver_criteria
   let criterion kind t =
     try Some (List.assoc kind t.solver_criteria)
@@ -1031,6 +1044,7 @@ module ConfigSyntax = struct
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
   let with_dl_tool_opt dl_tool t = { t with dl_tool }
   let with_dl_jobs dl_jobs t = { t with dl_jobs }
+  let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
   let with_criteria solver_criteria t = { t with solver_criteria }
   let with_criterion kind criterion t =
     { t with solver_criteria =
@@ -1049,6 +1063,7 @@ module ConfigSyntax = struct
     jobs = 1;
     dl_tool = None;
     dl_jobs = 1;
+    dl_cache = None;
     solver_criteria = [];
     solver = None;
     wrappers = Wrappers.empty;
@@ -1087,6 +1102,9 @@ module ConfigSyntax = struct
       "download-jobs", Pp.ppacc
         with_dl_jobs dl_jobs
         Pp.V.pos_int;
+      "archive-mirrors", Pp.ppacc_opt
+        with_dl_cache (fun t -> t.dl_cache)
+        (Pp.V.map_list ~depth:1 Pp.V.url);
       "solver-criteria", Pp.ppacc_opt
         (with_criterion `Default) (criterion `Default)
         Pp.V.string;
@@ -1153,6 +1171,7 @@ module InitConfigSyntax = struct
     jobs : int option;
     dl_tool : arg list option;
     dl_jobs : int option;
+    dl_cache : url list option;
     solver_criteria : (solver_criteria * string) list;
     solver : arg list option;
     wrappers : Wrappers.t;
@@ -1166,6 +1185,7 @@ module InitConfigSyntax = struct
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let solver_criteria t = t.solver_criteria
   let solver t = t.solver
   let wrappers t = t.wrappers
@@ -1178,6 +1198,7 @@ module InitConfigSyntax = struct
   let with_jobs jobs t = {t with jobs}
   let with_dl_tool dl_tool t = {t with dl_tool}
   let with_dl_jobs dl_jobs t = {t with dl_jobs}
+  let with_dl_cache dl_cache t = {t with dl_cache = Some dl_cache}
   let with_solver_criteria solver_criteria t = {t with solver_criteria}
   let with_solver solver t = {t with solver}
   let with_wrappers wrappers t = {t with wrappers}
@@ -1199,6 +1220,7 @@ module InitConfigSyntax = struct
     jobs = None;
     dl_tool = None;
     dl_jobs = None;
+    dl_cache = None;
     solver_criteria = [];
     solver = None;
     wrappers = Wrappers.empty;
@@ -1230,6 +1252,9 @@ module InitConfigSyntax = struct
       "download-jobs", Pp.ppacc_opt
         (with_dl_jobs @* OpamStd.Option.some) dl_jobs
         Pp.V.pos_int;
+      "archive-mirrors", Pp.ppacc
+        with_dl_cache dl_cache
+        (Pp.V.map_list ~depth:1 Pp.V.url);
       "solver-criteria", Pp.ppacc_opt
         (with_criterion `Default) (criterion `Default)
         Pp.V.string;
@@ -1280,6 +1305,7 @@ module InitConfigSyntax = struct
       jobs = opt t2.jobs t1.jobs;
       dl_tool = opt t2.dl_tool t1.dl_tool;
       dl_jobs = opt t2.dl_jobs t1.dl_jobs;
+      dl_cache = opt t2.dl_cache t1.dl_cache;
       solver_criteria =
         List.fold_left (fun acc c ->
             try (c, List.assoc c t2.solver_criteria) :: acc with Not_found ->
@@ -1357,14 +1383,14 @@ module Switch_configSyntax = struct
   let sections = [
     "paths", Pp.ppacc
       (fun paths t -> {t with paths}) (fun t -> t.paths)
-      (Pp.I.items -|
+      (Pp.I.anonymous_section Pp.I.items -|
        Pp.map_list
          (Pp.map_pair
             (Pp.of_pair "std-path" (std_path_of_string, string_of_std_path))
             Pp.V.string));
     "variables", Pp.ppacc
       (fun variables t -> {t with variables}) (fun t -> t.variables)
-      (Pp.I.items -|
+      (Pp.I.anonymous_section Pp.I.items -|
        Pp.map_list
          (Pp.map_pair
             (Pp.of_module "variable" (module OpamVariable))
@@ -1566,7 +1592,8 @@ module Dot_configSyntax = struct
   let pp_contents =
     Pp.I.fields ~name:"config-file" ~empty
       ~sections:[
-        "variables", Pp.ppacc with_vars vars pp_variables
+        "variables", Pp.ppacc with_vars vars
+          (Pp.I.anonymous_section pp_variables)
       ]
       [
         "opam-version", Pp.ppacc (fun _ t -> t) (fun _ -> OpamVersion.current)
@@ -1631,12 +1658,13 @@ module RepoSyntax = struct
     browse       : string option;
     upstream     : string option;
     redirect     : (string * filter option) list;
+    dl_cache     : url list option;
   }
 
   let create
       ?browse ?upstream ?(opam_version=OpamVersion.current_nopatch)
-      ?(redirect=[]) () =
-    { opam_version; browse; upstream; redirect; }
+      ?(redirect=[]) ?dl_cache () =
+    { opam_version; browse; upstream; redirect; dl_cache; }
 
   let empty = create ()
 
@@ -1644,11 +1672,13 @@ module RepoSyntax = struct
   let browse t = t.browse
   let upstream t = t.upstream
   let redirect t = t.redirect
+  let dl_cache t = OpamStd.Option.default [] t.dl_cache
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_browse browse t = { t with browse = Some browse }
   let with_upstream upstream t = { t with upstream = Some upstream }
   let with_redirect redirect t = { t with redirect }
+  let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
 
   let fields = [
     "opam-version", Pp.ppacc
@@ -1660,6 +1690,9 @@ module RepoSyntax = struct
       with_redirect redirect
       (Pp.V.map_list ~depth:1
          (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+    "archive-mirrors", Pp.ppacc
+      with_dl_cache dl_cache
+      (Pp.V.map_list ~depth:1 Pp.V.url)
   ]
 
   let pp =
@@ -1684,19 +1717,19 @@ module URLSyntax = struct
   type t = {
     url     : url;
     mirrors : url list;
-    checksum: OpamHash.t option;
+    checksum: OpamHash.t list;
     errors  : (string * Pp.bad_format) list;
   }
 
-  let create ?(mirrors=[]) url =
+  let create ?(mirrors=[]) ?(checksum=[]) url =
     {
-      url; mirrors; checksum = None; errors = [];
+      url; mirrors; checksum; errors = [];
     }
 
   let empty = {
     url     = OpamUrl.empty;
     mirrors = [];
-    checksum= None;
+    checksum= [];
     errors  = [];
   }
 
@@ -1706,7 +1739,7 @@ module URLSyntax = struct
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
-  let with_checksum checksum t = { t with checksum = Some checksum }
+  let with_checksum checksum t = { t with checksum = checksum }
 
   let fields =
     let with_url url t =
@@ -1728,8 +1761,9 @@ module URLSyntax = struct
         (Pp.V.url_with_backend `hg);
       "local",  Pp.ppacc_opt with_url OpamStd.Option.none
         (Pp.V.url_with_backend `rsync);
-      "checksum", Pp.ppacc_opt with_checksum checksum
-        (Pp.V.string -| Pp.of_module "checksum" (module OpamHash));
+      "checksum", Pp.ppacc with_checksum checksum
+        (Pp.V.map_list ~depth:1
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
     ]
@@ -1783,7 +1817,7 @@ module OPAMSyntax = struct
     patches    : (basename * filter option) list;
     build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (url * OpamHash.t * basename option) list;
+    extra_sources: (basename * URL.t) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -2238,16 +2272,6 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
       "features", no_cleanup Pp.ppacc with_features features
         Pp.V.features;
-      "extra-sources", no_cleanup Pp.ppacc with_extra_sources extra_sources
-        (Pp.V.map_list ~depth:2 @@
-         Pp.V.map_pair
-           (Pp.V.map_option
-              Pp.V.url
-              (Pp.opt @@ Pp.singleton -| pp_basename))
-           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash))
-         -| Pp.pp
-           (fun ~pos:_ ((u,md5),f) -> u,f,md5)
-           (fun (u,f,md5) -> (u,md5),f));
 
       "messages", no_cleanup Pp.ppacc with_messages messages
         (Pp.V.map_list ~depth:1 @@
@@ -2297,6 +2321,21 @@ module OPAMSyntax = struct
       "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
         (Pp.V.string_tr -|
          Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+      "extra-sources", no_cleanup Pp.ppacc_opt
+        with_extra_sources OpamStd.Option.none
+        (Pp.V.map_list ~depth:2 @@
+         Pp.V.map_pair
+           (Pp.V.map_option
+              Pp.V.url
+              (Pp.opt @@ Pp.singleton -| pp_basename))
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash))
+         -| Pp.pp
+           (fun ~pos:_ ((u,b),md5) ->
+              OpamStd.Option.default
+                (OpamFilename.Base.of_string (OpamUrl.basename u)) b,
+              URL.create ~checksum:[md5] u)
+           (fun (f, urlf) ->
+              URL.((url urlf, Some f), List.hd (checksum urlf))));
     ]
 
   (* These don't have a printer and their info is stored in new fields *)
@@ -2305,12 +2344,13 @@ module OPAMSyntax = struct
     "descr", "description";
   ]
 
-  (* These don't have a printer and their info can't be retrievec in the same
+  (* These don't have a printer and their info can't be retrieved in the same
      format anymore *)
   let deprecated_fields = [
     "ocaml-version";
     "os";
     "configure-style";
+    "extra-sources";
   ]
 
   let fields =
@@ -2318,7 +2358,16 @@ module OPAMSyntax = struct
       fields_gen
 
   let sections = [
-    "url", Pp.ppacc_opt with_url url URL.pp_contents;
+    "url", Pp.ppacc_opt with_url url (Pp.I.anonymous_section URL.pp_contents);
+    "extra-source", Pp.ppacc with_extra_sources extra_sources
+      (Pp.map_list
+         (Pp.map_pair
+            (Pp.pp
+               (fun ~pos -> function
+                  | Some o -> OpamFilename.Base.of_string o
+                  | None -> Pp.bad_format ~pos "missing extra-source name")
+               (fun b -> Some (OpamFilename.Base.to_string b)))
+            URL.pp_contents))
   ]
 
   let raw_fields =
@@ -2480,10 +2529,11 @@ module OPAMSyntax = struct
       match snd (Pp.print (List.assoc sec sections) t) with
       | None -> None
       | Some items ->
+        (* /!\ returns only the first result for multiple named sections *)
         Some (OpamStd.List.find_map (function
             | Variable (_, f, contents) when f = field -> Some contents
             | _ -> None)
-            items)
+            (List.flatten (List.map snd items)))
 
 end
 module OPAM = struct
@@ -2538,9 +2588,10 @@ module OPAM = struct
         (match t.url with
          | None -> None
          | Some u -> match URL.checksum u with
-           | None -> Some (URL.create (URL.url u)) (* ignore mirrors *)
-           | Some cksum ->
-             Some (URL.with_checksum cksum URL.empty)); (* ignore actual url *)
+           | [] -> Some (URL.create (URL.url u)) (* ignore mirrors *)
+           | cksum::_ ->
+             Some (URL.with_checksum [cksum] URL.empty));
+             (* ignore actual url and extra checksums *)
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
@@ -3116,13 +3167,10 @@ module CompSyntax = struct
         | [] -> assert false
     in
     let extra_sources =
-      let dummy_hash =
-        (* opam 1.2 used those without any checksum; conversion puts a dummy
-           value, to be fixed by the tools afterwards (we can't download the
-           files at this stage) *)
-        OpamHash.md5 (String.make 40 '0')
-      in
-      List.map (fun url -> url, dummy_hash, None) comp.patches
+      List.map (fun url ->
+          OpamFilename.Base.of_string (OpamUrl.basename url),
+          URL.create url)
+        comp.patches
     in
     let patches =
       List.map

@@ -166,10 +166,11 @@ module Job: sig
   val dry_run: 'a Op.job -> 'a
 
   (** Catch exceptions raised within a job *)
-  val catch: (exn -> 'a Op.job) -> 'a Op.job -> 'a Op.job
+  val catch: (exn -> 'a Op.job) -> (unit -> 'a Op.job) -> 'a Op.job
 
   (** Ignore all non-fatal exceptions raised by job and return default *)
-  val ignore_errors: default:'a -> ?message:string -> 'a Op.job -> 'a Op.job
+  val ignore_errors: default:'a -> ?message:string ->
+    (unit -> 'a Op.job) -> 'a Op.job
 
   (** Register an exception-safe finaliser in a job.
       [finally job fin] is equivalent to
@@ -181,6 +182,9 @@ module Job: sig
       Unless [keep_going] is true, stops on first error. *)
   val of_list: ?keep_going:bool -> command list ->
     (command * result) option Op.job
+
+  (** Returns the job made of the the given homogeneous jobs run sequentially *)
+  val seq: ('a -> 'a Op.job) list -> 'a -> 'a Op.job
 
   (** Sets and overrides text of the underlying commands *)
   val with_text: string -> 'a Op.job -> 'a Op.job

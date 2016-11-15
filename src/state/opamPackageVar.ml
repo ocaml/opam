@@ -111,8 +111,8 @@ let is_dev_package st opam =
     | { OpamUrl.backend = `http; _ }, _
       when not (OpamPackage.Set.mem (OpamFile.OPAM.package opam) st.pinned) ->
       false
-    | _, Some _ -> false
-    | _, None -> true
+    | _, _::_ -> false
+    | _, [] -> true
 
 let filter_depends_formula
     ?(build=true)

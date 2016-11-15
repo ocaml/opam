@@ -11,6 +11,7 @@
 (* To be used for quick repo scripts using the toplevel *)
 open OpamFilename.Op
 open OpamStd.Op
+open OpamTypes
 
 let identity _ x = x
 let true_ _ = true
@@ -50,15 +51,15 @@ let iter_packages_gen ?(quiet=false) f =
       if not quiet then
         OpamConsole.msg "Processing package %s... "
           (OpamPackage.to_string package);
-      let opam_file = OpamRepositoryPath.opam repo prefix package in
+      let opam_file = OpamRepositoryPath.opam repo.repo_root prefix package in
       let opam = OpamFile.OPAM.read opam_file in
-      let descr_file = OpamRepositoryPath.descr repo prefix package in
+      let descr_file = OpamRepositoryPath.descr repo.repo_root prefix package in
       let descr = OpamFile.Descr.read_opt descr_file in
-      let url_file = OpamRepositoryPath.url repo prefix package in
+      let url_file = OpamRepositoryPath.url repo.repo_root prefix package in
       let url = OpamFile.URL.read_opt url_file in
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
-          (OpamRepositoryPath.files repo prefix package
+          (OpamRepositoryPath.files repo.repo_root prefix package
            // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
       in
       let dot_install = OpamFile.Dot_install.read_opt dot_install_file in

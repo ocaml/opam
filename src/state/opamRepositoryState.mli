@@ -19,7 +19,11 @@ open OpamStateTypes
 (** Caching of repository loading (marshall of all parsed opam files) *)
 module Cache: sig
   val save: [< rw] repos_state -> unit
-  val load: dirname -> OpamFile.OPAM.t package_map repository_name_map option
+  val load:
+    dirname ->
+    (OpamFile.Repo.t repository_name_map *
+     OpamFile.OPAM.t package_map repository_name_map)
+      option
   val remove: unit -> unit
 end
 
@@ -48,11 +52,6 @@ val get_repo: 'a repos_state -> repository_name -> repository
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo_opams: repository -> OpamFile.OPAM.t OpamPackage.Map.t
-
-(** Downloads the repository-mirrored package archive into the repo's cache
-    ($opam/repo/$repo/archives) ; returns None if not found *)
-val download_archive: 'a repos_state -> repository_name list ->
-  package -> filename option OpamProcess.job
 
 (** Releases any locks on the given repos_state *)
 val unlock: 'a repos_state -> unlocked repos_state

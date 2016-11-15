@@ -137,8 +137,8 @@ let do_upgrade () =
   let write_opam ?(add_files=[]) opam =
     let nv = O.package opam in
     let pfx = Some (OpamPackage.name_to_string nv) in
-    let files_dir = OpamRepositoryPath.files repo pfx nv in
-    O.write (OpamRepositoryPath.opam repo pfx nv) opam;
+    let files_dir = OpamRepositoryPath.files repo.repo_root pfx nv in
+    O.write (OpamRepositoryPath.opam repo.repo_root pfx nv) opam;
     List.iter (fun (base,contents) ->
         OpamFilename.(write Op.(files_dir // base) contents))
       add_files
@@ -212,7 +212,7 @@ let do_upgrade () =
       in
       let patches = OpamFile.Comp.patches comp in
       if patches <> [] then
-        OpamConsole.msg "Fetching patches of %s to check their checksums...\n"
+        OpamConsole.msg "Fetching patches of %s to check their hashes...\n"
           (OpamPackage.to_string nv);
       let url_md5 =
         (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
@@ -221,7 +221,7 @@ let do_upgrade () =
         OpamUrl.Map.of_list
       in
       let extra_sources =
-        (* Download them just to get their mandatory MD5 *)
+        (* Download them just to get their MD5 *)
         OpamParallel.map
           ~jobs:3
           ~command:(fun url ->
@@ -235,11 +235,10 @@ let do_upgrade () =
                   Done None
                 in
                 OpamFilename.with_tmp_dir_job @@ fun dir ->
-                try
-                  OpamProcess.Job.catch err
-                    (OpamDownload.download ~overwrite:false url dir @@| fun f ->
-                     Some (url, OpamHash.compute (OpamFilename.to_string f), None))
-                with e -> err e)
+                OpamProcess.Job.catch err
+                  (fun () ->
+                     OpamDownload.download ~overwrite:false url dir @@| fun f ->
+                     Some (url, OpamHash.compute (OpamFilename.to_string f), None)))
           (OpamFile.Comp.patches comp)
       in
       List.fold_left
@@ -255,7 +254,10 @@ let do_upgrade () =
       let opam =
         opam |>
         OpamFile.OPAM.with_extra_sources
-          (OpamStd.List.filter_some extra_sources)
+          (List.map (fun (url, hash, _) ->
+               OpamFilename.Base.of_string (OpamUrl.basename url),
+               OpamFile.URL.create ~checksum:[hash] url)
+              (OpamStd.List.filter_some extra_sources))
       in
       write_opam opam;
 
@@ -387,7 +389,7 @@ let do_upgrade () =
     (OpamPackage.Name.Set.to_string all_base_packages);
 
   OpamPackage.Map.iter (fun package prefix ->
-      let opam_file = OpamRepositoryPath.opam repo prefix package in
+      let opam_file = OpamRepositoryPath.opam repo.repo_root prefix package in
       let opam0 = OpamFile.OPAM.read opam_file in
       OpamFile.OPAM.print_errors ~file:opam_file opam0;
       let nv = OpamFile.OPAM.package opam0 in
@@ -402,7 +404,7 @@ let do_upgrade () =
     )
     packages;
 
-  let repo_file = OpamRepositoryPath.repo repo in
+  let repo_file = OpamRepositoryPath.repo repo.repo_root in
   OpamFile.Repo.write repo_file
     (OpamFile.Repo.with_opam_version upgradeto_version
        (OpamFile.Repo.safe_read repo_file))

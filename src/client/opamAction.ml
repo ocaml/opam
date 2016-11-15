@@ -225,37 +225,18 @@ let prepare_package_build st nv dir =
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-  let name = nv.name in
   if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
     Done (`Successful None)
   else
-  let dev_dir =
-    if OpamSwitchState.is_dev_package st nv then
-      Some (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
-    else None
+  let dir =
+    OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
   in
-  let of_dl = function
-    | Some (Up_to_date f | Result f) -> `Successful (Some f)
-    | Some (Not_available s) -> `Error s
-    | None -> `Successful None
-  in
-  let job = match dev_dir with
-    | Some dir ->
-      OpamUpdate.download_upstream st nv dir @@| of_dl
-    | None ->
-      OpamRepositoryState.download_archive st.switch_repos
-        (OpamSwitchState.repos_list st)
-        nv
-      @@+ function
-      | Some f ->
-        Done (`Successful (Some (F f)))
-      | None ->
-        let dir =
-          OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
-        in
-        OpamUpdate.download_upstream st nv dir @@| of_dl
-  in
-  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) job
+  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) @@
+  fun () ->
+  OpamUpdate.download_package_source st nv dir @@| function
+  | Some (Up_to_date f | Result f) -> `Successful (Some f)
+  | Some (Not_available s) -> `Error s
+  | None -> `Successful None
 
 let extract_package st source nv destdir =
   log "extract_package: %a from %a"
@@ -271,26 +252,22 @@ let extract_package st source nv destdir =
   @@+ function
   | Some _ as some_err -> Done some_err
   | None ->
-  let is_repackaged_archive =
-    Some (F (OpamPath.archive st.switch_global.root nv)) = source
-  in
   let opam = OpamSwitchState.opam st nv in
   let get_extra_sources_job =
-    if is_repackaged_archive then Done None else
-    (* !X this should be done during the download phase, but at
-       the moment it assumes a single file *)
-    let dl_file_job (url,checksum,fname) =
-      let fname =
-        OpamStd.Option.default
-          (OpamFilename.Base.of_string (OpamUrl.basename url))
-          fname
-      in
-      OpamProcess.Job.catch (fun e -> Done (Some e)) @@
-      OpamDownload.download_as
-        ~overwrite:true
-        ~checksum url
-        (OpamFilename.create destdir fname)
-      @@+ fun () -> Done None
+    (* !X The extra sources have normally been prefetched during the dl phase;
+       this is, assuming their metadata contains a hash though. *)
+    let dl_file_job (basename, urlf) =
+      OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
+      OpamRepository.pull_file
+        ~cache_dir:(OpamPath.download_cache st.switch_global.root)
+        ~silent_hits:true
+        (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
+        (OpamFilename.create destdir basename)
+        (OpamFile.URL.checksum urlf)
+        (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
+      @@| function
+      | Result () | Up_to_date () -> None
+      | Not_available msg -> Some (Failure msg)
     in
     List.fold_left (fun job dl ->
         job @@+ function
@@ -313,16 +290,6 @@ let extract_package st source nv destdir =
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
       prepare_package_build st nv destdir
-
-(* unused ?
-let string_of_commands commands =
-  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  "  "
-  ^ if commands_s <> [] then
-    String.concat "\n  " commands_s
-  else
-    "Nothing to do."
-*)
 
 let compilation_env t opam =
   OpamEnv.get_full ~force_path:true t ~updates:([

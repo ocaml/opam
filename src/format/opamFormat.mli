@@ -174,6 +174,10 @@ sig
 
   val items : (opamfile_item list, (string * value) list) t
 
+  (** Suitable for the [fields] [sections] argument, when the sections are
+      anonymous ([section_name = None]) *)
+  val anonymous_section : ('a, 'b) t -> ((string option * 'a) list, 'b) t
+
   type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
   (** Parses an item list into a record using a fields_def; errors in a field
@@ -182,7 +186,8 @@ sig
   val fields :
     ?name:string ->
     empty:'a ->
-    ?sections:(('a, opamfile_item list) fields_def) ->
+    ?sections:
+      ('a, (string option * (opamfile_item list)) list) fields_def ->
     ?mandatory_fields:string list ->
     ('a, value) fields_def ->
     (opamfile_item list, 'a * (string * bad_format) list) t
@@ -204,19 +209,6 @@ sig
   val on_errors :
     ?name:string -> ('a -> string * bad_format -> 'a) ->
     ('a * (string * bad_format) list, 'a) t
-
-  (** Partitions a file's items into the ones that are known but not defined
-      in the file, the ones that are defined, and the ones that are in the
-      file but unknown. All but the well-defined ones are ignored when
-      printing back. *)
-  val good_fields :
-    ?name:string ->
-    ?allow_extensions:bool ->
-    ?sections:(('a, opamfile_item list) fields_def) ->
-    ('a, value) fields_def ->
-    (opamfile_item list,
-     ('a, value) fields_def * ('a, opamfile_item list) fields_def *
-     opamfile_item list * opamfile_item list) t
 
   (** Partitions items in an opamfile base on a condition on the variable
       names *)

@@ -92,6 +92,10 @@ let compute ?(kind=default_kind) file = match kind with
 
 let check_file f (kind, _ as h) = compute ~kind f = h
 
+let mismatch f (kind, _ as h) =
+  let hf = compute ~kind f in
+  if hf = h then None else Some hf
+
 module O = struct
   type _t = t
   type t = _t

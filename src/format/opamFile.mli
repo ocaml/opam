@@ -115,6 +115,7 @@ module Config: sig
   val with_dl_tool: arg list -> t -> t
   val with_dl_tool_opt: arg list option -> t -> t
   val with_dl_jobs: int -> t -> t
+  val with_dl_cache: url list -> t -> t
 
   val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables:
@@ -141,6 +142,8 @@ module Config: sig
   (** Return the number of download jobs *)
   val dl_jobs: t -> int
 
+  val dl_cache: t -> url list
+
   val criteria: t -> (solver_criteria * string) list
 
   val solver: t -> arg list option
@@ -165,6 +168,7 @@ module InitConfig: sig
   val jobs: t -> int option
   val dl_tool: t -> arg list option
   val dl_jobs: t -> int option
+  val dl_cache: t -> url list
   val solver_criteria: t -> (solver_criteria * string) list
   val solver: t -> arg list option
   val wrappers: t -> Wrappers.t
@@ -177,6 +181,7 @@ module InitConfig: sig
   val with_jobs: int option -> t -> t
   val with_dl_tool: arg list option -> t -> t
   val with_dl_jobs: int option -> t -> t
+  val with_dl_cache: url list -> t -> t
   val with_solver_criteria: (solver_criteria * string) list -> t -> t
   val with_solver: arg list option -> t -> t
   val with_wrappers: Wrappers.t -> t -> t
@@ -214,7 +219,7 @@ module URL: sig
 
   include IO_FILE
 
-  val create: ?mirrors:url list -> url -> t
+  val create: ?mirrors:url list -> ?checksum:OpamHash.t list -> url -> t
 
   (** URL address *)
   val url: t -> url
@@ -222,10 +227,10 @@ module URL: sig
   val mirrors: t -> url list
 
   (** Archive checksum *)
-  val checksum: t -> OpamHash.t option
+  val checksum: t -> OpamHash.t list
 
   (** Constructor *)
-  val with_checksum: OpamHash.t -> t -> t
+  val with_checksum: OpamHash.t list -> t -> t
 
 end
 
@@ -259,7 +264,7 @@ module OPAM: sig
     patches    : (basename * filter option) list;
     build_env  : env_update list;
     features   : (OpamVariable.t * string * filter) list;
-    extra_sources: (url * OpamHash.t * basename option) list;
+    extra_sources: (basename * URL.t) list;
 
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
@@ -366,7 +371,7 @@ module OPAM: sig
   (** External dependencies *)
   val depexts: t -> tags option
 
-  val extra_sources: t -> (url * OpamHash.t * basename option) list
+  val extra_sources: t -> (basename * URL.t) list
 
   (** All extended "x-" fields as a map *)
   val extensions: t -> value OpamStd.String.Map.t
@@ -533,7 +538,7 @@ module OPAM: sig
 
   val with_dev_repo: url -> t -> t
 
-  val with_extra_sources: (url * OpamHash.t * basename option) list -> t -> t
+  val with_extra_sources: (basename * URL.t) list -> t -> t
 
   val with_extensions: value OpamStd.String.Map.t -> t -> t
 
@@ -575,7 +580,8 @@ module OPAM: sig
 
   val fields: (t, value) OpamFormat.I.fields_def
 
-  val sections: (t, opamfile_item list) OpamFormat.I.fields_def
+  val sections:
+    (t, (string option * opamfile_item list) list) OpamFormat.I.fields_def
 
   (** Doesn't handle package name encoded in directory name *)
   val pp_raw_fields: (opamfile_item list, t) OpamPp.t
@@ -823,7 +829,9 @@ module Repo: sig
 
   val create:
     ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
-    ?redirect:(string * filter option) list -> unit -> t
+    ?redirect:(string * filter option) list ->
+    ?dl_cache:url list ->
+    unit -> t
 
   (** The minimum OPAM version required for this repository *)
   val opam_version : t -> OpamVersion.t
@@ -837,6 +845,8 @@ module Repo: sig
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
 
+  val dl_cache: t -> url list
+
   val with_opam_version : OpamVersion.t -> t -> t
 
   val with_browse: string -> t -> t
@@ -845,6 +855,7 @@ module Repo: sig
 
   val with_redirect: (string * filter option) list -> t -> t
 
+  val with_dl_cache: url list -> t -> t
 end
 
 (** {2 urls.txt file *} *)
@@ -872,7 +883,8 @@ module Syntax : sig
   val to_string_with_preserved_format:
     'a typed_file -> ?format_from:'a typed_file ->
     empty:'a ->
-    ?sections: ('a, opamfile_item list) OpamFormat.I.fields_def ->
+    ?sections:('a, (string option * opamfile_item list) list)
+      OpamFormat.I.fields_def ->
     fields:('a, value) OpamFormat.I.fields_def ->
     (opamfile, filename * 'a) OpamPp.t ->
     'a -> string

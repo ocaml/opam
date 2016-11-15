@@ -55,6 +55,9 @@ val init: t -> dirname
 (** Log dir {i $opam/log} *)
 val log: t -> dirname
 
+(** Prefix where to store the downloaded files cache {i $opam/download-cache} *)
+val download_cache: t -> dirname
+
 (** The directory where global backups are stored *)
 val backup_dir: t -> dirname
 

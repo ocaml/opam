@@ -13,13 +13,13 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 open OpamStateTypes
-open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "RSTATE" fmt
 let slog = OpamConsole.slog
 
 module Cache = struct
   type t = {
+    cached_repofiles: (repository_name * OpamFile.Repo.t) list;
     cached_opams: (repository_name * (package * OpamFile.OPAM.t) list) list;
   }
 
@@ -59,11 +59,14 @@ module Cache = struct
       let (cache: t) = Marshal.from_channel ic in
       close_in ic;
       log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
-      let repos_map =
+      let repofiles_map =
+        OpamRepositoryName.Map.of_list cache.cached_repofiles
+      in
+      let repo_opams_map =
         OpamRepositoryName.Map.map OpamPackage.Map.of_list
           (OpamRepositoryName.Map.of_list cache.cached_opams)
       in
-      Some repos_map
+      Some (repofiles_map, repo_opams_map)
     | None ->
       log "Invalid cache, removing";
       OpamFilename.remove file;
@@ -89,15 +92,22 @@ module Cache = struct
     output_string oc (OpamVersion.magic ());
     (* Repository without remote are not cached, they are intended to be
        manually edited *)
+    let filter_out_nourl repos_map =
+      OpamRepositoryName.Map.filter
+        (fun name _ ->
+           (OpamRepositoryName.Map.find name rt.repositories).repo_url <>
+           OpamUrl.empty)
+        repos_map
+    in
     Marshal.to_channel oc
-      { cached_opams =
-          OpamStd.List.filter_map
-            (fun (name, opams) ->
-               let repo = OpamRepositoryName.Map.find name rt.repositories in
-               if repo.repo_url <> OpamUrl.empty
-               then Some (name, OpamPackage.Map.bindings opams)
-               else None)
-            (OpamRepositoryName.Map.bindings rt.repo_opams) }
+      { cached_repofiles =
+          OpamRepositoryName.Map.bindings
+            (filter_out_nourl rt.repos_definitions);
+        cached_opams =
+          OpamRepositoryName.Map.bindings
+            (OpamRepositoryName.Map.map OpamPackage.Map.bindings
+               (filter_out_nourl rt.repo_opams));
+      }
       [Marshal.No_sharing];
     close_out oc;
     log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
@@ -114,11 +124,11 @@ let load_repo_opams repo =
     (fun nv prefix ->
        match
          OpamFileTools.read_opam
-           (OpamRepositoryPath.packages repo prefix nv)
+           (OpamRepositoryPath.packages repo.repo_root prefix nv)
        with
        | None -> assert false
        | Some o -> o)
-    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo))
+    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo.repo_root))
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE";
@@ -137,31 +147,43 @@ let load lock_kind gt =
        in-place *)
     OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
-  let make_rt opams =
+  let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
+  let load_repos_definitions repositories =
+    OpamRepositoryName.Map.map (fun r ->
+        OpamFile.Repo.safe_read
+          OpamRepositoryPath.(repo (create gt.root r.repo_name)))
+      repositories
+  in
+  let make_rt repos_definitions opams =
     { repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
-      repositories = OpamRepositoryName.Map.mapi mk_repo repos_map;
+      repositories;
+      repos_definitions;
       repo_opams = opams; }
   in
   match Cache.load gt.root with
-  | Some opams when OpamRepositoryName.Map.is_empty uncached ->
+  | Some (repofiles, opams) when OpamRepositoryName.Map.is_empty uncached ->
     log "Cache found";
-    make_rt opams
-  | Some opams ->
+    make_rt repofiles opams
+  | Some (repofiles, opams) ->
     log "Cache found, loading repositories without remote only";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun () ->
+    let uncached_repos = OpamRepositoryName.Map.mapi mk_repo uncached in
+    let uncached_repofiles = load_repos_definitions uncached_repos in
     let uncached_opams =
-      OpamRepositoryName.Map.map load_repo_opams
-        (OpamRepositoryName.Map.mapi mk_repo uncached)
+      OpamRepositoryName.Map.map load_repo_opams uncached_repos
     in
-    make_rt @@
-    OpamRepositoryName.Map.union (fun _ x -> x) opams uncached_opams
+    make_rt
+      (OpamRepositoryName.Map.union (fun _ x -> x) repofiles uncached_repofiles)
+      (OpamRepositoryName.Map.union (fun _ x -> x) opams uncached_opams)
   | None ->
     log "No cache found";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun () ->
+    let repos = OpamRepositoryName.Map.mapi mk_repo repos_map in
     let rt =
-      make_rt (OpamRepositoryName.Map.map load_repo_opams
-                 (OpamRepositoryName.Map.mapi mk_repo repos_map))
+      make_rt
+        (load_repos_definitions repos)
+        (OpamRepositoryName.Map.map load_repo_opams repos)
     in
     Cache.save rt;
     rt
@@ -190,33 +212,6 @@ let build_index rt repo_list =
     repo_list
 
 let get_repo rt name = OpamRepositoryName.Map.find name rt.repositories
-
-(* Try to download $name.$version+opam.tar.gz *)
-let download_archive rt repo_list nv =
-  log "get_archive %a" (slog OpamPackage.to_string) nv;
-  match find_package_opt rt repo_list nv with
-  | None -> Done None
-  | Some (repo_name, _) ->
-    let repo = OpamRepositoryName.Map.find repo_name rt.repositories in
-    let text =
-      OpamProcess.make_command_text
-        (OpamPackage.name_to_string nv)
-        ~args:[OpamRepositoryName.to_string repo.repo_name]
-        "from"
-    in
-    OpamProcess.Job.with_text text @@
-    OpamRepository.pull_archive repo nv
-    @@+ function
-    | Not_available _ ->
-      if OpamCoreConfig.(!r.verbose_level) >= 2 then
-        OpamConsole.msg "%s Repo archive not found\n" text;
-      Done None
-    | Up_to_date f ->
-      OpamConsole.msg "[%s] Archive in cache\n"
-        (OpamConsole.colorise `green (OpamPackage.name_to_string nv));
-      Done (Some f)
-    | Result f ->
-      Done (Some f)
 
 let unlock rt =
   OpamSystem.funlock rt.repos_lock;

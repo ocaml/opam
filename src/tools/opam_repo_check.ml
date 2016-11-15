@@ -10,6 +10,7 @@
 (**************************************************************************)
 
 (* Script to check that a given repository is well-typed (or well-parsed) *)
+open OpamTypes
 open OpamFilename.Op
 
 type args = {
@@ -38,23 +39,23 @@ let process args =
     OpamConsole.msg "Processing package %s\n" (OpamPackage.to_string package);
 
     (* OPAM *)
-    let opam = OpamRepositoryPath.opam repo prefix package in
+    let opam = OpamRepositoryPath.opam repo.repo_root prefix package in
     write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
 
     (* Descr *)
-    let descr = OpamRepositoryPath.descr repo prefix package in
+    let descr = OpamRepositoryPath.descr repo.repo_root prefix package in
     if OpamFile.exists descr then
       write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (* URL *)
-    let url = OpamRepositoryPath.url repo prefix package in
+    let url = OpamRepositoryPath.url repo.repo_root prefix package in
     if OpamFile.exists url then
       write OpamFile.URL.write url (OpamFile.URL.read url);
 
     (* Dot_install *)
     let dot_install : OpamFile.Dot_install.t OpamFile.t =
       OpamFile.make
-        (OpamRepositoryPath.files repo prefix package
+        (OpamRepositoryPath.files repo.repo_root prefix package
          // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
     in
     if OpamFile.exists dot_install then
