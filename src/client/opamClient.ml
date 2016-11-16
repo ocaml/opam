@@ -644,7 +644,8 @@ let slog = OpamConsole.slog
             OpamFile.InitConfig.add OpamInitDefaults.init_config ic
         in
         let repos = match repo with
-          | Some r -> [r.repo_name, r.repo_url]
+          | Some r -> [r.repo_name, (r.repo_url, None)]
+          (* !X add trust anchors *)
           | None -> OpamFile.InitConfig.repositories init_config
         in
         let config =
@@ -682,7 +683,7 @@ let slog = OpamConsole.slog
         OpamConsole.header_msg "Fetching repository information";
         let rt =
           OpamUpdate.repositories rt
-            (List.mapi (fun repo_priority (repo_name, repo_url) ->
+            (List.mapi (fun repo_priority (repo_name, (repo_url, _ta)) ->
                  { repo_root = OpamRepositoryPath.create root repo_name;
                    repo_name; repo_url; repo_priority; })
                 repos)

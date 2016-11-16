@@ -164,6 +164,11 @@ type url = OpamUrl.t (*= {
   backend: OpamUrl.backend;
 } *)
 
+type trust_anchors = {
+  quorum: int;
+  fingerprints: string list;
+}
+
 (** Repositories *)
 type repository = {
   repo_root    : dirname; (** The root of opam's local mirror for this repo *)
