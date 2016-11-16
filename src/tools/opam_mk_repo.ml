@@ -229,6 +229,19 @@ let rec process
     exit 0
   );
 
+  (* Build urls.txt, for compat with alpha5 and before *)
+  OpamFilename.of_string "repo" ::
+  OpamFilename.rec_files (OpamFilename.Dir.of_string "packages")
+  |> List.filter OpamFilename.exists
+  |> List.fold_left (fun set f ->
+      if not (OpamFilename.exists f) then set
+      else
+      let attr = OpamFilename.to_attribute repo.repo_root f in
+      OpamFilename.Attribute.Set.add attr set
+    ) OpamFilename.Attribute.Set.empty
+  |> OpamFile.File_attributes.write
+    (OpamFile.make (OpamFilename.of_string "urls.txt"));
+
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
     let prefix = OpamPackage.Map.find nv prefixes in
