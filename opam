@@ -23,7 +23,7 @@ build: [
 depends: [
   "ocamlgraph"
   "cmdliner"
-  "dose" {>= "3.2.2+opam" & < "4"}
+  "dose3" {>= "5.0"}
   "cudf"
   "re" {>= "1.2.0"}
   "ocamlfind" {build}
