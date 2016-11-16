@@ -620,7 +620,7 @@ let from_1_3_dev7_to_2_0_alpha root conf =
   in
   OpamFile.Repos_config.write (OpamPath.repos_config root)
     (OpamRepositoryName.Map.of_list
-       (List.map (fun (_, r, u) -> r, Some u) prio_repositories));
+       (List.map (fun (_, r, u) -> r, Some (u,None)) prio_repositories));
   let prio_repositories =
     List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
       prio_repositories

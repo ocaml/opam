@@ -559,8 +559,12 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
 
 - <a id="opamrcfield-opam-version">`opam-version: <string>`</a>:
   the file format version.
-- <a id="opamrcfield-repositories">`repositories: [ "[" <string> <url> "]" ... ]`</a>:
-  preconfigured repository names and their corresponding URLs.
+- <a id="opamrcfield-repositories">`repositories: [ <string> { <URL> } { {<string>}+ } { <int> } ... ]`</a>:
+  preconfigured repository names and the corresponding URLs. The last two
+  optional arguments for each repository are the trust anchors (fingerprints of
+  the trusted signing identities, see
+  [repository-validation-hook](#configfield-repository-validation-hook)) and the
+  quorum, _i.e._ how many of them are required for a signature to be accepted.
 - <a id="opamrcfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
@@ -1139,6 +1143,8 @@ for <span class="opam">opam</span>.
   the package script succeeded. The filters are evaluated in the same scope as
   the package commands, with the addition of the variable `error-code`, which is
   the return value of the package script.
+- <a id="configfield-repository-validation-hook">`repository-validation-hook`</a>:
+  _to do_
 
 #### switch-state
 
@@ -1170,8 +1176,10 @@ specified as strings in the format `<package>.<version>`.
 This file is at `~/.opam/repo/repos-config` and lists all package repositories
 configured on the system, and their source URLs.
 
-- <a id="reposconfigfield-repositories">`repositories: [ <string> { <URL> } ... ]`</a>:
-  lists the configured repository idents and their URLs.
+- <a id="reposconfigfield-repositories">`repositories: [ <string> { <URL> } { {<string>}+ } { <int> } ... ]`</a>:
+  lists the configured repository idents, their URLs and trust anchors. The
+  format is similar to [repositories:](#opamrcfield-repositories) from `opamrc`,
+  except that the `<URL>` itself is optional.
 
 Note that repositories without URLs can be used. In this case, the corresponding
 subdirectory in `~/.opam/repo/` is supposed to be put in place and updated by

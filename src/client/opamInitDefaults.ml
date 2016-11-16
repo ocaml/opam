@@ -35,6 +35,6 @@ module I = OpamFile.InitConfig
 let init_config =
   I.empty |>
   I.with_repositories
-    [OpamRepositoryName.of_string "default", repository_url] |>
+    [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
   I.with_eval_variables eval_variables

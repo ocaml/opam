@@ -141,6 +141,13 @@ module V = struct
         | (v, []) -> v
         | (v, l) -> Option (pos_null, v, l))
 
+  let option_strict =
+    pp ~name:"option"
+      (fun ~pos -> function
+         | Option (_,k,l) -> k, l
+         | _ -> bad_format ~pos "Expected an option")
+      (function (v, l) -> Option (pos_null, v, l))
+
   let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
   let list_depth expected_depth =
@@ -163,6 +170,24 @@ module V = struct
       (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
       (fun v -> lift expected_depth v)
 
+  let option_depth expected_depth =
+    let rec depth = function
+      | Option (_,v,_) -> 1 + depth v
+      | _ -> 0
+    in
+    let rec wrap n v =
+      if n <= 0 then v else wrap (n-1) (Option (pos_null, v, []))
+    in
+    let rec lift n v =
+      if n <= 0 then v else
+      match v with
+      | Option (_, v, []) -> lift (n-1) v
+      | v -> v
+    in
+    pp
+      (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
+      (fun v -> lift expected_depth v)
+
   let map_list ?(depth=0) pp1 =
     list_depth depth -|
     pp ~name:(Printf.sprintf "[%s]" pp1.ppname)
@@ -175,12 +200,31 @@ module V = struct
       (function
         | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
 
-  let map_option pp1 pp2 =
-    option -|
+  let map_option_contents pp1 pp2 =
     map_pair ~name:(Printf.sprintf "%s ?{%s}" pp1.ppname pp2.ppname)
       ~posf1:value_pos
       ~posf2:(fun v -> OpamStd.Option.default pos_null (values_pos v))
       pp1 pp2
+
+  let map_option pp1 pp2 = option -| map_option_contents pp1 pp2
+
+  let map_options_2 pp1 pp2 pp3 =
+    option_depth 2 -|
+    option_strict -| map_option_contents
+      (option_strict -| map_option_contents
+         pp1 pp2)
+      pp3 -|
+    pp (fun ~pos:_ ((a,b),c) -> a,b,c) (fun (a,b,c) -> (a,b),c)
+
+  let map_options_3 pp1 pp2 pp3 pp4 =
+    option_depth 3 -|
+    option_strict -| map_option_contents
+      (option_strict -| map_option_contents
+         (option_strict -| map_option_contents
+            pp1 pp2)
+         pp3)
+      pp4 -|
+    pp (fun ~pos:_ (((a,b),c),d) -> a,b,c,d) (fun (a,b,c,d) -> ((a,b),c),d)
 
   let map_pair pp1 pp2 =
     pp ~name:(Printf.sprintf "[%s %s]" pp1.ppname pp2.ppname)

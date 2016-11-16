@@ -1166,7 +1166,7 @@ module InitConfigSyntax = struct
 
   type t = {
     opam_version : opam_version;
-    repositories : (repository_name * url) list;
+    repositories : (repository_name * (url * trust_anchors option)) list;
     default_compiler : formula;
     jobs : int option;
     dl_tool : arg list option;
@@ -1228,6 +1228,24 @@ module InitConfigSyntax = struct
     eval_variables = [];
   }
 
+  let pp_repository_def =
+    Pp.V.map_options_3
+      (Pp.V.string -|
+       Pp.of_module "repository" (module OpamRepositoryName))
+      (Pp.opt @@ Pp.singleton -| Pp.V.url)
+      (Pp.map_list Pp.V.string)
+      (Pp.opt @@
+       Pp.singleton -| Pp.V.int -|
+       OpamPp.check ~name:"quorum" ~errmsg:"quorum must be >= 0" ((<=) 0)) -|
+    Pp.pp
+      (fun ~pos:_ (name, url, fingerprints, quorum) ->
+         name, url,
+         match fingerprints with [] -> None | fingerprints ->
+           Some {fingerprints; quorum = OpamStd.Option.default 1 quorum})
+      (fun (name, url, ta) -> match ta with
+         | Some ta ->  name, url, ta.fingerprints, Some ta.quorum
+         | None -> name, url, [], None)
+
   let fields =
     [
       "opam-version", Pp.ppacc
@@ -1235,11 +1253,12 @@ module InitConfigSyntax = struct
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "repositories", Pp.ppacc
         with_repositories repositories
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_pair
-              (Pp.V.string -|
-               Pp.of_module "repository" (module OpamRepositoryName))
-              Pp.V.url ));
+        (Pp.V.map_list ~depth:1 @@
+         pp_repository_def -|
+         Pp.pp (fun ~pos -> function
+             | (name, Some url, ta) -> (name, (url, ta))
+             | (_, None, _) -> Pp.bad_format ~pos "Missing repository URL")
+           (fun (name, (url, ta)) -> (name, Some url, ta)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
@@ -1328,18 +1347,22 @@ module Repos_configSyntax = struct
 
   let internal = "repos-config"
 
-  type t = url option OpamRepositoryName.Map.t
+  type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
 
   let empty = OpamRepositoryName.Map.empty
 
   let fields = [
     "repositories",
     Pp.ppacc (fun x _ -> x) (fun x -> x)
-      (Pp.V.map_list ~depth:1
-         (Pp.V.map_option
-            (Pp.V.string -|
-             Pp.of_module "repository" (module OpamRepositoryName))
-            (Pp.opt @@ Pp.singleton -| Pp.V.url)) -|
+      ((Pp.V.map_list ~depth:1 @@
+        InitConfigSyntax.pp_repository_def -|
+        Pp.pp
+          (fun ~pos:_ -> function
+             | (name, Some url, ta) -> name, Some (url, ta)
+             | (name, None, _) -> name, None)
+          (fun (name, def) -> match def with
+             | Some (url, ta) -> name, Some url, ta
+             | None -> name, None, None)) -|
        Pp.of_pair "repository-url-list"
          OpamRepositoryName.Map.(of_list, bindings));
   ]
