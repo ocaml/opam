@@ -18,10 +18,7 @@ module type S = sig
   val revision: dirname -> version option OpamProcess.job
 end
 
-let compare r1 r2 =
-  match compare r2.repo_priority r1.repo_priority with
-  | 0 -> compare r2.repo_name r1.repo_name
-  | x -> x
+let compare r1 r2 = compare r1.repo_name r2.repo_name
 
 let to_string r =
   Printf.sprintf "%s (%s)"
@@ -32,7 +29,7 @@ let local dirname = {
   repo_name     = OpamRepositoryName.of_string "local";
   repo_root     = dirname;
   repo_url      = OpamUrl.empty;
-  repo_priority = 0;
+  repo_trust    = None;
 }
 
 let to_json r =
