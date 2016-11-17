@@ -20,19 +20,18 @@ open OpamProcess.Job.Op
 module PackageActionGraph = OpamSolver.ActionGraph
 
 (* Install the package files *)
-let process_dot_install st nv =
+let process_dot_install st nv build_dir =
   let root = st.switch_global.root in
   if OpamStateConfig.(!r.dryrun) then
       OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
   else
-  let build_dir = OpamPath.Switch.build root st.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
       log "Installing %s.\n" (OpamPackage.to_string nv);
       let name = nv.name in
-      let config_f = OpamPath.Switch.build_config root st.switch nv in
+      let config_f = OpamPath.Builddir.config build_dir nv in
       let config = OpamFile.Dot_config.read_opt config_f in
-      let install_f = OpamPath.Switch.build_install root st.switch nv in
+      let install_f = OpamPath.Builddir.install build_dir nv in
       let install = OpamFile.Dot_install.safe_read install_f in
 
       (* .install *)
@@ -138,9 +137,7 @@ let process_dot_install st nv =
         in
         failwith msg
       )
-    );
-  if not (OpamStateConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
-    OpamFilename.rmdir build_dir
+    )
 
 (* Prepare the package build:
    * apply the patches
@@ -693,13 +690,18 @@ let install_package t ?(doc=false) ?build_dir nv =
     in
     let error =
       if error = None then
-        try process_dot_install t nv; None with e -> Some e
+        try process_dot_install t nv dir; None with e -> Some e
       else error
     in
     OpamProcess.Job.of_list ~keep_going:true
       (List.map mk_cmd
          (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
     @@+ fun error_post ->
+    if error = None &&
+       not OpamStateConfig.(!r.keep_build_dir) &&
+       not (OpamConsole.debug ()) then
+      OpamFilename.rmdir
+        (OpamPath.Switch.build t.switch_global.root t.switch nv);
     match error, error_post with
     | Some err, _ -> Done (Some err)
     | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r))
