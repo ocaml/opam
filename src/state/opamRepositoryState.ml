@@ -140,7 +140,7 @@ let load lock_kind gt =
     repo_root = OpamRepositoryPath.create gt.root name;
     repo_name = name;
     repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-    repo_priority = 0; (* ignored *)
+    repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
   } in
   let uncached =
     (* Don't cache repositories without remote, as they should be editable
@@ -235,5 +235,5 @@ let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
     (OpamRepositoryName.Map.map (fun r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some (r.repo_url, None)) (* !X drops trust-anchors! *)
+         else Some (r.repo_url, r.repo_trust))
         rt.repositories)

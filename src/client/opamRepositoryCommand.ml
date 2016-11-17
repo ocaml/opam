@@ -68,7 +68,7 @@ let add rt name url =
   | None ->
   let repo = { repo_name = name; repo_url = url;
                repo_root = OpamRepositoryPath.create root name;
-               repo_priority = 0; }
+               repo_trust = None; }
   in
   if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
   then

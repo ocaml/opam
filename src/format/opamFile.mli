@@ -794,7 +794,16 @@ module Package_index: IO_FILE with
 
 (** Repository config: [$opam/repo/$repo/config]. Deprecated, for migration
     only *)
-module Repo_config_legacy: IO_FILE with type t = repository
+module Repo_config_legacy : sig
+  type t = {
+    repo_name : repository_name;
+    repo_root : dirname;
+    repo_url : url;
+    repo_priority : int;
+  }
+  include IO_FILE with type t := t
+end
+
 
 module Repos_config: IO_FILE
   with type t = (url * trust_anchors option) option OpamRepositoryName.Map.t

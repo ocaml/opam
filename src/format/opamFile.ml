@@ -1529,7 +1529,12 @@ module Repo_config_legacySyntax = struct
 
   let internal = "repo-file"
 
-  type t = repository
+  type t = {
+    repo_name : repository_name;
+    repo_root : dirname;
+    repo_url : url;
+    repo_priority : int;
+  }
 
   let empty = {
     repo_name = OpamRepositoryName.of_string "<none>";
@@ -1540,27 +1545,27 @@ module Repo_config_legacySyntax = struct
 
   let fields = [
     "name", Pp.ppacc
-      (fun repo_name r -> {r with repo_name})
+      (fun repo_name (r:t) -> {r with repo_name})
       (fun r -> r.repo_name)
       (Pp.V.string -|
        Pp.of_module "repository-name" (module OpamRepositoryName));
     "address", Pp.ppacc
-      (fun repo_url r -> {r with repo_url})
+      (fun repo_url (r:t) -> {r with repo_url})
       (fun r -> r.repo_url)
       Pp.V.url;
     "kind", Pp.ppacc_opt (* deprecated *)
-      (fun backend r ->
+      (fun backend (r:t) ->
          {r with repo_url = {r.repo_url with OpamUrl.backend}})
       OpamStd.Option.none
       (Pp.V.string -|
        Pp.of_pair "repository-kind"
          OpamUrl.(backend_of_string, string_of_backend));
     "priority", Pp.ppacc
-      (fun repo_priority r -> {r with repo_priority})
+      (fun repo_priority (r:t) -> {r with repo_priority})
       (fun r -> r.repo_priority)
       Pp.V.int;
     "root", Pp.ppacc
-      (fun repo_root r -> {r with repo_root})
+      (fun repo_root (r:t) -> {r with repo_root})
       (fun r -> r.repo_root)
       (Pp.V.string -|
        Pp.of_module "directory" (module OpamFilename.Dir));

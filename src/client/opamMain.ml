@@ -215,7 +215,7 @@ let init =
           OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
             repo_name
         in
-        { repo_root; repo_name; repo_url; repo_priority = 0 })
+        { repo_root; repo_name; repo_url; repo_trust = None })
         repo_url
     in
     let update_config =

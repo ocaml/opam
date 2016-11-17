@@ -171,11 +171,10 @@ type trust_anchors = {
 
 (** Repositories *)
 type repository = {
-  repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_name    : repository_name;
+  repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_url     : url;
-  repo_priority: int; (** usage of this field is deprecated, priority is
-                          handled by order of definition *)
+  repo_trust   : trust_anchors option;
 }
 
 (** {2 Variable-based filters} *)
