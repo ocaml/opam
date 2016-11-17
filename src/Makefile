@@ -316,27 +316,33 @@ export PROJ_opam-admin-top
 # --
 
 # Looks for artifacts in sourcedir, _obuild, sourcedir/_obuild
-# The artifacts must be built first
+# The artifacts must be built first. Names relative from project root.
 define lib_inst_files
-  $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
-  $(foreach f,$(basename $(SRC_$(1))),\
-    $(wildcard $(addprefix $(1)/$(f),.mli .cmi .cmo .cmx .cmxs .cmti))) \
-  $(wildcard $(addprefix ../_obuild/opam-$(1)/*,\
-	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti)) \
-  $(wildcard $(addprefix $(1)/_obuild/opam-$(1)/*,\
-	.cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti))
+  $(addprefix src/,\
+    $(wildcard /opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
+    $(foreach f,$(basename $(SRC_$(1))),\
+      $(wildcard \
+        $(addprefix $(1)/$(f),\
+          .mli .cmi .cmo .cmx .cmxs .cmti)))) \
+  $(patsubst ../%,%,\
+    $(wildcard \
+      $(addprefix ../_obuild/opam-$(1)/*,\
+        .cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti)) \
+    $(wildcard \
+      $(addprefix $(1)/_obuild/opam-$(1)/*,\
+        .cma .cmxa .a .cmi .cmo .cmx .cmxs .cmti)))
 endef
 
 ../opam-%.install: ALWAYS
 	@echo 'lib: [' >$@
 	@echo '  "src/$*.META" {"META"}' >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,$*)) } >>$@
+	@{ $(patsubst %,echo '  "%"';,$(call lib_inst_files,$*)) } >>$@
 	@echo ']' >>$@
 
-../opam-admin.install:
+../opam-admin.install: ALWAYS
 	@echo 'lib: [' >$@
 	@echo '  "src/$*.META" {"META"}' >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,$(call lib_inst_files,tools)) } >>$@
+	@{ $(patsubst %,echo '  "%"';,$(call lib_inst_files,tools)) } >>$@
 	@echo ']' >>$@
 	@echo 'bin: [' >>$@
 	@echo '  "src/opam-admin"' >>$@
@@ -344,13 +350,13 @@ endef
 	@echo ']' >>$@
 
 # Older, all-inclusive opam-lib with ocamlfind sub-packages
-../opam-lib.install: $(OPAMLIB:=.cma)
+../opam-lib.install: ALWAYS
 	@echo 'lib: [' >$@
 	@echo '  "META"' >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,\
+	@{ $(patsubst %,echo '  "%"';,\
 	    $(foreach lib,$(SUBS),$(call lib_inst_files,$(lib))))\
 	} >>$@
-	@{ $(patsubst %,echo '  "src/'%'"';,\
+	@{ $(patsubst %,echo '  "%"';,\
 	    $(wildcard \
 	      $(addprefix tools/opam_admin_top.,mli cmi cmx cmxs cmti)))\
 	} >>$@
