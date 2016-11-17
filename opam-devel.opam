@@ -16,7 +16,8 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "opam-devel"]
+  [make name]
+  [make "%{name}%.install"]
 ]
 build-test: [make "tests"]
 depends: [

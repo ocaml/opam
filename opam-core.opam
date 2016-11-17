@@ -22,6 +22,8 @@ build: [
 depends: [
   "ocamlfind" {build}
   "ocp-build" {build & >= "1.99.7"}
+  "base-unix"
+  "base-bigarray"
   "ocamlgraph" {>= "1.8.5"}
   "re" {>= "1.5.0"}
   "jsonm"
