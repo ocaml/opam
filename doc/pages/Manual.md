@@ -563,7 +563,7 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   preconfigured repository names and the corresponding URLs. The last two
   optional arguments for each repository are the trust anchors (fingerprints of
   the trusted signing identities, see
-  [repository-validation-hook](#configfield-repository-validation-hook)) and the
+  [repository-validation-command](#configfield-repository-validation-command)) and the
   quorum, _i.e._ how many of them are required for a signature to be accepted.
 - <a id="opamrcfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
   a list of compiler package choices. On `opam init`, the first available
@@ -1143,8 +1143,11 @@ for <span class="opam">opam</span>.
   the package script succeeded. The filters are evaluated in the same scope as
   the package commands, with the addition of the variable `error-code`, which is
   the return value of the package script.
-- <a id="configfield-repository-validation-hook">`repository-validation-hook`</a>:
-  _to do_
+- <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
+  defines a command to run on the upstream repositories to validate their
+  authenticity. When this is specified, and for repositories that define
+  [trust anchors](#opamrcfield-repositories), opam will refuse any update that
+  doesn't pass this validation. TODO: define precise interface and variables.
 
 #### switch-state
 
