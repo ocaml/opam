@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~alpha4"
+version: "2.0~alpha5"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -22,6 +22,8 @@ build: [
 depends: [
   "ocamlfind" {build}
   "ocp-build" {build & >= "1.99.7"}
+  "base-unix"
+  "base-bigarray"
   "ocamlgraph"
   "re" {>= "1.5.0"}
   "jsonm"
