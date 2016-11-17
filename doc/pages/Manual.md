@@ -40,7 +40,7 @@ organised as follows:
 - `~/.opam/opam-init/`: contains <span class="opam">opam</span> configuration scripts for the outside world, e.g. shell environment initialisation
 - `~/.opam/cache/`: caches of downloaded files
 - `~/.opam/plugins/<plugin>`: reserved for plugins
-- `~/.opam/<switch>`: prefixes of named [switches](#switches)
+- `~/.opam/<switch>`: prefixes of named [switches](#Switches)
 
 ### Repositories
 

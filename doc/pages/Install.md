@@ -1,7 +1,7 @@
 # How to install opam
 
 This page describes how to install and configure opam and [external
-solvers](#Externalsolvers). For further help on how to use opam,
+solvers](#ExternalSolvers). For further help on how to use opam,
 either read `opam --help` or move on to the [Usage](Usage.html) guide.
 
 ## Upgrading from a previous version
@@ -215,9 +215,7 @@ should have one of those solvers on your system:
 
 - [aspcud](http://www.cs.uni-potsdam.de/wv/aspcud/) (recommended)
 - [packup](http://sat.inesc-id.pt/~mikolas/sw/packup/)
-- [mccs](http://www.i3s.unice.fr/~cpjm/misc/mccs.html) (no built-in support at
-  the moment, but may be used with the following solver configuration string:
-  `mccs -i %{input}% -o %{output}% -lexagregate[%{criteria}%]`.)
+- [mccs](http://www.i3s.unice.fr/~cpjm/misc/mccs.html)
 - [p2Cudf](https://wiki.eclipse.org/Equinox/p2/CUDFResolver), which may be the
   easiest if dependencies are a problem, as it comes as a single jar file.
   [Dowload it](http://eclipse.org/equinox/p2/p2CUDF/org.eclipse.equinox.p2.cudf-1.14.jar)
@@ -233,12 +231,8 @@ external solver and have reliable network connectivity,
 farm"](http://cudf-solvers.irill.org/) which can be used as a remote
 solver by opam.
 
-If you use the internal solver only, the following symptoms may be
-sign that you need an external solver: very bad upgrade proposals, or
-dependency solving becoming very slow.
-
-Opam will detect the availability of `aspcud` or `packup` commands on your
-system and should switch to using them directly. You can explicitly specify
+Opam will detect the availability of `aspcud`, `packup` or `mccs` commands on
+your system and should switch to using them directly. You can explicitly specify
 which external solver to use by using the `--solver` command-line argument, the
 `$OPAMEXTERNALSOLVER` environment variable, or the `solver:` field in the
 `~/.opam/config` file.
