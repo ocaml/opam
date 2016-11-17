@@ -104,14 +104,6 @@ module Switch: sig
   (** Temporary folder: {i $meta/build} *)
   val build_dir: t -> switch -> dirname
 
-  (** Temporary location of install files: {i
-      $meta/build/$package/$name.install} *)
-  val build_install: t -> switch -> package -> OpamFile.Dot_install.t OpamFile.t
-
-  (** Temporary location of config files: {i
-      $meta/build/$packages/$name.config} *)
-  val build_config: t -> switch -> package -> OpamFile.Dot_config.t OpamFile.t
-
   (** Installed files for a given package: {i
       $meta/install/$name.install} *)
   val install: t -> switch -> name -> OpamFile.Dot_install.t OpamFile.t
@@ -297,4 +289,15 @@ module Switch: sig
     (** Files overlay *)
     val files: t -> switch -> name -> dirname
   end
+end
+
+(** Location of package-specific files relative to their build directory *)
+module Builddir: sig
+
+  (** package.install file: {i $builddir/$name.install} *)
+  val install: dirname -> package -> OpamFile.Dot_install.t OpamFile.t
+
+  (** package.config file: {i $builddir/$name.config} *)
+  val config: dirname -> package -> OpamFile.Dot_config.t OpamFile.t
+
 end
