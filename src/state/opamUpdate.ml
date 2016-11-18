@@ -225,6 +225,11 @@ let pinned_package st ?version name =
       OpamFile.OPAM.with_url urlf @@
       OpamFile.OPAM.with_name name opam
     in
+    let opam =
+      if OpamFile.OPAM.version_opt opam = None
+      then OpamFile.OPAM.with_version version opam
+      else opam
+    in
     List.iter (fun (file, rel_file, hash) ->
         if OpamHash.check_file (OpamFilename.to_string file) hash then
           OpamFilename.copy ~src:file
