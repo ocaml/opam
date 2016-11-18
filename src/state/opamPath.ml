@@ -86,12 +86,6 @@ module Switch = struct
 
   let remove t a nv = remove_dir t a / OpamPackage.to_string nv
 
-  let build_install t a nv =
-    build t a nv /- (OpamPackage.Name.to_string nv.name ^ ".install")
-
-  let build_config t a nv =
-    build t a nv /- (OpamPackage.Name.to_string nv.name ^ ".config")
-
   let install_dir t a = meta t a / "install"
 
   let install t a n = install_dir t a /- (OpamPackage.Name.to_string n ^ ".install")
@@ -234,4 +228,14 @@ module Switch = struct
     let files t a n = package t a n / "files"
 
   end
+end
+
+module Builddir = struct
+
+  let install builddir nv =
+    builddir /- (OpamPackage.Name.to_string nv.name ^ ".install")
+
+  let config builddir nv =
+    builddir /- (OpamPackage.Name.to_string nv.name ^ ".config")
+
 end
