@@ -189,7 +189,8 @@ let guess_version_control s =
     let open OpamFilename in
     let open Op in
     let dir = Dir.of_string path in
-    if exists_dir (dir / ".git") then Some`git else
+    if exists_dir (dir / ".git") || exists (dir // ".git")
+    then Some`git else
     if exists_dir (dir / ".hg") then Some `hg else
     if exists_dir (dir / "_darcs") then Some `darcs else
       None

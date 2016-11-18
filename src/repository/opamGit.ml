@@ -19,7 +19,8 @@ module Git : OpamVCS.VCS= struct
   let name = `git
 
   let exists repo_root =
-    OpamFilename.exists_dir (repo_root / ".git")
+    OpamFilename.exists_dir (repo_root / ".git") ||
+    OpamFilename.exists (repo_root // ".git")
 
   let git repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
