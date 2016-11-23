@@ -68,6 +68,7 @@ val opam_init:
   ?solver_preferences_upgrade:string Lazy.t option ->
   ?solver_preferences_fixup:string Lazy.t option ->
   ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
+  ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
   ?debug_level:int ->

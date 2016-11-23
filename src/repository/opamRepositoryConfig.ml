@@ -13,13 +13,15 @@ open OpamTypes
 type dl_tool_kind = [ `Curl | `Default ]
 
 type t = {
-  download_tool: (OpamTypes.arg list * dl_tool_kind) Lazy.t;
+  download_tool: (arg list * dl_tool_kind) Lazy.t;
+  validation_hook: arg list option;
   retries: int;
   force_checksums: bool option;
 }
 
 type 'a options_fun =
   ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
+  ?validation_hook:arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
   'a
@@ -42,18 +44,21 @@ let default = {
          have either \"curl\" or \"wget\" installed, or specify a custom \
          command through variable OPAMFETCH."
   );
+  validation_hook = None;
   retries = 3;
   force_checksums = None;
 }
 
 let setk k t
     ?download_tool
+    ?validation_hook
     ?retries
     ?force_checksums
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     download_tool = t.download_tool + download_tool;
+    validation_hook = t.validation_hook + validation_hook;
     retries = t.retries + retries;
     force_checksums = t.force_checksums + force_checksums;
   }
@@ -89,6 +94,12 @@ let initk k =
     env_string "CURL" >>| (fun s ->
         lazy ([CString s, None], `Curl))
   in
+  let validation_hook =
+    env_string "VALIDATIONHOOK" >>| fun s ->
+    match List.map (fun s -> CString s, None) (OpamStd.String.split s ' ') with
+    | [] -> None
+    | l -> Some l
+  in
   let force_checksums =
     match env_bool "REQUIRECHECKSUMS", env_bool "NOCHECKSUMS" with
     | Some true, _ -> Some (Some true)
@@ -98,6 +109,7 @@ let initk k =
   in
   setk (setk (fun c -> r := c; k)) !r
     ?download_tool
+    ?validation_hook
     ?retries:(env_int "RETRIES")
     ?force_checksums
 
