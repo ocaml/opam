@@ -43,11 +43,15 @@ let to_json r =
 let check_digest filename = function
   | Some expected
     when OpamRepositoryConfig.(!r.force_checksums) <> Some false ->
-    if OpamHash.check_file (OpamFilename.to_string filename) expected then true
-    else
-      (OpamConsole.error
+    (match OpamHash.mismatch (OpamFilename.to_string filename) expected with
+     | None -> true
+     | Some bad_hash ->
+       OpamConsole.error
          "Bad checksum for %s: expected %s\n\
+         \                     got      %s\n\
           Metadata might be out of date, in this case run `opam update`."
-         (OpamFilename.to_string filename) (OpamHash.to_string expected);
+         (OpamFilename.to_string filename)
+         (OpamHash.to_string expected)
+         (OpamHash.to_string bad_hash);
        false)
   | _ -> true

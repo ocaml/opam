@@ -192,8 +192,10 @@ val extract: t -> Dir.t -> unit
 (** Same as [extract], as an OpamProcess.job *)
 val extract_job: t -> Dir.t -> exn option OpamProcess.job
 
-(** Extract an archive in a given directory (which should already exists) *)
+(** Extract an archive in a given directory *)
 val extract_in: t -> Dir.t -> unit
+
+val extract_in_job: t -> Dir.t -> exn option OpamProcess.job
 
 (** Extract a generic file *)
 val extract_generic_file: generic_file -> Dir.t -> unit

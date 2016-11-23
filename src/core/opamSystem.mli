@@ -184,8 +184,11 @@ val extract: dir:string -> string -> unit
 val extract_job: dir:string -> string -> exn option OpamProcess.job
 
 (** [extract_in ~dir:dirname filename] extracts the archive [filename] into
-    [dirname]. [dirname] should already exists. *)
+    [dirname]. *)
 val extract_in: dir:string -> string -> unit
+
+(** [extract_in_job] is similar to [extract_in], but as a job *)
+val extract_in_job: dir:string -> string -> exn option OpamProcess.job
 
 (** Create a directory. Do not fail if the directory already
     exist. *)

@@ -1153,7 +1153,7 @@ module ConfigSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ~strict:true ()
+    Pp.I.show_errors ~name ~strict:OpamCoreConfig.(not !r.safe_mode) ()
 
 end
 module Config = struct

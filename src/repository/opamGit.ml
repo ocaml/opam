@@ -19,7 +19,8 @@ module Git : OpamVCS.VCS= struct
   let name = `git
 
   let exists repo_root =
-    OpamFilename.exists_dir (repo_root / ".git")
+    OpamFilename.exists_dir (repo_root / ".git") ||
+    OpamFilename.exists (repo_root // ".git")
 
   let git repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
@@ -27,18 +28,16 @@ module Git : OpamVCS.VCS= struct
       OpamSystem.make_command ~dir ?verbose ?env "git" args
 
   let init repo_root repo_url =
-    let env =
-      Array.append (Unix.environment ()) [|
-        "GIT_AUTHOR_NAME=Opam";
-        "GIT_AUTHOR_EMAIL=opam@ocaml.org";
-        "GIT_COMMITTER_NAME=Opam";
-        "GIT_COMMITTER_EMAIL=opam@ocaml.org"
-      |] in
     OpamProcess.Job.of_list [
-      git repo_root ~env [ "init" ];
-      git repo_root ~env [ "remote" ; "add" ; "origin" ;
-                      OpamUrl.base_url repo_url ];
-      git repo_root ~env [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
+      git repo_root [ "init" ];
+      git repo_root [ "config" ; "--local" ; "user.name"; "Opam"];
+      git repo_root [ "config" ; "--local" ; "user.email"; "opam@ocaml.org"];
+      (* These are the default, but different user settings break the way we use
+         git *)
+      git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
+      git repo_root [ "config" ; "--local" ; "commit.gpgsign"; "false"];
+      git repo_root [ "remote" ; "add" ; "origin" ; OpamUrl.base_url repo_url ];
+      git repo_root [ "commit" ; "--allow-empty" ; "-m" ; "opam-git-init" ];
     ] @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err

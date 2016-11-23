@@ -606,14 +606,7 @@ module Job = struct
     try match fjob () with
       | Done x -> Done x
       | Run (cmd,cont) ->
-        let cont r =
-          match
-            try `Cont (cont r) with e -> `Hndl (handler e)
-          with
-          | `Cont job -> catch handler (fun () -> job)
-          | `Hndl job -> job
-        in
-        Run (cmd, cont)
+        Run (cmd, fun r -> catch handler (fun () -> cont r))
     with e -> handler e
 
   let ignore_errors ~default ?message job =
@@ -623,10 +616,12 @@ module Job = struct
         Done default)
       job
 
-  let rec finally fin = function
-    | Done x -> fin (); Done x
-    | Run (cmd,cont) ->
-      Run (cmd, fun r -> finally fin (try cont r with e -> fin (); raise e))
+  let rec finally fin fjob =
+    try match fjob () with
+      | Done x -> fin (); Done x
+      | Run (cmd,cont) ->
+        Run (cmd, fun r -> finally fin (fun () -> cont r))
+    with e -> fin (); raise e
 
   let of_list ?(keep_going=false) l =
     let rec aux err = function
