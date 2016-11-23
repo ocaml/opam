@@ -18,22 +18,27 @@ let slog = OpamConsole.slog
 
 let index_archive_name = "index.tar.gz"
 
-let local_index_archive repo_root =
-  OpamFilename.Op.(repo_root // index_archive_name)
 let remote_index_archive url = OpamUrl.Op.(url / index_archive_name)
 
 let sync_state name repo_root url =
+  OpamFilename.with_tmp_dir_job @@ fun dir ->
+  let local_index_archive = OpamFilename.Op.(dir // index_archive_name) in
   OpamDownload.download_as ~overwrite:true
     (remote_index_archive url)
-    (local_index_archive repo_root)
+    local_index_archive
   @@+ fun () ->
   List.iter OpamFilename.rmdir (OpamFilename.dirs repo_root);
-  OpamFilename.extract_in (local_index_archive repo_root) repo_root;
-  OpamConsole.msg "[%s] synchronized from %s\n"
-    (OpamConsole.colorise `blue
-       (OpamRepositoryName.to_string name))
-    (OpamUrl.to_string url);
-  Done ()
+  OpamProcess.Job.with_text
+    (Printf.sprintf "[%s: unpacking]"
+       (OpamConsole.colorise `green (OpamRepositoryName.to_string name))) @@
+  OpamFilename.extract_in_job local_index_archive repo_root @@+ function
+    | None ->
+      OpamConsole.msg "[%s] synchronized from %s\n"
+        (OpamConsole.colorise `blue
+           (OpamRepositoryName.to_string name))
+        (OpamUrl.to_string url);
+      Done ()
+    | Some err -> raise err
 
 module B = struct
 

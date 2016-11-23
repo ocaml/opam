@@ -102,9 +102,12 @@ let repository gt repo =
 
 let repositories rt repos =
   let command repo =
-    OpamProcess.Job.ignore_errors ~default:(fun t -> t)
-      ~message:("Could not update repository " ^
-                OpamRepositoryName.to_string repo.repo_name) @@
+    OpamProcess.Job.catch
+      (fun ex ->
+         OpamConsole.error "Could not update repository %s: %s"
+           (OpamRepositoryName.to_string repo.repo_name)
+           (Printexc.to_string ex);
+         Done (fun t -> t)) @@
     fun () -> repository rt.repos_global repo
   in
   let rt =
