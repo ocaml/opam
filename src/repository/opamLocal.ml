@@ -14,7 +14,6 @@ open OpamTypesBase
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "RSYNC" fmt
-let slog = OpamConsole.slog
 
 let rsync_arg = "-rLptgoDrvc"
 
@@ -163,30 +162,11 @@ module B = struct
         (OpamConsole.colorise `red "unavailable");
       Done ()
     | _ ->
-    let archives =
-      OpamFilename.files (OpamRepositoryPath.archives_dir repo_root)
-    in
-    log "archives: %a"
-      (slog (OpamStd.List.to_string OpamFilename.to_string)) archives;
-    let rec dl_archives = function
-      | [] -> Done ()
-      | archive::archives ->
-        match OpamPackage.of_archive archive with
-        | None ->
-          OpamConsole.msg "Removing %s\n." (OpamFilename.to_string archive);
-          OpamFilename.remove archive;
-          dl_archives archives
-        | Some nv ->
-          let remote_url = OpamRepositoryPath.Remote.archive repo_url nv in
-          rsync_file remote_url archive @@+ function
-          | Not_available _ -> OpamFilename.remove archive; dl_archives archives
-          | _ -> dl_archives archives
-    in
-    dl_archives archives @@| fun () ->
-    OpamConsole.msg "[%s] %s synchronized\n"
-      (OpamConsole.colorise `blue
-         (OpamRepositoryName.to_string repo_name))
-      (OpamUrl.to_string repo_url)
+      OpamConsole.msg "[%s] %s synchronized\n"
+        (OpamConsole.colorise `blue
+           (OpamRepositoryName.to_string repo_name))
+        (OpamUrl.to_string repo_url);
+      Done ()
 
   let pull_url local_dirname checksum remote_url =
     OpamFilename.mkdir local_dirname;

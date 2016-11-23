@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.Op
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "REPOSITORY" fmt
@@ -379,75 +378,3 @@ let update repo =
   | true -> ()
   | false ->
     failwith "Invalid repository signatures, update aborted"
-
-let make_archive ?(gener_digest=false) repo prefix nv =
-  let url_file = OpamRepositoryPath.url repo.repo_root prefix nv in
-  let files_dir = OpamRepositoryPath.files repo.repo_root prefix nv in
-  let archive = OpamRepositoryPath.archive repo.repo_root nv in
-  let archive_dir = OpamRepositoryPath.archives_dir repo.repo_root in
-  if not (OpamFilename.exists_dir archive_dir) then
-    OpamFilename.mkdir archive_dir;
-
-  (* Download the remote file / fetch the remote repository *)
-  let download download_dir =
-    match OpamFile.URL.read_opt url_file with
-    | None -> Done None
-    | Some url ->
-      let checksum = OpamFile.URL.checksum url in
-      let remote_url = OpamFile.URL.url url in
-      let mirrors = remote_url :: OpamFile.URL.mirrors url in
-      log "downloading %a" (slog OpamUrl.to_string) remote_url;
-      if not (OpamFilename.exists_dir download_dir) then
-        OpamFilename.mkdir download_dir;
-      match checksum with
-      | _::_ when gener_digest ->
-        pull_url_and_fix_digest (OpamPackage.to_string nv)
-          download_dir checksum url_file mirrors
-        @@+ fun f -> Done (Some f)
-      | _ ->
-        pull_url (OpamPackage.to_string nv) download_dir checksum mirrors
-        @@+ fun f -> Done (Some f)
-  in
-
-  (* if we've downloaded a file, extract it, otherwise just copy it *)
-  let extract local_filename extract_dir =
-    match local_filename with
-    | None                   -> ()
-    | Some (Not_available u) -> OpamConsole.error_and_exit "%s is not available" u
-    | Some ( Result r
-           | Up_to_date r )  -> OpamFilename.extract_generic_file r extract_dir in
-
-  (* Eventually add <package>/files/* into the extracted dir *)
-  let copy_files extract_dir =
-    if OpamFilename.exists_dir files_dir then (
-      if not (OpamFilename.exists_dir extract_dir) then
-        OpamFilename.mkdir extract_dir;
-      OpamFilename.copy_dir ~src:files_dir ~dst:extract_dir;
-      OpamFilename.Set.of_list (OpamFilename.rec_files extract_dir)
-    ) else
-      OpamFilename.Set.empty in
-
-    (* Finally create the final archive *)
-  let create_archive files extract_root =
-    if not (OpamFilename.Set.is_empty files) ||
-       OpamFile.exists url_file then (
-      OpamConsole.msg "Creating %s.\n" (OpamFilename.to_string archive);
-      OpamFilename.exec extract_root [
-        [ "tar" ; "czf" ;
-          OpamFilename.to_string archive ;
-          OpamPackage.to_string nv ]
-      ];
-      Some archive
-    ) else
-      None in
-
-  OpamFilename.with_tmp_dir_job (fun extract_root ->
-      OpamFilename.with_tmp_dir_job (fun download_dir ->
-          download download_dir @@+ fun local_filename ->
-          let extract_dir = extract_root / OpamPackage.to_string nv in
-          extract local_filename extract_dir;
-          let files = copy_files extract_dir in
-          match create_archive files extract_root with
-          | None | Some _ -> Done ()
-        )
-    )

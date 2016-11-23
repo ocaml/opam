@@ -16,9 +16,6 @@ open OpamTypes
 (** Repository local path: {i $opam/repo/<name>} *)
 val create: OpamFilename.Dir.t -> repository_name -> dirname
 
-(** Update cache *)
-val update_cache: dirname -> filename
-
 (** Return the repo file *)
 val repo: dirname -> OpamFile.Repo.t OpamFile.t
 
@@ -41,13 +38,6 @@ val url: dirname -> string option -> package -> OpamFile.URL.t OpamFile.t
 
 (** files {i $repo/packages/XXX/$NAME.$VERSION/files} *)
 val files: dirname -> string option -> package -> dirname
-
-(** Return the archive for a given package:
-    {i $repo/archives/$NAME.$VERSION.tar.gz} *)
-val archive: dirname -> package -> filename
-
-(** Return the archive folder: {i $repo/archives/} *)
-val archives_dir: dirname -> dirname
 
 (** Url constructor for parts of remote repositories, when applicable (http and
     rsync). Function take the repo's root url. *)
