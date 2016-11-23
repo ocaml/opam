@@ -578,14 +578,14 @@ end
 
 let is_tar_archive = Tar.is_archive
 
+let extract_command file =
+  if Zip.is_archive file then Zip.extract_command file
+  else Tar.extract_command file
+
 let extract_job ~dir file =
   if not (Sys.file_exists file) then
     Done (Some (File_not_found file))
   else
-  let extract_command =
-    if Zip.is_archive file then Zip.extract_command
-    else Tar.extract_command
-  in
   with_tmp_dir_job @@ fun tmp_dir ->
   match extract_command file with
   | None   ->
@@ -624,17 +624,23 @@ let extract ~dir file =
   | Some e -> raise e
   | None -> ()
 
-let extract_in ~dir file =
-  if not (Sys.file_exists dir) then
-    internal_error "%s does not exist." file;
-  match Tar.extract_command file with
-  | None   -> internal_error "%s is not a valid tar archive." file
+let extract_in_job ~dir file =
+  OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
+  mkdir dir;
+  match extract_command file with
+  | None -> internal_error "%s is not a valid tar or zip archive." file
   | Some cmd ->
-    let r = OpamProcess.Job.run (cmd dir @@> fun r -> Done r) in
+    cmd dir @@> fun r ->
     if not (OpamProcess.is_success r) then
-      failwith (Printf.sprintf "Failed to extract archive %s: %s" file
-                  (OpamProcess.result_summary r))
+      Done (Some (Failure
+                    (Printf.sprintf "Failed to extract archive %s: %s" file
+                       (OpamProcess.result_summary r))))
+    else Done None
 
+let extract_in ~dir file =
+  match OpamProcess.Job.run (extract_in_job ~dir file) with
+  | Some e -> raise e
+  | None -> ()
 
 let link src dst =
   if Sys.file_exists src then (

@@ -286,6 +286,9 @@ let extract_job filename dirname =
 let extract_in filename dirname =
   OpamSystem.extract_in (to_string filename) ~dir:(Dir.to_string dirname)
 
+let extract_in_job filename dirname =
+  OpamSystem.extract_in_job (to_string filename) ~dir:(Dir.to_string dirname)
+
 type generic_file =
   | D of Dir.t
   | F of t
