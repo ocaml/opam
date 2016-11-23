@@ -175,7 +175,7 @@ module Job: sig
   (** Register an exception-safe finaliser in a job.
       [finally job fin] is equivalent to
       [catch job (fun e -> fin (); raise e) @@+ fun r -> fin (); Done r] *)
-  val finally: (unit -> unit) -> 'a Op.job -> 'a Op.job
+  val finally: (unit -> unit) -> (unit -> 'a Op.job) -> 'a Op.job
 
   (** Converts a list of commands into a job that returns None on success, or
       the first failed command and its result.
