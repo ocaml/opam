@@ -132,41 +132,49 @@ module B = struct
 
   let name = `rsync
 
-  let pull_file_quiet local_dirname url =
-    let basename = OpamUrl.basename url in
-    let local_filename =
-      OpamFilename.create local_dirname (OpamFilename.Base.of_string basename)
-    in
-    rsync_file url local_filename
-
   let pull_dir_quiet local_dirname url =
     rsync_dirs url local_dirname
 
-  let pull_repo repo_name repo_root repo_url =
-    log "pull-repo";
-    pull_file_quiet repo_root (OpamRepositoryPath.Remote.repo repo_url)
-    @@+ fun res_repo ->
-    pull_dir_quiet
-      (OpamRepositoryPath.packages_dir repo_root)
-      (OpamRepositoryPath.Remote.packages_url repo_url)
-    @@+ fun res_pkgs ->
-    match res_repo, res_pkgs with
-    | Not_available _, Not_available _ ->
-      OpamConsole.error "Could not synchronize %s from %S"
-        (OpamRepositoryName.to_string repo_name)
-        (OpamUrl.to_string repo_url);
-      OpamConsole.msg "[%s] %s %s\n"
-        (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo_name))
-        (OpamUrl.to_string repo_url)
-        (OpamConsole.colorise `red "unavailable");
-      Done ()
-    | _ ->
-      OpamConsole.msg "[%s] %s synchronized\n"
-        (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string repo_name))
-        (OpamUrl.to_string repo_url);
-      Done ()
+  let fetch_repo_update repo_name repo_root url =
+    log "pull-repo-update";
+    let quarantine =
+      OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
+    in
+    let finalise () = OpamFilename.rmdir quarantine in
+    OpamProcess.Job.catch (fun e ->
+        finalise ();
+        Done (OpamRepositoryBackend.Update_err e))
+    @@ fun () ->
+    OpamRepositoryBackend.job_text repo_name "sync"
+      (match OpamUrl.local_dir url with
+       | Some dir ->
+         OpamFilename.link_dir ~target:dir ~link:quarantine;
+         Done (Result quarantine)
+       | None ->
+         if OpamFilename.exists_dir repo_root then
+           OpamFilename.copy_dir ~src:repo_root ~dst:quarantine
+         else
+           OpamFilename.mkdir quarantine;
+         pull_dir_quiet quarantine url) @@+ function
+    | Not_available _ ->
+      finalise ();
+      Done (OpamRepositoryBackend.Update_err (Failure "rsync failed"))
+    | Up_to_date _ ->
+      finalise (); Done OpamRepositoryBackend.Update_empty
+    | Result _ ->
+      if not (OpamFilename.exists_dir repo_root) ||
+         OpamFilename.dir_is_empty repo_root then
+        Done (OpamRepositoryBackend.Update_full quarantine)
+      else
+        OpamProcess.Job.finally finalise @@ fun () ->
+        OpamRepositoryBackend.job_text repo_name "diff" @@
+        OpamRepositoryBackend.get_diff
+          (OpamFilename.dirname_dir repo_root)
+          (OpamFilename.basename_dir repo_root)
+          (OpamFilename.basename_dir quarantine)
+        @@| function
+        | None -> OpamRepositoryBackend.Update_empty
+        | Some p -> OpamRepositoryBackend.Update_patch p
 
   let pull_url local_dirname checksum remote_url =
     OpamFilename.mkdir local_dirname;

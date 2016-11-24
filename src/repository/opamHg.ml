@@ -21,30 +21,23 @@ module Hg = struct
 
   let hg repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
-    fun ?verbose ?env args ->
-      OpamSystem.make_command ~dir ?verbose ?env "hg" args
+    fun ?verbose ?env ?stdout args ->
+      OpamSystem.make_command ~dir ?verbose ?env ?stdout "hg" args
 
-  let init repo_root repo_url =
+  let init repo_root _repo_url =
+    OpamFilename.mkdir repo_root;
     hg repo_root [ "init" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
-    OpamFilename.write
-      OpamFilename.Op.(repo_root / ".hg" // "hgrc")
-      (Printf.sprintf "[paths]\ndefault = %s\n"
-         (OpamUrl.base_url repo_url));
     Done ()
 
+  let withrev url = match url.OpamUrl.hash with
+    | None -> fun cmd -> cmd
+    | Some r -> fun cmd -> cmd @ ["--rev"; r]
+
   let fetch repo_root repo_url =
-    let check_and_fix_remote =
-      hg repo_root [ "showconfig" ; "paths.default" ]
-      @@> fun r ->
-      OpamSystem.raise_on_process_error r;
-      if r.OpamProcess.r_stdout <> [OpamUrl.base_url repo_url] then (
-        OpamFilename.rmdir OpamFilename.Op.(repo_root / ".hg");
-        init repo_root repo_url
-      ) else Done ()
-    in
-    check_and_fix_remote @@+ fun () ->
-    hg repo_root [ "pull" ] @@> fun r ->
+    hg repo_root
+      (withrev repo_url [ "pull"; "-f"; OpamUrl.base_url repo_url ])
+    @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done ()
 
@@ -57,26 +50,42 @@ module Hg = struct
       if String.length full > 8 then Done (String.sub full 0 8)
       else Done full
 
-  let unknown_commit commit =
-    OpamSystem.internal_error "Unknown mercurial revision/branch/bookmark: %s."
-      commit
+  let get_id repo_root repo_url =
+    hg repo_root
+      (withrev repo_url [ "id" ; "-i" ; OpamUrl.base_url repo_url])
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    match r.OpamProcess.r_stdout with
+    | [] -> failwith "unfound mercurial revision"
+    | id::_ -> Done id
 
   let reset repo_root repo_url =
-    let commit = match repo_url.OpamUrl.hash with
-      | None   -> "tip"
-      | Some c -> c
-    in
-    hg repo_root [ "update" ; "--clean"; commit ] @@> fun r ->
-      if OpamProcess.is_failure r then unknown_commit commit;
-      Done ()
+    get_id repo_root repo_url @@+ fun id ->
+    hg repo_root [ "update" ; "--clean" ; "--rev" ; id ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
 
   let diff repo_root repo_url =
-    let commit = match repo_url.OpamUrl.hash with
-      | None   -> "tip"
-      | Some c -> c in
-    hg repo_root [ "diff" ; "--stat" ; "-r" ; commit ] @@> fun r ->
-    if OpamProcess.is_failure r then unknown_commit commit;
-    Done (r.OpamProcess.r_stdout <> [])
+    let patch_file = OpamSystem.temp_file "hg-diff" in
+    let finalise () = OpamSystem.remove_file patch_file in
+    OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+    get_id repo_root repo_url @@+ fun id ->
+    hg repo_root ~stdout:patch_file [ "diff"; "--reverse"; "--rev"; id ]
+    @@> fun r ->
+    if OpamProcess.is_failure r then
+      (finalise ();
+       OpamSystem.internal_error "Hg error: %s not found." id)
+    else if OpamSystem.file_is_empty patch_file then
+      (finalise (); Done None)
+    else
+      Done (Some (OpamFilename.of_string patch_file))
+
+  let is_up_to_date repo_root repo_url =
+    get_id repo_root repo_url @@+ fun id ->
+    hg repo_root [ "stat"; "--rev"; id ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done (r.OpamProcess.r_stdout = [])
 
   let versionned_files repo_root =
     hg repo_root [ "locate" ] @@> fun r ->

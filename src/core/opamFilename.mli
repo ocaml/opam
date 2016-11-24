@@ -59,7 +59,7 @@ val move_dir: src:Dir.t -> dst:Dir.t -> unit
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)
-val link_dir: src:Dir.t -> dst:Dir.t -> unit
+val link_dir: target:Dir.t -> link:Dir.t -> unit
 
 (** Does the directory exist ? *)
 val exists_dir: Dir.t -> bool
@@ -163,9 +163,6 @@ val copy_in: ?root:Dir.t -> t -> Dir.t -> unit
 (** Move a file *)
 val move: src:t -> dst:t -> unit
 
-(** Symlink a file in a directory *)
-val link_in: t -> Dir.t -> unit
-
 (** Read a symlinked file *)
 val readlink: t -> t
 
@@ -183,7 +180,7 @@ val copy: src:t -> dst:t -> unit
 val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
 
 (** Symlink a file. If symlink is not possible on the system, use copy instead. *)
-val link: src:t -> dst:t -> unit
+val link: target:t -> link:t -> unit
 
 (** Extract an archive in a given directory (it rewrites the root to
     match [Dir.t] dir if needed) *)

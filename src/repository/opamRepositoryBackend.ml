@@ -10,11 +10,18 @@
 
 open OpamTypes
 
+type update =
+  | Update_full of dirname
+  | Update_patch of filename
+  | Update_empty
+  | Update_err of exn
+
 module type S = sig
   val name: OpamUrl.backend
   val pull_url: dirname -> OpamHash.t option -> url ->
     generic_file download OpamProcess.job
-  val pull_repo: repository_name -> dirname -> url -> unit OpamProcess.job
+  val fetch_repo_update:
+    repository_name -> dirname -> url -> update OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
 end
 
@@ -52,3 +59,28 @@ let check_digest filename = function
          (OpamHash.to_string bad_hash);
        false)
   | _ -> true
+
+open OpamProcess.Job.Op
+
+let job_text name label =
+  OpamProcess.Job.with_text
+    (Printf.sprintf "[%s: %s]"
+       (OpamConsole.colorise `green (OpamRepositoryName.to_string name))
+       label)
+
+let get_diff parent_dir dir1 dir2 =
+  let patch = OpamSystem.temp_file "patch" in
+  let patch_file = OpamFilename.of_string patch in
+  let finalise () = OpamFilename.remove patch_file in
+  OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+  OpamSystem.make_command
+    ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
+    ~dir:(OpamFilename.Dir.to_string parent_dir) ~stdout:patch
+    "diff"
+    [ "-rcN";
+      OpamFilename.Base.to_string dir1;
+      OpamFilename.Base.to_string dir2; ]
+  @@> function
+  | { OpamProcess.r_code = 0; _ } -> finalise(); Done None
+  | { OpamProcess.r_code = 1; _ } -> Done (Some patch_file)
+  | r -> OpamSystem.process_error r

@@ -20,6 +20,7 @@ type command = {
   cmd_dir: string option;
   cmd_env: string array option;
   cmd_stdin: bool option;
+  cmd_stdout: string option;
   cmd_verbose: bool option;
   cmd_name: string option;
   cmd_metadata: (string * string) list option;
@@ -44,10 +45,11 @@ let make_command_text ?(color=`green) str ?(args=[]) cmd =
   in
   Printf.sprintf "[%s: %s]" (OpamConsole.colorise color str) summary
 
-let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?text cmd args =
+let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?stdout ?text
+    cmd args =
   { cmd; args;
     cmd_env=env; cmd_verbose=verbose; cmd_name=name; cmd_metadata=metadata;
-    cmd_dir=dir; cmd_stdin=allow_stdin; cmd_text=text; }
+    cmd_dir=dir; cmd_stdin=allow_stdin; cmd_stdout=stdout; cmd_text=text; }
 
 
 (** Running processes *)
@@ -238,7 +240,8 @@ let interrupt p = match OpamStd.Sys.os () with
 let run_background command =
   let { cmd; args;
         cmd_env=env; cmd_verbose=_; cmd_name=name; cmd_text=_;
-        cmd_metadata=metadata; cmd_dir=dir; cmd_stdin=allow_stdin } =
+        cmd_metadata=metadata; cmd_dir=dir;
+        cmd_stdin=allow_stdin; cmd_stdout } =
     command
   in
   let verbose = is_verbose_command command in
@@ -256,7 +259,9 @@ let run_background command =
       in
       Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
   in
-  let stdout_file = file "out" in
+  let stdout_file =
+    OpamStd.Option.Op.(cmd_stdout >>+ fun () -> file "out")
+  in
   let stderr_file =
     if OpamCoreConfig.(!r.merged_output) then file "out" else file "err"
   in

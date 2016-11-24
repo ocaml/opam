@@ -294,7 +294,7 @@ let packages r =
 let packages_with_prefixes r =
   OpamPackage.prefixes (OpamRepositoryPath.packages_dir r.repo_root)
 
-let validate_repo repo quarantine =
+let validate_repo_update repo update =
   match
     repo.repo_trust,
     OpamRepositoryConfig.(!r.validation_hook),
@@ -307,45 +307,21 @@ let validate_repo repo quarantine =
       (OpamRepositoryName.to_string repo.repo_name);
     Done false
   | None, _, _ | _, None, _ | _, _, Some false ->
-    OpamFilename.rmdir repo.repo_root;
-    OpamFilename.move_dir ~src:quarantine ~dst:repo.repo_root;
     Done true
   | Some ta, Some hook, _ ->
-    (* Todo: built-in diff, or at least cleaner diff+redirect call *)
-    let patch =
-      OpamSystem.temp_file
-        (OpamRepositoryName.to_string repo.repo_name ^ ".patch")
-    in
-    let parent = OpamFilename.dirname_dir repo.repo_root in
-    assert (parent = OpamFilename.dirname_dir quarantine);
-    OpamSystem.make_command ~dir:(OpamFilename.Dir.to_string parent) "sh" [
-      "-c"; Printf.sprintf "diff -rcN \"%s\" \"%s\" >\"%s\""
-        OpamFilename.(Base.to_string @@ basename_dir repo.repo_root)
-        OpamFilename.(Base.to_string @@ basename_dir quarantine)
-        patch
-    ] @@> fun r ->
-    if r.OpamProcess.r_code > 1 then
-      (log "diff failed on %a: %a"
-         (slog OpamRepositoryName.to_string) repo.repo_name
-         (slog OpamProcess.result_summary)  r;
-       OpamSystem.internal_error "diff error")
-    else if r.OpamProcess.r_code = 0 then
-      (log "no changes for %a"
-         (slog OpamRepositoryName.to_string) repo.repo_name;
-       Done true)
-    else
     let cmd =
-      match
-        OpamFilter.single_command (fun v ->
-            match OpamVariable.Full.to_string v with
-            | "root" -> Some (S (OpamFilename.Dir.to_string repo.repo_root))
-            | "patch" -> Some (S patch)
-            | "anchors" -> Some (S (String.concat "," ta.fingerprints))
-            | "quorum" -> Some (S (string_of_int ta.quorum))
-            | _ -> None
-          )
-          hook
-      with
+      let open OpamRepositoryBackend in
+      let env v = match OpamVariable.Full.to_string v, update with
+        | "anchors", _ -> Some (S (String.concat "," ta.fingerprints))
+        | "quorum", _ -> Some (S (string_of_int ta.quorum))
+        | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo.repo_root))
+        | "patch", Update_patch f -> Some (S (OpamFilename.to_string f))
+        | "incremental", Update_patch _ -> Some (B true)
+        | "incremental", _ -> Some (B false)
+        | "dir", Update_full d -> Some (S (OpamFilename.Dir.to_string d))
+        | _ -> None
+      in
+      match OpamFilter.single_command env hook with
       | cmd::args ->
         OpamSystem.make_command
           ~name:"validation-hook"
@@ -353,28 +329,49 @@ let validate_repo repo quarantine =
           cmd args
       | [] -> failwith "Empty validation hook"
     in
-    OpamFilename.copy ~src:(OpamFilename.of_string patch) ~dst:(OpamFilename.of_string "/tmp/patch");
     cmd @@> fun r ->
     log "validation: %s" (OpamProcess.result_summary r);
-    if OpamProcess.is_failure r then Done false else
-    let dir = OpamFilename.Dir.to_string repo.repo_root in
-    OpamSystem.patch ~dir patch @@| function
-    | Some _ ->
-      OpamSystem.internal_error "repository patch didn't apply"
-    | None -> true
+    Done (OpamProcess.is_success r)
+
+open OpamRepositoryBackend
+
+let apply_repo_update repo = function
+  | Update_full d ->
+    OpamFilename.cleandir repo.repo_root;
+    OpamFilename.move_dir ~src:d ~dst:repo.repo_root;
+    OpamConsole.msg "[%s] Initialised"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name));
+    Done ()
+  | Update_patch f ->
+    (OpamFilename.patch f repo.repo_root @@+ function
+      | Some e ->
+        if not (OpamConsole.debug ()) then OpamFilename.remove f;
+        raise e
+      | None -> OpamFilename.remove f; Done ())
+  | Update_empty -> Done ()
+  | Update_err _ -> assert false
+
+let cleanup_repo_update = function
+  | Update_full d -> OpamFilename.rmdir d
+  | Update_patch f -> OpamFilename.remove f
+  | _ -> ()
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
-  let quarantine =
-    OpamFilename.Dir.(of_string (to_string repo.repo_root ^".40n"))
-  in
-  B.pull_repo repo.repo_name quarantine repo.repo_url @@+ fun () ->
-  OpamProcess.Job.catch (fun exn ->
-      OpamConsole.error "Repository validation failed: %s"
-        (Printexc.to_string exn);
-      Done ()) @@ fun () ->
-  validate_repo repo quarantine @@| function
-  | true -> ()
-  | false ->
-    failwith "Invalid repository signatures, update aborted"
+  B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
+  | Update_err e -> raise e
+  | Update_empty -> Done ()
+  | (Update_full _ | Update_patch _) as upd ->
+    OpamProcess.Job.catch (fun exn ->
+        cleanup_repo_update upd;
+        OpamConsole.error "Repository validation failed: %s"
+          (Printexc.to_string exn);
+        Done ())
+    @@ fun () ->
+    validate_repo_update repo upd @@+ function
+    | true -> apply_repo_update repo upd
+    | false ->
+      cleanup_repo_update upd;
+      failwith "Invalid repository signatures, update aborted"

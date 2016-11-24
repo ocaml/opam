@@ -25,35 +25,37 @@ module Darcs = struct
       OpamSystem.make_command ~dir ?verbose ?env "darcs" args
 
   let init repo_root repo_url =
-    OpamProcess.Job.of_list
-      [ darcs repo_root [ "init" ];
-        darcs repo_root [ "get" ; OpamUrl.base_url repo_url; "--lazy" ] ]
-    @@+ function
-    | None -> Done ()
-    | Some (_,err) -> OpamSystem.process_error err
+    OpamFilename.mkdir repo_root;
+    darcs repo_root [ "init" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
 
-  (* With darcs, it is apparently easier to compute a diff between
-     remote and local, without fething at all. So we set fetch to be a
-     no-op. *)
-  let fetch _ _ =
+  let fetch repo_root repo_url =
+    darcs repo_root [ "fetch"; OpamUrl.base_url repo_url; "--all"; "--quiet" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
     Done ()
 
   (* Merge is actually a full pull *)
   let reset repo_root repo_url =
-    darcs repo_root [ "pull"; OpamUrl.base_url repo_url; "--all"; "--quiet" ]
+    darcs repo_root [ "apply"; "--all"; "--quiet" ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done ()
 
   (* Difference between remote and local is a 'pull --dry-run' *)
   let diff repo_root repo_url =
-    darcs repo_root [ "pull" ; OpamUrl.base_url repo_url; "--dry-run" ; "--quiet" ]
-    @@> fun r ->
-    OpamSystem.raise_on_process_error r;
-    Done (r.OpamProcess.r_stdout <> [])
+    assert false(* ;
+     * darcs repo_root [ "pull" ; OpamUrl.base_url repo_url; "--dry-run" ; "--quiet" ]
+     * @@> fun r ->
+     * OpamSystem.raise_on_process_error r;
+     * Done (r.OpamProcess.r_stdout <> []) *)
 
   let revision _ =
     Done "<darcs-???>"
+
+  let is_up_to_date _repo_root _repo_url = assert false
 
   let versionned_files repo_root =
     darcs repo_root [ "show" ; "files" ]

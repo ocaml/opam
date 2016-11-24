@@ -103,13 +103,12 @@ let basename_dir dirname =
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
-let link_dir ~src ~dst =
-  if exists_dir dst then
-    OpamSystem.internal_error "Cannot link: %s already exists." (Dir.to_string dst)
-  else (
-    mkdir (Filename.dirname dst);
-    OpamSystem.link (Dir.to_string src) (Dir.to_string dst)
-  )
+let link_dir ~target ~link =
+  if exists_dir link then
+    OpamSystem.internal_error "Cannot link: %s already exists."
+      (Dir.to_string link)
+  else
+    OpamSystem.link (Dir.to_string target) (Dir.to_string link)
 
 let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
@@ -224,8 +223,8 @@ let move ~src ~dst =
     OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
       [ "mv"; to_string src; to_string dst ]
 
-let link ~src ~dst =
-  if src <> dst then OpamSystem.link (to_string src) (to_string dst)
+let link ~target ~link =
+  if target <> link then OpamSystem.link (to_string target) (to_string link)
 
 let readlink src =
   if exists src then
@@ -274,8 +273,6 @@ let process_in ?root fn src dst =
   fn ~src ~dst:(of_string dst)
 
 let copy_in ?root = process_in ?root copy
-
-let link_in = process_in link
 
 let extract filename dirname =
   OpamSystem.extract (to_string filename) ~dir:(Dir.to_string dirname)

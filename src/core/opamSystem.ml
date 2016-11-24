@@ -358,7 +358,8 @@ let print_stats () =
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
-    ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?dir ?(check_existence=true)
+    ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?stdout
+    ?dir ?(check_existence=true)
     cmd args =
   let name = log_file name in
   let verbose =
@@ -366,9 +367,10 @@ let make_command
   in
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
-    OpamConsole.warning "Command %S contains 1 space" cmd;
+    OpamConsole.warning "Command %S contains space characters" cmd;
   if not check_existence || command_exists ~env ?dir cmd then
-    OpamProcess.command ~env ~name ?text ~verbose ?metadata ?allow_stdin ?dir
+    OpamProcess.command
+      ~env ~name ?text ~verbose ?metadata ?allow_stdin ?stdout ?dir
       cmd args
   else
     command_not_found cmd
@@ -382,7 +384,7 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
 
     (* Check that the command doesn't contain whitespaces *)
     if None <> try Some (String.index cmd ' ') with Not_found -> None then
-      OpamConsole.warning "Command %S contains 1 space" cmd;
+      OpamConsole.warning "Command %S contains space characters" cmd;
 
     if command_exists ~env cmd then (
 
@@ -475,6 +477,8 @@ let is_exec file =
   let stat = Unix.stat file in
   stat.Unix.st_kind = Unix.S_REG &&
   stat.Unix.st_perm land 0o111 <> 0
+
+let file_is_empty f = Unix.((stat f).st_size = 0)
 
 let install ?exec src dst =
   if Sys.is_directory src then
@@ -652,7 +656,10 @@ let link src dst =
       Unix.symlink src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
       (* Fall back to copy if symlinks are not supported *)
-      copy_file src dst
+      if Sys.is_directory src then
+        copy_dir src dst
+      else
+        copy_file src dst
   ) else
     internal_error "link: %s does not exist." src
 
