@@ -77,7 +77,8 @@ val job_text:
     subdirs of [parent_dir], returns None if they are equal, and the
     corresponding patch otherwise.
 
-    Note: this relies on the [diff -rcN] command, a built-in diff may be more
-    portable -- in particular, [-N] is not POSIX, and recursive diffs might not
-    be completely reliable. *)
+    Note: this relies on the [diff -ruN] command, a built-in diff may be more
+    portable -- in particular, [-u], [-N] are not POSIX, and recursive diffs
+    might not be completely reliable. It also assumes text files only, and fails
+    otherwise. *)
 val get_diff: dirname -> basename -> basename -> filename option OpamProcess.job
