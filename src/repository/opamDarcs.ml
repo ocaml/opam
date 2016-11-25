@@ -130,7 +130,7 @@ module Darcs = struct
       darcs repo_root ~stdout:patch_file
         [ "diff";
           "--from-tag"; opam_remote_tag; "--to-tag"; opam_local_tag;
-          "--diff-command"; "diff -ruN %2 %1"; "--no-pause-for-gui"; ]
+          "--diff-command"; "diff -ruNa %2 %1"; "--no-pause-for-gui"; ]
       (* changing 'from' and 'to' doesn't work, so run a reverse diff command
          instead*)
       @@> fun r ->

@@ -77,10 +77,10 @@ let get_diff parent_dir dir1 dir2 =
     ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
     ~dir:(OpamFilename.Dir.to_string parent_dir) ~stdout:patch
     "diff"
-    [ "-ruN";
+    [ "-ruaN";
       OpamFilename.Base.to_string dir1;
       OpamFilename.Base.to_string dir2; ]
   @@> function
   | { OpamProcess.r_code = 0; _ } -> finalise(); Done None
   | { OpamProcess.r_code = 1; _ } -> Done (Some patch_file)
-  | _ -> failwith "diff failed. Binary files around ?"
+  | r -> OpamSystem.process_error r
