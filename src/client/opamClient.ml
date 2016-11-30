@@ -960,7 +960,7 @@ let slog = OpamConsole.slog
     let atoms = OpamSolution.sanitize_atom_list t names in
     remove_t ~autoremove ~force atoms t
 
-  let reinstall_t ?ask ?(force=false) atoms t =
+  let reinstall_t t ?ask ?(force=false) atoms =
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
     let reinstall, not_installed =
@@ -1007,7 +1007,7 @@ let slog = OpamConsole.slog
   let reinstall t names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    reinstall_t atoms t
+    reinstall_t t atoms
 
   module PIN = struct
     open OpamPinCommand

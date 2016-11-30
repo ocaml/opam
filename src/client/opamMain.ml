@@ -1305,17 +1305,70 @@ let reinstall =
   let doc = "Reinstall a list of packages." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command removes the given packages and the ones \
-        that depend on them, and reinstalls the same versions."
+    `P "This command removes the given packages and the ones that depend on \
+        them, and reinstalls the same versions. Without arguments, assume \
+        $(b,--pending) and reinstall any package with upstream changes."
   ] in
-  let reinstall global_options build_options atoms =
+  let cmd =
+    Arg.(value & vflag `Default [
+        `Pending, info ["pending"]
+          ~doc:"Perform pending reinstallations, i.e. reinstallations of \
+                packages that have changed since installed";
+        `List_pending, info ["list-pending"]
+          ~doc:"List packages that have been changed since installed and are \
+                marked for reinstallation";
+        `Forget_pending, info ["forget-pending"]
+          ~doc:"Forget about pending reinstallations of listed packages. This \
+                implies making opam assume that your packages were installed \
+                with a newer version of their metadata, so only use this if \
+                you know what you are doing, and the actual changes you are \
+                overriding."
+      ])
+  in
+  let reinstall global_options build_options atoms cmd =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-    ignore @@ OpamClient.reinstall st atoms
+    match cmd, atoms with
+    | `Default, (_::_ as atoms) ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      ignore @@ OpamClient.reinstall st atoms;
+      `Ok ()
+    | `Pending, [] | `Default, [] ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms = OpamSolution.eq_atoms_of_packages st.reinstall in
+      ignore @@ OpamClient.reinstall st atoms;
+      `Ok ()
+    | `List_pending, [] ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      OpamListCommand.display st
+        ~header:false ~format:[OpamListCommand.Package] ~dependency_order:true
+        ~all_versions:false st.reinstall;
+      `Ok ()
+    | `Forget_pending, atoms ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let to_forget = match atoms with
+        | [] -> st.reinstall
+        | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
+      in
+      OpamPackage.Set.iter (fun nv ->
+          try
+            let installed = OpamPackage.Map.find nv st.installed_opams in
+            let upstream = OpamPackage.Map.find nv st.opams in
+            if not (OpamFile.OPAM.effectively_equal installed upstream) &&
+               OpamConsole.confirm
+                 "Metadata of %s was updated. Force-update, without performing \
+                  the reinstallation ?" (OpamPackage.to_string nv)
+            then OpamSwitchAction.install_metadata st nv
+          with Not_found -> ())
+        to_forget;
+      let reinstall = OpamPackage.Set.Op.(st.reinstall -- to_forget) in
+      ignore @@ OpamSwitchAction.update_switch_state ~reinstall st;
+      `Ok ()
+    | _, _::_ ->
+      `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(pure reinstall $global_options $build_options $nonempty_atom_list),
+  Term.(ret (pure reinstall $global_options $build_options $atom_list $cmd)),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)

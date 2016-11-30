@@ -63,3 +63,12 @@ val add_to_installed:
     isn't removed from the switch state [installed_roots] set. *)
 val remove_from_installed:
   ?keep_as_root:bool -> rw switch_state -> package -> rw switch_state
+
+(** Update the switch selections with the supplied optional arguments. Changes
+    are written to disk and returned *)
+val update_switch_state:
+  ?installed: package_set ->
+  ?installed_roots: package_set ->
+  ?reinstall: package_set ->
+  ?pinned: package_set ->
+  rw switch_state -> rw switch_state

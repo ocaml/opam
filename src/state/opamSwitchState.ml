@@ -234,6 +234,8 @@ let load lock_kind gt rt switch =
                 deleted ||
                 not (OpamHash.check_file (OpamFilename.to_string file) hash)
               in
+              (* /!\ fixme: the package removal instructions won't actually ever
+                 be called in this case *)
               if deleted then
                 OpamConsole.error
                   "System file %s, which package %s depends upon, \
@@ -244,7 +246,7 @@ let load lock_kind gt rt switch =
                   (OpamFilename.to_string file) (OpamPackage.to_string nv)
               else if changed then
                 OpamConsole.warning
-                  "File %s was, which package %s depends upon, \
+                  "File %s, which package %s depends upon, \
                    was changed on your system. \
                    %s has been marked as removed, and will be reinstalled if \
                    necessary."
