@@ -1468,13 +1468,15 @@ let repository =
   let doc = repository_doc in
   let scope_section = "SCOPE SPECIFICATION" in
   let commands = [
-    "add", `add, ["NAME"; "[ADDRESS]"],
+    "add", `add, ["NAME"; "[ADDRESS]"; "[QUORUM]"; "[FINGERPRINTS]"],
     "Adds under $(i,NAME) the repository at address $(i,ADDRESS) to the list \
-     of configured repositories, if not already registerd, and sets this \
+     of configured repositories, if not already registered, and sets this \
      repository for use in the current switch (or the specified scope). \
      $(i,ADDRESS) is required if the repository name is not already \
      registered, and is otherwise an error if different from the registered \
-     address.";
+     address. The quorum is a positive integer that determines the validation \
+     threshold for signed repositories, with fingerprints the trust anchors \
+     for said validation.";
     "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
      package definitions anymore. With $(b,--all), makes opam forget about \
@@ -1483,8 +1485,10 @@ let repository =
     "Explicitely selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \
      selection and ranks), according to the specified scope.";
-    "set-url", `set_url, ["NAME"; "ADDRESS"],
-    "Updates the URL associated with a given repository name";
+    "set-url", `set_url, ["NAME"; "ADDRESS"; "[QUORUM]"; "[FINGERPRINTS]"],
+    "Updates the URL and trust anchors associated with a given repository \
+     name. Note that if you don't specify $(i,[QUORUM]) and \
+     $(i,[FINGERPRINTS]), any previous settings will be erased.";
     "list", `list, [],
     "Lists the currently selected repositories in priority order from rank 1. \
      With $(b,--all), lists all configured repositories and the switches where \
@@ -1600,11 +1604,19 @@ let repository =
         [] scope
     in
     match command, params with
-    | Some `add, [name; url] ->
+    | Some `add, name :: url :: security ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
+      let trust_anchors = match security with
+        | [] -> None
+        | quorum::fingerprints ->
+          try
+            let quorum = int_of_string quorum in
+            if quorum < 0 then failwith "neg" else Some { quorum; fingerprints }
+          with Failure _ -> failwith ("Invalid quorum: "^quorum)
+      in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
-          let rt = OpamRepositoryCommand.add rt name url in
+          let rt = OpamRepositoryCommand.add rt name url trust_anchors in
           let _rt =
             OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
           in ());
@@ -1642,12 +1654,20 @@ let repository =
           (update_repos name)
       in
       `Ok ()
-    | Some `set_url, [name; url] ->
+    | Some `set_url, (name :: url :: security) ->
       let name = OpamRepositoryName.of_string name in
       let url = OpamUrl.parse ?backend:kind url in
+      let trust_anchors = match security with
+        | [] -> None
+        | quorum::fingerprints ->
+          try
+            let quorum = int_of_string quorum in
+            if quorum < 0 then failwith "neg" else Some { quorum; fingerprints }
+          with Failure _ -> failwith ("Invalid quorum: "^quorum)
+      in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
-      let rt = OpamRepositoryCommand.set_url rt name url in
+      let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let _rt =
         OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
       in

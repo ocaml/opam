@@ -50,7 +50,7 @@ let update_repos_config rt repositories =
   OpamRepositoryState.write_config rt;
   rt
 
-let add rt name url =
+let add rt name url trust_anchors =
   log "repository-add";
   let root = rt.repos_global.root in
   let repo_exists =
@@ -58,17 +58,25 @@ let add rt name url =
       (OpamRepositoryName.Map.find name) rt.repositories
   in
   match repo_exists with
-  | Some r when r.repo_url = url -> rt
+  | Some r when r.repo_url = url && trust_anchors = r.repo_trust -> rt
   | Some r ->
     OpamConsole.error_and_exit
-      "Repository %s is already set up and points to %s. Maybe you meant \
+      "Repository %s is already set up %s. Maybe you meant \
        'opam repository set-url' ?"
       (OpamRepositoryName.to_string name)
-      (OpamUrl.to_string r.repo_url)
+      (if r.repo_url <> url then
+         "and points to "^OpamUrl.to_string r.repo_url
+       else match r.repo_trust with
+         | None -> "without trust anchors"
+         | Some ta ->
+           Printf.sprintf "with trust anchors %s and quorum %d"
+             (OpamStd.List.concat_map ~nil:"()" "," String.escaped
+                ta.fingerprints)
+             ta.quorum)
   | None ->
   let repo = { repo_name = name; repo_url = url;
                repo_root = OpamRepositoryPath.create root name;
-               repo_trust = None; }
+               repo_trust = trust_anchors; }
   in
   if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
   then
@@ -95,14 +103,16 @@ let remove rt name =
   OpamFilename.rmdir (OpamRepositoryPath.create rt.repos_global.root name);
   rt
 
-let set_url rt name url =
+let set_url rt name url trust_anchors =
   log "repository-set-url";
-  if not (OpamRepositoryName.Map.mem name rt.repositories) then
-    OpamConsole.error_and_exit "No repository %s found"
-      (OpamRepositoryName.to_string name);
+  let repo =
+    try OpamRepositoryName.Map.find name rt.repositories
+    with Not_found ->
+      OpamConsole.error_and_exit "No repository %s found"
+        (OpamRepositoryName.to_string name);
+  in
   OpamFilename.cleandir (OpamRepositoryPath.create rt.repos_global.root name);
-  let repo = OpamRepositoryName.Map.find name rt.repositories in
-  let repo = { repo with repo_url = url } in
+  let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
 
 let print_selection rt ~short repos_list =
