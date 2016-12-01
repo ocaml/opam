@@ -204,10 +204,10 @@ let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
         label;
     pull_from_mirrors label cache_dir local_dirname checksums remote_urls
 
-let revision repo =
-  let kind = repo.repo_url.OpamUrl.backend in
+let revision dirname url =
+  let kind = url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
-  B.revision repo.repo_root
+  B.revision dirname
 
 let pull_url_and_fix_digest label dirname checksums file url =
   pull_url label dirname [] url @@+ function

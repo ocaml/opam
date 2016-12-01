@@ -76,6 +76,8 @@ type output_format =
   | Field of string    (** The value of the given opam-file field *)
   | Installed_version  (** Installed version or "--" if none *)
   | Pinning_target     (** Empty string if not pinned *)
+  | Source_hash        (** The VC-reported ident of current version, for dev
+                           packages. Empty if not available *)
   | Raw                (** The full contents of the opam file (reformatted) *)
   | All_installed_versions (** List of the installed versions in all switches
                                with the corresponding switches in brackets *)

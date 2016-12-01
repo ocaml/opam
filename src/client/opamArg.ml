@@ -636,7 +636,9 @@ let global_options =
   let section = global_option_section in
   let git_version =
     mk_flag ~section ["git-version"]
-      "Print the git version if it exists and exit." in
+      "Print the git version of opam, if set (i.e. you are using a development \
+       version), and exit."
+  in
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message to stderr. \
