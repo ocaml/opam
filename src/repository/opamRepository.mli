@@ -25,7 +25,8 @@ val packages_with_prefixes: repository -> string option package_map
 (** Initialize {i $opam/repo/$repo} *)
 val init: dirname -> repository_name -> unit OpamProcess.job
 
-(** Update {i $opam/repo/$repo}. *)
+(** Update {i $opam/repo/$repo}. Raises [Failure] in case the update couldn't be
+    achieved. *)
 val update: repository -> unit OpamProcess.job
 
 (** Fetch an URL into a directory: if a single file, it will be put in that

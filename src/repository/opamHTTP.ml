@@ -32,12 +32,7 @@ let sync_state name destdir url =
     (Printf.sprintf "[%s: unpacking]"
        (OpamConsole.colorise `green (OpamRepositoryName.to_string name))) @@
   OpamFilename.extract_in_job local_index_archive destdir @@+ function
-    | None ->
-      OpamConsole.msg "[%s] synchronized from %s\n"
-        (OpamConsole.colorise `blue
-           (OpamRepositoryName.to_string name))
-        (OpamUrl.to_string url);
-      Done ()
+    | None -> Done ()
     | Some err -> raise err
 
 module B = struct

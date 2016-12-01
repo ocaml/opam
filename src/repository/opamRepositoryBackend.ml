@@ -10,6 +10,9 @@
 
 open OpamTypes
 
+let log = OpamConsole.log "REPO_BACKEND"
+let slog = OpamConsole.slog
+
 type update =
   | Update_full of dirname
   | Update_patch of filename
@@ -28,8 +31,9 @@ end
 let compare r1 r2 = compare r1.repo_name r2.repo_name
 
 let to_string r =
-  Printf.sprintf "%s (%s)"
+  Printf.sprintf "%s at %s from %s"
     (OpamRepositoryName.to_string r.repo_name)
+    (OpamFilename.Dir.to_string r.repo_root)
     (OpamUrl.to_string r.repo_url)
 
 let local dirname = {
@@ -69,6 +73,10 @@ let job_text name label =
        label)
 
 let get_diff parent_dir dir1 dir2 =
+  log "diff: %a/{%a,%a}"
+    (slog OpamFilename.Dir.to_string) parent_dir
+    (slog OpamFilename.Base.to_string) dir1
+    (slog OpamFilename.Base.to_string) dir2;
   let patch = OpamSystem.temp_file "patch" in
   let patch_file = OpamFilename.of_string patch in
   let finalise () = OpamFilename.remove patch_file in

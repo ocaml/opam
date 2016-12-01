@@ -379,9 +379,7 @@ let update repo =
   | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
-        OpamConsole.error "Repository validation failed: %s"
-          (Printexc.to_string exn);
-        Done ())
+        raise exn)
     @@ fun () ->
     validate_repo_update repo upd @@+ function
     | true -> apply_repo_update repo upd
