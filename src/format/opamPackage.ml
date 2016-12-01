@@ -214,23 +214,20 @@ let list dir =
   ) else
     Set.empty
 
-let prefixes dir =
-  log "prefixes %a" (slog OpamFilename.Dir.to_string) dir;
-  if OpamFilename.exists_dir dir then (
-    let files = OpamFilename.rec_files dir in
+let prefixes repodir =
+  log "prefixes %a" (slog OpamFilename.Dir.to_string) repodir;
+  if OpamFilename.exists_dir repodir then (
+    let files = OpamFilename.rec_files repodir in
     List.fold_left (fun map f ->
         match of_filename f with
         | None   -> map
         | Some p ->
-          let dirname = OpamFilename.dirname_dir (OpamFilename.dirname f) in
-          let suffix = OpamFilename.Dir.to_string dirname in
+          let pkgdir = OpamFilename.dirname_dir (OpamFilename.dirname f) in
           let prefix =
-            match
-              OpamStd.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
-            with
+            match OpamFilename.remove_prefix_dir repodir pkgdir with
             | "" -> None
-            | p  -> (* drop the leading '/' from the prefix *)
-              Some String.(sub p 1 (length p - 1)) in
+            | p  -> Some p
+          in
           Map.add p prefix map
       ) Map.empty files
   ) else
