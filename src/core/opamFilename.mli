@@ -76,7 +76,7 @@ val basename_dir: Dir.t -> Base.t
 (** Turn a full path into a list of directory names *)
 val to_list_dir: Dir.t -> Dir.t list
 
-(** Creation from a raw string (as {i http://<path>}) *)
+(** Creation from a raw string, without resolving symlinks etc. *)
 val raw_dir: string -> Dir.t
 
 (** Execute a function in a temp directory *)
@@ -99,7 +99,7 @@ val create: Dir.t -> Base.t -> t
     as dirname *)
 val of_basename: Base.t -> t
 
-(** Creation from a raw string (as {i http://<path>}) *)
+(** Creation from a raw string, without resolving symlinks, etc. *)
 val raw: string -> t
 
 (** Prettify a filename:

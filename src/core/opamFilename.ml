@@ -100,8 +100,7 @@ let opt_dir dirname =
 let basename_dir dirname =
   Base.of_string (Filename.basename (Dir.to_string dirname))
 
-let dirname_dir dirname =
-  Dir.to_string (Filename.dirname (Dir.of_string dirname))
+let dirname_dir dirname = Filename.dirname (Dir.to_string dirname)
 
 let link_dir ~target ~link =
   if exists_dir link then
@@ -263,11 +262,12 @@ let remove_prefix prefix filename =
   OpamStd.String.remove_prefix ~prefix filename
 
 let remove_prefix_dir prefix dir =
-  let prefix =
-    let str = Dir.to_string prefix in
-    if str = "" then "" else Filename.concat str "" in
+  let prefix = Dir.to_string prefix in
   let dirname = Dir.to_string dir in
-  OpamStd.String.remove_prefix ~prefix dirname
+  if prefix = "" then dirname
+  else
+    OpamStd.String.remove_prefix ~prefix dirname |>
+    OpamStd.String.remove_prefix ~prefix:"/"
 
 let process_in ?root fn src dst =
   let basename = match root with
