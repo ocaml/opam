@@ -17,7 +17,7 @@ endif
 ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
 OPAMBIN  = $(ENV) $(OPAM)
 ifndef CHECK
-  CHECK = $(ENV) $(dir $(OPAM))/opam-check
+  CHECK = $(ENV) $(realpath ../src/opam-check)
 endif
 
 ifeq ($(OPAMTESTQUIET), 1)

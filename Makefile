@@ -109,11 +109,11 @@ uninstall: opam.install
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
 
 .PHONY: tests tests-local tests-git
-tests: opam opam-admin opam-check
+tests:
 	$(MAKE) -C tests all
 
 # tests-local, tests-git
-tests-%: opam opam-admin opam-check
+tests-%:
 	$(MAKE) -C tests $*
 
 .PHONY: doc
