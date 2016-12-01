@@ -337,19 +337,32 @@ open OpamRepositoryBackend
 
 let apply_repo_update repo = function
   | Update_full d ->
-    OpamFilename.cleandir repo.repo_root;
-    OpamFilename.move_dir ~src:d ~dst:repo.repo_root;
-    OpamConsole.msg "[%s] Initialised"
+    log "%a: applying update from scratch at %a"
+      (slog OpamRepositoryName.to_string) repo.repo_name
+      (slog OpamFilename.Dir.to_string) d;
+    OpamFilename.rmdir repo.repo_root;
+    if OpamFilename.is_symlink_dir d then
+      (OpamFilename.copy_dir ~src:d ~dst:repo.repo_root;
+       OpamFilename.rmdir d)
+    else
+      OpamFilename.move_dir ~src:d ~dst:repo.repo_root;
+    OpamConsole.msg "[%s] Initialised\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
     Done ()
   | Update_patch f ->
+    log "%a: applying patch update at %a"
+      (slog OpamRepositoryName.to_string) repo.repo_name
+      (slog OpamFilename.to_string) f;
     (OpamFilename.patch f repo.repo_root @@+ function
       | Some e ->
         if not (OpamConsole.debug ()) then OpamFilename.remove f;
         raise e
       | None -> OpamFilename.remove f; Done ())
-  | Update_empty -> Done ()
+  | Update_empty ->
+    log "%a: applying empty update"
+      (slog OpamRepositoryName.to_string) repo.repo_name;
+    Done ()
   | Update_err _ -> assert false
 
 let cleanup_repo_update = function

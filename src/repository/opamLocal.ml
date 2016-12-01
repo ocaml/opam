@@ -148,7 +148,10 @@ module B = struct
     OpamRepositoryBackend.job_text repo_name "sync"
       (match OpamUrl.local_dir url with
        | Some dir ->
-         OpamFilename.link_dir ~target:dir ~link:quarantine;
+         OpamFilename.copy_dir ~src:dir ~dst:quarantine;
+         (* fixme: Would be best to symlink, but at the moment our filename api
+            isn't able to cope properly with the symlinks afterwards
+            OpamFilename.link_dir ~target:dir ~link:quarantine; *)
          Done (Result quarantine)
        | None ->
          if OpamFilename.exists_dir repo_root then

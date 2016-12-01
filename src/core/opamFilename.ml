@@ -240,6 +240,13 @@ let is_symlink src =
   with Unix.Unix_error _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
+let is_symlink_dir src =
+  try
+    let s = Unix.lstat (Dir.to_string src) in
+    s.Unix.st_kind = Unix.S_LNK
+  with Unix.Unix_error _ ->
+    OpamSystem.internal_error "%s does not exist." (Dir.to_string src)
+
 let is_exec file =
   try OpamSystem.is_exec (to_string file)
   with Unix.Unix_error _ ->

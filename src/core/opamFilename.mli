@@ -169,6 +169,8 @@ val readlink: t -> t
 (** Is a symlink ? *)
 val is_symlink: t -> bool
 
+val is_symlink_dir: Dir.t -> bool
+
 (** Is an executable ? *)
 val is_exec: t -> bool
 
