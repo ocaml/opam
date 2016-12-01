@@ -1409,7 +1409,7 @@ let update =
       ();
     OpamClientConfig.update ();
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
-    let rt =
+    let success, rt =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
         ~dev_only:(dev_only && not repos_only)
@@ -1421,7 +1421,8 @@ let update =
       OpamConsole.msg "\n";
       ignore @@ OpamClient.upgrade st []
     else
-      OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n"
+      OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
+    if not success then OpamStd.Sys.exit 1
   in
   Term.(pure update $global_options $jobs_flag $name_list
         $repos_only $dev_only $all $upgrade),

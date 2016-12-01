@@ -107,22 +107,23 @@ let repositories rt repos =
          OpamConsole.error "Could not update repository %s: %s"
            (OpamRepositoryName.to_string repo.repo_name)
            (Printexc.to_string ex);
-         Done (fun t -> t)) @@
-    fun () -> repository rt.repos_global repo
+         Done (false, fun t -> t)) @@
+    fun () -> repository rt.repos_global repo @@|
+    fun f -> true, f
   in
-  let rt =
+  let successful, rt_update =
     OpamParallel.reduce
       ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command
-      ~merge:( @* )
-      ~nil:(fun x -> x)
+      ~merge:(fun (ok1, f1) (ok2, f2) -> ok1 && ok2, f1 @* f2)
+      ~nil:(true, fun x -> x)
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
-      rt
   in
+  let rt = rt_update rt in
   OpamRepositoryState.write_config rt;
   OpamRepositoryState.Cache.save rt;
-  rt
+  successful, rt
 
 (* fixme: this doesn't extract the archive, so we won't get the source package's
    opam file unless we're going through VC. *)
@@ -308,29 +309,30 @@ let dev_packages st packages =
   log "update-dev-packages";
   let command nv =
     OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Set.empty)
+      ~default:(false, (fun st -> st), OpamPackage.Set.empty)
     @@ fun () ->
     dev_package st nv @@| fun (st_update, changed) ->
-    st_update, match changed with
+    true, st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
     | false -> OpamPackage.Set.empty
   in
-  let merge (st_update1, set1) (st_update2, set2) =
+  let merge (ok1, st_update1, set1) (ok2, st_update2, set2) =
+    ok1 && ok2,
     (fun st -> st_update1 (st_update2 st)),
     OpamPackage.Set.union set1 set2
   in
-  let st_update, updated_set =
+  let success, st_update, updated_set =
     OpamParallel.reduce ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command
       ~merge
-      ~nil:((fun st -> st), OpamPackage.Set.empty)
+      ~nil:(true, (fun st -> st), OpamPackage.Set.empty)
       (OpamPackage.Set.elements packages)
   in
   let st = st_update st in
   let st =
     OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updated_set
   in
-  st, updated_set
+  success, st, updated_set
 
 let pinned_packages st names =
   log "update-pinned-packages";

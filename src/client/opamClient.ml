@@ -189,7 +189,8 @@ let slog = OpamConsole.slog
     if OpamPackage.Set.is_empty to_update then t else (
       OpamConsole.header_msg "Synchronising pinned packages";
       try
-        fst (OpamUpdate.dev_packages t to_update)
+        let _success, t, _pkgs = OpamUpdate.dev_packages t to_update in
+        t
       with e ->
         OpamStd.Exn.fatal e;
         t
@@ -519,8 +520,8 @@ let slog = OpamConsole.slog
         (String.concat ", " remaining);
 
     (* Do the updates *)
-    let rt =
-      if repo_names = [] then rt else
+    let repo_update_success, rt =
+      if repo_names = [] then true, rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
       OpamConsole.header_msg "Updating package repositories";
       OpamUpdate.repositories rt
@@ -531,17 +532,19 @@ let slog = OpamConsole.slog
 
     (* st is still based on the old rt, it's not a problem at this point, but
        don't return it *)
-    let _st =
-      if OpamPackage.Set.is_empty packages then st else
+    let (dev_update_success, _updates), _st =
+      if OpamPackage.Set.is_empty packages then
+        (true, OpamPackage.Set.empty), st
+      else
         OpamSwitchState.with_write_lock st @@ fun st ->
         OpamConsole.header_msg "Synchronizing development packages";
-        let st, updates = OpamUpdate.dev_packages st packages in
+        let success, st, updates = OpamUpdate.dev_packages st packages in
         if OpamStateConfig.(!r.json_out <> None) then
           OpamJson.append "dev-packages-updates"
             (OpamPackage.Set.to_json updates);
-        st
+        (success, updates), st
     in
-    rt
+    repo_update_success && dev_update_success, rt
 
   let init
       ?init_config ?repo ?(bypass_checks=false)
@@ -680,13 +683,14 @@ let slog = OpamConsole.slog
         let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
-        let rt =
+        let success, rt =
           OpamUpdate.repositories rt
             (List.map (fun (repo_name, (repo_url, repo_trust)) ->
                  { repo_root = OpamRepositoryPath.create root repo_name;
                    repo_name; repo_url; repo_trust; })
                 repos)
         in
+        if not success then failwith "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
         OpamFile.InitConfig.default_compiler init_config
       with e ->
