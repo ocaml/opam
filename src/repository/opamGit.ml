@@ -95,6 +95,11 @@ module Git : OpamVCS.VCS = struct
     let patch_file = OpamSystem.temp_file "git-diff" in
     let finalise () = OpamSystem.remove_file patch_file in
     OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+    git repo_root [ "add"; "." ] @@> fun r ->
+    (* Git diff is to the working dir, but doesn't work properly for
+       unregistered directories. *)
+    if OpamProcess.is_failure r then
+      (finalise (); OpamSystem.process_error r);
     git repo_root ~stdout:patch_file [ "diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if OpamProcess.is_failure r then
