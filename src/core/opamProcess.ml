@@ -66,6 +66,7 @@ type t = {
   p_info   : string option;
   p_metadata: (string * string) list;
   p_verbose: bool;
+  p_tmp_files: string list;
 }
 
 let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND]
@@ -126,7 +127,7 @@ let string_of_info ?(color=`yellow) info =
     which is used to run the process is recorded into [env_file] (if
     set). *)
 let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
-    ~verbose cmd args =
+    ~verbose ~tmp_files cmd args =
   let nothing () = () in
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
@@ -203,6 +204,7 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
     p_info   = info_file;
     p_metadata = metadata;
     p_verbose = verbose;
+    p_tmp_files = tmp_files;
   }
 
 type result = {
@@ -267,8 +269,16 @@ let run_background command =
   in
   let env_file    = file "env" in
   let info_file   = file "info" in
+  let tmp_files =
+    OpamStd.List.filter_some [
+      info_file;
+      env_file;
+      stderr_file;
+      if cmd_stdout <> None then None else stdout_file;
+    ]
+  in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
-    ~allow_stdin ?dir cmd args
+    ~allow_stdin ?dir ~tmp_files cmd args
 
 let dry_run_background c = {
   p_name   = c.cmd;
@@ -282,6 +292,7 @@ let dry_run_background c = {
   p_info   = None;
   p_metadata = OpamStd.Option.default [] c.cmd_metadata;
   p_verbose = is_verbose_command c;
+  p_tmp_files = [];
 }
 
 let verbose_print_cmd p =
@@ -337,7 +348,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
 
 let set_verbose_process p =
   if p.p_verbose then
-    let fs = OpamStd.List.filter_map (fun x -> x) [p.p_stdout;p.p_stderr] in
+    let fs = OpamStd.List.filter_some [p.p_stdout;p.p_stderr] in
     if fs <> [] then (
       verbose_print_cmd p;
       set_verbose_f fs
@@ -347,9 +358,7 @@ let exit_status p return =
   let duration = Unix.gettimeofday () -. p.p_time in
   let stdout = option_default [] (option_map read_lines p.p_stdout) in
   let stderr = option_default [] (option_map read_lines p.p_stderr) in
-  let cleanup =
-    OpamStd.List.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ]
-  in
+  let cleanup = p.p_tmp_files in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
     | Unix.WSIGNALED s | Unix.WSTOPPED s -> None, Some s

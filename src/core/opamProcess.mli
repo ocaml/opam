@@ -61,7 +61,10 @@ type t = {
   p_env    : string option; (** dump environment variables *)
   p_info   : string option; (** dump process info *)
   p_metadata: (string * string) list; (** Metadata associated to the process *)
-  p_verbose: bool;           (** whether output of the process should be displayed *)
+  p_verbose: bool;          (** whether output of the process should be
+                                displayed *)
+  p_tmp_files: string list; (** temporary files that should be cleaned up upon
+                                completion *)
 }
 
 (** Process results *)
