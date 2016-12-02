@@ -98,8 +98,7 @@ module Git : OpamVCS.VCS = struct
     git repo_root [ "add"; "." ] @@> fun r ->
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)
-    if OpamProcess.is_failure r then
-      (finalise (); OpamSystem.process_error r);
+    OpamSystem.raise_on_process_error r;
     git repo_root ~stdout:patch_file [ "diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if OpamProcess.is_failure r then
