@@ -127,6 +127,7 @@ type build_options = {
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build : bool;
+  working_dir   : bool;
   make          : string option;
   no_checksums  : bool;
   req_checksums : bool;
@@ -140,10 +141,10 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir inplace_build make no_checksums
+    keep_build_dir reuse_build_dir inplace_build working_dir make no_checksums
     req_checksums build_test build_doc show dryrun external_tags fake
     jobs = {
-  keep_build_dir; reuse_build_dir; inplace_build; make;
+  keep_build_dir; reuse_build_dir; inplace_build; working_dir; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
   external_tags; fake; jobs;
 }
@@ -172,6 +173,7 @@ let apply_build_options b =
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
+    ?working_dir:(flag b.working_dir)
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ()
@@ -753,6 +755,14 @@ let build_options =
        affects packages that are explicitely listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
+  let working_dir =
+    mk_flag ["working-dir"]
+      "Whenever updating packages that are bound to a local, \
+       version-controlled directory, update to the current working state of \
+       their source instead of the last commited state, or the ref they are \
+       pointing to. \
+       This only affects packages explicitely listed on the command-line."
+  in
   let no_checksums =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
@@ -793,6 +803,6 @@ let build_options =
        WARNING: This option is dangerous and likely to break your OPAM \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $make $no_checksums
-    $req_checksums $build_test $build_doc $show $dryrun $external_tags $fake
-    $jobs_flag)
+    $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
+    $no_checksums $req_checksums $build_test $build_doc $show $dryrun
+    $external_tags $fake $jobs_flag)

@@ -140,7 +140,7 @@ let validate_and_add_to_cache label url cache_dir file checksums =
      | _ -> ());
     true
 
-let pull_from_upstream label cache_dir destdir checksums url =
+let pull_from_upstream label ?working_dir cache_dir destdir checksums url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -169,18 +169,20 @@ let pull_from_upstream label cache_dir destdir checksums url =
        Not_available "can't check directory checksum")
   | Not_available r -> Not_available r
 
-let rec pull_from_mirrors label cache_dir destdir checksums = function
+let rec pull_from_mirrors label ?working_dir cache_dir destdir checksums = function
   | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
-  | [url] -> pull_from_upstream label cache_dir destdir checksums url
+  | [url] ->
+    pull_from_upstream label ?working_dir cache_dir destdir checksums url
   | url::mirrors ->
-    pull_from_upstream label cache_dir destdir checksums url @@+ function
+    pull_from_upstream label ?working_dir cache_dir destdir checksums url
+    @@+ function
     | Not_available s ->
       OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
         label (OpamUrl.to_string url) s;
       pull_from_mirrors label cache_dir destdir checksums mirrors
     | r -> Done r
 
-let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
+let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false) ?working_dir
     local_dirname checksums remote_urls =
   (match cache_dir with
    | Some cache_dir ->
@@ -207,7 +209,8 @@ let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
       OpamConsole.error_and_exit
         "%s: Missing checksum, and `--require-checksums` was set."
         label;
-    pull_from_mirrors label cache_dir local_dirname checksums remote_urls
+    pull_from_mirrors label ?working_dir
+      cache_dir local_dirname checksums remote_urls
 
 let revision dirname url =
   let kind = url.OpamUrl.backend in

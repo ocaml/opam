@@ -38,7 +38,9 @@ val update: repository -> unit OpamProcess.job
     Not_available returned.
     The first argument, [label] is only for status message printing. *)
 val pull_url:
-  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
+  string ->
+  ?cache_dir:dirname -> ?cache_urls:url list ->
+  ?silent_hits:bool -> ?working_dir:bool ->
   dirname -> OpamHash.t list -> url list ->
   generic_file download OpamProcess.job
 

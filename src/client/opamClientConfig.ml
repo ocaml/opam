@@ -17,6 +17,7 @@ type t = {
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build: bool;
+  working_dir: bool;
   show: bool;
   fake: bool;
   json_out: string option;
@@ -31,6 +32,7 @@ let default = {
   keep_build_dir = false;
   reuse_build_dir = false;
   inplace_build = false;
+  working_dir = false;
   show = false;
   fake = false;
   json_out = None;
@@ -45,6 +47,7 @@ type 'a options_fun =
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
+  ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
   ?json_out:string option ->
@@ -59,6 +62,7 @@ let setk k t
     ?keep_build_dir
     ?reuse_build_dir
     ?inplace_build
+    ?working_dir
     ?show
     ?fake
     ?json_out
@@ -73,6 +77,7 @@ let setk k t
     keep_build_dir = t.keep_build_dir + keep_build_dir;
     reuse_build_dir = t.reuse_build_dir + reuse_build_dir;
     inplace_build = t.inplace_build + inplace_build;
+    working_dir = t.working_dir + working_dir;
     show = t.show + show;
     fake = t.fake + fake;
     json_out = t.json_out + json_out;
@@ -99,6 +104,7 @@ let initk k =
     ?keep_build_dir:(env_bool "KEEPBUILDDIR")
     ?reuse_build_dir:(env_bool "REUSEBUILDDIR")
     ?inplace_build:(env_bool "INPLACEBUILD")
+    ?working_dir:(env_bool "WORKINGDIR")
     ?show:(env_bool "SHOW")
     ?fake:(env_bool "FAKE")
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
