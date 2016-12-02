@@ -176,6 +176,7 @@ let slog = OpamConsole.slog
   (* Check atoms for pinned packages, and update them. Returns the state that
      may have been reloaded if there were changes *)
   let update_dev_packages_t atoms t =
+    let working_dir = OpamClientConfig.(!r.working_dir) in
     let to_update =
       List.fold_left (fun to_update (name,_) ->
           try
@@ -189,7 +190,12 @@ let slog = OpamConsole.slog
     if OpamPackage.Set.is_empty to_update then t else (
       OpamConsole.header_msg "Synchronising pinned packages";
       try
-        let _success, t, _pkgs = OpamUpdate.dev_packages t to_update in
+        let working_dir =
+          if working_dir then Some (OpamSwitchState.packages_of_atoms t atoms)
+          else None
+        in
+        let _success, t, _pkgs =
+          OpamUpdate.dev_packages t ?working_dir to_update in
         t
       with e ->
         OpamStd.Exn.fatal e;

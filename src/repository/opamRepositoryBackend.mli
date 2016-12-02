@@ -52,6 +52,11 @@ module type S = sig
       update the VCS commit information. *)
   val revision: dirname -> version option OpamProcess.job
 
+  (** Like [pull_url], except for locally-bound version control backends, where
+      it should get the latest, uncommited source. *)
+  val sync_dirty:
+    dirname -> url -> generic_file download OpamProcess.job
+
 end
 
 (** Pretty-print *)

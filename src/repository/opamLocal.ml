@@ -213,4 +213,6 @@ module B = struct
   let revision _ =
     Done None
 
+  let sync_dirty dir url = pull_url dir None url
+
 end

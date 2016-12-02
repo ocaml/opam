@@ -140,7 +140,8 @@ let validate_and_add_to_cache label url cache_dir file checksums =
      | _ -> ());
     true
 
-let pull_from_upstream label ?working_dir cache_dir destdir checksums url =
+let pull_from_upstream
+    label ?(working_dir=false) cache_dir destdir checksums url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -148,7 +149,8 @@ let pull_from_upstream label ?working_dir cache_dir destdir checksums url =
       (OpamUrl.string_of_backend url.OpamUrl.backend)
   in
   OpamProcess.Job.with_text text @@
-  B.pull_url destdir cksum url
+  (if working_dir then B.sync_dirty destdir url
+   else B.pull_url destdir cksum url)
   @@| function
   | (Result (F file) | Up_to_date (F file)) as ret ->
     if validate_and_add_to_cache label url cache_dir file checksums then

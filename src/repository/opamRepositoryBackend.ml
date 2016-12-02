@@ -26,6 +26,7 @@ module type S = sig
   val fetch_repo_update:
     repository_name -> dirname -> url -> update OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
+  val sync_dirty: dirname -> url -> generic_file download OpamProcess.job
 end
 
 let compare r1 r2 = compare r1.repo_name r2.repo_name

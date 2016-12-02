@@ -1983,10 +1983,7 @@ let pin ?(unpin_only=false) () =
      (and contents, if local) of $(i,TARGET), Use $(b,--kind) or an explicit \
      URL to disable that behaviour.\n\
      Pins to version control systems may target a specific branch or commit \
-     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing). When they don't, \
-     in the special case of version-controlled pinning to a local path, OPAM \
-     will use \"mixed mode\": it will only use version-controlled files, but \
-     at their current, on-disk version.\n\
+     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing).\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
      will be locally created.\n\
      The package version may be specified by using the format \
