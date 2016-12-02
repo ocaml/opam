@@ -1953,36 +1953,36 @@ let pin ?(unpin_only=false) () =
     "list", `list, [], "Lists pinned packages.";
     "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
-     or a URL. \
+     or a URL.\n\
      $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
      package description with a name. $(i,TARGET) can be replaced by \
-     `--dev-repo' if a package by that name is already known. Otherwise, if \
-     $(i,TARGET) is $(i,-) or is omitted, the currently defined source package \
-     archive is used, if any, and the package is pinned as a virtual package \
-     (without any source) otherwise. \
-     OPAM will infer the kind of pinning from the format of $(i,TARGET), using \
-     $(b,path) pinning by default, unless you use an explicit $(b,--kind) \
-     option. \
+     $(b,--dev-repo) if a package by that name is already known. If \
+     $(i,TARGET) is $(b,-), the package is pinned as a virtual package, \
+     without any source. OPAM will infer the kind of pinning from the format \
+     (and contents, if local) of $(i,TARGET), Use $(b,--kind) or an explicit \
+     URL to disable that behaviour.\n\
      Pins to version control systems may target a specific branch or commit \
      using $(b,#branch) e.g. $(b,git://host/me/pkg#testing). When they don't, \
      in the special case of version-controlled pinning to a local path, OPAM \
      will use \"mixed mode\": it will only use version-controlled files, but \
-     at their current, on-disk version. \
+     at their current, on-disk version.\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
-     will be locally created. \
+     will be locally created.\n\
      The package version may be specified by using the format \
      $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
      $(b,edit).";
     "remove", `remove, ["NAMES...|TARGET"],
-    "Unpins packages $(b,NAMES), restoring their definition from the \
-     repository, if any. With a $(b,TARGET), unpins everything that is \
+    "Unpins packages $(i,NAMES), restoring their definition from the \
+     repository, if any. With a $(i,TARGET), unpins everything that is \
      currently pinned to that target.";
     "edit", `edit, ["NAME"],
-    "Opens an editor giving you the opportunity to \
-     change the package definition that OPAM will locally use for package \
-     $(b,NAME), including its version and source URL. \
-     The chosen editor is determined from environment variables \
-     $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in order.";
+    "Opens an editor giving you the opportunity to change the package \
+     definition that OPAM will locally use for package $(i,NAME), including \
+     its version and source URL. Using the format $(b,NAME.VERSION) will \
+     update the version in the opam file in advance of editing, without \
+     changing the actual target. The chosen editor is determined from \
+     environment variables $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in \
+     order.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1997,12 +1997,14 @@ let pin ?(unpin_only=false) () =
         modifies package $(i,PKG) to fetch its source from $(i,URL). If a \
         package definition is found in the package's source tree, it will be \
         used locally.";
-    `P "If no target (or $(i,-)) is specified, the package is pinned to its \
-        current source archive. The package name can also be omitted if the \
-        target is a directory containing a valid package definition (this \
-        allows to do e.g. $(i,opam pin add .) from a source directory.";
+    `P "If (or $(i,-)) is specified, the package is pinned without a source \
+        archive. The package name can be omitted if the target is a directory \
+        containing one or more valid package definitions (this allows to do \
+        e.g. $(i,opam pin add .) from a source directory.";
     `P "If $(i,PACKAGE) has the form $(i,name.version), the pinned package \
-        will be considered as version $(i,version) by opam.";
+        will be considered as version $(i,version) by opam. Beware that this \
+        doesn't relate with the version of the source actually used for the \
+        package.";
     `P "The default subcommand is $(i,list) if there are no further arguments, \
         and $(i,add) otherwise if unambiguous.";
   ] @ mk_subdoc ~defaults:["","list"] commands in
@@ -2173,24 +2175,7 @@ let pin ?(unpin_only=false) () =
                    (List.map (fun n -> n, None) names) st);
               `Ok ())
        | _ ->
-         (* arg is a package, guess target *)
-         match (fst package) arg with
-         | `Ok (name,version) ->
-           OpamGlobalState.with_ `Lock_none @@ fun gt ->
-           OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-           if not (OpamPackage.has_name st.packages name) &&
-              command <> Some `add then
-             (* Don't do implicit command on non-existing packages *)
-             bad_subcommand commands ("pin", command, params)
-           else
-             (ignore @@ OpamClient.PIN.pin st name ?version ~edit ~action `None;
-              `Ok ())
-         | `Error _ ->
-           if command = Some `add then
-             `Error (false, Printf.sprintf
-                       "%s is not a valid directory or package name"
-                       arg)
-           else bad_subcommand commands ("pin", command, params))
+         `Error (true, "Missing pinning target"))
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
        | `Ok (name,version) ->

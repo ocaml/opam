@@ -288,7 +288,8 @@ let version_pin st name version =
            OpamConsole.note
              "Package %s used to be pinned to version %s"
              (OpamPackage.Name.to_string name)
-             (OpamPackage.Version.to_string version))
+             (OpamPackage.Version.to_string version)
+         else OpamConsole.note "Pinning unchanged")
       else if OpamConsole.confirm
           "Package %s is already %s. Unpin and continue ?"
           (OpamPackage.Name.to_string name)
@@ -302,6 +303,9 @@ let version_pin st name version =
   end;
   let st = OpamSwitchState.update_pin nv repo_opam st in
   OpamSwitchAction.write_selections st;
+  OpamConsole.msg "%s is now pinned to version %s\n"
+    (OpamPackage.Name.to_string name)
+    (OpamPackage.Version.to_string version);
   st
 
 let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_url =
@@ -381,17 +385,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
 
   let nv = OpamPackage.create name pin_version in
 
-  let urlf =
-    OpamStd.Option.Op.(
-      target_url >>| OpamFile.URL.create >>+ fun () ->
-      cur_urlf >>+ fun () ->
-      OpamPackage.Map.find_opt nv st.installed_opams >>= OpamFile.OPAM.url
-      >>+ fun () ->
-      OpamSwitchState.url st nv
-    )
-  in
-
-  let target_url = OpamStd.Option.map OpamFile.URL.url urlf in
+  let urlf = OpamStd.Option.Op.(target_url >>| OpamFile.URL.create) in
 
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name

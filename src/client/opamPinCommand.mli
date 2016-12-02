@@ -25,10 +25,6 @@ val version_pin: rw switch_state -> name -> version -> rw switch_state
     If [edit], or if no package definition is found, this opens an editor (with
     a template if no definition is available).
 
-    If no target url is given, the url from the installed package or
-    repositories, if any, is used and the package is otherwise pinned without
-    target.
-
     If [force], don't abort even if the source can't be fetched from [target] *)
 val source_pin:
   rw switch_state -> name -> ?version:version -> ?edit:bool -> ?force:bool ->
