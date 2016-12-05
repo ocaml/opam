@@ -539,7 +539,7 @@ let slog = OpamConsole.slog
         OpamSwitchState.with_write_lock st @@ fun st ->
         OpamConsole.header_msg "Synchronizing development packages";
         let success, st, updates = OpamUpdate.dev_packages st packages in
-        if OpamStateConfig.(!r.json_out <> None) then
+        if OpamClientConfig.(!r.json_out <> None) then
           OpamJson.append "dev-packages-updates"
             (OpamPackage.Set.to_json updates);
         (success, updates), st

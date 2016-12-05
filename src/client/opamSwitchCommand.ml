@@ -144,7 +144,7 @@ let clear_switch ?(keep_debug=false) gt switch =
   let gt = { gt with config } in
   OpamGlobalState.write gt;
   let comp_dir = OpamPath.Switch.root gt.root switch in
-  if keep_debug && (OpamStateConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
+  if keep_debug && (OpamClientConfig.(!r.keep_build_dir) || (OpamConsole.debug ())) then
     (OpamConsole.note "Keeping %s despite errors (debug mode), \
                        you may want to remove it by hand"
        (OpamFilename.Dir.to_string comp_dir);
@@ -242,10 +242,10 @@ let install_compiler_packages t atoms =
   in
   let t = { t with compiler_packages = to_install_pkgs } in
   let t, result =
-    OpamSolution.apply ~ask:OpamStateConfig.(!r.show) t (Switch roots)
+    OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t (Switch roots)
       ~requested:roots
       solution in
-  OpamSolution.check_solution ~quiet:OpamStateConfig.(not !r.show) t result;
+  OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
   t
 
 let install gt ?synopsis ?repos ~update_config ~packages switch =
@@ -261,7 +261,7 @@ let install gt ?synopsis ?repos ~update_config ~packages switch =
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
   let gt, st =
-    if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+    if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
       let gt =
         OpamSwitchAction.create_empty_switch gt ?synopsis ?repos switch
       in
@@ -297,7 +297,7 @@ let install gt ?synopsis ?repos ~update_config ~packages switch =
   try
     gt, install_compiler_packages st packages
   with e ->
-    if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+    if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
       ((try OpamStd.Exn.fatal e with e ->
            OpamConsole.warning "Switch %s left partially installed"
              (OpamSwitch.to_string switch);
@@ -312,7 +312,7 @@ let switch lock gt switch =
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
     let st =
-      if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+      if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.set_current_switch lock gt switch
       else
       let rt = OpamRepositoryState.load `Lock_none gt in
@@ -333,7 +333,7 @@ let switch_with_autoinstall gt ?repos ~packages switch =
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
     let st =
-      if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show)) then
+      if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.set_current_switch `Lock_write gt switch
       else
       let rt = OpamRepositoryState.load `Lock_none gt in
@@ -429,7 +429,7 @@ let import_t importfile t =
         extra_attributes = []; }
   in
   OpamSolution.check_solution t solution;
-  if not (OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.show))
+  if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show))
   then begin
     (* Put imported overlays in place *)
     OpamPackage.Set.iter (fun nv ->

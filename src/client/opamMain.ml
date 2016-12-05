@@ -2724,7 +2724,7 @@ let run default commands =
     exit !exit_code
 
 let json_out () =
-  match OpamStateConfig.(!r.json_out) with
+  match OpamClientConfig.(!r.json_out) with
   | None   -> ()
   | Some s ->
     let file_name () =

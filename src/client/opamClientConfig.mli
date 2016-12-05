@@ -16,6 +16,13 @@ type t = private {
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
+  external_tags: string list;
+  keep_build_dir: bool;
+  reuse_build_dir: bool;
+  inplace_build: bool;
+  show: bool;
+  fake: bool;
+  json_out: string option;
 }
 
 type 'a options_fun =
@@ -23,6 +30,14 @@ type 'a options_fun =
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
+
+  ?external_tags:string list ->
+  ?keep_build_dir:bool ->
+  ?reuse_build_dir:bool ->
+  ?inplace_build:bool ->
+  ?show:bool ->
+  ?fake:bool ->
+  ?json_out:string option ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -45,22 +60,21 @@ val opam_init:
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
-  ?current_switch:OpamSwitch.t ->
-  ?switch_from:[ `Command_line | `Default | `Env ] ->
-  ?jobs:int Lazy.t ->
-  ?dl_jobs:int ->
   ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
-  ?no_base_packages:bool ->
+  ?show:bool ->
+  ?fake:bool ->
+  ?json_out:string option ->
+  ?current_switch:OpamSwitch.t ->
+  ?switch_from:[ `Command_line | `Default | `Env ] ->
+  ?jobs:int Lazy.t ->
+  ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
-  ?show:bool ->
   ?dryrun:bool ->
-  ?fake:bool ->
   ?makecmd:string Lazy.t ->
-  ?json_out:string option ->
   ?cudf_file:string option ->
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->

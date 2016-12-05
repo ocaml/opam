@@ -102,7 +102,6 @@ let apply_global_options o =
     (* ?dl_jobs: int *)
     (* ?external_tags:string list *)
     (* ?keep_build_dir:bool *)
-    ?no_base_packages:(flag o.no_base_packages)
     (* ?build_test:bool *)
     (* ?build_doc:bool *)
     (* ?show:bool *)
@@ -117,7 +116,7 @@ let apply_global_options o =
     (* ?autoremove:bool *)
     (* ?editor:string *)
     ();
-  if OpamStateConfig.(!r.json_out <> None) then (
+  if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
@@ -141,12 +140,12 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir inplace_build make no_checksums req_checksums
-    build_test build_doc show dryrun external_tags fake
+    keep_build_dir reuse_build_dir inplace_build make no_checksums
+    req_checksums build_test build_doc show dryrun external_tags fake
     jobs = {
-  keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
-  req_checksums; build_test; build_doc; show; dryrun; external_tags;
-  fake; jobs;
+  keep_build_dir; reuse_build_dir; inplace_build; make;
+  no_checksums; req_checksums; build_test; build_doc; show; dryrun;
+  external_tags; fake; jobs;
 }
 
 let apply_build_options b =
@@ -162,17 +161,19 @@ let apply_build_options b =
     (* ?root: -- handled globally *)
     ?jobs:OpamStd.Option.Op.(b.jobs >>| fun j -> lazy j)
     (* ?dl_jobs:int *)
+    (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
+    ?build_test:(flag b.build_test)
+    ?build_doc:(flag b.build_doc)
+    ?dryrun:(flag b.dryrun)
+    ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
+    ();
+  OpamClientConfig.update
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
-    (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
-    ?build_test:(flag b.build_test)
-    ?build_doc:(flag b.build_doc)
     ?show:(flag b.show)
-    ?dryrun:(flag b.dryrun)
     ?fake:(flag b.fake)
-    ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
