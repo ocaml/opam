@@ -178,6 +178,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
         (OpamPackage.Name.Set.diff names
            (OpamPackage.names_of_packages installed_base))
   in
+  let old_selections = OpamSwitchState.selections st in
   let st =
     { st with
       installed;
@@ -187,11 +188,11 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
       compiler_packages; }
   in
   if not OpamStateConfig.(!r.dryrun) then (
-    write_selections st;
+    if OpamSwitchState.selections st <> old_selections then write_selections st;
     if not (OpamPackage.Set.equal reinstall0 reinstall) then
       OpamFile.PkgList.write
         (OpamPath.Switch.reinstall st.switch_global.root st.switch)
-        reinstall
+        (OpamPackage.Set.filter (OpamSwitchState.is_dev_package st) reinstall)
   );
   st
 

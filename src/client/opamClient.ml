@@ -960,7 +960,7 @@ let slog = OpamConsole.slog
     let atoms = OpamSolution.sanitize_atom_list t names in
     remove_t ~autoremove ~force atoms t
 
-  let reinstall_t ?ask ?(force=false) atoms t =
+  let reinstall_t t ?ask ?(force=false) atoms =
     log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
     let reinstall, not_installed =
@@ -1007,7 +1007,7 @@ let slog = OpamConsole.slog
   let reinstall t names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    reinstall_t atoms t
+    reinstall_t t atoms
 
   module PIN = struct
     open OpamPinCommand
@@ -1060,14 +1060,31 @@ let slog = OpamConsole.slog
       let st =
         if OpamPackage.has_name st.pinned name then
           edit st ?version name
-        else if
-          OpamConsole.confirm
-            "Package %s is not pinned. Edit as a new pinning ?"
-            (OpamPackage.Name.to_string name)
-        then
-          source_pin st name ~edit:true ?version None
         else
-          OpamConsole.error_and_exit "Aborted"
+        let pin_nv =
+          match version with
+          | Some v ->
+            let nv = OpamPackage.create name v in
+            if OpamPackage.Set.mem nv st.packages then Some nv else None
+          | None ->
+            OpamStd.Option.of_Not_found (OpamSwitchState.get_package st) name
+        in
+        match pin_nv with
+        | Some nv ->
+          if OpamConsole.confirm
+              "Package %s is not pinned. Edit as a new pinning to version %s ?"
+              (OpamPackage.Name.to_string name)
+              (OpamPackage.version_to_string nv)
+          then
+            let target =
+              OpamStd.Option.Op.(OpamSwitchState.url st nv >>| OpamFile.URL.url)
+            in
+            source_pin st name ~edit:true ?version target
+          else
+            OpamConsole.error_and_exit "Aborted"
+        | None ->
+          OpamConsole.error_and_exit
+            "Package is not pinned, and no existing version was supplied."
       in
       if action then post_pin_action st name else st
 

@@ -351,13 +351,13 @@ let opam_local_env_of_status ret =
          | None -> "0"
          | Some r -> string_of_int r.OpamProcess.r_code)))
 
-let make_command ~env ~name ~dir ?text_command (cmd, args) =
-  let dir = OpamFilename.Dir.to_string dir in
+let make_command ~env ~name ?dir ?text_command (cmd, args) =
+  let dir = OpamStd.Option.map OpamFilename.Dir.to_string dir in
   let text =
     let cmd, args = OpamStd.Option.default (cmd, args) text_command in
     OpamProcess.make_command_text name ~args cmd
   in
-  OpamSystem.make_command ~env ~name ~dir ~text
+  OpamSystem.make_command ~env ~name ?dir ~text
     ~verbose:(OpamConsole.verbose ()) ~check_existence:false
     cmd args
 
@@ -481,9 +481,12 @@ let remove_package_aux
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
-  let build_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+  let build_dir =
+    OpamFilename.opt_dir
+      (OpamPath.Switch.remove t.switch_global.root t.switch nv)
+  in
   let wrappers = get_wrappers t in
-  let mk_cmd = make_command ~env ~name ~dir:build_dir in
+  let mk_cmd = make_command ~env ~name ?dir:build_dir in
   OpamProcess.Job.of_list ~keep_going:true
     (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
   @@+ fun error_pre ->

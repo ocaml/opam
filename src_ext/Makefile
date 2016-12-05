@@ -53,8 +53,18 @@ clone: $(SRC_EXTS:=.stamp) graph-workaround extlib-cppo dose-cppo
 archives: $(SRC_EXTS:=.download)
 	@
 
+define cache_url
+https://opam.ocaml.org/2.0~dev/cache/md5/$(shell echo $(MD5_$(1)) | cut -c -2)/$(MD5_$(1))
+endef
+
+define get_from_cache
+{ $(FETCH) $(call cache_url,$(1)) && mv $(MD5_$(1)) $(notdir $(URL_$(1))); }
+endef
+
 %.download:
-	[ -e  $(notdir $(URL_$*)) ] || $(FETCH) $(URL_$*)
+	[ -e  $(notdir $(URL_$*)) ] || \
+	$(FETCH) $(URL_$*) || \
+	$(call get_from_cache,$*)
 	$(MD5CHECK) $(notdir $(URL_$*)) $(MD5_$*)
 
 %.stamp: %.download

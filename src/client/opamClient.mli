@@ -35,6 +35,11 @@ val install:
 val reinstall:
   rw switch_state -> atom list -> rw switch_state
 
+(** Low-level version of [reinstall], bypassing the package name sanitization
+    and dev package update, and offering more control *)
+val reinstall_t:
+  rw switch_state -> ?ask:bool -> ?force:bool -> atom list -> rw switch_state
+
 (** Update the local mirrors for the repositories and/or development packages *)
 val update:
   'a global_state ->
