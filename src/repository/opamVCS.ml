@@ -115,7 +115,8 @@ module Make (VCS: VCS) = struct
       let fset = OpamStd.String.Set.of_list files in
       List.iter (fun f ->
           let basename = OpamFilename.remove_prefix repo_root f in
-          if not (OpamStd.String.Set.mem basename fset)
+          if not (OpamFilename.(starts_with (VCS.vc_dir repo_root) f) ||
+                  OpamStd.String.Set.mem basename fset)
           then OpamFilename.remove f)
         (OpamFilename.rec_files repo_root);
       OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
