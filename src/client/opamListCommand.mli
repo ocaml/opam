@@ -65,7 +65,8 @@ val filter:
     of packages *)
 val print_depexts: 'a switch_state -> package_set -> string list -> unit
 
-(** Element of package information to be printed *)
+(** Element of package information to be printed. Fixme: should be part of the
+    run-time man! *)
 type output_format =
   | Name               (** Name without version *)
   | Version            (** Version of the currently looked-at package *)
@@ -90,6 +91,8 @@ type output_format =
                            for pinned packages) *)
   | Installed_files    (** The list of files that the installed package added to
                            the system *)
+  | VC_ref             (** The version-control branch or tag the package url is
+                           bound to, if any *)
 
 val default_list_format: output_format list
 

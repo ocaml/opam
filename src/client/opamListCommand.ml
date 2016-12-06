@@ -302,6 +302,7 @@ type output_format =
   | All_versions
   | Repository
   | Installed_files
+  | VC_ref
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -321,6 +322,7 @@ let disp_header = function
   | All_versions -> "Versions"
   | Repository -> "Repository"
   | Installed_files -> "Installed files"
+  | VC_ref -> "VC ref"
 
 let field_names = [
   Name, "name";
@@ -339,6 +341,7 @@ let field_names = [
   All_versions, "all-versions";
   Repository, "repository";
   Installed_files, "installed-files";
+  VC_ref, "vc-ref";
 ]
 
 let string_of_field = function
@@ -497,6 +500,12 @@ let detail_printer ?prettify ?normalise st nv =
          (OpamDirTrack.check
             (OpamPath.Switch.root st.switch_global.root st.switch)
             c))
+  | VC_ref ->
+    OpamStd.Option.Op.(
+      (OpamSwitchState.url st nv >>| OpamFile.URL.url >>= fun url ->
+       url.OpamUrl.hash)
+      +! ""
+    )
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
