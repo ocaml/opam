@@ -127,15 +127,15 @@ let repositories rt repos =
 
 (* fixme: this doesn't extract the archive, so we won't get the source package's
    opam file unless we're going through VC. *)
-let fetch_dev_package url srcdir ?working_dir nv =
+let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
   OpamRepository.pull_url
-    (OpamPackage.to_string nv) srcdir checksum ?working_dir mirrors
+    (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
 
-let pinned_package st ?version ?working_dir name =
+let pinned_package st ?version ?(working_dir=false) name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
@@ -183,8 +183,14 @@ let pinned_package st ?version ?working_dir name =
       Some (snd (OpamPackage.Map.min_binding above))
     | _ -> None
   in
+  OpamRepository. current_branch url @@+ fun branch ->
+  OpamRepository.is_dirty url @@+ fun dirty ->
+  if branch = url.OpamUrl.hash && dirty && not working_dir then
+    OpamConsole.note
+      "Ignoring uncommitted changes in %s (`--working-dir' not active)."
+      (OpamUrl.base_url url);
   (* Do the update *)
-  fetch_dev_package urlf srcdir ?working_dir nv @@+ fun result ->
+  fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
   let new_source_opam =
     OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
     let warns, opam_opt = OpamFileTools.lint_file f in

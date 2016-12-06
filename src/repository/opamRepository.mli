@@ -67,7 +67,7 @@ val revision: dirname -> url -> version option OpamProcess.job
 
 (** Get the version-control branch for that url. Only applicable for local,
     version controlled URLs. Returns [None] in other cases. *)
-val get_branch: url -> string option OpamProcess.job
+val current_branch: url -> string option OpamProcess.job
 
 (** Returns true if the url points to a local, version-controlled directory that
     has uncommitted changes *)

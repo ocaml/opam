@@ -406,7 +406,7 @@ let on_local_version_control url ~default f =
        f dir (find_vcs_backend backend))
   | #OpamUrl.backend -> default
 
-let get_branch url =
+let current_branch url =
   on_local_version_control url ~default:(Done None) @@
   fun dir (module VCS) -> VCS.current_branch dir
 

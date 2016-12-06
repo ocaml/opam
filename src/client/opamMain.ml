@@ -2105,7 +2105,7 @@ let pin ?(unpin_only=false) () =
     | `Source
         ({ OpamUrl.backend = #OpamUrl.version_control; hash = None; _ }
          as url) ->
-      (match OpamProcess.Job.run (OpamRepository.get_branch url) with
+      (match OpamProcess.Job.run (OpamRepository.current_branch url) with
        | Some b ->
          OpamConsole.note "Will pin to '%s' using %s"
            b (OpamUrl.string_of_backend url.OpamUrl.backend);
