@@ -12,7 +12,7 @@
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
-module Hg = struct
+module VCS = struct
 
   let name = `hg
 
@@ -94,6 +94,16 @@ module Hg = struct
 
   let vc_dir repo_root = OpamFilename.Op.(repo_root / ".hg")
 
+  let current_branch dir =
+    hg dir [ "branch" ] @@> function
+    | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [b]; _ } -> Done (Some b)
+    | _ -> Done None
+
+  let is_dirty dir =
+    hg dir [ "stat" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done (r.OpamProcess.r_stdout = [])
+
 end
 
-module B = OpamVCS.Make(Hg)
+module B = OpamVCS.Make(VCS)

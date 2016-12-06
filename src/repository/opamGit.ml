@@ -14,7 +14,7 @@ open OpamProcess.Job.Op
 
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
-module Git : OpamVCS.VCS = struct
+module VCS : OpamVCS.VCS = struct
 
   let name = `git
 
@@ -124,6 +124,21 @@ module Git : OpamVCS.VCS = struct
 
   let vc_dir repo_root = OpamFilename.Op.(repo_root / ".git")
 
+  let current_branch dir =
+    git dir [ "symbolic-ref"; "--quiet"; "--short"; "HEAD" ]
+    @@> function
+    | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [s]; _ } ->
+      Done (Some s)
+    | _ ->
+      Done (Some "HEAD")
+
+  let is_dirty dir =
+    git dir [ "diff"; "--quiet" ]
+    @@> function
+    | { OpamProcess.r_code = 0; _ } -> Done false
+    | { OpamProcess.r_code = 1; _ } -> Done true
+    | r -> OpamSystem.process_error r
+
 end
 
-module B = OpamVCS.Make(Git)
+module B = OpamVCS.Make(VCS)

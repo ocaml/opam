@@ -25,6 +25,8 @@ module type VCS = sig
   val revision: dirname -> string OpamProcess.job
   val versionned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
+  val current_branch: dirname -> string option OpamProcess.job
+  val is_dirty: dirname -> bool OpamProcess.job
 end
 
 
