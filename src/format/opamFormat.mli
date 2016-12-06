@@ -87,7 +87,19 @@ module V : sig
       that can be made implicit when printing *)
   val list_depth : int -> (value, value) t
 
+  (** Maps on the two terms of an option constructor. *)
   val map_option : (value, 'a) t -> (value list, 'b) t -> (value, 'a * 'b) t
+
+  (** Maps over two options (e.g. [v {op1} {op2}]) *)
+  val map_options_2 :
+    (value, 'a) t -> (value list, 'b) t -> (value list, 'c) t ->
+    (value, 'a * 'b * 'c) t
+
+  (** Maps over two options (e.g. [v {op1} {op2}]) *)
+  val map_options_3 :
+    (value, 'a) t ->
+    (value list, 'b) t -> (value list, 'c) t -> (value list, 'd) t ->
+    (value, 'a * 'b * 'c * 'd) t
 
   (** A pair is simply a list with two elements in the [value] type *)
   val map_pair :

@@ -25,7 +25,8 @@ val packages_with_prefixes: repository -> string option package_map
 (** Initialize {i $opam/repo/$repo} *)
 val init: dirname -> repository_name -> unit OpamProcess.job
 
-(** Update {i $opam/repo/$repo}. *)
+(** Update {i $opam/repo/$repo}. Raises [Failure] in case the update couldn't be
+    achieved. *)
 val update: repository -> unit OpamProcess.job
 
 (** Fetch an URL into a directory: if a single file, it will be put in that
@@ -61,12 +62,6 @@ val pull_url_and_fix_digest:
 
 (** Get the optional revision associated to a backend. *)
 val revision: repository -> version option OpamProcess.job
-
-(** [make_archive ?gener_digest repo prefix package] builds the
-    archive for the given [package]. By default, the digest that
-    appears in {i $NAME.$VERSION/url} is not modified, unless
-    [gener_digest] is set. *)
-val make_archive: ?gener_digest:bool -> repository -> string option -> package -> unit OpamProcess.job
 
 (** Find a backend *)
 val find_backend: repository -> (module OpamRepositoryBackend.S)

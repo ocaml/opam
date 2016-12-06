@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamFilename.Op
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "REPOSITORY" fmt
@@ -295,79 +294,95 @@ let packages r =
 let packages_with_prefixes r =
   OpamPackage.prefixes (OpamRepositoryPath.packages_dir r.repo_root)
 
+let validate_repo_update repo update =
+  match
+    repo.repo_trust,
+    OpamRepositoryConfig.(!r.validation_hook),
+    OpamRepositoryConfig.(!r.force_checksums)
+  with
+  | None, Some _, Some true ->
+    OpamConsole.error
+      "No trust anchors for repository %s, and security was enforced: \
+       not updating"
+      (OpamRepositoryName.to_string repo.repo_name);
+    Done false
+  | None, _, _ | _, None, _ | _, _, Some false ->
+    Done true
+  | Some ta, Some hook, _ ->
+    let cmd =
+      let open OpamRepositoryBackend in
+      let env v = match OpamVariable.Full.to_string v, update with
+        | "anchors", _ -> Some (S (String.concat "," ta.fingerprints))
+        | "quorum", _ -> Some (S (string_of_int ta.quorum))
+        | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo.repo_root))
+        | "patch", Update_patch f -> Some (S (OpamFilename.to_string f))
+        | "incremental", Update_patch _ -> Some (B true)
+        | "incremental", _ -> Some (B false)
+        | "dir", Update_full d -> Some (S (OpamFilename.Dir.to_string d))
+        | _ -> None
+      in
+      match OpamFilter.single_command env hook with
+      | cmd::args ->
+        OpamSystem.make_command
+          ~name:"validation-hook"
+          ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
+          cmd args
+      | [] -> failwith "Empty validation hook"
+    in
+    cmd @@> fun r ->
+    log "validation: %s" (OpamProcess.result_summary r);
+    Done (OpamProcess.is_success r)
+
+open OpamRepositoryBackend
+
+let apply_repo_update repo = function
+  | Update_full d ->
+    log "%a: applying update from scratch at %a"
+      (slog OpamRepositoryName.to_string) repo.repo_name
+      (slog OpamFilename.Dir.to_string) d;
+    OpamFilename.rmdir repo.repo_root;
+    if OpamFilename.is_symlink_dir d then
+      (OpamFilename.copy_dir ~src:d ~dst:repo.repo_root;
+       OpamFilename.rmdir d)
+    else
+      OpamFilename.move_dir ~src:d ~dst:repo.repo_root;
+    OpamConsole.msg "[%s] Initialised\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name));
+    Done ()
+  | Update_patch f ->
+    log "%a: applying patch update at %a"
+      (slog OpamRepositoryName.to_string) repo.repo_name
+      (slog OpamFilename.to_string) f;
+    (OpamFilename.patch f repo.repo_root @@+ function
+      | Some e ->
+        if not (OpamConsole.debug ()) then OpamFilename.remove f;
+        raise e
+      | None -> OpamFilename.remove f; Done ())
+  | Update_empty ->
+    log "%a: applying empty update"
+      (slog OpamRepositoryName.to_string) repo.repo_name;
+    Done ()
+  | Update_err _ -> assert false
+
+let cleanup_repo_update = function
+  | Update_full d -> OpamFilename.rmdir d
+  | Update_patch f -> OpamFilename.remove f
+  | _ -> ()
+
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
-  B.pull_repo repo.repo_name repo.repo_root repo.repo_url
-
-let make_archive ?(gener_digest=false) repo prefix nv =
-  let url_file = OpamRepositoryPath.url repo.repo_root prefix nv in
-  let files_dir = OpamRepositoryPath.files repo.repo_root prefix nv in
-  let archive = OpamRepositoryPath.archive repo.repo_root nv in
-  let archive_dir = OpamRepositoryPath.archives_dir repo.repo_root in
-  if not (OpamFilename.exists_dir archive_dir) then
-    OpamFilename.mkdir archive_dir;
-
-  (* Download the remote file / fetch the remote repository *)
-  let download download_dir =
-    match OpamFile.URL.read_opt url_file with
-    | None -> Done None
-    | Some url ->
-      let checksum = OpamFile.URL.checksum url in
-      let remote_url = OpamFile.URL.url url in
-      let mirrors = remote_url :: OpamFile.URL.mirrors url in
-      log "downloading %a" (slog OpamUrl.to_string) remote_url;
-      if not (OpamFilename.exists_dir download_dir) then
-        OpamFilename.mkdir download_dir;
-      match checksum with
-      | _::_ when gener_digest ->
-        pull_url_and_fix_digest (OpamPackage.to_string nv)
-          download_dir checksum url_file mirrors
-        @@+ fun f -> Done (Some f)
-      | _ ->
-        pull_url (OpamPackage.to_string nv) download_dir checksum mirrors
-        @@+ fun f -> Done (Some f)
-  in
-
-  (* if we've downloaded a file, extract it, otherwise just copy it *)
-  let extract local_filename extract_dir =
-    match local_filename with
-    | None                   -> ()
-    | Some (Not_available u) -> OpamConsole.error_and_exit "%s is not available" u
-    | Some ( Result r
-           | Up_to_date r )  -> OpamFilename.extract_generic_file r extract_dir in
-
-  (* Eventually add <package>/files/* into the extracted dir *)
-  let copy_files extract_dir =
-    if OpamFilename.exists_dir files_dir then (
-      if not (OpamFilename.exists_dir extract_dir) then
-        OpamFilename.mkdir extract_dir;
-      OpamFilename.copy_dir ~src:files_dir ~dst:extract_dir;
-      OpamFilename.Set.of_list (OpamFilename.rec_files extract_dir)
-    ) else
-      OpamFilename.Set.empty in
-
-    (* Finally create the final archive *)
-  let create_archive files extract_root =
-    if not (OpamFilename.Set.is_empty files) ||
-       OpamFile.exists url_file then (
-      OpamConsole.msg "Creating %s.\n" (OpamFilename.to_string archive);
-      OpamFilename.exec extract_root [
-        [ "tar" ; "czf" ;
-          OpamFilename.to_string archive ;
-          OpamPackage.to_string nv ]
-      ];
-      Some archive
-    ) else
-      None in
-
-  OpamFilename.with_tmp_dir_job (fun extract_root ->
-      OpamFilename.with_tmp_dir_job (fun download_dir ->
-          download download_dir @@+ fun local_filename ->
-          let extract_dir = extract_root / OpamPackage.to_string nv in
-          extract local_filename extract_dir;
-          let files = copy_files extract_dir in
-          match create_archive files extract_root with
-          | None | Some _ -> Done ()
-        )
-    )
+  B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
+  | Update_err e -> raise e
+  | Update_empty -> Done ()
+  | (Update_full _ | Update_patch _) as upd ->
+    OpamProcess.Job.catch (fun exn ->
+        cleanup_repo_update upd;
+        raise exn)
+    @@ fun () ->
+    validate_repo_update repo upd @@+ function
+    | true -> apply_repo_update repo upd
+    | false ->
+      cleanup_repo_update upd;
+      failwith "Invalid repository signatures, update aborted"

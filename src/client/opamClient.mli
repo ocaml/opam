@@ -40,12 +40,14 @@ val reinstall:
 val reinstall_t:
   rw switch_state -> ?ask:bool -> ?force:bool -> atom list -> rw switch_state
 
-(** Update the local mirrors for the repositories and/or development packages *)
+(** Update the local mirrors for the repositories and/or development packages.
+    Returns true on complete success, false means at least one package or repo
+    failed to update. And the updated repository_state. *)
 val update:
   'a global_state ->
   repos_only:bool -> dev_only:bool -> ?all:bool ->
   string list ->
-  unlocked repos_state
+  bool * unlocked repos_state
 
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version, within the given constraints.

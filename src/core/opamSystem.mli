@@ -59,6 +59,8 @@ val install: ?exec:bool -> string -> string -> unit
     permission) *)
 val is_exec: string -> bool
 
+val file_is_empty: string -> bool
+
 (** [link src dst] links [src] to [dst]. Remove [dst] if it is a file,
     not a directory. *)
 val link: string -> string -> unit
@@ -138,8 +140,8 @@ val directories_with_links: string -> string list
     with a process error instead) *)
 val make_command:
   ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
-  ?metadata:(string * string) list -> ?allow_stdin:bool -> ?dir:string ->
-  ?check_existence:bool ->
+  ?metadata:(string * string) list -> ?allow_stdin:bool -> ?stdout:string ->
+  ?dir:string -> ?check_existence:bool ->
   string -> string list -> OpamProcess.command
 
 (** OLD COMMAND API, DEPRECATED *)

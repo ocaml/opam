@@ -21,6 +21,7 @@ type command
     @param metadata    additional info to log
     @param dir         CWD for the command
     @param allow_stdin whether to forward stdin
+    @param stdout      redirect stdout to the given file instead of the logs
     @param text        Short text that may be displayed in the status-line
     @param command      The command itself
     @param args         Command-line arguments *)
@@ -31,6 +32,7 @@ val command:
   ?metadata:(string*string) list ->
   ?dir:string ->
   ?allow_stdin:bool ->
+  ?stdout:string ->
   ?text:string ->
   string ->
   string list ->
@@ -59,7 +61,10 @@ type t = {
   p_env    : string option; (** dump environment variables *)
   p_info   : string option; (** dump process info *)
   p_metadata: (string * string) list; (** Metadata associated to the process *)
-  p_verbose: bool;           (** whether output of the process should be displayed *)
+  p_verbose: bool;          (** whether output of the process should be
+                                displayed *)
+  p_tmp_files: string list; (** temporary files that should be cleaned up upon
+                                completion *)
 }
 
 (** Process results *)

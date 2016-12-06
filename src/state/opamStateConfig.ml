@@ -190,6 +190,7 @@ let load_defaults root_dir =
         | (CString c,None)::_ as t
           when OpamStd.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
         | t -> lazy (t, `Default))
+      ~validation_hook:(OpamFile.Config.validation_hook conf)
       ();
     update
       ?current_switch:(OpamFile.Config.switch conf)

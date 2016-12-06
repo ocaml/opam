@@ -30,15 +30,20 @@ module type VCS = sig
       to update accordingly. *)
   val fetch: dirname -> url -> unit OpamProcess.job
 
-  (** Reset the master branch of the repository to match the remote
-      repository state. *)
+  (** Reset the master branch of the repository to match the remote repository
+      state. This might still fetch more data (git submodules...), so is
+      unsuitable for running after validation. *)
   val reset: dirname -> url -> unit OpamProcess.job
 
-  (** Check whether the staging area is empty. Returns true if not (eg. there is
-      an update pending) *)
-  val diff: dirname -> url -> bool OpamProcess.job
+  (** Returns the pending modifications in the form of a patch file, or None if
+      [dirname] is up to date with what was last fetched. *)
+  val diff: dirname -> url -> filename option OpamProcess.job
 
-  (** Return the HEAD revision. *)
+  (** Returns true if the last fetched state is equal to the current, on-disk
+      state *)
+  val is_up_to_date: dirname -> url -> bool OpamProcess.job
+
+  (** Returns an backend-specific identifier for the current revision. *)
   val revision: dirname -> string OpamProcess.job
 
   (** Returns the list of files under version control *)

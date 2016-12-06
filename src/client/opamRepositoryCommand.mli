@@ -25,7 +25,9 @@ val list:
 val list_all: 'a repos_state -> short:bool -> unit
 
 (** Add a new repository to ~/.opam/repos, without updating any selections *)
-val add: rw repos_state -> repository_name -> url -> rw repos_state
+val add:
+  rw repos_state -> repository_name -> url -> trust_anchors option ->
+  rw repos_state
 
 (** Remove a repository from ~/.opam/repos, without updating any selections *)
 val remove: rw repos_state -> repository_name -> rw repos_state
@@ -44,4 +46,6 @@ val update_selection:
   'a global_state
 
 (** Change the registered address of a repo *)
-val set_url: rw repos_state -> repository_name -> url -> rw repos_state
+val set_url:
+  rw repos_state -> repository_name -> url -> trust_anchors option ->
+  rw repos_state

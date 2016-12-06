@@ -24,17 +24,20 @@ val repository:
 
 (** Update the given repositories from their upstream, and returns the updated
     state. This also saves the updated cached state, and the updated repository
-    config (it may be changed by e.g. redirects) *)
-val repositories: rw repos_state -> repository list -> rw repos_state
+    config (it may be changed by e.g. redirects). The boolean returned is true
+    if no error was encountered during the update of any of the repositories. *)
+val repositories: rw repos_state -> repository list -> bool * rw repos_state
 
 (** [update_dev_packages t] checks for upstream changes for packages
     first in the switch cache and then in the global cache. Return the
     packages whose contents have changed upstream.
 
     Side-effect: update the reinstall file, adding installed changed packages to
-    the current switch to-reinstall set. *)
+    the current switch to-reinstall set.
+
+    The returned boolean is true if all updates were successful. *)
 val dev_packages:
-  rw switch_state -> package_set -> rw switch_state * package_set
+  rw switch_state -> package_set -> bool * rw switch_state * package_set
 
 (** Updates a single dev or pinned package from its upstream; returns true
     if changed, false otherwise, and a switch_state update function, applying

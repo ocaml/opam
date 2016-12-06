@@ -100,16 +100,14 @@ let opt_dir dirname =
 let basename_dir dirname =
   Base.of_string (Filename.basename (Dir.to_string dirname))
 
-let dirname_dir dirname =
-  Dir.to_string (Filename.dirname (Dir.of_string dirname))
+let dirname_dir dirname = Filename.dirname (Dir.to_string dirname)
 
-let link_dir ~src ~dst =
-  if exists_dir dst then
-    OpamSystem.internal_error "Cannot link: %s already exists." (Dir.to_string dst)
-  else (
-    mkdir (Filename.dirname dst);
-    OpamSystem.link (Dir.to_string src) (Dir.to_string dst)
-  )
+let link_dir ~target ~link =
+  if exists_dir link then
+    OpamSystem.internal_error "Cannot link: %s already exists."
+      (Dir.to_string link)
+  else
+    OpamSystem.link (Dir.to_string target) (Dir.to_string link)
 
 let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
@@ -224,8 +222,8 @@ let move ~src ~dst =
     OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
       [ "mv"; to_string src; to_string dst ]
 
-let link ~src ~dst =
-  if src <> dst then OpamSystem.link (to_string src) (to_string dst)
+let link ~target ~link =
+  if target <> link then OpamSystem.link (to_string target) (to_string link)
 
 let readlink src =
   if exists src then
@@ -240,6 +238,13 @@ let is_symlink src =
     s.Unix.st_kind = Unix.S_LNK
   with Unix.Unix_error _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
+
+let is_symlink_dir src =
+  try
+    let s = Unix.lstat (Dir.to_string src) in
+    s.Unix.st_kind = Unix.S_LNK
+  with Unix.Unix_error _ ->
+    OpamSystem.internal_error "%s does not exist." (Dir.to_string src)
 
 let is_exec file =
   try OpamSystem.is_exec (to_string file)
@@ -257,11 +262,12 @@ let remove_prefix prefix filename =
   OpamStd.String.remove_prefix ~prefix filename
 
 let remove_prefix_dir prefix dir =
-  let prefix =
-    let str = Dir.to_string prefix in
-    if str = "" then "" else Filename.concat str "" in
+  let prefix = Dir.to_string prefix in
   let dirname = Dir.to_string dir in
-  OpamStd.String.remove_prefix ~prefix dirname
+  if prefix = "" then dirname
+  else
+    OpamStd.String.remove_prefix ~prefix dirname |>
+    OpamStd.String.remove_prefix ~prefix:"/"
 
 let process_in ?root fn src dst =
   let basename = match root with
@@ -274,8 +280,6 @@ let process_in ?root fn src dst =
   fn ~src ~dst:(of_string dst)
 
 let copy_in ?root = process_in ?root copy
-
-let link_in = process_in link
 
 let extract filename dirname =
   OpamSystem.extract (to_string filename) ~dir:(Dir.to_string dirname)

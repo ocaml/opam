@@ -1014,6 +1014,7 @@ module ConfigSyntax = struct
     solver : arg list option;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
+    validation_hook : arg list option;
   }
 
   let opam_version t = t.opam_version
@@ -1033,6 +1034,8 @@ module ConfigSyntax = struct
 
   let global_variables t = t.global_variables
   let eval_variables t = t.eval_variables
+
+  let validation_hook t = t.validation_hook
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1054,6 +1057,9 @@ module ConfigSyntax = struct
   let with_wrappers wrappers t = { t with wrappers }
   let with_global_variables global_variables t = { t with global_variables }
   let with_eval_variables eval_variables t = { t with eval_variables }
+  let with_validation_hook validation_hook t =
+    { t with validation_hook = Some validation_hook}
+  let with_validation_hook_opt validation_hook t = { t with validation_hook }
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
@@ -1069,6 +1075,7 @@ module ConfigSyntax = struct
     wrappers = Wrappers.empty;
     global_variables = [];
     eval_variables = [];
+    validation_hook = None;
   }
 
   let fields =
@@ -1131,6 +1138,9 @@ module ConfigSyntax = struct
               (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
               (Pp.V.map_list Pp.V.string)
               Pp.V.string));
+      "repository-validation-command", Pp.ppacc_opt
+        with_validation_hook validation_hook
+        (Pp.V.map_list ~depth:1 Pp.V.arg);
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
@@ -1166,7 +1176,7 @@ module InitConfigSyntax = struct
 
   type t = {
     opam_version : opam_version;
-    repositories : (repository_name * url) list;
+    repositories : (repository_name * (url * trust_anchors option)) list;
     default_compiler : formula;
     jobs : int option;
     dl_tool : arg list option;
@@ -1228,6 +1238,24 @@ module InitConfigSyntax = struct
     eval_variables = [];
   }
 
+  let pp_repository_def =
+    Pp.V.map_options_3
+      (Pp.V.string -|
+       Pp.of_module "repository" (module OpamRepositoryName))
+      (Pp.opt @@ Pp.singleton -| Pp.V.url)
+      (Pp.map_list Pp.V.string)
+      (Pp.opt @@
+       Pp.singleton -| Pp.V.int -|
+       OpamPp.check ~name:"quorum" ~errmsg:"quorum must be >= 0" ((<=) 0)) -|
+    Pp.pp
+      (fun ~pos:_ (name, url, fingerprints, quorum) ->
+         name, url,
+         match fingerprints with [] -> None | fingerprints ->
+           Some {fingerprints; quorum = OpamStd.Option.default 1 quorum})
+      (fun (name, url, ta) -> match ta with
+         | Some ta ->  name, url, ta.fingerprints, Some ta.quorum
+         | None -> name, url, [], None)
+
   let fields =
     [
       "opam-version", Pp.ppacc
@@ -1235,11 +1263,12 @@ module InitConfigSyntax = struct
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "repositories", Pp.ppacc
         with_repositories repositories
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_pair
-              (Pp.V.string -|
-               Pp.of_module "repository" (module OpamRepositoryName))
-              Pp.V.url ));
+        (Pp.V.map_list ~depth:1 @@
+         pp_repository_def -|
+         Pp.pp (fun ~pos -> function
+             | (name, Some url, ta) -> (name, (url, ta))
+             | (_, None, _) -> Pp.bad_format ~pos "Missing repository URL")
+           (fun (name, (url, ta)) -> (name, Some url, ta)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
@@ -1328,18 +1357,22 @@ module Repos_configSyntax = struct
 
   let internal = "repos-config"
 
-  type t = url option OpamRepositoryName.Map.t
+  type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
 
   let empty = OpamRepositoryName.Map.empty
 
   let fields = [
     "repositories",
     Pp.ppacc (fun x _ -> x) (fun x -> x)
-      (Pp.V.map_list ~depth:1
-         (Pp.V.map_option
-            (Pp.V.string -|
-             Pp.of_module "repository" (module OpamRepositoryName))
-            (Pp.opt @@ Pp.singleton -| Pp.V.url)) -|
+      ((Pp.V.map_list ~depth:1 @@
+        InitConfigSyntax.pp_repository_def -|
+        Pp.pp
+          (fun ~pos:_ -> function
+             | (name, Some url, ta) -> name, Some (url, ta)
+             | (name, None, _) -> name, None)
+          (fun (name, def) -> match def with
+             | Some (url, ta) -> name, Some url, ta
+             | None -> name, None, None)) -|
        Pp.of_pair "repository-url-list"
          OpamRepositoryName.Map.(of_list, bindings));
   ]
@@ -1506,7 +1539,12 @@ module Repo_config_legacySyntax = struct
 
   let internal = "repo-file"
 
-  type t = repository
+  type t = {
+    repo_name : repository_name;
+    repo_root : dirname;
+    repo_url : url;
+    repo_priority : int;
+  }
 
   let empty = {
     repo_name = OpamRepositoryName.of_string "<none>";
@@ -1517,27 +1555,27 @@ module Repo_config_legacySyntax = struct
 
   let fields = [
     "name", Pp.ppacc
-      (fun repo_name r -> {r with repo_name})
+      (fun repo_name (r:t) -> {r with repo_name})
       (fun r -> r.repo_name)
       (Pp.V.string -|
        Pp.of_module "repository-name" (module OpamRepositoryName));
     "address", Pp.ppacc
-      (fun repo_url r -> {r with repo_url})
+      (fun repo_url (r:t) -> {r with repo_url})
       (fun r -> r.repo_url)
       Pp.V.url;
     "kind", Pp.ppacc_opt (* deprecated *)
-      (fun backend r ->
+      (fun backend (r:t) ->
          {r with repo_url = {r.repo_url with OpamUrl.backend}})
       OpamStd.Option.none
       (Pp.V.string -|
        Pp.of_pair "repository-kind"
          OpamUrl.(backend_of_string, string_of_backend));
     "priority", Pp.ppacc
-      (fun repo_priority r -> {r with repo_priority})
+      (fun repo_priority (r:t) -> {r with repo_priority})
       (fun r -> r.repo_priority)
       Pp.V.int;
     "root", Pp.ppacc
-      (fun repo_root r -> {r with repo_root})
+      (fun repo_root (r:t) -> {r with repo_root})
       (fun r -> r.repo_root)
       (Pp.V.string -|
        Pp.of_module "directory" (module OpamFilename.Dir));

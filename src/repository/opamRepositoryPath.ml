@@ -13,8 +13,6 @@ open OpamFilename.Op
 
 let create root name = root / "repo" / OpamRepositoryName.to_string name
 
-let update_cache repo_root = repo_root // "update.cache"
-
 let repo repo_root = repo_root // "repo" |> OpamFile.make
 
 let packages_dir repo_root = repo_root / "packages"
@@ -35,12 +33,6 @@ let url repo_root prefix nv =
 
 let files repo_root prefix nv =
   packages repo_root prefix nv / "files"
-
-let archives_dir repo_root =
-  repo_root / "archives"
-
-let archive repo_root nv =
-  archives_dir repo_root // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 module Remote = struct
   (** URL, not FS paths *)

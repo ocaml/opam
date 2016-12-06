@@ -59,7 +59,7 @@ val move_dir: src:Dir.t -> dst:Dir.t -> unit
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)
-val link_dir: src:Dir.t -> dst:Dir.t -> unit
+val link_dir: target:Dir.t -> link:Dir.t -> unit
 
 (** Does the directory exist ? *)
 val exists_dir: Dir.t -> bool
@@ -76,7 +76,7 @@ val basename_dir: Dir.t -> Base.t
 (** Turn a full path into a list of directory names *)
 val to_list_dir: Dir.t -> Dir.t list
 
-(** Creation from a raw string (as {i http://<path>}) *)
+(** Creation from a raw string, without resolving symlinks etc. *)
 val raw_dir: string -> Dir.t
 
 (** Execute a function in a temp directory *)
@@ -99,7 +99,7 @@ val create: Dir.t -> Base.t -> t
     as dirname *)
 val of_basename: Base.t -> t
 
-(** Creation from a raw string (as {i http://<path>}) *)
+(** Creation from a raw string, without resolving symlinks, etc. *)
 val raw: string -> t
 
 (** Prettify a filename:
@@ -163,14 +163,13 @@ val copy_in: ?root:Dir.t -> t -> Dir.t -> unit
 (** Move a file *)
 val move: src:t -> dst:t -> unit
 
-(** Symlink a file in a directory *)
-val link_in: t -> Dir.t -> unit
-
 (** Read a symlinked file *)
 val readlink: t -> t
 
 (** Is a symlink ? *)
 val is_symlink: t -> bool
+
+val is_symlink_dir: Dir.t -> bool
 
 (** Is an executable ? *)
 val is_exec: t -> bool
@@ -183,7 +182,7 @@ val copy: src:t -> dst:t -> unit
 val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
 
 (** Symlink a file. If symlink is not possible on the system, use copy instead. *)
-val link: src:t -> dst:t -> unit
+val link: target:t -> link:t -> unit
 
 (** Extract an archive in a given directory (it rewrites the root to
     match [Dir.t] dir if needed) *)

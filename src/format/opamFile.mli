@@ -122,6 +122,8 @@ module Config: sig
     (variable * variable_contents * string) list -> t -> t
   val with_eval_variables:
     (variable * string list * string) list -> t -> t
+  val with_validation_hook_opt:
+    arg list option -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -156,6 +158,8 @@ module Config: sig
   (** variable, command, docstring *)
   val eval_variables: t -> (variable * string list * string) list
 
+  val validation_hook: t -> arg list option
+
 end
 
 (** Init config file [/etc/opamrc] *)
@@ -163,7 +167,7 @@ module InitConfig: sig
   include IO_FILE
 
   val opam_version: t -> opam_version
-  val repositories: t -> (repository_name * url) list
+  val repositories: t -> (repository_name * (url * trust_anchors option)) list
   val default_compiler: t -> formula
   val jobs: t -> int option
   val dl_tool: t -> arg list option
@@ -176,7 +180,8 @@ module InitConfig: sig
   val eval_variables: t -> (variable * string list * string) list
 
   val with_opam_version: opam_version -> t -> t
-  val with_repositories: (repository_name * url) list -> t -> t
+  val with_repositories:
+    (repository_name * (url * trust_anchors option)) list -> t -> t
   val with_default_compiler: formula -> t -> t
   val with_jobs: int option -> t -> t
   val with_dl_tool: arg list option -> t -> t
@@ -793,9 +798,19 @@ module Package_index: IO_FILE with
 
 (** Repository config: [$opam/repo/$repo/config]. Deprecated, for migration
     only *)
-module Repo_config_legacy: IO_FILE with type t = repository
+module Repo_config_legacy : sig
+  type t = {
+    repo_name : repository_name;
+    repo_root : dirname;
+    repo_url : url;
+    repo_priority : int;
+  }
+  include IO_FILE with type t := t
+end
 
-module Repos_config: IO_FILE with type t = url option OpamRepositoryName.Map.t
+
+module Repos_config: IO_FILE
+  with type t = (url * trust_anchors option) option OpamRepositoryName.Map.t
 
 module Switch_config: sig
   type t = {

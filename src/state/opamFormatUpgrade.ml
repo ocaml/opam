@@ -613,14 +613,15 @@ let from_1_3_dev7_to_2_0_alpha root conf =
           OpamFile.make
             (root / "repo" / OpamRepositoryName.to_string name // "config")
         in
-        let conf = OpamFile.Repo_config_legacy.read conf_file in
+        let module RCL = OpamFile.Repo_config_legacy in
+        let conf = RCL.read conf_file in
         OpamFilename.remove (OpamFile.filename conf_file);
-        conf.repo_priority, name, conf.repo_url)
+        conf.RCL.repo_priority, name, conf.RCL.repo_url)
       (OpamFile.Config.repositories conf)
   in
   OpamFile.Repos_config.write (OpamPath.repos_config root)
     (OpamRepositoryName.Map.of_list
-       (List.map (fun (_, r, u) -> r, Some u) prio_repositories));
+       (List.map (fun (_, r, u) -> r, Some (u,None)) prio_repositories));
   let prio_repositories =
     List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
       prio_repositories

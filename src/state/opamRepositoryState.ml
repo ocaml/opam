@@ -139,8 +139,8 @@ let load lock_kind gt =
   let mk_repo name url_opt = {
     repo_root = OpamRepositoryPath.create gt.root name;
     repo_name = name;
-    repo_url = OpamStd.Option.default OpamUrl.empty url_opt;
-    repo_priority = 0; (* ignored *)
+    repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
+    repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
   } in
   let uncached =
     (* Don't cache repositories without remote, as they should be editable
@@ -218,13 +218,13 @@ let unlock rt =
   (rt :> unlocked repos_state)
 
 let with_write_lock ?dontblock rt f =
-  let rt =
+  let ret, rt =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock rt.repos_lock
     @@ fun () -> f ({ rt with repos_lock = rt.repos_lock } : rw repos_state)
     (* We don't actually change the field value, but this makes restricting the
-       phantom lock type possible*)
+       phantom lock type possible *)
   in
-  { rt with repos_lock = rt.repos_lock }
+  ret, { rt with repos_lock = rt.repos_lock }
 
 let with_ lock gt f =
   let rt = load lock gt in
@@ -235,5 +235,5 @@ let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
     (OpamRepositoryName.Map.map (fun r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some r.repo_url)
+         else Some (r.repo_url, r.repo_trust))
         rt.repositories)

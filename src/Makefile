@@ -7,6 +7,7 @@ ifndef version
 endif
 
 all:
+	$(MAKE) opam-lib.byte
 	$(MAKE) opam-lib
 	$(MAKE) opam
 	$(MAKE) opam-check
