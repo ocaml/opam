@@ -2094,13 +2094,27 @@ let pin ?(unpin_only=false) () =
       let backend = OpamUrl.guess_version_control target in
       `Source (OpamUrl.parse ?backend ~handle_suffix:true target)
     in
-    match kind with
-    | Some `version -> `Version (OpamPackage.Version.of_string target)
-    | Some (#OpamUrl.backend as k) -> `Source (OpamUrl.parse ~backend:k target)
-    | Some `none -> `None
-    | Some `auto -> auto ()
-    | None when OpamClientConfig.(!r.pin_kind_auto) -> auto ()
-    | None -> `Source (OpamUrl.parse ~handle_suffix:false target)
+    let target =
+      match kind with
+      | Some `version -> `Version (OpamPackage.Version.of_string target)
+      | Some (#OpamUrl.backend as k) ->
+        `Source (OpamUrl.parse ~backend:k target)
+      | Some `none -> `None
+      | Some `auto -> auto ()
+      | None when OpamClientConfig.(!r.pin_kind_auto) -> auto ()
+      | None -> `Source (OpamUrl.parse ~handle_suffix:false target)
+    in
+    match target with
+    | `Source
+        ({ OpamUrl.backend = #OpamUrl.version_control; hash = None; _ }
+         as url) ->
+      (match OpamProcess.Job.run (OpamRepository.get_branch url) with
+       | Some b ->
+         OpamConsole.note "Will pin to '%s' using %s"
+           b (OpamUrl.string_of_backend url.OpamUrl.backend);
+         `Source { url with OpamUrl.hash = Some b }
+       | None -> target)
+    | _ -> target
   in
   let pin global_options kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
