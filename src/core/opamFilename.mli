@@ -73,6 +73,9 @@ val dirname_dir: Dir.t -> Dir.t
 (** Return the deeper directory name *)
 val basename_dir: Dir.t -> Base.t
 
+(** Find an ancestor of the directory that satisfies the predicate. *)
+val find_ancestor_dir : (Dir.t -> bool) -> Dir.t -> Dir.t option
+
 (** Turn a full path into a list of directory names *)
 val to_list_dir: Dir.t -> Dir.t list
 

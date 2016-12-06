@@ -67,6 +67,20 @@ let search_files = ["findlib"]
 
 open OpamStd.Op
 
+let local_override () =
+  let open OpamStd.Option.Op in
+  match
+    OpamStateConfig.(!r.switch_from),
+    OpamLocalConfig.(!r.local_file)
+  with
+  | `Default, Some opamlocal ->
+    let current_switch = OpamFile.Local.switch opamlocal in
+    OpamStateConfig.update
+      ?current_switch
+      ?switch_from:(current_switch >>| fun _ -> `Local)
+      ()
+  | _, _ -> ()
+
 let opam_init ?root_dir ?strict =
   let open OpamStd.Option.Op in
 
@@ -103,9 +117,10 @@ let opam_init ?root_dir ?strict =
     then Some OpamFilename.(Dir.to_string Op.(root / "log"))
     else None
   in
-  (fun () -> ()) |>
+  local_override |>
   OpamStd.Config.initk ?log_dir |>
   OpamRepositoryConfig.initk |>
   OpamSolverConfig.initk |>
   OpamStateConfig.initk ~root_dir:root |>
+  OpamLocalConfig.initk |>
   initk

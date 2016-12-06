@@ -223,6 +223,7 @@ opam-client.cma: client/opamGitVersion.ml opam-core.cma opam-format.cma opam-sol
 opam-client.cmxa: client/opamGitVersion.ml opam-core.cmxa opam-format.cmxa opam-solver.cmxa opam-repository.cmxa opam-state.cmxa ALWAYS
 
 SRC_client = \
+  opamLocalConfig.ml \
   opamClientConfig.ml \
   opamAction.ml \
   opamSolution.ml \
@@ -233,6 +234,7 @@ SRC_client = \
   opamListCommand.ml \
   opamInitDefaults.ml \
   opamClient.ml \
+  opamLocalCommand.ml \
   opamGitVersion.ml \
   opamArg.ml
 

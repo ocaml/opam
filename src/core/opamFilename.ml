@@ -109,6 +109,17 @@ let link_dir ~target ~link =
   else
     OpamSystem.link (Dir.to_string target) (Dir.to_string link)
 
+let find_ancestor_dir pred dir =
+  let root = raw_dir "/" in
+  let rec loop dir =
+    if pred dir then Some dir
+    else if dir = root then None
+    else loop (dirname_dir dir)
+  in
+  if not (exists_dir dir)
+    then None
+    else loop dir
+
 let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
   let rec aux acc dir =

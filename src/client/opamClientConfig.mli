@@ -45,8 +45,10 @@ val opam_init:
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
+  ?sandbox_dir:OpamTypes.dirname option ->
+  ?local_file:OpamFile.Local.t option ->
   ?current_switch:OpamSwitch.t ->
-  ?switch_from:[ `Command_line | `Default | `Env ] ->
+  ?switch_from:[ `Command_line | `Default | `Env | `Local ] ->
   ?jobs:int Lazy.t ->
   ?dl_jobs:int ->
   ?external_tags:string list ->
