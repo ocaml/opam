@@ -339,6 +339,9 @@ let descr st nv =
 let url st nv =
   OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
 
+let primary_url st nv =
+  OpamStd.Option.Op.(url st nv >>| OpamFile.URL.url)
+
 let files st nv =
   match opam_opt st nv with
   | None -> []

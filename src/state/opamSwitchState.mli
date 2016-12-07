@@ -80,6 +80,9 @@ val opam_opt: 'a switch_state -> package -> OpamFile.OPAM.t option
 (** Return the URL file for the given package *)
 val url: 'a switch_state -> package -> OpamFile.URL.t option
 
+(** Returns the primary URL from the URL file of the given package *)
+val primary_url: 'a switch_state -> package -> url option
+
 (** Return the Descr file for the given package (or an empty descr if none) *)
 val descr: 'a switch_state -> package -> OpamFile.Descr.t
 
