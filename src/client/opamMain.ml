@@ -2483,6 +2483,16 @@ let lint =
   Term.(pure lint $global_options $files $package $normalise $short $warnings),
   term_info "lint" ~doc ~man
 
+(* CLEAN *)
+(* Todo:
+   global
+   - clear cache (+ old archives/ dir)
+   - clear logs
+   - find and clean unused repositories
+   for one/all switches:
+   - clear build dirs
+   - clean stale sources (of non-pinned packages)
+*)
 
 (* HELP *)
 let help =
