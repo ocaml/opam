@@ -83,7 +83,7 @@ module B = struct
          Done (Not_available msg))
     @@ fun () ->
     OpamDownload.download ~overwrite:true ?checksum remote_url dirname
-    @@+ fun local_file -> Done (Result (F local_file))
+    @@+ fun local_file -> Done (Result (Some local_file))
 
   let revision _ =
     Done None

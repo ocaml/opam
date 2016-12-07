@@ -2289,7 +2289,7 @@ let source =
         mkdir dir;
         match
           OpamProcess.Job.run
-            (OpamRepository.pull_url (OpamPackage.to_string nv) dir []
+            (OpamRepository.pull_tree (OpamPackage.to_string nv) dir []
                [url])
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
@@ -2298,29 +2298,31 @@ let source =
             "Successfully fetched %s development repo to ./%s/\n"
             (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
     ) else (
-      OpamConsole.formatted_msg "Downloading archive of %s...\n"
-        (OpamPackage.to_string nv);
-      match OpamProcess.Job.run (OpamAction.download_package t nv) with
-      | `Error _ -> OpamConsole.error_and_exit "Download failed"
-      | `Successful s ->
-        (match OpamProcess.Job.run (OpamAction.extract_package t s nv dir) with
-         | None ->
-           OpamConsole.formatted_msg "Successfully extracted to %s\n"
-             (Dir.to_string dir);
-         | Some e ->
-           OpamConsole.warning "Some errors extracting to %s: %s\n"
-             (Dir.to_string dir) (Printexc.to_string e));
-        if OpamPinned.find_opam_file_in_source nv.name dir = None
-        then
-          let f =
-            if OpamFilename.exists_dir Op.(dir / "opam")
-            then OpamFile.make Op.(dir / "opam" // "opam")
-            else OpamFile.make Op.(dir // "opam")
-          in
-          OpamFile.OPAM.write f
-            (OpamFile.OPAM.with_substs [] @@
-             OpamFile.OPAM.with_patches [] @@
-             opam)
+      let job =
+        let open OpamProcess.Job.Op in
+        OpamUpdate.download_package_source t nv dir @@+ function
+        | Some (Not_available s) -> OpamConsole.error_and_exit "Download failed: %s" s
+        | None | Some (Result () | Up_to_date ()) ->
+          OpamAction.prepare_package_source t nv dir @@| function
+          | None ->
+            OpamConsole.formatted_msg "Successfully extracted to %s\n"
+              (Dir.to_string dir)
+          | Some e ->
+            OpamConsole.warning "Some errors extracting to %s: %s\n"
+              (Dir.to_string dir) (Printexc.to_string e)
+      in
+      OpamProcess.Job.run job;
+      if OpamPinned.find_opam_file_in_source nv.name dir = None
+      then
+        let f =
+          if OpamFilename.exists_dir Op.(dir / "opam")
+          then OpamFile.make Op.(dir / "opam" // "opam")
+          else OpamFile.make Op.(dir // "opam")
+        in
+        OpamFile.OPAM.write f
+          (OpamFile.OPAM.with_substs [] @@
+           OpamFile.OPAM.with_patches [] @@
+           opam)
     );
     if pin then
       let backend =

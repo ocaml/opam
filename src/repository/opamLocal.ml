@@ -179,7 +179,7 @@ module B = struct
         | None -> OpamRepositoryBackend.Update_empty
         | Some p -> OpamRepositoryBackend.Update_patch p
 
-  let pull_url local_dirname checksum remote_url =
+  let pull_url local_dirname _checksum remote_url =
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
     let remote_url =
@@ -198,17 +198,21 @@ module B = struct
         | Up_to_date _ -> Up_to_date x
         | _ -> assert false
       in
-      if OpamUrl.has_trailing_slash remote_url then res (D local_dirname)
-      else match Sys.readdir dir with
-        | [|f|] when not (Sys.is_directory (Filename.concat dir f)) ->
-          let filename = OpamFilename.Op.(local_dirname // f) in
-          if OpamRepositoryBackend.check_digest filename checksum
-          then
-            res (F filename)
-          else
-            (OpamFilename.remove filename;
-             Not_available (OpamUrl.to_string remote_url))
-        | _ -> res (D local_dirname)
+      if OpamUrl.has_trailing_slash remote_url then
+        res None
+      else
+      let filename =
+        OpamFilename.Op.(local_dirname // OpamUrl.basename remote_url)
+      in
+      if OpamFilename.exists filename then res (Some filename)
+      else
+        Not_available
+          (Printf.sprintf
+             "Could not find target file %s after rsync of %s. \
+              Maybe you meant %s/ ?"
+             (OpamUrl.basename remote_url)
+             (OpamUrl.to_string remote_url)
+             (OpamUrl.to_string remote_url))
 
   let revision _ =
     Done None

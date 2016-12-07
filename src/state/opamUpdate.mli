@@ -74,9 +74,9 @@ val pinned_package:
     any *)
 val download_package_source:
   'a switch_state -> package -> dirname ->
-  generic_file download option OpamProcess.job
+  unit download option OpamProcess.job
 
 (** Low-level function to retrieve the package source into its local cache *)
 val fetch_dev_package:
   OpamFile.URL.t -> dirname -> ?working_dir:bool -> package ->
-  generic_file download OpamProcess.job
+  unit download OpamProcess.job

@@ -351,14 +351,19 @@ let parallel_apply t action ~requested action_graph =
 
   (* 1/ fetch needed package archives *)
 
-  let package_sources, failed_downloads =
+  let failed_downloads =
     let sources_needed =
       OpamPackage.Set.Op.
         (OpamAction.sources_needed t action_graph -- OpamPackage.keys inplace)
     in
     let sources_list = OpamPackage.Set.elements sources_needed in
-    if sources_list <> [] then
-      OpamConsole.header_msg "Gathering sources";
+    if OpamPackage.Set.exists (fun nv ->
+        not (OpamSwitchState.is_dev_package t nv &&
+             OpamFilename.exists_dir
+               (OpamPath.Switch.dev_package
+                  t.switch_global.root t.switch nv.name)))
+        sources_needed
+    then OpamConsole.header_msg "Gathering sources";
     let results =
       OpamParallel.map
         ~jobs:OpamStateConfig.(!r.dl_jobs)
@@ -366,11 +371,10 @@ let parallel_apply t action ~requested action_graph =
         ~dry_run:OpamStateConfig.(!r.dryrun)
         sources_list
     in
-    List.fold_left2 (fun (sources,failed) nv -> function
-        | `Successful None -> sources, failed
-        | `Successful (Some dl) -> OpamPackage.Map.add nv dl sources, failed
-        | `Error e -> sources, OpamPackage.Map.add nv e failed)
-      (OpamPackage.Map.empty,OpamPackage.Map.empty) sources_list results
+    List.fold_left2 (fun failed nv -> function
+        | None -> failed
+        | Some e -> OpamPackage.Map.add nv e failed)
+      OpamPackage.Map.empty sources_list results
   in
 
   if OpamClientConfig.(!r.json_out <> None) &&
@@ -388,9 +392,7 @@ let parallel_apply t action ~requested action_graph =
   in
   if fatal_dl_error then
     OpamConsole.error_and_exit
-      "The sources of the following couldn't be obtained, aborting:\n%s\
-       (This might be due to outdated metadata, in this case run \
-       'opam update')"
+      "The sources of the following couldn't be obtained, aborting:\n%s"
       (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Map.keys failed_downloads))
   else if not (OpamPackage.Map.is_empty failed_downloads) then
@@ -473,7 +475,9 @@ let parallel_apply t action ~requested action_graph =
               !t_ref.conf_files; }
       in
       let nv = action_contents action in
-      let source = OpamPackage.Map.find_opt nv package_sources in
+      let source_dir =
+        OpamPath.Switch.dev_package t.switch_global.root t.switch nv.name
+      in
       if OpamClientConfig.(!r.fake) then
         match action with
         | `Build _ -> Done (`Successful (installed, removed))
@@ -503,9 +507,15 @@ let parallel_apply t action ~requested action_graph =
         let doc =
           OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
         in
-        (OpamAction.build_package t ~test ~doc source build_dir nv @@+ function
-          | None -> store_time (); Done (`Successful (installed, removed))
-          | Some exn -> store_time (); Done (`Exception exn))
+        (if OpamFilename.exists_dir source_dir
+         then OpamFilename.copy_dir ~src:source_dir ~dst:build_dir
+         else OpamFilename.mkdir build_dir;
+         OpamAction.prepare_package_source t nv build_dir @@+ function
+         | Some exn -> store_time (); Done (`Exception exn)
+         | None ->
+           OpamAction.build_package t ~test ~doc build_dir nv @@+ function
+           | Some exn -> store_time (); Done (`Exception exn)
+           | None -> store_time (); Done (`Successful (installed, removed)))
       | `Install nv ->
         let doc =
           OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
@@ -523,7 +533,10 @@ let parallel_apply t action ~requested action_graph =
         (if OpamAction.removal_needs_download t nv then
            let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
            OpamFilename.rmdir d;
-           OpamAction.extract_package t source nv d
+           if OpamFilename.exists_dir source_dir
+           then OpamFilename.copy_dir ~src:source_dir ~dst:d
+           else OpamFilename.mkdir d;
+           OpamAction.prepare_package_source t nv d
          else Done None) @@+ fun _ ->
         OpamProcess.Job.ignore_errors ~default:()
           (fun () -> OpamAction.remove_package t nv) @@| fun () ->

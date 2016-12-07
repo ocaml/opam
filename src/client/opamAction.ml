@@ -139,6 +139,24 @@ let process_dot_install st nv build_dir =
       )
     )
 
+let download_package st nv =
+  log "download_package: %a" (slog OpamPackage.to_string) nv;
+  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)
+  then Done None
+  else
+  let dir =
+    OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
+  in
+  if OpamSwitchState.is_dev_package st nv &&
+     OpamFilename.exists_dir dir
+  then Done None
+  else
+    OpamProcess.Job.catch (fun e -> Done (Some (Printexc.to_string e)))
+    @@ fun () ->
+    OpamUpdate.download_package_source st nv dir @@| function
+    | Some (Not_available s) -> Some s
+    | None | Some (Up_to_date () | Result ()) -> None
+
 (* Prepare the package build:
    * apply the patches
    * substitute the files *)
@@ -220,35 +238,11 @@ let prepare_package_build st nv dir =
   else
     Done None
 
-let download_package st nv =
-  log "download_package: %a" (slog OpamPackage.to_string) nv;
-  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
-    Done (`Successful None)
-  else
-  let dir =
-    OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
-  in
-  OpamProcess.Job.catch (fun e -> Done (`Error (Printexc.to_string e))) @@
-  fun () ->
-  OpamUpdate.download_package_source st nv dir @@| function
-  | Some (Up_to_date f | Result f) -> `Successful (Some f)
-  | Some (Not_available s) -> `Error s
-  | None -> `Successful None
-
-let extract_package st source nv destdir =
-  log "extract_package: %a from %a"
+let prepare_package_source st nv dir =
+  log "prepare_package_source: %a at %a"
     (slog OpamPackage.to_string) nv
-    (slog (OpamStd.Option.to_string OpamTypesBase.string_of_generic_file))
-    source;
+    (slog OpamFilename.Dir.to_string) dir;
   if OpamStateConfig.(!r.dryrun) then Done None else
-  (match source with
-    | None -> Done None
-    | Some (D dir) ->
-      OpamFilename.copy_dir ~src:dir ~dst:destdir; Done None
-    | Some (F archive) -> OpamFilename.extract_job archive destdir)
-  @@+ function
-  | Some _ as some_err -> Done some_err
-  | None ->
   let opam = OpamSwitchState.opam st nv in
   let get_extra_sources_job =
     (* !X The extra sources have normally been prefetched during the dl phase;
@@ -259,7 +253,7 @@ let extract_package st source nv destdir =
         ~cache_dir:(OpamPath.download_cache st.switch_global.root)
         ~silent_hits:true
         (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
-        (OpamFilename.create destdir basename)
+        (OpamFilename.create dir basename)
         (OpamFile.URL.checksum urlf)
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
@@ -279,14 +273,15 @@ let extract_package st source nv destdir =
             failwith
               (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
           else
-            OpamFilename.copy ~src ~dst:(OpamFilename.create destdir base))
+            OpamFilename.copy ~src ~dst:(OpamFilename.create dir base))
         (OpamFile.OPAM.get_extra_files opam);
       None
     with e -> Some e
   in
+  OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
-      prepare_package_build st nv destdir
+      prepare_package_build st nv dir
 
 let compilation_env t opam =
   OpamEnv.get_full ~force_path:true t ~updates:([
@@ -575,13 +570,7 @@ let remove_package t ?silent ?changes ?force nv =
   else
     remove_package_aux t ?silent ?changes ?force nv
 
-(* Compiles a package.
-   Assumes the package has already been downloaded to [source].
-*)
-let build_package t ?(test=false) ?(doc=false) source build_dir nv =
-  extract_package t source nv build_dir @@+ fun r ->
-  if r <> None then Done r
-  else
+let build_package t ?(test=false) ?(doc=false) build_dir nv =
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFile.OPAM.build opam @

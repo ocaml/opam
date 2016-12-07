@@ -125,14 +125,12 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   successful, rt
 
-(* fixme: this doesn't extract the archive, so we won't get the source package's
-   opam file unless we're going through VC. *)
 let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
-  OpamRepository.pull_url
+  OpamRepository.pull_tree
     (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
 
 let pinned_package st ?version ?(working_dir=false) name =
@@ -254,7 +252,7 @@ let pinned_package st ?version ?(working_dir=false) name =
     opam
   in
   match result, new_source_opam with
-  | Result _, Some new_opam
+  | Result (), Some new_opam
     when changed_opam old_source_opam new_source_opam &&
          changed_opam overlay_opam new_source_opam ->
     let interactive_part st =
@@ -293,7 +291,7 @@ let pinned_package st ?version ?(working_dir=false) name =
     Done (interactive_part, true)
   | (Up_to_date _ | Not_available _), _ ->
     Done ((fun st -> st), false)
-  | Result  _, _ ->
+  | Result  (), _ ->
     Done ((fun st -> st), true)
 
 let dev_package st ?working_dir nv =
@@ -312,7 +310,7 @@ let dev_package st ?working_dir nv =
         ?working_dir
         nv
       @@| fun result ->
-      (fun st -> st), match result with Result _ -> true | _ -> false
+      (fun st -> st), match result with Result () -> true | _ -> false
 
 let dev_packages st ?(working_dir=OpamPackage.Set.empty) packages =
   log "update-dev-packages";
@@ -401,7 +399,7 @@ let download_package_source st nv dirname =
     match OpamFile.OPAM.url opam with
     | None   -> Done None
     | Some u ->
-      OpamRepository.pull_url (OpamPackage.to_string nv)
+      OpamRepository.pull_tree (OpamPackage.to_string nv)
         ~cache_dir ~cache_urls
         dirname
         (OpamFile.URL.checksum u)

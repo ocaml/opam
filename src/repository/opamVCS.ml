@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamStd.Op
 open OpamProcess.Job.Op
 
@@ -77,16 +76,16 @@ module Make (VCS: VCS) = struct
       if VCS.exists dirname then
         VCS.fetch dirname url @@+ fun () ->
         VCS.is_up_to_date dirname url @@+ function
-        | true -> Done (Up_to_date (D dirname))
+        | true -> Done (Up_to_date None)
         | false ->
           VCS.reset dirname url @@+ fun () ->
-          Done (Result (D dirname))
+          Done (Result None)
       else
         (OpamFilename.mkdir dirname;
          VCS.init dirname url @@+ fun () ->
          VCS.fetch dirname url @@+ fun () ->
          VCS.reset dirname url @@+ fun () ->
-         Done (Result (D dirname)))
+         Done (Result None))
 
   let revision repo_root =
     VCS.revision repo_root @@+ fun r ->
@@ -122,8 +121,8 @@ module Make (VCS: VCS) = struct
       OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
         ~exclude_vcdirs:false
         repo_url repo_root
-      @@+ fun dl ->
+      @@+ fun _dl ->
       OpamSystem.remove stdout_file;
-      Done (download_dir dl)
+      Done (Result None)
 
 end

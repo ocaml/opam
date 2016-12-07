@@ -196,9 +196,11 @@ let slog = OpamConsole.slog
         in
         let _success, t, _pkgs =
           OpamUpdate.dev_packages t ?working_dir to_update in
+        OpamConsole.msg "\n";
         t
       with e ->
         OpamStd.Exn.fatal e;
+        OpamConsole.msg "\n";
         t
     )
 

@@ -22,11 +22,11 @@ type update =
 module type S = sig
   val name: OpamUrl.backend
   val pull_url: dirname -> OpamHash.t option -> url ->
-    generic_file download OpamProcess.job
+    filename option download OpamProcess.job
   val fetch_repo_update:
     repository_name -> dirname -> url -> update OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
-  val sync_dirty: dirname -> url -> generic_file download OpamProcess.job
+  val sync_dirty: dirname -> url -> filename option download OpamProcess.job
 end
 
 let compare r1 r2 = compare r1.repo_name r2.repo_name
@@ -58,7 +58,7 @@ let check_digest filename = function
        OpamConsole.error
          "Bad checksum for %s: expected %s\n\
          \                     got      %s\n\
-          Metadata might be out of date, in this case run `opam update`."
+          Metadata might be out of date, in this case use `opam update`."
          (OpamFilename.to_string filename)
          (OpamHash.to_string expected)
          (OpamHash.to_string bad_hash);
