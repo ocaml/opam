@@ -523,6 +523,8 @@ let unpin st names =
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   List.fold_left (fun st name ->
       OpamFilename.rmdir
+        (OpamPath.Switch.dev_package st.switch_global.root st.switch name);
+      OpamFilename.rmdir
         (OpamPath.Switch.Overlay.package
            st.switch_global.root st.switch name);
       match OpamPinned.package_opt st name with

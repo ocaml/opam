@@ -47,8 +47,9 @@ module type S = sig
   val fetch_repo_update:
     repository_name -> dirname -> url -> update OpamProcess.job
 
-  (** Return the (optional) revision of a given repository. Only useful
-      for VCS backends. Is not expected to work with [pull_repo_update], which*)
+  (** Return the (optional) revision of a given repository. Only useful for VCS
+      backends. Is not expected to work with [pull_repo_update], which doesn't
+      update the VCS commit information. *)
   val revision: dirname -> version option OpamProcess.job
 
 end

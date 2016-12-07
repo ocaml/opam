@@ -60,8 +60,16 @@ val pull_url_and_fix_digest:
   string -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
   generic_file download OpamProcess.job
 
-(** Get the optional revision associated to a backend. *)
-val revision: repository -> version option OpamProcess.job
+(** Get the optional revision associated to a backend (git hash, etc.). *)
+val revision: dirname -> url -> version option OpamProcess.job
+
+(** Get the version-control branch for that url. Only applicable for local,
+    version controlled URLs. Returns [None] in other cases. *)
+val get_branch: url -> string option OpamProcess.job
+
+(** Returns true if the url points to a local, version-controlled directory that
+    has uncommitted changes *)
+val is_dirty: url -> bool OpamProcess.job
 
 (** Find a backend *)
 val find_backend: repository -> (module OpamRepositoryBackend.S)

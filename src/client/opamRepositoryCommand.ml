@@ -83,7 +83,8 @@ let add rt name url trust_anchors =
     OpamConsole.error_and_exit
       "Invalid repository name, %s exists"
       (OpamFilename.Dir.to_string repo.repo_root);
-  if OpamUrl.local_dir url <> None &&
+  if url.OpamUrl.backend = `rsync &&
+     OpamUrl.local_dir url <> None &&
      OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo.repo_url) = None &&
      not (OpamConsole.confirm
             "%S doesn't contain a \"packages\" directory.\n\

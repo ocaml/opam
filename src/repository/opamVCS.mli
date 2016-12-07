@@ -52,6 +52,16 @@ module type VCS = sig
   (** Returns the absolute directory name for vc data (e.g.
       [.../project/.git]) *)
   val vc_dir: dirname -> dirname
+
+  (** Returns the currently selected branch handle. It should be valid as the
+      [hash] field of [OpamUrl.t]. *)
+  val current_branch: dirname -> string option OpamProcess.job
+
+  (** Returns true if the working tree state is different from the state
+      recorded in the VCS as current. This differs from [is_up_to_date], which
+      compares specifically to the last fetched state. This should always be
+      [false] after [reset] has been called. *)
+  val is_dirty: dirname -> bool OpamProcess.job
 end
 
 (** Create a backend from a [VCS] implementation. *)

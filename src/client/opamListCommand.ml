@@ -295,12 +295,14 @@ type output_format =
   | Field of string
   | Installed_version
   | Pinning_target
+  | Source_hash
   | Raw
   | All_installed_versions
   | Available_versions
   | All_versions
   | Repository
   | Installed_files
+  | VC_ref
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -313,12 +315,14 @@ let disp_header = function
   | Field s -> String.capitalize_ascii s
   | Installed_version -> "Installed"
   | Pinning_target -> "Pin"
+  | Source_hash -> "Source hash"
   | Raw -> "Metadata"
   | All_installed_versions -> "Installed versions"
   | Available_versions -> "Available versions"
   | All_versions -> "Versions"
   | Repository -> "Repository"
   | Installed_files -> "Installed files"
+  | VC_ref -> "VC ref"
 
 let field_names = [
   Name, "name";
@@ -330,12 +334,14 @@ let field_names = [
   Field "<field>", "<field>:";
   Installed_version, "installed-version";
   Pinning_target, "pin";
+  Source_hash, "source-hash";
   Raw, "opam-file";
   All_installed_versions, "all-installed-versions";
   Available_versions, "available-versions";
   All_versions, "all-versions";
   Repository, "repository";
   Installed_files, "installed-files";
+  VC_ref, "vc-ref";
 ]
 
 let string_of_field = function
@@ -443,6 +449,16 @@ let detail_printer ?prettify ?normalise st nv =
       OpamStd.Option.to_string ~none:"--" OpamUrl.to_string
         (OpamFile.OPAM.get_url opam)
     else ""
+  | Source_hash ->
+    let hash_opt =
+      let open OpamStd.Option.Op in
+      OpamSwitchState.url st nv >>| OpamFile.URL.url >>= fun url ->
+      OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name |>
+      OpamFilename.opt_dir >>= fun srcdir ->
+      OpamProcess.Job.run (OpamRepository.revision srcdir url) >>|
+      OpamPackage.Version.to_string
+    in
+    OpamStd.Option.default "" hash_opt
   | Raw -> OpamFile.OPAM.write_to_string (get_opam st nv)
   | All_installed_versions ->
     OpamGlobalState.installed_versions st.switch_global nv.name |>
@@ -484,6 +500,12 @@ let detail_printer ?prettify ?normalise st nv =
          (OpamDirTrack.check
             (OpamPath.Switch.root st.switch_global.root st.switch)
             c))
+  | VC_ref ->
+    OpamStd.Option.Op.(
+      (OpamSwitchState.url st nv >>| OpamFile.URL.url >>= fun url ->
+       url.OpamUrl.hash)
+      +! ""
+    )
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
@@ -668,6 +690,7 @@ let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     Version;
     Repository;
     Pinning_target;
+    Source_hash;
     Field "url.src";
     Field "url.checksum";
     Field "homepage";

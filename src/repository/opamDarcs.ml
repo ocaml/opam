@@ -12,7 +12,7 @@
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
-module Darcs = struct
+module VCS = struct
 
   let name = `darcs
 
@@ -146,6 +146,14 @@ module Darcs = struct
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout
 
+  let current_branch _dir = Done None (* No branches in Darcs *)
+
+  let is_dirty dir =
+    darcs dir [ "whatsnew"; "--quiet"; "--summary" ]
+    @@> function
+    | { OpamProcess.r_code = 0; _ } -> Done true
+    | _ -> Done false
+
 end
 
-module B = OpamVCS.Make(Darcs)
+module B = OpamVCS.Make(VCS)

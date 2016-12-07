@@ -164,7 +164,7 @@ let base_url url =
 
 let local_path = function
   | { transport = ("file"|"path"|"local"|"rsync"); path;
-      hash = None; backend = (#version_control | `rsync); }
+      hash = _; backend = (#version_control | `rsync); }
     when looks_like_ssh_path path = None ->
     Some path
   | _ -> None

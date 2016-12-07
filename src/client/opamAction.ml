@@ -168,7 +168,7 @@ let prepare_package_build st nv dir =
         (OpamFilename.Base.to_string basename)
   in
 
-  if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
+  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
     iter_patches print_apply patches @@| fun _ -> None
   else
 
@@ -222,7 +222,7 @@ let prepare_package_build st nv dir =
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
-  if OpamStateConfig.(!r.dryrun) || OpamStateConfig.(!r.fake) then
+  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
     Done (`Successful None)
   else
   let dir =
@@ -544,7 +544,7 @@ let cleanup_package_artefacts t nv =
   log "Cleaning up artefacts of %a" (slog OpamPackage.to_string) nv;
 
   let build_dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-  if not OpamStateConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir;
+  if not OpamClientConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir;
   let remove_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
   if OpamFilename.exists_dir remove_dir then OpamFilename.rmdir remove_dir;
   let name = nv.name in
@@ -570,7 +570,7 @@ let sources_needed st g =
     g OpamPackage.Set.empty
 
 let remove_package t ?silent ?changes ?force nv =
-  if OpamStateConfig.(!r.fake) || OpamStateConfig.(!r.show) then
+  if OpamClientConfig.(!r.fake) || OpamClientConfig.(!r.show) then
     Done (OpamConsole.msg "Would remove: %s.\n" (OpamPackage.to_string nv))
   else
     remove_package_aux t ?silent ?changes ?force nv
@@ -701,7 +701,7 @@ let install_package t ?(doc=false) ?build_dir nv =
          (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
     @@+ fun error_post ->
     if error = None &&
-       not OpamStateConfig.(!r.keep_build_dir) &&
+       not OpamClientConfig.(!r.keep_build_dir) &&
        not (OpamConsole.debug ()) then
       OpamFilename.rmdir
         (OpamPath.Switch.build t.switch_global.root t.switch nv);

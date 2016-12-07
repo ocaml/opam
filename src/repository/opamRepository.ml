@@ -23,6 +23,11 @@ let find_backend_by_kind = function
   | `hg -> (module OpamHg.B: OpamRepositoryBackend.S)
   | `darcs -> (module OpamDarcs.B: OpamRepositoryBackend.S)
 
+let find_vcs_backend = function
+  | `git -> (module OpamGit.VCS: OpamVCS.VCS)
+  | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
+  | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
+
 let url_backend url = find_backend_by_kind url.OpamUrl.backend
 
 let find_backend r = url_backend r.repo_url
@@ -204,10 +209,10 @@ let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
         label;
     pull_from_mirrors label cache_dir local_dirname checksums remote_urls
 
-let revision repo =
-  let kind = repo.repo_url.OpamUrl.backend in
+let revision dirname url =
+  let kind = url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
-  B.revision repo.repo_root
+  B.revision dirname
 
 let pull_url_and_fix_digest label dirname checksums file url =
   pull_url label dirname [] url @@+ function
@@ -386,3 +391,20 @@ let update repo =
     | false ->
       cleanup_repo_update upd;
       failwith "Invalid repository signatures, update aborted"
+
+let on_local_version_control url ~default f =
+  match url.OpamUrl.backend with
+  | #OpamUrl.version_control as backend ->
+    (match OpamUrl.local_dir url with
+     | None -> default
+     | Some dir ->
+       f dir (find_vcs_backend backend))
+  | #OpamUrl.backend -> default
+
+let get_branch url =
+  on_local_version_control url ~default:(Done None) @@
+  fun dir (module VCS) -> VCS.current_branch dir
+
+let is_dirty url =
+  on_local_version_control url ~default:(Done false) @@
+  fun dir (module VCS) -> VCS.is_dirty dir

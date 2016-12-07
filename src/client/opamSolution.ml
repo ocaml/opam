@@ -237,7 +237,7 @@ let print_variable_warnings st =
 
 module Json = struct
   let output_request request action =
-    if OpamStateConfig.(!r.json_out = None) then () else
+    if OpamClientConfig.(!r.json_out = None) then () else
     let atoms =
       List.map (fun a -> `String (OpamFormula.short_string_of_atom a))
     in
@@ -260,7 +260,7 @@ module Json = struct
     OpamJson.append "request" j
 
   let output_solution t solution =
-    if OpamStateConfig.(!r.json_out = None) then () else
+    if OpamClientConfig.(!r.json_out = None) then () else
     match solution with
     | Success solution ->
       let action_graph = OpamSolver.get_atomic_action_graph solution in
@@ -288,7 +288,7 @@ module Json = struct
 
   let exc e =
     let lmap f l = List.rev (List.rev_map f l) in
-    if OpamStateConfig.(!r.json_out = None) then `O [] else
+    if OpamClientConfig.(!r.json_out = None) then `O [] else
     match e with
     | OpamSystem.Process_error
         {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
@@ -336,7 +336,7 @@ let parallel_apply t action ~requested action_graph =
   in
 
   let inplace =
-    if OpamStateConfig.(!r.inplace_build) then
+    if OpamClientConfig.(!r.inplace_build) then
       OpamPackage.Set.fold (fun nv acc ->
           match
             OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>=
@@ -373,7 +373,7 @@ let parallel_apply t action ~requested action_graph =
       (OpamPackage.Map.empty,OpamPackage.Map.empty) sources_list results
   in
 
-  if OpamStateConfig.(!r.json_out <> None) &&
+  if OpamClientConfig.(!r.json_out <> None) &&
      not (OpamPackage.Map.is_empty failed_downloads) then
     OpamJson.append "download-failures"
       (`O (List.map (fun (nv,err) -> OpamPackage.to_string nv, `String err)
@@ -474,7 +474,7 @@ let parallel_apply t action ~requested action_graph =
       in
       let nv = action_contents action in
       let source = OpamPackage.Map.find_opt nv package_sources in
-      if OpamStateConfig.(!r.fake) then
+      if OpamClientConfig.(!r.fake) then
         match action with
         | `Build _ -> Done (`Successful (installed, removed))
         | `Install nv ->
@@ -493,7 +493,7 @@ let parallel_apply t action ~requested action_graph =
           try OpamPackage.Map.find nv inplace
           with Not_found ->
             let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-            if not OpamStateConfig.(!r.reuse_build_dir) then
+            if not OpamClientConfig.(!r.reuse_build_dir) then
               OpamFilename.rmdir dir;
             dir
         in
@@ -572,7 +572,7 @@ let parallel_apply t action ~requested action_graph =
           ~mutually_exclusive
           action_graph
       in
-      if OpamStateConfig.(!r.json_out <> None) then
+      if OpamClientConfig.(!r.json_out <> None) then
         (let j =
            PackageActionGraph.Topological.fold (fun a acc ->
                let r = match List.assoc a results with
@@ -625,7 +625,7 @@ let parallel_apply t action ~requested action_graph =
           when not (OpamPackage.has_name t.pinned nv.name) ->
           let build_dir =
             OpamPath.Switch.build t.switch_global.root t.switch nv in
-          if not OpamStateConfig.(!r.keep_build_dir) then
+          if not OpamClientConfig.(!r.keep_build_dir) then
             OpamFilename.rmdir build_dir
         | `Remove _ | `Install _ | `Build _ -> ()
         | _ -> assert false)
@@ -751,7 +751,7 @@ let simulate_new_state state t =
 
 let print_external_tags t solution =
   let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamStd.String.Set.of_list OpamStateConfig.(!r.external_tags) in
+  let external_tags = OpamStd.String.Set.of_list OpamClientConfig.(!r.external_tags) in
   let values =
     OpamPackage.Set.fold (fun nv accu ->
         let opam = OpamSwitchState.opam t nv in
@@ -800,7 +800,7 @@ let apply ?ask t action ~requested solution =
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false &&
-                        OpamStateConfig.(!r.external_tags) = [] in
+                        OpamClientConfig.(!r.external_tags) = [] in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
     OpamPackage.Set.iter
@@ -809,9 +809,9 @@ let apply ?ask t action ~requested solution =
     if show_solution then (
       OpamConsole.msg
         "The following actions %s be %s:\n"
-        (if OpamStateConfig.(!r.show) then "would" else "will")
+        (if OpamClientConfig.(!r.show) then "would" else "will")
         (if OpamStateConfig.(!r.dryrun) then "simulated" else
-         if OpamStateConfig.(!r.fake) then "faked"
+         if OpamClientConfig.(!r.fake) then "faked"
          else "performed");
       let messages p =
         let opam = OpamSwitchState.opam new_state p in
@@ -843,10 +843,10 @@ let apply ?ask t action ~requested solution =
       | _ -> ()
     );
 
-    if OpamStateConfig.(!r.external_tags) <> [] then (
+    if OpamClientConfig.(!r.external_tags) <> [] then (
       print_external_tags t solution;
       t, Aborted
-    ) else if not OpamStateConfig.(!r.show) &&
+    ) else if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)
@@ -859,7 +859,7 @@ let apply ?ask t action ~requested solution =
   )
 
 let resolve ?(verbose=true) t action ~orphans ~requested request =
-  if OpamStateConfig.(!r.json_out <> None) then (
+  if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));

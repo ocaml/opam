@@ -65,7 +65,8 @@ val filter:
     of packages *)
 val print_depexts: 'a switch_state -> package_set -> string list -> unit
 
-(** Element of package information to be printed *)
+(** Element of package information to be printed. Fixme: should be part of the
+    run-time man! *)
 type output_format =
   | Name               (** Name without version *)
   | Version            (** Version of the currently looked-at package *)
@@ -76,6 +77,8 @@ type output_format =
   | Field of string    (** The value of the given opam-file field *)
   | Installed_version  (** Installed version or "--" if none *)
   | Pinning_target     (** Empty string if not pinned *)
+  | Source_hash        (** The VC-reported ident of current version, for dev
+                           packages. Empty if not available *)
   | Raw                (** The full contents of the opam file (reformatted) *)
   | All_installed_versions (** List of the installed versions in all switches
                                with the corresponding switches in brackets *)
@@ -88,6 +91,8 @@ type output_format =
                            for pinned packages) *)
   | Installed_files    (** The list of files that the installed package added to
                            the system *)
+  | VC_ref             (** The version-control branch or tag the package url is
+                           bound to, if any *)
 
 val default_list_format: output_format list
 

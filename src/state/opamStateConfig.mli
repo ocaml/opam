@@ -19,18 +19,10 @@ type t = private {
   switch_from: [ `Env | `Command_line | `Default ];
   jobs: int Lazy.t;
   dl_jobs: int;
-  external_tags: string list;
-  keep_build_dir: bool;
-  reuse_build_dir: bool;
-  inplace_build: bool;
-  no_base_packages: bool;
   build_test: bool;
   build_doc: bool;
-  show: bool;
   dryrun: bool;
-  fake: bool;
   makecmd: string Lazy.t;
-  json_out: string option;
 }
 
 type 'a options_fun =
@@ -39,18 +31,10 @@ type 'a options_fun =
   ?switch_from:[ `Env | `Command_line | `Default ] ->
   ?jobs:(int Lazy.t) ->
   ?dl_jobs:int ->
-  ?external_tags:string list ->
-  ?keep_build_dir:bool ->
-  ?reuse_build_dir:bool ->
-  ?inplace_build:bool ->
-  ?no_base_packages:bool ->
   ?build_test:bool ->
   ?build_doc:bool ->
-  ?show:bool ->
   ?dryrun:bool ->
-  ?fake:bool ->
   ?makecmd:string Lazy.t ->
-  ?json_out:string option ->
   'a
 
 include OpamStd.Config.Sig
