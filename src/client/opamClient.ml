@@ -633,6 +633,7 @@ let slog = OpamConsole.slog
            fetch_cmd_user ||
            check_external_dep "curl" ||
            check_external_dep "wget";
+           "diff", check_external_dep "diff";
            "patch", check_external_dep "patch";
            "tar", check_external_dep "tar";
            "unzip", check_external_dep "unzip"]
