@@ -2,8 +2,8 @@
 
 SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm opam-file-format
 
-URL_cppo = http://mjambon.com/releases/cppo/cppo-1.1.2.tar.gz
-MD5_cppo = f1a551639c0c667ee8840d95ea5b2ab7
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.3.2.tar.gz
+MD5_cppo = 133c9f8afadb6aa1c5ba0f5eb55c5648
 
 URL_extlib = https://github.com/ygrek/ocaml-extlib/archive/1.7.0.tar.gz
 MD5_extlib = b50b02d9e40d35cc20c82d9c881a1bf6 
@@ -58,14 +58,15 @@ https://opam.ocaml.org/2.0~dev/cache/md5/$(shell echo $(MD5_$(1)) | cut -c -2)/$
 endef
 
 define get_from_cache
-{ $(FETCH) $(call cache_url,$(1)) && mv $(MD5_$(1)) $(notdir $(URL_$(1))); }
+{ $(FETCH) $(call cache_url,$(1)) && \
+  mv $(MD5_$(1)) $(notdir $(URL_$(1))) && \
+  $(MD5CHECK) $(notdir $(URL_$(1))) $(MD5_$(1)); }
 endef
 
 %.download:
 	[ -e  $(notdir $(URL_$*)) ] || \
-	$(FETCH) $(URL_$*) || \
+	$(FETCH) $(URL_$*) && $(MD5CHECK) $(notdir $(URL_$*)) $(MD5_$*) || \
 	$(call get_from_cache,$*)
-	$(MD5CHECK) $(notdir $(URL_$*)) $(MD5_$*)
 
 %.stamp: %.download
 	mkdir -p tmp
