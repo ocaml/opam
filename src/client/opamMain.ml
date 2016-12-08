@@ -1555,13 +1555,13 @@ let repository =
   let repository global_options command kind short scope rank params =
     apply_global_options global_options;
     let global = List.mem `Default scope in
-    let command, rank = match command, params, rank with
-      | Some `priority, [rank], 1 ->
-        (try Some `add, int_of_string rank
+    let command, params, rank = match command, params, rank with
+      | Some `priority, [name; rank], 1 ->
+        (try Some `add, [name], int_of_string rank
          with Failure _ ->
            OpamConsole.error_and_exit "Invalid rank specification %S" rank)
-      | Some `priority, [], rank -> Some `add, rank
-      | command, _, rank -> command, rank
+      | Some `priority, [], rank -> Some `add, [], rank
+      | command, params, rank -> command, params, rank
     in
     let update_repos new_repo repos =
       let rank =
