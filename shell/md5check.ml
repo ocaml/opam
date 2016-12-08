@@ -15,6 +15,7 @@ let () =
       \  expected: %s\n\
       \    actual: %s\n"
       file md5 md5_of_file;
-    Sys.remove file
+    Sys.remove file;
+    exit 1
   ) else
     Printf.printf "%s has the expected MD5.\n" file

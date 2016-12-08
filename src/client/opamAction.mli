@@ -14,27 +14,26 @@
 open OpamTypes
 open OpamStateTypes
 
-(** [download t pkg] downloads the source of the package [pkg] into
-    the local cache. Returns the downloaded file or directory. *)
+(** [download t pkg] downloads the source of the package [pkg] into its locally
+    cached source dir. Returns [Some errmsg] on error, [None] on success.
+
+    This doesn't update dev packages that already have a locally cached
+    source. *)
 val download_package:
-  rw switch_state -> package ->
-  [ `Error of string | `Successful of generic_file option ] OpamProcess.job
+  rw switch_state -> package -> string option OpamProcess.job
 
-(** [extract_package t source pkg] extracts and patches the already
-    downloaded [source] of the package [pkg]. See {!download_package}
-    to download the sources. *)
-val extract_package:
-  rw switch_state -> generic_file option -> package -> dirname ->
-  exn option OpamProcess.job
+(** [prepare_package_source t pkg dir] updates the given source [dir] with the
+    extra downloads, overlays and patches from the package's metadata
+    applied. *)
+val prepare_package_source:
+  rw switch_state -> package -> dirname -> exn option OpamProcess.job
 
-(** [build_package t source build_dir pkg] builds the package [pkg] within
-    [build_dir].
-    If [source] is specified, it is first extracted or copied into [build_dir].
+(** [build_package t build_dir pkg] builds the package [pkg] within [build_dir].
     Returns [None] on success, [Some exn] on error.
-    See {!download_package} to download the source. *)
+    See {!download_package} and {!prepare_package_source} for the previous
+    steps. *)
 val build_package:
-  rw switch_state -> ?test:bool -> ?doc:bool ->
-  generic_file option -> dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> dirname -> package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns

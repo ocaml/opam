@@ -108,6 +108,7 @@ let apply_global_options o =
     (* ?dryrun:bool *)
     (* ?fake:bool *)
     (* ?makecmd:string Lazy.t *)
+    (* ?skip_dev_update:bool *)
     ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
     (* - client options - *)
     (* ?print_stats:bool *)
@@ -127,6 +128,7 @@ type build_options = {
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build : bool;
+  working_dir   : bool;
   make          : string option;
   no_checksums  : bool;
   req_checksums : bool;
@@ -135,17 +137,18 @@ type build_options = {
   show          : bool;
   dryrun        : bool;
   fake          : bool;
+  skip_update   : bool;
   external_tags : string list;
   jobs          : int option;
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc show dryrun external_tags fake
-    jobs = {
-  keep_build_dir; reuse_build_dir; inplace_build; make;
+    keep_build_dir reuse_build_dir inplace_build working_dir make no_checksums
+    req_checksums build_test build_doc show dryrun skip_update external_tags
+    fake jobs = {
+  keep_build_dir; reuse_build_dir; inplace_build; working_dir; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  external_tags; fake; jobs;
+  skip_update; external_tags; fake; jobs;
 }
 
 let apply_build_options b =
@@ -172,8 +175,10 @@ let apply_build_options b =
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
+    ?working_dir:(flag b.working_dir)
     ?show:(flag b.show)
     ?fake:(flag b.fake)
+    ?skip_dev_update:(flag b.skip_update)
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
@@ -753,6 +758,14 @@ let build_options =
        affects packages that are explicitely listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
+  let working_dir =
+    mk_flag ["working-dir"]
+      "Whenever updating packages that are bound to a local, \
+       version-controlled directory, update to the current working state of \
+       their source instead of the last commited state, or the ref they are \
+       pointing to. \
+       This only affects packages explicitely listed on the command-line."
+  in
   let no_checksums =
     mk_flag ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
@@ -781,6 +794,12 @@ let build_options =
   let dryrun =
     mk_flag ["dry-run"]
       "Simulate the command, but don't actually perform any changes." in
+  let skip_update =
+    mk_flag ["skip-updates"]
+      "When running an install, upgrade or reinstall on source-pinned \
+       packages, they are normally updated from their origin first. This flag \
+       disables that behaviour and will keep them to their version in cache."
+  in
   let external_tags =
     mk_opt ["e";"external"] "TAGS"
       "Display the external packages associated to the given tags. \
@@ -793,6 +812,6 @@ let build_options =
        WARNING: This option is dangerous and likely to break your OPAM \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $make $no_checksums
-    $req_checksums $build_test $build_doc $show $dryrun $external_tags $fake
-    $jobs_flag)
+    $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
+    $no_checksums $req_checksums $build_test $build_doc $show $dryrun
+    $skip_update $external_tags $fake $jobs_flag)

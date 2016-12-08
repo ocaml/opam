@@ -46,11 +46,6 @@ type std_path =
   | Lib | Bin | Sbin | Share | Doc | Etc | Man
   | Toplevel | Stublibs
 
-(** Generalized file type *)
-type generic_file = OpamFilename.generic_file =
-  | D of dirname
-  | F of filename
-
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a

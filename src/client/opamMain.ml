@@ -1983,10 +1983,7 @@ let pin ?(unpin_only=false) () =
      (and contents, if local) of $(i,TARGET), Use $(b,--kind) or an explicit \
      URL to disable that behaviour.\n\
      Pins to version control systems may target a specific branch or commit \
-     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing). When they don't, \
-     in the special case of version-controlled pinning to a local path, OPAM \
-     will use \"mixed mode\": it will only use version-controlled files, but \
-     at their current, on-disk version.\n\
+     using $(b,#branch) e.g. $(b,git://host/me/pkg#testing).\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
      will be locally created.\n\
      The package version may be specified by using the format \
@@ -2108,7 +2105,7 @@ let pin ?(unpin_only=false) () =
     | `Source
         ({ OpamUrl.backend = #OpamUrl.version_control; hash = None; _ }
          as url) ->
-      (match OpamProcess.Job.run (OpamRepository.get_branch url) with
+      (match OpamProcess.Job.run (OpamRepository.current_branch url) with
        | Some b ->
          OpamConsole.note "Will pin to '%s' using %s"
            b (OpamUrl.string_of_backend url.OpamUrl.backend);
@@ -2292,7 +2289,7 @@ let source =
         mkdir dir;
         match
           OpamProcess.Job.run
-            (OpamRepository.pull_url (OpamPackage.to_string nv) dir []
+            (OpamRepository.pull_tree (OpamPackage.to_string nv) dir []
                [url])
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
@@ -2301,29 +2298,31 @@ let source =
             "Successfully fetched %s development repo to ./%s/\n"
             (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
     ) else (
-      OpamConsole.formatted_msg "Downloading archive of %s...\n"
-        (OpamPackage.to_string nv);
-      match OpamProcess.Job.run (OpamAction.download_package t nv) with
-      | `Error _ -> OpamConsole.error_and_exit "Download failed"
-      | `Successful s ->
-        (match OpamProcess.Job.run (OpamAction.extract_package t s nv dir) with
-         | None ->
-           OpamConsole.formatted_msg "Successfully extracted to %s\n"
-             (Dir.to_string dir);
-         | Some e ->
-           OpamConsole.warning "Some errors extracting to %s: %s\n"
-             (Dir.to_string dir) (Printexc.to_string e));
-        if OpamPinned.find_opam_file_in_source nv.name dir = None
-        then
-          let f =
-            if OpamFilename.exists_dir Op.(dir / "opam")
-            then OpamFile.make Op.(dir / "opam" // "opam")
-            else OpamFile.make Op.(dir // "opam")
-          in
-          OpamFile.OPAM.write f
-            (OpamFile.OPAM.with_substs [] @@
-             OpamFile.OPAM.with_patches [] @@
-             opam)
+      let job =
+        let open OpamProcess.Job.Op in
+        OpamUpdate.download_package_source t nv dir @@+ function
+        | Some (Not_available s) -> OpamConsole.error_and_exit "Download failed: %s" s
+        | None | Some (Result () | Up_to_date ()) ->
+          OpamAction.prepare_package_source t nv dir @@| function
+          | None ->
+            OpamConsole.formatted_msg "Successfully extracted to %s\n"
+              (Dir.to_string dir)
+          | Some e ->
+            OpamConsole.warning "Some errors extracting to %s: %s\n"
+              (Dir.to_string dir) (Printexc.to_string e)
+      in
+      OpamProcess.Job.run job;
+      if OpamPinned.find_opam_file_in_source nv.name dir = None
+      then
+        let f =
+          if OpamFilename.exists_dir Op.(dir / "opam")
+          then OpamFile.make Op.(dir / "opam" // "opam")
+          else OpamFile.make Op.(dir // "opam")
+        in
+        OpamFile.OPAM.write f
+          (OpamFile.OPAM.with_substs [] @@
+           OpamFile.OPAM.with_patches [] @@
+           opam)
     );
     if pin then
       let backend =
@@ -2484,6 +2483,16 @@ let lint =
   Term.(pure lint $global_options $files $package $normalise $short $warnings),
   term_info "lint" ~doc ~man
 
+(* CLEAN *)
+(* Todo:
+   global
+   - clear cache (+ old archives/ dir)
+   - clear logs
+   - find and clean unused repositories
+   for one/all switches:
+   - clear build dirs
+   - clean stale sources (of non-pinned packages)
+*)
 
 (* HELP *)
 let help =

@@ -20,8 +20,10 @@ type t = private {
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build: bool;
+  working_dir: bool;
   show: bool;
   fake: bool;
+  skip_dev_update: bool;
   json_out: string option;
 }
 
@@ -35,8 +37,10 @@ type 'a options_fun =
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
+  ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
+  ?skip_dev_update:bool ->
   ?json_out:string option ->
   'a
   (* constraint 'a = 'b -> 'c *)
@@ -64,8 +68,10 @@ val opam_init:
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
+  ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
+  ?skip_dev_update:bool ->
   ?json_out:string option ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Command_line | `Default | `Env ] ->

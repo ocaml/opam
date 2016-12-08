@@ -125,16 +125,15 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   successful, rt
 
-(* fixme: this doesn't extract the archive, so we won't get the source package's
-   opam file unless we're going through VC. *)
-let fetch_dev_package url srcdir nv =
+let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
-  OpamRepository.pull_url (OpamPackage.to_string nv) srcdir checksum mirrors
+  OpamRepository.pull_tree
+    (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
 
-let pinned_package st ?version name =
+let pinned_package st ?version ?(working_dir=false) name =
   log "update-pinned-package %s" (OpamPackage.Name.to_string name);
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
@@ -182,8 +181,14 @@ let pinned_package st ?version name =
       Some (snd (OpamPackage.Map.min_binding above))
     | _ -> None
   in
+  OpamRepository. current_branch url @@+ fun branch ->
+  OpamRepository.is_dirty url @@+ fun dirty ->
+  if branch = url.OpamUrl.hash && dirty && not working_dir then
+    OpamConsole.note
+      "Ignoring uncommitted changes in %s (`--working-dir' not active)."
+      (OpamUrl.base_url url);
   (* Do the update *)
-  fetch_dev_package urlf srcdir nv @@+ fun result ->
+  fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
   let new_source_opam =
     OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
     let warns, opam_opt = OpamFileTools.lint_file f in
@@ -247,7 +252,7 @@ let pinned_package st ?version name =
     opam
   in
   match result, new_source_opam with
-  | Result _, Some new_opam
+  | Result (), Some new_opam
     when changed_opam old_source_opam new_source_opam &&
          changed_opam overlay_opam new_source_opam ->
     let interactive_part st =
@@ -286,13 +291,13 @@ let pinned_package st ?version name =
     Done (interactive_part, true)
   | (Up_to_date _ | Not_available _), _ ->
     Done ((fun st -> st), false)
-  | Result  _, _ ->
+  | Result  (), _ ->
     Done ((fun st -> st), true)
 
-let dev_package st nv =
+let dev_package st ?working_dir nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
   if OpamPackage.Set.mem nv st.pinned then
-    pinned_package st ~version:nv.version nv.name
+    pinned_package st ~version:nv.version ?working_dir nv.name
   else
   match OpamSwitchState.url st nv with
   | None     -> Done ((fun st -> st), false)
@@ -301,17 +306,20 @@ let dev_package st nv =
       Done ((fun st -> st), false)
     else
       fetch_dev_package url
-        (OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name) nv
+        (OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name)
+        ?working_dir
+        nv
       @@| fun result ->
-      (fun st -> st), match result with Result _ -> true | _ -> false
+      (fun st -> st), match result with Result () -> true | _ -> false
 
-let dev_packages st packages =
+let dev_packages st ?(working_dir=OpamPackage.Set.empty) packages =
   log "update-dev-packages";
   let command nv =
+    let working_dir = OpamPackage.Set.mem nv working_dir in
     OpamProcess.Job.ignore_errors
       ~default:(false, (fun st -> st), OpamPackage.Set.empty)
     @@ fun () ->
-    dev_package st nv @@| fun (st_update, changed) ->
+    dev_package st ~working_dir nv @@| fun (st_update, changed) ->
     true, st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
     | false -> OpamPackage.Set.empty
@@ -334,13 +342,14 @@ let dev_packages st packages =
   in
   success, st, updated_set
 
-let pinned_packages st names =
+let pinned_packages st ?(working_dir=OpamPackage.Name.Set.empty) names =
   log "update-pinned-packages";
   let command name =
+    let working_dir = OpamPackage.Name.Set.mem name working_dir in
     OpamProcess.Job.ignore_errors
       ~default:((fun st -> st), OpamPackage.Name.Set.empty)
     @@ fun () ->
-    pinned_package st name @@| fun (st_update, changed) ->
+    pinned_package st ~working_dir name @@| fun (st_update, changed) ->
     st_update,
     match changed with
     | true -> OpamPackage.Name.Set.singleton name
@@ -390,7 +399,7 @@ let download_package_source st nv dirname =
     match OpamFile.OPAM.url opam with
     | None   -> Done None
     | Some u ->
-      OpamRepository.pull_url (OpamPackage.to_string nv)
+      OpamRepository.pull_tree (OpamPackage.to_string nv)
         ~cache_dir ~cache_urls
         dirname
         (OpamFile.URL.checksum u)

@@ -140,7 +140,9 @@ let validate_and_add_to_cache label url cache_dir file checksums =
      | _ -> ());
     true
 
-let pull_from_upstream label cache_dir destdir checksums url =
+(* [cache_dir] used to add to cache only *)
+let pull_from_upstream
+    label ?(working_dir=false) cache_dir destdir checksums url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -148,40 +150,54 @@ let pull_from_upstream label cache_dir destdir checksums url =
       (OpamUrl.string_of_backend url.OpamUrl.backend)
   in
   OpamProcess.Job.with_text text @@
-  B.pull_url destdir cksum url
+  (if working_dir then B.sync_dirty destdir url
+   else B.pull_url destdir cksum url)
   @@| function
-  | (Result (F file) | Up_to_date (F file)) as ret ->
+  | (Result (Some file) | Up_to_date (Some file)) as ret ->
     if validate_and_add_to_cache label url cache_dir file checksums then
-      (OpamConsole.msg "[%s] %s %s\n"
+      (OpamConsole.msg "[%s] %s from %s\n"
          (OpamConsole.colorise `green label)
-         (if url.OpamUrl.backend = `http then "downloaded from"
-          else "synchronised with")
+         (match ret with Up_to_date _ -> "no changes" | _ -> "downloaded")
          (OpamUrl.to_string url);
        ret)
     else
       Not_available "Checksum mismatch"
-  | Result (D dir) | Up_to_date (D dir) ->
-    if checksums = [] then Result (D dir) else
+  | (Result None | Up_to_date None) as ret ->
+    if checksums = [] then
+      (OpamConsole.msg "[%s] %s from %s\n"
+         (OpamConsole.colorise `green label)
+         (match ret with Up_to_date _ -> "no changes" | _ -> "synchronised")
+         (OpamUrl.to_string url);
+       Result None)
+    else
       (OpamConsole.error "%s: file checksum specified, but a directory was \
                           retrieved from %s"
          label (OpamUrl.to_string url);
-       OpamFilename.rmdir dir;
+       OpamFilename.rmdir destdir;
        Not_available "can't check directory checksum")
   | Not_available r -> Not_available r
 
-let rec pull_from_mirrors label cache_dir destdir checksums = function
+let rec pull_from_mirrors label ?working_dir cache_dir destdir checksums = function
   | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
-  | [url] -> pull_from_upstream label cache_dir destdir checksums url
+  | [url] ->
+    pull_from_upstream label ?working_dir cache_dir destdir checksums url
   | url::mirrors ->
-    pull_from_upstream label cache_dir destdir checksums url @@+ function
+    pull_from_upstream label ?working_dir cache_dir destdir checksums url
+    @@+ function
     | Not_available s ->
       OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
         label (OpamUrl.to_string url) s;
       pull_from_mirrors label cache_dir destdir checksums mirrors
     | r -> Done r
 
-let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
+let pull_tree
+    label ?cache_dir ?(cache_urls=[]) ?working_dir
     local_dirname checksums remote_urls =
+  let extract_archive f =
+    OpamFilename.extract_job f local_dirname @@+ function
+    | None -> Done (Up_to_date ())
+    | Some e -> Done (Not_available (Printexc.to_string e))
+  in
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
@@ -191,51 +207,37 @@ let pull_url label ?cache_dir ?(cache_urls=[]) ?(silent_hits=false)
      assert (cache_urls = []);
      Done (Not_available "no cache"))
   @@+ function
-  | Up_to_date (f, _) ->
-    if not silent_hits then
-      OpamConsole.msg "[%s] found in cache\n"
-        (OpamConsole.colorise `green label);
-    Done (Up_to_date (F f))
-  | Result (f, url) ->
+  | Up_to_date (archive, _) ->
+    OpamConsole.msg "[%s] found in cache\n"
+      (OpamConsole.colorise `green label);
+    extract_archive archive
+  | Result (archive, url) ->
     OpamConsole.msg "[%s] downloaded from %s\n"
       (OpamConsole.colorise `green label)
       (OpamUrl.to_string url);
-    Done (Result (F f))
+    extract_archive archive
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
       OpamConsole.error_and_exit
         "%s: Missing checksum, and `--require-checksums` was set."
         label;
-    pull_from_mirrors label cache_dir local_dirname checksums remote_urls
+    pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
+      remote_urls
+    @@+ function
+    | Up_to_date _ -> assert false
+    | Result (Some archive) ->
+      OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
+      let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
+      OpamFilename.move ~src:archive ~dst:tmp_archive;
+      extract_archive tmp_archive
+    | Result None -> Done (Result ())
+    | Not_available _ as na -> Done na
 
 let revision dirname url =
   let kind = url.OpamUrl.backend in
   let module B = (val find_backend_by_kind kind: OpamRepositoryBackend.S) in
   B.revision dirname
-
-let pull_url_and_fix_digest label dirname checksums file url =
-  pull_url label dirname [] url @@+ function
-  | Not_available _
-  | Up_to_date _
-  | Result (D _) as r -> Done r
-  | Result (F f) as r ->
-    let fixed_checksums =
-      List.map (fun c ->
-          match OpamHash.mismatch (OpamFilename.to_string f) c with
-          | Some actual ->
-            OpamConsole.msg
-              "Fixing wrong checksum for %s: current value is %s, setting it \
-               to %s.\n"
-              label (OpamHash.to_string c) (OpamHash.to_string actual);
-            actual
-          | None -> c)
-        checksums
-    in
-    (if fixed_checksums <> checksums then
-       let u = OpamFile.URL.read file in
-       OpamFile.URL.write file (OpamFile.URL.with_checksum fixed_checksums u));
-    Done r
 
 let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
     file checksums remote_urls =
@@ -270,8 +272,8 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
         pull_from_mirrors label cache_dir tmpdir checksums remote_urls
         @@| function
         | Up_to_date _ -> assert false
-        | Result (F f) -> OpamFilename.move ~src:f ~dst:file; Result ()
-        | Result (D _) -> Not_available "is a directory"
+        | Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
+        | Result None -> Not_available "is a directory"
         | Not_available _ as na -> na)
 
 let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
@@ -289,8 +291,8 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
         pull_from_mirrors label (Some cache_dir) tmpdir checksums remote_urls
         @@| function
         | Up_to_date _ -> assert false
-        | Result (F _) -> Result ()
-        | Result (D _) -> Not_available "is a directory"
+        | Result (Some _) -> Result ()
+        | Result None -> Not_available "is a directory"
         | Not_available _ as na -> na)
 
 let packages r =
@@ -401,7 +403,7 @@ let on_local_version_control url ~default f =
        f dir (find_vcs_backend backend))
   | #OpamUrl.backend -> default
 
-let get_branch url =
+let current_branch url =
   on_local_version_control url ~default:(Done None) @@
   fun dir (module VCS) -> VCS.current_branch dir
 

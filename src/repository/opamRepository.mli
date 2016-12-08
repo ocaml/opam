@@ -29,18 +29,15 @@ val init: dirname -> repository_name -> unit OpamProcess.job
     achieved. *)
 val update: repository -> unit OpamProcess.job
 
-(** Fetch an URL into a directory: if a single file, it will be put in that
-    directory, otherwise the given directory is synchronised with the remote
-    one. Several mirrors can be provided, in which case they will be tried in
-    order, in case of an error.
-    All provided hashes are checked in case of a single file; if the hash list
-    is non-empty, and a directory is obtained, an error message is printed and
-    Not_available returned.
-    The first argument, [label] is only for status message printing. *)
-val pull_url:
-  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
+(** Fetch an URL and put the resulting tree into the supplied directory. The URL
+    must either point to a tree (VCS, rsync) or to a known archive type. In case
+    of an archive, the cache is used and supplied the hashes verified, then the
+    archive uncompressed. In case of a version-controlled URL, it's checked out,
+    or synchronised directly if local and [working_dir] was set. *)
+val pull_tree:
+  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
   dirname -> OpamHash.t list -> url list ->
-  generic_file download OpamProcess.job
+  unit download OpamProcess.job
 
 (** Same as [pull_url], but for fetching a single file. *)
 val pull_file:
@@ -54,18 +51,12 @@ val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
   OpamHash.t list -> url list -> unit download OpamProcess.job
 
-(** As [pull_url], but doesn't check hashes, and instead patches the given url
-    file to match the actual file hashes, as downloaded *)
-val pull_url_and_fix_digest:
-  string -> dirname -> OpamHash.t list -> OpamFile.URL.t OpamFile.t -> url list ->
-  generic_file download OpamProcess.job
-
 (** Get the optional revision associated to a backend (git hash, etc.). *)
 val revision: dirname -> url -> version option OpamProcess.job
 
 (** Get the version-control branch for that url. Only applicable for local,
     version controlled URLs. Returns [None] in other cases. *)
-val get_branch: url -> string option OpamProcess.job
+val current_branch: url -> string option OpamProcess.job
 
 (** Returns true if the url points to a local, version-controlled directory that
     has uncommitted changes *)

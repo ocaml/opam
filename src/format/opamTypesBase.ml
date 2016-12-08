@@ -13,18 +13,6 @@ open OpamTypes
 
 include OpamCompat
 
-let download_map fn = function
-  | Up_to_date f    -> Up_to_date (fn f)
-  | Result  f       -> Result (fn f)
-  | Not_available d -> Not_available d
-
-let download_dir = download_map (fun d -> D d)
-let download_file = download_map (fun f -> F f)
-let string_of_download = function
-  | Up_to_date _ -> "already up-to-date"
-  | Result _ -> "synchronized"
-  | Not_available _ -> OpamConsole.colorise `red "unavailable"
-
 let std_path_of_string = function
   | "prefix" -> Prefix
   | "lib" -> Lib
@@ -52,10 +40,6 @@ let string_of_std_path = function
 
 let all_std_paths =
   [ Prefix; Lib; Bin; Sbin; Share; Doc; Etc; Man; Toplevel; Stublibs ]
-
-let string_of_generic_file = function
-  | D d -> OpamFilename.Dir.to_string d
-  | F f -> OpamFilename.to_string f
 
 let string_of_shell = function
   | `fish -> "fish"

@@ -477,20 +477,6 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
       (OpamPackage.Name.to_string name)
       (string_of_pinned opam);
 
-    (match target_url with
-     | Some ({ OpamUrl.backend = #OpamUrl.version_control;
-               transport = "file";
-               hash = None;
-               path = _; } as url) ->
-       (match OpamUrl.local_dir url with
-        | Some dir ->
-          OpamConsole.note
-            "Pinning in mixed mode: OPAM will use tracked files in the current \
-             working tree from %s. If this is not what you want, pin to a \
-             given branch (e.g. %s#HEAD)"
-            (OpamFilename.Dir.to_string dir) (OpamUrl.to_string url)
-        | None -> ())
-     | _ -> ());
     st
 
 (* pure *)

@@ -176,6 +176,8 @@ let slog = OpamConsole.slog
   (* Check atoms for pinned packages, and update them. Returns the state that
      may have been reloaded if there were changes *)
   let update_dev_packages_t atoms t =
+    if OpamClientConfig.(!r.skip_dev_update) then t else
+    let working_dir = OpamClientConfig.(!r.working_dir) in
     let to_update =
       List.fold_left (fun to_update (name,_) ->
           try
@@ -189,10 +191,17 @@ let slog = OpamConsole.slog
     if OpamPackage.Set.is_empty to_update then t else (
       OpamConsole.header_msg "Synchronising pinned packages";
       try
-        let _success, t, _pkgs = OpamUpdate.dev_packages t to_update in
+        let working_dir =
+          if working_dir then Some (OpamSwitchState.packages_of_atoms t atoms)
+          else None
+        in
+        let _success, t, _pkgs =
+          OpamUpdate.dev_packages t ?working_dir to_update in
+        OpamConsole.msg "\n";
         t
       with e ->
         OpamStd.Exn.fatal e;
+        OpamConsole.msg "\n";
         t
     )
 
@@ -502,6 +511,29 @@ let slog = OpamConsole.slog
            controlled upstream) and can't be updated individually. What you \
            want is probably to update your repositories: %s"
           (OpamPackage.Set.to_string nondev_packages);
+      let dirty_dev_packages, dev_packages =
+        if names <> [] then OpamPackage.Set.empty, dev_packages else
+          OpamPackage.Set.partition
+            (fun nv ->
+               let src_cache =
+                 OpamPath.Switch.dev_package st.switch_global.root st.switch
+                   nv.name
+               in
+               let cache_url =
+                 OpamUrl.of_string (OpamFilename.Dir.to_string src_cache)
+               in
+               match OpamSwitchState.primary_url st nv with
+               | Some { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
+                 OpamProcess.Job.run @@
+                 OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
+               | _ -> false)
+            dev_packages
+      in
+      OpamPackage.Set.iter (fun nv ->
+          OpamConsole.note "%s has previously been updated with --working-dir, \
+                            not resetting unless explicitely selected"
+            (OpamPackage.to_string nv))
+        dirty_dev_packages;
       dev_packages
     in
 
@@ -625,6 +657,7 @@ let slog = OpamConsole.slog
            fetch_cmd_user ||
            check_external_dep "curl" ||
            check_external_dep "wget";
+           "diff", check_external_dep "diff";
            "patch", check_external_dep "patch";
            "tar", check_external_dep "tar";
            "unzip", check_external_dep "unzip"]
