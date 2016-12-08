@@ -23,6 +23,7 @@ type t = private {
   working_dir: bool;
   show: bool;
   fake: bool;
+  skip_dev_update: bool;
   json_out: string option;
 }
 
@@ -39,6 +40,7 @@ type 'a options_fun =
   ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
+  ?skip_dev_update:bool ->
   ?json_out:string option ->
   'a
   (* constraint 'a = 'b -> 'c *)
@@ -69,6 +71,7 @@ val opam_init:
   ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
+  ?skip_dev_update:bool ->
   ?json_out:string option ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Command_line | `Default | `Env ] ->

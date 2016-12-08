@@ -20,6 +20,7 @@ type t = {
   working_dir: bool;
   show: bool;
   fake: bool;
+  skip_dev_update: bool;
   json_out: string option;
 }
 
@@ -35,6 +36,7 @@ let default = {
   working_dir = false;
   show = false;
   fake = false;
+  skip_dev_update = false;
   json_out = None;
 }
 
@@ -50,6 +52,7 @@ type 'a options_fun =
   ?working_dir:bool ->
   ?show:bool ->
   ?fake:bool ->
+  ?skip_dev_update:bool ->
   ?json_out:string option ->
   'a
 
@@ -65,6 +68,7 @@ let setk k t
     ?working_dir
     ?show
     ?fake
+    ?skip_dev_update
     ?json_out
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
@@ -80,6 +84,7 @@ let setk k t
     working_dir = t.working_dir + working_dir;
     show = t.show + show;
     fake = t.fake + fake;
+    skip_dev_update = t.skip_dev_update + skip_dev_update;
     json_out = t.json_out + json_out;
   }
 
@@ -107,6 +112,7 @@ let initk k =
     ?working_dir:(env_bool "WORKINGDIR")
     ?show:(env_bool "SHOW")
     ?fake:(env_bool "FAKE")
+    ?skip_dev_update:(env_bool "SKIPUPDATE")
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
 
 let init ?noop:_ = initk (fun () -> ())

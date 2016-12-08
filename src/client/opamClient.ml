@@ -176,6 +176,7 @@ let slog = OpamConsole.slog
   (* Check atoms for pinned packages, and update them. Returns the state that
      may have been reloaded if there were changes *)
   let update_dev_packages_t atoms t =
+    if OpamClientConfig.(!r.skip_dev_update) then t else
     let working_dir = OpamClientConfig.(!r.working_dir) in
     let to_update =
       List.fold_left (fun to_update (name,_) ->
