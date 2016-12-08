@@ -24,6 +24,7 @@ module Cache = struct
   }
 
   let check_marshaled_file file =
+    try
     let ic = open_in_bin (OpamFilename.to_string file) in
     let this_magic = OpamVersion.magic () in
     let magic_len = String.length this_magic in
@@ -51,6 +52,10 @@ module Cache = struct
       seek_in ic magic_len;
       Some ic
     )
+    with e ->
+      OpamStd.Exn.fatal e;
+      OpamConsole.note "Broken repository cache, rebuilding";
+      None
 
   let marshal_from_file file =
     let chrono = OpamConsole.timer () in
@@ -95,8 +100,10 @@ module Cache = struct
     let filter_out_nourl repos_map =
       OpamRepositoryName.Map.filter
         (fun name _ ->
-           (OpamRepositoryName.Map.find name rt.repositories).repo_url <>
-           OpamUrl.empty)
+           try
+             (OpamRepositoryName.Map.find name rt.repositories).repo_url <>
+             OpamUrl.empty
+           with Not_found -> false)
         repos_map
     in
     Marshal.to_channel oc
