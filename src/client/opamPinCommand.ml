@@ -115,7 +115,7 @@ let edit_raw name temp_file =
     if OpamStd.Sys.tty_in then
       (OpamConsole.msg "Press enter to start \"%s\" (this can be customised by \
                         setting EDITOR or OPAMEDITOR)... "
-         (Filename.basename OpamClientConfig.(!r.editor));
+         OpamClientConfig.(!r.editor);
        ignore (read_line ()));
     let edited_ok =
       try
