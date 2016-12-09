@@ -873,7 +873,6 @@ let apply ?ask t action ~requested solution =
 
 let resolve ?(verbose=true) t action ~orphans ~requested request =
   if OpamClientConfig.(!r.json_out <> None) then (
-    OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
