@@ -35,8 +35,6 @@ let update_selection gt ~global ~switches update_fun =
      update_global_selection gt update_fun)
   else gt
 
-(* update the repository config file:
-   ~/.opam/repo/<repo>/config *)
 let update_repos_config rt repositories =
   (* Remove cached opam files for changed or removed repos *)
   let repo_opams =

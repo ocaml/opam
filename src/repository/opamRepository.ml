@@ -194,6 +194,7 @@ let pull_tree
     label ?cache_dir ?(cache_urls=[]) ?working_dir
     local_dirname checksums remote_urls =
   let extract_archive f =
+    OpamFilename.cleandir local_dirname;
     OpamFilename.extract_job f local_dirname @@+ function
     | None -> Done (Up_to_date ())
     | Some e -> Done (Not_available (Printexc.to_string e))

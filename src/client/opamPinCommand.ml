@@ -115,7 +115,7 @@ let edit_raw name temp_file =
     if OpamStd.Sys.tty_in then
       (OpamConsole.msg "Press enter to start \"%s\" (this can be customised by \
                         setting EDITOR or OPAMEDITOR)... "
-         (Filename.basename OpamClientConfig.(!r.editor));
+         OpamClientConfig.(!r.editor);
        ignore (read_line ()));
     let edited_ok =
       try
@@ -335,7 +335,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
         (OpamPackage.Name.to_string name)
         (if no_changes then "already" else "currently")
         (string_of_pinned cur_opam);
-      if no_changes then
+      if no_changes && not need_edit then
         (OpamConsole.msg "No changes.\n"; OpamStd.Sys.exit 0);
       if OpamConsole.confirm "Proceed and change pinning target ?" then
         OpamFilename.remove
