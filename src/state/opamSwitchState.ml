@@ -428,6 +428,9 @@ let universe st
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
   in
+  let requested_allpkgs =
+    OpamPackage.packages_of_names st.packages requested
+  in
   let u =
 {
   u_packages  = st.packages;
@@ -441,13 +444,9 @@ let universe st
   u_pinned    = OpamPinned.packages st;
   u_dev       = dev_packages st;
   u_base      = st.compiler_packages;
-  u_attrs     = [];
-  u_test      =
-    if test then OpamPackage.packages_of_names st.packages requested
-    else OpamPackage.Set.empty;
-  u_doc       =
-    if doc then OpamPackage.packages_of_names st.packages requested
-    else OpamPackage.Set.empty;
+  u_attrs     = ["opam-query", requested_allpkgs];
+  u_test      = if test then requested_allpkgs else OpamPackage.Set.empty;
+  u_doc       = if doc then requested_allpkgs else OpamPackage.Set.empty;
 }
   in
   u

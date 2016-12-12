@@ -59,7 +59,7 @@ val load_cudf_universe:
 
 (**  Build a request *)
 val request:
-  ?criteria:solver_criteria -> ?extra_attributes:string list ->
+  ?criteria:solver_criteria ->
   ?install:atom list ->
   ?upgrade:atom list ->
   ?remove:atom list ->
