@@ -164,29 +164,37 @@ let list_all rt ~short =
          OpamConsole.msg "%s\n" (OpamRepositoryName.to_string r))
       rt.repositories
   else
-  let default_repos = OpamGlobalState.repos_list rt.repos_global in
+  let repos_switches, _ =
+    List.fold_left (fun (acc,i) repo ->
+        OpamRepositoryName.Map.add repo [None, i] acc,
+        i + 1)
+      (OpamRepositoryName.Map.empty, 1)
+      (OpamGlobalState.repos_list rt.repos_global)
+  in
   let repos_switches =
     List.fold_left (fun acc sw ->
         let acc,_ =
           List.fold_left (fun (acc,i) repo ->
-              OpamRepositoryName.Map.update repo (fun s -> (sw,i)::s) [] acc,
+              OpamRepositoryName.Map.update repo
+                (fun s -> (Some sw, i)::s) [] acc,
               i + 1)
             (acc,1) (switch_repos rt sw)
         in acc)
-      OpamRepositoryName.Map.empty
+      repos_switches
       (OpamFile.Config.installed_switches rt.repos_global.config)
   in
   let cols =
     List.map (OpamConsole.colorise `blue)
-      ["# Repository"; "# Default"; "# Switches"]
+      ["# Repository"; "# Url"; "# Switches(rank)"]
   in
   let lines =
-    OpamRepositoryName.Map.mapi (fun name _ -> [
+    OpamRepositoryName.Map.mapi (fun name repo -> [
           OpamRepositoryName.to_string name |> OpamConsole.colorise `bold;
-          if List.mem name default_repos then "yes" else "no";
+          OpamUrl.to_string repo.repo_url;
           OpamStd.List.concat_map " "
             (fun (sw,i) ->
-               OpamSwitch.to_string sw ^
+               OpamStd.Option.to_string ~none:"<default>"
+                 OpamSwitch.to_string sw ^
                (Printf.sprintf "(%d)" i |> OpamConsole.colorise `yellow))
             (List.rev (try OpamRepositoryName.Map.find name repos_switches
                        with Not_found -> []));
