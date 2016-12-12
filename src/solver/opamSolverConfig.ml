@@ -14,6 +14,7 @@ type t = {
   cudf_file: string option;
   solver_timeout: float;
   external_solver: OpamTypes.arg list option Lazy.t;
+  soft: bool;
   solver_preferences_default: string Lazy.t option;
   solver_preferences_upgrade: string Lazy.t option;
   solver_preferences_fixup: string Lazy.t option;
@@ -23,6 +24,7 @@ type 'a options_fun =
   ?cudf_file:string option ->
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->
+  ?soft:bool ->
   ?solver_preferences_default:string Lazy.t option ->
   ?solver_preferences_upgrade:string Lazy.t option ->
   ?solver_preferences_fixup:string Lazy.t option ->
@@ -39,6 +41,7 @@ let default =
     cudf_file = None;
     solver_timeout = 5.;
     external_solver;
+    soft = false;
     solver_preferences_default = None;
     solver_preferences_upgrade = None;
     solver_preferences_fixup = None;
@@ -48,6 +51,7 @@ let setk k t
     ?cudf_file
     ?solver_timeout
     ?external_solver
+    ?soft
     ?solver_preferences_default
     ?solver_preferences_upgrade
     ?solver_preferences_fixup
@@ -57,6 +61,7 @@ let setk k t
     cudf_file = t.cudf_file + cudf_file;
     solver_timeout = t.solver_timeout + solver_timeout;
     external_solver = t.external_solver + external_solver;
+    soft = t.soft + soft;
     solver_preferences_default =
       t.solver_preferences_default + solver_preferences_default;
     solver_preferences_upgrade =
@@ -125,12 +130,14 @@ type criteria = {
   crit_default: string;
   crit_upgrade: string;
   crit_fixup: string;
+  crit_soft_prefix: string;
 }
 
 let default_criteria_compat = {
  crit_default = "-removed,-notuptodate,-changed";
  crit_upgrade = "-removed,-notuptodate,-changed";
  crit_fixup = "-changed,-notuptodate";
+ crit_soft_prefix = "";
 }
 
 let default_criteria_mccs = {
@@ -143,6 +150,7 @@ let default_criteria_mccs = {
                   -count[version-lag:,false],\
                   -new";
   crit_fixup = "-changed,-count[version-lag:,false]";
+  crit_soft_prefix = "+count[opam-query:,false],";
 }
 
 let default_criteria_packup = default_criteria_compat
@@ -159,6 +167,7 @@ let default_criteria_aspcud19 = {
                   -count(new)";
   crit_fixup = "-count(changed),\
                 -notuptodate(solution),-sum(solution,version-lag)";
+  crit_soft_prefix = "+sum(solution,opam-query),";
 }
 
 let check_aspcud_version = function
@@ -200,16 +209,21 @@ let with_auto_criteria config =
             | `Latest -> default_criteria_aspcud19
             | `Compat -> default_criteria_compat)
     in
+    let get_crit fld = lazy (
+      let c = Lazy.force criteria in
+      if config.soft then c.crit_soft_prefix ^ fld c
+      else fld c
+    ) in
     set config
       ~solver_preferences_default:
         (config.solver_preferences_default >>+ fun () ->
-         Some (lazy (Lazy.force criteria).crit_default))
+         Some (get_crit (fun c -> c.crit_default)))
       ~solver_preferences_upgrade:
         (config.solver_preferences_upgrade >>+ fun () ->
-         Some (lazy (Lazy.force criteria).crit_upgrade))
+         Some (get_crit (fun c -> c.crit_upgrade)))
       ~solver_preferences_fixup:
         (config.solver_preferences_fixup >>+ fun () ->
-         Some (lazy (Lazy.force criteria).crit_fixup))
+         Some (get_crit (fun c -> c.crit_fixup)))
       ()
 
 let initk k =
@@ -230,6 +244,8 @@ let initk k =
         Some (List.map (fun a -> OpamTypes.CString a, None) args)
       )
   in
+  let soft =
+    env_bool "SOFTREQUEST" in
   let criteria =
     env_string "CRITERIA" >>| fun c -> Some (lazy c) in
   let upgrade_criteria =
@@ -240,6 +256,7 @@ let initk k =
     ~cudf_file:(env_string "CUDFFILE")
     ?solver_timeout:(env_float "SOLVERTIMEOUT")
     ?external_solver
+    ?soft
     ?solver_preferences_default:criteria
     ?solver_preferences_upgrade:upgrade_criteria
     ?solver_preferences_fixup:fixup_criteria

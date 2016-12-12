@@ -325,7 +325,11 @@ let map_request f r =
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)
+(* Remove constraints in soft mode *)
 let cleanup_request universe (req:atom request) =
+  if OpamSolverConfig.(!r.soft) then
+    { req with wish_install = []; wish_upgrade = []; }
+  else
   let wish_install =
     List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
       req.wish_install in
@@ -356,6 +360,13 @@ let resolve ?(verbose=true) universe ~orphans request =
   let simple_universe =
     load_cudf_universe universe ~version_map ~build:true
       (universe.u_available ++ universe.u_installed -- orphans) in
+  let request =
+    let extra_attributes =
+      OpamStd.List.sort_nodup compare
+        (List.map fst universe.u_attrs @ request.extra_attributes)
+    in
+    { request with extra_attributes }
+  in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let add_orphan_packages u =
@@ -371,9 +382,10 @@ let resolve ?(verbose=true) universe ~orphans request =
         OpamCudf.to_actions add_orphan_packages u resp
       with OpamCudf.Solver_failure ->
         OpamConsole.error_and_exit
-          "External solver failure, please fix your installation and check \
-           $OPAMROOT/config and variable $OPAMEXTERNALSOLVER.\n\
-           You may also retry with option --use-internal-solver"
+          "External solver failure. This may be due to bad settings (solver or \
+           solver criteria) or a broken solver solver installation. Check \
+           $OPAMROOT/config, and the --external-solver and --solver-criteria \
+           options."
     else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c
@@ -598,7 +610,6 @@ let filter_solution filter t =
     t;
   t
 
-let request ?(criteria=`Default) ?(extra_attributes=[])
-    ?(install=[]) ?(upgrade=[]) ?(remove=[]) () =
+let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[]) () =
   { wish_install = install; wish_upgrade = upgrade; wish_remove = remove;
-    criteria; extra_attributes; }
+    criteria; extra_attributes = []; }

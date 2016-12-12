@@ -86,18 +86,13 @@ type global_options = {
   use_internal_solver : bool;
   cudf_file : string option;
   solver_preferences : string option;
+  soft_request: bool;
   safe_mode : bool;
   json : string option;
 }
 
 (** Global options *)
 val global_options: global_options Term.t
-
-val create_global_options:
-  bool -> bool -> int option -> 'a list -> bool -> [ `Always | `Auto | `Never ] option ->
-  string option -> bool -> bool -> OpamTypes.dirname option -> bool -> string option ->
-  bool -> string option -> string option -> bool -> string option
-  -> global_options
 
 (** Apply global options *)
 val apply_global_options: global_options -> unit
