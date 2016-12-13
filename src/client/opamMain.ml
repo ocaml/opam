@@ -1171,7 +1171,7 @@ let env =
      pre-existing OPAM path in-place rather than putting \
      the new path in front. This means programs installed \
      in OPAM that were shadowed will remain so after \
-     $(b,opam config env)" in
+     $(b,opam env)" in
   let inplace_path = mk_flag ["inplace-path"] inplace_path_doc in
   let sexp =
     mk_flag ["sexp"]
@@ -1761,7 +1761,7 @@ let switch =
          $(b,--switch) is specified.");
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
-        environment. For that, use $(i,eval `opam config env \
+        environment. For that, use $(i,eval `opam env \
         --switch=SWITCH`).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
 
