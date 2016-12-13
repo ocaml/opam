@@ -328,9 +328,9 @@ let eval_string gt switch =
   in
   match OpamStd.Sys.guess_shell_compat () with
   | `fish ->
-    Printf.sprintf "eval (opam config env%s%s)" root switch
+    Printf.sprintf "eval (opam env%s%s)" root switch
   | _ ->
-    Printf.sprintf "eval `opam config env%s%s`" root switch
+    Printf.sprintf "eval `opam env%s%s`" root switch
 
 
 
@@ -521,6 +521,7 @@ let dot_profile_needs_update root dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else
   let body = OpamFilename.read dot_profile in
   let pattern1 = "opam config env" in
+  let pattern1b = "opam env" in
   let pattern2 = OpamFilename.to_string (OpamPath.init root // "init") in
   let pattern3 =
     OpamStd.String.remove_prefix ~prefix:(OpamFilename.Dir.to_string root)
@@ -530,7 +531,7 @@ let dot_profile_needs_update root dot_profile =
     Re.(compile (seq [bol; rep (diff any (set "#:"));
                       alt (List.map str patts)]))
   in
-  if Re.execp (uncommented_re [pattern1; pattern2]) body then `no
+  if Re.execp (uncommented_re [pattern1; pattern1b; pattern2]) body then `no
   else if Re.execp (uncommented_re [pattern3]) body then `otherroot
   else `yes
 
@@ -636,7 +637,7 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `bold @@ string_of_shell shell)
     (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
     (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
-    (OpamConsole.colorise `bold @@ "eval `opam config env`");
+    (OpamConsole.colorise `bold @@ "eval `opam env`");
   match
     OpamConsole.read
       "Do you want opam to modify %s ? [N/y/f]\n\
