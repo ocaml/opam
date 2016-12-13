@@ -293,12 +293,15 @@ module Json = struct
     | OpamSystem.Process_error
         {OpamProcess.r_code; r_duration; r_info; r_stdout; r_stderr; _} ->
       `O [ ("process-error",
-            `O [ ("code", `String (string_of_int r_code));
-                 ("duration", `Float r_duration);
-                 ("info", `O (lmap (fun (k,v) -> (k, `String v)) r_info));
-                 ("stdout", `A (lmap (fun s -> `String s) r_stdout));
-                 ("stderr", `A (lmap (fun s -> `String s) r_stderr));
-               ])]
+            `O ([ ("code", `String (string_of_int r_code));
+                  ("duration", `Float r_duration);
+                  ("info", `O (lmap (fun (k,v) -> (k, `String v)) r_info)); ]
+                @ if OpamCoreConfig.(!r.merged_output) then
+                  [("output", `A (lmap (fun s -> `String s) r_stdout))]
+                else
+                  [("output", `A (lmap (fun s -> `String s) r_stdout));
+                   ("stderr", `A (lmap (fun s -> `String s) r_stderr));
+                  ]))]
     | OpamSystem.Internal_error s ->
       `O [ ("internal-error", `String s) ]
     | e -> `O [ ("exception", `String (Printexc.to_string e)) ]
