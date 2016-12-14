@@ -160,7 +160,8 @@ let check prefix changes =
     changes []
   |> List.rev
 
-let revert ?title ?(verbose=true) ?(force=false) prefix changes =
+let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
+    prefix changes =
   let title = match title with
     | None -> ""
     | Some t -> t ^ ": "
