@@ -173,8 +173,9 @@ let edit_raw name temp_file =
     with e ->
       OpamStd.Exn.fatal e;
       log "Editing error: %s" (Printexc.to_string e);
-      if OpamConsole.confirm "Errors in %s, retry editing ?"
-          (OpamFile.to_string temp_file)
+      if OpamStd.Sys.tty_in &&
+         OpamConsole.confirm "Errors in %s, retry editing ?"
+           (OpamFile.to_string temp_file)
       then edit ()
       else None
   in
