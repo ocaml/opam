@@ -1734,9 +1734,9 @@ let switch =
      packages with the $(i,compiler) flag set. Only standard versions are \
      shown by default if no pattern is supplied, use $(b,--all) to show all.";
     "show", `current, [], "Prints the name of the current switch.";
-    "set-base", `set_compiler, ["NAMES"],
+    "set-base", `set_compiler, ["PACKAGES"],
     "Sets the packages forming the immutable base for the selected switch, \
-     overriding the current setting. The packages must be installed already.";
+     overriding the current setting.";
     "set-description", `set_description, ["STRING"],
     "Sets the description for the selected switch";
     "install", `install, ["SWITCH"],
@@ -1785,7 +1785,7 @@ let switch =
     mk_opt ["repositories"] "REPOS"
       "When creating a new switch, use the given selection of repositories \
        instead of the default. You can configure new repositories in advance \
-       using $(i,opam repository add --no-select) and then create a switch \
+       using $(i,opam repository add --dont-select) and then create a switch \
        using them with this option. See $(i,opam repository) for more \
        details. This option also affects $(i,list-available)."
       Arg.(some (list repository_name)) None
@@ -1942,10 +1942,14 @@ let switch =
       `Ok ()
     | Some `set_compiler, packages ->
       (try
-         let names = List.map OpamPackage.Name.of_string packages in
+         let parse_namev s = match fst OpamArg.package s with
+           | `Ok (name, version_opt) -> name, version_opt
+           | `Error e -> failwith e
+         in
+         let namesv = List.map parse_namev packages in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         let _st = OpamSwitchCommand.set_compiler st names in
+         let _st = OpamSwitchCommand.set_compiler st namesv in
          `Ok ()
        with Failure e -> `Error (false, e))
     | Some `set_description, text ->
