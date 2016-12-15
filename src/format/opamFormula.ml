@@ -184,6 +184,9 @@ let check_relop relop c = match relop with
 let eval_relop relop v1 v2 =
   check_relop relop (OpamPackage.Version.compare v1 v2)
 
+let check_version_formula f v =
+  eval (fun (relop, vref) -> eval_relop relop v vref) f
+
 let check (name,cstr) package =
   name = OpamPackage.name package &&
   match cstr with
@@ -347,9 +350,8 @@ let of_disjunction d =
 let atoms t =
   fold_left (fun accu x -> x::accu) [] (to_atom_formula t)
 
-let simplify_version_formula f =
+let simplify_ineq_formula vcomp f =
   (* backported from OWS/WeatherReasons *)
-  let vcomp = OpamPackage.Version.compare in
   let vmin a b = if vcomp a b <= 0 then a else b in
   let vmax a b = if vcomp a b >= 0 then a else b in
   let and_cstrs c1 c2 = match c1, c2 with
@@ -364,6 +366,7 @@ let simplify_version_formula f =
     | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Eq, b]
     | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Eq, b]
     | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Eq, b]
+    | (`Leq,a), (`Geq,b) [ (`Geq,b), (`Leq,a) when vcomp a b =  0 -> [`Eq, a]
     | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Eq, b]
     | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Geq,a]
     | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Gt, a]
@@ -383,6 +386,7 @@ let simplify_version_formula f =
     | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Geq,a]
     | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Gt, a]
     | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Leq,a]
+    | (`Leq,a), (`Geq,b) [ (`Geq,b), (`Leq,a) when vcomp a b =  0 -> []
     | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Lt, a]
     | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Neq,b]
     | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Neq,b]
@@ -412,6 +416,44 @@ let simplify_version_formula f =
     | (Atom _ | Empty) as f -> f
   in
   aux f
+
+let simplify_version_formula f =
+  simplify_ineq_formula OpamPackage.Version.compare f
+
+let simplify_version_set set f =
+  let module S = OpamPackage.Version.Set in
+  if S.is_empty set then Empty else
+  let vmin = S.min_elt set in
+  let vmax = S.max_elt set in
+  let contiguous_ranges, last =
+    S.fold (fun version (ranges, cur) ->
+        if check_version_formula f version then
+          ranges,
+          match cur with
+          | None -> Some (version,version)
+          | Some (vlow,_) -> Some (vlow, version)
+        else
+        match cur with
+        | Some (vlow,vhigh) -> (vlow, vhigh) :: ranges, None
+        | None -> ranges, None
+      )
+      set ([], None)
+  in
+  let contiguous_ranges = match last with
+    | None -> contiguous_ranges
+    | Some (vlow, _) -> (vlow, vmax) :: contiguous_ranges
+  in
+  let disj =
+    List.rev_map (fun (vlow,vhigh) ->
+        if vlow = vhigh && vmin <> vmax then Atom (`Eq, vlow) else
+        ands
+          ((if vlow = vmin then [] else [Atom (`Geq, vlow)]) @
+           (if vhigh = vmax then [] else [Atom (`Leq, vhigh)])))
+      contiguous_ranges
+  in
+  match disj with
+  | [] -> f
+  | disj -> ors disj
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula

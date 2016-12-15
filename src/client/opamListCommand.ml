@@ -226,7 +226,7 @@ let apply_selector ~base st = function
       Printf.sprintf "No solution%s for %s:\n%s"
         (if tog.depopts then " including optional dependencies" else "")
         (OpamFormula.string_of_atoms atoms)
-        (OpamCudf.string_of_conflict
+        (OpamCudf.string_of_conflict st.packages
            (OpamSwitchState.unavailable_reason st) cs))
   | Pattern (psel, pat) ->
     let re =

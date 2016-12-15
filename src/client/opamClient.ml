@@ -317,10 +317,12 @@ let slog = OpamConsole.slog
       log "conflict!";
       if not (OpamPackage.Name.Set.is_empty requested) then
         (OpamConsole.msg "%s"
-           (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
+           (OpamCudf.string_of_conflict t.packages
+              (OpamSwitchState.unavailable_reason t) cs);
          OpamStd.Sys.exit 3);
       let reasons, chains, cycles =
-        OpamCudf.strings_of_conflict (OpamSwitchState.unavailable_reason t) cs in
+        OpamCudf.strings_of_conflict t.packages
+          (OpamSwitchState.unavailable_reason t) cs in
       if cycles <> [] then begin
         OpamConsole.error
           "Dependency errors in the upgrade actions. Please update, and \
@@ -423,7 +425,8 @@ let slog = OpamConsole.slog
       | _, Success _ -> true
       | _, Conflicts cs ->
         log "conflict: %a"
-          (slog (OpamCudf.string_of_conflict @@ OpamSwitchState.unavailable_reason t))
+          (slog (OpamCudf.string_of_conflict t.packages @@
+                 OpamSwitchState.unavailable_reason t))
           cs;
         false
     in
@@ -459,7 +462,8 @@ let slog = OpamConsole.slog
            available. Either fix their prerequisites or change them through \
            'opam list --base' and 'opam switch set-base'.";
         OpamConsole.errmsg "%s"
-          (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
+          (OpamCudf.string_of_conflict t.packages
+             (OpamSwitchState.unavailable_reason t) cs);
         t, No_solution
       | Success solution ->
         let _, req_rm, _ = orphans ~transitive:false t in
@@ -888,7 +892,8 @@ let slog = OpamConsole.slog
         | Conflicts cs ->
           log "conflict!";
           OpamConsole.msg "%s"
-            (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
+            (OpamCudf.string_of_conflict t.packages
+               (OpamSwitchState.unavailable_reason t) cs);
           t, No_solution
         | Success solution ->
           let solution =

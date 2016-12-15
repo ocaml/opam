@@ -193,7 +193,7 @@ let install_compiler_packages t atoms =
     | Success s -> s
     | Conflicts cs ->
       OpamConsole.error_and_exit "Could not resolve set of base packages:\n%s"
-        (OpamCudf.string_of_conflict
+        (OpamCudf.string_of_conflict t.packages
            (OpamSwitchState.unavailable_reason t) cs);
   in
   let () = match OpamSolver.stats solution with

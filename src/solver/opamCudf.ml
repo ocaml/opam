@@ -277,7 +277,7 @@ let strings_of_reason cudfnv2opam (unav_reasons: atom -> string) r =
   | Dependency _  -> []
 
 
-let make_chains cudfnv2opam depends =
+let make_chains packages cudfnv2opam depends =
   let open Algo.Diagnostic in
   let map_addlist k v map =
     try Map.add k (v @ Map.find k map) map
@@ -329,10 +329,11 @@ let make_chains cudfnv2opam depends =
                  OpamFormula.ands (List.map to_opam_constr conj))
                 name_constrs)
         in
-        let formula = OpamFormula.simplify_version_formula formula in
         let opam_name =
           OpamPackage.Name.of_string (Common.CudfAdd.decode name)
         in
+        let all_versions = OpamPackage.versions_of_name packages opam_name in
+        let formula = OpamFormula.simplify_version_set all_versions formula in
         let formula = Atom (opam_name, formula) in
         let children_constrs =
           List.map (fun p -> try Map.find p vpkgs with Not_found -> [])
@@ -359,8 +360,8 @@ let strings_of_final_reasons cudfnv2opam unav_reasons reasons =
          reasons) in
   OpamStd.String.Set.(elements (of_list reasons))
 
-let strings_of_chains cudfnv2opam reasons =
-  let chains = make_chains cudfnv2opam reasons in
+let strings_of_chains packages cudfnv2opam reasons =
+  let chains = make_chains packages cudfnv2opam reasons in
   let string_of_chain c =
     arrow_concat (List.map OpamFormula.to_string c) in
   List.map string_of_chain chains
@@ -368,23 +369,25 @@ let strings_of_chains cudfnv2opam reasons =
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
-let strings_of_conflict unav_reasons = function
+let strings_of_conflict packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
     strings_of_final_reasons cudfnv2opam unav_reasons r,
-    strings_of_chains cudfnv2opam r,
+    strings_of_chains packages cudfnv2opam r,
     []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], [], strings_of_cycles cycles
 
-let conflict_chains = function
+let conflict_chains packages = function
   | cudf_universe, version_map, Conflict_dep r ->
-    make_chains (cudfnv2opam ~cudf_universe ~version_map) (r ())
+    make_chains packages (cudfnv2opam ~cudf_universe ~version_map) (r ())
   | _ -> []
 
-let string_of_conflict unav_reasons conflict =
-  let final, chains, cycles = strings_of_conflict unav_reasons conflict in
+let string_of_conflict packages unav_reasons conflict =
+  let final, chains, cycles =
+    strings_of_conflict packages unav_reasons conflict
+  in
   let b = Buffer.create 1024 in
   let pr_items b l = List.iter (Printf.bprintf b "  - %s\n") l in
   if cycles <> [] then
