@@ -541,14 +541,31 @@ let import st filename =
   in
   import_t importfile st
 
-let set_compiler st names =
-  let packages =
-    try List.map (OpamSwitchState.find_installed_package_by_name st) names
-    with Not_found ->
-      OpamConsole.error_and_exit "These packages are not installed: %s"
-        (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
-           (List.filter (not @* OpamSwitchState.is_name_installed st) names))
+let set_compiler st namesv =
+  let name_unknown =
+    List.filter (fun (name,_) -> not (OpamPackage.has_name st.packages name))
+      namesv
   in
+  if name_unknown <> [] then
+    OpamConsole.error_and_exit "No packages by these names found: %s"
+      (OpamStd.List.concat_map ", " (OpamPackage.Name.to_string @* fst)
+         name_unknown);
+  let packages =
+    List.map (function
+          | name, Some v -> OpamPackage.create name v
+          | name, None -> OpamSwitchState.get_package st name)
+      namesv
+  in
+  let uninstalled =
+    List.filter (fun nv -> not (OpamPackage.Set.mem nv st.installed)) packages
+  in
+  if uninstalled <> [] then
+    (OpamConsole.warning
+       "These packages are not installed:\n%s"
+       (OpamStd.List.concat_map ", " OpamPackage.to_string uninstalled);
+     if not (OpamConsole.confirm
+               "Set them as compilers at the proposed versions anyways ?")
+     then OpamConsole.error_and_exit "Aborted");
   let st = { st with compiler_packages = OpamPackage.Set.of_list packages } in
   OpamSwitchAction.write_selections st;
   st

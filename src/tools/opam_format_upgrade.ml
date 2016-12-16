@@ -447,8 +447,9 @@ let process args =
         let redir = (OpamUrl.to_string base_url,
                      Some (FOp (opam_version_fid, `Lt, FString "2.0~")))
         in
+        repo0 |>
+        OpamFile.Repo.with_opam_version (OpamVersion.current_nopatch) |>
         OpamFile.Repo.with_redirect (redir :: OpamFile.Repo.redirect repo0)
-          repo0
       in
       OpamFile.Repo.write repo_file repo_12;
       OpamFile.Repo.write
