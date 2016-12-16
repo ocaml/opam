@@ -169,10 +169,10 @@ let resolve_deps args dir names =
       (OpamSolver.get_atomic_action_graph solution) OpamPackage.Set.empty
   | Conflicts cs ->
     OpamConsole.error_and_exit "%s"
-      (OpamCudf.string_of_conflict
+      (OpamCudf.string_of_conflict packages
          (fun atom ->
             Printf.sprintf "%s is unavailable"
-              (OpamFormula.string_of_atom atom))
+              (OpamFormula.to_string (Atom atom)))
          cs)
 
 let rec process

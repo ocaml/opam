@@ -123,6 +123,9 @@ val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 (** Expressions composed entirely of version constraints *)
 type version_formula = version_constraint formula
 
+(** Checks if a given version satisfies a formula *)
+val check_version_formula: version_formula -> OpamPackage.Version.t -> bool
+
 (** An atom is: [name] * ([relop] * [version]) formula.
     Examples of valid formulae:
     - "foo" \{> "1" & (<"3" | ="5")\}
@@ -145,6 +148,12 @@ val of_atom_formula: atom formula -> t
 (** Reduces the formula, finding a shorter description of the same version set.
     Keeps conflicting formula, for documentation, when the set is empty. *)
 val simplify_version_formula: version_formula -> version_formula
+
+(** A more aggressive version of [simplify_version_formula] that attempts to
+    find a shorter formula describing the same subset of versions within a given
+    set. The empty formula is returned for an empty set, and the original
+    formula is otherwise returned as is if no versions match. *)
+val simplify_version_set: OpamPackage.Version.Set.t -> version_formula -> version_formula
 
 (** {2 Atoms} *)
 

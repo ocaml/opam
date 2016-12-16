@@ -105,7 +105,7 @@ let atom_of_name name =
 
 let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
-  let check_atom (name, _ as atom) =
+  let check_atom (name, cstr as atom) =
     let exists =
       try
         OpamPackage.Version.Set.exists
@@ -116,7 +116,11 @@ let check_availability ?permissive t set atoms =
     if exists then None
     else if permissive = Some true
     then Some (OpamSwitchState.not_found_message t atom)
-    else Some (OpamSwitchState.unavailable_reason t atom) in
+    else
+    let f = name, match cstr with None -> Empty | Some c -> Atom c in
+    Some (Printf.sprintf "%s %s"
+            (OpamFormula.to_string (Atom f))
+            (OpamSwitchState.unavailable_reason t f)) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
@@ -272,12 +276,14 @@ module Json = struct
       OpamJson.append "solution" (`A (List.rev to_proceed))
     | Conflicts cs ->
       let causes,_,cycles =
-        OpamCudf.strings_of_conflict (OpamSwitchState.unavailable_reason t) cs
+        OpamCudf.strings_of_conflict
+          t.packages (OpamSwitchState.unavailable_reason t) cs
       in
-      let chains = OpamCudf.conflict_chains cs in
+      let chains = OpamCudf.conflict_chains t.packages cs in
       let jchains =
         `A (List.map (fun c ->
-            `A ((List.map (fun f -> `String (OpamFormula.to_string f)) c)))
+            `A ((List.map (fun f ->
+                `String (OpamFormula.to_string (Atom f))) c)))
             chains)
       in
       let toj l = `A (List.map (fun s -> `String s) l) in
@@ -893,6 +899,7 @@ let resolve_and_apply ?ask t action ~requested ~orphans request =
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"
-      (OpamCudf.string_of_conflict (OpamSwitchState.unavailable_reason t) cs);
+      (OpamCudf.string_of_conflict t.packages
+         (OpamSwitchState.unavailable_reason t) cs);
     t, No_solution
   | Success solution -> apply ?ask t action ~requested solution
