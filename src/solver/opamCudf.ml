@@ -226,7 +226,7 @@ let cycle_conflict ~version_map univ cycle =
 let arrow_concat =
   String.concat (OpamConsole.colorise `yellow " -> ")
 
-let strings_of_reason cudfnv2opam (unav_reasons: atom -> string) r =
+let strings_of_reason packages cudfnv2opam unav_reasons r =
   let open Algo.Diagnostic in
   let is_base cpkg = cpkg.Cudf.keep = `Keep_version in
   match r with
@@ -267,13 +267,26 @@ let strings_of_reason cudfnv2opam (unav_reasons: atom -> string) r =
         (OpamPackage.to_string nva)
         (OpamPackage.to_string nvb) in
     [str]
+(* -- covered by the next case
   | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
     List.map (fun p ->
         unav_reasons (vpkg2atom cudfnv2opam p)
       ) missing
+*)
   | Missing (_,missing) -> (* Dependencies missing *)
-    List.map (fun m -> unav_reasons (vpkg2atom cudfnv2opam m))
-      missing
+    let atoms = List.map (vpkg2atom cudfnv2opam) missing in
+    let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
+    List.map (fun name ->
+        let formula =
+          OpamFormula.ors (List.map (function
+              | n, Some atom when n = name -> Atom atom
+              | _ -> Empty)
+              atoms)
+        in
+        let all_versions = OpamPackage.versions_of_name packages name in
+        let formula = OpamFormula.simplify_version_set all_versions formula in
+        unav_reasons (name, formula))
+      names
   | Dependency _  -> []
 
 
@@ -352,13 +365,25 @@ let make_chains packages cudfnv2opam depends =
     List.map (fun name -> [name,None]) (OpamStd.String.Set.elements set) in
   aux start_constrs roots
 
-let strings_of_final_reasons cudfnv2opam unav_reasons reasons =
-  let reasons =
-    List.flatten
-      (List.map
-         (strings_of_reason cudfnv2opam unav_reasons)
-         reasons) in
-  OpamStd.String.Set.(elements (of_list reasons))
+let strings_of_final_reasons packages cudfnv2opam unav_reasons reasons =
+  let missing, conflicts =
+    List.fold_left (fun (missing, conflicts) -> function
+        | Algo.Diagnostic.Missing (_,m) -> List.rev_append m missing, conflicts
+        | Algo.Diagnostic.Conflict _ as c -> missing, c::conflicts
+        | Algo.Diagnostic.Dependency _ -> missing, conflicts)
+      ([], [])
+      reasons
+  in
+  let reasons_missing =
+    strings_of_reason packages cudfnv2opam unav_reasons
+      (Algo.Diagnostic.Missing (Cudf.default_package, missing))
+  in
+  List.fold_left (fun acc conflict ->
+      List.rev_append
+        (strings_of_reason packages cudfnv2opam unav_reasons conflict)
+        acc)
+    reasons_missing
+    (OpamStd.List.sort_nodup compare conflicts)
 
 let strings_of_chains packages cudfnv2opam reasons =
   let chains = make_chains packages cudfnv2opam reasons in
@@ -373,7 +398,7 @@ let strings_of_conflict packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
-    strings_of_final_reasons cudfnv2opam unav_reasons r,
+    strings_of_final_reasons packages cudfnv2opam unav_reasons r,
     strings_of_chains packages cudfnv2opam r,
     []
   | _univ, _version_map, Conflict_cycle cycles ->

@@ -170,4 +170,4 @@ val not_found_message: 'a switch_state -> atom -> string
 
 (** Returns a printable explanation why a package is not currently available
     (pinned to an incompatible version, unmet [available:] constraints...) *)
-val unavailable_reason: 'a switch_state -> atom -> string
+val unavailable_reason: 'a switch_state -> name * OpamFormula.version_formula -> string

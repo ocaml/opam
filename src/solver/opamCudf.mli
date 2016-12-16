@@ -179,15 +179,17 @@ val cycle_conflict:
 (** Convert a conflict to something readable by the user. The first argument
     should return a string like "lwt<3.2.1 is not available because..." when called
     on an unavailable package (the reason can't be known this deep in the solver) *)
-val string_of_conflict: package_set -> (atom -> string) -> conflict -> string
+val string_of_conflict:
+  package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
+  string
 
 (** Returns three lists of strings:
     - the final reasons why the request can't be satisfied
     - the dependency chains explaining it
     - the cycles in the actions to process (exclusive with the other two) *)
 val strings_of_conflict:
-  package_set ->
-  (atom -> string) -> conflict -> string list * string list * string list
+  package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
+  string list * string list * string list
 
 val conflict_chains: package_set -> conflict -> OpamFormula.t list list
 

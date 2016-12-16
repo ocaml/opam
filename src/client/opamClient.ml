@@ -377,8 +377,7 @@ let slog = OpamConsole.slog
                hdmsg
                (OpamStd.Format.itemize (fun p ->
                     OpamSwitchState.unavailable_reason t
-                      (OpamSolution.eq_atom
-                         (OpamPackage.name p) (OpamPackage.version p)))
+                      (OpamPackage.name p, Atom (`Eq, OpamPackage.version p)))
                    (OpamPackage.Set.elements unav))
            else
              OpamConsole.formatted_msg

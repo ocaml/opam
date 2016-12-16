@@ -520,12 +520,16 @@ let not_found_message st (name, cstr) =
       (OpamPackage.Name.to_string name)
 
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason st (name, _ as atom) =
+let unavailable_reason st (name, vformula) =
+  let candidates = OpamPackage.packages_of_name st.packages name in
   let candidates =
-    OpamPackage.Set.filter (OpamFormula.check atom) st.packages in
+    OpamPackage.Set.filter
+      (fun nv -> OpamFormula.check_version_formula vformula nv.version)
+      candidates
+  in
   if OpamPackage.Set.is_empty candidates then
     Printf.sprintf "No package matching \"%s\" found"
-      (OpamFormula.short_string_of_atom atom)
+      (OpamFormula.to_string (Atom (name, vformula)))
   else
   let nv =
     try OpamPinned.package st name
@@ -535,14 +539,16 @@ let unavailable_reason st (name, _ as atom) =
   if not (OpamPackage.Set.mem nv candidates) then
     Printf.sprintf
       "%s is not available because the package is pinned to version %s."
-      (OpamFormula.short_string_of_atom atom)
+      (OpamFormula.to_string (Atom (name, vformula)))
       (OpamPackage.version_to_string nv)
   else if not (OpamFilter.eval_to_bool ~default:false
                  (OpamPackageVar.resolve_switch ~package:nv st)
                  avail)
   then
-    Printf.sprintf "%s has unmet availability conditions: %s"
-      (OpamPackage.to_string nv)
+    Printf.sprintf "%s has unmet availability conditions%s%s"
+      (OpamFormula.to_string (Atom (name, vformula)))
+      (if OpamPackage.Set.cardinal candidates = 1 then ": "
+       else ", e.g. ")
       (OpamFilter.to_string avail)
   else if OpamPackage.has_name
             (Lazy.force st.available_packages --
@@ -551,7 +557,7 @@ let unavailable_reason st (name, _ as atom) =
             name
   then
     Printf.sprintf "%s is in conflict with the base packages of this switch"
-      (OpamFormula.short_string_of_atom atom)
+      (OpamFormula.to_string (Atom (name, vformula)))
   else
   match OpamPackage.package_of_name_opt st.compiler_packages name with
   | Some nv ->

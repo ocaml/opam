@@ -105,7 +105,7 @@ let atom_of_name name =
 
 let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
-  let check_atom (name, _ as atom) =
+  let check_atom (name, cstr as atom) =
     let exists =
       try
         OpamPackage.Version.Set.exists
@@ -116,7 +116,9 @@ let check_availability ?permissive t set atoms =
     if exists then None
     else if permissive = Some true
     then Some (OpamSwitchState.not_found_message t atom)
-    else Some (OpamSwitchState.unavailable_reason t atom) in
+    else
+    let f = name, match cstr with None -> Empty | Some c -> Atom c in
+    Some (OpamSwitchState.unavailable_reason t f) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;

@@ -366,7 +366,7 @@ let simplify_ineq_formula vcomp f =
     | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Eq, b]
     | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Eq, b]
     | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Eq, b]
-    | (`Leq,a), (`Geq,b) [ (`Geq,b), (`Leq,a) when vcomp a b =  0 -> [`Eq, a]
+    | (`Leq,a), (`Geq,b) | (`Geq,b), (`Leq,a) when vcomp a b =  0 -> [`Eq, a]
     | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Eq, b]
     | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Geq,a]
     | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Gt, a]
@@ -386,7 +386,7 @@ let simplify_ineq_formula vcomp f =
     | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Geq,a]
     | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Gt, a]
     | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Leq,a]
-    | (`Leq,a), (`Geq,b) [ (`Geq,b), (`Leq,a) when vcomp a b =  0 -> []
+    | (`Leq,a), (`Geq,b) | (`Geq,b), (`Leq,a) when vcomp a b =  0 -> []
     | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Lt, a]
     | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Neq,b]
     | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Neq,b]
@@ -423,37 +423,29 @@ let simplify_version_formula f =
 let simplify_version_set set f =
   let module S = OpamPackage.Version.Set in
   if S.is_empty set then Empty else
+  let set = fold_left (fun set (_relop, v) -> S.add v set) set f in
   let vmin = S.min_elt set in
-  let vmax = S.max_elt set in
-  let contiguous_ranges, last =
-    S.fold (fun version (ranges, cur) ->
-        if check_version_formula f version then
-          ranges,
-          match cur with
-          | None -> Some (version,version)
-          | Some (vlow,_) -> Some (vlow, version)
-        else
-        match cur with
-        | Some (vlow,vhigh) -> (vlow, vhigh) :: ranges, None
-        | None -> ranges, None
-      )
-      set ([], None)
-  in
-  let contiguous_ranges = match last with
-    | None -> contiguous_ranges
-    | Some (vlow, _) -> (vlow, vmax) :: contiguous_ranges
-  in
-  let disj =
-    List.rev_map (fun (vlow,vhigh) ->
-        if vlow = vhigh && vmin <> vmax then Atom (`Eq, vlow) else
-        ands
-          ((if vlow = vmin then [] else [Atom (`Geq, vlow)]) @
-           (if vhigh = vmax then [] else [Atom (`Leq, vhigh)])))
-      contiguous_ranges
-  in
-  match disj with
-  | [] -> f
-  | disj -> ors disj
+  S.fold (fun version acc ->
+      if check_version_formula f version
+      then make_or acc (Atom (`Geq, version))
+      else make_and acc (Atom (`Lt, version)))
+    set Empty |>
+  partial_eval (function
+      | (`Geq, v) when v = vmin -> `True
+      | (`Lt, v) when v = vmin -> `False
+      | a -> `Formula (Atom a)) |>
+  function
+  | `True -> Empty
+  | `False -> f
+  | `Formula f ->
+    simplify_version_formula f |>
+    map_formula (function
+        | And (Atom (`Geq, vlow), Atom (`Lt, vhigh)) as f ->
+          let _,_,s = S.split vlow set in
+          if S.min_elt s = vhigh then Atom (`Eq, vlow) else f
+        | f -> f)
+
+
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula
