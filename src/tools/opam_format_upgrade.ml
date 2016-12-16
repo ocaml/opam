@@ -158,6 +158,29 @@ let do_upgrade () =
       OpamStd.String.Map.empty
   in
 
+  let get_url_md5, save_cache =
+    let url_md5 = Hashtbl.create 187 in
+    let () =
+      OpamFile.Lines.read_opt cache_file +! [] |> List.iter @@ function
+      | [url; md5] -> Hashtbl.add url_md5 (OpamUrl.of_string url) (OpamHash.of_string md5)
+      | _ -> failwith "Bad cache"
+    in
+    (fun url ->
+       try Done (Some (Hashtbl.find url_md5 url))
+       with Not_found ->
+         OpamFilename.with_tmp_dir_job @@ fun dir ->
+         OpamProcess.Job.ignore_errors ~default:None
+           (fun () ->
+              OpamDownload.download ~overwrite:false url dir @@| fun f ->
+              let hash = OpamHash.compute (OpamFilename.to_string f) in
+              Hashtbl.add url_md5 url hash;
+              Some hash)),
+    (fun () ->
+       Hashtbl.fold
+         (fun url hash l -> [OpamUrl.to_string url; OpamHash.to_string hash]::l)
+         url_md5 [] |>
+       OpamFile.Lines.write cache_file)
+  in
   let ocaml_versions =
     OpamStd.String.Map.fold (fun c comp_file ocaml_versions ->
       let comp = OpamFile.Comp.read (OpamFile.make comp_file) in
@@ -210,45 +233,42 @@ let do_upgrade () =
             ])
         else opam
       in
+      let opam =
+        match OpamFile.OPAM.url opam with
+        | Some urlf when OpamFile.URL.checksum urlf = [] ->
+          (match OpamProcess.Job.run (get_url_md5 (OpamFile.URL.url urlf)) with
+           | None -> None
+           | Some hash ->
+             Some
+               (OpamFile.OPAM.with_url (OpamFile.URL.with_checksum [hash] urlf)
+                  opam))
+        | _ -> Some opam
+      in
+      match opam with
+      | None ->
+        OpamConsole.error
+          "Could not get the archive of %s, skipping"
+          (OpamPackage.to_string nv);
+        ocaml_versions
+      | Some opam ->
       let patches = OpamFile.Comp.patches comp in
       if patches <> [] then
         OpamConsole.msg "Fetching patches of %s to check their hashes...\n"
           (OpamPackage.to_string nv);
-      let url_md5 =
-        (OpamFile.Lines.read_opt cache_file +! [] |> List.map @@ function
-          | [url; md5] -> OpamUrl.of_string url, OpamHash.of_string md5
-          | _ -> failwith "Bad cache") |>
-        OpamUrl.Map.of_list
-      in
       let extra_sources =
         (* Download them just to get their MD5 *)
         OpamParallel.map
           ~jobs:3
           ~command:(fun url ->
-              try Done (Some (url, OpamUrl.Map.find url url_md5, None))
-              with Not_found ->
-                let err e =
-                  OpamConsole.error
-                    "Could not get patch file for %s from %s (%s), skipping"
-                    (OpamPackage.to_string nv) (OpamUrl.to_string url)
-                    (Printexc.to_string e);
-                  Done None
-                in
-                OpamFilename.with_tmp_dir_job @@ fun dir ->
-                OpamProcess.Job.catch err
-                  (fun () ->
-                     OpamDownload.download ~overwrite:false url dir @@| fun f ->
-                     Some (url, OpamHash.compute (OpamFilename.to_string f), None)))
+              get_url_md5 url @@| function
+              | Some md5 -> Some (url, md5, None)
+              | None ->
+                OpamConsole.error
+                  "Could not get patch file for %s from %s, skipping"
+                  (OpamPackage.to_string nv) (OpamUrl.to_string url);
+                None)
           (OpamFile.Comp.patches comp)
       in
-      List.fold_left
-        (fun url_md5 -> function
-           | Some (url,md5,_) -> OpamUrl.Map.add url md5 url_md5
-           | None -> url_md5)
-        url_md5 extra_sources |>
-      OpamUrl.Map.bindings |>
-      List.map (fun (url,m) -> [OpamUrl.to_string url; OpamHash.to_string m]) |>
-      OpamFile.Lines.write cache_file;
       if List.mem None extra_sources then ocaml_versions
       else
       let opam =
@@ -306,6 +326,7 @@ let do_upgrade () =
       )
     compilers OpamStd.String.Set.empty
   in
+  save_cache ();
 
   (* Generate "ocaml" package wrappers depending on one of the implementations
      at the appropriate version *)
