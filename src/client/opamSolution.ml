@@ -118,7 +118,9 @@ let check_availability ?permissive t set atoms =
     then Some (OpamSwitchState.not_found_message t atom)
     else
     let f = name, match cstr with None -> Empty | Some c -> Atom c in
-    Some (OpamSwitchState.unavailable_reason t f) in
+    Some (Printf.sprintf "%s %s"
+            (OpamFormula.to_string (Atom f))
+            (OpamSwitchState.unavailable_reason t f)) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
@@ -280,7 +282,8 @@ module Json = struct
       let chains = OpamCudf.conflict_chains t.packages cs in
       let jchains =
         `A (List.map (fun c ->
-            `A ((List.map (fun f -> `String (OpamFormula.to_string f)) c)))
+            `A ((List.map (fun f ->
+                `String (OpamFormula.to_string (Atom f))) c)))
             chains)
       in
       let toj l = `A (List.map (fun s -> `String s) l) in

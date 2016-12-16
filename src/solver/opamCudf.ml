@@ -223,8 +223,12 @@ let make_conflicts ~version_map univ = function
 let cycle_conflict ~version_map univ cycle =
   Conflicts (univ, version_map, Conflict_cycle cycle)
 
-let arrow_concat =
-  String.concat (OpamConsole.colorise `yellow " -> ")
+let arrow_concat sl =
+  let arrow =
+    if OpamConsole.utf8 () then " \xe2\x86\x92 " (* U+2192 *)
+    else " -> "
+  in
+  String.concat (OpamConsole.colorise `yellow arrow) sl
 
 let strings_of_reason packages cudfnv2opam unav_reasons r =
   let open Algo.Diagnostic in
@@ -267,13 +271,7 @@ let strings_of_reason packages cudfnv2opam unav_reasons r =
         (OpamPackage.to_string nva)
         (OpamPackage.to_string nvb) in
     [str]
-(* -- covered by the next case
   | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
-    List.map (fun p ->
-        unav_reasons (vpkg2atom cudfnv2opam p)
-      ) missing
-*)
-  | Missing (_,missing) -> (* Dependencies missing *)
     let atoms = List.map (vpkg2atom cudfnv2opam) missing in
     let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
     List.map (fun name ->
@@ -287,6 +285,7 @@ let strings_of_reason packages cudfnv2opam unav_reasons r =
         let formula = OpamFormula.simplify_version_set all_versions formula in
         unav_reasons (name, formula))
       names
+  | Missing _ (* dependency missing, treated in strings_of_chains *)
   | Dependency _  -> []
 
 
@@ -347,7 +346,7 @@ let make_chains packages cudfnv2opam depends =
         in
         let all_versions = OpamPackage.versions_of_name packages opam_name in
         let formula = OpamFormula.simplify_version_set all_versions formula in
-        let formula = Atom (opam_name, formula) in
+        let formula = opam_name, formula in
         let children_constrs =
           List.map (fun p -> try Map.find p vpkgs with Not_found -> [])
             (Set.elements name_deps) in
@@ -366,29 +365,24 @@ let make_chains packages cudfnv2opam depends =
   aux start_constrs roots
 
 let strings_of_final_reasons packages cudfnv2opam unav_reasons reasons =
-  let missing, conflicts =
-    List.fold_left (fun (missing, conflicts) -> function
-        | Algo.Diagnostic.Missing (_,m) -> List.rev_append m missing, conflicts
-        | Algo.Diagnostic.Conflict _ as c -> missing, c::conflicts
-        | Algo.Diagnostic.Dependency _ -> missing, conflicts)
-      ([], [])
-      reasons
-  in
-  let reasons_missing =
-    strings_of_reason packages cudfnv2opam unav_reasons
-      (Algo.Diagnostic.Missing (Cudf.default_package, missing))
-  in
-  List.fold_left (fun acc conflict ->
-      List.rev_append
-        (strings_of_reason packages cudfnv2opam unav_reasons conflict)
-        acc)
-    reasons_missing
-    (OpamStd.List.sort_nodup compare conflicts)
+  let reasons =
+    List.flatten
+      (List.map
+         (strings_of_reason packages cudfnv2opam unav_reasons)
+         reasons) in
+  OpamStd.List.sort_nodup compare reasons
 
-let strings_of_chains packages cudfnv2opam reasons =
+let strings_of_chains packages cudfnv2opam unav_reasons reasons =
   let chains = make_chains packages cudfnv2opam reasons in
   let string_of_chain c =
-    arrow_concat (List.map OpamFormula.to_string c) in
+    match List.rev c with
+    | (name, vform) :: _ ->
+      let all_versions = OpamPackage.versions_of_name packages name in
+      let formula = OpamFormula.simplify_version_set all_versions vform in
+      arrow_concat (List.map (fun c -> OpamFormula.to_string (Atom c)) c)
+      ^ "\n" ^ unav_reasons (name, formula)
+    | [] -> ""
+  in
   List.map string_of_chain chains
 
 let strings_of_cycles cycles =
@@ -399,7 +393,7 @@ let strings_of_conflict packages unav_reasons = function
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
     strings_of_final_reasons packages cudfnv2opam unav_reasons r,
-    strings_of_chains packages cudfnv2opam r,
+    strings_of_chains packages cudfnv2opam unav_reasons r,
     []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], [], strings_of_cycles cycles
@@ -414,7 +408,9 @@ let string_of_conflict packages unav_reasons conflict =
     strings_of_conflict packages unav_reasons conflict
   in
   let b = Buffer.create 1024 in
-  let pr_items b l = List.iter (Printf.bprintf b "  - %s\n") l in
+  let pr_items b l =
+    Buffer.add_string b (OpamStd.Format.itemize (fun s -> s) l)
+  in
   if cycles <> [] then
     Printf.bprintf b
       "The actions to process have cyclic dependencies:\n%a"

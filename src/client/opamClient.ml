@@ -376,8 +376,11 @@ let slog = OpamConsole.slog
                 The following newer versions couldn't be installed:\n%s"
                hdmsg
                (OpamStd.Format.itemize (fun p ->
-                    OpamSwitchState.unavailable_reason t
-                      (OpamPackage.name p, Atom (`Eq, OpamPackage.version p)))
+                    Printf.sprintf "%s: %s"
+                      (OpamPackage.to_string p)
+                      (OpamSwitchState.unavailable_reason t
+                         (OpamPackage.name p,
+                          Atom (`Eq, OpamPackage.version p))))
                    (OpamPackage.Set.elements unav))
            else
              OpamConsole.formatted_msg
