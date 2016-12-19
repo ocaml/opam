@@ -1402,14 +1402,21 @@ let update =
     mk_flag ["a"; "all"]
       "Update all configured repositories, not only what is set in the current \
        switch" in
-  let update global_options jobs names repos_only dev_only all upgrade =
+  let check =
+    mk_flag ["check"]
+      "Do the update, then return with code 0 if there were any upstream \
+       changes, 1 if there were none. Repositories or development packages \
+       that failed to update are considered without changes. With \
+       $(b,--upgrade), behaves like $(b,opam upgrade --check), that is, \
+       returns 0 only if there are currently availbale updates." in
+  let update global_options jobs names repos_only dev_only all check upgrade =
     apply_global_options global_options;
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ();
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
-    let success, rt =
+    let success, changed, rt =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
         ~dev_only:(dev_only && not repos_only)
@@ -1419,13 +1426,14 @@ let update =
     if upgrade then
       OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
-      ignore @@ OpamClient.upgrade st []
+      ignore @@ OpamClient.upgrade st ~check []
+    else if check then OpamStd.Sys.exit (if changed then 0 else 1)
     else
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
-    if not success then OpamStd.Sys.exit 1
+    if not success then OpamStd.Sys.exit 10
   in
   Term.(pure update $global_options $jobs_flag $name_list
-        $repos_only $dev_only $all $upgrade),
+        $repos_only $dev_only $all $check $upgrade),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
@@ -1444,12 +1452,17 @@ let upgrade =
       "Recover from a broken state (eg. missing dependencies, two conflicting \
        packages installed together...). This requires that you have an \
        external solver installed (aspcud, cudf-services.irill.org, ...)" in
-  let upgrade global_options build_options fixup atoms =
+  let check =
+    mk_flag ["check"]
+      "Don't run the upgrade: just check if anything could be upgraded. \
+       Returns 0 if that is the case, 1 if there is nothing that can be \
+       upgraded." in
+  let upgrade global_options build_options fixup check atoms =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
-      if atoms <> [] then
+      if atoms <> [] || check then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1457,10 +1470,10 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.upgrade st atoms;
+      ignore @@ OpamClient.upgrade st ~check atoms;
       `Ok ()
   in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $atom_list)),
+  Term.(ret (pure upgrade $global_options $build_options $fixup $check $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

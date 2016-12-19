@@ -168,7 +168,7 @@ let pull_from_upstream
          (OpamConsole.colorise `green label)
          (match ret with Up_to_date _ -> "no changes" | _ -> "synchronised")
          (OpamUrl.to_string url);
-       Result None)
+       ret)
     else
       (OpamConsole.error "%s: file checksum specified, but a directory was \
                           retrieved from %s"
@@ -226,8 +226,8 @@ let pull_tree
     pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
       remote_urls
     @@+ function
-    | Up_to_date _ -> assert false
-    | Result (Some archive) ->
+    | Up_to_date None -> Done (Up_to_date ())
+    | Up_to_date (Some archive) | Result (Some archive) ->
       OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
       let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
       OpamFilename.move ~src:archive ~dst:tmp_archive;
@@ -359,6 +359,10 @@ let apply_repo_update repo = function
          (OpamRepositoryName.to_string repo.repo_name));
     Done ()
   | Update_patch f ->
+    OpamConsole.msg "[%s] synchronised from %s\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamUrl.to_string repo.repo_url);
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
@@ -368,6 +372,10 @@ let apply_repo_update repo = function
         raise e
       | None -> OpamFilename.remove f; Done ())
   | Update_empty ->
+    OpamConsole.msg "[%s] no changes from %s\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamUrl.to_string repo.repo_url);
     log "%a: applying empty update"
       (slog OpamRepositoryName.to_string) repo.repo_name;
     Done ()
@@ -383,8 +391,7 @@ let update repo =
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
-  | Update_empty -> Done ()
-  | (Update_full _ | Update_patch _) as upd ->
+  | (Update_empty | Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
         raise exn)

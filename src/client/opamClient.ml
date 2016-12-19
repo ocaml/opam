@@ -308,7 +308,7 @@ let slog = OpamConsole.slog
          ~wish_upgrade:upgrade_atoms
          ())
 
-  let upgrade_t ?strict_upgrade ?auto_install ?ask atoms t =
+  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
@@ -347,6 +347,11 @@ let slog = OpamConsole.slog
       end;
       OpamStd.Sys.exit 3
     | requested, action, Success solution ->
+      if check then
+        if OpamSolver.solution_is_empty solution
+        then OpamStd.Sys.exit 1
+        else OpamStd.Sys.exit 0
+      else
       let t, result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
         let to_check =
@@ -396,10 +401,10 @@ let slog = OpamConsole.slog
       OpamSolution.check_solution t result;
       t
 
-  let upgrade t names =
+  let upgrade t ?check names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t atoms t
+    upgrade_t ?check atoms t
 
   let fixup t =
     log "FIXUP";
@@ -558,6 +563,7 @@ let slog = OpamConsole.slog
         (String.concat ", " remaining);
 
     (* Do the updates *)
+    let rt_before = rt in
     let repo_update_success, rt =
       if repo_names = [] then true, rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
@@ -567,12 +573,18 @@ let slog = OpamConsole.slog
            (fun r -> OpamRepositoryName.Map.find r rt.repositories)
            repo_names)
     in
+    let repo_changed =
+      not
+        (OpamRepositoryName.Map.equal
+           (OpamPackage.Map.equal (OpamFile.OPAM.effectively_equal))
+           rt_before.repo_opams rt.repo_opams)
+    in
 
     (* st is still based on the old rt, it's not a problem at this point, but
        don't return it *)
-    let (dev_update_success, _updates), _st =
+    let (dev_update_success, dev_changed), _st =
       if OpamPackage.Set.is_empty packages then
-        (true, OpamPackage.Set.empty), st
+        (true, false), st
       else
         OpamSwitchState.with_write_lock st @@ fun st ->
         OpamConsole.header_msg "Synchronizing development packages";
@@ -580,9 +592,11 @@ let slog = OpamConsole.slog
         if OpamClientConfig.(!r.json_out <> None) then
           OpamJson.append "dev-packages-updates"
             (OpamPackage.Set.to_json updates);
-        (success, updates), st
+        (success, not (OpamPackage.Set.is_empty updates)), st
     in
-    repo_update_success && dev_update_success, rt
+    repo_update_success && dev_update_success,
+    repo_changed || dev_changed,
+    rt
 
   let init
       ?init_config ?repo ?(bypass_checks=false)
