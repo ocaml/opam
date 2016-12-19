@@ -168,7 +168,7 @@ let pull_from_upstream
          (OpamConsole.colorise `green label)
          (match ret with Up_to_date _ -> "no changes" | _ -> "synchronised")
          (OpamUrl.to_string url);
-       Result None)
+       ret)
     else
       (OpamConsole.error "%s: file checksum specified, but a directory was \
                           retrieved from %s"
@@ -226,8 +226,8 @@ let pull_tree
     pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
       remote_urls
     @@+ function
-    | Up_to_date _ -> assert false
-    | Result (Some archive) ->
+    | Up_to_date None -> Done (Up_to_date ())
+    | Up_to_date (Some archive) | Result (Some archive) ->
       OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
       let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
       OpamFilename.move ~src:archive ~dst:tmp_archive;
