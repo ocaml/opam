@@ -532,7 +532,12 @@ let unavailable_reason st (name, vformula) =
   else
   let nv =
     try OpamPinned.package st name
-    with Not_found -> OpamPackage.max_version candidates name
+    with Not_found ->
+      match vformula with
+      | Atom (_, v) when
+          OpamPackage.Set.mem (OpamPackage.create name v) candidates ->
+        OpamPackage.create name v
+      | _ -> OpamPackage.max_version candidates name
   in
   let avail = OpamFile.OPAM.available (opam st nv) in
   if not (OpamPackage.Set.mem nv candidates) then
