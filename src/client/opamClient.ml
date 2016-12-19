@@ -308,7 +308,7 @@ let slog = OpamConsole.slog
          ~wish_upgrade:upgrade_atoms
          ())
 
-  let upgrade_t ?strict_upgrade ?auto_install ?ask atoms t =
+  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
@@ -347,6 +347,11 @@ let slog = OpamConsole.slog
       end;
       OpamStd.Sys.exit 3
     | requested, action, Success solution ->
+      if check then
+        if OpamSolver.solution_is_empty solution
+        then OpamStd.Sys.exit 1
+        else OpamStd.Sys.exit 0
+      else
       let t, result = OpamSolution.apply ?ask t action ~requested solution in
       if result = Nothing_to_do then (
         let to_check =
@@ -396,10 +401,10 @@ let slog = OpamConsole.slog
       OpamSolution.check_solution t result;
       t
 
-  let upgrade t names =
+  let upgrade t ?check names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t atoms t
+    upgrade_t ?check atoms t
 
   let fixup t =
     log "FIXUP";
