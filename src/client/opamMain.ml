@@ -470,7 +470,12 @@ let list =
       all_versions ||
       state_selector = [] && match packages with
       | [single] ->
-        (try ignore (OpamPackage.Name.of_string single); true
+        let nameglob =
+          match OpamStd.String.cut_at single '.' with
+          | None -> single
+          | Some (n, _v) -> n
+        in
+        (try ignore (OpamPackage.Name.of_string nameglob); true
          with Failure _ -> false)
       | _ -> false
     in
