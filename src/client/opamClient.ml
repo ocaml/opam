@@ -563,6 +563,7 @@ let slog = OpamConsole.slog
         (String.concat ", " remaining);
 
     (* Do the updates *)
+    let rt_before = rt in
     let repo_update_success, rt =
       if repo_names = [] then true, rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
@@ -572,12 +573,18 @@ let slog = OpamConsole.slog
            (fun r -> OpamRepositoryName.Map.find r rt.repositories)
            repo_names)
     in
+    let repo_changed =
+      not
+        (OpamRepositoryName.Map.equal
+           (OpamPackage.Map.equal (OpamFile.OPAM.effectively_equal))
+           rt_before.repo_opams rt.repo_opams)
+    in
 
     (* st is still based on the old rt, it's not a problem at this point, but
        don't return it *)
-    let (dev_update_success, _updates), _st =
+    let (dev_update_success, dev_changed), _st =
       if OpamPackage.Set.is_empty packages then
-        (true, OpamPackage.Set.empty), st
+        (true, false), st
       else
         OpamSwitchState.with_write_lock st @@ fun st ->
         OpamConsole.header_msg "Synchronizing development packages";
@@ -585,9 +592,11 @@ let slog = OpamConsole.slog
         if OpamClientConfig.(!r.json_out <> None) then
           OpamJson.append "dev-packages-updates"
             (OpamPackage.Set.to_json updates);
-        (success, updates), st
+        (success, not (OpamPackage.Set.is_empty updates)), st
     in
-    repo_update_success && dev_update_success, rt
+    repo_update_success && dev_update_success,
+    repo_changed || dev_changed,
+    rt
 
   let init
       ?init_config ?repo ?(bypass_checks=false)

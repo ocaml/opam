@@ -359,6 +359,10 @@ let apply_repo_update repo = function
          (OpamRepositoryName.to_string repo.repo_name));
     Done ()
   | Update_patch f ->
+    OpamConsole.msg "[%s] synchronised from %s\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamUrl.to_string repo.repo_url);
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
@@ -368,6 +372,10 @@ let apply_repo_update repo = function
         raise e
       | None -> OpamFilename.remove f; Done ())
   | Update_empty ->
+    OpamConsole.msg "[%s] no changes from %s\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamUrl.to_string repo.repo_url);
     log "%a: applying empty update"
       (slog OpamRepositoryName.to_string) repo.repo_name;
     Done ()
@@ -383,8 +391,7 @@ let update repo =
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
-  | Update_empty -> Done ()
-  | (Update_full _ | Update_patch _) as upd ->
+  | (Update_empty | Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
         raise exn)

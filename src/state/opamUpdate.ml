@@ -188,15 +188,17 @@ let pinned_package st ?version ?(working_dir=false) name =
       Some (snd (OpamPackage.Map.min_binding above))
     | _ -> None
   in
-  (if working_dir || url.OpamUrl.hash = None then Done () else
-     OpamRepository.current_branch url @@+ fun branch ->
-     if branch <> url.OpamUrl.hash then Done () else
-       OpamRepository.is_dirty url @@| function
-       | false -> ()
-       | true ->
-         OpamConsole.note
-           "Ignoring uncommitted changes in %s (`--working-dir' not active)."
-           (OpamUrl.base_url url))
+  (if working_dir then Done () else
+     (match url.OpamUrl.hash with
+      | None -> Done true
+      | Some h ->
+        OpamRepository.current_branch url @@| fun branch -> branch = Some h)
+     @@+ function false -> Done () | true ->
+       OpamRepository.is_dirty url
+     @@| function false -> () | true ->
+       OpamConsole.note
+         "Ignoring uncommitted changes in %s (`--working-dir' not active)."
+         url.OpamUrl.path)
   @@+ fun () ->
   (* Do the update *)
   fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
