@@ -250,23 +250,20 @@ let strings_of_reason packages cudfnv2opam unav_reasons r =
             (OpamPackage.to_string (cudf2opam a)) in
         [str]
     else
-    let nva, nvb =
-      let nvi = cudf2opam i in
-      let nvj = cudf2opam j in
-      min nvi nvj, max nvi nvj in
     if i.Cudf.package = j.Cudf.package then
-      if is_base j then
+      if is_base i || is_base j then
         let str =
           Printf.sprintf "Package %s is part of the base for this compiler \
                           and can't be changed"
-            (OpamPackage.name_to_string nvb) in
+            (OpamPackage.name_to_string (cudf2opam i)) in
         [str]
       else
       let str = Printf.sprintf "No available version of %s satisfies the \
                                 constraints"
-          (OpamPackage.name_to_string nva) in
+          (OpamPackage.name_to_string (cudf2opam i)) in
       [str]
     else
+    let nva, nvb = cudf2opam i, cudf2opam j in
     let str = Printf.sprintf "%s is in conflict with %s"
         (OpamPackage.to_string nva)
         (OpamPackage.to_string nvb) in
