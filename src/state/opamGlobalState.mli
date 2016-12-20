@@ -25,6 +25,8 @@ val with_: 'a lock -> ('a global_state -> 'b) -> 'b
 (** The set of all installed packages, in any switch *)
 val all_installed: 'a global_state -> package_set
 
+val switches: 'a global_state -> switch list
+
 val fold_switches:
   (switch -> switch_selections -> 'a -> 'a) -> 'b global_state -> 'a -> 'a
 

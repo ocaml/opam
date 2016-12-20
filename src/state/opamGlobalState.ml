@@ -83,6 +83,9 @@ let load lock_kind =
     config;
     global_variables; }
 
+let switches gt =
+  OpamFile.Config.installed_switches gt.config
+
 let fold_switches f gt acc =
   List.fold_left (fun acc switch ->
       f switch

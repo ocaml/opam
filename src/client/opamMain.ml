@@ -2517,15 +2517,146 @@ let lint =
   term_info "lint" ~doc ~man
 
 (* CLEAN *)
-(* Todo:
-   global
-   - clear cache (+ old archives/ dir)
-   - clear logs
-   - find and clean unused repositories
-   for one/all switches:
-   - clear build dirs
-   - clean stale sources (of non-pinned packages)
-*)
+let clean_doc = "Cleans up opam caches"
+let clean =
+  let doc = clean_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Cleans up opam caches, reclaiming some disk space. If no options are \
+        specified, the default is $(b,--download-cache --switch)."
+  ] in
+  let dry_run =
+    mk_flag ["dry-run"]
+      "Print the removal commands, but don't execute them"
+  in
+  let download_cache =
+    mk_flag ["c"; "download-cache"]
+      "Clear the cache of downloaded files ($OPAMROOT/download-cache), as well \
+       as the obsolete $OPAMROOT/archives, if that exists."
+  in
+  let repos =
+    mk_flag ["unused-repositories"]
+      "Clear any configured repository that is not used by any switch nor the \
+       default."
+  in
+  let repo_cache =
+    mk_flag ["r"; "repo-cache"]
+      "Clear the repository cache. It will be rebuilt by the next opam command \
+       that needs it."
+  in
+  let switch =
+    mk_flag ["s";"switch-cleanup"]
+      "Run the switch-specific cleanup: clears backups, build dirs, and \
+       uncompressed package sources of non-dev packages."
+  in
+  let all_switches =
+    mk_flag ["a"; "all-switches"]
+      "Run the switch cleanup commands in all switches. Implies $(b,--switch-cleanup)"
+  in
+  let clean global_options dry_run
+      download_cache repos repo_cache switch all_switches =
+    apply_global_options global_options;
+    let download_cache, switch =
+      if download_cache || repos || repo_cache || switch || all_switches
+      then download_cache, switch
+      else true, true
+    in
+    OpamGlobalState.with_ `Lock_write @@ fun gt ->
+    let root = gt.root in
+    let cleandir d =
+      if dry_run then
+        OpamConsole.msg "rm -rf \"%s\"/*\n"
+          (OpamFilename.Dir.to_string d)
+      else
+        OpamFilename.cleandir d
+    in
+    let rmdir d =
+      if dry_run then
+        OpamConsole.msg "rm -rf \"%s\"\n"
+          (OpamFilename.Dir.to_string d)
+      else
+        OpamFilename.rmdir d
+    in
+    let switches =
+      if all_switches then OpamGlobalState.switches gt
+      else if switch then match OpamStateConfig.(!r.current_switch) with
+        | Some s -> [s]
+        | None -> []
+      else []
+    in
+    if switches <> [] then
+      (OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+       List.iter (fun sw ->
+           OpamConsole.msg "Cleaning up switch %s\n" (OpamSwitch.to_string sw);
+           cleandir (OpamPath.Switch.backup_dir root sw);
+           cleandir (OpamPath.Switch.build_dir root sw);
+           cleandir (OpamPath.Switch.remove_dir root sw);
+           OpamSwitchState.with_ `Lock_write gt ~rt ~switch:sw @@ fun st ->
+           let installed_dev_dirs =
+             OpamPackage.Set.filter (OpamSwitchState.is_dev_package st)
+               st.installed |>
+             OpamPackage.names_of_packages |>
+             OpamPackage.Name.Set.elements |>
+             List.map (OpamPath.Switch.dev_package root sw)
+           in
+           OpamFilename.dirs (OpamPath.Switch.dev_packages_dir root sw) |>
+           List.iter (fun d ->
+               if not (List.mem d installed_dev_dirs) then rmdir d))
+         switches);
+    if repos then
+      (OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root)
+       @@ fun _lock ->
+       let repos_config =
+         OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+       in
+       let all_repos =
+         OpamRepositoryName.Map.keys repos_config |>
+         OpamRepositoryName.Set.of_list
+       in
+       let default_repos =
+         OpamGlobalState.repos_list gt |>
+         OpamRepositoryName.Set.of_list
+       in
+       let unused_repos =
+         List.fold_left (fun repos sw ->
+             let switch_config =
+               OpamFile.Switch_config.safe_read
+                 (OpamPath.Switch.switch_config root sw)
+             in
+             let used_repos =
+               OpamStd.Option.default []
+                 switch_config.OpamFile.Switch_config.repos |>
+               OpamRepositoryName.Set.of_list
+             in
+             OpamRepositoryName.Set.diff repos used_repos)
+           (OpamRepositoryName.Set.diff all_repos default_repos)
+           (OpamGlobalState.switches gt)
+       in
+       OpamRepositoryName.Set.iter (fun r ->
+           OpamConsole.msg "Removing repository %s\n"
+             (OpamRepositoryName.to_string r);
+           rmdir (OpamRepositoryPath.create root r))
+         unused_repos;
+       let repos_config =
+         OpamRepositoryName.Map.filter
+           (fun r _ -> not (OpamRepositoryName.Set.mem r unused_repos))
+           repos_config
+       in
+       OpamConsole.msg "Updating %s\n"
+         (OpamFile.to_string (OpamPath.repos_config root));
+       if not dry_run then
+         OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config);
+    if repo_cache then
+      (OpamConsole.msg "Clearing repository cache\n";
+       if not dry_run then OpamRepositoryState.Cache.remove ());
+    if download_cache then
+      (OpamConsole.msg "Clearing cache of downloaded files\n";
+       rmdir (OpamPath.archives_dir root);
+       cleandir (OpamPath.download_cache root))
+  in
+  Term.(pure clean $global_options $dry_run $download_cache $repos $repo_cache
+        $switch $all_switches),
+  term_info "clean" ~doc ~man
 
 (* HELP *)
 let help =
@@ -2633,6 +2764,7 @@ let commands = [
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   source;
   lint;
+  clean;
   help;
 ]
 
