@@ -88,6 +88,8 @@ let process_dot_install st nv build_dir =
       (* lib *)
       install_files false (instdir_pkg P.lib) I.lib;
       install_files true (instdir_pkg P.lib) I.libexec;
+      install_files false (instdir_gen P.lib_dir) I.lib_root;
+      install_files true (instdir_gen P.lib_dir) I.libexec_root;
 
       (* toplevel *)
       install_files false (instdir_gen P.toplevel) I.toplevel;
