@@ -48,6 +48,7 @@ type selector =
   | Pinned
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
+  | Coinstallable_with of dependency_toggles * package list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
   | Atoms of atom list

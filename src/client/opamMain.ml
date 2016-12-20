@@ -321,6 +321,11 @@ let list =
     Arg.(value & opt (list atom) [] &
          info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["required-by"])
   in
+  let coinstallable_with =
+    let doc = "Only list packages that are compatible with all of $(docv)." in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["coinstallable-with"])
+  in
   let resolve =
     let doc =
       "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
@@ -458,7 +463,8 @@ let list =
            ~doc:"Set the column-separator string")
   in
   let list global_options state_selector field_match
-      depends_on required_by resolve recursive depopts no_switch
+      depends_on required_by coinstallable_with resolve
+      recursive depopts no_switch
       depexts nobuild dev doc test repos has_flag has_tag
       print_short sort columns all_versions normalise wrap separator
       packages =
@@ -483,8 +489,9 @@ let list =
       if state_selector = [] then
         if no_switch then Empty
         else if
-          depends_on = [] && required_by = [] && resolve = [] &&
-          packages = [] && field_match = [] && has_flag = [] && has_tag = []
+          depends_on = [] && required_by = [] && coinstallable_with = [] &&
+          resolve = [] && packages = [] && field_match = [] && has_flag = [] &&
+          has_tag = []
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
@@ -510,6 +517,9 @@ let list =
                 [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
             (match required_by with [] -> [] | rdeps ->
                 [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+            (match coinstallable_with with [] -> [] | pkgs ->
+                [OpamListCommand.Coinstallable_with
+                   (dependency_toggles, pkgs)]) @
             (match resolve with [] -> [] | deps ->
                 [OpamListCommand.Solution (dependency_toggles, deps)]) @
             (if no_switch then [] else
@@ -578,7 +588,8 @@ let list =
       OpamListCommand.print_depexts st results tags_list
   in
   Term.(pure list $global_options $state_selector $field_match
-        $depends_on $required_by $resolve $recursive $depopts
+        $depends_on $required_by $coinstallable_with
+        $resolve $recursive $depopts
         $no_switch $depexts $nobuild $dev $doc_flag $test $repos
         $has_flag $has_tag
         $print_short $sort $columns $all_versions
