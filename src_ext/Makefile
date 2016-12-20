@@ -70,7 +70,7 @@ endef
 
 %.stamp: %.download
 	mkdir -p tmp
-	cd tmp && tar xf$(if $(patsubst %.tar.gz,,$(URL_$*)),j,z) ../$(notdir $(URL_$*))
+	cd tmp && $(if $(patsubst %.tar.gz,,$(URL_$*)),bunzip2,gunzip) -c ../$(notdir $(URL_$*)) | tar x
 	rm -rf $*
 	@for ii in tmp/*; do if [ -d $${ii} ]; then mv $${ii} $*; fi; done; \
 	rm -rf tmp
