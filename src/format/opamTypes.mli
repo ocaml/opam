@@ -104,7 +104,6 @@ type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
 (** Opam package flags *)
 type package_flag =
   | Pkgflag_LightUninstall (** The package doesn't require downloading to uninstall *)
-  | Pkgflag_AllSwitches (** The package is pervasive on all switches (unimplemented) *)
   | Pkgflag_Verbose (** The package's scripts output is to be displayed to the user *)
   | Pkgflag_Plugin (** The package is an opam plugin that will install a
                        [opam-<name>] exec, and may be auto-installed when doing

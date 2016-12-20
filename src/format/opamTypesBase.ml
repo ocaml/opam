@@ -123,7 +123,6 @@ let all_package_flags = [
 
 let string_of_pkg_flag = function
   | Pkgflag_LightUninstall -> "light-uninstall"
-  | Pkgflag_AllSwitches -> "all-switches"
   | Pkgflag_Verbose -> "verbose"
   | Pkgflag_Plugin -> "plugin"
   | Pkgflag_Compiler -> "compiler"
@@ -132,7 +131,6 @@ let string_of_pkg_flag = function
 
 let pkg_flag_of_string = function
   | "light-uninstall" -> Pkgflag_LightUninstall
-  | "all-switches" -> Pkgflag_AllSwitches
   | "verbose" -> Pkgflag_Verbose
   | "plugin" -> Pkgflag_Plugin
   | "compiler" -> Pkgflag_Compiler
