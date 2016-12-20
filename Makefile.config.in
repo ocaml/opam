@@ -1,3 +1,5 @@
+SHELL=bash
+
 OCAMLVERSION = @OCAMLVERSION@
 OCAML_4_03 = @ocaml_4_03@
 OCAML_4_02 = @ocaml_4_02@
