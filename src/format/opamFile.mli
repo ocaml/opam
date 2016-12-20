@@ -748,6 +748,12 @@ module Dot_install: sig
   (** Executable files under lib/ *)
   val libexec: t -> (basename optional * basename option) list
 
+  (** Not relative to the package's lib dir *)
+  val lib_root: t -> (basename optional * basename option) list
+
+  (** Not relative to the package's lib dir, and with +x set *)
+  val libexec_root: t -> (basename optional * basename option) list
+
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
 

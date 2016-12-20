@@ -2699,6 +2699,8 @@ module Dot_installSyntax = struct
     doc     : (basename optional * basename option) list;
     man     : (basename optional * basename option) list;
     libexec : (basename optional * basename option) list;
+    lib_root: (basename optional * basename option) list;
+    libexec_root: (basename optional * basename option) list;
     misc    : (basename optional * filename) list;
   }
 
@@ -2714,6 +2716,8 @@ module Dot_installSyntax = struct
     etc      = [];
     man      = [];
     libexec  = [];
+    lib_root = [];
+    libexec_root = [];
     doc      = [];
   }
 
@@ -2729,6 +2733,8 @@ module Dot_installSyntax = struct
   let raw_man t = t.man
   let doc t = t.doc
   let libexec t = t.libexec
+  let lib_root t = t.lib_root
+  let libexec_root t = t.libexec_root
 
   let with_bin bin t = { t with bin }
   let with_sbin sbin t = { t with sbin }
@@ -2742,6 +2748,8 @@ module Dot_installSyntax = struct
   let with_man man t = { t with man }
   let with_doc doc t = { t with doc }
   let with_libexec libexec t = { t with libexec }
+  let with_lib_root lib_root t = { t with lib_root }
+  let with_libexec_root libexec_root t = { t with libexec_root }
 
   let add_man_section_dir src =
     let file = Filename.basename (OpamFilename.Base.to_string src.c) in
@@ -2817,6 +2825,8 @@ module Dot_installSyntax = struct
       "doc", Pp.ppacc with_doc doc pp_field;
       "man", Pp.ppacc with_man raw_man pp_field;
       "libexec", Pp.ppacc with_libexec libexec pp_field;
+      "lib_root", Pp.ppacc with_lib_root lib_root pp_field;
+      "libexec", Pp.ppacc with_libexec_root libexec_root pp_field;
     ]
 
   let pp =
