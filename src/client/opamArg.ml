@@ -353,7 +353,7 @@ let package =
     let re = Re.(compile @@ seq [
         bos;
         group @@ rep1 @@ diff any (set ">=<.!");
-        opt @@ seq [ char '.'; group @@ rep1 any ];
+        opt @@ seq [ set ".="; group @@ rep1 any ];
         eos;
       ]) in
     try
@@ -373,14 +373,24 @@ let package =
   in
   parse, print
 
+let package_with_version =
+  let parse str =
+    match fst package str with
+    | `Ok (n, Some v) -> `Ok (OpamPackage.create n v)
+    | `Ok (_, None) -> `Error "missing package version"
+    | `Error e -> `Error e
+  in
+  let print ppf nv = pr_str ppf (OpamPackage.to_string nv) in
+  parse, print
+
 (* name * version constraint *)
 let atom =
   let parse str =
     let re = Re.(compile @@ seq [
         bos;
         group @@ rep1 @@ diff any (set ">=<.!");
-        group @@ alt [ seq [ alt [char '<'; char '>']; opt @@ char '=' ];
-                       char '='; char '.'; str "!="; ];
+        group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
+                       set "=."; str "!="; ];
         group @@ rep1 any;
         eos;
       ]) in

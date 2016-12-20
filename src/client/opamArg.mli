@@ -131,8 +131,11 @@ val existing_filename_dirname_or_dash:
 (** Package name converter *)
 val package_name: name Arg.converter
 
-(** [name{.version}] *)
+(** [name{.version}] (or [name=version]) *)
 val package: (name * version option) Arg.converter
+
+(** [name.version] (or [name=version]) *)
+val package_with_version: package Arg.converter
 
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
 val atom: atom Arg.converter

@@ -62,6 +62,7 @@ type selector =
   | Pinned
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
+  | Coinstallable_with of dependency_toggles * package list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
   | Atoms of atom list
@@ -89,6 +90,10 @@ let string_of_selector =
       ((if tog.recursive then "rec-required-by" else "required-by") % `blue)
       (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
        % `bold)
+  | Coinstallable_with (_,packages) ->
+    Printf.sprintf "%s(%s)"
+      ("coinstallable" % `blue)
+      ((OpamStd.List.concat_map " " OpamPackage.to_string packages) % `bold)
   | Solution (_tog,atoms) ->
     Printf.sprintf "%s(%s)"
       ("solution" % `blue)
@@ -211,6 +216,12 @@ let apply_selector ~base st = function
           (fun nv -> List.exists (fun at -> OpamFormula.check at nv) deps)
           packages)
       base
+  | Coinstallable_with (tog, packages) ->
+    let universe = get_universe st tog in
+    let universe =
+      { universe with u_base = OpamPackage.Set.of_list packages }
+    in
+    OpamSolver.installable universe
   | Solution (tog, atoms) ->
     let universe = get_universe st tog in
     let universe =
