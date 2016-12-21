@@ -59,7 +59,7 @@ val noop_remove_package:
   rw switch_state -> package -> bool
 
 (** Removes auxiliary files related to a package, after checking that
-    they're not needed (even in other switches) *)
+    they're not needed *)
 val cleanup_package_artefacts: rw switch_state -> package -> unit
 
 (** Compute the set of packages which will need to be downloaded to apply a

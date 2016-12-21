@@ -2523,7 +2523,7 @@ let clean =
   let man = [
     `S "DESCRIPTION";
     `P "Cleans up opam caches, reclaiming some disk space. If no options are \
-        specified, the default is $(b,--download-cache --switch)."
+        specified, the default is $(b,--download-cache --switch-cleanup)."
   ] in
   let dry_run =
     mk_flag ["dry-run"]
@@ -2546,8 +2546,9 @@ let clean =
   in
   let switch =
     mk_flag ["s";"switch-cleanup"]
-      "Run the switch-specific cleanup: clears backups, build dirs, and \
-       uncompressed package sources of non-dev packages."
+      "Run the switch-specific cleanup: clears backups, build dirs, \
+       uncompressed package sources of non-dev packages, local metadata of \
+       previously pinned packages, etc."
   in
   let all_switches =
     mk_flag ["a"; "all-switches"]
@@ -2587,11 +2588,19 @@ let clean =
     if switches <> [] then
       (OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
        List.iter (fun sw ->
+           OpamSwitchState.with_ `Lock_write gt ~rt ~switch:sw @@ fun st ->
            OpamConsole.msg "Cleaning up switch %s\n" (OpamSwitch.to_string sw);
            cleandir (OpamPath.Switch.backup_dir root sw);
            cleandir (OpamPath.Switch.build_dir root sw);
            cleandir (OpamPath.Switch.remove_dir root sw);
-           OpamSwitchState.with_ `Lock_write gt ~rt ~switch:sw @@ fun st ->
+           let pinning_overlay_dirs =
+             List.map
+               (fun nv -> OpamPath.Switch.Overlay.package root sw nv.name)
+               (OpamPackage.Set.elements st.pinned)
+           in
+           List.iter (fun d ->
+               if not (List.mem d pinning_overlay_dirs) then rmdir d)
+             (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root sw));
            let installed_dev_dirs =
              OpamPackage.Set.filter (OpamSwitchState.is_dev_package st)
                st.installed |>
