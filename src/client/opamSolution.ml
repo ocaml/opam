@@ -251,7 +251,6 @@ module Json = struct
           | Upgrade ps -> `O [ "upgrade", OpamPackage.Set.to_json ps ]
           | Reinstall ps -> `O [ "reinstall", OpamPackage.Set.to_json ps ]
           | Depends -> `String "depends"
-          | Init -> `String "init"
           | Remove -> `String "remove"
           | Switch ns -> `O [ "switch", OpamPackage.Name.Set.to_json ns ]
           | Import  ns -> `O [ "import", OpamPackage.Name.Set.to_json ns ]);
@@ -326,9 +325,6 @@ let parallel_apply t action ~requested action_graph =
   let root_installs =
     let names = OpamPackage.names_of_packages t.installed_roots in
     match action with
-    | Init ->
-      OpamPackage.Name.Set.union names
-        (OpamPackage.names_of_packages t.compiler_packages)
     | Install r | Import r | Switch r  ->
       OpamPackage.Name.Set.union names r
     | Upgrade _ | Reinstall _ -> names

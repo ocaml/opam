@@ -274,14 +274,20 @@ type 'a request = {
 
 (** user request action *)
 type user_action =
-  | Install of name_set (** The 'root' packages to be installed *)
-  | Upgrade of package_set (** The subset of packages to upgrade *)
+  | Install of name_set
+  (** Just install the requested packages. Add [name_set] as roots. *)
+  | Upgrade of package_set
+  (** Upgrade the requested packages, and reinstall [package_set] *)
   | Reinstall of package_set
+  (** Just reinstall [package_set] *)
   | Depends
-  | Init
+  (** Just querying dependencies, no action will be taken *)
   | Remove
-  | Switch of name_set  (** The 'root' packages to be installed *)
-  | Import of name_set  (** The 'root' packages to be installed *)
+  (** Just remove the requested packages *)
+  | Switch of name_set
+  (** Switch init request, add [name_set] as roots *)
+  | Import of name_set
+  (** Switch import request, add [name_set] as roots *)
 
 (** Solver universe *)
 type universe = {
