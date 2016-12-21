@@ -374,6 +374,18 @@ let is_dev_package st nv =
   | Some opam -> OpamPackageVar.is_dev_package st opam
   | None -> false
 
+let is_pinned st name =
+  OpamPackage.has_name st.pinned name
+
+let is_version_pinned st name =
+  match OpamPackage.package_of_name_opt st.pinned name with
+  | None -> false
+  | Some nv ->
+    match opam_opt st nv with
+    | Some opam ->
+      OpamPackage.Map.find_opt nv st.repos_package_index = Some opam
+    | None -> false
+
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)

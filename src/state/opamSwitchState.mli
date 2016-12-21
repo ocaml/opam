@@ -116,6 +116,13 @@ val get_package: 'a switch_state -> name -> package
     packages, but no rule enforces it in opam itself. *)
 val is_dev_package: 'a switch_state -> package -> bool
 
+(** Checks if the given package name is pinned *)
+val is_pinned: 'a switch_state -> name -> bool
+
+(** Checks if the given package is version-pinned, i.e. pinned without
+    overlay metadata, and relying on the repo's data *)
+val is_version_pinned: 'a switch_state -> name -> bool
+
 (** The set of all "dev packages" (see [is_dev_package] for a definition) *)
 val dev_packages: 'a switch_state -> package_set
 
