@@ -44,8 +44,8 @@ distclean: clean
 	rm -f src/*.META
 	rm -f src/core/opamVersion.ml
 
-OPAMINSTALLER_FLAGS = --prefix $(DESTDIR)$(prefix)
-OPAMINSTALLER_FLAGS += --mandir $(DESTDIR)$(mandir)
+OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
+OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
 
 # With ocamlfind, prefer to install to the standard directory rather
 # than $(prefix) if there are no overrides
@@ -56,7 +56,7 @@ endif
 endif
 
 ifneq ($(LIBINSTALL_DIR),)
-    OPAMINSTALLER_FLAGS += --libdir $(LIBINSTALL_DIR)
+    OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
 endif
 
 opam-%.install: ALWAYS
