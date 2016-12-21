@@ -516,6 +516,7 @@ let slog = OpamConsole.slog
       let dev_packages, nondev_packages =
         OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
       in
+      let dev_packages = dev_packages -- (st.compiler_packages -- st.pinned) in
       if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
         OpamConsole.warning
           "The following are not development packages (no dynamic or version \

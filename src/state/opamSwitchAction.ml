@@ -104,7 +104,6 @@ let add_to_reinstall st ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
     (slog OpamPackage.Set.to_string) packages;
   let root = st.switch_global.root in
-  let packages = packages -- st.compiler_packages in
   let packages =
     if unpinned_only then
       OpamPackage.Set.filter
