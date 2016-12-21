@@ -104,6 +104,9 @@ module Switch: sig
   (** Temporary folder: {i $meta/build} *)
   val build_dir: t -> switch -> dirname
 
+  (** Temporary folder: {i $meta/remove} *)
+  val remove_dir: t -> switch -> dirname
+
   (** Installed files for a given package: {i
       $meta/install/$name.install} *)
   val install: t -> switch -> name -> OpamFile.Dot_install.t OpamFile.t

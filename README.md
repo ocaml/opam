@@ -87,7 +87,7 @@ Keep track of development and community news.
 
 We welcome contributions ! Please use Github's pull-request mechanism against
 the master branch of the [OPAM repository](https://github.com/ocaml/opam). If
-that's not an option for you, you can use `git format-patch` and email TODO.
+that's not an option for you, you can use `git format-patch` and email us.
 
 ## Versioning
 

@@ -566,13 +566,13 @@ let cleanup_package_artefacts t nv =
   let dev_dir =
     OpamPath.Switch.dev_package t.switch_global.root t.switch name
   in
-  if not (OpamPackage.Set.mem nv t.installed) then (
-    if OpamFilename.exists_dir dev_dir then (
-      log "Cleaning-up the switch repository";
-      OpamFilename.rmdir dev_dir );
-    log "Removing the local metadata";
-    OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv);
-  )
+  if OpamPackage.Set.mem nv t.installed then
+    (if not (OpamSwitchState.is_dev_package t nv) then
+       OpamFilename.rmdir dev_dir)
+  else
+    (OpamFilename.rmdir dev_dir;
+     log "Removing the local metadata";
+     OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv))
 
 let sources_needed st g =
   PackageActionGraph.fold_vertex (fun act acc ->
