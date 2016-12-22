@@ -102,7 +102,9 @@ let slog = OpamConsole.slog
         lazy (Lazy.force t.available_packages ++
               (t.installed -- orphans)) in
       { t with available_packages } in
-    log "Orphans: full %a, versions %a"
+    log "Orphans: (changes: %a, transitive: %b) -> full %a, versions %a"
+      (slog @@ OpamStd.Option.to_string OpamPackage.Set.to_string) changes
+      transitive
       (slog @@ OpamPackage.Name.Set.to_string @* OpamPackage.names_of_packages)
       full_orphans
       (slog OpamPackage.Set.to_string) orphan_versions;
@@ -782,15 +784,19 @@ let slog = OpamConsole.slog
   let check_conflicts t atoms =
     let changes = OpamSwitchState.packages_of_atoms t atoms in
     let t, full_orphans, orphan_versions = orphans ~changes t in
+    let available_changes = changes %% Lazy.force t.available_packages in
     (* packages which still have local data are OK for install/reinstall *)
     let has_no_local_data nv =
       not (OpamFile.exists
-             (OpamPath.Switch.installed_opam t.switch_global.root t.switch nv)) in
+             (OpamPath.Switch.installed_opam t.switch_global.root t.switch nv))
+    in
     let full_orphans, full_orphans_with_local_data =
       OpamPackage.Set.partition has_no_local_data
         full_orphans in
     let orphan_versions, orphan_versions_with_local_data =
-      OpamPackage.Set.partition has_no_local_data
+      OpamPackage.Set.partition
+        (fun nv -> has_no_local_data nv ||
+                   OpamPackage.has_name available_changes nv.name)
         orphan_versions in
     let available = lazy (t.packages -- full_orphans -- orphan_versions) in
     let orphans = full_orphans ++ orphan_versions in
