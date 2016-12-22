@@ -190,7 +190,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     else `Keep_none
   in
   let reinstall = match universe.u_action with
-    | Upgrade reinstall | Reinstall reinstall ->
+    | Upgrade (reinstall, _) | Reinstall reinstall ->
       OpamPackage.Set.mem package reinstall
     | _                 -> false in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in

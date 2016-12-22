@@ -1243,16 +1243,12 @@ let install =
     Arg.(value & flag & info ["deps-only"]
            ~doc:"Install all its dependencies, but don't actually install the \
                  package.") in
-  let upgrade =
-    Arg.(value & flag & info ["u";"upgrade"]
-           ~doc:"Upgrade the packages if already installed, rather than \
-                 ignoring them") in
   let restore =
     Arg.(value & flag & info ["restore"]
            ~doc:"Attempt to restore packages that were marked for installation \
                  but have been removed due to errors") in
   let install
-      global_options build_options add_to_roots deps_only upgrade restore
+      global_options build_options add_to_roots deps_only restore
       atoms =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1276,12 +1272,13 @@ let install =
       else atoms
     in
     if atoms = [] then `Ok () else
-      (ignore @@ OpamClient.install st atoms add_to_roots ~deps_only ~upgrade;
+      (ignore @@
+       OpamClient.install st atoms add_to_roots ~deps_only;
        `Ok ())
   in
   Term.ret
     Term.(pure install $global_options $build_options
-          $add_to_roots $deps_only $upgrade $restore $atom_list),
+          $add_to_roots $deps_only $restore $atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1473,9 +1470,16 @@ let upgrade =
       "Don't run the upgrade: just check if anything could be upgraded. \
        Returns 0 if that is the case, 1 if there is nothing that can be \
        upgraded." in
-  let upgrade global_options build_options fixup check atoms =
+  let all =
+    mk_flag ["a";"all"]
+      "Run an upgrade of all installed packages. This is the default if \
+       $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
+       to upgrade while ensuring that some packages get or remain installed."
+  in
+  let upgrade global_options build_options fixup check all atoms =
     apply_global_options global_options;
     apply_build_options build_options;
+    let all = all || atoms = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
       if atoms <> [] || check then
@@ -1486,10 +1490,11 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.upgrade st ~check atoms;
+      ignore @@ OpamClient.upgrade st ~check ~all atoms;
       `Ok ()
   in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $check $atom_list)),
+  Term.(ret (pure upgrade $global_options $build_options $fixup $check $all
+             $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
@@ -2863,7 +2868,7 @@ let check_and_run_external_commands () =
             OpamSwitchState.with_ `Lock_write gt (fun st ->
                 ignore @@
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
-                  None ~deps_only:false ~upgrade:false
+                  None ~deps_only:false
               );
             OpamConsole.header_msg "Carrying on to \"%s\""
               (String.concat " " (Array.to_list Sys.argv));

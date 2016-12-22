@@ -219,27 +219,13 @@ let slog = OpamConsole.slog
         t
     )
 
-  let compute_upgrade_t ?(strict_upgrade=true) ?(auto_install=false) atoms t =
+  let compute_upgrade_t
+      ?(strict_upgrade=true) ?(auto_install=false) ~all atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    if atoms = [] then
-      let to_reinstall = t.reinstall %% t.installed in
-      let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-      let to_upgrade = t.installed -- full_orphans in
-      let requested = OpamPackage.Name.Set.empty in
-      let action = Upgrade to_reinstall in
-      requested,
-      action,
-      OpamSolution.resolve t action
-        ~orphans:(full_orphans ++ orphan_versions)
-        ~requested
-        (preprocessed_request t full_orphans orphan_versions
-           ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
-           ~criteria:`Upgrade ())
-    else
     let atoms =
       List.map (function
           | (n,None) when strict_upgrade ->
-            (* force strict update for unchanged, non dev or pinned packages
+            (* force strict upgrade for unchanged, non dev or pinned packages
                (strict update makes no sense for pinned packages which have
                a fixed version) *)
             (try
@@ -257,7 +243,7 @@ let slog = OpamConsole.slog
              with Not_found -> (n,None))
           | atom -> atom
         ) atoms in
-    let to_upgrade, not_installed =
+    let requested_installed, not_installed =
       List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
           try
             let nv =
@@ -278,31 +264,35 @@ let slog = OpamConsole.slog
       then not_installed
       else []
     in
-    let changes =
-      to_upgrade ++ OpamSwitchState.packages_of_atoms t to_install
+    if all then
+      let to_reinstall = t.reinstall %% t.installed in
+      let new_installs =
+        OpamPackage.Name.Set.of_list (List.rev_map fst to_install)
+      in
+      let action = Upgrade (to_reinstall, new_installs) in
+      let t, full_orphans, orphan_versions = orphans ~transitive:true t in
+      let to_upgrade = t.installed -- full_orphans in
+      names,
+      action,
+      OpamSolution.resolve t action
+        ~orphans:(full_orphans ++ orphan_versions)
+        ~requested:names
+        (preprocessed_request t full_orphans orphan_versions
+           ~wish_install:to_install
+           ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
+           ~criteria:`Upgrade ())
+    else
+    let to_reinstall = t.reinstall %% requested_installed in
+    let new_installs =
+      OpamPackage.Name.Set.of_list (List.rev_map fst to_install)
     in
-    let to_reinstall = t.reinstall %% to_upgrade in
-(*
-      (* Only treat related reinstalls (i.e. the ones belonging to the
-         dependency cone of packages specified to update) *)
-      let universe =
-        OpamSwitchState.universe t (Upgrade OpamPackage.Set.empty)
-      in
-      let all_deps =
-        OpamPackage.names_of_packages @@ OpamPackage.Set.of_list @@
-        OpamSolver.dependencies ~depopts:true ~build:false ~installed:true
-          universe changes
-      in
-      OpamPackage.Set.filter
-        (fun nv -> OpamPackage.Name.Set.mem nv.name all_deps)
-        t.reinstall
-      in
-*)
+    let action = Upgrade (to_reinstall, new_installs) in
+    let changes =
+      requested_installed ++ OpamSwitchState.packages_of_atoms t to_install
+    in
     let t, full_orphans, orphan_versions = orphans ~changes t in
-    let to_remove = to_upgrade %% full_orphans in
-    let to_upgrade = to_upgrade -- full_orphans in
-    let requested = names in
-    let action = Upgrade to_reinstall in
+    let to_remove = requested_installed %% full_orphans in
+    let to_upgrade = requested_installed -- full_orphans in
     let upgrade_atoms =
       (* packages corresponds to the currently installed versions.
          Not what we are interested in, recover the original atom constraints *)
@@ -311,22 +301,22 @@ let slog = OpamConsole.slog
           try name, List.assoc name atoms
           with Not_found -> name, None)
         (OpamPackage.Set.elements to_upgrade) in
-    requested,
+    names,
     action,
     OpamSolution.resolve t action
       ~orphans:(full_orphans ++ orphan_versions)
-      ~requested
+      ~requested:names
       (preprocessed_request t full_orphans orphan_versions
          ~wish_install:to_install
          ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
          ~wish_upgrade:upgrade_atoms
          ())
 
-  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) atoms t =
+  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
-    match compute_upgrade_t ?strict_upgrade ?auto_install atoms t with
+    match compute_upgrade_t ?strict_upgrade ?auto_install ~all atoms t with
     | requested, _action, Conflicts cs ->
       log "conflict!";
       if not (OpamPackage.Name.Set.is_empty requested) then
@@ -415,10 +405,10 @@ let slog = OpamConsole.slog
       OpamSolution.check_solution t result;
       t
 
-  let upgrade t ?check names =
+  let upgrade t ?check ~all names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t ?check atoms t
+    upgrade_t ?check ~strict_upgrade:(not all) ~all atoms t
 
   let fixup t =
     log "FIXUP";
@@ -430,7 +420,7 @@ let slog = OpamConsole.slog
        OpamStd.Sys.exit 1)
     else
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-    let action = Upgrade OpamPackage.Set.empty in
+    let action = Upgrade (OpamPackage.Set.empty, OpamPackage.Name.Set.empty) in
     let all_orphans = full_orphans ++ orphan_versions in
     let resolve pkgs =
       pkgs,
@@ -822,7 +812,7 @@ let slog = OpamConsole.slog
       full_orphans,
       orphan_versions
 
-  let install_t ?ask atoms add_to_roots ~deps_only ~upgrade t =
+  let install_t ?ask atoms add_to_roots ~deps_only t =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -839,11 +829,10 @@ let slog = OpamConsole.slog
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              if not upgrade then
-                OpamConsole.note
-                  "Package %s is already installed (current version is %s)."
-                  (OpamPackage.Name.to_string nv.name)
-                  (OpamPackage.Version.to_string nv.version);
+              OpamConsole.note
+                "Package %s is already installed (current version is %s)."
+                (OpamPackage.Name.to_string nv.name)
+                (OpamPackage.Version.to_string nv.version);
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
@@ -901,21 +890,14 @@ let slog = OpamConsole.slog
          available_packages) in
     let t = {t with available_packages = lazy available_packages} in
 
-    let wish_upgrade =
-      if upgrade then List.filter (fun at -> not (List.mem at pkg_new)) atoms
-      else [] in
-
-    if pkg_new <> [] || wish_upgrade <> [] then (
+    if pkg_new <> [] then (
 
       let request =
         preprocessed_request t full_orphans orphan_versions
-          ~wish_install:atoms ~wish_upgrade ();
+          ~wish_install:atoms ();
       in
       let action =
-        if wish_upgrade <> [] then
-          Upgrade (OpamPackage.Set.of_list pkg_skip %% t.reinstall)
-        (* Fixme: the above won't properly handle setting as a root *)
-        else match add_to_roots, deps_only with
+        match add_to_roots, deps_only with
           | Some false, _ | None, true ->
             Install OpamPackage.Name.Set.empty
           | _ -> Install names in
@@ -944,10 +926,10 @@ let slog = OpamConsole.slog
     )
     else t
 
-  let install t names add_to_roots ~deps_only ~upgrade =
+  let install t names add_to_roots ~deps_only =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
-    install_t atoms add_to_roots ~deps_only ~upgrade t
+    install_t atoms add_to_roots ~deps_only t
 
   let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove
@@ -1092,7 +1074,7 @@ let slog = OpamConsole.slog
 
     let post_pin_action st name =
       try
-        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true
+        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
           [name, None] st
       with e ->
         OpamConsole.note
@@ -1179,7 +1161,8 @@ let slog = OpamConsole.slog
               else (nv.name, None) :: acc)
             installed_unpinned []
         in
-        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true atoms st
+        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+          atoms st
       else st
 
     let list = list
