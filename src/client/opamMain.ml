@@ -1473,9 +1473,16 @@ let upgrade =
       "Don't run the upgrade: just check if anything could be upgraded. \
        Returns 0 if that is the case, 1 if there is nothing that can be \
        upgraded." in
-  let upgrade global_options build_options fixup check atoms =
+  let all =
+    mk_flag ["a";"all"]
+      "Run an upgrade of all installed packages. This is the default if \
+       $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
+       to upgrade while ensuring that some packages get or remain installed."
+  in
+  let upgrade global_options build_options fixup check all atoms =
     apply_global_options global_options;
     apply_build_options build_options;
+    let all = all || atoms = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
       if atoms <> [] || check then
@@ -1486,10 +1493,11 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.upgrade st ~check atoms;
+      ignore @@ OpamClient.upgrade st ~check ~all atoms;
       `Ok ()
   in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $check $atom_list)),
+  Term.(ret (pure upgrade $global_options $build_options $fixup $check $all
+             $atom_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

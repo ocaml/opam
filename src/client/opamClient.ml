@@ -219,13 +219,14 @@ let slog = OpamConsole.slog
         t
     )
 
-  let compute_upgrade_t ?(strict_upgrade=true) ?(auto_install=false) atoms t =
+  let compute_upgrade_t ?(strict_upgrade=true) ?(auto_install=false) ~all
+      atoms t =
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    if atoms = [] then
+    if all then
       let to_reinstall = t.reinstall %% t.installed in
       let t, full_orphans, orphan_versions = orphans ~transitive:true t in
       let to_upgrade = t.installed -- full_orphans in
-      let requested = OpamPackage.Name.Set.empty in
+      let requested = names in
       let action = Upgrade to_reinstall in
       requested,
       action,
@@ -233,6 +234,7 @@ let slog = OpamConsole.slog
         ~orphans:(full_orphans ++ orphan_versions)
         ~requested
         (preprocessed_request t full_orphans orphan_versions
+           ~wish_install:atoms
            ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
            ~criteria:`Upgrade ())
     else
@@ -322,11 +324,11 @@ let slog = OpamConsole.slog
          ~wish_upgrade:upgrade_atoms
          ())
 
-  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) atoms t =
+  let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
     log "UPGRADE %a"
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
-    match compute_upgrade_t ?strict_upgrade ?auto_install atoms t with
+    match compute_upgrade_t ?strict_upgrade ?auto_install ~all atoms t with
     | requested, _action, Conflicts cs ->
       log "conflict!";
       if not (OpamPackage.Name.Set.is_empty requested) then
@@ -415,10 +417,10 @@ let slog = OpamConsole.slog
       OpamSolution.check_solution t result;
       t
 
-  let upgrade t ?check names =
+  let upgrade t ?check ~all names =
     let atoms = OpamSolution.sanitize_atom_list t names in
     let t = update_dev_packages_t atoms t in
-    upgrade_t ?check atoms t
+    upgrade_t ?check ~all atoms t
 
   let fixup t =
     log "FIXUP";
@@ -1092,7 +1094,7 @@ let slog = OpamConsole.slog
 
     let post_pin_action st name =
       try
-        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true
+        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
           [name, None] st
       with e ->
         OpamConsole.note
@@ -1179,7 +1181,8 @@ let slog = OpamConsole.slog
               else (nv.name, None) :: acc)
             installed_unpinned []
         in
-        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true atoms st
+        upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+          atoms st
       else st
 
     let list = list
