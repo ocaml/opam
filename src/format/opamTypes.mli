@@ -276,8 +276,9 @@ type 'a request = {
 type user_action =
   | Install of name_set
   (** Just install the requested packages. Add [name_set] as roots. *)
-  | Upgrade of package_set
-  (** Upgrade the requested packages, and reinstall [package_set] *)
+  | Upgrade of package_set * name_set
+  (** Upgrade the requested packages, and reinstall [package_set]. Also add
+      [name_set] as roots. *)
   | Reinstall of package_set
   (** Just reinstall [package_set] *)
   | Depends
