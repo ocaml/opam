@@ -516,6 +516,7 @@ let slog = OpamConsole.slog
       let dev_packages, nondev_packages =
         OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
       in
+      let dev_packages = dev_packages -- (st.compiler_packages -- st.pinned) in
       if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
         OpamConsole.warning
           "The following are not development packages (no dynamic or version \
@@ -893,7 +894,8 @@ let slog = OpamConsole.slog
           ~wish_install:atoms ~wish_upgrade ();
       in
       let action =
-        if wish_upgrade <> [] then Upgrade (OpamPackage.Set.of_list pkg_skip)
+        if wish_upgrade <> [] then
+          Upgrade (OpamPackage.Set.of_list pkg_skip %% t.reinstall)
         (* Fixme: the above won't properly handle setting as a root *)
         else match add_to_roots, deps_only with
           | Some false, _ | None, true ->

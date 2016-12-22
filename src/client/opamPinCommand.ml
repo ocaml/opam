@@ -542,7 +542,7 @@ let list st ~short =
     let opam = OpamSwitchState.opam st nv in
     let url = OpamFile.OPAM.get_url opam in
     let kind, target =
-      if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
+      if OpamSwitchState.is_version_pinned st nv.name then
         "version", OpamPackage.Version.to_string nv.version
       else
       match url with

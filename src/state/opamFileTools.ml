@@ -406,7 +406,15 @@ let lint t =
        instructions"
       (has_flag Pkgflag_Conf t &&
        (t.install <> [] || t.remove <> [] || t.url <> None ||
-        t.extra_sources <> []))
+        t.extra_sources <> []));
+    cond 47 `Warning
+      "Synopsis should start with a capital and not end with a dot"
+      (let valid_re =
+         Re.(compile (seq [bos; diff any (alt [blank; lower]); rep any;
+                           diff any (alt [blank; char '.']); eos]))
+       in
+       match t.descr with None -> false | Some d ->
+         not (Re.execp valid_re (OpamFile.Descr.synopsis d)));
   ]
   in
   format_errors @

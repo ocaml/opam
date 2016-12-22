@@ -309,7 +309,8 @@ let pinned_package st ?version ?(working_dir=false) name =
 
 let dev_package st ?working_dir nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
-  if OpamPackage.Set.mem nv st.pinned then
+  if OpamSwitchState.is_pinned st nv.name &&
+     not (OpamSwitchState.is_version_pinned st nv.name) then
     pinned_package st ~version:nv.version ?working_dir nv.name
   else
   match OpamSwitchState.url st nv with
