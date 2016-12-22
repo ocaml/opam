@@ -1,3 +1,7 @@
+Changes prefixed with "(*)" are potentially breaking to scripts or existing
+repositories (changes that are automatically handled by the format upgrade tools
+are not marked).
+
 2.0~alpha5
 * Merge stdout and stderr of child processes by default
 * Fixed regression on solver call times
@@ -5,7 +9,7 @@
   the corresponding `opam config` commands
 * Simplified `opam repo` to only use `add` and `remove` in normal use, always
   meaning the current switch (only) if not specified otherwise
-* Restrict package names and versions to a reasonable character set
+* (*) Restrict package names and versions to a reasonable character set
 * Added support for SHA256 and SHA512 checksums
 * Separated the opam format lexer/parser/printers into a separate
   `opam-file-format` library
@@ -16,7 +20,7 @@
   directory contains multiple packages. `opam unpin <dir>` now allowed to cancel
   `opam pin <dir>`
 * Updated version of the dose lib dependency
-* All patch files used in package definitions are now assumed to apply with
+* (*) All patch files used in package definitions are now assumed to apply with
   `-p1`.
 
 2.0~alpha4
@@ -33,8 +37,8 @@
   their source directory
 
 2.0~alpha3
-* Refactored 'opam switch' command, creation of new switches no longer implicit
-* Allow per-switch selection of repositories
+* (*) Refactored 'opam switch' command, creation of new switches no longer implicit
+* (*) Allow per-switch selection of repositories
 * Better update of the environment variables across switches or opam roots
 * Add `opam install --restore` to recover packages that got removed due to
   errors or interruptions
@@ -52,7 +56,7 @@
 * Extended the `opam lint` command-line options (package descriptions from opam
   metadata, warnings selection)
 * Allow to create a new switch with `opam switch import`
-* Rewritten, much more flexible `opam list` command, with composable filters and
+* (*) Rewritten, much more flexible `opam list` command, with composable filters and
   output selection
 * Delay the removals of packages as much as possible, avoiding most cases of
   mass uninstalled packages after a build failure
@@ -69,7 +73,7 @@
 * Allow command wrappers around package build/install/remove commands to be
   defined in `~/.opam/config`; include sample Linux wrappers to restrict process
   permissions (e.g. ensure `build:` doesn't install)
-* Reworked `opam show`, with more fields and the ability to select raw fields
+* (*) Reworked `opam show`, with more fields and the ability to select raw fields
   from the opam file (#2122)
 * Dropped ability to compile opam with OCaml earlier than 4.01.0
 * Version constraints in `depopts:` allowed again, but with consistent semantics
@@ -89,12 +93,12 @@
 * Extended package configuration files
 * Allow initialised opam without switch, initialised switch without compiler.
   Better handling of compiler install failure
-* Large API rework, switch and repository state now handled separately, used in
+* (*) Large API rework, switch and repository state now handled separately, used in
   functional style and avoiding many loads
 * Git submodules are now automatically fetched by the git backend
-* Package definition files now prioritize `&` higher than `|`, like is most
+* (*) Package definition files now prioritize `&` higher than `|`, like is most
   common
-* `opam list -a` now lists all available packages, even if they can't be
+* (*) `opam list -a` now lists all available packages, even if they can't be
   installed (missing depends...), which is much faster (#2370)
 * Added ability to reprint files with reduced diffs (#2363)
 * Url and description can now be included within a single package definition
@@ -105,13 +109,13 @@
   variables (#2337, #2361)
 * Built-in support for alternative solver `mccs` (#2333)
 * `opam upgrade pkg` now prompts to install `pkg` if absent (#2327)
-* Assume plugin package and exec names start with "opam-" (#2316, #2317)
+* (*) Assume plugin package and exec names start with "opam-" (#2316, #2317)
 * Reworked, cleaner and bidirectional file manipulation library (kind of lenses)
   (#2325)
 * Allow packages to specify extra remote overlay files within their definition
   files
 * Heuristic to detect bad solutions and print a hint when no solver is available
-* Proper URL handling with version-control + transport handling (e.g.
+* (*) Proper URL handling with version-control + transport handling (e.g.
   `git+https://`)
 * Allow unescaped strings enclosed between `"""` markers in package definition
   files
