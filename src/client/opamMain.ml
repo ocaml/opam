@@ -1243,16 +1243,12 @@ let install =
     Arg.(value & flag & info ["deps-only"]
            ~doc:"Install all its dependencies, but don't actually install the \
                  package.") in
-  let upgrade =
-    Arg.(value & flag & info ["u";"upgrade"]
-           ~doc:"Upgrade the packages if already installed, rather than \
-                 ignoring them") in
   let restore =
     Arg.(value & flag & info ["restore"]
            ~doc:"Attempt to restore packages that were marked for installation \
                  but have been removed due to errors") in
   let install
-      global_options build_options add_to_roots deps_only upgrade restore
+      global_options build_options add_to_roots deps_only restore
       atoms =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1276,12 +1272,13 @@ let install =
       else atoms
     in
     if atoms = [] then `Ok () else
-      (ignore @@ OpamClient.install st atoms add_to_roots ~deps_only ~upgrade;
+      (ignore @@
+       OpamClient.install st atoms add_to_roots ~deps_only;
        `Ok ())
   in
   Term.ret
     Term.(pure install $global_options $build_options
-          $add_to_roots $deps_only $upgrade $restore $atom_list),
+          $add_to_roots $deps_only $restore $atom_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -2871,7 +2868,7 @@ let check_and_run_external_commands () =
             OpamSwitchState.with_ `Lock_write gt (fun st ->
                 ignore @@
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
-                  None ~deps_only:false ~upgrade:false
+                  None ~deps_only:false
               );
             OpamConsole.header_msg "Carrying on to \"%s\""
               (String.concat " " (Array.to_list Sys.argv));

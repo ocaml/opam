@@ -812,7 +812,7 @@ let slog = OpamConsole.slog
       full_orphans,
       orphan_versions
 
-  let install_t ?ask atoms add_to_roots ~deps_only ~upgrade t =
+  let install_t ?ask atoms add_to_roots ~deps_only t =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -829,11 +829,10 @@ let slog = OpamConsole.slog
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              if not upgrade then
-                OpamConsole.note
-                  "Package %s is already installed (current version is %s)."
-                  (OpamPackage.Name.to_string nv.name)
-                  (OpamPackage.Version.to_string nv.version);
+              OpamConsole.note
+                "Package %s is already installed (current version is %s)."
+                (OpamPackage.Name.to_string nv.name)
+                (OpamPackage.Version.to_string nv.version);
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
@@ -891,21 +890,14 @@ let slog = OpamConsole.slog
          available_packages) in
     let t = {t with available_packages = lazy available_packages} in
 
-    let wish_upgrade =
-      if upgrade then List.filter (fun at -> not (List.mem at pkg_new)) atoms
-      else [] in
-
-    if pkg_new <> [] || wish_upgrade <> [] then (
+    if pkg_new <> [] then (
 
       let request =
         preprocessed_request t full_orphans orphan_versions
-          ~wish_install:atoms ~wish_upgrade ();
+          ~wish_install:atoms ();
       in
       let action =
-        if wish_upgrade <> [] then
-          Upgrade (OpamPackage.Set.of_list pkg_skip %% t.reinstall)
-        (* Fixme: the above won't properly handle setting as a root *)
-        else match add_to_roots, deps_only with
+        match add_to_roots, deps_only with
           | Some false, _ | None, true ->
             Install OpamPackage.Name.Set.empty
           | _ -> Install names in
@@ -934,10 +926,10 @@ let slog = OpamConsole.slog
     )
     else t
 
-  let install t names add_to_roots ~deps_only ~upgrade =
+  let install t names add_to_roots ~deps_only =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
-    install_t atoms add_to_roots ~deps_only ~upgrade t
+    install_t atoms add_to_roots ~deps_only t
 
   let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove

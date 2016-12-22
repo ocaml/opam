@@ -28,7 +28,7 @@ val init:
     Third argument installs all dependencies but not the packages themselves *)
 val install:
   rw switch_state ->
-  atom list -> bool option -> deps_only:bool -> upgrade:bool ->
+  atom list -> bool option -> deps_only:bool ->
   rw switch_state
 
 (** Reinstall the given set of packages. *)
