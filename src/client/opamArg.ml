@@ -227,7 +227,8 @@ let help_sections = [
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
       detected when pinning to a local path. Enabled by default since 1.3.0.";
-  `P "$(i,OPAMREQUIRECHECKSUMS) see option `--require-checksums'.";
+  `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
+      available (e.g. for `opam install`).";
   `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam env --root=DIR' when DIR is non-default or OPAMROOT is \

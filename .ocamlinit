@@ -1,0 +1,13 @@
+#use "topfind";;
+#require "opam-client";;
+
+OpamClientConfig.opam_init ();;
+
+let gt = OpamGlobalState.load `Lock_none;;
+OpamConsole.msg "Opam global state for %s loaded in 'gt'\n"
+  OpamStateConfig.(OpamFilename.Dir.to_string !r.root_dir);;
+let rt = OpamRepositoryState.load `Lock_none gt;;
+OpamConsole.msg "Opam repository state loaded in 'rt'\n";;
+let st = OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ());;
+OpamConsole.msg "Opam switch state of '%s' loaded in 'st'\n"
+  (OpamSwitch.to_string (OpamStateConfig.get_switch ()));;
