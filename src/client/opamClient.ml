@@ -39,6 +39,18 @@ let slog = OpamConsole.slog
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
     (* Restriction to the request-related packages *)
+    let changes = match changes with
+      | None -> None
+      | Some ch ->
+        Some
+          (OpamPackage.Name.Set.fold (fun name ch ->
+               try
+                 OpamPackage.Set.add
+                   (OpamPackage.package_of_name t.installed name) ch
+               with Not_found -> ch)
+              (OpamPackage.names_of_packages ch)
+              ch)
+    in
     let orphans = match changes with
       | None -> orphans
       | Some ch ->
