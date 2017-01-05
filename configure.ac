@@ -90,7 +90,8 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3" = "xno" ||
-       test "x$OCAML_PKG_jsonm" = "xno"; }],[
+       test "x$OCAML_PKG_jsonm" = "xno" ||
+       test "x$OCAML_PKG_opam_file_format" = "xno"; }],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "'opam' binary, run 'make lib-ext' to download and include them."

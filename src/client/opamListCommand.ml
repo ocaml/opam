@@ -561,7 +561,9 @@ let display
     else l
   in
   if packages = [] then
-    OpamConsole.msg "%s\n" (OpamConsole.colorise `red "# No matches found")
+    (if header then
+       OpamConsole.errmsg "%s\n"
+         (OpamConsole.colorise `red "# No matches found"))
   else
     List.rev_map
       (fun nv -> List.map (detail_printer ?prettify ?normalise st nv) format)
