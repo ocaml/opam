@@ -52,7 +52,21 @@ let cache_file cache_dir checksum =
   in
   aux cache_dir (OpamHash.to_path checksum)
 
-let fetch_from_cache cache_dir cache_urls checksums =
+let fetch_from_cache =
+  let currently_downloading = ref [] in
+  let rec no_concurrent_dls key f x =
+    if List.mem key !currently_downloading then
+      Run (OpamProcess.command "sleep" ["1"],
+           (fun _ -> no_concurrent_dls key f x))
+    else
+      (currently_downloading := key :: !currently_downloading;
+       OpamProcess.Job.finally
+         (fun () ->
+            currently_downloading :=
+              List.filter (fun k -> k <> key) !currently_downloading)
+         (fun () -> f x))
+  in
+  fun cache_dir cache_urls checksums ->
   let mismatch file =
     OpamConsole.error
       "Conflicting file hashes, or broken or compromised cache !\n%s"
@@ -113,7 +127,7 @@ let fetch_from_cache cache_dir cache_urls checksums =
              Done (Result (local_file, root_cache_url)))
           else mismatch tmpfile
       in
-      try_cache_dl cache_urls
+      no_concurrent_dls checksum try_cache_dl cache_urls
 
 let validate_and_add_to_cache label url cache_dir file checksums =
   try
