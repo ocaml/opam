@@ -618,7 +618,8 @@ let search =
     let doc =
       "Finds installed packages responsible for installing the given file"
     in
-    Arg.(value & opt (some OpamArg.filename) None & info ~doc ["owns-file"])
+    Arg.(value & opt (some OpamArg.filename) None &
+         info ~doc ~docv:"FILE" ["owns-file"])
   in
   let search global_options print_short installed installed_roots
       case_sensitive owns_file pkgs =
@@ -1551,7 +1552,9 @@ let repository =
   ] @ mk_subdoc ~defaults:["","list"] commands in
   let command, params = mk_subcommands commands in
   let scope =
-    let scope_info flags doc = Arg.info ~docs:scope_section ~doc flags in
+    let scope_info ?docv flags doc =
+      Arg.info ~docs:scope_section ~doc ?docv flags
+    in
     let flags =
       Arg.vflag_all [] [
         `No_selection, scope_info ["dont-select"]
@@ -1567,7 +1570,7 @@ let repository =
     in
     let switches =
       Arg.opt Arg.(list string) []
-        (scope_info ["on-switches"]
+        (scope_info ["on-switches"] ~docv:"SWITCHES"
            "Act on the selections of the given list of switches")
     in
     let switches =
@@ -1893,17 +1896,21 @@ let switch =
         OpamListCommand.filter ~base:compilers st
           (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
       in
-      let format = OpamListCommand.([ Name; Version; Synopsis; ]) in
+      let format =
+        if print_short then OpamListCommand.([ Package ])
+        else OpamListCommand.([ Name; Version; Synopsis; ])
+      in
       let order nv1 nv2 =
         if nv1.version = nv2.version
         then OpamPackage.Name.compare nv1.name nv2.name
         else OpamPackage.Version.compare nv1.version nv2.version
       in
-      OpamListCommand.display st ~header:true ~format ~dependency_order:false
+      OpamListCommand.display st ~header:(not print_short) ~format
+        ~dependency_order:false
         ~all_versions:true ~order compilers;
       if all || pattlist <> [] then `Ok () else
       let unshown  = OpamPackage.Set.Op.(all_compilers -- compilers) in
-      if not (OpamPackage.Set.is_empty unshown) then
+      if not (print_short || OpamPackage.Set.is_empty unshown) then
         OpamConsole.msg "# %d more patched or experimental compilers, use \
                          '--all' to show\n"
           (OpamPackage.Set.cardinal unshown);
