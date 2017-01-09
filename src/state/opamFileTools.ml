@@ -534,7 +534,7 @@ let try_read rd f =
     let f = OpamFile.filename f in
     Some (OpamFilename.(Base.to_string (basename f)), bf)
 
-let add_aux_files ?dir opam =
+let add_aux_files ?dir ~files_subdir_hashes opam =
   let dir = match dir with
     | None -> OpamFile.OPAM.metadata_dir opam
     | some -> some
@@ -575,15 +575,16 @@ let add_aux_files ?dir opam =
         OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
       | None, None  -> opam
     in
-    let extra_files =
-      OpamFilename.opt_dir files_dir >>| fun dir ->
-      List.map
-        (fun f ->
-           OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
-           OpamHash.compute (OpamFilename.to_string f))
-        (OpamFilename.rec_files dir)
-    in
     let opam =
+      if not files_subdir_hashes then opam else
+      let extra_files =
+        OpamFilename.opt_dir files_dir >>| fun dir ->
+        List.map
+          (fun f ->
+             OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
+             OpamHash.compute (OpamFilename.to_string f))
+          (OpamFilename.rec_files dir)
+      in
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
       | None, Some ef -> OpamFile.OPAM.with_extra_files ef opam
@@ -606,7 +607,7 @@ let read_opam dir =
     OpamFile.make (dir // "opam")
   in
   match try_read OpamFile.OPAM.read_opt opam_file with
-  | Some opam, None -> Some (add_aux_files ~dir opam)
+  | Some opam, None -> Some (add_aux_files ~dir ~files_subdir_hashes:true opam)
   | _, Some err ->
     OpamConsole.warning
       "Could not read file %s. skipping:\n%s"

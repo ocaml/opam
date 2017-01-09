@@ -416,11 +416,18 @@ let do_upgrade () =
       let nv = OpamFile.OPAM.package opam0 in
       if not (List.mem nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
+        let opam = OpamFileTools.add_aux_files ~files_subdir_hashes:true opam0 in
         let opam =
-          OpamFormatUpgrade.opam_file_from_1_2_to_2_0 ~filename:opam_file opam0
+          OpamFormatUpgrade.opam_file_from_1_2_to_2_0 ~filename:opam_file opam
         in
         if opam <> opam0 then
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
+           List.iter OpamFilename.remove [
+             OpamFile.filename
+               (OpamRepositoryPath.descr repo.repo_root prefix package);
+             OpamFile.filename
+               (OpamRepositoryPath.url repo.repo_root prefix package);
+           ];
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
     packages;
