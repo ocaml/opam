@@ -438,9 +438,20 @@ let process args =
     | None -> do_upgrade ()
     | Some base_url ->
       OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
-      OpamFilename.copy_dir ~src:(OpamFilename.cwd ()) ~dst:tmp_mirror_dir;
-      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / "2.0");
-      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / ".git");
+      let open OpamFilename.Op in
+      let copy_dir d =
+        let src = OpamFilename.cwd () / d in
+        if OpamFilename.exists_dir src then
+          OpamFilename.copy_dir ~src ~dst:(tmp_mirror_dir / d)
+      in
+      let copy_file f =
+        let src = OpamFilename.cwd () // f in
+        if OpamFilename.exists src then
+          OpamFilename.copy ~src ~dst:(tmp_mirror_dir // f)
+      in
+      copy_dir "packages";
+      copy_dir "compilers";
+      copy_file "repo";
       OpamFilename.in_dir tmp_mirror_dir do_upgrade;
       let repo_file = OpamFile.make (OpamFilename.of_string "repo") in
       let repo0 = OpamFile.Repo.safe_read repo_file in
