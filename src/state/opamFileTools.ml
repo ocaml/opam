@@ -552,28 +552,33 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       OpamFilename.Op.(dir / "files")
     in
     let opam =
-      match try_read OpamFile.URL.read_opt url_file with
-      | Some url, None ->
-        if OpamFile.OPAM.url opam <> None then
-          log "Overriding url of %s through external url file at %s"
-            (OpamPackage.to_string (OpamFile.OPAM.package opam))
-            (OpamFilename.Dir.to_string dir);
-        OpamFile.OPAM.with_url url opam
-      | _, Some err ->
+      match OpamFile.OPAM.url opam, try_read OpamFile.URL.read_opt url_file with
+      | None, (Some url, None) -> OpamFile.OPAM.with_url url opam
+      | Some opam_url, (Some url, errs) ->
+        if url = opam_url && errs = None then
+          log "Duplicate definition of url in '%s' and opam file"
+            (OpamFile.to_string url_file)
+        else
+          OpamConsole.warning
+            "File '%s' ignored (conflicting url already specified in the \
+             'opam' file)"
+            (OpamFile.to_string url_file);
+        opam
+      | _, (_, Some err) ->
         OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
-      | None, None -> opam
+      | _, (None, None) -> opam
     in
     let opam =
-      match try_read OpamFile.Descr.read_opt descr_file with
-      | Some descr, None ->
-        if OpamFile.OPAM.descr opam <> None then
-          log "Overriding descr of %s through external descr file at %s"
-            (OpamPackage.to_string (OpamFile.OPAM.package opam))
-            (OpamFilename.Dir.to_string dir);
-        OpamFile.OPAM.with_descr descr opam
-      | _, Some err ->
+      match OpamFile.OPAM.descr opam,
+            try_read OpamFile.Descr.read_opt descr_file with
+      | None, (Some descr, None) -> OpamFile.OPAM.with_descr descr opam
+      | Some _, (Some _, _) ->
+        log "Duplicate descr in '%s' and opam file"
+          (OpamFile.to_string descr_file);
+        opam
+      | _, (_, Some err) ->
         OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
-      | None, None  -> opam
+      | _, (None, None)  -> opam
     in
     let opam =
       if not files_subdir_hashes then opam else

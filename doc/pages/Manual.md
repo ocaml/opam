@@ -951,8 +951,9 @@ It has the following fields:
   an optional list of mirrors. They must use the same protocol as the main URL.
 
 These contents can be embedded within the [`url {}`](#opamsection-url) section
-of an `opam` file; however, if an `url` file is present alongside the `opam`
-file, its contents take precedence.
+of an `opam` file, which is the preferred way. You shouldn't have both an `url`
+file and an `opam` file with an `url {}` section: in that case, the `url` file
+will be ignored with a warning.
 
 #### files/
 
