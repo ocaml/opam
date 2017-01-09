@@ -460,13 +460,13 @@ let copy_dir src dst =
       | [] -> ()
       | srcfiles ->
         command ~verbose:(verbose_for_base_commands ())
-          ([ "cp"; "-PR" ] @ srcfiles @ [ dst ])
+          ([ "cp"; "-PRp" ] @ srcfiles @ [ dst ])
     else internal_error "Can not copy dir %s to %s, which is not a directory"
         src dst
   else
     (mkdir (Filename.dirname dst);
      command ~verbose:(verbose_for_base_commands ())
-       [ "cp"; "-PR"; src; dst ])
+       [ "cp"; "-PRp"; src; dst ])
 
 let mv src dst =
   if Sys.file_exists dst then remove_file dst;
