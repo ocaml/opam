@@ -2,7 +2,7 @@
 
 _opam_add()
 {
-  _opam_reply="$_opam_reply $1"
+  _opam_reply="$_opam_reply $@"
 }
 
 _opam_add_f()
@@ -15,9 +15,8 @@ _opam_add_f()
 _opam_flags()
 {
   opam "$@" --help=groff 2>/dev/null | \
-      sed -n \
-      -e 's%\\-%-%g' \
-      -e 's%^\\fB\(-[^,= ]*\)\\fR.*%\1%p'
+      sed -n -e 's%\\-%-%g' -e 's%, \\fB%\n\\fB%g' -e '/^\\fB-/p' | \
+      sed -e 's%^\\fB\(-[^\\]*\).*%\1%'
 }
 
 _opam_commands()
@@ -34,19 +33,34 @@ _opam_vars()
   opam config list --safe 2>/dev/null | \
       sed -n \
       -e '/^PKG:/d' \
-      -e 's%^\([^# ][^ ]*\).*%\1%p'
+      -e 's%^\([^#= ][^ ]*\).*%\1%p'
+}
+
+_opam_argtype()
+{
+  local cmd flag
+  cmd="$1"; shift
+  flag="$1"; shift
+  case "$flag" in
+      -*)
+          opam "$cmd" --help=groff 2>/dev/null | \
+          sed -n \
+              -e 's%\\-%-%g' \
+              -e 's%.*\\fB'"$flag"'\\fR[= ]\\fI\([^, ]*\)\\fR.*%\1%p'
+          ;;
+  esac
 }
 
 _opam()
 {
-  local cmd subcmd cur prev compgen_opt
+  local IFS cmd subcmd cur prev compgen_opt
 
   COMPREPLY=()
   cmd=${COMP_WORDS[1]}
   subcmd=${COMP_WORDS[2]}
   cur=${COMP_WORDS[COMP_CWORD]}
   prev=${COMP_WORDS[COMP_CWORD-1]}
-  compgen_opt=""
+  compgen_opt=()
   _opam_reply=""
 
   if [ $COMP_CWORD -eq 1 ]; then
@@ -55,6 +69,28 @@ _opam()
       unset _opam_reply
       return 0
   fi
+
+  case "$(_opam_argtype $cmd $prev)" in
+      LEVEL|JOBS|RANK) _opam_add 1 2 3 4 5 6 7 8 9;;
+      FILE|FILENAME) compgen_opt+=(-o filenames -f);;
+      DIR|ROOT) compgen_opt+=(-o filenames -d);;
+      MAKE|CMD) compgen_opt+=(-c);;
+      KIND) _opam_add http local git darcs hg;;
+      WHEN) _opam_add always never auto;;
+      SWITCH|SWITCHES) _opam_add_f opam switch list --safe -s;;
+      COLUMNS|FIELDS)
+          _opam_add name version package synopsis synopsis-or-target \
+                    description installed-version pin source-hash \
+                    opam-file all-installed-versions available-versions \
+                    all-versions repository installed-files vc-ref;;
+      PACKAGE|PACKAGES|PKG) _opam_add_f opam list --safe -A -s;;
+      FLAG) _opam_add light-uninstall verbose plugin compiler conf;;
+      REPOS) _opam_add_f opam repository list --safe -s -a;;
+      SHELL) _opam_add bash sh csh zsh fish;;
+      TAGS) ;;
+      CRITERIA) ;;
+      STRING) ;;
+      "")
   case "$cmd" in
       install|show|info)
           _opam_add_f opam list --safe -a -s
@@ -74,15 +110,15 @@ _opam()
           case $COMP_CWORD in
               2)
                   _opam_add_f _opam_commands "$cmd"
-                  _opam_add_f opam switch list --safe -s -i;;
+                  _opam_add_f opam switch list --safe -s;;
               3)
                   case "$subcmd" in
-                      install|set)
-                          _opam_add_f opam switch list --safe -s -a;;
-                      remove|reinstall)
-                          _opam_add_f opam switch list --safe -s -i;;
+                      create|install)
+                          _opam_add_f opam switch list-available --safe -s -a;;
+                      set|remove|reinstall)
+                          _opam_add_f opam switch list --safe -s;;
                       import|export)
-                          compgen_opt="-o filenames -f";;
+                          compgen_opt+=(-o filenames -f);;
                       *)
                           _opam_add_f _opam_flags "$cmd"
                   esac;;
@@ -90,15 +126,18 @@ _opam()
                   _opam_add_f _opam_flags "$cmd"
           esac;;
       config)
-          if [ $COMP_CWORD -eq 2 ]; then
-              _opam_add_f _opam_commands "$cmd"
-          else
-              if [ $COMP_CWORD -eq 3 ] && [ "$subcmd" = "var" ]; then
-                  _opam_add_f _opam_vars
-              else
+          case $COMP_CWORD in
+              2)
+                  _opam_add_f _opam_commands "$cmd";;
+              3)
+                  case "$subcmd" in
+                      var) _opam_add_f _opam_vars;;
+                      exec) compgen_opt+=(-c);;
+                      *) _opam_add_f _opam_flags "$cmd"
+                  esac;;
+              *)
                   _opam_add_f _opam_flags "$cmd"
-              fi
-          fi;;
+          esac;;
       repository|remote)
           case $COMP_CWORD in
               2)
@@ -107,7 +146,7 @@ _opam()
                   case "$subcmd" in
                       add)
                           if [ $COMP_CWORD -gt 3 ]; then
-                              compgen_opt="-o filenames -f"
+                              compgen_opt+=(-o filenames -f)
                           fi;;
                       remove|priority|set-url)
                           _opam_add_f opam repository list --safe -s;;
@@ -117,17 +156,20 @@ _opam()
               *)
                   _opam_add_f _opam_flags "$cmd"
                   case "$subcmd" in
-                      set-url|add) compgen_opt="-o filenames -f";;
+                      set-url|add) compgen_opt+=(-o filenames -f);;
                   esac;;
           esac;;
       update)
           _opam_add_f opam repository list --safe -s
           _opam_add_f opam pin list --safe -s
-          ;;
-      source)
-          _opam_add_f opam list --safe -A -s
           _opam_add_f _opam_flags "$cmd"
           ;;
+      source)
+          if [ $COMP_CWORD -eq 2 ]; then
+              _opam_add_f opam list --safe -A -s
+          else
+              _opam_add_f _opam_flags "$cmd"
+          fi;;
       pin)
           case $COMP_CWORD in
               2)
@@ -135,6 +177,7 @@ _opam()
               3)
                   case "$subcmd" in
                       add)
+                          compgen_opt+=(-o filenames -d)
                           _opam_add_f opam list --safe -A -s;;
                       remove|edit)
                           _opam_add_f opam pin list --safe -s;;
@@ -144,7 +187,7 @@ _opam()
               *)
                   case "$subcmd" in
                       add)
-                          compgen_opt="-o filenames -f";;
+                          compgen_opt+=(-o filenames -d);;
                       *)
                           _opam_add_f _opam_flags "$cmd"
                   esac
@@ -155,16 +198,30 @@ _opam()
           else
               _opam_add_f _opam_flags "$cmd"
           fi;;
+      var)
+          if [ $COMP_CWORD -eq 2 ]; then _opam_add_f _opam_vars
+          else _opam_add_f _opam_flags "$cmd"; fi;;
+      exec)
+          if [ $COMP_CWORD -eq 2 ]; then compgen_opt+=(-c)
+          else _opam_add_f _opam_flags "$cmd"; fi;;
+      lint)
+          if [ $COMP_CWORD -eq 2 ]; then
+              compgen_opt+=(-f -X '!*opam' -o plusdirs)
+          else _opam_add_f _opam_flags "$cmd"; fi;;
       *)
           _opam_add_f _opam_commands "$cmd"
           _opam_add_f _opam_flags "$cmd"
+  esac;;
   esac
 
-  COMPREPLY=( $(compgen -W "$_opam_reply" $compgen_opt -- "$cur") )
+  CMP="$(compgen -W "$_opam_reply" -o nosort "${compgen_opt[@]}" -- "$cur")"
+  IFS="
+"
+  COMPREPLY=($CMP)
   unset _opam_reply
   return 0
 }
 
 autoload bashcompinit
 bashcompinit
-complete -F _opam opam
+complete -o nosort -F _opam opam
