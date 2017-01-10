@@ -833,7 +833,11 @@ module OpamFormat = struct
       in
       List.map (if multiline then pad_multi len else pad len) sl
     in
-    transpose (List.map align columns)
+    let rec map_but_last f = function
+      | ([] | [_]) as l -> l
+      | x::r -> f x :: map_but_last f r
+    in
+    transpose (map_but_last align columns)
 
   let reformat
       ?(start_column=0) ?(indent=0) ?(width=OpamSys.terminal_columns ()) s =
