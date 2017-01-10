@@ -416,11 +416,18 @@ let do_upgrade () =
       let nv = OpamFile.OPAM.package opam0 in
       if not (List.mem nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
+        let opam = OpamFileTools.add_aux_files ~files_subdir_hashes:true opam0 in
         let opam =
-          OpamFormatUpgrade.opam_file_from_1_2_to_2_0 ~filename:opam_file opam0
+          OpamFormatUpgrade.opam_file_from_1_2_to_2_0 ~filename:opam_file opam
         in
         if opam <> opam0 then
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
+           List.iter OpamFilename.remove [
+             OpamFile.filename
+               (OpamRepositoryPath.descr repo.repo_root prefix package);
+             OpamFile.filename
+               (OpamRepositoryPath.url repo.repo_root prefix package);
+           ];
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
     packages;
@@ -438,9 +445,20 @@ let process args =
     | None -> do_upgrade ()
     | Some base_url ->
       OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
-      OpamFilename.copy_dir ~src:(OpamFilename.cwd ()) ~dst:tmp_mirror_dir;
-      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / "2.0");
-      OpamFilename.rmdir OpamFilename.Op.(tmp_mirror_dir / ".git");
+      let open OpamFilename.Op in
+      let copy_dir d =
+        let src = OpamFilename.cwd () / d in
+        if OpamFilename.exists_dir src then
+          OpamFilename.copy_dir ~src ~dst:(tmp_mirror_dir / d)
+      in
+      let copy_file f =
+        let src = OpamFilename.cwd () // f in
+        if OpamFilename.exists src then
+          OpamFilename.copy ~src ~dst:(tmp_mirror_dir // f)
+      in
+      copy_dir "packages";
+      copy_dir "compilers";
+      copy_file "repo";
       OpamFilename.in_dir tmp_mirror_dir do_upgrade;
       let repo_file = OpamFile.make (OpamFilename.of_string "repo") in
       let repo0 = OpamFile.Repo.safe_read repo_file in

@@ -162,7 +162,7 @@ let pinned_package st ?version ?(working_dir=false) name =
      from the repo *)
   let add_extra_files srcdir file opam =
     if OpamFilename.dirname (OpamFile.filename file) <> srcdir
-    then OpamFileTools.add_aux_files opam
+    then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
     else opam
   in
   let old_source_opam_hash, old_source_opam =

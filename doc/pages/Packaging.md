@@ -23,8 +23,7 @@ Publish to the OPAM repository:
   tool (`opam install opam-publish`)
 * Or by hand:
     - Fork [https://github.com/ocaml/opam-repository](https://github.com/ocaml/opam-repository)
-    - Add your `opam`, `descr` and `url` files to
-      `packages/<pkgname>/<pkgname>.<version>`
+    - Add `packages/<pkgname>/<pkgname>.<version>/opam` with your metadata
     - File a [pull request](https://github.com/ocaml/opam-repository/compare/)
 
 
