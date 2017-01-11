@@ -149,7 +149,7 @@ let download_package st nv =
   let dir =
     OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
   in
-  if OpamSwitchState.is_dev_package st nv &&
+  if OpamPackage.Set.mem nv st.pinned &&
      OpamFilename.exists_dir dir
   then Done None
   else
