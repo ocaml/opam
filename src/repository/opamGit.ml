@@ -64,15 +64,15 @@ module VCS : OpamVCS.VCS = struct
   let revision repo_root =
     git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
     fun r ->
-    if r.OpamProcess.r_code = 128 then Done "<none>" else
+    if r.OpamProcess.r_code = 128 then Done None else
       (OpamSystem.raise_on_process_error r;
        match r.OpamProcess.r_stdout with
-       | []      -> Done "<none>"
+       | []      -> Done None
        | full::_ ->
          if String.length full > 8 then
-           Done (String.sub full 0 8)
+           Done (Some (String.sub full 0 8))
          else
-           Done full)
+           Done (Some full))
 
   let reset repo_root repo_url =
     let rref = remote_ref repo_url in

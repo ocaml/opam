@@ -21,7 +21,7 @@ module type VCS = sig
   val reset: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
   val is_up_to_date: dirname -> url -> bool OpamProcess.job
-  val revision: dirname -> string OpamProcess.job
+  val revision: dirname -> string option OpamProcess.job
   val versionned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
@@ -89,7 +89,7 @@ module Make (VCS: VCS) = struct
 
   let revision repo_root =
     VCS.revision repo_root @@+ fun r ->
-    Done (Some (OpamPackage.Version.of_string r))
+    Done (OpamStd.Option.map OpamPackage.Version.of_string r)
 
   let sync_dirty repo_root repo_url =
     match OpamUrl.local_dir repo_url with
