@@ -573,10 +573,6 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   the trusted signing identities, see
   [repository-validation-command](#configfield-repository-validation-command)) and the
   quorum, _i.e._ how many of them are required for a signature to be accepted.
-- <a id="opamrcfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
-  a list of compiler package choices. On `opam init`, the first available
-  compiler in the list will be chosen for creating the initial switch if
-  `--bare` wasn't specified.
 - [`jobs:`](#configfield-jobs),
   [`download-command:`](#configfield-download-command),
   [`download-jobs:`](#configfield-download-jobs),
@@ -585,9 +581,12 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   [`solver-upgrade-criteria:`](#configfield-solver-upgrade-criteria),
   [`solver-fixup-criteria:`](#configfield-solver-fixup-criteria),
   [`solver:`](#configfield-solver),
-  [`global-variables:`](#configfield-global-variables):
-  these have the same format as the same-named fields in the [config](#config)
-  file, and will be imported to that file on `opam init`.
+  [`global-variables:`](#configfield-global-variables),
+  [`default-compiler:`](#configfield-default-compiler): these have the same
+  format as the same-named fields in the [config](#config) file, and will be
+  imported to that file on `opam init`.
+  [`default-compiler:`](#configfield-default-compiler) is additionally used to
+  select the switch that will be created by `opam init` without `--bare`.
 
 #### switch-config
 
@@ -1164,6 +1163,10 @@ for <span class="opam">opam</span>.
   authenticity. When this is specified, and for repositories that define
   [trust anchors](#opamrcfield-repositories), opam will refuse any update that
   doesn't pass this validation. TODO: define precise interface and variables.
+- <a id="configfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
+  a list of compiler package choices. On `opam init`, the first available
+  compiler in the list will be chosen for creating the initial switch if
+  `--bare` wasn't specified.
 
 #### switch-state
 

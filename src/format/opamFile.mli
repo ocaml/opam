@@ -124,6 +124,8 @@ module Config: sig
     (variable * string list * string) list -> t -> t
   val with_validation_hook_opt:
     arg list option -> t -> t
+  val with_default_compiler:
+    formula -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -159,6 +161,8 @@ module Config: sig
   val eval_variables: t -> (variable * string list * string) list
 
   val validation_hook: t -> arg list option
+
+  val default_compiler: t -> formula
 
 end
 

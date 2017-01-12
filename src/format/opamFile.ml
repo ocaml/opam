@@ -1015,6 +1015,8 @@ module ConfigSyntax = struct
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
+    default_compiler : formula;
+
   }
 
   let opam_version t = t.opam_version
@@ -1036,6 +1038,7 @@ module ConfigSyntax = struct
   let eval_variables t = t.eval_variables
 
   let validation_hook t = t.validation_hook
+  let default_compiler t = t.default_compiler
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1060,6 +1063,7 @@ module ConfigSyntax = struct
   let with_validation_hook validation_hook t =
     { t with validation_hook = Some validation_hook}
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
+  let with_default_compiler default_compiler t = { t with default_compiler }
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
@@ -1076,6 +1080,7 @@ module ConfigSyntax = struct
     global_variables = [];
     eval_variables = [];
     validation_hook = None;
+    default_compiler = OpamFormula.Empty;
   }
 
   let fields =
@@ -1141,6 +1146,9 @@ module ConfigSyntax = struct
       "repository-validation-command", Pp.ppacc_opt
         with_validation_hook validation_hook
         (Pp.V.map_list ~depth:1 Pp.V.arg);
+      "default-compiler", Pp.ppacc
+        with_default_compiler default_compiler
+        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
