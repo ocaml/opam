@@ -539,6 +539,8 @@ module OPAM: sig
 
   val add_flags: package_flag list -> t -> t
 
+  val with_tags: string list -> t -> t
+
   val with_env: env_update list -> t -> t
 
   val with_dev_repo: url -> t -> t
