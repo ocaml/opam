@@ -31,8 +31,11 @@ let update_selection gt ~global ~switches update_fun =
          if not (List.mem sw switches) then
            OpamSwitchState.update_repositories gt (fun r -> r) sw)
         (OpamFile.Config.installed_switches gt.config);
-     OpamGlobalState.with_write_lock gt @@ fun gt ->
-     update_global_selection gt update_fun)
+     let (), gt =
+       OpamGlobalState.with_write_lock gt @@ fun gt ->
+       (), update_global_selection gt update_fun
+     in
+     gt)
   else gt
 
 let update_repos_config rt repositories =

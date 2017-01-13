@@ -161,11 +161,13 @@ let check prefix changes =
   |> List.rev
 
 let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
-    prefix changes =
+    ?(dryrun=false) prefix changes =
   let title = match title with
     | None -> ""
     | Some t -> t ^ ": "
   in
+  let rmdir d = if not dryrun then OpamFilename.rmdir d in
+  let rmfile f = if not dryrun then OpamFilename.remove f in
   let changes =
     (* Reverse the list so that dirnames come after the files they contain *)
     List.rev (OpamStd.String.Map.bindings changes)
@@ -187,7 +189,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
           else if cur_item_ct = Some Dir then
             let d = OpamFilename.Dir.of_string f in
             if OpamFilename.dir_is_empty d then
-              (OpamFilename.rmdir d; acc)
+              (rmdir d; acc)
             else
               let nonempty =
                 if List.exists
@@ -197,7 +199,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
               (already, modified, nonempty, cannot)
           else
           let f = OpamFilename.of_string f in
-          OpamFilename.remove f;
+          rmfile f;
           acc
         | Contents_changed dg ->
           let unreverted =

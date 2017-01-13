@@ -43,7 +43,7 @@ val track:
     set to [false]. Ignores non-existing files.
     [title] is used to prefix messages if specified. *)
 val revert:
-  ?title:string -> ?verbose:bool -> ?force:bool ->
+  ?title:string -> ?verbose:bool -> ?force:bool -> ?dryrun:bool ->
   OpamFilename.Dir.t -> t -> unit
 
 (** Checks the items that were added or kind-changed in the given diff, and
