@@ -76,7 +76,14 @@ let repository gt repo =
           job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
-  let repo_file = OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo.repo_root) in
+  let repo_file_path = OpamRepositoryPath.repo repo.repo_root in
+  if not (OpamFile.exists repo_file_path) then
+    OpamConsole.warning
+      "The repository '%s' at %s doesn't have a 'repo' file, and might not be \
+       compatible with this version of opam."
+      (OpamRepositoryName.to_string repo.repo_name)
+      (OpamUrl.to_string repo.repo_url);
+  let repo_file = OpamFile.Repo.safe_read repo_file_path in
   let repo_vers = OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then

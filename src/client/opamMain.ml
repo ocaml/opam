@@ -1664,7 +1664,7 @@ let repository =
       in
       if scope = [`Current_switch] then
         OpamConsole.msg
-          "Repository %s has been added to the selections of switch %s."
+          "Repository %s has been added to the selections of switch %s.\n"
           (OpamRepositoryName.to_string name)
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
       `Ok ()
@@ -1687,7 +1687,7 @@ let repository =
       else if scope = [`Current_switch] then
         OpamConsole.msg
           "Repositories removed from the selections of switch %s. \
-           Use '--all' to forget about them altogether."
+           Use '--all' to forget about them altogether.\n"
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
       `Ok ()
     | Some `add, [name] ->
