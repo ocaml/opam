@@ -1,4 +1,4 @@
-AC_INIT(opam,2.0~alpha5)
+AC_INIT(opam,2.0~beta)
 AC_COPYRIGHT(Copyright 2012-2016 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
