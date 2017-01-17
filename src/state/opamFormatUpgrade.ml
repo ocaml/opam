@@ -787,10 +787,42 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
     (OpamFile.Config.installed_switches conf);
   conf
 
-let latest_version = v2_0_alpha3
+let v2_0_beta = OpamVersion.of_string "2.0~beta"
 
-(* Advertise this on upgrades, although it's synonym with 2.0~alpha3 *)
-let v2_0_alpha4 = OpamVersion.of_string "2.0~alpha4"
+let from_2_0_alpha3_to_2_0_beta root conf =
+  List.iter (fun switch ->
+      let switch_meta_dir =
+        root / OpamSwitch.to_string switch / ".opam-switch"
+      in
+      let packages_dev_dir = switch_meta_dir / "packages.dev" in (* old *)
+      let sources_dir = switch_meta_dir / "sources" in (* new *)
+      let state =
+        OpamFile.SwitchSelections.safe_read
+          (OpamFile.make (switch_meta_dir // "switch-state"))
+      in
+      OpamFilename.mkdir sources_dir;
+      List.iter (fun d ->
+          try
+            let name =
+              OpamPackage.Name.of_string
+                OpamFilename.(Base.to_string (basename_dir d))
+            in
+            if OpamPackage.has_name state.sel_pinned name then
+              OpamFilename.move_dir ~src:d
+                ~dst:(sources_dir / OpamPackage.Name.to_string name)
+            else
+              let nv = OpamPackage.package_of_name state.sel_installed name in
+              OpamFilename.move_dir ~src:d
+                ~dst:(sources_dir / OpamPackage.to_string nv)
+          with Failure _ | Not_found -> ()
+        )
+        (OpamFilename.dirs packages_dev_dir);
+      OpamFilename.rmdir packages_dev_dir;
+    )
+    (OpamFile.Config.installed_switches conf);
+  conf
+
+let latest_version = v2_0_beta
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
@@ -846,7 +878,7 @@ let as_necessary global_lock root config =
         update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
         update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
         update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
-        update_to v2_0_alpha4 (fun _ c -> c)
+        update_to v2_0_beta from_2_0_alpha3_to_2_0_beta
       in
       OpamConsole.msg
         "Update done, please run 'opam update' and retry your command\n";

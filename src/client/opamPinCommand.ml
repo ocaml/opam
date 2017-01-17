@@ -26,7 +26,7 @@ let string_of_pinned opam =
 
 let get_source_definition ?version st nv url =
   let root = st.switch_global.root in
-  let srcdir = OpamPath.Switch.dev_package root st.switch nv.name in
+  let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
     OpamFile.OPAM.with_url url @@
     (match version with
@@ -265,6 +265,7 @@ let edit st ?version name =
 
       let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
       let st = OpamSwitchState.update_pin nv opam st in
+      OpamUpdate.cleanup_source st current_opam opam;
       OpamSwitchAction.write_selections st;
       st
 
@@ -379,7 +380,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
        u.backend <> target.backend
      ) ->
      OpamFilename.rmdir
-       (OpamPath.Switch.dev_package st.switch_global.root st.switch name)
+       (OpamPath.Switch.pinned_package st.switch_global.root st.switch name)
    | _ -> ());
 
   let pin_version = OpamStd.Option.Op.(version +! cur_version) in
@@ -510,7 +511,7 @@ let unpin st names =
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   List.fold_left (fun st name ->
       OpamFilename.rmdir
-        (OpamPath.Switch.dev_package st.switch_global.root st.switch name);
+        (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
       OpamFilename.rmdir
         (OpamPath.Switch.Overlay.package
            st.switch_global.root st.switch name);

@@ -363,10 +363,8 @@ let parallel_apply t action ~requested action_graph =
     in
     let sources_list = OpamPackage.Set.elements sources_needed in
     if OpamPackage.Set.exists (fun nv ->
-        not (OpamSwitchState.is_dev_package t nv &&
-             OpamFilename.exists_dir
-               (OpamPath.Switch.dev_package
-                  t.switch_global.root t.switch nv.name)))
+        not (OpamPackage.Set.mem nv t.pinned &&
+             OpamFilename.exists_dir (OpamSwitchState.source_dir t nv)))
         sources_needed
     then OpamConsole.header_msg "Gathering sources";
     let results =
@@ -480,9 +478,7 @@ let parallel_apply t action ~requested action_graph =
               !t_ref.conf_files; }
       in
       let nv = action_contents action in
-      let source_dir =
-        OpamPath.Switch.dev_package t.switch_global.root t.switch nv.name
-      in
+      let source_dir = OpamSwitchState.source_dir t nv in
       if OpamClientConfig.(!r.fake) then
         match action with
         | `Build _ -> Done (`Successful (installed, removed))

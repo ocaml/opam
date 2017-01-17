@@ -132,13 +132,20 @@ module Switch: sig
       $meta/config/$name.config} *)
   val config: t -> switch -> name -> OpamFile.Dot_config.t OpamFile.t
 
+  (** Clean, uncompressed sources for this switch: {i $meta/sources/} *)
+  val sources_dir: t -> switch -> dirname
+
+  (** Clean, uncompressed source directory for this package: {i
+      $meta/sources/$name.$version/} *)
+  val sources: t -> switch -> package -> dirname
+(*
   (** Source dir for all pinned packages: {i
       $meta/packages.dev/} *)
   val dev_packages_dir: t -> switch -> dirname
-
-  (** Build dir for a given pinned package: {i
-      $meta/packages.dev/$name.$version/} *)
-  val dev_package: t -> switch -> name -> dirname
+*)
+  (** Mirror of the sources for a given pinned package: {i
+      $meta/sources/$name/} (without version) *)
+  val pinned_package: t -> switch -> name -> dirname
 
   (** Cached environment updates. *)
   val environment: t -> switch -> OpamFile.Environment.t OpamFile.t

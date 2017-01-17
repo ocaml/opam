@@ -156,7 +156,7 @@ let pinned_package st ?version ?(working_dir=false) name =
     OpamPackage.Version.of_string "dev"
   in
   let nv = OpamPackage.create name version in
-  let srcdir = OpamPath.Switch.dev_package root st.switch name in
+  let srcdir = OpamPath.Switch.pinned_package root st.switch name in
   (* Four versions of the metadata: from the old and new versions
      of the package, from the current overlay, and also the original one
      from the repo *)
@@ -319,10 +319,7 @@ let dev_package st ?working_dir nv =
     if (OpamFile.URL.url url).OpamUrl.backend = `http then
       Done ((fun st -> st), false)
     else
-      fetch_dev_package url
-        (OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name)
-        ?working_dir
-        nv
+      fetch_dev_package url (OpamSwitchState.source_dir st nv) ?working_dir nv
       @@| fun result ->
       (fun st -> st), match result with Result () -> true | _ -> false
 
@@ -403,6 +400,17 @@ let active_caches st nv =
     | None -> []
   in
   repo_cache @ global_cache
+
+let cleanup_source st old_opam_opt new_opam =
+  let open OpamStd.Option.Op in
+  let base_url urlf =
+    let u = OpamFile.URL.url urlf in
+    { u with OpamUrl.hash = None }
+  in
+  let url_remote opam = OpamFile.OPAM.url opam >>| base_url in
+  if url_remote new_opam <> (old_opam_opt >>= url_remote) then
+    OpamFilename.rmdir
+      (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
 
 let download_package_source st nv dirname =
   let opam = OpamSwitchState.opam st nv in

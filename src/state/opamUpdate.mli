@@ -76,6 +76,13 @@ val download_package_source:
   'a switch_state -> package -> dirname ->
   unit download option OpamProcess.job
 
+(** [cleanup_source old_opam_option new_opam] checks if the remote URL has
+    changed between [old_opam_option] and [new_opam], and, depending on that,
+    cleans up the source directory of the package ([OpamPath.Switch.sources]) if
+    needed. *)
+val cleanup_source:
+  'a switch_state -> OpamFile.OPAM.t option -> OpamFile.OPAM.t -> unit
+
 (** Low-level function to retrieve the package source into its local cache *)
 val fetch_dev_package:
   OpamFile.URL.t -> dirname -> ?working_dir:bool -> package ->

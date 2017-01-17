@@ -146,10 +146,11 @@ let download_package st nv =
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)
   then Done None
   else
-  let dir =
-    OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name
-  in
-  if OpamSwitchState.is_dev_package st nv &&
+  let dir = OpamSwitchState.source_dir st nv in
+  OpamUpdate.cleanup_source st
+    (OpamPackage.Map.find_opt nv st.installed_opams)
+    (OpamSwitchState.opam st nv);
+  if OpamPackage.Set.mem nv st.pinned &&
      OpamFilename.exists_dir dir
   then Done None
   else
@@ -562,17 +563,15 @@ let cleanup_package_artefacts t nv =
   if not OpamClientConfig.(!r.keep_build_dir) then OpamFilename.rmdir build_dir;
   let remove_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
   if OpamFilename.exists_dir remove_dir then OpamFilename.rmdir remove_dir;
-  let name = nv.name in
-  let dev_dir =
-    OpamPath.Switch.dev_package t.switch_global.root t.switch name
-  in
+  let dev_dir = OpamSwitchState.source_dir t nv in
   if OpamPackage.Set.mem nv t.installed then
     (if not (OpamSwitchState.is_dev_package t nv) then
        OpamFilename.rmdir dev_dir)
   else
-    (OpamFilename.rmdir dev_dir;
-     log "Removing the local metadata";
-     OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv))
+    (log "Removing the local metadata";
+     OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv);
+     if not (OpamPackage.Set.mem nv t.pinned) then
+       OpamFilename.rmdir dev_dir)
 
 let sources_needed st g =
   PackageActionGraph.fold_vertex (fun act acc ->

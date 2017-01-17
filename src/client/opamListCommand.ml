@@ -464,7 +464,7 @@ let detail_printer ?prettify ?normalise st nv =
     let hash_opt =
       let open OpamStd.Option.Op in
       OpamSwitchState.url st nv >>| OpamFile.URL.url >>= fun url ->
-      OpamPath.Switch.dev_package st.switch_global.root st.switch nv.name |>
+      OpamSwitchState.source_dir st nv |>
       OpamFilename.opt_dir >>= fun srcdir ->
       OpamProcess.Job.run (OpamRepository.revision srcdir url) >>|
       OpamPackage.Version.to_string
