@@ -257,6 +257,7 @@ module OPAM: sig
     depends    : filtered_formula;
     depopts    : filtered_formula;
     conflicts  : formula;
+    conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
     env        : env_update list;
@@ -395,6 +396,8 @@ module OPAM: sig
   (** Package conflicts *)
   val conflicts: t -> formula
 
+  val conflict_class: t -> name list
+
   (** Contents of the 'features' field *)
   val features: t -> (OpamVariable.t * string * filter) list
 
@@ -493,6 +496,8 @@ module OPAM: sig
   val with_depopts: filtered_formula -> t -> t
 
   val with_conflicts: formula -> t -> t
+
+  val with_conflict_class: name list -> t -> t
 
   val with_features: (OpamVariable.t * string * filter) list -> t -> t
 

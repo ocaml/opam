@@ -131,6 +131,12 @@ val dev_packages: 'a switch_state -> package_set
     wether it's pinned). *)
 val source_dir: 'a switch_state -> package -> dirname
 
+(** [conflicts_with st subset pkgs] returns all packages declared in conflict
+    with at least one element of [subset] within [pkgs], through forward or
+    backward conflict definition or common conflict-class. Packages in [subset]
+    (all their versions) are excluded from the result. *)
+val conflicts_with: 'a switch_state -> package_set -> package_set -> package_set
+
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets. Packages in the [requested] set are the ones that will get
     affected by the global [build_test] and [build_doc] flags.

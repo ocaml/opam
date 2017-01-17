@@ -1847,6 +1847,7 @@ module OPAMSyntax = struct
     depends    : filtered_formula;
     depopts    : filtered_formula;
     conflicts  : formula;
+    conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
     env        : env_update list;
@@ -1889,6 +1890,8 @@ module OPAMSyntax = struct
     url        : URL.t option;
     descr      : Descr.t option;
 
+    (* Extra data, not actually file fields *)
+
     (* Related metadata directory (not an actual field of the file)
        This can be used to locate e.g. the files/ overlays *)
     metadata_dir: dirname option;
@@ -1915,6 +1918,7 @@ module OPAMSyntax = struct
     conflicts  = OpamFormula.Empty;
     available  = FBool true;
     flags      = [];
+    conflict_class = [];
     env        = [];
 
     build      = [];
@@ -1986,6 +1990,7 @@ module OPAMSyntax = struct
   let depends t = t.depends
   let depopts t = t.depopts
   let conflicts t = t.conflicts
+  let conflict_class t = t.conflict_class
   let available t = t.available
   let flags t = t.flags
   let has_flag f t = List.mem f t.flags
@@ -2062,6 +2067,7 @@ module OPAMSyntax = struct
   let with_depends depends t = { t with depends }
   let with_depopts depopts t = { t with depopts }
   let with_conflicts conflicts t = {t with conflicts }
+  let with_conflict_class conflict_class t = { t with conflict_class }
   let with_available available t = { t with available }
   let with_flags flags t = { t with flags }
   let add_flags flags t =
@@ -2289,6 +2295,8 @@ module OPAMSyntax = struct
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
         (Pp.V.package_formula `Disj (Pp.V.constraints Pp.V.version));
+      "conflict-class", no_cleanup Pp.ppacc with_conflict_class conflict_class
+        (Pp.V.map_list ~depth:1 Pp.V.pkgname);
       "available", no_cleanup Pp.ppacc with_available available
         (Pp.V.list_depth 1 -| Pp.V.list -| Pp.V.filter);
       "flags", with_cleanup cleanup_flags Pp.ppacc add_flags flags
@@ -2598,6 +2606,7 @@ module OPAM = struct
       depends    = t.depends;
       depopts    = t.depopts;
       conflicts  = t.conflicts;
+      conflict_class = t.conflict_class;
       available  = t.available;
       flags      = t.flags;
       env        = t.env;
