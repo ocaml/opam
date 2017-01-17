@@ -101,9 +101,11 @@ module Switch = struct
   let config t a n =
     config_dir t a /- (OpamPackage.Name.to_string n ^ ".config")
 
-  let dev_packages_dir t a = meta t a / "packages.dev"
+  let sources_dir t a = meta t a / "sources"
 
-  let dev_package t a name = dev_packages_dir t a / OpamPackage.Name.to_string name
+  let sources t a nv = sources_dir t a / OpamPackage.to_string nv
+
+  let pinned_package t a name = sources_dir t a / OpamPackage.Name.to_string name
 
   let env_filename = "environment"
 

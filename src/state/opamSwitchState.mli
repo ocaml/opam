@@ -126,6 +126,11 @@ val is_version_pinned: 'a switch_state -> name -> bool
 (** The set of all "dev packages" (see [is_dev_package] for a definition) *)
 val dev_packages: 'a switch_state -> package_set
 
+(** Returns the local source mirror for the given package
+    ([OpamPath.Switch.sources] or [OpamPath.Switch.pinned_package], depending on
+    wether it's pinned). *)
+val source_dir: 'a switch_state -> package -> dirname
+
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets. Packages in the [requested] set are the ones that will get
     affected by the global [build_test] and [build_doc] flags.

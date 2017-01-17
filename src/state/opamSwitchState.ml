@@ -386,6 +386,11 @@ let is_version_pinned st name =
       OpamPackage.Map.find_opt nv st.repos_package_index = Some opam
     | None -> false
 
+let source_dir st nv =
+  if OpamPackage.Set.mem nv st.pinned
+  then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
+  else OpamPath.Switch.sources st.switch_global.root st.switch nv
+
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)

@@ -531,10 +531,7 @@ let slog = OpamConsole.slog
         if names <> [] then OpamPackage.Set.empty, dev_packages else
           OpamPackage.Set.partition
             (fun nv ->
-               let src_cache =
-                 OpamPath.Switch.dev_package st.switch_global.root st.switch
-                   nv.name
-               in
+               let src_cache = OpamSwitchState.source_dir st nv in
                let cache_url =
                  OpamUrl.of_string (OpamFilename.Dir.to_string src_cache)
                in
