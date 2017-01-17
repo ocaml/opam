@@ -45,10 +45,10 @@ module VCS = struct
     hg repo_root [ "id"; "-i" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     match r.OpamProcess.r_stdout with
-    | [] -> Done "<none>"
+    | [] -> Done None
     | full::_ ->
-      if String.length full > 8 then Done (String.sub full 0 8)
-      else Done full
+      if String.length full > 8 then Done (Some (String.sub full 0 8))
+      else Done (Some full)
 
   let get_id repo_root repo_url =
     hg repo_root

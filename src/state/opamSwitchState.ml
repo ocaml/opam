@@ -545,7 +545,8 @@ let unavailable_reason st (name, vformula) =
       candidates
   in
   if OpamPackage.Set.is_empty candidates then
-    "unknown package"
+    (if OpamPackage.has_name st.packages name then "no matching version"
+     else "unknown package")
   else
   let nv =
     try OpamPinned.package st name

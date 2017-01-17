@@ -723,7 +723,9 @@ let slog = OpamConsole.slog
           C.with_global_variables
             (I.global_variables init_config) |>
           C.with_eval_variables
-            (I.eval_variables init_config)
+            (I.eval_variables init_config) |>
+          C.with_default_compiler
+            (I.default_compiler init_config)
         in
         OpamFile.Config.write (OpamPath.config root) config;
 

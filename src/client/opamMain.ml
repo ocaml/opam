@@ -1662,6 +1662,11 @@ let repository =
         OpamRepositoryCommand.update_selection gt ~global ~switches
           (update_repos name)
       in
+      if scope = [`Current_switch] then
+        OpamConsole.msg
+          "Repository %s has been added to the selections of switch %s."
+          (OpamRepositoryName.to_string name)
+          (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
@@ -1678,9 +1683,13 @@ let repository =
           (OpamConsole.warning
              "No configured repositories by these names found: %s");
         let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
-        `Ok ()
-      else
-        `Ok ()
+        ()
+      else if scope = [`Current_switch] then
+        OpamConsole.msg
+          "Repositories removed from the selections of switch %s. \
+           Use '--all' to forget about them altogether."
+          (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+      `Ok ()
     | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
       OpamRepositoryState.with_ `Lock_none gt (fun rt ->
@@ -1731,7 +1740,7 @@ let repository =
         then switches
         else []
       in
-      if not short && scope = [] then
+      if not short && scope = [`Current_switch] then
         OpamConsole.note
           "Use '--all' to see all configured repositories independently of \
            what is selected in the current switch";

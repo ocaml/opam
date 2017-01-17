@@ -96,7 +96,7 @@ module VCS = struct
            match OpamStd.String.rcut_at s ' ' with
            | Some (label, value)
              when OpamStd.String.contains ~sub:"Weak Hash" label ->
-             Some (Done value)
+             Some (Done (Some value))
            | _ -> None)
         r.OpamProcess.r_stdout
     with Not_found ->
@@ -106,11 +106,11 @@ module VCS = struct
            match OpamStd.String.rcut_at s ' ' with
            | Some (label, value)
              when OpamStd.String.contains ~sub:"Num Patches" label ->
-             Some (Done (Printf.sprintf "<darcs-%s>" value))
+             Some (Done (Some (Printf.sprintf "darcs-%s" value)))
            | _ -> None)
         r.OpamProcess.r_stdout
     with Not_found ->
-      Done "<darcs-???>"
+      Done None
 
   let is_up_to_date repo_root _repo_url =
     darcs repo_root [ "log"; "-p"; opam_reverse_commit; "--last"; "2" ]

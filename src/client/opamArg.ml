@@ -756,13 +756,15 @@ let global_options =
         $safe_mode $json_flag)
 
 (* Options common to all build commands *)
+let build_option_section = "PACKAGE BUILD OPTIONS"
 let build_options =
+  let section = build_option_section in
   let keep_build_dir =
-    mk_flag ["b";"keep-build-dir"]
+    mk_flag ~section ["b";"keep-build-dir"]
       "Keep the build directories after compiling packages. \
        This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to \"true\"." in
   let reuse_build_dir =
-    mk_flag ["reuse-build-dir"]
+    mk_flag ~section ["reuse-build-dir"]
       "Reuse existing build directories (kept by using $(b,--keep-build-dir)), \
        instead of compiling from a fresh clone of the source. This can be \
        faster, but also lead to failures if the build systems of the packages \
@@ -770,7 +772,7 @@ let build_options =
        setting $(b,\\$OPAMREUSEBUILDDIR) to \"true\"."
   in
   let inplace_build =
-    mk_flag ["inplace-build"]
+    mk_flag ~section ["inplace-build"]
       "When compiling a package which has its source bound to a local \
        directory, process the build and install actions directly in that \
        directory, rather than in a clean copy handled by opam. This only \
@@ -778,7 +780,7 @@ let build_options =
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
   let working_dir =
-    mk_flag ["working-dir"]
+    mk_flag ~section ["working-dir"]
       "Whenever updating packages that are bound to a local, \
        version-controlled directory, update to the current working state of \
        their source instead of the last commited state, or the ref they are \
@@ -786,20 +788,20 @@ let build_options =
        This only affects packages explicitely listed on the command-line."
   in
   let no_checksums =
-    mk_flag ["no-checksums"]
+    mk_flag ~section ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"." in
   let req_checksums =
-    mk_flag ["require-checksums"]
+    mk_flag ~section ["require-checksums"]
       "Reject the installation of packages that don't provide a checksum for the upstream archives. \
        This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
-    mk_flag ["t";"build-test"]
+    mk_flag ~section ["t";"build-test"]
       "Build and $(b,run) the package unit-tests. \
        This only affects packages listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMBUILDTEST) to \"true\"." in
   let build_doc =
-    mk_flag ["d";"build-doc"]
+    mk_flag ~section ["d";"build-doc"]
       "Build the package documentation. \
        This only affects packages listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMBUILDDOC) to \"true\"." in
@@ -808,13 +810,13 @@ let build_options =
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
   let show =
-    mk_flag ["show-actions"]
+    mk_flag ~section ["show-actions"]
       "Call the solver and display the actions. Don't perform any changes." in
   let dryrun =
-    mk_flag ["dry-run"]
+    mk_flag ~section ["dry-run"]
       "Simulate the command, but don't actually perform any changes." in
   let skip_update =
-    mk_flag ["skip-updates"]
+    mk_flag ~section ["skip-updates"]
       "When running an install, upgrade or reinstall on source-pinned \
        packages, they are normally updated from their origin first. This flag \
        disables that behaviour and will keep them to their version in cache."
@@ -825,7 +827,7 @@ let build_options =
        This is deprecated, use `opam list --external' instead"
       Arg.(list string) [] in
   let fake =
-    mk_flag ["fake"]
+    mk_flag ~section ["fake"]
       "This option registers the actions into the OPAM database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your OPAM \
