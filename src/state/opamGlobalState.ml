@@ -29,8 +29,8 @@ let load_config global_lock root =
   OpamFormatUpgrade.as_necessary global_lock root config
 
 let load lock_kind =
-  log "LOAD-GLOBAL-STATE";
   let root = OpamStateConfig.(!r.root_dir) in
+  log "LOAD-GLOBAL-STATE @ %a" (slog OpamFilename.Dir.to_string) root;
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
   let global_lock = OpamFilename.flock `Lock_read (OpamPath.lock root) in
@@ -118,13 +118,13 @@ let unlock gt =
   (gt :> unlocked global_state)
 
 let with_write_lock ?dontblock gt f =
-  let gt =
+  let ret, gt =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock gt.global_lock
     @@ fun () -> f ({ gt with global_lock = gt.global_lock } : rw global_state)
     (* We don't actually change the field value, but this makes restricting the
        phantom lock type possible*)
   in
-  { gt with global_lock = gt.global_lock }
+  ret, { gt with global_lock = gt.global_lock }
 
 let with_ lock f =
   let gt = load lock in

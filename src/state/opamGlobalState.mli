@@ -45,8 +45,9 @@ val unlock: 'a global_state -> unlocked global_state
 (** Calls the provided function, ensuring a temporary write lock on the given
     global state*)
 val with_write_lock:
-  ?dontblock:bool -> 'a global_state -> (rw global_state -> rw global_state) ->
-  'a global_state
+  ?dontblock:bool -> 'a global_state ->
+  (rw global_state -> 'b * 'c global_state) ->
+  'b * 'a global_state
 
 (** Writes back the global configuration file ~/.opam/config *)
 val write: rw global_state -> unit

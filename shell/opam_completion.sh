@@ -199,7 +199,7 @@ _opam()
       exec|e)
           if [ $COMP_CWORD -eq 2 ]; then compgen_opt+=(-c)
           else _opam_add_f _opam_flags "$cmd"; fi;;
-      lint)
+      lint|build)
           if [ $COMP_CWORD -eq 2 ]; then
               compgen_opt+=(-f -X '!*opam' -o plusdirs)
           else _opam_add_f _opam_flags "$cmd"; fi;;

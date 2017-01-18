@@ -138,7 +138,7 @@ let load_repo_opams repo =
     (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo.repo_root))
 
 let load lock_kind gt =
-  log "LOAD-REPOSITORY-STATE";
+  log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repos_map =
     OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
