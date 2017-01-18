@@ -62,6 +62,7 @@ type selector =
   | Pinned
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
+  | Conflicts_with of package list
   | Coinstallable_with of dependency_toggles * package list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
@@ -90,6 +91,10 @@ let string_of_selector =
       ((if tog.recursive then "rec-required-by" else "required-by") % `blue)
       (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom atoms
        % `bold)
+  | Conflicts_with packages ->
+    Printf.sprintf "%s(%s)"
+      ("conflicts" % `blue)
+      ((OpamStd.List.concat_map " " OpamPackage.to_string packages) % `bold)
   | Coinstallable_with (_,packages) ->
     Printf.sprintf "%s(%s)"
       ("coinstallable" % `blue)
@@ -216,6 +221,9 @@ let apply_selector ~base st = function
           (fun nv -> List.exists (fun at -> OpamFormula.check at nv) deps)
           packages)
       base
+  | Conflicts_with packages ->
+    OpamSwitchState.conflicts_with st (OpamPackage.Set.of_list packages)
+      (Lazy.force st.available_packages)
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
     let universe =
