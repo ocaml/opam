@@ -90,7 +90,8 @@ let global_options =
         OpamStd.Option.Op.(options.debug_level ++
                            OpamStd.Config.env_level "DEBUG" +! 0 > 0)
         (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
-    if not options.safe_mode && Unix.getuid () = 0 then
+    if not (options.safe_mode || OpamClientConfig.(!r.root_is_ok)) &&
+       Unix.getuid () = 0 then
       OpamConsole.warning "Running as root is not recommended";
     options, self_upgrade_status
   in
@@ -1664,7 +1665,7 @@ let repository =
       in
       if scope = [`Current_switch] then
         OpamConsole.msg
-          "Repository %s has been added to the selections of switch %s."
+          "Repository %s has been added to the selections of switch %s.\n"
           (OpamRepositoryName.to_string name)
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
       `Ok ()
@@ -1687,7 +1688,7 @@ let repository =
       else if scope = [`Current_switch] then
         OpamConsole.msg
           "Repositories removed from the selections of switch %s. \
-           Use '--all' to forget about them altogether."
+           Use '--all' to forget about them altogether.\n"
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
       `Ok ()
     | Some `add, [name] ->

@@ -112,6 +112,7 @@ let apply_global_options o =
     (* ?makecmd:string Lazy.t *)
     (* ?skip_dev_update:bool *)
     ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
+    (* ?root_is_ok:bool *)
     (* - client options - *)
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
@@ -233,6 +234,7 @@ let help_sections = [
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam env --root=DIR' when DIR is non-default or OPAMROOT is \
       already defined.";
+  `P "$(i,OPAMROOTISOK) don't complain when running as root.";
   `P "$(i,OPAMSAFE) see option `--safe'";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
