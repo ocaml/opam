@@ -2181,8 +2181,11 @@ let pin ?(unpin_only=false) () =
        | None -> target)
     | _ -> target
   in
-  let pin global_options kind edit no_act dev_repo print_short command params =
+  let pin
+      global_options build_options
+      kind edit no_act dev_repo print_short command params =
     apply_global_options global_options;
+    apply_build_options build_options;
     let action = not no_act in
     match command, params with
     | Some `list, [] | None, [] ->
@@ -2290,8 +2293,8 @@ let pin ?(unpin_only=false) () =
   in
   Term.ret
     Term.(pure pin
-          $global_options $kind $edit $no_act $dev_repo $print_short_flag
-          $command $params),
+          $global_options $build_options
+          $kind $edit $no_act $dev_repo $print_short_flag $command $params),
   term_info "pin" ~doc ~man
 
 (* SOURCE *)
