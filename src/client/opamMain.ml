@@ -1829,10 +1829,6 @@ let switch =
   let no_switch =
     mk_flag ["no-switch"]
       "Don't automatically select newly installed switches" in
-  let all =
-    mk_flag ["a";"all"]
-      "With $(b,list-available), show all available compilers, not only \
-       official releases. This is the default if a pattern is supplied" in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1858,7 +1854,7 @@ let switch =
       Arg.(some string) None
   in
   let switch
-      global_options build_options command print_short all
+      global_options build_options command print_short
       no_switch packages empty descr repos params =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1895,18 +1891,8 @@ let switch =
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      let all_compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
+      let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
-      let compilers =
-        if all || pattlist <> [] then all_compilers else
-        let is_main_comp_re =
-          Re.(compile (seq [bos; rep1 (alt [digit; char '.']); eos]))
-        in
-        OpamPackage.Set.filter
-          (fun nv ->
-             Re.(execp is_main_comp_re (OpamPackage.version_to_string nv)))
-          all_compilers
-      in
       let filters =
         List.map (fun patt ->
             OpamListCommand.Pattern
@@ -1931,12 +1917,6 @@ let switch =
       OpamListCommand.display st ~header:(not print_short) ~format
         ~dependency_order:false
         ~all_versions:true ~order compilers;
-      if all || pattlist <> [] then `Ok () else
-      let unshown  = OpamPackage.Set.Op.(all_compilers -- compilers) in
-      if not (print_short || OpamPackage.Set.is_empty unshown) then
-        OpamConsole.msg "# %d more patched or experimental compilers, use \
-                         '--all' to show\n"
-          (OpamPackage.Set.cardinal unshown);
       `Ok ()
     | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -2030,7 +2010,7 @@ let switch =
   Term.(ret (pure switch
              $global_options $build_options $command
              $print_short_flag
-             $all $no_switch
+             $no_switch
              $packages $empty $descr $repos $params)),
   term_info "switch" ~doc ~man
 
