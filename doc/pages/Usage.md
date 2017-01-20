@@ -1,7 +1,7 @@
-# Using OPAM
+# Using opam
 
 This document starts with a quick introduction, then covers most commonly-used
-OPAM features.
+opam features.
 
 If you are a developer and want to get a project packaged or change an existing
 package, see the step-by-step [packaging guide](Packaging.html)
@@ -20,8 +20,8 @@ details.
 
 ```
 # ** Get started **
-opam init            # Initialize ~/.opam using an already installed OCaml
-opam init --comp 4.02.3
+opam init            # Initialize ~/.opam
+opam init --compiler=ocaml-base-compiler.4.02.3
                      # Initialize with a freshly compiled OCaml 4.02.3
 
 # ** Lookup **
@@ -50,25 +50,28 @@ system or OCaml version -- `opam install PACKAGE` will give you the reason.
 
 ### opam init
 
-OPAM needs to initialize its internal state in a `~/.opam` directory to work.
-This command can also take care of installing a version of OCaml there if
-needed, using the `--comp VERSION` option.
+opam needs to initialize its internal state in a `~/.opam` directory to work.
+This command will also automatically pick a compiler to install, unless `--bare`
+has been specified.
 
-To operate as expected, some variables need to be set in your environment. You
-will be prompted to update your configuration, and given instructions on how
-to proceed manually if you decline.
+To make your shell aware of what has been installed in opam, some variables need
+to be set in your environment. You will be prompted to update your
+configuration, and given instructions on how to proceed manually if you decline.
 
 ### opam update
 
-This command synchronizes OPAM's database with the package repositories. The
+This command synchronizes opam's database with the package repositories. The
 lists of available packages and their details are stored into
 `~/.opam/repo/<name>`. Remember to run this regularly if you want to keep
 up-to-date, or if you are having trouble with a package.
 
+It will also update any packages that are bound to version-controlled sources.
+
 ### Looking up packages
 
 There are three useful commands for that:
-* `opam list` List installed packages, or packages matching a pattern
+* `opam list` List installed packages, or packages matching various selection
+  criteria
 * `opam search` Search in package descriptions
 * `opam show` Print details on a given package.
 
@@ -83,7 +86,7 @@ opam install ocp-indent ocp-index.1.0.2
 opam install "ocamlfind>=1.4.0"
 ```
 
-If OPAM seems unable to fulfill very simple installation requests or
+If opam seems unable to fulfill very simple installation requests or
 propose non-sensical install plans, it may be due to limitations of
 its internal dependency solver; you should check that you have an
 [External dependency solver](Install.html#ExternalSolvers) on your
@@ -95,11 +98,6 @@ Will attempt to upgrade the installed packages to their newest versions. You
 should run it after `opam update`, and may use `opam pin` to prevent specific
 packages from being upgraded.
 
-If OPAM proposes non-sensical upgrade plans, it may be due to
-limitations of its internal dependency solver; you should check that
-you have an [External dependency solver](Install.html#ExternalSolvers)
-on your system.
-
 ### opam switch
 
 This command enables the user to have several installations on disk, each with
@@ -107,16 +105,15 @@ their own prefix, set of installed packages, and OCaml version. Use cases
 include having to work or test with different OCaml versions, keeping separate
 development environments for specific projects, etc.
 
-Use `opam switch <version>` to _switch_ to a different OCaml version, or `opam
-switch <name> --alias-of <version>` to name the new _switch_ as you like. Don't
-forget to run the advertised `eval $(opam config env)` to update your PATH
-accordingly.
+Use `opam switch create [name] <package-or-version>` to _switch_ to a different
+compiler. Don't forget to run the advertised `eval $(opam env)` to update your
+PATH accordingly. Replace `[name]` with a directory name to have the switch
+bound to that directory, and automatically selected when opam is run from there:
+this is typically done within projects that require a specific compiler or set
+of opam packages.
 
-Creating a new switch requires re-compiling OCaml, unless you make it an alias
-of the "system" switch, relying on the global OCaml installation.
-
-There are a bunch of specific or experimental OCaml compiler definitions on the
-official repository, list them all with `opam switch list --all`.
+Creating a new switch requires re-compiling OCaml, unless you use the
+`ocaml-system` package, that relies on the global OCaml installation.
 
 ### opam pin
 
@@ -133,7 +130,7 @@ Where `<target>` may be a version, but also a local path, an http address or
 even a git, mercurial or darcs URL. The package will be kept up-to-date with its
 origin on `opam update` and when explicitly mentioned in a command, so that
 you can simply run `opam upgrade <package name>` to re-compile it from its
-upstream. If the upstream includes OPAM metadata, that will be used as well.
+upstream. If the upstream includes opam metadata, that will be used as well.
 
 ```
 opam pin add camlpdf 1.7                                      # version pin
@@ -153,21 +150,23 @@ opam upgrade <package>
 
 ### opam repo
 
-OPAM is configured by default to use the community's software repository at
+opam is configured by default to use the community's software repository at
 [opam.ocaml.org](https://opam.ocaml.org), but this can easily be
 changed at `opam init` time or later.
 
-`opam repo add <name> <address>` will make OPAM use the definitions of any
+`opam repo add <name> <address>` will make opam use the definitions of any
 package versions defined at `<address>`, falling back to the previously defined
 repositories for those which aren't defined. The `<address>` may point to an
-http, local or version-controlled repository.
+http, local or version-controlled repository. The newly configured repository is
+only selected for the current switch (since opam 2.0), unless you add `--all`.
 
 Defining your own repository, either locally or online, is quite easy: you can
-start off by cloning [the official
-repository](https://github.com/ocaml/opam-repository) if you intend it as a
-replacement, or just create a new directory with `packages` and `compilers`
-sub-directories. See the [packaging guide](Packaging.html) if you need help on
-the package format.
+start off by cloning
+[the official repository](https://github.com/ocaml/opam-repository) if you
+intend it as a replacement, or just create a new directory with a `packages`
+sub-directory, and a [`repo` file](Manual.html#repo) containing at least an
+`opam-version` field. See the [packaging guide](Packaging.html) if you need help
+on the package format.
 
 If your repository is going to be served over HTTP, you should generate an index
 using the `opam-admin` tool.
