@@ -102,6 +102,8 @@ val apply_global_options: global_options -> unit
 (** Abstract type for build options *)
 type build_options
 
+val build_option_section: string
+
 (** Build options *)
 val build_options: build_options Term.t
 

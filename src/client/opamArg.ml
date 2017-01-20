@@ -521,8 +521,7 @@ let mk_subdoc ?(defaults=[]) commands =
   List.map (fun (c,_,args,d) ->
       let cmds = bold c ^ " " ^ OpamStd.List.concat_map " " it args in
       `I (cmds, d)
-    ) commands @
-  [`S "OPTIONS"] (* Ensures options get after commands *)
+    ) commands
 
 let mk_subcommands_aux my_enum commands =
   let command =

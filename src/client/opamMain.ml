@@ -889,7 +889,9 @@ let config =
     `P "Apart from $(b,opam config env), most of these commands are used \
         by OPAM internally, and are of limited interest for the casual \
         user.";
-  ] @ mk_subdoc commands in
+  ] @ mk_subdoc commands
+    @ [`S "OPTIONS"]
+  in
 
   let command, params = mk_subcommands commands in
   let all_doc         = "Enable all the global and user configuration options." in
@@ -1563,7 +1565,9 @@ let repository =
         $(b,remove), $(b,set-repos). If no flag in this section is specified \
         the updated selections default to the current switch. Multiple scopes \
         can be selected, e.g. $(b,--this-switch --set-default)."
-  ] @ mk_subdoc ~defaults:["","list"] commands in
+  ] @ mk_subdoc ~defaults:["","list"] commands
+    @ [`S "OPTIONS"]
+  in
   let command, params = mk_subcommands commands in
   let scope =
     let scope_info ?docv flags doc =
@@ -1823,7 +1827,10 @@ let switch =
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval `opam env \
         --switch=SWITCH`).";
-  ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands in
+  ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
+    @ [`S "OPTIONS"]
+    @ [`S OpamArg.build_option_section]
+  in
 
   let command, params = mk_subcommands_with_default commands in
   let no_switch =
@@ -2073,7 +2080,10 @@ let pin ?(unpin_only=false) () =
         package.";
     `P "The default subcommand is $(i,list) if there are no further arguments, \
         and $(i,add) otherwise if unambiguous.";
-  ] @ mk_subdoc ~defaults:["","list"] commands in
+  ] @ mk_subdoc ~defaults:["","list"] commands
+    @ [`S "OPTIONS"]
+    @ [`S OpamArg.build_option_section]
+  in
   let command, params =
     if unpin_only then
       Term.pure (Some `remove),
