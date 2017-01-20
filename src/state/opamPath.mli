@@ -138,11 +138,7 @@ module Switch: sig
   (** Clean, uncompressed source directory for this package: {i
       $meta/sources/$name.$version/} *)
   val sources: t -> switch -> package -> dirname
-(*
-  (** Source dir for all pinned packages: {i
-      $meta/packages.dev/} *)
-  val dev_packages_dir: t -> switch -> dirname
-*)
+
   (** Mirror of the sources for a given pinned package: {i
       $meta/sources/$name/} (without version) *)
   val pinned_package: t -> switch -> name -> dirname

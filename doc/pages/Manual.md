@@ -770,7 +770,7 @@ files.
       documentation
 
 - <a id="opamfield-depopts">
-  `depopts: [ <string> { <filtered-package-formula> } ... ]`</a>:
+  `depopts: [ <pkgname> { <filtered-package-formula> } ... ]`</a>:
   the package optional dependencies. This flag is similar to
   [`depends:`](#opamfield-depends) in format. It contains packages that will be
   _used_, if present, by the package being defined, either during build or
@@ -787,9 +787,16 @@ files.
     [`conflicts:`](#opamfield-conflicts) field.
 
 - <a id="opamfield-conflicts">
-  `conflicts: [ <string> { <version-constraint> } ... ]`</a>:
+  `conflicts: [ <pkgname> { <version-constraint> } ... ]`</a>:
   a list of package names with optional version constraints indicating that the
   current package can't coexist with those.
+
+- <a id="opamfield-conflict-class">`conflict-class: [ <pkgname> ... ]`</a>:
+  an alternate, symmetric way of defining package conflicts. Conflict classes
+  defined by this flag have the same constraints as package names, but occupy a
+  different namespace. Any two packages having a common conflict class will be
+  considered incompatible. This is useful to define sets of mutually conflicting
+  packages.
 
 - <a id="opamfield-depexts">
   `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`</a>:

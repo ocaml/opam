@@ -395,27 +395,37 @@ let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
 
-let remove_conflicts st subset =
-  let conflicts nv =
-    OpamFile.OPAM.conflicts (OpamPackage.Map.find nv st.opams)
+let conflicts_with st subset =
+  let forward_conflicts, conflict_classes =
+    OpamPackage.Set.fold (fun nv (cf,cfc) ->
+        try
+          let opam = OpamPackage.Map.find nv st.opams in
+          OpamFormula.ors [cf;OpamFile.OPAM.conflicts opam],
+          List.fold_right OpamPackage.Name.Set.add
+            (OpamFile.OPAM.conflict_class opam) cfc
+        with Not_found -> cf, cfc)
+      subset (OpamFormula.Empty, OpamPackage.Name.Set.empty)
   in
-  let forward_conflicts =
-    subset |>
-    OpamPackage.Set.elements |>
-    List.map conflicts |>
-    OpamFormula.ors |>
-    OpamFormula.to_atom_formula
-  in
+  let forward_conflicts = OpamFormula.to_atom_formula forward_conflicts in
   let verifies formula nv =
+    formula <> OpamFormula.Empty &&
     OpamFormula.eval (fun at -> OpamFormula.check at nv) formula
   in
   OpamPackage.Set.filter
     (fun nv ->
-       (forward_conflicts = OpamFormula.Empty ||
-        not (verifies forward_conflicts nv)) &&
-       let backwards_conflicts = OpamFormula.to_atom_formula (conflicts nv) in
-       backwards_conflicts = OpamFormula.Empty ||
-       not (OpamPackage.Set.exists (verifies backwards_conflicts) subset))
+       not (OpamPackage.has_name subset nv.name) &&
+       (verifies forward_conflicts nv ||
+        let opam = OpamPackage.Map.find nv st.opams in
+        List.exists (fun cl -> OpamPackage.Name.Set.mem cl conflict_classes)
+          (OpamFile.OPAM.conflict_class opam)
+        ||
+        let backwards_conflicts =
+          OpamFormula.to_atom_formula (OpamFile.OPAM.conflicts opam)
+        in
+        OpamPackage.Set.exists (verifies backwards_conflicts) subset))
+
+let remove_conflicts st subset pkgs =
+  pkgs -- conflicts_with st subset pkgs
 
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
@@ -441,7 +451,46 @@ let universe st
       ) opams
   in
   let u_depends = get_deps OpamFile.OPAM.depends st.opams in
-  let u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts st.opams in
+  let u_conflicts =
+    let conflict_classes =
+      OpamPackage.Map.fold (fun nv opam acc ->
+          List.fold_left (fun acc cc ->
+              OpamPackage.Name.Map.update cc
+                (OpamPackage.Set.add nv) OpamPackage.Set.empty acc)
+            acc
+            (OpamFile.OPAM.conflict_class opam))
+        st.opams
+        OpamPackage.Name.Map.empty
+    in
+    let conflict_class_formulas =
+      OpamPackage.Name.Map.map (fun pkgs ->
+          OpamPackage.to_map pkgs |>
+          OpamPackage.Name.Map.mapi (fun name versions ->
+              OpamFormula.simplify_version_set
+                (OpamPackage.versions_of_name st.packages name)
+                (OpamFormula.ors
+                   (List.map (fun v -> Atom (`Eq, v))
+                      (OpamPackage.Version.Set.elements versions)))))
+        conflict_classes
+    in
+    OpamPackage.Map.fold (fun nv opam acc ->
+        let conflicts =
+          List.fold_left (fun acc cl ->
+              let cmap =
+                OpamPackage.Name.Map.find cl conflict_class_formulas |>
+                OpamPackage.Name.Map.remove nv.name
+              in
+              OpamPackage.Name.Map.fold
+                (fun name vformula acc ->
+                   OpamFormula.ors [acc; Atom (name, vformula)])
+                cmap acc)
+            (OpamFile.OPAM.conflicts opam)
+            (OpamFile.OPAM.conflict_class opam)
+        in
+        OpamPackage.Map.add nv conflicts acc)
+      st.opams
+      OpamPackage.Map.empty
+  in
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
   in
@@ -572,8 +621,8 @@ let unavailable_reason st (name, vformula) =
       (OpamFilter.to_string avail)
   else if OpamPackage.has_name
             (Lazy.force st.available_packages --
-             remove_conflicts st (Lazy.force st.available_packages)
-               st.compiler_packages)
+             remove_conflicts st st.compiler_packages
+               (Lazy.force st.available_packages))
             name
   then
     "conflict with the base packages of this switch"

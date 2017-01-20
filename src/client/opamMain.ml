@@ -322,6 +322,16 @@ let list =
     Arg.(value & opt (list atom) [] &
          info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["required-by"])
   in
+  let conflicts_with =
+    let doc =
+      "List packages that have declared conflicts with at least one of the \
+       given list. This includes conflicts defined from the packages in the \
+       list, from the other package, or by a common $(b,conflict-class:) \
+       field."
+    in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["conflicts-with"])
+  in
   let coinstallable_with =
     let doc = "Only list packages that are compatible with all of $(docv)." in
     Arg.(value & opt (list package_with_version) [] &
@@ -464,7 +474,7 @@ let list =
            ~doc:"Set the column-separator string")
   in
   let list global_options state_selector field_match
-      depends_on required_by coinstallable_with resolve
+      depends_on required_by conflicts_with coinstallable_with resolve
       recursive depopts no_switch
       depexts nobuild dev doc test repos has_flag has_tag
       print_short sort columns all_versions normalise wrap separator
@@ -490,7 +500,8 @@ let list =
       if state_selector = [] then
         if no_switch then Empty
         else if
-          depends_on = [] && required_by = [] && coinstallable_with = [] &&
+          depends_on = [] && required_by = [] &&
+          conflicts_with = [] && coinstallable_with = [] &&
           resolve = [] && packages = [] && field_match = [] && has_flag = [] &&
           has_tag = []
         then Atom OpamListCommand.Installed
@@ -518,6 +529,8 @@ let list =
                 [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
             (match required_by with [] -> [] | rdeps ->
                 [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+            (match conflicts_with with [] -> [] | pkgs ->
+                [OpamListCommand.Conflicts_with pkgs]) @
             (match coinstallable_with with [] -> [] | pkgs ->
                 [OpamListCommand.Coinstallable_with
                    (dependency_toggles, pkgs)]) @
@@ -589,7 +602,7 @@ let list =
       OpamListCommand.print_depexts st results tags_list
   in
   Term.(pure list $global_options $state_selector $field_match
-        $depends_on $required_by $coinstallable_with
+        $depends_on $required_by $conflicts_with $coinstallable_with
         $resolve $recursive $depopts
         $no_switch $depexts $nobuild $dev $doc_flag $test $repos
         $has_flag $has_tag
