@@ -427,25 +427,28 @@ let simplify_version_set set f =
   let vmin = S.min_elt set in
   S.fold (fun version acc ->
       if check_version_formula f version
-      then make_or acc (Atom (`Geq, version))
-      else make_and acc (Atom (`Lt, version)))
-    set Empty |>
-  partial_eval (function
-      | (`Geq, v) when v = vmin -> `True
-      | (`Lt, v) when v = vmin -> `False
-      | a -> `Formula (Atom a)) |>
-  function
-  | `True -> Empty
-  | `False -> f
-  | `Formula f ->
-    simplify_version_formula f |>
+      then match acc with
+        | Empty | Atom (`Geq, _) | Or (_, Atom (`Geq, _)) -> acc
+        | Atom (`Eq, vl) -> Atom (`Geq, vl)
+        | Or (f1, Atom (`Eq, vl)) -> Or (f1, Atom (`Geq, vl))
+        | _ -> make_or acc (Atom (`Eq, version))
+      else match acc with
+        | Atom ((`Lt|`Eq), _)
+        | And (_, Atom ((`Lt|`Eq), _))
+        | Or (_, (And (_, Atom (`Lt, _))))
+          -> acc
+        | Or (f1, (Atom ((`Eq|`Geq), _) as atl))
+          -> Or (f1, And (atl, (Atom (`Lt, version))))
+        | _ -> make_and acc (Atom (`Lt, version)))
+    set Empty
+  |> function
+  | Atom (`Lt, v) when v = vmin -> f (* No packages match, return unchanged *)
+  | f1 ->
     map_formula (function
-        | And (Atom (`Geq, vlow), Atom (`Lt, vhigh)) as f ->
-          let _,_,s = S.split vlow set in
-          if S.min_elt s = vhigh then Atom (`Eq, vlow) else f
+        | And (Atom (`Eq, _) as a1, Atom (`Lt, _)) -> a1
+        | Atom (`Lt, v) when v = vmin -> Empty
         | f -> f)
-
-
+      f1
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula
