@@ -2179,7 +2179,7 @@ module OPAMSyntax = struct
        OpamVersion.compare opam_version (OpamVersion.of_string "1.2") < 0
     then depopts
     else
-    (* Make sure depopts are a pure disjunction, without constraints *)
+    (* Make sure depopts are a pure disjunction *)
     let rec aux acc disjunction =
       List.fold_left (fun acc -> function
           | OpamFormula.Atom _ as atom -> atom :: acc

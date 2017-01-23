@@ -1169,7 +1169,20 @@ for <span class="opam">opam</span>.
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define
   [trust anchors](#opamrcfield-repositories), opam will refuse any update that
-  doesn't pass this validation. TODO: define precise interface and variables.
+  doesn't pass this validation. The command should return 0 on successful
+  validation, and the following opam variables are made available:
+    - `anchors`: comma-separated list of fingerprints
+    - `quorum`: integer, the currently defined quorum
+    - `repo`: directory containing the already-validated state of the repository
+      (empty for an initial validation)
+    - `patch`: for incremental validation, filename of a patch applying to
+      `repo` (with `patch -p1`) and that needs verification
+    - `dir`: for initial validation, the directory to verify
+    - `incremental`: `false` if doing an initial validation based on `dir`,
+      `true` for an incremental validation based on `repo` and `patch`.
+
+    Since there are two modes (initial and incremental), all variables may not be
+    defined in all cases.
 - <a id="configfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
