@@ -46,8 +46,6 @@ let ocaml_official_pkgname = OpamPackage.Name.of_string "ocaml-base-compiler"
 let ocaml_variants_pkgname = OpamPackage.Name.of_string "ocaml-variants"
 let ocaml_system_pkgname = OpamPackage.Name.of_string "ocaml-system"
 
-let ocaml_conflict_class = OpamPackage.Name.of_string "ocaml-core-compiler"
-
 let ocaml_package_names =
   [ocaml_wrapper_pkgname;
    ocaml_official_pkgname;
@@ -226,7 +224,15 @@ let do_upgrade () =
       *)
 
       let opam = OpamFile.Comp.to_package ~package:nv comp descr in
-      let opam = O.with_conflict_class [ocaml_conflict_class] opam in
+      let opam =
+        if variant = None then
+          opam |>
+          O.with_conflicts (OpamFormula.ors [
+              Atom (ocaml_system_pkgname, Empty);
+              Atom (ocaml_variants_pkgname, Empty);
+            ])
+        else opam
+      in
       let opam =
         match OpamFile.OPAM.url opam with
         | Some urlf when OpamFile.URL.checksum urlf = [] ->
@@ -286,7 +292,10 @@ let do_upgrade () =
               [ "ocaml"; conf_script_name ],
             None
           ] |>
-          O.with_conflict_class [ocaml_conflict_class] |>
+          O.with_conflicts (OpamFormula.ors [
+              Atom (ocaml_official_pkgname, Empty);
+              Atom (ocaml_variants_pkgname, Empty);
+            ]) |>
           O.with_depends (OpamFormula.ands (
               List.map (fun name -> Atom (OpamPackage.Name.of_string name, Empty))
                 ["base-unix"; "base-threads"; "base-bigarray"]
