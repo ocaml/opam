@@ -44,13 +44,19 @@ list of supported distributions:
 
 #### Archlinux
 
-The [opam](https://aur.archlinux.org/packages/opam/) and
-[opam-git](https://aur.archlinux.org/packages/opam-git/) packages are
-available in the [AUR](https://wiki.archlinux.org/index.php/AUR). Replace `opam`
-with `opam-git` in the following instruction to get the development version:
+The [opam](https://www.archlinux.org/packages/community/x86_64/opam/)
+package is available in the official distribution. To install it simply run:
 
 ```
-yaourt -S opam
+pacman -S opam
+```
+
+If you'd like to use the development version there is an [opam-git](https://aur.archlinux.org/packages/opam-git/)
+package available in the [AUR](https://wiki.archlinux.org/index.php/AUR).
+Assuming you have [yaourt](https://aur.archlinux.org/packages/yaourt) installed just run the following command:
+
+```
+yaourt -S opam-git
 ```
 
 #### Debian
