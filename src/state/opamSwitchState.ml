@@ -427,7 +427,7 @@ let conflicts_with st subset =
 let remove_conflicts st subset pkgs =
   pkgs -- conflicts_with st subset pkgs
 
-let get_conflicts packages opams_map =
+let get_conflicts opams_map =
   let conflict_classes =
     OpamPackage.Map.fold (fun nv opam acc ->
         List.fold_left (fun acc cc ->
@@ -441,12 +441,10 @@ let get_conflicts packages opams_map =
   let conflict_class_formulas =
     OpamPackage.Name.Map.map (fun pkgs ->
         OpamPackage.to_map pkgs |>
-        OpamPackage.Name.Map.mapi (fun name versions ->
-            OpamFormula.simplify_version_set
-              (OpamPackage.versions_of_name packages name)
-              (OpamFormula.ors
-                 (List.map (fun v -> Atom (`Eq, v))
-                    (OpamPackage.Version.Set.elements versions)))))
+        OpamPackage.Name.Map.map (fun versions ->
+            (OpamFormula.ors
+               (List.map (fun v -> Atom (`Eq, v))
+                  (OpamPackage.Version.Set.elements versions)))))
       conflict_classes
   in
   OpamPackage.Map.fold (fun nv opam acc ->
@@ -491,7 +489,7 @@ let universe st
       ) opams
   in
   let u_depends = get_deps OpamFile.OPAM.depends st.opams in
-  let u_conflicts = get_conflicts st.packages st.opams in
+  let u_conflicts = get_conflicts st.opams in
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
   in
@@ -519,7 +517,7 @@ let universe st
   u
 
 let dump_pef_state st oc =
-  let conflicts = get_conflicts st.packages st.opams in
+  let conflicts = get_conflicts st.opams in
   let print_def nv opam =
     Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string nv);
     Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string nv);
