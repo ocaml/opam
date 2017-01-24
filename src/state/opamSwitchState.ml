@@ -427,6 +427,46 @@ let conflicts_with st subset =
 let remove_conflicts st subset pkgs =
   pkgs -- conflicts_with st subset pkgs
 
+let get_conflicts packages opams_map =
+  let conflict_classes =
+    OpamPackage.Map.fold (fun nv opam acc ->
+        List.fold_left (fun acc cc ->
+            OpamPackage.Name.Map.update cc
+              (OpamPackage.Set.add nv) OpamPackage.Set.empty acc)
+          acc
+          (OpamFile.OPAM.conflict_class opam))
+      opams_map
+      OpamPackage.Name.Map.empty
+  in
+  let conflict_class_formulas =
+    OpamPackage.Name.Map.map (fun pkgs ->
+        OpamPackage.to_map pkgs |>
+        OpamPackage.Name.Map.mapi (fun name versions ->
+            OpamFormula.simplify_version_set
+              (OpamPackage.versions_of_name packages name)
+              (OpamFormula.ors
+                 (List.map (fun v -> Atom (`Eq, v))
+                    (OpamPackage.Version.Set.elements versions)))))
+      conflict_classes
+  in
+  OpamPackage.Map.fold (fun nv opam acc ->
+      let conflicts =
+        List.fold_left (fun acc cl ->
+            let cmap =
+              OpamPackage.Name.Map.find cl conflict_class_formulas |>
+              OpamPackage.Name.Map.remove nv.name
+            in
+            OpamPackage.Name.Map.fold
+              (fun name vformula acc ->
+                 OpamFormula.ors [acc; Atom (name, vformula)])
+              cmap acc)
+          (OpamFile.OPAM.conflicts opam)
+          (OpamFile.OPAM.conflict_class opam)
+      in
+      OpamPackage.Map.add nv conflicts acc)
+    opams_map
+    OpamPackage.Map.empty
+
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
@@ -451,46 +491,7 @@ let universe st
       ) opams
   in
   let u_depends = get_deps OpamFile.OPAM.depends st.opams in
-  let u_conflicts =
-    let conflict_classes =
-      OpamPackage.Map.fold (fun nv opam acc ->
-          List.fold_left (fun acc cc ->
-              OpamPackage.Name.Map.update cc
-                (OpamPackage.Set.add nv) OpamPackage.Set.empty acc)
-            acc
-            (OpamFile.OPAM.conflict_class opam))
-        st.opams
-        OpamPackage.Name.Map.empty
-    in
-    let conflict_class_formulas =
-      OpamPackage.Name.Map.map (fun pkgs ->
-          OpamPackage.to_map pkgs |>
-          OpamPackage.Name.Map.mapi (fun name versions ->
-              OpamFormula.simplify_version_set
-                (OpamPackage.versions_of_name st.packages name)
-                (OpamFormula.ors
-                   (List.map (fun v -> Atom (`Eq, v))
-                      (OpamPackage.Version.Set.elements versions)))))
-        conflict_classes
-    in
-    OpamPackage.Map.fold (fun nv opam acc ->
-        let conflicts =
-          List.fold_left (fun acc cl ->
-              let cmap =
-                OpamPackage.Name.Map.find cl conflict_class_formulas |>
-                OpamPackage.Name.Map.remove nv.name
-              in
-              OpamPackage.Name.Map.fold
-                (fun name vformula acc ->
-                   OpamFormula.ors [acc; Atom (name, vformula)])
-                cmap acc)
-            (OpamFile.OPAM.conflicts opam)
-            (OpamFile.OPAM.conflict_class opam)
-        in
-        OpamPackage.Map.add nv conflicts acc)
-      st.opams
-      OpamPackage.Map.empty
-  in
+  let u_conflicts = get_conflicts st.packages st.opams in
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
   in
@@ -518,6 +519,7 @@ let universe st
   u
 
 let dump_pef_state st oc =
+  let conflicts = get_conflicts st.packages st.opams in
   let print_def nv opam =
     Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string nv);
     Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string nv);
@@ -558,8 +560,9 @@ let dump_pef_state st oc =
       (OpamStd.List.concat_map " | " OpamFormula.string_of_atom) |>
     output_string oc;
 
-    OpamFormula.ors [Atom (nv.name, Empty); OpamFile.OPAM.conflicts opam] |>
-    OpamFormula.to_disjunction |>
+    OpamFormula.ors
+      [Atom (nv.name, Empty); OpamPackage.Map.find nv conflicts] |>
+    OpamFormula.to_disjunction st.packages |>
     OpamStd.List.concat_map ~left:"conflicts: " ~right:"\n" ~nil:"" " , "
       OpamFormula.string_of_atom |>
     output_string oc;
