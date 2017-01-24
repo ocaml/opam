@@ -562,7 +562,7 @@ let dump_pef_state st oc =
 
     OpamFormula.ors
       [Atom (nv.name, Empty); OpamPackage.Map.find nv conflicts] |>
-    OpamFormula.to_disjunction st.packages |>
+    OpamFormula.set_to_disjunction st.packages |>
     OpamStd.List.concat_map ~left:"conflicts: " ~right:"\n" ~nil:"" " , "
       OpamFormula.string_of_atom |>
     output_string oc;

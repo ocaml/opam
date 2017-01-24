@@ -170,9 +170,14 @@ val to_conjunction: t -> atom conjunction
 (** Return a formula from a conjunction of atoms *)
 val of_conjunction: atom conjunction -> t
 
-(** Return a disjunction. It the initial formula is not a
-    disjunction, then fail. *)
+(** Return a disjunction of atoms from a package formula. It the initial formula
+    is not a disjunction, then fail. *)
 val to_disjunction: t -> atom disjunction
+
+(** Like [to_disjunction], but accepts conjunctions within constraint formulas,
+    resolving them using the provided package set. Conjunctions between packages
+    still raise [Failure]. *)
+val set_to_disjunction: OpamPackage.Set.t -> t -> atom disjunction
 
 (** Return a formula from a disjunction of atoms *)
 val of_disjunction: atom disjunction -> t

@@ -350,6 +350,34 @@ let of_disjunction d =
 let atoms t =
   fold_left (fun accu x -> x::accu) [] (to_atom_formula t)
 
+let get_disjunction_formula version_set cstr =
+  List.map (fun ff ->
+      match ands_to_list ff with
+      | [] -> assert false
+      | [Atom _] as at -> at
+      | _ ->
+        OpamPackage.Version.Set.filter (check_version_formula ff) version_set |>
+        OpamPackage.Version.Set.elements |>
+        List.map (fun v -> Atom (`Eq, v)))
+    (ors_to_list cstr) |>
+  List.flatten
+
+let set_to_disjunction set t =
+  List.map (function
+      | And _ ->
+        failwith (Printf.sprintf "%s is not a valid disjunction" (to_string t))
+      | Or _ | Block _ | Empty -> assert false
+      | Atom (name, Empty) -> [name, None]
+      | Atom (name, cstr) ->
+        get_disjunction_formula
+          (OpamPackage.versions_of_name set name)
+          cstr |>
+        List.map (function
+            | Atom (relop, v) -> name, Some (relop, v)
+            | _ -> assert false))
+    (ors_to_list t) |>
+  List.flatten
+
 let simplify_ineq_formula vcomp f =
   (* backported from OWS/WeatherReasons *)
   let vmin a b = if vcomp a b <= 0 then a else b in

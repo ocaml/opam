@@ -178,7 +178,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
     with Not_found -> Empty in
   let conflicts =
     (name, None) :: (* prevents install of multiple versions of the same pkg *)
-    OpamFormula.to_disjunction conflicts in
+    OpamFormula.set_to_disjunction universe.u_packages conflicts in
   let installed = OpamPackage.Set.mem package universe.u_installed in
   let keep =
     if OpamPackage.Set.mem package universe.u_base then
