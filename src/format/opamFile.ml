@@ -2204,7 +2204,7 @@ module OPAMSyntax = struct
        should be an error. *)
     let is_disjunction f =
       List.for_all (function Atom _ -> true | _ -> false)
-        OpamFormula.(ors_to_list (to_atom_formula f))
+        OpamFormula.(ors_to_list f)
     in
     if is_disjunction conflicts then conflicts else
     let force_disjunction f =
@@ -2216,8 +2216,7 @@ module OPAMSyntax = struct
     if OpamVersion.(compare opam_version (of_string "1.3") >= 0) then
       Pp.warn ~pos "Conflicts must be a disjunction, '&' is not \
                     supported (treated as '|').";
-    OpamFormula.map (fun (n,cs) -> Atom (n, force_disjunction cs)) conflicts
-    |> force_disjunction
+    force_disjunction conflicts
 
   let cleanup_flags _opam_version ~pos flags =
     let known_flags =
