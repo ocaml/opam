@@ -1704,13 +1704,14 @@ module RepoSyntax = struct
     browse       : string option;
     upstream     : string option;
     redirect     : (string * filter option) list;
-    dl_cache     : url list option;
+    root_url     : url option;
+    dl_cache     : string list option;
   }
 
   let create
       ?browse ?upstream ?(opam_version=OpamVersion.current_nopatch)
-      ?(redirect=[]) ?dl_cache () =
-    { opam_version; browse; upstream; redirect; dl_cache; }
+      ?(redirect=[]) ?root_url ?dl_cache () =
+    { opam_version; browse; upstream; redirect; root_url; dl_cache; }
 
   let empty = create ()
 
@@ -1718,12 +1719,14 @@ module RepoSyntax = struct
   let browse t = t.browse
   let upstream t = t.upstream
   let redirect t = t.redirect
+  let root_url t = t.root_url
   let dl_cache t = OpamStd.Option.default [] t.dl_cache
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_browse browse t = { t with browse = Some browse }
   let with_upstream upstream t = { t with upstream = Some upstream }
   let with_redirect redirect t = { t with redirect }
+  let with_root_url root_url t = { t with root_url = Some root_url }
   let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
 
   let fields = [
@@ -1738,7 +1741,7 @@ module RepoSyntax = struct
          (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
     "archive-mirrors", Pp.ppacc
       with_dl_cache dl_cache
-      (Pp.V.map_list ~depth:1 Pp.V.url)
+      (Pp.V.map_list ~depth:1 Pp.V.string)
   ]
 
   let pp =

@@ -34,7 +34,11 @@ let eval_redirect gt repo =
   match redirect with
   | []         -> None
   | (redirect, f) :: _ ->
-    let redirect_url = OpamUrl.of_string redirect in
+    let redirect_url =
+      if OpamStd.String.contains ~sub:"://" redirect
+      then OpamUrl.of_string redirect
+      else OpamUrl.Op.(repo.repo_url / redirect)
+    in
     if redirect_url = repo.repo_url then None
     else Some (redirect_url, f)
 
@@ -84,6 +88,7 @@ let repository gt repo =
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamUrl.to_string repo.repo_url);
   let repo_file = OpamFile.Repo.safe_read repo_file_path in
+  let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
   let repo_vers = OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
@@ -401,10 +406,18 @@ let active_caches st nv =
     match OpamRepositoryState.find_package_opt rt
             (OpamSwitchState.repos_list st) nv
     with
-    | Some (repo, _) ->
-      OpamFile.Repo.dl_cache
-        (OpamRepositoryName.Map.find repo rt.repos_definitions)
     | None -> []
+    | Some (repo, _) ->
+      let repo_def = OpamRepositoryName.Map.find repo rt.repos_definitions in
+      let root_url = match OpamFile.Repo.root_url repo_def with
+        | None -> OpamSystem.internal_error "repo file of unknown origin"
+        | Some u -> u
+      in
+      List.map (fun rel ->
+          if OpamStd.String.contains ~sub:"://" rel
+          then OpamUrl.of_string rel
+          else OpamUrl.Op.(root_url / rel))
+        (OpamFile.Repo.dl_cache repo_def)
   in
   repo_cache @ global_cache
 

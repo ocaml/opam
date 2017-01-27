@@ -861,8 +861,8 @@ module Repo: sig
 
   val create:
     ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
-    ?redirect:(string * filter option) list ->
-    ?dl_cache:url list ->
+    ?redirect:(string * filter option) list -> ?root_url:url ->
+    ?dl_cache:string list ->
     unit -> t
 
   (** The minimum OPAM version required for this repository *)
@@ -874,10 +874,15 @@ module Repo: sig
   (** Base URL for browsing OPAM repository source on the WWW *)
   val upstream: t -> string option
 
+  (** The root URL of the repository (not an actual file field, determined at
+      runtime by opam) *)
+  val root_url: t -> url option
+
   (** Redirections. *)
   val redirect: t -> (string * filter option) list
 
-  val dl_cache: t -> url list
+  (** Cache URLs, either full or relative to the repo root *)
+  val dl_cache: t -> string list
 
   val with_opam_version : OpamVersion.t -> t -> t
 
@@ -887,7 +892,9 @@ module Repo: sig
 
   val with_redirect: (string * filter option) list -> t -> t
 
-  val with_dl_cache: url list -> t -> t
+  val with_root_url: url -> t -> t
+
+  val with_dl_cache: string list -> t -> t
 end
 
 (** {2 urls.txt file *} *)

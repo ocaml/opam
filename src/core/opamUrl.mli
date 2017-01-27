@@ -48,6 +48,10 @@ val base_url: t -> string
     ["http://that.here/"] *)
 val basename: t -> string
 
+(** Returns the url with all path components but the first one (the hostname)
+    dropped, e.g. ["http://some.host/some/path"] becomes ["http://some.host"] *)
+val root: t -> t
+
 val has_trailing_slash: t -> bool
 
 (** Check if the URL matches an existing local directory, and return it *)
@@ -62,7 +66,8 @@ val guess_version_control: string -> [> version_control ] option
 
 module Op: sig
 
-  (** Appends at the end of an URL path with '/' separator *)
+  (** Appends at the end of an URL path with '/' separator. Gets back to the
+      root if the second argument starts with '/' *)
   val ( / ) : t -> string -> t
 
 end
