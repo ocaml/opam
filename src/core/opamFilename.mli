@@ -181,8 +181,10 @@ val copy: src:t -> dst:t -> unit
     be set executable *)
 val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
 
-(** Symlink a file. If symlink is not possible on the system, use copy instead. *)
-val link: target:t -> link:t -> unit
+(** Symlink a file. If symlink is not possible on the system, use copy instead.
+    With [relative], creates a relative link through the closest common ancestor
+    directory if possible. Otherwise, the symlink is absolute. *)
+val link: ?relative:bool -> target:t -> link:t -> unit
 
 (** Extract an archive in a given directory (it rewrites the root to
     match [Dir.t] dir if needed) *)
