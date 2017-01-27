@@ -593,6 +593,24 @@ let mk_subcommands commands =
 let mk_subcommands_with_default commands =
   mk_subcommands_aux enum_with_default commands
 
+let make_command_alias cmd ?(options="") name =
+  let term, info = cmd in
+  let orig = Term.name info in
+  let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
+  let man = [
+    `S "DESCRIPTION";
+    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
+          name orig options);
+    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
+          orig);
+    `S "OPTIONS";
+  ] @ help_sections
+  in
+  term,
+  Term.info name
+    ~docs:"COMMAND ALIASES"
+    ~doc ~man
+
 let bad_subcommand subcommands (command, usersubcommand, userparams) =
   match usersubcommand with
   | None ->
