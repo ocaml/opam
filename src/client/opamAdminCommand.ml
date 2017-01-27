@@ -21,7 +21,7 @@ let admin_command_man = [
   `P "This command can perform various actions on repositories in the opam \
       format. It is expected to be run from the root of a repository, i.e. a \
       directory containing a 'repo' file and a subdirectory 'packages/' \
-      holding package definition within sub-subdirectories. A 'compilers/' \
+      holding package definition within subdirectories. A 'compilers/' \
       subdirectory (opam repository format version < 2) will also be used by \
       the $(b,upgrade-format) subcommand."
 ]
@@ -61,9 +61,9 @@ let index_command =
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
-        OpamConsole.error_and_exit
-          "No repository found in current directory.\n\
-           Please make sure there is a \"packages/\" directory";
+      OpamConsole.error_and_exit
+        "No repository found in current directory.\n\
+         Please make sure there is a \"packages/\" directory";
     let repo_file =
       OpamFile.Repo.read_opt (OpamRepositoryPath.repo repo_root)
     in
@@ -234,8 +234,7 @@ let cache_command =
 
 
 let upgrade_command_doc =
-  "Upgrades a repository from an earlier version of opam to the current \
-   format."
+  "Upgrades repository from earlier opam versions."
 let upgrade_command =
   let command = "upgrade" in
   let doc = upgrade_command_doc in
@@ -246,11 +245,40 @@ let upgrade_command =
         opam installation."
   ]
   in
-  let cmd global_options =
+  let clear_cache_arg =
+    let doc =
+      "Instead of running the upgrade, clear the cache of archive hashes (held \
+       in ~/.cache), that is used to avoid re-downloading files to obtain \
+       their hashes at every run."
+    in
+    Arg.(value & flag & info ["clear-cache"] ~doc)
+  in
+  let create_mirror_arg =
+    let doc =
+      "Don't overwrite the current repository, but put an upgraded mirror in \
+       place in a subdirectory, with proper redirections. Needs the URL the \
+       repository will be served from to put in the redirects (older versions \
+       of opam don't understand relative redirects)."
+    in
+    Arg.(value & opt (some OpamArg.url) None & info ["m"; "mirror"] ~doc)
+  in
+  let cmd global_options clear_cache create_mirror =
     OpamArg.apply_global_options global_options;
+    if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
+    else match create_mirror with
+      | None ->
+        OpamAdminRepoUpgrade.do_upgrade ();
+        if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
+           OpamFilename.exists (OpamFilename.of_string "urls.txt")
+        then
+          OpamConsole.note
+            "Indexes need updating: you should now run:\n\
+             \n\
+            \  opam admin index"
+      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror m
   in
   Term.(pure cmd $ OpamArg.global_options $
-        cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
+        clear_cache_arg $ create_mirror_arg),
   OpamArg.term_info command ~doc ~man
 
 (*
@@ -276,9 +304,8 @@ let list_command =
 let admin_subcommands = [
   index_command; OpamArg.make_command_alias index_command "make";
   cache_command;
-  upgrade_format;
+  upgrade_command;
   (* "list";
-   * "upgrade-format";
    * "lint"; *)
 ]
 
@@ -298,13 +325,15 @@ let default_subcommand =
       \                  <command> [<args>]\n\
        \n\
        The most commonly used opam commands are:\n\
-      \    index        %s\n\
-      \    cache        %s\n\
+      \    index          %s\n\
+      \    cache          %s\n\
+      \    upgrade-format %s\n\
        \n\
        See 'opam admin <command> --help' for more information on a specific \
        command.\n"
       index_command_doc
       cache_command_doc
+      upgrade_command_doc
   in
   Term.(pure usage $ OpamArg.global_options),
   Term.info "opam admin"
