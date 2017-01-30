@@ -272,7 +272,7 @@ let init =
 let list_doc = "Display the list of available packages."
 let list =
   let doc = list_doc in
-  let selection_docs = "PACKAGE SELECTION" in
+  let selection_docs = OpamArg.package_selection_section in
   let display_docs = "OUTPUT FORMAT" in
   let man = [
     `S "DESCRIPTION";
@@ -310,106 +310,12 @@ let list =
           ~doc:"List only the pinned packages";
       ])
   in
-  let depends_on =
-    let doc =
-      "List only packages that depend on one of (comma-separated) $(docv)."
-    in
-    Arg.(value & opt (list atom) [] &
-         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["depends-on"])
-  in
-  let required_by =
-    let doc = "List only the dependencies of (comma-separated) $(docv)." in
-    Arg.(value & opt (list atom) [] &
-         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["required-by"])
-  in
-  let conflicts_with =
-    let doc =
-      "List packages that have declared conflicts with at least one of the \
-       given list. This includes conflicts defined from the packages in the \
-       list, from the other package, or by a common $(b,conflict-class:) \
-       field."
-    in
-    Arg.(value & opt (list package_with_version) [] &
-         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["conflicts-with"])
-  in
-  let coinstallable_with =
-    let doc = "Only list packages that are compatible with all of $(docv)." in
-    Arg.(value & opt (list package_with_version) [] &
-         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["coinstallable-with"])
-  in
-  let resolve =
-    let doc =
-      "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
-       a consistent set of packages including those. This is subtly different \
-       from `--required-by --recursive`, which is more predictable and can't \
-       fail, but lists all dependencies independently without ensuring \
-       consistency. \
-       Without `--installed`, the answer is self-contained and independent of \
-       the current installation. With `--installed', it's computed from the \
-       set of currently installed packages. \
-       `--no-switch` further makes the solution independent from the \
-       currently pinned packages, architecture, and compiler version. \
-       The combination with `--depopts' is not supported."
-    in
-    Arg.(value & opt (list atom) [] &
-         info ~doc ~docs:selection_docs ~docv:"PACKAGES" ["resolve"])
-  in
-  let recursive =
-    mk_flag ["recursive"] ~section:selection_docs
-      "With `--depends-on' and `--required-by', display all transitive \
-       dependencies rather than just direct dependencies." in
-  let depopts =
-    mk_flag ["depopts"]  ~section:selection_docs
-      "Include optional dependencies in dependency requests."
-  in
-  let nobuild =
-    mk_flag ["nobuild"]  ~section:selection_docs
-      "Exclude build dependencies (they are included by default)."
-  in
-  let dev =
-    mk_flag ["dev"]  ~section:selection_docs
-      "Include development packages in dependencies."
-  in
-  let doc_flag =
-    mk_flag ["doc"] ~section:selection_docs
-      "Include doc-only dependencies."
-  in
-  let test =
-    mk_flag ["t";"test"] ~section:selection_docs
-      "Include test-only dependencies."
-  in
   let repos =
     mk_opt ["repos"] "REPOS" ~section:selection_docs
       "Include only packages that took their origin from one of the given \
        repositories (unless $(i,no-switch) is also specified, this excludes \
        pinned packages)."
       Arg.(some & list & repository_name) None
-  in
-  let field_match =
-    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section:selection_docs
-      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
-      Arg.(pair ~sep:':' string string)
-  in
-  let has_flag =
-    mk_opt_all ["has-flag"] "FLAG" ~section:selection_docs
-      ("Only include packages which have the given flag set. Package flags are \
-        one of: "^
-       (OpamStd.List.concat_map " "
-          (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
-          all_package_flags))
-      ((fun s -> match pkg_flag_of_string s with
-          | Pkgflag_Unknown s ->
-            `Error ("Invalid package flag "^s^", must be one of "^
-                    OpamStd.List.concat_map " " string_of_pkg_flag
-                      all_package_flags)
-          | f -> `Ok f),
-       fun fmt flag ->
-         Format.pp_print_string fmt (string_of_pkg_flag flag))
-  in
-  let has_tag =
-    mk_opt_all ["has-tag"] "TAG" ~section:selection_docs
-      "Only includes packages which have the given tag set"
-      Arg.string
   in
   let no_switch =
     mk_flag ["no-switch"] ~section:selection_docs
@@ -473,10 +379,7 @@ let list =
            ~docv:"STRING" ~docs:display_docs
            ~doc:"Set the column-separator string")
   in
-  let list global_options state_selector field_match
-      depends_on required_by conflicts_with coinstallable_with resolve
-      recursive depopts no_switch
-      depexts nobuild dev doc test repos has_flag has_tag
+  let list global_options selection state_selector no_switch depexts repos
       print_short sort columns all_versions normalise wrap separator
       packages =
     apply_global_options global_options;
@@ -499,64 +402,21 @@ let list =
     let state_selector =
       if state_selector = [] then
         if no_switch then Empty
-        else if
-          depends_on = [] && required_by = [] &&
-          conflicts_with = [] && coinstallable_with = [] &&
-          resolve = [] && packages = [] && field_match = [] && has_flag = [] &&
-          has_tag = []
+        else if packages = [] && selection = OpamFormula.Empty
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
       else OpamFormula.ands (List.map (fun x -> Atom x) state_selector)
     in
-    let dependency_toggles = {
-      OpamListCommand.
-      recursive; depopts; build = not nobuild; test; doc; dev
-    } in
-    let pattern_toggles ?(exact=true) field = {
-      OpamListCommand.
-      exact;
-      case_sensitive = false;
-      fields = [field];
-      glob = true;
-      ext_fields = false;
-    } in
     let filter =
-      OpamFormula.ands
-        (state_selector ::
-         List.map (fun x -> Atom x)
-           ((match depends_on with [] -> [] | deps ->
-                [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
-            (match required_by with [] -> [] | rdeps ->
-                [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
-            (match conflicts_with with [] -> [] | pkgs ->
-                [OpamListCommand.Conflicts_with pkgs]) @
-            (match coinstallable_with with [] -> [] | pkgs ->
-                [OpamListCommand.Coinstallable_with
-                   (dependency_toggles, pkgs)]) @
-            (match resolve with [] -> [] | deps ->
-                [OpamListCommand.Solution (dependency_toggles, deps)]) @
-            (if no_switch then [] else
-             match repos with None -> [] | Some repos ->
-               [OpamListCommand.From_repository repos]) @
-            (List.map (fun (field,patt) ->
-                 OpamListCommand.Pattern
-                   (pattern_toggles ~exact:false field, patt))
-                field_match) @
-            (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
-            (List.map (fun tag -> OpamListCommand.Tag tag) has_tag)) @
-         [OpamFormula.ors
-            (List.map (fun patt ->
-                 match OpamStd.String.cut_at patt '.' with
-                 | None ->
-                   Atom (OpamListCommand.Pattern (pattern_toggles "name", patt))
-                 | Some (name, version) ->
-                   OpamFormula.ands
-                     [Atom (OpamListCommand.Pattern
-                              (pattern_toggles "name", name));
-                      Atom (OpamListCommand.Pattern
-                              (pattern_toggles "version", version))])
-                packages)])
+      OpamFormula.ands [
+        state_selector;
+        (if no_switch then OpamFormula.Empty else
+         match repos with None -> OpamFormula.Empty | Some repos ->
+           Atom (OpamListCommand.From_repository repos));
+        selection;
+        OpamListCommand.pattern_selector packages;
+      ]
     in
     let format =
       match columns with
@@ -601,11 +461,8 @@ let list =
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
   in
-  Term.(pure list $global_options $state_selector $field_match
-        $depends_on $required_by $conflicts_with $coinstallable_with
-        $resolve $recursive $depopts
-        $no_switch $depexts $nobuild $dev $doc_flag $test $repos
-        $has_flag $has_tag
+  Term.(pure list $global_options $package_selection $state_selector
+        $no_switch $depexts $repos
         $print_short $sort $columns $all_versions
         $normalise $wrap $separator
         $pattern_list),

@@ -110,6 +110,18 @@ val build_options: build_options Term.t
 (** Applly build options *)
 val apply_build_options: build_options -> unit
 
+(** {3 Package listing and filtering options} *)
+
+(** Man section name *)
+val package_selection_section: string
+
+(** Build a package selection filter *)
+val package_selection: OpamListCommand.selector OpamFormula.formula Term.t
+
+(** Package selection filter based on the current state of packages (installed,
+    available, etc.) *)
+
+
 (** {3 Converters} *)
 
 (** Repository name converter *)

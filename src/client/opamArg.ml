@@ -837,3 +837,141 @@ let build_options =
     $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag)
+
+let package_selection_section = "PACKAGE SELECTION"
+
+let package_selection =
+  let section = package_selection_section in
+  let docs = section in
+  let patterns =
+    Arg.(value & pos_all Arg.string [] & info [] ~docv:"PATTERNS" ~doc:
+           "Package patterns, i.e. package names or packages in the form \
+            $(b,NAME).$(b,VERSION), optionally containing globs $(b,*).")
+  in
+  let depends_on =
+    let doc =
+      "List only packages that depend on one of (comma-separated) $(docv)."
+    in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["depends-on"])
+  in
+  let required_by =
+    let doc = "List only the dependencies of (comma-separated) $(docv)." in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["required-by"])
+  in
+  let conflicts_with =
+    let doc =
+      "List packages that have declared conflicts with at least one of the \
+       given list. This includes conflicts defined from the packages in the \
+       list, from the other package, or by a common $(b,conflict-class:) \
+       field."
+    in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["conflicts-with"])
+  in
+  let coinstallable_with =
+    let doc = "Only list packages that are compatible with all of $(docv)." in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["coinstallable-with"])
+  in
+  let resolve =
+    let doc =
+      "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
+       a consistent set of packages including those. This is subtly different \
+       from `--required-by --recursive`, which is more predictable and can't \
+       fail, but lists all dependencies independently without ensuring \
+       consistency. \
+       Without `--installed`, the answer is self-contained and independent of \
+       the current installation. With `--installed', it's computed from the \
+       set of currently installed packages. \
+       `--no-switch` further makes the solution independent from the \
+       currently pinned packages, architecture, and compiler version. \
+       The combination with `--depopts' is not supported."
+    in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["resolve"])
+  in
+  let recursive =
+    mk_flag ["recursive"] ~section
+      "With `--depends-on' and `--required-by', display all transitive \
+       dependencies rather than just direct dependencies." in
+  let depopts =
+    mk_flag ["depopts"]  ~section
+      "Include optional dependencies in dependency requests."
+  in
+  let nobuild =
+    mk_flag ["nobuild"]  ~section
+      "Exclude build dependencies (they are included by default)."
+  in
+  let dev =
+    mk_flag ["dev"]  ~section
+      "Include development packages in dependencies."
+  in
+  let doc_flag =
+    mk_flag ["doc"] ~section
+      "Include doc-only dependencies."
+  in
+  let test =
+    mk_flag ["t";"test"] ~section
+      "Include test-only dependencies."
+  in
+  let field_match =
+    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section
+      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
+      Arg.(pair ~sep:':' string string)
+  in
+  let has_flag =
+    mk_opt_all ["has-flag"] "FLAG" ~section
+      ("Only include packages which have the given flag set. Package flags are \
+        one of: "^
+       (OpamStd.List.concat_map " "
+          (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
+          all_package_flags))
+      ((fun s -> match pkg_flag_of_string s with
+          | Pkgflag_Unknown s ->
+            `Error ("Invalid package flag "^s^", must be one of "^
+                    OpamStd.List.concat_map " " string_of_pkg_flag
+                      all_package_flags)
+          | f -> `Ok f),
+       fun fmt flag ->
+         Format.pp_print_string fmt (string_of_pkg_flag flag))
+  in
+  let has_tag =
+    mk_opt_all ["has-tag"] "TAG" ~section
+      "Only includes packages which have the given tag set"
+      Arg.string
+  in
+  let filter
+      depends_on required_by conflicts_with coinstallable_with resolve recursive
+      depopts nobuild dev doc_flag test field_match has_flag has_tag
+    =
+    let dependency_toggles = {
+      OpamListCommand.
+      recursive; depopts; build = not nobuild; test; doc = doc_flag; dev
+    } in
+    OpamFormula.ands @@
+    List.map (fun x -> Atom x)
+      ((match depends_on with [] -> [] | deps ->
+           [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+       (match required_by with [] -> [] | rdeps ->
+           [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+       (match conflicts_with with [] -> [] | pkgs ->
+           [OpamListCommand.Conflicts_with pkgs]) @
+       (match coinstallable_with with [] -> [] | pkgs ->
+           [OpamListCommand.Coinstallable_with
+              (dependency_toggles, pkgs)]) @
+       (match resolve with [] -> [] | deps ->
+           [OpamListCommand.Solution (dependency_toggles, deps)]) @
+       (List.map (fun (field,patt) ->
+            OpamListCommand.Pattern
+              ({OpamListCommand.default_pattern_selector with fields = [field]},
+               patt))
+           field_match) @
+       (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
+       (List.map (fun tag -> OpamListCommand.Tag tag) has_tag))
+  in
+  Term.(pure filter $
+        depends_on $ required_by $ conflicts_with $ coinstallable_with $
+        resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
+        field_match $ has_flag $ has_tag)

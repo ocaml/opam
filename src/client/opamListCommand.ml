@@ -186,6 +186,24 @@ let rec value_strings value =
     List.fold_left (fun acc v -> SS.union acc (value_strings v))
       (value_strings v) vl
 
+let pattern_selector patterns =
+  let name_patt =
+    { default_pattern_selector with exact = true; fields = ["name"] }
+  in
+  let version_patt =
+    { default_pattern_selector with exact = true; fields = ["version"] }
+  in
+  OpamFormula.ors
+    (List.map (fun patt ->
+         match OpamStd.String.cut_at patt '.' with
+         | None ->
+           Atom (Pattern (name_patt, patt))
+         | Some (name, version) ->
+           OpamFormula.ands
+             [Atom (Pattern (name_patt, name));
+              Atom (Pattern (version_patt, version))])
+        patterns)
+
 let apply_selector ~base st = function
   | Any -> base
   | Installed -> st.installed

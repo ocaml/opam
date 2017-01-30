@@ -63,6 +63,9 @@ val filter:
   base:package_set -> 'a switch_state ->
   selector OpamFormula.formula -> package_set
 
+(** Or-filter on package patterns (NAME or NAME.VERSION) *)
+val pattern_selector: string list -> selector OpamFormula.formula
+
 (** Lists the external dependencies matching the given flags for the given set
     of packages *)
 val print_depexts: 'a switch_state -> package_set -> string list -> unit
