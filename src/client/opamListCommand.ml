@@ -70,6 +70,7 @@ type selector =
   | Flag of package_flag
   | Tag of string
   | From_repository of repository_name list
+  | Owns_file of filename
 
 let string_of_selector =
   let (%) s col = OpamConsole.colorise col s in
@@ -125,6 +126,9 @@ let string_of_selector =
   | From_repository r ->
     Printf.sprintf "%s(%s)" ("from-repository" % `magenta)
       (OpamStd.List.concat_map " " OpamRepositoryName.to_string r % `bold)
+  | Owns_file f ->
+    Printf.sprintf "%s(%s)" ("owns-file" % `magenta)
+      (OpamFilename.prettify f % `bold)
 
 let string_of_formula =
   OpamFormula.string_of_formula string_of_selector
@@ -314,6 +318,51 @@ let apply_selector ~base st = function
         else OpamPackage.Set.diff (aux rl) packages
     in
     aux (OpamSwitchState.repos_list st)
+  | Owns_file file ->
+    (try
+       let root = st.switch_global.root in
+       let switch =
+        List.find (fun sw ->
+            OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
+            <> OpamFilename.to_string file)
+          (OpamFile.Config.installed_switches st.switch_global.config)
+       in
+       let rel_name =
+         OpamFilename.remove_prefix (OpamPath.Switch.root root switch) file
+       in
+       let matching_change_files =
+         List.filter (fun change_f ->
+             OpamFilename.check_suffix change_f ".changes" &&
+             let changes =
+               OpamFile.Changes.safe_read (OpamFile.make change_f)
+             in
+             OpamStd.String.Map.exists
+               (fun f -> function
+                  | OpamDirTrack.Removed -> false
+                  | _ -> rel_name = f)
+               changes)
+           (OpamFilename.files (OpamPath.Switch.install_dir root switch))
+       in
+       let selections =
+         if switch = st.switch then OpamSwitchState.selections st
+         else OpamSwitchState.load_selections st.switch_global switch
+       in
+       List.fold_left (fun acc f ->
+           let name =
+             OpamPackage.Name.of_string @@
+             OpamFilename.(Base.to_string (basename (chop_extension f)))
+           in
+           try
+             OpamPackage.Set.add
+               (OpamPackage.package_of_name selections.sel_installed name)
+               acc
+           with Not_found -> acc)
+         OpamPackage.Set.empty matching_change_files
+     with Not_found ->
+       log "%a doesn't belong to a known opam switch"
+         (slog OpamFilename.to_string) file;
+       OpamPackage.Set.empty)
+
 
 let rec filter ~base st = function
   | Empty -> base

@@ -47,9 +47,6 @@ val repo_kind_flag: OpamUrl.backend option Term.t
 (** --jobs *)
 val jobs_flag: int option Term.t
 
-(** patterns *)
-val pattern_list: string list Term.t
-
 (** package names *)
 val name_list: name list Term.t
 

@@ -56,6 +56,7 @@ type selector =
   | Flag of package_flag
   | Tag of string
   | From_repository of repository_name list
+  | Owns_file of filename
 
 (** Applies a formula of selectors to filter the package from a given switch
     state *)

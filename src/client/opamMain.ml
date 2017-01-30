@@ -270,7 +270,7 @@ let init =
 
 (* LIST *)
 let list_doc = "Display the list of available packages."
-let list =
+let list ?(force_search=false) () =
   let doc = list_doc in
   let selection_docs = OpamArg.package_selection_section in
   let display_docs = "OUTPUT FORMAT" in
@@ -287,6 +287,12 @@ let list =
         extended search capabilities within the packages' metadata, see \
         $(b,opam search)."
   ] in
+  let pattern_list =
+    arg_list "PATTERNS"
+      "Package patterns with globs. Unless $(b,--search) is specified, they \
+       match againsta $(b,NAME) or $(b,NAME.VERSION)"
+      Arg.string
+  in
   let state_selector =
     let docs = selection_docs in
     Arg.(value & vflag_all [] [
@@ -310,12 +316,26 @@ let list =
           ~doc:"List only the pinned packages";
       ])
   in
+  let search =
+    if force_search then Term.pure true else
+      mk_flag ["search"] ~section:selection_docs
+        "Match $(i,PATTERNS) against the full descriptions of packages, and \
+         require all of them to match, instead of requiring at least one to \
+         match against package names."
+  in
   let repos =
     mk_opt ["repos"] "REPOS" ~section:selection_docs
       "Include only packages that took their origin from one of the given \
        repositories (unless $(i,no-switch) is also specified, this excludes \
        pinned packages)."
       Arg.(some & list & repository_name) None
+  in
+  let owns_file =
+    let doc =
+      "Finds installed packages responsible for installing the given file"
+    in
+    Arg.(value & opt (some OpamArg.filename) None &
+         info ~doc ~docv:"FILE" ["owns-file"])
   in
   let no_switch =
     mk_flag ["no-switch"] ~section:selection_docs
@@ -380,15 +400,15 @@ let list =
            ~doc:"Set the column-separator string")
   in
   let list global_options selection state_selector no_switch depexts repos
-      print_short sort columns all_versions normalise wrap separator
-      packages =
+      owns_file print_short sort columns all_versions normalise wrap separator
+      search packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.(!r.current_switch) = None
     in
     let all_versions =
       all_versions ||
-      state_selector = [] && match packages with
+      not search && state_selector = [] && match packages with
       | [single] ->
         let nameglob =
           match OpamStd.String.cut_at single '.' with
@@ -401,21 +421,33 @@ let list =
     in
     let state_selector =
       if state_selector = [] then
-        if no_switch then Empty
+        if no_switch || search || owns_file <> None then Empty
         else if packages = [] && selection = OpamFormula.Empty
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
       else OpamFormula.ands (List.map (fun x -> Atom x) state_selector)
     in
+    let pattern_selector =
+      if search then
+        OpamFormula.ands
+          (List.map
+             (fun p ->
+                Atom (OpamListCommand.(Pattern (default_pattern_selector, p))))
+             packages)
+      else OpamListCommand.pattern_selector packages
+    in
     let filter =
       OpamFormula.ands [
         state_selector;
-        (if no_switch then OpamFormula.Empty else
-         match repos with None -> OpamFormula.Empty | Some repos ->
+        (if no_switch then Empty else
+         match repos with None -> Empty | Some repos ->
            Atom (OpamListCommand.From_repository repos));
         selection;
-        OpamListCommand.pattern_selector packages;
+        OpamStd.Option.Op.
+          ((owns_file >>| fun f -> Atom (OpamListCommand.Owns_file f)) +!
+           Empty);
+        pattern_selector;
       ]
     in
     let format =
@@ -462,96 +494,12 @@ let list =
       OpamListCommand.print_depexts st results tags_list
   in
   Term.(pure list $global_options $package_selection $state_selector
-        $no_switch $depexts $repos
+        $no_switch $depexts $repos $owns_file
         $print_short $sort $columns $all_versions
-        $normalise $wrap $separator
+        $normalise $wrap $separator $search
         $pattern_list),
   term_info "list" ~doc ~man
 
-(* SEARCH *)
-let search =
-  let doc = "Search into the package list." in
-  let man = [
-    `S "DESCRIPTION";
-    `P "This command displays the list of available packages that match one of \
-        the package patterns specified as arguments.";
-    `P "Unless the $(b,--short) flag is used, the output format is the same as the \
-        $(b,opam list) command. It displays one package per line, and each line \
-        contains the name of the package, the installed version or -- if the package \
-        is not installed, and a short description.";
-    `P "The full description can be obtained by doing $(b,opam show <package>).";
-  ] in
-  let installed =
-    mk_flag ["i";"installed"] "Search among installed packages only." in
-  let case_sensitive =
-    mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
-  let owns_file =
-    let doc =
-      "Finds installed packages responsible for installing the given file"
-    in
-    Arg.(value & opt (some OpamArg.filename) None &
-         info ~doc ~docv:"FILE" ["owns-file"])
-  in
-  let search global_options print_short installed installed_roots
-      case_sensitive owns_file pkgs =
-    apply_global_options global_options;
-    match owns_file with
-    | None ->
-      let filter = match installed, installed_roots with
-        | _, true -> `roots
-        | true, _ -> `installed
-        | _       -> `all in
-      let order = `normal in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.list gt ~print_short ~filter ~order
-        ~exact_name:false ~case_sensitive pkgs;
-      `Ok ();
-    | Some file ->
-      if installed || installed_roots || case_sensitive then
-        `Error (true, "options conflicting with --owns-file")
-      else
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        let root = OpamStateConfig.(!r.root_dir) in
-        let switch =
-          try
-            List.find (fun sw ->
-                OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
-                <> OpamFilename.to_string file)
-              (OpamFile.Config.installed_switches gt.config)
-          with Not_found ->
-            OpamConsole.error_and_exit
-              "The specified file does not seem to belong to an opam switch of \
-               the current opam root (%s)"
-              (OpamFilename.Dir.to_string root)
-        in
-        let rel_name =
-          OpamFilename.remove_prefix (OpamPath.Switch.root root switch) file
-        in
-        let matching_change_files =
-          List.filter (fun change_f ->
-              OpamFilename.check_suffix change_f ".changes" &&
-              let changes =
-                OpamFile.Changes.safe_read (OpamFile.make change_f)
-              in
-              OpamStd.String.Map.exists
-                (fun f -> function
-                   | OpamDirTrack.Removed -> false
-                   | _ -> rel_name = f)
-                changes)
-            (OpamFilename.files (OpamPath.Switch.install_dir root switch))
-        in
-        List.iter (fun f ->
-            OpamConsole.msg "%s\n"
-              OpamFilename.(Base.to_string (basename (chop_extension f))))
-          matching_change_files;
-        `Ok ()
-  in
-  Term.ret @@
-  Term.(pure search $global_options
-    $print_short_flag $installed $installed_roots_flag $case_sensitive
-    $owns_file
-    $pattern_list),
-  term_info "search" ~doc ~man
 
 (* SHOW *)
 let show_doc = "Display information about specific packages."
@@ -2928,7 +2876,8 @@ let make_command_alias cmd ?(options="") name =
 
 let commands = [
   init;
-  list; search;
+  list ();
+  make_command_alias (list ~force_search:true ()) ~options:" --search" "search";
   show; make_command_alias show "info";
   install;
   remove; make_command_alias remove "uninstall";

@@ -630,9 +630,6 @@ let jobs_flag =
      the $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
 
-let pattern_list =
-  arg_list "PATTERNS" "List of package patterns." Arg.string
-
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
 
@@ -843,11 +840,6 @@ let package_selection_section = "PACKAGE SELECTION"
 let package_selection =
   let section = package_selection_section in
   let docs = section in
-  let patterns =
-    Arg.(value & pos_all Arg.string [] & info [] ~docv:"PATTERNS" ~doc:
-           "Package patterns, i.e. package names or packages in the form \
-            $(b,NAME).$(b,VERSION), optionally containing globs $(b,*).")
-  in
   let depends_on =
     let doc =
       "List only packages that depend on one of (comma-separated) $(docv)."
@@ -965,7 +957,8 @@ let package_selection =
            [OpamListCommand.Solution (dependency_toggles, deps)]) @
        (List.map (fun (field,patt) ->
             OpamListCommand.Pattern
-              ({OpamListCommand.default_pattern_selector with fields = [field]},
+              ({OpamListCommand.default_pattern_selector with
+                OpamListCommand.fields = [field]},
                patt))
            field_match) @
        (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
