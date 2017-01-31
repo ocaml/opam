@@ -83,8 +83,7 @@ let string_interp_regex =
     ])
 
 let escape_expansions =
-  let rex = Re.(compile @@ char '%') in
-  Re_pcre.substitute ~rex ~subst:(fun s -> "%"^s)
+  Re.replace_string Re.(compile @@ char '%') ~by:"%%"
 
 let escape_strings = map_up @@ function
   | FString s -> FString (escape_expansions s)
@@ -219,7 +218,8 @@ let expand_string ?(partial=false) ?default env text =
       | x -> x
     else env v
   in
-  let subst str =
+  let f g =
+    let str = Re.Group.get g 0 in
     if str = "%%" then (if partial then "%%" else "%")
     else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
@@ -229,7 +229,7 @@ let expand_string ?(partial=false) ?default env text =
     resolve_ident ~no_undef_expand:partial env (filter_ident_of_string fident)
     |> value_string ?default:(default fident)
   in
-  Re_pcre.substitute ~rex:string_interp_regex ~subst text
+  Re.replace string_interp_regex ~f text
 
 let unclosed_expansions text =
   let re =

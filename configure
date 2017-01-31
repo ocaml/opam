@@ -594,8 +594,6 @@ OCAML_PKG_cudf
 OCAML_PKG_ocamlgraph
 OCAML_PKG_cmdliner
 OCAML_PKG_re_glob
-OCAML_PKG_re_pcre
-OCAML_PKG_re_str
 OCAML_PKG_re
 OCAML_PKG_extlib
 OCAML_PKG_bigarray
@@ -4301,54 +4299,6 @@ $as_echo "found" >&6; }
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
     OCAML_PKG_re=no
-  fi
-
-
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package re.str" >&5
-$as_echo_n "checking for OCaml findlib package re.str... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in re.str  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_re_str=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_re_str=no
-  fi
-
-
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package re.pcre" >&5
-$as_echo_n "checking for OCaml findlib package re.pcre... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in re.pcre  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_re_pcre=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_re_pcre=no
   fi
 
 

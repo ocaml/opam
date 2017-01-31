@@ -6,7 +6,7 @@ LIBS = $(patsubst %,../src/opam-%.cma,$(DEPS))
 
 %: %.ml
 	sed 's/^#.*//' $< >$*-tmp.ml
-	ocamlfind ocamlc -package unix,re.str,re.glob,re.pcre,ocamlgraph -linkpkg $(INCLUDE) $(LIBS) ../src/tools/opam_admin_top.ml $*-tmp.ml -o $@
+	ocamlfind ocamlc -package unix,re.glob,ocamlgraph -linkpkg $(INCLUDE) $(LIBS) ../src/tools/opam_admin_top.ml $*-tmp.ml -o $@
 	rm $*-tmp.ml
 
 1_2_to_2_0: compilers-to-packages
