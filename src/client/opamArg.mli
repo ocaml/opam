@@ -159,7 +159,7 @@ type 'a default = [> `default of string] as 'a
 (** Enumeration with a default command *)
 val enum_with_default: (string * 'a default) list -> 'a Arg.converter
 
-val opamlist_column: OpamListCommand.output_format Arg.converter
+val opamlist_columns: OpamListCommand.output_format list Arg.converter
 
 (** {2 Subcommands} *)
 

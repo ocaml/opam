@@ -389,6 +389,7 @@ type output_format =
   | Repository
   | Installed_files
   | VC_ref
+  | Depexts of string list
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -409,6 +410,8 @@ let disp_header = function
   | Repository -> "Repository"
   | Installed_files -> "Installed files"
   | VC_ref -> "VC ref"
+  | Depexts [] -> "Depexts"
+  | Depexts sl -> Printf.sprintf "Depexts(%s)" (String.concat "," sl)
 
 let field_names = [
   Name, "name";
@@ -428,6 +431,7 @@ let field_names = [
   Repository, "repository";
   Installed_files, "installed-files";
   VC_ref, "vc-ref";
+  Depexts [], "depexts";
 ]
 
 let string_of_field = function
@@ -592,6 +596,28 @@ let detail_printer ?prettify ?normalise st nv =
        url.OpamUrl.hash)
       +! ""
     )
+  | Depexts tags_list ->
+    let tags =
+      OpamStd.Option.default OpamStd.String.SetMap.empty
+        (OpamFile.OPAM.depexts (get_opam st nv))
+    in
+    if tags_list = [] then
+      OpamStd.String.SetMap.fold (fun tags values acc ->
+          Printf.sprintf "%s\n%s: %s" acc
+            (String.concat " " (OpamStd.String.Set.elements tags))
+            (String.concat " " (OpamStd.String.Set.elements values)))
+        tags ""
+    else
+    let required_tags = OpamStd.String.Set.of_list tags_list in
+    OpamStd.String.SetMap.fold (fun tags values acc ->
+        if OpamStd.String.Set.for_all
+            (fun tag -> OpamStd.String.Set.mem tag required_tags)
+            tags
+        then
+          Printf.sprintf "%s %s" acc
+            (String.concat " " (OpamStd.String.Set.elements values))
+        else acc)
+      tags ""
 
 let display
     st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")

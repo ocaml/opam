@@ -99,6 +99,9 @@ type output_format =
                            the system *)
   | VC_ref             (** The version-control branch or tag the package url is
                            bound to, if any *)
+  | Depexts of string list (** The external dependencies associated with any
+                               subset of the given tags (or all, associated to
+                               their respective tags, if the list is empty *)
 
 val default_list_format: output_format list
 

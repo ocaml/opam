@@ -464,16 +464,26 @@ let enum_with_default sl: 'a Arg.converter =
   parse, print
 
 let opamlist_column =
+  let depexts_flag_re =
+    Re.(compile @@ seq [
+        str "depexts(";
+        group @@ rep @@ seq [rep @@ diff any (set ",)"); opt (char ',')];
+        char ')'])
+  in
   let parse str =
     if OpamStd.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else
     try
-      List.find (function (OpamListCommand.Field _), _ -> false
-                        | _, name -> name = str)
-        OpamListCommand.field_names
-      |> fun (f, _) -> `Ok f
+      try `Ok (OpamListCommand.Depexts
+                 (OpamStd.String.split
+                    (Re.Group.get (Re.exec depexts_flag_re str) 1) ','))
+      with Not_found ->
+        List.find (function (OpamListCommand.Field _), _ -> false
+                          | _, name -> name = str)
+          OpamListCommand.field_names
+        |> fun (f, _) -> `Ok f
     with Not_found ->
       `Error (Printf.sprintf
                 "No known printer for column %s. If you meant an opam file \
@@ -482,6 +492,47 @@ let opamlist_column =
   in
   let print ppf field =
     Format.pp_print_string ppf (OpamListCommand.string_of_field field)
+  in
+  parse, print
+
+let opamlist_columns =
+  let field_re =
+    (* max paren nesting 1, obviously *)
+    Re.(compile @@ seq [
+        start;
+        group @@ seq [
+          rep @@ diff any (set ",(");
+          opt @@ seq [char '('; rep (diff any (char ')')); char ')'];
+        ];
+        alt [char ','; stop];
+      ])
+  in
+  let parse str =
+    try
+      let rec aux pos =
+        if pos = String.length str then [] else
+        let g = Re.exec ~pos field_re str in
+        Re.Group.get g 1 :: aux (Re.Group.stop g 0)
+      in
+      let fields = aux 0 in
+      List.fold_left (function
+          | `Error _ as e -> fun _ -> e
+          | `Ok acc -> fun str ->
+            match fst opamlist_column str with
+            | `Ok f -> `Ok (acc @ [f])
+            | `Error _ as e -> e)
+        (`Ok []) fields
+    with Not_found ->
+      `Error (Printf.sprintf "Invalid columns specification: '%s'." str)
+  in
+  let print ppf cols =
+    let rec aux = function
+      | x::(_::_) as r ->
+        snd opamlist_column ppf x; Format.pp_print_char ppf ','; aux r
+      | [x] -> snd opamlist_column ppf x
+      | [] -> ()
+    in
+    aux cols
   in
   parse, print
 
