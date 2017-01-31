@@ -2842,7 +2842,7 @@ module Dot_installSyntax = struct
       "man", Pp.ppacc with_man raw_man pp_field;
       "libexec", Pp.ppacc with_libexec libexec pp_field;
       "lib_root", Pp.ppacc with_lib_root lib_root pp_field;
-      "libexec", Pp.ppacc with_libexec_root libexec_root pp_field;
+      "libexec_root", Pp.ppacc with_libexec_root libexec_root pp_field;
     ]
 
   let pp =
