@@ -1019,3 +1019,84 @@ let package_selection =
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
         resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
         field_match $ has_flag $ has_tag)
+
+let package_listing_section = "OUTPUT FORMAT"
+
+let package_listing =
+  let section = package_listing_section in
+  let all_versions = mk_flag ["all-versions"] ~section
+      "Normally, when multiple versions of a package match, only one is shown \
+       in the output (the installed one, the pinned-to one, or, failing that, \
+       the highest one available or the highest one). This flag disables this \
+       behaviour and shows all matching versions. This also changes the \
+       default display format to include package versions instead of just \
+       package names (including when --short is set). This is automatically \
+       turned on when a single non-pattern package name is provided on the \
+       command-line."
+  in
+  let print_short =
+    mk_flag ["short";"s"] ~section
+      "Don't print a header, and sets the default columns to $(b,name) only. \
+       If you need package versions included, use $(b,--columns=package) \
+       instead"
+  in
+  let sort =
+    mk_flag ["sort";"S"] ~section
+      "Sort the packages in dependency order (i.e. an order in which they \
+       could be individually installed.)"
+  in
+  let columns =
+    mk_opt ["columns"] "COLUMNS" ~section
+      (Printf.sprintf "Select the columns to display among: %s.\n\
+                       The default is $(b,name) when $(i,--short) is present \
+                       and %s otherwise."
+         (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
+            OpamListCommand.field_names)
+         (OpamStd.List.concat_map ", "
+            (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
+            OpamListCommand.default_list_format))
+      Arg.(some & opamlist_columns) None
+  in
+  let normalise = mk_flag ["normalise"] ~section
+      "Print the values of opam fields normalised"
+  in
+  let wrap = mk_flag ["wrap"] ~section
+      "Wrap long lines, the default being to truncate when displaying on a \
+       terminal, or to keep as is otherwise"
+  in
+  let separator =
+    Arg.(value & opt string " " & info ["separator"]
+           ~docv:"STRING" ~docs:package_listing_section
+           ~doc:"Set the column-separator string")
+  in
+  let format all_versions short sort columns normalise wrap separator =
+  fun ~force_all_versions ->
+    let all_versions = force_all_versions || all_versions in
+    let columns =
+      match columns with
+      | Some c -> c
+      | None ->
+        let cols =
+          if short then [OpamListCommand.Name]
+          else OpamListCommand.default_list_format
+        in
+        if all_versions then
+          List.map (function
+              | OpamListCommand.Name -> OpamListCommand.Package
+              | c -> c)
+            cols
+        else cols
+    in
+    { OpamListCommand.
+      short;
+      header = not short;
+      columns;
+      all_versions;
+      wrap = if wrap then Some (`Wrap "\\ ") else Some `Truncate;
+      separator;
+      value_printer = if normalise then `Normalised else `Normal;
+      order = if sort then `Dependency else `Standard;
+    }
+  in
+  Term.(pure format $ all_versions $ print_short $ sort $ columns $ normalise $
+        wrap $ separator)

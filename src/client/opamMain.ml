@@ -353,71 +353,29 @@ let list ?(force_search=false) () =
        Rather than using this directly, you should probably head for the \
        `depext' plugin, that can infer your system's tags and handle \
        the system installations. Run `opam depext'."
-      Arg.(some & list string) None in
-  let print_short =
-    mk_flag ["short";"s"] ~section:display_docs
-      "Don't print a header, and sets the default columns to $(b,name) only. \
-       If you need package versions included, use $(b,--columns=package) \
-       instead"
+      Arg.(some & list string) None
   in
-  let sort =
-    mk_flag ["sort";"S"] ~section:display_docs
-      "Sort the packages in dependency order (i.e. an order in which they \
-       could be individually installed.)"
-  in
-  let columns =
-    mk_opt ["columns"] "COLUMNS" ~section:display_docs
-      (Printf.sprintf "Select the columns to display among: %s.\n\
-                       The default is $(b,name) when $(i,--short) is present \
-                       and %s otherwise."
-         (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
-            OpamListCommand.field_names)
-         (OpamStd.List.concat_map ", "
-            (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
-            OpamListCommand.default_list_format))
-      Arg.(some & list opamlist_column) None
-  in
-  let all_versions = mk_flag ["all-versions"] ~section:selection_docs
-      "Normally, when multiple versions of a package match, only one is shown \
-       in the output (the installed one, the pinned-to one, or, failing that, \
-       the highest one available or the highest one). This flag disables this \
-       behaviour and shows all matching versions. This also changes the \
-       default display format to include package versions instead of just \
-       package names (including when --short is set). This is automatically \
-       turned on when a single non-pattern package name is provided on the \
-       command-line."
-  in
-  let normalise = mk_flag ["normalise"] ~section:display_docs
-      "Print the values of opam fields normalised"
-  in
-  let wrap = mk_flag ["wrap"] ~section:display_docs
-      "Wrap long lines, the default being to truncate when displaying on a \
-       terminal, or to keep as is otherwise"
-  in
-  let separator =
-    Arg.(value & opt string " " & info ["separator"]
-           ~docv:"STRING" ~docs:display_docs
-           ~doc:"Set the column-separator string")
-  in
-  let list global_options selection state_selector no_switch depexts repos
-      owns_file print_short sort columns all_versions normalise wrap separator
-      search packages =
+  let list
+      global_options selection state_selector no_switch depexts repos owns_file
+      search format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.(!r.current_switch) = None
     in
-    let all_versions =
-      all_versions ||
-      not search && state_selector = [] && match packages with
-      | [single] ->
-        let nameglob =
-          match OpamStd.String.cut_at single '.' with
-          | None -> single
-          | Some (n, _v) -> n
-        in
-        (try ignore (OpamPackage.Name.of_string nameglob); true
-         with Failure _ -> false)
-      | _ -> false
+    let format =
+      let force_all_versions =
+        not search && state_selector = [] && match packages with
+        | [single] ->
+          let nameglob =
+            match OpamStd.String.cut_at single '.' with
+            | None -> single
+            | Some (n, _v) -> n
+          in
+          (try ignore (OpamPackage.Name.of_string nameglob); true
+           with Failure _ -> false)
+        | _ -> false
+      in
+      format ~force_all_versions
     in
     let state_selector =
       if state_selector = [] then
@@ -431,10 +389,9 @@ let list ?(force_search=false) () =
     let pattern_selector =
       if search then
         OpamFormula.ands
-          (List.map
-             (fun p ->
-                Atom (OpamListCommand.(Pattern (default_pattern_selector, p))))
-             packages)
+          (List.map (fun p ->
+               Atom (OpamListCommand.(Pattern (default_pattern_selector, p))))
+              packages)
       else OpamListCommand.pattern_selector packages
     in
     let filter =
@@ -450,21 +407,6 @@ let list ?(force_search=false) () =
         pattern_selector;
       ]
     in
-    let format =
-      match columns with
-      | Some c -> c
-      | None ->
-        let cols =
-          if print_short then [OpamListCommand.Name]
-          else OpamListCommand.default_list_format
-        in
-        if all_versions then
-          List.map (function
-              | OpamListCommand.Name -> OpamListCommand.Package
-              | c -> c)
-            cols
-        else cols
-    in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let st =
       let rt = OpamRepositoryState.load `Lock_none gt in
@@ -472,7 +414,10 @@ let list ?(force_search=false) () =
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
     in
 
-    if not print_short && filter <> OpamFormula.Empty then
+    if depexts = None &&
+       not format.OpamListCommand.short &&
+       filter <> OpamFormula.Empty
+    then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
     let all = OpamPackage.Set.union st.packages st.installed in
@@ -481,22 +426,12 @@ let list ?(force_search=false) () =
     in
     match depexts with
     | None ->
-      OpamListCommand.display st
-        ~format
-        ~dependency_order:sort
-        ~header:(not print_short)
-        ~all_versions
-        ~wrap:(if wrap then `Wrap "\\ " else `Truncate)
-        ~separator
-        ~normalise
-        results
+      OpamListCommand.display st format results
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
   in
   Term.(pure list $global_options $package_selection $state_selector
-        $no_switch $depexts $repos $owns_file
-        $print_short $sort $columns $all_versions
-        $normalise $wrap $separator $search
+        $no_switch $depexts $repos $owns_file $search $package_listing
         $pattern_list),
   term_info "list" ~doc ~man
 
@@ -1177,8 +1112,14 @@ let reinstall =
     | `List_pending, [] ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamListCommand.display st
-        ~header:false ~format:[OpamListCommand.Package] ~dependency_order:true
-        ~all_versions:false st.reinstall;
+        { OpamListCommand.default_package_listing_format
+          with OpamListCommand.
+            columns = [OpamListCommand.Package];
+            short = true;
+            header = false;
+            order = `Dependency;
+        }
+        st.reinstall;
       `Ok ()
     | `Forget_pending, atoms ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1726,9 +1667,16 @@ let switch =
         then OpamPackage.Name.compare nv1.name nv2.name
         else OpamPackage.Version.compare nv1.version nv2.version
       in
-      OpamListCommand.display st ~header:(not print_short) ~format
-        ~dependency_order:false
-        ~all_versions:true ~order compilers;
+      OpamListCommand.display st
+        {OpamListCommand.default_package_listing_format
+         with OpamListCommand.
+           short = print_short;
+           header = not print_short;
+           columns = format;
+           all_versions = true;
+           order = `Custom order;
+        }
+        compilers;
       `Ok ()
     | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
