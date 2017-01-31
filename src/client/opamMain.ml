@@ -308,7 +308,9 @@ let list ?(force_search=false) () =
           ~doc:"List only packages that are available on the current system";
         OpamListCommand.Installable, info ~docs ["installable"]
           ~doc:"List only packages that can be installed on the current switch \
-                (this calls the solver and may be more costly)";
+                (this calls the solver and may be more costly; a package \
+                depending on an unavailable package may be available, but is \
+                never installable)";
         OpamListCommand.Compiler, info ~docs ["base"]
           ~doc:"List only the immutable base of the current switch (i.e. \
                 compiler packages)";

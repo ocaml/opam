@@ -11,6 +11,7 @@
 
 open OpamTypes
 open OpamProcess.Job.Op
+open OpamStateTypes
 open Cmdliner
 
 let admin_command_doc =
@@ -281,7 +282,6 @@ let upgrade_command =
         clear_cache_arg $ create_mirror_arg),
   OpamArg.term_info command ~doc ~man
 
-(*
 let list_command_doc = "Lists packages from a repository"
 let list_command =
   let command = "list" in
@@ -293,20 +293,130 @@ let list_command =
         opam installation."
   ]
   in
-  let cmd global_options =
-    OpamArg.apply_global_options global_options;
+  let pattern_list_arg =
+    OpamArg.arg_list "PATTERNS"
+      "Package patterns with globs. matching againsta $(b,NAME) or \
+       $(b,NAME.VERSION)"
+      Arg.string
   in
-  Term.(pure cmd $ OpamArg.global_options $
-        cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
+  let env_arg =
+    Arg.(value & opt (list string) [] & info ["environment"] ~doc:
+           "Use the given opam environment, in the form of a list \
+            comma-separated 'var=value' bindings, when resolving variables. \
+            This is used e.g. when computing available packages: if undefined, \
+            availability of packages is not taken into account. Note that, \
+            unless overriden, variables like 'root' or 'opam-version' may be \
+            taken from the current opam installation. What is defined in \
+            $(i,~/.opam/config) is always ignored.")
+  in
+  let state_selection_arg =
+    let docs = OpamArg.package_selection_section in
+    Arg.(value & vflag OpamListCommand.Available [
+        OpamListCommand.Any, info ~docs ["A";"all"]
+          ~doc:"Include all, even uninstalled or unavailable packages";
+        OpamListCommand.Available, info ~docs ["a";"available"]
+          ~doc:"List only packages that are available according to the defined \
+                $(b,environment). Without $(b,--environment), equivalent to \
+                $(b,--all).";
+        OpamListCommand.Installable, info ~docs ["installable"]
+          ~doc:"List only packages that are installable according to the \
+                defined $(b,environment) (this calls the solver and may be \
+                more costly; a package depending on an unavailable may be \
+                available, but is never installable)";
+      ])
+  in
+  let cmd
+      global_options package_selection state_selection package_listing env
+      packages =
+    OpamArg.apply_global_options global_options;
+    let format =
+      let force_all_versions =
+        match packages with
+        | [single] ->
+          let nameglob =
+            match OpamStd.String.cut_at single '.' with
+            | None -> single
+            | Some (n, _v) -> n
+          in
+          (try ignore (OpamPackage.Name.of_string nameglob); true
+           with Failure _ -> false)
+        | _ -> false
+      in
+      package_listing ~force_all_versions
+    in
+    let pattern_selector = OpamListCommand.pattern_selector packages in
+    let filter =
+      OpamFormula.ands
+        [package_selection; Atom state_selection; pattern_selector]
+    in
+    let env =
+      List.map (fun s ->
+          match OpamStd.String.cut_at s '=' with
+          | Some (var,value) -> OpamVariable.of_string var, S value
+          | None -> OpamVariable.of_string s, B true)
+        env
+    in
+    let repo_root = OpamFilename.cwd () in
+    let repo = OpamRepositoryBackend.local repo_root in
+    let repo_file = OpamRepositoryPath.repo repo_root in
+    let repo_def = OpamFile.Repo.safe_read repo_file in
+    let opams = OpamRepositoryState.load_repo_opams repo in
+    let gt = {
+      global_lock = OpamSystem.lock_none;
+      root = OpamStateConfig.(!r.root_dir);
+      config = OpamStd.Option.Op.(OpamStateConfig.(load !r.root_dir) +!
+                                  OpamFile.Config.empty);
+      global_variables = OpamVariable.Map.empty;
+    } in
+    let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
+    let rt = {
+      repos_global = gt;
+      repos_lock = OpamSystem.lock_none;
+      repositories = singl repo;
+      repos_definitions = singl repo_def;
+      repo_opams = singl opams;
+    } in
+    let st = OpamSwitchState.load_virtual ~repos_list:[repo.repo_name] gt rt in
+    let st =
+      if env = [] then st else
+        let gt =
+          {gt with global_variables =
+                     OpamVariable.Map.of_list @@
+                     List.map (fun (var, value) ->
+                         var, (lazy (Some value), "Manually defined"))
+                       env }
+        in
+        {st with
+         switch_global = gt;
+         available_packages = lazy (
+           OpamPackage.keys @@
+           OpamPackage.Map.filter (fun package opam ->
+               OpamFilter.eval_to_bool ~default:false
+                 (OpamPackageVar.resolve_switch_raw ~package gt
+                    OpamSwitch.unset OpamFile.Switch_config.empty)
+                 (OpamFile.OPAM.available opam))
+             st.opams
+         )}
+    in
+    if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
+      OpamConsole.msg "# Packages matching: %s\n"
+        (OpamListCommand.string_of_formula filter);
+    let results =
+      OpamListCommand.filter ~base:st.packages st filter
+    in
+    OpamListCommand.display st format results
+  in
+  Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $
+        state_selection_arg $ OpamArg.package_listing $ env_arg $
+        pattern_list_arg),
   OpamArg.term_info command ~doc ~man
-*)
 
 let admin_subcommands = [
   index_command; OpamArg.make_command_alias index_command "make";
   cache_command;
   upgrade_command;
-  (* "list";
-   * "lint"; *)
+  (* lint_command; *)
+  list_command;
 ]
 
 let default_subcommand =
