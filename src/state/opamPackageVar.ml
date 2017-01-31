@@ -63,7 +63,6 @@ let resolve_global gt full_var =
       match V.to_string var with
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
       | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
-      | "arch"          -> Some (V.string (OpamStd.Sys.arch ()))
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | _               -> None
 
