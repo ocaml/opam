@@ -587,8 +587,7 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
 OCAML_PKG_jsonm
-OCAML_PKG_dose3_algo
-OCAML_PKG_dose3_common
+OCAML_PKG_dose3
 OCAML_PKG_cudf
 OCAML_PKG_ocamlgraph
 OCAML_PKG_cmdliner
@@ -4386,17 +4385,17 @@ $as_echo "not found" >&6; }
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package dose3.common" >&5
-$as_echo_n "checking for OCaml findlib package dose3.common... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package dose3" >&5
+$as_echo_n "checking for OCaml findlib package dose3... " >&6; }
 
   unset found
   unset pkg
   found=no
-  for pkg in dose3.common dose.common ; do
+  for pkg in dose3  ; do
     if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
 $as_echo "found" >&6; }
-      OCAML_PKG_dose3_common=$pkg
+      OCAML_PKG_dose3=$pkg
       found=yes
       break
     fi
@@ -4404,31 +4403,7 @@ $as_echo "found" >&6; }
   if test "$found" = "no" ; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-    OCAML_PKG_dose3_common=no
-  fi
-
-
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package dose3.algo" >&5
-$as_echo_n "checking for OCaml findlib package dose3.algo... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in dose3.algo dose.algo ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_dose3_algo=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_dose3_algo=no
+    OCAML_PKG_dose3=no
   fi
 
 
