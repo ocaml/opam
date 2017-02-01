@@ -481,19 +481,17 @@ module OpamString = struct
   let rcut_at = cut_at_aux String.rindex
 
   let split s c =
-    Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s
-  (* Unavailable in re 1.2.0 {[
-       Re.(split (compile (rep1 (char c))) s
-     ]} *)
+    (* old compat version (Re 1.2.0)
+       {[Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s]} *)
+    Re.(split (compile (rep1 (char c)))) s
 
   let split_delim s c =
-    Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
-  (* Unavailable in re 1.2.0 {[
-       let s = if String.length s <> 0
-         then Printf.sprintf "%c%s%c" c s c
-         else s in
-       Re.(split (compile (rep1 (char c))) s)
-     ]} *)
+    (* old compat version (Re 1.2.0)
+       {[Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s]} *)
+    let s = if String.length s <> 0
+      then Printf.sprintf "%c%s%c" c s c
+      else s in
+    Re.(split (compile (rep1 (char c))) s)
 
   let fold_left f acc s =
     let acc = ref acc in

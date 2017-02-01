@@ -162,8 +162,7 @@ define PROJ_extlib
 endef
 export PROJ_extlib
 
-SRC_re = re_cset.ml re_automata.ml re.ml re_perl.ml re_pcre.ml re_emacs.ml \
-re_glob.ml re_str.ml
+SRC_re = re_cset.ml re_automata.ml re.ml re_glob.ml re_perl.ml re_pcre.ml
 
 define PROJ_re
   SOURCES = $(call addmli,re/lib,$(SRC_re))
