@@ -54,15 +54,15 @@ following hierarchy:
   that are copied over the root of the source tree of the given package before
   it gets used.
 - `/cache/`: cached package files, by checksum. Note that the cache location is
-  configured in the [repo](#repofield-archive-mirrors) file, this is only where
-  `opam-admin make` puts it by default.
+  configured in the [repo](#repofield-archive-mirrors) file, this name is only
+  where `opam admin cache` puts it by default.
 - `/archives/`: this is no longer used by opam automatically, but is the
   canonical place where you should place your package archives if you want to
   serve them from the repository server directly. The URLs of the packages will
   have to be set accordingly.
 - `/index.tar.gz`: archive containing the whole repository contents (except the
-  cache), needed when serving over HTTP. It can be generated using `opam-admin
-  make --index`.
+  cache), needed when serving over HTTP. It can be generated using `opam admin
+  index`.
 
 <span class="opam">opam</span> repositories can be accessed using local or
 remote (ssh) paths, HTTP URLs, or one of the supported version control systems
@@ -1118,7 +1118,7 @@ for <span class="opam">opam</span>.
   `<hash-algo>/<first-2-hash-characters>/<hash>`, where the hash is in
   hexadecimal. Proxies are tried in order, and the file is looked up from
   upstream if not found. They can also be configured
-  [per-repository](#repofield-archive-mirrors). The command `opam-admin make`
+  [per-repository](#repofield-archive-mirrors). The command `opam admin cache`
   generates a suitable cache in `./cache`, see the [Repositories](#repositories)
   section.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be

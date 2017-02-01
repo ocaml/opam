@@ -241,9 +241,11 @@ let upgrade_command =
   let doc = upgrade_command_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command is similar to 'opam upgrade', but allows upgrading \
-        packages directly from a repository instead of what is available in a \
-        given opam installation."
+    `P "This command reads repositories from earlier opam versions, and \
+        converts them to repositories suitable for the current opam version. \
+        Packages might be created or renamed, and any compilers defined in the \
+        old format ('compilers/' directory) will be turned into packages, \
+        using a pre-defined hierarchy that assumes OCaml compilers."
   ]
   in
   let clear_cache_arg =
@@ -261,7 +263,8 @@ let upgrade_command =
        repository will be served from to put in the redirects (older versions \
        of opam don't understand relative redirects)."
     in
-    Arg.(value & opt (some OpamArg.url) None & info ["m"; "mirror"] ~doc)
+    Arg.(value & opt (some OpamArg.url) None &
+         info ~docv:"URL" ["m"; "mirror"] ~doc)
   in
   let cmd global_options clear_cache create_mirror =
     OpamArg.apply_global_options global_options;

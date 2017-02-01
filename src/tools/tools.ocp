@@ -12,19 +12,6 @@ begin program "opam-check"
   requires = [ "opam-client" ]
 end
 
-begin program "opam-admin"
-  files = [
-    "opam_mk_repo.ml"
-    "opam_repo_check.ml"
-    "opam_stats.ml"
-    "opam_depexts_change.ml"
-    "opam_rename.ml"
-    "opam_format_upgrade.ml"
-    "opam_admin.ml"
-  ]
-  requires = [ "opam-state" "opam-client" ]
-end
-
 begin program "opam-installer"
   files = [
     "opam_installer.ml"

@@ -169,4 +169,4 @@ sub-directory, and a [`repo` file](Manual.html#repo) containing at least an
 on the package format.
 
 If your repository is going to be served over HTTP, you should generate an index
-using the `opam-admin` tool.
+using the `opam admin index` command.

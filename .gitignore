@@ -56,10 +56,8 @@ src/format/opamParser.mli
 src/core/opamCompat.ml
 src/core/opamCompat.mli
 src/opam
-src/opam-admin
 src/opam-installer
 src/opam-check
-src/opamlfind
 src/opam-admin.top
 src/*.META
 ._d

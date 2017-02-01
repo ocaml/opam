@@ -11,7 +11,6 @@ all:
 	$(MAKE) opam-lib
 	$(MAKE) opam
 	$(MAKE) opam-check
-	$(MAKE) opam-admin
 	$(MAKE) opam-installer
 	$(MAKE) opam-admin.top
 
@@ -262,7 +261,7 @@ export PROJ_opam
 
 # -- opam utils -- #
 
-TOOLS = opam-check opam-admin opam-installer
+TOOLS = opam-check opam-installer
 
 $(TOOLS): opam ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=$@ SUBTARGET=$(BINTARGET)
@@ -274,35 +273,12 @@ define PROJ_opam-check
 endef
 export PROJ_opam-check
 
-SRC_opam-admin = \
-  opam_mk_repo.ml \
-  opam_repo_check.ml \
-  opam_stats.ml \
-  opam_depexts_change.ml \
-  opam_rename.ml \
-  opam_format_upgrade.ml \
-  opam_admin.ml
-
-define PROJ_opam-admin
-  SOURCES = $(call addmli,tools,$(SRC_opam-admin))
-  RESULT = opam-admin
-  LIBS = $(LIBS) $(OPAMLIB)
-endef
-export PROJ_opam-admin
-
 define PROJ_opam-installer
   SOURCES = tools/opam_installer.ml
   RESULT = opam-installer
   LIBS = $(LIBS) opam-core opam-format opam-state
 endef
 export PROJ_opam-installer
-
-define PROJ_opamlfind
-  SOURCES = tools/opamlfind.ml
-  RESULT = opamlfind
-  LIBS = $(LIBS) $(OPAMLIB)
-endef
-export PROJ_opamlfind
 
 opam-admin.top: opam-lib.byte ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam-admin-top SUBTARGET=top
@@ -348,7 +324,6 @@ endef
 	@{ $(patsubst %,echo '  "%"';,$(call lib_inst_files,tools)) } >>$@
 	@echo ']' >>$@
 	@echo 'bin: [' >>$@
-	@echo '  "src/opam-admin"' >>$@
 	@echo '  "src/opam-admin.top"' >>$@
 	@echo ']' >>$@
 
@@ -378,7 +353,7 @@ dotinstalls: $(patsubst %,../opam-%.install,$(SUBS) admin)
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 
 ifndef SUBPROJS
-  export SUBPROJS = $(SUBS) opam opam-check opam-admin opam-installer opamlfind opam-admin-top
+  export SUBPROJS = $(SUBS) opam opam-check opam-installer opam-admin-top
 endif
 
 OCAMLMAKEFILE = ../OCamlMakefile
