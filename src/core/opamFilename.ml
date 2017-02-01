@@ -222,9 +222,6 @@ let move ~src ~dst =
     OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
       [ "mv"; to_string src; to_string dst ]
 
-let link ~target ~link =
-  if target <> link then OpamSystem.link (to_string target) (to_string link)
-
 let readlink src =
   if exists src then
     try of_string (Unix.readlink (to_string src))
@@ -325,6 +322,26 @@ let rec find_in_parents f dir =
   let parent = dirname_dir dir in
   if parent = dir then None
   else find_in_parents f parent
+
+let link ?(relative=false) ~target ~link =
+  if target = link then () else
+  let target =
+    if not relative then to_string target else
+    match
+      find_in_parents (fun d -> d <> "/" && starts_with d link) (dirname target)
+    with
+    | None -> to_string target
+    | Some ancestor ->
+      let back =
+        let rel = remove_prefix_dir ancestor (dirname link) in
+        OpamStd.List.concat_map Filename.dir_sep
+          (fun _ -> "..")
+          (OpamStd.String.split rel Filename.dir_sep.[0])
+      in
+      let forward = remove_prefix ancestor target in
+      Filename.concat back forward
+  in
+  OpamSystem.link target (to_string link)
 
 let patch filename dirname =
   OpamSystem.patch ~dir:(Dir.to_string dirname) (to_string filename)

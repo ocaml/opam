@@ -210,6 +210,11 @@ let basename =
       Re.get (Re.exec re t.path) 1
     with Not_found -> ""
 
+let root =
+  let re = Re.(compile @@ seq [char '/'; rep any]) in
+  fun t ->
+    { t with path = Re.replace_string re ~by:"" t.path }
+
 let has_trailing_slash url =
   OpamStd.String.ends_with ~suffix:"/" url.path
 
@@ -232,6 +237,11 @@ module Op = struct
 
   (** appending to an url path *)
   let ( / ) url dir =
+    let url =
+      if OpamStd.String.starts_with ~prefix:"/" dir then
+        root url
+      else url
+    in
     let path =
       if has_trailing_slash url then url.path ^ dir
       else String.concat "/" [url.path; dir]

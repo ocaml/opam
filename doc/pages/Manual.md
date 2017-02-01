@@ -550,10 +550,13 @@ some specifics of the repository. It has the following optional fields:
 * <a id="repofield-redirect">`redirect: [ <string> { <filter> } ... ]`</a>:
   List of URLs to (permanently) redirect to if their filters evaluate to `true`.
   Can be used to serve different repositories for different OSes or different
-  versions of <span class="opam">opam</span>.
-* <a id="repofield-archive-mirrors">`archive-mirrors: [ <URL> ... ]`</a>:
+  versions of <span class="opam">opam</span>. Relative URLs are supported from
+  opam 2.0, but discouraged for compatibility reasons.
+* <a id="repofield-archive-mirrors">`archive-mirrors: [ <string> ... ]`</a>:
   Archive proxy URLs specific to this repository, with the same semantics as the
-  similar [config field](#configfield-archive-mirrors).
+  similar [config field](#configfield-archive-mirrors), except a path without a
+  `protocol://` prefix is accepted and will be considered relative to the
+  repository root (e.g. `cache/`).
 
 #### opamrc
 

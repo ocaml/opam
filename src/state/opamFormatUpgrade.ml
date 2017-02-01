@@ -820,7 +820,11 @@ let from_2_0_alpha3_to_2_0_beta root conf =
       OpamFilename.rmdir packages_dev_dir;
     )
     (OpamFile.Config.installed_switches conf);
-  conf
+  OpamFile.Config.with_eval_variables
+    ((OpamVariable.of_string "arch", ["uname"; "-m"],
+      "Host architecture, as returned by 'uname -m'")
+     :: OpamFile.Config.eval_variables conf)
+    conf
 
 let latest_version = v2_0_beta
 

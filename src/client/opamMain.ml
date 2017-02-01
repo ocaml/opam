@@ -3093,6 +3093,7 @@ let check_and_run_external_commands () =
   let plugin_prefix = "opam-" in
   match Array.to_list Sys.argv with
   | [] | [_] -> ()
+  | _ :: ("-y" | "--yes") :: name :: args
   | _ :: name :: args ->
     if
       not (OpamStd.String.starts_with ~prefix:"-" name)
@@ -3102,7 +3103,11 @@ let check_and_run_external_commands () =
     then
       (* No such command, check if there is a matching plugin *)
       let command = plugin_prefix ^ name in
-      OpamStd.Config.init ();
+      let answer = match Sys.argv.(1) with
+        | "-y" | "--yes" -> Some true
+        | _ -> None
+      in
+      OpamStd.Config.init ~answer ();
       OpamFormatConfig.init ();
       let root_dir = OpamStateConfig.opamroot () in
       let has_init = OpamStateConfig.load_defaults root_dir <> None in

@@ -158,7 +158,8 @@ let load lock_kind gt =
   let load_repos_definitions repositories =
     OpamRepositoryName.Map.map (fun r ->
         OpamFile.Repo.safe_read
-          OpamRepositoryPath.(repo (create gt.root r.repo_name)))
+          OpamRepositoryPath.(repo (create gt.root r.repo_name)) |>
+        OpamFile.Repo.with_root_url r.repo_url)
       repositories
   in
   let make_rt repos_definitions opams =
