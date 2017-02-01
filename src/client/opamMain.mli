@@ -34,13 +34,10 @@ val default: command
 val init: command
 
 (** opam list *)
-val list: command
+val list: ?force_search:bool -> unit -> command
 
 (** opam show *)
 val show: command
-
-(** opam search *)
-val search: command
 
 (** opam install *)
 val install: command

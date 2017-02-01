@@ -56,12 +56,16 @@ type selector =
   | Flag of package_flag
   | Tag of string
   | From_repository of repository_name list
+  | Owns_file of filename
 
 (** Applies a formula of selectors to filter the package from a given switch
     state *)
 val filter:
   base:package_set -> 'a switch_state ->
   selector OpamFormula.formula -> package_set
+
+(** Or-filter on package patterns (NAME or NAME.VERSION) *)
+val pattern_selector: string list -> selector OpamFormula.formula
 
 (** Lists the external dependencies matching the given flags for the given set
     of packages *)
@@ -95,6 +99,9 @@ type output_format =
                            the system *)
   | VC_ref             (** The version-control branch or tag the package url is
                            bound to, if any *)
+  | Depexts of string list (** The external dependencies associated with any
+                               subset of the given tags (or all, associated to
+                               their respective tags, if the list is empty *)
 
 val default_list_format: output_format list
 
@@ -109,37 +116,24 @@ val string_of_field: output_format -> string
 
 val field_of_string: string -> output_format
 
+type package_listing_format = {
+  short: bool;
+  header: bool;
+  columns: output_format list;
+  all_versions: bool;
+  wrap: [`Wrap of string | `Truncate | `None] option;
+  separator: string;
+  value_printer: [`Normal | `Pretty | `Normalised];
+  order: [`Standard | `Dependency | `Custom of package -> package -> int];
+}
+
+val default_package_listing_format: package_listing_format
 
 (** Outputs a list of packages as a table according to the formatting options.
     [normalise] supersedes [prettify] and uses a canonical way of displaying
     package definition file fields. [prettify] uses a nicer to read format for the
     package definition file fields. *)
-val display:
-  'a switch_state ->
-  header:bool ->
-  format:output_format list ->
-  dependency_order:bool ->
-  all_versions:bool ->
-  ?wrap:[`Wrap of string | `Truncate | `None] ->
-  ?separator:string ->
-  ?prettify:bool ->
-  ?normalise:bool ->
-  ?order:(package -> package -> int) ->
-  package_set -> unit
-
-(** Display all available packages that match any of the regexps. *)
-val list:
-  'a global_state ->
-  print_short:bool ->
-  filter:[`all|`installed|`roots|`installable] ->
-  order:[`normal|`depends] ->
-  exact_name:bool ->
-  case_sensitive:bool ->
-  ?depends:(atom list) ->
-  ?reverse_depends:bool -> ?recursive_depends:bool -> ?resolve_depends:bool ->
-  ?depopts:bool -> ?depexts:string list -> ?dev:bool ->
-  string list ->
-  unit
+val display: 'a switch_state -> package_listing_format -> package_set -> unit
 
 (** Display a general summary of a collection of packages. *)
 val info:

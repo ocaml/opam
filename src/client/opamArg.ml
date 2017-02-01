@@ -464,16 +464,26 @@ let enum_with_default sl: 'a Arg.converter =
   parse, print
 
 let opamlist_column =
+  let depexts_flag_re =
+    Re.(compile @@ seq [
+        str "depexts(";
+        group @@ rep @@ seq [rep @@ diff any (set ",)"); opt (char ',')];
+        char ')'])
+  in
   let parse str =
     if OpamStd.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else
     try
-      List.find (function (OpamListCommand.Field _), _ -> false
-                        | _, name -> name = str)
-        OpamListCommand.field_names
-      |> fun (f, _) -> `Ok f
+      try `Ok (OpamListCommand.Depexts
+                 (OpamStd.String.split
+                    (Re.Group.get (Re.exec depexts_flag_re str) 1) ','))
+      with Not_found ->
+        List.find (function (OpamListCommand.Field _), _ -> false
+                          | _, name -> name = str)
+          OpamListCommand.field_names
+        |> fun (f, _) -> `Ok f
     with Not_found ->
       `Error (Printf.sprintf
                 "No known printer for column %s. If you meant an opam file \
@@ -482,6 +492,47 @@ let opamlist_column =
   in
   let print ppf field =
     Format.pp_print_string ppf (OpamListCommand.string_of_field field)
+  in
+  parse, print
+
+let opamlist_columns =
+  let field_re =
+    (* max paren nesting 1, obviously *)
+    Re.(compile @@ seq [
+        start;
+        group @@ seq [
+          rep @@ diff any (set ",(");
+          opt @@ seq [char '('; rep (diff any (char ')')); char ')'];
+        ];
+        alt [char ','; stop];
+      ])
+  in
+  let parse str =
+    try
+      let rec aux pos =
+        if pos = String.length str then [] else
+        let g = Re.exec ~pos field_re str in
+        Re.Group.get g 1 :: aux (Re.Group.stop g 0)
+      in
+      let fields = aux 0 in
+      List.fold_left (function
+          | `Error _ as e -> fun _ -> e
+          | `Ok acc -> fun str ->
+            match fst opamlist_column str with
+            | `Ok f -> `Ok (acc @ [f])
+            | `Error _ as e -> e)
+        (`Ok []) fields
+    with Not_found ->
+      `Error (Printf.sprintf "Invalid columns specification: '%s'." str)
+  in
+  let print ppf cols =
+    let rec aux = function
+      | x::(_::_) as r ->
+        snd opamlist_column ppf x; Format.pp_print_char ppf ','; aux r
+      | [x] -> snd opamlist_column ppf x
+      | [] -> ()
+    in
+    aux cols
   in
   parse, print
 
@@ -629,9 +680,6 @@ let jobs_flag =
     "Set the maximal number of concurrent jobs to use. You can also set it using \
      the $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
-
-let pattern_list =
-  arg_list "PATTERNS" "List of package patterns." Arg.string
 
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
@@ -837,3 +885,218 @@ let build_options =
     $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag)
+
+let package_selection_section = "PACKAGE SELECTION"
+
+let package_selection =
+  let section = package_selection_section in
+  let docs = section in
+  let depends_on =
+    let doc =
+      "List only packages that depend on one of (comma-separated) $(docv)."
+    in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["depends-on"])
+  in
+  let required_by =
+    let doc = "List only the dependencies of (comma-separated) $(docv)." in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["required-by"])
+  in
+  let conflicts_with =
+    let doc =
+      "List packages that have declared conflicts with at least one of the \
+       given list. This includes conflicts defined from the packages in the \
+       list, from the other package, or by a common $(b,conflict-class:) \
+       field."
+    in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["conflicts-with"])
+  in
+  let coinstallable_with =
+    let doc = "Only list packages that are compatible with all of $(docv)." in
+    Arg.(value & opt (list package_with_version) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["coinstallable-with"])
+  in
+  let resolve =
+    let doc =
+      "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
+       a consistent set of packages including those. This is subtly different \
+       from `--required-by --recursive`, which is more predictable and can't \
+       fail, but lists all dependencies independently without ensuring \
+       consistency. \
+       Without `--installed`, the answer is self-contained and independent of \
+       the current installation. With `--installed', it's computed from the \
+       set of currently installed packages. \
+       `--no-switch` further makes the solution independent from the \
+       currently pinned packages, architecture, and compiler version. \
+       The combination with `--depopts' is not supported."
+    in
+    Arg.(value & opt (list atom) [] &
+         info ~doc ~docs ~docv:"PACKAGES" ["resolve"])
+  in
+  let recursive =
+    mk_flag ["recursive"] ~section
+      "With `--depends-on' and `--required-by', display all transitive \
+       dependencies rather than just direct dependencies." in
+  let depopts =
+    mk_flag ["depopts"]  ~section
+      "Include optional dependencies in dependency requests."
+  in
+  let nobuild =
+    mk_flag ["nobuild"]  ~section
+      "Exclude build dependencies (they are included by default)."
+  in
+  let dev =
+    mk_flag ["dev"]  ~section
+      "Include development packages in dependencies."
+  in
+  let doc_flag =
+    mk_flag ["doc"] ~section
+      "Include doc-only dependencies."
+  in
+  let test =
+    mk_flag ["t";"test"] ~section
+      "Include test-only dependencies."
+  in
+  let field_match =
+    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section
+      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
+      Arg.(pair ~sep:':' string string)
+  in
+  let has_flag =
+    mk_opt_all ["has-flag"] "FLAG" ~section
+      ("Only include packages which have the given flag set. Package flags are \
+        one of: "^
+       (OpamStd.List.concat_map " "
+          (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
+          all_package_flags))
+      ((fun s -> match pkg_flag_of_string s with
+          | Pkgflag_Unknown s ->
+            `Error ("Invalid package flag "^s^", must be one of "^
+                    OpamStd.List.concat_map " " string_of_pkg_flag
+                      all_package_flags)
+          | f -> `Ok f),
+       fun fmt flag ->
+         Format.pp_print_string fmt (string_of_pkg_flag flag))
+  in
+  let has_tag =
+    mk_opt_all ["has-tag"] "TAG" ~section
+      "Only includes packages which have the given tag set"
+      Arg.string
+  in
+  let filter
+      depends_on required_by conflicts_with coinstallable_with resolve recursive
+      depopts nobuild dev doc_flag test field_match has_flag has_tag
+    =
+    let dependency_toggles = {
+      OpamListCommand.
+      recursive; depopts; build = not nobuild; test; doc = doc_flag; dev
+    } in
+    OpamFormula.ands @@
+    List.map (fun x -> Atom x)
+      ((match depends_on with [] -> [] | deps ->
+           [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+       (match required_by with [] -> [] | rdeps ->
+           [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+       (match conflicts_with with [] -> [] | pkgs ->
+           [OpamListCommand.Conflicts_with pkgs]) @
+       (match coinstallable_with with [] -> [] | pkgs ->
+           [OpamListCommand.Coinstallable_with
+              (dependency_toggles, pkgs)]) @
+       (match resolve with [] -> [] | deps ->
+           [OpamListCommand.Solution (dependency_toggles, deps)]) @
+       (List.map (fun (field,patt) ->
+            OpamListCommand.Pattern
+              ({OpamListCommand.default_pattern_selector with
+                OpamListCommand.fields = [field]},
+               patt))
+           field_match) @
+       (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
+       (List.map (fun tag -> OpamListCommand.Tag tag) has_tag))
+  in
+  Term.(pure filter $
+        depends_on $ required_by $ conflicts_with $ coinstallable_with $
+        resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
+        field_match $ has_flag $ has_tag)
+
+let package_listing_section = "OUTPUT FORMAT"
+
+let package_listing =
+  let section = package_listing_section in
+  let all_versions = mk_flag ["all-versions"] ~section
+      "Normally, when multiple versions of a package match, only one is shown \
+       in the output (the installed one, the pinned-to one, or, failing that, \
+       the highest one available or the highest one). This flag disables this \
+       behaviour and shows all matching versions. This also changes the \
+       default display format to include package versions instead of just \
+       package names (including when --short is set). This is automatically \
+       turned on when a single non-pattern package name is provided on the \
+       command-line."
+  in
+  let print_short =
+    mk_flag ["short";"s"] ~section
+      "Don't print a header, and sets the default columns to $(b,name) only. \
+       If you need package versions included, use $(b,--columns=package) \
+       instead"
+  in
+  let sort =
+    mk_flag ["sort";"S"] ~section
+      "Sort the packages in dependency order (i.e. an order in which they \
+       could be individually installed.)"
+  in
+  let columns =
+    mk_opt ["columns"] "COLUMNS" ~section
+      (Printf.sprintf "Select the columns to display among: %s.\n\
+                       The default is $(b,name) when $(i,--short) is present \
+                       and %s otherwise."
+         (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
+            OpamListCommand.field_names)
+         (OpamStd.List.concat_map ", "
+            (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
+            OpamListCommand.default_list_format))
+      Arg.(some & opamlist_columns) None
+  in
+  let normalise = mk_flag ["normalise"] ~section
+      "Print the values of opam fields normalised"
+  in
+  let wrap = mk_flag ["wrap"] ~section
+      "Wrap long lines, the default being to truncate when displaying on a \
+       terminal, or to keep as is otherwise"
+  in
+  let separator =
+    Arg.(value & opt string " " & info ["separator"]
+           ~docv:"STRING" ~docs:package_listing_section
+           ~doc:"Set the column-separator string")
+  in
+  let format all_versions short sort columns normalise wrap separator =
+  fun ~force_all_versions ->
+    let all_versions = force_all_versions || all_versions in
+    let columns =
+      match columns with
+      | Some c -> c
+      | None ->
+        let cols =
+          if short then [OpamListCommand.Name]
+          else OpamListCommand.default_list_format
+        in
+        if all_versions then
+          List.map (function
+              | OpamListCommand.Name -> OpamListCommand.Package
+              | c -> c)
+            cols
+        else cols
+    in
+    { OpamListCommand.
+      short;
+      header = not short;
+      columns;
+      all_versions;
+      wrap = if wrap then Some (`Wrap "\\ ") else Some `Truncate;
+      separator;
+      value_printer = if normalise then `Normalised else `Normal;
+      order = if sort then `Dependency else `Standard;
+    }
+  in
+  Term.(pure format $ all_versions $ print_short $ sort $ columns $ normalise $
+        wrap $ separator)

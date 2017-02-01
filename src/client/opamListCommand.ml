@@ -70,6 +70,7 @@ type selector =
   | Flag of package_flag
   | Tag of string
   | From_repository of repository_name list
+  | Owns_file of filename
 
 let string_of_selector =
   let (%) s col = OpamConsole.colorise col s in
@@ -125,6 +126,9 @@ let string_of_selector =
   | From_repository r ->
     Printf.sprintf "%s(%s)" ("from-repository" % `magenta)
       (OpamStd.List.concat_map " " OpamRepositoryName.to_string r % `bold)
+  | Owns_file f ->
+    Printf.sprintf "%s(%s)" ("owns-file" % `magenta)
+      (OpamFilename.prettify f % `bold)
 
 let string_of_formula =
   OpamFormula.string_of_formula string_of_selector
@@ -185,6 +189,24 @@ let rec value_strings value =
   | Option (_, v, vl) ->
     List.fold_left (fun acc v -> SS.union acc (value_strings v))
       (value_strings v) vl
+
+let pattern_selector patterns =
+  let name_patt =
+    { default_pattern_selector with exact = true; fields = ["name"] }
+  in
+  let version_patt =
+    { default_pattern_selector with exact = true; fields = ["version"] }
+  in
+  OpamFormula.ors
+    (List.map (fun patt ->
+         match OpamStd.String.cut_at patt '.' with
+         | None ->
+           Atom (Pattern (name_patt, patt))
+         | Some (name, version) ->
+           OpamFormula.ands
+             [Atom (Pattern (name_patt, name));
+              Atom (Pattern (version_patt, version))])
+        patterns)
 
 let apply_selector ~base st = function
   | Any -> base
@@ -296,6 +318,51 @@ let apply_selector ~base st = function
         else OpamPackage.Set.diff (aux rl) packages
     in
     aux (OpamSwitchState.repos_list st)
+  | Owns_file file ->
+    (try
+       let root = st.switch_global.root in
+       let switch =
+        List.find (fun sw ->
+            OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
+            <> OpamFilename.to_string file)
+          (OpamFile.Config.installed_switches st.switch_global.config)
+       in
+       let rel_name =
+         OpamFilename.remove_prefix (OpamPath.Switch.root root switch) file
+       in
+       let matching_change_files =
+         List.filter (fun change_f ->
+             OpamFilename.check_suffix change_f ".changes" &&
+             let changes =
+               OpamFile.Changes.safe_read (OpamFile.make change_f)
+             in
+             OpamStd.String.Map.exists
+               (fun f -> function
+                  | OpamDirTrack.Removed -> false
+                  | _ -> rel_name = f)
+               changes)
+           (OpamFilename.files (OpamPath.Switch.install_dir root switch))
+       in
+       let selections =
+         if switch = st.switch then OpamSwitchState.selections st
+         else OpamSwitchState.load_selections st.switch_global switch
+       in
+       List.fold_left (fun acc f ->
+           let name =
+             OpamPackage.Name.of_string @@
+             OpamFilename.(Base.to_string (basename (chop_extension f)))
+           in
+           try
+             OpamPackage.Set.add
+               (OpamPackage.package_of_name selections.sel_installed name)
+               acc
+           with Not_found -> acc)
+         OpamPackage.Set.empty matching_change_files
+     with Not_found ->
+       log "%a doesn't belong to a known opam switch"
+         (slog OpamFilename.to_string) file;
+       OpamPackage.Set.empty)
+
 
 let rec filter ~base st = function
   | Empty -> base
@@ -322,6 +389,7 @@ type output_format =
   | Repository
   | Installed_files
   | VC_ref
+  | Depexts of string list
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -342,6 +410,8 @@ let disp_header = function
   | Repository -> "Repository"
   | Installed_files -> "Installed files"
   | VC_ref -> "VC ref"
+  | Depexts [] -> "Depexts"
+  | Depexts sl -> Printf.sprintf "Depexts(%s)" (String.concat "," sl)
 
 let field_names = [
   Name, "name";
@@ -361,6 +431,7 @@ let field_names = [
   Repository, "repository";
   Installed_files, "installed-files";
   VC_ref, "vc-ref";
+  Depexts [], "depexts";
 ]
 
 let string_of_field = function
@@ -525,12 +596,54 @@ let detail_printer ?prettify ?normalise st nv =
        url.OpamUrl.hash)
       +! ""
     )
+  | Depexts tags_list ->
+    let tags =
+      OpamStd.Option.default OpamStd.String.SetMap.empty
+        (OpamFile.OPAM.depexts (get_opam st nv))
+    in
+    if tags_list = [] then
+      OpamStd.String.SetMap.fold (fun tags values acc ->
+          Printf.sprintf "%s\n%s: %s" acc
+            (String.concat " " (OpamStd.String.Set.elements tags))
+            (String.concat " " (OpamStd.String.Set.elements values)))
+        tags ""
+    else
+    let required_tags = OpamStd.String.Set.of_list tags_list in
+    OpamStd.String.SetMap.fold (fun tags values acc ->
+        if OpamStd.String.Set.for_all
+            (fun tag -> OpamStd.String.Set.mem tag required_tags)
+            tags
+        then
+          Printf.sprintf "%s %s" acc
+            (String.concat " " (OpamStd.String.Set.elements values))
+        else acc)
+      tags ""
 
-let display
-    st ~header ~format ~dependency_order ~all_versions ?wrap ?(separator=" ")
-    ?prettify ?normalise ?order packages =
+type package_listing_format = {
+  short: bool;
+  header: bool;
+  columns: output_format list;
+  all_versions: bool;
+  wrap: [`Wrap of string | `Truncate | `None] option;
+  separator: string;
+  value_printer: [`Normal | `Pretty | `Normalised];
+  order: [`Standard | `Dependency | `Custom of package -> package -> int];
+}
+
+let default_package_listing_format = {
+  short = false;
+  header = true;
+  columns = default_list_format;
+  all_versions = false;
+  wrap = None;
+  separator = " ";
+  value_printer = `Normal;
+  order = `Standard;
+}
+
+let display st format packages =
   let packages =
-    if all_versions then packages else
+    if format.all_versions then packages else
       OpamPackage.Name.Set.fold (fun name ->
           let pkgs = OpamPackage.packages_of_name packages name in
           let nv =
@@ -545,7 +658,7 @@ let display
         OpamPackage.Set.empty
   in
   let packages =
-    if dependency_order then
+    if format.order = `Dependency then
       let universe =
         OpamSwitchState.universe st
           ~requested:(OpamPackage.names_of_packages packages)
@@ -558,28 +671,30 @@ let display
       in
       List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages |>
       List.rev
-    else match order with
-      | None -> OpamPackage.Set.elements packages
-      | Some o -> List.sort o (OpamPackage.Set.elements packages)
+    else match format.order with
+      | `Custom o -> List.sort o (OpamPackage.Set.elements packages)
+      | _ -> OpamPackage.Set.elements packages
   in
   let add_head l =
-    if header then
-      (List.map (fun f -> "# "^disp_header f) format)
+    if format.header then
+      (List.map (fun f -> "# "^disp_header f) format.columns)
       :: l
     else l
   in
+  let prettify = format.value_printer = `Pretty in
+  let normalise = format.value_printer = `Normalised in
   if packages = [] then
-    (if header then
+    (if format.header then
        OpamConsole.errmsg "%s\n"
          (OpamConsole.colorise `red "# No matches found"))
   else
-    List.rev_map
-      (fun nv -> List.map (detail_printer ?prettify ?normalise st nv) format)
+    List.rev_map (fun nv ->
+        List.map (detail_printer ~prettify ~normalise st nv) format.columns)
       packages |>
     List.rev |>
     add_head |>
     OpamStd.Format.align_table |>
-    OpamStd.Format.print_table ?cut:wrap stdout ~sep:separator
+    OpamStd.Format.print_table ?cut:format.wrap stdout ~sep:format.separator
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in
@@ -617,80 +732,6 @@ let print_depexts st packages tags_list =
     (OpamPackage.names_of_packages packages)
     OpamStd.String.Set.empty
   |> OpamStd.String.Set.iter print_endline
-
-let list gt
-    ~print_short ~filter:filter_arg ~order ~exact_name ~case_sensitive
-    ?depends
-    ?(reverse_depends=false) ?(recursive_depends=false) ?(resolve_depends=false)
-    ?(depopts=false) ?depexts ?(dev=false)
-    patterns
-  =
-  let module F = OpamFormula in
-  let filter_f =
-    match filter_arg with
-    | `all -> F.Atom Any
-    | `installed -> F.Atom Installed
-    | `roots -> F.Atom Root
-    | `installable -> F.Atom Available (* /!\ *)
-  in
-  let st = get_switch_state gt in
-  let filter_deps =
-    match depends with
-    | None | Some [] -> F.Empty
-    | Some deps ->
-      let tog = {
-        recursive = recursive_depends;
-        depopts;
-        build=true;
-        test=false;
-        doc=false;
-        dev
-      } in
-      let deps =
-        List.map (function
-            | name, None ->
-              (try
-                 name, Some (`Eq, (OpamSwitchState.get_package st name).version)
-               with Not_found -> name, None)
-            | at -> at)
-          deps
-      in
-      let atom =
-        if resolve_depends then Solution (tog, deps)
-        else if reverse_depends
-        then Depends_on (tog, deps)
-        else Required_by (tog, deps)
-      in
-      if depexts <> None then
-        F.ors [F.Atom atom; F.Atom (Atoms deps)]
-      else F.Atom atom
-  in
-  let patt_f =
-    F.ors @@
-    List.map (fun pat ->
-        F.Atom (Pattern ({case_sensitive; exact = exact_name;
-                          fields =
-                            if exact_name then ["name"]
-                            else ["name"; "descr"; "tags"];
-                          glob = true;
-                          ext_fields = false}, pat)))
-      patterns
-  in
-  let formula = F.ands [filter_f; filter_deps; patt_f] in
-  log "Package selector: %a" (slog string_of_formula) formula;
-  if not print_short && formula <> OpamFormula.Empty then
-    OpamConsole.msg "# Packages matching: %s\n" (string_of_formula formula);
-  let packages = filter ~base:(st.packages ++ st.installed) st formula in
-  if OpamPackage.Set.is_empty packages then
-    (if not print_short then OpamConsole.error "No matches";
-     OpamStd.Sys.exit 1);
-  let format = if print_short then [Name] else default_list_format in
-  match depexts with
-  | None ->
-    display st ~format ~dependency_order:(order=`depends)
-      ~header:(not print_short) ~all_versions:false packages
-  | Some tags_list ->
-    print_depexts st packages tags_list
 
 let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   let st = get_switch_state gt in
