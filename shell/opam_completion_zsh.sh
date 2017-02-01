@@ -83,7 +83,8 @@ _opam()
                     description installed-version pin source-hash \
                     opam-file all-installed-versions available-versions \
                     all-versions repository installed-files vc-ref;;
-      PACKAGE|PACKAGES|PKG) _opam_add_f opam list --safe -A -s;;
+      PACKAGE|PACKAGES|PKG|PATTERN|PATTERNS)
+          _opam_add_f opam list --safe -A -s;;
       FLAG) _opam_add light-uninstall verbose plugin compiler conf;;
       REPOS) _opam_add_f opam repository list --safe -s -a;;
       SHELL) _opam_add bash sh csh zsh fish;;
@@ -201,10 +202,14 @@ _opam()
       exec|e)
           if [ $COMP_CWORD -eq 2 ]; then compgen_opt+=(-c)
           else _opam_add_f _opam_flags "$cmd"; fi;;
-      lint)
+      lint|build)
           if [ $COMP_CWORD -eq 2 ]; then
               compgen_opt+=(-f -X '!*opam' -o plusdirs)
           else _opam_add_f _opam_flags "$cmd"; fi;;
+      admin)
+          if [ $COMP_CWORD -eq 2 ]; then
+              _opam_add_f _opam_commands "$cmd"
+          else _opam_add_f _opam_flags "$cmd" "$subcmd"; fi;;
       *)
           _opam_add_f _opam_commands "$cmd"
           _opam_add_f _opam_flags "$cmd"
