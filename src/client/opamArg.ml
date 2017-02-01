@@ -344,7 +344,7 @@ let positive_integer : int Arg.converter =
   let (parser, printer) = Arg.int in
   let parser s =
     match parser s with
-    | `Error _ -> `Error "expected a positive integer"
+    | `Error _ -> `Error "expected a strictly positive integer"
     | `Ok n as r -> if n <= 0
       then `Error "expected a positive integer"
       else r in

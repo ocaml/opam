@@ -282,6 +282,90 @@ let upgrade_command =
         clear_cache_arg $ create_mirror_arg),
   OpamArg.term_info command ~doc ~man
 
+let lint_command_doc =
+  "Runs 'opam lint' and reports on a whole repository"
+let lint_command =
+  let command = "lint" in
+  let doc = lint_command_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command gathers linting results on all files in a repository. The \
+        warnings and errors to show or hide can be selected"
+  ]
+  in
+  let short_arg =
+    OpamArg.mk_flag ["s";"short"]
+      "Print only packages and warning/error numbers, without explanations"
+  in
+  let list_arg =
+    OpamArg.mk_flag ["list";"l"]
+      "Only list package names, without warning details"
+  in
+  let include_arg =
+    OpamArg.arg_list "INT" "Show only these warnings"
+      OpamArg.positive_integer
+  in
+  let exclude_arg =
+    OpamArg.mk_opt_all ["exclude";"x"] "INT"
+      "Exclude the given warnings or errors"
+      OpamArg.positive_integer
+  in
+  let ignore_arg =
+    OpamArg.mk_opt_all ["ignore-packages";"i"] "INT"
+      "Ignore any packages having one of these warnings or errors"
+      OpamArg.positive_integer
+  in
+  let warn_error_arg =
+    OpamArg.mk_flag ["warn-error";"W"]
+      "Return failure on any warnings, not only on errors"
+  in
+  let cmd global_options short list incl excl ign warn_error =
+    OpamArg.apply_global_options global_options;
+    let repo_root = OpamFilename.cwd () in
+    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
+    then
+        OpamConsole.error_and_exit
+          "No repository found in current directory.\n\
+           Please make sure there is a \"packages\" directory";
+    let repo = OpamRepositoryBackend.local repo_root in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let ret =
+      OpamPackage.Map.fold (fun nv prefix ret ->
+          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let w, _ = OpamFileTools.lint_file opam_file in
+          if List.exists (fun (n,_,_) -> List.mem n ign) w then ret else
+          let w =
+            List.filter (fun (n,_,_) ->
+                (incl = [] || List.mem n incl) && not (List.mem n excl))
+              w
+          in
+          if w <> [] then
+            if list then
+              print_endline (OpamPackage.to_string nv)
+            else if short then
+              OpamConsole.msg "%s %s\n" (OpamPackage.to_string nv)
+                (OpamStd.List.concat_map " " (fun (n,k,_) ->
+                     OpamConsole.colorise
+                       (match k with `Warning -> `yellow | `Error -> `red)
+                       (string_of_int n))
+                    w)
+            else
+              OpamConsole.msg "\r\027[KIn %s:\n%s\n"
+                (OpamPackage.to_string nv)
+                (OpamFileTools.warns_to_string w);
+          ret && not (warn_error && w <> [] ||
+                      List.exists (fun (_,k,_) -> k = `Error) w))
+        pkg_prefixes
+        true
+    in
+    OpamStd.Sys.exit (if ret then 0 else 1)
+  in
+  Term.(pure cmd $ OpamArg.global_options $
+        short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
+        warn_error_arg),
+  OpamArg.term_info command ~doc ~man
+
+
 let list_command_doc = "Lists packages from a repository"
 let list_command =
   let command = "list" in
@@ -290,7 +374,7 @@ let list_command =
     `S "DESCRIPTION";
     `P "This command is similar to 'opam list', but allows listing packages \
         directly from a repository instead of what is available in a given \
-        opam installation."
+        opam installation.";
   ]
   in
   let pattern_list_arg =
@@ -415,7 +499,7 @@ let admin_subcommands = [
   index_command; OpamArg.make_command_alias index_command "make";
   cache_command;
   upgrade_command;
-  (* lint_command; *)
+  lint_command;
   list_command;
 ]
 
