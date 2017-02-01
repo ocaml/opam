@@ -42,6 +42,10 @@ module Sys2 = struct
     with Unix.Unix_error _ as e -> raise (Sys_error (Printexc.to_string e))
 end
 
+let file_or_symlink_exists f =
+  try ignore (Unix.lstat f); true
+  with Unix.Unix_error (Unix.ENOENT, _, _) -> false
+
 let (/) = Filename.concat
 
 let temp_basename prefix =
@@ -448,7 +452,7 @@ let copy_file src dst =
   then internal_error "Cannot copy %s: it is a directory." src;
   if (try Sys.is_directory dst with Sys_error _ -> false)
   then internal_error "Cannot copy to %s: it is a directory." dst;
-  if Sys.file_exists dst
+  if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
   command ~verbose:(verbose_for_base_commands ()) ["cp"; src; dst ]
@@ -469,7 +473,7 @@ let copy_dir src dst =
        [ "cp"; "-PRp"; src; dst ])
 
 let mv src dst =
-  if Sys.file_exists dst then remove_file dst;
+  if file_or_symlink_exists dst then remove_file dst;
   mkdir (Filename.dirname dst);
   command ~verbose:(verbose_for_base_commands ()) ["mv"; src; dst ]
 
@@ -647,21 +651,22 @@ let extract_in ~dir file =
   | None -> ()
 
 let link src dst =
-  if Sys.file_exists src then (
-    mkdir (Filename.dirname dst);
-    if Sys.file_exists dst then
-      remove_file dst;
-    try
-      log "ln -s %s %s" src dst;
-      Unix.symlink src dst
-    with Unix.Unix_error (Unix.EXDEV, _, _) ->
-      (* Fall back to copy if symlinks are not supported *)
-      if Sys.is_directory src then
-        copy_dir src dst
-      else
-        copy_file src dst
-  ) else
-    internal_error "link: %s does not exist." src
+  mkdir (Filename.dirname dst);
+  if file_or_symlink_exists dst then
+    remove_file dst;
+  try
+    log "ln -s %s %s" src dst;
+    Unix.symlink src dst
+  with Unix.Unix_error (Unix.EXDEV, _, _) ->
+    (* Fall back to copy if symlinks are not supported *)
+    let src =
+      if Filename.is_relative src then Filename.dirname dst / src
+      else src
+    in
+    if Sys.is_directory src then
+      copy_dir src dst
+    else
+      copy_file src dst
 
 type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
 
