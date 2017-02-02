@@ -43,14 +43,14 @@ let switch_to_updated_self debug opamroot =
       OpamConsole.error "%s exists but cannot be read, disabling self-upgrade."
         updated_self_version_str
     else if OpamVersion.compare update_version OpamVersion.current <= 0 then
-      OpamConsole.warning "Obsolete OPAM self-upgrade package v.%s found, \
+      OpamConsole.warning "Obsolete opam self-upgrade package v.%s found, \
                            not using it (current system version is %s)."
         (OpamVersion.to_string update_version)
         (OpamVersion.to_string OpamVersion.current)
     else (
       if OpamVersion.git () <> None then
-        OpamConsole.warning "Using OPAM self-upgrade to %s while the system \
-                             OPAM is a development version (%s)"
+        OpamConsole.warning "Using opam self-upgrade to %s while the system \
+                             opam is a development version (%s)"
           (OpamVersion.to_string update_version)
           (OpamVersion.to_string (OpamVersion.full ()));
       (if debug || (OpamConsole.debug ()) then
@@ -74,7 +74,7 @@ let switch_to_updated_self debug opamroot =
 let global_options =
   let no_self_upgrade =
     mk_flag ~section:global_option_section ["no-self-upgrade"]
-      "OPAM will replace itself with a newer binary found \
+      "Opam will replace itself with a newer binary found \
        at $(b,OPAMROOT/opam) if present. This disables this behaviour." in
   let self_upgrade no_self_upgrade options =
     let self_upgrade_status =
@@ -121,7 +121,7 @@ let init_dot_profile shell dot_profile =
 type command = unit Term.t * Term.info
 
 (* INIT *)
-let init_doc = "Initialize OPAM state."
+let init_doc = "Initialize opam state."
 let init =
   let doc = init_doc in
   let man = [
@@ -156,7 +156,7 @@ let init =
   in
   let no_compiler =
     mk_flag ["bare"]
-      "Initialise the OPAM state, but don't setup any compiler switch yet."
+      "Initialise the opam state, but don't setup any compiler switch yet."
   in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
@@ -164,8 +164,8 @@ let init =
   let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 (some string) None & doc) in
-  let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
-  let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
+  let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup opam." in
+  let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for opam." in
   let config_file =
     mk_opt ["config"] "FILE"
       "Use the given init config file (default is ~/.opamrc or /etc/opamrc, \
@@ -574,7 +574,7 @@ let config =
     "Reverts environment changes made by opam, e.g. $(b,eval `opam config \
      revert-env`) undoes what $(b,eval `opam config env`) did.";
     "setup", `setup, [],
-    "Configure global and user parameters for OPAM. Use $(b, opam config \
+    "Configure global and user parameters for opam. Use $(b, opam config \
      setup) to display more options. Use $(b,--list) to display the current \
      configuration options. You can use this command to automatically update: \
      (i) user-configuration files such as ~/.profile; and (ii) \
@@ -625,11 +625,11 @@ let config =
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command uses OPAM state to output information on how to use \
+    `P "This command uses opam state to output information on how to use \
         installed libraries, update the $(b,PATH), and substitute \
-        variables used in OPAM packages.";
+        variables used in opam packages.";
     `P "Apart from $(b,opam config env), most of these commands are used \
-        by OPAM internally, and are of limited interest for the casual \
+        by opam internally, and are of limited interest for the casual \
         user.";
   ] @ mk_subdoc commands
     @ [`S "OPTIONS"]
@@ -640,14 +640,14 @@ let config =
   let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
   let profile_doc     = "Modify ~/.profile (or ~/.zshrc, etc., depending on your shell) to \
-                         setup an OPAM-friendly environment when starting a new shell." in
+                         setup an opam-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
   let sexp_doc        = "Display environment variables as an s-expression" in
-  let inplace_path_doc= "When updating the PATH variable, replace any pre-existing OPAM path \
+  let inplace_path_doc= "When updating the PATH variable, replace any pre-existing opam path \
                          in-place rather than putting the new path in front. This means programs \
-                         installed in OPAM that were shadowed will remain so after \
+                         installed in opam that were shadowed will remain so after \
                          $(b,opam config env)" in
   let profile         = mk_flag ["profile"]        profile_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
@@ -762,7 +762,7 @@ let config =
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
         let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
-        Printf.printf "# OPAM config report\n";
+        Printf.printf "# opam config report\n";
         print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
           (if self_upgrade_status global_options = `Running then
@@ -910,9 +910,9 @@ let exec =
   in
   let inplace_path_doc=
     "When updating the PATH variable, replace any \
-     pre-existing OPAM path in-place rather than putting \
+     pre-existing opam path in-place rather than putting \
      the new path in front. This means programs installed \
-     in OPAM that were shadowed will remain so after \
+     in opam that were shadowed will remain so after \
      $(b,opam config env)" in
   let inplace_path    = mk_flag ["inplace-path"] inplace_path_doc in
   let exec global_options inplace_path cmd =
@@ -943,9 +943,9 @@ let env =
   in
   let inplace_path_doc=
     "When updating the PATH variable, replace any \
-     pre-existing OPAM path in-place rather than putting \
+     pre-existing opam path in-place rather than putting \
      the new path in front. This means programs installed \
-     in OPAM that were shadowed will remain so after \
+     in opam that were shadowed will remain so after \
      $(b,opam env)" in
   let inplace_path = mk_flag ["inplace-path"] inplace_path_doc in
   let sexp =
@@ -976,17 +976,16 @@ let install =
   let doc = install_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command installs one or more packages to the currently selected \
-        compiler. To install packages for another compiler, you need to switch \
-        compilers using $(b,opam switch). You can remove installed packages with \
-        $(b,opam remove), and list installed packages with $(b,opam list -i). \
-        See $(b,opam pin) as well to understand how to manage package versions.";
-    `P "This command makes OPAM use the dependency solver to compute the \
-        transitive closure of dependencies to be installed, and will also handle \
-        conflicts. If the dependency solver returns more than one \
-        solution, OPAM will arbitrarily select the first one. If dependencies \
-        are to be installed, OPAM will confirm if the installation should \
-        proceed.";
+    `P "This command installs one or more packages inside the currently \
+        selected switch (see $(b,opam switch)). Once installed, you can remove \
+        packages with $(b,opam remove), upgrade them with $(b,opam upgrade), \
+        and list them with $(b,opam list). See $(b,opam pin) as well to manage \
+        package versions.";
+    `P "All required dependencies of the selected packages will be installed \
+        first. Any already installed packages having dependencies, or optional \
+        dependencies to the changed packages will be recompiled. The proposed \
+        solution may also imply removing incompatible or conflicting \
+        packages.";
   ] in
   let add_to_roots =
     let root =
@@ -1061,7 +1060,7 @@ let remove =
   let force =
     mk_flag ["force"]
       "Execute the remove commands of given packages directly, even if they are \
-       not considered installed by OPAM." in
+       not considered installed by opam." in
   let remove global_options build_options autoremove force atoms =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1263,7 +1262,7 @@ let upgrade =
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
-let repository_doc = "Manage OPAM repositories."
+let repository_doc = "Manage opam repositories."
 let repository =
   let doc = repository_doc in
   let scope_section = "SCOPE SPECIFICATION" in
@@ -1789,7 +1788,7 @@ let pin ?(unpin_only=false) () =
      package description with a name. $(i,TARGET) can be replaced by \
      $(b,--dev-repo) if a package by that name is already known. If \
      $(i,TARGET) is $(b,-), the package is pinned as a virtual package, \
-     without any source. OPAM will infer the kind of pinning from the format \
+     without any source. opam will infer the kind of pinning from the format \
      (and contents, if local) of $(i,TARGET), Use $(b,--kind) or an explicit \
      URL to disable that behaviour.\n\
      Pins to version control systems may target a specific branch or commit \
@@ -1805,7 +1804,7 @@ let pin ?(unpin_only=false) () =
      currently pinned to that target.";
     "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to change the package \
-     definition that OPAM will locally use for package $(i,NAME), including \
+     definition that opam will locally use for package $(i,NAME), including \
      its version and source URL. Using the format $(b,NAME.VERSION) will \
      update the version in the opam file in advance of editing, without \
      changing the actual target. The chosen editor is determined from \
@@ -2043,7 +2042,7 @@ let pin ?(unpin_only=false) () =
   term_info "pin" ~doc ~man
 
 (* SOURCE *)
-let source_doc = "Get the source of an OPAM package."
+let source_doc = "Get the source of an opam package."
 let source =
   let doc = source_doc in
   let man = [
@@ -2733,10 +2732,10 @@ let build =
 
 (* HELP *)
 let help =
-  let doc = "Display help about OPAM and OPAM commands." in
+  let doc = "Display help about opam and opam commands." in
   let man = [
     `S "DESCRIPTION";
-    `P "Prints help about OPAM commands.";
+    `P "Prints help about opam commands.";
     `P "Use `$(mname) help topics' to get the full list of help topics.";
   ] in
   let topic =
@@ -2910,7 +2909,7 @@ let check_and_run_external_commands () =
                (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
              exit 1)
           else if
-            OpamConsole.confirm "OPAM plugin \"%s\" is not installed. \
+            OpamConsole.confirm "Opam plugin \"%s\" is not installed. \
                                  Install it on the current switch?"
               name
           then

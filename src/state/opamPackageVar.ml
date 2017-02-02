@@ -17,9 +17,9 @@ open OpamStateTypes
 (* Lists of defined variables, for documentation *)
 
 let global_variable_names = [
-  "opam-version",         "The currently running OPAM version";
+  "opam-version",         "The currently running opam version";
   "switch",               "The local name (alias) of the current switch";
-  "jobs",                 "The number of parallel jobs set up in OPAM \
+  "jobs",                 "The number of parallel jobs set up in opam \
                            configuration";
   "arch",                 "The current arch, as returned by \"uname -m\"";
   "root",                 "The current opam root directory";

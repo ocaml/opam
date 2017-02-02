@@ -213,7 +213,7 @@ let uninstall options =
 
 let options =
   let file =
-    let doc = "The OPAM .install file to read for installation instructions" in
+    let doc = "The opam .install file to read for installation instructions" in
     Arg.(value & pos 0 (some string) None & info ~docv:"PKG.install" ~doc [])
   in
   let prefix =
@@ -339,7 +339,7 @@ let command =
 
 let info =
   let doc = "Handles (un)installation of package files following instructions from \
-             OPAM *.install files." in
+             opam *.install files." in
   Term.info "opam-installer" ~version:OpamVersion.(to_string current) ~doc
 
 let () =

@@ -193,7 +193,7 @@ let help_sections = [
   `P "These options are common to all commands.";
 
   `S "ENVIRONMENT VARIABLES";
-  `P "OPAM makes use of the environment variables listed here. Boolean \
+  `P "Opam makes use of the environment variables listed here. Boolean \
       variables should be set to \"0\", \"no\", \"false\" or the empty  string \
       to disable, \"1\", \"yes\" or \"true\" to enable.";
 
@@ -251,7 +251,7 @@ let help_sections = [
   `P ("$(i,OPAMUTF8) use UTF8 characters in output \
        (one of "^Arg.doc_alts_enum when_enum^
       "). By default `auto', which is determined from the locale).");
-  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in OPAM \
+  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in opam \
       messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
       substituting `%{var}%` strings in `opam` files.";
@@ -665,7 +665,7 @@ let shell_opt =
     ] in
   mk_opt ["shell"] "SHELL"
     (Printf.sprintf
-       "Sets the configuration mode for OPAM environment appropriate for \
+       "Sets the configuration mode for opam environment appropriate for \
         $(docv). One of %s." (Arg.doc_alts_enum enum))
     (Arg.enum enum) (OpamStd.Sys.guess_shell_compat ())
 
@@ -810,7 +810,7 @@ let global_options =
   in
   let json_flag =
     mk_opt ~section ["json"] "FILENAME"
-      "Save the results of the OPAM run in a computer-readable file. If the \
+      "Save the results of the opam run in a computer-readable file. If the \
        filename contains the character `%', it will be replaced by an index \
        that doesn't overwrite an existing file. Similar to setting the \
        $(b,\\$OPAMJSON) variable."
@@ -895,9 +895,9 @@ let build_options =
       Arg.(list string) [] in
   let fake =
     mk_flag ~section ["fake"]
-      "This option registers the actions into the OPAM database, without \
+      "This option registers the actions into the opam database, without \
        actually performing them. \
-       WARNING: This option is dangerous and likely to break your OPAM \
+       WARNING: This option is dangerous and likely to break your opam \
        environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make

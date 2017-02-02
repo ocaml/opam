@@ -4,7 +4,7 @@ help () {
     echo -e "$@"
     echo
     cat <<EOF
-$0: prepare packages for distribution of OPAM
+$0: prepare packages for distribution of opam
 Options:
   full-archive	Build the inclusive source archive
   binary	Build a binary for your current platform

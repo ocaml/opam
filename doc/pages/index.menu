@@ -3,7 +3,7 @@
 # <string>.md -> A markdown page
 # empty <string> -> A menu divider
 #source: https://github.com/ocaml/opam/tree/master/doc/pages
-OPAM 2.0 DOCUMENTATION (work in progress)
+opam 2.0 DOCUMENTATION (work in progress)
 
 Install.md
 Usage.md
