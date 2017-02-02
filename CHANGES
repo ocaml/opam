@@ -2,6 +2,28 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0~beta
+* (*) New, by-hash package archive caching system
+* Simpler HTTP repository update
+* Allow specification of multiple checksums per file
+* Add `opam reinstall --pending`, to handle reinstallations of changed packages
+* Support for defining trust anchors and repository validation hooks (for use
+  with Conex)
+* (*) Added `opam install --working-dir`, removed "mixed mode" for pinned packages
+* Added `opam install --soft-request`, a non-failing "do what can be done"
+  install mode
+* Simplified, better conflict messages
+* Added `opam list --coinstallable-with PKG`
+* Added command `opam clean`
+* Added `opam upgrade --all PKGS`, to do a full upgrade while guaranteeing
+  `PKGS` are kept installed
+* Allow `&` in conflict version constraints, e.g. `conflicts: "foo" {>= "3" & <
+  "4"}`
+* Added an `opam admin` command, with various, better organised repository admin
+  commands, and remove the `opam-admin` tool
+* Added an `opam build` command, to handle `opam` files found in the current
+  directory
+
 2.0~alpha5
 * Merge stdout and stderr of child processes by default
 * Fixed regression on solver call times
