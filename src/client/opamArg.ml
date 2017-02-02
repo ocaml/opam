@@ -873,7 +873,7 @@ let build_options =
        This only affects packages listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMBUILDDOC) to \"true\"." in
   let make =
-    mk_opt ["m";"make"] "MAKE"
+    mk_opt ~section ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
   let show =
@@ -889,7 +889,7 @@ let build_options =
        disables that behaviour and will keep them to their version in cache."
   in
   let external_tags =
-    mk_opt ["e";"external"] "TAGS"
+    mk_opt ~section ["e";"external"] "TAGS"
       "Display the external packages associated to the given tags. \
        This is deprecated, use `opam list --external' instead"
       Arg.(list string) [] in

@@ -54,7 +54,7 @@ let index_command =
            file. This allows opam versions earlier than 2.0 to read that file, \
            and be properly redirected to a repository dedicated to their \
            version, assuming a suitable 'redirect:' field is defined, instead \
-           of failing.";
+           of failing. This is the default.";
       ])
   in
   let cmd global_options urls_txt =

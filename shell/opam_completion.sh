@@ -80,7 +80,7 @@ _opam()
           _opam_add name version package synopsis synopsis-or-target \
                     description installed-version pin source-hash \
                     opam-file all-installed-versions available-versions \
-                    all-versions repository installed-files vc-ref;;
+                    all-versions repository installed-files vc-ref depexts;;
       PACKAGE|PACKAGES|PKG|PATTERN|PATTERNS)
           _opam_add_f opam list --safe -A -s;;
       FLAG) _opam_add light-uninstall verbose plugin compiler conf;;
@@ -89,6 +89,12 @@ _opam()
       TAGS) ;;
       CRITERIA) ;;
       STRING) ;;
+      URL)
+          compgen_opt+=(-o filenames -d)
+          _opam_add "https://" "http://" "file://" \
+                    "git://" "git+file://" "git+ssh://" "git+https://" \
+                    "hg+file://" "hg+ssh://" "hg+https://" \
+                    "darcs+file://" "darcs+ssh://" "darcs+https://";;
       "")
   case "$cmd" in
       install|show|info|inst|ins|in|i|inf|sh)
