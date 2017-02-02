@@ -68,8 +68,3 @@ val pin: ?unpin_only:bool -> unit -> command
 
 (** opam help *)
 val help: command
-
-(** Create an alias for an existing command. [options] can be used to
-    add extra options after the original command in the doc. *)
-val make_command_alias:
-  unit Term.t * Term.info -> ?options:string -> string -> unit Term.t * Term.info

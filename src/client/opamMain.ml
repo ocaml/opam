@@ -308,7 +308,9 @@ let list ?(force_search=false) () =
           ~doc:"List only packages that are available on the current system";
         OpamListCommand.Installable, info ~docs ["installable"]
           ~doc:"List only packages that can be installed on the current switch \
-                (this calls the solver and may be more costly)";
+                (this calls the solver and may be more costly; a package \
+                depending on an unavailable package may be available, but is \
+                never installable)";
         OpamListCommand.Compiler, info ~docs ["base"]
           ~doc:"List only the immutable base of the current switch (i.e. \
                 compiler packages)";
@@ -2793,10 +2795,13 @@ let default =
       \    switch       %s\n\
       \    pin          %s\n\
       \    build        %s\n\
+      \    admin        %s\n\
        \n\
        See 'opam help <command>' for more information on a specific command.\n"
       init_doc list_doc show_doc install_doc remove_doc update_doc
-      upgrade_doc config_doc repository_doc switch_doc pin_doc build_doc in
+      upgrade_doc config_doc repository_doc switch_doc pin_doc build_doc
+      OpamAdminCommand.admin_command_doc
+  in
   Term.(pure usage $global_options),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
@@ -2804,23 +2809,12 @@ let default =
     ~doc
     ~man
 
-let make_command_alias cmd ?(options="") name =
-  let term, info = cmd in
-  let orig = Term.name info in
-  let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
-  let man = [
-    `S "DESCRIPTION";
-    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
-          name orig options);
-    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
-          orig);
-    `S "OPTIONS";
-  ] @ help_sections
-  in
-  term,
-  Term.info name
-    ~docs:"COMMAND ALIASES"
-    ~doc ~man
+let admin =
+  let doc = "Use 'opam admin' instead (abbreviation not supported)" in
+  Term.(ret (pure (`Error (true, doc)))),
+  Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
+    ~man:[`S "SYNOPSIS";
+          `P doc]
 
 let commands = [
   init;
@@ -2839,6 +2833,7 @@ let commands = [
   lint;
   clean;
   build;
+  admin;
   help;
 ]
 
@@ -2946,7 +2941,22 @@ let run default commands =
   OpamSystem.init ();
   try
     check_and_run_external_commands ();
-    match Term.eval_choice ~catch:false default commands with
+    let admin, argv1 =
+      if Array.length Sys.argv > 1 && Sys.argv.(1) = "admin" then
+        true,
+        Array.init (Array.length Sys.argv - 1) (function
+            | 0 -> Sys.argv.(0)
+            | i -> Sys.argv.(i+1))
+      else false, Sys.argv
+    in
+    let eval () =
+      if admin then
+        Term.eval_choice ~catch:false ~argv:argv1
+          OpamAdminCommand.default_subcommand OpamAdminCommand.admin_subcommands
+      else
+        Term.eval_choice ~catch:false ~argv:argv1 default commands
+    in
+    match eval () with
     | `Error _ -> exit 1
     | _        -> exit 0
   with

@@ -63,11 +63,11 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
       "--exclude"; "_darcs";
       "--exclude"; ".hg";
       "--exclude"; ".#*";
-      "--exclude"; OpamSwitch.external_dirname;
+      "--exclude"; OpamSwitch.external_dirname ^ "*";
     ]
     else [
       "--exclude"; ".#*";
-      "--exclude"; OpamSwitch.external_dirname;
+      "--exclude"; OpamSwitch.external_dirname ^ "*";
     ]
   in
   if not(remote || Sys.file_exists src) then

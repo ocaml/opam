@@ -7,11 +7,8 @@ BINDIR = $(dir $(OPAM))
 SRCDIR = $(sort $(foreach x,$(wildcard ../src/*/*),$(dir $x)))
 
 TOPICS  = $(shell $(OPAM) help topics)
+TOPICS_ADMIN = cache filter index lint list upgrade
 
-ifndef OPAM_ADMIN
-  OPAM_ADMIN = $(BINDIR)/opam-admin
-endif
-TOPICS_ADMIN = check depexts make rename stats
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
@@ -36,9 +33,9 @@ man:
 	for i in $(TOPICS); do\
 	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1;\
 	done
-	$(OPAM_ADMIN) $(HELPFMT) > man/opam-admin.1
+	$(OPAM) admin $(HELPFMT) > man/opam-admin.1
 	for i in $(TOPICS_ADMIN); do\
-	  $(OPAM_ADMIN) $$i $(HELPFMT) > man/opam-admin-$$i.1;\
+	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1;\
 	done
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
 

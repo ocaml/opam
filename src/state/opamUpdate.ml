@@ -101,7 +101,7 @@ let repository gt repo =
      OpamVersion.(compare (major repo_vers) (major current)) < 0 then
     OpamConsole.warning
       "Repository '%s' is in opam %s format, it may not operate as expected \
-       unless converted (see 'opam-admin upgrade-format')"
+       unless converted (see 'opam admin upgrade --help')"
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_vers);
   let opams = OpamRepositoryState.load_repo_opams repo in

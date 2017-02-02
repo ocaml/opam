@@ -145,6 +145,8 @@ val dirname: dirname Arg.converter
 val existing_filename_dirname_or_dash:
   OpamFilename.generic_file option Arg.converter
 
+val positive_integer: int Arg.converter
+
 (** Package name converter *)
 val package_name: name Arg.converter
 
@@ -185,6 +187,13 @@ val mk_subcommands_with_default:
   'a default subcommands -> 'a option Term.t * string list Term.t
 (** Same as {!mk_subcommand} but use the default value if no
     sub-command is selected. *)
+
+val make_command_alias:
+  'a Term.t * Term.info -> ?options:string -> string ->
+  'a Term.t * Term.info
+(** Create an alias for an existing command. [options] can be used to add extra
+    options after the original command in the doc (eg like `unpin` is an alias
+    for `pin remove`). *)
 
 val bad_subcommand:
   'a default subcommands -> (string * 'a option * string list) -> 'b Term.ret

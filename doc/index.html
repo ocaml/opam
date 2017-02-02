@@ -230,10 +230,10 @@ td.sublib {
 
 <tr><th><a href="ocamldoc/OpamClientConfig.html">opamClientConfig.ml</a></th>
   <td>Configuration options for this lib (record, global reference, setter, initialisation), plus helper for global setup</td></tr>
-<tr><th><a href="ocamldoc/OpamSolution.html">opamSolution.ml</a></th>
-  <td>Interface with the solver, processing of full solutions through actions</td></tr>
 <tr><th><a href="ocamldoc/OpamAction.html">opamAction.ml</a></th>
   <td>Handles concrete actions on packages, like installations and removals</td></tr>
+<tr><th><a href="ocamldoc/OpamSolution.html">opamSolution.ml</a></th>
+  <td>Interface with the solver, processing of full solutions through actions</td></tr>
 <tr><th><a href="ocamldoc/OpamConfigCommand.html">opamConfigCommand.ml</a></th>
   <td>Functions for the "opam config" subcommand</td></tr>
 <tr><th><a href="ocamldoc/OpamPinCommand.html">opamPinCommand.ml</a></th>
@@ -244,13 +244,20 @@ td.sublib {
   <td>Functions for the "opam switch" subcommand</td></tr>
 <tr><th><a href="ocamldoc/OpamListCommand.html">opamListCommand.ml</a></th>
   <td>Functions for the "opam list" subcommand</td></tr>
+<tr><th><a href="ocamldoc/OpamInitDefaults.html">opamInitDefaults.ml</a></th>
+  <td>Defines the built-in "opamrc" to use by default on "opam init"</td></tr>
 <tr><th><a href="ocamldoc/OpamClient.html">opamClient.ml</a></th>
   <td>High-level execution of the main user commands ("install", "upgrade",
   "remove"), and wrapper for Pin commands</td></tr>
+<tr><th><a href="ocamldoc/OpamAdminRepoUpgrade.html">opamAdminRepoUpgrade.ml</a></th>
+  <td>Handles converting package repositories from the format of older opam
+  versions to the current format</td></tr>
 <tr><th><a href="ocamldoc/OpamGitVersion.html">opamGitVersion.mli</a></th>
   <td>(generated) Current git version of OPAM</td></tr>
 <tr><th><a href="ocamldoc/OpamArg.html">opamArg.ml</a></th>
   <td>Command-line argument parsers and helpers</td></tr>
+<tr><th><a href="ocamldoc/OpamAdminCommand.html">opamAdminCommand.ml</a></th>
+  <td>All sub-commands of the "opam admin" command</td></tr>
 
 <tr><td colspan="2" class="sublib">Main opam CLI</td></tr>
 <tr><th><a href="ocamldoc/OpamMain.html">opamMain.ml</a></th>
@@ -261,24 +268,7 @@ td.sublib {
   <td>Extra tools and utilities</td>
 </tr>
 
-<tr><td colspan="2" class="sublib">opam-admin tool</td></tr>
-
-<tr><th><a href="ocamldoc/Opam_mk_repo.html">opam_mk_repo.ml</a></th>
-  <td>Repo index and archives generation</td></tr>
-<tr><th><a href="ocamldoc/Opam_depexts_change.html">opam_depexts_change.ml</a></th>
-  <td>Operation on external dependencies in a repo</td></tr>
-<tr><th><a href="ocamldoc/Opam_findlib.html">opam_findlib.ml</a></th>
-  <td>Automatically add some findlib information to a repo</td></tr>
-<tr><th><a href="ocamldoc/Opam_rename.html">opam_rename.ml</a></th>
-  <td>Package renaming</td></tr>
-<tr><th><a href="ocamldoc/Opam_stats.html">opam_stats.ml</a></th>
-  <td>Repo stats & graphs generation</td></tr>
-<tr><th><a href="ocamldoc/Opam_repo_check.html">opam_repo_check.ml</a></th>
-  <td>Check the repo for errors</td></tr>
-<tr><th><a href="ocamldoc/Opam_admin.html">opam_admin.ml</a></th>
-  <td>Source of the opam-admin tool, main</td></tr>
-
-<tr><td colspan="2" class="sublib">other stand-alone tools</td></tr>
+<tr><td colspan="2" class="sublib">Auxiliary standalone tools</td></tr>
 
 <tr><th><a href="ocamldoc/Opam_admin_top.html">opam_admin_top.ml</a></th>
   <td>Tiny library for admin-scripts, included in opam-admin.top</td></tr>

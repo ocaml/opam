@@ -1,12 +1,12 @@
 -include Makefile.config
 
-all: opam-lib opam opam-admin opam-installer
+all: opam-lib opam opam-installer
 	@
 
 ALWAYS:
 	@
 
-opam-lib opam opam-admin opam-installer all: ALWAYS
+opam-lib opam opam-installer all: ALWAYS
 
 #backwards-compat
 compile with-ocamlbuild: all
@@ -65,7 +65,6 @@ opam-%.install: ALWAYS
 opam.install:
 	@echo 'bin: [' >$@
 	@echo '  "src/opam"' >>$@
-	@echo '  "src/opam-admin"' >>$@
 	@echo '  "src/opam-installer"' >>$@
 	@echo ']' >>$@
 	@echo 'man: [' >>$@
@@ -81,7 +80,6 @@ opam.install:
 opam-devel.install:
 	@echo 'libexec: [' >$@
 	@echo '  "_obuild/opam/opam.asm" {"opam"}' >>$@
-	@echo '  "_obuild/opam-admin/opam-admin.asm" {"opam-admin"}' >>$@
 	@echo '  "_obuild/opam-installer/opam-installer.asm" {"opam-installer"}' >>$@
 	@echo ']' >>$@
 
@@ -121,7 +119,7 @@ doc: all
 	$(MAKE) -C doc
 
 .PHONY: man man-html
-man man-html: opam opam-admin opam-installer
+man man-html: opam opam-installer
 	$(MAKE) -C doc $@
 
 configure: configure.ac m4/*.m4
@@ -141,7 +139,7 @@ $(OPAM_FULL).tar.gz:
 	ln -s .
 
 fastlink:
-	@$(foreach b,opam opam-admin opam-installer opam-check,\
+	@$(foreach b,opam opam-installer opam-check,\
 	   ln -sf ../_obuild/$b/$b.asm src/$b;)
 	@$(foreach l,core format solver repository state client,\
 	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
@@ -154,7 +152,7 @@ fastlink:
 	       ln -sf ../../$f src/tools/;))
 
 rmartefacts: ALWAYS
-	@rm -f $(addprefix src/, opam opam-admin opam-installer opam-check)
+	@rm -f $(addprefix src/, opam opam-installer opam-check)
 	@$(foreach l,core format solver repository state client,\
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
