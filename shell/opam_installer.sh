@@ -15,7 +15,7 @@ cat <<EOF
 Usage:
     ./opam_install BINDIR [COMP]
 
-    Download and installs the latest binary version of OPAM
+    Download and installs the latest binary version of opam
 
     BINDIR is the directory where it should be installed, e.g. /usr/local/bin
     (it should be in your PATH).
@@ -57,7 +57,7 @@ getopam() {
 }
 
 if [ $# -lt 1 ] || [ $# -gt 2 ] || [ "${1#-}" != "$1" ]; then
-    echo "OPAM binary installer v. $VERSION"
+    echo "opam binary installer v. $VERSION"
     usage
 fi
 
@@ -66,7 +66,7 @@ COMP=${2:-$default_ocaml}
 
 file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 
-echo Downloading OPAM...
+echo Downloading opam...
 getopam "https://github.com/ocaml/opam/releases/download/$VERSION" $file
 
 mkdir -p "$BINDIR" 2>/dev/null || true
@@ -81,14 +81,14 @@ rm -f $TMP/$file
 
 OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then
-    echo "WARNING: you have a different version of OPAM installed at $OPAM"
+    echo "WARNING: you have a different version of opam installed at $OPAM"
     echo "It is highly recommended that you remove it."
     read -p "[press enter to continue]" x
     OPAM="$BINDIR/opam"
 fi
 
 if [ "$(id -u)" = "0" ]; then
-    echo "Running as super-user: not running OPAM initialization."
+    echo "Running as super-user: not running opam initialization."
     echo "You'll want to run \"$OPAM init --comp $COMP\" as user"
 else
     echo "Initializing with compiler $COMP"

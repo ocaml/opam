@@ -520,7 +520,7 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
             ~input:"$in" ~output:"$out" ~criteria
      with
      | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
-     | None -> Printf.fprintf oc "#internal OPAM solver\n");
+     | None -> Printf.fprintf oc "#internal opam solver\n");
     Cudf_printer.pp_cudf oc cudf;
     OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
       let name = OpamPackage.name_to_string pkg in

@@ -37,7 +37,7 @@ AC_PROG_FINDLIB
 
 AC_ARG_ENABLE([certificate_check],
   AS_HELP_STRING([--disable-certificate-check],
-                 [Do not check the certificate of OPAM's dependency archives])
+                 [Do not check the certificate of opam's dependency archives])
 )
 
 AS_IF([test "x${enable_certificate_check}" = "xno"], [

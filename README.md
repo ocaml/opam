@@ -1,10 +1,10 @@
-# OPAM - A package manager for OCaml
+# opam - A package manager for OCaml
 
-OPAM is a source-based package manager for OCaml. It supports multiple simultaneous
+Opam is a source-based package manager for OCaml. It supports multiple simultaneous
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
-OPAM was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
+Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
 
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
@@ -35,7 +35,7 @@ it as a second step.
 
 ## Compiling without OCaml
 
-`make cold` is provided as a facility to compile OCaml, then bootstrap OPAM.
+`make cold` is provided as a facility to compile OCaml, then bootstrap opam.
 You don't need need to run `./configure` in that case, but
 you may specify `CONFIGURE_ARGS` if needed, e.g.:
 
@@ -56,7 +56,7 @@ details that may help track down the issue.
 
 #### User Manual
 
-The main documentation entry point to OPAM is the user manual,
+The main documentation entry point to opam is the user manual,
 available using `opam --help`. To get help for a specific command, use
 `opam <command> --help`.
 
@@ -68,7 +68,7 @@ files in [doc/pages](https://github.com/ocaml/opam/tree/master/doc/pages).
 
 #### API, Code Documentation and Developer Manual
 
-A more thorough technical document describing OPAM and specifying the package
+A more thorough technical document describing opam and specifying the package
 description format is available in the
 [developer manual](http://opam.ocaml.org/doc/manual/dev-manual.html). `make
 doc` will otherwise make the API documentation available under `doc/`.
@@ -80,13 +80,13 @@ Keep track of development and community news.
 * Have a question that's not a feature request or bug report?
   [Ask on the mailing list](http://lists.ocaml.org/listinfo/infrastructure).
 
-* Chat with fellow OPAMers on IRC. On the `irc.freenode.net` server,
+* Chat with fellow opamers on IRC. On the `irc.freenode.net` server,
   in the `#ocaml` or the `#opam` channel.
 
 ## Contributing
 
 We welcome contributions ! Please use Github's pull-request mechanism against
-the master branch of the [OPAM repository](https://github.com/ocaml/opam). If
+the master branch of the [opam repository](https://github.com/ocaml/opam). If
 that's not an option for you, you can use `git format-patch` and email us.
 
 ## Versioning
@@ -96,15 +96,15 @@ The release cycle respects [Semantic Versioning](http://semver.org/).
 ## Related repositories
 
 - [ocaml/opam-repository](https://github.com/ocaml/opam-repository) is the
-  official repository for OPAM packages and compilers. A number of non-official
+  official repository for opam packages and compilers. A number of non-official
   repositories are also available on the interwebs, for instance on
   [Github](https://github.com/search?q=opam-repo&type=Repositories).
 - [opam2web](https://github.com/ocaml/opam2web) generates a collection of
   browsable HTML files for a given repository. It is used to generate
   http://opam.ocaml.org.
-- [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for OPAM.
+- [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for opam.
 - [opam-publish](https://github.com/AltGr/opam-publish) is a tool to facilitate
-  the creation, update and publication of OPAM packages.
+  the creation, update and publication of opam packages.
 
 ## Copyright and license
 
@@ -118,11 +118,11 @@ All other code is:
 Copyright 2012-2016 OCamlPro
 Copyright 2012 INRIA
 
-All rights reserved. OPAM is distributed under the terms of the GNU Lesser
+All rights reserved. Opam is distributed under the terms of the GNU Lesser
 General Public License version 2.1, with the special exception on linking
 described in the file LICENSE.
 
-OPAM is distributed in the hope that it will be useful, but WITHOUT ANY
+Opam is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
 

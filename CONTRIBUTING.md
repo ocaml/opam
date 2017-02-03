@@ -1,4 +1,4 @@
-Bug reports and feature requests for **the OPAM tool** should be reported on:
+Bug reports and feature requests for **the opam tool** should be reported on:
 
 * http://github.com/ocaml/opam/issues
   (please include the output of `opam config report` whenever possible)

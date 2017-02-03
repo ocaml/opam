@@ -1306,7 +1306,7 @@ Optional Features:
   --disable-checks        Assume OCaml dependencies are OK without checking
 
   --disable-certificate-check
-                          Do not check the certificate of OPAM's dependency
+                          Do not check the certificate of opam's dependency
                           archives
 
 

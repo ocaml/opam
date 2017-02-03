@@ -346,7 +346,7 @@ let slog = OpamConsole.slog
             (OpamStd.Format.itemize (fun x -> x) chains);
         if OpamCudf.external_solver_available () then
           OpamConsole.errmsg
-            "\nYou may run \"opam upgrade --fixup\" to let OPAM fix the \
+            "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
              current state.\n"
       end;
       OpamStd.Sys.exit 3
@@ -612,7 +612,7 @@ let slog = OpamConsole.slog
 
     let gt, rt, default_compiler =
     if OpamFile.exists config_f then (
-      OpamConsole.msg "OPAM has already been initialized.\n";
+      OpamConsole.msg "Opam has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
       gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
     ) else (
@@ -689,7 +689,7 @@ let slog = OpamConsole.slog
          | missing ->
            OpamConsole.error_and_exit
              "Missing dependencies -- \
-              the following commands are required for OPAM to operate:\n%s"
+              the following commands are required for opam to operate:\n%s"
              (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
                 missing)));
 

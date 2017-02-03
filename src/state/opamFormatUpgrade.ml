@@ -835,7 +835,7 @@ let as_necessary global_lock root config =
   else if cmp < 0 then
     if OpamFormatConfig.(!r.skip_version_checks) then config else
       OpamConsole.error_and_exit
-        "%s reports a newer OPAM version, aborting."
+        "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
   if OpamVersion.compare config_version latest_version >= 0 then config else
