@@ -820,11 +820,21 @@ let from_2_0_alpha3_to_2_0_beta root conf =
       OpamFilename.rmdir packages_dev_dir;
     )
     (OpamFile.Config.installed_switches conf);
+  (if OpamFile.Config.default_compiler conf <> Empty then conf
+   else
+     OpamFile.Config.with_default_compiler
+       (OpamFormula.ors [
+           OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
+                             OpamFormula.Atom
+                               (`Geq, OpamPackage.Version.of_string "4.01.0"));
+           OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
+                             OpamFormula.Empty);
+         ])
+       conf) |>
   OpamFile.Config.with_eval_variables
     ((OpamVariable.of_string "arch", ["uname"; "-m"],
       "Host architecture, as returned by 'uname -m'")
      :: OpamFile.Config.eval_variables conf)
-    conf
 
 let latest_version = v2_0_beta
 
