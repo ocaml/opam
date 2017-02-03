@@ -2593,6 +2593,14 @@ let build =
              (OpamFilename.(remove_prefix (cwd ())
                               (OpamFile.filename file))))
           opam_files);
+    let local_opams =
+      List.fold_left (fun opams (nv, _, opam) ->
+          OpamPackage.Map.add nv opam opams)
+        OpamPackage.Map.empty opam_files
+    in
+    let local_packages =
+      OpamPackage.keys local_opams
+    in
     let st =
       if no_autoinit then
         (if OpamFilename.exists_dir OpamStateConfig.(!r.root_dir) then
@@ -2642,12 +2650,39 @@ let build =
           OpamSwitchState.load `Lock_write gt rt switch, gt
         else
           OpamGlobalState.with_write_lock gt @@ fun gt ->
-          let packages = match compiler with
-            | Some atoms -> atoms
+          let coinstallable_packages =
+            let virt_st = OpamSwitchState.load_virtual gt rt in
+            let universe =
+              OpamSwitchState.universe virt_st
+                ~requested:(OpamPackage.names_of_packages local_packages)
+                Depends
+            in
+            let universe = { universe with u_base = local_packages } in
+            (* we could compute available packages (using global variables), but
+               choose not to *)
+            OpamSolver.installable universe
+          in
+          let check_coinstallable_atoms atoms =
+            List.for_all (fun (name, _ as atom) ->
+                OpamPackage.Set.exists (fun nv -> OpamFormula.check atom nv)
+                  (OpamPackage.packages_of_name coinstallable_packages name))
+              atoms
+          in
+          let default_compiler =
+            OpamFile.Config.default_compiler gt.config
+          in
+          let compiler_atoms = match compiler with
+            | Some atoms ->
+              if check_coinstallable_atoms atoms then atoms else
+                (OpamConsole.error
+                   "The specified compiler is not compatible with the local \
+                    packages.";
+                 if OpamConsole.confirm "Install anyway ?" then atoms
+                 else OpamStd.Sys.exit 66)
+            | None when default_compiler = Empty ->
+              OpamConsole.warning "No compiler selected";
+              []
             | None ->
-              let default_compiler =
-                OpamFile.Config.default_compiler gt.config
-              in
               let candidates = OpamFormula.to_dnf default_compiler in
               let all_compilers = OpamSwitchCommand.get_compiler_packages rt in
               try
@@ -2656,26 +2691,30 @@ let build =
                     let pkgs =
                       OpamFormula.packages_of_atoms all_compilers atoms
                     in
-                    List.for_all (OpamPackage.has_name pkgs) names)
+                    List.for_all (OpamPackage.has_name pkgs) names &&
+                    check_coinstallable_atoms atoms)
                   candidates
-              with Not_found -> []
+              with Not_found ->
+                OpamConsole.warning
+                  "The default compiler selection: %s\n\
+                   is not compatible with the local packages found.\n\
+                   You can use `--compiler` to select a different compiler."
+                  (OpamFormula.to_string default_compiler);
+                if OpamConsole.confirm
+                    "Continue anyway with no compiler selected ?"
+                then []
+                else OpamStd.Sys.exit 66
           in
-          OpamConsole.msg "Initialising switch %s"
-            (OpamSwitch.to_string switch);
+          OpamConsole.msg "Initialising switch %s with compiler %s\n"
+            (OpamSwitch.to_string switch)
+            (OpamFormula.string_of_atoms compiler_atoms);
           let gt, st =
-            OpamSwitchCommand.install gt ~update_config:false ~packages switch
+            OpamSwitchCommand.install
+              gt ~update_config:false ~packages:compiler_atoms switch
           in
           st, gt
       in
       st
-    in
-    let local_opams =
-      List.fold_left (fun opams (nv, _, opam) ->
-          OpamPackage.Map.add nv opam opams)
-        OpamPackage.Map.empty opam_files
-    in
-    let local_packages =
-      OpamPackage.keys local_opams
     in
     let st =
       { st with
