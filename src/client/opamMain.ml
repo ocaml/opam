@@ -1519,7 +1519,47 @@ let repository =
           $print_short_flag $scope $rank $params),
   term_info "repository" ~doc ~man
 
+
 (* SWITCH *)
+
+(* From a list of strings (either "repo_name" or "repo_name=URL"), configure the
+   repos with URLs if possible, and return the updated repos_state and selection of
+   repositories *)
+let get_repos_rt gt repos =
+  OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+  match repos with
+  | None -> None, rt
+  | Some repos ->
+    let repos =
+      List.map (fun s ->
+          match OpamStd.String.cut_at s '=' with
+          | None -> OpamRepositoryName.of_string s, None
+          | Some (name, url) -> OpamRepositoryName.of_string name, Some url)
+        repos
+    in
+    let new_defs =
+      OpamStd.List.filter_map (function
+          | (_, None) -> None
+          | (n, Some u) -> Some (n, OpamUrl.of_string u))
+        repos
+    in
+    if List.for_all
+        (fun (name,url) ->
+           match OpamRepositoryName.Map.find_opt name rt.repositories with
+           | Some r -> r.repo_url = url
+           | None -> false)
+        new_defs
+    then
+      Some (List.map fst repos), rt
+    else
+      OpamRepositoryState.with_write_lock rt @@ fun rt ->
+      Some (List.map fst repos),
+      List.fold_left (fun rt (name, url) ->
+          OpamConsole.msg "Creating repository %s...\n"
+            (OpamRepositoryName.to_string name);
+          OpamRepositoryCommand.add rt name url None)
+        rt new_defs
+
 let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
@@ -1621,41 +1661,6 @@ let switch =
       | None, true -> Some []
       | packages, _ -> packages
     in
-    let get_repos_rt gt =
-      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      match repos with
-      | None -> None, rt
-      | Some repos ->
-        let repos =
-          List.map (fun s ->
-              match OpamStd.String.cut_at s '=' with
-              | None -> OpamRepositoryName.of_string s, None
-              | Some (name, url) -> OpamRepositoryName.of_string name, Some url)
-            repos
-        in
-        let new_defs =
-          OpamStd.List.filter_map (function
-              | (_, None) -> None
-              | (n, Some u) -> Some (n, OpamUrl.of_string u))
-            repos
-        in
-        if List.for_all
-            (fun (name,url) ->
-               match OpamRepositoryName.Map.find_opt name rt.repositories with
-               | Some r -> r.repo_url = url
-               | None -> false)
-            new_defs
-        then
-          Some (List.map fst repos), rt
-        else
-          OpamRepositoryState.with_write_lock rt @@ fun rt ->
-          Some (List.map fst repos),
-          List.fold_left (fun rt (name, url) ->
-              OpamConsole.msg "Creating repository %s...\n"
-                (OpamRepositoryName.to_string name);
-              OpamRepositoryCommand.add rt name url None)
-            rt new_defs
-    in
     let compiler_packages rt ?repos switch compiler_opt =
       match packages, compiler_opt with
       | None, None -> OpamSwitchCommand.guess_compiler_package ?repos rt switch
@@ -1679,7 +1684,7 @@ let switch =
       `Ok ()
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let repos, rt = get_repos_rt gt in
+      let repos, rt = get_repos_rt gt repos in
       let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let filters =
@@ -1716,7 +1721,7 @@ let switch =
       `Ok ()
     | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let repos, rt = get_repos_rt gt in
+      let repos, rt = get_repos_rt gt repos in
       let packages = compiler_packages rt ?repos switch (param_compiler params) in
       let _gt, st =
         OpamSwitchCommand.install gt ~rt
@@ -1739,7 +1744,7 @@ let switch =
       let is_new_switch = not (List.mem switch installed_switches) in
       let gt, rt =
         if is_new_switch then
-          let repos, rt = get_repos_rt gt in
+          let repos, rt = get_repos_rt gt repos in
           let (), gt =
             OpamGlobalState.with_write_lock gt @@ fun gt ->
             (), OpamSwitchAction.create_empty_switch gt ?repos switch
@@ -2519,6 +2524,19 @@ let build =
         behaviour.";
     (* Note: handle a local 'opamrc' -- or a variant thereof for switches ? *)
   ] in
+  let repos =
+    mk_opt ["repositories"] "REPOS"
+      "When creating a new switch, use the given selection of repositories \
+       instead of the default. $(i,REPOS) should be a comma-separated list of \
+       either already registered repository names (configured through e.g. \
+       $(i,opam repository add --dont-select)), or $(b,NAME)=$(b,URL) \
+       bindings, in which case $(b,NAME) should not be registered already to a \
+       different URL, and the new repository will be registered. See $(i,opam \
+       repository) for more details. If the switch already exists, and it is \
+       local ($(i,./)), its repositories are reset. The argument is otherwise \
+       ignored."
+      Arg.(some (list string)) None
+  in
   let deps_only =
     mk_flag ["deps-only"]
       "Build all dependencies, but not the local packages themselves."
@@ -2553,7 +2571,7 @@ let build =
       "Set the compiler to install when creating an adhoc switch."
       Arg.(some (list atom)) None
   in
-  let build global_options build_options deps_only
+  let build global_options build_options repos deps_only
       install_prefix uninstall_prefix no_autoinit compiler opam_files =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -2645,25 +2663,47 @@ let build =
     let local_packages =
       OpamPackage.keys local_opams
     in
+    let local_switch = OpamSwitch.of_dirname (OpamFilename.cwd ()) in
+    let switch =
+      match OpamStateConfig.(!r.current_switch, !r.switch_from) with
+      | None, _ | Some _, `Default -> local_switch
+      | Some sw, (`Command_line | `Env) -> sw
+    in
+    let get_st gt ?rt_opt = function
+      | None ->
+        let rt = match rt_opt with
+          | Some rt -> rt
+          | None -> OpamRepositoryState.load `Lock_none gt
+        in
+        OpamSwitchState.load `Lock_write gt rt switch
+      | Some repos ->
+        if switch = local_switch then
+          let repos, rt = get_repos_rt gt (Some repos) in
+          OpamStd.Option.iter (fun r ->
+              OpamSwitchState.update_repositories gt (fun _ -> r) switch)
+            repos;
+          OpamSwitchState.load `Lock_write gt rt switch
+        else
+          (OpamConsole.warning
+             "Switch exists and is not './', ignoring '--repositories' \
+              argument.";
+           let rt = OpamRepositoryState.load `Lock_none gt in
+           OpamSwitchState.load `Lock_write gt rt switch)
+    in
     let st =
       if no_autoinit then
         (if OpamFilename.exists_dir OpamStateConfig.(!r.root_dir) then
            let gt = OpamGlobalState.load `Lock_none in
-           let rt = OpamRepositoryState.load `Lock_none gt in
-           OpamSwitchState.load `Lock_write gt rt
-             (OpamStateConfig.get_switch ())
+           get_st gt repos
          else
            OpamConsole.error_and_exit
              "Opam doesn't seem to have been initialised at %s, and \
               `--no-autoinit` was specified."
              (OpamFilename.Dir.to_string OpamStateConfig.(!r.root_dir)))
       else
-      let gt, rt =
+      let gt, rt_opt =
         if OpamFile.exists (OpamPath.config OpamStateConfig.(!r.root_dir))
-        then
-          let gt = OpamGlobalState.load `Lock_none in
-          let rt = OpamRepositoryState.load `Lock_none gt in
-          gt, rt
+        then OpamGlobalState.load `Lock_none, None
         else
         let init_config =
           OpamStd.Option.map OpamFile.InitConfig.read
@@ -2676,13 +2716,7 @@ let build =
              `bash (OpamFilename.of_string "~/.profile") (* ignored args *)
              `no
          in
-         (gt :> unlocked global_state), rt)
-      in
-      let local_switch = OpamSwitch.of_dirname (OpamFilename.cwd ()) in
-      let switch =
-        match OpamStateConfig.(!r.current_switch, !r.switch_from) with
-        | None, _ | Some _, `Default -> local_switch
-        | Some sw, (`Command_line | `Env) -> sw
+         (gt :> unlocked global_state), Some rt)
       in
       let switch_pfx = OpamSwitch.get_root gt.root switch in
       let st, _gt =
@@ -2691,11 +2725,14 @@ let build =
           OpamFilename.exists_dir switch_pfx
         then
           let gt = OpamGlobalState.unlock gt in
-          OpamSwitchState.load `Lock_write gt rt switch, gt
+          get_st gt ?rt_opt repos, gt
         else
+          let repos, rt = get_repos_rt gt repos in
           OpamGlobalState.with_write_lock gt @@ fun gt ->
           let coinstallable_packages =
-            let virt_st = OpamSwitchState.load_virtual gt rt in
+            let virt_st =
+              OpamSwitchState.load_virtual ?repos_list:repos gt rt
+            in
             let universe =
               OpamSwitchState.universe virt_st
                 ~requested:(OpamPackage.names_of_packages local_packages)
@@ -2754,7 +2791,7 @@ let build =
             (OpamFormula.string_of_atoms compiler_atoms);
           let gt, st =
             OpamSwitchCommand.install
-              gt ~update_config:false ~packages:compiler_atoms switch
+              gt ~update_config:false ~packages:compiler_atoms ?repos switch
           in
           st, gt
       in
@@ -2810,7 +2847,7 @@ let build =
             | _ -> ())
           (gather_changes ())
   in
-  Term.(pure build $global_options $build_options $deps_only
+  Term.(pure build $global_options $build_options $repos $deps_only
         $install_prefix $uninstall_prefix $no_autoinit $compiler $opam_files),
   term_info "build" ~doc ~man
 
