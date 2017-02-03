@@ -83,7 +83,8 @@ let fetch_from_cache =
     let url = cache_url root_cache_url checksum in
     match url.OpamUrl.backend with
     | `http ->
-      OpamDownload.download_as ~validate:false ~overwrite:true ~checksum
+      OpamDownload.download_as
+        ~quiet:true ~validate:false ~overwrite:true ~checksum
         url file
     | `rsync ->
       (OpamLocal.rsync_file url file @@| function
