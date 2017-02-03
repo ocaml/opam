@@ -59,11 +59,13 @@ let add rt name url trust_anchors =
       (OpamRepositoryName.Map.find name) rt.repositories
   in
   match repo_exists with
-  | Some r when r.repo_url = url && trust_anchors = r.repo_trust -> rt
+  | Some r when r.repo_url = url &&
+                (trust_anchors = r.repo_trust || trust_anchors = None)
+    -> rt
   | Some r ->
     OpamConsole.error_and_exit
-      "Repository %s is already set up %s. Maybe you meant \
-       'opam repository set-url' ?"
+      "Repository %s is already set up %s. To change that, use 'opam \
+       repository set-url'."
       (OpamRepositoryName.to_string name)
       (if r.repo_url <> url then
          "and points to "^OpamUrl.to_string r.repo_url

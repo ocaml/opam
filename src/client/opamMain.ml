@@ -236,9 +236,9 @@ let init =
          let packages =
            OpamSwitchCommand.guess_compiler_package rt comp
          in
-         OpamSwitchCommand.switch_with_autoinstall
-           gt ~packages (OpamSwitch.of_string comp)
-      |> ignore
+         OpamSwitchCommand.install
+           gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
+         |> ignore
       | None ->
          let candidates = OpamFormula.to_dnf default_compiler in
          let all_packages = OpamSwitchCommand.get_compiler_packages rt in
@@ -253,14 +253,15 @@ let init =
          in
          match compiler_packages with
          | Some packages ->
-            OpamSwitchCommand.switch_with_autoinstall
-              gt ~packages (OpamSwitch.of_string "default")
-         |> ignore
+            OpamSwitchCommand.install
+              gt ~rt ~packages ~update_config:true
+              (OpamSwitch.of_string "default")
+            |> ignore
          | None ->
             OpamConsole.note
               "No compiler selected, and no available default switch found: \
-             no switch has been created.\n\
-             Use 'opam switch create <compiler>' to get started."
+               no switch has been created.\n\
+               Use 'opam switch create <compiler>' to get started."
   in
   Term.(pure init
           $global_options $build_options $repo_kind_flag $repo_name $repo_url
@@ -1594,11 +1595,14 @@ let switch =
   let repos =
     mk_opt ["repositories"] "REPOS"
       "When creating a new switch, use the given selection of repositories \
-       instead of the default. You can configure new repositories in advance \
-       using $(i,opam repository add --dont-select) and then create a switch \
-       using them with this option. See $(i,opam repository) for more \
-       details. This option also affects $(i,list-available)."
-      Arg.(some (list repository_name)) None
+       instead of the default. $(i,REPOS) should be a comma-separated list of \
+       either already registered repository names (configured through e.g. \
+       $(i,opam repository add --dont-select)), or $(b,NAME)=$(b,URL) \
+       bindings, in which case $(b,NAME) should not be registered already to a \
+       different URL, and the new repository will be registered. See $(i,opam \
+       repository) for more details. This option also affects \
+       $(i,list-available)."
+      Arg.(some (list string)) None
   in
   let descr =
     mk_opt ["description"] "STRING"
@@ -1617,16 +1621,47 @@ let switch =
       | None, true -> Some []
       | packages, _ -> packages
     in
-    let guess_compiler_package gt s =
+    let get_repos_rt gt =
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      OpamSwitchCommand.guess_compiler_package ?repos rt s
+      match repos with
+      | None -> None, rt
+      | Some repos ->
+        let repos =
+          List.map (fun s ->
+              match OpamStd.String.cut_at s '=' with
+              | None -> OpamRepositoryName.of_string s, None
+              | Some (name, url) -> OpamRepositoryName.of_string name, Some url)
+            repos
+        in
+        let new_defs =
+          OpamStd.List.filter_map (function
+              | (_, None) -> None
+              | (n, Some u) -> Some (n, OpamUrl.of_string u))
+            repos
+        in
+        if List.for_all
+            (fun (name,url) ->
+               match OpamRepositoryName.Map.find_opt name rt.repositories with
+               | Some r -> r.repo_url = url
+               | None -> false)
+            new_defs
+        then
+          Some (List.map fst repos), rt
+        else
+          OpamRepositoryState.with_write_lock rt @@ fun rt ->
+          Some (List.map fst repos),
+          List.fold_left (fun rt (name, url) ->
+              OpamConsole.msg "Creating repository %s...\n"
+                (OpamRepositoryName.to_string name);
+              OpamRepositoryCommand.add rt name url None)
+            rt new_defs
     in
-    let compiler_packages gt switch compiler_opt =
+    let compiler_packages rt ?repos switch compiler_opt =
       match packages, compiler_opt with
-      | None, None -> guess_compiler_package gt switch
+      | None, None -> OpamSwitchCommand.guess_compiler_package ?repos rt switch
       | _ ->
         OpamStd.Option.Op.(
-          ((compiler_opt >>| guess_compiler_package gt) +! []) @
+          ((compiler_opt >>| OpamSwitchCommand.guess_compiler_package ?repos rt) +! []) @
           packages +! [])
     in
     let param_compiler = function
@@ -1644,7 +1679,7 @@ let switch =
       `Ok ()
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let repos, rt = get_repos_rt gt in
       let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let filters =
@@ -1681,11 +1716,13 @@ let switch =
       `Ok ()
     | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      let repos, rt = get_repos_rt gt in
+      let packages = compiler_packages rt ?repos switch (param_compiler params) in
       let _gt, st =
-        OpamSwitchCommand.install gt
+        OpamSwitchCommand.install gt ~rt
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
-          ~packages:(compiler_packages gt switch (param_compiler params))
+          ~packages
           (OpamSwitch.of_string switch)
       in
       ignore (OpamSwitchState.unlock st);
@@ -1700,13 +1737,21 @@ let switch =
       let switch = OpamStateConfig.get_switch () in
       let installed_switches = OpamFile.Config.installed_switches gt.config in
       let is_new_switch = not (List.mem switch installed_switches) in
-      let (), gt =
+      let gt, rt =
         if is_new_switch then
-          OpamGlobalState.with_write_lock gt @@ fun gt ->
-          (), OpamSwitchAction.create_empty_switch gt ?repos switch
-        else (), gt
+          let repos, rt = get_repos_rt gt in
+          let (), gt =
+            OpamGlobalState.with_write_lock gt @@ fun gt ->
+            (), OpamSwitchAction.create_empty_switch gt ?repos switch
+          in
+          gt, rt
+        else
+          (if repos <> None then
+             OpamConsole.warning
+               "Switch exists, '--repositories' argument ignored";
+           gt, OpamRepositoryState.load `Lock_none gt)
       in
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      OpamSwitchState.with_ `Lock_write gt ~rt ~switch @@ fun st ->
       let _st =
         try
           OpamSwitchCommand.import st
@@ -1805,7 +1850,7 @@ let pin ?(unpin_only=false) () =
     "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to change the package \
      definition that opam will locally use for package $(i,NAME), including \
-     its version and source URL. Using the format $(b,NAME.VERSION) will \
+     its version and source URL. Using the format $(i,NAME.VERSION) will \
      update the version in the opam file in advance of editing, without \
      changing the actual target. The chosen editor is determined from \
      environment variables $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in \
