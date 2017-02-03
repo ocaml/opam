@@ -2829,7 +2829,10 @@ let build =
         (gather_changes ())
     | None ->
       let atoms = OpamSolution.eq_atoms_of_packages local_packages in
-      let _st = OpamClient.install st atoms None ~deps_only in
+      let st =
+        if deps_only then OpamClient.install_t st atoms None ~deps_only
+        else OpamClient.reinstall_t st ~force:true atoms
+      in
       match install_prefix with
       | None -> ()
       | Some pfx ->

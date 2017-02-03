@@ -811,7 +811,7 @@ let slog = OpamConsole.slog
       full_orphans,
       orphan_versions
 
-  let install_t ?ask atoms add_to_roots ~deps_only t =
+  let install_t t ?ask atoms add_to_roots ~deps_only =
     log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -824,6 +824,7 @@ let slog = OpamConsole.slog
        warning for already installed package roots. *)
     let current_roots = t.installed_roots in
     let t =
+      if deps_only then t else
       List.fold_left (fun t nv ->
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
@@ -928,7 +929,7 @@ let slog = OpamConsole.slog
   let install t names add_to_roots ~deps_only =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
     let t = update_dev_packages_t atoms t in
-    install_t atoms add_to_roots ~deps_only t
+    install_t t atoms add_to_roots ~deps_only
 
   let remove_t ?ask ~autoremove ~force atoms t =
     log "REMOVE autoremove:%b %a" autoremove
