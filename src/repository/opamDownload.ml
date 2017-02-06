@@ -77,14 +77,14 @@ let tool_return url ret =
     OpamSystem.raise_on_process_error ret;
     match ret.OpamProcess.r_stdout with
     | [] ->
-      OpamSystem.internal_error "curl: empty response while downloading %s"
-        (OpamUrl.to_string url)
+      failwith (Printf.sprintf "curl: empty response while downloading %s"
+                  (OpamUrl.to_string url))
     | l  ->
       let code = List.hd (List.rev l) in
       let num = try int_of_string code with Failure _ -> 999 in
       if num >= 400 then
-        OpamSystem.internal_error "curl: code %s while downloading %s" code
-          (OpamUrl.to_string url)
+        failwith (Printf.sprintf "curl: code %s while downloading %s"
+                    code (OpamUrl.to_string url))
       else Done ()
 
 let download_command ~compress ?checksum ~url ~dst =
@@ -102,16 +102,17 @@ let download_command ~compress ?checksum ~url ~dst =
   in
   OpamSystem.make_command cmd args @@> tool_return url
 
-let really_download ~overwrite ?(compress=false) ?checksum ?(validate=true)
+let really_download
+    ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
     ~url ~dst =
   assert (url.OpamUrl.backend = `http);
   let tmp_dst = dst ^ ".part" in
   if Sys.file_exists tmp_dst then OpamSystem.remove tmp_dst;
   OpamProcess.Job.catch
     (function
-      | OpamSystem.Internal_error s as e ->
+      | Failure s as e ->
         OpamSystem.remove tmp_dst;
-        OpamConsole.error "%s" s;
+        if not quiet then OpamConsole.error "%s" s;
         raise e
       | e ->
         OpamSystem.remove tmp_dst;
@@ -122,7 +123,7 @@ let really_download ~overwrite ?(compress=false) ?checksum ?(validate=true)
     download_command ~compress ?checksum ~url ~dst:tmp_dst
     @@+ fun () ->
     if not (Sys.file_exists tmp_dst) then
-      OpamSystem.internal_error "Downloaded file not found"
+      failwith "Downloaded command succeeded, but resulting file not found"
     else if Sys.file_exists dst && not overwrite then
       OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
     if validate &&
@@ -135,7 +136,7 @@ let really_download ~overwrite ?(compress=false) ?checksum ?(validate=true)
     OpamSystem.mv tmp_dst dst;
     Done ()
 
-let download_as ?validate ~overwrite ?compress ?checksum url dst =
+let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
   match OpamUrl.local_file url with
   | Some src ->
     if src = dst then Done () else
@@ -147,12 +148,13 @@ let download_as ?validate ~overwrite ?compress ?checksum url dst =
        Done ())
   | None ->
     OpamFilename.(mkdir (dirname dst));
-    really_download ~overwrite ?compress ?checksum ?validate
+    really_download ?quiet ~overwrite ?compress ?checksum ?validate
       ~url
       ~dst:(OpamFilename.to_string dst)
 
-let download ?validate ~overwrite ?compress ?checksum url dstdir =
+let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
   let dst =
     OpamFilename.(create dstdir (Base.of_string (OpamUrl.basename url)))
   in
-  download_as ?validate ~overwrite ?compress ?checksum url dst @@| fun () -> dst
+  download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst @@|
+  fun () -> dst

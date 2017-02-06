@@ -31,6 +31,13 @@ val install:
   atom list -> bool option -> deps_only:bool ->
   rw switch_state
 
+(** Low-level version of [reinstall], bypassing the package name sanitization
+    and dev package update, and offering more control *)
+val install_t:
+  rw switch_state -> ?ask:bool ->
+  atom list -> bool option -> deps_only:bool ->
+  rw switch_state
+
 (** Reinstall the given set of packages. *)
 val reinstall:
   rw switch_state -> atom list -> rw switch_state

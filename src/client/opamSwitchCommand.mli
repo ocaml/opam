@@ -20,6 +20,7 @@ open OpamStateTypes
     globally, unless it is external *)
 val install:
   rw global_state ->
+  ?rt:'a repos_state ->
   ?synopsis:string ->
   ?repos:repository_name list ->
   update_config:bool ->
@@ -47,13 +48,6 @@ val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 
 (** Changes the currently active switch *)
 val switch: 'a lock -> rw global_state -> switch -> 'a switch_state
-
-(** Switch to the given compiler switch, installing it if it doesn't exist
-    already (with the given compiler, or empty if unspecified). *)
-val switch_with_autoinstall:
-  rw global_state -> ?repos:repository_name list ->
-  packages:atom conjunction -> switch ->
-  unlocked global_state * rw switch_state
 
 (** Reinstall the given compiler switch. *)
 val reinstall: rw switch_state -> rw switch_state
