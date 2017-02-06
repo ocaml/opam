@@ -26,6 +26,7 @@ type t = private {
   skip_dev_update: bool;
   json_out: string option;
   root_is_ok: bool;
+  no_auto_upgrade: bool;
 }
 
 type 'a options_fun =
@@ -44,6 +45,7 @@ type 'a options_fun =
   ?skip_dev_update:bool ->
   ?json_out:string option ->
   ?root_is_ok:bool ->
+  ?no_auto_upgrade:bool ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -76,6 +78,7 @@ val opam_init:
   ?skip_dev_update:bool ->
   ?json_out:string option ->
   ?root_is_ok:bool ->
+  ?no_auto_upgrade:bool ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Command_line | `Default | `Env ] ->
   ?jobs:int Lazy.t ->

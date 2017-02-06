@@ -271,7 +271,7 @@ let upgrade_command =
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
-        OpamAdminRepoUpgrade.do_upgrade ();
+        OpamAdminRepoUpgrade.do_upgrade (OpamFilename.cwd ());
         if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
            OpamFilename.exists (OpamFilename.of_string "urls.txt")
         then
@@ -279,7 +279,7 @@ let upgrade_command =
             "Indexes need updating: you should now run:\n\
              \n\
             \  opam admin index"
-      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror m
+      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
   in
   Term.(pure cmd $ OpamArg.global_options $
         clear_cache_arg $ create_mirror_arg),

@@ -1700,7 +1700,7 @@ module RepoSyntax = struct
   let internal = "repo"
 
   type t = {
-    opam_version : OpamVersion.t;
+    opam_version : OpamVersion.t option;
     browse       : string option;
     upstream     : string option;
     redirect     : (string * filter option) list;
@@ -1709,7 +1709,7 @@ module RepoSyntax = struct
   }
 
   let create
-      ?browse ?upstream ?(opam_version=OpamVersion.current_nopatch)
+      ?browse ?upstream ?opam_version
       ?(redirect=[]) ?root_url ?dl_cache () =
     { opam_version; browse; upstream; redirect; root_url; dl_cache; }
 
@@ -1722,7 +1722,8 @@ module RepoSyntax = struct
   let root_url t = t.root_url
   let dl_cache t = OpamStd.Option.default [] t.dl_cache
 
-  let with_opam_version opam_version t = { t with opam_version }
+  let with_opam_version opam_version t =
+    { t with opam_version = Some opam_version }
   let with_browse browse t = { t with browse = Some browse }
   let with_upstream upstream t = { t with upstream = Some upstream }
   let with_redirect redirect t = { t with redirect }
@@ -1730,7 +1731,7 @@ module RepoSyntax = struct
   let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
 
   let fields = [
-    "opam-version", Pp.ppacc
+    "opam-version", Pp.ppacc_opt
       with_opam_version opam_version
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
     "browse", Pp.ppacc_opt with_browse browse Pp.V.string;

@@ -865,8 +865,8 @@ module Repo: sig
     ?dl_cache:string list ->
     unit -> t
 
-  (** The minimum OPAM version required for this repository *)
-  val opam_version : t -> OpamVersion.t
+  (** The minimum OPAM version required for this repository, if defined *)
+  val opam_version : t -> OpamVersion.t option
 
   (** Base URL for browsing packages on the WWW *)
   val browse: t -> string option

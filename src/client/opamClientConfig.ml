@@ -23,6 +23,7 @@ type t = {
   skip_dev_update: bool;
   json_out: string option;
   root_is_ok: bool;
+  no_auto_upgrade: bool;
 }
 
 let default = {
@@ -40,6 +41,7 @@ let default = {
   skip_dev_update = false;
   json_out = None;
   root_is_ok = false;
+  no_auto_upgrade = false;
 }
 
 type 'a options_fun =
@@ -57,6 +59,7 @@ type 'a options_fun =
   ?skip_dev_update:bool ->
   ?json_out:string option ->
   ?root_is_ok:bool ->
+  ?no_auto_upgrade:bool ->
   'a
 
 let setk k t
@@ -74,6 +77,7 @@ let setk k t
     ?skip_dev_update
     ?json_out
     ?root_is_ok
+    ?no_auto_upgrade
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -91,6 +95,7 @@ let setk k t
     skip_dev_update = t.skip_dev_update + skip_dev_update;
     json_out = t.json_out + json_out;
     root_is_ok = t.root_is_ok + root_is_ok;
+    no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
   }
 
 let set t = setk (fun x () -> x) t
@@ -120,6 +125,7 @@ let initk k =
     ?skip_dev_update:(env_bool "SKIPUPDATE")
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
     ?root_is_ok:(env_bool "ROOTISOK")
+    ?no_auto_upgrade:(env_bool "NOAUTOUPGRADE")
 
 let init ?noop:_ = initk (fun () -> ())
 

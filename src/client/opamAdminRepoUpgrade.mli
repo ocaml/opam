@@ -10,6 +10,8 @@
 
 val clear_cache: unit -> unit
 
-val do_upgrade: unit -> unit
+val upgradeto_version: OpamVersion.t
 
-val do_upgrade_mirror: OpamUrl.t -> unit
+val do_upgrade: OpamTypes.dirname -> unit
+
+val do_upgrade_mirror: OpamTypes.dirname -> OpamUrl.t -> unit

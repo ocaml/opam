@@ -209,3 +209,54 @@ let list_all rt ~short =
   cols :: OpamRepositoryName.Map.values lines |>
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table stdout ~sep:" "
+
+let update_with_auto_upgrade rt repo_names =
+  let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in
+  let success, rt = OpamUpdate.repositories rt repos in
+  if OpamFormatConfig.(!r.skip_version_checks) ||
+     OpamClientConfig.(!r.no_auto_upgrade)
+  then
+    success, rt
+  else
+  let rt, done_upgrade =
+    List.fold_left (fun (rt, done_upgrade) r ->
+        let def =
+          OpamRepositoryName.Map.find r.repo_name rt.repos_definitions
+        in
+        let need_upgrade = match OpamFile.Repo.opam_version def with
+          | None ->
+            OpamConsole.note
+              "Repository at %s doesn't define its version, assuming it's 1.2."
+              (OpamUrl.to_string r.repo_url);
+            true
+          | Some v when
+              OpamVersion.compare v OpamAdminRepoUpgrade.upgradeto_version < 0
+            -> true
+          | _ -> false
+        in
+        if need_upgrade then
+          (if not done_upgrade then
+             (OpamConsole.header_msg
+                "Upgrading repositories from older opam format";
+              OpamRepositoryState.Cache.remove ());
+           OpamConsole.msg "Upgrading repository \"%s\"...\n"
+             (OpamRepositoryName.to_string r.repo_name);
+           OpamAdminRepoUpgrade.do_upgrade r.repo_root;
+           let def =
+             OpamFile.Repo.safe_read (OpamRepositoryPath.repo r.repo_root) |>
+             OpamFile.Repo.with_root_url r.repo_url
+           in
+           let opams = OpamRepositoryState.load_repo_opams r in
+           let rt = {
+             rt with
+             repos_definitions =
+               OpamRepositoryName.Map.add r.repo_name def rt.repos_definitions;
+             repo_opams =
+               OpamRepositoryName.Map.add r.repo_name opams rt.repo_opams;
+           } in
+           rt, true)
+        else rt, done_upgrade)
+      (rt, false) repos
+  in
+  if done_upgrade then OpamRepositoryState.Cache.save rt;
+  success, rt

@@ -86,6 +86,7 @@ type global_options = {
   soft_request: bool;
   safe_mode : bool;
   json : string option;
+  no_auto_upgrade : bool;
 }
 
 (** Global options *)
