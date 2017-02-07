@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0~beta"
+version: "2.0.0~beta"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -20,8 +20,8 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-state" {= "2.0~beta"}
-  "opam-solver" {= "2.0~beta"}
+  "opam-state" {= "2.0.0~beta"}
+  "opam-solver" {= "2.0.0~beta"}
   "cmdliner" {>= "0.9.8"}
 ]
 available: ocaml-version >= "4.01.0"
