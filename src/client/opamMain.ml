@@ -2733,14 +2733,33 @@ let build =
             let virt_st =
               OpamSwitchState.load_virtual ?repos_list:repos gt rt
             in
+            let opams =
+              OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
+            in
+            let virt_st =
+              { virt_st with
+                opams;
+                packages =
+                  OpamPackage.Set.union virt_st.packages local_packages;
+                available_packages = lazy (
+                  OpamPackage.Map.filter (fun package opam ->
+                      OpamFilter.eval_to_bool ~default:false
+                        (OpamPackageVar.resolve_switch_raw ~package gt
+                           switch OpamFile.Switch_config.empty)
+                        (OpamFile.OPAM.available opam))
+                    opams
+                  |> OpamPackage.keys);
+              }
+            in
             let universe =
               OpamSwitchState.universe virt_st
                 ~requested:(OpamPackage.names_of_packages local_packages)
                 Depends
             in
-            let universe = { universe with u_base = local_packages } in
-            (* we could compute available packages (using global variables), but
-               choose not to *)
+            let universe = {
+              universe with u_base = local_packages;
+                            u_installed = local_packages }
+            in
             OpamSolver.installable universe
           in
           let check_coinstallable_atoms atoms =
