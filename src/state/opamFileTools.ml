@@ -29,10 +29,10 @@ let names_of_formula flag f =
 let all_commands t =
   t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
 
-let all_filters t =
+let all_filters ?(exclude_post=false) t =
   OpamStd.List.filter_map snd t.patches @
   OpamStd.List.filter_map snd t.messages @
-  OpamStd.List.filter_map snd t.post_messages @
+  (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
   [t.available] @
   OpamFormula.fold_left (fun acc (_, f) ->
       OpamFormula.fold_left (fun acc -> function
@@ -42,10 +42,10 @@ let all_filters t =
     [] (OpamFormula.ands [t.depends; t.depopts]) @
   List.map (fun (_,_,f) -> f) t.features
 
-let all_variables t =
+let all_variables ?exclude_post t =
   OpamFilter.commands_variables (all_commands t) @
   List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
-    [] (all_filters t)
+    [] (all_filters ?exclude_post t)
 
 let map_all_variables f t =
   let map_optfld = function
@@ -202,7 +202,6 @@ let lint t =
     else None
   in
   let all_commands = all_commands t in
-  let all_variables = all_variables t in
   let all_expanded_strings = all_expanded_strings t in
   let all_depends = all_depends t in
   let warnings = [
@@ -215,9 +214,7 @@ let lint t =
       "Field 'opam-version' doesn't match the current version, \
        validation may not be accurate"
       ~detail:[OpamVersion.to_string t.opam_version]
-      (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0
-       && OpamVersion.compare t.opam_version (OpamVersion.of_string "1.2")
-          <> 0);
+      (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0);
 (*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";
@@ -249,10 +246,12 @@ let lint t =
        probably part of 'build'. Use the 'install' field or a .install \
        file"
       (t.install = [] && t.build <> [] && t.remove <> []);
+(*
     cond 27 `Warning
       "No field 'remove' while a field 'install' is present, uncomplete \
        uninstallation suspected"
       (t.install <> [] && t.remove = []);
+*)
     (let unk_flags =
        OpamStd.List.filter_map (function
            | Pkgflag_Unknown s -> Some s
@@ -273,12 +272,14 @@ let lint t =
        "Package dependencies mention package variables"
        ~detail:filtered_vars
        (filtered_vars <> []));
+(*
     cond 30 `Error
       "Field 'depopts' is not a pure disjunction"
       (List.exists (function
            | OpamFormula.Atom _ -> false
            | _ -> true)
           (OpamFormula.ors_to_list t.depopts));
+*)
     (let dup_depends =
        OpamPackage.Name.Set.inter
          (names_of_formula false t.depends)
@@ -290,9 +291,12 @@ let lint t =
                  (List.map to_string (Set.elements dup_depends))
        (not (OpamPackage.Name.Set.is_empty dup_depends)));
     cond 32 `Error
-      "Field 'ocaml-version' is deprecated, use 'available' and the \
-       'ocaml-version' variable instead"
-      (t.ocaml_version <> None);
+      "Field 'ocaml-version:' and variable 'ocaml-version' are deprecated, use \
+       a dependency towards the 'ocaml' package instead for availability, and \
+       the 'ocaml:version' package variable for scripts"
+      (t.ocaml_version <> None ||
+       List.mem (OpamVariable.Full.of_string "ocaml-version")
+         (all_variables t));
     cond 33 `Error
       "Field 'os' is deprecated, use 'available' and the 'os' variable \
        instead"
@@ -302,7 +306,7 @@ let lint t =
          (OpamFilter.variables t.available)
      in
      cond 34 `Error
-       "Field 'available' contains references to package-local variables. \
+       "Field 'available:' contains references to package-local variables. \
         It should only be determined from global configuration variables"
        ~detail:(List.map OpamVariable.Full.to_string pkg_vars)
        (pkg_vars <> []));
@@ -362,7 +366,7 @@ let lint t =
               ->
               OpamPackage.Name.Set.add n acc
             | _ -> acc)
-         OpamPackage.Name.Set.empty all_variables
+         OpamPackage.Name.Set.empty (all_variables ~exclude_post:true t)
      in
      cond 41 `Warning
        "Some packages are mentioned in package scripts of features, but \

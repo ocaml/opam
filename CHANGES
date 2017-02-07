@@ -3,7 +3,7 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
 2.0~beta
-* (*) New, by-hash package archive caching system
+* New, by-hash package archive caching system
 * Simpler HTTP repository update
 * Allow specification of multiple checksums per file
 * Add `opam reinstall --pending`, to handle reinstallations of changed packages
@@ -23,14 +23,16 @@ are not marked).
   commands, and remove the `opam-admin` tool
 * Added an `opam build` command, to handle `opam` files found in the current
   directory
+* Internally upgrade repositories in 1.2 format automatically to 2.0 (on `init`,
+  `update` or `repo add`)
 
 2.0~alpha5
 * Merge stdout and stderr of child processes by default
 * Fixed regression on solver call times
 * Added a few shorter command aliases: `opam var` `opam exec`, `opam env` for
   the corresponding `opam config` commands
-* Simplified `opam repo` to only use `add` and `remove` in normal use, always
-  meaning the current switch (only) if not specified otherwise
+* (*) Simplified `opam repo` to only use `add` and `remove` in normal use,
+  always meaning the current switch (only) if not specified otherwise
 * (*) Restrict package names and versions to a reasonable character set
 * Added support for SHA256 and SHA512 checksums
 * Separated the opam format lexer/parser/printers into a separate
