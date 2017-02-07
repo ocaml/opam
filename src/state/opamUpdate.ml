@@ -89,19 +89,14 @@ let repository gt repo =
       (OpamUrl.to_string repo.repo_url);
   let repo_file = OpamFile.Repo.safe_read repo_file_path in
   let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
-  let repo_vers = OpamFile.Repo.opam_version repo_file in
+  let repo_vers =
+    OpamStd.Option.default OpamVersion.current_nopatch @@
+    OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
     OpamConsole.error_and_exit
       "The current version of opam cannot read the repository %S. \n\
        You should upgrade to at least version %s."
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamVersion.to_string repo_vers);
-  if not OpamFormatConfig.(!r.skip_version_checks) &&
-     OpamVersion.(compare (major repo_vers) (major current)) < 0 then
-    OpamConsole.warning
-      "Repository '%s' is in opam %s format, it may not operate as expected \
-       unless converted (see 'opam admin upgrade --help')"
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamVersion.to_string repo_vers);
   let opams = OpamRepositoryState.load_repo_opams repo in

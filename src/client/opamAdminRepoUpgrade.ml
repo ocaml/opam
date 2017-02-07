@@ -111,8 +111,8 @@ let cache_file : string list list OpamFile.t =
   OpamFile.make @@
   OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
 
-let do_upgrade () =
-  let repo = OpamRepositoryBackend.local (OpamFilename.cwd ()) in
+let do_upgrade repo_root =
+  let repo = OpamRepositoryBackend.local repo_root in
 
   let write_opam ?(add_files=[]) opam =
     let nv = O.package opam in
@@ -143,7 +143,7 @@ let do_upgrade () =
     let () =
       OpamFile.Lines.read_opt cache_file +! [] |> List.iter @@ function
       | [url; md5] -> Hashtbl.add url_md5 (OpamUrl.of_string url) (OpamHash.of_string md5)
-      | _ -> failwith "Bad cache"
+      | _ -> failwith "Bad cache, run 'opam admin upgrade --clear-cache'"
     in
     (fun url ->
        try Done (Some (Hashtbl.find url_md5 url))
@@ -388,7 +388,8 @@ let do_upgrade () =
 
   let packages = OpamRepository.packages_with_prefixes repo in
 
-  OpamConsole.msg "Will not update base packages: %s\n"
+  OpamConsole.log "REPO_UPGRADE"
+    "Will not update base packages: %s\n"
     (OpamPackage.Name.Set.to_string all_base_packages);
 
   OpamPackage.Map.iter (fun package prefix ->
@@ -422,23 +423,23 @@ let do_upgrade () =
 let clear_cache () =
   OpamFilename.remove (OpamFile.filename cache_file)
 
-let do_upgrade_mirror base_url =
+let do_upgrade_mirror repo_root base_url =
   OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
   let open OpamFilename.Op in
   let copy_dir d =
-    let src = OpamFilename.cwd () / d in
+    let src = repo_root / d in
     if OpamFilename.exists_dir src then
       OpamFilename.copy_dir ~src ~dst:(tmp_mirror_dir / d)
   in
   let copy_file f =
-    let src = OpamFilename.cwd () // f in
+    let src = repo_root // f in
     if OpamFilename.exists src then
       OpamFilename.copy ~src ~dst:(tmp_mirror_dir // f)
   in
   copy_dir "packages";
   copy_dir "compilers";
   copy_file "repo";
-  OpamFilename.in_dir tmp_mirror_dir do_upgrade;
+  do_upgrade tmp_mirror_dir;
   let repo_file = OpamFile.make (OpamFilename.of_string "repo") in
   let repo0 = OpamFile.Repo.safe_read repo_file in
   let opam_version_fid =
@@ -450,7 +451,7 @@ let do_upgrade_mirror base_url =
                FString (upgradeto_version_string ^ "~")))
   in
   let repo0 =
-    if OpamFile.Repo.opam_version repo0 = OpamVersion.current_nopatch
+    if OpamFile.Repo.opam_version repo0 = None
     then OpamFile.Repo.with_opam_version (OpamVersion.of_string "1.2") repo0
     else repo0
   in
@@ -488,4 +489,4 @@ let do_upgrade_mirror base_url =
      then
        "  opam admin index --full-urls-txt\n"
      else "")
-    (OpamFilename.remove_prefix_dir (OpamFilename.cwd ()) dir20)
+    (OpamFilename.remove_prefix_dir repo_root dir20)

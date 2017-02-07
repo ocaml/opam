@@ -1421,8 +1421,8 @@ let repository =
       in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url trust_anchors in
-          let _rt =
-            OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
+          let _result, _rt =
+            OpamRepositoryCommand.update_with_auto_upgrade rt [name]
           in ());
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
@@ -1481,8 +1481,8 @@ let repository =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
-      let _rt =
-        OpamUpdate.repositories rt [OpamRepositoryState.get_repo rt name]
+      let _result, _rt =
+        OpamRepositoryCommand.update_with_auto_upgrade rt [name]
       in
       `Ok ()
     | Some `set_repos, names ->

@@ -33,19 +33,21 @@ type global_options = {
   soft_request : bool;
   safe_mode : bool;
   json : string option;
+  no_auto_upgrade : bool;
 }
 
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root no_base_packages external_solver use_internal_solver
-    cudf_file solver_preferences soft_request safe_mode json =
+    cudf_file solver_preferences soft_request safe_mode json no_auto_upgrade =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   let verbose = List.length verbose in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; no_base_packages; external_solver; use_internal_solver;
-    cudf_file; solver_preferences; soft_request; safe_mode; json; }
+    cudf_file; solver_preferences; soft_request; safe_mode; json;
+    no_auto_upgrade; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -113,6 +115,7 @@ let apply_global_options o =
     (* ?skip_dev_update:bool *)
     ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
     (* ?root_is_ok:bool *)
+    ?no_auto_upgrade:(flag o.no_auto_upgrade)
     (* - client options - *)
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
@@ -218,6 +221,9 @@ let help_sections = [
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
+  `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
+      repositories in an earlier format to the current one, on 'update' or \
+      'init'.";
   `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
       and some backups. This skips some finalisers and may also help to get \
       more reliable backtraces";
@@ -816,11 +822,21 @@ let global_options =
        $(b,\\$OPAMJSON) variable."
       Arg.(some string) None
   in
+  let no_auto_upgrade =
+    mk_flag ~section ["no-auto-upgrade"]
+      "When configuring or updating a repository that is written for an \
+       earlier opam version (1.2), opam internally converts it to the current \
+       format. This disables this behaviour. Note that repositories should \
+       define their format version in a 'repo' file at their root, or they \
+       will be assumed to be in the older format. It is, in any case, \
+       preferable to upgrade the repositories manually using $(i,opam admin \
+       upgrade [--mirror URL]) when possible."
+  in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $no_base_packages $external_solver
         $use_internal_solver $cudf_file $solver_preferences $soft_request
-        $safe_mode $json_flag)
+        $safe_mode $json_flag $no_auto_upgrade)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"

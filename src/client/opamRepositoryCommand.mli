@@ -49,3 +49,10 @@ val update_selection:
 val set_url:
   rw repos_state -> repository_name -> url -> trust_anchors option ->
   rw repos_state
+
+(** Update the given repositories, as per [OpamUpdate.repositories], checks for
+    their version and runs the upgrade script locally if they are for an earlier
+    opam (the user is asked if the version is unknown). Returns [true] if no
+    update or upgrade errors were encountered. *)
+val update_with_auto_upgrade:
+  rw repos_state -> repository_name list -> bool * rw repos_state

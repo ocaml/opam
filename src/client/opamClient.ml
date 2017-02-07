@@ -570,10 +570,7 @@ let slog = OpamConsole.slog
       if repo_names = [] then true, rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
       OpamConsole.header_msg "Updating package repositories";
-      OpamUpdate.repositories rt
-        (List.map
-           (fun r -> OpamRepositoryName.Map.find r rt.repositories)
-           repo_names)
+      OpamRepositoryCommand.update_with_auto_upgrade rt repo_names
     in
     let repo_changed =
       not
@@ -741,11 +738,8 @@ let slog = OpamConsole.slog
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
         let success, rt =
-          OpamUpdate.repositories rt
-            (List.map (fun (repo_name, (repo_url, repo_trust)) ->
-                 { repo_root = OpamRepositoryPath.create root repo_name;
-                   repo_name; repo_url; repo_trust; })
-                repos)
+          OpamRepositoryCommand.update_with_auto_upgrade rt
+            (List.map fst repos)
         in
         if not success then failwith "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
