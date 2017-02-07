@@ -18,6 +18,12 @@ begin program "opam-installer"
   ]
   requires = [ "opam-client" ]
 end
+}
+
+if build_libs = [] ||
+   %mem( string = "opam-tools"
+         strings = build_libs )
+then {
 
 begin program "opam-admin.top"
   has_asm = false
