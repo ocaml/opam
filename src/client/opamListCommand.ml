@@ -248,9 +248,8 @@ let apply_selector ~base st = function
       (Lazy.force st.available_packages)
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
-    let universe =
-      { universe with u_base = OpamPackage.Set.of_list packages }
-    in
+    let set = OpamPackage.Set.of_list packages in
+    let universe = { universe with u_base = set; u_installed = set } in
     OpamSolver.installable universe
   | Solution (tog, atoms) ->
     let universe = get_universe st tog in
