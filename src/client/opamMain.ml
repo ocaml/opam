@@ -2745,6 +2745,12 @@ let build =
           OpamFilename.exists_dir switch_pfx
         then
           let gt = OpamGlobalState.unlock gt in
+          if compiler <> None then
+            OpamConsole.note
+              "Using existing switch %s: '--compiler' argument ignored. Check \
+               the OPAMSWITCH environment variable or the presence of a \
+               '_opam/' directory if you wanted to create a new switch."
+              (OpamSwitch.to_string switch);
           get_st gt ?rt_opt repos, gt
         else
           let repos, rt = get_repos_rt gt repos in
