@@ -2709,14 +2709,16 @@ let build =
           OpamStd.Option.map OpamFile.InitConfig.read
             (OpamPath.init_config_file ())
         in
-        (OpamConsole.msg "First run: initialising opam.\n";
-         let gt, rt, _ =
-           OpamClient.init
-             ?init_config
-             `bash (OpamFilename.of_string "~/.profile") (* ignored args *)
-             `no
-         in
-         (gt :> unlocked global_state), Some rt)
+        if not (OpamConsole.confirm
+                  "This appears to be your first run of opam. Initialise now ?")
+        then OpamStd.Sys.exit 1;
+        let gt, rt, _ =
+          OpamClient.init
+            ?init_config
+            `bash (OpamFilename.of_string "~/.profile") (* ignored args *)
+            `no
+        in
+        (gt :> unlocked global_state), Some rt
       in
       let switch_pfx = OpamSwitch.get_root gt.root switch in
       let st, _gt =
