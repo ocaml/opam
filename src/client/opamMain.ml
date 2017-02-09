@@ -2709,6 +2709,24 @@ let build =
           OpamStd.Option.map OpamFile.InitConfig.read
             (OpamPath.init_config_file ())
         in
+        let init_config = match repos with
+          | None -> init_config
+          | Some repos ->
+            let repos =
+              List.map (fun def -> match OpamStd.String.cut_at def '=' with
+                  | Some (repo, url) ->
+                    OpamRepositoryName.of_string repo,
+                    (OpamUrl.of_string url, None)
+                  | None ->
+                    OpamConsole.error_and_exit
+                      "Unknown URL for repository %s, please specify '%s=URL'"
+                    def def)
+                repos
+            in
+            Some (OpamFile.InitConfig.with_repositories repos
+                    (OpamStd.Option.default OpamInitDefaults.init_config
+                       init_config))
+        in
         if not (OpamConsole.confirm
                   "This appears to be your first run of opam. Initialise now ?")
         then OpamStd.Sys.exit 1;
