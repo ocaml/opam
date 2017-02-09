@@ -2826,9 +2826,18 @@ let build =
                 then []
                 else OpamStd.Sys.exit 66
           in
-          OpamConsole.msg "Initialising switch %s with compiler %s\n"
-            (OpamSwitch.to_string switch)
-            (OpamFormula.string_of_atoms compiler_atoms);
+          if OpamGlobalState.switches gt = [] then
+            OpamConsole.msg "Initialising switch %s with compiler %s\n"
+              (OpamSwitch.to_string switch)
+              (OpamFormula.string_of_atoms compiler_atoms)
+          else if not @@ OpamConsole.confirm
+              "Create switch %s with compiler %s ?\n"
+              (OpamSwitch.to_string switch)
+              (OpamFormula.string_of_atoms compiler_atoms)
+          then
+            OpamConsole.error_and_exit
+              "Aborted. Please use '--switch', or 'eval $(opam env --switch)' \
+               to use 'opam build' in an existing switch.";
           let gt, st =
             OpamSwitchCommand.install
               gt ~update_config:false ~packages:compiler_atoms ?repos switch
