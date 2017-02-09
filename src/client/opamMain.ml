@@ -2755,7 +2755,7 @@ let build =
         else
           let repos, rt = get_repos_rt gt repos in
           OpamGlobalState.with_write_lock gt @@ fun gt ->
-          let coinstallable_packages =
+          let get_coinstallable_packages () =
             let virt_st =
               OpamSwitchState.load_virtual ?repos_list:repos gt rt
             in
@@ -2788,7 +2788,7 @@ let build =
             in
             OpamSolver.installable universe
           in
-          let check_coinstallable_atoms atoms =
+          let check_coinstallable_atoms coinstallable_packages atoms =
             List.for_all (fun (name, _ as atom) ->
                 OpamPackage.Set.exists (fun nv -> OpamFormula.check atom nv)
                   (OpamPackage.packages_of_name coinstallable_packages name))
@@ -2798,13 +2798,7 @@ let build =
             OpamFile.Config.default_compiler gt.config
           in
           let compiler_atoms = match compiler with
-            | Some atoms ->
-              if check_coinstallable_atoms atoms then atoms else
-                (OpamConsole.error
-                   "The specified compiler is not compatible with the local \
-                    packages.";
-                 if OpamConsole.confirm "Install anyway ?" then atoms
-                 else OpamStd.Sys.exit 66)
+            | Some atoms -> atoms
             | None when default_compiler = Empty ->
               OpamConsole.warning "No compiler selected";
               []
@@ -2812,13 +2806,14 @@ let build =
               let candidates = OpamFormula.to_dnf default_compiler in
               let all_compilers = OpamSwitchCommand.get_compiler_packages rt in
               try
+                let coinst = get_coinstallable_packages () in
                 List.find (fun atoms ->
                     let names = List.map fst atoms in
                     let pkgs =
                       OpamFormula.packages_of_atoms all_compilers atoms
                     in
                     List.for_all (OpamPackage.has_name pkgs) names &&
-                    check_coinstallable_atoms atoms)
+                    check_coinstallable_atoms coinst atoms)
                   candidates
               with Not_found ->
                 OpamConsole.warning
