@@ -399,6 +399,7 @@ let list ?(force_search=false) () =
     in
     let filter =
       OpamFormula.ands [
+        pattern_selector;
         state_selector;
         (if no_switch then Empty else
          match repos with None -> Empty | Some repos ->
@@ -407,7 +408,6 @@ let list ?(force_search=false) () =
         OpamStd.Option.Op.
           ((owns_file >>| fun f -> Atom (OpamListCommand.Owns_file f)) +!
            Empty);
-        pattern_selector;
       ]
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->

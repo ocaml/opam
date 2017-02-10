@@ -250,7 +250,7 @@ let apply_selector ~base st = function
     let universe = get_universe st tog in
     let set = OpamPackage.Set.of_list packages in
     let universe = { universe with u_base = set; u_installed = set } in
-    OpamSolver.installable universe
+    OpamSolver.installable_subset universe base
   | Solution (tog, atoms) ->
     let universe = get_universe st tog in
     let universe =
@@ -367,7 +367,9 @@ let rec filter ~base st = function
   | Empty -> base
   | Atom select -> apply_selector ~base st select
   | Block b -> filter ~base st b
-  | And (a, b) -> filter ~base st a %% filter ~base st b
+  | And (a, b) ->
+    let base = filter ~base st a in
+    base %% filter ~base st b
   | Or (a, b) -> filter ~base st a ++ filter ~base st b
 
 type output_format =

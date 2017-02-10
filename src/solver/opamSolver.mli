@@ -78,6 +78,9 @@ val get_atomic_action_graph : solution -> ActionGraph.t
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
 
+(** Like [installable], but within a subset and potentially much faster *)
+val installable_subset: universe -> package_set -> package_set
+
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
 val dependencies :

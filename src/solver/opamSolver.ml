@@ -414,7 +414,8 @@ let installable universe =
   let simple_universe =
     load_cudf_universe universe universe.u_available ~build:true in
   let trimmed_universe =
-    (* Algo.Depsolver.trim simple_universe => this can explode memory*)
+    (* Algo.Depsolver.trim simple_universe => this can explode memory, we need
+       to specify [~explain:false] *)
     let open Algo in
     let open Depsolver in
     let trimmed_pkgs = ref [] in
@@ -425,6 +426,35 @@ let installable universe =
         |_ -> assert false
     in
     ignore (univcheck ~callback ~explain:false simple_universe);
+    Cudf.load_universe !trimmed_pkgs
+  in
+  Cudf.fold_packages
+    (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
+    OpamPackage.Set.empty
+    trimmed_universe
+
+let installable_subset universe packages =
+  log "trim-subset";
+  let version_map = cudf_versions_map universe universe.u_available in
+  let simple_universe =
+    load_cudf_universe ~build:true universe ~version_map universe.u_available
+  in
+  let cudf_packages =
+    List.map (opam2cudf universe ~build:true version_map)
+      (OpamPackage.Set.elements packages)
+  in
+  let trimmed_universe =
+    (* Algo.Depsolver.trimlist simple_universe with [~explain:false] *)
+    let open Algo in
+    let open Depsolver in
+    let trimmed_pkgs = ref [] in
+    let callback d =
+      if Algo.Diagnostic.is_solution d then
+        match d.Diagnostic.request with
+        |[p] -> trimmed_pkgs := p::!trimmed_pkgs
+        |_ -> assert false
+    in
+    ignore (listcheck ~callback ~explain:false simple_universe cudf_packages);
     Cudf.load_universe !trimmed_pkgs
   in
   Cudf.fold_packages
