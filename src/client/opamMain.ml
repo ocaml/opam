@@ -2709,14 +2709,34 @@ let build =
           OpamStd.Option.map OpamFile.InitConfig.read
             (OpamPath.init_config_file ())
         in
-        (OpamConsole.msg "First run: initialising opam.\n";
-         let gt, rt, _ =
-           OpamClient.init
-             ?init_config
-             `bash (OpamFilename.of_string "~/.profile") (* ignored args *)
-             `no
-         in
-         (gt :> unlocked global_state), Some rt)
+        let init_config = match repos with
+          | None -> init_config
+          | Some repos ->
+            let repos =
+              List.map (fun def -> match OpamStd.String.cut_at def '=' with
+                  | Some (repo, url) ->
+                    OpamRepositoryName.of_string repo,
+                    (OpamUrl.of_string url, None)
+                  | None ->
+                    OpamConsole.error_and_exit
+                      "Unknown URL for repository %s, please specify '%s=URL'"
+                    def def)
+                repos
+            in
+            Some (OpamFile.InitConfig.with_repositories repos
+                    (OpamStd.Option.default OpamInitDefaults.init_config
+                       init_config))
+        in
+        if not (OpamConsole.confirm
+                  "This appears to be your first run of opam. Initialise now ?")
+        then OpamStd.Sys.exit 1;
+        let gt, rt, _ =
+          OpamClient.init
+            ?init_config
+            `bash (OpamFilename.of_string "~/.profile") (* ignored args *)
+            `no
+        in
+        (gt :> unlocked global_state), Some rt
       in
       let switch_pfx = OpamSwitch.get_root gt.root switch in
       let st, _gt =
@@ -2725,11 +2745,17 @@ let build =
           OpamFilename.exists_dir switch_pfx
         then
           let gt = OpamGlobalState.unlock gt in
+          if compiler <> None then
+            OpamConsole.note
+              "Using existing switch %s: '--compiler' argument ignored. Check \
+               the OPAMSWITCH environment variable or the presence of a \
+               '_opam/' directory if you wanted to create a new switch."
+              (OpamSwitch.to_string switch);
           get_st gt ?rt_opt repos, gt
         else
           let repos, rt = get_repos_rt gt repos in
           OpamGlobalState.with_write_lock gt @@ fun gt ->
-          let coinstallable_packages =
+          let get_coinstallable_packages () =
             let virt_st =
               OpamSwitchState.load_virtual ?repos_list:repos gt rt
             in
@@ -2762,7 +2788,7 @@ let build =
             in
             OpamSolver.installable universe
           in
-          let check_coinstallable_atoms atoms =
+          let check_coinstallable_atoms coinstallable_packages atoms =
             List.for_all (fun (name, _ as atom) ->
                 OpamPackage.Set.exists (fun nv -> OpamFormula.check atom nv)
                   (OpamPackage.packages_of_name coinstallable_packages name))
@@ -2772,13 +2798,7 @@ let build =
             OpamFile.Config.default_compiler gt.config
           in
           let compiler_atoms = match compiler with
-            | Some atoms ->
-              if check_coinstallable_atoms atoms then atoms else
-                (OpamConsole.error
-                   "The specified compiler is not compatible with the local \
-                    packages.";
-                 if OpamConsole.confirm "Install anyway ?" then atoms
-                 else OpamStd.Sys.exit 66)
+            | Some atoms -> atoms
             | None when default_compiler = Empty ->
               OpamConsole.warning "No compiler selected";
               []
@@ -2786,13 +2806,14 @@ let build =
               let candidates = OpamFormula.to_dnf default_compiler in
               let all_compilers = OpamSwitchCommand.get_compiler_packages rt in
               try
+                let coinst = get_coinstallable_packages () in
                 List.find (fun atoms ->
                     let names = List.map fst atoms in
                     let pkgs =
                       OpamFormula.packages_of_atoms all_compilers atoms
                     in
                     List.for_all (OpamPackage.has_name pkgs) names &&
-                    check_coinstallable_atoms atoms)
+                    check_coinstallable_atoms coinst atoms)
                   candidates
               with Not_found ->
                 OpamConsole.warning
@@ -2805,9 +2826,18 @@ let build =
                 then []
                 else OpamStd.Sys.exit 66
           in
-          OpamConsole.msg "Initialising switch %s with compiler %s\n"
-            (OpamSwitch.to_string switch)
-            (OpamFormula.string_of_atoms compiler_atoms);
+          if OpamGlobalState.switches gt = [] then
+            OpamConsole.msg "Initialising switch %s with compiler %s\n"
+              (OpamSwitch.to_string switch)
+              (OpamFormula.string_of_atoms compiler_atoms)
+          else if not @@ OpamConsole.confirm
+              "Create switch %s with compiler %s ?\n"
+              (OpamSwitch.to_string switch)
+              (OpamFormula.string_of_atoms compiler_atoms)
+          then
+            OpamConsole.error_and_exit
+              "Aborted. Please use '--switch', or 'eval $(opam env --switch)' \
+               to use 'opam build' in an existing switch.";
           let gt, st =
             OpamSwitchCommand.install
               gt ~update_config:false ~packages:compiler_atoms ?repos switch

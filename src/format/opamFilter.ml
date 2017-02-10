@@ -456,8 +456,13 @@ let filter_constraints ?default env filtered_constraint =
       | Filter flt ->
         if eval_to_bool ?default env flt then `True else `False
       | Constraint (relop, v) ->
-        let v = eval_to_string ~default:"" env v in
-        `Formula (Atom (relop, OpamPackage.Version.of_string v)))
+        try
+          let v = eval_to_string env v in
+          `Formula (Atom (relop, OpamPackage.Version.of_string v))
+        with Failure _ as f -> match default with
+          | None -> raise f
+          | Some true -> `True
+          | Some false -> `False)
     filtered_constraint
 
 (* { build & "%{skromuk}%" = "flib%" } *)
