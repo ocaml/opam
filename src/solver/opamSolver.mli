@@ -78,6 +78,9 @@ val get_atomic_action_graph : solution -> ActionGraph.t
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
 
+(** Like [installable], but within a subset and potentially much faster *)
+val installable_subset: universe -> package_set -> package_set
+
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
 val dependencies :
@@ -100,6 +103,14 @@ val reverse_dependencies :
 (** Check the current set of installed packages in a universe for
     inconsistencies *)
 val check_for_conflicts : universe -> OpamCudf.conflict option
+
+(** Checks the given package set for complete installability ; returns None if
+    they can all be installed together *)
+val coinstallability_check : universe -> package_set -> OpamCudf.conflict option
+
+(** Checks if the given atoms can be honored at the same time in the given
+    universe *)
+val atom_coinstallability_check : universe -> atom list -> bool
 
 (** Dumps a cudf file containing all available packages in the given universe,
     plus version bindings (as '#v2v' comments) for the other ones. *)

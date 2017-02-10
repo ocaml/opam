@@ -1029,25 +1029,25 @@ let package_selection =
     } in
     OpamFormula.ands @@
     List.map (fun x -> Atom x)
-      ((match depends_on with [] -> [] | deps ->
-           [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
-       (match required_by with [] -> [] | rdeps ->
-           [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
-       (match conflicts_with with [] -> [] | pkgs ->
-           [OpamListCommand.Conflicts_with pkgs]) @
-       (match coinstallable_with with [] -> [] | pkgs ->
-           [OpamListCommand.Coinstallable_with
-              (dependency_toggles, pkgs)]) @
-       (match resolve with [] -> [] | deps ->
-           [OpamListCommand.Solution (dependency_toggles, deps)]) @
+      ((List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
+       (List.map (fun tag -> OpamListCommand.Tag tag) has_tag) @
        (List.map (fun (field,patt) ->
             OpamListCommand.Pattern
               ({OpamListCommand.default_pattern_selector with
                 OpamListCommand.fields = [field]},
                patt))
            field_match) @
-       (List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
-       (List.map (fun tag -> OpamListCommand.Tag tag) has_tag))
+       (match depends_on with [] -> [] | deps ->
+           [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
+       (match required_by with [] -> [] | rdeps ->
+           [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
+       (match conflicts_with with [] -> [] | pkgs ->
+           [OpamListCommand.Conflicts_with pkgs]) @
+       (match resolve with [] -> [] | deps ->
+           [OpamListCommand.Solution (dependency_toggles, deps)]) @
+       (match coinstallable_with with [] -> [] | pkgs ->
+           [OpamListCommand.Coinstallable_with
+              (dependency_toggles, pkgs)]))
   in
   Term.(pure filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $

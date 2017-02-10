@@ -414,7 +414,8 @@ let installable universe =
   let simple_universe =
     load_cudf_universe universe universe.u_available ~build:true in
   let trimmed_universe =
-    (* Algo.Depsolver.trim simple_universe => this can explode memory*)
+    (* Algo.Depsolver.trim simple_universe => this can explode memory, we need
+       to specify [~explain:false] *)
     let open Algo in
     let open Depsolver in
     let trimmed_pkgs = ref [] in
@@ -425,6 +426,35 @@ let installable universe =
         |_ -> assert false
     in
     ignore (univcheck ~callback ~explain:false simple_universe);
+    Cudf.load_universe !trimmed_pkgs
+  in
+  Cudf.fold_packages
+    (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
+    OpamPackage.Set.empty
+    trimmed_universe
+
+let installable_subset universe packages =
+  log "trim-subset";
+  let version_map = cudf_versions_map universe universe.u_available in
+  let simple_universe =
+    load_cudf_universe ~build:true universe ~version_map universe.u_available
+  in
+  let cudf_packages =
+    List.map (opam2cudf universe ~build:true version_map)
+      (OpamPackage.Set.elements packages)
+  in
+  let trimmed_universe =
+    (* Algo.Depsolver.trimlist simple_universe with [~explain:false] *)
+    let open Algo in
+    let open Depsolver in
+    let trimmed_pkgs = ref [] in
+    let callback d =
+      if Algo.Diagnostic.is_solution d then
+        match d.Diagnostic.request with
+        |[p] -> trimmed_pkgs := p::!trimmed_pkgs
+        |_ -> assert false
+    in
+    ignore (listcheck ~callback ~explain:false simple_universe cudf_packages);
     Cudf.load_universe !trimmed_pkgs
   in
   Cudf.fold_packages
@@ -461,22 +491,45 @@ let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
-let check_for_conflicts universe =
+let coinstallability_check universe packages =
   let version_map = cudf_versions_map universe universe.u_packages in
   let cudf_universe =
-    load_cudf_universe ~depopts:false ~build:true
-      ~version_map universe  universe.u_packages
+    load_cudf_universe ~build:true ~version_map universe  universe.u_packages
   in
-  let installed =
-    Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) cudf_universe
+  let cudf_packages =
+    List.map (opam2cudf universe ~build:true version_map)
+      (OpamPackage.Set.elements packages)
   in
-  match Algo.Depsolver.edos_coinstall cudf_universe installed with
+  match Algo.Depsolver.edos_coinstall cudf_universe cudf_packages with
   | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
     None
   | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } as c ->
     match OpamCudf.make_conflicts ~version_map cudf_universe c with
     | Conflicts cs -> Some cs
     | _ -> None
+
+let check_for_conflicts universe =
+  coinstallability_check universe universe.u_installed
+
+let atom_coinstallability_check universe atoms =
+  let packages = OpamFormula.packages_of_atoms universe.u_available atoms in
+  let map = OpamPackage.to_map packages in
+  List.for_all (fun (n, _) -> OpamPackage.Name.Map.mem n map) atoms &&
+  let ll =
+    List.map (fun (n, versions) ->
+        List.map (fun v -> OpamPackage.create n v)
+          (OpamPackage.Version.Set.elements versions))
+      (OpamPackage.Name.Map.bindings map)
+  in
+  let version_map = cudf_versions_map universe universe.u_packages in
+  let cudf_universe =
+    load_cudf_universe ~build:true ~version_map universe  universe.u_packages
+  in
+  let cudf_ll =
+    List.map (List.map (opam2cudf universe ~build:true version_map)) ll
+  in
+  let result = Algo.Depsolver.edos_coinstall_prod cudf_universe cudf_ll in
+  List.exists Algo.Diagnostic.is_solution result
 
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
