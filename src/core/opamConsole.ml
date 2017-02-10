@@ -55,8 +55,8 @@ let utf8, utf8_extended =
 
 let timer () =
   if debug () then
-    let t = Unix.time () in
-    fun () -> Unix.time () -. t
+    let t = Unix.gettimeofday () in
+    fun () -> Unix.gettimeofday () -. t
   else
     fun () -> 0.
 

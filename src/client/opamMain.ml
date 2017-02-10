@@ -2755,7 +2755,7 @@ let build =
         else
           let repos, rt = get_repos_rt gt repos in
           OpamGlobalState.with_write_lock gt @@ fun gt ->
-          let get_coinstallable_packages () =
+          let get_coinst_universe () =
             let virt_st =
               OpamSwitchState.load_virtual ?repos_list:repos gt rt
             in
@@ -2777,22 +2777,9 @@ let build =
                   |> OpamPackage.keys);
               }
             in
-            let universe =
-              OpamSwitchState.universe virt_st
-                ~requested:(OpamPackage.names_of_packages local_packages)
-                Depends
-            in
-            let universe = {
-              universe with u_base = local_packages;
-                            u_installed = local_packages }
-            in
-            OpamSolver.installable universe
-          in
-          let check_coinstallable_atoms coinstallable_packages atoms =
-            List.for_all (fun (name, _ as atom) ->
-                OpamPackage.Set.exists (fun nv -> OpamFormula.check atom nv)
-                  (OpamPackage.packages_of_name coinstallable_packages name))
-              atoms
+            OpamSwitchState.universe virt_st
+              ~requested:(OpamPackage.names_of_packages local_packages)
+              Depends
           in
           let default_compiler =
             OpamFile.Config.default_compiler gt.config
@@ -2804,16 +2791,15 @@ let build =
               []
             | None ->
               let candidates = OpamFormula.to_dnf default_compiler in
-              let all_compilers = OpamSwitchCommand.get_compiler_packages rt in
+              let local_atoms =
+                OpamSolution.eq_atoms_of_packages local_packages
+              in
               try
-                let coinst = get_coinstallable_packages () in
-                List.find (fun atoms ->
-                    let names = List.map fst atoms in
-                    let pkgs =
-                      OpamFormula.packages_of_atoms all_compilers atoms
-                    in
-                    List.for_all (OpamPackage.has_name pkgs) names &&
-                    check_coinstallable_atoms coinst atoms)
+                let univ = get_coinst_universe () in
+                List.find
+                  (fun atoms ->
+                     OpamSolver.atom_coinstallability_check univ
+                       (local_atoms @ atoms))
                   candidates
               with Not_found ->
                 OpamConsole.warning
