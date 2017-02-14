@@ -206,15 +206,6 @@ let do_upgrade repo_root =
       let opam = OpamFile.Comp.to_package ~package:nv comp descr in
       let opam = O.with_conflict_class [ocaml_conflict_class] opam in
       let opam =
-        if variant = None then
-          opam |>
-          O.with_conflicts (OpamFormula.ors [
-              Atom (ocaml_system_pkgname, Empty);
-              Atom (ocaml_variants_pkgname, Empty);
-            ])
-        else opam
-      in
-      let opam =
         match OpamFile.OPAM.url opam with
         | Some urlf when OpamFile.URL.checksum urlf = [] ->
           (match OpamProcess.Job.run (get_url_md5 (OpamFile.URL.url urlf)) with
@@ -274,10 +265,6 @@ let do_upgrade repo_root =
             None
           ] |>
           O.with_conflict_class [ocaml_conflict_class] |>
-          O.with_conflicts (OpamFormula.ors [
-              Atom (ocaml_official_pkgname, Empty);
-              Atom (ocaml_variants_pkgname, Empty);
-            ]) |>
           O.with_depends (OpamFormula.ands (
               List.map (fun name -> Atom (OpamPackage.Name.of_string name, Empty))
                 ["base-unix"; "base-threads"; "base-bigarray"]
