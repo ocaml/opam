@@ -220,9 +220,9 @@ _opam()
   esac;;
   esac
 
-  COMPREPLY=($(compgen -W "${_opam_reply[*]}" -o nosort "${compgen_opt[@]}" -- "$cur"))
+  COMPREPLY=($(compgen -W "${_opam_reply[*]}" "${compgen_opt[@]}" -- "$cur"))
   unset _opam_reply
   return 0
 }
 
-complete -o nosort -F _opam opam
+complete -F _opam opam

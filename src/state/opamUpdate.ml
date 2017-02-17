@@ -212,6 +212,13 @@ let pinned_package st ?version ?(working_dir=false) name =
   let new_source_opam =
     OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
     let warns, opam_opt = OpamFileTools.lint_file f in
+    let warns, opam_opt = match opam_opt with
+      | Some opam0 ->
+        let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
+        if opam <> opam0 then OpamFileTools.lint opam, Some opam
+        else warns, Some opam0
+      | None -> warns, opam_opt
+    in
     if warns <> [] &&
        match old_source_opam_hash with
        | None -> true
