@@ -2355,7 +2355,8 @@ let clean =
   let man = [
     `S "DESCRIPTION";
     `P "Cleans up opam caches, reclaiming some disk space. If no options are \
-        specified, the default is $(b,--download-cache --switch-cleanup)."
+        specified, the default is $(b,--logs --download-cache \
+        --switch-cleanup)."
   ] in
   let dry_run =
     mk_flag ["dry-run"]
@@ -2376,6 +2377,9 @@ let clean =
       "Clear the repository cache. It will be rebuilt by the next opam command \
        that needs it."
   in
+  let logs =
+    mk_flag ["logs"] "Clear the logs directory."
+  in
   let switch =
     mk_flag ["s";"switch-cleanup"]
       "Run the switch-specific cleanup: clears backups, build dirs, \
@@ -2387,12 +2391,12 @@ let clean =
       "Run the switch cleanup commands in all switches. Implies $(b,--switch-cleanup)"
   in
   let clean global_options dry_run
-      download_cache repos repo_cache switch all_switches =
+      download_cache repos repo_cache logs switch all_switches =
     apply_global_options global_options;
-    let download_cache, switch =
-      if download_cache || repos || repo_cache || switch || all_switches
-      then download_cache, switch
-      else true, true
+    let logs, download_cache, switch =
+      if logs || download_cache || repos || repo_cache || switch || all_switches
+      then logs, download_cache, switch
+      else true, true, true
     in
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
     let root = gt.root in
@@ -2493,10 +2497,13 @@ let clean =
     if download_cache then
       (OpamConsole.msg "Clearing cache of downloaded files\n";
        rmdir (OpamPath.archives_dir root);
-       cleandir (OpamPath.download_cache root))
+       cleandir (OpamPath.download_cache root));
+    if logs then
+      (OpamConsole.msg "Clearing logs\n";
+       cleandir (OpamPath.log root))
   in
   Term.(pure clean $global_options $dry_run $download_cache $repos $repo_cache
-        $switch $all_switches),
+        $logs $switch $all_switches),
   term_info "clean" ~doc ~man
 
 (* BUILD *)
