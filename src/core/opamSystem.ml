@@ -86,7 +86,10 @@ let temp_files = Hashtbl.create 1024
 let logs_cleaner =
   let to_clean = ref OpamStd.String.Set.empty in
   OpamStd.Sys.at_exit
-    (fun () -> OpamStd.String.Set.iter remove_dir !to_clean);
+    (fun () ->
+       OpamStd.String.Set.iter (fun f ->
+           try Unix.unlink f with Unix.Unix_error _ -> ())
+         !to_clean);
   fun tmp_dir ->
     if OpamCoreConfig.(!r.keep_log_dir) then
       to_clean := OpamStd.String.Set.remove tmp_dir !to_clean
@@ -95,9 +98,7 @@ let logs_cleaner =
 
 let rec temp_file ?dir prefix =
   let temp_dir = match dir with
-    | None   ->
-      logs_cleaner OpamCoreConfig.(!r.log_dir);
-      OpamCoreConfig.(!r.log_dir)
+    | None   -> OpamCoreConfig.(!r.log_dir)
     | Some d -> d in
   mkdir temp_dir;
   let file = temp_dir / temp_basename prefix in
@@ -105,6 +106,7 @@ let rec temp_file ?dir prefix =
     temp_file ?dir prefix
   else (
     Hashtbl.add temp_files file true;
+    logs_cleaner file;
     file
   )
 
@@ -250,8 +252,7 @@ let getchdir s =
     try Sys.getcwd ()
     with Sys_error _ ->
       let p = OpamCoreConfig.(!r.log_dir) in
-      if Sys.file_exists p then p else
-        (mkdir p; logs_cleaner p; p)
+      mkdir p; p
   in
   chdir s;
   p
