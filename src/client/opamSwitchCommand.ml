@@ -511,7 +511,7 @@ let reinstall init_st =
       reinstall = OpamPackage.Set.empty; }
   in
   import_t { OpamFile.SwitchExport.
-             selections = OpamSwitchState.selections st;
+             selections = OpamSwitchState.selections init_st;
              overlays = OpamPackage.Name.Map.empty; }
     st
 
