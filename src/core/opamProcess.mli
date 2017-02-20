@@ -125,6 +125,12 @@ val is_failure : result -> bool
     force has been set. *)
 val cleanup : ?force:bool -> result -> unit
 
+(** Like [is_success], with an added cleanup side-effect (as [cleanup
+    ~force:true]). Use this when not returning 0 is not an error case: since the
+    default behaviour is to cleanup only when the command returned 0, which is
+    not what is expected in that case. *)
+val check_success_and_cleanup : result -> bool
+
 (** {2 Misc} *)
 
 (** Reads a text file and returns a list of lines *)

@@ -310,8 +310,7 @@ let command_exists =
         (OpamProcess.command ~env ?dir ~name:(temp_file "command") ~verbose:false
            cmd args)
     in
-    OpamProcess.cleanup ~force:true r;
-    if OpamProcess.is_success r then
+    if OpamProcess.check_success_and_cleanup r then
       match r.OpamProcess.r_stdout with
       | cmdname::_ ->
         (* check that we have permission to execute the command *)

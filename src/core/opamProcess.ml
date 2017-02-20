@@ -490,6 +490,10 @@ let cleanup ?(force=false) r =
   if force || (not (OpamConsole.debug ()) && is_success r) then
     List.iter safe_unlink r.r_cleanup
 
+let check_success_and_cleanup r =
+  List.iter safe_unlink r.r_cleanup;
+  is_success r
+
 let log_line_limit = 5 * 80
 let truncate_str = "[...]"
 

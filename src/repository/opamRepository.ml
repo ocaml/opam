@@ -354,7 +354,7 @@ let validate_repo_update repo update =
     in
     cmd @@> fun r ->
     log "validation: %s" (OpamProcess.result_summary r);
-    Done (OpamProcess.is_success r)
+    Done (OpamProcess.check_success_and_cleanup r)
 
 open OpamRepositoryBackend
 

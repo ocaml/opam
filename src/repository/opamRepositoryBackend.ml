@@ -91,5 +91,7 @@ let get_diff parent_dir dir1 dir2 =
       OpamFilename.Base.to_string dir2; ]
   @@> function
   | { OpamProcess.r_code = 0; _ } -> finalise(); Done None
-  | { OpamProcess.r_code = 1; _ } -> Done (Some patch_file)
+  | { OpamProcess.r_code = 1; _ } as r ->
+    OpamProcess.cleanup ~force:true r;
+    Done (Some patch_file)
   | r -> OpamSystem.process_error r
