@@ -2812,14 +2812,16 @@ let build =
                 then []
                 else OpamStd.Sys.exit 66
           in
+          let compiler_str =
+            if compiler_atoms = [] then "no compiler selected"
+            else "compiler "^OpamFormula.string_of_atoms compiler_atoms
+          in
           if OpamGlobalState.switches gt = [] then
             OpamConsole.msg "Initialising switch %s with compiler %s\n"
-              (OpamSwitch.to_string switch)
-              (OpamFormula.string_of_atoms compiler_atoms)
+              (OpamSwitch.to_string switch) compiler_str
           else if not @@ OpamConsole.confirm
-              "Create switch %s with compiler %s ?\n"
-              (OpamSwitch.to_string switch)
-              (OpamFormula.string_of_atoms compiler_atoms)
+              "Create switch %s with compiler %s ?"
+              (OpamSwitch.to_string switch) compiler_str
           then
             OpamConsole.error_and_exit
               "Aborted. Please use '--switch', or 'eval $(opam env --switch)' \
