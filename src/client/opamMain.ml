@@ -2672,6 +2672,7 @@ let build =
     in
     let local_switch = OpamSwitch.of_dirname (OpamFilename.cwd ()) in
     let switch =
+      if no_autoinit then OpamStateConfig.get_switch () else
       match OpamStateConfig.(!r.current_switch, !r.switch_from) with
       | None, _ | Some _, `Default -> local_switch
       | Some sw, (`Command_line | `Env) -> sw
