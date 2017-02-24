@@ -336,7 +336,7 @@ let switch lock gt switch =
       (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
-let import_t importfile t =
+let import_t ?ask importfile t =
   log "import switch";
 
   let import_sel = importfile.OpamFile.SwitchExport.selections in
@@ -410,7 +410,7 @@ let import_t importfile t =
 
     let roots = OpamPackage.names_of_packages import_sel.sel_roots in
 
-    OpamSolution.resolve_and_apply t (Import roots)
+    OpamSolution.resolve_and_apply ?ask t (Import roots)
       ~requested:(OpamPackage.Name.Set.of_list @@ List.map fst to_import)
       ~orphans:OpamPackage.Set.empty
       { wish_install = to_import;
