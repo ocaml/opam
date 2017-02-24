@@ -68,7 +68,7 @@ let cached_digest =
       digest
 
 let item_of_filename f : item =
-  let stats = Unix.stat f in
+  let stats = Unix.lstat f in
   Unix.(stats.st_uid, stats.st_gid, stats.st_perm),
   match stats.Unix.st_kind with
   | Unix.S_REG -> File (cached_digest f stats.Unix.st_size stats.Unix.st_mtime)
