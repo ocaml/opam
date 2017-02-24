@@ -117,7 +117,9 @@ module VCS = struct
     (* last 2 since the tag counts as one *)
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done false
-    | { OpamProcess.r_code = 1; _ } -> Done true
+    | { OpamProcess.r_code = 1; _ } as r->
+      OpamProcess.cleanup ~force:true r;
+      Done true
     | r -> OpamSystem.process_error r
 
   let diff repo_root repo_url =
@@ -150,9 +152,7 @@ module VCS = struct
 
   let is_dirty dir =
     darcs dir [ "whatsnew"; "--quiet"; "--summary" ]
-    @@> function
-    | { OpamProcess.r_code = 0; _ } -> Done true
-    | _ -> Done false
+    @@> fun r -> Done (OpamProcess.check_success_and_cleanup r)
 
 end
 

@@ -48,7 +48,7 @@ module VCS : OpamVCS.VCS = struct
     let refspec = Printf.sprintf "+%s:%s" branch (remote_ref repo_url) in
     git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
     @@> fun r ->
-    if OpamProcess.is_success r then Done ()
+    if OpamProcess.check_success_and_cleanup r then Done ()
     else
       (* fallback to fetching all first (workaround, git 2.1 fails silently
          on 'fetch HASH' when HASH isn't available locally already).
@@ -64,7 +64,9 @@ module VCS : OpamVCS.VCS = struct
   let revision repo_root =
     git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
     fun r ->
-    if r.OpamProcess.r_code = 128 then Done None else
+    if r.OpamProcess.r_code = 128 then
+      (OpamProcess.cleanup ~force:true r; Done None)
+    else
       (OpamSystem.raise_on_process_error r;
        match r.OpamProcess.r_stdout with
        | []      -> Done None
@@ -101,7 +103,7 @@ module VCS : OpamVCS.VCS = struct
     OpamSystem.raise_on_process_error r;
     git repo_root ~stdout:patch_file [ "diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
-    if OpamProcess.is_failure r then
+    if not (OpamProcess.check_success_and_cleanup r) then
       (finalise ();
        OpamSystem.internal_error "Git error: %s not found." rref)
     else if OpamSystem.file_is_empty patch_file then
@@ -114,7 +116,8 @@ module VCS : OpamVCS.VCS = struct
     git repo_root [ "diff" ; "--quiet" ; rref; "--" ]
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
-    | { OpamProcess.r_code = 1; _ } -> Done false
+    | { OpamProcess.r_code = 1; _ } as r ->
+      OpamProcess.cleanup ~force:true r; Done false
     | r -> OpamSystem.process_error r
 
   let versionned_files repo_root =
@@ -136,7 +139,8 @@ module VCS : OpamVCS.VCS = struct
     git dir [ "diff"; "--quiet" ]
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done false
-    | { OpamProcess.r_code = 1; _ } -> Done true
+    | { OpamProcess.r_code = 1; _ } as r ->
+      OpamProcess.cleanup ~force:true r; Done true
     | r -> OpamSystem.process_error r
 
 end

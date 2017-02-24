@@ -166,7 +166,7 @@ let opam_init ?root_dir ?strict =
   (* (iii) load from env and options using OpamXxxConfig.init *)
   let log_dir =
     if log_dir = None && initialised
-    then Some OpamFilename.(Dir.to_string Op.(root / "log"))
+    then Some OpamFilename.(Dir.to_string (OpamPath.log root))
     else None
   in
   (fun () -> ()) |>
