@@ -500,7 +500,7 @@ let reinstall init_st =
   let pkg_dirs =
     List.filter ((<>) opam_subdir) (OpamFilename.dirs switch_root)
   in
-  List.iter OpamFilename.rmdir pkg_dirs;
+  List.iter OpamFilename.cleandir pkg_dirs;
   List.iter OpamFilename.remove (OpamFilename.files switch_root);
   OpamFilename.cleandir (OpamPath.Switch.config_dir gt.root switch);
   OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
