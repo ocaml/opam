@@ -109,4 +109,5 @@ val opam_init:
   ?errlog_length:int ->
   ?merged_output:bool ->
   ?use_openssl:bool ->
+  ?precise_tracking:bool ->
   unit -> unit

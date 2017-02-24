@@ -23,6 +23,7 @@ type t = {
   errlog_length: int;
   merged_output: bool;
   use_openssl: bool;
+  precise_tracking: bool;
 }
 
 type 'a options_fun =
@@ -38,6 +39,7 @@ type 'a options_fun =
   ?errlog_length:int ->
   ?merged_output:bool ->
   ?use_openssl:bool ->
+  ?precise_tracking:bool ->
   'a
 
 let default = {
@@ -56,6 +58,7 @@ let default = {
   errlog_length = 12;
   merged_output = true;
   use_openssl = true;
+  precise_tracking = false;
 }
 
 let setk k t
@@ -71,6 +74,7 @@ let setk k t
     ?errlog_length
     ?merged_output
     ?use_openssl
+    ?precise_tracking
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -85,7 +89,8 @@ let setk k t
     keep_log_dir = t.keep_log_dir + keep_log_dir;
     errlog_length = t.errlog_length + errlog_length;
     merged_output = t.merged_output + merged_output;
-    use_openssl = t.use_openssl + use_openssl
+    use_openssl = t.use_openssl + use_openssl;
+    precise_tracking = t.precise_tracking + precise_tracking;
   }
 
 let set t = setk (fun x () -> x) t

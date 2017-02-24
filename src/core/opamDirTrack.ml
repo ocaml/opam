@@ -65,23 +65,34 @@ let cached_digest =
     with Not_found ->
       let digest = Digest.file f in
       Hashtbl.replace item_cache f (size, mtime, digest);
-      digest
+      Digest.to_hex digest
 
-let item_of_filename f : item =
+let quick_digest _f size mtime =
+  Printf.sprintf "S%dT%s" size (string_of_float mtime)
+
+let get_digest ?(precise=OpamCoreConfig.(!r.precise_tracking)) f size mtime =
+  if precise then cached_digest f size mtime
+  else quick_digest f size mtime
+
+let item_of_filename ?precise f : item =
   let stats = Unix.lstat f in
   Unix.(stats.st_uid, stats.st_gid, stats.st_perm),
   match stats.Unix.st_kind with
-  | Unix.S_REG -> File (cached_digest f stats.Unix.st_size stats.Unix.st_mtime)
+  | Unix.S_REG ->
+    File (get_digest ?precise f stats.Unix.st_size stats.Unix.st_mtime)
   | Unix.S_DIR -> Dir
   | Unix.S_LNK -> Link (Unix.readlink f)
   | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO | Unix.S_SOCK ->
     Special Unix.(stats.st_dev, stats.st_rdev)
 
 let item_digest = function
-  | _perms, File d -> "F:" ^ Digest.to_hex d
+  | _perms, File d -> "F:" ^ d
   | _perms, Dir -> "D"
   | _perms, Link l -> "L:" ^ l
   | _perms, Special (a,b) -> Printf.sprintf "S:%d:%d" a b
+
+let is_precise_digest d =
+  not (OpamStd.String.starts_with ~prefix:"F:S" d)
 
 let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
   let module SM = OpamStd.String.Map in
@@ -150,7 +161,8 @@ let check prefix changes =
       | Added dg | Kind_changed dg ->
         let status =
           try
-            let it = item_of_filename f in
+            let precise = is_precise_digest dg in
+            let it = item_of_filename ~precise f in
             if item_digest it = dg then `Unchanged
             else `Changed
           with Unix.Unix_error _ -> `Removed
@@ -179,7 +191,8 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
         | Added dg | Kind_changed dg ->
           let cur_item_ct, cur_dg =
             try
-              let item = item_of_filename f in
+              let precise = is_precise_digest dg in
+              let item = item_of_filename ~precise f in
               Some (snd item), Some (item_digest item)
             with Unix.Unix_error _ -> None, None
           in
@@ -203,7 +216,8 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
           acc
         | Contents_changed dg ->
           let unreverted =
-            try item_digest (item_of_filename fname) <> dg
+            let precise = is_precise_digest dg in
+            try item_digest (item_of_filename ~precise fname) <> dg
             with Unix.Unix_error _ -> false
           in
           if unreverted then

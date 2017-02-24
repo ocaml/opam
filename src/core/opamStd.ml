@@ -1118,6 +1118,7 @@ module Config = struct
       ?errlog_length:(env_int "ERRLOGLEN")
       ?merged_output:(env_bool "MERGEOUT")
       ?use_openssl:(env_bool "USEOPENSSL")
+      ?precise_tracking:(env_bool "PRECISETRACKING")
 
   let init ?noop:_ = initk (fun () -> ())
 end

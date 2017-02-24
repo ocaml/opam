@@ -42,6 +42,9 @@ type t = private {
   use_openssl : bool;
   (** If false, will use built-in hash functions without checking for an openssl
       executable first *)
+  precise_tracking : bool;
+  (** If set, will take full md5 of all files when checking diffs (to track
+      installations), rather than rely on just file size and mtime *)
 }
 
 type 'a options_fun =
@@ -57,6 +60,7 @@ type 'a options_fun =
   ?errlog_length:int ->
   ?merged_output:bool ->
   ?use_openssl:bool ->
+  ?precise_tracking:bool ->
   'a
 
 val default : t
