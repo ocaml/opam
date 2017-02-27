@@ -708,6 +708,11 @@ let rec flock_update
     let new_lock = flock flag ~dontblock file in
     lock.kind <- (flag :> lock_flag);
     lock.fd <- new_lock.fd
+  | `Lock_write, { fd = Some fd; file; kind = `Lock_read } ->
+    Unix.close fd; (* fd needs read-write reopen *)
+    let new_lock = flock flag ~dontblock file in
+    lock.kind <- (flag :> lock_flag);
+    lock.fd <- new_lock.fd
   | (`Lock_read | `Lock_write) as flag, { fd = Some fd; file; _ } ->
     (try
        Unix.lockf fd (unix_lock_op ~dontblock:true flag) 0
@@ -730,9 +735,10 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
     OpamConsole.error_and_exit "Write lock attempt in safe mode";
   | flag ->
     mkdir (Filename.dirname file);
-    let fd = Unix.openfile file Unix.([O_CREAT; O_RDWR]) 0o666 in
+    let rdflag = if (flag :> lock_flag) = `Lock_write then Unix.O_RDWR else Unix.O_RDONLY in
+    let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; rdflag]) 0o666 in
     let lock = { fd = Some fd; file; kind = `Lock_none } in
-    flock_update (flag :> lock_flag) ?dontblock lock;
+    flock_update flag ?dontblock lock;
     lock
 
 let funlock lock = flock_update `Lock_none lock
