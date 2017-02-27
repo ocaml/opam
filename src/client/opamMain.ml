@@ -1577,7 +1577,7 @@ let switch =
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
-    "reinstall", `reinstall, ["SWITCH"],
+    "reinstall", `reinstall, ["[SWITCH]"],
     "Reinstall the given compiler switch and all its packages.";
     "list", `list, [],
     "Lists installed switches.";
@@ -1780,8 +1780,13 @@ let switch =
           switches
       in
       `Ok ()
-    | Some `reinstall, [switch] ->
-      let switch = OpamSwitch.of_string switch in
+    | Some `reinstall, switch ->
+      let switch = match switch with
+        | [sw] -> OpamSwitch.of_string sw
+        | [] -> OpamStateConfig.get_switch ()
+        | _ ->
+          OpamConsole.error_and_exit "Only one switch argument is supported"
+      in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
       let _st = OpamSwitchCommand.reinstall st in
