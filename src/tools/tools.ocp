@@ -25,12 +25,17 @@ if build_libs = [] ||
          strings = build_libs )
 then {
 
+begin objects "topstart"
+  generated = true;
+  dirname = "%{OCAMLLIB}%/compiler-libs";
+  files = [ "topstart.ml" ];
+  requires = [ "compiler-libs.toplevel" ];
+end
+
 begin program "opam-admin.top"
   has_asm = false
-  ocamlc = "ocamlmktop"
-  files = [
-    "opam_admin_top.ml"
-  ]
+  bytelink = [ "-linkall" ]
+  files = [ "opam_admin_top.ml" ];
   requires = [
     "opam-core"
     "opam-format"
@@ -38,6 +43,7 @@ begin program "opam-admin.top"
     "opam-repository"
     "opam-state"
     "re.glob"
+    "topstart"
   ]
 end
 }
