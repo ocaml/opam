@@ -15,7 +15,7 @@ type t = private {
   cudf_file: string option;
   solver_timeout: float;
   external_solver: OpamTypes.arg list option Lazy.t;
-  soft: bool;
+  best_effort: bool;
   solver_preferences_default: string Lazy.t option;
   solver_preferences_upgrade: string Lazy.t option;
   solver_preferences_fixup: string Lazy.t option;
@@ -25,7 +25,7 @@ type 'a options_fun =
   ?cudf_file:string option ->
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->
-  ?soft:bool ->
+  ?best_effort:bool ->
   ?solver_preferences_default:string Lazy.t option ->
   ?solver_preferences_upgrade:string Lazy.t option ->
   ?solver_preferences_fixup:string Lazy.t option ->

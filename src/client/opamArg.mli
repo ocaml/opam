@@ -83,7 +83,7 @@ type global_options = {
   use_internal_solver : bool;
   cudf_file : string option;
   solver_preferences : string option;
-  soft_request: bool;
+  best_effort: bool;
   safe_mode : bool;
   json : string option;
   no_auto_upgrade : bool;
