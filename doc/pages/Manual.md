@@ -95,10 +95,10 @@ The current switch can be selected in the following ways:
   further commands, except when overriden in one of the following ways.
 - for local switches, which are external to the opam root, when in the directory
   where the switch resides or a descendant.
-- through the `--switch <switch>` command-line flag, for a single command.
 - by setting the `OPAMSWITCH=<switch>` environment variable, to set it within a
-  single shell session. This can be done by running `eval $(opam config env
-  --switch <switch>)` to set the shell environment at once, see below.
+  single shell session. This can be done by running `eval $(opam env --switch
+  <switch>)` to set the shell environment at once, see below.
+- through the `--switch <switch>` command-line flag, for a single command.
 
 Switches have their own prefix, normally `~/.opam/<switch>`, where packages get
 intalled ; to use what is installed in a switch, some environment variables need
@@ -137,10 +137,10 @@ Switches are laid out thusly:
   in the UNIX `/usr` standard (with subdirectories `bin`, `lib`, `share`, `man`,
   `doc`, `etc`...)
 - `<switch-prefix>/.opam-switch/`: holds all <span class="opam">opam</span> data regarding this switch
-- [`<switch-prefix>/.opam-switch/switch-config`](#switchconfig): switch-specific
-  configuration
-- [`<switch-prefix>/.opam-switch/switch-state`](#switchstate): stores the sets
-  of installed, base, pinned packages
+- [`<switch-prefix>/.opam-switch/switch-config`: switch-specific
+  configuration](#switchconfig)
+- [`<switch-prefix>/.opam-switch/switch-state`: stores the sets
+  of installed, base, pinned packages](#switchstate)
 - `<switch-prefix>/.opam-switch/environment`: contains the environment variable
   settings for this switch
 - `<switch-prefix>/.opam-switch/reinstall`: list of packages marked for
@@ -154,9 +154,10 @@ Switches are laid out thusly:
   class="opam">opam</span>
 - `<switch-prefix>/.opam-switch/packages/<pkgname>.<version>/`: metadata of the
   given package as it has been used for its installation
-- `<switch-prefix>/.opam-switch/packages.dev/<pkgname>/`: sources (archives or
-  VC clones) of the given packages, when not fetched from the repository
-  directly
+- `<switch-prefix>/.opam-switch/sources/<pkgname>.<version>/` or `<pkgname>/`:
+  unpacked sources of packages. The version is omitted from the directory name
+  for pinned packages, which are typically synchronised to a version-control
+  system rather than unpacked from an archive.
 - `<switch-prefix>/.opam-switch/overlay/<pkgname>/`: custom definition for the
   given pinned packages
 - `<switch-prefix>/.opam-switch/build/<pkgname>.<version>/`: temporary
@@ -172,9 +173,11 @@ Switches are laid out thusly:
 Pinning is an operation by which a package definition can be created or altered
 locally in a switch.
 
-In its most simple form, `opam pin <package>`, `<package>` is bound to its
-current version and won't be changed on `opam upgrade` (assuming it is an
-existing package).
+In its most simple form, `opam pin <package> <version>`, `<package>` is bound to
+the specified version and won't be changed on `opam upgrade` (assuming it is an
+existing package). `opam pin edit <package>` provides a way to directly pin and
+edit the metadata of the given package, locally to the current switch, for
+example to tweak a dependency.
 
 `opam pin` can further be used to divert the source of a package, or even create
 a new package, using `opam pin <package> <URL>` ; this is also very useful to
@@ -184,8 +187,9 @@ or `opam/` directory, a matching `<pkgname>.opam` or `opam` file, that will be
 used as the initial package metadata.
 
 Whenever an install, reinstall or upgrade command-line refers to a pinned
-package, <span class="opam">opam</span> first fetches its latest source. `opam update` otherwise updates
-its cache of all the packages pinned in the current switch.
+package, <span class="opam">opam</span> first fetches its latest source. `opam
+update [--development]` is otherwise the standard way to update the sources of
+all the packages pinned in the current switch.
 
 ## Common file format
 
@@ -631,9 +635,12 @@ contains configuration options specific to that switch:
 
 ### Package definitions
 
-Package definitions can be a single [`opam`](#opam) file, with optional
-[`descr`](#descr) and [`url`](#url) files besides it. A [`files/`](#files)
-subdirectory can also be used to add files over the package source.
+Package definitions can be a single [`opam`](#opam) file. A [`files/`](#files)
+subdirectory can also be used to add files over the package source. Older
+versions of <span class="opam">opam</span> used [`descr`](#descr) and
+[`url`](#url) files besides the `opam` file, and this is still supported, but
+the preferred way is now to include their information into the `opam` file
+instead.
 
 [`<pkgname>.install`](#ltpkgnamegtinstall) and
 [`<pkgname>.config`](#ltpkgnamegtconfig), on the other hand, are metadata files
