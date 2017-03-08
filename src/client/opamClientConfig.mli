@@ -87,6 +87,7 @@ val opam_init:
   ?build_doc:bool ->
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
+  ?ignore_constraints_on:OpamPackage.Name.Set.t ->
   ?cudf_file:string option ->
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->

@@ -112,6 +112,7 @@ let apply_global_options o =
     (* ?dryrun:bool *)
     (* ?fake:bool *)
     (* ?makecmd:string Lazy.t *)
+    (* ?ignore_constraints_on:name_set *)
     (* ?skip_dev_update:bool *)
     ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
     (* ?root_is_ok:bool *)
@@ -146,15 +147,16 @@ type build_options = {
   skip_update   : bool;
   external_tags : string list;
   jobs          : int option;
+  ignore_constraints_on: name list option;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build working_dir make no_checksums
     req_checksums build_test build_doc show dryrun skip_update external_tags
-    fake jobs = {
+    fake jobs ignore_constraints_on = {
   keep_build_dir; reuse_build_dir; inplace_build; working_dir; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; external_tags; fake; jobs;
+  skip_update; external_tags; fake; jobs; ignore_constraints_on;
 }
 
 let apply_build_options b =
@@ -175,6 +177,9 @@ let apply_build_options b =
     ?build_doc:(flag b.build_doc)
     ?dryrun:(flag b.dryrun)
     ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
+    ?ignore_constraints_on:
+      OpamStd.Option.Op.(b.ignore_constraints_on >>|
+                         OpamPackage.Name.Set.of_list)
     ();
   OpamClientConfig.update
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
@@ -915,10 +920,17 @@ let build_options =
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
        environment. You probably want `--dry-run'. You've been warned." in
+  let ignore_constraints_on =
+    mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
+      "Forces opam to ignore version constraints on all dependencies to the \
+       listed packages. This can be used to test compatibility, but expect \
+       builds to break when using this. Note that version constraints on \
+       optional dependencies and conflicts are unaffected."
+      Arg.(some (list package_name)) None ~vopt:(Some []) in
   Term.(pure create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $external_tags $fake $jobs_flag)
+    $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
 
 let package_selection_section = "PACKAGE SELECTION"
 
