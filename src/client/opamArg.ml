@@ -30,7 +30,7 @@ type global_options = {
   use_internal_solver : bool;
   cudf_file : string option;
   solver_preferences : string option;
-  soft_request : bool;
+  best_effort : bool;
   safe_mode : bool;
   json : string option;
   no_auto_upgrade : bool;
@@ -39,14 +39,14 @@ type global_options = {
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root no_base_packages external_solver use_internal_solver
-    cudf_file solver_preferences soft_request safe_mode json no_auto_upgrade =
+    cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   let verbose = List.length verbose in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; no_base_packages; external_solver; use_internal_solver;
-    cudf_file; solver_preferences; soft_request; safe_mode; json;
+    cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; }
 
 let apply_global_options o =
@@ -94,7 +94,7 @@ let apply_global_options o =
     ?cudf_file:(some o.cudf_file)
     (* ?solver_timeout:float *)
     ?external_solver
-    ?soft:(flag o.soft_request)
+    ?best_effort:(flag o.best_effort)
     ?solver_preferences_default:(some solver_prefs)
     ?solver_preferences_upgrade:(some solver_prefs)
     ?solver_preferences_fixup:(some solver_prefs)
@@ -801,8 +801,8 @@ let global_options =
       "Debug option: Save the CUDF requests sent to the solver to \
        $(docv)-<n>.cudf."
       Arg.(some string) None in
-  let soft_request =
-    mk_flag ~section ["soft-request"]
+  let best_effort =
+    mk_flag ~section ["best-effort"]
       "Don't fail if all requested packages can't be installed: try to install \
        as many as possible. Note that this requires a recent external solver \
        (aspcud or mccs only)."
@@ -835,7 +835,7 @@ let global_options =
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $no_base_packages $external_solver
-        $use_internal_solver $cudf_file $solver_preferences $soft_request
+        $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade)
 
 (* Options common to all build commands *)

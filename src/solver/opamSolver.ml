@@ -325,9 +325,9 @@ let map_request f r =
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)
-(* Remove constraints in soft mode *)
+(* Remove constraints in best_effort mode *)
 let cleanup_request universe (req:atom request) =
-  if OpamSolverConfig.(!r.soft) then
+  if OpamSolverConfig.(!r.best_effort) then
     { req with wish_install = []; wish_upgrade = []; }
   else
   let wish_install =

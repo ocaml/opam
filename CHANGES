@@ -2,6 +2,10 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0~beta3
+* Renamed `--soft-request` to `--best-effort`
+* Fixed and improved speed of the package file tracking mechanism
+
 2.0~beta2
 * Fixes (mainly to `opam build`)
 * Faster coinstallability check
