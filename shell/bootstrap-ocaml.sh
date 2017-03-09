@@ -17,5 +17,5 @@ fi
 tar -zxvf ${V}.tar.gz
 cd ${V}
 ./configure -prefix "`pwd`/../ocaml"
-make world opt
+make world opt.opt
 make install
