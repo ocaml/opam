@@ -436,9 +436,9 @@ let mk_flag ?section flags doc =
   let doc = Arg.info ?docs:section ~doc flags in
   Arg.(value & flag & doc)
 
-let mk_opt ?section ?vopt flags value doc conv default =
+let mk_opt ?section ?vopt flags value doc kind default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  Arg.(value & opt ?vopt conv default & doc)
+  Arg.(value & opt ?vopt kind default & doc)
 
 let mk_tristate_opt ?section flags value doc =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
@@ -510,13 +510,13 @@ let term_info title ~doc ~man =
   let man = man @ help_sections in
   Term.info ~sdocs:global_option_section ~docs:"COMMANDS" ~doc ~man title
 
-let arg_list name doc conv =
+let arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
-  Arg.(value & pos_all conv [] & doc)
+  Arg.(value & pos_all kind [] & doc)
 
-let nonempty_arg_list name doc conv =
+let nonempty_arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
-  Arg.(non_empty & pos_all conv [] & doc)
+  Arg.(non_empty & pos_all kind [] & doc)
 
 (* Common flags *)
 let print_short_flag =
