@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "opam-lib"
-version: "1.3.0~dev"
+version: "1.3.1"
 maintainer: "opam-devel@lists.ocaml.org"
 homepage:     "https://opam.ocaml.org/"
 dev-repo:     "https://github.com/ocaml/opam.git"
