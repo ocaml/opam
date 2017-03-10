@@ -910,7 +910,7 @@ let build_options =
        disables that behaviour and will keep them to their version in cache."
   in
   let external_tags =
-    mk_opt ~section ["e";"external"] "TAGS"
+    mk_opt ~section ["external"] "TAGS"
       "Display the external packages associated to the given tags. \
        This is deprecated, use `opam list --external' instead"
       Arg.(list string) [] in
