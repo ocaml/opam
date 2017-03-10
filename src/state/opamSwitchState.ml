@@ -488,7 +488,24 @@ let universe st
         OpamFilter.partial_filter_formula (env nv) (f opam)
       ) opams
   in
-  let u_depends = get_deps OpamFile.OPAM.depends st.opams in
+  let u_depends =
+    let depend =
+      let ignored = OpamStateConfig.(!r.ignore_constraints_on) in
+      if OpamPackage.Name.Set.is_empty ignored then OpamFile.OPAM.depends
+      else fun opam ->
+        OpamFormula.map (fun (name, cstr as atom) ->
+            if OpamPackage.Name.Set.mem name ignored then
+              let cstr =
+                OpamFormula.map
+                  (function Constraint _ -> Empty | Filter _ as f -> Atom f)
+                  cstr
+              in
+              Atom (name, cstr)
+            else Atom atom)
+          (OpamFile.OPAM.depends opam)
+    in
+    get_deps depend st.opams
+  in
   let u_conflicts = get_conflicts st.opams in
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)

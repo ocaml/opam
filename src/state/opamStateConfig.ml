@@ -20,6 +20,7 @@ type t = {
   build_doc: bool;
   dryrun: bool;
   makecmd: string Lazy.t;
+  ignore_constraints_on: name_set;
 }
 
 let default = {
@@ -38,6 +39,7 @@ let default = {
       | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
       | _ -> "make"
     );
+  ignore_constraints_on = OpamPackage.Name.Set.empty;
 }
 
 type 'a options_fun =
@@ -50,6 +52,7 @@ type 'a options_fun =
   ?build_doc:bool ->
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
+  ?ignore_constraints_on:name_set ->
   'a
 
 let setk k t
@@ -62,6 +65,7 @@ let setk k t
     ?build_doc
     ?dryrun
     ?makecmd
+    ?ignore_constraints_on
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -75,6 +79,7 @@ let setk k t
     build_doc = t.build_doc + build_doc;
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
+    ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
   }
 
 let set t = setk (fun x () -> x) t
@@ -101,6 +106,11 @@ let initk k =
     ?build_doc:(env_bool "BUILDDOC")
     ?dryrun:(env_bool "DRYRUN")
     ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
+    ?ignore_constraints_on:
+      (env_string "IGNORECONSTRAINTS" >>| fun s ->
+       OpamStd.String.split s ',' |>
+       List.map OpamPackage.Name.of_string |>
+       OpamPackage.Name.Set.of_list)
 
 let init ?noop:_ = initk (fun () -> ())
 
