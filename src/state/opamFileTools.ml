@@ -27,7 +27,7 @@ let names_of_formula flag f =
   |> OpamPackage.Name.Set.of_list
 
 let all_commands t =
-  t.build @ t.install @ t.remove @ t.build_test @ t.build_doc
+  t.build @ t.install @ t.remove @ t.run_test @ t.deprecated_build_doc
 
 let all_filters ?(exclude_post=false) t =
   OpamStd.List.filter_map snd t.patches @
@@ -99,14 +99,15 @@ let map_all_variables f t =
   with_messages (List.map map_optfld t.messages) |>
   with_post_messages (List.map map_optfld t.post_messages) |>
   with_build (map_commands t.build) |>
-  with_build_test (map_commands t.build_test) |>
-  with_build_doc (map_commands t.build_doc) |>
+  with_run_test (map_commands t.run_test) |>
   with_install (map_commands t.install) |>
   with_remove (map_commands t.remove) |>
   with_depends (map_filtered_formula t.depends) |>
   with_depopts (map_filtered_formula t.depopts) |>
   with_available (OpamFilter.map_variables f t.available) |>
-  with_features (map_features t.features)
+  with_features (map_features t.features) |>
+  with_deprecated_build_doc (map_commands t.deprecated_build_doc)
+
 
 let all_expanded_strings t =
   List.map fst t.messages @
@@ -419,6 +420,12 @@ let lint t =
        in
        match t.descr with None -> false | Some d ->
          not (Re.execp valid_re (OpamFile.Descr.synopsis d)));
+    cond 48 `Warning
+      "The fields 'build-test:' and 'build-doc:' are deprecated, and should be \
+       replaced by uses of the 'with-test' and 'with-doc' filter variables in \
+       the 'build:' and 'install:' fields, and by the newer 'run-test:' \
+       field."
+      (t.deprecated_build_test <> [] || t.deprecated_build_doc <> []);
   ]
   in
   format_errors @

@@ -102,8 +102,8 @@ let initk k =
     ?switch_from
     ?jobs:(env_int "JOBS" >>| fun s -> lazy s)
     ?dl_jobs:(env_int "DOWNLOADJOBS")
-    ?build_test:(env_bool "BUILDTEST")
-    ?build_doc:(env_bool "BUILDDOC")
+    ?build_test:(env_bool "WITHTEST" ++ env_bool "BUILDTEST")
+    ?build_doc:(env_bool "WITHDOC" ++ env_bool "BUILDDOC")
     ?dryrun:(env_bool "DRYRUN")
     ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
     ?ignore_constraints_on:
