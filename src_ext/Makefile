@@ -97,11 +97,11 @@ graph-workaround.stamp:
 SRC_cppo = cppo_version.ml cppo_types.ml cppo_parser.mli cppo_parser.ml cppo_lexer.ml \
 					 cppo_command.ml cppo_eval.ml cppo_main.ml
 
-cppo/cppo:
+cppo/cppo$(EXE):
 	echo 'let cppo_version = "$(VERSION)"' > cppo/cppo_version.ml
 	ocamllex cppo/cppo_lexer.mll
 	ocamlyacc cppo/cppo_parser.mly
-	ocamlopt -o cppo/cppo -I cppo -dtypes unix.cmxa str.cmxa $(foreach ml,$(SRC_cppo),cppo/$(ml))
+	ocamlopt -o cppo/cppo$(EXE) -I cppo -dtypes unix.cmxa str.cmxa $(foreach ml,$(SRC_cppo),cppo/$(ml))
 
 ifeq ($(OCAML_4_02),true)
 CPPOVARS=-D OCAML4 -D OCAML_4_02
@@ -109,16 +109,21 @@ else
 CPPOVARS=-D OCAML4
 endif
 
-extlib-cppo.stamp: cppo/cppo
-	cppo/cppo $(CPPOVARS) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml	
-	cppo/cppo $(CPPOVARS) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
-	cppo/cppo $(CPPOVARS) extlib/src/extString.mlpp -o extlib/src/extString.ml
-	cppo/cppo $(CPPOVARS) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
+extlib-cppo.stamp: cppo/cppo$(EXE)
+	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml
+	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
+	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extString.mlpp -o extlib/src/extString.ml
+	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
 	@touch $@
 
 dose-cppo.stamp:
 	for f in `find dose -regex ".*.mli*"`; do\
-		echo "(*pp cppo/cppo -V OCAML:$(OCAMLVERSION) -D 'OCAMLGRAPHVERSION 186' *)"|cat - $$f > /tmp/out && mv /tmp/out $$f;\
+		T=`mktemp`; \
+		echo "(*pp cppo$(if $(filter 1,$(WIN32)),\,/)cppo$(EXE) -V OCAML:$(OCAMLVERSION) *)" > $$T; \
+		if fgrep -q OCAMLGRAPHVERSION $$f ; then \
+		  echo "#define OCAMLGRAPHVERSION 186" >> $$T ; \
+		fi ; \
+		cat $$f >> $$T && mv $$T $$f;\
 	done
 	@touch $@
 
