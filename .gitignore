@@ -17,6 +17,7 @@ src_ext/opam_file_format/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
+src_ext/*.download
 *.tar.bz2
 *.annot
 *.tar.gz
