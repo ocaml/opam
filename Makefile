@@ -176,7 +176,7 @@ opam-devel: opam-devel.install
 
 fastclean: rmartefacts
 	@rm -f src/x_build_libs.ocp
-	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null
+	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null || true
 	@rm -rf src/*/_obuild
 
 cold:
