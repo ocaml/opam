@@ -40,7 +40,7 @@ val build_package:
     [None] on success, [Some exn] on error. Do not update OPAM's
     metadata. See {!build_package} to build the package. *)
 val install_package:
-  rw switch_state -> ?doc:bool -> ?build_dir:dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?build_dir:dirname -> package ->
   exn option OpamProcess.job
 
 (** Find out if the package source is needed for uninstall *)

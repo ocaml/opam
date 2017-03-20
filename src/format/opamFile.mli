@@ -264,8 +264,7 @@ module OPAM: sig
 
     (* Build instructions *)
     build      : command list;
-    build_test : command list;
-    build_doc  : command list;
+    run_test   : command list;
     install    : command list;
     remove     : command list;
 
@@ -312,6 +311,8 @@ module OPAM: sig
     (* Deprecated, for compat and proper linting *)
     ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
     os         : (bool * string) generic_formula;
+    deprecated_build_test : command list;
+    deprecated_build_doc  : command list;
   }
 
   include IO_FILE with type t := t
@@ -426,10 +427,13 @@ module OPAM: sig
   val tags: t -> string list
 
   (** Commands to build and run the tests *)
-  val build_test: t -> command list
+  val run_test: t -> command list
 
   (** Commands to build the documentation *)
-  val build_doc: t -> command list
+  val deprecated_build_doc: t -> command list
+
+  (** Commands to build the tests *)
+  val deprecated_build_test: t -> command list
 
   (** Messages to display before taking action *)
   val messages: t -> (string * filter option) list
@@ -504,9 +508,7 @@ module OPAM: sig
   (** Construct as [build] *)
   val with_build: command list -> t -> t
 
-  val with_build_test: command list -> t -> t
-
-  val with_build_doc: command list -> t -> t
+  val with_run_test: command list -> t -> t
 
   val with_install: command list -> t -> t
 
@@ -559,6 +561,10 @@ module OPAM: sig
   val with_extensions: value OpamStd.String.Map.t -> t -> t
 
   val add_extension: t -> string -> value -> t
+
+  val with_deprecated_build_doc: command list -> t -> t
+
+  val with_deprecated_build_test: command list -> t -> t
 
   val with_descr: Descr.t -> t -> t
   val with_descr_opt: Descr.t option -> t -> t

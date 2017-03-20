@@ -532,8 +532,8 @@ let filter_deps ~build ~test ~doc ~dev ?default deps =
   let env var =
     match OpamVariable.Full.to_string var with
     | "build" -> Some (B build)
-    | "test" -> Some (B test)
-    | "doc" -> Some (B doc)
+    | "with-test" -> Some (B test)
+    | "with-doc" -> Some (B doc)
     | "dev" -> Some (B dev)
     | _ -> None
   in

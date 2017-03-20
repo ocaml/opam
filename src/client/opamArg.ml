@@ -884,15 +884,18 @@ let build_options =
       "Reject the installation of packages that don't provide a checksum for the upstream archives. \
        This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
-    mk_flag ~section ["t";"build-test"]
-      "Build and $(b,run) the package unit-tests. \
-       This only affects packages listed on the command-line. \
-       This is equivalent to setting $(b,\\$OPAMBUILDTEST) to \"true\"." in
+    mk_flag ~section ["t";"with-test";"build-test"]
+      "Build and $(b,run) the package unit-tests. This only affects packages \
+       listed on the command-line. The $(build-test) form is deprecated as \
+       this also affects installation. This is equivalent to setting \
+       $(b,\\$OPAMWITHTEST) (or the deprecated $(b,\\$OPAMBUILDTEST)) to \
+       \"true\"." in
   let build_doc =
-    mk_flag ~section ["d";"build-doc"]
-      "Build the package documentation. \
-       This only affects packages listed on the command-line. \
-       This is equivalent to setting $(b,\\$OPAMBUILDDOC) to \"true\"." in
+    mk_flag ~section ["d";"with-doc";"build-doc"]
+      "Build the package documentation. This only affects packages listed on \
+       the command-line. The $(b,--build-doc) form is deprecated as this does \
+       also installation. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
+       (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"." in
   let make =
     mk_opt ~section ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
@@ -998,11 +1001,11 @@ let package_selection =
       "Include development packages in dependencies."
   in
   let doc_flag =
-    mk_flag ["doc"] ~section
+    mk_flag ["doc";"with-doc"] ~section
       "Include doc-only dependencies."
   in
   let test =
-    mk_flag ["t";"test"] ~section
+    mk_flag ["t";"test";"with-test"] ~section
       "Include test-only dependencies."
   in
   let field_match =

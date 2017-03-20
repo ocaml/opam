@@ -1858,8 +1858,7 @@ module OPAMSyntax = struct
 
     (* Build instructions *)
     build      : command list;
-    build_test : command list;
-    build_doc  : command list;
+    run_test   : command list;
     install    : command list;
     remove     : command list;
 
@@ -1909,6 +1908,9 @@ module OPAMSyntax = struct
     (* Deprecated, for compat and proper linting *)
     ocaml_version: (OpamFormula.relop * string) OpamFormula.formula option;
     os         : (bool * string) generic_formula;
+
+    deprecated_build_test : command list;
+    deprecated_build_doc  : command list;
   }
 
   let empty = {
@@ -1926,8 +1928,7 @@ module OPAMSyntax = struct
     env        = [];
 
     build      = [];
-    build_test = [];
-    build_doc  = [];
+    run_test   = [];
     install    = [];
     remove     = [];
 
@@ -1963,6 +1964,8 @@ module OPAMSyntax = struct
 
     ocaml_version = None;
     os         = Empty;
+    deprecated_build_test = [];
+    deprecated_build_doc  = [];
   }
 
   let create nv =
@@ -2008,8 +2011,9 @@ module OPAMSyntax = struct
       t.env
 
   let build t = t.build
-  let build_test t = t.build_test
-  let build_doc t = t.build_doc
+  let run_test t = t.deprecated_build_test @ t.run_test
+  let deprecated_build_test t = t.deprecated_build_test
+  let deprecated_build_doc t = t.deprecated_build_doc
   let install t = t.install
   let remove t = t.remove
 
@@ -2079,8 +2083,11 @@ module OPAMSyntax = struct
   let with_env env t = { t with env }
 
   let with_build build t = { t with build }
-  let with_build_test build_test t = { t with build_test }
-  let with_build_doc build_doc t = { t with build_doc }
+  let with_run_test run_test t = { t with run_test }
+  let with_deprecated_build_test deprecated_build_test t =
+    { t with deprecated_build_test }
+  let with_deprecated_build_doc deprecated_build_doc t =
+    { t with deprecated_build_doc }
   let with_install install t = { t with install }
   let with_remove remove t = { t with remove }
 
@@ -2311,9 +2318,7 @@ module OPAMSyntax = struct
 
       "build", no_cleanup Pp.ppacc with_build build
         (Pp.V.map_list ~depth:2 Pp.V.command);
-      "build-test", no_cleanup Pp.ppacc with_build_test build_test
-        (Pp.V.map_list ~depth:2 Pp.V.command);
-      "build-doc", no_cleanup Pp.ppacc with_build_doc build_doc
+      "run-test", no_cleanup Pp.ppacc with_run_test run_test
         (Pp.V.map_list ~depth:2 Pp.V.command);
       "install", no_cleanup Pp.ppacc with_install install
         (Pp.V.map_list ~depth:2 Pp.V.command);
@@ -2393,6 +2398,12 @@ module OPAMSyntax = struct
               URL.create ~checksum:[md5] u)
            (fun (f, urlf) ->
               URL.((url urlf, Some f), List.hd (checksum urlf))));
+      "build-test", no_cleanup Pp.ppacc_opt
+        with_deprecated_build_test OpamStd.Option.none
+        (Pp.V.map_list ~depth:2 Pp.V.command);
+      "build-doc", no_cleanup Pp.ppacc_opt
+        with_deprecated_build_doc (fun x -> Some (deprecated_build_doc x))
+        (Pp.V.map_list ~depth:2 Pp.V.command);
     ]
 
   (* These don't have a printer and their info is stored in new fields *)
@@ -2615,8 +2626,7 @@ module OPAM = struct
       env        = t.env;
 
       build      = t.build;
-      build_test = t.build_test;
-      build_doc  = t.build_doc;
+      run_test   = t.deprecated_build_test @ t.run_test;
       install    = t.install;
       remove     = t.remove;
 
@@ -2659,6 +2669,9 @@ module OPAM = struct
 
       ocaml_version = empty.ocaml_version;
       os         = empty.os;
+
+      deprecated_build_test = []; (* merged into run_test *)
+      deprecated_build_doc = t.deprecated_build_doc;
     }
 
   let effectively_equal o1 o2 =

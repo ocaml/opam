@@ -200,11 +200,50 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     then OpamFile.OPAM.add_flags [Pkgflag_LightUninstall] opam
     else opam
   in
+  let build_doc, install_doc =
+    let rec split acc = function
+      | [] -> List.rev acc, []
+      | (cmd, _ as c) :: r as l ->
+        if List.exists (function
+            | CString s, _ -> OpamStd.String.contains ~sub:"install" s
+            | _ -> false)
+            cmd
+        then List.rev acc, l
+        else split (c::acc) r
+    in
+    split [] (OpamFile.OPAM.deprecated_build_doc opam)
+  in
+  let add_filter to_add cmdlist =
+    List.map (fun (cmd,filter) ->
+        cmd, match filter with
+        | None -> Some to_add
+        | Some f -> Some (FAnd (to_add, f)))
+      cmdlist
+  in
+  let test_filter =
+    FIdent ([], OpamVariable.of_string "with-test", None)
+  in
+  let doc_filter =
+    FIdent ([], OpamVariable.of_string "with-doc", None)
+  in
+  let build =
+    OpamFile.OPAM.build opam @
+    add_filter test_filter (OpamFile.OPAM.deprecated_build_test opam) @
+    add_filter doc_filter build_doc
+  in
+  let install =
+    OpamFile.OPAM.install opam @
+    add_filter doc_filter install_doc
+  in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
   OpamFile.OPAM.with_depends depends |>
   OpamFile.OPAM.with_conflicts conflicts |>
   OpamFile.OPAM.with_available available |>
+  OpamFile.OPAM.with_build build |>
+  OpamFile.OPAM.with_install install |>
+  OpamFile.OPAM.with_deprecated_build_test [] |>
+  OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>
   auto_add_flags
 

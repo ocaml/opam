@@ -589,23 +589,29 @@ let remove_package t ?silent ?changes ?force nv =
   else
     remove_package_aux t ?silent ?changes ?force nv
 
+let local_vars ~test ~doc =
+  OpamVariable.Map.of_list [
+    OpamVariable.of_string "with-test", Some (B test);
+    OpamVariable.of_string "with-doc", Some (B doc);
+  ]
+
 let build_package t ?(test=false) ?(doc=false) build_dir nv =
   let opam = OpamSwitchState.opam t nv in
   let commands =
-    OpamFile.OPAM.build opam @
-    (if test then OpamFile.OPAM.build_test opam else []) @
-    (if doc then OpamFile.OPAM.build_doc opam else [])
-  in
-  let commands =
-    let local =
-      OpamVariable.Map.of_list [
-        OpamVariable.of_string "build-test", Some (B test);
-        OpamVariable.of_string "build-doc", Some (B doc);
-      ]
-    in
-    OpamFilter.commands (OpamPackageVar.resolve ~opam ~local t) commands |>
-    OpamStd.List.filter_map
-      (function [] -> None | cmd::args -> Some (cmd, args))
+    OpamFilter.commands
+      (OpamPackageVar.resolve ~opam ~local:(local_vars ~test ~doc) t)
+      (OpamFile.OPAM.build opam) @
+    (if test then
+       OpamFilter.commands (OpamPackageVar.resolve ~opam t)
+         (OpamFile.OPAM.run_test opam)
+     else []) @
+    (if doc then
+       OpamFilter.commands (OpamPackageVar.resolve ~opam t)
+         (OpamFile.OPAM.deprecated_build_doc opam)
+     else [])
+    |> OpamStd.List.filter_map (function
+        | [] -> None
+        | cmd::args -> Some (cmd, args))
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
@@ -643,20 +649,14 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
 
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata ! *)
-let install_package t ?(doc=false) ?build_dir nv =
+let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   let opam = OpamSwitchState.opam t nv in
-  let commands = OpamFile.OPAM.install opam in
   let commands =
-    let local =
-      OpamVariable.Map.singleton
-        (OpamVariable.of_string "build-doc") (Some (B doc))
-    in
-    OpamFilter.commands (OpamPackageVar.resolve ~opam ~local t) commands
-  in
-  let commands =
+    OpamFile.OPAM.install opam |>
+    OpamFilter.commands
+      (OpamPackageVar.resolve ~opam ~local:(local_vars ~test ~doc) t) |>
     OpamStd.List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))
-      commands
   in
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in

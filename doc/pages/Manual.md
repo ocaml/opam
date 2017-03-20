@@ -381,7 +381,13 @@ three scopes:
      `_:bar`, always refers to the version being defined.
 
 3. Some fields define their own local variables, like `success` in the field
-   [`post-messages`](#opamfield-post-messages)
+   [`post-messages`](#opamfield-post-messages). Common examples of this include
+   the following variables, available in the `depends:`, `depopts:`, `build` and
+   `install` fields:
+
+    * `with-test`: `true` when testing has been turned on for the package
+      (through the `--with-test` flag)
+    * `with-doc`: similarly for documentation.
 
 For a comprehensive list of predefined variables, and their current local
 values, run:
@@ -723,6 +729,16 @@ files.
     expected to be produced within the source directory subtree, _i.e._ below
     the command's `$PWD`, during this step.
 
+    The following filter variables are available in the scope of this field:
+
+    * `with-test`: this is set to true when the user asked for the tests of
+      this package to be built. Use it to filter testing commands (_e.g._ `[make
+      "test"] {with-test}`).
+    * `with-doc`: likewise for documentation.
+    * not limited to this scope, but the `dev` variable can be useful here to
+      detect that the package is not installed from a release tarball, and may
+      need additional preprocessing (_e.g._ `automake`).
+
 - <a id="opamfield-install">
   `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands that will be run in order to install the package.
@@ -736,17 +752,29 @@ files.
     itself.
 
     This field contains typically just `[make "install"]`. If a
-    `package-name.install` is found at the source of the build directory, <span class="opam">opam</span>
-    will install files from there to the prefix according to its instructions
-    after calling the commands specified in the `install:` field have been run.
+    `package-name.install` is found at the source of the build directory, <span
+    class="opam">opam</span> will install files from there to the prefix
+    according to its instructions after calling the commands specified in the
+    `install:` field have been run, if any.
+
+    Variables `with-test` and `with-doc` are also available to the filters used
+    in this field, to run specific installation commands when tests or
+    documentation have been requested.
 
 - <a id="opamfield-build-doc">
   `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="opamfield-build-test">
-  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
-  the list of commands to build documentation and tests. They are processed
-  after the build phase when documentation or tests have been requested. These
-  follow the same specification as the [`build:`](#opamfield-build) field.
+  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a> (__deprecated__):
+  you should use the [`build:`](#opamfield-build) and
+  [`install:`](#opamfield-install) fields with filters based on the `with-test`
+  and `with-doc` variables, to specify test and documentation specific
+  instructions. The instructions in the deprecated `build-test:` are currently
+  understood as part of the [`run-test:`](#opamfield-run-test) field.
+
+- <a id="opamfield-run-test">
+  `run-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  specific instructions for running the package tests, in a format similar to
+  the [`build:`](#opamfield-build) field.
 
 - <a id="opamfield-remove"> `remove: [ [ <string> { <filter> } ... ] { <filter>
   } ... ]`</a>: commands to run before removing the package, in the same format
@@ -769,15 +797,15 @@ files.
 
     The filtered package formula can access the global and switch variables, but
     not variables from other packages. Additionally, special boolean variables
-    `build`, `test` and `doc` are defined to allow limiting the scope of the
-    dependency.
+    `build`, `with-test` and `with-doc` are defined to allow limiting the scope
+    of the dependency.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
       recompilations of your package.
-    * `test` dependencies are only needed when building tests (_i.e._ by
-      instructions in the [`build-test:`](#opamfield-build-test) field)
-    * likewise, `doc` dependecies are only required when building the package
-      documentation
+    * `with-test` dependencies are only needed when building tests (when the
+      package is explicitely installed with `--with-test`)
+    * likewise, `with-doc` dependecies are only required when building the
+      package documentation
 
 - <a id="opamfield-depopts">
   `depopts: [ <pkgname> { <filtered-package-formula> } ... ]`</a>:
@@ -789,7 +817,8 @@ files.
   won't automatically install _depopts_ when installing the package.
 
     Variables in the filtered package formula are evaluated as for
-    [`depends:`](#opamfield-depends).
+    [`depends:`](#opamfield-depends), with the same specific variables
+    available.
 
     Note that `depopts: [ "foo" { = "3" } ]` means that the optional dependency
     only applies for `foo` version `3`, not that your package can't be installed
