@@ -2145,7 +2145,8 @@ let source =
     let open OpamFilename in
     if exists_dir dir then
       OpamConsole.error_and_exit
-        "Directory %s already exists. Please remove it or use option `--dir'"
+        "Directory %s already exists. Please remove it or use a different one \
+         (see option `--dir')"
         (Dir.to_string dir);
     let opam = OpamSwitchState.opam t nv in
     if dev_repo then (
