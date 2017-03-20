@@ -92,9 +92,9 @@ val opam_init:
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string Lazy.t option ->
-  ?solver_preferences_upgrade:string Lazy.t option ->
-  ?solver_preferences_fixup:string Lazy.t option ->
+  ?solver_preferences_default:string option Lazy.t ->
+  ?solver_preferences_upgrade:string option Lazy.t ->
+  ?solver_preferences_fixup:string option Lazy.t ->
   ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->

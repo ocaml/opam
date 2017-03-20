@@ -16,9 +16,9 @@ type t = private {
   solver_timeout: float;
   external_solver: OpamTypes.arg list option Lazy.t;
   best_effort: bool;
-  solver_preferences_default: string Lazy.t option;
-  solver_preferences_upgrade: string Lazy.t option;
-  solver_preferences_fixup: string Lazy.t option;
+  solver_preferences_default: string option Lazy.t;
+  solver_preferences_upgrade: string option Lazy.t;
+  solver_preferences_fixup: string option Lazy.t;
 }
 
 type 'a options_fun =
@@ -26,9 +26,9 @@ type 'a options_fun =
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string Lazy.t option ->
-  ?solver_preferences_upgrade:string Lazy.t option ->
-  ?solver_preferences_fixup:string Lazy.t option ->
+  ?solver_preferences_default:string option Lazy.t ->
+  ?solver_preferences_upgrade:string option Lazy.t ->
+  ?solver_preferences_fixup:string option Lazy.t ->
   'a
 
 include OpamStd.Config.Sig
