@@ -30,7 +30,11 @@ let load_config global_lock root =
 
 let load lock_kind =
   let root = OpamStateConfig.(!r.root_dir) in
+
   log "LOAD-GLOBAL-STATE @ %a" (slog OpamFilename.Dir.to_string) root;
+ (* Protect against removal of CWD *)
+  if OpamFilename.exists_dir root then
+    Sys.chdir (OpamFilename.Dir.to_string root);
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
   let global_lock = OpamFilename.flock `Lock_read (OpamPath.lock root) in
