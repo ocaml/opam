@@ -127,15 +127,16 @@ module Cache = struct
 end
 
 let load_repo_opams repo =
-  OpamPackage.Map.mapi
-    (fun nv prefix ->
+  OpamPackage.Map.fold
+    (fun nv prefix acc ->
        match
          OpamFileTools.read_opam
            (OpamRepositoryPath.packages repo.repo_root prefix nv)
        with
-       | None -> assert false
-       | Some o -> o)
+       | None -> acc
+       | Some o -> OpamPackage.Map.add nv o acc)
     (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo.repo_root))
+    OpamPackage.Map.empty
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
