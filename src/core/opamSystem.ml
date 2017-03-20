@@ -89,7 +89,10 @@ let logs_cleaner =
     (fun () ->
        OpamStd.String.Set.iter (fun f ->
            try Unix.unlink f with Unix.Unix_error _ -> ())
-         !to_clean);
+         !to_clean;
+       if OpamCoreConfig.(!r.log_dir = default.log_dir) then
+         try Unix.rmdir OpamCoreConfig.(default.log_dir)
+         with Unix.Unix_error _ -> ());
   fun tmp_dir ->
     if OpamCoreConfig.(!r.keep_log_dir) then
       to_clean := OpamStd.String.Set.remove tmp_dir !to_clean
@@ -307,7 +310,7 @@ let command_exists =
     let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
     let r =
       OpamProcess.run
-        (OpamProcess.command ~env ?dir ~name:(temp_file "command") ~verbose:false
+        (OpamProcess.command ~env ?dir ~name:(temp_file ("command-"^name)) ~verbose:false
            cmd args)
     in
     if OpamProcess.check_success_and_cleanup r then

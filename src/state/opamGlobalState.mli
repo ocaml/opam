@@ -15,7 +15,7 @@ open OpamTypes
 open OpamStateTypes
 
 (** Loads the global state (from the opam root obtained through
-    [OpamStateConfig.(!r.root)]) *)
+    [OpamStateConfig.(!r.root)]). Also places [CWD] at the opam root. *)
 val load: 'a lock -> 'a global_state
 
 (** Loads the global state as [load], and calls the given function while keeping

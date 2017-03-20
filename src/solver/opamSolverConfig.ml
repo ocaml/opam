@@ -15,9 +15,9 @@ type t = {
   solver_timeout: float;
   external_solver: OpamTypes.arg list option Lazy.t;
   best_effort: bool;
-  solver_preferences_default: string Lazy.t option;
-  solver_preferences_upgrade: string Lazy.t option;
-  solver_preferences_fixup: string Lazy.t option;
+  solver_preferences_default: string option Lazy.t;
+  solver_preferences_upgrade: string option Lazy.t;
+  solver_preferences_fixup: string option Lazy.t;
 }
 
 type 'a options_fun =
@@ -25,9 +25,9 @@ type 'a options_fun =
   ?solver_timeout:float ->
   ?external_solver:OpamTypes.arg list option Lazy.t ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string Lazy.t option ->
-  ?solver_preferences_upgrade:string Lazy.t option ->
-  ?solver_preferences_fixup:string Lazy.t option ->
+  ?solver_preferences_default:string option Lazy.t ->
+  ?solver_preferences_upgrade:string option Lazy.t ->
+  ?solver_preferences_fixup:string option Lazy.t ->
   'a
 
 let default =
@@ -42,9 +42,9 @@ let default =
     solver_timeout = 5.;
     external_solver;
     best_effort = false;
-    solver_preferences_default = None;
-    solver_preferences_upgrade = None;
-    solver_preferences_fixup = None;
+    solver_preferences_default = lazy None;
+    solver_preferences_upgrade = lazy None;
+    solver_preferences_fixup = lazy None;
   }
 
 let setk k t
@@ -197,34 +197,39 @@ let check_aspcud_version = function
       `Compat
 
 let with_auto_criteria config =
-  let open OpamStd.Option.Op in
-  match Lazy.force config.external_solver with
-  | None -> config
-  | Some solver_cmd ->
-    let criteria = match solver_of_cmd solver_cmd with
-      | `mccs -> lazy (default_criteria_mccs)
-      | `packup -> lazy (default_criteria_packup)
+  let criteria = lazy (
+    match Lazy.force config.external_solver with
+    | None -> None
+    | Some solver_cmd ->
+      match solver_of_cmd solver_cmd with
+      | `mccs -> Some default_criteria_mccs
+      | `packup -> Some default_criteria_packup
       | `aspcud ->
-        lazy (match check_aspcud_version solver_cmd with
+          Some (match check_aspcud_version solver_cmd with
             | `Latest -> default_criteria_aspcud19
             | `Compat -> default_criteria_compat)
-    in
-    let get_crit fld = lazy (
-      let c = Lazy.force criteria in
-      if config.best_effort then c.crit_best_effort_prefix ^ fld c
-      else fld c
-    ) in
-    set config
-      ~solver_preferences_default:
-        (config.solver_preferences_default >>+ fun () ->
-         Some (get_crit (fun c -> c.crit_default)))
-      ~solver_preferences_upgrade:
-        (config.solver_preferences_upgrade >>+ fun () ->
-         Some (get_crit (fun c -> c.crit_upgrade)))
-      ~solver_preferences_fixup:
-        (config.solver_preferences_fixup >>+ fun () ->
-         Some (get_crit (fun c -> c.crit_fixup)))
-      ()
+  ) in
+  let get_crit fld =
+    match Lazy.force criteria with
+    | None -> None
+    | Some c ->
+      if config.best_effort then Some (c.crit_best_effort_prefix ^ fld c)
+      else Some (fld c)
+  in
+  set config
+    ~solver_preferences_default:
+      (lazy (match config.solver_preferences_default with
+           | lazy None -> get_crit (fun c -> c.crit_default)
+           | lazy some -> some))
+    ~solver_preferences_upgrade:
+      (lazy (match config.solver_preferences_upgrade with
+           | lazy None -> get_crit (fun c -> c.crit_upgrade)
+           | lazy some -> some))
+    ~solver_preferences_fixup:
+      (lazy (match config.solver_preferences_fixup with
+           | lazy None -> get_crit (fun c -> c.crit_fixup)
+           | lazy some -> some))
+    ()
 
 let initk k =
   let open OpamStd.Config in
@@ -247,11 +252,11 @@ let initk k =
   let best_effort =
     env_bool "BESTEFFORT" in
   let criteria =
-    env_string "CRITERIA" >>| fun c -> Some (lazy c) in
+    env_string "CRITERIA" >>| fun c -> lazy (Some c) in
   let upgrade_criteria =
-    (env_string "UPGRADECRITERIA" >>| fun c -> Some (lazy c)) ++ criteria in
+    (env_string "UPGRADECRITERIA" >>| fun c -> lazy (Some c)) ++ criteria in
   let fixup_criteria =
-    env_string "FIXUPCRITERIA" >>| fun c -> Some (lazy c) in
+    env_string "FIXUPCRITERIA" >>| fun c -> (lazy (Some c)) in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(env_string "CUDFFILE")
     ?solver_timeout:(env_float "SOLVERTIMEOUT")
@@ -269,6 +274,6 @@ let criteria kind =
     | `Upgrade -> !r.solver_preferences_upgrade
     | `Fixup -> !r.solver_preferences_fixup
   in
-  match crit with
-  | Some (lazy c) -> c
+  match Lazy.force crit with
+  | Some c -> c
   | None -> failwith "Solver criteria uninitialised"

@@ -157,9 +157,9 @@ let opam_init ?root_dir ?strict =
       in
       OpamSolverConfig.update
         ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
-        ?solver_preferences_default:(criteria `Default >>| fun s-> Some(lazy s))
-        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> Some(lazy s))
-        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> Some(lazy s))
+        ?solver_preferences_default:(criteria `Default >>| fun s-> lazy(Some s))
+        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> lazy(Some s))
+        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
         ()
   end;
 

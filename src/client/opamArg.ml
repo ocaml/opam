@@ -68,7 +68,7 @@ let apply_global_options o =
         Some (List.map (fun a -> OpamTypes.CString a, None) args)
       )
   in
-  let solver_prefs = o.solver_preferences >>| fun p -> lazy p in
+  let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
@@ -95,9 +95,9 @@ let apply_global_options o =
     (* ?solver_timeout:float *)
     ?external_solver
     ?best_effort:(flag o.best_effort)
-    ?solver_preferences_default:(some solver_prefs)
-    ?solver_preferences_upgrade:(some solver_prefs)
-    ?solver_preferences_fixup:(some solver_prefs)
+    ?solver_preferences_default:solver_prefs
+    ?solver_preferences_upgrade:solver_prefs
+    ?solver_preferences_fixup:solver_prefs
     (* - state options - *)
     ?root_dir:o.opt_root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
