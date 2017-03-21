@@ -2066,7 +2066,8 @@ let pin ?(unpin_only=false) () =
               OpamSwitchState.with_ `Lock_write gt @@ fun st ->
               let st =
                 List.fold_left (fun st name ->
-                    OpamPinCommand.source_pin st name ~edit (Some url))
+                    try OpamPinCommand.source_pin st name ~edit (Some url)
+                    with e -> OpamStd.Exn.fatal e; st)
                   st names
               in
               if action then
