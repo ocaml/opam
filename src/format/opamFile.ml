@@ -2247,6 +2247,12 @@ module OPAMSyntax = struct
     ignore (cleanup_flags opam_version ~pos flags);
     tags
 
+  let cleanup_dev_repo opam_version ~pos:_ dev_repo =
+    if OpamVersion.(compare opam_version (of_string "1.3") >= 0) then
+      dev_repo
+    else
+      OpamUrl.parse ~handle_suffix:true (OpamUrl.to_string dev_repo)
+
   let pp_basename =
     Pp.V.string -|
     Pp.of_module "file" (module OpamFilename.Base)
@@ -2357,13 +2363,10 @@ module OPAMSyntax = struct
       "syntax", no_cleanup Pp.ppacc with_syntax syntax
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter));
-      "dev-repo", no_cleanup Pp.ppacc_opt with_dev_repo dev_repo
+      "dev-repo", with_cleanup cleanup_dev_repo Pp.ppacc_opt with_dev_repo dev_repo
         (Pp.V.string -|
          Pp.of_pair "vc-url"
-           OpamUrl.(parse ?backend:None ?handle_suffix:None, to_string) -|
-         Pp.check ~errmsg:"invalid remote url"
-           (function {OpamUrl.transport = "file" | "local" | "path"; _} -> false
-                   | _ -> true));
+           OpamUrl.(parse ?backend:None ~handle_suffix:false, to_string));
 
       "extra-files", no_cleanup Pp.ppacc_opt with_extra_files extra_files
         (Pp.V.map_list ~depth:2 @@
@@ -2419,6 +2422,8 @@ module OPAMSyntax = struct
     "os";
     "configure-style";
     "extra-sources";
+    "build-test";
+    "build-doc";
   ]
 
   let fields =
