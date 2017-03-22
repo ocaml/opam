@@ -2066,7 +2066,8 @@ let pin ?(unpin_only=false) () =
               OpamSwitchState.with_ `Lock_write gt @@ fun st ->
               let st =
                 List.fold_left (fun st name ->
-                    OpamPinCommand.source_pin st name ~edit (Some url))
+                    try OpamPinCommand.source_pin st name ~edit (Some url)
+                    with e -> OpamStd.Exn.fatal e; st)
                   st names
               in
               if action then
@@ -2145,7 +2146,8 @@ let source =
     let open OpamFilename in
     if exists_dir dir then
       OpamConsole.error_and_exit
-        "Directory %s already exists. Please remove it or use option `--dir'"
+        "Directory %s already exists. Please remove it or use a different one \
+         (see option `--dir')"
         (Dir.to_string dir);
     let opam = OpamSwitchState.opam t nv in
     if dev_repo then (

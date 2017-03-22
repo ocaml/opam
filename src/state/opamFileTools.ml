@@ -29,6 +29,12 @@ let names_of_formula flag f =
 let all_commands t =
   t.build @ t.install @ t.remove @ t.run_test @ t.deprecated_build_doc
 
+let all_urls t =
+  let urlf_urls uf = OpamFile.URL.url uf :: OpamFile.URL.mirrors uf in
+  (match t.url with Some uf -> urlf_urls uf | None -> []) @
+  (match t.dev_repo with Some u -> [u] | None -> []) @
+  List.fold_left (fun acc (_, uf) -> urlf_urls uf @ acc) [] t.extra_sources
+
 let all_filters ?(exclude_post=false) t =
   OpamStd.List.filter_map snd t.patches @
   OpamStd.List.filter_map snd t.messages @
@@ -424,8 +430,18 @@ let lint t =
       "The fields 'build-test:' and 'build-doc:' are deprecated, and should be \
        replaced by uses of the 'with-test' and 'with-doc' filter variables in \
        the 'build:' and 'install:' fields, and by the newer 'run-test:' \
-       field."
+       field"
       (t.deprecated_build_test <> [] || t.deprecated_build_doc <> []);
+    (let suspicious_urls =
+       List.filter (fun u ->
+           OpamUrl.parse ~handle_suffix:true (OpamUrl.to_string u) <> u)
+         (all_urls t)
+     in
+     cond 49 `Warning
+       "The following URLs don't use version control but look like version \
+        control URLs"
+       ~detail:(List.map OpamUrl.to_string suspicious_urls)
+       (suspicious_urls <> []));
   ]
   in
   format_errors @

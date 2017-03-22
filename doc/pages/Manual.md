@@ -1047,9 +1047,14 @@ allowed.
 
 - <a id="installfield-lib">`lib:`</a>
   installs to `<prefix>/lib/<pkgname>/`
+- <a id="installfield-lib_root">`lib_root:`</a>
+  installs to `<prefix>/lib/` (since <span class="opam">opam</span> 2.0.0)
 - <a id="installfield-libexec">`libexec:`</a>
   installs to `<prefix>/lib/<pkgname>/`, but the `exec` bit is set (since
   <span class="opam">opam</span> 1.2.1)
+- <a id="installfield-libexec_root">`libexec_root:`</a>
+  installs to `<prefix>/lib/`, with the `exec` bit set (since <span
+  class="opam">opam</span> 2.0.0)
 - <a id="installfield-bin">`bin:`</a>
   installs to `<prefix>/bin/`, with the `exec` bit set
 - <a id="installfield-sbin">`sbin:`</a>
