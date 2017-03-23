@@ -153,22 +153,20 @@ let track dir ?(except=OpamFilename.Base.Set.empty) job_f =
     diff (scan_timer ());
   result, diff
 
+let check_digest file digest =
+  let precise = is_precise_digest digest in
+  let it = item_of_filename ~precise file in
+  try if item_digest it = digest then `Unchanged else `Changed
+  with Unix.Unix_error _ -> `Removed
+
 let check prefix changes =
   let str_pfx = OpamFilename.Dir.to_string prefix in
   SM.fold (fun fname op acc ->
       let f = Filename.concat str_pfx fname in
       match op with
-      | Added dg | Kind_changed dg ->
-        let status =
-          try
-            let precise = is_precise_digest dg in
-            let it = item_of_filename ~precise f in
-            if item_digest it = dg then `Unchanged
-            else `Changed
-          with Unix.Unix_error _ -> `Removed
-        in
-        (OpamFilename.of_string f, status) :: acc
-      | Contents_changed _ | Perm_changed _ | Removed -> acc)
+      | Added dg | Kind_changed dg | Contents_changed dg ->
+        (OpamFilename.of_string f, check_digest f dg) :: acc
+      | Perm_changed _ | Removed -> acc)
     changes []
   |> List.rev
 
@@ -215,12 +213,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
           rmfile f;
           acc
         | Contents_changed dg ->
-          let unreverted =
-            let precise = is_precise_digest dg in
-            try item_digest (item_of_filename ~precise fname) <> dg
-            with Unix.Unix_error _ -> false
-          in
-          if unreverted then
+          if check_digest fname dg = `Changed then
             (already, modified, nonempty, (op,fname)::cannot)
           else
             acc (* File has changed, assume the removal script reverted it *)
