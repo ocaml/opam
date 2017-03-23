@@ -1553,12 +1553,18 @@ let get_repos_rt gt repos =
       Some (List.map fst repos), rt
     else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
-      Some (List.map fst repos),
-      List.fold_left (fun rt (name, url) ->
-          OpamConsole.msg "Creating repository %s...\n"
-            (OpamRepositoryName.to_string name);
-          OpamRepositoryCommand.add rt name url None)
-        rt new_defs
+      let rt =
+        List.fold_left (fun rt (name, url) ->
+            OpamConsole.msg "Creating repository %s...\n"
+              (OpamRepositoryName.to_string name);
+            OpamRepositoryCommand.add rt name url None)
+          rt new_defs
+      in
+      let _result, rt =
+        OpamRepositoryCommand.update_with_auto_upgrade rt
+          (List.map fst new_defs)
+      in
+      Some (List.map fst repos), rt
 
 let switch_doc = "Manage multiple installation of compilers."
 let switch =
