@@ -120,7 +120,10 @@ let check_availability ?permissive t set atoms =
     let f = name, match cstr with None -> Empty | Some c -> Atom c in
     Some (Printf.sprintf "%s %s"
             (OpamFormula.to_string (Atom f))
-            (OpamSwitchState.unavailable_reason t f)) in
+            (OpamSwitchState.unavailable_reason
+               ~default:"unavailable for unknown reasons (this may be a bug in \
+                         opam)"
+               t f)) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
