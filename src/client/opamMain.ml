@@ -2870,21 +2870,9 @@ let build =
         );
       }
     in
-    let gather_changes () =
-      OpamPackage.Set.fold (fun nv acc ->
-          let f =
-            OpamPath.Switch.changes st.switch_global.root st.switch nv.name
-          in
-          match OpamFile.Changes.read_opt f with
-          | None -> acc
-          | Some ch -> OpamStd.String.Map.union (fun _ x -> x) acc ch)
-        local_packages
-        OpamStd.String.Map.empty
-    in
     match uninstall_prefix with
     | Some pfx ->
-      OpamDirTrack.revert ~verbose:true ~dryrun:OpamStateConfig.(!r.dryrun) pfx
-        (gather_changes ())
+      OpamAuxCommands.remove_files_from_destdir st pfx local_packages
     | None ->
       let atoms = OpamSolution.eq_atoms_of_packages local_packages in
       let st =
@@ -2892,21 +2880,9 @@ let build =
         else OpamClient.reinstall_t st ~force:true atoms
       in
       match install_prefix with
-      | None -> ()
       | Some pfx ->
-        let switch_pfx = OpamPath.Switch.root st.switch_global.root st.switch in
-        OpamStd.String.Map.iter (fun relf -> function
-            | OpamDirTrack.Added _ | OpamDirTrack.Contents_changed _ ->
-              let src = OpamFilename.Op.(switch_pfx // relf) in
-              let dst = OpamFilename.Op.(pfx // relf) in
-              if OpamFilename.exists src then
-                (OpamConsole.msg "%s %s %s\n"
-                   relf (OpamConsole.colorise `blue "=>")
-                   (OpamFilename.to_string dst);
-                 if not OpamStateConfig.(!r.dryrun) then
-                   OpamFilename.copy ~src ~dst)
-            | _ -> ())
-          (gather_changes ())
+        OpamAuxCommands.copy_files_to_destdir st pfx local_packages
+      | None -> ()
   in
   Term.(pure build $global_options $build_options $repos $deps_only
         $install_prefix $uninstall_prefix $no_autoinit $compiler $opam_files),
