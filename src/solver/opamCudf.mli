@@ -176,9 +176,10 @@ val cycle_conflict:
   version_map:int package_map -> Cudf.universe ->
   string list list -> ('a, conflict) result
 
-(** Convert a conflict to something readable by the user. The first argument
-    should return a string like "lwt<3.2.1 is not available because..." when called
-    on an unavailable package (the reason can't be known this deep in the solver) *)
+(** Convert a conflict to something readable by the user. The second argument
+    should return a string explaining the unavailability, or the empty string,
+    when called on an unavailable package (the reason can't be known this deep
+    in the solver) *)
 val string_of_conflict:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   string

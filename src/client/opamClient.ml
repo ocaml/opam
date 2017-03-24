@@ -388,6 +388,8 @@ let slog = OpamConsole.slog
                     Printf.sprintf "%s: %s"
                       (OpamPackage.to_string p)
                       (OpamSwitchState.unavailable_reason t
+                         ~default:"unavailable for unknown reasons (this may \
+                                   be a bug in opam)"
                          (OpamPackage.name p,
                           Atom (`Eq, OpamPackage.version p))))
                    (OpamPackage.Set.elements unav))

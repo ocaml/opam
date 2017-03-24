@@ -605,7 +605,7 @@ let not_found_message st (name, cstr) =
       (OpamPackage.Name.to_string name)
 
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason st (name, vformula) =
+let unavailable_reason st ?(default="") (name, vformula) =
   let candidates = OpamPackage.packages_of_name st.packages name in
   let candidates =
     OpamPackage.Set.filter
@@ -628,7 +628,7 @@ let unavailable_reason st (name, vformula) =
   let avail = OpamFile.OPAM.available (opam st nv) in
   if not (OpamPackage.Set.mem nv candidates) then
     Printf.sprintf
-      "not available because the package is pinned to version %s."
+      "not available because the package is pinned to version %s"
       (OpamPackage.version_to_string nv)
   else if not (OpamFilter.eval_to_bool ~default:false
                  (OpamPackageVar.resolve_switch ~package:nv st)
@@ -648,7 +648,7 @@ let unavailable_reason st (name, vformula) =
   else if OpamPackage.has_name st.compiler_packages name then
     "base of this switch, can't be changed"
   else
-    "unavailable for unknown reasons (this may be a bug in opam)"
+    default
 
 let update_package_metadata nv opam st =
   { st with

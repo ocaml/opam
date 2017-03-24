@@ -377,7 +377,7 @@ let strings_of_chains packages cudfnv2opam unav_reasons reasons =
       let all_versions = OpamPackage.versions_of_name packages name in
       let formula = OpamFormula.simplify_version_set all_versions vform in
       arrow_concat (List.map (fun c -> OpamFormula.to_string (Atom c)) c)
-      ^ "\n" ^ unav_reasons (name, formula)
+      ^ (match unav_reasons (name, formula) with "" -> "" | s -> "\n" ^ s)
     | [] -> ""
   in
   List.map string_of_chain chains
