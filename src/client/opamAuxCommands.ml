@@ -67,3 +67,95 @@ let remove_files_from_destdir st pfx packages =
         OpamConsole.note "Not removing non-empty directory %s"
           (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d))
   | _ -> ()
+
+let name_from_project_dirname d =
+  try
+    Some (OpamFilename.(Base.to_string (basename_dir d)) |>
+          Re.(replace_string (compile (seq [char '.'; any]))) ~by:"" |>
+          OpamPackage.Name.of_string)
+  with Failure _ -> None
+
+let resolve_locals atom_or_local_list =
+  let open OpamStd.Option.Op in
+  let target_dir dir =
+    let d = OpamFilename.Dir.to_string dir in
+    let backend = OpamUrl.guess_version_control d in
+    OpamUrl.parse ?backend d
+  in
+  let to_pin, atoms =
+    List.fold_left (fun (to_pin, atoms) -> function
+        | `Atom a -> to_pin, a :: atoms
+        | `Dirname d ->
+          let files = OpamPinned.files_in_source d in
+          let target = target_dir d in
+          List.fold_left (fun (to_pin, atoms) (n, f) ->
+              let name =
+                n >>+ fun () ->
+                OpamFile.OPAM.(name_opt (safe_read f))
+                >>+ fun () ->
+                match files with
+                | [] | _::_::_ -> None
+                | [_] -> name_from_project_dirname d
+              in
+              match name with
+              | Some n ->
+                (n, target, f) :: to_pin, (n, None) :: atoms
+              | None ->
+                OpamConsole.warning
+                  "Ignoring file at %s: could not infer package name"
+                  (OpamFile.to_string f);
+                to_pin, atoms)
+            (to_pin, atoms) files
+        | `Filename f ->
+          let srcdir = OpamFilename.dirname f in
+          let srcdir =
+            if OpamFilename.dir_ends_with ".opam" srcdir &&
+               OpamUrl.guess_version_control (OpamFilename.Dir.to_string srcdir)
+               = None
+            then OpamFilename.dirname_dir srcdir
+            else srcdir
+          in
+          let name =
+            OpamPinned.name_of_opam_filename srcdir f >>+ fun () ->
+            OpamFile.OPAM.(name_opt (safe_read (OpamFile.make f))) >>+ fun () ->
+            name_from_project_dirname srcdir
+          in
+          match name with
+          | Some n ->
+            (n, target_dir srcdir, OpamFile.make f) :: to_pin,
+            (n, None) :: atoms
+          | None ->
+            OpamConsole.error_and_exit
+              "Could not infer package name from package definition file %s"
+              (OpamFilename.to_string f))
+      ([], [])
+      atom_or_local_list
+  in
+  let duplicates =
+    List.filter (fun (n, _, f) ->
+        List.exists (fun (n1, _, f1) -> n = n1 && f <> f1) to_pin)
+      to_pin
+  in
+  match duplicates with
+  | [] -> List.rev to_pin, List.rev atoms
+  | _ ->
+    OpamConsole.error_and_exit
+      "Multiple files for the same package name were specified:\n%s"
+      (OpamStd.Format.itemize (fun (n, t, f) ->
+         Printf.sprintf "Package %s with definition %s %s %s"
+           (OpamConsole.colorise `bold @@ OpamPackage.Name.to_string n)
+           (OpamFile.to_string f)
+           (OpamConsole.colorise `blue "=>")
+           (OpamUrl.to_string t))
+          duplicates)
+
+let autopin st atom_or_local_list =
+  let to_pin, atoms = resolve_locals atom_or_local_list in
+  List.fold_left (fun st (name, target, file) ->
+      try
+        let opam = OpamFile.OPAM.read file in
+        OpamPinCommand.source_pin st name ~quiet:true ~opam (Some target)
+      with OpamPinCommand.Nothing_to_do -> st
+         | OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
+    st to_pin,
+  atoms

@@ -59,6 +59,10 @@ val atom_list: OpamFormula.atom list Term.t
 (** package list with optional constraints *)
 val nonempty_atom_list: OpamFormula.atom list Term.t
 
+val atom_or_local_list:
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list
+    Term.t
+
 (** Generic argument list builder *)
 val arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 
@@ -158,6 +162,10 @@ val package_with_version: package Arg.converter
 
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
 val atom: atom Arg.converter
+
+(** Accepts [atom] but also (explicit) file and directory names *)
+val atom_or_local:
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.converter
 
 (** Warnings string ["+3..10-4"] *)
 val warn_selector: (int * bool) list Arg.converter

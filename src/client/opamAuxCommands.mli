@@ -24,3 +24,19 @@ val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
     it's more agressive than [OpamDirTrack.revert] and doesn't check if the
     files are current. *)
 val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
+
+(** Resolves the opam files and directories in the list to package name and
+    location, and returns the corresponding pinnings and atoms. May fail and
+    exit if package names for provided [`Filename] could not be inferred, or if
+    the same package name appears multiple times *)
+val resolve_locals:
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
+
+(** Resolves the opam files in the list to package name and location, pins the
+    corresponding packages accordingly if necessary, and returns the
+    resolved atom list *)
+val autopin:
+  rw switch_state ->
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  rw switch_state * atom list

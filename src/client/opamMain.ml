@@ -1009,15 +1009,15 @@ let install =
                  but have been removed due to errors") in
   let install
       global_options build_options add_to_roots deps_only restore
-      atoms =
+      atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
-    if atoms = [] && not restore then
+    if atoms_or_locals = [] && not restore then
       `Error (true, "required argument PACKAGES is missing")
     else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-    let atoms =
+    let atoms_or_locals =
       if restore then
         let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
         if OpamPackage.Set.is_empty to_restore then
@@ -1026,19 +1026,20 @@ let install =
           OpamConsole.msg "Packages to be restored: %s\n"
             (OpamPackage.Name.Set.to_string
                (OpamPackage.names_of_packages to_restore));
-        atoms @
-        List.map OpamSolution.atom_of_package
+        atoms_or_locals @
+        List.map (fun p -> `Atom (OpamSolution.atom_of_package p))
           (OpamPackage.Set.elements to_restore)
-      else atoms
+      else atoms_or_locals
     in
-    if atoms = [] then `Ok () else
-      (ignore @@
-       OpamClient.install st atoms add_to_roots ~deps_only;
-       `Ok ())
+    if atoms_or_locals = [] then `Ok () else
+    let st, atoms = OpamAuxCommands.autopin st atoms_or_locals in
+    ignore @@
+    OpamClient.install st atoms add_to_roots ~deps_only;
+    `Ok ()
   in
   Term.ret
     Term.(pure install $global_options $build_options
-          $add_to_roots $deps_only $restore $atom_list),
+          $add_to_roots $deps_only $restore $atom_or_local_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -2074,7 +2075,8 @@ let pin ?(unpin_only=false) () =
               let st =
                 List.fold_left (fun st name ->
                     try OpamPinCommand.source_pin st name ~edit (Some url)
-                    with e -> OpamStd.Exn.fatal e; st)
+                    with OpamPinCommand.Aborted
+                       | OpamPinCommand.Nothing_to_do -> st)
                   st names
               in
               if action then

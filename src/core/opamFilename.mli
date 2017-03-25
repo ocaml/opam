@@ -207,6 +207,9 @@ val starts_with: Dir.t -> t -> bool
 (** Check whether a filename ends with a given suffix *)
 val ends_with: string -> t -> bool
 
+(** Check whether a dirname ends with a given suffix *)
+val dir_ends_with: string -> Dir.t -> bool
+
 (** Remove a prefix from a file name *)
 val remove_prefix: Dir.t -> t -> string
 

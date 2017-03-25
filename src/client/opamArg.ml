@@ -425,6 +425,30 @@ let atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
   parse, print
 
+let atom_or_local =
+  let parse str =
+    if OpamStd.String.contains ~sub:Filename.dir_sep str ||
+       OpamStd.String.starts_with ~prefix:"." str
+    then
+      if OpamFilename.(exists (of_string str)) then
+        `Ok (`Filename (OpamFilename.of_string str))
+      else if  OpamFilename.(exists_dir (Dir.of_string str)) then
+        `Ok (`Dirname (OpamFilename.Dir.of_string str))
+      else
+        `Error (Printf.sprintf
+                  "Not a valid package specification or existing file or \
+                   directory: %s" str)
+    else match fst atom str with
+      | `Ok at -> `Ok (`Atom at)
+      | `Error e -> `Error e
+  in
+  let print ppf = function
+    | `Filename f -> pr_str ppf (OpamFilename.to_string f)
+    | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
+    | `Atom a -> snd atom ppf a
+  in
+  parse, print
+
 let warn_selector =
   let parse str =
     let sep = Re.(compile (set "+-")) in
@@ -717,6 +741,13 @@ let atom_list =
     "List of package names, with an optional version or constraint, \
      e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
     atom
+
+let atom_or_local_list =
+  arg_list "PACKAGES"
+    "List of package names, with an optional version or constraint, e.g `pkg', \
+     `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
+     description, with explicit directory (e.g. `./foo.opam' or `.')"
+    atom_or_local
 
 let nonempty_atom_list =
   nonempty_arg_list "PACKAGES"

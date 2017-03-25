@@ -312,6 +312,9 @@ let extract_generic_file filename dirname =
 let ends_with suffix filename =
   OpamStd.String.ends_with ~suffix (to_string filename)
 
+let dir_ends_with suffix dirname =
+  OpamStd.String.ends_with ~suffix (Dir.to_string dirname)
+
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
   let filename = to_string filename in

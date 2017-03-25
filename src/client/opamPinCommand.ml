@@ -310,7 +310,15 @@ let version_pin st name version =
     (OpamPackage.Version.to_string version);
   st
 
-let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_url =
+exception Aborted
+exception Nothing_to_do
+
+let source_pin
+    st name
+    ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
+    ?(force=false)
+    target_url
+  =
   log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
@@ -332,19 +340,21 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
         target_url = OpamStd.Option.map OpamFile.URL.url cur_urlf &&
         (version = Some cur_version || version = None)
       in
-      OpamConsole.note
-        "Package %s is %s %s."
-        (OpamPackage.Name.to_string name)
-        (if no_changes then "already" else "currently")
-        (string_of_pinned cur_opam);
+      if not (quiet && no_changes) then
+        OpamConsole.note
+          "Package %s is %s %s."
+          (OpamPackage.Name.to_string name)
+          (if no_changes then "already" else "currently")
+          (string_of_pinned cur_opam);
       if no_changes && not need_edit then
-        (OpamConsole.msg "No changes.\n"; OpamStd.Sys.exit 0);
+        (if not quiet then OpamConsole.msg "No changes.\n";
+         raise Nothing_to_do);
       if OpamConsole.confirm "Proceed and change pinning target ?" then
         OpamFilename.remove
           (OpamFile.filename
              (OpamPath.Switch.Overlay.tmp_opam
                 st.switch_global.root st.switch name))
-      else OpamStd.Sys.exit 10;
+      else raise Aborted;
       cur_version, cur_urlf
     with Not_found ->
       if OpamPackage.has_name st.compiler_packages name then (
@@ -353,7 +363,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
           (OpamPackage.Name.to_string name);
         if not @@ OpamConsole.confirm
             "Are you sure you want to override this and pin it anyway ?"
-        then OpamStd.Sys.exit 10
+        then raise Aborted
       );
       let version =
         try OpamPackage.version (OpamSwitchState.get_package st name)
@@ -364,14 +374,12 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
       version, None
   in
 
-  if OpamPackage.Set.is_empty (OpamPackage.packages_of_name st.packages name) &&
+  if not (OpamPackage.has_name st.packages name) &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
             (OpamConsole.colorise `bold "NEW"))
-  then
-    (OpamConsole.msg "Aborting.\n";
-     OpamStd.Sys.exit 10);
+  then raise Aborted;
 
   (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
    | Some u, Some target when OpamUrl.(
@@ -398,6 +406,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
   let opam_opt =
     try
       OpamStd.Option.Op.(
+        opam_opt >>+ fun () ->
         urlf >>= fun url ->
         OpamProcess.Job.run @@ get_source_definition ?version st nv url
       )
@@ -440,7 +449,7 @@ let source_pin st name ?version ?edit:(need_edit=false) ?(force=false) target_ur
            temp_file opam_base;
        edit_raw name temp_file)
     else
-      Some (OpamFile.OPAM.with_url_opt urlf opam_base)
+      Some opam_base
   in
   match opam_opt with
   | None ->

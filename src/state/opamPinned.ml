@@ -33,6 +33,19 @@ let find_opam_file_in_source name dir =
     (OpamStd.List.find_opt OpamFilename.exists
        (possible_definition_filenames dir name))
 
+let name_of_opam_filename dir file =
+  let open OpamStd.Option.Op in
+  let get_name s =
+    if Filename.check_suffix s ".opam"
+    then Some Filename.(chop_suffix (basename s) ".opam")
+    else None
+  in
+  let rel = OpamFilename.remove_prefix dir file in
+  (get_name (Filename.basename rel) >>+ fun () ->
+   get_name (Filename.dirname rel)) >>= fun name ->
+  try Some (OpamPackage.Name.of_string name)
+  with Failure _ -> None
+
 let files_in_source d =
   let baseopam = OpamFilename.Base.of_string "opam" in
   let files =
@@ -49,21 +62,7 @@ let files_in_source d =
       (OpamFilename.dirs d)
   in
   List.map
-    (fun f ->
-       let name =
-         let b =
-           if OpamFilename.(basename f = baseopam) then
-             OpamFilename.(Base.to_string (basename_dir (dirname f)))
-           else
-             OpamFilename.(Base.to_string (basename f))
-         in
-         if b = "opam" then None else
-         try
-           Some (OpamPackage.Name.of_string
-                   (OpamStd.String.remove_suffix ~suffix:".opam" b))
-         with Failure _ -> None
-       in
-       name, OpamFile.make f)
+    (fun f -> name_of_opam_filename d f, OpamFile.make f)
     files
 
 let orig_opam_file opam =

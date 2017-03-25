@@ -1100,19 +1100,23 @@ let slog = OpamConsole.slog
           (OpamPackage.Name.to_string name)
 
     let pin st name ?(edit=false) ?version ?(action=true) target =
-      let st =
-        match target with
-        | `Source url -> source_pin st name ?version ~edit (Some url)
-        | `Version v ->
-          let st = version_pin st name v in
-          if edit then OpamPinCommand.edit st name else st
-        | `Dev_upstream ->
-          source_pin st name ?version ~edit (Some (get_upstream st name))
-        | `None -> source_pin st name ?version ~edit None
-      in
-      if action then
-        (OpamConsole.msg "\n"; post_pin_action st name)
-      else st
+      try
+        let st =
+          match target with
+          | `Source url -> source_pin st name ?version ~edit (Some url)
+          | `Version v ->
+            let st = version_pin st name v in
+            if edit then OpamPinCommand.edit st name else st
+          | `Dev_upstream ->
+            source_pin st name ?version ~edit (Some (get_upstream st name))
+          | `None -> source_pin st name ?version ~edit None
+        in
+        if action then
+          (OpamConsole.msg "\n"; post_pin_action st name)
+        else st
+      with
+      | OpamPinCommand.Aborted -> OpamStd.Sys.exit 10
+      | OpamPinCommand.Nothing_to_do -> st
 
     let edit st ?(action=true) ?version name =
       let st =
@@ -1137,7 +1141,9 @@ let slog = OpamConsole.slog
             let target =
               OpamStd.Option.Op.(OpamSwitchState.url st nv >>| OpamFile.URL.url)
             in
-            source_pin st name ~edit:true ?version target
+            try source_pin st name ~edit:true ?version target
+            with OpamPinCommand.Aborted -> OpamStd.Sys.exit 10
+               | OpamPinCommand.Nothing_to_do -> st
           else
             OpamConsole.error_and_exit "Aborted"
         | None ->

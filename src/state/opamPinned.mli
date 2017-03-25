@@ -36,6 +36,12 @@ val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t opti
     [pkgname.opam/opam], etc. *)
 val files_in_source: dirname -> (name option * OpamFile.OPAM.t OpamFile.t) list
 
+(** From an opam file location, sitting below the given project directory, find
+    the corresponding package name if specified ([<name>.opam] or
+    [<name>.opam/opam]). This function doesn't check the project directory name
+    itself, or the package name that might be specified within the file. *)
+val name_of_opam_filename: dirname -> filename -> name option
+
 (** Finds back the location of the opam file this package definition was loaded
     from *)
 val orig_opam_file: OpamFile.OPAM.t -> OpamFile.OPAM.t OpamFile.t option
