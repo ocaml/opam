@@ -82,11 +82,16 @@ let parse_url (s,c) =
          (proto2^urlsplit^address, c), url_kind_of_string proto1
        | None ->
          let addr = match proto with
-           | "git" -> s (* git:// urls legit *)
-           | _ ->
+           | "hg" | "darcs" ->
+             (* backwards compatibility hack, allow:
+              *   hg://example.com (http)
+              *   hg://https://example.com (https)
+              * for hg / darcs
+              *)
              if Re_str.string_match (Re_str.regexp (".*"^urlsplit)) address 0
              then address
              else "http://" ^ address (* assume http transport by default *)
+           | _ -> s
          in
          (addr,c), url_kind_of_string proto)
     | [address] -> (address,c), `local
