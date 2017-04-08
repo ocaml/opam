@@ -880,7 +880,7 @@ let build_options =
   let build_test =
     mk_flag ~section ["t";"with-test";"build-test"]
       "Build and $(b,run) the package unit-tests. This only affects packages \
-       listed on the command-line. The $(build-test) form is deprecated as \
+       listed on the command-line. The $(b,--build-test) form is deprecated as \
        this also affects installation. This is equivalent to setting \
        $(b,\\$OPAMWITHTEST) (or the deprecated $(b,\\$OPAMBUILDTEST)) to \
        \"true\"." in
