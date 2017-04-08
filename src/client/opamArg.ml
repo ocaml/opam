@@ -24,7 +24,6 @@ type global_options = {
   yes : bool;
   strict : bool;
   opt_root : dirname option;
-  no_base_packages: bool;
   git_version : bool;
   external_solver : string option;
   use_internal_solver : bool;
@@ -38,14 +37,14 @@ type global_options = {
 
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
-    opt_root no_base_packages external_solver use_internal_solver
+    opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   let verbose = List.length verbose in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
-    strict; opt_root; no_base_packages; external_solver; use_internal_solver;
+    strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; }
 
@@ -776,11 +775,6 @@ let global_options =
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
-  let no_base_packages =
-    mk_flag ~section ["no-base-packages"]
-      "Do not install base packages (useful for testing purposes). \
-       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
-       string." in
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
       "Force use of internal heuristics, even if an external solver is \
@@ -839,7 +833,7 @@ let global_options =
   in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
-        $strict $root $no_base_packages $external_solver
+        $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade)
 
