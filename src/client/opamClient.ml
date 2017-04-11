@@ -879,7 +879,9 @@ let slog = OpamConsole.slog
         (* Assume the named packages are available *)
         OpamPackage.Name.Set.fold (fun name avail ->
             if OpamPackage.has_name available_packages name then avail
-            else avail ++ OpamPackage.packages_of_name t.packages name)
+            else match OpamPinned.package_opt t name with
+              | Some nv -> OpamPackage.Set.add nv avail
+              | None -> avail ++ OpamPackage.packages_of_name t.packages name)
           names available_packages
       else
         (OpamSolution.check_availability t available_packages atoms;
