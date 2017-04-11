@@ -1,5 +1,6 @@
 _obuild/
 _opam/
+_olint/
 bootstrap/
 tests/tmp/
 .*.swp

@@ -1,0 +1,279 @@
+(*************************************)
+(*   Never edit options files while  *)
+(*       the program is running      *)
+(*************************************)
+(* SECTION : Header                  *)
+(* These options must be read first  *)
+(*************************************)
+
+
+
+(* [ignore]: Module to ignore during the lint. *)
+ignore = [
+]
+
+(* [db_persistence]: Time before erasing cached results (in days). *)
+db_persistence = 1
+
+(* [jobs]: Number of parallel jobs *)
+jobs = 4
+plugin_typedtree = {
+
+(* [enabled]: A plugin with linters on typed tree *)
+  enabled = true
+  fully_qualified_identifiers = {
+
+(* [enabled]: Enable/Disable linter "Fully-Qualified Identifiers". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Fully-Qualified Identifiers" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Fully-Qualified Identifiers" *)
+    warnings = "+A-1"
+    ignored_modules = [
+      Pervasives;
+      StringCompat;
+    ]
+    ignore_operators = true
+    ignore_depth = 2
+  }
+  polymorphic_function = {
+
+(* [enabled]: Enable/Disable linter "Polymorphic function". *)
+    enabled = false
+
+(* [ignore]: Module to ignore durint the lint of "Polymorphic function" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Polymorphic function" *)
+    warnings = "+A"
+  }
+}
+plugin_text = {
+
+(* [enabled]: A plugin with linters on the source *)
+  enabled = true
+  code_length = {
+
+(* [enabled]: Enable/Disable linter "Code Length". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Code Length" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Code Length" *)
+    warnings = "+A-1"
+
+(* [max_line_length]: Maximum line length *)
+    max_line_length = 80
+  }
+  useless_space_line = {
+
+(* [enabled]: Enable/Disable linter "Useless space character and empty line at the end of file.". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Useless space character and empty line at the end of file." *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Useless space character and empty line at the end of file." *)
+    warnings = "+A"
+  }
+  not_that_char = {
+
+(* [enabled]: Enable/Disable linter "Detect use of unwanted chars in files". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Detect use of unwanted chars in files" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Detect use of unwanted chars in files" *)
+    warnings = "+A"
+  }
+}
+plugin_patch = {
+
+(* [enabled]: Detect pattern with semantic patch. *)
+  enabled = true
+  sempatch_lint = {
+
+(* [enabled]: Enable/Disable linter "Lint from semantic patches.". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Lint from semantic patches." *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Lint from semantic patches." *)
+    warnings = "+A-1"
+  }
+}
+plugin_parsing = {
+
+(* [enabled]: Analyses requiring to re-parse the file *)
+  enabled = true
+  raw_syntax = {
+
+(* [enabled]: Enable/Disable linter "Raw Syntax". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Raw Syntax" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Raw Syntax" *)
+    warnings = "+A-2-7-8"
+  }
+
+}
+plugin_parsetree = {
+
+(* [enabled]: A plugin with linters on parsetree *)
+  enabled = true
+  code_identifier_length = {
+
+(* [enabled]: Enable/Disable linter "Code Identifier Length". *)
+    enabled = false
+
+(* [ignore]: Module to ignore durint the lint of "Code Identifier Length" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Code Identifier Length" *)
+    warnings = "+A"
+
+(* [min_identifier_length]: Identifiers with a shorter name will trigger a warning *)
+    min_identifier_length = 2
+
+(* [max_identifier_length]: Identifiers with a longer name will trigger a warning *)
+    max_identifier_length = 30
+  }
+  code_list_on_singleton = {
+
+(* [enabled]: Enable/Disable linter "List function on singleton". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "List function on singleton" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "List function on singleton" *)
+    warnings = "+A"
+  }
+  phys_comp_allocated_lit = {
+
+(* [enabled]: Enable/Disable linter "Physical comparison between allocated litterals.". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Physical comparison between allocated litterals." *)
+    warnings = "+A"
+  }
+  fabrice_good_practices = {
+
+(* [enabled]: Enable/Disable linter "Good Practices". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Good Practices" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Good Practices" *)
+    warnings = "+A"
+  }
+  check_constr_args = {
+
+(* [enabled]: Enable/Disable linter "Check Constructor Arguments". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Check Constructor Arguments" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Check Constructor Arguments" *)
+    warnings = "+A"
+  }
+  code_redefine_stdlib_module = {
+
+(* [enabled]: Enable/Disable linter "Refedine Stdlib Module". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Refedine Stdlib Module" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Refedine Stdlib Module" *)
+    warnings = "+A-1-2"
+  }
+}
+plugin_indent = {
+
+(* [enabled]: A plugin with linters on the source *)
+  enabled = true
+  ocp_indent = {
+
+(* [enabled]: Enable/Disable linter "Indention with ocp-indent". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Indention with ocp-indent" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Indention with ocp-indent" *)
+    warnings = "+A-1"
+  }
+}
+plugin_file_system = {
+
+(* [enabled]: A plugin with linters on file system like interface missing, etc *)
+  enabled = true
+  interface_missing = {
+
+(* [enabled]: Enable/Disable linter "Missing interface". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Missing interface" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Missing interface" *)
+    warnings = "+A"
+  }
+  project_files = {
+
+(* [enabled]: Enable/Disable linter "File Names". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "File Names" *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "File Names" *)
+    warnings = "+A"
+  }
+}
+plugin_complex = {
+
+(* [enabled]: A plugin with linters on different inputs *)
+  enabled = true
+  interface_module_type_name = {
+
+(* [enabled]: Enable/Disable linter "Checks on module type name.". *)
+    enabled = true
+
+(* [ignore]: Module to ignore durint the lint of "Checks on module type name." *)
+    ignore = [
+    ]
+
+(* [warnings]: Enable/Disable warnings from "Checks on module type name." *)
+    warnings = "+A"
+  }
+}
