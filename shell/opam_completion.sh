@@ -1,3 +1,5 @@
+if [ -z "$BASH_VERSION" ]; then return 0; fi
+
 _opam_add()
 {
   IFS=$'\n' _opam_reply+=("$@")
