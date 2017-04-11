@@ -236,7 +236,8 @@ SRC_client = \
   opamAuxCommands.ml \
   opamGitVersion.ml \
   opamArg.ml \
-  opamAdminCommand.ml
+  opamAdminCommand.ml \
+  opamCommands.ml
 
 define PROJ_client
   SOURCES = $(call addmli,client,$(SRC_client))
@@ -254,7 +255,7 @@ opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
 
 define PROJ_opam
-  SOURCES = $(call addmli,client,opamGitVersion.ml opamArg.ml opamAdminCommand.ml opamMain.ml)
+  SOURCES = $(call addmli,client,opamMain.ml)
   RESULT = opam
   LIBS = $(LIBS) $(OPAMLIB)
 endef
