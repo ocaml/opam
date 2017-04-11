@@ -34,9 +34,12 @@ val resolve_locals:
   (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
 
 (** Resolves the opam files in the list to package name and location, pins the
-    corresponding packages accordingly if necessary, and returns the
-    resolved atom list *)
+    corresponding packages accordingly if necessary, and returns the resolved
+    atom list. With [simulate], don't do the pinnings but return the switch
+    state with the package definitions that would have been obtained if
+    pinning. *)
 val autopin:
   rw switch_state ->
+  ?simulate:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list

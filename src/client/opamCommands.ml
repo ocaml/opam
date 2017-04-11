@@ -1032,7 +1032,9 @@ let install =
       else atoms_or_locals
     in
     if atoms_or_locals = [] then `Ok () else
-    let st, atoms = OpamAuxCommands.autopin st atoms_or_locals in
+    let st, atoms =
+      OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
+    in
     ignore @@
     OpamClient.install st atoms add_to_roots ~deps_only;
     `Ok ()

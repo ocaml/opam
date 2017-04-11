@@ -149,13 +149,55 @@ let resolve_locals atom_or_local_list =
            (OpamUrl.to_string t))
           duplicates)
 
-let autopin st atom_or_local_list =
+let autopin st ?(simulate=false) atom_or_local_list =
   let to_pin, atoms = resolve_locals atom_or_local_list in
-  List.fold_left (fun st (name, target, file) ->
-      try
-        let opam = OpamFile.OPAM.read file in
-        OpamPinCommand.source_pin st name ~quiet:true ~opam (Some target)
-      with OpamPinCommand.Nothing_to_do -> st
-         | OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
-    st to_pin,
-  atoms
+  if to_pin = [] then st, atoms else
+  let st =
+    if simulate then
+      let local_names =
+        List.fold_left (fun set (name, _, _) ->
+            OpamPackage.Name.Set.add name set)
+          OpamPackage.Name.Set.empty to_pin
+      in
+      let local_opams =
+        List.fold_left (fun map (name, target, file) ->
+            let opam =
+              OpamFile.OPAM.read file |>
+              OpamFile.OPAM.with_url (OpamFile.URL.create target) |>
+              OpamFile.OPAM.with_name name
+            in
+            let opam, version = match OpamFile.OPAM.version_opt opam with
+              | Some v -> opam, v
+              | None ->
+                let v = OpamPackage.Version.of_string "dev" in
+                OpamFile.OPAM.with_version v opam, v
+            in
+            OpamPackage.Map.add (OpamPackage.create name version) opam map)
+          OpamPackage.Map.empty to_pin
+      in
+      let local_packages = OpamPackage.keys local_opams in
+      { st with
+        opams =
+          OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
+        packages =
+          OpamPackage.Set.union st.packages local_packages;
+        available_packages = lazy (
+          OpamPackage.Set.union
+            (OpamPackage.Set.filter
+               (fun nv -> OpamPackage.Name.Set.mem nv.name local_names)
+               (Lazy.force st.available_packages))
+            (OpamSwitchState.compute_available_packages
+               st.switch_global st.switch st.switch_config ~pinned:st.pinned
+               ~opams:local_opams)
+        );
+      }
+    else
+      List.fold_left (fun st (name, target, file) ->
+          try
+            let opam = OpamFile.OPAM.read file in
+            OpamPinCommand.source_pin st name ~quiet:true ~opam (Some target)
+          with OpamPinCommand.Nothing_to_do -> st
+             | OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
+        st to_pin
+  in
+  st, atoms
