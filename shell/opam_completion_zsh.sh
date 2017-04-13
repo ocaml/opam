@@ -17,7 +17,10 @@ _opam_add_f()
 _opam_flags()
 {
   opam "$@" --help=groff 2>/dev/null | \
-      sed -n -e 's%\\-%-%g' -e 's%, \\fB%\n\\fB%g' -e '/^\\fB-/p' | \
+      sed -n \
+      -e 's%\\-\|\\N'"'45'"'%-%g' \
+      -e 's%, \\fB%\n\\fB%g' \
+      -e '/^\\fB-/p' | \
       sed -e 's%^\\fB\(-[^\\]*\).*%\1%'
 }
 
@@ -25,7 +28,7 @@ _opam_commands()
 {
   opam "$@" --help=groff 2>/dev/null | \
       sed -n \
-      -e 's%\\-%-%g' \
+      -e 's%\\-\|\\N'"'45'"'%-%g' \
       -e '/^\.SH COMMANDS$/,/^\.SH/ s%^\\fB\([^,= ]*\)\\fR.*%\1%p'
   echo '--help'
 }
@@ -47,7 +50,7 @@ _opam_argtype()
       -*)
           opam "$cmd" --help=groff 2>/dev/null | \
           sed -n \
-              -e 's%\\-%-%g' \
+              -e 's%\\-\|\\N'"'45'"'%-%g' \
               -e 's%.*\\fB'"$flag"'\\fR[= ]\\fI\([^, ]*\)\\fR.*%\1%p'
           ;;
   esac
