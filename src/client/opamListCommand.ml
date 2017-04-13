@@ -164,7 +164,7 @@ let get_universe st tog =
     OpamSwitchState.universe st
       ~test:tog.test ~doc:tog.doc
       ~requested:(OpamPackage.names_of_packages st.packages)
-      Depends
+      Query
   in
   if tog.dev then { universe with u_dev = st.packages }
   else universe
@@ -216,8 +216,7 @@ let apply_selector ~base st = function
   | Available -> Lazy.force st.available_packages
   | Installable ->
     OpamSolver.installable
-      (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty
-         Depends)
+      (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty Query)
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
@@ -663,7 +662,7 @@ let display st format packages =
       let universe =
         OpamSwitchState.universe st
           ~requested:(OpamPackage.names_of_packages packages)
-          Depends
+          Query
       in
       let deps_packages =
         OpamSolver.dependencies

@@ -66,6 +66,15 @@ let string_of_pos (file,line,col) =
     else ""
   else ""
 
+let string_of_user_action = function
+  | Query -> "query"
+  | Install -> "install"
+  | Upgrade -> "upgrade"
+  | Reinstall -> "reinstall"
+  | Remove -> "remove"
+  | Switch -> "switch"
+  | Import -> "import"
+
 (* Command line arguments *)
 
 let env_array l =

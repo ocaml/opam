@@ -145,6 +145,7 @@ val universe:
   'a switch_state ->
   ?test:bool ->
   ?doc:bool ->
+  ?reinstall:package_set ->
   requested:name_set ->
   user_action -> universe
 

@@ -754,7 +754,7 @@ let config =
       let opam_univ =
         OpamSwitchState.universe opam_state
           ~requested:(OpamPackage.names_of_packages opam_state.packages)
-          Depends
+          Query
       in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
       (match params with
@@ -988,6 +988,13 @@ let install =
         dependencies to the changed packages will be recompiled. The proposed \
         solution may also imply removing incompatible or conflicting \
         packages.";
+    `P "If paths are provided as argument instead of packages, they are \
+        assumed to point to either project source directories containing one \
+        or more package definitions ($(i,opam) files), or directly to \
+        $(i,opam) files. Then the corresponding packages will be pinned to \
+        their local directory and installed (unless $(b,--deps-only) was \
+        specified)."
+    ;
   ] in
   let add_to_roots =
     let root =
@@ -2797,7 +2804,7 @@ let build =
             in
             OpamSwitchState.universe virt_st
               ~requested:(OpamPackage.names_of_packages local_packages)
-              Depends
+              Query
           in
           let default_compiler =
             OpamFile.Config.default_compiler gt.config

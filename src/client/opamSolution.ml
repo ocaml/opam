@@ -243,20 +243,13 @@ let print_variable_warnings st =
 *)
 
 module Json = struct
-  let output_request request action =
+  let output_request request user_action =
     if OpamClientConfig.(!r.json_out = None) then () else
     let atoms =
       List.map (fun a -> `String (OpamFormula.short_string_of_atom a))
     in
     let j = `O [
-        ("action", match action with
-          | Install ns -> `O [ "install", OpamPackage.Name.Set.to_json ns ]
-          | Upgrade (ps, _) -> `O [ "upgrade", OpamPackage.Set.to_json ps ]
-          | Reinstall ps -> `O [ "reinstall", OpamPackage.Set.to_json ps ]
-          | Depends -> `String "depends"
-          | Remove -> `String "remove"
-          | Switch ns -> `O [ "switch", OpamPackage.Name.Set.to_json ns ]
-          | Import  ns -> `O [ "import", OpamPackage.Name.Set.to_json ns ]);
+        "action", `String (string_of_user_action user_action);
         "install", `A (atoms request.wish_install);
         "remove", `A (atoms request.wish_remove);
         "upgrade", `A (atoms request.wish_upgrade);
@@ -318,21 +311,48 @@ end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
-let parallel_apply t action ~requested action_graph =
+let parallel_apply t _action ~requested ?add_roots action_graph =
   log "parallel_apply";
+
+  let remove_action_packages =
+    PackageActionGraph.fold_vertex
+      (function `Remove nv -> OpamPackage.Set.add nv
+              | _ -> fun acc -> acc)
+      action_graph OpamPackage.Set.empty
+  in
+
+  let install_action_packages =
+    PackageActionGraph.fold_vertex
+      (function `Install nv -> OpamPackage.Set.add nv
+              | _ -> fun acc -> acc)
+      action_graph OpamPackage.Set.empty
+  in
+
+  (* the core set of installed packages that won't change *)
+  let minimal_install =
+    OpamPackage.Set.Op.(t.installed -- remove_action_packages)
+  in
+
+  let wished_removed =
+    OpamPackage.Set.filter
+      (fun nv -> not (OpamPackage.has_name install_action_packages nv.name))
+      remove_action_packages
+  in
+
+  let root_installs =
+    OpamPackage.Name.Set.union
+      (OpamPackage.names_of_packages t.installed_roots) @@
+    match add_roots with
+    | Some r -> r
+    | None ->
+      OpamPackage.Name.Set.diff
+        (OpamPackage.names_of_packages requested)
+        (OpamPackage.names_of_packages remove_action_packages)
+  in
 
   (* We keep an imperative state up-to-date and flush it to disk as soon
      as an operation terminates *)
   let t_ref = ref t in
-
-  let root_installs =
-    let names = OpamPackage.names_of_packages t.installed_roots in
-    match action with
-    | Install r | Upgrade (_, r) | Import r | Switch r  ->
-      OpamPackage.Name.Set.union names r
-    | Reinstall _ -> names
-    | Depends | Remove -> OpamPackage.Name.Set.empty
-  in
 
   let add_to_install nv =
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
@@ -423,31 +443,6 @@ let parallel_apply t action ~requested action_graph =
      let oc = open_out filename in
      OpamSolver.ActionGraph.Dot.output_graph oc action_graph;
      close_out oc);
-
-  let remove_action_packages =
-    PackageActionGraph.fold_vertex
-      (function `Remove nv -> OpamPackage.Set.add nv
-              | _ -> fun acc -> acc)
-      action_graph OpamPackage.Set.empty
-  in
-
-  let install_action_packages =
-    PackageActionGraph.fold_vertex
-      (function `Install nv -> OpamPackage.Set.add nv
-              | _ -> fun acc -> acc)
-      action_graph OpamPackage.Set.empty
-  in
-
-  (* the core set of installed packages that won't change *)
-  let minimal_install =
-    OpamPackage.Set.Op.(t.installed -- remove_action_packages)
-  in
-
-  let wished_removed =
-    OpamPackage.Set.filter
-      (fun nv -> not (OpamPackage.has_name install_action_packages nv.name))
-      remove_action_packages
-  in
 
   let timings = Hashtbl.create 17 in
   (* the child job to run on each action *)
@@ -811,7 +806,7 @@ let confirmation ?ask requested solution =
     || OpamConsole.confirm "Do you want to continue ?"
 
 (* Apply a solution *)
-let apply ?ask t action ~requested solution =
+let apply ?ask t action ~requested ?add_roots solution =
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
@@ -852,7 +847,7 @@ let apply ?ask t action ~requested solution =
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
       match action with
-      | Install _ | Upgrade _ | Reinstall _
+      | Install | Upgrade | Reinstall
         when not (OpamCudf.external_solver_available ()) &&
              stats.s_remove + stats.s_downgrade >= max 2 (total_actions / 2)
         ->
@@ -873,12 +868,12 @@ let apply ?ask t action ~requested solution =
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in
-      parallel_apply t action ~requested action_graph
+      parallel_apply t action ~requested ?add_roots action_graph
     ) else
       t, Aborted
   )
 
-let resolve ?(verbose=true) t action ~orphans ~requested request =
+let resolve ?(verbose=true) t action ~orphans ?reinstall ~requested request =
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
@@ -887,17 +882,19 @@ let resolve ?(verbose=true) t action ~orphans ~requested request =
   Json.output_request request action;
   let r =
     OpamSolver.resolve ~verbose
-      (OpamSwitchState.universe t ~requested action) ~orphans request
+      (OpamSwitchState.universe t ~requested ?reinstall action)
+      ~orphans
+      request
   in
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ~requested ~orphans request =
-  match resolve t action ~orphans ~requested request with
+let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots request =
+  match resolve t action ~orphans ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"
       (OpamCudf.string_of_conflict t.packages
          (OpamSwitchState.unavailable_reason t) cs);
     t, No_solution
-  | Success solution -> apply ?ask t action ~requested solution
+  | Success solution -> apply ?ask t action ~requested ?add_roots solution

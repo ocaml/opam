@@ -52,6 +52,8 @@ val pos_file: filename -> pos
 (** Prints a file position *)
 val string_of_pos: pos -> string
 
+val string_of_user_action: user_action -> string
+
 (** Makes sure to keep only the last binding for a given variable; doesn't
     preserve order *)
 val env_array: env -> string array

@@ -28,11 +28,12 @@ let empty_universe =
     u_depends = OpamPackage.Map.empty;
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
-    u_action = Install OpamPackage.Name.Set.empty;
+    u_action = Install;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
     u_dev = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
+    u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];
     u_test = OpamPackage.Set.empty;
     u_doc = OpamPackage.Set.empty;
@@ -189,10 +190,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
       else `Keep_none
     else `Keep_none
   in
-  let reinstall = match universe.u_action with
-    | Upgrade (reinstall, _) | Reinstall reinstall ->
-      OpamPackage.Set.mem package reinstall
-    | _                 -> false in
+  let reinstall = OpamPackage.Set.mem package universe.u_reinstall in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let pinned_to_current_version =
     OpamPackage.Set.mem package universe.u_pinned in

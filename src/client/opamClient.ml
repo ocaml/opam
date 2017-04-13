@@ -33,8 +33,7 @@ let slog = OpamConsole.slog
     let all = t.packages ++ t.installed in
     let allnames = OpamPackage.names_of_packages all in
     let universe =
-      OpamSwitchState.universe t ~requested:OpamPackage.Name.Set.empty
-        (Reinstall OpamPackage.Set.empty)
+      OpamSwitchState.universe t ~requested:OpamPackage.Name.Set.empty Reinstall
     in
     (* Basic definition of orphan packages *)
     let orphans = t.installed -- Lazy.force t.available_packages in
@@ -265,28 +264,18 @@ let slog = OpamConsole.slog
       else []
     in
     if all then
-      let to_reinstall = t.reinstall %% t.installed in
-      let new_installs =
-        OpamPackage.Name.Set.of_list (List.rev_map fst to_install)
-      in
-      let action = Upgrade (to_reinstall, new_installs) in
       let t, full_orphans, orphan_versions = orphans ~transitive:true t in
       let to_upgrade = t.installed -- full_orphans in
       names,
-      action,
-      OpamSolution.resolve t action
+      OpamSolution.resolve t Upgrade
         ~orphans:(full_orphans ++ orphan_versions)
         ~requested:names
+        ~reinstall:t.reinstall
         (preprocessed_request t full_orphans orphan_versions
            ~wish_install:to_install
            ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
            ~criteria:`Upgrade ())
     else
-    let to_reinstall = t.reinstall %% requested_installed in
-    let new_installs =
-      OpamPackage.Name.Set.of_list (List.rev_map fst to_install)
-    in
-    let action = Upgrade (to_reinstall, new_installs) in
     let changes =
       requested_installed ++ OpamSwitchState.packages_of_atoms t to_install
     in
@@ -302,8 +291,7 @@ let slog = OpamConsole.slog
           with Not_found -> name, None)
         (OpamPackage.Set.elements to_upgrade) in
     names,
-    action,
-    OpamSolution.resolve t action
+    OpamSolution.resolve t Upgrade
       ~orphans:(full_orphans ++ orphan_versions)
       ~requested:names
       (preprocessed_request t full_orphans orphan_versions
@@ -317,7 +305,7 @@ let slog = OpamConsole.slog
       (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
       atoms;
     match compute_upgrade_t ?strict_upgrade ?auto_install ~all atoms t with
-    | requested, _action, Conflicts cs ->
+    | requested, Conflicts cs ->
       log "conflict!";
       if not (OpamPackage.Name.Set.is_empty requested) then
         (OpamConsole.msg "%s"
@@ -350,13 +338,13 @@ let slog = OpamConsole.slog
              current state.\n"
       end;
       OpamStd.Sys.exit 3
-    | requested, action, Success solution ->
+    | requested, Success solution ->
       if check then
         if OpamSolver.solution_is_empty solution
         then OpamStd.Sys.exit 1
         else OpamStd.Sys.exit 0
       else
-      let t, result = OpamSolution.apply ?ask t action ~requested solution in
+      let t, result = OpamSolution.apply ?ask t Upgrade ~requested solution in
       if result = Nothing_to_do then (
         let to_check =
           if OpamPackage.Name.Set.is_empty requested then t.installed
@@ -422,11 +410,10 @@ let slog = OpamConsole.slog
        OpamStd.Sys.exit 1)
     else
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
-    let action = Upgrade (OpamPackage.Set.empty, OpamPackage.Name.Set.empty) in
     let all_orphans = full_orphans ++ orphan_versions in
     let resolve pkgs =
       pkgs,
-      OpamSolution.resolve t action
+      OpamSolution.resolve t Upgrade
         ~orphans:all_orphans
         ~requested:(OpamPackage.names_of_packages pkgs)
         (OpamSolver.request
@@ -480,7 +467,7 @@ let slog = OpamConsole.slog
         t, No_solution
       | Success solution ->
         let _, req_rm, _ = orphans ~transitive:false t in
-        OpamSolution.apply ~ask:true t action
+        OpamSolution.apply ~ask:true t Upgrade
           ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
           solution
     in
@@ -815,6 +802,9 @@ let slog = OpamConsole.slog
 
     let pkg_skip, pkg_new =
       get_installed_atoms t atoms in
+    let pkg_reinstall =
+      t.reinstall %% OpamPackage.Set.of_list pkg_skip
+    in
 
     (* Add the packages to the list of package roots and display a
        warning for already installed package roots. *)
@@ -825,10 +815,11 @@ let slog = OpamConsole.slog
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              OpamConsole.note
-                "Package %s is already installed (current version is %s)."
-                (OpamPackage.Name.to_string nv.name)
-                (OpamPackage.Version.to_string nv.version);
+              if not (OpamPackage.Set.mem nv pkg_reinstall) then
+                OpamConsole.note
+                  "Package %s is already installed (current version is %s)."
+                  (OpamPackage.Name.to_string nv.name)
+                  (OpamPackage.Version.to_string nv.version);
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
@@ -853,7 +844,7 @@ let slog = OpamConsole.slog
                    (OpamPackage.Name.to_string nv.name);
                  t)
           else t
-        )  t pkg_skip in
+        ) t pkg_skip in
     if t.installed_roots <> current_roots then (
       let diff = t.installed_roots -- current_roots in
       if not (OpamPackage.Set.is_empty diff) then
@@ -877,30 +868,28 @@ let slog = OpamConsole.slog
     let available_packages =
       if deps_only then
         (* Assume the named packages are available *)
-        OpamPackage.Name.Set.fold (fun name avail ->
-            if OpamPackage.has_name available_packages name then avail
+        List.fold_left (fun avail (name, _ as atom) ->
+            if OpamPackage.Set.exists (OpamFormula.check atom) avail then avail
             else match OpamPinned.package_opt t name with
-              | Some nv -> OpamPackage.Set.add nv avail
-              | None -> avail ++ OpamPackage.packages_of_name t.packages name)
-          names available_packages
+              | Some nv when OpamFormula.check atom nv ->
+                OpamPackage.Set.add nv avail
+              | _ ->
+                avail ++
+                OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+          available_packages atoms
       else
         (OpamSolution.check_availability t available_packages atoms;
          available_packages) in
     let t = {t with available_packages = lazy available_packages} in
 
-    if pkg_new <> [] then (
+    if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
 
       let request =
         preprocessed_request t full_orphans orphan_versions
           ~wish_install:atoms ();
       in
-      let action =
-        match add_to_roots, deps_only with
-          | Some false, _ | None, true ->
-            Install OpamPackage.Name.Set.empty
-          | _ -> Install names in
       let solution =
-        OpamSolution.resolve t action
+        OpamSolution.resolve t Install
           ~orphans:(full_orphans ++ orphan_versions)
           ~requested:names
           request in
@@ -918,11 +907,16 @@ let slog = OpamConsole.slog
                   not (OpamPackage.Name.Set.mem nv.name names))
                 solution
             else solution in
-          OpamSolution.apply ?ask t action ~requested:names solution in
+          let add_roots =
+            OpamStd.Option.map (function
+                | true -> names
+                | false -> OpamPackage.Name.Set.empty)
+              add_to_roots
+          in
+          OpamSolution.apply ?ask t Install ~requested:names ?add_roots solution
+      in
       OpamSolution.check_solution t solution;
       t
-    )
-    else t
 
   let install t names add_to_roots ~deps_only =
     let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
@@ -1055,8 +1049,10 @@ let slog = OpamConsole.slog
     in
 
     let t, solution =
-      OpamSolution.resolve_and_apply ?ask t (Reinstall reinstall) ~requested
+      OpamSolution.resolve_and_apply ?ask t Reinstall
         ~orphans:(full_orphans ++ orphan_versions)
+        ~reinstall:(OpamPackage.packages_of_names t.installed requested)
+        ~requested
         request in
 
     OpamSolution.check_solution t solution;

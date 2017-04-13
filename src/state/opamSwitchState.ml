@@ -469,8 +469,9 @@ let get_conflicts opams_map =
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
+    ?reinstall
     ~requested
-    action =
+    user_action =
   let env nv v =
     if List.mem v OpamPackageVar.predefined_depends_variables then None else
     let r = OpamPackageVar.resolve_switch ~package:nv st v in
@@ -514,19 +515,27 @@ let universe st
   let requested_allpkgs =
     OpamPackage.packages_of_names st.packages requested
   in
+  let u_reinstall = match reinstall with
+    | Some set -> set
+    | None ->
+      OpamPackage.Set.filter
+        (fun nv -> OpamPackage.Name.Set.mem nv.name requested)
+        st.reinstall
+  in
   let u =
 {
   u_packages  = st.packages;
-  u_action    = action;
+  u_action = user_action;
   u_installed = st.installed;
-  u_available (* = Lazy.force st.available_packages *);
+  u_available;
   u_depends;
-  u_depopts   = get_deps OpamFile.OPAM.depopts st.opams;
+  u_depopts = get_deps OpamFile.OPAM.depopts st.opams;
   u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
   u_dev       = dev_packages st;
   u_base      = st.compiler_packages;
+  u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs];
   u_test      = if test then requested_allpkgs else OpamPackage.Set.empty;
   u_doc       = if doc then requested_allpkgs else OpamPackage.Set.empty;

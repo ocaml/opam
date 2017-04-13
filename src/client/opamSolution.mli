@@ -20,30 +20,36 @@ val resolve:
   'a switch_state ->
   user_action ->
   orphans:package_set ->
+  ?reinstall:package_set ->
   requested:name_set ->
   atom request ->
   (OpamSolver.solution, OpamCudf.conflict) result
 
-(** Apply a solution returned by the solver. If [ask] is not
-    specified, prompts the user whenever the solution isn't
-    obvious from the request *)
+(** Apply a solution returned by the solver. If [ask] is not specified, prompts
+    the user whenever the solution isn't obvious from the request. [add_roots]
+    defaults to the set of newly installed packages that are part of
+    [requested]. *)
 val apply:
   ?ask:bool ->
   rw switch_state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
+  ?add_roots:OpamPackage.Name.Set.t ->
   OpamSolver.solution ->
   rw switch_state * solver_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not
     specified, prompts the user whenever the solution isn't obvious from the
-    request *)
+    request. [add_roots] defaults to the set of newly installed packages that
+    are part of [requested]. *)
 val resolve_and_apply:
   ?ask:bool ->
   rw switch_state ->
   user_action ->
-  requested:OpamPackage.Name.Set.t ->
   orphans:package_set ->
+  ?reinstall:package_set ->
+  requested:OpamPackage.Name.Set.t ->
+  ?add_roots:OpamPackage.Name.Set.t ->
   atom request ->
   rw switch_state * solver_result
 
