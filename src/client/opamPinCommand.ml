@@ -210,6 +210,11 @@ let edit st ?version name =
   match edit_raw name temp_file with
   | None -> st
   | Some opam ->
+    let opam = match current_opam with
+      | Some cur -> OpamFile.OPAM.(with_metadata_dir (metadata_dir cur)) opam
+      | None -> opam
+    in
+    let opam = copy_files st opam in
     OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
       (OpamPackage.Name.to_string name);
     match current_opam with
@@ -447,7 +452,11 @@ let source_pin
          OpamFile.OPAM.write_with_preserved_format
            ?format_from:(OpamPinned.orig_opam_file opam_base)
            temp_file opam_base;
-       edit_raw name temp_file)
+       OpamStd.Option.Op.(
+         edit_raw name temp_file >>|
+         (* Preserve metadata_dir so that copy_files below works *)
+         OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
+       ))
     else
       Some opam_base
   in
@@ -571,7 +580,7 @@ let list st ~short =
             [Printf.sprintf "(installed:%s)"
                (OpamConsole.colorise `bold
                   (OpamPackage.version_to_string inst))]
-        with Not_found -> OpamConsole.colorise `yellow " (uninstalled)", []
+        with Not_found -> OpamConsole.colorise `yellow "(uninstalled)", []
       in
       [ OpamPackage.to_string nv;
         state;

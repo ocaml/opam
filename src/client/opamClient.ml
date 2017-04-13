@@ -1137,7 +1137,8 @@ module PIN = struct
           let target =
             OpamStd.Option.Op.(OpamSwitchState.url st nv >>| OpamFile.URL.url)
           in
-          try source_pin st name ~edit:true ?version target
+          let opam = OpamPackage.Map.find_opt nv st.repos_package_index in
+          try source_pin st name ~edit:true ?version ?opam target
           with OpamPinCommand.Aborted -> OpamStd.Sys.exit 10
              | OpamPinCommand.Nothing_to_do -> st
         else
