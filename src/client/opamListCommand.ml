@@ -160,14 +160,10 @@ let atom_dependencies st tog atoms =
     pkgs OpamFormula.Empty
 
 let get_universe st tog =
-  let universe =
-    OpamSwitchState.universe st
-      ~test:tog.test ~doc:tog.doc
-      ~requested:(OpamPackage.names_of_packages st.packages)
-      Query
-  in
-  if tog.dev then { universe with u_dev = st.packages }
-  else universe
+  OpamSwitchState.universe st
+    ~test:tog.test ~doc:tog.doc ~force_dev_deps:tog.dev
+    ~requested:(OpamPackage.names_of_packages st.packages)
+    Query
 
 let rec value_strings value =
   let module SS = OpamStd.String.Set in
