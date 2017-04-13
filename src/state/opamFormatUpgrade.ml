@@ -942,13 +942,15 @@ let as_necessary global_lock root config =
     OpamConsole.error_and_exit
       "Could not acquire lock for performing format upgrade."
 
-let opam_file ?filename opam =
+let opam_file ?(quiet=false) ?filename opam =
   let v = OpamFile.OPAM.opam_version opam in
   if OpamVersion.compare v v2_0_alpha3 < 0
   then
-    ((match filename with None -> () | Some f ->
-         OpamConsole.note "Converting format of %s from %s to %s"
-           (OpamFile.to_string f) (OpamVersion.to_string v)
-           (OpamVersion.to_string latest_version));
+    ((match filename with
+        | Some f when not quiet ->
+          OpamConsole.note "Converting format of %s from %s to %s"
+            (OpamFile.to_string f) (OpamVersion.to_string v)
+            (OpamVersion.to_string latest_version)
+        | _ -> ());
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam
