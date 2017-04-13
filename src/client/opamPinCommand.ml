@@ -549,30 +549,34 @@ let list st ~short =
   else
   let lines nv =
     try
-    let opam = OpamSwitchState.opam st nv in
-    let url = OpamFile.OPAM.get_url opam in
-    let kind, target =
-      if OpamSwitchState.is_version_pinned st nv.name then
-        "version", OpamPackage.Version.to_string nv.version
-      else
-      match url with
-      | Some u -> OpamUrl.string_of_backend u.OpamUrl.backend, OpamUrl.to_string u
-      | None -> "local definition", ""
-    in
-    let state, extra =
-      try
-        let inst = OpamSwitchState.find_installed_package_by_name st nv.name in
-        if inst.version = nv.version then "",[]
+      let opam = OpamSwitchState.opam st nv in
+      let url = OpamFile.OPAM.get_url opam in
+      let kind, target =
+        if OpamSwitchState.is_version_pinned st nv.name then
+          "version", OpamPackage.Version.to_string nv.version
         else
-          OpamConsole.colorise `red "(not in sync)",
-          [Printf.sprintf "(installed:%s)"
-             (OpamConsole.colorise `bold (OpamPackage.version_to_string inst))]
-      with Not_found -> OpamConsole.colorise `yellow " (uninstalled)", []
-    in
-    [ OpamPackage.to_string nv;
-      state;
-      OpamConsole.colorise `blue kind;
-      String.concat " " (target::extra) ]
+        match url with
+        | Some u ->
+          OpamUrl.string_of_backend u.OpamUrl.backend, OpamUrl.to_string u
+        | None -> "local definition", ""
+      in
+      let state, extra =
+        try
+          let inst =
+            OpamSwitchState.find_installed_package_by_name st nv.name
+          in
+          if inst.version = nv.version then "",[]
+          else
+            OpamConsole.colorise `red "(not in sync)",
+            [Printf.sprintf "(installed:%s)"
+               (OpamConsole.colorise `bold
+                  (OpamPackage.version_to_string inst))]
+        with Not_found -> OpamConsole.colorise `yellow " (uninstalled)", []
+      in
+      [ OpamPackage.to_string nv;
+        state;
+        OpamConsole.colorise `blue kind;
+        String.concat " " (target::extra) ]
     with Not_found ->
       [ OpamPackage.to_string nv;
         OpamConsole.colorise `red " (no definition found)" ]

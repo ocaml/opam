@@ -77,26 +77,27 @@ let add rt name url trust_anchors =
                 ta.fingerprints)
              ta.quorum)
   | None ->
-  let repo = { repo_name = name; repo_url = url;
-               repo_root = OpamRepositoryPath.create root name;
-               repo_trust = trust_anchors; }
-  in
-  if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
-  then
-    OpamConsole.error_and_exit
-      "Invalid repository name, %s exists"
-      (OpamFilename.Dir.to_string repo.repo_root);
-  if url.OpamUrl.backend = `rsync &&
-     OpamUrl.local_dir url <> None &&
-     OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo.repo_url) = None &&
-     not (OpamConsole.confirm
-            "%S doesn't contain a \"packages\" directory.\n\
-             Is it really the directory of your repo ?"
-            (OpamUrl.to_string url))
-  then OpamStd.Sys.exit 1;
-  OpamProcess.Job.run (OpamRepository.init root name);
-  update_repos_config rt
-    (OpamRepositoryName.Map.add name repo rt.repositories)
+    let repo = { repo_name = name; repo_url = url;
+                 repo_root = OpamRepositoryPath.create root name;
+                 repo_trust = trust_anchors; }
+    in
+    if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
+    then
+      OpamConsole.error_and_exit
+        "Invalid repository name, %s exists"
+        (OpamFilename.Dir.to_string repo.repo_root);
+    if url.OpamUrl.backend = `rsync &&
+       OpamUrl.local_dir url <> None &&
+       OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo.repo_url)
+       = None &&
+       not (OpamConsole.confirm
+              "%S doesn't contain a \"packages\" directory.\n\
+               Is it really the directory of your repo ?"
+              (OpamUrl.to_string url))
+    then OpamStd.Sys.exit 1;
+    OpamProcess.Job.run (OpamRepository.init root name);
+    update_repos_config rt
+      (OpamRepositoryName.Map.add name repo rt.repositories)
 
 let remove rt name =
   log "repository-remove";

@@ -216,18 +216,18 @@ let cache_command =
               (cache_dir_url :: OpamFile.Repo.dl_cache repo_def)
               repo_def));
 
-    if not (OpamPackage.Map.is_empty errors) then (
-      OpamConsole.error "Got some errors while processing: %s"
-        (OpamStd.List.concat_map ", " OpamPackage.to_string
-           (OpamPackage.Map.keys errors));
-      OpamConsole.errmsg "%s"
-        (OpamStd.Format.itemize (fun (nv,el) ->
-             Printf.sprintf "[%s] %s" (OpamPackage.to_string nv)
-               (String.concat "\n" el))
-            (OpamPackage.Map.bindings errors))
-    );
+      if not (OpamPackage.Map.is_empty errors) then (
+        OpamConsole.error "Got some errors while processing: %s"
+          (OpamStd.List.concat_map ", " OpamPackage.to_string
+             (OpamPackage.Map.keys errors));
+        OpamConsole.errmsg "%s"
+          (OpamStd.Format.itemize (fun (nv,el) ->
+               Printf.sprintf "[%s] %s" (OpamPackage.to_string nv)
+                 (String.concat "\n" el))
+              (OpamPackage.Map.bindings errors))
+      );
 
-    OpamConsole.msg "Done.\n";
+      OpamConsole.msg "Done.\n";
   in
   Term.(pure cmd $ OpamArg.global_options $
         cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),

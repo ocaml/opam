@@ -65,27 +65,27 @@ module Make (VCS: VCS) = struct
 
   let pull_url dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
-      OpamProcess.Job.catch
-        (fun e ->
-           OpamConsole.error "Could not synchronize %s from %S:\n%s"
-             (OpamFilename.Dir.to_string dirname)
-             (OpamUrl.to_string url)
-             (Printexc.to_string e);
-           Done (Not_available (Printexc.to_string e)))
-      @@ fun () ->
-      if VCS.exists dirname then
-        VCS.fetch dirname url @@+ fun () ->
-        VCS.is_up_to_date dirname url @@+ function
-        | true -> Done (Up_to_date None)
-        | false ->
-          VCS.reset dirname url @@+ fun () ->
-          Done (Result None)
-      else
-        (OpamFilename.mkdir dirname;
-         VCS.init dirname url @@+ fun () ->
-         VCS.fetch dirname url @@+ fun () ->
-         VCS.reset dirname url @@+ fun () ->
-         Done (Result None))
+    OpamProcess.Job.catch
+      (fun e ->
+         OpamConsole.error "Could not synchronize %s from %S:\n%s"
+           (OpamFilename.Dir.to_string dirname)
+           (OpamUrl.to_string url)
+           (Printexc.to_string e);
+         Done (Not_available (Printexc.to_string e)))
+    @@ fun () ->
+    if VCS.exists dirname then
+      VCS.fetch dirname url @@+ fun () ->
+      VCS.is_up_to_date dirname url @@+ function
+      | true -> Done (Up_to_date None)
+      | false ->
+        VCS.reset dirname url @@+ fun () ->
+        Done (Result None)
+    else
+      (OpamFilename.mkdir dirname;
+       VCS.init dirname url @@+ fun () ->
+       VCS.fetch dirname url @@+ fun () ->
+       VCS.reset dirname url @@+ fun () ->
+       Done (Result None))
 
   let revision repo_root =
     VCS.revision repo_root @@+ fun r ->

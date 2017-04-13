@@ -119,22 +119,22 @@ let really_download
         OpamStd.Exn.fatal e;
         log "Could not download file at %s." (OpamUrl.to_string url);
         raise e)
-    @@ fun () ->
-    download_command ~compress ?checksum ~url ~dst:tmp_dst
-    @@+ fun () ->
-    if not (Sys.file_exists tmp_dst) then
-      failwith "Downloaded command succeeded, but resulting file not found"
-    else if Sys.file_exists dst && not overwrite then
-      OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
-    if validate &&
-       OpamRepositoryConfig.(!r.force_checksums <> Some false) then
-      OpamStd.Option.iter (fun cksum ->
-          if not (OpamHash.check_file tmp_dst cksum) then
-            failwith (Printf.sprintf "Bad checksum, expected %s"
-                        (OpamHash.to_string cksum)))
-        checksum;
-    OpamSystem.mv tmp_dst dst;
-    Done ()
+  @@ fun () ->
+  download_command ~compress ?checksum ~url ~dst:tmp_dst
+  @@+ fun () ->
+  if not (Sys.file_exists tmp_dst) then
+    failwith "Downloaded command succeeded, but resulting file not found"
+  else if Sys.file_exists dst && not overwrite then
+    OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
+  if validate &&
+     OpamRepositoryConfig.(!r.force_checksums <> Some false) then
+    OpamStd.Option.iter (fun cksum ->
+        if not (OpamHash.check_file tmp_dst cksum) then
+          failwith (Printf.sprintf "Bad checksum, expected %s"
+                      (OpamHash.to_string cksum)))
+      checksum;
+  OpamSystem.mv tmp_dst dst;
+  Done ()
 
 let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
   match OpamUrl.local_file url with

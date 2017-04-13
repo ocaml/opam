@@ -230,43 +230,43 @@ let init =
         shell dot_profile update_config
     in
     if not no_compiler &&
-      OpamFile.Config.installed_switches gt.config = [] then
+       OpamFile.Config.installed_switches gt.config = [] then
       match compiler with
       | Some comp ->
-         let packages =
-           OpamSwitchCommand.guess_compiler_package rt comp
-         in
-         OpamSwitchCommand.install
-           gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
-         |> ignore
+        let packages =
+          OpamSwitchCommand.guess_compiler_package rt comp
+        in
+        OpamSwitchCommand.install
+          gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
+        |> ignore
       | None ->
-         let candidates = OpamFormula.to_dnf default_compiler in
-         let all_packages = OpamSwitchCommand.get_compiler_packages rt in
-         let compiler_packages =
-           try
-             Some (List.find (fun atoms ->
-               let names = List.map fst atoms in
-               let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
-               List.for_all (OpamPackage.has_name pkgs) names)
-                     candidates)
-           with Not_found -> None
-         in
-         match compiler_packages with
-         | Some packages ->
-            OpamSwitchCommand.install
-              gt ~rt ~packages ~update_config:true
-              (OpamSwitch.of_string "default")
-            |> ignore
-         | None ->
-            OpamConsole.note
-              "No compiler selected, and no available default switch found: \
-               no switch has been created.\n\
-               Use 'opam switch create <compiler>' to get started."
+        let candidates = OpamFormula.to_dnf default_compiler in
+        let all_packages = OpamSwitchCommand.get_compiler_packages rt in
+        let compiler_packages =
+          try
+            Some (List.find (fun atoms ->
+                let names = List.map fst atoms in
+                let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
+                List.for_all (OpamPackage.has_name pkgs) names)
+                candidates)
+          with Not_found -> None
+        in
+        match compiler_packages with
+        | Some packages ->
+          OpamSwitchCommand.install
+            gt ~rt ~packages ~update_config:true
+            (OpamSwitch.of_string "default")
+          |> ignore
+        | None ->
+          OpamConsole.note
+            "No compiler selected, and no available default switch found: \
+             no switch has been created.\n\
+             Use 'opam switch create <compiler>' to get started."
   in
   Term.(pure init
-          $global_options $build_options $repo_kind_flag $repo_name $repo_url
-          $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
-          $config_file $no_config_file $bypass_checks),
+        $global_options $build_options $repo_kind_flag $repo_name $repo_url
+        $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
+        $config_file $no_config_file $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -2778,84 +2778,84 @@ let build =
               (OpamSwitch.to_string switch);
           get_st gt ?rt_opt repos, gt
         else
-          let repos, rt = get_repos_rt gt repos in
-          OpamGlobalState.with_write_lock gt @@ fun gt ->
-          let get_coinst_universe () =
-            let virt_st =
-              OpamSwitchState.load_virtual ?repos_list:repos gt rt
+        let repos, rt = get_repos_rt gt repos in
+        OpamGlobalState.with_write_lock gt @@ fun gt ->
+        let get_coinst_universe () =
+          let virt_st =
+            OpamSwitchState.load_virtual ?repos_list:repos gt rt
+          in
+          let opams =
+            OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
+          in
+          let virt_st =
+            { virt_st with
+              opams;
+              packages =
+                OpamPackage.Set.union virt_st.packages local_packages;
+              available_packages = lazy (
+                OpamPackage.Map.filter (fun package opam ->
+                    OpamFilter.eval_to_bool ~default:false
+                      (OpamPackageVar.resolve_switch_raw ~package gt
+                         switch OpamFile.Switch_config.empty)
+                      (OpamFile.OPAM.available opam))
+                  opams
+                |> OpamPackage.keys);
+            }
+          in
+          OpamSwitchState.universe virt_st
+            ~requested:(OpamPackage.names_of_packages local_packages)
+            Query
+        in
+        let default_compiler =
+          OpamFile.Config.default_compiler gt.config
+        in
+        let compiler_atoms = match compiler with
+          | Some atoms -> atoms
+          | None when default_compiler = Empty ->
+            OpamConsole.warning "No compiler selected";
+            []
+          | None ->
+            let candidates = OpamFormula.to_dnf default_compiler in
+            let local_atoms =
+              OpamSolution.eq_atoms_of_packages local_packages
             in
-            let opams =
-              OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
-            in
-            let virt_st =
-              { virt_st with
-                opams;
-                packages =
-                  OpamPackage.Set.union virt_st.packages local_packages;
-                available_packages = lazy (
-                  OpamPackage.Map.filter (fun package opam ->
-                      OpamFilter.eval_to_bool ~default:false
-                        (OpamPackageVar.resolve_switch_raw ~package gt
-                           switch OpamFile.Switch_config.empty)
-                        (OpamFile.OPAM.available opam))
-                    opams
-                  |> OpamPackage.keys);
-              }
-            in
-            OpamSwitchState.universe virt_st
-              ~requested:(OpamPackage.names_of_packages local_packages)
-              Query
-          in
-          let default_compiler =
-            OpamFile.Config.default_compiler gt.config
-          in
-          let compiler_atoms = match compiler with
-            | Some atoms -> atoms
-            | None when default_compiler = Empty ->
-              OpamConsole.warning "No compiler selected";
-              []
-            | None ->
-              let candidates = OpamFormula.to_dnf default_compiler in
-              let local_atoms =
-                OpamSolution.eq_atoms_of_packages local_packages
-              in
-              try
-                let univ = get_coinst_universe () in
-                List.find
-                  (fun atoms ->
-                     OpamSolver.atom_coinstallability_check univ
-                       (local_atoms @ atoms))
-                  candidates
-              with Not_found ->
-                OpamConsole.warning
-                  "The default compiler selection: %s\n\
-                   is not compatible with the local packages found.\n\
-                   You can use `--compiler` to select a different compiler."
-                  (OpamFormula.to_string default_compiler);
-                if OpamConsole.confirm
-                    "Continue anyway with no compiler selected ?"
-                then []
-                else OpamStd.Sys.exit 66
-          in
-          let compiler_str =
-            if compiler_atoms = [] then "no compiler selected"
-            else "compiler "^OpamFormula.string_of_atoms compiler_atoms
-          in
-          if OpamGlobalState.switches gt = [] then
-            OpamConsole.msg "Initialising switch %s with compiler %s\n"
-              (OpamSwitch.to_string switch) compiler_str
-          else if not @@ OpamConsole.confirm
-              "Create switch %s with compiler %s ?"
-              (OpamSwitch.to_string switch) compiler_str
-          then
-            OpamConsole.error_and_exit
-              "Aborted. Please use '--switch', or 'eval $(opam env --switch)' \
-               to use 'opam build' in an existing switch.";
-          let gt, st =
-            OpamSwitchCommand.install
-              gt ~update_config:false ~packages:compiler_atoms ?repos switch
-          in
-          st, gt
+            try
+              let univ = get_coinst_universe () in
+              List.find
+                (fun atoms ->
+                   OpamSolver.atom_coinstallability_check univ
+                     (local_atoms @ atoms))
+                candidates
+            with Not_found ->
+              OpamConsole.warning
+                "The default compiler selection: %s\n\
+                 is not compatible with the local packages found.\n\
+                 You can use `--compiler` to select a different compiler."
+                (OpamFormula.to_string default_compiler);
+              if OpamConsole.confirm
+                  "Continue anyway with no compiler selected ?"
+              then []
+              else OpamStd.Sys.exit 66
+        in
+        let compiler_str =
+          if compiler_atoms = [] then "no compiler selected"
+          else "compiler "^OpamFormula.string_of_atoms compiler_atoms
+        in
+        if OpamGlobalState.switches gt = [] then
+          OpamConsole.msg "Initialising switch %s with compiler %s\n"
+            (OpamSwitch.to_string switch) compiler_str
+        else if not @@ OpamConsole.confirm
+            "Create switch %s with compiler %s ?"
+            (OpamSwitch.to_string switch) compiler_str
+        then
+          OpamConsole.error_and_exit
+            "Aborted. Please use '--switch', or 'eval $(opam env --switch)' \
+             to use 'opam build' in an existing switch.";
+        let gt, st =
+          OpamSwitchCommand.install
+            gt ~update_config:false ~packages:compiler_atoms ?repos switch
+        in
+        st, gt
       in
       st
     in

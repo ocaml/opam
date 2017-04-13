@@ -397,31 +397,31 @@ let string_of_update st shell updates =
       Printf.sprintf "%sset -gx %s %s;\n"
         (make_comment comment) k v
     else
-      (* The MANPATH and CDPATH have default "values" if they are unset and we
-       * must be sure that we preserve these defaults when "appending" to them.
-       * This because Fish has trouble dealing with the case where we want to
-       * have a colon at the start or at the end of the string that gets exported.
-       *  - MANPATH: ""  (default system manpages)
-       *  - CDPATH:  "." (current directory) *)
-      let init_array = match k with
-        | "PATH"    -> "" (* PATH is always set *)
-        | "MANPATH" -> "if [ 0 -eq (count $MANPATH) ]; set -gx MANPATH \"\"; end;\n"
-        | "CDPATH"  -> "if [ 0 -eq (count $CDPATH) ]; set -gx CDPATH \".\"; end;\n"
-        | _         -> assert false in
-      (* Opam assumes that `v` is a string with colons in the middle so we have
-       * to convert that to an array assignment that fish understands.
-       * We also have to pay attention so we don't quote array expansions - that
-       * would replace some colons by spaces in the exported string *)
-      let vs = OpamStd.String.split_delim v ':' in
-      let to_arr_element v =
-        if List.mem v fish_array_derefs then
-          String.sub v 1 (String.length v - 2) (* remove quotes *)
-        else v in
-      let set_array =
-        Printf.sprintf "%sset -gx %s %s;\n"
-          (make_comment comment)
-          k (OpamStd.List.concat_map " " to_arr_element vs) in
-      (init_array ^ set_array) in
+    (* The MANPATH and CDPATH have default "values" if they are unset and we
+     * must be sure that we preserve these defaults when "appending" to them.
+     * This because Fish has trouble dealing with the case where we want to
+     * have a colon at the start or at the end of the string that gets exported.
+     *  - MANPATH: ""  (default system manpages)
+     *  - CDPATH:  "." (current directory) *)
+    let init_array = match k with
+      | "PATH"    -> "" (* PATH is always set *)
+      | "MANPATH" -> "if [ 0 -eq (count $MANPATH) ]; set -gx MANPATH \"\"; end;\n"
+      | "CDPATH"  -> "if [ 0 -eq (count $CDPATH) ]; set -gx CDPATH \".\"; end;\n"
+      | _         -> assert false in
+    (* Opam assumes that `v` is a string with colons in the middle so we have
+     * to convert that to an array assignment that fish understands.
+     * We also have to pay attention so we don't quote array expansions - that
+     * would replace some colons by spaces in the exported string *)
+    let vs = OpamStd.String.split_delim v ':' in
+    let to_arr_element v =
+      if List.mem v fish_array_derefs then
+        String.sub v 1 (String.length v - 2) (* remove quotes *)
+      else v in
+    let set_array =
+      Printf.sprintf "%sset -gx %s %s;\n"
+        (make_comment comment)
+        k (OpamStd.List.concat_map " " to_arr_element vs) in
+    (init_array ^ set_array) in
   let export = match shell with
     | `zsh | `sh  -> sh
     | `fish -> fish

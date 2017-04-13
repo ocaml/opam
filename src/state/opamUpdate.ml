@@ -53,31 +53,31 @@ let repository gt repo =
          (OpamRepositoryName.to_string repo.repo_name);
        Done r)
     else
-      let text =
-        OpamProcess.make_command_text ~color:`blue
+    let text =
+      OpamProcess.make_command_text ~color:`blue
+        (OpamRepositoryName.to_string repo.repo_name)
+        OpamUrl.(string_of_backend repo.repo_url.backend)
+    in
+    OpamProcess.Job.with_text text @@
+    OpamRepository.update r @@+ fun () ->
+    if n <> max_loop && r = repo then
+      (OpamConsole.warning "%s: Cyclic redirections, stopping."
+         (OpamRepositoryName.to_string repo.repo_name);
+       Done r)
+    else match eval_redirect gt r with
+      | None -> Done r
+      | Some (new_url, f) ->
+        OpamFilename.cleandir repo.repo_root;
+        let reason = match f with
+          | None   -> ""
+          | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
+        OpamConsole.note
+          "The repository '%s' will be *%s* redirected to %s%s"
           (OpamRepositoryName.to_string repo.repo_name)
-          OpamUrl.(string_of_backend repo.repo_url.backend)
-      in
-      OpamProcess.Job.with_text text @@
-      OpamRepository.update r @@+ fun () ->
-      if n <> max_loop && r = repo then
-        (OpamConsole.warning "%s: Cyclic redirections, stopping."
-           (OpamRepositoryName.to_string repo.repo_name);
-         Done r)
-      else match eval_redirect gt r with
-        | None -> Done r
-        | Some (new_url, f) ->
-          OpamFilename.cleandir repo.repo_root;
-          let reason = match f with
-            | None   -> ""
-            | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
-          OpamConsole.note
-            "The repository '%s' will be *%s* redirected to %s%s"
-            (OpamRepositoryName.to_string repo.repo_name)
-            (OpamConsole.colorise `bold "permanently")
-            (OpamUrl.to_string new_url)
-            reason;
-          job { r with repo_url = new_url } (n-1)
+          (OpamConsole.colorise `bold "permanently")
+          (OpamUrl.to_string new_url)
+          reason;
+        job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
   let repo_file_path = OpamRepositoryPath.repo repo.repo_root in
@@ -156,170 +156,170 @@ let pinned_package st ?version ?(working_dir=false) name =
   match overlay_opam >>| fun opam -> opam, OpamFile.OPAM.url opam with
   | None | Some (_, None) -> Done ((fun st -> st), false)
   | Some (opam, Some urlf) ->
-  let url = OpamFile.URL.url urlf in
-  let version =
-    OpamFile.OPAM.version_opt opam ++
-    version +!
-    OpamPackage.Version.of_string "dev"
-  in
-  let nv = OpamPackage.create name version in
-  let srcdir = OpamPath.Switch.pinned_package root st.switch name in
-  (* Four versions of the metadata: from the old and new versions
-     of the package, from the current overlay, and also the original one
-     from the repo *)
-  let add_extra_files srcdir file opam =
-    if OpamFilename.dirname (OpamFile.filename file) <> srcdir
-    then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
-    else opam
-  in
-  let old_source_opam_hash, old_source_opam =
-    match OpamPinned.find_opam_file_in_source name srcdir with
-    | None -> None, None
-    | Some f ->
-      Some (OpamHash.compute (OpamFile.to_string f)),
-      try
-        Some (OpamFile.OPAM.read f |> OpamFile.OPAM.with_name name |>
-              add_extra_files srcdir f)
-      with e -> OpamStd.Exn.fatal e; None
-  in
-  let repo_opam =
-    let packages =
-      OpamPackage.Map.filter (fun nv _ -> nv.name = name) st.repos_package_index
+    let url = OpamFile.URL.url urlf in
+    let version =
+      OpamFile.OPAM.version_opt opam ++
+      version +!
+      OpamPackage.Version.of_string "dev"
     in
-    (* get the latest version below v *)
-    match OpamPackage.Map.split nv packages with
-    | _, (Some opam), _ -> Some opam
-    | below, None, _ when not (OpamPackage.Map.is_empty below) ->
-      Some (snd (OpamPackage.Map.max_binding below))
-    | _, None, above when not (OpamPackage.Map.is_empty above) ->
-      Some (snd (OpamPackage.Map.min_binding above))
-    | _ -> None
-  in
-  (if working_dir then Done () else
-     (match url.OpamUrl.hash with
-      | None -> Done true
-      | Some h ->
-        OpamRepository.current_branch url @@| fun branch -> branch = Some h)
-     @@+ function false -> Done () | true ->
-       OpamRepository.is_dirty url
-     @@| function false -> () | true ->
-       OpamConsole.note
-         "Ignoring uncommitted changes in %s (`--working-dir' not active)."
-         url.OpamUrl.path)
-  @@+ fun () ->
-  (* Do the update *)
-  fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
-  let new_source_opam =
-    OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
-    let warns, opam_opt = OpamFileTools.lint_file f in
-    let warns, opam_opt = match opam_opt with
-      | Some opam0 ->
-        let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
-        if opam <> opam0 then OpamFileTools.lint opam, Some opam
-        else warns, Some opam0
-      | None -> warns, opam_opt
-    in
-    if warns <> [] &&
-       match old_source_opam_hash with
-       | None -> true
-       | Some h -> not (OpamHash.check_file (OpamFile.to_string f) h)
-    then
-      (OpamConsole.warning
-         "%s opam file from upstream of %s:"
-         (if opam_opt = None then "Fatal errors, not using"
-          else "Failed checks in")
-         (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
-       OpamConsole.errmsg "%s\n"
-         (OpamFileTools.warns_to_string warns));
-    opam_opt >>| OpamFile.OPAM.with_name name >>| add_extra_files srcdir f
-  in
-  let equal_opam a b =
-    let cleanup_opam o =
-      OpamFile.OPAM.effective_part
-        (OpamFile.OPAM.with_version_opt None
-           (OpamFile.OPAM.with_url_opt None o))
-    in
-    cleanup_opam a = cleanup_opam b
-  in
-  let changed_opam old new_ = match old, new_ with
-    | None, Some _ -> true
-    | _, None -> false
-    | Some a, Some b -> not (equal_opam a b)
-  in
-  let save_overlay opam =
-    OpamFilename.mkdir overlay_dir;
-    let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
-    List.iter OpamFilename.remove
-      OpamPath.Switch.Overlay.([
-        OpamFile.filename opam_file;
-        OpamFile.filename (url root st.switch name);
-        OpamFile.filename (descr root st.switch name);
-      ]);
-    let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
-    OpamFilename.rmdir files_dir;
-    let opam =
-      OpamFile.OPAM.with_url urlf @@
-      OpamFile.OPAM.with_name name opam
-    in
-    let opam =
-      if OpamFile.OPAM.version_opt opam = None
-      then OpamFile.OPAM.with_version version opam
+    let nv = OpamPackage.create name version in
+    let srcdir = OpamPath.Switch.pinned_package root st.switch name in
+    (* Four versions of the metadata: from the old and new versions
+       of the package, from the current overlay, and also the original one
+       from the repo *)
+    let add_extra_files srcdir file opam =
+      if OpamFilename.dirname (OpamFile.filename file) <> srcdir
+      then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
       else opam
     in
-    List.iter (fun (file, rel_file, hash) ->
-        if OpamHash.check_file (OpamFilename.to_string file) hash then
-          OpamFilename.copy ~src:file
-            ~dst:(OpamFilename.create files_dir rel_file)
-        else
-          OpamConsole.warning "Ignoring file %s with invalid hash"
-            (OpamFilename.to_string file))
-      (OpamFile.OPAM.get_extra_files opam);
-    OpamFile.OPAM.write opam_file
-      (OpamFile.OPAM.with_extra_files_opt None opam);
-    opam
-  in
-  match result, new_source_opam with
-  | Result (), Some new_opam
-    when changed_opam old_source_opam new_source_opam &&
-         changed_opam overlay_opam new_source_opam ->
-    let interactive_part st =
-      (* Metadata from the package source changed *)
-      if not (changed_opam old_source_opam overlay_opam) ||
-         not (changed_opam repo_opam overlay_opam)
-      then
-        (* No manual changes *)
-        (OpamConsole.formatted_msg
-           "[%s] Installing new package description from upstream %s\n"
-           (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-           (OpamUrl.to_string url);
-         let opam = save_overlay new_opam in
-         OpamSwitchState.update_pin nv opam st)
-      else if
-        OpamConsole.formatted_msg
-          "[%s] Conflicting update of the metadata from %s."
-          (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
-          (OpamUrl.to_string url);
-        OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
-          (OpamFilename.Dir.to_string overlay_dir)
-      then (
-        let bak =
-          OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
-        in
-        OpamFilename.mkdir (OpamPath.backup_dir root);
-        OpamFilename.rmdir bak;
-        OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
-        OpamConsole.formatted_msg "User metadata backed up in %s\n"
-          (OpamFilename.Dir.to_string bak);
-        let opam = save_overlay new_opam in
-        OpamSwitchState.update_pin nv opam st)
-      else
-        st
+    let old_source_opam_hash, old_source_opam =
+      match OpamPinned.find_opam_file_in_source name srcdir with
+      | None -> None, None
+      | Some f ->
+        Some (OpamHash.compute (OpamFile.to_string f)),
+        try
+          Some (OpamFile.OPAM.read f |> OpamFile.OPAM.with_name name |>
+                add_extra_files srcdir f)
+        with e -> OpamStd.Exn.fatal e; None
     in
-    Done (interactive_part, true)
-  | (Up_to_date _ | Not_available _), _ ->
-    Done ((fun st -> st), false)
-  | Result  (), _ ->
-    Done ((fun st -> st), true)
+    let repo_opam =
+      let packages =
+        OpamPackage.Map.filter (fun nv _ -> nv.name = name) st.repos_package_index
+      in
+      (* get the latest version below v *)
+      match OpamPackage.Map.split nv packages with
+      | _, (Some opam), _ -> Some opam
+      | below, None, _ when not (OpamPackage.Map.is_empty below) ->
+        Some (snd (OpamPackage.Map.max_binding below))
+      | _, None, above when not (OpamPackage.Map.is_empty above) ->
+        Some (snd (OpamPackage.Map.min_binding above))
+      | _ -> None
+    in
+    (if working_dir then Done () else
+       (match url.OpamUrl.hash with
+        | None -> Done true
+        | Some h ->
+          OpamRepository.current_branch url @@| fun branch -> branch = Some h)
+       @@+ function false -> Done () | true ->
+         OpamRepository.is_dirty url
+         @@| function false -> () | true ->
+           OpamConsole.note
+             "Ignoring uncommitted changes in %s (`--working-dir' not active)."
+             url.OpamUrl.path)
+    @@+ fun () ->
+    (* Do the update *)
+    fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
+    let new_source_opam =
+      OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
+      let warns, opam_opt = OpamFileTools.lint_file f in
+      let warns, opam_opt = match opam_opt with
+        | Some opam0 ->
+          let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
+          if opam <> opam0 then OpamFileTools.lint opam, Some opam
+          else warns, Some opam0
+        | None -> warns, opam_opt
+      in
+      if warns <> [] &&
+         match old_source_opam_hash with
+         | None -> true
+         | Some h -> not (OpamHash.check_file (OpamFile.to_string f) h)
+      then
+        (OpamConsole.warning
+           "%s opam file from upstream of %s:"
+           (if opam_opt = None then "Fatal errors, not using"
+            else "Failed checks in")
+           (OpamConsole.colorise `bold (OpamPackage.Name.to_string name));
+         OpamConsole.errmsg "%s\n"
+           (OpamFileTools.warns_to_string warns));
+      opam_opt >>| OpamFile.OPAM.with_name name >>| add_extra_files srcdir f
+    in
+    let equal_opam a b =
+      let cleanup_opam o =
+        OpamFile.OPAM.effective_part
+          (OpamFile.OPAM.with_version_opt None
+             (OpamFile.OPAM.with_url_opt None o))
+      in
+      cleanup_opam a = cleanup_opam b
+    in
+    let changed_opam old new_ = match old, new_ with
+      | None, Some _ -> true
+      | _, None -> false
+      | Some a, Some b -> not (equal_opam a b)
+    in
+    let save_overlay opam =
+      OpamFilename.mkdir overlay_dir;
+      let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
+      List.iter OpamFilename.remove
+        OpamPath.Switch.Overlay.([
+            OpamFile.filename opam_file;
+            OpamFile.filename (url root st.switch name);
+            OpamFile.filename (descr root st.switch name);
+          ]);
+      let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
+      OpamFilename.rmdir files_dir;
+      let opam =
+        OpamFile.OPAM.with_url urlf @@
+        OpamFile.OPAM.with_name name opam
+      in
+      let opam =
+        if OpamFile.OPAM.version_opt opam = None
+        then OpamFile.OPAM.with_version version opam
+        else opam
+      in
+      List.iter (fun (file, rel_file, hash) ->
+          if OpamHash.check_file (OpamFilename.to_string file) hash then
+            OpamFilename.copy ~src:file
+              ~dst:(OpamFilename.create files_dir rel_file)
+          else
+            OpamConsole.warning "Ignoring file %s with invalid hash"
+              (OpamFilename.to_string file))
+        (OpamFile.OPAM.get_extra_files opam);
+      OpamFile.OPAM.write opam_file
+        (OpamFile.OPAM.with_extra_files_opt None opam);
+      opam
+    in
+    match result, new_source_opam with
+    | Result (), Some new_opam
+      when changed_opam old_source_opam new_source_opam &&
+           changed_opam overlay_opam new_source_opam ->
+      let interactive_part st =
+        (* Metadata from the package source changed *)
+        if not (changed_opam old_source_opam overlay_opam) ||
+           not (changed_opam repo_opam overlay_opam)
+        then
+          (* No manual changes *)
+          (OpamConsole.formatted_msg
+             "[%s] Installing new package description from upstream %s\n"
+             (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+             (OpamUrl.to_string url);
+           let opam = save_overlay new_opam in
+           OpamSwitchState.update_pin nv opam st)
+        else if
+          OpamConsole.formatted_msg
+            "[%s] Conflicting update of the metadata from %s."
+            (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
+            (OpamUrl.to_string url);
+          OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
+            (OpamFilename.Dir.to_string overlay_dir)
+        then (
+          let bak =
+            OpamPath.backup_dir root / (OpamPackage.Name.to_string name ^ ".bak")
+          in
+          OpamFilename.mkdir (OpamPath.backup_dir root);
+          OpamFilename.rmdir bak;
+          OpamFilename.copy_dir ~src:overlay_dir ~dst:bak;
+          OpamConsole.formatted_msg "User metadata backed up in %s\n"
+            (OpamFilename.Dir.to_string bak);
+          let opam = save_overlay new_opam in
+          OpamSwitchState.update_pin nv opam st)
+        else
+          st
+      in
+      Done (interactive_part, true)
+    | (Up_to_date _ | Not_available _), _ ->
+      Done ((fun st -> st), false)
+    | Result  (), _ ->
+      Done ((fun st -> st), true)
 
 let dev_package st ?working_dir nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
