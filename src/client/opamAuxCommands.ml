@@ -75,12 +75,20 @@ let name_from_project_dirname d =
           OpamPackage.Name.of_string)
   with Failure _ -> None
 
+let url_with_local_branch = function
+  | { OpamUrl.backend = #OpamUrl.version_control; hash = None; _ } as url ->
+    (match OpamProcess.Job.run (OpamRepository.current_branch url) with
+     | Some b -> { url with OpamUrl.hash = Some b }
+     | None -> url)
+  | url -> url
+
 let resolve_locals atom_or_local_list =
   let open OpamStd.Option.Op in
   let target_dir dir =
     let d = OpamFilename.Dir.to_string dir in
     let backend = OpamUrl.guess_version_control d in
-    OpamUrl.parse ?backend d
+    OpamUrl.parse ?backend d |>
+    url_with_local_branch
   in
   let to_pin, atoms =
     List.fold_left (fun (to_pin, atoms) -> function
@@ -152,8 +160,9 @@ let resolve_locals atom_or_local_list =
 let autopin st ?(simulate=false) atom_or_local_list =
   let to_pin, atoms = resolve_locals atom_or_local_list in
   if to_pin = [] then st, atoms else
-  let st =
-    if simulate then
+  let st, pins =
+    if simulate || OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
+    then
       let local_names =
         List.fold_left (fun set (name, _, _) ->
             OpamPackage.Name.Set.add name set)
@@ -161,22 +170,22 @@ let autopin st ?(simulate=false) atom_or_local_list =
       in
       let local_opams =
         List.fold_left (fun map (name, target, file) ->
-            let opam =
+            let opam, version =
               OpamFile.OPAM.read file |>
               OpamFile.OPAM.with_url (OpamFile.URL.create target) |>
-              OpamFile.OPAM.with_name name
-            in
-            let opam, version = match OpamFile.OPAM.version_opt opam with
+              OpamFile.OPAM.with_name name |>
+              fun opam -> match OpamFile.OPAM.version_opt opam with
               | Some v -> opam, v
               | None ->
-                let v = OpamPackage.Version.of_string "dev" in
+                let v = OpamPackage.Version.of_string "~dev" in
                 OpamFile.OPAM.with_version v opam, v
             in
             OpamPackage.Map.add (OpamPackage.create name version) opam map)
           OpamPackage.Map.empty to_pin
       in
       let local_packages = OpamPackage.keys local_opams in
-      { st with
+      let st = {
+        st with
         opams =
           OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
         packages =
@@ -190,14 +199,30 @@ let autopin st ?(simulate=false) atom_or_local_list =
                st.switch_global st.switch st.switch_config ~pinned:st.pinned
                ~opams:local_opams)
         );
-      }
+      } in
+      st, local_packages
     else
-      List.fold_left (fun st (name, target, file) ->
+      List.fold_left (fun (st, pins) (name, target, file) ->
           try
-            let opam = OpamFile.OPAM.read file in
-            OpamPinCommand.source_pin st name ~quiet:true ~opam (Some target)
-          with OpamPinCommand.Nothing_to_do -> st
-             | OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
-        st to_pin
+            let st =
+              try
+                let opam = OpamFile.OPAM.read file in
+                OpamPinCommand.source_pin st name ~quiet:true ~opam
+                  (Some target)
+              with OpamPinCommand.Nothing_to_do -> st
+            in
+            st, OpamPackage.Set.add (OpamPinned.package st name) pins
+          with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
+        (st, OpamPackage.Set.empty) to_pin
+  in
+  let atoms =
+    List.map (function
+        | (_, Some _) as at -> at
+        | name, None ->
+          name,
+          OpamStd.Option.map
+            (fun nv -> `Eq, nv.version)
+            (OpamPackage.package_of_name_opt pins name))
+      atoms
   in
   st, atoms

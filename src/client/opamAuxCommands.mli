@@ -25,6 +25,10 @@ val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
     files are current. *)
 val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
 
+(** If the URL points to a local, version-controlled directory, qualify it by
+    suffixing `#current-branch` if no branch/tag/hash was specified. *)
+val url_with_local_branch: url -> url
+
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
     exit if package names for provided [`Filename] could not be inferred, or if
