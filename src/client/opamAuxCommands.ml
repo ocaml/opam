@@ -163,12 +163,39 @@ let resolve_locals atom_or_local_list =
 let autopin st ?(simulate=false) atom_or_local_list =
   let to_pin, atoms = resolve_locals atom_or_local_list in
   if to_pin = [] then st, atoms else
+  let pinning_dirs =
+    OpamStd.List.filter_map (function
+        | `Dirname d -> Some d
+        | _ -> None)
+      atom_or_local_list
+  in
   log "autopin: %a"
     (slog @@ OpamStd.List.to_string (fun (name, target, _) ->
          Printf.sprintf "%s => %s"
            (OpamPackage.Name.to_string name)
            (OpamUrl.to_string target)))
     to_pin;
+  let obsolete_pins =
+    (* Packages not current but pinned to the same dirs *)
+    OpamPackage.Set.filter (fun nv ->
+        not (List.exists (fun (n,_,_) -> n = nv.name) to_pin) &&
+        match OpamStd.Option.Op.(OpamSwitchState.primary_url st nv >>=
+                                 OpamUrl.local_dir)
+        with
+        | Some d -> List.mem d pinning_dirs
+        | None -> false)
+      st.pinned
+  in
+  let st =
+    if simulate || OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
+    then
+      OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
+        obsolete_pins st
+    else
+      OpamPinCommand.unpin st
+        (OpamPackage.Name.Set.elements
+           (OpamPackage.names_of_packages obsolete_pins))
+  in
   let already_pinned, to_pin =
     List.partition (fun (name, target, _) ->
         try

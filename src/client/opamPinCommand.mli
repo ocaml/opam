@@ -47,6 +47,9 @@ val edit: rw switch_state -> ?version:version -> name -> rw switch_state
 (** Unpin packages *)
 val unpin: rw switch_state -> name list -> rw switch_state
 
+(** Pure function that reverts a single package pinning *)
+val unpin_one: 'a switch_state -> package -> 'a switch_state
+
 (** List the pinned packages to the user. *)
 val list: 'a switch_state -> short:bool -> unit
 
