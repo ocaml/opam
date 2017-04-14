@@ -41,6 +41,18 @@ val resolve_locals:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
 
+(** Resolves the opam files and directories in the list to package name and
+    location, according to what is currently pinned, and returns the
+    corresponding list of atoms. Prints warnings for directories where nothing
+    is pinned, or opam files corresponding to no pinned package.
+
+    NOTE: opam files are currently not supported and a fatal error.
+*)
+val resolve_locals_pinned:
+  'a switch_state ->
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  atom list
+
 (** Resolves the opam files in the list to package name and location, pins the
     corresponding packages accordingly if necessary, otherwise updates them, and
     returns the resolved atom list. With [simulate], don't do the pinnings but

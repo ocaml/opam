@@ -105,6 +105,33 @@ let name_and_dir_of_opam_file f =
   in
   name, srcdir
 
+let resolve_locals_pinned st atom_or_local_list =
+  let pinned_packages_of_dir st dir =
+    OpamPackage.Set.filter
+      (fun nv ->
+         OpamStd.Option.Op.(OpamSwitchState.primary_url st nv >>=
+                            OpamUrl.local_dir)
+         = Some dir)
+      st.pinned
+
+  in
+  let atoms =
+    List.fold_left (fun acc -> function
+        | `Atom a -> a::acc
+        | `Dirname d ->
+          let pkgs = pinned_packages_of_dir st d in
+          if OpamPackage.Set.is_empty pkgs then
+            OpamConsole.warning "No pinned packages found at %s"
+              (OpamFilename.Dir.to_string d);
+          List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
+        | `Filename f ->
+          OpamConsole.error_and_exit
+            "This command doesn't support specifying a file name (%S)"
+            (OpamFilename.to_string f))
+      [] atom_or_local_list
+  in
+  List.rev atoms
+
 let resolve_locals atom_or_local_list =
   let open OpamStd.Option.Op in
   let target_dir dir =
