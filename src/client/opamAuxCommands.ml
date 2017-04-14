@@ -33,9 +33,10 @@ let copy_files_to_destdir st pfx packages =
   | src, `Unchanged ->
     let relf = OpamFilename.remove_prefix switch_pfx src in
     let dst = OpamFilename.Op.(pfx // relf) in
-    OpamConsole.msg "%-40s %s %s\n"
-      relf (OpamConsole.colorise `blue "=>")
-      (OpamFilename.to_string dst);
+    if OpamConsole.verbose () then
+      OpamConsole.msg "%-40s %s %s\n"
+        relf (OpamConsole.colorise `blue "=>")
+        (OpamFilename.to_string dst);
     if not OpamStateConfig.(!r.dryrun) then
       if OpamFilename.exists src then OpamFilename.copy ~src ~dst else
       let as_dir f = OpamFilename.(Dir.of_string (to_string f)) in
@@ -58,13 +59,15 @@ let remove_files_from_destdir st pfx packages =
     let f = OpamFilename.Op.(pfx // rel_file) in
     let d = OpamFilename.Op.(pfx / rel_file) in
     if OpamFilename.exists f then
-      (OpamConsole.msg "Removing %s\n"
-         (OpamConsole.colorise `bold (OpamFilename.to_string f));
+      (if OpamConsole.verbose () then
+         OpamConsole.msg "Removing %s\n"
+           (OpamConsole.colorise `bold (OpamFilename.to_string f));
        if not OpamStateConfig.(!r.dryrun) then OpamFilename.remove f)
     else if OpamFilename.exists_dir d then
       if OpamFilename.dir_is_empty d then
-        (OpamConsole.msg "Removing %s\n"
-           (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d));
+        (if OpamConsole.verbose () then
+           OpamConsole.msg "Removing %s\n"
+             (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d));
          if not OpamStateConfig.(!r.dryrun) then OpamFilename.rmdir d)
       else
         OpamConsole.note "Not removing non-empty directory %s"

@@ -1014,8 +1014,18 @@ let install =
     Arg.(value & flag & info ["restore"]
            ~doc:"Attempt to restore packages that were marked for installation \
                  but have been removed due to errors") in
+  let destdir =
+    mk_opt ["destdir"] "DIR"
+      "Copy the files installed by the given package within the current opam \
+       switch below the prefix $(i,DIR), respecting their hierarchy, after \
+       installation. Caution, calling this can overwrite, but never remove \
+       files, even if they were installed by a previous use of $(b,--destdir), \
+       e.g. on a previous version of the same package. See $(b,opam remove \
+       --destdir) to revert."
+      Arg.(some dirname) None
+  in
   let install
-      global_options build_options add_to_roots deps_only restore
+      global_options build_options add_to_roots deps_only restore destdir
       atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1046,13 +1056,21 @@ let install =
     let st, atoms =
       OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
     in
-    ignore @@
-    OpamClient.install st atoms ~autoupdate:pure_atoms ?add_to_roots ~deps_only;
-    `Ok ()
+    let st =
+      OpamClient.install st atoms
+        ~autoupdate:pure_atoms ?add_to_roots ~deps_only
+    in
+    match destdir with
+    | None -> `Ok ()
+    | Some dest ->
+      let packages = OpamFormula.packages_of_atoms st.installed atoms in
+      OpamAuxCommands.copy_files_to_destdir st dest packages;
+      `Ok ()
   in
   Term.ret
     Term.(pure install $global_options $build_options
-          $add_to_roots $deps_only $restore $atom_or_local_list),
+          $add_to_roots $deps_only $restore $destdir
+          $atom_or_local_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1077,14 +1095,41 @@ let remove =
     mk_flag ["force"]
       "Execute the remove commands of given packages directly, even if they are \
        not considered installed by opam." in
-  let remove global_options build_options autoremove force atoms =
+  let destdir =
+    mk_opt ["destdir"] "DIR"
+      "Instead of uninstalling the packages, reverts the action of $(b,opam \
+       install --destdir): remove files corresponding to what the listed \
+       packages installed to the current switch from the given $(i,DIR). Note \
+       that the package needs to still be installed to the same version that \
+       was used for $(b,install --destdir) for this to work reliably. The \
+       packages are not removed from the current opam switch when this is \
+       specified."
+      Arg.(some dirname) None
+  in
+  let remove global_options build_options autoremove force destdir atoms =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-    ignore @@ OpamClient.remove st ~autoremove ~force atoms
+    match destdir with
+    | Some d ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      let packages = OpamFormula.packages_of_atoms st.installed atoms in
+      let uninst =
+        List.filter (fun (name, _) -> not (OpamPackage.has_name packages name))
+          atoms
+      in
+      if uninst <> [] then
+        OpamConsole.warning
+          "Can't remove the following packages from the given destdir, they \
+           need to be installed in opam: %s"
+          (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom uninst);
+      OpamAuxCommands.remove_files_from_destdir st d packages
+    | None ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      ignore @@ OpamClient.remove st ~autoremove ~force atoms
   in
-  Term.(pure remove $global_options $build_options $autoremove $force $atom_list),
+  Term.(pure remove $global_options $build_options $autoremove $force $destdir
+        $atom_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
