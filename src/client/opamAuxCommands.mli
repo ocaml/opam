@@ -24,3 +24,28 @@ val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
     it's more agressive than [OpamDirTrack.revert] and doesn't check if the
     files are current. *)
 val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
+
+(** If the URL points to a local, version-controlled directory, qualify it by
+    suffixing `#current-branch` if no branch/tag/hash was specified. *)
+val url_with_local_branch: url -> url
+
+(** Resolves the opam files and directories in the list to package name and
+    location, and returns the corresponding pinnings and atoms. May fail and
+    exit if package names for provided [`Filename] could not be inferred, or if
+    the same package name appears multiple times *)
+val resolve_locals:
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
+
+(** Resolves the opam files in the list to package name and location, pins the
+    corresponding packages accordingly if necessary, otherwise updates them, and
+    returns the resolved atom list. With [simulate], don't do the pinnings but
+    return the switch state with the package definitions that would have been
+    obtained if pinning. Also synchronises the specified directories, that is,
+    unpins any package pinned there but not current (no more corresponding opam
+    file). *)
+val autopin:
+  rw switch_state ->
+  ?simulate:bool ->
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  rw switch_state * atom list

@@ -28,26 +28,19 @@ let empty_universe =
     u_depends = OpamPackage.Map.empty;
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
-    u_action = Install OpamPackage.Name.Set.empty;
+    u_action = Install;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_dev = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
+    u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];
-    u_test = OpamPackage.Set.empty;
-    u_doc = OpamPackage.Set.empty;
   }
 
 (* Get the optional dependencies of a package *)
 let depopts_of_package universe ~build package =
   let opts =
     try
-      let dev = OpamPackage.Set.mem package universe.u_dev in
-      OpamFilter.filter_deps ~build
-        ~test:(OpamPackage.Set.mem package universe.u_test)
-        ~doc:(OpamPackage.Set.mem package universe.u_doc)
-        ~dev
-        ~default:false
+      OpamFilter.filter_deps ~build ~default:false
         (OpamPackage.Map.find package universe.u_depopts)
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
@@ -74,20 +67,17 @@ let is_available universe wish_remove (name, _ as c) =
 let cudf_versions_map universe packages =
   log ~level:3 "cudf_versions_map";
   let add_referred_to_packages filt acc refmap =
-    OpamPackage.Map.fold (fun package deps acc ->
-        let dev = OpamPackage.Set.mem package universe.u_dev in
+    OpamPackage.Map.fold (fun _ deps acc ->
         List.fold_left (fun acc -> function
             | n, Some (_, v) -> OpamPackage.Set.add (OpamPackage.create n v) acc
             | _, None -> acc)
-          acc (OpamFormula.atoms (filt ~dev deps)))
+          acc (OpamFormula.atoms (filt deps)))
       refmap acc
   in
-  (* include test and doc dependencies even if they aren't required in the
-     universe, for consistency of version numbers *)
-  let filt =
-    OpamFilter.filter_deps ~build:true ~test:true ~doc:true ~default:false
+  let filt f =
+    OpamFilter.filter_deps ~build:true ~default:false f
   in
-  let id = fun ~dev:_ x -> x in
+  let id = fun x -> x in
   let packages = add_referred_to_packages filt packages universe.u_depends in
   let packages = add_referred_to_packages filt packages universe.u_depopts in
   let packages = add_referred_to_packages id packages universe.u_conflicts in
@@ -147,14 +137,9 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
 let opam2cudf universe ?(depopts=false) ~build version_map package =
   let name = OpamPackage.name package in
   let version = OpamPackage.version package in
-  let dev = OpamPackage.Set.mem package universe.u_dev in
   let depends =
     try
-      OpamFilter.filter_deps ~build
-        ~test:(OpamPackage.Set.mem package universe.u_test)
-        ~doc:(OpamPackage.Set.mem package universe.u_doc)
-        ~dev
-        ~default:false
+      OpamFilter.filter_deps ~build ~default:false
         (OpamPackage.Map.find package universe.u_depends)
     with Not_found -> Empty in
 (*
@@ -189,10 +174,7 @@ let opam2cudf universe ?(depopts=false) ~build version_map package =
       else `Keep_none
     else `Keep_none
   in
-  let reinstall = match universe.u_action with
-    | Upgrade (reinstall, _) | Reinstall reinstall ->
-      OpamPackage.Set.mem package reinstall
-    | _                 -> false in
+  let reinstall = OpamPackage.Set.mem package universe.u_reinstall in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let pinned_to_current_version =
     OpamPackage.Set.mem package universe.u_pinned in

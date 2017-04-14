@@ -139,12 +139,17 @@ val conflicts_with: 'a switch_state -> package_set -> package_set -> package_set
 
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets. Packages in the [requested] set are the ones that will get
-    affected by the global [build_test] and [build_doc] flags.
-    [test] and [doc], if unspecified, are taken from [OpamStateConfig.r] *)
+    affected by the global [build_test] and [build_doc] flags. [test] and [doc],
+    if unspecified, are taken from [OpamStateConfig.r]. [reinstall] marks
+    package not considered current in the universe, and that should therefore be
+    reinstalled. If unspecified, it is the packages marked in
+    [switch_state.reinstall] that are present in [requested]. *)
 val universe:
   'a switch_state ->
   ?test:bool ->
   ?doc:bool ->
+  ?force_dev_deps:bool ->
+  ?reinstall:package_set ->
   requested:name_set ->
   user_action -> universe
 

@@ -181,7 +181,7 @@ let install_compiler_packages t atoms =
       "No packages %s found."
       (OpamPackage.Name.Set.to_string not_found);
   let solution =
-    OpamSolution.resolve t (Switch roots)
+    OpamSolution.resolve t Switch
       ~orphans:OpamPackage.Set.empty
       ~requested:roots
       { wish_install = [];
@@ -242,7 +242,7 @@ let install_compiler_packages t atoms =
   in
   let t = { t with compiler_packages = to_install_pkgs } in
   let t, result =
-    OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t (Switch roots)
+    OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t Switch
       ~requested:roots
       solution in
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
@@ -408,10 +408,11 @@ let import_t ?ask importfile t =
       OpamSolution.atoms_of_packages unavailable_version
     in
 
-    let roots = OpamPackage.names_of_packages import_sel.sel_roots in
+    let add_roots = OpamPackage.names_of_packages import_sel.sel_roots in
 
-    OpamSolution.resolve_and_apply ?ask t (Import roots)
+    OpamSolution.resolve_and_apply ?ask t Import
       ~requested:(OpamPackage.Name.Set.of_list @@ List.map fst to_import)
+      ~add_roots
       ~orphans:OpamPackage.Set.empty
       { wish_install = to_import;
         wish_remove  = [];

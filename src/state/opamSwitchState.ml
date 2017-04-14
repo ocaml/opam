@@ -469,10 +469,24 @@ let get_conflicts opams_map =
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
+    ?(force_dev_deps=false)
+    ?reinstall
     ~requested
-    action =
+    user_action =
+  let requested_allpkgs =
+    OpamPackage.packages_of_names st.packages requested
+  in
   let env nv v =
-    if List.mem v OpamPackageVar.predefined_depends_variables then None else
+    if List.mem v OpamPackageVar.predefined_depends_variables then
+      match OpamVariable.Full.to_string v with
+      | "dev" ->
+        Some (B (force_dev_deps || is_dev_package st nv))
+      | "with-test" ->
+        Some (B (test && OpamPackage.Set.mem nv requested_allpkgs))
+      | "with-doc" ->
+        Some (B (doc && OpamPackage.Set.mem nv requested_allpkgs))
+      | _ -> None (* Computation delayed to the solver *)
+    else
     let r = OpamPackageVar.resolve_switch ~package:nv st v in
     if r = None then
       (if OpamFormatConfig.(!r.strict) then
@@ -511,25 +525,27 @@ let universe st
   let u_available =
     remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
   in
-  let requested_allpkgs =
-    OpamPackage.packages_of_names st.packages requested
+  let u_reinstall = match reinstall with
+    | Some set -> set
+    | None ->
+      OpamPackage.Set.filter
+        (fun nv -> OpamPackage.Name.Set.mem nv.name requested)
+        st.reinstall
   in
   let u =
 {
   u_packages  = st.packages;
-  u_action    = action;
+  u_action = user_action;
   u_installed = st.installed;
-  u_available (* = Lazy.force st.available_packages *);
+  u_available;
   u_depends;
-  u_depopts   = get_deps OpamFile.OPAM.depopts st.opams;
+  u_depopts = get_deps OpamFile.OPAM.depopts st.opams;
   u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
-  u_dev       = dev_packages st;
   u_base      = st.compiler_packages;
+  u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs];
-  u_test      = if test then requested_allpkgs else OpamPackage.Set.empty;
-  u_doc       = if doc then requested_allpkgs else OpamPackage.Set.empty;
 }
   in
   u
@@ -545,9 +561,7 @@ let dump_pef_state st oc =
     let pinned = OpamPackage.Set.mem nv st.pinned in
     let available = OpamPackage.Set.mem nv (Lazy.force st.available_packages) in
     let reinstall = OpamPackage.Set.mem nv st.reinstall in
-    let dev =
-      (pinned || installed) && OpamPackageVar.is_dev_package st opam
-    in
+    let dev = OpamPackageVar.is_dev_package st opam in
     (* current state *)
     Printf.fprintf oc "available: %b\n" available;
     if installed then output_string oc "installed: true\n";

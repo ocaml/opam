@@ -154,7 +154,8 @@ val variables_of_filtered_formula: filtered_formula -> full_variable list
 (** Resolves the build, test, doc, dev flags in a filtered formula (which is
     supposed to have been pre-processed to remove switch and global variables).
     [default] determines the behaviour on undefined filters, raising if
-    undefined *)
+    undefined. If test, doc or dev are unspecified, they are assumed to be
+    filtered already and encountering them will raise an assert. *)
 val filter_deps:
-  build:bool -> test:bool -> doc:bool -> dev:bool -> ?default:bool ->
+  build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool -> ?default:bool ->
   filtered_formula -> formula

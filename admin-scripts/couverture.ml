@@ -26,7 +26,7 @@
 open OpamTypes
 
 let max_install t inst_packages =
-  let universe = OpamState.universe t Depends in
+  let universe = OpamState.universe t Query in
   let wish_field = "wished" in
   let base = OpamState.base_packages t in
   let universe =

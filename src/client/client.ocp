@@ -23,6 +23,7 @@ begin library "opam-client"
     "opamGitVersion.ml"
     "opamArg.ml"
     "opamAdminCommand.ml"
+    "opamCommands.ml"
   ]
 
   requires = [

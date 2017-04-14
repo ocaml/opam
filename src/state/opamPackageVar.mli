@@ -23,7 +23,7 @@ val package_variable_names: (string * string) list
 (** Variables that are pre-defined in the dependency filtered-formula scope, and
     which resolution is delayed to after the universe is computed (these are the
     only ones allowed in the universe, and resolved by
-    [OpamSolver.filter_deps]) *)
+    [OpamFilter.filter_deps]) *)
 val predefined_depends_variables: full_variable list
 
 (** Resolves globally available variables only *)

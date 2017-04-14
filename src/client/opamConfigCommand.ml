@@ -211,21 +211,21 @@ let set var value =
   if oldval = newval then
     OpamConsole.note "No change for \"%s\"" (OpamVariable.to_string var)
   else
-    let () = match oldval, newval with
-      | Some old, Some _ ->
-        OpamConsole.note "Overriding value of \"%s\": was \"%s\""
-          (OpamVariable.to_string var)
-          (OpamVariable.string_of_variable_contents old)
-      | _ -> ()
-    in
-    let variables = config.OpamFile.Switch_config.variables in
-    let variables =
-      match newval with
-      | None -> List.remove_assoc var variables
-      | Some v -> OpamStd.List.update_assoc var v variables
-    in
-    OpamFile.Switch_config.write config_f
-      {config with OpamFile.Switch_config.variables}
+  let () = match oldval, newval with
+    | Some old, Some _ ->
+      OpamConsole.note "Overriding value of \"%s\": was \"%s\""
+        (OpamVariable.to_string var)
+        (OpamVariable.string_of_variable_contents old)
+    | _ -> ()
+  in
+  let variables = config.OpamFile.Switch_config.variables in
+  let variables =
+    match newval with
+    | None -> List.remove_assoc var variables
+    | Some v -> OpamStd.List.update_assoc var v variables
+  in
+  OpamFile.Switch_config.write config_f
+    {config with OpamFile.Switch_config.variables}
 
 let set_global var value =
   if not (OpamVariable.Full.is_global var) then

@@ -510,31 +510,31 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
                   (Some (S (String.concat "" vnum)))
               | None -> config
             else
-              let get_dir d =
-                match OpamFile.Dot_config.variable switch_config
-                        (OpamVariable.of_string d)
-                with
-                | Some (S d) -> OpamFilename.Dir.of_string d
-                | _ -> OpamPath.Switch.get_stdpath root switch
-                         OpamFile.Switch_config.empty (std_path_of_string d)
-              in
-              OpamFile.Dot_config.create @@
-              List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
-              [ "ocaml-version",
-                S (OpamFile.Comp.version comp);
-                "compiler", S comp_name;
-                "preinstalled", B false;
-                "ocaml-native",
-                B (OpamFilename.exists (get_dir "bin" // "ocamlopt"));
-                "ocaml-native-tools",
-                B (OpamFilename.exists (get_dir "bin" // "ocamlc.opt"));
-                "ocaml-native-dynlink",
-                B (OpamFilename.exists
-                     (get_dir "lib" / "ocaml" // "dynlink.cmxa"));
-                "ocaml-stubsdir",
-                S (OpamFilename.Dir.to_string
-                     (get_dir "stublibs"));
-              ]
+            let get_dir d =
+              match OpamFile.Dot_config.variable switch_config
+                      (OpamVariable.of_string d)
+              with
+              | Some (S d) -> OpamFilename.Dir.of_string d
+              | _ -> OpamPath.Switch.get_stdpath root switch
+                       OpamFile.Switch_config.empty (std_path_of_string d)
+            in
+            OpamFile.Dot_config.create @@
+            List.map (fun (v,c) -> OpamVariable.of_string v, c) @@
+            [ "ocaml-version",
+              S (OpamFile.Comp.version comp);
+              "compiler", S comp_name;
+              "preinstalled", B false;
+              "ocaml-native",
+              B (OpamFilename.exists (get_dir "bin" // "ocamlopt"));
+              "ocaml-native-tools",
+              B (OpamFilename.exists (get_dir "bin" // "ocamlc.opt"));
+              "ocaml-native-dynlink",
+              B (OpamFilename.exists
+                   (get_dir "lib" / "ocaml" // "dynlink.cmxa"));
+              "ocaml-stubsdir",
+              S (OpamFilename.Dir.to_string
+                   (get_dir "stublibs"));
+            ]
           in
           let config_f =
             OpamFile.make
@@ -942,13 +942,15 @@ let as_necessary global_lock root config =
     OpamConsole.error_and_exit
       "Could not acquire lock for performing format upgrade."
 
-let opam_file ?filename opam =
+let opam_file ?(quiet=false) ?filename opam =
   let v = OpamFile.OPAM.opam_version opam in
   if OpamVersion.compare v v2_0_alpha3 < 0
   then
-    ((match filename with None -> () | Some f ->
-         OpamConsole.note "Converting format of %s from %s to %s"
-           (OpamFile.to_string f) (OpamVersion.to_string v)
-           (OpamVersion.to_string latest_version));
+    ((match filename with
+        | Some f when not quiet ->
+          OpamConsole.note "Converting format of %s from %s to %s"
+            (OpamFile.to_string f) (OpamVersion.to_string v)
+            (OpamVersion.to_string latest_version)
+        | _ -> ());
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam

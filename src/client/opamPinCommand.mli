@@ -19,16 +19,25 @@ open OpamStateTypes
     not created. Therefore, the package must exist already. *)
 val version_pin: rw switch_state -> name -> version -> rw switch_state
 
+exception Aborted
+exception Nothing_to_do
+
 (** Sets the package as pinned to the given target. A package definition is
-    looked for in the package source and current metadata (in this order).
+    looked for in the package source and current metadata (in this order),
+    unless specified using [~opam].
 
     If [edit], or if no package definition is found, this opens an editor (with
     a template if no definition is available).
 
-    If [force], don't abort even if the source can't be fetched from [target] *)
+    If [force], don't abort even if the source can't be fetched from [target]
+
+    May raise [Aborted] or [Nothing_to_do]. *)
 val source_pin:
-  rw switch_state -> name -> ?version:version -> ?edit:bool -> ?force:bool ->
-  url option -> rw switch_state
+  rw switch_state -> name ->
+  ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->
+  ?force:bool ->
+  url option ->
+  rw switch_state
 
 (** Let the user edit a pinned package's opam file. If given, the version is put
     into the template in advance. Writes and returns the updated switch
@@ -38,5 +47,14 @@ val edit: rw switch_state -> ?version:version -> name -> rw switch_state
 (** Unpin packages *)
 val unpin: rw switch_state -> name list -> rw switch_state
 
+(** Pure function that reverts a single package pinning *)
+val unpin_one: 'a switch_state -> package -> 'a switch_state
+
 (** List the pinned packages to the user. *)
 val list: 'a switch_state -> short:bool -> unit
+
+(** Lints the given opam file, prints warnings or errors accordingly, adds
+    references to files below the 'files/' subdir (unless the file is directly
+    below the specified, local [url]), and returns it *)
+val read_opam_file_for_pinning:
+  name -> OpamFile.OPAM.t OpamFile.t -> url -> OpamFile.OPAM.t option

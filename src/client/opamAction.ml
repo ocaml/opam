@@ -23,7 +23,7 @@ module PackageActionGraph = OpamSolver.ActionGraph
 let process_dot_install st nv build_dir =
   let root = st.switch_global.root in
   if OpamStateConfig.(!r.dryrun) then
-      OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
+    OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
   else
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 

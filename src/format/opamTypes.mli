@@ -274,21 +274,7 @@ type 'a request = {
 
 (** user request action *)
 type user_action =
-  | Install of name_set
-  (** Just install the requested packages. Add [name_set] as roots. *)
-  | Upgrade of package_set * name_set
-  (** Upgrade the requested packages, and reinstall [package_set]. Also add
-      [name_set] as roots. *)
-  | Reinstall of package_set
-  (** Just reinstall [package_set] *)
-  | Depends
-  (** Just querying dependencies, no action will be taken *)
-  | Remove
-  (** Just remove the requested packages *)
-  | Switch of name_set
-  (** Switch init request, add [name_set] as roots *)
-  | Import of name_set
-  (** Switch import request, add [name_set] as roots *)
+    Query | Install | Upgrade | Reinstall | Remove | Switch | Import
 
 (** Solver universe *)
 type universe = {
@@ -301,15 +287,9 @@ type universe = {
   u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
-  u_dev      : package_set; (** packages with a version-controlled upstream *)
-  (* NOTE: only needed for the dev depflag, remove and pre-compute instead *)
   u_base     : package_set;
+  u_reinstall: package_set;
   u_attrs    : (string * package_set) list;
-
-  (* extra CUDF attributes for the given packages *)
-  u_test     : package_set; (** Test dependencies should be honored *)
-  u_doc      : package_set; (** Doc dependencies should be honored *)
-  (* NOTE: pre-compute these also *)
 }
 
 (** {2 Command line arguments} *)

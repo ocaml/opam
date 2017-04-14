@@ -43,9 +43,10 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
     of files below files/ *)
 val read_opam: dirname -> OpamFile.OPAM.t option
 
-(** Adds (or overrides) data from 'url' and 'descr' files found in the specified
-    dir or the opam file's metadata dir. if [files_subdir_hashes] is [true],
-    also adds the names and hashes of files found below 'files/' *)
+(** Adds data from 'url' and 'descr' files found in the specified dir or the
+    opam file's metadata dir, if not already present in the opam file. if
+    [files_subdir_hashes] is [true], also adds the names and hashes of files
+    found below 'files/' *)
 val add_aux_files:
   ?dir:dirname -> files_subdir_hashes:bool -> OpamFile.OPAM.t -> OpamFile.OPAM.t
 
