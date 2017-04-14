@@ -893,7 +893,7 @@ let build_options =
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
   let working_dir =
-    mk_flag ~section ["working-dir"]
+    mk_flag ~section ["working-dir"; "w"]
       "Whenever updating packages that are bound to a local, \
        version-controlled directory, update to the current working state of \
        their source instead of the last commited state, or the ref they are \

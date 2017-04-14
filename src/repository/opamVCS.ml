@@ -121,8 +121,11 @@ module Make (VCS: VCS) = struct
       OpamLocal.rsync_dirs ~args:["--files-from"; stdout_file]
         ~exclude_vcdirs:false
         repo_url repo_root
-      @@+ fun _dl ->
+      @@+ fun result ->
       OpamSystem.remove stdout_file;
-      Done (Result None)
+      Done (match result with
+          | Up_to_date _ -> prerr_endline "UTD"; Up_to_date None
+          | Result _ -> prerr_endline "RES"; Result None
+          | Not_available _ as na -> prerr_endline "NA"; na)
 
 end
