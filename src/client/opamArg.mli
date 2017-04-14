@@ -77,7 +77,6 @@ type global_options = {
   yes : bool;
   strict : bool;
   opt_root : dirname option;
-  no_base_packages: bool;
   git_version : bool;
   external_solver : string option;
   use_internal_solver : bool;

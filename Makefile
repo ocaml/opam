@@ -153,7 +153,7 @@ fastlink:
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-installer opam-check)
-	@$(foreach l,core format solver repository state client,\
+	@$(foreach l,core format solver repository state client tools,\
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
 

@@ -981,7 +981,8 @@ let install =
         selected switch (see $(b,opam switch)). Once installed, you can remove \
         packages with $(b,opam remove), upgrade them with $(b,opam upgrade), \
         and list them with $(b,opam list). See $(b,opam pin) as well to manage \
-        package versions.";
+        package versions, reroute existing packages or add packages that are \
+        not defined in the repositories.";
     `P "All required dependencies of the selected packages will be installed \
         first. Any already installed packages having dependencies, or optional \
         dependencies to the changed packages will be recompiled. The proposed \
