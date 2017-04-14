@@ -1039,11 +1039,15 @@ let install =
       else atoms_or_locals
     in
     if atoms_or_locals = [] then `Ok () else
+    let pure_atoms =
+      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+        atoms_or_locals
+    in
     let st, atoms =
       OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
     in
     ignore @@
-    OpamClient.install st atoms add_to_roots ~deps_only;
+    OpamClient.install st atoms ~autoupdate:pure_atoms ?add_to_roots ~deps_only;
     `Ok ()
   in
   Term.ret

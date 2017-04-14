@@ -23,13 +23,14 @@ val init:
   shell -> filename -> [`ask|`yes|`no] ->
   rw global_state * unlocked repos_state * formula
 
-(** Install the given list of packages. Second argument, if not None, specifies
-    that given packages should be added or removed from the roots.
-    Third argument installs all dependencies but not the packages themselves *)
+(** Install the given list of packages. [add_to_roots], if given, specifies that
+    given packages should be added or removed from the roots. [autoupdate]
+    defaults to the list of atoms, and can be used to restrict the atoms which
+    are updated if pinned. *)
 val install:
   rw switch_state ->
-  atom list -> bool option -> deps_only:bool ->
-  rw switch_state
+  ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
+  atom list -> rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)

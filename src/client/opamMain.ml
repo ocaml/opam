@@ -106,7 +106,6 @@ let check_and_run_external_commands () =
             OpamSwitchState.with_ `Lock_write gt (fun st ->
                 ignore @@
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
-                  None ~deps_only:false
               );
             OpamConsole.header_msg "Carrying on to \"%s\""
               (String.concat " " (Array.to_list Sys.argv));

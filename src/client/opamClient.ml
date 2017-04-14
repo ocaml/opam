@@ -918,9 +918,13 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
   OpamSolution.check_solution t solution;
   t
 
-let install t names add_to_roots ~deps_only =
+let install t ?autoupdate ?add_to_roots ?(deps_only=false) names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
-  let t = update_dev_packages_t atoms t in
+  let autoupdate_atoms = match autoupdate with
+    | None -> atoms
+    | Some a -> OpamSolution.sanitize_atom_list ~permissive:true t a
+  in
+  let t = update_dev_packages_t autoupdate_atoms t in
   install_t t atoms add_to_roots ~deps_only
 
 let remove_t ?ask ~autoremove ~force atoms t =
