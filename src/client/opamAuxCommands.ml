@@ -170,17 +170,23 @@ let autopin st ?(simulate=false) atom_or_local_list =
       in
       let local_opams =
         List.fold_left (fun map (name, target, file) ->
-            let opam, version =
-              OpamFile.OPAM.read file |>
-              OpamFile.OPAM.with_url (OpamFile.URL.create target) |>
-              OpamFile.OPAM.with_name name |>
-              fun opam -> match OpamFile.OPAM.version_opt opam with
-              | Some v -> opam, v
-              | None ->
-                let v = OpamPackage.Version.of_string "~dev" in
-                OpamFile.OPAM.with_version v opam, v
-            in
-            OpamPackage.Map.add (OpamPackage.create name version) opam map)
+            match
+              OpamPinCommand.read_opam_file_for_pinning name file target
+            with
+            | None -> map
+            | Some opam ->
+              let opam =
+                opam |>
+                OpamFile.OPAM.with_name name |>
+                OpamFile.OPAM.with_url (OpamFile.URL.create target)
+              in
+              let opam, version = match OpamFile.OPAM.version_opt opam with
+                | Some v -> opam, v
+                | None ->
+                  let v = OpamPackage.Version.of_string "~dev" in
+                  OpamFile.OPAM.with_version v opam, v
+              in
+              OpamPackage.Map.add (OpamPackage.create name version) opam map)
           OpamPackage.Map.empty to_pin
       in
       let local_packages = OpamPackage.keys local_opams in
@@ -202,18 +208,20 @@ let autopin st ?(simulate=false) atom_or_local_list =
       } in
       st, local_packages
     else
+    try
       List.fold_left (fun (st, pins) (name, target, file) ->
-          try
+          match OpamPinCommand.read_opam_file_for_pinning name file target with
+          | None -> st, pins
+          | Some opam ->
             let st =
               try
-                let opam = OpamFile.OPAM.read file in
                 OpamPinCommand.source_pin st name ~quiet:true ~opam
                   (Some target)
               with OpamPinCommand.Nothing_to_do -> st
             in
-            st, OpamPackage.Set.add (OpamPinned.package st name) pins
-          with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted")
+            st, OpamPackage.Set.add (OpamPinned.package st name) pins)
         (st, OpamPackage.Set.empty) to_pin
+    with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted"
   in
   let atoms =
     List.map (function

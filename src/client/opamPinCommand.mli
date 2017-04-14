@@ -49,3 +49,9 @@ val unpin: rw switch_state -> name list -> rw switch_state
 
 (** List the pinned packages to the user. *)
 val list: 'a switch_state -> short:bool -> unit
+
+(** Lints the given opam file, prints warnings or errors accordingly, adds
+    references to files below the 'files/' subdir (unless the file is directly
+    below the specified, local [url]), and returns it *)
+val read_opam_file_for_pinning:
+  name -> OpamFile.OPAM.t OpamFile.t -> url -> OpamFile.OPAM.t option

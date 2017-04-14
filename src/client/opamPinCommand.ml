@@ -24,6 +24,33 @@ let string_of_pinned opam =
        (OpamFile.OPAM.url opam))
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
+let read_opam_file_for_pinning name f url =
+  match OpamFileTools.lint_file f with
+  | warns, None ->
+    OpamConsole.error
+      "Invalid opam file in %s source from %s:"
+      (OpamPackage.Name.to_string name)
+      (OpamUrl.to_string url);
+    OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns);
+    None
+  | warns, Some opam0 ->
+    let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
+    let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
+    if warns <> [] then
+      (OpamConsole.warning
+         "Failed checks on %s package definition from source at %s \
+          (fix with 'opam pin edit'):"
+         (OpamPackage.Name.to_string name)
+         (OpamUrl.to_string url);
+       OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
+    let opam =
+      if OpamUrl.local_dir url =
+         Some (OpamFilename.dirname (OpamFile.filename f))
+      then opam (* don't add aux files for [project/opam] *)
+      else OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
+    in
+    Some opam
+
 let get_source_definition ?version st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
@@ -41,30 +68,15 @@ let get_source_definition ?version st nv url =
     match OpamPinned.find_opam_file_in_source nv.name srcdir with
     | None -> None
     | Some f ->
-      match OpamFileTools.lint_file f with
-      | warns, None ->
-        OpamConsole.error
-          "Invalid opam file in %s source from %s:"
-          (OpamPackage.to_string nv)
-          (OpamUrl.to_string (OpamFile.URL.url url));
-        OpamConsole.msg "%s\n" (OpamFileTools.warns_to_string warns);
+      match read_opam_file_for_pinning nv.name f (OpamFile.URL.url url) with
+      | None ->
         let dst =
           OpamFile.filename
             (OpamPath.Switch.Overlay.tmp_opam root st.switch nv.name)
         in
         OpamFilename.copy ~src:(OpamFile.filename f) ~dst;
         None
-      | warns, Some opam0 ->
-        let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
-        let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
-        if warns <> [] then
-          (OpamConsole.warning
-             "Failed checks on %s package definition from source at %s \
-              (fix with 'opam pin edit'):"
-             (OpamPackage.to_string nv)
-             (OpamUrl.to_string (OpamFile.URL.url url));
-           OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
-        Some (fix opam)
+      | Some opam -> Some (fix opam)
 
 let copy_files st opam =
   let name = OpamFile.OPAM.name opam in
