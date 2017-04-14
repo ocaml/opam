@@ -1132,6 +1132,14 @@ let remove =
         $atom_list),
   term_info "remove" ~doc ~man
 
+let pinned_packages_of_dir st dir =
+  OpamPackage.Set.filter
+    (fun nv ->
+       OpamStd.Option.Op.(OpamSwitchState.primary_url st nv >>=
+                          OpamUrl.local_dir)
+       = Some dir)
+    st.pinned
+
 (* REINSTALL *)
 let reinstall =
   let doc = "Reinstall a list of packages." in
@@ -1139,7 +1147,9 @@ let reinstall =
     `S "DESCRIPTION";
     `P "This command removes the given packages and the ones that depend on \
         them, and reinstalls the same versions. Without arguments, assume \
-        $(b,--pending) and reinstall any package with upstream changes."
+        $(b,--pending) and reinstall any package with upstream changes.";
+    `P "If a directory is specified as argument, anything that is pinned to \
+        that directory is selected for reinstall.";
   ] in
   let cmd =
     Arg.(value & vflag `Default [
@@ -1157,14 +1167,31 @@ let reinstall =
                 overriding."
       ])
   in
-  let reinstall global_options build_options atoms cmd =
+  let reinstall global_options build_options atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
+    let get_atoms st atom_locs =
+      let atoms = List.fold_left (fun acc -> function
+          | `Atom a -> a::acc
+          | `Dirname d ->
+            let pkgs = pinned_packages_of_dir st d in
+            if OpamPackage.Set.is_empty pkgs then
+              OpamConsole.warning "No pinned packages to reinstall found at %s"
+                (OpamFilename.Dir.to_string d);
+            List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
+          | `Filename f ->
+            OpamConsole.error_and_exit
+              "`opam reinstall' doesn't support specifying a file name (%S)"
+              (OpamFilename.to_string f))
+          [] atom_locs
+      in
+      List.rev atoms
+    in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    match cmd, atoms with
-    | `Default, (_::_ as atoms) ->
+    match cmd, atoms_locs with
+    | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.reinstall st atoms;
+      ignore @@ OpamClient.reinstall st (get_atoms st atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1183,9 +1210,9 @@ let reinstall =
         }
         st.reinstall;
       `Ok ()
-    | `Forget_pending, atoms ->
+    | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let to_forget = match atoms with
+      let to_forget = match get_atoms st atom_locs with
         | [] -> st.reinstall
         | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
       in
@@ -1206,7 +1233,8 @@ let reinstall =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (pure reinstall $global_options $build_options $atom_list $cmd)),
+  Term.(ret (pure reinstall $global_options $build_options $atom_or_local_list
+             $cmd)),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
@@ -1284,6 +1312,8 @@ let upgrade =
         versions. More precisely, this command calls the dependency solver to \
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
+    `P "If a directory is specified as argument, anything that is pinned to \
+        that directory is selected for upgrade."
   ] in
   let fixup =
     mk_flag ["fixup"]
@@ -1301,13 +1331,13 @@ let upgrade =
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
-  let upgrade global_options build_options fixup check all atoms =
+  let upgrade global_options build_options fixup check all atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
-    let all = all || atoms = [] in
+    let all = all || atom_locs = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
-      if atoms <> [] || check then
+      if atom_locs <> [] || check then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1315,11 +1345,25 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.upgrade st ~check ~all atoms;
+      let atoms = List.fold_left (fun acc -> function
+          | `Atom a -> a::acc
+          | `Dirname d ->
+            let pkgs = pinned_packages_of_dir st d in
+            if OpamPackage.Set.is_empty pkgs then
+              OpamConsole.warning "No pinned packages to upgrade found at %s"
+                (OpamFilename.Dir.to_string d);
+            List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
+          | `Filename f ->
+            OpamConsole.error_and_exit
+              "`opam upgrade' doesn't support specifying a file name (%S)"
+              (OpamFilename.to_string f))
+          [] atom_locs
+      in
+      ignore @@ OpamClient.upgrade st ~check ~all (List.rev atoms);
       `Ok ()
   in
   Term.(ret (pure upgrade $global_options $build_options $fixup $check $all
-             $atom_list)),
+             $atom_or_local_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
