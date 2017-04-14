@@ -11,6 +11,9 @@
 open OpamTypes
 open OpamStateTypes
 
+let log fmt = OpamConsole.log "AUXCMD" fmt
+let slog = OpamConsole.slog
+
 let package_file_changes st packages =
   OpamPackage.Set.fold (fun nv acc ->
       let f =
@@ -160,6 +163,36 @@ let resolve_locals atom_or_local_list =
 let autopin st ?(simulate=false) atom_or_local_list =
   let to_pin, atoms = resolve_locals atom_or_local_list in
   if to_pin = [] then st, atoms else
+  log "autopin: %a"
+    (slog @@ OpamStd.List.to_string (fun (name, target, _) ->
+         Printf.sprintf "%s => %s"
+           (OpamPackage.Name.to_string name)
+           (OpamUrl.to_string target)))
+    to_pin;
+  let already_pinned, to_pin =
+    List.partition (fun (name, target, _) ->
+        try
+          OpamSwitchState.primary_url st (OpamPinned.package st name)
+          = Some target
+        with Not_found -> false)
+      to_pin
+  in
+  let already_pinned_set =
+    List.fold_left (fun acc (name, _, _) ->
+        OpamPackage.Set.add (OpamPinned.package st name) acc)
+      OpamPackage.Set.empty already_pinned
+  in
+  let st =
+    if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st else
+    let working_dir =
+      if OpamClientConfig.(!r.working_dir) then already_pinned_set
+      else OpamPackage.Set.empty
+    in
+    let _result, st, _updated =
+      OpamUpdate.dev_packages st ~working_dir already_pinned_set
+    in
+    st
+  in
   let st, pins =
     if simulate || OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
     then
@@ -223,6 +256,7 @@ let autopin st ?(simulate=false) atom_or_local_list =
         (st, OpamPackage.Set.empty) to_pin
     with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted"
   in
+  let pins = OpamPackage.Set.union pins already_pinned_set in
   let atoms =
     List.map (function
         | (_, Some _) as at -> at
