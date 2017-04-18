@@ -293,7 +293,7 @@ let autopin st ?(simulate=false) atom_or_local_list =
         available_packages = lazy (
           OpamPackage.Set.union
             (OpamPackage.Set.filter
-               (fun nv -> OpamPackage.Name.Set.mem nv.name local_names)
+               (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
                (Lazy.force st.available_packages))
             (OpamSwitchState.compute_available_packages
                st.switch_global st.switch st.switch_config ~pinned:st.pinned
