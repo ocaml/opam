@@ -88,6 +88,50 @@ let url_with_local_branch = function
      | None -> url)
   | url -> url
 
+let name_and_dir_of_opam_file f =
+  let srcdir = OpamFilename.dirname f in
+  let srcdir =
+    if OpamFilename.dir_ends_with ".opam" srcdir &&
+       OpamUrl.guess_version_control (OpamFilename.Dir.to_string srcdir)
+       = None
+    then OpamFilename.dirname_dir srcdir
+    else srcdir
+  in
+  let name =
+    let open OpamStd.Option.Op in
+    OpamPinned.name_of_opam_filename srcdir f >>+ fun () ->
+    OpamFile.OPAM.(name_opt (safe_read (OpamFile.make f))) >>+ fun () ->
+    name_from_project_dirname srcdir
+  in
+  name, srcdir
+
+let resolve_locals_pinned st atom_or_local_list =
+  let pinned_packages_of_dir st dir =
+    OpamPackage.Set.filter
+      (fun nv ->
+         OpamStd.Option.Op.(OpamSwitchState.primary_url st nv >>=
+                            OpamUrl.local_dir)
+         = Some dir)
+      st.pinned
+
+  in
+  let atoms =
+    List.fold_left (fun acc -> function
+        | `Atom a -> a::acc
+        | `Dirname d ->
+          let pkgs = pinned_packages_of_dir st d in
+          if OpamPackage.Set.is_empty pkgs then
+            OpamConsole.warning "No pinned packages found at %s"
+              (OpamFilename.Dir.to_string d);
+          List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
+        | `Filename f ->
+          OpamConsole.error_and_exit
+            "This command doesn't support specifying a file name (%S)"
+            (OpamFilename.to_string f))
+      [] atom_or_local_list
+  in
+  List.rev atoms
+
 let resolve_locals atom_or_local_list =
   let open OpamStd.Option.Op in
   let target_dir dir =
@@ -121,24 +165,11 @@ let resolve_locals atom_or_local_list =
                 to_pin, atoms)
             (to_pin, atoms) files
         | `Filename f ->
-          let srcdir = OpamFilename.dirname f in
-          let srcdir =
-            if OpamFilename.dir_ends_with ".opam" srcdir &&
-               OpamUrl.guess_version_control (OpamFilename.Dir.to_string srcdir)
-               = None
-            then OpamFilename.dirname_dir srcdir
-            else srcdir
-          in
-          let name =
-            OpamPinned.name_of_opam_filename srcdir f >>+ fun () ->
-            OpamFile.OPAM.(name_opt (safe_read (OpamFile.make f))) >>+ fun () ->
-            name_from_project_dirname srcdir
-          in
-          match name with
-          | Some n ->
+          match name_and_dir_of_opam_file f with
+          | Some n, srcdir ->
             (n, target_dir srcdir, OpamFile.make f) :: to_pin,
             (n, None) :: atoms
-          | None ->
+          | None, _ ->
             OpamConsole.error_and_exit
               "Could not infer package name from package definition file %s"
               (OpamFilename.to_string f))

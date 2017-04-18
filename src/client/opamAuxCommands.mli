@@ -29,6 +29,10 @@ val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
     suffixing `#current-branch` if no branch/tag/hash was specified. *)
 val url_with_local_branch: url -> url
 
+(** From an in-source opam file, return the corresponding package name if it can
+    be found, and the corresponding source directory *)
+val name_and_dir_of_opam_file: filename -> name option * dirname
+
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
     exit if package names for provided [`Filename] could not be inferred, or if
@@ -36,6 +40,18 @@ val url_with_local_branch: url -> url
 val resolve_locals:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
+
+(** Resolves the opam files and directories in the list to package name and
+    location, according to what is currently pinned, and returns the
+    corresponding list of atoms. Prints warnings for directories where nothing
+    is pinned, or opam files corresponding to no pinned package.
+
+    NOTE: opam files are currently not supported and a fatal error.
+*)
+val resolve_locals_pinned:
+  'a switch_state ->
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  atom list
 
 (** Resolves the opam files in the list to package name and location, pins the
     corresponding packages accordingly if necessary, otherwise updates them, and

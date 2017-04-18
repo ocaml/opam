@@ -1084,6 +1084,8 @@ let remove =
         installed in another compiler, you need to switch compilers using \
         $(b,opam switch) or use the $(b,--switch) flag. This command is the \
         inverse of $(b,opam-install).";
+    `P "If a directory name is specified as package, packages pinned to that \
+        directory are both unpinned and removed.";
   ] in
   let autoremove =
     mk_flag ["a";"auto-remove"]
@@ -1106,13 +1108,14 @@ let remove =
        specified."
       Arg.(some dirname) None
   in
-  let remove global_options build_options autoremove force destdir atoms =
+  let remove global_options build_options autoremove force destdir atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match destdir with
     | Some d ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
       let packages = OpamFormula.packages_of_atoms st.installed atoms in
       let uninst =
         List.filter (fun (name, _) -> not (OpamPackage.has_name packages name))
@@ -1126,10 +1129,22 @@ let remove =
       OpamAuxCommands.remove_files_from_destdir st d packages
     | None ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let pure_atoms, pin_atoms =
+        List.partition (function `Atom _ -> true | _ -> false) atom_locs
+      in
+      let pin_atoms = OpamAuxCommands.resolve_locals_pinned st pin_atoms in
+      let st =
+        if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
+        else OpamPinCommand.unpin st (List.map fst pin_atoms)
+      in
+      let atoms =
+        List.map (function `Atom a -> a | _ -> assert false) pure_atoms
+        @ pin_atoms
+      in
       ignore @@ OpamClient.remove st ~autoremove ~force atoms
   in
   Term.(pure remove $global_options $build_options $autoremove $force $destdir
-        $atom_list),
+        $atom_or_local_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -1139,7 +1154,9 @@ let reinstall =
     `S "DESCRIPTION";
     `P "This command removes the given packages and the ones that depend on \
         them, and reinstalls the same versions. Without arguments, assume \
-        $(b,--pending) and reinstall any package with upstream changes."
+        $(b,--pending) and reinstall any package with upstream changes.";
+    `P "If a directory is specified as argument, anything that is pinned to \
+        that directory is selected for reinstall.";
   ] in
   let cmd =
     Arg.(value & vflag `Default [
@@ -1157,14 +1174,15 @@ let reinstall =
                 overriding."
       ])
   in
-  let reinstall global_options build_options atoms cmd =
+  let reinstall global_options build_options atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    match cmd, atoms with
-    | `Default, (_::_ as atoms) ->
+    match cmd, atoms_locs with
+    | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.reinstall st atoms;
+      ignore @@ OpamClient.reinstall st
+        (OpamAuxCommands.resolve_locals_pinned st atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1183,8 +1201,9 @@ let reinstall =
         }
         st.reinstall;
       `Ok ()
-    | `Forget_pending, atoms ->
+    | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
       let to_forget = match atoms with
         | [] -> st.reinstall
         | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
@@ -1206,7 +1225,8 @@ let reinstall =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (pure reinstall $global_options $build_options $atom_list $cmd)),
+  Term.(ret (pure reinstall $global_options $build_options $atom_or_local_list
+             $cmd)),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
@@ -1284,6 +1304,8 @@ let upgrade =
         versions. More precisely, this command calls the dependency solver to \
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
+    `P "If a directory is specified as argument, anything that is pinned to \
+        that directory is selected for upgrade."
   ] in
   let fixup =
     mk_flag ["fixup"]
@@ -1301,13 +1323,13 @@ let upgrade =
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
-  let upgrade global_options build_options fixup check all atoms =
+  let upgrade global_options build_options fixup check all atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
-    let all = all || atoms = [] in
+    let all = all || atom_locs = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
-      if atoms <> [] || check then
+      if atom_locs <> [] || check then
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1315,11 +1337,12 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
       ignore @@ OpamClient.upgrade st ~check ~all atoms;
       `Ok ()
   in
   Term.(ret (pure upgrade $global_options $build_options $fixup $check $all
-             $atom_list)),
+             $atom_or_local_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
