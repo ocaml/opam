@@ -22,7 +22,6 @@ let log fmt = OpamConsole.log "CURL" fmt
 let curl_args = [
   CString "--write-out", None;
   CString "%%{http_code}\\n", None;
-  CString "--insecure", None;
   CString "--retry", None; CIdent "retry", None;
   CString "--retry-delay", None; CString "2", None;
   CString "--compressed",
@@ -34,7 +33,6 @@ let curl_args = [
 
 let wget_args = [
   CString "--content-disposition", None;
-  CString "--no-check-certificate", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
   CIdent "url", None;
