@@ -960,7 +960,7 @@ let build_options =
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
 
-let package_selection_section = "PACKAGE SELECTION"
+let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =
   let section = package_selection_section in
@@ -1094,7 +1094,7 @@ let package_selection =
         resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
         field_match $ has_flag $ has_tag)
 
-let package_listing_section = "OUTPUT FORMAT"
+let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
 let package_listing =
   let section = package_listing_section in

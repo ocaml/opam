@@ -137,6 +137,8 @@ let init =
         configuration file found at $(i,~/.opamrc) or $(i,/etc/opamrc).";
     `P "For further customisation once opam has been initialised, see \
         $(b,opam switch) and $(b,opam repository).";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
     `S "CONFIGURATION FILE";
     `P "Any field from the built-in initial configuration can be overriden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
@@ -148,7 +150,8 @@ let init =
         $(b,solver-upgrade-criteria:), \
         $(b,solver-fixup-criteria:), $(b,solver:), $(b,wrap-build-commands:), \
         $(b,wrap-install-commands:), $(b,wrap-remove-commands:), \
-        $(b,global-variables:)."
+        $(b,global-variables:).";
+    `S OpamArg.build_option_section;
   ] in
   let compiler =
     mk_opt ["c";"compiler"] "PACKAGE" "Set the compiler to install"
@@ -274,7 +277,7 @@ let list_doc = "Display the list of available packages."
 let list ?(force_search=false) () =
   let doc = list_doc in
   let selection_docs = OpamArg.package_selection_section in
-  let display_docs = "OUTPUT FORMAT" in
+  let display_docs = OpamArg.package_listing_section in
   let man = [
     `S "DESCRIPTION";
     `P "List selections of opam packages.";
@@ -286,7 +289,10 @@ let list ?(force_search=false) () =
          customise the output format.");
     `P "For a more detailed description of packages, see $(b,opam show). For \
         extended search capabilities within the packages' metadata, see \
-        $(b,opam search)."
+        $(b,opam search).";
+    `S "ARGUMENTS";
+    `S selection_docs;
+    `S display_docs;
   ] in
   let pattern_list =
     arg_list "PATTERNS"
@@ -338,7 +344,7 @@ let list ?(force_search=false) () =
       "Finds installed packages responsible for installing the given file"
     in
     Arg.(value & opt (some OpamArg.filename) None &
-         info ~doc ~docv:"FILE" ["owns-file"])
+         info ~doc ~docv:"FILE" ~docs:selection_docs ["owns-file"])
   in
   let no_switch =
     mk_flag ["no-switch"] ~section:selection_docs
@@ -993,8 +999,10 @@ let install =
         or more package definitions ($(i,opam) files), or directly to \
         $(i,opam) files. Then the corresponding packages will be pinned to \
         their local directory and installed (unless $(b,--deps-only) was \
-        specified)."
-    ;
+        specified).";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.build_option_section;
   ] in
   let add_to_roots =
     let root =
@@ -1086,13 +1094,17 @@ let remove =
         inverse of $(b,opam-install).";
     `P "If a directory name is specified as package, packages pinned to that \
         directory are both unpinned and removed.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.build_option_section;
   ] in
   let autoremove =
     mk_flag ["a";"auto-remove"]
       "Remove all the packages which have not been explicitly installed and \
-       which are not necessary anymore. It is possible to prevent the removal of an \
-       already-installed package by running $(b,opam install <pkg>). This flag \
-       can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
+       which are not necessary anymore. It is possible to prevent the removal \
+       of an already-installed package by running $(b,opam install <pkg> \
+       --set-root). This flag can also be set using the $(b,\\$OPAMAUTOREMOVE) \
+       configuration variable." in
   let force =
     mk_flag ["force"]
       "Execute the remove commands of given packages directly, even if they are \
@@ -1157,6 +1169,9 @@ let reinstall =
         $(b,--pending) and reinstall any package with upstream changes.";
     `P "If a directory is specified as argument, anything that is pinned to \
         that directory is selected for reinstall.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.build_option_section;
   ] in
   let cmd =
     Arg.(value & vflag `Default [
@@ -1305,7 +1320,10 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
     `P "If a directory is specified as argument, anything that is pinned to \
-        that directory is selected for upgrade."
+        that directory is selected for upgrade.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.build_option_section;
   ] in
   let fixup =
     mk_flag ["fixup"]
@@ -1349,7 +1367,7 @@ let upgrade =
 let repository_doc = "Manage opam repositories."
 let repository =
   let doc = repository_doc in
-  let scope_section = "SCOPE SPECIFICATION" in
+  let scope_section = "SCOPE SPECIFICATION OPTIONS" in
   let commands = [
     "add", `add, ["NAME"; "[ADDRESS]"; "[QUORUM]"; "[FINGERPRINTS]"],
     "Adds under $(i,NAME) the repository at address $(i,ADDRESS) to the list \
@@ -1391,13 +1409,14 @@ let repository =
          explained in $(b,"^scope_section^").");
     `P "Without a subcommand, or with the subcommand $(b,list), lists selected \
         repositories, or all configured repositories with $(b,--all).";
-    `S scope_section;
-    `P "These flags allow to choose what selections are changed by $(b,add), \
-        $(b,remove), $(b,set-repos). If no flag in this section is specified \
-        the updated selections default to the current switch. Multiple scopes \
-        can be selected, e.g. $(b,--this-switch --set-default)."
-  ] @ mk_subdoc ~defaults:["","list"] commands
-    @ [`S "OPTIONS"]
+  ] @ mk_subdoc ~defaults:["","list"] commands @ [
+      `S scope_section;
+      `P "These flags allow to choose what selections are changed by $(b,add), \
+          $(b,remove), $(b,set-repos). If no flag in this section is specified \
+          the updated selections default to the current switch. Multiple scopes \
+          can be selected, e.g. $(b,--this-switch --set-default).";
+      `S "OPTIONS";
+    ]
   in
   let command, params = mk_subcommands commands in
   let scope =
@@ -1978,9 +1997,10 @@ let pin ?(unpin_only=false) () =
         package.";
     `P "The default subcommand is $(i,list) if there are no further arguments, \
         and $(i,add) otherwise if unambiguous.";
-  ] @ mk_subdoc ~defaults:["","list"] commands
-    @ [`S "OPTIONS"]
-    @ [`S OpamArg.build_option_section]
+  ] @ mk_subdoc ~defaults:["","list"] commands @ [
+      `S "OPTIONS";
+      `S OpamArg.build_option_section;
+    ]
   in
   let command, params =
     if unpin_only then
@@ -2636,7 +2656,6 @@ let default =
         for more information on a specific command.";
     `S "COMMANDS";
     `S "COMMAND ALIASES";
-    `S "OPTIONS";
   ] @  help_sections
   in
   let usage global_options =
