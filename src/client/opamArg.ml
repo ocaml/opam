@@ -633,9 +633,9 @@ let make_command_alias cmd ?(options="") name =
   let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
     `S "DESCRIPTION";
-    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
+    `P (Printf.sprintf "$(mname)$(b, %s) is an alias for $(mname)$(b, %s%s)."
           name orig options);
-    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
+    `P (Printf.sprintf "See $(mname)$(b, %s --help) for details."
           orig);
     `S "OPTIONS";
   ] @ help_sections

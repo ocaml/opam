@@ -1959,7 +1959,7 @@ let pin ?(unpin_only=false) () =
      If $(i,PACKAGE) is not a known package name, a new package by that name \
      will be locally created.\n\
      The package version may be specified by using the format \
-     $(i,NAME).$(i,VERSION) for $(PACKAGE), in the source opam file, or with \
+     $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, or with \
      $(b,edit).";
     "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(i,NAMES), restoring their definition from the \
@@ -2009,8 +2009,9 @@ let pin ?(unpin_only=false) () =
     else
       mk_subcommands_with_default commands in
   let edit =
-    mk_flag ["e";"edit"] "With $(opam pin add), edit the opam file as with \
-                          `opam pin edit' after pinning." in
+    mk_flag ["e";"edit"]
+      "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
+       after pinning." in
   let kind =
     let main_kinds = [
       "version", `version;
@@ -2473,8 +2474,8 @@ let clean =
   in
   let download_cache =
     mk_flag ["c"; "download-cache"]
-      "Clear the cache of downloaded files ($OPAMROOT/download-cache), as well \
-       as the obsolete $OPAMROOT/archives, if that exists."
+      "Clear the cache of downloaded files ($$OPAMROOT/download-cache), as \
+       well as the obsolete $$OPAMROOT/archives, if that exists."
   in
   let repos =
     mk_flag ["unused-repositories"]
