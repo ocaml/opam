@@ -580,7 +580,6 @@ let default_subcommand =
     admin_command_man @ [
       `S "COMMANDS";
       `S "COMMAND ALIASES";
-      `S "OPTIONS";
     ] @ OpamArg.help_sections
   in
   let usage global_options =

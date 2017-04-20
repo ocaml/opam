@@ -633,9 +633,9 @@ let make_command_alias cmd ?(options="") name =
   let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
     `S "DESCRIPTION";
-    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s%s)."
+    `P (Printf.sprintf "$(mname)$(b, %s) is an alias for $(mname)$(b, %s%s)."
           name orig options);
-    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
+    `P (Printf.sprintf "See $(mname)$(b, %s --help) for details."
           orig);
     `S "OPTIONS";
   ] @ help_sections
@@ -960,7 +960,7 @@ let build_options =
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
 
-let package_selection_section = "PACKAGE SELECTION"
+let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =
   let section = package_selection_section in
@@ -1094,7 +1094,7 @@ let package_selection =
         resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
         field_match $ has_flag $ has_tag)
 
-let package_listing_section = "OUTPUT FORMAT"
+let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
 let package_listing =
   let section = package_listing_section in

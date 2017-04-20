@@ -217,8 +217,8 @@ let options =
     Arg.(value & pos 0 (some string) None & info ~docv:"PKG.install" ~doc [])
   in
   let prefix =
-    let doc = "The prefix to install to. You can use \
-               eg '$$$$PREFIX' to output a relocatable script" in
+    let doc = "The prefix to install to. You can use eg '$$PREFIX' to output a \
+               relocatable script" in
     Arg.(value & opt string "/usr/local" &  info ~docv:"PREFIX" ~doc ["prefix"])
   in
   let script =
