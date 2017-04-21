@@ -1680,9 +1680,14 @@ let switch =
   let commands = [
     "create", `install, ["SWITCH"; "[COMPILER]"],
     "Create a new switch, and install the given compiler there. $(i,SWITCH) \
-     can be a plain name, or a directory, absolute or relative. $(i,COMPILER), \
-     if omitted, defaults to $(i,SWITCH) unless $(b,--packages) or \
-     $(b,--empty) is specified.";
+     can be a plain name, or a directory, absolute or relative, in which case \
+     a local switch is created below the given directory. $(i,COMPILER), if \
+     omitted, defaults to $(i,SWITCH) if it is a plain name, unless \
+     $(b,--packages) or $(b,--empty) is specified. When creating a local \
+     switch, and none of these options are present, the compiler is chosen \
+     according to the configuration default (see opam-init(1)). If the chosen \
+     directory contains package definitions, a compatible compiler is searched \
+     within the default selection.";
     "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
@@ -1776,11 +1781,18 @@ let switch =
       | packages, _ -> packages
     in
     let compiler_packages rt ?repos switch compiler_opt =
-      match packages, compiler_opt with
-      | None, None -> OpamSwitchCommand.guess_compiler_package ?repos rt switch
+      match packages, compiler_opt, OpamSwitch.is_external switch with
+      | None, None, false ->
+        OpamSwitchCommand.guess_compiler_package ?repos rt
+          (OpamSwitch.to_string switch)
+      | None, None, true ->
+        OpamAuxCommands.get_compatible_compiler ?repos rt
+          (OpamFilename.dirname_dir
+             (OpamSwitch.get_root rt.repos_global.root switch))
       | _ ->
         OpamStd.Option.Op.(
-          ((compiler_opt >>| OpamSwitchCommand.guess_compiler_package ?repos rt) +! []) @
+          ((compiler_opt >>|
+            OpamSwitchCommand.guess_compiler_package ?repos rt) +! []) @
           packages +! [])
     in
     let param_compiler = function
@@ -1836,13 +1848,16 @@ let switch =
     | Some `install, switch::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let repos, rt = get_repos_rt gt repos in
-      let packages = compiler_packages rt ?repos switch (param_compiler params) in
+      let switch = OpamSwitch.of_string switch in
+      let packages =
+        compiler_packages rt ?repos switch (param_compiler params)
+      in
       let _gt, st =
         OpamSwitchCommand.install gt ~rt
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
           ~packages
-          (OpamSwitch.of_string switch)
+          switch
       in
       ignore (OpamSwitchState.unlock st);
       `Ok ()

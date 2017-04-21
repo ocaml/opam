@@ -88,6 +88,27 @@ let url_with_local_branch = function
      | None -> url)
   | url -> url
 
+let opams_of_dir d =
+  let files = OpamPinned.files_in_source d in
+  List.fold_left (fun acc (n, f) ->
+      let name =
+        let open OpamStd.Option.Op in
+        n >>+ fun () ->
+        OpamFile.OPAM.(name_opt (safe_read f))
+        >>+ fun () ->
+        match files with
+        | [] | _::_::_ -> None
+        | [_] -> name_from_project_dirname d
+      in
+      match name with
+      | Some n -> (n, f) :: acc
+      | None ->
+        OpamConsole.warning
+          "Ignoring file at %s: could not infer package name"
+          (OpamFile.to_string f);
+        acc)
+    [] files
+
 let name_and_dir_of_opam_file f =
   let srcdir = OpamFilename.dirname f in
   let srcdir =
@@ -113,7 +134,6 @@ let resolve_locals_pinned st atom_or_local_list =
                             OpamUrl.local_dir)
          = Some dir)
       st.pinned
-
   in
   let atoms =
     List.fold_left (fun acc -> function
@@ -133,7 +153,6 @@ let resolve_locals_pinned st atom_or_local_list =
   List.rev atoms
 
 let resolve_locals atom_or_local_list =
-  let open OpamStd.Option.Op in
   let target_dir dir =
     let d = OpamFilename.Dir.to_string dir in
     let backend = OpamUrl.guess_version_control d in
@@ -144,26 +163,15 @@ let resolve_locals atom_or_local_list =
     List.fold_left (fun (to_pin, atoms) -> function
         | `Atom a -> to_pin, a :: atoms
         | `Dirname d ->
-          let files = OpamPinned.files_in_source d in
+          let names_files = opams_of_dir d in
           let target = target_dir d in
-          List.fold_left (fun (to_pin, atoms) (n, f) ->
-              let name =
-                n >>+ fun () ->
-                OpamFile.OPAM.(name_opt (safe_read f))
-                >>+ fun () ->
-                match files with
-                | [] | _::_::_ -> None
-                | [_] -> name_from_project_dirname d
-              in
-              match name with
-              | Some n ->
-                (n, target, f) :: to_pin, (n, None) :: atoms
-              | None ->
-                OpamConsole.warning
-                  "Ignoring file at %s: could not infer package name"
-                  (OpamFile.to_string f);
-                to_pin, atoms)
-            (to_pin, atoms) files
+          let to_pin =
+            List.map (fun (n,f) -> n, target, f) names_files @ to_pin
+          in
+          let atoms =
+            List.map (fun (n,_) -> n, None) names_files @ atoms
+          in
+          to_pin, atoms
         | `Filename f ->
           match name_and_dir_of_opam_file f with
           | Some n, srcdir ->
@@ -354,3 +362,78 @@ let autopin st ?(simulate=false) atom_or_local_list =
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
+
+let get_compatible_compiler ?repos rt dir =
+  let gt = rt.repos_global in
+  let default_compiler =
+    OpamFile.Config.default_compiler gt.config
+  in
+  if default_compiler = Empty then
+    (OpamConsole.warning "No compiler selected"; [])
+  else
+  let candidates = OpamFormula.to_dnf default_compiler in
+  let local_files = opams_of_dir dir in
+  let local_opams =
+    List.fold_left (fun acc (name, f) ->
+        let opam = OpamFile.OPAM.safe_read f in
+        let opam = OpamFormatUpgrade.opam_file ~filename:f opam in
+        let nv, opam =
+          match OpamFile.OPAM.version_opt opam with
+          | Some v -> OpamPackage.create name v, opam
+          | None ->
+            let v = OpamPackage.Version.of_string "dev" in
+            OpamPackage.create name v,
+            OpamFile.OPAM.with_version v opam
+        in
+        OpamPackage.Map.add nv opam acc)
+      OpamPackage.Map.empty
+      local_files
+  in
+  let local_packages = OpamPackage.keys local_opams in
+  let local_atoms =
+    OpamSolution.eq_atoms_of_packages local_packages
+  in
+  try
+    let univ =
+      let virt_st =
+        OpamSwitchState.load_virtual ?repos_list:repos gt rt
+      in
+      let opams =
+        OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
+      in
+      let virt_st =
+        { virt_st with
+          opams;
+          packages =
+            OpamPackage.Set.union virt_st.packages local_packages;
+          available_packages = lazy (
+            OpamPackage.Map.filter (fun package opam ->
+                OpamFilter.eval_to_bool ~default:false
+                  (OpamPackageVar.resolve_switch_raw ~package gt
+                     (OpamSwitch.of_dirname dir)
+                     OpamFile.Switch_config.empty)
+                  (OpamFile.OPAM.available opam))
+              opams
+            |> OpamPackage.keys);
+        }
+      in
+      OpamSwitchState.universe virt_st
+        ~requested:(OpamPackage.names_of_packages local_packages)
+        Query
+    in
+    List.find
+      (fun atoms ->
+         OpamSolver.atom_coinstallability_check univ
+           (local_atoms @ atoms))
+      candidates
+  with Not_found ->
+    OpamConsole.warning
+      "The default compiler selection: %s\n\
+       is not compatible with the local packages found at %s.\n\
+       You can use `--compiler` to select a different compiler."
+      (OpamFormula.to_string default_compiler)
+      (OpamFilename.Dir.to_string dir);
+    if OpamConsole.confirm
+        "Continue anyway, with no compiler selected ?"
+    then []
+    else OpamStd.Sys.exit 66
