@@ -65,3 +65,10 @@ val autopin:
   ?simulate:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
+
+(** The read-only version of [autopin ~simulate:true]: this doesn't require a
+    write-locked switch, and doesn't update the local packages *)
+val simulate_autopin:
+  'a switch_state ->
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  'a switch_state * atom list

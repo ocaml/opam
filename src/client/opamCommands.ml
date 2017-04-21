@@ -459,6 +459,9 @@ let show =
         complete description.";
     `P "$(b,opam list) can be used to display the list of \
         available packages as well as a short description for each.";
+    `P "Paths to package definition files or to directories containing package \
+        definitions can also be specified, in which case the corresponding \
+        metadata will be shown."
   ] in
   let fields =
     let doc =
@@ -494,9 +497,10 @@ let show =
     let doc =
       Arg.info
         ~docv:"FILE"
-        ~doc:"Get package information from the given FILE instead of from \
-              known packages. This implies $(b,--raw) unless $(b,--fields) \
-              is used. Only raw opam-file fields can be queried."
+        ~doc:"DEPRECATED: use an explicit path argument as package instead. \
+              Get package information from the given FILE instead of from \
+              known packages. This implies $(b,--raw) unless $(b,--fields) is \
+              used. Only raw opam-file fields can be queried."
         ["file"] in
     Arg.(value & opt (some existing_filename_or_dash) None & doc) in
   let normalise = mk_flag ["normalise"]
@@ -504,15 +508,15 @@ let show =
        brackets)"
   in
   let pkg_info global_options fields show_empty raw where
-      list_files file normalise packages =
+      list_files file normalise atom_locs =
     apply_global_options global_options;
-    match file, packages with
+    match file, atom_locs with
     | None, [] ->
       `Error (true, "required argument PACKAGES is missing")
     | Some _, _::_ ->
       `Error (true,
-              "arguments PACKAGES and `--files' can't be specified together")
-    | None, pkgs ->
+              "arguments PACKAGES and `--file' can't be specified together")
+    | None, atom_locs ->
       let fields, show_empty =
         if list_files then
           fields @ [OpamListCommand.(string_of_field Installed_files)],
@@ -520,8 +524,10 @@ let show =
         else fields, show_empty || fields <> []
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamListCommand.info gt
-        ~fields ~raw_opam:raw ~where ~normalise ~show_empty pkgs;
+      let st = OpamListCommand.get_switch_state gt in
+      let st, atoms = OpamAuxCommands.simulate_autopin st atom_locs in
+      OpamListCommand.info st
+        ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
       `Ok ()
     | Some f, [] ->
       let opam = match f with
@@ -561,7 +567,7 @@ let show =
   in
   Term.(ret
           (pure pkg_info $global_options $fields $show_empty $raw $where $list_files
-           $file $normalise $atom_list)),
+           $file $normalise $atom_or_local_list)),
   term_info "show" ~doc ~man
 
 

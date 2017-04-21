@@ -137,7 +137,7 @@ val display: 'a switch_state -> package_listing_format -> package_set -> unit
 
 (** Display a general summary of a collection of packages. *)
 val info:
-  'a global_state ->
+  'a switch_state ->
   fields:string list -> raw_opam:bool -> where:bool ->
   ?normalise:bool -> ?show_empty:bool ->
   atom list -> unit

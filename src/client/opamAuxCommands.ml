@@ -194,9 +194,11 @@ let resolve_locals atom_or_local_list =
            (OpamUrl.to_string t))
           duplicates)
 
-let autopin st ?(simulate=false) atom_or_local_list =
+let autopin_aux st atom_or_local_list =
   let to_pin, atoms = resolve_locals atom_or_local_list in
-  if to_pin = [] then st, atoms else
+  if to_pin = [] then
+    atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
+  else
   let pinning_dirs =
     OpamStd.List.filter_map (function
         | `Dirname d -> Some d
@@ -220,16 +222,6 @@ let autopin st ?(simulate=false) atom_or_local_list =
         | None -> false)
       st.pinned
   in
-  let st =
-    if simulate || OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
-    then
-      OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
-        obsolete_pins st
-    else
-      OpamPinCommand.unpin st
-        (OpamPackage.Name.Set.elements
-           (OpamPackage.names_of_packages obsolete_pins))
-  in
   let already_pinned, to_pin =
     List.partition (fun (name, target, _) ->
         try
@@ -243,8 +235,96 @@ let autopin st ?(simulate=false) atom_or_local_list =
         OpamPackage.Set.add (OpamPinned.package st name) acc)
       OpamPackage.Set.empty already_pinned
   in
+  atoms, to_pin, obsolete_pins, already_pinned_set
+
+let simulate_local_pinnings st to_pin =
+  let local_names =
+    List.fold_left (fun set (name, _, _) ->
+        OpamPackage.Name.Set.add name set)
+      OpamPackage.Name.Set.empty to_pin
+  in
+  let local_opams =
+    List.fold_left (fun map (name, target, file) ->
+        match
+          OpamPinCommand.read_opam_file_for_pinning name file target
+        with
+        | None -> map
+        | Some opam ->
+          let opam =
+            opam |>
+            OpamFile.OPAM.with_name name |>
+            OpamFile.OPAM.with_url (OpamFile.URL.create target)
+          in
+          let opam, version = match OpamFile.OPAM.version_opt opam with
+            | Some v -> opam, v
+            | None ->
+              let v = OpamPackage.Version.of_string "~dev" in
+              OpamFile.OPAM.with_version v opam, v
+          in
+          OpamPackage.Map.add (OpamPackage.create name version) opam map)
+      OpamPackage.Map.empty to_pin
+  in
+  let local_packages = OpamPackage.keys local_opams in
+  let st = {
+    st with
+    opams =
+      OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
+    packages =
+      OpamPackage.Set.union st.packages local_packages;
+    available_packages = lazy (
+      OpamPackage.Set.union
+        (OpamPackage.Set.filter
+           (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
+           (Lazy.force st.available_packages))
+        (OpamSwitchState.compute_available_packages
+           st.switch_global st.switch st.switch_config ~pinned:st.pinned
+           ~opams:local_opams)
+    );
+  } in
+  st, local_packages
+
+let fix_atom_versions_in_set set atoms =
+  List.map (function
+      | (_, Some _) as at -> at
+      | name, None ->
+        name,
+        OpamStd.Option.map
+          (fun nv -> `Eq, nv.version)
+          (OpamPackage.package_of_name_opt set name))
+    atoms
+
+let simulate_autopin st atom_or_local_list =
+  let atoms, to_pin, obsolete_pins, already_pinned_set =
+    autopin_aux st atom_or_local_list
+  in
+  if to_pin = [] then st, atoms else
   let st =
-    if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st else
+    OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
+      obsolete_pins st
+  in
+  let st, pins = simulate_local_pinnings st to_pin in
+  let pins = OpamPackage.Set.union pins already_pinned_set in
+  let atoms = fix_atom_versions_in_set pins atoms in
+  st, atoms
+
+let autopin st ?(simulate=false) atom_or_local_list =
+  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then
+    simulate_autopin st atom_or_local_list
+  else
+  let atoms, to_pin, obsolete_pins, already_pinned_set =
+    autopin_aux st atom_or_local_list
+  in
+  if to_pin = [] then st, atoms else
+  let st =
+    if simulate then
+      OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
+        obsolete_pins st
+    else
+      OpamPinCommand.unpin st
+        (OpamPackage.Name.Set.elements
+           (OpamPackage.names_of_packages obsolete_pins))
+  in
+  let st =
     let working_dir =
       if OpamClientConfig.(!r.working_dir) then already_pinned_set
       else OpamPackage.Set.empty
@@ -255,53 +335,7 @@ let autopin st ?(simulate=false) atom_or_local_list =
     st
   in
   let st, pins =
-    if simulate || OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
-    then
-      let local_names =
-        List.fold_left (fun set (name, _, _) ->
-            OpamPackage.Name.Set.add name set)
-          OpamPackage.Name.Set.empty to_pin
-      in
-      let local_opams =
-        List.fold_left (fun map (name, target, file) ->
-            match
-              OpamPinCommand.read_opam_file_for_pinning name file target
-            with
-            | None -> map
-            | Some opam ->
-              let opam =
-                opam |>
-                OpamFile.OPAM.with_name name |>
-                OpamFile.OPAM.with_url (OpamFile.URL.create target)
-              in
-              let opam, version = match OpamFile.OPAM.version_opt opam with
-                | Some v -> opam, v
-                | None ->
-                  let v = OpamPackage.Version.of_string "~dev" in
-                  OpamFile.OPAM.with_version v opam, v
-              in
-              OpamPackage.Map.add (OpamPackage.create name version) opam map)
-          OpamPackage.Map.empty to_pin
-      in
-      let local_packages = OpamPackage.keys local_opams in
-      let st = {
-        st with
-        opams =
-          OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
-        packages =
-          OpamPackage.Set.union st.packages local_packages;
-        available_packages = lazy (
-          OpamPackage.Set.union
-            (OpamPackage.Set.filter
-               (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
-               (Lazy.force st.available_packages))
-            (OpamSwitchState.compute_available_packages
-               st.switch_global st.switch st.switch_config ~pinned:st.pinned
-               ~opams:local_opams)
-        );
-      } in
-      st, local_packages
-    else
+    if simulate then simulate_local_pinnings st to_pin else
     try
       List.fold_left (fun (st, pins) (name, target, file) ->
           match OpamPinCommand.read_opam_file_for_pinning name file target with
@@ -318,14 +352,5 @@ let autopin st ?(simulate=false) atom_or_local_list =
     with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted"
   in
   let pins = OpamPackage.Set.union pins already_pinned_set in
-  let atoms =
-    List.map (function
-        | (_, Some _) as at -> at
-        | name, None ->
-          name,
-          OpamStd.Option.map
-            (fun nv -> `Eq, nv.version)
-            (OpamPackage.package_of_name_opt pins name))
-      atoms
-  in
+  let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
