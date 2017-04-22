@@ -127,8 +127,8 @@ export PROJ_core
 
 # -- opam-format -- #
 
-opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
+opam-format.cma: opam-core.cma ALWAYS
+opam-format.cmxa: opam-core.cmxa ALWAYS
 
 SRC_format = \
   opamFormatConfig.ml \
@@ -169,8 +169,8 @@ endef
 export PROJ_solver
 
 # -- opam-repository -- #
-opam-repository.cma: opam-core.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa ALWAYS
+opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_repository = \
   opamRepositoryConfig.ml \
