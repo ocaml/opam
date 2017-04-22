@@ -264,7 +264,7 @@ let remove_prefix_dir prefix dir =
   if prefix = "" then dirname
   else
     OpamStd.String.remove_prefix ~prefix dirname |>
-    OpamStd.String.remove_prefix ~prefix:"/"
+    OpamStd.String.remove_prefix ~prefix:Filename.dir_sep
 
 let process_in ?root fn src dst =
   let basename = match root with
