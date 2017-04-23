@@ -51,7 +51,7 @@ val removal_needs_download: 'a switch_state -> package -> bool
     in [changes] even if the files have been modified since. *)
 val remove_package:
   rw switch_state -> ?silent:bool ->
-  ?changes:OpamDirTrack.t -> ?force:bool ->
+  ?changes:OpamDirTrack.t -> ?force:bool -> ?build_dir:dirname ->
   package -> unit OpamProcess.job
 
 (** Returns [true] whenever [remove_package] is a no-op. *)
