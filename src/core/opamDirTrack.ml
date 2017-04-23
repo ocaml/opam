@@ -213,7 +213,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
           rmfile f;
           acc
         | Contents_changed dg ->
-          if check_digest fname dg = `Changed then
+          if check_digest f dg = `Changed then
             (already, modified, nonempty, (op,fname)::cannot)
           else
             acc (* File has changed, assume the removal script reverted it *)
