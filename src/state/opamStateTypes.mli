@@ -23,6 +23,10 @@ open OpamTypes
     on the fact that the given state doesn't change during the run (e.g. an
     update that depends on it). In particular, all query commands don't need a
     read lock.
+
+    Subtyping is by guarantees given on the operations allowed, [rw] giving the
+    most and being the smallest type, so that it is safe to coerce
+    [(rw t :> ro t)].
 *)
 
 (** Phantom type for readwrite-locked state (ensures that there are no

@@ -729,8 +729,7 @@ let print_depexts st packages tags_list =
     OpamStd.String.Set.empty
   |> OpamStd.String.Set.iter print_endline
 
-let info gt ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
-  let st = get_switch_state gt in
+let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   let packages =
     OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
   in
