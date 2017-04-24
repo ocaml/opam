@@ -409,7 +409,7 @@ let noop_remove_package t nv =
 
 (* Remove a given package *)
 let remove_package_aux
-    t ?(silent=false) ?changes ?force nv =
+    t ?(silent=false) ?changes ?force ?build_dir nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
   let name = nv.name in
 
@@ -498,8 +498,10 @@ let remove_package_aux
   let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let build_dir =
-    OpamFilename.opt_dir
-      (OpamPath.Switch.remove t.switch_global.root t.switch nv)
+    OpamStd.Option.default_map
+      (OpamFilename.opt_dir
+        (OpamPath.Switch.remove t.switch_global.root t.switch nv))
+       build_dir
   in
   let wrappers = get_wrappers t in
   let mk_cmd = make_command ~env ~name ?dir:build_dir in
@@ -583,11 +585,11 @@ let sources_needed st g =
       | _ -> assert false)
     g OpamPackage.Set.empty
 
-let remove_package t ?silent ?changes ?force nv =
+let remove_package t ?silent ?changes ?force ?build_dir nv =
   if OpamClientConfig.(!r.fake) || OpamClientConfig.(!r.show) then
     Done (OpamConsole.msg "Would remove: %s.\n" (OpamPackage.to_string nv))
   else
-    remove_package_aux t ?silent ?changes ?force nv
+    remove_package_aux t ?silent ?changes ?force ?build_dir nv
 
 let local_vars ~test ~doc =
   OpamVariable.Map.of_list [
@@ -729,7 +731,7 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     install_job
   @@+ function
   | Some e, changes ->
-    remove_package t ~silent:true ~changes nv @@| fun () ->
+    remove_package t ~silent:true ~changes ~build_dir:dir nv @@| fun () ->
     OpamStd.Exn.fatal e;
     Some e
   | None, changes ->
