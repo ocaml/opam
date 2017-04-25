@@ -45,7 +45,8 @@ module VCS : OpamVCS.VCS = struct
   let fetch repo_root repo_url =
     let origin = OpamUrl.base_url repo_url in
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
-    let refspec = Printf.sprintf "+%s:%s" branch (remote_ref repo_url) in
+    let opam_ref = remote_ref repo_url in
+    let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
     git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
     @@> fun r ->
     if OpamProcess.check_success_and_cleanup r then Done ()
@@ -54,12 +55,23 @@ module VCS : OpamVCS.VCS = struct
          on 'fetch HASH' when HASH isn't available locally already).
          Also, remove the [--update-shallow] option in case git is so old that
          it didn't exist yet, as that is not needed in the general case *)
-      OpamProcess.Job.of_list
-        [ git repo_root [ "fetch" ; "-q"; origin ];
-          git repo_root [ "fetch" ; "-q"; origin; refspec ] ]
-      @@+ function
-      | None -> Done ()
-      | Some (_,err) -> OpamSystem.process_error err
+      git repo_root [ "fetch" ; "-q"; origin ] @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      (* retry to fetch the specific branch *)
+      git repo_root [ "fetch" ; "-q"; origin; refspec ] @@> fun r ->
+      if OpamProcess.check_success_and_cleanup r then Done ()
+      else if
+        OpamStd.String.fold_left (fun acc c -> match acc, c with
+            | true, ('0'..'9' | 'a'..'f' | 'A'..'F') -> true
+            | _ -> false)
+          true branch
+      then
+        (* the above might still fail on raw, untracked hashes: try to bind to
+           the direct refspec, if found *)
+        (git repo_root [ "update-ref" ; opam_ref; branch ] @@> fun r ->
+         OpamSystem.raise_on_process_error r;
+         Done ())
+      else OpamSystem.process_error r
 
   let revision repo_root =
     git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
