@@ -70,12 +70,19 @@ let resolve_global gt full_var =
     field *)
 let resolve_switch_raw ?package gt switch switch_config full_var =
   let module V = OpamVariable in
-  if V.Full.(scope full_var <> Global) then None else
   let var = V.Full.variable full_var in
-  match package, V.to_string var with
-  | Some nv, "package" -> Some (S (OpamPackage.Name.to_string nv.name))
-  | Some nv, "version" -> Some (S (OpamPackage.Version.to_string nv.version))
-  | _ ->
+  let allowed_package_variables =
+    match V.Full.scope full_var, package with
+    | _, None -> None
+    | V.Full.Package n, Some nv when n <> nv.name -> None
+    | _, Some nv -> match V.to_string var with
+      | "name" -> Some (S (OpamPackage.Name.to_string nv.name))
+      | "version" -> Some (S (OpamPackage.Version.to_string nv.version))
+      | _ -> None
+  in
+  if allowed_package_variables <> None then allowed_package_variables
+  else if V.Full.scope full_var <> V.Full.Global then None
+  else
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
