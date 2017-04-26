@@ -99,7 +99,7 @@ val eval_to_bool: ?default:bool -> env -> filter -> bool
     most common behaviour for using "filters" for filtering *)
 val opt_eval_to_bool: env -> filter option -> bool
 
-(** Like [to_value] but casts the result to a string *)
+(** Like [eval] but casts the result to a string *)
 val eval_to_string: ?default:string -> env -> filter -> string
 
 (** Reduces what can be, keeps the rest unchanged *)
@@ -138,10 +138,17 @@ val commands_variables: command list -> full_variable list
 (** Converts a generic formula to a filter, given a converter for atoms *)
 val of_formula: ('a -> filter) -> 'a generic_formula -> filter
 
-(** [default] indicates the result to assume when a filter is undefined; this is
-    normally [false] when computing the universe. Will raise as other filter
-    functions if undefined and [default] is not given. *)
-val filter_formula: ?default:bool -> env -> filtered_formula -> formula
+(** Resolves the filter in a filtered formula, reducing to a pure formula.
+
+    [default] is the assumed result for undefined filters. If a version filter
+    doesn't resolve to a valid version, the constraint is dropped unless
+    [default_version] is specified.
+
+    May raise, as other filter functions, if [default] is not provided and
+    filters don't resolve. *)
+val filter_formula:
+  ?default_version:version -> ?default:bool ->
+  env -> filtered_formula -> formula
 
 (** Reduces according to what is defined in [env], and returns the simplified
     formula *)
@@ -153,9 +160,12 @@ val variables_of_filtered_formula: filtered_formula -> full_variable list
 
 (** Resolves the build, test, doc, dev flags in a filtered formula (which is
     supposed to have been pre-processed to remove switch and global variables).
-    [default] determines the behaviour on undefined filters, raising if
-    undefined. If test, doc or dev are unspecified, they are assumed to be
-    filtered already and encountering them will raise an assert. *)
+    [default] determines the behaviour on undefined filters, and the function
+    may raise if it is undefined. If a constraint resolves to an invalid
+    version, it is dropped, or replaced with [default_version] if specified. If
+    test, doc or dev are unspecified, they are assumed to be filtered out
+    already and encountering them will raise an assert. *)
 val filter_deps:
-  build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool -> ?default:bool ->
+  build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
+  ?default_version:version -> ?default:bool ->
   filtered_formula -> formula

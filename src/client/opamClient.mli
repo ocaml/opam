@@ -15,7 +15,7 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Initialize the client a consistent state. *)
+(** Initialize the client to a consistent state. *)
 val init:
   ?init_config:OpamFile.InitConfig.t ->
   ?repo:repository ->

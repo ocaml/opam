@@ -389,6 +389,10 @@ three scopes:
       (through the `--with-test` flag)
     * `with-doc`: similarly for documentation.
 
+    Within package definition files, the variables `name` and `version`, as
+    shortcuts to `_:name` and `_:version`, corresponding to the package being
+    defined, are always available.
+
 For a comprehensive list of predefined variables, and their current local
 values, run:
 
@@ -792,8 +796,8 @@ files.
 
 - <a id="opamfield-depends">`depends: [ <filtered-package-formula> ... ]`</a>:
   the package dependencies. This describes the requirements on other packages
-  for this package to be built and installed. It contains a list of package
-  formulas, understood as a conjunction.
+  for this package to be built and installed. It contains a list of filtered
+  package formulas, understood as a conjunction.
 
     The filtered package formula can access the global and switch variables, but
     not variables from other packages. Additionally, special boolean variables
