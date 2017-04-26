@@ -389,6 +389,10 @@ three scopes:
       (through the `--with-test` flag)
     * `with-doc`: similarly for documentation.
 
+    Within package definition files, the variables `name` and `version`, as
+    shortcuts to `_:name` and `_:version`, corresponding to the package being
+    defined, are always available.
+
 For a comprehensive list of predefined variables, and their current local
 values, run:
 
