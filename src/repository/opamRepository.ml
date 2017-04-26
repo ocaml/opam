@@ -396,10 +396,12 @@ let apply_repo_update repo = function
     Done ()
   | Update_err _ -> assert false
 
-let cleanup_repo_update = function
-  | Update_full d -> OpamFilename.rmdir d
-  | Update_patch f -> OpamFilename.remove f
-  | _ -> ()
+let cleanup_repo_update upd =
+  if not (OpamConsole.debug ()) then
+    match upd with
+    | Update_full d -> OpamFilename.rmdir d
+    | Update_patch f -> OpamFilename.remove f
+    | _ -> ()
 
 let update repo =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
