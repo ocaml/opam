@@ -432,7 +432,15 @@ module V = struct
   let ext_version =
     pp ~name:"version-expr"
       (fun ~pos:_ -> function
-         | String (_,s) -> FString OpamPackage.Version.(to_string (of_string s))
+         | String (pos,s) ->
+           let _ =
+             try
+               OpamPackage.Version.of_string
+                 (OpamFilter.expand_string (fun _ -> Some (S "-")) s)
+             with Failure msg ->
+               bad_format ~pos "Invalid version string %S: %s" s msg
+           in
+           FString s
          | Ident (_,s) -> FIdent (filter_ident_of_string s)
          | _ -> unexpected ())
       (function
