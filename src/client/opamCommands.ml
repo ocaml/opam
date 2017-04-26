@@ -170,10 +170,10 @@ let init =
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup opam." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for opam." in
   let config_file =
-    mk_opt ["config"] "FILE"
+    mk_opt_all ["config"] "FILE"
       "Use the given init config file (default is ~/.opamrc or /etc/opamrc, \
        if present)"
-      Arg.(some & OpamArg.filename) None
+      OpamArg.filename
   in
   let no_config_file =
     mk_flag ["default-config"]
@@ -191,26 +191,29 @@ let init =
       compiler no_compiler config_file no_config_file bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
-    let config_file =
-      if no_config_file then None else
+    let config_files =
+      if no_config_file then [] else
         match config_file with
-        | Some f -> Some (OpamFile.make f)
-        | None -> OpamPath.init_config_file ()
+        | [] ->
+          (match OpamPath.init_config_file () with
+           | Some c -> [c]
+           | None -> [])
+        | fs -> List.map OpamFile.make fs
     in
-    let init_config = match config_file with
-      | None -> None
-      | Some cf ->
-         try
-           let r = OpamFile.InitConfig.read cf in
-           OpamConsole.note "Will configure defaults from %s"
-             (OpamFile.to_string cf);
-           Some r
-         with e ->
-           OpamConsole.error
-             "Error in configuration file, fix it or use '--default-config' or \
-             '--config FILE':";
-           OpamConsole.errmsg "%s" (Printexc.to_string e);
-           OpamStd.Sys.exit 10
+    let init_config =
+      try
+        OpamConsole.note "Will configure defaults from %s"
+          (OpamStd.List.concat_map ", " OpamFile.to_string config_files);
+        List.fold_left (fun acc f ->
+            OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
+          OpamInitDefaults.init_config
+          config_files
+      with e ->
+        OpamConsole.error
+          "Error in configuration file, fix it or use '--default-config' or \
+           '--config FILE':";
+        OpamConsole.errmsg "%s" (Printexc.to_string e);
+        OpamStd.Sys.exit 10
     in
     let repo =
       OpamStd.Option.map (fun url ->
@@ -229,7 +232,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ?init_config ?repo ~bypass_checks
+        ~init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&

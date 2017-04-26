@@ -587,7 +587,7 @@ let update
   rt
 
 let init
-    ?init_config ?repo ?(bypass_checks=false)
+    ?(init_config=OpamInitDefaults.init_config) ?repo ?(bypass_checks=false)
     shell dot_profile update_config =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
@@ -680,13 +680,6 @@ let init
                   missing)));
 
         (* Create ~/.opam/config *)
-        let init_config =
-          match init_config with
-          | None ->
-            OpamInitDefaults.init_config
-          | Some ic ->
-            OpamFile.InitConfig.add OpamInitDefaults.init_config ic
-        in
         let repos = match repo with
           | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
           | None -> OpamFile.InitConfig.repositories init_config
