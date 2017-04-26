@@ -618,7 +618,7 @@ let config =
     "set", `set, ["VAR";"VALUE"],
     "Set the given opam variable for the current switch. Warning: changing a \
      configured path will not move any files! This command does not perform \
-     anyvariable expansion.";
+     any variable expansion.";
     "unset", `unset, ["VAR"],
     "Unset the given opam variable for the current switch. Warning: \
      unsetting built-in configuration variables can cause problems!";

@@ -140,9 +140,9 @@ SRC_format = \
   opamFormula.ml \
   opamTypes.mli \
   opamTypesBase.ml \
+  opamFilter.ml \
   opamPp.ml \
   opamFormat.ml \
-  opamFilter.ml \
   opamFile.ml
 
 define PROJ_format

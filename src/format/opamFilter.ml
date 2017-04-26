@@ -15,6 +15,7 @@ open OpamStd.Op
 
 let log ?level fmt =
   OpamConsole.log "FILTER" ?level fmt
+let slog = OpamConsole.slog
 
 type env = full_variable -> variable_contents option
 
@@ -450,7 +451,7 @@ let rec of_formula atom_f = function
   | And (a, b) -> FAnd (of_formula atom_f a, of_formula atom_f b)
   | Or (a, b) -> FOr (of_formula atom_f a, of_formula atom_f b)
 
-let filter_constraints ?default env filtered_constraint =
+let filter_constraints ?default_version ?default env filtered_constraint =
   OpamFormula.partial_eval
     (function
       | Filter flt ->
@@ -459,10 +460,12 @@ let filter_constraints ?default env filtered_constraint =
         try
           let v = eval_to_string env v in
           `Formula (Atom (relop, OpamPackage.Version.of_string v))
-        with Failure _ as f -> match default with
-          | None -> raise f
-          | Some true -> `True
-          | Some false -> `False)
+        with Failure msg -> match default_version with
+          | None ->
+            log "Warn: ignoring version constraint %a: %s"
+              (slog to_string) v msg;
+            `Formula (Empty)
+          | Some v -> `Formula (Atom (relop, v)))
     filtered_constraint
 
 (* { build & "%{skromuk}%" = "flib%" } *)
@@ -492,8 +495,9 @@ let gen_filter_formula constraints filtered_formula =
        | `Formula c -> Atom (name, c))
     filtered_formula
 
-let filter_formula ?default env ff =
-  gen_filter_formula (filter_constraints ?default env) ff
+let filter_formula ?default_version ?default env ff =
+  gen_filter_formula
+    (filter_constraints ?default_version ?default env) ff
 
 let partial_filter_formula env ff =
   gen_filter_formula (partial_filter_constraints env) ff
@@ -528,7 +532,7 @@ let variables_of_filtered_formula ff =
          acc f)
     [] ff
 
-let filter_deps ~build ?test ?doc ?dev ?default deps =
+let filter_deps ~build ?test ?doc ?dev ?default_version ?default deps =
   let env var =
     let get_opt = function
       | Some b -> Some (B b)
@@ -541,4 +545,4 @@ let filter_deps ~build ?test ?doc ?dev ?default deps =
     | "dev" -> get_opt dev
     | _ -> None
   in
-  filter_formula ?default env deps
+  filter_formula ?default_version ?default env deps
