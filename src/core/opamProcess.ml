@@ -484,7 +484,11 @@ let is_failure r = r.r_code <> 0 || r.r_signal <> None
 let is_success r = not (is_failure r)
 
 let safe_unlink f =
-  try Unix.unlink f with Unix.Unix_error _ -> ()
+  try
+    log ~level:2 "safe_unlink: %s" f;
+    Unix.unlink f
+  with Unix.Unix_error _ ->
+    log ~level:2 "safe_unlink: %s (FAILED)" f
 
 let cleanup ?(force=false) r =
   if force || (not (OpamConsole.debug ()) && is_success r) then

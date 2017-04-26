@@ -88,7 +88,11 @@ let logs_cleaner =
   OpamStd.Sys.at_exit
     (fun () ->
        OpamStd.String.Set.iter (fun f ->
-           try Unix.unlink f with Unix.Unix_error _ -> ())
+           try
+             Unix.unlink f;
+             (* Only log the item if unlink succeeded *)
+             log "logs_cleaner: rm: %s" f
+           with Unix.Unix_error _ -> ())
          !to_clean;
        if OpamCoreConfig.(!r.log_dir = default.log_dir) then
          try Unix.rmdir OpamCoreConfig.(default.log_dir)
