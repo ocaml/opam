@@ -249,6 +249,8 @@ let init =
         let packages =
           OpamSwitchCommand.guess_compiler_package rt comp
         in
+        OpamConsole.header_msg "Creating initial switch (%s)"
+          (OpamFormula.string_of_atoms packages);
         OpamSwitchCommand.install
           gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
         |> ignore
@@ -266,6 +268,8 @@ let init =
         in
         match compiler_packages with
         | Some packages ->
+          OpamConsole.header_msg "Creating initial switch (%s)"
+            (OpamFormula.string_of_atoms packages);
           OpamSwitchCommand.install
             gt ~rt ~packages ~update_config:true
             (OpamSwitch.of_string "default")
