@@ -2,9 +2,24 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
-2.0~beta3
-* Renamed `--soft-request` to `--best-effort`
+2.0.0~beta3
+* (*) Renamed `--soft-request` to `--best-effort`
 * Fixed and improved speed of the package file tracking mechanism
+* Added `--ignore-constraints-on` to temporarily bypass version constraints on
+  some dependencies
+* Fields `build-test:`, `build-doc:` are now deprecated, in favor of specifying
+  conditions on the `with-test` and `with-doc` variables within the `build:`
+  field, and of the new `run-test:` field
+* (*) The command-line options have been renamed accordingly to `--with-test`
+  and `--with-doc`
+* Removed the `opam build` command
+* Allow directories in place of package specifications for the `install`,
+  `remove`, `upgrade`, `reinstall` and `show` commands. `opam` files can also be
+  specified for `install` and `show`
+* On local switch creation, check for package definitions and choose a
+  compatible compiler if possible
+* Add `opam install|remove --destdir` to copy the package's installed files
+  somewhere else
 
 2.0~beta2
 * Fixes (mainly to `opam build`)
