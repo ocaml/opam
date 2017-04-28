@@ -50,6 +50,9 @@ let to_string t =
     | FNot e     ->
       paren ~cond:(context = `Relop)
         (Printf.sprintf "!%s" (aux ~context:`Not e))
+    | FDefined e ->
+      paren ~cond:(context = `Relop)
+        (Printf.sprintf "?%s" (aux ~context:`Defined e))
     | FUndef f -> Printf.sprintf "#undefined(%s)" (aux f)
   in
   aux t
@@ -66,7 +69,7 @@ let rec map_up f = function
   | FOr (l, r) -> f (FOr (map_up f l, map_up f r))
   | FNot x -> f (FNot (map_up f x))
   | FUndef x -> f (FUndef (map_up f x))
-  | (FBool _ | FString _ | FIdent _) as flt -> f flt
+  | (FBool _ | FString _ | FIdent _ | FDefined _) as flt -> f flt
 
 (* ["%%"], ["%{xxx}%"], or ["%{xxx"] if unclosed *)
 let string_interp_regex =
@@ -342,6 +345,10 @@ let rec reduce_aux ?no_undef_expand ~default_str env =
     logop2 (fun e f -> FOr (e,f)) (||) true (reduce e) (reduce f)
   | FNot e ->
     logop1 (fun e -> FNot e) not (reduce e)
+  | FDefined e ->
+    match reduce e with
+    | FUndef _ -> FBool false
+    | _ -> FBool true
 
 and reduce ?no_undef_expand ?(default_str = Some (fun _ -> "")) env e =
   match reduce_aux ?no_undef_expand ~default_str env e with

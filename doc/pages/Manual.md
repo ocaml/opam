@@ -412,6 +412,7 @@ is `true`. This is evaluated just when the command is going to be run.
 ```BNF
 <filter> ::= <filter> <logop> <filter>
            | "!" <filter>
+           | "?" <filter>
            | ( <filter> )
            | <filter> <relop> <filter>
            | <varident>
@@ -427,6 +428,8 @@ The following are allowed in filters:
 - Idents
 - Parentheses
 - Logical operators (binary AND `&`, binary OR `|`, prefix, unary NOT `!`)
+- The unary operator `?` for detecting whether an expression contains undefined
+  variables
 - Binary relational operators (`=`, `!=`, `<`, `<=`, `>`, `>=`)
 
 The comparisons are done using [Version Order](#version-ordering). Relational
@@ -434,7 +437,9 @@ operators have a higher precedence than logical operators.
 
 Undefined values are propagated through relational operators, and logical
 operators unless absorbed (`undef & false` is `false`, `undef | true` is
-`true`).
+`true`). Undefined values may be detected using the `?` operator, for example,
+`!(?foo & foo != bar)` requires either `foo` to be undefined or equal in value
+to `bar`.
 
 ### Filtered package formulas
 
@@ -453,6 +458,7 @@ The definition is similar to that of `<package-formula>`, except that two cases
 
 <filtered-version-formula> ::= <filtered-version-formula> <logop> <filtered-version-formula>
                              | "!" <filtered-version-formula>
+                             | "?" <filtered-version-formula>
                              | "(" <filtered-version-formula> ")"
                              | <relop> <version>
                              | <filter>

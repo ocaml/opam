@@ -183,6 +183,7 @@ type filter =
   | FAnd of filter * filter
   | FOr of filter * filter
   | FNot of filter
+  | FDefined of filter
   | FUndef of filter
   (** Returned by reduce functions when the filter could not be resolved to an
       atom (due to undefined variables or string expansions). The argument
