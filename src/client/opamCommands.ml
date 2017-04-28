@@ -182,8 +182,9 @@ let init =
     mk_opt_all ["config"] "FILE"
       "Use the given init config file. If repeated, latest has the highest \
        priority ($(b,i.e.) each field gets its value from where it was defined \
-       latest)."
-      OpamArg.filename
+       latest). Specifying a URL pointing to a config file instead is \
+       allowed."
+      OpamArg.url
   in
   let no_config_file =
     mk_flag ["no-opamrc"]
@@ -204,7 +205,21 @@ let init =
     let config_files =
       (if no_config_file then []
        else List.filter OpamFile.exists (OpamPath.init_config_files ()))
-      @ List.map OpamFile.make config_file
+      @ List.map (fun url ->
+          match OpamUrl.local_file url with
+          | Some f -> OpamFile.make f
+          | None ->
+            let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
+            OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
+            let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
+            if OpamConsole.confirm
+                "Using configuration file from %s. \
+                 Please verify the following SHA256:\n    %s\n\
+                 Is this correct ?"
+                (OpamUrl.to_string url) (OpamHash.contents hash)
+            then OpamFile.make f
+            else OpamStd.Sys.exit 10
+        ) config_file
     in
     let init_config =
       try
