@@ -163,27 +163,37 @@ let init =
   in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
-    Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
+    Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default
+         & doc)
+  in
   let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 (some string) None & doc) in
-  let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup opam." in
-  let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for opam." in
+  let no_setup   =
+    mk_flag ["n";"no-setup"]
+      "Do not update the global and user configuration options to setup opam."
+  in
+  let auto_setup =
+    mk_flag ["a";"auto-setup"]
+      "Automatically setup all the global and user configuration options for \
+       opam."
+  in
   let config_file =
     mk_opt_all ["config"] "FILE"
-      "Use the given init config file (default is ~/.opamrc or /etc/opamrc, \
-       if present)"
+      "Use the given init config file. If repeated, latest has the highest \
+       priority ($(b,i.e.) each field gets its value from where it was defined \
+       latest)."
       OpamArg.filename
   in
   let no_config_file =
-    mk_flag ["default-config"]
-      "Use the built-in default configuration, bypassing any opamrc file found \
-       on the system"
+    mk_flag ["no-opamrc"]
+      "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
+       the files specified through $(b,--config) only"
   in
   let bypass_checks =
     mk_flag ["bypass-checks"]
-      "Skip checks on required or recommended tools, \
-       and assume everything is fine"
+      "Skip checks on required or recommended tools, and assume everything is \
+       fine"
   in
   let init global_options
       build_options repo_kind repo_name repo_url
@@ -192,27 +202,24 @@ let init =
     apply_global_options global_options;
     apply_build_options build_options;
     let config_files =
-      if no_config_file then [] else
-        match config_file with
-        | [] ->
-          (match OpamPath.init_config_file () with
-           | Some c -> [c]
-           | None -> [])
-        | fs -> List.map OpamFile.make fs
+      (if no_config_file then []
+       else List.filter OpamFile.exists (OpamPath.init_config_files ()))
+      @ List.map OpamFile.make config_file
     in
     let init_config =
       try
-        OpamConsole.note "Will configure defaults from %s"
-          (OpamStd.List.concat_map ", " OpamFile.to_string config_files);
+        OpamConsole.note "Will configure from built-in defaults%s."
+          (OpamStd.List.concat_map ~nil:"" ~left:", " ", "
+             OpamFile.to_string config_files);
         List.fold_left (fun acc f ->
             OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
           OpamInitDefaults.init_config
           config_files
       with e ->
         OpamConsole.error
-          "Error in configuration file, fix it or use '--default-config' or \
-           '--config FILE':";
-        OpamConsole.errmsg "%s" (Printexc.to_string e);
+          "Error in configuration file, fix it, use '--no-opamrc', or check \
+           your '--config FILE' arguments:";
+        OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit 10
     in
     let repo =

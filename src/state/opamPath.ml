@@ -19,14 +19,11 @@ let ( /- ) dir f = OpamFile.make (dir // f)
 
 let config t = t /- "config"
 
-let init_config_file () =
-  OpamStd.Option.Op.(
-    OpamFilename.opt_file
-      (OpamFilename.Dir.of_string (OpamStd.Sys.home ()) // ".opamrc") ++
-    OpamFilename.opt_file
-      (OpamFilename.Dir.of_string (OpamStd.Sys.etc ()) // "opamrc")
-    >>| OpamFile.make
-  )
+let init_config_files () =
+  List.map OpamFile.make [
+    OpamFilename.Dir.of_string (OpamStd.Sys.etc ()) // "opamrc";
+    OpamFilename.Dir.of_string (OpamStd.Sys.home ()) // ".opamrc";
+  ]
 
 let state_cache t = t / "repo" // "state.cache"
 
