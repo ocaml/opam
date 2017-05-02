@@ -163,27 +163,38 @@ let init =
   in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
-    Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
+    Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default
+         & doc)
+  in
   let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 (some string) None & doc) in
-  let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup opam." in
-  let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for opam." in
+  let no_setup   =
+    mk_flag ["n";"no-setup"]
+      "Do not update the global and user configuration options to setup opam."
+  in
+  let auto_setup =
+    mk_flag ["a";"auto-setup"]
+      "Automatically setup all the global and user configuration options for \
+       opam."
+  in
   let config_file =
-    mk_opt ["config"] "FILE"
-      "Use the given init config file (default is ~/.opamrc or /etc/opamrc, \
-       if present)"
-      Arg.(some & OpamArg.filename) None
+    mk_opt_all ["config"] "FILE"
+      "Use the given init config file. If repeated, latest has the highest \
+       priority ($(b,i.e.) each field gets its value from where it was defined \
+       latest). Specifying a URL pointing to a config file instead is \
+       allowed."
+      OpamArg.url
   in
   let no_config_file =
-    mk_flag ["default-config"]
-      "Use the built-in default configuration, bypassing any opamrc file found \
-       on the system"
+    mk_flag ["no-opamrc"]
+      "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
+       the files specified through $(b,--config) only"
   in
   let bypass_checks =
     mk_flag ["bypass-checks"]
-      "Skip checks on required or recommended tools, \
-       and assume everything is fine"
+      "Skip checks on required or recommended tools, and assume everything is \
+       fine"
   in
   let init global_options
       build_options repo_kind repo_name repo_url
@@ -191,26 +202,40 @@ let init =
       compiler no_compiler config_file no_config_file bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
-    let config_file =
-      if no_config_file then None else
-        match config_file with
-        | Some f -> Some (OpamFile.make f)
-        | None -> OpamPath.init_config_file ()
+    let config_files =
+      (if no_config_file then []
+       else List.filter OpamFile.exists (OpamPath.init_config_files ()))
+      @ List.map (fun url ->
+          match OpamUrl.local_file url with
+          | Some f -> OpamFile.make f
+          | None ->
+            let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
+            OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
+            let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
+            if OpamConsole.confirm
+                "Using configuration file from %s. \
+                 Please verify the following SHA256:\n    %s\n\
+                 Is this correct ?"
+                (OpamUrl.to_string url) (OpamHash.contents hash)
+            then OpamFile.make f
+            else OpamStd.Sys.exit 10
+        ) config_file
     in
-    let init_config = match config_file with
-      | None -> None
-      | Some cf ->
-         try
-           let r = OpamFile.InitConfig.read cf in
-           OpamConsole.note "Will configure defaults from %s"
-             (OpamFile.to_string cf);
-           Some r
-         with e ->
-           OpamConsole.error
-             "Error in configuration file, fix it or use '--default-config' or \
-             '--config FILE':";
-           OpamConsole.errmsg "%s" (Printexc.to_string e);
-           OpamStd.Sys.exit 10
+    let init_config =
+      try
+        OpamConsole.note "Will configure from built-in defaults%s."
+          (OpamStd.List.concat_map ~nil:"" ~left:", " ", "
+             OpamFile.to_string config_files);
+        List.fold_left (fun acc f ->
+            OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
+          OpamInitDefaults.init_config
+          config_files
+      with e ->
+        OpamConsole.error
+          "Error in configuration file, fix it, use '--no-opamrc', or check \
+           your '--config FILE' arguments:";
+        OpamConsole.errmsg "%s\n" (Printexc.to_string e);
+        OpamStd.Sys.exit 10
     in
     let repo =
       OpamStd.Option.map (fun url ->
@@ -229,7 +254,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ?init_config ?repo ~bypass_checks
+        ~init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&
@@ -239,6 +264,8 @@ let init =
         let packages =
           OpamSwitchCommand.guess_compiler_package rt comp
         in
+        OpamConsole.header_msg "Creating initial switch (%s)"
+          (OpamFormula.string_of_atoms packages);
         OpamSwitchCommand.install
           gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
         |> ignore
@@ -256,6 +283,8 @@ let init =
         in
         match compiler_packages with
         | Some packages ->
+          OpamConsole.header_msg "Creating initial switch (%s)"
+            (OpamFormula.string_of_atoms packages);
           OpamSwitchCommand.install
             gt ~rt ~packages ~update_config:true
             (OpamSwitch.of_string "default")
@@ -615,7 +644,7 @@ let config =
     "set", `set, ["VAR";"VALUE"],
     "Set the given opam variable for the current switch. Warning: changing a \
      configured path will not move any files! This command does not perform \
-     anyvariable expansion.";
+     any variable expansion.";
     "unset", `unset, ["VAR"],
     "Unset the given opam variable for the current switch. Warning: \
      unsetting built-in configuration variables can cause problems!";
