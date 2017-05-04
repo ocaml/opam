@@ -96,8 +96,11 @@ AS_IF([test "x${enable_checks}" != "xno" && {
   echo "============================================================================"
   echo
   AC_SUBST(hasalldeps,"")
+  printf "S src_ext/*\nB src_ext/*" > .merlin
+  grep -v "^PKG" .merlin.in >> .merlin
 ],[
   AC_SUBST(hasalldeps,"true")
+  cp .merlin.in .merlin
 ])
 
 if test "x$prefix" = "xNONE"; then
