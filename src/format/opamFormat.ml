@@ -285,6 +285,7 @@ module V = struct
         | Group (pos,g) -> parse_filter ~pos g
         | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
         | Pfxop (_,`Not,e) -> FNot (aux e)
+        | Pfxop (_,`Defined,e) -> FDefined (aux e)
         | Logop(_,`And,e,f)-> FAnd (aux e, aux f)
         | Logop(_,`Or, e,f)-> FOr (aux e, aux f)
         | _ -> unexpected ()
@@ -318,6 +319,9 @@ module V = struct
         | FNot f ->
           group_if ~cond:(context = `Relop)
             (Pfxop (pos_null, `Not, aux ~context:`Not f))
+        | FDefined f ->
+          group_if ~cond:(context = `Relop)
+            (Pfxop (pos_null, `Defined, aux ~context:`Defined f))
         | FUndef _ -> assert false
       in
       match f with
