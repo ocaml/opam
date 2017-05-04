@@ -78,7 +78,7 @@ let get_diff parent_dir dir1 dir2 =
     (slog OpamFilename.Dir.to_string) parent_dir
     (slog OpamFilename.Base.to_string) dir1
     (slog OpamFilename.Base.to_string) dir2;
-  let patch = OpamSystem.temp_file "patch" in
+  let patch = OpamSystem.temp_file ~auto_clean: false "patch" in
   let patch_file = OpamFilename.of_string patch in
   let finalise () = OpamFilename.remove patch_file in
   OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->

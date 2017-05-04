@@ -88,7 +88,11 @@ let logs_cleaner =
   OpamStd.Sys.at_exit
     (fun () ->
        OpamStd.String.Set.iter (fun f ->
-           try Unix.unlink f with Unix.Unix_error _ -> ())
+           try
+             Unix.unlink f;
+             (* Only log the item if unlink succeeded *)
+             log "logs_cleaner: rm: %s" f
+           with Unix.Unix_error _ -> ())
          !to_clean;
        if OpamCoreConfig.(!r.log_dir = default.log_dir) then
          try Unix.rmdir OpamCoreConfig.(default.log_dir)
@@ -99,17 +103,17 @@ let logs_cleaner =
     else
       to_clean := OpamStd.String.Set.add tmp_dir !to_clean
 
-let rec temp_file ?dir prefix =
+let rec temp_file ?(auto_clean=true) ?dir prefix =
   let temp_dir = match dir with
     | None   -> OpamCoreConfig.(!r.log_dir)
     | Some d -> d in
   mkdir temp_dir;
   let file = temp_dir / temp_basename prefix in
   if Hashtbl.mem temp_files file then
-    temp_file ?dir prefix
+    temp_file ~auto_clean ?dir prefix
   else (
     Hashtbl.add temp_files file true;
-    logs_cleaner file;
+    if auto_clean then logs_cleaner file;
     file
   )
 

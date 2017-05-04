@@ -243,8 +243,10 @@ val get_lock_flag: lock -> lock_flag
     didn't apply. *)
 val patch: dir:string -> string -> exn option OpamProcess.job
 
-(** Create a tempory file in {i ~/.opam/logs/<name>XXX} *)
-val temp_file: ?dir:string -> string -> string
+(** Create a tempory file in {i ~/.opam/logs/<name>XXX}. ?auto_clean controls
+    whether the file is automatically deleted when opam terminates
+    (default: [true]). *)
+val temp_file: ?auto_clean:bool -> ?dir:string -> string -> string
 
 (** Print stats *)
 val print_stats: unit -> unit

@@ -126,7 +126,7 @@ module VCS = struct
     is_up_to_date repo_root repo_url @@+ function
     | true -> Done None
     | false ->
-      let patch_file = OpamSystem.temp_file "darcs-diff" in
+      let patch_file = OpamSystem.temp_file ~auto_clean: false "darcs-diff" in
       let finalise () = OpamSystem.remove_file patch_file in
       OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
       darcs repo_root ~stdout:patch_file

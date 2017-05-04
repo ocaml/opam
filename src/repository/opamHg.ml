@@ -67,7 +67,7 @@ module VCS = struct
     Done ()
 
   let diff repo_root repo_url =
-    let patch_file = OpamSystem.temp_file "hg-diff" in
+    let patch_file = OpamSystem.temp_file ~auto_clean:false "hg-diff" in
     let finalise () = OpamSystem.remove_file patch_file in
     OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
     get_id repo_root repo_url @@+ fun id ->
