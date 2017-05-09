@@ -1,5 +1,8 @@
 # opam - A package manager for OCaml
 
+[![TravisCI Build Status](https://travis-ci.org/ocaml/opam.svg?branch=master)](https://travis-ci.org/ocaml/opam)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=master&svg=true)](https://ci.appveyor.com/project/AltGr/opam)
+
 Opam is a source-based package manager for OCaml. It supports multiple simultaneous
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
