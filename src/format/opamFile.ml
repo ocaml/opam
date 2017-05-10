@@ -1209,6 +1209,69 @@ module Config = struct
   include SyntaxFile(ConfigSyntax)
 end
 
+module SwitchDefaultsSyntax = struct
+  let internal = "switch-defaults"
+
+  type t = {
+    opam_version : opam_version;
+    switch_variables :
+      ((variable * variable_contents * string) * filter option) list;
+  }
+
+  let opam_version t = t.opam_version
+  let switch_variables t = t.switch_variables
+
+  let with_opam_version opam_version t = {t with opam_version}
+  let with_switch_variables switch_variables t = {t with switch_variables}
+
+  let empty = {
+    opam_version = OpamVersion.current_nopatch;
+    switch_variables = [];
+  }
+
+  let fields =
+    [
+      "switch-variables", Pp.ppacc
+        with_switch_variables switch_variables
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_option
+              (Pp.V.map_triple
+                (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+                Pp.V.variable_contents
+                Pp.V.string)
+              (Pp.opt Pp.V.filter)));
+    ]
+
+  let pp_contents =
+    let name = internal in
+    Pp.I.fields ~name ~empty fields
+    -| Pp.I.show_errors ~name ~strict:true ()
+
+  let pp =
+    let name = internal in
+    let fields =
+      ("opam-version", Pp.ppacc
+        with_opam_version opam_version
+        (Pp.V.string
+          -| Pp.of_module "opam-version" (module OpamVersion));)::fields
+    in
+    Pp.I.map_file @@
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.show_errors ~name ~strict:true ()
+
+  let add t1 t2 =
+    let list = function [] -> fun l -> l | l -> fun _ -> l in
+    {
+      opam_version = t2.opam_version;
+      switch_variables = list t2.switch_variables t1.switch_variables;
+    }
+
+end
+module SwitchDefaults = struct
+  include SwitchDefaultsSyntax
+  include SyntaxFile(SwitchDefaultsSyntax)
+end
+
 module InitConfigSyntax = struct
   let internal = "init-config"
 
@@ -1228,6 +1291,7 @@ module InitConfigSyntax = struct
     recommended_tools : (string list * string option * filter option) list;
     required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
+    switch_defaults : SwitchDefaults.t option;
   }
 
   let opam_version t = t.opam_version
@@ -1245,6 +1309,7 @@ module InitConfigSyntax = struct
   let recommended_tools t = t.recommended_tools
   let required_tools t = t.required_tools
   let init_scripts t = t.init_scripts
+  let switch_defaults t = t.switch_defaults
 
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
@@ -1261,6 +1326,8 @@ module InitConfigSyntax = struct
   let with_recommended_tools recommended_tools t = {t with recommended_tools}
   let with_required_tools required_tools t = {t with required_tools}
   let with_init_scripts init_scripts t = {t with init_scripts}
+  let with_switch_defaults switch_defaults t =
+    {t with switch_defaults = Some switch_defaults}
 
   let criterion kind t =
     try Some (List.assoc kind t.solver_criteria)
@@ -1286,6 +1353,7 @@ module InitConfigSyntax = struct
     recommended_tools = [];
     required_tools = [];
     init_scripts = [];
+    switch_defaults = None;
   }
 
   let pp_repository_def =
@@ -1387,11 +1455,16 @@ module InitConfigSyntax = struct
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
       Wrappers.fields
 
+  let sections = [
+    "switch-defaults",
+    Pp.ppacc_opt with_switch_defaults switch_defaults
+      (Pp.I.anonymous_section SwitchDefaults.pp_contents);
+  ]
 
   let pp =
     let name = internal in
     Pp.I.map_file @@
-    Pp.I.fields ~name ~empty fields -|
+    Pp.I.fields ~name ~empty ~sections fields -|
     Pp.I.show_errors ~name ~strict:true ()
 
   let add t1 t2 =
@@ -1420,6 +1493,7 @@ module InitConfigSyntax = struct
       recommended_tools = list t2.recommended_tools t1.recommended_tools;
       required_tools = list t2.required_tools t1.required_tools;
       init_scripts = list t2.init_scripts t1.init_scripts;
+      switch_defaults = opt t2.switch_defaults t1.switch_defaults;
     }
 
 end
