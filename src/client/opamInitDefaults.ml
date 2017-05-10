@@ -127,6 +127,9 @@ module I = OpamFile.InitConfig
 
 let (@|) g f = OpamStd.Op.(g @* f) ()
 
+let switch_defaults =
+  OpamFile.SwitchDefaults.empty
+
 let init_config ?(sandboxing=true) () =
   I.empty |>
   I.with_repositories
@@ -137,4 +140,5 @@ let init_config ?(sandboxing=true) () =
   I.with_recommended_tools @| recommended_tools |>
   I.with_required_tools @| required_tools ~sandboxing |>
   I.with_init_scripts @| init_scripts |>
-  I.with_dl_tool @| dl_tool
+  I.with_dl_tool @| dl_tool |>
+  I.with_switch_defaults switch_defaults
