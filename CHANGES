@@ -20,6 +20,7 @@ are not marked).
   compatible compiler if possible
 * Add `opam install|remove --destdir` to copy the package's installed files
   somewhere else
+* Allow `opam init --config=URL`
 
 2.0~beta2
 * Fixes (mainly to `opam build`)

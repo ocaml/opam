@@ -382,8 +382,8 @@ three scopes:
 
 3. Some fields define their own local variables, like `success` in the field
    [`post-messages`](#opamfield-post-messages). Common examples of this include
-   the following variables, available in the `depends:`, `depopts:`, `build` and
-   `install` fields:
+   the following variables, available in the `depends:`, `depopts:`, `build:` and
+   `install:` fields:
 
     * `with-test`: `true` when testing has been turned on for the package
       (through the `--with-test` flag)
