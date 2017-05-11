@@ -2101,7 +2101,7 @@ let pin ?(unpin_only=false) () =
   let guess_names path =
     OpamStd.List.filter_map
       (fun (nameopt, f) -> match nameopt with
-         | None -> OpamFile.OPAM.(name_opt (read f))
+         | None -> OpamFile.OPAM.(name_opt (safe_read f))
          | some -> some)
       (OpamPinned.files_in_source path)
   in

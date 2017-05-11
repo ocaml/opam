@@ -29,8 +29,8 @@ MD5_uutf = 708c0421e158b390c7cc341f37b40add
 URL_jsonm = http://erratique.ch/software/jsonm/releases/jsonm-0.9.1.tbz
 MD5_jsonm = 631a5dabdada83236c83056f60e42685
 
-URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/9dbcf8a1ec44b6b3ec72e280de609db791c7a3d5.tar.gz
-MD5_opam_file_format = c71ee1aaa004b5d1491a559d735bd70f
+URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
+MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
