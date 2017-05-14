@@ -141,12 +141,16 @@ for Opam usage.
 
 #### Ubuntu
 
-> **Warning**: although there is an opam package available officially in
-> "**Utopic**" (14.10), it's currently broken. Don't use it, see the
-> [bug report](https://bugs.launchpad.net/ubuntu/+source/opam/+bug/1401346).
-> The Ubuntu "Vivid" (15.04) package is fine.
+The latest version of Opam is available in Ubuntu universe starting from 15.10
+"Wily":
 
-We provide binary packages for "Precise" and "Trusty"
+```
+apt install opam
+```
+
+Ubuntu 12.04 LTS "Precise" doesn't have an opam package and the package in 14.04
+LTS "Trusty" is an older release. We provide binary packages of the latest
+version for these two releases:
 
 ```
 add-apt-repository ppa:avsm/ppa
