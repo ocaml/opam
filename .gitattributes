@@ -1,0 +1,14 @@
+# Default behaviour, for if core.autocrlf isn't set
+* text=auto
+
+# Shell scripts, autoconf, etc. must have LF endings, even on Windows
+*.sh text eol=lf
+configure text eol=lf
+configure.ac text eol=lf
+*.m4 text eol=lf
+
+# Treat patches as binary for safety
+*.patch binary
+
+# Actual binary files
+*.pdf binary

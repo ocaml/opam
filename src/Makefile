@@ -127,8 +127,8 @@ export PROJ_core
 
 # -- opam-format -- #
 
-opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
+opam-format.cma: opam-core.cma ALWAYS
+opam-format.cmxa: opam-core.cmxa ALWAYS
 
 SRC_format = \
   opamFormatConfig.ml \
@@ -169,8 +169,8 @@ endef
 export PROJ_solver
 
 # -- opam-repository -- #
-opam-repository.cma: opam-core.cma ALWAYS
-opam-repository.cmxa: opam-core.cmxa ALWAYS
+opam-repository.cma: opam-core.cma opam-format.cma ALWAYS
+opam-repository.cmxa: opam-core.cmxa opam-format.cmxa ALWAYS
 
 SRC_repository = \
   opamRepositoryConfig.ml \
@@ -362,10 +362,10 @@ OCAMLMAKEFILE = ../OCamlMakefile
 export OCAMLMAKEFILE
 
 clean-aux:
-	rm -f $(foreach e,a cma cmxa,$(wildcard *.$e))
+	rm -f $(foreach e,lib a cma cmxa,$(wildcard *.$e))
 	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
 	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
-	rm -f $(foreach e,o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
+	rm -f $(foreach e,obj o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
 
 clean: clean-aux
 

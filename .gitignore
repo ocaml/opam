@@ -11,7 +11,9 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
 src_ext/graph/
-src_ext/opam-file-format/
+src_ext/jsonm/
+src_ext/uutf/
+src_ext/opam_file_format/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
@@ -40,8 +42,10 @@ ocp-build.root.old.old
 *.cmxa
 *.cmxs
 *.a
+*.lib
+*.dll
 *.o
-META
+*.obj
 *.install
 Makefile.config
 config.log
@@ -57,9 +61,12 @@ src/format/opamParser.mli
 src/core/opamCompat.ml
 src/core/opamCompat.mli
 src/opam
+src/opam.exe
 src/opam-installer
+src/opam-installer.exe
 src/opam-check
 src/opam-admin.top
+src/opam-admin.top.exe
 src/*.META
 ._d
 ._ncdi

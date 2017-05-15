@@ -6,7 +6,7 @@ URL_cppo = https://github.com/mjambon/cppo/archive/v1.3.2.tar.gz
 MD5_cppo = 133c9f8afadb6aa1c5ba0f5eb55c5648
 
 URL_extlib = https://github.com/ygrek/ocaml-extlib/archive/1.7.0.tar.gz
-MD5_extlib = b50b02d9e40d35cc20c82d9c881a1bf6 
+MD5_extlib = b50b02d9e40d35cc20c82d9c881a1bf6
 
 URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.5.0.tar.gz
 MD5_re = 1e9bff3279648881be31e5ff96219f0a
@@ -122,7 +122,7 @@ distclean:
 	rm -rf cudf extlib re graph dose cmdliner uutf jsonm opam_file_format
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp
-	rm -f *.cm* *.o *.a *.lib
+	rm -f *.cm* *.o *.a *.lib *.obj
 	rm -rf lib
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo uutf jsonm opam_file_format
