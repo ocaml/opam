@@ -530,18 +530,26 @@ let filter_command =
     in
     let st = get_virtual_switch_state repo_root env in
     let packages = OpamListCommand.filter ~base:st.packages st filter in
+    if OpamPackage.Set.is_empty packages then
+      if remove then
+        (OpamConsole.warning "No packages match the selection criteria";
+         OpamStd.Sys.exit 0)
+      else
+        OpamConsole.error_and_exit "No packages match the selection criteria";
+    let num_total = OpamPackage.Set.cardinal st.packages in
+    let num_selected = OpamPackage.Set.cardinal packages in
     if remove then
       OpamConsole.formatted_msg
-        "The following packages will be REMOVED from the repository (%d \
+        "The following %d packages will be REMOVED from the repository (%d \
          packages will be kept):\n%s\n"
-        OpamPackage.Set.(cardinal Op.(st.packages -- packages))
+        num_selected (num_total - num_selected)
         (OpamStd.List.concat_map " " OpamPackage.to_string
            (OpamPackage.Set.elements packages))
     else
       OpamConsole.formatted_msg
-        "The following packages will be kept in the repository (%d packages \
+        "The following %d packages will be kept in the repository (%d packages \
          will be REMOVED):\n%s\n"
-        OpamPackage.Set.(cardinal Op.(st.packages -- packages))
+        num_selected (num_total - num_selected)
         (OpamStd.List.concat_map " " OpamPackage.to_string
            (OpamPackage.Set.elements packages));
     let packages =
@@ -558,7 +566,8 @@ let filter_command =
           if dryrun then
             OpamConsole.msg "rm -rf %s\n" (OpamFilename.Dir.to_string d)
           else
-            OpamFilename.rmdir_cleanup d)
+            (OpamFilename.cleandir d;
+             OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
   Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $
