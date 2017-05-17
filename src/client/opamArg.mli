@@ -119,7 +119,7 @@ val apply_build_options: build_options -> unit
 val package_selection_section: string
 
 (** Build a package selection filter *)
-val package_selection: OpamListCommand.selector OpamFormula.formula Term.t
+val package_selection: OpamListCommand.selector list Term.t
 
 (** Man section name *)
 val package_listing_section: string
