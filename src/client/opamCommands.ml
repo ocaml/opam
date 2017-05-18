@@ -361,7 +361,7 @@ let list ?(force_search=false) () =
       mk_flag ["search"] ~section:selection_docs
         "Match $(i,PATTERNS) against the full descriptions of packages, and \
          require all of them to match, instead of requiring at least one to \
-         match against package names."
+         match against package names (unless $(b,--or) is also specified)."
   in
   let repos =
     mk_opt ["repos"] "REPOS" ~section:selection_docs
@@ -382,6 +382,11 @@ let list ?(force_search=false) () =
       "List what is available from the repositories, without consideration for \
        the current (or any other) switch (installed or pinned packages, etc.)"
   in
+  let disjunction =
+    mk_flag ["or"] ~section:selection_docs
+      "Instead of selecting packages that match $(i,all) the criteria, select \
+       packages that match $(i,any) of them"
+  in
   let depexts =
     mk_opt ["e";"external"] "TAGS" ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
@@ -397,7 +402,7 @@ let list ?(force_search=false) () =
   in
   let list
       global_options selection state_selector no_switch depexts repos owns_file
-      search format packages =
+      disjunction search format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.(!r.current_switch) = None
@@ -417,18 +422,21 @@ let list ?(force_search=false) () =
       in
       format ~force_all_versions
     in
+    let join =
+      if disjunction then OpamFormula.ors else OpamFormula.ands
+    in
     let state_selector =
       if state_selector = [] then
         if no_switch || search || owns_file <> None then Empty
-        else if packages = [] && selection = OpamFormula.Empty
+        else if packages = [] && selection = []
         then Atom OpamListCommand.Installed
         else Or (Atom OpamListCommand.Installed,
                  Atom OpamListCommand.Available)
-      else OpamFormula.ands (List.map (fun x -> Atom x) state_selector)
+      else join (List.map (fun x -> Atom x) state_selector)
     in
     let pattern_selector =
       if search then
-        OpamFormula.ands
+        join
           (List.map (fun p ->
                Atom (OpamListCommand.(Pattern (default_pattern_selector, p))))
               packages)
@@ -436,15 +444,16 @@ let list ?(force_search=false) () =
     in
     let filter =
       OpamFormula.ands [
-        pattern_selector;
         state_selector;
-        (if no_switch then Empty else
-         match repos with None -> Empty | Some repos ->
-           Atom (OpamListCommand.From_repository repos));
-        selection;
-        OpamStd.Option.Op.
-          ((owns_file >>| fun f -> Atom (OpamListCommand.Owns_file f)) +!
-           Empty);
+        join
+          (pattern_selector ::
+           (if no_switch then Empty else
+            match repos with None -> Empty | Some repos ->
+              Atom (OpamListCommand.From_repository repos)) ::
+           OpamStd.Option.Op.
+             ((owns_file >>| fun f -> Atom (OpamListCommand.Owns_file f)) +!
+              Empty) ::
+           List.map (fun x -> Atom x) selection)
       ]
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -471,8 +480,8 @@ let list ?(force_search=false) () =
       OpamListCommand.print_depexts st results tags_list
   in
   Term.(pure list $global_options $package_selection $state_selector
-        $no_switch $depexts $repos $owns_file $search $package_listing
-        $pattern_list),
+        $no_switch $depexts $repos $owns_file $disjunction $search
+        $package_listing $pattern_list),
   term_info "list" ~doc ~man
 
 

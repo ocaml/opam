@@ -969,12 +969,12 @@ let package_selection =
     let doc =
       "List only packages that depend on one of (comma-separated) $(docv)."
     in
-    Arg.(value & opt (list atom) [] &
+    Arg.(value & opt_all (list atom) [] &
          info ~doc ~docs ~docv:"PACKAGES" ["depends-on"])
   in
   let required_by =
     let doc = "List only the dependencies of (comma-separated) $(docv)." in
-    Arg.(value & opt (list atom) [] &
+    Arg.(value & opt_all (list atom) [] &
          info ~doc ~docs ~docv:"PACKAGES" ["required-by"])
   in
   let conflicts_with =
@@ -984,12 +984,12 @@ let package_selection =
        list, from the other package, or by a common $(b,conflict-class:) \
        field."
     in
-    Arg.(value & opt (list package_with_version) [] &
+    Arg.(value & opt_all (list package_with_version) [] &
          info ~doc ~docs ~docv:"PACKAGES" ["conflicts-with"])
   in
   let coinstallable_with =
     let doc = "Only list packages that are compatible with all of $(docv)." in
-    Arg.(value & opt (list package_with_version) [] &
+    Arg.(value & opt_all (list package_with_version) [] &
          info ~doc ~docs ~docv:"PACKAGES" ["coinstallable-with"])
   in
   let resolve =
@@ -1006,7 +1006,7 @@ let package_selection =
        currently pinned packages, architecture, and compiler version. \
        The combination with `--depopts' is not supported."
     in
-    Arg.(value & opt (list atom) [] &
+    Arg.(value & opt_all (list atom) [] &
          info ~doc ~docs ~docv:"PACKAGES" ["resolve"])
   in
   let recursive =
@@ -1067,27 +1067,29 @@ let package_selection =
       OpamListCommand.
       recursive; depopts; build = not nobuild; test; doc = doc_flag; dev
     } in
-    OpamFormula.ands @@
-    List.map (fun x -> Atom x)
-      ((List.map (fun flag -> OpamListCommand.Flag flag) has_flag) @
-       (List.map (fun tag -> OpamListCommand.Tag tag) has_tag) @
-       (List.map (fun (field,patt) ->
-            OpamListCommand.Pattern
-              ({OpamListCommand.default_pattern_selector with
-                OpamListCommand.fields = [field]},
-               patt))
-           field_match) @
-       (match depends_on with [] -> [] | deps ->
-           [OpamListCommand.Depends_on (dependency_toggles, deps)]) @
-       (match required_by with [] -> [] | rdeps ->
-           [OpamListCommand.Required_by (dependency_toggles, rdeps)]) @
-       (match conflicts_with with [] -> [] | pkgs ->
-           [OpamListCommand.Conflicts_with pkgs]) @
-       (match resolve with [] -> [] | deps ->
-           [OpamListCommand.Solution (dependency_toggles, deps)]) @
-       (match coinstallable_with with [] -> [] | pkgs ->
-           [OpamListCommand.Coinstallable_with
-              (dependency_toggles, pkgs)]))
+    List.map (fun flag -> OpamListCommand.Flag flag) has_flag @
+    List.map (fun tag -> OpamListCommand.Tag tag) has_tag @
+    List.map (fun (field,patt) ->
+        OpamListCommand.Pattern
+          ({OpamListCommand.default_pattern_selector with
+            OpamListCommand.fields = [field]},
+           patt))
+      field_match @
+    List.map (fun deps ->
+        OpamListCommand.Depends_on (dependency_toggles, deps))
+      depends_on @
+    List.map (fun rdeps ->
+        OpamListCommand.Required_by (dependency_toggles, rdeps))
+      required_by @
+    List.map (fun pkgs ->
+        OpamListCommand.Conflicts_with pkgs)
+      conflicts_with @
+    List.map (fun deps ->
+        OpamListCommand.Solution (dependency_toggles, deps))
+      resolve @
+    List.map (fun pkgs ->
+        OpamListCommand.Coinstallable_with (dependency_toggles, pkgs))
+      coinstallable_with
   in
   Term.(pure filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $

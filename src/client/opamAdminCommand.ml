@@ -449,6 +449,11 @@ let get_virtual_switch_state repo_root env =
        st.opams
    )}
 
+let or_arg =
+  Arg.(value & flag & info ~docs:OpamArg.package_selection_section ["or"]
+         ~doc:"Instead of selecting packages that match $(i,all) the \
+               criteria, select packages that match $(i,any) of them")
+
 let list_command_doc = "Lists packages from a repository"
 let list_command =
   let command = "list" in
@@ -458,11 +463,15 @@ let list_command =
     `P "This command is similar to 'opam list', but allows listing packages \
         directly from a repository instead of what is available in a given \
         opam installation.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.package_selection_section;
+    `S OpamArg.package_listing_section;
   ]
   in
   let cmd
-      global_options package_selection state_selection package_listing env
-      packages =
+      global_options package_selection disjunction state_selection
+      package_listing env packages =
     OpamArg.apply_global_options global_options;
     let format =
       let force_all_versions =
@@ -480,9 +489,15 @@ let list_command =
       package_listing ~force_all_versions
     in
     let pattern_selector = OpamListCommand.pattern_selector packages in
+    let join =
+      if disjunction then OpamFormula.ors else OpamFormula.ands
+    in
     let filter =
-      OpamFormula.ands
-        [package_selection; Atom state_selection; pattern_selector]
+      OpamFormula.ands [
+        Atom state_selection;
+        join (pattern_selector ::
+              List.map (fun x -> Atom x) package_selection);
+      ]
     in
     let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
     if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
@@ -494,7 +509,7 @@ let list_command =
     OpamListCommand.display st format results
   in
   Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $
-        state_selection_arg $ OpamArg.package_listing $ env_arg $
+        or_arg $ state_selection_arg $ OpamArg.package_listing $ env_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
 
@@ -506,7 +521,10 @@ let filter_command =
     `S "DESCRIPTION";
     `P "This command removes all package definitions that don't match the \
         search criteria (specified similarly to 'opam admin list') from a \
-        repository."
+        repository.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S OpamArg.package_selection_section;
   ]
   in
   let remove_arg =
@@ -519,29 +537,44 @@ let filter_command =
       "List the removal commands, without actually performing them"
   in
   let cmd
-      global_options package_selection state_selection env remove dryrun
-      packages =
+      global_options package_selection disjunction state_selection env
+      remove dryrun packages =
     OpamArg.apply_global_options global_options;
     let repo_root = OpamFilename.cwd () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
+    let join =
+      if disjunction then OpamFormula.ors else OpamFormula.ands
+    in
     let filter =
-      OpamFormula.ands
-        [package_selection; Atom state_selection; pattern_selector]
+      OpamFormula.ands [
+        Atom state_selection;
+        join
+          (pattern_selector ::
+           List.map (fun x -> Atom x) package_selection)
+      ]
     in
     let st = get_virtual_switch_state repo_root env in
     let packages = OpamListCommand.filter ~base:st.packages st filter in
+    if OpamPackage.Set.is_empty packages then
+      if remove then
+        (OpamConsole.warning "No packages match the selection criteria";
+         OpamStd.Sys.exit 0)
+      else
+        OpamConsole.error_and_exit "No packages match the selection criteria";
+    let num_total = OpamPackage.Set.cardinal st.packages in
+    let num_selected = OpamPackage.Set.cardinal packages in
     if remove then
       OpamConsole.formatted_msg
-        "The following packages will be REMOVED from the repository (%d \
+        "The following %d packages will be REMOVED from the repository (%d \
          packages will be kept):\n%s\n"
-        OpamPackage.Set.(cardinal Op.(st.packages -- packages))
+        num_selected (num_total - num_selected)
         (OpamStd.List.concat_map " " OpamPackage.to_string
            (OpamPackage.Set.elements packages))
     else
       OpamConsole.formatted_msg
-        "The following packages will be kept in the repository (%d packages \
+        "The following %d packages will be kept in the repository (%d packages \
          will be REMOVED):\n%s\n"
-        OpamPackage.Set.(cardinal Op.(st.packages -- packages))
+        num_selected (num_total - num_selected)
         (OpamStd.List.concat_map " " OpamPackage.to_string
            (OpamPackage.Set.elements packages));
     let packages =
@@ -558,10 +591,11 @@ let filter_command =
           if dryrun then
             OpamConsole.msg "rm -rf %s\n" (OpamFilename.Dir.to_string d)
           else
-            OpamFilename.rmdir_cleanup d)
+            (OpamFilename.cleandir d;
+             OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
-  Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $
+  Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $ or_arg $
         state_selection_arg $ env_arg $ remove_arg $ dryrun_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
