@@ -1,0 +1,34 @@
+From 46cc20dd55cf2faa6143f2e95a83e4aa31e7a394 Mon Sep 17 00:00:00 2001
+From: Louis Gesbert <louis.gesbert@ocamlpro.com>
+Date: Fri, 23 May 2014 11:39:10 +0200
+Subject: [PATCH] Restore the sigchild handler after use
+
+---
+ common/cudfSolver.ml | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
+index bddf6a0..a33aa7e 100644
+--- a/common/cudfSolver.ml
++++ b/common/cudfSolver.ml
+@@ -100,7 +100,7 @@ let execsolver exec_pat criteria cudf =
+   (* Tell OCaml we want to capture SIGCHLD                       *)
+   (* In case the external solver fails before reading its input, *)
+   (* this will raise a Unix.EINTR error which is captured below  *)
+-  Sys.set_signal Sys.sigchld (Sys.Signal_handle (fun _ -> ()));
++  let eintr_handl = Sys.signal Sys.sigchld (Sys.Signal_handle (fun _ -> ())) in
+ 
+   let env = Unix.environment () in
+   let (cin,cout,cerr) = Unix.open_process_full cmd env in
+@@ -115,6 +115,8 @@ let execsolver exec_pat criteria cudf =
+     with Unix.Unix_error (Unix.EINTR,_,_) ->  info "Interrupted by EINTR while executing command '%s'" cmd
+   end;
+   Util.Timer.stop timer3 ();
++  (* restore previous behaviour on sigchild *)
++  Sys.set_signal Sys.sigchld eintr_handl;
+ 
+   Util.Timer.start timer4;
+   let lines_cin = input_all_lines [] cin in
+-- 
+1.9.1
+
