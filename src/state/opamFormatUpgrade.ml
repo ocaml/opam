@@ -235,6 +235,11 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     OpamFile.OPAM.install opam @
     add_filter doc_filter install_doc
   in
+  let dev_repo =
+    OpamStd.Option.map
+      (OpamUrl.parse ~handle_suffix:true @* OpamUrl.to_string)
+      (OpamFile.OPAM.dev_repo opam)
+  in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
   OpamFile.OPAM.with_depends depends |>
@@ -242,6 +247,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   OpamFile.OPAM.with_available available |>
   OpamFile.OPAM.with_build build |>
   OpamFile.OPAM.with_install install |>
+  OpamFile.OPAM.with_dev_repo_opt dev_repo |>
   OpamFile.OPAM.with_deprecated_build_test [] |>
   OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>

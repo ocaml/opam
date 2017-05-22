@@ -556,6 +556,8 @@ module OPAM: sig
 
   val with_dev_repo: url -> t -> t
 
+  val with_dev_repo_opt: url option -> t -> t
+
   val with_extra_sources: (basename * URL.t) list -> t -> t
 
   val with_extensions: value OpamStd.String.Map.t -> t -> t
