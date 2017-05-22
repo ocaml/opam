@@ -43,7 +43,7 @@ AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\
 
 AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [AC_SUBST(DEVELOPER,false)])
 
-AS_IF([test "x${CI}" != "x"], [
+AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"], [
   CONF_OCAMLFLAGS="-warn-error A"
 ],[
   CONF_OCAMLFLAGS=
