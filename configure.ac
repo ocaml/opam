@@ -36,6 +36,13 @@ AC_MSG_RESULT([$OS_TYPE])
 AS_IF([test "$OCAMLBEST" = "opt"],[OCAMLBESTCC=$OCAMLOPT],[OCAMLBESTCC=$OCAMLC])
 AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc])
 
+AS_IF([test "x${CI}" != "x"], [
+  CONF_OCAMLFLAGS="-warn-error A"
+],[
+  CONF_OCAMLFLAGS=
+])
+AC_SUBST(CONF_OCAMLFLAGS)
+
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
