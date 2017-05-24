@@ -754,7 +754,11 @@ let apply ?ask t action ~requested ?add_roots solution =
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
     OpamPackage.Set.iter
-      (fun p -> OpamFile.OPAM.print_errors (OpamSwitchState.opam new_state p))
+      (fun p ->
+         try OpamFile.OPAM.print_errors (OpamSwitchState.opam new_state p)
+         with Not_found ->
+           OpamConsole.error "No opam file found for %s"
+             (OpamPackage.to_string p))
       (OpamSolver.all_packages solution);
     if show_solution then (
       OpamConsole.msg

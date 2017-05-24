@@ -371,7 +371,7 @@ let lint_command =
 
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
-    "Package patterns with globs. matching againsta $(b,NAME) or \
+    "Package patterns with globs. matching against $(b,NAME) or \
      $(b,NAME.VERSION)"
     Arg.string
 
