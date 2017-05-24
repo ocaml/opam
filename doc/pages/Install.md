@@ -32,7 +32,7 @@ https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh
 ```
 
 Highlight and copy the text in the page that opens, and save this text
-into a new file opam_installer.sh on your system.  Make this file
+into a new file named "opam_installer.sh" on your system.  Make this file
 executable with a command such as
 
 ```
