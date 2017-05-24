@@ -23,6 +23,24 @@ wget https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh -O - | sh 
 This will simply check your architecture, download and install the proper
 pre-compiled binary and run `opam init`.
 
+(If you don't have `wget`, or have trouble installing it, another
+option is to simply copy the contents of `opam_installer.sh` to your system
+and run it.  For example, use your browser to go to the URL
+
+```
+https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh
+```
+
+Highlight and copy the text in the page that opens, and save this text
+into a new file opam_installer.sh on your system.  Make this file
+executable with a command such as
+
+```
+chmod 700 opam_installer.sh
+```
+
+and run the file.)
+
 We provide pre-compiled binaries for:
 - Linux i686, amd64 and arm7
 - OSX (intel 64 bits)
