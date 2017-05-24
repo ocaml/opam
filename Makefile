@@ -64,8 +64,8 @@ opam-%.install: ALWAYS
 
 opam.install:
 	@echo 'bin: [' >$@
-	@echo '  "src/opam"' >>$@
-	@echo '  "src/opam-installer"' >>$@
+	@echo '  "src/opam$(EXE)"' >>$@
+	@echo '  "src/opam-installer$(EXE)"' >>$@
 	@echo ']' >>$@
 	@echo 'man: [' >>$@
 	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))

@@ -488,7 +488,10 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
                   in
                   List.fold_left (function
                       | None -> fun d ->
-                        let f = Filename.concat d "ocamlc" in
+                        let f =
+                          OpamStd.Sys.executable_name
+                            (Filename.concat d "ocamlc")
+                        in
                         if Sys.file_exists f
                         then Some (OpamFilename.of_string f)
                         else None

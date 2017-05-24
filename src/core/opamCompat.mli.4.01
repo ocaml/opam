@@ -24,6 +24,7 @@ end
 module String : sig
   include module type of String
   val lowercase_ascii : string -> string
+  val uppercase_ascii : string -> string
   val capitalize_ascii : string -> string
 end
 
