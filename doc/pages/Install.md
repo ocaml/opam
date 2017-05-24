@@ -33,13 +33,8 @@ https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh
 
 Highlight and copy the text in the page that opens, and save this text
 into a new file named "opam_installer.sh" on your system.  Make this file
-executable with a command such as
-
-```
-chmod 700 opam_installer.sh
-```
-
-and run the file.)
+executable with a command such as `chmod 700 opam_installer.sh` and run 
+the file.)
 
 We provide pre-compiled binaries for:
 - Linux i686, amd64 and arm7
