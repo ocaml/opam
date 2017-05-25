@@ -146,6 +146,15 @@ for Opam usage.
 > [bug report](https://bugs.launchpad.net/ubuntu/+source/opam/+bug/1401346).
 > The Ubuntu "Vivid" (15.04) package is fine.
 
+For "Xenial" (Ubuntu 16.04) and above, opam can be installed simply using
+
+```
+apt-get install opam
+```
+
+This also installs `aspcud` external solver.
+
+
 We provide binary packages for "Precise" and "Trusty"
 
 ```
