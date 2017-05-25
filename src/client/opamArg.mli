@@ -90,6 +90,7 @@ type global_options = {
   safe_mode : bool;
   json : string option;
   no_auto_upgrade : bool;
+  working_dir : bool;
 }
 
 (** Global options *)
