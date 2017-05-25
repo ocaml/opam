@@ -124,8 +124,8 @@ module Make (VCS: VCS) = struct
       @@+ fun result ->
       OpamSystem.remove stdout_file;
       Done (match result with
-          | Up_to_date _ -> prerr_endline "UTD"; Up_to_date None
-          | Result _ -> prerr_endline "RES"; Result None
-          | Not_available _ as na -> prerr_endline "NA"; na)
+          | Up_to_date _ -> Up_to_date None
+          | Result _ -> Result None
+          | Not_available _ as na -> na)
 
 end
