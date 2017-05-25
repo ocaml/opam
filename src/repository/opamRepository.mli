@@ -39,7 +39,7 @@ val pull_tree:
   dirname -> OpamHash.t list -> url list ->
   unit download OpamProcess.job
 
-(** Same as [pull_url], but for fetching a single file. *)
+(** Same as [pull_tree], but for fetching a single file. *)
 val pull_file:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
   filename -> OpamHash.t list -> url list ->
@@ -50,6 +50,10 @@ val pull_file:
 val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
   OpamHash.t list -> url list -> unit download OpamProcess.job
+
+(** The file where the file with the given hash is stored under cache at given
+    dirname. *)
+val cache_file: dirname -> OpamHash.t -> filename
 
 (** Get the optional revision associated to a backend (git hash, etc.). *)
 val revision: dirname -> url -> version option OpamProcess.job

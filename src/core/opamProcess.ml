@@ -667,6 +667,12 @@ module Job = struct
 
   let seq job start = List.fold_left (@@+) (Done start) job
 
+  let seq_map f l =
+    List.fold_left (fun job x ->
+        job @@+ fun acc -> f x @@| fun y -> y :: acc)
+      (Done []) l
+    @@| List.rev
+
   let rec with_text text = function
     | Done _ as j -> j
     | Run (cmd, cont) ->
