@@ -146,6 +146,23 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     in
     OpamFormula.ands (remain @ List.rev conj)
   in
+  let rwr_depflags =
+    let rwr_vars v = match OpamVariable.Full.to_string v with
+      | "test" -> OpamVariable.Full.of_string "with-test"
+      | "doc" -> OpamVariable.Full.of_string "with-doc"
+      | _ -> v
+    in
+    OpamFormula.map (fun (name, cstr) ->
+        let cstr =
+          OpamFormula.map (function
+              | Filter f -> Atom (Filter (OpamFilter.map_variables rwr_vars f))
+              | Constraint _ as c -> Atom c)
+            cstr
+        in
+        Atom (name, cstr))
+  in
+  let depends = rwr_depflags depends in
+  let depopts = rwr_depflags (OpamFile.OPAM.depopts opam) in
   let conflicts =
     let pkg_conflicts =
       NMap.map (OpamFormula.map (function
@@ -235,13 +252,20 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     OpamFile.OPAM.install opam @
     add_filter doc_filter install_doc
   in
+  let dev_repo =
+    OpamStd.Option.map
+      (OpamUrl.parse ~handle_suffix:true @* OpamUrl.to_string)
+      (OpamFile.OPAM.dev_repo opam)
+  in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
   OpamFile.OPAM.with_depends depends |>
+  OpamFile.OPAM.with_depopts depopts |>
   OpamFile.OPAM.with_conflicts conflicts |>
   OpamFile.OPAM.with_available available |>
   OpamFile.OPAM.with_build build |>
   OpamFile.OPAM.with_install install |>
+  OpamFile.OPAM.with_dev_repo_opt dev_repo |>
   OpamFile.OPAM.with_deprecated_build_test [] |>
   OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>

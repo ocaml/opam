@@ -2103,6 +2103,7 @@ module OPAMSyntax = struct
   let with_libraries libraries t = { t with libraries }
   let with_syntax syntax t = { t with syntax }
   let with_dev_repo dev_repo t = { t with dev_repo = Some dev_repo }
+  let with_dev_repo_opt dev_repo t = { t with dev_repo }
 
   let with_maintainer maintainer t = { t with maintainer }
   let with_author author t = { t with author }
