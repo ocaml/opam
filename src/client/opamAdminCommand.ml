@@ -121,9 +121,7 @@ let package_files_to_cache repo_root cache_dir ?link (nv, prefix) =
         | Up_to_date () | Result () ->
           OpamStd.Option.iter (fun link_dir ->
               let target =
-                OpamFilename.create cache_dir
-                  (OpamFilename.Base.of_string
-                     (String.concat "/" (OpamHash.to_path first_checksum)))
+                OpamRepository.cache_file cache_dir first_checksum
               in
               let name =
                 OpamStd.Option.default

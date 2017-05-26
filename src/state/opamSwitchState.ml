@@ -694,6 +694,10 @@ let remove_package_metadata nv st =
   }
 
 let update_pin nv opam st =
+  let version =
+    OpamStd.Option.default nv.version (OpamFile.OPAM.version_opt opam)
+  in
+  let nv = OpamPackage.create nv.name version in
   update_package_metadata nv opam @@
   { st with
     pinned =

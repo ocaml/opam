@@ -169,7 +169,9 @@ val update_package_metadata:
 val remove_package_metadata: package -> 'a switch_state -> 'a switch_state
 
 (** Like [update_package_metadata], but also ensures the package is pinned to
-    the given version. Also marks it for reinstall if changed. *)
+    the given version. The version specified in the opam file, if any, takes
+    precedence over the version of [package]. Also marks it for reinstall if
+    changed. *)
 val update_pin: package -> OpamFile.OPAM.t -> 'a switch_state -> 'a switch_state
 
 (** Updates the selected repositories in the given switch (does not load the

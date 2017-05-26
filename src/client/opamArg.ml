@@ -33,12 +33,14 @@ type global_options = {
   safe_mode : bool;
   json : string option;
   no_auto_upgrade : bool;
+  working_dir : bool;
 }
 
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
-    cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade =
+    cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
+    working_dir =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -46,7 +48,7 @@ let create_global_options
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; }
+    no_auto_upgrade; working_dir; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -117,6 +119,7 @@ let apply_global_options o =
     (* ?root_is_ok:bool *)
     ?no_auto_upgrade:(flag o.no_auto_upgrade)
     (* - client options - *)
+    ?working_dir:(flag o.working_dir)
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
     (* ?pin_kind_auto:bool *)
@@ -134,7 +137,6 @@ type build_options = {
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build : bool;
-  working_dir   : bool;
   make          : string option;
   no_checksums  : bool;
   req_checksums : bool;
@@ -150,10 +152,10 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir inplace_build working_dir make no_checksums
+    keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update external_tags
     fake jobs ignore_constraints_on = {
-  keep_build_dir; reuse_build_dir; inplace_build; working_dir; make;
+  keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
   skip_update; external_tags; fake; jobs; ignore_constraints_on;
 }
@@ -185,7 +187,6 @@ let apply_build_options b =
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
-    ?working_dir:(flag b.working_dir)
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
@@ -862,11 +863,19 @@ let global_options =
        preferable to upgrade the repositories manually using $(i,opam admin \
        upgrade [--mirror URL]) when possible."
   in
+  let working_dir =
+    mk_flag ~section ["working-dir"; "w"]
+      "Whenever updating packages that are bound to a local, \
+       version-controlled directory, update to the current working state of \
+       their source instead of the last commited state, or the ref they are \
+       pointing to. \
+       This only affects packages explicitely listed on the command-line."
+  in
   Term.(pure create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
-        $safe_mode $json_flag $no_auto_upgrade)
+        $safe_mode $json_flag $no_auto_upgrade $ working_dir)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
@@ -891,14 +900,6 @@ let build_options =
        directory, rather than in a clean copy handled by opam. This only \
        affects packages that are explicitely listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
-  in
-  let working_dir =
-    mk_flag ~section ["working-dir"; "w"]
-      "Whenever updating packages that are bound to a local, \
-       version-controlled directory, update to the current working state of \
-       their source instead of the last commited state, or the ref they are \
-       pointing to. \
-       This only affects packages explicitely listed on the command-line."
   in
   let no_checksums =
     mk_flag ~section ["no-checksums"]
@@ -956,7 +957,7 @@ let build_options =
        optional dependencies and conflicts are unaffected."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   Term.(pure create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $working_dir $make
+    $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
 

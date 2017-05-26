@@ -140,7 +140,7 @@ val opt_file: t -> t option
 (** Check whether a file has a given suffix *)
 val check_suffix: t -> string -> bool
 
-(** Add a file extension *)
+(** Adds a dot and the given file extension *)
 val add_extension: t -> string -> t
 
 (** Remove the file extension *)
