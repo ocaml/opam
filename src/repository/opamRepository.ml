@@ -228,9 +228,12 @@ let pull_tree
       (OpamConsole.colorise `green label);
     extract_archive archive
   | Result (archive, url) ->
-    OpamConsole.msg "[%s] downloaded from %s\n"
+    OpamConsole.msg "[%s] %s\n"
       (OpamConsole.colorise `green label)
-      (OpamUrl.to_string url);
+      (match url.OpamUrl.backend with
+       | `http -> "downloaded from cache at "^OpamUrl.to_string url
+       | `rsync -> "found in external cache at "^url.OpamUrl.path
+       | _ -> "found in external cache "^OpamUrl.to_string url);
     extract_archive archive
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
