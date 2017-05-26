@@ -25,7 +25,7 @@ pre-compiled binary and run `opam init`.
 
 (If you don't have `wget`, or have trouble installing it, another
 option is to simply copy the contents of `opam_installer.sh` to your
-system and run it.  Use your browser to go to the URL listed after
+system and run it.  Use your browser to go to the URL listed above after
 `wget`, copy the text in the page that opens, and save that text into a file
 named "opam_installer.sh".  Make this file executable and run it.)
 
