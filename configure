@@ -3114,7 +3114,7 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler os_type" >&5
 $as_echo_n "checking for compiler os_type... " >&6; }
-OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | fgrep os_type | sed -e "s/.*: //"`
+OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | sed -n -e "s/^os_type: //p"`
 if  test "$?" -eq 0 ; then :
 
 else

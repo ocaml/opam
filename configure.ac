@@ -28,7 +28,7 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
 ])
 
 AC_MSG_CHECKING([for compiler os_type])
-OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | fgrep os_type | sed -e "s/.*: //"`
+OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | sed -n -e "s/^os_type: //p"`
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$OS_TYPE])
 
