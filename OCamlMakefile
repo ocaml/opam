@@ -758,30 +758,30 @@ QUIET=@
 
 # generates byte-code (default)
 byte-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes
 bc:	byte-code
 
 byte-code-nolink:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes
 bcnl:	byte-code-nolink
 
 top:			$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(TOPRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(TOPRESULT) \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes
 
 # generates native-code
 
 native-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
 				make_deps=yes
 nc:	native-code
 
 native-code-nolink:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
 				make_deps=yes
@@ -789,7 +789,7 @@ ncnl:	native-code-nolink
 
 # generates byte-code libraries
 byte-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(BCRESULT).cma \
 				REAL_RESULT="$(BCRESULT)" \
 				CREATE_LIB=yes \
@@ -798,7 +798,7 @@ bcl:	byte-code-library
 
 # generates native-code libraries
 native-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(NCRESULT).cmxa \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
@@ -809,7 +809,7 @@ ncl:	native-code-library
 ifdef WIN32
 # generates byte-code dll
 byte-code-dll:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(BCRESULT).dll \
 				REAL_RESULT="$(BCRESULT)" \
 				make_deps=yes
@@ -817,7 +817,7 @@ bcd:	byte-code-dll
 
 # generates native-code dll
 native-code-dll:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(NCRESULT).dll \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
@@ -827,14 +827,14 @@ endif
 
 # generates byte-code with debugging information
 debug-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes \
 				OCAMLFLAGS="-g $(OCAMLFLAGS)" \
 				OCAMLLDFLAGS="-g $(OCAMLLDFLAGS)"
 dc:	debug-code
 
 debug-code-nolink:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes \
 				OCAMLFLAGS="-g $(OCAMLFLAGS)" \
 				OCAMLLDFLAGS="-g $(OCAMLLDFLAGS)"
@@ -842,7 +842,7 @@ dcnl:	debug-code-nolink
 
 # generates byte-code with debugging information (native code)
 debug-native-code:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
 				REAL_RESULT="$(NCRESULT)" make_deps=yes \
 				REAL_OCAMLC="$(OCAMLOPT)" \
 				OCAMLFLAGS="-g $(OCAMLFLAGS)" \
@@ -850,7 +850,7 @@ debug-native-code:	$(PRE_TARGETS)
 dnc:	debug-native-code
 
 debug-native-code-nolink:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) nolink \
 				REAL_RESULT="$(NCRESULT)" make_deps=yes \
 				REAL_OCAMLC="$(OCAMLOPT)" \
 				OCAMLFLAGS="-g $(OCAMLFLAGS)" \
@@ -859,7 +859,7 @@ dncnl:	debug-native-code-nolink
 
 # generates byte-code libraries with debugging information
 debug-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(BCRESULT).cma \
 				REAL_RESULT="$(BCRESULT)" make_deps=yes \
 				CREATE_LIB=yes \
@@ -869,7 +869,7 @@ dcl:	debug-code-library
 
 # generates byte-code libraries with debugging information (native code)
 debug-native-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(NCRESULT).cmxa \
 				REAL_RESULT="$(NCRESULT)" make_deps=yes \
 				REAL_OCAMLC="$(OCAMLOPT)" \
@@ -880,7 +880,7 @@ dncl:	debug-native-code-library
 
 # generates byte-code for profiling
 profiling-byte-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT) \
 				REAL_RESULT="$(BCRESULT)" PROFILING="y" \
 				make_deps=yes
 pbc:	profiling-byte-code
@@ -888,7 +888,7 @@ pbc:	profiling-byte-code
 # generates native-code
 
 profiling-native-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(NCRESULT) \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
 				PROFILING="y" \
@@ -897,7 +897,7 @@ pnc:	profiling-native-code
 
 # generates byte-code libraries
 profiling-byte-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(BCRESULT).cma \
 				REAL_RESULT="$(BCRESULT)" PROFILING="y" \
 				CREATE_LIB=yes \
@@ -906,7 +906,7 @@ pbcl:	profiling-byte-code-library
 
 # generates native-code libraries
 profiling-native-code-library:	$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(RES_CLIB) $(NCRESULT).cmxa \
 				REAL_RESULT="$(NCRESULT)" PROFILING="y" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
@@ -916,14 +916,14 @@ pncl:	profiling-native-code-library
 
 # packs byte-code objects
 pack-byte-code:			$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT).cmo \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) $(BCRESULT).cmo \
 				REAL_RESULT="$(BCRESULT)" \
 				PACK_LIB=yes make_deps=yes
 pabc:	pack-byte-code
 
 # packs native-code objects
 pack-native-code:		$(PRE_TARGETS)
-			$(QUIET)$(MAKE) -r -f $(OCAMLMAKEFILE) \
+			$(QUIET)+$(MAKE) -r -f $(OCAMLMAKEFILE) \
 				$(NCRESULT).cmx $(NCRESULT).$(EXT_OBJ) \
 				REAL_RESULT="$(NCRESULT)" \
 				REAL_OCAMLC="$(OCAMLOPT)" \
@@ -1034,10 +1034,10 @@ $(LIB_PACK_NAME_CMI) $(LIB_PACK_NAME).cmx: $(REAL_IMPL_INTF)
 			$(REAL_OCAMLFIND) $(OCAMLOPT) -pack -o $(LIB_PACK_NAME).cmx  $(OCAMLLDFLAGS) $(REAL_IMPL)
 endif
 
-$(RESULT).cma:		$(LIB_PACK_NAME).cmi $(LIB_PACK_NAME).cmo $(MAKEDLL) $(EXTRADEPS) $(RESULTDEPS)
+$(RESULT).cma:		$(LIB_PACK_NAME).cmo $(MAKEDLL) $(EXTRADEPS) $(RESULTDEPS)
 			$(REAL_OCAMLFIND) $(REAL_OCAMLC) -a $(OBJS_LIBS) $(ALL_LDFLAGS) -o $@ $(LIB_PACK_NAME).cmo
 
-$(RESULT).cmxa $(RESULT).$(EXT_LIB):	$(LIB_PACK_NAME).cmi $(LIB_PACK_NAME).cmx $(EXTRADEPS) $(RESULTDEPS)
+$(RESULT).cmxa $(RESULT).$(EXT_LIB):	$(LIB_PACK_NAME).cmx $(EXTRADEPS) $(RESULTDEPS)
 			$(REAL_OCAMLFIND) $(OCAMLOPT) -a $(OBJS_LIBS) $(filter-out -custom, $(ALL_LDFLAGS)) -o $@ $(LIB_PACK_NAME).cmx
 endif
 
@@ -1072,7 +1072,20 @@ endif
 
 %.cmi: %$(IMPL_SUF);
 
+# procmail's lockfile is one of several possible mechanisms for mutual exclusion
+# when parallel compiling .ml files where no .mli exists. If no mechanism for
+# mutual exclusion is available, then we mark the Makefile as not supporting
+# parallel execution.
+LOCKFILE=$(shell bash -c "command -v lockfile" 2>/dev/null)
+ifeq ($(LOCKFILE),)
+.NOTPARALLEL:
+endif
+
 %$(IMPL_SUF) %.$(EXT_OBJ):	%.ml
+			$(QUIET)if [ ! -e $*.mli -a ! -z "$(LOCKFILE)" ] ; then \
+				$(ECHO) $(LOCKFILE) $(MLDEPDIR)/$*.ml.lock; \
+				$(LOCKFILE) $(MLDEPDIR)/$*.ml.lock; \
+			fi
 			$(QUIET)pp=`sed -n -e '/^#/d' -e 's/(\*pp \([^*]*\) \*)/\1/p;q' $<`; \
 			if [ -z "$$pp" ]; then \
 			  $(ECHO) $(REAL_OCAMLFIND) $(REAL_OCAMLC) $(OCAML_FIND_PACKAGES) \
@@ -1084,6 +1097,10 @@ endif
 				-c -pp \"$$pp $(PPFLAGS)\" $(ALL_OCAMLCFLAGS) $<; \
 			  $(REAL_OCAMLFIND) $(REAL_OCAMLC) $(OCAML_FIND_PACKAGES) \
 				-c -pp "$$pp $(PPFLAGS)" $(ALL_OCAMLCFLAGS) $<; \
+			fi
+			$(QUIET)if [ -e $(MLDEPDIR)/$*.ml.lock ] ; then \
+				$(ECHO) rm -f $(MLDEPDIR)/$*.ml.lock; \
+				rm -f $(MLDEPDIR)/$*.ml.lock; \
 			fi
 
 .PRECIOUS:		%.ml
@@ -1218,7 +1235,7 @@ define make_subproj
 .PHONY:
 subproj_$(1):
 	$$(eval $$(call PROJ_$(1)))
-	$(QUIET)if [ "$(SUBTARGET)" != "all" ]; then \
+	$(QUIET)+if [ "$(SUBTARGET)" != "all" ]; then \
 	  $(MAKE) -f $(OCAMLMAKEFILE) $(SUBTARGET); \
 	fi
 endef
