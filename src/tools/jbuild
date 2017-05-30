@@ -1,0 +1,26 @@
+(jbuild_version 1)
+
+(executable
+  ((name opam_admin_topstart)
+   (modules (opam_admin_top opam_admin_topstart))
+   (ocamlc_flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp) -linkall))
+   (libraries (opam-client opam-file-format compiler-libs.toplevel re.glob))))
+
+(install
+  ((section bin)
+   (package opam-admin)
+   (files ((opam_admin_topstart.bc as opam-admin.top)))))
+
+(executable
+  ((name opam_check)
+   (modules (opam_check))
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (libraries (opam-client))))
+
+(executable
+  ((name opam_installer)
+   (package opam)
+   (public_name opam-installer)
+   (modules (opam_installer))
+   (libraries (opam-state cmdliner))
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))))

@@ -181,6 +181,7 @@ AC_CONFIG_FILES(
   src/state.META
   src/client.META
   src/admin.META
+  src/ocaml-flags-standard.sexp
 )
 AC_OUTPUT
 

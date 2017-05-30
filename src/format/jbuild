@@ -1,0 +1,18 @@
+(jbuild_version 1)
+
+(library
+  ((name opam_format)
+   (public_name opam-format)
+   (synopsis "OCaml Package Manager file format handling library")
+   (libraries (opam-core opam-file-format re.pcre re.posix))
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (wrapped false)))
+
+(ocamllex (opamLineLexer))
+
+(rule
+  (with-stdout-to opamTypes.ml
+    (progn
+      (echo "module rec OpamTypes : sig\n")
+      (cat opamTypes.mli)
+      (echo "\nend = OpamTypes\ninclude OpamTypes\n"))))

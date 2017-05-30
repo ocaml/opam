@@ -1,10 +1,10 @@
+_build/
 _obuild/
 _opam/
 _olint/
 bootstrap/
 tests/tmp/
 .*.swp
-src_ext/_build
 src_ext/lib
 src_ext/cudf/
 src_ext/cppo/
@@ -76,6 +76,7 @@ src/*.META
 aclocal.m4
 autom4te.cache
 .merlin
+src/ocaml-flags-standard.sexp
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html

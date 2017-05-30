@@ -4927,7 +4927,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core/opamCoreConfig.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml src/core/opamCoreConfig.ml src/core.META src/format.META src/repository.META src/solver.META src/state.META src/client.META src/admin.META src/ocaml-flags-standard.sexp"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5645,6 +5645,7 @@ do
     "src/state.META") CONFIG_FILES="$CONFIG_FILES src/state.META" ;;
     "src/client.META") CONFIG_FILES="$CONFIG_FILES src/client.META" ;;
     "src/admin.META") CONFIG_FILES="$CONFIG_FILES src/admin.META" ;;
+    "src/ocaml-flags-standard.sexp") CONFIG_FILES="$CONFIG_FILES src/ocaml-flags-standard.sexp" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

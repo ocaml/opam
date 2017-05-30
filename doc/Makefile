@@ -18,9 +18,9 @@ endif
 SRCEXTDIR = ../src_ext/lib
 
 ifneq ($(wildcard $(SRCEXTDIR)),)
-  OCAMLDOC = ocamldoc $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR))
+  OCAMLDOC = ocamldoc $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR) +compiler-libs)
 else
-  OCAMLDOC = ocamlfind ocamldoc $(patsubst %,-package %,$(PACKS)) $(patsubst %,-I %,$(SRCDIR))
+  OCAMLDOC = ocamlfind ocamldoc $(patsubst %,-package %,$(PACKS) compiler-libs.toplevel) $(patsubst %,-I %,$(SRCDIR))
 endif
 
 .PHONY: man html dev-manual pages

@@ -5,6 +5,26 @@ endif
 all: opam-lib opam opam-installer
 	@
 
+ifeq ($(JBUILDER),)
+JBUILDER_DEP=src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+ifeq ($(shell command -v cygpath 2>/dev/null),)
+JBUILDER:=$(JBUILDER_DEP)
+else
+JBUILDER:=$(shell echo "$(JBUILDER_DEP)" | cygpath -f - -a)
+endif
+else
+JBUILDER_DEP=
+endif
+
+src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.stamp
+	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
+
+src_ext/jbuilder.stamp:
+	make -C src_ext jbuilder.stamp
+
+jbuilder: $(JBUILDER_DEP)
+	@$(JBUILDER) build @install
+
 ALWAYS:
 	@
 
@@ -40,16 +60,16 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
-clean:
+clean: fastclean
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
-	rm -rf _obuild
+	rm -rf _obuild _build
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml src/core/opamCoreConfig.ml aclocal.m4
-	rm -f src/*.META
+	rm -f src/*.META src/*/.merlin src/ocaml-flags-standard.sexp
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
 OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"

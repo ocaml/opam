@@ -129,14 +129,13 @@ clean:
 distclean: clean
 	rm -rf jbuilder $(SRC_EXTS)
 	rm -f *.tar.gz *.tbz *.stamp *.download
-	rm -rf _build
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
 LIB_EXTS = extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
 
 copy: build
 	mkdir -p lib
-	for d in $(LIB_EXTS:%=$$(find _build/install/default/lib/% -type d)); do \
+	for d in $(LIB_EXTS:%=$$(find ../_build/install/default/lib/% -type d)); do \
     cp $$d/* lib/ 2>/dev/null; \
   done
 	rm lib/META lib/opam lib/*.cmxs lib/*.mli
