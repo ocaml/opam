@@ -44,6 +44,7 @@ clean:
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
+	rm -rf _obuild
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
@@ -83,12 +84,6 @@ opam.install:
 	  echo '  "$x" {"man/$(notdir $x)"}' >>$@;)
 	@$(foreach x,$(wildcard doc/pages/*.html),\
 	  echo '  "$x" {"$(notdir $x)"}' >>$@;)
-	@echo ']' >>$@
-
-opam-devel.install:
-	@echo 'libexec: [' >$@
-	@echo '  "_obuild/opam/opam.asm" {"opam"}' >>$@
-	@echo '  "_obuild/opam-installer/opam-installer.asm" {"opam-installer"}' >>$@
 	@echo ']' >>$@
 
 OPAMLIBS = core format solver repository state client
@@ -139,46 +134,15 @@ release-tag:
 	git tag -a latest -m "Latest release"
 	git tag -a $(version) -m "Release $(version)"
 
-fastlink:
-	@$(foreach b,opam opam-installer opam-check,\
-	   ln -sf ../_obuild/$b/$b.asm src/$b;)
-	@$(foreach l,core format solver repository state client,\
-	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
-	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,\
-	       $(foreach f,$(wildcard _obuild/opam-$l/*.$e),\
-		   ln -sf ../../$f src/$l;)))
-	@ln -sf ../_obuild/opam-admin.top/opam-admin.top.byte src/opam-admin.top
-	@$(foreach e,o cmo cmx cmxs cmi cmt cmti,\
-	   $(foreach f,$(wildcard _obuild/opam-admin.top/*.$e),\
-	       ln -sf ../../$f src/tools/;))
+fastclean:: rmartefacts
+
+include Makefile.ocp-build
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-installer opam-check)
 	@$(foreach l,core format solver repository state client tools,\
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
-
-prefast: rmartefacts src/client/opamGitVersion.ml src/state/opamScript.ml src/core/opamCompat.ml src/core/opamCompat.mli
-	@
-
-fast: prefast
-	@rm -f src/x_build_libs.ocp
-	@ocp-build init
-	@ocp-build
-	@$(MAKE) fastlink
-
-opam-core opam-format opam-solver opam-repository opam-state opam-client opam-devel opam-tools: prefast ALWAYS
-	@ocp-build init
-	@echo "build_libs = [ \"$@\" ]" > src/x_build_libs.ocp
-	@ocp-build
-	@rm -f src/x_build_libs.ocp
-
-opam-devel: opam-devel.install
-
-fastclean: rmartefacts
-	@rm -f src/x_build_libs.ocp
-	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null || true
-	@rm -rf src/*/_obuild
 
 cold:
 	./shell/bootstrap-ocaml.sh

@@ -372,5 +372,8 @@ clean-aux:
 
 clean: clean-aux
 
+fastclean:
+	@
+
 %:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=$@
