@@ -2,7 +2,8 @@ AC_INIT(opam,2.0.0~beta3)
 AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_CC
+
+AC_PREFIX_DEFAULT([`ocamlc -config 2>/dev/null | tr -d '\r' | sed -n -e "s;^os_type: Win32;C:/OPAM;p" -e "s;^os_type:.*;/usr/local;p"`])
 
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
@@ -27,14 +28,27 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
 ])
 
 AC_MSG_CHECKING([for compiler os_type])
-OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | fgrep os_type | sed -e "s/.*: //"`
+OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | sed -n -e "s/^os_type: //p"`
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$OS_TYPE])
+
+# Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
+AS_IF([test "$OCAMLBEST" = "opt"],[OCAMLBESTCC=$OCAMLOPT],[OCAMLBESTCC=$OCAMLC])
+AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc])
 
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
 AC_SUBST(ocaml_4_03,"$ax_compare_version")
+
+AC_CHECK_TOOL([CYGPATH],[cygpath],[no])
+
+if test x"$CYGPATH" = x"no" ; then
+  AR=ar
+else
+  printf "include %s/Makefile.config\nall:\n\t@echo \$(ARCMD)" `$OCAMLC -where | cygpath -f -` > conftestMakefile
+  AR=`make --no-print-directory -f conftestMakefile`
+fi
 
 AS_IF([ test "${OS_TYPE}" = "Win32"],[
   WIN32=1
@@ -46,6 +60,27 @@ AS_IF([ test "${OS_TYPE}" = "Win32"],[
 
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
+
+AC_MSG_CHECKING([for invocation options for $OCAMLDEP])
+AS_IF([ test ${WIN32} -eq 1 ],[
+  OCAMLDEPARGS=-slash
+  AC_SUBST(OCAMLDEP,"$OCAMLDEP -slash")
+  AC_MSG_RESULT([$OCAMLDEPARGS])
+],[
+  OCAMLDEPARGS=
+  AC_MSG_RESULT([none required])
+])
+AC_SUBST(OCAMLDEPARGS)
+
+AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
+  AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
+  PATH_PREPEND=$(bash ./shell/check_linker)
+  AS_IF([test "x${PATH_PREPEND}" = "x" ],[PATH_PREPEND_RESULT=no],[PATH_PREPEND_RESULT=yes])
+  AC_SUBST(PATH_PREPEND)
+  AC_MSG_RESULT([$PATH_PREPEND_RESULT])
+])
+
+AS_IF([ test "x$AR" != "x" ],[AC_CHECK_TOOL(AR,$AR)],[AC_SUBST(AR,"no")])
 
 AC_PROG_OCAMLLEX
 AC_PROG_OCAMLYACC

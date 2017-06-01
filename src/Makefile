@@ -48,7 +48,7 @@ else
   # Reset command name for ocamlfind
   OCAMLC = ocamlc
   OCAMLOPT = ocamlopt
-  OCAMLDEP = ocamldep
+  OCAMLDEP = ocamldep $(OCAMLDEPARGS)
   OCAMLLEX = ocamllex
   OCAMLYACC = ocamlyacc
   OCAMLMKLIB = ocamlmklib
