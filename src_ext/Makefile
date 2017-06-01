@@ -141,7 +141,7 @@ clean:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
 
 distclean:
-	rm -rf cudf extlib re graph dose cmdliner uutf jsonm opam_file_format
+	rm -rf cudf extlib re graph dose cmdliner uutf jsonm opam_file_format ._ncdi ._bcdi ._d
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	rm -f *.cm* *.o *.a *.lib *.obj
