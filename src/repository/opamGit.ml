@@ -27,12 +27,14 @@ module VCS : OpamVCS.VCS = struct
     fun ?verbose ?env ?stdout args ->
       OpamSystem.make_command ~dir ?verbose ?env ?stdout "git" args
 
-  let init repo_root _repo_url =
+  let init repo_root repo_url =
     OpamFilename.mkdir repo_root;
     OpamProcess.Job.of_list [
       git repo_root [ "init" ];
       (* Enforce this option, it can break our use of git if set *)
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
+      (* Document the remote for user-friendliness (we don't use it) *)
+      git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
     ] @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
@@ -47,6 +49,7 @@ module VCS : OpamVCS.VCS = struct
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
     let opam_ref = remote_ref repo_url in
     let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
+    git repo_root [ "remote" ; "set-url"; "origin"; origin ] @@> fun _ ->
     git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
     @@> fun r ->
     if OpamProcess.check_success_and_cleanup r then Done ()
