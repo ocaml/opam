@@ -132,6 +132,9 @@ val check_version_formula: version_formula -> OpamPackage.Version.t -> bool
     - "foo" \{= "1" | > "4"\} | ("bar" "bouh") *)
 type t = (OpamPackage.Name.t * version_formula) formula
 
+(** Returns the subset of packages matching the formula *)
+val packages: OpamPackage.Set.t -> t -> OpamPackage.Set.t
+
 (** Convert a formula to CNF *)
 val cnf_of_formula: 'a formula -> 'a formula
 
