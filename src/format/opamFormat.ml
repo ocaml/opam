@@ -96,6 +96,24 @@ module V = struct
       (fun ~pos:_ -> function String (_,s) -> s | _ -> unexpected ())
       (fun str -> String (pos_null,str))
 
+  (** Parses either string or ident, prints to ident if valid, to string
+      otherwise *)
+  let string_or_ident =
+    pp ~name:"string-or-ident"
+      (fun ~pos:_ -> function
+         | String (_,s) | Ident (_,s) -> s
+         | _ -> unexpected ())
+      (fun str ->
+         if Some true =
+            OpamStd.String.fold_left (fun acc c ->
+                if acc = Some false then acc else match c with
+                  | 'a'..'z' | 'A'..'Z' -> Some true
+                  | '0'..'9' | '-' | '_' | '+' -> acc
+                  | _ -> Some false)
+              None str
+         then Ident (pos_null, str)
+         else String (pos_null, str))
+
   let string_tr = string -| pp (fun ~pos:_ -> OpamStd.String.strip) (fun x -> x)
 
   let simple_arg =
@@ -431,7 +449,7 @@ module V = struct
     pp ~name:"filtered-constraints" parse_cs print_cs
 
   let version =
-    string -| of_module "version" (module OpamPackage.Version)
+    string_or_ident -| of_module "version" (module OpamPackage.Version)
 
   let ext_version =
     pp ~name:"version-expr"
@@ -465,7 +483,7 @@ module V = struct
     in
     let rec parse_formula ~pos:_ l =
       let rec aux = function
-        | String (pos,_) | Option (pos,_,_) as at ->
+        | String (pos,_) | Option (pos,_,_) | Ident (pos,_) as at ->
           Atom (parse (package_atom constraints) ~pos at)
         | Group (pos,g) -> Block (parse_formula ~pos g)
         | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
