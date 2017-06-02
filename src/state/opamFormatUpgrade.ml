@@ -203,6 +203,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
        | "ocaml-native" -> mkvar "native"
        | "ocaml-native-tools" -> mkvar "native-tools"
        | "ocaml-native-dynlink" -> mkvar "native-dynlink"
+       | "test" -> OpamVariable.Full.global (OpamVariable.of_string "with-test")
+       | "doc" -> OpamVariable.Full.global (OpamVariable.of_string "with-doc")
        | _ -> v)
     | _ -> v
   in
