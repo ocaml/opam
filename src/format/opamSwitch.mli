@@ -16,9 +16,6 @@ include OpamStd.ABSTRACT
 (** System switch name *)
 val unset: t
 
-(** Display an error message when a switch is not installed. *)
-val not_installed: t -> 'a
-
 (** Determines wether this switch is internal (bound to a prefix within the opam
     root) or living somewhere else, in which case its prefix dir is inferred
     from its name using [get_root] *)
