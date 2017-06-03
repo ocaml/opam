@@ -70,6 +70,7 @@ src/*.META
 ._bcdi
 aclocal.m4
 autom4te.cache
+.merlin
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html
@@ -80,4 +81,3 @@ doc/tutorials/opam.wiki
 doc/dev-manual/*.out
 doc/man
 src/x_build_libs.ocp
-.merlin
