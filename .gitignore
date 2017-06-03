@@ -54,11 +54,7 @@ config.status
 src/client/opamGitVersion.ml
 src/state/opamScript.ml
 src/core/opamVersion.ml
-src/core/opamScript.ml
-src/format/opamLexer.ml
 src/format/opamLineLexer.ml
-src/format/opamParser.ml
-src/format/opamParser.mli
 src/core/opamCompat.ml
 src/core/opamCompat.mli
 src/opam
@@ -74,7 +70,6 @@ src/*.META
 ._bcdi
 aclocal.m4
 autom4te.cache
-opam.install
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html
