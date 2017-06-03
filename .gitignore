@@ -80,4 +80,5 @@ doc/man-html
 doc/tutorials/opam.wiki
 doc/dev-manual/*.out
 doc/man
+doc/pages/*.html
 src/x_build_libs.ocp
