@@ -3,8 +3,6 @@ if build_libs = [] ||
          strings = build_libs )
 then {
 
-comp += [ "-w" "-48" ]
-
 begin library "opam-client"
 
   files   = [

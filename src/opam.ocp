@@ -1,5 +1,6 @@
-comp += [ "-g" "-w" "+a-4-44" ]
-link += [ "-g" "-w" "+a-4-44" ]
+(* These options should be kept in sync with Makefile *)
+comp += [ "-g" "-w" "+a-4-44-48" "-short-paths" ]
+link += [ "-g" "-w" "+a-4-44-48" ]
 
 if ( ocaml_major_version >= "4" && ocaml_minor_version >= "02" ) then {
   comp += [ "-safe-string" ]
