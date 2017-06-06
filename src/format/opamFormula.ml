@@ -262,6 +262,38 @@ let dnf_of_formula t =
     | And (x,y) -> mk_right (mk x) (mk y) in
   mk t
 
+let verifies f nv =
+  let name_formula =
+    map (fun ((n, _) as a) -> if n = OpamPackage.name nv then Atom a else Empty)
+      (dnf_of_formula f)
+  in
+  name_formula <> Empty &&
+  eval (fun (_name, cstr) ->
+      check_version_formula cstr (OpamPackage.version nv))
+    name_formula
+
+let packages pkgset f =
+  let names =
+    fold_left (fun acc (name, _) ->
+        OpamPackage.Name.Set.add name acc)
+      OpamPackage.Name.Set.empty f
+  in
+  (* dnf allows us to transform the formula into a union of intervals, where
+     ignoring atoms for different package names works. *)
+  let dnf = dnf_of_formula f in
+  OpamPackage.Name.Set.fold (fun name acc ->
+      (* Ignore conjunctions where [name] doesn't appear *)
+      let name_formula =
+        map (fun ((n, _) as a) -> if n = name then Atom a else Empty) dnf
+      in
+      OpamPackage.Set.union acc @@
+      OpamPackage.Set.filter (fun nv ->
+          let v = OpamPackage.version nv in
+          eval (fun (_name, cstr) -> check_version_formula cstr v)
+            name_formula)
+        (OpamPackage.packages_of_name pkgset name))
+    names OpamPackage.Set.empty
+
 (* Convert a t an atom formula *)
 let to_atom_formula (t:t): atom formula =
   let atom (r,v) = Atom (r, v) in
