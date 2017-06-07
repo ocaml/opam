@@ -580,11 +580,70 @@ let get_compiler_packages ?repos rt =
     package_index
   |> OpamPackage.keys
 
+let advise_compiler_dependencies rt opams compilers name atoms =
+  let packages = OpamFormula.packages_of_atoms (OpamPackage.keys opams) atoms in
+  let deps =
+    List.map (fun nv ->
+        let opam = OpamPackage.Map.find nv opams in
+        OpamPackageVar.filter_depends_formula
+          ~default:false
+          ~env:(OpamPackageVar.resolve_switch_raw ~package:nv rt.repos_global
+                  (OpamSwitch.of_string name)
+                  (OpamFile.Switch_config.empty))
+          (OpamFile.OPAM.depends opam))
+      (OpamPackage.Set.elements packages)
+  in
+  let comp_deps =
+    List.fold_left (fun acc f ->
+        OpamPackage.Set.union acc (OpamFormula.packages compilers f))
+      OpamPackage.Set.empty deps
+  in
+  if not (OpamPackage.Set.is_empty comp_deps) then
+    OpamConsole.formatted_msg
+      "Package%s %s do%sn't have the 'compiler' flag set, and may not be \
+       suitable to set as switch base. You probably meant to choose among \
+       the following compiler implementations, which they depend \
+       upon:\n%s"
+      (match atoms with [_] -> "" | _ -> "s")
+      (OpamStd.List.concat_map ", " OpamFormula.short_string_of_atom atoms)
+      (match atoms with [_] -> "es" | _ -> "")
+      (OpamStd.Format.itemize OpamPackage.Name.to_string
+         (OpamPackage.Name.Set.elements
+            (OpamPackage.names_of_packages comp_deps)))
+
 let guess_compiler_package ?repos rt name =
-  let compiler_packages = get_compiler_packages ?repos rt in
+  let repos = match repos with
+    | None -> OpamGlobalState.repos_list rt.repos_global
+    | Some r -> r
+  in
+  let opams =
+    OpamRepositoryState.build_index rt repos |>
+    OpamPackage.Map.filter
+      (fun _ opam ->
+         OpamFilter.eval_to_bool ~default:false
+           (OpamPackageVar.resolve_global rt.repos_global)
+           (OpamFile.OPAM.available opam))
+  in
+  let compiler_packages =
+    OpamPackage.Map.filter
+      (fun _ -> OpamFile.OPAM.has_flag Pkgflag_Compiler)
+      opams
+    |> OpamPackage.keys
+  in
+  let no_compiler_error () =
+    OpamConsole.error_and_exit
+      "No compiler matching '%s' found, use 'opam switch list-available' \
+       to see what is available, or use '--packages' to select packages \
+       explicitely."
+      name
+  in
   match OpamPackage.of_string_opt name with
   | Some nv when OpamPackage.Set.mem nv compiler_packages ->
     [OpamSolution.eq_atom_of_package nv]
+  | Some nv when OpamRepositoryState.find_package_opt rt repos nv <> None ->
+    advise_compiler_dependencies rt opams compiler_packages name
+      [OpamSolution.eq_atom_of_package nv];
+    no_compiler_error ()
   | _ ->
     let pkgname =
       try Some (OpamPackage.Name.of_string name)
@@ -593,6 +652,12 @@ let guess_compiler_package ?repos rt name =
     match pkgname with
     | Some pkgname when OpamPackage.has_name compiler_packages pkgname ->
       [pkgname, None]
+    | Some pkgname when
+        OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = pkgname) opams
+      ->
+      advise_compiler_dependencies rt opams compiler_packages name
+        [pkgname, None];
+      no_compiler_error ()
     | _ ->
       let version = OpamPackage.Version.of_string name in
       let has_version =
@@ -603,11 +668,7 @@ let guess_compiler_package ?repos rt name =
         [OpamSolution.eq_atom_of_package
            (OpamPackage.Set.choose_one has_version)]
       with
-      | Not_found ->
-        OpamConsole.error_and_exit
-          "No compiler matching '%s' found, use 'opam switch list-available' \
-           to see what is available"
-          name
+      | Not_found -> no_compiler_error ()
       | Failure _ ->
         OpamConsole.error_and_exit
           "Compiler selection '%s' is ambiguous. matching packages: %s"
