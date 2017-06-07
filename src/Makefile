@@ -304,7 +304,7 @@ export PROJ_opam-admin-top
 # The artifacts must be built first. Names relative from project root.
 define lib_inst_files
   $(addprefix src/,\
-    $(wildcard /opam-$(1).cma opam-$(1).cmxa opam-$(1).a) \
+    $(wildcard opam-$(1).cma opam-$(1).cmxa opam-$(1).lib opam-$(1).a) \
     $(foreach f,$(basename $(SRC_$(1))),\
       $(wildcard \
         $(addprefix $(1)/$(f),\
