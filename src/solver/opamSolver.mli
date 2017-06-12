@@ -45,7 +45,7 @@ val solution_is_empty: solution -> bool
 val print_solution:
   messages:(package -> string list) ->
   append:(package -> string) ->
-  requested:name_set ->
+  requested:name_set -> reinstall:package_set ->
   solution -> unit
 
 (** Computes an opam->cudf version map from a set of package *)

@@ -620,12 +620,13 @@ let config =
     "Returns the bindings for the environment variables set in the current \
      switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
      $(i,-v), add comments documenting the reason or package of origin for \
-     each binding. This is most usefully used as $(b,eval `opam config env`) \
-     to have further shell commands be evaluated in the proper opam context. \
-     Can also be accessed through $(b,opam env).";
+     each binding. This is most usefully used as $(b,eval \\$(opam config \
+     env\\)) to have further shell commands be evaluated in the proper opam \
+     context. Can also be accessed through $(b,opam env).";
     "revert-env", `revert_env, [],
-    "Reverts environment changes made by opam, e.g. $(b,eval `opam config \
-     revert-env`) undoes what $(b,eval `opam config env`) did.";
+    "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
+     revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
+     possible.";
     "setup", `setup, [],
     "Configure global and user parameters for opam. Use $(b, opam config \
      setup) to display more options. Use $(b,--list) to display the current \
@@ -985,8 +986,8 @@ let env =
     `P "Returns the bindings for the environment variables set in the current \
         switch, e.g. PATH, in a format intended to be evaluated by a shell. \
         With $(i,-v), add comments documenting the reason or package of origin \
-        for each binding. This is most usefully used as $(b,eval `opam env`) \
-        to have further shell commands be evaluated in the proper opam \
+        for each binding. This is most usefully used as $(b,eval \\$(opam \
+        env\\)) to have further shell commands be evaluated in the proper opam \
         context.";
     `P "This is a shortcut, and equivalent to $(b,opam config env).";
   ] in
@@ -1772,8 +1773,8 @@ let switch =
          $(b,--switch) is specified.");
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
-        environment. For that, use $(i,eval `opam env \
-        --switch=SWITCH`).";
+        environment. For that, use $(i,eval \\$(opam env \
+        --switch=SWITCH`\\)).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
     @ [`S "OPTIONS"]
     @ [`S OpamArg.build_option_section]
@@ -2544,8 +2545,8 @@ let clean =
   in
   let download_cache =
     mk_flag ["c"; "download-cache"]
-      "Clear the cache of downloaded files ($$OPAMROOT/download-cache), as \
-       well as the obsolete $$OPAMROOT/archives, if that exists."
+      "Clear the cache of downloaded files (\\$OPAMROOT/download-cache), as \
+       well as the obsolete \\$OPAMROOT/archives, if that exists."
   in
   let repos =
     mk_flag ["unused-repositories"]

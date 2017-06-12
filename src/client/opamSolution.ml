@@ -652,7 +652,9 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
                           (if OpamConsole.utf8 ()
                            then "\xe2\x94\x82 " (* U+2503 *) else "| "))
                (fun x -> x)
-               (PackageAction.to_aligned_strings actions))
+               (List.map (String.concat " ") @@
+                OpamStd.Format.align_table
+                  (PackageAction.to_aligned_strings actions)))
             (OpamConsole.colorise color
                (if OpamConsole.utf8 ()
                 then "\xe2\x94\x94\xe2\x94\x80 " (* U+2514 U+2500 *)
@@ -781,7 +783,9 @@ let apply ?ask t action ~requested ?add_roots solution =
         if OpamPackage.Set.mem nv t.pinned then "*"
         else ""
       in
-      OpamSolver.print_solution ~messages ~append ~requested solution;
+      OpamSolver.print_solution ~messages ~append
+        ~requested ~reinstall:t.reinstall
+        solution;
       let total_actions = sum stats in
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
