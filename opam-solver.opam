@@ -20,7 +20,6 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-core" {= "2.0.0~beta3"}
   "opam-format" {= "2.0.0~beta3"}
   "dose3" {>= "5"}
 ]

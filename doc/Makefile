@@ -54,8 +54,8 @@ html:
 	mkdir -p html/ocamldoc
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -html -d html/ocamldoc || true
-	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -dot -o /dev/stdout | \
-	  tred | \
+	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -dot -o dependencies.dot || true
+	tred dependencies.dot | \
 	  dot -Tsvg > \
 	    html/ocamldoc/dependencies.svg \
 	|| true
@@ -68,5 +68,5 @@ PAGES=$(wildcard pages/*.md)
 pages: $(PAGES:.md=.html)
 
 clean:
-	rm -rf man html/ocamldoc man-html pages/*.html
+	rm -rf dependencies.dot man html/ocamldoc man-html pages/*.html html/index.html
 	$(MAKE) -C dev-manual clean

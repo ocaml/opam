@@ -2,8 +2,6 @@ if build_libs = [] ||
    %mem( string = "opam-state"
          strings = build_libs )
 then {
-comp += [ "-w" "-48" ]
-
 begin library "opam-state"
 
   files   = [
