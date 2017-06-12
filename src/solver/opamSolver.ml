@@ -608,12 +608,17 @@ let print_solution ~messages ~append ~requested ~reinstall t =
       ) t ([],[])
   in
   let actions, details = List.rev actions, List.rev details in
-  let actions_str = Action.to_aligned_strings ~append actions in
-  List.iter2 (fun act (cause,messages) ->
-      if cause <> "" then OpamConsole.msg "  %-60s  [%s]\n" act cause
-      else OpamConsole.msg "  %s\n" act;
-      List.iter (OpamConsole.msg "       %s\n") messages
-    ) actions_str details
+  let actions_tbl = Action.to_aligned_strings ~append actions in
+  let actions_tbl =
+    List.map2 (fun line (cause,messages) ->
+        let append = List.map (fun s -> "\n       "^s) messages in
+        " " :: line @
+        [if cause = "" then "" else Printf.sprintf "[%s]" cause] @
+        append
+      ) actions_tbl details
+  in
+  OpamStd.Format.print_table ~sep:" " stdout
+    (OpamStd.Format.align_table actions_tbl)
 
 let dump_universe universe oc =
   let version_map = cudf_versions_map universe universe.u_packages in

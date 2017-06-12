@@ -652,7 +652,9 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
                           (if OpamConsole.utf8 ()
                            then "\xe2\x94\x82 " (* U+2503 *) else "| "))
                (fun x -> x)
-               (PackageAction.to_aligned_strings actions))
+               (List.map (String.concat " ") @@
+                OpamStd.Format.align_table
+                  (PackageAction.to_aligned_strings actions)))
             (OpamConsole.colorise color
                (if OpamConsole.utf8 ()
                 then "\xe2\x94\x94\xe2\x94\x80 " (* U+2514 U+2500 *)
