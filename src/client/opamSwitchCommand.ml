@@ -68,12 +68,15 @@ let list gt ~print_short =
 
   let table =
     List.map (OpamConsole.colorise `blue)
-      ["# switch"; "compiler"; "description" ] ::
+      ["#"; "switch"; "compiler"; "description" ] ::
     List.map (fun (switch, (packages, descr)) ->
+        let current = Some switch = OpamStateConfig.(!r.current_switch) in
         List.map
-          (if Some switch = OpamStateConfig.(!r.current_switch)
-           then OpamConsole.colorise `bold else fun s -> s)
-          [ OpamSwitch.to_string switch;
+          (if current then OpamConsole.colorise `bold else fun s -> s)
+          [ if current then if OpamConsole.utf8 ()
+              then "\xe2\x86\x92" (* U+2192 *) else "->"
+            else "";
+            OpamSwitch.to_string switch;
             OpamStd.List.concat_map ","
               (OpamConsole.colorise `yellow @* OpamPackage.to_string)
               (OpamPackage.Set.elements packages);
