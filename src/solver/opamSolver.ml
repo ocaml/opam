@@ -575,7 +575,7 @@ let string_of_stats stats =
 let solution_is_empty t =
   OpamCudf.ActionGraph.is_empty t
 
-let print_solution ~messages ~append ~requested t =
+let print_solution ~messages ~append ~requested ~reinstall t =
   let dump_cudf sfx t = match OpamSolverConfig.(!r.cudf_file) with
     | None -> ()
     | Some f ->
@@ -587,7 +587,9 @@ let print_solution ~messages ~append ~requested t =
   dump_cudf "-full" t;
   let t = OpamCudf.ActionGraph.reduce t in
   dump_cudf "" t;
-  let causes = OpamCudf.compute_root_causes t requested in
+  let causes =
+    OpamCudf.compute_root_causes t requested reinstall
+  in
   let actions, details =
     OpamCudf.ActionGraph.Topological.fold (fun a (actions,details) ->
         let cause =

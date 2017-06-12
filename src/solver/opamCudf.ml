@@ -736,12 +736,16 @@ let find_cycles g =
    out the closest neighbour that gets there. This way, if a -> b -> c and the
    user requests a to be installed, we can print:
    - install a - install b [required by a] - intall c [required by b] *)
-let compute_root_causes g requested =
+let compute_root_causes g requested reinstall =
   let module StringSet = OpamStd.String.Set in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
         StringSet.add (Common.CudfAdd.encode (OpamPackage.Name.to_string n)) s)
       requested StringSet.empty in
+  let reinstall_pkgnames =
+    OpamPackage.Set.fold (fun nv s ->
+        StringSet.add (Common.CudfAdd.encode (OpamPackage.name_to_string nv)) s)
+      reinstall StringSet.empty in
   let actions =
     ActionGraph.fold_vertex (fun a acc -> Map.add (action_contents a) a acc)
       g Map.empty in
@@ -838,31 +842,34 @@ let compute_root_causes g requested =
       g Map.empty in
   let causes = Map.empty in
   let causes =
-      let roots =
-        if Map.is_empty requested_actions then (* Assume a global upgrade *)
-          make_roots causes Requested (function
-              | `Change (`Up,_,_) -> true
-              | _ -> false)
-        else (Map.map (fun _ -> Requested, 0) requested_actions) in
-      get_causes causes roots in
-    let causes =
-      (* Compute causes for remaining upgrades
-         (maybe these could be removed from the actions altogether since they are
-         unrelated to the request ?) *)
-      let roots = make_roots causes Unknown (function
-          | `Change _ as act
-            when List.for_all
-                (function `Change _ -> false | _ -> true)
-                (ActionGraph.pred g act) -> true
-          | _ -> false) in
-      get_causes causes roots in
-    let causes =
-      (* Compute causes for packages marked to reinstall *)
-      let roots =
-        make_roots causes Upstream_changes
-          (function `Reinstall p -> need_reinstall p
-                  | _ -> false) in
-      get_causes causes roots in
+    let roots =
+      if Map.is_empty requested_actions then (* Assume a global upgrade *)
+        make_roots causes Requested (function
+            | `Change (`Up,_,_) -> true
+            | _ -> false)
+      else (Map.map (fun _ -> Requested, 0) requested_actions) in
+    get_causes causes roots in
+  let causes =
+    (* Compute causes for remaining upgrades
+       (maybe these could be removed from the actions altogether since they are
+       unrelated to the request ?) *)
+    let roots = make_roots causes Unknown (function
+        | `Change _ as act ->
+          List.for_all
+            (function `Change _ -> false | _ -> true)
+            (ActionGraph.pred g act)
+        | _ -> false) in
+    get_causes causes roots in
+  let causes =
+    (* Compute causes for marked reinstalls *)
+    let roots =
+      make_roots causes Upstream_changes (function
+          | `Reinstall p ->
+            (* need_reinstall p is not available here *)
+            StringSet.mem p.Cudf.package reinstall_pkgnames
+          | _ -> false)
+    in
+    get_causes causes roots in
   Map.map fst causes
 
 (* Compute a full solution from a set of root actions. This means adding all

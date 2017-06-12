@@ -781,7 +781,9 @@ let apply ?ask t action ~requested ?add_roots solution =
         if OpamPackage.Set.mem nv t.pinned then "*"
         else ""
       in
-      OpamSolver.print_solution ~messages ~append ~requested solution;
+      OpamSolver.print_solution ~messages ~append
+        ~requested ~reinstall:t.reinstall
+        solution;
       let total_actions = sum stats in
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
