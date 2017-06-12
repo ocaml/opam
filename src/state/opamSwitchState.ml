@@ -639,30 +639,33 @@ let unavailable_reason st ?(default="") (name, vformula) =
         OpamPackage.create name v
       | _ -> OpamPackage.max_version candidates name
   in
-  let avail = OpamFile.OPAM.available (opam st nv) in
-  if not (OpamPackage.Set.mem nv candidates) then
-    Printf.sprintf
-      "not available because the package is pinned to version %s"
-      (OpamPackage.version_to_string nv)
-  else if not (OpamFilter.eval_to_bool ~default:false
-                 (OpamPackageVar.resolve_switch ~package:nv st)
-                 avail)
-  then
-    Printf.sprintf "unmet availability conditions%s%s"
-      (if OpamPackage.Set.cardinal candidates = 1 then ": "
-       else ", e.g. ")
-      (OpamFilter.to_string avail)
-  else if OpamPackage.has_name
-            (Lazy.force st.available_packages --
-             remove_conflicts st st.compiler_packages
-               (Lazy.force st.available_packages))
-            name
-  then
-    "conflict with the base packages of this switch"
-  else if OpamPackage.has_name st.compiler_packages name then
-    "base of this switch, can't be changed"
-  else
-    default
+  match opam_opt st nv with
+  | None -> "no package definition found"
+  | Some opam ->
+    let avail = OpamFile.OPAM.available opam in
+    if not (OpamPackage.Set.mem nv candidates) then
+      Printf.sprintf
+        "not available because the package is pinned to version %s"
+        (OpamPackage.version_to_string nv)
+    else if not (OpamFilter.eval_to_bool ~default:false
+                   (OpamPackageVar.resolve_switch ~package:nv st)
+                   avail)
+    then
+      Printf.sprintf "unmet availability conditions%s%s"
+        (if OpamPackage.Set.cardinal candidates = 1 then ": "
+         else ", e.g. ")
+        (OpamFilter.to_string avail)
+    else if OpamPackage.has_name
+        (Lazy.force st.available_packages --
+         remove_conflicts st st.compiler_packages
+           (Lazy.force st.available_packages))
+        name
+    then
+      "conflict with the base packages of this switch"
+    else if OpamPackage.has_name st.compiler_packages name then
+      "base of this switch, can't be changed"
+    else
+      default
 
 let update_package_metadata nv opam st =
   { st with
