@@ -338,7 +338,7 @@ let eval_string gt switch =
   | `fish ->
     Printf.sprintf "eval (opam env%s%s)" root switch
   | _ ->
-    Printf.sprintf "eval `opam env%s%s`" root switch
+    Printf.sprintf "eval $(opam env%s%s)" root switch
 
 
 
@@ -645,7 +645,7 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `bold @@ string_of_shell shell)
     (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
     (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
-    (OpamConsole.colorise `bold @@ "eval `opam env`");
+    (OpamConsole.colorise `bold @@ "eval $(opam env)");
   match
     OpamConsole.read
       "Do you want opam to modify %s ? [N/y/f]\n\
