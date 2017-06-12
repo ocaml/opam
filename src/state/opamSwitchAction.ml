@@ -16,7 +16,7 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "SWACT" fmt
 let slog = OpamConsole.slog
 
-let gen_switch_config root ?(synopsis="") ?repos switch =
+let gen_switch_config root ?(synopsis="") ?repos _switch =
   let vars =
     List.map (fun (s,p) -> OpamVariable.of_string s, S p) [
       ("user" ,
@@ -29,15 +29,11 @@ let gen_switch_config root ?(synopsis="") ?repos switch =
       ("os"   , OpamStd.Sys.os_string ());
     ]
   in
-  let paths = [
-    (Prefix, OpamFilename.Dir.to_string (OpamPath.Switch.root root switch));
-  ]
-  in
   { OpamFile.Switch_config.
     opam_version = OpamVersion.current_nopatch;
     synopsis;
     variables = vars;
-    paths;
+    paths = [];
     opam_root = Some root;
     repos;
     wrappers = OpamFile.Wrappers.empty; }

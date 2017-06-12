@@ -1810,9 +1810,15 @@ let switch =
        existing switch."
       Arg.(some string) None
   in
+  let full =
+    mk_flag ["full"]
+      "When exporting, include the metadata of all installed packages, \
+       allowing to re-import even if they don't exist in the repositories (the \
+       default is to include only the metadata of pinned packages)"
+  in
   let switch
       global_options build_options command print_short
-      no_switch packages empty descr repos params =
+      no_switch packages empty descr full repos params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1905,6 +1911,7 @@ let switch =
       `Ok ()
     | Some `export, [filename] ->
       OpamSwitchCommand.export
+        ~full
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
@@ -1998,7 +2005,7 @@ let switch =
              $global_options $build_options $command
              $print_short_flag
              $no_switch
-             $packages $empty $descr $repos $params)),
+             $packages $empty $descr $full $repos $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)

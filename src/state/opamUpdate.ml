@@ -361,10 +361,18 @@ let dev_packages st ?(working_dir=OpamPackage.Set.empty) packages =
       ~nil:(true, (fun st -> st), OpamPackage.Set.empty)
       (OpamPackage.Set.elements packages)
   in
+  let selections0 = OpamSwitchState.selections st in
   let st = st_update st in
   let st =
     OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updated_set
   in
+  (* The following is needed for pinned packages that may have changed
+     version *)
+  let selections1 = OpamSwitchState.selections st in
+  if selections0 <> selections1 then
+    OpamFile.SwitchSelections.write
+      (OpamPath.Switch.selections st.switch_global.root st.switch)
+      selections1;
   success, st, updated_set
 
 let pinned_packages st ?(working_dir=OpamPackage.Name.Set.empty) names =
