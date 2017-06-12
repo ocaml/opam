@@ -18,8 +18,8 @@ all:
 
 # --
 
-OCAMLFLAGS = -g -w +a-4-44-48 -bin-annot -short-paths
-OCAMLLDFLAGS = -g -w +a-4-44-48 -bin-annot
+OCAMLFLAGS = -g -w +a-4-44-48 -bin-annot -short-paths $(CONF_OCAMLFLAGS)
+OCAMLLDFLAGS = -g -w +a-4-44-48 -bin-annot $(CONF_OCAMLFLAGS)
 ifeq ($(OCAML_4_02),true)
   OCAMLFLAGS += -safe-string
   OCAMLLDFLAGS += -safe-string

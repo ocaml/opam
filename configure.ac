@@ -20,6 +20,11 @@ AC_ARG_ENABLE([checks],
                  [Assume OCaml dependencies are OK without checking])
 )
 
+AC_ARG_ENABLE([developer_mode],
+  AC_HELP_STRING([--enable-developer-mode],
+                 [Enable developer features])
+)
+
 # Check that OCaml version is greater or equal to 4.01.0
 AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(
@@ -35,6 +40,15 @@ AC_MSG_RESULT([$OS_TYPE])
 # Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
 AS_IF([test "$OCAMLBEST" = "opt"],[OCAMLBESTCC=$OCAMLOPT],[OCAMLBESTCC=$OCAMLC])
 AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\1/p") gcc cl cc])
+
+AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [AC_SUBST(DEVELOPER,false)])
+
+AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"], [
+  CONF_OCAMLFLAGS="-warn-error A"
+],[
+  CONF_OCAMLFLAGS=
+])
+AC_SUBST(CONF_OCAMLFLAGS)
 
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
 AC_SUBST(ocaml_4_02,"$ax_compare_version")
@@ -161,6 +175,7 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
+  src/core/opamCoreConfig.ml
   src/core.META
   src/format.META
   src/repository.META

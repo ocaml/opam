@@ -17,6 +17,7 @@ src_ext/opam_file_format/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
+src_ext/archives/*
 src_ext/*.download
 *.tar.bz2
 *.annot
@@ -53,6 +54,7 @@ config.log
 config.status
 src/client/opamGitVersion.ml
 src/state/opamScript.ml
+src/core/opamCoreConfig.ml
 src/core/opamVersion.ml
 src/format/opamLineLexer.ml
 src/core/opamCompat.ml

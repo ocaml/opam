@@ -1,4 +1,6 @@
+ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
+endif
 
 SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm opam_file_format
 
@@ -32,6 +34,14 @@ MD5_jsonm = 631a5dabdada83236c83056f60e42685
 URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
 
+ifndef FETCH
+ifneq ($(shell command -v curl > /dev/null),)
+FETCH=curl -OL
+else
+FETCH=wget
+endif
+endif
+
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
 lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),,))
 
@@ -63,8 +73,17 @@ all: bcl ncl
 clone: $(SRC_EXTS:=.stamp) graph-workaround.stamp extlib-cppo.stamp dose-cppo.stamp
 	@
 
+.PHONY: archives
 archives: $(SRC_EXTS:=.download)
 	@
+
+cache-archives: $(SRC_EXTS:=.cache)
+	@
+
+%.cache:
+	@mkdir -p archives
+	@[ -e archives/$(notdir $(URL_$*)) ] || \
+		($(FETCH) $(URL_$*) && mv $(notdir $(URL_$*)) archives/)
 
 define cache_url
 https://opam.ocaml.org/2.0~dev/cache/md5/$(shell echo $(MD5_$(1)) | cut -c -2)/$(MD5_$(1))
@@ -78,6 +97,7 @@ endef
 
 %.download:
 	[ -e  $(notdir $(URL_$*)) ] || \
+    cp archives/$(notdir $(URL_$*)) . 2>/dev/null || \
 	$(FETCH) $(URL_$*) && $(call MD5CHECK,$(notdir $(URL_$*)),$(MD5_$*)) || \
 	$(call get_from_cache,$*)
 	@touch $@
@@ -146,8 +166,10 @@ distclean:
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	rm -f *.cm* *.o *.a *.lib *.obj
 	rm -rf lib
+	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo uutf jsonm opam_file_format
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo \
+           uutf jsonm opam_file_format
 
 proj_uutf: proj_cmdliner
 
@@ -165,58 +187,36 @@ proj_dose_opam: proj_extlib proj_dose_pef proj_re proj_cudf
 
 proj_dose_algo: proj_extlib proj_dose_common proj_graph proj_cudf
 
-inst_objs = cp $(1)/*.cm*i lib
-
-copy: build
-	mkdir -p lib
-	cp *.cma lib || true
-	cp *.cmxa lib || true
-	cp *.a lib || true
-	cp *.lib lib || true
-	$(call inst_objs,extlib/src)
-	$(call inst_objs,re/lib)
-	$(call inst_objs,cmdliner/src)
-	$(call inst_objs,graph/src)
-	$(call inst_objs,cudf)
-	$(call inst_objs,dose/algo)
-	$(call inst_objs,uutf/src)
-	$(call inst_objs,jsonm/src)
-	$(call inst_objs,opam_file_format/src)
-	$(call inst_objs,.)
-
 # --
 
 addmli = $(foreach ml,$(2),$(wildcard $(addsuffix .mli,$(basename $(1)/$(ml)))) $(1)/$(ml))
 
+define MAKE_LIB
+define PROJ_$1
+  SRC_DIR = $(lastword $2)
+  SOURCES = $(foreach DIR,$(filter-out $(lastword $2),$2),$(call addmli,$(DIR),$(SRC_$1_$(notdir $(DIR))))) \
+            $(call addmli,$(lastword $2),$(SRC_$1))
+  RESULT = $(if $4,$4,$1)
+  LIB_PACK_NAME = $(filter-out @,$(PACK_NAME))
+  INCDIRS = $(foreach DEP,$3,$(eval $(PROJ_$(DEP)))$(SRC_DIR))
+endef
+export PROJ_$1
+endef
+PROCESS_LIB=$(eval $(call MAKE_LIB,$1,$(if $2,$(foreach DIR,$2,$1/$(DIR)),$1),$3,$4))
+BASIC_LIB=$(foreach PACK_NAME,@,$(call PROCESS_LIB,$1,$2,$3,$4))
+PACK_LIB=$(foreach PACK_NAME,$1,$(call PROCESS_LIB,$1,$2,$3,$4))
+SUB_PACK_LIB=$(foreach PACK_NAME,$2,$(eval $(call MAKE_LIB,$1_$2,$1/$2,$3,$4)))
+
 SRC_extlib = extBytes.ml extBuffer.ml enum.ml extHashtbl.ml extList.ml extString.ml global.ml \
 IO.ml option.ml pMap.ml refList.ml std.ml uChar.ml unzip.ml uTF8.ml optParse.ml	\
 dynArray.ml dllist.ml bitSet.ml base64.ml extArray.ml extLib.ml
-
-define PROJ_extlib
-  SOURCES = $(call addmli,extlib/src,$(SRC_extlib))
-  RESULT = extlib
-  # Don't omit !! it leaks between subprojs...
-  LIB_PACK_NAME =
-endef
-export PROJ_extlib
+$(call BASIC_LIB,extlib,src)
 
 SRC_re = re_cset.ml re_automata.ml re.ml re_glob.ml re_perl.ml re_pcre.ml
-
-define PROJ_re
-  SOURCES = $(call addmli,re/lib,$(SRC_re))
-  RESULT = re
-  LIB_PACK_NAME =
-endef
-export PROJ_re
+$(call BASIC_LIB,re,lib)
 
 SRC_cmdliner = cmdliner.ml
-
-define PROJ_cmdliner
-  SOURCES = $(call addmli,cmdliner/src,$(SRC_cmdliner))
-  RESULT = cmdliner
-  LIB_PACK_NAME =
-endef
-export PROJ_cmdliner
+$(call BASIC_LIB,cmdliner,src)
 
 SRC_graph_lib = bitv.ml heap.ml unionfind.ml
 SRC_graph = sig_pack.ml sig.ml dot_ast.ml builder.ml classic.ml contraction.ml	\
@@ -225,99 +225,40 @@ graphviz.ml leaderlist.ml oper.ml rand.ml strat.ml traverse.ml util.ml		\
 version.ml kruskal.ml flow.ml dot_lexer.mll components.ml coloring.ml blocks.ml	\
 dot.ml imperative.ml merge.ml minsep.ml persistent.ml nonnegative.ml path.ml	\
 topological.ml pack.ml mcs_m.ml cliquetree.ml md.ml
-
-define PROJ_graph
-  SOURCES = $(call addmli,graph/lib,$(SRC_graph_lib)) $(call addmli,graph/src,$(SRC_graph))
-  RESULT = graph
-  LIB_PACK_NAME = graph
-endef
-export PROJ_graph
+$(call PACK_LIB,graph,lib src)
 
 SRC_cudf = cudf_types.ml cudf_type_parser.mly cudf_type_lexer.mll cudf_conf.ml	\
 cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml \
 cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml \
 cudf_c.ml
-
-define PROJ_cudf
-  SOURCES = $(call addmli,cudf,$(SRC_cudf))
-  RESULT = cudf
-  LIB_PACK_NAME =
-  INCDIRS = extlib/src
-endef
-export PROJ_cudf
+$(call BASIC_LIB,cudf,,extlib)
 
 SRC_dose_common = shell_lexer.mll util.ml url.ml input.ml\
 									format822.ml format822_parser.mly format822_lexer.mll \
 									criteria_parser.mly criteria_lexer.mll criteria_types.ml criteria.ml\
 									edosSolver.ml cudfSolver.ml	cudfAdd.ml cudfDiff.ml
-
-define PROJ_dose_common
-  SOURCES = $(call addmli,dose/common,$(SRC_dose_common))
-  RESULT = dose_common
-  LIB_PACK_NAME = common
-  INCDIRS = extlib/src cudf re/lib
-endef
-export PROJ_dose_common
+$(call SUB_PACK_LIB,dose,common,extlib cudf re)
 
 SRC_dose_versioning = debian.ml semverNode.ml semver.ml utils.ml
-
-define PROJ_dose_versioning
-  SOURCES = $(call addmli,dose/versioning,$(SRC_dose_versioning))
-  RESULT = dose_versioning
-  LIB_PACK_NAME = versioning
-  INCDIRS = extlib/src cudf re/lib
-endef
-export PROJ_dose_versioning
+$(call SUB_PACK_LIB,dose,versioning,extlib cudf re)
 
 SRC_dose_pef = packages_types.ml packages_parser.mly packages_lexer.mll printer.ml packages.ml \
-							 pefcudf.ml 
-
-#SOURCES = $(SRC_dose_pef)
-
-define PROJ_dose_pef
-  SOURCES = $(call addmli,dose/pef,$(SRC_dose_pef))
-  RESULT = dose_pef
-  LIB_PACK_NAME = pef
-  INCDIRS = extlib/src cudf re/lib
-endef
-export PROJ_dose_pef
+							 pefcudf.ml
+$(call SUB_PACK_LIB,dose,pef,extlib cudf re)
 
 SRC_dose_opam = opamcudf.ml packages.ml
-
-define PROJ_dose_opam
-  SOURCES = $(call addmli,dose/opam,$(SRC_dose_opam))
-  RESULT = dose_opam
-  LIB_PACK_NAME = opam
-  INCDIRS = extlib/src cudf re/lib
-endef
-export PROJ_dose_opam
+$(call SUB_PACK_LIB,dose,opam,extlib cudf re)
 
 SRC_dose_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
 								statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
 								strongconflicts.ml strongdeps.ml
+$(call SUB_PACK_LIB,dose,algo,extlib graph cudf)
 
-define PROJ_dose_algo
-  SOURCES = $(call addmli,dose/algo,$(SRC_dose_algo))
-  RESULT = dose_algo
-  LIB_PACK_NAME = algo
-  INCDIRS = extlib/src graph/src cudf
-endef
-export PROJ_dose_algo
+SRC_uutf = uutf.ml
+$(call BASIC_LIB,uutf,src)
 
-define PROJ_uutf
-  SOURCES = $(call addmli,uutf/src,uutf.ml)
-  RESULT = uutf
-  LIB_PACK_NAME =
-endef
-export PROJ_uutf
-
-define PROJ_jsonm
-  SOURCES = $(call addmli,jsonm/src,jsonm.ml)
-  RESULT = jsonm
-  LIB_PACK_NAME =
-  INCDIRS = uutf/src
-endef
-export PROJ_jsonm
+SRC_jsonm = jsonm.ml
+$(call BASIC_LIB,jsonm,src,uutf)
 
 SRC_opam_file_format = \
   opamParserTypes.mli \
@@ -325,13 +266,19 @@ SRC_opam_file_format = \
   opamBaseParser.mly \
 	opamParser.mli opamParser.ml \
   opamPrinter.mli  opamPrinter.ml
+$(call BASIC_LIB,opam_file_format,src,,opam-file-format)
 
-define PROJ_opam_file_format
-  SOURCES = $(call addmli,opam_file_format/src,$(SRC_opam_file_format))
-  RESULT = opam-file-format
-  LIB_PACK_NAME =
+# --
+
+define INSTALL_OBJECTS
+	cp $(eval $(call PROJ_$(LIB)))$(if $(LIB_PACK_NAME),$(LIB_PACK_NAME).cm*i $(LIB_PACK_NAME).cmx,$(SRC_DIR)/*.cm*i $(SRC_DIR)/*.cmx) lib 2>/dev/null || true
+
 endef
-export PROJ_opam_file_format
+
+copy: build
+	mkdir -p lib
+	cp *.cma *.cmxa *$(shell ocamlc -config | grep "^ext_lib:" | tr -d '\r' | sed -e "s/.*: //") lib 2>/dev/null || true
+	$(foreach LIB,$(LIB_EXTS),$(INSTALL_OBJECTS))
 
 # --
 

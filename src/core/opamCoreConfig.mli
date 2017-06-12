@@ -72,3 +72,6 @@ val setk : (t -> 'a) -> t -> 'a options_fun
 val r : t ref
 
 val update : ?noop:_ -> (unit -> unit) options_fun
+
+(** [true] if OPAM was compiled in developer mode *)
+val developer : bool

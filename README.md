@@ -36,6 +36,11 @@ it as a second step.
   `./configure` once done
 * Run `make libinstall` at the end
 
+## Developer mode
+
+If you are developing OPAM, you may enable developer features by including the
+`--enable-developer-mode` parameter with `./configure`.
+
 ## Compiling without OCaml
 
 `make cold` is provided as a facility to compile OCaml, then bootstrap opam.

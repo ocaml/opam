@@ -100,3 +100,5 @@ let set t = setk (fun x () -> x) t
 let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
+
+let developer = @DEVELOPER@
