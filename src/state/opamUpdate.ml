@@ -98,6 +98,15 @@ let repository gt repo =
       "repository format version is %s, and this is only opam %s"
       (OpamVersion.to_string repo_vers)
       (OpamVersion.to_string OpamVersion.current);
+  List.iter (fun (msg, filter) ->
+      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve_global gt) filter
+      then
+        OpamConsole.formatted_msg ~indent:4 "%s (at %s): %s\n"
+          (OpamConsole.colorise' [`bold;`green]
+             (OpamRepositoryName.to_string repo.repo_name))
+          (OpamConsole.colorise `bold (OpamUrl.to_string repo.repo_url))
+          msg)
+    (OpamFile.Repo.announce repo_file);
   let opams = OpamRepositoryState.load_repo_opams repo in
   Done (
     (* Return an update function to make parallel execution possible *)
