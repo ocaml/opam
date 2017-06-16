@@ -213,14 +213,16 @@ let list_all rt ~short =
 
 let update_with_auto_upgrade rt repo_names =
   let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in
-  let success, rt = OpamUpdate.repositories rt repos in
+  let failed, rt = OpamUpdate.repositories rt repos in
+  let failed = List.map (fun r -> r.repo_name) failed in
   if OpamFormatConfig.(!r.skip_version_checks) ||
      OpamClientConfig.(!r.no_auto_upgrade)
   then
-    success, rt
+    failed, rt
   else
   let rt, done_upgrade =
     List.fold_left (fun (rt, done_upgrade) r ->
+        if List.mem r.repo_name failed then rt, done_upgrade else
         let def =
           OpamRepositoryName.Map.find r.repo_name rt.repos_definitions
         in
@@ -260,4 +262,4 @@ let update_with_auto_upgrade rt repo_names =
       (rt, false) repos
   in
   if done_upgrade then OpamRepositoryState.Cache.save rt;
-  success, rt
+  failed, rt

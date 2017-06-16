@@ -701,16 +701,25 @@ module I = struct
 
   let show_errors ?name
       ?(strict=OpamFormatConfig.(!r.strict))
+      ?(condition=fun _ -> true)
       () =
     let parse ~pos:(file,_,_) (t, errs) =
       if errs = [] then t
       else if strict then raise (Bad_format_list (List.rev_map snd errs))
       else
-        (OpamConsole.warning "Errors in %s, some fields have been ignored:\n%s"
-           file
-           (OpamStd.Format.itemize
-              (fun e -> OpamPp.string_of_bad_format (Bad_format e))
-              (List.rev_map snd errs));
+        (if condition t then
+           OpamConsole.warning
+             "Errors in %s, some fields have been ignored:\n%s"
+             file
+             (OpamStd.Format.itemize
+                (fun e -> OpamPp.string_of_bad_format (Bad_format e))
+                (List.rev_map snd errs))
+         else
+           OpamConsole.log "FORMAT" "File errors in %s, ignored fields: %s"
+             file
+             (OpamStd.List.concat_map "; "
+                (fun e -> OpamPp.string_of_bad_format (Bad_format e))
+                (List.rev_map snd errs));
          t)
     in
     let print t = t, [] in

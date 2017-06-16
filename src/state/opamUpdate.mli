@@ -24,9 +24,10 @@ val repository:
 
 (** Update the given repositories from their upstream, and returns the updated
     state. This also saves the updated cached state, and the updated repository
-    config (it may be changed by e.g. redirects). The boolean returned is true
-    if no error was encountered during the update of any of the repositories. *)
-val repositories: rw repos_state -> repository list -> bool * rw repos_state
+    config (it may be changed by e.g. redirects). The returned list is the list
+    of repositories for which the update failed. *)
+val repositories:
+  rw repos_state -> repository list -> repository list * rw repos_state
 
 (** [update_dev_packages t] checks for upstream changes for packages
     first in the switch cache and then in the global cache. Return the

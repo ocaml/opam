@@ -54,4 +54,5 @@ val set_url:
     their version and runs the upgrade script locally if they are for an earlier
     opam. Returns [true] if no update or upgrade errors were encountered. *)
 val update_with_auto_upgrade:
-  rw repos_state -> repository_name list -> bool * rw repos_state
+  rw repos_state -> repository_name list ->
+  repository_name list * rw repos_state

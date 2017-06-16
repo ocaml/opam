@@ -1749,7 +1749,11 @@ module RepoSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name
+      ~condition:(function
+          | {opam_version = Some v; _} -> OpamVersion.(compare current v) >= 0
+          | _ -> true)
+      ()
 
 end
 module Repo = struct
