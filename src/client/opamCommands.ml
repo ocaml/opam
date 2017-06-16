@@ -2411,7 +2411,7 @@ let lint =
       "Only print the warning/error numbers, space-separated, if any"
   in
   let warnings =
-    mk_opt ["warnings";"w"] "WARNS"
+    mk_opt ["warnings";"W"] "WARNS"
       "Select the warnings to show or hide. $(i,WARNS) should be a \
        concatenation of $(b,+N), $(b,-N), $(b,+N..M), $(b,-N..M) to \
        respectively enable or disable warning or error number $(b,N) or \
@@ -2470,6 +2470,7 @@ let lint =
         OpamConsole.error_and_exit
           "--package and a file argument are incompatible"
     in
+    let msg = if normalise then OpamConsole.errmsg else OpamConsole.msg in
     let err =
       List.fold_left (fun err opam_f ->
           try
@@ -2498,16 +2499,18 @@ let lint =
             in
             if short then
               (if warnings <> [] then
-                 OpamConsole.msg "%s\n"
+                 msg "%s\n"
                    (OpamStd.List.concat_map " " (fun (n,_,_) -> string_of_int n)
                       warnings))
             else if warnings = [] then
-              OpamConsole.msg "%s%s\n"
-                (OpamStd.Option.to_string (fun f -> OpamFile.to_string f ^ ": ")
-                   opam_f)
-                (OpamConsole.colorise `green "Passed.")
+              (if not normalise then
+                 msg "%s%s\n"
+                   (OpamStd.Option.to_string
+                      (fun f -> OpamFile.to_string f ^ ": ")
+                      opam_f)
+                   (OpamConsole.colorise `green "Passed."))
             else
-              OpamConsole.msg "%s%s\n%s\n"
+              msg "%s%s\n%s\n"
                 (OpamStd.Option.to_string (fun f -> OpamFile.to_string f ^ ": ")
                    opam_f)
                 (if failed then OpamConsole.colorise `red "Errors."
@@ -2520,7 +2523,7 @@ let lint =
           | Parsing.Parse_error
           | OpamLexer.Error _
           | OpamPp.Bad_format _ ->
-            OpamConsole.msg "File format error\n";
+            msg "File format error\n";
             true)
         false files
     in

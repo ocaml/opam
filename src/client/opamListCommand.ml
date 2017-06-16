@@ -228,8 +228,7 @@ let apply_selector ~base st = function
     |> OpamPackage.Set.of_list
   | Required_by (tog, atoms) ->
     atom_dependencies st tog atoms |>
-    OpamFormula.atoms |>
-    OpamFormula.packages_of_atoms base
+    OpamFormula.packages base
   | Depends_on (tog, atoms) ->
     let packages = packages_of_atoms st atoms in
     OpamPackage.Set.filter (fun nv ->

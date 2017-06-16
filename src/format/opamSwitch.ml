@@ -13,12 +13,6 @@ include OpamStd.AbstractString
 
 let unset = of_string "#unset#"
 
-let not_installed s =
-  OpamConsole.error_and_exit
-    "The selected switch %s is not installed. Please choose a \
-     different one using the 'opam switch' command."
-    (to_string s)
-
 let is_external s =
   OpamStd.String.starts_with ~prefix:"." s ||
   OpamStd.String.contains ~sub:Filename.dir_sep s

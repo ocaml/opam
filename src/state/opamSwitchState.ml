@@ -82,7 +82,18 @@ let load lock_kind gt rt switch =
     (log "The switch %a does not appear to be installed according to %a"
        (slog OpamSwitch.to_string) switch
        (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
-     OpamSwitch.not_installed switch)
+
+     OpamConsole.error_and_exit
+       "The selected switch %s is not installed.%s"
+       (OpamSwitch.to_string switch)
+     @@ match OpamStateConfig.(!r.switch_from) with
+     | `Command_line -> ""
+     | `Default ->
+       "Please choose a different one using 'opam switch <name>', or use the \
+        '--switch <name>' flag."
+     | `Env ->
+       "Please fix the value of the OPAMSWITCH environment variable, or use \
+        the '--switch <name>' flag")
   else
   let lock =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
@@ -401,29 +412,23 @@ let conflicts_with st subset =
     OpamPackage.Set.fold (fun nv (cf,cfc) ->
         try
           let opam = OpamPackage.Map.find nv st.opams in
-          OpamFormula.ors [cf;OpamFile.OPAM.conflicts opam],
+          OpamFormula.ors [cf; OpamFile.OPAM.conflicts opam],
           List.fold_right OpamPackage.Name.Set.add
             (OpamFile.OPAM.conflict_class opam) cfc
         with Not_found -> cf, cfc)
       subset (OpamFormula.Empty, OpamPackage.Name.Set.empty)
   in
-  let forward_conflicts = OpamFormula.to_atom_formula forward_conflicts in
-  let verifies formula nv =
-    formula <> OpamFormula.Empty &&
-    OpamFormula.eval (fun at -> OpamFormula.check at nv) formula
-  in
   OpamPackage.Set.filter
     (fun nv ->
        not (OpamPackage.has_name subset nv.name) &&
-       (verifies forward_conflicts nv ||
+       (OpamFormula.verifies forward_conflicts nv ||
         let opam = OpamPackage.Map.find nv st.opams in
         List.exists (fun cl -> OpamPackage.Name.Set.mem cl conflict_classes)
           (OpamFile.OPAM.conflict_class opam)
         ||
-        let backwards_conflicts =
-          OpamFormula.to_atom_formula (OpamFile.OPAM.conflicts opam)
-        in
-        OpamPackage.Set.exists (verifies backwards_conflicts) subset))
+        let backwards_conflicts = OpamFile.OPAM.conflicts opam in
+        OpamPackage.Set.exists
+          (OpamFormula.verifies backwards_conflicts) subset))
 
 let remove_conflicts st subset pkgs =
   pkgs -- conflicts_with st subset pkgs
