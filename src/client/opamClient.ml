@@ -555,8 +555,8 @@ let update
 
   (* Do the updates *)
   let rt_before = rt in
-  let repo_update_success, rt =
-    if repo_names = [] then true, rt else
+  let repo_update_failure, rt =
+    if repo_names = [] then [], rt else
       OpamRepositoryState.with_write_lock rt @@ fun rt ->
       OpamConsole.header_msg "Updating package repositories";
       OpamRepositoryCommand.update_with_auto_upgrade rt repo_names
@@ -582,7 +582,7 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
-  repo_update_success && dev_update_success,
+  repo_update_failure = [] && dev_update_success,
   repo_changed || dev_changed,
   rt
 
@@ -719,20 +719,18 @@ let init
         let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
-        let success, rt =
+        let failed, rt =
           OpamRepositoryCommand.update_with_auto_upgrade rt
             (List.map fst repos)
         in
-        if not success then failwith "Initial download of repository failed";
+        if failed <> [] then failwith "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
         OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.register_backtrace e;
-        OpamConsole.error "Initialisation failed";
-        OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root;
-        raise e)
+        OpamConsole.error_and_exit "Initialisation failed")
   in
   let _updated = match update_config with
     | `no  -> false

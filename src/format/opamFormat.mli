@@ -207,11 +207,13 @@ sig
   (** Intended to be piped after [fields]. If the errors list is non-empty, this
       raises [Bad_format_list] if [strict], and otherwise prints warnings for
       all the errors. The errors are then dropped when parsing, and initialised
-      to empty when printing. [strict] is taken from the global
-      settings if unspecified. *)
+      to empty when printing. [strict] is taken from the global settings if
+      unspecified. [condition] may be added to only show the errors when it
+      returns [true], and only log them otherwise. *)
   val show_errors :
     ?name:string ->
     ?strict:bool ->
+    ?condition:('a -> bool) ->
     unit ->
     ('a * (string * bad_format) list, 'a) t
 

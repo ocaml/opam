@@ -577,6 +577,9 @@ some specifics of the repository. It has the following optional fields:
   similar [config field](#configfield-archive-mirrors), except a path without a
   `protocol://` prefix is accepted and will be considered relative to the
   repository root (e.g. `cache/`).
+* <a id="repofield-announce">`announce: [ <string> { <filter> } ... ]`</a>:
+  Messages that will be printed to the user on initialisation or update of this
+  repository, with optional conditions.
 
 #### opamrc
 

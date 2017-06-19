@@ -93,12 +93,20 @@ let repository gt repo =
     OpamStd.Option.default OpamVersion.current_nopatch @@
     OpamFile.Repo.opam_version repo_file in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
-     OpamVersion.compare repo_vers OpamVersion.current_nopatch > 0 then
-    OpamConsole.error_and_exit
-      "The current version of opam cannot read the repository %S. \n\
-       You should upgrade to at least version %s."
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamVersion.to_string repo_vers);
+     OpamVersion.compare repo_vers OpamVersion.current > 0 then
+    Printf.ksprintf failwith
+      "repository format version is %s, and this is only opam %s"
+      (OpamVersion.to_string repo_vers)
+      (OpamVersion.to_string OpamVersion.current);
+  List.iter (fun (msg, filter) ->
+      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve_global gt) filter
+      then
+        OpamConsole.formatted_msg ~indent:4 "%s (at %s): %s\n"
+          (OpamConsole.colorise' [`bold;`green]
+             (OpamRepositoryName.to_string repo.repo_name))
+          (OpamConsole.colorise `bold (OpamUrl.to_string repo.repo_url))
+          msg)
+    (OpamFile.Repo.announce repo_file);
   let opams = OpamRepositoryState.load_repo_opams repo in
   Done (
     (* Return an update function to make parallel execution possible *)
@@ -118,26 +126,26 @@ let repositories rt repos =
   let command repo =
     OpamProcess.Job.catch
       (fun ex ->
-         OpamConsole.error "Could not update repository %s: %s"
+         OpamConsole.error "Could not update repository %S: %s"
            (OpamRepositoryName.to_string repo.repo_name)
-           (Printexc.to_string ex);
-         Done (false, fun t -> t)) @@
+           (match ex with Failure s -> s | ex -> Printexc.to_string ex);
+         Done ([repo], fun t -> t)) @@
     fun () -> repository rt.repos_global repo @@|
-    fun f -> true, f
+    fun f -> [], f
   in
-  let successful, rt_update =
+  let failed, rt_update =
     OpamParallel.reduce
       ~jobs:OpamStateConfig.(!r.dl_jobs)
       ~command
-      ~merge:(fun (ok1, f1) (ok2, f2) -> ok1 && ok2, f1 @* f2)
-      ~nil:(true, fun x -> x)
+      ~merge:(fun (failed1, f1) (failed2, f2) -> failed1 @ failed2, f1 @* f2)
+      ~nil:([], fun x -> x)
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
   in
   let rt = rt_update rt in
   OpamRepositoryState.write_config rt;
   OpamRepositoryState.Cache.save rt;
-  successful, rt
+  failed, rt
 
 let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in

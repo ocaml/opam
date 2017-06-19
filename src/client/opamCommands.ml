@@ -1570,7 +1570,7 @@ let repository =
       in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url trust_anchors in
-          let _result, _rt =
+          let _failed, _rt =
             OpamRepositoryCommand.update_with_auto_upgrade rt [name]
           in ());
       let _gt =
@@ -1630,7 +1630,7 @@ let repository =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
-      let _result, _rt =
+      let _failed, _rt =
         OpamRepositoryCommand.update_with_auto_upgrade rt [name]
       in
       `Ok ()
@@ -1709,7 +1709,7 @@ let get_repos_rt gt repos =
             OpamRepositoryCommand.add rt name url None)
           rt new_defs
       in
-      let _result, rt =
+      let _failed, rt =
         OpamRepositoryCommand.update_with_auto_upgrade rt
           (List.map fst new_defs)
       in
