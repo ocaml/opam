@@ -1774,7 +1774,7 @@ let switch =
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
-        --switch=SWITCH`\\)).";
+        --switch=SWITCH\\)).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
     @ [`S "OPTIONS"]
     @ [`S OpamArg.build_option_section]
