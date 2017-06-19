@@ -338,15 +338,21 @@ let command_exists =
                  else
                    f acc next current last normal in
           f [] 0 "" 0 true in
-        let name = if Filename.check_suffix name ".exe" then name else name ^ ".exe" in
-        List.exists (fun path -> let name = Filename.concat path name in Sys.file_exists name && (Unix.stat name).Unix.st_kind = Unix.S_REG) search
+        let name =
+          if Filename.check_suffix name ".exe" then name else name ^ ".exe"
+        in
+        List.exists (fun path ->
+            let name = Filename.concat path name in
+            Sys.file_exists name && (Unix.stat name).Unix.st_kind = Unix.S_REG)
+          search
     else
       fun name ->
         let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
         let r =
           OpamProcess.run
-            (OpamProcess.command ~env ?dir ~name:(temp_file ("command-"^name)) ~verbose:false
-               cmd args)
+            (OpamProcess.command ~env ?dir
+               ~name:(temp_file ("command-"^(Filename.basename name)))
+               ~verbose:false cmd args)
         in
         if OpamProcess.check_success_and_cleanup r then
           match r.OpamProcess.r_stdout with
