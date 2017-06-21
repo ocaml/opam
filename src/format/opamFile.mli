@@ -846,6 +846,7 @@ module Switch_config: sig
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
+    env: env_update list;
   }
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option

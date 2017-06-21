@@ -633,6 +633,10 @@ contains configuration options specific to that switch:
 - <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
   the opam root the switch belongs to. Used for local switches, to avoid
   automatically selecting a switch belonging to a different opam root.
+- <a id="switchconfigfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
+  defines environment variable updates that will be applied whenever in this
+  switch (both in the environment where packages are built, and in the
+  environment exported by opam through `opam env`)
 - [`pre-build-commands:`](#configfield-pre-build-commands),
   [`pre-install-commands:`](#configfield-pre-install-commands),
   [`pre-remove-commands:`](#configfield-pre-remove-commands):

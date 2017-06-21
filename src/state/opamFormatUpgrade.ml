@@ -845,6 +845,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
             synopsis = "";
             repos = None;
             opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
+            env = [];
           }
         in
         OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;
