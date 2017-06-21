@@ -106,12 +106,12 @@ to be set, _e.g._ to make executables installed into `~/.opam/<switch>/bin`
 visible, that directory needs to be added to `PATH`, but individual packages can
 define their own settings as well.
 
-Command `opam config env` returns the environment updates corresponding to the
+Command `opam env` returns the environment updates corresponding to the
 current switch, in a format readable by your shell, and when needed <span class="opam">opam</span> will
 prompt you to run:
 
 ```
-eval $(opam config env)
+eval $(opam env)
 ```
 
 A switch is created using `opam switch create <switch> (<compiler>|--empty)`.
@@ -954,7 +954,7 @@ files.
 - <a id="opamfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
   defines environment variables updates that will be applied upon installing the
   package. The updates will be visible to any dependent package, as well as
-  exported to the shell environment through `opam config env` and
+  exported to the shell environment through `opam env` and
   `~/.opam/opam-init/` scripts.
 
 - <a id="opamfield-build-env">`build-env: [ <environment-update> ... ]`</a>:

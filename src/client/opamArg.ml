@@ -783,7 +783,7 @@ let global_options =
             Repeat to see more. Repeating $(i,n) times is equivalent to \
             setting $(b,\\$OPAMVERBOSE) to \"$(i,n)\".") in
   let quiet =
-    mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
+    mk_flag ~section ["q";"quiet"] "Disables $(b,--verbose)." in
   let color =
     mk_tristate_opt ~section ["color"] "WHEN"
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
