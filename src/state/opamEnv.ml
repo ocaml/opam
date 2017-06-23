@@ -197,23 +197,21 @@ let compute_updates ?(force_path=false) st =
             st.switch_global.root st.switch st.switch_config),
       Some "Current opam switch man dir"]
   in
-  let switch_pfx =
-    "OPAM_SWITCH_PREFIX", Eq,
-    OpamFilename.Dir.to_string
-      (OpamPath.Switch.root st.switch_global.root st.switch),
-    Some "Prefix of the current opam switch"
+  let env_expansion ?opam (name,op,str,cmt) =
+    let s = OpamFilter.expand_string ~default:(fun _ -> "") (fenv ?opam) str in
+    name, op, s, cmt
+  in
+  let switch_env =
+    ("OPAM_SWITCH_PREFIX", Eq,
+     OpamFilename.Dir.to_string
+       (OpamPath.Switch.root st.switch_global.root st.switch),
+     Some "Prefix of the current opam switch") ::
+    List.map env_expansion st.switch_config.OpamFile.Switch_config.env
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
     OpamPackage.Set.fold (fun nv acc ->
         match OpamPackage.Map.find_opt nv st.opams with
-        | Some opam ->
-          List.map (fun (name,op,str,cmt) ->
-              let s =
-                OpamFilter.expand_string ~default:(fun _ -> "") (fenv ~opam) str
-              in
-              name, op, s, cmt)
-            (OpamFile.OPAM.env opam)
-          @ acc
+        | Some opam -> List.map (env_expansion ~opam) (OpamFile.OPAM.env opam) @ acc
         | None -> acc)
       st.installed []
   in
@@ -226,7 +224,7 @@ let compute_updates ?(force_path=false) st =
     then [ "OPAMROOT", Eq, current_string, Some "Opam root in use" ]
     else []
   in
-  path :: man_path @ root @ switch_pfx :: pkg_env
+  root @ switch_env @ pkg_env @ man_path @ [path]
 
 let updates ~opamswitch ?force_path st =
   let update = compute_updates ?force_path st in

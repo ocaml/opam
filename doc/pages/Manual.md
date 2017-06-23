@@ -106,12 +106,12 @@ to be set, _e.g._ to make executables installed into `~/.opam/<switch>/bin`
 visible, that directory needs to be added to `PATH`, but individual packages can
 define their own settings as well.
 
-Command `opam config env` returns the environment updates corresponding to the
+Command `opam env` returns the environment updates corresponding to the
 current switch, in a format readable by your shell, and when needed <span class="opam">opam</span> will
 prompt you to run:
 
 ```
-eval $(opam config env)
+eval $(opam env)
 ```
 
 A switch is created using `opam switch create <switch> (<compiler>|--empty)`.
@@ -633,6 +633,10 @@ contains configuration options specific to that switch:
 - <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
   the opam root the switch belongs to. Used for local switches, to avoid
   automatically selecting a switch belonging to a different opam root.
+- <a id="switchconfigfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
+  defines environment variable updates that will be applied whenever in this
+  switch (both in the environment where packages are built, and in the
+  environment exported by opam through `opam env`)
 - [`pre-build-commands:`](#configfield-pre-build-commands),
   [`pre-install-commands:`](#configfield-pre-install-commands),
   [`pre-remove-commands:`](#configfield-pre-remove-commands):
@@ -950,7 +954,7 @@ files.
 - <a id="opamfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
   defines environment variables updates that will be applied upon installing the
   package. The updates will be visible to any dependent package, as well as
-  exported to the shell environment through `opam config env` and
+  exported to the shell environment through `opam env` and
   `~/.opam/opam-init/` scripts.
 
 - <a id="opamfield-build-env">`build-env: [ <environment-update> ... ]`</a>:

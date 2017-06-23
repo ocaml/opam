@@ -574,7 +574,7 @@ let detail_printer ?prettify ?normalise st nv =
       OpamPath.Switch.changes st.switch_global.root st.switch nv.name
     in
     (match OpamFile.Changes.read_opt changes_f with
-     | None -> "n/a"
+     | None -> ""
      | Some c ->
        OpamStd.Format.itemize ~bullet:""
          (fun (file, status) ->

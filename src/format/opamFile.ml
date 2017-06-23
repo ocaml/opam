@@ -1409,6 +1409,7 @@ module Switch_configSyntax = struct
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
+    env: env_update list;
   }
 
   let empty = {
@@ -1419,6 +1420,7 @@ module Switch_configSyntax = struct
     variables = [];
     opam_root = None;
     wrappers = Wrappers.empty;
+    env = [];
   }
 
   let sections = [
@@ -1452,6 +1454,9 @@ module Switch_configSyntax = struct
     "opam-root", Pp.ppacc_opt
       (fun r t -> {t with opam_root = Some r}) (fun t -> t.opam_root)
       (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
+    "setenv", Pp.ppacc
+      (fun env t -> {t with env}) (fun t -> t.env)
+      (Pp.V.map_list ~depth:2 Pp.V.env_binding);
   ] @
     List.map
       (fun (fld, ppacc) ->
