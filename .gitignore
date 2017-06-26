@@ -7,13 +7,13 @@ tests/tmp/
 src_ext/lib
 src_ext/cudf/
 src_ext/cppo/
-src_ext/dose/
+src_ext/dose3/
 src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
-src_ext/graph/
+src_ext/ocamlgraph/
 src_ext/result/
-src_ext/opam_file_format/
+src_ext/opam-file-format/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz

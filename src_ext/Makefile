@@ -2,7 +2,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner graph cudf dose opam_file_format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
 
 URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
 MD5_cppo = bdc99442945f6bc26e7a8096d0975239
@@ -16,17 +16,17 @@ MD5_re = 0e45743512b7ab5e6b175f955dc72002
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.0.tbz
 MD5_cmdliner = 6baa375f393fbe9ca1fcb0a7a875e001
 
-URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.7.tar.gz
-MD5_graph = e733b8309b9374e89d96e907ecaf4f76
+URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.7.tar.gz
+MD5_ocamlgraph = e733b8309b9374e89d96e907ecaf4f76
 
 URL_cudf = https://gforge.inria.fr/frs/download.php/file/36602/cudf-0.9.tar.gz
 MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
-MD5_dose = e7d4b1840383c6732f29a47c08ba5650
+URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
+MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 
-URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
-MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
+MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 
 URL_result = http://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
@@ -113,10 +113,10 @@ endef
 	@touch $@
 
 # OCamlMakefile doesn't include stand-alone mlis in the packs...
-graph-workaround.stamp: graph.stamp
-	cp graph/src/sig.mli graph/src/sig.ml
-	cp graph/src/sig_pack.mli graph/src/sig_pack.ml
-	cp graph/src/dot_ast.mli graph/src/dot_ast.ml
+graph-workaround.stamp: ocamlgraph.stamp
+	cp ocamlgraph/src/sig.mli ocamlgraph/src/sig.ml
+	cp ocamlgraph/src/sig_pack.mli ocamlgraph/src/sig_pack.ml
+	cp ocamlgraph/src/dot_ast.mli ocamlgraph/src/dot_ast.ml
 	@touch $@
 
 SRC_cppo = cppo_version.ml cppo_types.ml cppo_parser.mli cppo_parser.ml cppo_lexer.ml \
@@ -145,8 +145,8 @@ extlib-cppo.stamp: cppo/cppo$(EXE) extlib.stamp
   done
 	@touch $@
 
-dose-cppo.stamp: dose.stamp
-	for f in `find dose -regex ".*.mli*"`; do\
+dose-cppo.stamp: dose3.stamp
+	for f in `find dose3 -regex ".*.mli*"`; do\
 		T=`mktemp`; \
 		echo "(*pp cppo$(if $(filter 1,$(WIN32)),\,/)cppo$(EXE) -V OCAML:$(OCAMLVERSION) *)" > $$T; \
 		if fgrep -q OCAMLGRAPHVERSION $$f ; then \
@@ -176,16 +176,16 @@ distclean:
 	rm -rf lib
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_algo \
-           opam_file_format result
+LIB_EXTS = extlib re cmdliner ocamlgraph cudf dose3_common dose3_algo \
+           opam-file-format result
 
 proj_cmdliner: proj_result
 
 proj_cudf: proj_extlib
 
-proj_dose_common: proj_extlib proj_re proj_cudf
+proj_dose3_common: proj_extlib proj_re proj_cudf
 
-proj_dose_algo: proj_extlib proj_dose_common proj_graph proj_cudf
+proj_dose3_algo: proj_extlib proj_dose3_common proj_ocamlgraph proj_cudf
 
 # --
 
@@ -204,7 +204,7 @@ export PROJ_$1
 endef
 PROCESS_LIB=$(eval $(call MAKE_LIB,$1,$(if $2,$(foreach DIR,$2,$1/$(DIR)),$1),$3,$4))
 BASIC_LIB=$(foreach PACK_NAME,@,$(call PROCESS_LIB,$1,$2,$3,$4))
-PACK_LIB=$(foreach PACK_NAME,$1,$(call PROCESS_LIB,$1,$2,$3,$4))
+PACK_LIB=$(foreach PACK_NAME,$(if $4,$4,$1),$(call PROCESS_LIB,$1,$2,$3,$4))
 SUB_PACK_LIB=$(foreach PACK_NAME,$2,$(eval $(call MAKE_LIB,$1_$2,$1/$2,$3,$4)))
 
 SRC_extlib = extBytes.ml extBuffer.ml enum.ml extHashtbl.ml extList.ml extString.ml global.ml \
@@ -223,14 +223,14 @@ cmdliner_manpage.ml cmdliner_info.ml cmdliner_docgen.ml cmdliner_msg.ml \
 cmdliner_cline.ml cmdliner_arg.ml cmdliner_term.ml cmdliner.ml
 $(call BASIC_LIB,cmdliner,src,result)
 
-SRC_graph_lib = bitv.ml heap.ml unionfind.ml
-SRC_graph = sig_pack.ml sig.ml dot_ast.ml builder.ml classic.ml contraction.ml	\
+SRC_ocamlgraph_lib = bitv.ml heap.ml unionfind.ml
+SRC_ocamlgraph = sig_pack.ml sig.ml dot_ast.ml builder.ml classic.ml contraction.ml	\
 delaunay.ml dominator.ml dot_parser.mly fixpoint.ml gmap.ml gml.mll graphml.ml	\
 graphviz.ml leaderlist.ml oper.ml rand.ml strat.ml traverse.ml util.ml		\
 version.ml kruskal.ml flow.ml dot_lexer.mll components.ml coloring.ml blocks.ml	\
 dot.ml imperative.ml merge.ml minsep.ml persistent.ml nonnegative.ml path.ml	\
 topological.ml pack.ml mcs_m.ml cliquetree.ml md.ml
-$(call PACK_LIB,graph,lib src)
+$(call PACK_LIB,ocamlgraph,lib src,,graph)
 
 SRC_cudf = cudf_types.ml cudf_type_parser.mly cudf_type_lexer.mll cudf_conf.ml	\
 cudf_822_parser.mly cudf_822_lexer.mll cudf_types_pp.ml \
@@ -238,24 +238,24 @@ cudf.ml cudf_checker.ml cudf_parser.mly cudf_printer.ml \
 cudf_c.ml
 $(call BASIC_LIB,cudf,,extlib)
 
-SRC_dose_common = shell_lexer.mll util.ml url.ml input.ml\
-									format822.ml format822_parser.mly format822_lexer.mll \
-									criteria_parser.mly criteria_lexer.mll criteria_types.ml criteria.ml\
-									edosSolver.ml cudfSolver.ml	cudfAdd.ml cudfDiff.ml
-$(call SUB_PACK_LIB,dose,common,extlib cudf re)
+SRC_dose3_common = shell_lexer.mll util.ml url.ml input.ml\
+									 format822.ml format822_parser.mly format822_lexer.mll \
+									 criteria_parser.mly criteria_lexer.mll criteria_types.ml criteria.ml\
+									 edosSolver.ml cudfSolver.ml	cudfAdd.ml cudfDiff.ml
+$(call SUB_PACK_LIB,dose3,common,extlib cudf re)
 
-SRC_dose_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
-								statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
-								strongconflicts.ml strongdeps.ml
-$(call SUB_PACK_LIB,dose,algo,extlib graph cudf)
+SRC_dose3_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
+								 statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
+								 strongconflicts.ml strongdeps.ml
+$(call SUB_PACK_LIB,dose3,algo,extlib ocamlgraph cudf)
 
-SRC_opam_file_format = \
+SRC_opam-file-format = \
   opamParserTypes.mli \
   opamLexer.mli opamLexer.mll \
   opamBaseParser.mly \
 	opamParser.mli opamParser.ml \
   opamPrinter.mli  opamPrinter.ml
-$(call BASIC_LIB,opam_file_format,src,,opam-file-format)
+$(call BASIC_LIB,opam-file-format,src)
 
 # --
 
