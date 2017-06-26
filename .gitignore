@@ -4,6 +4,7 @@ _olint/
 bootstrap/
 tests/tmp/
 .*.swp
+src_ext/lib
 src_ext/cudf/
 src_ext/cppo/
 src_ext/dose/
