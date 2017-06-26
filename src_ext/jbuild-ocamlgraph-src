@@ -1,0 +1,27 @@
+(jbuild_version 1)
+
+(library
+  ((name graph)
+   (libraries (graphlib))
+   (public_name ocamlgraph)))
+
+(rule
+  (with-stdout-to sig_pack.ml
+    (progn
+      (echo "[@@@warning \"-a\"]\nmodule rec Sig_pack : sig\n")
+      (cat sig_pack.mli)
+      (echo "\nend = Sig_pack\ninclude Sig_pack\n"))))
+
+(rule
+  (with-stdout-to sig.ml
+    (progn
+      (echo "[@@@warning \"-a\"]\nmodule rec Sig : sig\n")
+      (cat sig.mli)
+      (echo "\nend = Sig\ninclude Sig\n"))))
+
+(rule
+  (with-stdout-to dot_ast.ml
+    (progn
+      (echo "[@@@warning \"-a\"]\nmodule rec Dot_ast : sig\n")
+      (cat dot_ast.mli)
+      (echo "\nend = Dot_ast\ninclude Dot_ast\n"))))

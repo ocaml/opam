@@ -4,6 +4,7 @@ _olint/
 bootstrap/
 tests/tmp/
 .*.swp
+src_ext/_build
 src_ext/lib
 src_ext/cudf/
 src_ext/cppo/
@@ -12,6 +13,7 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
 src_ext/ocamlgraph/
+src_ext/jbuilder/
 src_ext/result/
 src_ext/opam-file-format/
 src_ext/*.stamp

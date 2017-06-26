@@ -32,7 +32,7 @@ ifneq ($(or $(filter-out cold download-ext configure,$(MAKECMDGOALS)),$(filter o
 endif
 
 lib-ext:
-	$(MAKE) -C src_ext lib-ext
+	$(MAKE) -j -C src_ext lib-ext
 
 download-ext:
 	$(MAKE) -C src_ext archives

@@ -111,6 +111,8 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
+AC_CHECK_TOOL(JBUILDER,jbuilder)
+
 if test x"$FETCH" = x"curl" ; then
   AC_SUBST(fetch, "curl $curl_certificate_check -OL")
 elif test x"$FETCH" = x"wget" ; then

@@ -19,7 +19,12 @@ install-bootstrap () {
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
         mv $FINDCONF.1 $FINDCONF
     else
-        opam install ocamlbuild --yes
+        if [ "$OCAML_VERSION" = "4.01.0" ] ; then
+          EXTRAS="cmdliner dose3 opam-file-format"
+        else
+          EXTRAS=
+        fi
+        opam install ocamlbuild $EXTRAS --yes
     fi
     rm -f "$OPAMBSROOT"/log/*
 }
@@ -61,7 +66,7 @@ git config --global user.name "Travis CI"
 
     ./configure --prefix ~/local
 
-    if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
+    if [ "$OPAM_TEST" != "1" -a "$OCAML_VERSION" != "4.01.0" ]; then make lib-ext; fi
     make all opam-check
 
     rm -f ~/local/bin/opam
