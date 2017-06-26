@@ -1,6 +1,5 @@
-(* Taken from ocurl - https://github.com/ygrek/ocurl/blob/b537a2b7259d2230b66d6aa3e104cb0e54beddc5/print_ext.ml *)
-#use "topfind";;
-#require "compiler-libs.common";;
+#directory "+compiler-libs";;
+#load "ocamlcommon.cma";;
 set_binary_mode_out stdout true;;
 match List.tl (Array.to_list Sys.argv) with
 | ["dll"] -> print_endline Config.ext_dll
