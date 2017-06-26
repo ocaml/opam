@@ -12,6 +12,7 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
 src_ext/graph/
+src_ext/result/
 src_ext/opam_file_format/
 src_ext/*.stamp
 src_ext/*.tbz

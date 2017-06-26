@@ -2,31 +2,34 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner graph cudf dose opam_file_format
+SRC_EXTS = cppo extlib re cmdliner graph cudf dose opam_file_format result
 
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.3.2.tar.gz
-MD5_cppo = 133c9f8afadb6aa1c5ba0f5eb55c5648
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
+MD5_cppo = bdc99442945f6bc26e7a8096d0975239
 
-URL_extlib = https://github.com/ygrek/ocaml-extlib/archive/1.7.0.tar.gz
-MD5_extlib = b50b02d9e40d35cc20c82d9c881a1bf6
+URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.2/extlib-1.7.2.tar.gz
+MD5_extlib = 0f550dd06242828399a73387c49e0eed
 
-URL_re = https://github.com/ocaml/ocaml-re/archive/ocaml-re-1.5.0.tar.gz
-MD5_re = 1e9bff3279648881be31e5ff96219f0a
+URL_re = http://github.com/ocaml/ocaml-re/archive/1.7.1.tar.gz
+MD5_re = 0e45743512b7ab5e6b175f955dc72002
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.8.tbz
-MD5_cmdliner = fc67c937447cc223722f1419fa2189da
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.0.tbz
+MD5_cmdliner = 6baa375f393fbe9ca1fcb0a7a875e001
 
-URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.6.tar.gz
-MD5_graph = afbc24f0e0eb72c2d3eda64b68513e73
+URL_graph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.7.tar.gz
+MD5_graph = e733b8309b9374e89d96e907ecaf4f76
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/33593/cudf-0.7.tar.gz
-MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
+URL_cudf = https://gforge.inria.fr/frs/download.php/file/36602/cudf-0.9.tar.gz
+MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
-URL_dose = https://gforge.inria.fr/frs/download.php/file/35975/dose3-5.0.tar.gz
-MD5_dose = 228c6a73a0759783fd01181047046610
+URL_dose = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
+MD5_dose = e7d4b1840383c6732f29a47c08ba5650
 
 URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
+
+URL_result = http://github.com/janestreet/result/archive/1.2.tar.gz
+MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
 ifndef FETCH
 ifneq ($(shell command -v curl 2>/dev/null),)
@@ -63,7 +66,7 @@ build: clone
 
 all: bcl ncl
 
-clone: $(SRC_EXTS:=.stamp) graph-workaround.stamp extlib-cppo.stamp dose-cppo.stamp
+clone: $(SRC_EXTS:=.stamp) graph-workaround.stamp extlib-cppo.stamp dose-cppo.stamp result-workaround.stamp
 	@
 
 .PHONY: archives
@@ -125,17 +128,21 @@ cppo/cppo$(EXE): cppo.stamp
 	ocamlyacc cppo/cppo_parser.mly
 	ocamlopt -o cppo/cppo$(EXE) -I cppo -dtypes unix.cmxa str.cmxa $(foreach ml,$(SRC_cppo),cppo/$(ml))
 
+ifeq ($(OCAML_4_03),true)
+CPPOVARS=-D OCAML4 -D OCAML4_02 -D OCAML4_03
+else
 ifeq ($(OCAML_4_02),true)
-CPPOVARS=-D OCAML4 -D OCAML_4_02
+CPPOVARS=-D OCAML4 -D OCAML4_02
 else
 CPPOVARS=-D OCAML4
 endif
+endif
 
 extlib-cppo.stamp: cppo/cppo$(EXE) extlib.stamp
-	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extBytes.mlpp -o extlib/src/extBytes.ml
-	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extHashtbl.mlpp -o extlib/src/extHashtbl.ml
-	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extString.mlpp -o extlib/src/extString.ml
-	cppo/cppo$(EXE) $(CPPOVARS) extlib/src/extBuffer.mlpp -o extlib/src/extBuffer.ml
+	for i in Array.ml Array.mli Buffer.ml Buffer.mli Bytes.ml Hashtbl.ml Hashtbl.mli List.ml List.mli String.ml ; do \
+    mv extlib/src/ext$$i extlib/src/ext$$ipp ; \
+    cppo/cppo$(EXE) $(CPPOVARS) extlib/src/ext$$ipp -o extlib/src/ext$$i ; \
+  done
 	@touch $@
 
 dose-cppo.stamp: dose.stamp
@@ -143,10 +150,18 @@ dose-cppo.stamp: dose.stamp
 		T=`mktemp`; \
 		echo "(*pp cppo$(if $(filter 1,$(WIN32)),\,/)cppo$(EXE) -V OCAML:$(OCAMLVERSION) *)" > $$T; \
 		if fgrep -q OCAMLGRAPHVERSION $$f ; then \
-		  echo "#define OCAMLGRAPHVERSION 186" >> $$T ; \
+		  echo "#define OCAMLGRAPHVERSION 187" >> $$T ; \
 		fi ; \
 		cat $$f >> $$T && mv $$T $$f;\
 	done
+	@touch $@
+
+result-workaround.stamp: result.stamp
+ifeq ($(OCAML_4_03),true)
+	cp result/result-as-alias.ml result/result.ml
+else
+	cp result/result-as-newtype.ml result/result.ml
+endif
 	@touch $@
 
 clean:
@@ -154,7 +169,7 @@ clean:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
 
 distclean:
-	rm -rf cudf extlib re graph dose cmdliner opam_file_format ._ncdi ._bcdi ._d
+	rm -rf $(SRC_EXTS) ._ncdi ._bcdi ._d
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	rm -f *.cm* *.o *.a *.lib *.obj
@@ -162,7 +177,9 @@ distclean:
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo \
-           opam_file_format
+           opam_file_format result
+
+proj_cmdliner: proj_result
 
 proj_cudf: proj_extlib
 
@@ -201,11 +218,16 @@ IO.ml option.ml pMap.ml refList.ml std.ml uChar.ml unzip.ml uTF8.ml optParse.ml	
 dynArray.ml dllist.ml bitSet.ml base64.ml extArray.ml extLib.ml
 $(call BASIC_LIB,extlib,src)
 
-SRC_re = re_cset.ml re_automata.ml re.ml re_glob.ml re_perl.ml re_pcre.ml
+SRC_re = re_fmt.ml re_cset.ml re_automata.ml re.ml re_glob.ml re_perl.ml re_pcre.ml
 $(call BASIC_LIB,re,lib)
 
-SRC_cmdliner = cmdliner.ml
-$(call BASIC_LIB,cmdliner,src)
+SRC_result = result.ml
+$(call BASIC_LIB,result)
+
+SRC_cmdliner = cmdliner_suggest.ml cmdliner_trie.ml cmdliner_base.ml \
+cmdliner_manpage.ml cmdliner_info.ml cmdliner_docgen.ml cmdliner_msg.ml \
+cmdliner_cline.ml cmdliner_arg.ml cmdliner_term.ml cmdliner.ml
+$(call BASIC_LIB,cmdliner,src,result)
 
 SRC_graph_lib = bitv.ml heap.ml unionfind.ml
 SRC_graph = sig_pack.ml sig.ml dot_ast.ml builder.ml classic.ml contraction.ml	\

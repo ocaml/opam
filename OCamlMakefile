@@ -12,9 +12,6 @@
 # Set these variables to the names of the sources to be processed and
 # the result variable. Order matters during linkage!
 
-ifndef SOURCES
-  SOURCES := foo.ml
-endif
 export SOURCES
 
 ifndef RES_CLIB_SUF
