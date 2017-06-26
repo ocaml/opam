@@ -583,7 +583,7 @@ PACKAGE_STRING='opam 2.0.0~beta3'
 PACKAGE_BUGREPORT=''
 PACKAGE_URL=''
 
-ac_default_prefix=`ocamlc -config 2>/dev/null | tr -d '\r' | sed -n -e "s;^os_type: Win32;C:/OPAM;p" -e "s;^os_type:.*;/usr/local;p"`
+ac_default_prefix=`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;C:/OPAM;" -e "s;^os_type:.*;/usr/local;"`
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
@@ -622,6 +622,7 @@ LDFLAGS
 CFLAGS
 CC
 AWK
+OCAML_OS_TYPE
 OCAMLBUILD
 OCAMLDOCDOTOPT
 OCAMLDOC
@@ -1807,8 +1808,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-
-
   # checking for ocamlc
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlc", so it can be a program name with args.
@@ -1904,7 +1903,7 @@ fi
 
 
   if test "$OCAMLC" != "no"; then
-     OCAMLVERSION=`$OCAMLC -v | sed -n -e 's|.*version* *\(.*\)$|\1|p'`
+     OCAMLVERSION=`$OCAMLC -v | tr -d '\015' | sed -n -e 's|.*version* *\(.*\)$|\1|p'`
      { $as_echo "$as_me:${as_lineno-$LINENO}: result: OCaml version is $OCAMLVERSION" >&5
 $as_echo "OCaml version is $OCAMLVERSION" >&6; }
      # If OCAMLLIB is set, use it
@@ -2018,7 +2017,7 @@ fi
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find ocamlopt; bytecode compilation only." >&5
 $as_echo "$as_me: WARNING: Cannot find ocamlopt; bytecode compilation only." >&2;}
      else
-	TMPVERSION=`$OCAMLOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
+	TMPVERSION=`$OCAMLOPT -v | tr -d '\015' | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	if test "$TMPVERSION" != "$OCAMLVERSION" ; then
 	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt discarded." >&5
 $as_echo "versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt discarded." >&6; }
@@ -2124,7 +2123,7 @@ else
 fi
 
      if test "$OCAMLCDOTOPT" != "no"; then
-	TMPVERSION=`$OCAMLCDOTOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
+	TMPVERSION=`$OCAMLCDOTOPT -v | tr -d '\015' | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	if test "$TMPVERSION" != "$OCAMLVERSION" ; then
 	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlc.opt discarded." >&5
 $as_echo "versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlc.opt discarded." >&6; }
@@ -2228,7 +2227,7 @@ else
 fi
 
 	if test "$OCAMLOPTDOTOPT" != "no"; then
-	   TMPVERSION=`$OCAMLOPTDOTOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
+	   TMPVERSION=`$OCAMLOPTDOTOPT -v | tr -d '\015' | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	   if test "$TMPVERSION" != "$OCAMLVERSION" ; then
 	      { $as_echo "$as_me:${as_lineno-$LINENO}: result: versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt.opt discarded." >&5
 $as_echo "versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt.opt discarded." >&6; }
@@ -2526,7 +2525,7 @@ else
 fi
 
     if test "$OCAMLDEPDOTOPT" != "no"; then
-      TMPVERSION=`$OCAMLDEPDOTOPT -version | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
+      TMPVERSION=`$OCAMLDEPDOTOPT -version | tr -d '\015' | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
       if test "$TMPVERSION" != "$OCAMLVERSION" ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: version differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamldep.opt discarded." >&5
 $as_echo "version differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamldep.opt discarded." >&6; }
@@ -3020,6 +3019,23 @@ fi
 if test "x$OCAMLC" = "xno"; then
    as_fn_error $? "You must install the OCaml compiler" "$LINENO" 5
 fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking OCaml Sys.os_type" >&5
+$as_echo_n "checking OCaml Sys.os_type... " >&6; }
+
+  cat > conftest.ml <<EOF
+  print_string(Sys.os_type);;
+EOF
+
+  OCAML_OS_TYPE=`$OCAML conftest.ml`
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $OCAML_OS_TYPE" >&5
+$as_echo "$OCAML_OS_TYPE" >&6; }
+
+
+if test "${OCAML_OS_TYPE}" = "Win32" ; then
+  OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
+fi
+
+
 
 # Check whether --enable-version_check was given.
 if test "${enable_version_check+set}" = set; then :
@@ -3121,17 +3137,6 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 
 fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler os_type" >&5
-$as_echo_n "checking for compiler os_type... " >&6; }
-OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | sed -n -e "s/^os_type: //p"`
-if  test "$?" -eq 0 ; then :
-
-else
-  as_fn_error $? "failed" "$LINENO" 5
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $OS_TYPE" >&5
-$as_echo "$OS_TYPE" >&6; }
 
 # Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
 if test "$OCAMLBEST" = "opt"; then :
@@ -3931,7 +3936,7 @@ else
   AR=`make --no-print-directory -f conftestMakefile`
 fi
 
-if  test "${OS_TYPE}" = "Win32"; then :
+if  test "${OCAML_OS_TYPE}" = "Win32"; then :
 
   WIN32=1
   EXE=.exe
