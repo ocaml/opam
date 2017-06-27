@@ -7,7 +7,7 @@ let file =
 
 let read file =
   if Sys.file_exists file then
-    let ic = open_in_bin file in
+    let ic = open_in file in
     Some (input_line ic)
   else
     None
