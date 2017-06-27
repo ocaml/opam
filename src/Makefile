@@ -252,7 +252,6 @@ export PROJ_client
 
 client/opamGitVersion.ml: ALWAYS
 	cd .. && ocaml shell/get-git-id.ml src/$@
-	touch $@
 
 opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
