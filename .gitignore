@@ -54,6 +54,7 @@ ocp-build.root.old.old
 Makefile.config
 config.log
 config.status
+src/client/.git-sha-*
 src/client/opamGitVersion.ml
 src/state/opamScript.ml
 src/core/opamCoreConfig.ml
