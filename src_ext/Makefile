@@ -176,7 +176,7 @@ distclean:
 	rm -rf lib
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
-LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo \
+LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_algo \
            opam_file_format result
 
 proj_cmdliner: proj_result
@@ -184,12 +184,6 @@ proj_cmdliner: proj_result
 proj_cudf: proj_extlib
 
 proj_dose_common: proj_extlib proj_re proj_cudf
-
-proj_dose_versioning: proj_extlib proj_dose_common proj_re proj_cudf
-
-proj_dose_pef: proj_extlib proj_dose_common proj_re proj_cudf
-
-proj_dose_opam: proj_extlib proj_dose_pef proj_re proj_cudf
 
 proj_dose_algo: proj_extlib proj_dose_common proj_graph proj_cudf
 
@@ -249,16 +243,6 @@ SRC_dose_common = shell_lexer.mll util.ml url.ml input.ml\
 									criteria_parser.mly criteria_lexer.mll criteria_types.ml criteria.ml\
 									edosSolver.ml cudfSolver.ml	cudfAdd.ml cudfDiff.ml
 $(call SUB_PACK_LIB,dose,common,extlib cudf re)
-
-SRC_dose_versioning = debian.ml semverNode.ml semver.ml utils.ml
-$(call SUB_PACK_LIB,dose,versioning,extlib cudf re)
-
-SRC_dose_pef = packages_types.ml packages_parser.mly packages_lexer.mll printer.ml packages.ml \
-							 pefcudf.ml
-$(call SUB_PACK_LIB,dose,pef,extlib cudf re)
-
-SRC_dose_opam = opamcudf.ml packages.ml
-$(call SUB_PACK_LIB,dose,opam,extlib cudf re)
 
 SRC_dose_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
 								statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
