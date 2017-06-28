@@ -571,24 +571,33 @@ module OpamSys = struct
   let tty_in = Unix.isatty Unix.stdin
 
   let default_columns =
-    try int_of_string (Env.get "COLUMNS") with
-    | Not_found
-    | Failure _ -> 16_000_000
+    let default = 16_000_000 in
+    let cols =
+      try int_of_string (Env.get "COLUMNS") with
+      | Not_found
+      | Failure _ -> default
+    in
+    if cols > 0 then cols else default
 
   let get_terminal_columns () =
-    try (* terminfo *)
-      with_process_in "tput" "cols"
-        (fun ic -> int_of_string (input_line ic))
-    with Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
-      try (* GNU stty *)
-        with_process_in "stty" "size"
-          (fun ic ->
-             match OpamString.split (input_line ic) ' ' with
-             | [_ ; v] -> int_of_string v
-             | _ -> failwith "stty")
+    let fallback = 80 in
+    let cols =
+      try (* terminfo *)
+        with_process_in "tput" "cols"
+          (fun ic -> int_of_string (input_line ic))
       with
-        Unix.Unix_error _ | Sys_error _ | Failure _  | End_of_file | Not_found ->
-          default_columns
+      | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+        try (* GNU stty *)
+          with_process_in "stty" "size"
+            (fun ic ->
+               match OpamString.split (input_line ic) ' ' with
+               | [_ ; v] -> int_of_string v
+               | _ -> failwith "stty")
+        with
+        | Unix.Unix_error _ | Sys_error _ | Failure _
+        | End_of_file | Not_found -> fallback
+    in
+    if cols > 0 then cols else fallback
 
   let terminal_columns =
     let v = ref (lazy (get_terminal_columns ())) in
