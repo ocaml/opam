@@ -156,7 +156,8 @@ let fetch_dev_package url srcdir ?(working_dir=false) nv =
     (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
 
 let pinned_package st ?version ?(working_dir=false) name =
-  log "update-pinned-package %s" (OpamPackage.Name.to_string name);
+  log "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
+    (slog @@ function true -> " (working dir)" | false -> "") working_dir;
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
   let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
