@@ -147,18 +147,18 @@ let download_package st nv =
   then Done None
   else
   let dir = OpamSwitchState.source_dir st nv in
-  OpamUpdate.cleanup_source st
-    (OpamPackage.Map.find_opt nv st.installed_opams)
-    (OpamSwitchState.opam st nv);
   if OpamPackage.Set.mem nv st.pinned &&
      OpamFilename.exists_dir dir
   then Done None
   else
-    OpamProcess.Job.catch (fun e -> Done (Some (Printexc.to_string e)))
-    @@ fun () ->
-    OpamUpdate.download_package_source st nv dir @@| function
-    | Some (Not_available s) -> Some s
-    | None | Some (Up_to_date () | Result ()) -> None
+    (OpamUpdate.cleanup_source st
+       (OpamPackage.Map.find_opt nv st.installed_opams)
+       (OpamSwitchState.opam st nv);
+     OpamProcess.Job.catch (fun e -> Done (Some (Printexc.to_string e)))
+     @@ fun () ->
+     OpamUpdate.download_package_source st nv dir @@| function
+     | Some (Not_available s) -> Some s
+     | None | Some (Up_to_date () | Result ()) -> None)
 
 (* Prepare the package build:
    * apply the patches
