@@ -322,7 +322,9 @@ let autopin st ?(simulate=false) atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st atom_or_local_list
   in
-  if to_pin = [] then st, atoms else
+  if to_pin = [] && OpamPackage.Set.is_empty obsolete_pins &&
+     OpamPackage.Set.is_empty already_pinned_set
+  then st, atoms else
   let st =
     if simulate then
       OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)

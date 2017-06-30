@@ -401,8 +401,8 @@ let lint t =
        match t.OpamFile.OPAM.name with
        | None -> false
        | Some name ->
-         OpamStd.String.starts_with ~prefix:"opam-"
-           (OpamPackage.Name.to_string name));
+         not (OpamStd.String.starts_with ~prefix:"opam-"
+                (OpamPackage.Name.to_string name)));
     (let unclosed =
        List.fold_left (fun acc s ->
            List.rev_append (OpamFilter.unclosed_expansions s) acc)
