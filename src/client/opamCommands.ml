@@ -840,21 +840,31 @@ let config =
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
           print "repositories" "%s"
             (let repos = state.switch_repos.repositories in
-             let has_default, nhttp, nlocal, nvcs =
+             let default, nhttp, nlocal, nvcs =
                OpamRepositoryName.Map.fold
-                 (fun _ {repo_url = url; _} (dft, nhttp, nlocal, nvcs) ->
-                   let dft = dft || url = OpamInitDefaults.repository_url in
-                   match url.OpamUrl.backend with
-                   | `http -> dft, nhttp+1, nlocal, nvcs
-                   | `rsync -> dft, nhttp, nlocal+1, nvcs
-                   | _ -> dft, nhttp, nlocal, nvcs+1)
-                 repos (false,0,0,0)
-              in
-              String.concat ", "
-                (Printf.sprintf "%d%s (http)" nhttp
-                   (if has_default then "*" else "") ::
-                 nprint "local" nlocal @
-                 nprint "version-controlled" nvcs)
+                 (fun _ repo (dft, nhttp, nlocal, nvcs) ->
+                    let dft =
+                      if OpamUrl.root repo.repo_url =
+                         OpamUrl.root OpamInitDefaults.repository_url
+                      then
+                        OpamFile.Repo.safe_read
+                          (OpamRepositoryPath.repo repo.repo_root) |>
+                        OpamFile.Repo.stamp
+                      else dft
+                    in
+                    match repo.repo_url.OpamUrl.backend with
+                    | `http -> dft, nhttp+1, nlocal, nvcs
+                    | `rsync -> dft, nhttp, nlocal+1, nvcs
+                    | _ -> dft, nhttp, nlocal, nvcs+1)
+                 repos (None,0,0,0)
+             in
+             String.concat ", "
+               (nprint "http" nhttp @
+                nprint "local" nlocal @
+                nprint "version-controlled" nvcs) ^
+             match default with
+             | Some v -> Printf.sprintf "(default repo at %s)" v
+             | None -> ""
             );
           print "pinned" "%s"
             (if OpamPackage.Set.is_empty state.pinned then "0" else
@@ -879,15 +889,6 @@ let config =
             );
           print "current-switch" "%s"
             (OpamSwitch.to_string state.switch);
-          (* !X fixme: find a way to do thit without the package index
-             let index_file =
-             OpamFile.to_string (OpamPath.package_index state.switch_global.root)
-             in
-             let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
-             Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
-                (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
-                u.tm_hour u.tm_min);
-          *)
           `Ok ()
         with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     | command, params -> bad_subcommand commands ("config", command, params)

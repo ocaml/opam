@@ -65,11 +65,32 @@ let index_command =
       OpamConsole.error_and_exit
         "No repository found in current directory.\n\
          Please make sure there is a \"packages/\" directory";
-    let repo_file =
-      OpamFile.Repo.read_opt (OpamRepositoryPath.repo repo_root)
+    let repo_file = OpamRepositoryPath.repo repo_root in
+    let repo_def =
+      match OpamFile.Repo.read_opt repo_file with
+      | None ->
+        OpamConsole.warning "No \"repo\" file found. Creating a minimal one.";
+        OpamFile.Repo.create ~opam_version:OpamVersion.current_nopatch ()
+      | Some r -> r
     in
-    if repo_file = None then
-      OpamConsole.warning "No \"repo\" file found.";
+    let repo_stamp =
+      let date () =
+        let t = Unix.gmtime (Unix.time ()) in
+        Printf.sprintf "%04d-%02d-%02d %02d:%02d"
+          (t.Unix.tm_year + 1900) (t.Unix.tm_mon +1) t.Unix.tm_mday
+          t.Unix.tm_hour t.Unix.tm_min
+      in
+      match OpamUrl.guess_version_control (OpamFilename.Dir.to_string repo_root)
+      with
+      | None -> date ()
+      | Some vcs ->
+        let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
+        match OpamProcess.Job.run (VCS.revision repo_root) with
+        | None -> date ()
+        | Some hash -> OpamPackage.Version.to_string hash
+    in
+    let repo_def = OpamFile.Repo.with_stamp repo_stamp repo_def in
+    OpamFile.Repo.write repo_file repo_def;
     if urls_txt <> `no_urls_txt then
       (OpamConsole.msg "Generating urls.txt...\n";
        OpamFilename.of_string "repo" ::
