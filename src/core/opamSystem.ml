@@ -423,7 +423,8 @@ let make_command
   else
     command_not_found cmd
 
-let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command =
+let run_process
+    ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin command =
   let chrono = OpamConsole.timer () in
   runs := command :: !runs;
   match command with
@@ -442,7 +443,8 @@ let run_process ?verbose ?(env=default_env) ~name ?metadata ?allow_stdin command
 
       let r =
         OpamProcess.run
-          (OpamProcess.command ~env ~name ~verbose ?metadata ?allow_stdin
+          (OpamProcess.command
+             ~env ~name ~verbose ?metadata ?allow_stdin ?stdout
              cmd args)
       in
       let str = String.concat " " (cmd :: args) in
@@ -482,7 +484,11 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
 
 let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
-  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
+  let r =
+    run_process ?verbose ?env ~name ?metadata ?allow_stdin
+      ~stdout:(name^".stdout")
+      cmd
+  in
   OpamProcess.cleanup r;
   raise_on_process_error r;
   r.OpamProcess.r_stdout
