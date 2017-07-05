@@ -91,14 +91,22 @@ let option_default d = function
 let make_info ?code ?signal
     ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () =
   let b = ref [] in
-  let print name str = b := (name, str) :: !b in
+  let home = OpamStd.Sys.home () in
+  let print name str =
+    let str =
+      if OpamStd.String.starts_with ~prefix:home str
+      then "~"^OpamStd.String.remove_prefix ~prefix:home str
+      else str
+    in
+    b := (name, str) :: !b
+  in
   let print_opt name = function
     | None   -> ()
     | Some s -> print name s in
 
-  print     "command"      (String.concat " " (cmd :: args));
-  print     "path"         cwd;
   List.iter (fun (k,v) -> print k v) metadata;
+  print     "path"         cwd;
+  print     "command"      (String.concat " " (cmd :: args));
   print_opt "exit-code"    (option_map string_of_int code);
   print_opt "signalled"    (option_map string_of_int signal);
   print_opt "env-file"     env_file;
