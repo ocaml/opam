@@ -209,13 +209,20 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let auto_add_flags opam =
     (* Automatically add light-uninstall for trivial commands that won't
        need the source *)
-    if List.for_all
-        (fun (cmd, _filter) -> match cmd with
-           | [] | (CString ("ocamlfind" | "rm"), _) :: _ -> true
-           | _ -> false)
-        (OpamFile.OPAM.remove opam)
+    if OpamFile.OPAM.remove opam <> [] &&
+       List.for_all
+         (fun (cmd, _filter) -> match cmd with
+            | [] | (CString ("ocamlfind" | "rm"), _) :: _ -> true
+            | _ -> false)
+         (OpamFile.OPAM.remove opam)
     then OpamFile.OPAM.add_flags [Pkgflag_LightUninstall] opam
     else opam
+  in
+  let filter_out_flagtags opam =
+    OpamFile.OPAM.with_tags
+      (List.filter (fun tag -> OpamFile.OPAM.flag_of_tag tag = None)
+         (OpamFile.OPAM.tags opam))
+      opam
   in
   let build_doc, install_doc =
     let rec split acc = function
@@ -269,7 +276,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   OpamFile.OPAM.with_deprecated_build_test [] |>
   OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>
-  auto_add_flags
+  auto_add_flags |>
+  filter_out_flagtags
 
 
 

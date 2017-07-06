@@ -367,13 +367,54 @@ let opam_local_env_of_status ret =
          | None -> "0"
          | Some r -> string_of_int r.OpamProcess.r_code)))
 
-let make_command ~env ~name ?dir ?text_command (cmd, args) =
+let make_command st opam ?dir ?text_command (cmd, args) =
+  let nv = OpamFile.OPAM.package opam in
+  let name = OpamPackage.name_to_string nv in
+  let env = OpamTypesBase.env_array (compilation_env st opam) in
   let dir = OpamStd.Option.map OpamFilename.Dir.to_string dir in
   let text =
     let cmd, args = OpamStd.Option.default (cmd, args) text_command in
     OpamProcess.make_command_text name ~args cmd
   in
+  let context =
+    String.concat " | " [
+      OpamVersion.(to_string current);
+      OpamStd.Sys.os_string () ^"/"^ OpamStd.Sys.arch ();
+      (OpamStd.List.concat_map " " OpamPackage.to_string
+         OpamPackage.Set.(elements @@
+                          inter st.compiler_packages st.installed_roots));
+      if OpamPackage.Set.mem nv st.pinned then
+        match OpamFile.OPAM.get_url opam with
+        | None -> "pinned"
+        | Some u ->
+          let src =
+            OpamPath.Switch.pinned_package st.switch_global.root st.switch
+              nv.name
+          in
+          let rev = OpamProcess.Job.run (OpamRepository.revision src u) in
+          Printf.sprintf "pinned(%s%s)"
+            (OpamUrl.to_string u)
+            (OpamStd.Option.to_string
+               (fun r -> "#"^OpamPackage.Version.to_string r) rev)
+      else
+        match
+          OpamRepositoryState.find_package_opt st.switch_repos
+            (OpamSwitchState.repos_list st) nv
+        with
+        | None -> "no repo"
+        | Some (r, _) ->
+          let rt = st.switch_repos in
+          let repo = OpamRepositoryName.Map.find r rt.repositories in
+          let stamp =
+            OpamFile.Repo.stamp
+              (OpamRepositoryName.Map.find r rt.repos_definitions)
+          in
+          OpamUrl.to_string repo.repo_url ^
+          OpamStd.Option.to_string (fun s -> "#"^s) stamp
+    ]
+  in
   OpamSystem.make_command ~env ~name ?dir ~text
+    ~metadata:["context", context]
     ~verbose:(OpamConsole.verbose ()) ~check_existence:false
     cmd args
 
@@ -495,8 +536,6 @@ let remove_package_aux
     | Some o -> o
     | None -> OpamFile.OPAM.create nv
   in
-  let env = OpamTypesBase.env_array (compilation_env t opam) in
-  let name = OpamPackage.name_to_string nv in
   let build_dir =
     OpamStd.Option.default_map
       (OpamFilename.opt_dir
@@ -504,7 +543,7 @@ let remove_package_aux
        build_dir
   in
   let wrappers = get_wrappers t in
-  let mk_cmd = make_command ~env ~name ?dir:build_dir in
+  let mk_cmd = make_command t opam ?dir:build_dir in
   OpamProcess.Job.of_list ~keep_going:true
     (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
   @@+ fun error_pre ->
@@ -615,10 +654,9 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
         | [] -> None
         | cmd::args -> Some (cmd, args))
   in
-  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let wrappers = get_wrappers t in
-  let mk_cmd = make_command ~env ~name ~dir:build_dir in
+  let mk_cmd = make_command t opam ~dir:build_dir in
   OpamProcess.Job.of_list
     (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
      List.map (fun ((cmd,args) as ca) ->
@@ -660,14 +698,13 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     OpamStd.List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))
   in
-  let env = OpamTypesBase.env_array (compilation_env t opam) in
   let name = OpamPackage.name_to_string nv in
   let dir = match build_dir with
     | None -> OpamPath.Switch.build t.switch_global.root t.switch nv
     | Some d -> d
   in
   let wrappers = get_wrappers t in
-  let mk_cmd = make_command ~env ~name ~dir in
+  let mk_cmd = make_command t opam ~dir in
   let rec run_commands = function
     | (cmd,args as ca)::commands ->
       mk_cmd ~text_command:ca

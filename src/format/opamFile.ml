@@ -1712,12 +1712,14 @@ module RepoSyntax = struct
     root_url     : url option;
     dl_cache     : string list option;
     announce     : (string * filter option) list;
+    stamp        : string option;
   }
 
   let create
       ?browse ?upstream ?opam_version
-      ?(redirect=[]) ?root_url ?dl_cache ?(announce=[]) () =
-    { opam_version; browse; upstream; redirect; root_url; dl_cache; announce; }
+      ?(redirect=[]) ?root_url ?dl_cache ?(announce=[]) ?stamp () =
+    { opam_version; browse; upstream; redirect; root_url; dl_cache; announce;
+      stamp; }
 
   let empty = create ()
 
@@ -1728,6 +1730,7 @@ module RepoSyntax = struct
   let root_url t = t.root_url
   let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let announce t = t.announce
+  let stamp t = t.stamp
 
   let with_opam_version opam_version t =
     { t with opam_version = Some opam_version }
@@ -1737,6 +1740,8 @@ module RepoSyntax = struct
   let with_root_url root_url t = { t with root_url = Some root_url }
   let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
   let with_announce announce t = { t with announce }
+  let with_stamp id t = { t with stamp = Some id }
+  let with_stamp_opt stamp t = { t with stamp }
 
   let fields = [
     "opam-version", Pp.ppacc_opt
@@ -1755,6 +1760,9 @@ module RepoSyntax = struct
       with_announce announce
       (Pp.V.map_list ~depth:1
          (Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter)));
+    "stamp", Pp.ppacc_opt
+      with_stamp stamp
+      Pp.V.string
   ]
 
   let pp =

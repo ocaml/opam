@@ -872,6 +872,7 @@ module Repo: sig
     ?browse:string -> ?upstream:string -> ?opam_version:OpamVersion.t ->
     ?redirect:(string * filter option) list -> ?root_url:url ->
     ?dl_cache:string list -> ?announce:(string * filter option) list ->
+    ?stamp:string ->
     unit -> t
 
   (** The minimum OPAM version required for this repository, if defined *)
@@ -895,6 +896,8 @@ module Repo: sig
 
   val announce: t -> (string * filter option) list
 
+  val stamp: t -> string option
+
   val with_opam_version : OpamVersion.t -> t -> t
 
   val with_browse: string -> t -> t
@@ -908,6 +911,10 @@ module Repo: sig
   val with_dl_cache: string list -> t -> t
 
   val with_announce: (string * filter option) list -> t -> t
+
+  val with_stamp: string -> t -> t
+
+  val with_stamp_opt: string option -> t -> t
 end
 
 (** {2 urls.txt file *} *)
