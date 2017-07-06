@@ -392,17 +392,10 @@ let make_command st opam ?dir ?text_command (cmd, args) =
               nv.name
           in
           let rev = OpamProcess.Job.run (OpamRepository.revision src u) in
-          let dirty =
-            OpamProcess.Job.run @@
-            OpamRepository.is_dirty
-              (OpamUrl.parse (OpamFilename.Dir.to_string src)
-                 ~backend:u.OpamUrl.backend)
-          in
-          Printf.sprintf "pinned(%s%s%s)"
+          Printf.sprintf "pinned(%s%s)"
             (OpamUrl.to_string u)
             (OpamStd.Option.to_string
                (fun r -> "#"^OpamPackage.Version.to_string r) rev)
-            (if dirty then ", dirty" else "")
       else
         match
           OpamRepositoryState.find_package_opt st.switch_repos
