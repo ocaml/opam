@@ -153,6 +153,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let checksum = OpamFile.URL.checksum url in
   log "updating %a" (slog OpamUrl.to_string) remote_url;
   OpamRepository.pull_tree
+    ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
     (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
 
 let pinned_package st ?version ?(working_dir=false) name =
@@ -453,7 +454,7 @@ let cleanup_source st old_opam_opt new_opam =
 
 let download_package_source st nv dirname =
   let opam = OpamSwitchState.opam st nv in
-  let cache_dir = OpamPath.download_cache st.switch_global.root in
+  let cache_dir = OpamRepositoryPath.download_cache st.switch_global.root in
   let cache_urls = active_caches st nv in
 
   let fetch_source_job =

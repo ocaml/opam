@@ -271,7 +271,7 @@ let prepare_package_source st nv dir =
     let dl_file_job (basename, urlf) =
       OpamProcess.Job.catch (fun e -> Done (Some e)) @@ fun () ->
       OpamRepository.pull_file
-        ~cache_dir:(OpamPath.download_cache st.switch_global.root)
+        ~cache_dir:(OpamRepositoryPath.download_cache st.switch_global.root)
         ~silent_hits:true
         (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
         (OpamFilename.create dir basename)

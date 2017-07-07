@@ -17,7 +17,7 @@ module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
   val init: dirname -> url -> unit OpamProcess.job
-  val fetch: dirname -> url -> unit OpamProcess.job
+  val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
   val reset: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
   val is_up_to_date: dirname -> url -> bool OpamProcess.job
@@ -33,12 +33,12 @@ module Make (VCS: VCS) = struct
 
   let name = VCS.name
 
-  let fetch_repo_update repo_name repo_root repo_url =
+  let fetch_repo_update repo_name ?cache_dir repo_root repo_url =
     if VCS.exists repo_root then
       OpamProcess.Job.catch (fun e -> Done (OpamRepositoryBackend.Update_err e))
       @@ fun () ->
       OpamRepositoryBackend.job_text repo_name "sync"
-        (VCS.fetch repo_root repo_url)
+        (VCS.fetch ?cache_dir repo_root repo_url)
       @@+ fun () ->
       OpamRepositoryBackend.job_text repo_name "diff"
         (VCS.diff repo_root repo_url)
@@ -54,7 +54,7 @@ module Make (VCS: VCS) = struct
         (VCS.init repo_root repo_url)
       @@+ fun () ->
       OpamRepositoryBackend.job_text repo_name "sync"
-        (VCS.fetch repo_root repo_url)
+        (VCS.fetch ?cache_dir repo_root repo_url)
       @@+ fun () ->
       let tmpdir = OpamFilename.Dir.(of_string (to_string repo_root ^".new")) in
       OpamFilename.copy_dir ~src:repo_root ~dst:tmpdir;
@@ -63,7 +63,7 @@ module Make (VCS: VCS) = struct
       VCS.reset tmpdir repo_url @@| fun () ->
       OpamRepositoryBackend.Update_full tmpdir
 
-  let pull_url dirname checksum url =
+  let pull_url ?cache_dir dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
       (fun e ->
@@ -74,7 +74,7 @@ module Make (VCS: VCS) = struct
          Done (Not_available (Printexc.to_string e)))
     @@ fun () ->
     if VCS.exists dirname then
-      VCS.fetch dirname url @@+ fun () ->
+      VCS.fetch ?cache_dir dirname url @@+ fun () ->
       VCS.is_up_to_date dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
@@ -83,7 +83,7 @@ module Make (VCS: VCS) = struct
     else
       (OpamFilename.mkdir dirname;
        VCS.init dirname url @@+ fun () ->
-       VCS.fetch dirname url @@+ fun () ->
+       VCS.fetch ?cache_dir dirname url @@+ fun () ->
        VCS.reset dirname url @@+ fun () ->
        Done (Result None))
 

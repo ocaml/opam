@@ -2336,7 +2336,10 @@ let source =
         mkdir dir;
         match
           OpamProcess.Job.run
-            (OpamRepository.pull_tree (OpamPackage.to_string nv) dir []
+            (OpamRepository.pull_tree
+               ~cache_dir:(OpamRepositoryPath.download_cache
+                             OpamStateConfig.(!r.root_dir))
+               (OpamPackage.to_string nv) dir []
                [url])
         with
         | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
@@ -2682,7 +2685,7 @@ let clean =
     if download_cache then
       (OpamConsole.msg "Clearing cache of downloaded files\n";
        rmdir (OpamPath.archives_dir root);
-       cleandir (OpamPath.download_cache root));
+       cleandir (OpamRepositoryPath.download_cache root));
     if logs then
       (OpamConsole.msg "Clearing logs\n";
        cleandir (OpamPath.log root))

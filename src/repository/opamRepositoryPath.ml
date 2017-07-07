@@ -13,6 +13,8 @@ open OpamFilename.Op
 
 let create root name = root / "repo" / OpamRepositoryName.to_string name
 
+let download_cache root = root / "download-cache"
+
 let repo repo_root = repo_root // "repo" |> OpamFile.make
 
 let packages_dir repo_root = repo_root / "packages"

@@ -39,7 +39,7 @@ module B = struct
 
   let name = `http
 
-  let fetch_repo_update repo_name repo_root url =
+  let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     let quarantine =
       OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
@@ -67,7 +67,7 @@ module B = struct
       | Some patch -> OpamRepositoryBackend.Update_patch patch
 
 
-  let pull_url dirname checksum remote_url =
+  let pull_url ?cache_dir:_ dirname checksum remote_url =
     log "pull-file into %a: %a"
       (slog OpamFilename.Dir.to_string) dirname
       (slog OpamUrl.to_string) remote_url;

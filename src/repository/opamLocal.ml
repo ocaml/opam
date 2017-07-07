@@ -135,7 +135,7 @@ module B = struct
   let pull_dir_quiet local_dirname url =
     rsync_dirs url local_dirname
 
-  let fetch_repo_update repo_name repo_root url =
+  let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     let quarantine =
       OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
@@ -179,7 +179,7 @@ module B = struct
         | None -> OpamRepositoryBackend.Update_empty
         | Some p -> OpamRepositoryBackend.Update_patch p
 
-  let pull_url local_dirname _checksum remote_url =
+  let pull_url ?cache_dir:_ local_dirname _checksum remote_url =
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
     let remote_url =
