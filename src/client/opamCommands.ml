@@ -2120,12 +2120,41 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_names path =
-    OpamStd.List.filter_map
-      (fun (nameopt, f) -> match nameopt with
-         | None -> OpamFile.OPAM.(name_opt (safe_read f))
-         | some -> some)
-      (OpamPinned.files_in_source path)
+  let guess_names url =
+    let from_opam_files dir =
+      OpamStd.List.filter_map
+        (fun (nameopt, f) -> match nameopt with
+           | None -> OpamFile.OPAM.(name_opt (safe_read f))
+           | some -> some)
+        (OpamPinned.files_in_source dir)
+    in
+    let basename =
+      List.hd (OpamStd.String.split (OpamUrl.basename url) '.')
+    in
+    let found =
+      match OpamUrl.local_dir url with
+      | Some d -> from_opam_files d
+      | None ->
+        let open OpamProcess.Job.Op in
+        OpamProcess.Job.run @@
+        OpamFilename.with_tmp_dir_job @@ fun dir ->
+        OpamRepository.pull_tree
+          ~cache_dir:(OpamRepositoryPath.download_cache
+                        OpamStateConfig.(!r.root_dir))
+          basename dir [] [url] @@| function
+        | Not_available u ->
+          OpamConsole.error_and_exit "Could not retrieve %s" u
+        | Result _ | Up_to_date _ -> from_opam_files dir
+    in
+    match found with
+    | _::_ -> found
+    | [] ->
+      try [OpamPackage.Name.of_string basename] with
+      | Failure _ ->
+        OpamConsole.error_and_exit
+          "Could not infer a package name from %s, please specify it on the \
+           command-line, e.g. 'opam pin NAME TARGET'"
+          (OpamUrl.to_string url)
   in
   let pin_target kind target =
     let looks_like_version_re =
@@ -2218,42 +2247,39 @@ let pin ?(unpin_only=false) () =
          else bad_subcommand commands ("pin", command, params))
     | Some `add, [arg] | Some `default arg, [] ->
       (match pin_target kind arg with
-       | `Source url when OpamUrl.local_dir url <> None ->
-         (* arg is a directory, lookup an opam file *)
-         (match guess_names (OpamFilename.Dir.of_string arg) with
-          | [] ->
-            `Error (false, Printf.sprintf
-                      "No valid package description found at path %s.\n\
-                       Please supply a package name \
-                       (e.g. `opam pin add NAME PATH')"
-                      (OpamUrl.base_url url))
-          | names ->
-            match names with
-            | _::_::_ as n when
-                not @@
-                OpamConsole.confirm
-                  "This will pin the following packages: %s. Continue ?"
-                  (OpamStd.List.concat_map ", " OpamPackage.Name.to_string n)
-              -> OpamStd.Sys.exit 2
-            | names ->
-              OpamGlobalState.with_ `Lock_none @@ fun gt ->
-              OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-              let st =
-                List.fold_left (fun st name ->
-                    try OpamPinCommand.source_pin st name ~edit (Some url)
-                    with OpamPinCommand.Aborted
-                       | OpamPinCommand.Nothing_to_do -> st)
-                  st names
-              in
-              if action then
-                (OpamConsole.msg "\n";
-                 ignore @@
-                 OpamClient.upgrade_t
-                   ~strict_upgrade:false ~auto_install:true ~ask:true
-                   (List.map (fun n -> n, None) names) st);
-              `Ok ())
-       | _ ->
-         `Error (true, "Missing pinning target"))
+       | `None | `Version _ ->
+         let msg =
+           Printf.sprintf "Ambiguous argument %S, if it is the pinning target, \
+                           you must specify a package name first" arg
+         in
+         `Error (true, msg)
+       | `Source url ->
+         let names = guess_names url in
+         let names = match names with
+           | _::_::_ ->
+             if OpamConsole.confirm
+                 "This will pin the following packages: %s. Continue ?"
+                 (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names)
+             then names
+             else OpamStd.Sys.exit 2
+           | _ -> names
+         in
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let st =
+           List.fold_left (fun st name ->
+               try OpamPinCommand.source_pin st name ~edit (Some url)
+               with OpamPinCommand.Aborted
+                  | OpamPinCommand.Nothing_to_do -> st)
+             st names
+         in
+         if action then
+           (OpamConsole.msg "\n";
+            ignore @@
+            OpamClient.upgrade_t
+              ~strict_upgrade:false ~auto_install:true ~ask:true
+              (List.map (fun n -> n, None) names) st);
+         `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
