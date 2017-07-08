@@ -2198,33 +2198,37 @@ let pin ?(unpin_only=false) () =
     | Some `remove, arg ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let to_unpin = match arg with
-        | [target] ->
-          let url = OpamUrl.of_string target in
-          OpamPackage.Set.filter
-            (fun nv ->
-               match OpamSwitchState.url st nv with
-               | Some u ->
-                 let u = OpamFile.URL.url u in
-                 OpamUrl.(u.transport = url.transport && u.path = url.path)
-               | None -> false)
-            st.pinned |>
-          OpamPackage.names_of_packages |>
-          OpamPackage.Name.Set.elements
-        | _ -> []
+      let err, to_unpin =
+        List.fold_left (fun (err, acc) arg ->
+            let as_url =
+              let url = OpamUrl.of_string arg in
+              OpamPackage.Set.filter
+                (fun nv ->
+                   match OpamSwitchState.url st nv with
+                   | Some u ->
+                     let u = OpamFile.URL.url u in
+                     OpamUrl.(u.transport = url.transport && u.path = url.path)
+                   | None -> false)
+                st.pinned |>
+              OpamPackage.names_of_packages |>
+              OpamPackage.Name.Set.elements
+            in
+            match as_url with
+            | _::_ -> err, as_url @ acc
+            | [] ->
+              match (fst package_name) arg with
+              | `Ok name -> err, name::acc
+              | `Error _ ->
+                OpamConsole.error
+                  "No package pinned to this target found, or invalid package \
+                   name: %s" arg;
+                true, acc)
+          (false,[]) arg
       in
-      let to_unpin, errs =
-        if to_unpin <> [] then to_unpin, [] else
-          List.fold_left (fun (names,errs) n -> match (fst package_name) n with
-              | `Ok name -> name::names,errs
-              | `Error e -> names,e::errs)
-            ([],[]) arg
-      in
-      (match errs with
-       | [] ->
-         ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
-         `Ok ()
-       | es -> `Error (false, String.concat "\n" es))
+      if err then OpamStd.Sys.exit 2
+      else
+        (ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
+         `Ok ())
     | Some `edit, [nv]  ->
       (match (fst package) nv with
        | `Ok (name, version) ->
@@ -2274,12 +2278,13 @@ let pin ?(unpin_only=false) () =
              st names
          in
          if action then
-           (OpamConsole.msg "\n";
-            ignore @@
-            OpamClient.upgrade_t
-              ~strict_upgrade:false ~auto_install:true ~ask:true
-              (List.map (fun n -> n, None) names) st);
-         `Ok ())
+           let _st =
+             OpamClient.upgrade_t
+               ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+               (List.map (fun n -> n, None) names) st
+           in
+           `Ok ()
+         else `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
