@@ -157,10 +157,6 @@ let edit_raw name temp_file =
         | Some opam -> opam
       in
       let namecheck = match OpamFile.OPAM.name_opt opam with
-        | None ->
-          OpamConsole.error "Missing \"name: %S\" field."
-            (OpamPackage.Name.to_string name);
-          false
         | Some n when n <> name ->
           OpamConsole.error "Bad \"name: %S\" field, package name is %s"
             (OpamPackage.Name.to_string n) (OpamPackage.Name.to_string name);
@@ -184,7 +180,9 @@ let edit_raw name temp_file =
         else edit ()
     with e ->
       OpamStd.Exn.fatal e;
-      OpamConsole.error "%s" (Printexc.to_string e);
+      (match e with
+       | Failure _ -> ()
+       | e -> OpamConsole.error "%s" (Printexc.to_string e));
       if OpamStd.Sys.tty_in &&
          OpamConsole.confirm "Errors in %s, retry editing ?"
            (OpamFile.to_string temp_file)
@@ -193,7 +191,13 @@ let edit_raw name temp_file =
   in
   match edit () with
   | None -> None
-  | Some new_opam -> Some new_opam
+  | Some new_opam ->
+    OpamConsole.msg
+      "You can edit this file again with \"opam pin edit %s\", export it with \
+       \"opam show %s --raw\"\n"
+      (OpamPackage.Name.to_string name)
+      (OpamPackage.Name.to_string name);
+    Some new_opam
 
 let edit st ?version name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
@@ -227,8 +231,6 @@ let edit st ?version name =
       | None -> opam
     in
     let opam = copy_files st opam in
-    OpamConsole.msg "You can edit this file again with \"opam pin edit %s\"\n"
-      (OpamPackage.Name.to_string name);
     match current_opam with
     |  Some o when OpamFile.OPAM.equal opam o ->
       (OpamConsole.msg "Package metadata unchanged.\n"; st)
@@ -454,6 +456,11 @@ let source_pin
       OpamSwitchState.opam_opt st nv)
   in
 
+  if not need_edit && opam_opt = None then
+    OpamConsole.note
+      "No package definition found for %s: please complete the template"
+      (OpamConsole.colorise `bold (OpamPackage.to_string nv));
+
   let need_edit = need_edit || opam_opt = None in
 
   let opam_opt =
@@ -558,7 +565,7 @@ let unpin st names =
         in
         let st = unpin_one st nv in
         OpamSwitchAction.write_selections st;
-        OpamConsole.msg "%s is no longer %s\n"
+        OpamConsole.msg "Ok, %s is no longer %s\n"
           (OpamPackage.Name.to_string name) pin_str;
         st
       | None ->

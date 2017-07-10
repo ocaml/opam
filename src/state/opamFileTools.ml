@@ -168,6 +168,7 @@ let template nv =
         | None -> []
   in
   create nv
+  |> with_name_opt None
   |> with_maintainer maintainer
   |> with_build
     [[CString "./configure", None;
@@ -176,8 +177,8 @@ let template nv =
   |> with_install
     [[CIdent "make", None; CString "install", None], None]
   |> with_depends
-    (Atom (OpamPackage.Name.of_string "compiler",
-           (Atom (Constraint (`Geq, FString "1.0")))))
+    (Atom (OpamPackage.Name.of_string "specify-dependencies-here",
+           (Atom (Constraint (`Geq, FString "optional-version")))))
   |> with_author maintainer
   |> with_homepage [""]
   |> with_license [""]
