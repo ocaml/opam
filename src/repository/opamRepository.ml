@@ -166,7 +166,7 @@ let pull_from_upstream
   in
   OpamProcess.Job.with_text text @@
   (if working_dir then B.sync_dirty destdir url
-   else B.pull_url destdir cksum url)
+   else B.pull_url ?cache_dir destdir cksum url)
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
     if validate_and_add_to_cache label url cache_dir file checksums then

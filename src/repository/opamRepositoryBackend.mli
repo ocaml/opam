@@ -45,7 +45,7 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function. *)
   val pull_url:
-    dirname -> OpamHash.t option -> url ->
+    ?cache_dir:dirname -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
 
   (** [pull_repo_update] fetches the remote update from [url] to the local
@@ -53,7 +53,8 @@ module type S = sig
       verifications. The file or directory returned is always temporary and
       should be cleaned up by the caller. *)
   val fetch_repo_update:
-    repository_name -> dirname -> url -> update OpamProcess.job
+    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    update OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful for VCS
       backends. Is not expected to work with [pull_repo_update], which doesn't

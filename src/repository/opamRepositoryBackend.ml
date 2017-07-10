@@ -21,10 +21,12 @@ type update =
 
 module type S = sig
   val name: OpamUrl.backend
-  val pull_url: dirname -> OpamHash.t option -> url ->
+  val pull_url:
+    ?cache_dir:dirname -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
-    repository_name -> dirname -> url -> update OpamProcess.job
+    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    update OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
   val sync_dirty: dirname -> url -> filename option download OpamProcess.job
 end

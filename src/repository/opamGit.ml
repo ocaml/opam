@@ -44,15 +44,42 @@ module VCS : OpamVCS.VCS = struct
     | Some h -> "refs/remotes/opam-ref-"^h
     | None -> "refs/remotes/opam-ref"
 
-  let fetch repo_root repo_url =
+  let fetch ?cache_dir repo_root repo_url =
+    (match cache_dir with
+     | Some c ->
+       let dir = c / "git" in
+       if not (OpamFilename.exists_dir dir) then
+         (OpamFilename.mkdir dir;
+          git dir [ "init"; "--bare" ] @@> fun r ->
+          OpamSystem.raise_on_process_error r;
+          Done (Some dir))
+       else Done (Some dir)
+     | None -> Done None)
+    @@+ fun global_cache ->
     let origin = OpamUrl.base_url repo_url in
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
     let opam_ref = remote_ref repo_url in
     let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
     git repo_root [ "remote" ; "set-url"; "origin"; origin ] @@> fun _ ->
+    OpamStd.Option.iter (fun cache ->
+        let alternates = repo_root / ".git" / "objects" / "info" // "alternates" in
+        if not (OpamFilename.exists alternates) then
+          OpamFilename.write alternates
+            (OpamFilename.Dir.to_string (cache / "objects")))
+      global_cache;
     git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
     @@> fun r ->
-    if OpamProcess.check_success_and_cleanup r then Done ()
+    if OpamProcess.check_success_and_cleanup r then
+      let refspec =
+        Printf.sprintf "+%s:refs/remotes/%s" opam_ref
+          (Digest.to_hex (Digest.string (OpamUrl.to_string repo_url)))
+      in
+      match global_cache with
+      | Some cache ->
+        git repo_root [ "push" ; OpamFilename.Dir.to_string cache ;
+                        refspec ]
+        @@> fun _ -> Done ()
+      | None -> Done ()
     else
       (* fallback to fetching all first (workaround, git 2.1 fails silently
          on 'fetch HASH' when HASH isn't available locally already).

@@ -34,7 +34,7 @@ module VCS = struct
     | None -> fun cmd -> cmd
     | Some r -> fun cmd -> cmd @ ["--rev"; r]
 
-  let fetch repo_root repo_url =
+  let fetch ?cache_dir:_ repo_root repo_url =
     hg repo_root
       (withrev repo_url [ "pull"; "-f"; OpamUrl.base_url repo_url ])
     @@> fun r ->
