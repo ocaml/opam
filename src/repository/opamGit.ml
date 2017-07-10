@@ -46,7 +46,7 @@ module VCS : OpamVCS.VCS = struct
 
   let fetch ?cache_dir repo_root repo_url =
     (match cache_dir with
-     | Some c ->
+     | Some c when OpamUrl.local_dir repo_url = None ->
        let dir = c / "git" in
        if not (OpamFilename.exists_dir dir) then
          (OpamFilename.mkdir dir;
@@ -54,7 +54,7 @@ module VCS : OpamVCS.VCS = struct
           OpamSystem.raise_on_process_error r;
           Done (Some dir))
        else Done (Some dir)
-     | None -> Done None)
+     | _ -> Done None)
     @@+ fun global_cache ->
     let origin = OpamUrl.base_url repo_url in
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
