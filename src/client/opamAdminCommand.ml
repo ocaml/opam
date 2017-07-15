@@ -109,7 +109,7 @@ let index_command =
     OpamHTTP.make_index_tar_gz repo_root;
     OpamConsole.msg "Done.\n";
   in
-  Term.(pure cmd $ OpamArg.global_options $ urls_txt_arg),
+  Term.(const cmd $ OpamArg.global_options $ urls_txt_arg),
   OpamArg.term_info command ~doc ~man
 
 
@@ -248,7 +248,7 @@ let cache_command =
 
       OpamConsole.msg "Done.\n";
   in
-  Term.(pure cmd $ OpamArg.global_options $
+  Term.(const cmd $ OpamArg.global_options $
         cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
   OpamArg.term_info command ~doc ~man
 
@@ -300,7 +300,7 @@ let upgrade_command =
             \  opam admin index"
       | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
   in
-  Term.(pure cmd $ OpamArg.global_options $
+  Term.(const cmd $ OpamArg.global_options $
         clear_cache_arg $ create_mirror_arg),
   OpamArg.term_info command ~doc ~man
 
@@ -382,7 +382,7 @@ let lint_command =
     in
     OpamStd.Sys.exit (if ret then 0 else 1)
   in
-  Term.(pure cmd $ OpamArg.global_options $
+  Term.(const cmd $ OpamArg.global_options $
         short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
         warn_error_arg),
   OpamArg.term_info command ~doc ~man
@@ -527,7 +527,7 @@ let list_command =
     in
     OpamListCommand.display st format results
   in
-  Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $
+  Term.(const cmd $ OpamArg.global_options $ OpamArg.package_selection $
         or_arg $ state_selection_arg $ OpamArg.package_listing $ env_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
@@ -614,7 +614,7 @@ let filter_command =
              OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
-  Term.(pure cmd $ OpamArg.global_options $ OpamArg.package_selection $ or_arg $
+  Term.(const cmd $ OpamArg.global_options $ OpamArg.package_selection $ or_arg $
         state_selection_arg $ env_arg $ remove_arg $ dryrun_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
@@ -653,7 +653,7 @@ let default_subcommand =
       cache_command_doc
       upgrade_command_doc
   in
-  Term.(pure usage $ OpamArg.global_options),
+  Term.(const usage $ OpamArg.global_options),
   Term.info "opam admin"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:OpamArg.global_option_section
