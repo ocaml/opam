@@ -587,6 +587,7 @@ ac_default_prefix=`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
+OCAML_PKG_mccs
 OCAML_PKG_opam_file_format
 OCAML_PKG_dose3_algo
 OCAML_PKG_dose3_common
@@ -4381,6 +4382,30 @@ $as_echo "found" >&6; }
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
     OCAML_PKG_opam_file_format=no
+  fi
+
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package mccs" >&5
+$as_echo_n "checking for OCaml findlib package mccs... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in mccs  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_mccs=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_mccs=no
   fi
 
 

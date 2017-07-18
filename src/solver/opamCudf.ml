@@ -516,11 +516,11 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    (match OpamSolverConfig.external_solver_command
-            ~input:"$in" ~output:"$out" ~criteria
-     with
-     | Some cmd -> Printf.fprintf oc "# %s\n" (String.concat " " cmd)
-     | None -> Printf.fprintf oc "#internal opam solver\n");
+    let cmd =
+      OpamSolverConfig.external_solver_command
+        ~input:"$in" ~output:"$out" ~criteria
+    in
+    Printf.fprintf oc "# %s\n" (String.concat " " cmd);
     Cudf_printer.pp_cudf oc cudf;
     OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
       let name = OpamPackage.name_to_string pkg in
@@ -559,19 +559,20 @@ let dose_solver_callback ~criteria (_,universe,_ as cudf) =
       Cudf_printer.pp_cudf oc cudf;
       close_out oc
     in
-    let solver_command =
-      match
+    let () =
+      let cmd =
         OpamSolverConfig.external_solver_command
           ~input:(OpamFilename.to_string solver_in)
           ~output:(OpamFilename.to_string solver_out)
           ~criteria
-      with
-      | Some c -> c
-      | None -> raise (Common.CudfSolver.Error "External solver misconfigured")
+      in
+      if external_solver_available () then
+        OpamSystem.command
+          ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
+          cmd
+      else
+        Mccs.call_solver (Array.of_list cmd)
     in
-    OpamSystem.command
-      ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
-      solver_command;
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
       raise (Common.CudfSolver.Error "no output")

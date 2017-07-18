@@ -110,6 +110,7 @@ AC_CHECK_OCAML_PKG([cudf])
 AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
+AC_CHECK_OCAML_PKG([mccs])
 
 dnl echo
 dnl echo "extlib........................ ${OCAML_PKG_extlib}"

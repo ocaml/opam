@@ -830,10 +830,9 @@ let config =
             OpamSolverConfig.external_solver_command
               ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
           print "external-solver" "%s"
-            (OpamStd.Option.to_string ~none:"no" (String.concat " ")
-               external_solver);
-          if external_solver <> None then
-            print "criteria" "%s" (OpamSolverConfig.criteria `Default);
+            (String.concat " " external_solver);
+          (* if external_solver <> None then
+           *   print "criteria" "%s" (OpamSolverConfig.criteria `Default); *)
           let nprint label n =
             if n <> 0 then [Printf.sprintf "%d (%s)" n label]
             else [] in

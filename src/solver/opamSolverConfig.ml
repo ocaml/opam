@@ -33,8 +33,8 @@ type 'a options_fun =
 let default =
   let external_solver = lazy (
     if OpamSystem.command_exists "aspcud" then Some [CIdent "aspcud", None] else
-    if OpamSystem.command_exists "packup" then Some [CIdent "packup", None] else
     if OpamSystem.command_exists "mccs" then Some [CIdent "mccs", None] else
+    if OpamSystem.command_exists "packup" then Some [CIdent "packup", None] else
       None
   ) in
   {
@@ -108,23 +108,37 @@ let solver_of_cmd cmd =
   OpamStd.Option.Op.(solver_opt +! `aspcud)
 
 let external_solver_command ~input ~output ~criteria =
-  let open OpamStd.Option.Op in
-  Lazy.force !r.external_solver >>| fun cmd ->
-  let cmd = match cmd with
-    | [exe] -> exe :: List.assoc (solver_of_cmd cmd) solver_args
-    | cmd -> cmd
-  in
-  OpamFilter.single_command (fun v ->
-      if not (OpamVariable.Full.is_global v) then None else
-      match OpamVariable.to_string (OpamVariable.Full.variable v) with
-      | "aspcud" -> Some (S "aspcud")
-      | "mccs" -> Some (S "mccs")
-      | "packup" -> Some (S "packup")
-      | "input" -> Some (S input)
-      | "output" -> Some (S output)
-      | "criteria" -> Some (S criteria)
-      | _ -> None)
-    cmd
+  match Lazy.force !r.external_solver with
+  | Some cmd ->
+    let cmd = match cmd with
+      | [exe] -> exe :: List.assoc (solver_of_cmd cmd) solver_args
+      | cmd -> cmd
+    in
+    OpamFilter.single_command (fun v ->
+        if not (OpamVariable.Full.is_global v) then None else
+        match OpamVariable.to_string (OpamVariable.Full.variable v) with
+        | "aspcud" -> Some (S "aspcud")
+        | "mccs" -> Some (S "mccs")
+        | "packup" -> Some (S "packup")
+        | "input" -> Some (S input)
+        | "output" -> Some (S output)
+        | "criteria" -> Some (S criteria)
+        | _ -> None)
+      cmd
+  | None ->
+    let cmd =
+      (CString "opam-integrated-mccs", None) ::
+      (CString "-glpk", None) (* :: (CString "/usr/share/mccs/cbclp", None) *) ::
+      List.assoc `mccs solver_args
+    in
+    OpamFilter.single_command (fun v ->
+        if not (OpamVariable.Full.is_global v) then None else
+        match OpamVariable.to_string (OpamVariable.Full.variable v) with
+        | "input" -> Some (S input)
+        | "output" -> Some (S output)
+        | "criteria" -> Some (S criteria)
+        | _ -> None)
+      cmd
 
 type criteria = {
   crit_default: string;
@@ -199,7 +213,7 @@ let check_aspcud_version = function
 let with_auto_criteria config =
   let criteria = lazy (
     match Lazy.force config.external_solver with
-    | None -> None
+    | None -> Some default_criteria_mccs
     | Some solver_cmd ->
       match solver_of_cmd solver_cmd with
       | `mccs -> Some default_criteria_mccs

@@ -357,7 +357,7 @@ let resolve ?(verbose=true) universe ~orphans request =
          (OpamPackage.Set.of_list
             (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
-    if OpamCudf.external_solver_available ()
+    if OpamCudf.external_solver_available () || true
     then
       try
         let resp = OpamCudf.resolve ~extern:true ~version_map u req in

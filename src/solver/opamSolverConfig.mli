@@ -36,6 +36,6 @@ include OpamStd.Config.Sig
    and type 'a options_fun := 'a options_fun
 
 val external_solver_command:
-  input:string -> output:string -> criteria:string -> string list option
+  input:string -> output:string -> criteria:string -> string list
 
 val criteria: OpamTypes.solver_criteria -> string
