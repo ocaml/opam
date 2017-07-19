@@ -359,7 +359,7 @@ let options =
     let docdir = mk_dir docdir in
     { file; prefix; script; pkgname; mandir; libdir; stubsdir; topdir; docdir }
   in
-  Term.(pure make_options $ file $ prefix $ script $ pkgname
+  Term.(const make_options $ file $ prefix $ script $ pkgname
         $ mandir $ libdir $ stubsdir $ topdir $ docdir)
 
 let command =
@@ -369,7 +369,7 @@ let command =
            true, Arg.info ["u";"uninstall";"remove"] ~doc:"Remove the package"; ])
   in
   Term.(
-    pure
+    const
       (fun options remove ->
          if remove then uninstall options else install options)
     $ options $ remove)

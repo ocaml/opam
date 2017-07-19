@@ -95,7 +95,7 @@ let global_options =
       OpamConsole.warning "Running as root is not recommended";
     options, self_upgrade_status
   in
-  Term.(pure self_upgrade $ no_self_upgrade $ global_options)
+  Term.(const self_upgrade $ no_self_upgrade $ global_options)
 
 let apply_global_options (options,self_upgrade) =
   apply_global_options options;
@@ -297,7 +297,7 @@ let init =
              no switch has been created.\n\
              Use 'opam switch create <compiler>' to get started."
   in
-  Term.(pure init
+  Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
         $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
         $config_file $no_config_file $bypass_checks),
@@ -357,7 +357,7 @@ let list ?(force_search=false) () =
       ])
   in
   let search =
-    if force_search then Term.pure true else
+    if force_search then Term.const true else
       mk_flag ["search"] ~section:selection_docs
         "Match $(i,PATTERNS) against the full descriptions of packages, and \
          require all of them to match, instead of requiring at least one to \
@@ -479,7 +479,7 @@ let list ?(force_search=false) () =
     | Some tags_list ->
       OpamListCommand.print_depexts st results tags_list
   in
-  Term.(pure list $global_options $package_selection $state_selector
+  Term.(const list $global_options $package_selection $state_selector
         $no_switch $depexts $repos $owns_file $disjunction $search
         $package_listing $pattern_list),
   term_info "list" ~doc ~man
@@ -606,7 +606,7 @@ let show =
         `Ok ()
   in
   Term.(ret
-          (pure pkg_info $global_options $fields $show_empty $raw $where $list_files
+          (const pkg_info $global_options $fields $show_empty $raw $where $list_files
            $file $normalise $atom_or_local_list)),
   term_info "show" ~doc ~man
 
@@ -895,7 +895,7 @@ let config =
   in
 
   Term.ret (
-    Term.(pure config
+    Term.(const config
           $global_options $command $shell_opt $sexp
           $inplace_path
           $dot_profile_flag $list $all $global $user
@@ -942,7 +942,7 @@ let var =
                      'pkg:var' instead.")
   in
   Term.ret (
-    Term.(pure print_var $global_options $package $varname)
+    Term.(const print_var $global_options $package $varname)
   ),
   term_info "var" ~doc ~man
 
@@ -975,7 +975,7 @@ let exec =
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamConfigCommand.exec gt ~inplace_path cmd
   in
-  Term.(pure exec $global_options $inplace_path $cmd),
+  Term.(const exec $global_options $inplace_path $cmd),
   term_info "exec" ~doc ~man
 
 (* ENV *)
@@ -1022,7 +1022,7 @@ let env =
         ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
         (OpamEnv.add [] [])
   in
-  Term.(pure env $global_options $shell_opt $sexp $inplace_path $revert),
+  Term.(const env $global_options $shell_opt $sexp $inplace_path $revert),
   term_info "env" ~doc ~man
 
 (* INSTALL *)
@@ -1124,7 +1124,7 @@ let install =
       `Ok ()
   in
   Term.ret
-    Term.(pure install $global_options $build_options
+    Term.(const install $global_options $build_options
           $add_to_roots $deps_only $restore $destdir
           $atom_or_local_list),
   term_info "install" ~doc ~man
@@ -1203,7 +1203,7 @@ let remove =
       in
       ignore @@ OpamClient.remove st ~autoremove ~force atoms
   in
-  Term.(pure remove $global_options $build_options $autoremove $force $destdir
+  Term.(const remove $global_options $build_options $autoremove $force $destdir
         $atom_or_local_list),
   term_info "remove" ~doc ~man
 
@@ -1288,7 +1288,7 @@ let reinstall =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (pure reinstall $global_options $build_options $atom_or_local_list
+  Term.(ret (const reinstall $global_options $build_options $atom_or_local_list
              $cmd)),
   term_info "reinstall" ~doc ~man
 
@@ -1353,7 +1353,7 @@ let update =
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
     if not success then OpamStd.Sys.exit 10
   in
-  Term.(pure update $global_options $jobs_flag $name_list
+  Term.(const update $global_options $jobs_flag $name_list
         $repos_only $dev_only $all $check $upgrade),
   term_info "update" ~doc ~man
 
@@ -1407,7 +1407,7 @@ let upgrade =
       ignore @@ OpamClient.upgrade st ~check ~all atoms;
       `Ok ()
   in
-  Term.(ret (pure upgrade $global_options $build_options $fixup $check $all
+  Term.(ret (const upgrade $global_options $build_options $fixup $check $all
              $atom_or_local_list)),
   term_info "upgrade" ~doc ~man
 
@@ -1490,10 +1490,10 @@ let repository =
            "Act on the selections of the given list of switches")
     in
     let switches =
-      Term.(pure (List.map (fun s -> `Switch (OpamSwitch.of_string s)))
+      Term.(const (List.map (fun s -> `Switch (OpamSwitch.of_string s)))
             $ Arg.value switches)
     in
-    Term.(pure (fun l1 l2 -> match l1@l2 with [] -> [`Current_switch] | l -> l)
+    Term.(const (fun l1 l2 -> match l1@l2 with [] -> [`Current_switch] | l -> l)
           $ Arg.value flags $ switches)
   in
   let rank =
@@ -1665,7 +1665,7 @@ let repository =
     | command, params -> bad_subcommand commands ("repository", command, params)
   in
   Term.ret
-    Term.(pure repository $global_options $command $repo_kind_flag
+    Term.(const repository $global_options $command $repo_kind_flag
           $print_short_flag $scope $rank $params),
   term_info "repository" ~doc ~man
 
@@ -2003,7 +2003,7 @@ let switch =
       `Ok ()
     | command, params -> bad_subcommand commands ("switch", command, params)
   in
-  Term.(ret (pure switch
+  Term.(ret (const switch
              $global_options $build_options $command
              $print_short_flag
              $no_switch
@@ -2076,7 +2076,7 @@ let pin ?(unpin_only=false) () =
   in
   let command, params =
     if unpin_only then
-      Term.pure (Some `remove),
+      Term.const (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
       mk_subcommands_with_default commands in
@@ -2298,7 +2298,7 @@ let pin ?(unpin_only=false) () =
     | command, params -> bad_subcommand commands ("pin", command, params)
   in
   Term.ret
-    Term.(pure pin
+    Term.(const pin
           $global_options $build_options
           $kind $edit $no_act $dev_repo $print_short_flag $command $params),
   term_info "pin" ~doc ~man
@@ -2418,7 +2418,7 @@ let source =
       in
       ignore @@ OpamClient.PIN.pin t nv.name ~version:nv.version target
   in
-  Term.(pure source
+  Term.(const source
         $global_options $atom $dev_repo $pin $dir),
   term_info "source" ~doc ~man
 
@@ -2564,7 +2564,7 @@ let lint =
     in
     if err then OpamStd.Sys.exit 1
   in
-  Term.(pure lint $global_options $files $package $normalise $short $warnings),
+  Term.(const lint $global_options $files $package $normalise $short $warnings),
   term_info "lint" ~doc ~man
 
 (* CLEAN *)
@@ -2721,7 +2721,7 @@ let clean =
       (OpamConsole.msg "Clearing logs\n";
        cleandir (OpamPath.log root))
   in
-  Term.(pure clean $global_options $dry_run $download_cache $repos $repo_cache
+  Term.(const clean $global_options $dry_run $download_cache $repos $repo_cache
         $logs $switch $all_switches),
   term_info "clean" ~doc ~man
 
@@ -2747,7 +2747,7 @@ let help =
       | `Ok t when t = "topics" -> List.iter print_endline cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
-  Term.(ret (pure help $Term.man_format $Term.choice_names $topic)),
+  Term.(ret (const help $Term.man_format $Term.choice_names $topic)),
   Term.info "help" ~doc ~man
 
 let default =
@@ -2794,7 +2794,7 @@ let default =
       upgrade_doc config_doc repository_doc switch_doc pin_doc
       OpamAdminCommand.admin_command_doc
   in
-  Term.(pure usage $global_options),
+  Term.(const usage $global_options),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:global_option_section
@@ -2803,7 +2803,7 @@ let default =
 
 let admin =
   let doc = "Use 'opam admin' instead (abbreviation not supported)" in
-  Term.(ret (pure (`Error (true, doc)))),
+  Term.(ret (const (`Error (true, doc)))),
   Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
     ~man:[`S "SYNOPSIS";
           `P doc]

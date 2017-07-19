@@ -871,7 +871,7 @@ let global_options =
        pointing to. \
        This only affects packages explicitely listed on the command-line."
   in
-  Term.(pure create_global_options
+  Term.(const create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
@@ -956,7 +956,7 @@ let build_options =
        builds to break when using this. Note that version constraints on \
        optional dependencies and conflicts are unaffected."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
-  Term.(pure create_build_options
+  Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
@@ -1092,7 +1092,7 @@ let package_selection =
         OpamListCommand.Coinstallable_with (dependency_toggles, pkgs))
       coinstallable_with
   in
-  Term.(pure filter $
+  Term.(const filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
         resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
         field_match $ has_flag $ has_tag)
@@ -1175,5 +1175,5 @@ let package_listing =
       order = if sort then `Dependency else `Standard;
     }
   in
-  Term.(pure format $ all_versions $ print_short $ sort $ columns $ normalise $
+  Term.(const format $ all_versions $ print_short $ sort $ columns $ normalise $
         wrap $ separator)
