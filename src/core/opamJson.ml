@@ -10,38 +10,9 @@
 
 include Jsonm
 
-(* String conversion *)
-exception Escape of ((int * int) * (int * int)) * error
 type t =
   [ `Null | `Bool of bool | `Float of float| `String of string
   | `A of t list | `O of (string * t) list ]
-
-let json_of_src ?encoding src =
-  let dec d = match decode d with
-    | `Lexeme l -> l
-    | `Error e -> raise (Escape (decoded_range d, e))
-    | `End | `Await -> assert false
-  in
-  let rec value v k d = match v with
-    | `Os -> obj [] k d  | `As -> arr [] k d
-    | `Null | `Bool _ | `String _ | `Float _ as v -> k v d
-    | _ -> assert false
-  and arr vs k d = match dec d with
-    | `Ae -> k (`A (List.rev vs)) d
-    | v -> value v (fun v -> arr (v :: vs) k) d
-  and obj ms k d = match dec d with
-    | `Oe -> k (`O (List.rev ms)) d
-    | `Name n -> value (dec d) (fun v -> obj ((n, v) :: ms) k) d
-    | _ -> assert false
-  in
-  let d = decoder ?encoding src in
-  try `JSON (value (dec d) (fun v _ -> v) d) with
-  | Escape (r, e) -> `Error (r, e)
-
-let of_string str: t =
-  match json_of_src (`String str) with
-  | `JSON j  -> j
-  | `Error _ -> failwith "json_of_string"
 
 let json_to_dst ~minify dst (json:t) =
   let enc e l = ignore (encode e (`Lexeme l)) in
