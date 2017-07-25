@@ -28,7 +28,6 @@ begin library "opam-core"
     "ocamlgraph"
     "re"
     "re.str"
-    "jsonm"
   ]
 
 end

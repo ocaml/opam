@@ -132,7 +132,6 @@ AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG([cudf])
 AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
-AC_CHECK_OCAML_PKG([jsonm])
 AC_CHECK_OCAML_PKG([opam-file-format])
 
 dnl echo
@@ -142,7 +141,6 @@ dnl echo "cmdliner...................... ${OCAML_PKG_cmdliner}"
 dnl echo "graph......................... ${OCAML_PKG_ocamlgraph}"
 dnl echo "cudf.......................... ${OCAML_PKG_cudf}"
 dnl echo "dose3......................... ${OCAML_PKG_dose3}"
-dnl echo "jsonm......................... ${OCAML_PKG_jsonm}"
 echo
 
 
@@ -153,7 +151,6 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_jsonm" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno"; }],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"

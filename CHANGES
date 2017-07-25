@@ -2,6 +2,9 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+
+* Remove jsonm and transitive uutf dependency.
+
 2.0.0~beta3
 * (*) Renamed `--soft-request` to `--best-effort`
 * Fixed and improved speed of the package file tracking mechanism

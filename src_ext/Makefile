@@ -2,7 +2,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner graph cudf dose uutf jsonm opam_file_format
+SRC_EXTS = cppo extlib re cmdliner graph cudf dose opam_file_format
 
 URL_cppo = https://github.com/mjambon/cppo/archive/v1.3.2.tar.gz
 MD5_cppo = 133c9f8afadb6aa1c5ba0f5eb55c5648
@@ -24,12 +24,6 @@ MD5_cudf = 2047222fcf78278c6a24ac619fc39abb
 
 URL_dose = https://gforge.inria.fr/frs/download.php/file/35975/dose3-5.0.tar.gz
 MD5_dose = 228c6a73a0759783fd01181047046610
-
-URL_uutf = http://erratique.ch/software/uutf/releases/uutf-0.9.3.tbz
-MD5_uutf = 708c0421e158b390c7cc341f37b40add
-
-URL_jsonm = http://erratique.ch/software/jsonm/releases/jsonm-0.9.1.tbz
-MD5_jsonm = 631a5dabdada83236c83056f60e42685
 
 URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
@@ -161,7 +155,7 @@ clean:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=cleanup
 
 distclean:
-	rm -rf cudf extlib re graph dose cmdliner uutf jsonm opam_file_format ._ncdi ._bcdi ._d
+	rm -rf cudf extlib re graph dose cmdliner opam_file_format ._ncdi ._bcdi ._d
 	rm -f depends.ocp
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	rm -f *.cm* *.o *.a *.lib *.obj
@@ -169,11 +163,7 @@ distclean:
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
 
 LIB_EXTS = extlib re cmdliner graph cudf dose_common dose_versioning dose_pef dose_opam dose_algo \
-           uutf jsonm opam_file_format
-
-proj_uutf: proj_cmdliner
-
-proj_jsonm: proj_uutf
+           opam_file_format
 
 proj_cudf: proj_extlib
 
@@ -253,12 +243,6 @@ SRC_dose_algo = defaultgraphs.ml diagnostic.ml dominators.ml flatten.ml \
 								statistics.ml depsolver_int.ml depsolver.ml strongconflicts_int.ml\
 								strongconflicts.ml strongdeps.ml
 $(call SUB_PACK_LIB,dose,algo,extlib graph cudf)
-
-SRC_uutf = uutf.ml
-$(call BASIC_LIB,uutf,src)
-
-SRC_jsonm = jsonm.ml
-$(call BASIC_LIB,jsonm,src,uutf)
 
 SRC_opam_file_format = \
   opamParserTypes.mli \

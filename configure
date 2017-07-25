@@ -588,7 +588,6 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
 OCAML_PKG_opam_file_format
-OCAML_PKG_jsonm
 OCAML_PKG_dose3_algo
 OCAML_PKG_dose3_common
 OCAML_PKG_cudf
@@ -4771,32 +4770,6 @@ $as_echo "not found" >&6; }
   fi
 
 
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package jsonm" >&5
-$as_echo_n "checking for OCaml findlib package jsonm... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in jsonm  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_jsonm=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_jsonm=no
-  fi
-
-
-
-
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-file-format" >&5
 $as_echo_n "checking for OCaml findlib package opam-file-format... " >&6; }
 
@@ -4831,7 +4804,6 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_jsonm" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno"; }; then :
 
   echo "============================================================================"
