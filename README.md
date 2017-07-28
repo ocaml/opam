@@ -30,7 +30,7 @@ libraries, rather than use `make lib-ext` which would cause conflicts. It's
 easier to already have a working opam installation in this case, so you can do
 it as a second step.
 
-* Make sure to have ocamlfind, ocamlgraph, cmdliner >= 0.9.8, jsonm, cudf,
+* Make sure to have ocamlfind, ocamlgraph, cmdliner >= 0.9.8, cudf,
   dose3, re >= 1.2.0, opam-file-format installed. Or run `opam install
   opam-lib --deps-only` if you already have a working instance. Re-run
   `./configure` once done
@@ -117,9 +117,7 @@ The release cycle respects [Semantic Versioning](http://semver.org/).
 ## Copyright and license
 
 The version comparison function in `src/core/opamVersionCompare.ml` is part of
-the Dose library and Copyright 2011 Ralf Treinen. Some code in
-`src/core/opamJson.ml` is taken from the documentation of `Jsonm` and is
-Copyright 2012 Daniel C. Bünzli. See the specific file for details.
+the Dose library and Copyright 2011 Ralf Treinen.
 
 All other code is:
 

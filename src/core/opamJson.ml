@@ -8,80 +8,81 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include Jsonm
-
-(* String conversion *)
-exception Escape of ((int * int) * (int * int)) * error
 type t =
   [ `Null | `Bool of bool | `Float of float| `String of string
   | `A of t list | `O of (string * t) list ]
 
-let json_of_src ?encoding src =
-  let dec d = match decode d with
-    | `Lexeme l -> l
-    | `Error e -> raise (Escape (decoded_range d, e))
-    | `End | `Await -> assert false
+let addc b c = Buffer.add_char b c
+let adds b s = Buffer.add_string b s
+let adds_esc b s =
+  let len = String.length s in
+  let max_idx = len - 1 in
+  let flush b start i =
+    if start < len then Buffer.add_substring b s start (i - start);
   in
-  let rec value v k d = match v with
-    | `Os -> obj [] k d  | `As -> arr [] k d
-    | `Null | `Bool _ | `String _ | `Float _ as v -> k v d
-    | _ -> assert false
-  and arr vs k d = match dec d with
-    | `Ae -> k (`A (List.rev vs)) d
-    | v -> value v (fun v -> arr (v :: vs) k) d
-  and obj ms k d = match dec d with
-    | `Oe -> k (`O (List.rev ms)) d
-    | `Name n -> value (dec d) (fun v -> obj ((n, v) :: ms) k) d
-    | _ -> assert false
+  let rec loop start i = match i > max_idx with
+  | true -> flush b start i
+  | false ->
+      let next = i + 1 in
+      match String.get s i with
+      | '"' -> flush b start i; adds b "\\\""; loop next next
+      | '\\' -> flush b start i; adds b "\\\\"; loop next next
+      | '\x00' .. '\x1F' | '\x7F' (* US-ASCII control chars *) as c ->
+          flush b start i;
+          adds b (Printf.sprintf "\\u%04X" (Char.code c));
+          loop next next
+      | _ -> loop start next
   in
-  let d = decoder ?encoding src in
-  try `JSON (value (dec d) (fun v _ -> v) d) with
-  | Escape (r, e) -> `Error (r, e)
+  loop 0 0
 
-let of_string str: t =
-  match json_of_src (`String str) with
-  | `JSON j  -> j
-  | `Error _ -> failwith "json_of_string"
+let enc_json_string b s = addc b '"'; adds_esc b s; addc b '"'
+let enc_vsep b = addc b ','
+let enc_lexeme b = function
+| `Null -> adds b "null"
+| `Bool true -> adds b "true"
+| `Bool false -> adds b "false"
+| `Float f -> Printf.bprintf b "%.16g" f
+| `String s -> enc_json_string b s
+| `Name n -> enc_json_string b n; addc b ':'
+| `As -> addc b '['
+| `Ae -> addc b ']'
+| `Os -> addc b '{'
+| `Oe -> addc b '}'
 
-let json_to_dst ~minify dst (json:t) =
-  let enc e l = ignore (encode e (`Lexeme l)) in
-  let rec value v k e = match v with
-    | `A vs -> arr vs k e
-    | `O ms -> obj ms k e
-    | `Null | `Bool _ | `Float _ | `String _ as v -> enc e v; k e
-  and arr vs k e = enc e `As; arr_vs vs k e
-  and arr_vs vs k e = match vs with
-    | v :: vs' -> value v (arr_vs vs' k) e
-    | [] -> enc e `Ae; k e
-  and obj ms k e = enc e `Os; obj_ms ms k e
-  and obj_ms ms k e = match ms with
-    | (n, v) :: ms -> enc e (`Name n); value v (obj_ms ms k) e
-    | [] -> enc e `Oe; k e
+let enc_json b (json:t) =
+  let enc = enc_lexeme in
+  let enc_sep seq enc_seq k b = match seq with
+  | [] -> enc_seq seq k b
+  | seq -> enc_vsep b; enc_seq seq k b
   in
-  let e = encoder ~minify dst in
-  let finish e = ignore (encode e `End) in
-  match json with
-  | `A _ | `O _ as json -> value json finish e
-  | _ -> invalid_arg "invalid json text"
+  let rec value v k b = match v with
+    | `A vs -> arr vs k b
+    | `O ms -> obj ms k b
+    | `Null | `Bool _ | `Float _ | `String _ as v -> enc b v; k b
+  and arr vs k b = enc b `As; arr_vs vs k b
+  and arr_vs vs k b = match vs with
+    | v :: vs' -> value v (enc_sep vs' arr_vs k) b
+    | [] -> enc b `Ae; k b
+  and obj ms k b = enc b `Os; obj_ms ms k b
+  and obj_ms ms k b = match ms with
+    | (n, v) :: ms -> enc b (`Name n); value v (enc_sep ms obj_ms k) b
+    | [] -> enc b `Oe; k b
+  in
+  value json (fun _ -> ()) b
 
 let to_string (json:t) =
-  let buf = Buffer.create 1024 in
-  json_to_dst ~minify:false (`Buffer buf) json;
-  Buffer.contents buf
+  let b = Buffer.create 1024 in
+  enc_json b json;
+  Buffer.contents b
 
-let json_buffer = ref []
+let json_buffer =
+  ref []
 
 let append key json =
   json_buffer := (key,json) :: !json_buffer
 
 let flush oc =
-  json_to_dst ~minify:false (`Channel oc)
-    (`O (List.rev !json_buffer))
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2012 Daniel C. Bünzli
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-  ---------------------------------------------------------------------------*)
+  let b = Buffer.create 1024 in
+  let json = (`O (List.rev !json_buffer)) in
+  let json = enc_json b json; Buffer.contents b in
+  output_string oc json; flush oc
