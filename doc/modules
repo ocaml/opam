@@ -58,8 +58,8 @@ src
 │   │   [ opam-solver lib ]
 │   ├── opamSolverConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation)
 │   ├── opamActionGraph.ml              Handles graphs of actions (package changes), based on ocamlgraph
+│   ├── opamCudfSolver.ml               Bindings to CUDF solvers
 │   ├── opamCudf.ml                     Solver interaction, conversion of answer to solution
-│   ├── opamHeuristic.ml                The "internal solver", brute-force search using Dose's checker
 │   └── opamSolver.ml                   Entry point, conversion of universe to cudf, dependencies computation
 │
 ├── state                               Handling of the ~/.opam hierarchy and actions on it

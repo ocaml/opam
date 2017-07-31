@@ -16,7 +16,6 @@ open OpamStateTypes
 
 (** Resolve an user request *)
 val resolve:
-  ?verbose:bool ->
   'a switch_state ->
   user_action ->
   orphans:package_set ->

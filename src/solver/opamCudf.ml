@@ -499,8 +499,6 @@ let string_of_request r =
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
 
-let external_solver_available () = true
-
 let solver_calls = ref 0
 
 let dump_universe oc univ =

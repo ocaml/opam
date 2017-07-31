@@ -109,72 +109,6 @@ let orphans ?changes ?(transitive=false) t =
     (slog OpamPackage.Set.to_string) orphan_versions;
   t, full_orphans, orphan_versions
 
-(* The internal "solver" needs some rewrites of the requests, to make them
-   more explicit. This has no effect when using the external solver. *)
-let preprocessed_request t full_orphans orphan_versions
-    ?wish_install ?wish_remove ?wish_upgrade ?criteria () =
-  let request =
-    OpamSolver.request ?install:wish_install ?remove:wish_remove
-      ?upgrade:wish_upgrade ?criteria ()
-  in
-  if OpamCudf.external_solver_available () then request else
-  let { wish_install; wish_remove; wish_upgrade; criteria; _ } = request in
-  (* Convert install to upgrade when necessary, request roots installed *)
-  let eqnames, neqnames =
-    List.partition (function (_,Some(`Eq,_)) -> true | _ -> false)
-      wish_install in
-  let add_wish_install =
-    List.rev_append eqnames
-      (OpamSolution.atoms_of_packages
-         (t.installed_roots %% Lazy.force t.available_packages)) in
-  let base_packages =
-    OpamSolution.eq_atoms_of_packages t.compiler_packages in
-  let base_packages =
-    List.map (fun atom ->
-        try OpamPackage.Set.find (OpamFormula.check atom) t.installed
-            |> OpamSolution.eq_atom_of_package
-        with Not_found -> atom)
-      base_packages in
-  let wish_install = List.rev_append add_wish_install wish_install in
-  let wish_install = List.rev_append base_packages wish_install in
-  let uninstalled_eqnames =
-    List.filter (fun (name,_) -> not (OpamSwitchState.is_name_installed t name))
-      eqnames in
-  let wish_upgrade = List.rev_append neqnames wish_upgrade in
-  let wish_upgrade = List.rev_append uninstalled_eqnames wish_upgrade in
-  (* Remove orphans *)
-  let wish_remove =
-    OpamSolution.atoms_of_packages full_orphans @
-    OpamSolution.eq_atoms_of_packages orphan_versions @
-    wish_remove in
-  let available =
-    Lazy.force t.available_packages -- orphan_versions -- full_orphans in
-  let still_available ?(up=false) (name,_ as atom) =
-    let installed =
-      if up then
-        try Some (OpamPackage.version @@
-                  OpamPackage.package_of_name t.installed name)
-        with Not_found -> None
-      else None in
-    OpamPackage.Set.exists
-      (fun p -> OpamFormula.check atom p &&
-                match installed with Some i -> OpamPackage.version p >= i
-                                   | None -> true)
-      available in
-  let upgradeable, non_upgradeable =
-    List.partition (still_available ~up:true) wish_upgrade in
-  let wish_install =
-    List.filter (still_available ~up:false)
-      (non_upgradeable @ wish_install) in
-  let wish_upgrade =
-    List.filter (still_available ~up:true) upgradeable in
-  let nrequest = { wish_install; wish_remove; wish_upgrade;
-                   criteria; extra_attributes = [] } in
-  log "Preprocess request: %a => %a"
-    (slog OpamSolver.string_of_request) request
-    (slog OpamSolver.string_of_request) nrequest;
-  nrequest
-
 (* Splits a list of atoms into the installed and uninstalled ones*)
 let get_installed_atoms t atoms =
   List.fold_left (fun (packages, not_installed) atom ->
@@ -271,9 +205,9 @@ let compute_upgrade_t
       ~orphans:(full_orphans ++ orphan_versions)
       ~requested:names
       ~reinstall:t.reinstall
-      (preprocessed_request t full_orphans orphan_versions
-         ~wish_install:to_install
-         ~wish_upgrade:(OpamSolution.atoms_of_packages to_upgrade)
+      (OpamSolver.request
+         ~install:to_install
+         ~upgrade:(OpamSolution.atoms_of_packages to_upgrade)
          ~criteria:`Upgrade ())
   else
   let changes =
@@ -294,10 +228,10 @@ let compute_upgrade_t
   OpamSolution.resolve t Upgrade
     ~orphans:(full_orphans ++ orphan_versions)
     ~requested:names
-    (preprocessed_request t full_orphans orphan_versions
-       ~wish_install:to_install
-       ~wish_remove:(OpamSolution.atoms_of_packages to_remove)
-       ~wish_upgrade:upgrade_atoms
+    (OpamSolver.request
+       ~install:to_install
+       ~remove:(OpamSolution.atoms_of_packages to_remove)
+       ~upgrade:upgrade_atoms
        ())
 
 let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
@@ -332,10 +266,9 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
         OpamConsole.errmsg
           "The following dependencies are the cause:\n%s"
           (OpamStd.Format.itemize (fun x -> x) chains);
-      if OpamCudf.external_solver_available () then
-        OpamConsole.errmsg
-          "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
-           current state.\n"
+      OpamConsole.errmsg
+        "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
+         current state.\n"
     end;
     OpamStd.Sys.exit 3
   | requested, Success solution ->
@@ -402,13 +335,6 @@ let upgrade t ?check ~all names =
 
 let fixup t =
   log "FIXUP";
-  if not (OpamCudf.external_solver_available ()) then
-    (OpamConsole.formatted_msg
-       "Sorry, \"--fixup\" is not available without an external solver. \
-        You'll have to select the packages to change or remove by hand, \
-        or install aspcud or another solver on your system.\n";
-     OpamStd.Sys.exit 1)
-  else
   let t, full_orphans, orphan_versions = orphans ~transitive:true t in
   let all_orphans = full_orphans ++ orphan_versions in
   let resolve pkgs =
@@ -875,10 +801,7 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
 
   if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
 
-  let request =
-    preprocessed_request t full_orphans orphan_versions
-      ~wish_install:atoms ();
-  in
+  let request = OpamSolver.request ~install:atoms () in
   let solution =
     OpamSolution.resolve t Install
       ~orphans:(full_orphans ++ orphan_versions)
@@ -1036,12 +959,7 @@ let reinstall_t t ?ask ?(force=false) atoms =
   let requested =
     OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
-  let request =
-    preprocessed_request t full_orphans orphan_versions
-      ~wish_install:atoms
-      ~criteria:`Fixup
-      ()
-  in
+  let request = OpamSolver.request ~install:atoms ~criteria:`Fixup () in
 
   let t, solution =
     OpamSolution.resolve_and_apply ?ask t Reinstall

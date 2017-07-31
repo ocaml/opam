@@ -334,7 +334,7 @@ let cycle_conflict ~version_map univ cycles =
              Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
-let resolve ?(verbose=true) universe ~orphans request =
+let resolve universe ~orphans request =
   log "resolve request=%a" (slog string_of_request) request;
   let version_map =
     cudf_versions_map universe
@@ -357,18 +357,16 @@ let resolve ?(verbose=true) universe ~orphans request =
          (OpamPackage.Set.of_list
             (List.map OpamCudf.cudf2opam (Cudf.get_packages u)))) in
   let resolve u req =
-    if OpamCudf.external_solver_available () || true
-    then
-      try
-        let resp = OpamCudf.resolve ~extern:true ~version_map u req in
-        OpamCudf.to_actions add_orphan_packages u resp
-      with OpamCudf.Solver_failure ->
-        OpamConsole.error_and_exit
-          "External solver failure. This may be due to bad settings (solver or \
-           solver criteria) or a broken solver solver installation. Check \
-           $OPAMROOT/config, and the --external-solver and --solver-criteria \
-           options."
-    else OpamHeuristic.resolve ~verbose ~version_map add_orphan_packages u req in
+    try
+      let resp = OpamCudf.resolve ~extern:true ~version_map u req in
+      OpamCudf.to_actions add_orphan_packages u resp
+    with OpamCudf.Solver_failure ->
+      OpamConsole.error_and_exit
+        "External solver failure. This may be due to bad settings (solver or \
+         solver criteria) or a broken solver solver installation. Check \
+         $OPAMROOT/config, and the --external-solver and --solver-criteria \
+         options."
+  in
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c
   | Success actions ->
