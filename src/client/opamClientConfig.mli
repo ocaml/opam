@@ -89,12 +89,12 @@ val opam_init:
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
   ?cudf_file:string option ->
-  ?solver_timeout:float ->
-  ?external_solver:OpamTypes.arg list option Lazy.t ->
+  ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->
   ?solver_preferences_upgrade:string option Lazy.t ->
   ?solver_preferences_fixup:string option Lazy.t ->
+  ?solver_preferences_best_effort_prefix: string option Lazy.t ->
   ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->

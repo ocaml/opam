@@ -309,7 +309,7 @@ let map_request f r =
 (* Add upgrade constraints *)
 (* Remove constraints in best_effort mode *)
 let cleanup_request universe (req:atom request) =
-  if OpamSolverConfig.(!r.best_effort) then
+  if OpamSolverConfig.best_effort () then
     { req with wish_install = []; wish_upgrade = []; }
   else
   let wish_install =

@@ -815,7 +815,7 @@ let config =
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
-        let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
+        let print label fmt = Printf.printf ("# %-17s "^^fmt^^"\n") label in
         Printf.printf "# opam config report\n";
         print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
@@ -826,13 +826,12 @@ let config =
         try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
           OpamSwitchState.with_ `Lock_none gt @@ fun state ->
-          let external_solver =
-            OpamSolverConfig.external_solver_command
-              ~input:"$in" ~output:"$out" ~criteria:"$criteria" in
-          print "external-solver" "%s"
-            (String.concat " " external_solver);
-          (* if external_solver <> None then
-           *   print "criteria" "%s" (OpamSolverConfig.criteria `Default); *)
+          let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
+          print "solver" "%s" Solver.name;
+          print "install-criteria" "%s"
+            (OpamSolverConfig.criteria `Default);
+          print "upgrade-criteria" "%s"
+            (OpamSolverConfig.criteria `Upgrade);
           let nprint label n =
             if n <> 0 then [Printf.sprintf "%d (%s)" n label]
             else [] in

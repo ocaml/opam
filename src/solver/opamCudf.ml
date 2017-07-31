@@ -499,8 +499,7 @@ let string_of_request r =
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
 
-let external_solver_available () =
-  Lazy.force OpamSolverConfig.(!r.external_solver) <> None
+let external_solver_available () = true
 
 let solver_calls = ref 0
 
@@ -516,11 +515,9 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    let cmd =
-      OpamSolverConfig.external_solver_command
-        ~input:"$in" ~output:"$out" ~criteria
-    in
-    Printf.fprintf oc "# %s\n" (String.concat " " cmd);
+    let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
+    Printf.fprintf oc "# Solver: %s\n" Solver.name;
+    Printf.fprintf oc "# Criteria: %s\n" criteria;
     Cudf_printer.pp_cudf oc cudf;
     OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->
       let name = OpamPackage.name_to_string pkg in
@@ -540,87 +537,30 @@ let dump_cudf_error ~version_map univ req =
       ("solver-error-"^string_of_int (Unix.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
-      (if external_solver_available ()
-       then OpamSolverConfig.criteria req.criteria
-       else "")
+      (OpamSolverConfig.criteria req.criteria)
       (Some cudf_file)
   with
   | Some f -> f
   | None -> assert false
-
-let dose_solver_callback ~criteria (_,universe,_ as cudf) =
-  let solver_in =
-    OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
-  let solver_out =
-    OpamFilename.of_string (OpamSystem.temp_file "solver-out") in
-  try
-    let _ =
-      let oc = OpamFilename.open_out solver_in in
-      Cudf_printer.pp_cudf oc cudf;
-      close_out oc
-    in
-    let () =
-      let cmd =
-        OpamSolverConfig.external_solver_command
-          ~input:(OpamFilename.to_string solver_in)
-          ~output:(OpamFilename.to_string solver_out)
-          ~criteria
-      in
-      if external_solver_available () then
-        OpamSystem.command
-          ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
-          cmd
-      else
-        Mccs.call_solver (Array.of_list cmd)
-    in
-    OpamFilename.remove solver_in;
-    if not (OpamFilename.exists solver_out) then
-      raise (Common.CudfSolver.Error "no output")
-    else if
-      (let ic = OpamFilename.open_in solver_out in
-       try
-         let i = input_line ic in close_in ic;
-         i = "FAIL"
-       with End_of_file -> close_in ic; false)
-    then
-      raise Common.CudfSolver.Unsat
-    else
-    let r =
-      Cudf_parser.load_solution_from_file
-        (OpamFilename.to_string solver_out) universe in
-    OpamFilename.remove solver_out;
-(*
-    if Cudf.universe_size (snd r) = 0 &&
-       not OpamStateConfig.(!r.no_base_packages) &&
-       Cudf.installed_size universe <> 0
-    then
-      raise (Common.CudfSolver.Error "empty solution");
-*)
-    r
-  with e ->
-    OpamFilename.remove solver_in;
-    OpamFilename.remove solver_out;
-    raise e
 
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
     let chrono = OpamConsole.timer () in
-    log "Calling external solver with criteria %s" criteria;
     ignore (dump_cudf_request ~version_map cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
     try
       let r =
         Algo.Depsolver.check_request_using
-          ~call_solver:(dose_solver_callback ~criteria)
+          ~call_solver:(OpamSolverConfig.call_solver ~criteria)
           ~criteria ~explain:true cudf_request
       in
-      log "External solver call done in %.3f" (chrono ());
+      log "Solver call done in %.3f" (chrono ());
       r
     with e ->
       OpamStd.Exn.fatal e;
-      OpamConsole.warning "External solver failed:";
+      OpamConsole.warning "Solver failed:";
       OpamConsole.errmsg "%s\n" (Printexc.to_string e);
       raise Solver_failure
   else

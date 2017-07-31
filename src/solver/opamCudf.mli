@@ -219,9 +219,9 @@ val cudf2opam: Cudf.package -> package
 (** Returns the list of packages in a Cudf universe *)
 val packages: Cudf.universe -> Cudf.package list
 
-(** {2 External solver} *)
-val external_solver_available: unit -> bool
-
 (** Converts an OPAM request to a Cudf request *)
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
+
+(** For transition, always true *)
+val external_solver_available: unit -> bool

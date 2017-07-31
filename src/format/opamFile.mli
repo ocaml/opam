@@ -107,6 +107,7 @@ module Config: sig
   val with_opam_version: OpamVersion.t -> t -> t
 
   val with_criteria: (solver_criteria * string) list -> t -> t
+  val with_best_effort_prefix: string -> t -> t
 
   val with_solver: arg list -> t -> t
   val with_solver_opt: arg list option -> t -> t
@@ -149,6 +150,8 @@ module Config: sig
   val dl_cache: t -> url list
 
   val criteria: t -> (solver_criteria * string) list
+
+  val best_effort_prefix: t -> string option
 
   val solver: t -> arg list option
 

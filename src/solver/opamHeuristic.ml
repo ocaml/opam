@@ -139,10 +139,10 @@ let brute_force ?(verbose=true) ~dump is_consistent state_space =
       let t1 = Unix.time () in
       if verbose && !count mod interval = interval - 1 then
         OpamConsole.msg ".";
-      if t1 -. t0 > OpamSolverConfig.(!r.solver_timeout) then (
+      if t1 -. t0 > 5.0 then (
         OpamConsole.msg
           "The brute-force exploration algorithm timed-out [%d states, %.2gs].\n%s\n"
-          !count OpamSolverConfig.(!r.solver_timeout) fallback_msg;
+          !count 5.0 fallback_msg;
         None
       ) else
       if is_consistent state then
