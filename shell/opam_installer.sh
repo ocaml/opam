@@ -7,7 +7,7 @@ set -ue
 
 VERSION='1.2.2'
 
-default_ocaml=4.02.1
+default_ocaml=4.05.0
 
 usage() {
 cat <<EOF
