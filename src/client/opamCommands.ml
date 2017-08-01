@@ -1571,9 +1571,12 @@ let repository =
       in
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url trust_anchors in
-          let _failed, _rt =
+          let failed, rt =
             OpamRepositoryCommand.update_with_auto_upgrade rt [name]
-          in ());
+          in
+          if failed <> [] then
+            (let _rt = OpamRepositoryCommand.remove rt name in
+             OpamConsole.error_and_exit "Initial repository fetch failed"));
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
           (update_repos name)
@@ -1658,8 +1661,8 @@ let repository =
       in
       if not short && scope = [`Current_switch] then
         OpamConsole.note
-          "Use '--all' to see all configured repositories independently of \
-           what is selected in the current switch";
+          "These are the repositories in use by the current switch. Use \
+           '--all' to see all configured repositories.";
       OpamRepositoryCommand.list rt ~global ~switches ~short;
       `Ok ()
     | command, params -> bad_subcommand commands ("repository", command, params)
@@ -1710,11 +1713,17 @@ let get_repos_rt gt repos =
             OpamRepositoryCommand.add rt name url None)
           rt new_defs
       in
-      let _failed, rt =
+      let failed, rt =
         OpamRepositoryCommand.update_with_auto_upgrade rt
           (List.map fst new_defs)
       in
-      Some (List.map fst repos), rt
+      if failed <> [] then
+        let _rt = List.fold_left OpamRepositoryCommand.remove rt failed in
+        OpamConsole.error_and_exit
+          "Initial fetch of these repositories failed: %s"
+          (OpamStd.List.concat_map ", " OpamRepositoryName.to_string failed)
+      else
+        Some (List.map fst repos), rt
 
 let switch_doc = "Manage multiple installation of compilers."
 let switch =
