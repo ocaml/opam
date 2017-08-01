@@ -118,13 +118,13 @@ module Aspcud_def = struct
   let default_criteria =
     {
       crit_default = "-count(removed),\
-                      -notuptodate(request),-sum(request,version-lag),\
+                      -sum(request,version-lag),\
                       -count(down),\
-                      -notuptodate(changed),-count(changed),\
-                      -notuptodate(solution),-sum(solution,version-lag)";
+                      -sum(solution,version-lag),\
+                      -count(changed)";
       crit_upgrade = "-count(down),\
                       -count(removed),\
-                      -notuptodate(solution),-sum(solution,version-lag),\
+                      -sum(solution,version-lag),\
                       -count(new)";
       crit_fixup = "-count(changed),\
                     -notuptodate(solution),-sum(solution,version-lag)";
