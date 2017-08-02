@@ -29,8 +29,7 @@ URL_opam_file_format = https://github.com/ocaml/opam-file-format/archive/2.0.0-b
 MD5_opam_file_format = fb461d14a44aac3a43751aa936e79143
 
 ifndef FETCH
-ifneq ($(shell command -v curl > /dev/null),)
-FETCH=curl -OL
+ifneq ($(shell command -v curl 2>/dev/null),)
 else
 FETCH=wget
 endif
