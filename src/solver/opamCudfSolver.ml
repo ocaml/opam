@@ -9,8 +9,9 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamCudfSolverSig
 
-type criteria_def = {
+type criteria_def = OpamCudfSolverSig.criteria_def = {
   crit_default: string;
   crit_upgrade: string;
   crit_fixup: string;
@@ -24,50 +25,7 @@ let default_compat_criteria = {
   crit_best_effort_prefix = None;
 }
 
-module type S = sig
-
-  val name: string
-
-  val is_present: bool Lazy.t
-
-  val command_name: string option
-
-  val default_criteria: criteria_def
-
-  val call: criteria:string -> Cudf.cudf -> Cudf.preamble option * Cudf.universe
-
-end
-
-module Builtin_mccs : S = struct
-
-  let name = "builtin-"^Mccs.solver_id
-
-  let is_present = lazy true
-
-  let command_name = None
-
-  let default_criteria = {
-    crit_default = "-removed,\
-                    -count[version-lag:,true],\
-                    -changed,\
-                    -count[version-lag:,false],\
-                    -new";
-    crit_upgrade = "-removed,\
-                    -count[version-lag:,false],\
-                    -new";
-    crit_fixup = "-changed,-count[version-lag:,false]";
-    crit_best_effort_prefix = Some "+count[opam-query:,false],";
-  }
-
-  let call ~criteria cudf =
-    match
-      Mccs.resolve_cudf ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
-        criteria cudf
-    with
-    | None -> raise Common.CudfSolver.Unsat
-    | Some (preamble, univ) -> Some preamble, univ
-
-end
+module type S = OpamCudfSolverSig.S
 
 module type ExternalArg = sig
   val name: string
@@ -257,7 +215,7 @@ let make_custom_solver name args criteria =
 
 
 let default_solver_selection = [
-  (module Builtin_mccs: S);
+  (module OpamBuiltinMccs: S);
   (module Aspcud: S);
   (module Mccs: S);
   (module Aspcud_old: S);

@@ -1,0 +1,37 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2017 OCamlPro                                             *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+open OpamCudfSolverSig
+
+let name = "builtin-"^Mccs.solver_id
+
+let is_present = lazy true
+
+let command_name = None
+
+let default_criteria = {
+  crit_default = "-removed,\
+                  -count[version-lag:,true],\
+                  -changed,\
+                  -count[version-lag:,false]";
+  crit_upgrade = "-removed,\
+                  -count[version-lag:,false],\
+                  -new";
+  crit_fixup = "-changed,-count[version-lag:,false]";
+  crit_best_effort_prefix = Some "+count[opam-query:,false],";
+}
+
+let call ~criteria cudf =
+  match
+    Mccs.resolve_cudf ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
+      criteria cudf
+  with
+  | None -> raise Common.CudfSolver.Unsat
+  | Some (preamble, univ) -> Some preamble, univ

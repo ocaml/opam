@@ -12,7 +12,7 @@
     relying on external solvers (aspcud, etc.). Used for calling-back below
     Dose. *)
 
-type criteria_def = {
+type criteria_def = OpamCudfSolverSig.criteria_def = {
   crit_default: string;
   crit_upgrade: string;
   crit_fixup: string;
@@ -38,7 +38,6 @@ module Aspcud : S
 module Aspcud_old : S
 module Mccs : S
 module Packup : S
-module Builtin_mccs : S
 
 (** The list of supported solvers, in decreasing order of preference *)
 val default_solver_selection: (module S) list
