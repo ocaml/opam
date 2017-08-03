@@ -148,7 +148,7 @@ let all_depends ?build ?test ?doc ?dev ?(filter_default=false)
     ~env:(resolve_switch ~package:(OpamFile.OPAM.package opam) st) deps
 
 (* filter handling *)
-let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
+let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
@@ -178,25 +178,6 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
         | some -> some
       with Not_found -> None
   in
-  let get_features_var opam v =
-    let to_str opam =
-      OpamPackage.to_string @@
-      OpamPackage.create (OpamFile.OPAM.name opam) (OpamFile.OPAM.version opam)
-    in
-    let features = OpamFile.OPAM.features opam in
-    try
-      let v, _descr, filt = List.find (fun (id,_,_) -> id = v) features in
-      let local = (* Avoid recursion *)
-        OpamVariable.Map.add v None local in
-      try Some (OpamFilter.eval (resolve st ~opam ~local) filt)
-      with Failure _ ->
-        OpamConsole.warning "Feature %s of %s didn't resolve%s"
-          (OpamVariable.to_string v) (to_str opam)
-          (match opam_arg with None -> "" | Some o ->
-            Printf.sprintf " (referred to from %s)" (to_str o));
-        None
-    with Not_found -> None
-  in
   let get_package_var v =
     if OpamVariable.Full.is_global v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
@@ -216,10 +197,6 @@ let rec resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
           Some (OpamPackage.Map.find nv st.opams)
         with Not_found -> None
     in
-    let feat = match opam with
-      | Some o -> get_features_var o (OpamVariable.Full.variable v)
-      | None -> None in
-    if feat <> None then feat else
     let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
     let root = st.switch_global.root in
     match var_str, opam with

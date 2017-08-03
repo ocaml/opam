@@ -209,9 +209,12 @@ and _options_:
   It corresponds to a case of the `<list>` non-terminal and is a list of
   `<list-contents>` repeated any number of times. The square brackets can be
   omitted when `<list-contents>` occurs just once.
+- `<element> { <opt> ... }` means `<element> "{" { <opt> }* "}"`, and is a
+  shortcut for the `<option>` non-terminal.
 - `<element> { <opt> }` means
   `<element> [ "{" <opt> "}" ]`.
-  It corresponds to a specific case of the `<option>` non-terminal.
+  It corresponds to a specific case of the `<option>` non-terminal where there
+  is exactly one element within the braces..
 
 ### General syntax
 
@@ -927,17 +930,13 @@ files.
       [`depexts:`](#opamfield-depexts) field.
 
 - <a id="opamfield-features">
-  `features: [ <ident> <string> { <filter> } ... ]`</a> (EXPERIMENTAL):
-  this field is currently experimental and shouldn't be used on the main package
-  repository. It allows to define custom variables that better document what
-  _features_ are available in a given package build. Each feature is defined as
-  an identifier, a documentation string, and a filter expression. The filter
-  expression can evaluate to either a boolean or a string, and the defined
-  identifier can be used as a variable in any filter (but recursive features are
-  not allowed and will be _undefined_).
-
-    This is typically useful to pass appropriate flags to `./configure` scripts,
-    depending on what is installed.
+  `features: [ <ident> { <pkgname> { <filtered-package-formula> } ... } { <string> } ... ]`
+  </a> (EXPERIMENTAL):
+  This field binds given idents to dependency formulas, and a documentation
+  text. The intent is to allow, in the future, packages to depend on additional
+  characteristics of their dependencies. This can be understood as a way to
+  further document the consequences of the presence of absence of optional
+  dependencies.
 
 - <a id="opamfield-synopsis">`synopsis: <string>`</a>:
   defines a short description (one line) for the package. This can also be

@@ -275,7 +275,7 @@ module OPAM: sig
     substs     : basename list;
     patches    : (basename * filter option) list;
     build_env  : env_update list;
-    features   : (OpamVariable.t * string * filter) list;
+    features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
     (* User-facing data used by opam *)
@@ -403,7 +403,7 @@ module OPAM: sig
   val conflict_class: t -> name list
 
   (** Contents of the 'features' field *)
-  val features: t -> (OpamVariable.t * string * filter) list
+  val features: t -> (OpamVariable.t * filtered_formula * string) list
 
   (** List of exported libraries *)
   val libraries: t -> (string * filter option) list
@@ -506,7 +506,7 @@ module OPAM: sig
 
   val with_conflict_class: name list -> t -> t
 
-  val with_features: (OpamVariable.t * string * filter) list -> t -> t
+  val with_features: (OpamVariable.t * filtered_formula * string) list -> t -> t
 
   (** Construct as [build] *)
   val with_build: command list -> t -> t

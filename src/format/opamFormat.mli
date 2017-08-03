@@ -165,11 +165,14 @@ module V : sig
     (value list, 'a) t ->
     (value, (name * 'a) OpamFormula.formula) t
 
+  (** Like [package_formula], but takes the list items directly *)
+  val package_formula_items :
+    [< `Conj | `Disj ] ->
+    (value list, 'a) t ->
+    (value list, (name * 'a) OpamFormula.formula) t
+
   (** Environment variable updates syntax *)
   val env_binding : (value, env_update) t
-
-  (** For the "features" field, e.g. a list of [(variable "doc" {filter})] *)
-  val features : (value, (variable * string * filter) list) t
 
   val os_constraint : (value, (bool * string) OpamFormula.formula) t
 end

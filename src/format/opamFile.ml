@@ -1896,7 +1896,7 @@ module OPAMSyntax = struct
     substs     : basename list;
     patches    : (basename * filter option) list;
     build_env  : env_update list;
-    features   : (OpamVariable.t * string * filter) list;
+    features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
     (* User-facing data used by opam *)
@@ -2370,7 +2370,11 @@ module OPAMSyntax = struct
       "build-env", no_cleanup Pp.ppacc with_build_env build_env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
       "features", no_cleanup Pp.ppacc with_features features
-        Pp.V.features;
+        (Pp.V.map_list ~depth:2 @@
+         Pp.V.map_options_2
+           (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
+           (Pp.V.package_formula_items `Conj Pp.V.(filtered_constraints ext_version))
+           (Pp.singleton -| Pp.V.string));
 
       "messages", no_cleanup Pp.ppacc with_messages messages
         (Pp.V.map_list ~depth:1 @@
