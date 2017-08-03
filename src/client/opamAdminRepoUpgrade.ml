@@ -72,6 +72,10 @@ let wrapper_conf_script =
   \    (Sys.file_exists (Filename.concat libdir \"dynlink.cmxa\"));\n\
   \  p \"  stubsdir: %%S\"\n\
   \    stubsdir;\n\
+  \  p \"  preinstalled: %{ocaml-system:installed}%\";\n\
+  \  p \"  compiler: \\\"%{ocaml-system:installed?system:}%\
+                       %{ocaml-base-compiler:version}%\
+                       %{ocaml-variants:version}%\\\"\";\n\
   \  p \"}\";\n\
   \  close_out oc\n\
   "
@@ -351,22 +355,7 @@ let do_upgrade repo_root =
               ocaml_system_pkgname,
               Atom (Constraint (`Eq, FString str_version))
             )
-          ]) |>
-      O.with_features [
-        OpamVariable.of_string "preinstalled",
-        "The concrete compiler was installed outside of opam",
-        FIdent ([Some ocaml_system_pkgname], OpamVariable.of_string "installed",
-                None);
-        OpamVariable.of_string "compiler",
-        "Detailed OCaml or variant compiler name",
-        FString
-          (Printf.sprintf "%%{%s:installed?system:}%%\
-                           %%{%s:installed?%s:}%%\
-                           %%{%s:version}%%"
-             (OpamPackage.Name.to_string ocaml_system_pkgname)
-             (OpamPackage.Name.to_string ocaml_official_pkgname) str_version
-             (OpamPackage.Name.to_string ocaml_variants_pkgname));
-      ]
+          ])
     in
     write_opam ~add_files:[conf_script_name^".in", wrapper_conf_script]
       wrapper_opam
