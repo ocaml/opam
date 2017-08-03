@@ -22,5 +22,6 @@ build: [
 depends: [
   "opam-format" {= "2.0.0~beta3"}
   "dose3" {>= "5"}
+  "cudf" {<= "0.7"}
 ]
 available: ocaml-version >= "4.01.0"
