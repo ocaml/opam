@@ -130,7 +130,7 @@ uninstall: opam.install
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
 
 .PHONY: tests tests-local tests-git
-tests:
+tests: src/opam-check$(EXE)
 	$(MAKE) -C tests all
 
 # tests-local, tests-git
