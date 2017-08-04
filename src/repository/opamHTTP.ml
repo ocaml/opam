@@ -23,7 +23,7 @@ let remote_index_archive url = OpamUrl.Op.(url / index_archive_name)
 let sync_state name destdir url =
   OpamFilename.with_tmp_dir_job @@ fun dir ->
   let local_index_archive = OpamFilename.Op.(dir // index_archive_name) in
-  OpamDownload.download_as ~overwrite:true
+  OpamDownload.download_as ~quiet:true ~overwrite:true
     (remote_index_archive url)
     local_index_archive
   @@+ fun () ->
@@ -82,7 +82,7 @@ module B = struct
          in
          Done (Not_available msg))
     @@ fun () ->
-    OpamDownload.download ~overwrite:true ?checksum remote_url dirname
+    OpamDownload.download ~quiet:true ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file -> Done (Result (Some local_file))
 
   let revision _ =
