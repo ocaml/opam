@@ -301,6 +301,21 @@ define PROJ_opam-admin-top
 endef
 export PROJ_opam-admin-top
 
+opam-tests: opam ALWAYS
+	$(MAKE) -f $(OCAMLMAKEFILE) subprojs PACKS="oUnit $(PACKS)" SUBPROJS=opam-tests SUBTARGET=$(BINTARGET)
+	./opam-tests
+
+define PROJ_opam-tests
+  SOURCES = \
+						tests/testsCommon.ml \
+						tests/testsScenarios.ml \
+						tests/solverTests.ml \
+						tests/stateTests.ml
+  RESULT = opam-tests
+  LIBS = $(LIBS) $(OPAMLIB)
+endef
+export PROJ_opam-tests
+
 # --
 
 # Looks for artifacts in sourcedir, _obuild, sourcedir/_obuild
