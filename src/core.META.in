@@ -1,5 +1,0 @@
-version = "@PACKAGE_VERSION@"
-description = "OCaml Package Manager core internal stdlib"
-requires = "bigarray, unix, ocamlgraph, re, re.str"
-archive(byte) = "opam-core.cma"
-archive(native) = "opam-core.cmxa"

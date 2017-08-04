@@ -16,11 +16,11 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make name]
   [make "%{name}%.install"]
 ]
 depends: [
   "opam-core" {= "2.0.0~beta4"}
   "opam-file-format" {>= "2.0.0~beta3"}
+  "jbuilder" {build & >= "1.0+beta12"}
 ]
 available: ocaml-version >= "4.01.0"

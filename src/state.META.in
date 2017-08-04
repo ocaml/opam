@@ -1,5 +1,0 @@
-version = "@PACKAGE_VERSION@"
-description = "OCaml Package Manager instance management library"
-archive(byte) = "opam-state.cma"
-archive(native) = "opam-state.cmxa"
-requires = "opam-core, opam-format, opam-repository"

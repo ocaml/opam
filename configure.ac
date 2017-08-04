@@ -54,15 +54,6 @@ AC_SUBST(ocaml_4_02,"$ax_compare_version")
 AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
 AC_SUBST(ocaml_4_03,"$ax_compare_version")
 
-AC_CHECK_TOOL([CYGPATH],[cygpath],[no])
-
-if test x"$CYGPATH" = x"no" ; then
-  AR=ar
-else
-  printf "include %s/Makefile.config\nall:\n\t@echo \$(ARCMD)" `$OCAMLC -where | cygpath -f -` > conftestMakefile
-  AR=`make --no-print-directory -f conftestMakefile`
-fi
-
 AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   WIN32=1
   EXE=.exe
@@ -74,17 +65,6 @@ AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
 
-AC_MSG_CHECKING([for invocation options for $OCAMLDEP])
-AS_IF([ test ${WIN32} -eq 1 ],[
-  OCAMLDEPARGS=-slash
-  AC_SUBST(OCAMLDEP,"$OCAMLDEP -slash")
-  AC_MSG_RESULT([$OCAMLDEPARGS])
-],[
-  OCAMLDEPARGS=
-  AC_MSG_RESULT([none required])
-])
-AC_SUBST(OCAMLDEPARGS)
-
 AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
   AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
   PATH_PREPEND=$(bash ./shell/check_linker)
@@ -93,10 +73,6 @@ AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
   AC_MSG_RESULT([$PATH_PREPEND_RESULT])
 ])
 
-AS_IF([ test "x$AR" != "x" ],[AC_CHECK_TOOL(AR,$AR)],[AC_SUBST(AR,"no")])
-
-AC_PROG_OCAMLLEX
-AC_PROG_OCAMLYACC
 AC_PROG_FINDLIB
 
 AC_ARG_ENABLE([certificate_check],
@@ -159,11 +135,8 @@ AS_IF([test "x${enable_checks}" != "xno" && {
   echo "============================================================================"
   echo
   AC_SUBST(hasalldeps,"")
-  printf "S src_ext/*\nB src_ext/*" > .merlin
-  grep -v "^PKG" .merlin.in >> .merlin
 ],[
   AC_SUBST(hasalldeps,"true")
-  cp .merlin.in .merlin
 ])
 
 if test "x$prefix" = "xNONE"; then
@@ -172,16 +145,6 @@ fi
 
 AC_CONFIG_FILES(
   Makefile.config
-  src/core/opamVersion.ml
-  src/core/opamCoreConfig.ml
-  src/core.META
-  src/format.META
-  src/repository.META
-  src/solver.META
-  src/state.META
-  src/client.META
-  src/admin.META
-  src/ocaml-flags-standard.sexp
 )
 AC_OUTPUT
 

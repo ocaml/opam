@@ -13,7 +13,8 @@ install-bootstrap () {
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
         opam pin add opam-file-format "git://github.com/ocaml/opam-file-format.git" --no-action --yes
-        opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format --yes
+        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
+        opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format jbuilder --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
@@ -24,7 +25,8 @@ install-bootstrap () {
         else
           EXTRAS=
         fi
-        opam install ocamlbuild $EXTRAS --yes
+        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
+        opam install jbuilder ocamlbuild $EXTRAS --yes
     fi
     rm -f "$OPAMBSROOT"/log/*
 }
@@ -67,7 +69,7 @@ git config --global user.name "Travis CI"
     ./configure --prefix ~/local
 
     if [ "$OPAM_TEST" != "1" -a "$OCAML_VERSION" != "4.01.0" ]; then make lib-ext; fi
-    make all opam-check
+    make all
 
     rm -f ~/local/bin/opam
     make install
@@ -83,7 +85,7 @@ git config --global user.name "Travis CI"
         make
     else
         # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make -C tests || (tail -2000 tests/fulltest-*.log; exit 1)
+        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests || (tail -2000 _build/default/tests/fulltest-*.log; exit 1)
     fi
 )
 
