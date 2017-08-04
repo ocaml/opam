@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library
+  ((name cmdliner)
+   (public_name cmdliner)
+   (libraries (result))
+   (wrapped false)))

@@ -3,6 +3,7 @@
 
 # Shell scripts, autoconf, etc. must have LF endings, even on Windows
 *.sh text eol=lf
+*.zsh text eol=lf
 configure text eol=lf
 configure.ac text eol=lf
 check_linker text eol=lf

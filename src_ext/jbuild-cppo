@@ -1,0 +1,15 @@
+(jbuild_version 1)
+
+(executable
+  ((name cppo_main)
+   (public_name cppo)
+   (libraries (str unix))))
+
+(ocamllex (cppo_lexer))
+
+(ocamlyacc (cppo_parser))
+
+(rule
+  ((targets (cppo_version.ml))
+   (deps (Makefile))
+   (action (run make cppo_version.ml))))

@@ -12,12 +12,12 @@ OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 PACKAGES  = P1-0 P1-1 P1-2 P2 P3 P4 P5
 
 ifndef OPAM
-  OPAM = $(realpath ../src/opam)
+  OPAM = $(firstword $(realpath ../src/opam ../src/opam.exe ../src/client/opamMain.exe))
 endif
 ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
 OPAMBIN  = $(ENV) $(OPAM)
 ifndef CHECK
-  CHECK = $(ENV) $(realpath ../src/opam-check)
+  CHECK = $(ENV) $(firstword $(realpath ../src/opam-check ../src/opam-check.exe ../src/tools/opam_check.exe))
 endif
 
 ifeq ($(OPAMTESTQUIET), 1)

@@ -3,12 +3,16 @@ AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PREFIX_DEFAULT([`ocamlc -config 2>/dev/null | tr -d '\r' | sed -n -e "s;^os_type: Win32;C:/OPAM;p" -e "s;^os_type:.*;/usr/local;p"`])
-
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
+AC_CHECK_OCAML_OS_TYPE
+if test "${OCAML_OS_TYPE}" = "Win32" ; then
+  OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
+fi
+
+AC_PREFIX_DEFAULT([`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;C:/OPAM;" -e "s;^os_type:.*;/usr/local;"`])
 
 AC_ARG_ENABLE([version_check],
   AS_HELP_STRING([--disable-version-check],
@@ -31,11 +35,6 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
     [$OCAMLVERSION], [lt], [4.01.0],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
-
-AC_MSG_CHECKING([for compiler os_type])
-OS_TYPE=`$OCAML shell/print_config.ml os_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | sed -n -e "s/^os_type: //p"`
-AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
-AC_MSG_RESULT([$OS_TYPE])
 
 # Need the C compiler used for OCaml (important on Windows, as both x86 and x64 are used)
 AS_IF([test "$OCAMLBEST" = "opt"],[OCAMLBESTCC=$OCAMLOPT],[OCAMLBESTCC=$OCAMLC])
@@ -64,7 +63,7 @@ else
   AR=`make --no-print-directory -f conftestMakefile`
 fi
 
-AS_IF([ test "${OS_TYPE}" = "Win32"],[
+AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   WIN32=1
   EXE=.exe
 ],[
@@ -111,6 +110,8 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 ])
 
 AC_CHECK_PROGS(FETCH,[curl wget],no)
+
+AC_CHECK_TOOL(JBUILDER,jbuilder)
 
 if test x"$FETCH" = x"curl" ; then
   AC_SUBST(fetch, "curl $curl_certificate_check -OL")
@@ -180,6 +181,7 @@ AC_CONFIG_FILES(
   src/state.META
   src/client.META
   src/admin.META
+  src/ocaml-flags-standard.sexp
 )
 AC_OUTPUT
 

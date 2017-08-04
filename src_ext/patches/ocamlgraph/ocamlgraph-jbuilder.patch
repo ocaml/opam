@@ -1,0 +1,78 @@
+diff -Naur ocamlgraph-1.8.7/src/imperative.ml ocamlgraph/src/imperative.ml
+--- ocamlgraph-1.8.7/src/imperative.ml	2016-04-12 08:47:31.000000000 +0200
++++ ocamlgraph/src/imperative.ml	2017-06-26 12:29:20.195718700 +0200
+@@ -233,7 +233,7 @@
+   module Concrete(V: COMPARABLE) = struct
+ 
+     module G = struct include Digraph.Concrete(V) type return = unit end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Redefine the [add_edge] and [remove_edge] operations *)
+ 
+@@ -261,7 +261,7 @@
+       include Digraph.ConcreteLabeled(V)(Edge)
+       type return = unit
+     end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Redefine the [add_edge] and [remove_edge] operations *)
+ 
+@@ -289,7 +289,7 @@
+   module Abstract(V: sig type t end) = struct
+ 
+     module G = struct include Digraph.Abstract(V) type return = unit end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     module Mark = G.Mark
+@@ -318,7 +318,7 @@
+       include Digraph.AbstractLabeled(V)(Edge)
+       type return = unit
+     end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     module Mark = G.Mark
+diff -Naur ocamlgraph-1.8.7/src/persistent.ml ocamlgraph/src/persistent.ml
+--- ocamlgraph-1.8.7/src/persistent.ml	2016-04-12 08:47:31.000000000 +0200
++++ ocamlgraph/src/persistent.ml	2017-06-26 12:29:20.204618600 +0200
+@@ -209,7 +209,7 @@
+   module Concrete(V: COMPARABLE) = struct
+ 
+     module G = struct include Digraph.Concrete(V) type return = t end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     let empty = G.empty
+@@ -238,7 +238,7 @@
+       include Digraph.ConcreteLabeled(V)(Edge)
+       type return = t
+     end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     let empty = G.empty
+@@ -267,7 +267,7 @@
+   module Abstract(V: sig type t end) = struct
+ 
+     module G = struct include Digraph.Abstract(V) type return = t end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     let empty = G.empty
+@@ -296,7 +296,7 @@
+       include Digraph.AbstractLabeled(V)(Edge)
+       type return = t
+     end
+-    include Graph(G)
++    include Blocks.Graph(G)
+ 
+     (* Export some definitions of [G] *)
+     let empty = G.empty

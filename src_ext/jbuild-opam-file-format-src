@@ -1,0 +1,17 @@
+(jbuild_version 1)
+
+(library
+  ((name opam_file_format)
+   (public_name opam-file-format)
+   (wrapped false)))
+
+(ocamllex (opamLexer))
+
+(ocamlyacc (opamBaseParser))
+
+(rule
+  (with-stdout-to opamParserTypes.ml
+    (progn
+      (echo "[@@@warning \"-a\"]\nmodule rec OpamParserTypes : sig\n")
+      (cat opamParserTypes.mli)
+      (echo "\nend = OpamParserTypes\ninclude OpamParserTypes\n"))))

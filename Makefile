@@ -5,6 +5,26 @@ endif
 all: opam-lib opam opam-installer
 	@
 
+ifeq ($(JBUILDER),)
+JBUILDER_DEP=src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+ifeq ($(shell command -v cygpath 2>/dev/null),)
+JBUILDER:=$(JBUILDER_DEP)
+else
+JBUILDER:=$(shell echo "$(JBUILDER_DEP)" | cygpath -f - -a)
+endif
+else
+JBUILDER_DEP=
+endif
+
+src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.stamp
+	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
+
+src_ext/jbuilder.stamp:
+	make -C src_ext jbuilder.stamp
+
+jbuilder: $(JBUILDER_DEP)
+	@$(JBUILDER) build @install
+
 ALWAYS:
 	@
 
@@ -32,7 +52,7 @@ ifneq ($(or $(filter-out cold download-ext configure,$(MAKECMDGOALS)),$(filter o
 endif
 
 lib-ext:
-	$(MAKE) -C src_ext lib-ext
+	$(MAKE) -j -C src_ext lib-ext
 
 download-ext:
 	$(MAKE) -C src_ext archives
@@ -40,15 +60,16 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
-clean:
+clean: fastclean
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
+	rm -rf _obuild _build
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml src/core/opamCoreConfig.ml aclocal.m4
-	rm -f src/*.META
+	rm -f src/*.META src/*/.merlin src/ocaml-flags-standard.sexp
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
 OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
@@ -85,12 +106,6 @@ opam.install:
 	  echo '  "$x" {"$(notdir $x)"}' >>$@;)
 	@echo ']' >>$@
 
-opam-devel.install:
-	@echo 'libexec: [' >$@
-	@echo '  "_obuild/opam/opam.asm" {"opam"}' >>$@
-	@echo '  "_obuild/opam-installer/opam-installer.asm" {"opam-installer"}' >>$@
-	@echo ']' >>$@
-
 OPAMLIBS = core format solver repository state client
 
 installlib-%: opam-installer opam-%.install src/opam-%$(LIBEXT)
@@ -115,7 +130,7 @@ uninstall: opam.install
 	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
 
 .PHONY: tests tests-local tests-git
-tests:
+tests: src/opam-check$(EXE)
 	$(MAKE) -C tests all
 
 # tests-local, tests-git
@@ -139,46 +154,15 @@ release-tag:
 	git tag -a latest -m "Latest release"
 	git tag -a $(version) -m "Release $(version)"
 
-fastlink:
-	@$(foreach b,opam opam-installer opam-check,\
-	   ln -sf ../_obuild/$b/$b.asm src/$b;)
-	@$(foreach l,core format solver repository state client,\
-	   $(foreach e,a cma cmxa,ln -sf ../_obuild/opam-$l/opam-$l.$e src/opam-$l.$e;)\
-	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,\
-	       $(foreach f,$(wildcard _obuild/opam-$l/*.$e),\
-		   ln -sf ../../$f src/$l;)))
-	@ln -sf ../_obuild/opam-admin.top/opam-admin.top.byte src/opam-admin.top
-	@$(foreach e,o cmo cmx cmxs cmi cmt cmti,\
-	   $(foreach f,$(wildcard _obuild/opam-admin.top/*.$e),\
-	       ln -sf ../../$f src/tools/;))
+fastclean:: rmartefacts
+
+include Makefile.ocp-build
 
 rmartefacts: ALWAYS
 	@rm -f $(addprefix src/, opam opam-installer opam-check)
 	@$(foreach l,core format solver repository state client tools,\
 	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
 	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
-
-prefast: rmartefacts src/client/opamGitVersion.ml src/state/opamScript.ml src/core/opamCompat.ml src/core/opamCompat.mli
-	@
-
-fast: prefast
-	@rm -f src/x_build_libs.ocp
-	@ocp-build init
-	@ocp-build
-	@$(MAKE) fastlink
-
-opam-core opam-format opam-solver opam-repository opam-state opam-client opam-devel opam-tools: prefast ALWAYS
-	@ocp-build init
-	@echo "build_libs = [ \"$@\" ]" > src/x_build_libs.ocp
-	@ocp-build
-	@rm -f src/x_build_libs.ocp
-
-opam-devel: opam-devel.install
-
-fastclean: rmartefacts
-	@rm -f src/x_build_libs.ocp
-	@ocp-build -clean 2>/dev/null || ocp-build clean 2>/dev/null || true
-	@rm -rf src/*/_obuild
 
 cold:
 	./shell/bootstrap-ocaml.sh

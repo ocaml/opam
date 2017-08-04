@@ -1,0 +1,21 @@
+(jbuild_version 1)
+
+(library
+  ((name opam_state)
+   (public_name opam-state)
+   (libraries (opam-repository))
+   (synopsis "OCaml Package Manager instance management library")
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (wrapped false)))
+
+(rule
+  ((targets (opamScript.ml))
+   (deps    (../../shell/crunch.ml complete.sh complete.zsh prompt.sh))
+   (action  (with-stdout-to ${@} (run ocaml ${!^})))))
+
+(rule
+  (with-stdout-to opamStateTypes.ml
+    (progn
+      (echo "[@@@warning \"-a\"]\nmodule rec OpamStateTypes : sig\n")
+      (cat opamStateTypes.mli)
+      (echo "\nend = OpamStateTypes\ninclude OpamStateTypes\n"))))

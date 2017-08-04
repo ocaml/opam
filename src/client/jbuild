@@ -1,0 +1,56 @@
+(* -*- tuareg -*- *)
+
+module J = Jbuild_plugin.V1
+
+let (sha, version) =
+  let remove () =
+    try
+      Sys.remove "current-git-sha"
+    with _ ->
+      ()
+  in
+  try
+    let _ = Sys.command "git rev-parse HEAD > current-git-sha" in
+    let c = open_in "current-git-sha" in
+    let sha =
+      try
+        input_line c
+      with _ ->
+        ""
+    in
+    close_in c;
+    remove ();
+    if sha = "" then
+      raise Exit
+    else
+      (sha, Printf.sprintf "let version = Some \\\"%s\\\"" sha)
+  with _ ->
+    remove ();
+    ("", "let version = None")
+
+let () = Printf.ksprintf J.send {|
+(jbuild_version 1)
+
+(library
+  ((name opam_client)
+   (public_name opam-client)
+   (synopsis "OCaml Package Manager client and CLI library")
+   (modules (:standard \ opamMain))
+   (libraries (opam-state opam-solver re.glob cmdliner))
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (wrapped false)))
+
+(executable
+  ((name opamMain)
+   (public_name opam)
+   (package opam)
+   (modules opamMain)
+   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (libraries (opam-client))))
+
+(rule
+  (with-stdout-to opamGitVersion.ml (echo ${read-lines:git-sha-%s})))
+
+(rule
+  (with-stdout-to git-sha-%s (echo "%s")))
+|} sha sha version

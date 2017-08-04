@@ -37,7 +37,7 @@ endif
 
 ifneq ($(HAS_LIBEXT),)
   EXT_INCDIRS = ../src_ext/lib
-  LIBS = unix bigarray extlib re cmdliner graph cudf dose_common dose_algo opam-file-format
+  LIBS = unix bigarray extlib re re_glob re_posix re_perl re_pcre cmdliner graphlib graph cudf common algo opam_file_format
 else
   ifeq ($(HAS_PACKAGES),)
     ifeq ($(findstring clean,$(MAKECMDGOALS)),)
@@ -87,10 +87,9 @@ ALWAYS:
 # -- opam-core -- #
 opam-core.cma opam-core.cmxa: state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ALWAYS
 
-state/opamScript.ml: ../shell core/opamVersion.ml
-	ocaml ../shell/crunch.ml "complete"     < ../shell/opam_completion.sh > $@
-	ocaml ../shell/crunch.ml "complete_zsh" < ../shell/opam_completion_zsh.sh >> $@
-	ocaml ../shell/crunch.ml "prompt"       < ../shell/opam_prompt.sh >> $@
+state/opamScript.ml: ../shell/crunch.ml state/complete.sh state/complete.zsh \
+                     state/prompt.sh
+	ocaml $^ > $@
 
 ifeq ($(OCAML_4_03),true)
   COMPATV = 4.03
@@ -251,9 +250,13 @@ export PROJ_client
 
 # -- opam binary -- #
 
-client/opamGitVersion.ml: ALWAYS
-	cd .. && ocaml shell/get-git-id.ml src/$@
-	touch $@
+GIT_SHA:=$(shell git rev-parse HEAD 2>/dev/null)
+
+client/opamGitVersion.ml: client/.git-sha-$(GIT_SHA)
+	echo "let version = $(if $(GIT_SHA),Some \"$(GIT_SHA)\",None)" > $@
+
+client/.git-sha-%:
+	@touch $@
 
 opam: $(addsuffix $(LIBEXT),$(OPAMLIB)) ALWAYS
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBPROJS=opam SUBTARGET=$(BINTARGET)
@@ -368,10 +371,13 @@ export OCAMLMAKEFILE
 clean-aux:
 	rm -f $(foreach e,lib a cma cmxa,$(wildcard *.$e))
 	rm -f client/opamGitVersion.ml state/opamScript.ml core/opamCompat.ml core/opamCompat.mli ../opam-lib.install
-	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml
+	rm -f */*Parser.ml */*Parser.mli */*Lexer.ml client/.git-sha-*
 	rm -f $(foreach e,obj o cmo cmx cmxs cmi cmt cmti,$(wildcard */*.$e))
 
 clean: clean-aux
+
+fastclean:
+	@
 
 %:
 	$(MAKE) -f $(OCAMLMAKEFILE) subprojs SUBTARGET=$@

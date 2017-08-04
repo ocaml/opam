@@ -1,17 +1,21 @@
+_build/
 _obuild/
 _opam/
 _olint/
 bootstrap/
 tests/tmp/
 .*.swp
+src_ext/lib
 src_ext/cudf/
 src_ext/cppo/
-src_ext/dose/
+src_ext/dose3/
 src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
-src_ext/graph/
-src_ext/opam_file_format/
+src_ext/ocamlgraph/
+src_ext/jbuilder/
+src_ext/result/
+src_ext/opam-file-format/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
@@ -50,6 +54,7 @@ ocp-build.root.old.old
 Makefile.config
 config.log
 config.status
+src/client/.git-sha-*
 src/client/opamGitVersion.ml
 src/state/opamScript.ml
 src/core/opamCoreConfig.ml
@@ -71,6 +76,7 @@ src/*.META
 aclocal.m4
 autom4te.cache
 .merlin
+src/ocaml-flags-standard.sexp
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html
