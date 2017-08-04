@@ -161,7 +161,7 @@ let remove gt ?(confirm = true) switch =
   if not (List.mem switch (OpamFile.Config.installed_switches gt.config)) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
-    OpamStd.Sys.exit 1;
+    OpamStd.Sys.exit_because `Not_found;
   );
   if not confirm ||
      OpamConsole.confirm
@@ -180,7 +180,7 @@ let install_compiler_packages t atoms =
     OpamPackage.packages_of_names t.packages roots
   in
   if not (OpamPackage.Name.Set.is_empty not_found) then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Not_found
       "No packages %s found."
       (OpamPackage.Name.Set.to_string not_found);
   let solution =
@@ -195,7 +195,8 @@ let install_compiler_packages t atoms =
   let solution = match solution with
     | Success s -> s
     | Conflicts cs ->
-      OpamConsole.error_and_exit "Could not resolve set of base packages:\n%s"
+      OpamConsole.error_and_exit `No_solution
+        "Could not resolve set of base packages:\n%s"
         (OpamCudf.string_of_conflict t.packages
            (OpamSwitchState.unavailable_reason t) cs);
   in
@@ -203,7 +204,7 @@ let install_compiler_packages t atoms =
     | { s_install = _; s_reinstall = 0; s_upgrade = 0;
         s_downgrade=0; s_remove = 0 } -> ()
     | stats ->
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `No_solution
         "Inconsistent resolution of base package installs:\n%s"
         (OpamSolver.string_of_stats stats)
   in
@@ -222,8 +223,9 @@ let install_compiler_packages t atoms =
              you want to set them as the compiler base for this switch ?"
             (OpamPackage.Set.to_string non_comp))
   then
-    OpamConsole.error_and_exit "Aborted installation of non-compiler packages \
-                                as switch base.";
+    OpamConsole.error_and_exit `Aborted
+      "Aborted installation of non-compiler packages \
+       as switch base.";
   let t =
     if t.switch_config.OpamFile.Switch_config.synopsis = "" then
       let synopsis =
@@ -256,11 +258,11 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   if List.mem switch (OpamFile.Config.installed_switches gt.config) then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "There already is an installed compiler switch named %s"
       (OpamSwitch.to_string switch);
   if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
   let gt, st =
@@ -332,7 +334,7 @@ let switch lock gt switch =
     OpamEnv.check_and_print_env_warning st;
     st
   else
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Not_found
       "No switch %s is currently installed. Did you mean \
        'opam switch create %s' ?\n\
        Installed switches are:\n%s"
@@ -542,7 +544,7 @@ let set_compiler st namesv =
       namesv
   in
   if name_unknown <> [] then
-    OpamConsole.error_and_exit "No packages by these names found: %s"
+    OpamConsole.error_and_exit `Not_found "No packages by these names found: %s"
       (OpamStd.List.concat_map ", " (OpamPackage.Name.to_string @* fst)
          name_unknown);
   let packages =
@@ -560,7 +562,7 @@ let set_compiler st namesv =
        (OpamStd.List.concat_map ", " OpamPackage.to_string uninstalled);
      if not (OpamConsole.confirm
                "Set them as compilers at the proposed versions anyways ?")
-     then OpamConsole.error_and_exit "Aborted");
+     then OpamStd.Sys.exit_because `Aborted);
   let st = { st with compiler_packages = OpamPackage.Set.of_list packages } in
   OpamSwitchAction.write_selections st;
   st
@@ -631,7 +633,7 @@ let guess_compiler_package ?repos rt name =
     |> OpamPackage.keys
   in
   let no_compiler_error () =
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Not_found
       "No compiler matching '%s' found, use 'opam switch list-available' \
        to see what is available, or use '--packages' to select packages \
        explicitely."
@@ -670,6 +672,6 @@ let guess_compiler_package ?repos rt name =
       with
       | Not_found -> no_compiler_error ()
       | Failure _ ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Bad_arguments
           "Compiler selection '%s' is ambiguous. matching packages: %s"
           name (OpamPackage.Set.to_string has_version)

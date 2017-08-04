@@ -98,7 +98,9 @@ let download_command ~compress ?checksum ~url ~dst =
         ~compress
     with
     | cmd::args -> cmd, args
-    | [] -> OpamConsole.error_and_exit "Empty custom download command"
+    | [] ->
+      OpamConsole.error_and_exit `Configuration_error
+        "Empty custom download command"
   in
   OpamSystem.make_command cmd args @@> tool_return url
 

@@ -286,7 +286,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
 let v1_1 = OpamVersion.of_string "1.1"
 
 let from_1_0_to_1_1 root _config =
-  OpamConsole.error_and_exit
+  OpamConsole.error_and_exit `Configuration_error
     "You appear to have an opam setup dating back to opam 1.0, which is no \
      longer supported since opam 2.0. Please remove \"%s\" and run \
      `opam init`"
@@ -919,7 +919,7 @@ let as_necessary global_lock root config =
   if cmp = 0 then config
   else if cmp < 0 then
     if OpamFormatConfig.(!r.skip_version_checks) then config else
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Configuration_error
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
@@ -971,11 +971,11 @@ let as_necessary global_lock root config =
       in
       OpamConsole.msg
         "Update done, please run 'opam update' and retry your command\n";
-      OpamStd.Sys.exit 0;
+      OpamStd.Sys.exit_because `Success;
     else
-      OpamConsole.error_and_exit "Aborted"
+      OpamStd.Sys.exit_because `Aborted
   with OpamSystem.Locked ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Locked
       "Could not acquire lock for performing format upgrade."
 
 let opam_file ?(quiet=false) ?filename opam =

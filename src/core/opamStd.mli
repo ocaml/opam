@@ -408,7 +408,20 @@ module Sys : sig
   exception Exec of string * string array * string array
 
   (** Raises [Exit i] *)
-  val exit: int -> 'a
+  (* val exit: int -> 'a *)
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  val exit_codes : (exit_reason * int) list
+
+  val get_exit_code : exit_reason -> int
+
+  (** Raises [Exit], with the code associated to the exit reason *)
+  val exit_because: exit_reason -> 'a
 
 end
 

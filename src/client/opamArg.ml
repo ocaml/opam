@@ -56,7 +56,7 @@ let apply_global_options o =
       | None   -> ()
       | Some v -> OpamConsole.msg "%s\n%!" v
     end;
-    exit 0
+    OpamStd.Sys.exit_because `Success
   );
   let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
@@ -271,6 +271,54 @@ let help_sections = [
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
   `P "$(i,OPAMYES) see option `--yes'.";
 
+  `S "EXIT STATUS";
+] @
+  List.map (fun (reason, code) ->
+      `I (string_of_int code, match reason with
+        | `Success ->
+          "Success, or true for boolean queries."
+        | `False ->
+          "False. Returned when a boolean return value is expected, e.g. when \
+           running with $(b,--check), or for queries like $(b,opam lint)."
+        | `Bad_arguments ->
+          "Bad command-line arguments, or command-line arguments pointing to \
+           an invalid context (e.g. file not following the expected format)."
+        | `Not_found ->
+          "Not found. You requested something (package, version, repository, \
+           etc.) that couldn't be found."
+        | `Aborted ->
+          "Aborted. The operation required confirmation, which wasn't given."
+        | `Locked ->
+          "Could not acquire the locks required for the operation."
+        | `No_solution ->
+          "There is no solution to the user request. This can be caused by \
+           asking to install two incompatible packages, for example."
+        | `File_error ->
+          "Error in package definition, or other metadata files. Using \
+           $(b,--strict) raises this error more often."
+        | `Package_operation_error ->
+          "Package script error. Some package operations were unsuccessful. \
+           This may be an error in the packages or an incompatibility with \
+           your system. This can be a partial error."
+        | `Sync_error ->
+          "Sync error. Could not fetch some remotes from the network. This can \
+           be a partial error."
+        | `Configuration_error ->
+          "Configuration error. Opam or system configuration doesn't allow \
+           operation, and needs fixing."
+        | `Solver_failure ->
+          "Solver failure. The solver failed to return a sound answer. It can \
+           be due to a broken external solver, or an error in solver \
+           configuration."
+        | `Internal_error ->
+          "Internal error. Something went wrong, likely due to a bug in opam \
+           itself."
+        | `User_interrupt ->
+          "User interrupt. SIGINT was received, generally due to the user \
+           pressing Ctrl-C."
+        ))
+    OpamStd.Sys.exit_codes
+@ [
   `S "FURTHER DOCUMENTATION";
   `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
 

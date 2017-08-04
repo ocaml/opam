@@ -282,7 +282,8 @@ let apply_selector ~base st = function
              | Some v -> value_strings v)
           psel.fields
       with Not_found ->
-        OpamConsole.error_and_exit "Unrecognised field in selection %s"
+        OpamConsole.error_and_exit `Bad_arguments
+          "Unrecognised field in selection %s"
           (String.concat ", " psel.fields)
     in
     OpamPackage.Set.filter
@@ -441,7 +442,8 @@ let field_of_string =
     else
     try List.assoc s names_fields
     with Not_found ->
-      OpamConsole.error_and_exit "No printer for %S%s" s
+      OpamConsole.error_and_exit `Bad_arguments
+        "No printer for %S%s" s
         (if not (OpamStd.String.ends_with ~suffix:":" s) &&
             List.mem_assoc s (OpamFile.OPAM.fields)
          then Printf.sprintf ". Did you mean the opam field \"%s:\" \
@@ -735,7 +737,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   if OpamPackage.Set.is_empty packages then
     (OpamConsole.error "No package matching %s found"
        (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
-     OpamStd.Sys.exit 1);
+     OpamStd.Sys.exit_because `Not_found);
   let fields = List.map field_of_string fields in
   let all_versions_fields = [
     Name;

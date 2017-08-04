@@ -120,7 +120,7 @@ let add_to_reinstall st ~unpinned_only packages =
 
 let set_current_switch lock gt ?rt switch =
   if OpamSwitch.is_external switch then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Can not set external switch '%s' globally. To set it in the current \
        shell use:\n %s"
       (OpamSwitch.to_string switch)

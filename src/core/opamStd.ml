@@ -759,6 +759,41 @@ module OpamSys = struct
   exception Exec of string * string array * string array
 
   let exit i = raise (Exit i)
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  let exit_codes : (exit_reason * int) list = [
+    (* Normal return values *)
+    `Success, 0;
+    `False, 1;
+    (* Errors happening in normal use (user related, or impossible requests) *)
+    `Bad_arguments, 2;
+    `Not_found, 5;
+    `Aborted, 10;
+    `Locked, 15;
+    `No_solution, 20;
+    (* Errors related to the database (repository and package definitions) *)
+    `File_error, 30;
+    `Package_operation_error, 31;
+    (* Network related error *)
+    `Sync_error, 40;
+    (* Opam setup error *)
+    `Configuration_error, 50;
+    (* Errors that shouldn't happen and are likely bugs *)
+    `Solver_failure, 60;
+    `Internal_error, 99;
+    (* Received signals *)
+    `User_interrupt, 130;
+  ]
+
+  let get_exit_code reason = List.assoc reason exit_codes
+
+  let exit_because reason = exit (get_exit_code reason)
+
 end
 
 

@@ -62,7 +62,7 @@ let index_command =
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Bad_arguments
         "No repository found in current directory.\n\
          Please make sure there is a \"packages/\" directory";
     let repo_file = OpamRepositoryPath.repo repo_root in
@@ -202,7 +202,7 @@ let cache_command =
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
            Please make sure there is a \"packages\" directory";
     let repo_file = OpamRepositoryPath.repo repo_root in
@@ -346,7 +346,7 @@ let lint_command =
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
            Please make sure there is a \"packages\" directory";
     let repo = OpamRepositoryBackend.local repo_root in
@@ -380,7 +380,7 @@ let lint_command =
         pkg_prefixes
         true
     in
-    OpamStd.Sys.exit (if ret then 0 else 1)
+    OpamStd.Sys.exit_because (if ret then `Success else `False)
   in
   Term.(const cmd $ OpamArg.global_options $
         short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
@@ -577,9 +577,10 @@ let filter_command =
     if OpamPackage.Set.is_empty packages then
       if remove then
         (OpamConsole.warning "No packages match the selection criteria";
-         OpamStd.Sys.exit 0)
+         OpamStd.Sys.exit_because `Success)
       else
-        OpamConsole.error_and_exit "No packages match the selection criteria";
+        OpamConsole.error_and_exit `Not_found
+          "No packages match the selection criteria";
     let num_total = OpamPackage.Set.cardinal st.packages in
     let num_selected = OpamPackage.Set.cardinal packages in
     if remove then
@@ -600,7 +601,7 @@ let filter_command =
       if remove then packages else OpamPackage.Set.Op.(st.packages -- packages)
     in
     if not (dryrun || OpamConsole.confirm "Confirm ?") then
-      OpamStd.Sys.exit 2
+      OpamStd.Sys.exit_because `Aborted
     else
     let repo = OpamRepositoryBackend.local repo_root in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo in

@@ -104,7 +104,8 @@ let copy_files st opam =
         let hash =
           if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
             if OpamFormatConfig.(!r.strict) then
-              OpamConsole.error_and_exit "Hash mismatch on %s %s (strict mode)"
+              OpamConsole.error_and_exit `File_error
+                "Hash mismatch on %s %s (strict mode)"
                 (OpamPackage.Name.to_string name)
                 (OpamFilename.to_string src)
             else
@@ -204,7 +205,7 @@ let edit st ?version name =
   let nv =
     try OpamPinned.package st name
     with Not_found ->
-      OpamConsole.error_and_exit "%s is not pinned"
+      OpamConsole.error_and_exit `Bad_arguments "%s is not pinned"
         (OpamPackage.Name.to_string name)
   in
   let new_nv = match version with
@@ -294,7 +295,7 @@ let version_pin st name version =
   let repo_opam =
     try OpamPackage.Map.find nv st.repos_package_index
     with Not_found ->
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Not_found
         "Package %s has no known version %s in the repositories"
         (OpamPackage.Name.to_string name)
         (OpamPackage.Version.to_string version)
@@ -319,7 +320,7 @@ let version_pin st name version =
         OpamFilename.rmdir
           (OpamPath.Switch.Overlay.package root st.switch name)
       else
-        (OpamConsole.msg "Aborting.\n"; OpamStd.Sys.exit 10)
+        (OpamConsole.msg "Aborting.\n"; OpamStd.Sys.exit_because `Aborted)
     | None -> ()
   end;
   let st = OpamSwitchState.update_pin nv repo_opam st in
@@ -436,7 +437,8 @@ let source_pin
       )
     with Not_found ->
       if force then None else
-        OpamConsole.error_and_exit "Error getting source from %s"
+        OpamConsole.error_and_exit `Sync_error
+          "Error getting source from %s"
           (OpamStd.Option.to_string OpamUrl.to_string target_url)
   in
 
@@ -486,7 +488,8 @@ let source_pin
   in
   match opam_opt with
   | None ->
-    OpamConsole.error_and_exit "No valid package definition found"
+    OpamConsole.error_and_exit `Not_found
+      "No valid package definition found"
   | Some opam ->
     let opam =
       match OpamFile.OPAM.get_url opam with

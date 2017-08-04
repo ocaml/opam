@@ -203,7 +203,8 @@ let init =
     apply_global_options global_options;
     apply_build_options build_options;
     if compiler <> None && no_compiler then
-      OpamConsole.error_and_exit "Options --bare and --compiler are incompatible";
+      OpamConsole.error_and_exit `Bad_arguments
+        "Options --bare and --compiler are incompatible";
     let config_files =
       (if no_config_file then []
        else List.filter OpamFile.exists (OpamPath.init_config_files ()))
@@ -220,7 +221,7 @@ let init =
                  Is this correct ?"
                 (OpamUrl.to_string url) (OpamHash.contents hash)
             then OpamFile.make f
-            else OpamStd.Sys.exit 10
+            else OpamStd.Sys.exit_because `Aborted
         ) config_file
     in
     let init_config =
@@ -237,7 +238,7 @@ let init =
           "Error in configuration file, fix it, use '--no-opamrc', or check \
            your '--config FILE' arguments:";
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-        OpamStd.Sys.exit 10
+        OpamStd.Sys.exit_because `Configuration_error
     in
     let repo =
       OpamStd.Option.map (fun url ->
@@ -1346,10 +1347,11 @@ let update =
       OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
       ignore @@ OpamClient.upgrade st ~check []
-    else if check then OpamStd.Sys.exit (if changed then 0 else 1)
+    else if check then
+      OpamStd.Sys.exit_because (if changed then `Success else `False)
     else
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
-    if not success then OpamStd.Sys.exit 10
+    if not success then OpamStd.Sys.exit_because `Sync_error
   in
   Term.(const update $global_options $jobs_flag $name_list
         $repos_only $dev_only $all $check $upgrade),
@@ -1510,7 +1512,8 @@ let repository =
       | Some `priority, [name; rank], 1 ->
         (try Some `add, [name], int_of_string rank
          with Failure _ ->
-           OpamConsole.error_and_exit "Invalid rank specification %S" rank)
+           OpamConsole.error_and_exit `Bad_arguments
+             "Invalid rank specification %S" rank)
       | Some `priority, [], rank -> Some `add, [], rank
       | command, params, rank -> command, params, rank
     in
@@ -1540,7 +1543,8 @@ let repository =
             if not (OpamSwitch.Set.mem sw all) &&
                not (OpamSwitch.is_external sw)
             then
-              OpamConsole.error_and_exit "No switch %s found"
+              OpamConsole.error_and_exit `Not_found
+                "No switch %s found"
                 (OpamSwitch.to_string sw)
             else if List.mem sw acc then acc
             else acc @ [sw]
@@ -1574,7 +1578,8 @@ let repository =
           in
           if failed <> [] then
             (let _rt = OpamRepositoryCommand.remove rt name in
-             OpamConsole.error_and_exit "Initial repository fetch failed"));
+             OpamConsole.error_and_exit `Sync_error
+               "Initial repository fetch failed"));
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
           (update_repos name)
@@ -1611,7 +1616,7 @@ let repository =
       let name = OpamRepositoryName.of_string name in
       OpamRepositoryState.with_ `Lock_none gt (fun rt ->
           check_for_repos rt [name]
-            (OpamConsole.error_and_exit
+            (OpamConsole.error_and_exit `Not_found
                "No configured repository '%s' found, you must specify an URL"));
       let _gt =
         OpamRepositoryCommand.update_selection gt ~global ~switches
@@ -1717,7 +1722,7 @@ let get_repos_rt gt repos =
       in
       if failed <> [] then
         let _rt = List.fold_left OpamRepositoryCommand.remove rt failed in
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Sync_error
           "Initial fetch of these repositories failed: %s"
           (OpamStd.List.concat_map ", " OpamRepositoryName.to_string failed)
       else
@@ -1834,7 +1839,8 @@ let switch =
       match packages, empty with
       | None, true -> Some []
       | Some packages, true when packages <> [] ->
-          OpamConsole.error_and_exit "Options --packages and --empty may not be specified at the same time"
+          OpamConsole.error_and_exit `Bad_arguments
+            "Options --packages and --empty may not be specified at the same time"
       | packages, _ -> packages
     in
     let compiler_packages rt ?repos switch compiler_opt =
@@ -1856,7 +1862,8 @@ let switch =
       | [] -> None
       | [comp] -> Some comp
       | args ->
-        OpamConsole.error_and_exit "Invalid extra arguments %s"
+        OpamConsole.error_and_exit `Bad_arguments
+          "Invalid extra arguments %s"
           (String.concat " " args)
     in
     match command, params with
@@ -1972,7 +1979,8 @@ let switch =
         | [sw] -> OpamSwitch.of_string sw
         | [] -> OpamStateConfig.get_switch ()
         | _ ->
-          OpamConsole.error_and_exit "Only one switch argument is supported"
+          OpamConsole.error_and_exit `Bad_arguments
+            "Only one switch argument is supported"
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
@@ -2150,7 +2158,8 @@ let pin ?(unpin_only=false) () =
                         OpamStateConfig.(!r.root_dir))
           basename dir [] [url] @@| function
         | Not_available u ->
-          OpamConsole.error_and_exit "Could not retrieve %s" u
+          OpamConsole.error_and_exit `Sync_error
+            "Could not retrieve %s" u
         | Result _ | Up_to_date _ -> from_opam_files dir
     in
     match found with
@@ -2158,7 +2167,7 @@ let pin ?(unpin_only=false) () =
     | [] ->
       try [OpamPackage.Name.of_string basename] with
       | Failure _ ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Bad_arguments
           "Could not infer a package name from %s, please specify it on the \
            command-line, e.g. 'opam pin NAME TARGET'"
           (OpamUrl.to_string url)
@@ -2232,7 +2241,7 @@ let pin ?(unpin_only=false) () =
                 true, acc)
           (false,[]) arg
       in
-      if err then OpamStd.Sys.exit 2
+      if err then OpamStd.Sys.exit_because `Bad_arguments
       else
         (ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ())
@@ -2272,7 +2281,7 @@ let pin ?(unpin_only=false) () =
                  "This will pin the following packages: %s. Continue ?"
                  (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names)
              then names
-             else OpamStd.Sys.exit 2
+             else OpamStd.Sys.exit_because `Aborted
            | _ -> names
          in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -2345,7 +2354,8 @@ let source =
         OpamPackage.Set.max_elt
           (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
       with Not_found ->
-        OpamConsole.error_and_exit "No package matching %s found."
+        OpamConsole.error_and_exit `Not_found
+          "No package matching %s found."
           (OpamFormula.short_string_of_atom atom)
     in
     let dir = match dir with
@@ -2358,7 +2368,7 @@ let source =
     in
     let open OpamFilename in
     if exists_dir dir then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Bad_arguments
         "Directory %s already exists. Please remove it or use a different one \
          (see option `--dir')"
         (Dir.to_string dir);
@@ -2366,7 +2376,7 @@ let source =
     if dev_repo then (
       match OpamFile.OPAM.dev_repo opam with
       | None ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Not_found
           "Version-controlled repo for %s unknown \
            (\"dev-repo\" field missing from metadata)"
           (OpamPackage.to_string nv)
@@ -2380,7 +2390,8 @@ let source =
                (OpamPackage.to_string nv) dir []
                [url])
         with
-        | Not_available u -> OpamConsole.error_and_exit "%s is not available" u
+        | Not_available u ->
+          OpamConsole.error_and_exit `Sync_error "%s is not available" u
         | Result _ | Up_to_date _ ->
           OpamConsole.formatted_msg
             "Successfully fetched %s development repo to ./%s/\n"
@@ -2389,7 +2400,8 @@ let source =
       let job =
         let open OpamProcess.Job.Op in
         OpamUpdate.download_package_source t nv dir @@+ function
-        | Some (Not_available s) -> OpamConsole.error_and_exit "Download failed: %s" s
+        | Some (Not_available s) ->
+          OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
         | None | Some (Result () | Up_to_date ()) ->
           OpamAction.prepare_package_source t nv dir @@| function
           | None ->
@@ -2504,12 +2516,12 @@ let lint =
            | None -> raise Not_found
            | some -> [some]
          with Not_found ->
-           OpamConsole.error_and_exit "No opam file found for %s%s"
+           OpamConsole.error_and_exit `Not_found "No opam file found for %s%s"
              (OpamPackage.Name.to_string (fst pkg))
              (match snd pkg with None -> ""
                                | Some v -> "."^OpamPackage.Version.to_string v))
       | _::_, Some _ ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Bad_arguments
           "--package and a file argument are incompatible"
     in
     let msg = if normalise then OpamConsole.errmsg else OpamConsole.msg in
@@ -2569,7 +2581,7 @@ let lint =
             true)
         false files
     in
-    if err then OpamStd.Sys.exit 1
+    if err then OpamStd.Sys.exit_because `False
   in
   Term.(const lint $global_options $files $package $normalise $short $warnings),
   term_info "lint" ~doc ~man

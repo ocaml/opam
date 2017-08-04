@@ -224,7 +224,7 @@ let custom_solver cmd = match cmd with
            && Lazy.force S.is_present)
          default_solver_selection
      with Not_found ->
-       OpamConsole.error_and_exit
+       OpamConsole.error_and_exit `Configuration_error
          "No installed solver matching the selected '%s' found"
          name)
   | ((CIdent name | CString name), _) :: args ->
@@ -241,7 +241,7 @@ let custom_solver cmd = match cmd with
     in
     make_custom_solver name args criteria
   | _ ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Configuration_error
       "Invalid custom solver command specified."
 
 let solver_of_string s =
@@ -262,7 +262,7 @@ let get_solver ?internal l =
          Lazy.force S.is_present)
       l
   with Not_found ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Configuration_error
       "No available solver found. Make sure your solver configuration is \
        correct. %s"
       (if has_builtin_solver () then

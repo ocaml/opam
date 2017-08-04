@@ -512,7 +512,7 @@ let lint_file filename =
         close_in ic; f
       with e -> close_in ic; raise e
     with OpamSystem.File_not_found _ ->
-      OpamConsole.error_and_exit "File %s not found"
+      OpamConsole.error_and_exit `Bad_arguments "File %s not found"
         (OpamFile.to_string filename)
   in
   lint_gen reader filename
@@ -546,7 +546,7 @@ let try_read rd f =
   try rd f, None with
   | (OpamSystem.Internal_error _ | Not_found) as exc ->
     if OpamFormatConfig.(!r.strict) then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `File_error
         "Could not read file %s: %s.\nAborting (strict mode)."
         (OpamFile.to_string f) (Printexc.to_string exc);
     None,
@@ -555,7 +555,7 @@ let try_read rd f =
           (Some (pos_file f), Printexc.to_string exc))
   | OpamPp.Bad_format bf as exc ->
     if OpamFormatConfig.(!r.strict) then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `File_error
         "Errors while parsing %s: %s.\nAborting (strict mode)."
         (OpamFile.to_string f) (Printexc.to_string exc);
     None,

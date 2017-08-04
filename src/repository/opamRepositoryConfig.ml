@@ -39,7 +39,7 @@ let default = {
       in
       [ CIdent cmd, None ], kind
     with Not_found ->
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Configuration_error
         "Could not find a suitable download command. Please make sure you \
          have either \"curl\" or \"wget\" installed, or specify a custom \
          command through variable OPAMFETCH."

@@ -68,7 +68,8 @@ val note : ('a, unit, string, unit) format4 -> 'a
     error messages without repeating "[ERROR]") *)
 val errmsg : ('a, out_channel, unit, unit, unit, unit) format6 -> 'a
 
-val error_and_exit : ?num:int -> ('a, unit, string, 'b) format4 -> 'a
+val error_and_exit :
+  OpamStd.Sys.exit_reason -> ('a, unit, string, 'b) format4 -> 'a
 val msg : ('a, out_channel, unit, unit) format4 -> 'a
 val formatted_msg : ?indent:int -> ('a, unit, string, unit) format4 -> 'a
 val header_msg : ('a, unit, string, unit) format4 -> 'a

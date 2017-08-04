@@ -238,7 +238,7 @@ let pull_tree
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `File_error
         "%s: Missing checksum, and `--require-checksums` was set."
         label;
     pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
@@ -284,7 +284,7 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `File_error
         "%s: Missing checksum, and `--require-checksums` was set."
         label;
     OpamFilename.with_tmp_dir_job (fun tmpdir ->

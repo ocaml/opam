@@ -50,4 +50,4 @@ let _ =
         end
       | _ -> ()
     end
-  | _ -> OpamConsole.error_and_exit "unsupported cudf file"
+  | _ -> OpamConsole.error_and_exit `Solver_error "unsupported cudf file"

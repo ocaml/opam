@@ -63,7 +63,7 @@ let add rt name url trust_anchors =
                 (trust_anchors = r.repo_trust || trust_anchors = None)
     -> rt
   | Some r ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Repository %s is already set up %s. To change that, use 'opam \
        repository set-url'."
       (OpamRepositoryName.to_string name)
@@ -83,7 +83,7 @@ let add rt name url trust_anchors =
     in
     if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
     then
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Bad_arguments
         "Invalid repository name, %s exists"
         (OpamFilename.Dir.to_string repo.repo_root);
     if url.OpamUrl.backend = `rsync &&
@@ -94,7 +94,7 @@ let add rt name url trust_anchors =
               "%S doesn't contain a \"packages\" directory.\n\
                Is it really the directory of your repo ?"
               (OpamUrl.to_string url))
-    then OpamStd.Sys.exit 1;
+    then OpamStd.Sys.exit_because `Aborted;
     OpamProcess.Job.run (OpamRepository.init root name);
     update_repos_config rt
       (OpamRepositoryName.Map.add name repo rt.repositories)
@@ -113,7 +113,7 @@ let set_url rt name url trust_anchors =
   let repo =
     try OpamRepositoryName.Map.find name rt.repositories
     with Not_found ->
-      OpamConsole.error_and_exit "No repository %s found"
+      OpamConsole.error_and_exit `Not_found "No repository %s found"
         (OpamRepositoryName.to_string name);
   in
   OpamFilename.cleandir (OpamRepositoryPath.create rt.repos_global.root name);

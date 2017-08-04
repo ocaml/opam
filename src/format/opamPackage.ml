@@ -207,7 +207,8 @@ let list dir =
           else
             let suffix = Filename.concat (to_string p) "opam" in
             let files = List.filter (OpamFilename.ends_with suffix) files in
-            OpamConsole.error_and_exit "Multiple definition of package %s in %s:\n%s"
+            OpamConsole.error_and_exit `File_error
+              "Multiple definition of package %s in %s:\n%s"
               (to_string p) (OpamFilename.Dir.to_string dir)
               (OpamStd.Format.itemize ~bullet:"" OpamFilename.to_string files);
       ) Set.empty files
@@ -279,17 +280,5 @@ let max_version set name =
   let versions = versions_of_name set name in
   let version = Version.Set.max_elt versions in
   create name version
-
-let unknown name version =
-  match version with
-  | None   ->
-    OpamConsole.error_and_exit
-      "%s is not a valid package."
-      (Name.to_string name)
-  | Some v ->
-    OpamConsole.error_and_exit
-      "The package %s has no version %s."
-      (Name.to_string name)
-      (Version.to_string v)
 
 module Graph = (OpamParallel.MakeGraph (O) : OpamParallel.GRAPH with type V.t = t)

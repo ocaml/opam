@@ -159,10 +159,10 @@ let errmsg fmt =
   flush stdout;
   Printf.eprintf (fmt ^^ "%!")
 
-let error_and_exit ?(num=66) fmt =
+let error_and_exit reason fmt =
   Printf.ksprintf (fun str ->
     error "%s" str;
-    OpamStd.Sys.exit num
+    OpamStd.Sys.exit_because reason
   ) fmt
 
 let msg fmt =
