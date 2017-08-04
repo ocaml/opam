@@ -32,4 +32,4 @@ If you just want to give it a try without altering your current installation, yo
     alias opam2=\"OPAMROOT=~/.opam2 %{lib}%/%{name}%/opam\""
   {success}
 ]
-available: ocaml-version >= "4.01.0"
+available: ocaml-version >= "4.02.3"

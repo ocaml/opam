@@ -29,10 +29,10 @@ AC_ARG_ENABLE([developer_mode],
                  [Enable developer features])
 )
 
-# Check that OCaml version is greater or equal to 4.01.0
+# Check that OCaml version is greater or equal to 4.02.3
 AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(
-    [$OCAMLVERSION], [lt], [4.01.0],
+    [$OCAMLVERSION], [lt], [4.02.3],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 

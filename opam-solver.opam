@@ -24,4 +24,4 @@ depends: [
   "cudf" {<= "0.7"}
   "jbuilder" {build & >= "1.0+beta12"}
 ]
-available: ocaml-version >= "4.01.0"
+available: ocaml-version >= "4.02.3"
