@@ -254,7 +254,7 @@ let options =
     Arg.(value & pos 0 (some string) None & info ~docv:"PKG.install" ~doc [])
   in
   let prefix =
-    let doc = "The prefix to install to. You can use eg '$$PREFIX' to output a \
+    let doc = "The prefix to install to. You can use eg '\\$PREFIX' to output a \
                relocatable script" in
     Arg.(value & opt string "/usr/local" &  info ~docv:"PREFIX" ~doc ["prefix"])
   in
@@ -271,28 +271,28 @@ let options =
   in
   let mandir =
     let doc = "Manpages dir. Relative to $(b,prefix) or absolute. \
-               By default $(i,$$prefix/man)." in
+               By default $(i,\\$prefix/man)." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["mandir"])
   in
   let libdir =
     let doc = "OCaml lib dir. Relative to $(b,prefix) or absolute. \
-               By default $(i,$$prefix/lib) ; sometimes setting this to \
-               $(i,$$(ocamlc -where)) is preferable." in
+               By default $(i,\\$prefix/lib) ; sometimes setting this to \
+               $(i,\\$(ocamlc -where)) is preferable." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["libdir"])
   in
   let stubsdir =
     let doc = "Stubs installation dir. Relative to $(b,prefix) or absolute. \
-               By default $(i,$$libdir/stublibs)." in
+               By default $(i,\\$libdir/stublibs)." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["stubsdir"])
   in
   let topdir =
     let doc = "Toplevel install dir. Relative to $(b,prefix) or absolute. \
-               By default $(i,$$libdir/toplevel)." in
+               By default $(i,\\$libdir/toplevel)." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["topdir"])
   in
   let docdir =
     let doc = "Documentation dir. Relative to $(b,prefix) or absolute. \
-               By default $(i,$$prefix/doc)." in
+               By default $(i,\\$prefix/doc)." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["docdir"])
   in
   let make_options file prefix script name mandir libdir stubsdir topdir docdir
