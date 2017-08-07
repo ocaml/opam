@@ -2,7 +2,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 mccs opam-file-format result
 
 URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
 MD5_cppo = bdc99442945f6bc26e7a8096d0975239
@@ -24,6 +24,9 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
 URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
 MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
+
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+1c.tar.gz
+MD5_mccs = bcf4edb663765886c648f3ee19428910
 
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
