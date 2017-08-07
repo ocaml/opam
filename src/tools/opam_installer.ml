@@ -349,7 +349,7 @@ let options =
     let mandir = mk_dir mandir in
     let libdir = mk_dir libdir in
     let stubsdir = match mk_dir stubsdir, libdir with
-      | None, Some d -> Some OpamFilename.Op.(d / "stubslibs")
+      | None, Some d -> Some OpamFilename.Op.(d / "stublibs")
       | d, None | (Some _ as d), _ -> d
     in
     let topdir = match mk_dir topdir, libdir with
