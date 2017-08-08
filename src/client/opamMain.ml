@@ -63,7 +63,11 @@ let check_and_run_external_commands () =
             OpamPackage.packages_of_names
               (Lazy.force st.available_packages)
               (OpamPackage.Name.Set.of_list @@
-               List.map OpamPackage.Name.of_string [ prefixed_name; name ])
+               (OpamStd.List.filter_map
+                  (fun s ->
+                     try Some (OpamPackage.Name.of_string s)
+                     with Failure _ -> None)
+                  [ prefixed_name; name ]))
           in
           let plugins =
             OpamPackage.Set.filter (fun nv ->
