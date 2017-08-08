@@ -27,11 +27,9 @@ src_ext/*.download
 *~
 .#*
 \#*#
-ocp-build.root
-ocp-build.root.old
-ocp-get
-ocp-get-server
-ocp-build.root.old.old
+opam
+opam-installer
+opam-admin.top
 # debug files
 *.log
 *.cudf

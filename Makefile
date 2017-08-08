@@ -38,9 +38,11 @@ opam: $(JBUILDER_DEP) opam.install
 
 opam-installer: $(JBUILDER_DEP)
 	$(JBUILDER) build src/tools/opam_installer.exe
+	ln -sf _build/default/src/tools/opam_installer.exe $@
 
 opam-admin.top: $(JBUILDER_DEP)
 	$(JBUILDER) build src/tools/opam_admin_top.bc
+	ln -sf _build/default/src/tools/opam_admin_top.bc $@
 
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
