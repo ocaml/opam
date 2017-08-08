@@ -30,6 +30,9 @@ ALWAYS:
 
 opam: ALWAYS opam.install
 
+%-static: ALWAYS
+	OPAM_BUILD_STATIC=true $(MAKE) $*
+
 opam-installer: ALWAYS
 	$(JBUILDER) build src/tools/opam_installer.exe
 

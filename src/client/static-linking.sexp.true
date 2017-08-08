@@ -1,0 +1,8 @@
+(-noautolink
+ -cclib -lunix
+ -cclib -lbigarray
+ -cclib -lmccs_stubs
+ -cclib -static-libgcc
+ -cclib -Wl,-l:libstdc++.a,-l:libglpk.a
+ -cclib -lz
+ -cclib -lltdl)
