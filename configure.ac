@@ -113,6 +113,14 @@ AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
 AC_CHECK_OCAML_PKG([mccs])
+AS_IF([test "x${OCAML_PKG_mccs}" = "xno" && test "x${MCCS_DISABLED}" != "xtrue"],
+      AC_CHECK_LIB(glpk,glp_create_prob,[],
+                   [AS_IF([test "x${with_mccs}" = "xyes"],
+                          [AC_MSG_ERROR([libglpk was not found. Cannot compile mccs])],
+                          AC_SUBST(MCCS_DISABLED,true)])))
+
+AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
+      [AC_MSG_ERROR([Option --without-mccs is not supported. You need to uninstall the 'mccs' package])])
 
 dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
 dnl -- if it's installed, at the moment
