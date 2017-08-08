@@ -29,6 +29,11 @@ AC_ARG_ENABLE([developer_mode],
                  [Enable developer features])
 )
 
+AC_ARG_WITH([mccs],
+  AC_HELP_STRING([--without-mccs],
+                 [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)])
+)
+
 # Check that OCaml version is greater or equal to 4.02.3
 AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(
@@ -42,17 +47,14 @@ AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\
 
 AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [AC_SUBST(DEVELOPER,false)])
 
+AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_DISABLED,true)], [AC_SUBST(MCCS_DISABLED,false)])
+
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"], [
   CONF_OCAMLFLAGS="-warn-error A"
 ],[
   CONF_OCAMLFLAGS=
 ])
 AC_SUBST(CONF_OCAMLFLAGS)
-
-AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.02.0])
-AC_SUBST(ocaml_4_02,"$ax_compare_version")
-AX_COMPARE_VERSION([$OCAMLVERSION], [ge], [4.03.0])
-AC_SUBST(ocaml_4_03,"$ax_compare_version")
 
 AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   WIN32=1
@@ -112,6 +114,14 @@ AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
 AC_CHECK_OCAML_PKG([mccs])
 
+dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
+dnl -- if it's installed, at the moment
+dnl AS_IF([test "x${with_mccs}" != "xno"],
+dnl      AC_CHECK_OCAML_PKG([mccs]),
+dnl      [echo "checking for OCaml findlib package mccs... disabled"
+dnl       AC_SUBST(OCAML_PKG_mccs,"no")])
+
+
 dnl echo
 dnl echo "extlib........................ ${OCAML_PKG_extlib}"
 dnl echo "re............................ ${OCAML_PKG_re}"
@@ -156,5 +166,10 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
+AS_IF([{ test "x$MCCS_DISABLED" = "xtrue" && test "x${hasalldeps}" = "x"; } ||
+       { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }],
+      [echo "Opam will be built WITHOUT a built-in solver"],
+      [echo "Opam will be built WITH a built-in solver"])
+echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}

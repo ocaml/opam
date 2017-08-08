@@ -2,7 +2,10 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 mccs opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+ifneq ($(MCCS_DISABLED),true)
+SRC_EXTS := $(SRC_EXTS) mccs
+endif
 
 URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
 MD5_cppo = bdc99442945f6bc26e7a8096d0975239
@@ -127,6 +130,6 @@ clean:
 	@
 
 distclean: clean
-	rm -rf jbuilder $(SRC_EXTS)
+	rm -rf jbuilder $(SRC_EXTS) mccs
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true

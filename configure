@@ -606,9 +606,8 @@ OCAMLFIND
 PATH_PREPEND
 EXE
 WIN32
-ocaml_4_03
-ocaml_4_02
 CONF_OCAMLFLAGS
+MCCS_DISABLED
 DEVELOPER
 OBJEXT
 EXEEXT
@@ -679,6 +678,7 @@ enable_option_checking
 enable_version_check
 enable_checks
 enable_developer_mode
+with_mccs
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1318,6 +1318,13 @@ Optional Features:
   --disable-certificate-check
                           Do not check the certificate of opam's dependency
                           archives
+
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --without-mccs          Compile without a built-in Cudf solver (only works
+                          if 'mccs' is not otherwise installed)
 
 
 Some influential environment variables:
@@ -3051,6 +3058,13 @@ if test "${enable_developer_mode+set}" = set; then :
 fi
 
 
+
+# Check whether --with-mccs was given.
+if test "${with_mccs+set}" = set; then :
+  withval=$with_mccs;
+fi
+
+
 # Check that OCaml version is greater or equal to 4.02.3
 for ac_prog in gawk mawk nawk awk
 do
@@ -3746,6 +3760,14 @@ else
 
 fi
 
+if test "x${with_mccs}" = "xno"; then :
+  MCCS_DISABLED=true
+
+else
+  MCCS_DISABLED=false
+
+fi
+
 if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
 
   CONF_OCAMLFLAGS="-warn-error A"
@@ -3755,81 +3777,6 @@ else
   CONF_OCAMLFLAGS=
 
 fi
-
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.02.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/true/;s/x${ax_compare_version_B}/false/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-    :
-      fi
-
-ocaml_4_02="$ax_compare_version"
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.03.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/true/;s/x${ax_compare_version_B}/false/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-    :
-      fi
-
-ocaml_4_03="$ax_compare_version"
 
 
 if  test "${OCAML_OS_TYPE}" = "Win32"; then :
@@ -4407,6 +4354,8 @@ $as_echo "found" >&6; }
 $as_echo "not found" >&6; }
     OCAML_PKG_mccs=no
   fi
+
+
 
 
 
@@ -5608,5 +5557,12 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
+if { test "x$MCCS_DISABLED" = "xtrue" && test "x${hasalldeps}" = "x"; } ||
+       { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }; then :
+  echo "Opam will be built WITHOUT a built-in solver"
+else
+  echo "Opam will be built WITH a built-in solver"
+fi
+echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}

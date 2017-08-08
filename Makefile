@@ -2,7 +2,7 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include Makefile.config
 endif
 
-all: opam-lib opam opam-installer
+all: opam opam-installer
 	@
 
 ifeq ($(JBUILDER),)
@@ -28,28 +28,13 @@ jbuilder: $(JBUILDER_DEP)
 ALWAYS:
 	@
 
-opam-lib opam opam-installer all: ALWAYS
+opam: ALWAYS opam.install
 
-#backwards-compat
-compile with-ocamlbuild: all
-	@
-install-with-ocamlbuild: install
-	@
-libinstall-with-ocamlbuild: libinstall
-	@
+opam-installer: ALWAYS
+	$(JBUILDER) build src/tools/opam_installer.exe
 
-byte:
-	$(MAKE) all USE_BYTE=true
-
-src/%: $(JBUILDER_DEP)
-	$(MAKE) -C src $*
-
-# Disable this rule if the only build targets are cold, download-ext or configure
-# to suppress error messages trying to build Makefile.config
-ifneq ($(or $(filter-out cold download-ext configure,$(MAKECMDGOALS)),$(filter own-goal,own-$(MAKECMDGOALS)goal)),)
-%: $(JBUILDER_DEP)
-	$(MAKE) -C src $@
-endif
+opam-admin.top: ALWAYS
+	$(JBUILDER) build src/tools/opam_admin_top.bc
 
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
@@ -61,7 +46,6 @@ clean-ext:
 	$(MAKE) -C src_ext distclean
 
 clean:
-	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
 	rm -rf _build
@@ -88,14 +72,14 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
 endif
 
-opam-devel.install:
+opam-devel.install: ALWAYS
 	$(JBUILDER) build -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
-opam-%.install:
+opam-%.install: ALWAYS
 	$(JBUILDER) build -p opam-$* $@
 
-opam.install:
+opam.install: ALWAYS
 	$(JBUILDER) build $@
 
 opam-actual.install: opam.install
@@ -111,6 +95,12 @@ opam-actual.install: opam.install
 	@echo ']' >>$@
 
 OPAMLIBS = core format solver repository state client
+
+opam-%: ALWAYS
+	$(JBUILDER) build opam-$*.install
+
+opam-lib: ALWAYS
+	$(JBUILDER) build $(patsubst %,opam-%.install,$(OPAMLIBS))
 
 installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
@@ -134,7 +124,7 @@ uninstall: opam-actual.install
 	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
-tests:
+tests: ALWAYS
 	$(JBUILDER) runtest
 
 # tests-local, tests-git

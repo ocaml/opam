@@ -2,10 +2,12 @@
 
 JBUILDER=jbuilder exec --
 
+BASESRC=../_build/default/src
+
 ifndef OPAM
   OPAM = $(JBUILDER) opam
 endif
-SRCDIR = $(sort $(foreach x,$(wildcard ../_build/default/src/*/*),$(dir $x)))
+SRCDIR = $(sort $(foreach x,$(wildcard $(BASESRC)/*/*),$(dir $x)))
 
 TOPICS  = $(shell $(OPAM) help topics)
 TOPICS_ADMIN = cache filter index lint list upgrade
@@ -54,8 +56,8 @@ html:
 	rm -rf html/ocamldoc
 	mkdir -p html/ocamldoc
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
-	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -html -d html/ocamldoc || true
-	$(OCAMLDOC) $(wildcard ../src/*/*.mli) $(wildcard ../src/*/*.ml) -dot -o dependencies.dot || true
+	$(OCAMLDOC) $(wildcard $(BASESRC)/*/*.mli) $(wildcard $(BASESRC)/*/*.ml) -html -d html/ocamldoc || true
+	$(OCAMLDOC) $(wildcard $(BASESRC)/*/*.mli) $(wildcard $(BASESRC)/*/*.ml) -dot -o dependencies.dot || true
 	tred dependencies.dot | \
 	  dot -Tsvg > \
 	    html/ocamldoc/dependencies.svg \
