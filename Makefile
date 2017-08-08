@@ -6,15 +6,20 @@ all: opam opam-installer
 	@
 
 ifeq ($(JBUILDER),)
-JBUILDER_DEP=src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
-ifeq ($(shell command -v cygpath 2>/dev/null),)
-JBUILDER:=$(JBUILDER_DEP)
+  JBUILDER_FILE = src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+  ifeq ($(shell command -v cygpath 2>/dev/null),)
+    JBUILDER := $(JBUILDER_FILE)
+  else
+    JBUILDER := $(shell echo "$(JBUILDER_FILE)" | cygpath -f - -a)
+  endif
 else
-JBUILDER:=$(shell echo "$(JBUILDER_DEP)" | cygpath -f - -a)
+  JBUILDER_FILE=
 endif
-else
-JBUILDER_DEP=
-endif
+
+ALWAYS:
+	@
+
+JBUILDER_DEP = ALWAYS $(JBUILDER_FILE)
 
 src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.stamp
 	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
@@ -25,18 +30,16 @@ src_ext/jbuilder.stamp:
 jbuilder: $(JBUILDER_DEP)
 	@$(JBUILDER) build @install
 
-ALWAYS:
-	@
-
-opam: ALWAYS opam.install
+opam: $(JBUILDER_DEP) opam.install
+	ln -sf _build/default/src/client/opamMain.exe $@
 
 %-static: ALWAYS
 	OPAM_BUILD_STATIC=true $(MAKE) $*
 
-opam-installer: ALWAYS
+opam-installer: $(JBUILDER_DEP)
 	$(JBUILDER) build src/tools/opam_installer.exe
 
-opam-admin.top: ALWAYS
+opam-admin.top: $(JBUILDER_DEP)
 	$(JBUILDER) build src/tools/opam_admin_top.bc
 
 lib-ext:
@@ -75,14 +78,14 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
 endif
 
-opam-devel.install: ALWAYS
+opam-devel.install: $(JBUILDER_DEP)
 	$(JBUILDER) build -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
-opam-%.install: ALWAYS
+opam-%.install: $(JBUILDER_DEP)
 	$(JBUILDER) build -p opam-$* $@
 
-opam.install: ALWAYS
+opam.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $@
 
 opam-actual.install: opam.install
@@ -99,35 +102,35 @@ opam-actual.install: opam.install
 
 OPAMLIBS = core format solver repository state client
 
-opam-%: ALWAYS
+opam-%: $(JBUILDER_DEP)
 	$(JBUILDER) build opam-$*.install
 
-opam-lib: ALWAYS
+opam-lib: $(JBUILDER_DEP)
 	$(JBUILDER) build $(patsubst %,opam-%.install,$(OPAMLIBS))
 
-installlib-%: opam-installer opam-%.install
+installlib-%: $(JBUILDER_DEP) opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
 	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-uninstalllib-%: opam-installer opam-%.install
+uninstalllib-%: $(JBUILDER_DEP) opam-installer opam-%.install
 	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-libinstall: opam-admin.top $(OPAMLIBS:%=installlib-%)
+libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam-actual.install
+install: opam-actual.install $(JBUILDER_DEP)
 	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam-actual.install
+uninstall: opam-actual.install $(JBUILDER_DEP)
 	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
-tests: ALWAYS
+tests: $(JBUILDER_DEP)
 	$(JBUILDER) runtest
 
 # tests-local, tests-git
