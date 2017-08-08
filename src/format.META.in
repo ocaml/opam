@@ -1,5 +1,0 @@
-version = "@PACKAGE_VERSION@"
-description = "OCaml Package Manager file format handling library"
-archive(byte) = "opam-format.cma"
-archive(native) = "opam-format.cmxa"
-requires = "opam-core, opam-file-format"

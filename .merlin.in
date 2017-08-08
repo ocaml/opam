@@ -1,5 +1,0 @@
-PKG ocamlgraph cmdliner dose3 cudf re
-
-S src/*
-B _obuild/*
-B src/*

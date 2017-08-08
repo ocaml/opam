@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~beta3"
+version: "2.0.0~beta4"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -16,15 +16,13 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make name]
   [make "%{name}%.install"]
 ]
 depends: [
-  "ocamlfind" {build}
-  "ocp-build" {build & >= "1.99.7"}
   "base-unix"
   "base-bigarray"
   "ocamlgraph"
   "re" {>= "1.5.0"}
+  "jbuilder" {build & >= "1.0+beta12"}
 ]
-available: ocaml-version >= "4.01.0"
+available: ocaml-version >= "4.02.3"

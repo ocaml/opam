@@ -1,10 +1,11 @@
 -include ../Makefile.config
 
+JBUILDER=jbuilder exec --
+
 ifndef OPAM
-  OPAM = ../src/opam
+  OPAM = $(JBUILDER) opam
 endif
-BINDIR = $(dir $(OPAM))
-SRCDIR = $(sort $(foreach x,$(wildcard ../src/*/*),$(dir $x)))
+SRCDIR = $(sort $(foreach x,$(wildcard ../_build/default/src/*/*),$(dir $x)))
 
 TOPICS  = $(shell $(OPAM) help topics)
 TOPICS_ADMIN = cache filter index lint list upgrade
@@ -12,7 +13,7 @@ TOPICS_ADMIN = cache filter index lint list upgrade
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
-  OPAM_INSTALLER = $(BINDIR)/opam-installer
+  OPAM_INSTALLER = $(JBUILDER) opam-installer
 endif
 
 SRCEXTDIR = ../src_ext/lib

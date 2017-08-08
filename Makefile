@@ -41,13 +41,13 @@ libinstall-with-ocamlbuild: libinstall
 byte:
 	$(MAKE) all USE_BYTE=true
 
-src/%:
+src/%: $(JBUILDER_DEP)
 	$(MAKE) -C src $*
 
 # Disable this rule if the only build targets are cold, download-ext or configure
 # to suppress error messages trying to build Makefile.config
 ifneq ($(or $(filter-out cold download-ext configure,$(MAKECMDGOALS)),$(filter own-goal,own-$(MAKECMDGOALS)goal)),)
-%:
+%: $(JBUILDER_DEP)
 	$(MAKE) -C src $@
 endif
 
@@ -60,16 +60,16 @@ download-ext:
 clean-ext:
 	$(MAKE) -C src_ext distclean
 
-clean: fastclean
+clean:
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out
-	rm -rf _obuild _build
+	rm -rf _build
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
-	rm -f .merlin Makefile.config config.log config.status src/core/opamVersion.ml src/core/opamCoreConfig.ml aclocal.m4
-	rm -f src/*.META src/*/.merlin src/ocaml-flags-standard.sexp
+	rm -f Makefile.config config.log config.status aclocal.m4
+	rm -f src/*.META src/*/.merlin
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
 OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
@@ -88,14 +88,18 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
 endif
 
-opam-%.install: ALWAYS
-	$(MAKE) -C src ../opam-$*.install
+opam-devel.install:
+	$(JBUILDER) build -p opam opam.install
+	sed -e "s/bin:/libexec:/" opam.install > $@
+
+opam-%.install:
+	$(JBUILDER) build -p opam-$* $@
 
 opam.install:
-	@echo 'bin: [' >$@
-	@echo '  "src/opam$(EXE)"' >>$@
-	@echo '  "src/opam-installer$(EXE)"' >>$@
-	@echo ']' >>$@
+	$(JBUILDER) build $@
+
+opam-actual.install: opam.install
+	@sed -n -e "/^bin: /,/^]/p" $< > $@
 	@echo 'man: [' >>$@
 	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
 	@echo ']' >>$@
@@ -108,30 +112,30 @@ opam.install:
 
 OPAMLIBS = core format solver repository state client
 
-installlib-%: opam-installer opam-%.install src/opam-%$(LIBEXT)
+installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
-	src/opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-uninstalllib-%: opam-installer opam-%.install src/opam-%$(LIBEXT)
-	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
+uninstalllib-%: opam-installer opam-%.install
+	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 libinstall: opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam.install
-	src/opam-installer $(OPAMINSTALLER_FLAGS) $<
+install: opam-actual.install
+	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam.install
-	src/opam-installer -u $(OPAMINSTALLER_FLAGS) opam.install
+uninstall: opam-actual.install
+	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
-tests: src/opam-check$(EXE)
-	$(MAKE) -C tests all
+tests:
+	$(JBUILDER) runtest
 
 # tests-local, tests-git
 tests-%:
@@ -153,16 +157,6 @@ release-tag:
 	git tag -d latest || true
 	git tag -a latest -m "Latest release"
 	git tag -a $(version) -m "Release $(version)"
-
-fastclean:: rmartefacts
-
-include Makefile.ocp-build
-
-rmartefacts: ALWAYS
-	@rm -f $(addprefix src/, opam opam-installer opam-check)
-	@$(foreach l,core format solver repository state client tools,\
-	   $(foreach e,a cma cmxa,rm -f src/opam-$l.$e;)\
-	   $(foreach e,o cmo cmx cmxs cmi cmt cmti,rm -f $(wildcard src/$l/*.$e);))
 
 cold:
 	./shell/bootstrap-ocaml.sh

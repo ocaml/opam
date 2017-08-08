@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~beta3"
+version: "2.0.0~beta4"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -16,13 +16,13 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make name]
   [make "%{name}%.install"]
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.0.0~beta3"}
+  "opam-client" {= "2.0.0~beta4"}
   "cmdliner" {>= "0.9.8"}
+  "jbuilder" {build & >= "1.0+beta12"}
 ]
 post-messages: [
 "The development version of opam has been successfuly compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with
@@ -32,4 +32,4 @@ If you just want to give it a try without altering your current installation, yo
     alias opam2=\"OPAMROOT=~/.opam2 %{lib}%/%{name}%/opam\""
   {success}
 ]
-available: ocaml-version >= "4.01.0"
+available: ocaml-version >= "4.02.3"
