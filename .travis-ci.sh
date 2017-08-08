@@ -13,7 +13,7 @@ install-bootstrap () {
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
         opam pin add opam-file-format "git://github.com/ocaml/opam-file-format.git" --no-action --yes
-        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
+        opam pin add jbuilder.1.0+beta12 "git://github.com/janestreet/jbuilder.git" --no-action --yes
         opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format jbuilder --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
