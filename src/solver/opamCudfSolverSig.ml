@@ -8,8 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-
 type criteria_def = {
   crit_default: string;
   crit_upgrade: string;
@@ -24,6 +22,7 @@ module type S = sig
   val is_present: bool Lazy.t
 
   val command_name: string option
+  (** None means the solver is built-in *)
 
   val default_criteria: criteria_def
 

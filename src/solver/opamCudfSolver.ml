@@ -9,14 +9,8 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamCudfSolverSig
 
-type criteria_def = OpamCudfSolverSig.criteria_def = {
-  crit_default: string;
-  crit_upgrade: string;
-  crit_fixup: string;
-  crit_best_effort_prefix: string option;
-}
+include OpamCudfSolverSig
 
 let default_compat_criteria = {
   crit_default = "-removed,-notuptodate,-changed";
@@ -24,8 +18,6 @@ let default_compat_criteria = {
   crit_fixup = "-changed,-notuptodate";
   crit_best_effort_prefix = None;
 }
-
-module type S = OpamCudfSolverSig.S
 
 module type ExternalArg = sig
   val name: string
