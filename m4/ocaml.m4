@@ -171,13 +171,27 @@ AC_DEFUN([AC_PROG_CAMLP4],
   AC_SUBST([CAMLP4RF])
 ])
 
+AC_DEFUN([AC_PROG_OCAMLOBJINFO],
+[dnl
+  AC_CHECK_TOOL([OCAMLOBJINFO],[ocamlobjinfo],[no])
+  AC_SUBST([OCAMLOBJINFO])
+])
 
 AC_DEFUN([AC_PROG_FINDLIB],
 [dnl
   AC_REQUIRE([AC_PROG_OCAML])dnl
+  AC_REQUIRE([AC_PROG_OCAMLOBJINFO])dnl
 
   # checking for ocamlfind
   AC_CHECK_TOOL([OCAMLFIND],[ocamlfind],[no])
+  AS_IF([test "$OCAMLFIND" != "no"],[
+    AS_IF([test "$OCAMLOBJINFO" = "no"],[AC_MSG_WARN([ocamlobjinfo not found; cannot verify ocamlfind])],[
+      AS_IF([! $OCAMLOBJINFO `$OCAMLFIND query -predicates byte -a-format findlib | tr -d '\015'` > /dev/null 2>&1],[
+        AC_MSG_RESULT([site-lib is for a different version of OCaml; ocamlfind discarded.])
+        OCAMLFIND=no
+      ])
+    ])
+  ])
   AC_SUBST([OCAMLFIND])
 ])
 
