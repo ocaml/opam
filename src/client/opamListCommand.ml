@@ -48,7 +48,7 @@ let default_pattern_selector = {
   case_sensitive = false;
   exact = false;
   glob = true;
-  fields = ["name"; "descr"; "flags"];
+  fields = ["name"; "synopsis"; "descr"; "tags"];
   ext_fields = false;
 }
 
@@ -267,7 +267,7 @@ let apply_selector ~base st = function
       if psel.glob then Re_glob.glob ~expand_braces:true pat
       else Re.str pat
     in
-    let re = if psel.case_sensitive then Re.case re else re in
+    let re = if psel.case_sensitive then Re.case re else Re.no_case re in
     let re = if psel.exact then Re.seq [Re.bos; re; Re.eos] else re in
     let re = Re.compile re in
     let content_strings nv =
