@@ -12,21 +12,11 @@ install-bootstrap () {
     opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
-        opam pin add opam-file-format "git://github.com/ocaml/opam-file-format.git" --no-action --yes
-        opam pin add jbuilder.1.0+beta12 "git://github.com/janestreet/jbuilder.git" --no-action --yes
-        opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format jbuilder --yes
+        opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format jbuilder re --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
         mv $FINDCONF.1 $FINDCONF
-    else
-        if [ "$OCAML_VERSION" = "4.01.0" ] ; then
-          EXTRAS="cmdliner dose3 opam-file-format"
-        else
-          EXTRAS=
-        fi
-        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
-        opam install jbuilder ocamlbuild $EXTRAS --yes
     fi
     rm -f "$OPAMBSROOT"/log/*
 }
@@ -66,9 +56,13 @@ git config --global user.name "Travis CI"
 
     [ "$(ocaml -vnum)" = "$OCAML_VERSION" ] || exit 12
 
+    if [ "$OPAM_TEST" = "1" ]; then
+        opam pin add jbuilder.1.0+beta12 "https://github.com/janestreet/jbuilder/archive/b913a42739362ac58c9a3df55a80eeacc9af9135.tar.gz" --yes
+    fi
+
     ./configure --prefix ~/local
 
-    if [ "$OPAM_TEST" != "1" -a "$OCAML_VERSION" != "4.01.0" ]; then make lib-ext; fi
+    if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
     make all
 
     rm -f ~/local/bin/opam
