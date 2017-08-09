@@ -92,7 +92,7 @@ AC_CHECK_PROGS(FETCH,[curl wget],no)
 AC_CHECK_TOOL(JBUILDER,jbuilder)
 
 if test x"$FETCH" = x"curl" ; then
-  AC_SUBST(fetch, "curl $curl_certificate_check -OL")
+  AC_SUBST(fetch, "curl $curl_certificate_check -OLSs")
 elif test x"$FETCH" = x"wget" ; then
   AC_SUBST(fetch, "wget $wget_certificate_check")
 elif test x"${enable_checks}" != x"no" ; then

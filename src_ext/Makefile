@@ -41,10 +41,11 @@ URL_jbuilder = https://github.com/dra27/jbuilder/archive/more-reads.tar.gz
 MD5_jbuilder = 6c329177bd81a0b25ebde7235eeb19bc
 
 ifndef FETCH
-ifneq ($(shell command -v curl 2>/dev/null),)
-else
-FETCH=wget
-endif
+  ifneq ($(shell command -v curl 2>/dev/null),)
+    FETCH = curl -OLSs
+  else
+    FETCH = wget
+  endif
 endif
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))

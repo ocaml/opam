@@ -3768,7 +3768,6 @@ else
 
 fi
 
-
 if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
 
   CONF_OCAMLFLAGS="-warn-error A"
@@ -4059,7 +4058,7 @@ fi
 
 
 if test x"$FETCH" = x"curl" ; then
-  fetch="curl $curl_certificate_check -OL"
+  fetch="curl $curl_certificate_check -OLSs"
 
 elif test x"$FETCH" = x"wget" ; then
   fetch="wget $wget_certificate_check"
