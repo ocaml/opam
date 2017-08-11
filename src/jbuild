@@ -8,4 +8,4 @@
 (rule
   ((targets (ocaml-context-flags.sexp))
    (deps (../shell/context_flags.ml))
-   (action (with-stdout-to ${@} (run ocaml ../shell/context_flags.ml flags)))))
+   (action (with-stdout-to ${@} (run ocaml ${^} flags)))))
