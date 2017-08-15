@@ -96,18 +96,20 @@ module Aspcud_def = struct
 
   let is_present = lazy (
     OpamSystem.command_exists command_name &&
-    match
-      OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-        [command_name; "-v"]
-    with
-    | [] -> false
-    | s::_ ->
-      match OpamStd.String.split s ' ' with
-      | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
-        OpamConsole.log "SOLVER"
-          "Solver is aspcud >= 1.9: using latest version criteria";
-        true
-      | _ -> false
+    try
+      match
+        OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
+          [command_name; "-v"]
+      with
+      | [] -> false
+      | s::_ ->
+        match OpamStd.String.split s ' ' with
+        | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
+          OpamConsole.log "SOLVER"
+            "Solver is aspcud >= 1.9: using latest version criteria";
+          true
+        | _ -> false
+    with OpamSystem.Process_error _ -> false
   )
 
   let command_args = [
