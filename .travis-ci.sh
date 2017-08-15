@@ -12,11 +12,16 @@ install-bootstrap () {
     opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
-        opam install ocamlfind cohttp.0.22.0 cohttp-lwt-unix ssl cmdliner dose3 opam-file-format jbuilder re --yes
+        # TEMPORARY: waiting for merge into opam-repository
+        opam pin add jbuilder.1.0+beta12 "https://github.com/janestreet/jbuilder/archive/b913a42739362ac58c9a3df55a80eeacc9af9135.tar.gz" --yes --no-action
+        ( cd $(OPAMBSROOT) && git clone https://github.com/AltGr/ocaml-mccs && cd ocaml-mccs && git checkout 1.1+2b && opam pin add mccs.1.1+2 . --yes; )
+
+        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re jbuilder mccs --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
         mv $FINDCONF.1 $FINDCONF
+
     fi
     rm -f "$OPAMBSROOT"/log/*
 }
@@ -56,10 +61,6 @@ git config --global user.name "Travis CI"
 
     [ "$(ocaml -vnum)" = "$OCAML_VERSION" ] || exit 12
 
-    if [ "$OPAM_TEST" = "1" ]; then
-        opam pin add jbuilder.1.0+beta12 "https://github.com/janestreet/jbuilder/archive/b913a42739362ac58c9a3df55a80eeacc9af9135.tar.gz" --yes
-    fi
-
     ./configure --prefix ~/local
 
     if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
@@ -79,7 +80,8 @@ git config --global user.name "Travis CI"
         make
     else
         # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests || (tail -2000 _build/default/tests/fulltest-*.log; exit 1)
+        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
+            (tail -2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
     fi
 )
 
