@@ -5,4 +5,5 @@ if [ -n "${P1:-}" ]; then
     exit 12
 fi
 
-ocamlbuild p1.cma p1.cmxa
+ocamlc -a p1.ml -o p1.cma
+ocamlopt -a p1.ml -o p1.cmxa

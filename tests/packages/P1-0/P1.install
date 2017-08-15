@@ -1,6 +1,6 @@
 lib: [
-  "_build/p1.cmi"
-  "_build/p1.cma"
-  "_build/p1.cmxa"
-  "_build/p1.a"
+  "p1.cmi"
+  "p1.cma"
+  "p1.cmxa"
+  "p1.a"
 ]
