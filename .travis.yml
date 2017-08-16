@@ -15,6 +15,7 @@ install:
 cache:
     directories:
     - $HOME/.opam.bootstrap
+    - /usr/local/Cellar
 
 script:
     - bash -ex .travis-ci.sh build
@@ -34,9 +35,7 @@ matrix:
     - os: osx
       env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=
-  allowed_failures:
-    - env: OCAML_VERSION=4.05.0
+      env: OCAML_VERSION=4.03.0 OPAM_TEST= EXTERNAL_SOLVER=aspcud
 notifications:
   email:
     - opam-commits@lists.ocaml.org

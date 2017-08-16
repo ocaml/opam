@@ -32,6 +32,10 @@ case "$TARGET" in
         wget -q -O ~/local/bin/opam \
              "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
         chmod a+x ~/local/bin/opam
+        if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+            if [ "$OPAM_TEST" = "1" ]; then brew install glpk
+            else brew install aspcud; fi
+        fi
         exit 0
         ;;
     install)
