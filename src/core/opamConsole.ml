@@ -301,7 +301,8 @@ let confirm ?(default=true) fmt =
           r
         with e -> reset (); raise e
       with
-      | End_of_file -> msg "%s\n" (if default then "y" else "n"); default
+      | Unix.Unix_error _ | End_of_file ->
+        msg "%s\n" (if default then "y" else "n"); default
       | Sys.Break as e -> msg "\n"; raise e
     ) fmt
 

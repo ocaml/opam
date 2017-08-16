@@ -270,5 +270,5 @@ let get_solver ?internal l =
           `--use-internal-solver'."
        else
          "This opam has been compiled without a built-in solver, so you need \
-          to install and configure one. See \
+          to install and configure an external one. See \
           http://opam.ocaml.org/doc/Install.html#ExternalSolvers for details.")
