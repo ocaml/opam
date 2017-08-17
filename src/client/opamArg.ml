@@ -856,14 +856,18 @@ let global_options =
       Arg.(some dirname) None in
   let use_internal_solver =
     mk_flag ~section ["no-aspcud"; "use-internal-solver"]
-      "Force use of internal heuristics, even if an external solver is \
-       available." in
+      "Disable any external solver, and use the built-in one (this requires \
+       that opam has been compiled with a built-in solver)." in
   let external_solver =
     mk_opt ~section ["solver"] "CMD"
-      ("Specify the CUDF solver to use for resolving package installation \
-        problems. This is either a predefined solver (this version of opam \
-        supports any of %s), or a custom command that should contain the \
-        variables %{input}%, %{output}% and %{criteria}%")
+      (Printf.sprintf
+         "Specify the CUDF solver to use for resolving package installation \
+          problems. This is either a predefined solver (this version of opam \
+          supports %s), or a custom command that should contain the variables \
+          %%{input}%%, %%{output}%% and %%{criteria}%%"
+         (OpamStd.List.concat_map ", "
+            (fun (module S : OpamCudfSolver.S) -> S.name)
+            (OpamCudfSolver.default_solver_selection)))
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ~section ["criteria"] "CRITERIA"
@@ -882,8 +886,8 @@ let global_options =
   let best_effort =
     mk_flag ~section ["best-effort"]
       "Don't fail if all requested packages can't be installed: try to install \
-       as many as possible. Note that this requires a recent external solver \
-       (aspcud or mccs only)."
+       as many as possible. Note that not all external solvers may support \
+       this option (recent versions of $(i,aspcud) or $(i,mccs) should)."
   in
   let safe_mode =
     mk_flag ~section ["readonly"; "safe"]

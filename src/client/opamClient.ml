@@ -560,14 +560,20 @@ let init
                       install the %s command on your system."
                      msg (OpamConsole.colorise `bold cmd))
                  unavailable_repos);
-          let external_solvers = ["aspcud"; "packup"; "mccs"] in
-          if not (List.exists check_external_dep external_solvers) then
-            OpamConsole.warning
-              "No external solver found, one of %s is recommended (see \
-               http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
-               details)"
-              (OpamStd.Format.pretty_list ~last:"or"
-                 (List.map (OpamConsole.colorise `bold) external_solvers));
+          let fail =
+            if OpamCudfSolver.has_builtin_solver () then false else
+            let external_solvers = ["aspcud"; "packup"; "mccs"] in
+            if not (List.exists check_external_dep external_solvers) then
+              (OpamConsole.error
+                 "No external solver found. You should get one of %s, or use a \
+                  version of opam compiled with a built-in solver (see \
+                  http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
+                  details)"
+                 (OpamStd.Format.pretty_list ~last:"or"
+                    (List.map (OpamConsole.colorise `bold) external_solvers));
+               true)
+            else false
+          in
           let advised_deps =
             [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
           in
@@ -598,14 +604,18 @@ let init
              "tar", check_external_dep "tar";
              "unzip", check_external_dep "unzip"]
           in
-          (match List.filter (not @* snd) required_deps with
-           | [] -> ()
-           | missing ->
-             OpamConsole.error_and_exit `Configuration_error
-               "Missing dependencies -- \
-                the following commands are required for opam to operate:\n%s"
-               (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
-                  missing)));
+          let fail =
+            match List.filter (not @* snd) required_deps with
+            | [] -> fail
+            | missing ->
+              OpamConsole.error
+                "Missing dependencies -- \
+                 the following commands are required for opam to operate:\n%s"
+                (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
+                   missing);
+              true
+          in
+          if fail then OpamStd.Sys.exit_because `Configuration_error);
 
         (* Create ~/.opam/config *)
         let repos = match repo with
