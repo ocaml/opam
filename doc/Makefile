@@ -1,11 +1,20 @@
 -include ../Makefile.config
 
-JBUILDER=jbuilder exec --
+ifeq ($(JBUILDER),)
+  JBUILDER_FILE = ../src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+  ifeq ($(shell command -v cygpath 2>/dev/null),)
+    JBUILDER := $(JBUILDER_FILE)
+  else
+    JBUILDER := $(shell echo "$(JBUILDER_FILE)" | cygpath -f - -a)
+  endif
+else
+  JBUILDER_FILE=
+endif
 
 BASESRC=../_build/default/src
 
 ifndef OPAM
-  OPAM = $(JBUILDER) opam
+  OPAM = $(JBUILDER) exec -- opam
 endif
 SRCDIR = $(sort $(foreach x,$(wildcard $(BASESRC)/*/*),$(dir $x)))
 
@@ -15,7 +24,7 @@ TOPICS_ADMIN = cache filter index lint list upgrade
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
-  OPAM_INSTALLER = $(JBUILDER) opam-installer
+  OPAM_INSTALLER = $(JBUILDER) exec -- opam-installer
 endif
 
 SRCEXTDIR = ../src_ext/lib
