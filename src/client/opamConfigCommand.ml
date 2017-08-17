@@ -142,18 +142,25 @@ let print_sexp_env env =
   OpamConsole.msg ")\n"
 
 let print_fish_env env =
-  List.iter (fun (k,v,_) ->
+  let set_arr_cmd k v =
+    let v = OpamStd.String.split_delim v ':' in
+    OpamConsole.msg "set -gx %s %s;\n" k
+      (OpamStd.List.concat_map " "
+         (fun v ->
+            Printf.sprintf "'%s'"
+              (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
+         v)
+  in
+  List.iter (fun (k,v,_comment) ->
       match k with
-      | "PATH" | "MANPATH" | "CDPATH" ->
-        (* This function assumes that `v` does not include any variable expansions
-         * and that the directory names are written in full. See the opamState.ml for details *)
-        let v = OpamStd.String.split_delim v ':' in
-        OpamConsole.msg "set -gx %s %s;\n" k
-          (OpamStd.List.concat_map " "
-             (fun v ->
-               Printf.sprintf "'%s'"
-                 (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
-             v)
+      | "PATH" | "CDPATH" ->
+        (* This function assumes that `v` does not include any variable
+         * expansions and that the directory names are written in full. See the
+         * opamState.ml for details *)
+        set_arr_cmd k v
+      | "MANPATH" ->
+        if OpamStd.Env.getopt k <> None then
+          set_arr_cmd k v
       | _ ->
         OpamConsole.msg "set -gx %s '%s';\n"
           k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v)
