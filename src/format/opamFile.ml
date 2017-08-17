@@ -138,7 +138,7 @@ module MakeIO (F : IO_Arg) = struct
       if OpamFormatConfig.(!r.strict) then
         (OpamConsole.error "%s"
            (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
-         OpamConsole.error_and_exit "Strict mode: aborting")
+         OpamConsole.error_and_exit `File_error "Strict mode: aborting")
       else raise e
 
   let read f =
@@ -166,7 +166,7 @@ module MakeIO (F : IO_Arg) = struct
     | Pp.Bad_format _ as e ->
       if OpamFormatConfig.(!r.strict) then
         (OpamConsole.error "%s" (Pp.string_of_bad_format e);
-         OpamConsole.error_and_exit "Strict mode: aborting")
+         OpamConsole.error_and_exit `File_error "Strict mode: aborting")
       else raise e
 
   let read_from_channel ?(filename=dummy_file) ic =

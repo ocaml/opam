@@ -125,9 +125,5 @@ val prefixes: OpamFilename.Dir.t -> string option Map.t
 
 (** {2 Errors} *)
 
-(** Unknown package: either the name is unknown, or the version does
-    not exist. *)
-val unknown: Name.t -> Version.t option -> 'a
-
 (** Parallel executions. *)
 module Graph: OpamParallel.GRAPH with type V.t = t

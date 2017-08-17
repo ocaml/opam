@@ -145,7 +145,7 @@ let resolve_locals_pinned st atom_or_local_list =
               (OpamFilename.Dir.to_string d);
           List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
         | `Filename f ->
-          OpamConsole.error_and_exit
+          OpamConsole.error_and_exit `Bad_arguments
             "This command doesn't support specifying a file name (%S)"
             (OpamFilename.to_string f))
       [] atom_or_local_list
@@ -178,7 +178,7 @@ let resolve_locals atom_or_local_list =
             (n, target_dir srcdir, OpamFile.make f) :: to_pin,
             (n, None) :: atoms
           | None, _ ->
-            OpamConsole.error_and_exit
+            OpamConsole.error_and_exit `Not_found
               "Could not infer package name from package definition file %s"
               (OpamFilename.to_string f))
       ([], [])
@@ -192,7 +192,7 @@ let resolve_locals atom_or_local_list =
   match duplicates with
   | [] -> List.rev to_pin, List.rev atoms
   | _ ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Multiple files for the same package name were specified:\n%s"
       (OpamStd.Format.itemize (fun (n, t, f) ->
          Printf.sprintf "Package %s with definition %s %s %s"
@@ -359,7 +359,8 @@ let autopin st ?(simulate=false) atom_or_local_list =
             in
             st, OpamPackage.Set.add (OpamPinned.package st name) pins)
         (st, OpamPackage.Set.empty) to_pin
-    with OpamPinCommand.Aborted -> OpamConsole.error_and_exit "Aborted"
+    with OpamPinCommand.Aborted ->
+      OpamStd.Sys.exit_because `Aborted
   in
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let atoms = fix_atom_versions_in_set pins atoms in
@@ -438,4 +439,4 @@ let get_compatible_compiler ?repos rt dir =
     if OpamConsole.confirm
         "Continue anyway, with no compiler selected ?"
     then []
-    else OpamStd.Sys.exit 66
+    else OpamStd.Sys.exit_because `Aborted

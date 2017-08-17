@@ -190,7 +190,7 @@ let expand gt str =
 
 let set var value =
   if not (OpamVariable.Full.is_global var) then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Only global variables may be set using this command";
   let root = OpamStateConfig.(!r.root_dir) in
   let switch = OpamStateConfig.get_switch () in
@@ -222,7 +222,7 @@ let set var value =
 
 let set_global var value =
   if not (OpamVariable.Full.is_global var) then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Bad_arguments
       "Only global variables may be set using this command";
   OpamGlobalState.with_ `Lock_write @@ fun gt ->
   let var = OpamVariable.Full.variable var in
@@ -252,7 +252,8 @@ let variable gt v =
     | Some c ->
       OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
     | None ->
-      OpamConsole.error_and_exit "Variable %s not found"
+      OpamConsole.error_and_exit `Not_found
+        "Variable %s not found"
         (OpamVariable.Full.to_string v)
 
 let setup gt ?dot_profile ~completion ~shell

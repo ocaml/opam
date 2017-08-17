@@ -259,7 +259,7 @@ let load_cudf_universe ?depopts ~build
         opam_packages [] in
     try Cudf.load_universe cudf_packages
     with Cudf.Constraint_violation s ->
-      OpamConsole.error_and_exit "Malformed CUDF universe (%s)" s
+      OpamConsole.error_and_exit `Solver_failure "Malformed CUDF universe (%s)" s
   in
   log ~level:3 "Load cudf universe: done in %.3fs" (chrono ());
   (* We can trim the universe here to get faster results, but we
@@ -361,7 +361,7 @@ let resolve universe ~orphans request =
       let resp = OpamCudf.resolve ~extern:true ~version_map u req in
       OpamCudf.to_actions add_orphan_packages u resp
     with OpamCudf.Solver_failure ->
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Solver_failure
         "External solver failure. This may be due to bad settings (solver or \
          solver criteria) or a broken solver solver installation. Check \
          $OPAMROOT/config, and the --external-solver and --solver-criteria \

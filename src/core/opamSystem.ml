@@ -732,7 +732,7 @@ let unix_lock_op ~dontblock = function
   | `Lock_read -> if dontblock then Unix.F_TRLOCK else Unix.F_RLOCK
   | `Lock_write ->
     if OpamCoreConfig.(!r.safe_mode) then
-      OpamConsole.error_and_exit "Write lock attempt in safe mode"
+      OpamConsole.error_and_exit `Locked "Write lock attempt in safe mode"
     else
     if dontblock then Unix.F_TLOCK else Unix.F_LOCK
 
@@ -782,7 +782,7 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
   match flag with
   | `Lock_none -> { fd = None; file; kind = `Lock_none }
   | `Lock_write when OpamCoreConfig.(!r.safe_mode) ->
-    OpamConsole.error_and_exit "Write lock attempt in safe mode";
+    OpamConsole.error_and_exit `Locked "Write lock attempt in safe mode";
   | flag ->
     mkdir (Filename.dirname file);
     let rdflag = if (flag :> lock_flag) = `Lock_write then Unix.O_RDWR else Unix.O_RDONLY in

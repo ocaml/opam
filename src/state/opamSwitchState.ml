@@ -84,6 +84,8 @@ let load lock_kind gt rt switch =
        (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
 
      OpamConsole.error_and_exit
+       (if OpamStateConfig.(!r.switch_from = `Command_line) then `Bad_arguments
+        else `Configuration_error)
        "The selected switch %s is not installed.%s"
        (OpamSwitch.to_string switch)
      @@ match OpamStateConfig.(!r.switch_from) with
@@ -103,7 +105,7 @@ let load lock_kind gt rt switch =
       (OpamVersion.nopatch (switch_config.OpamFile.Switch_config.opam_version))
       (OpamVersion.nopatch OpamFormatUpgrade.latest_version)
      <> 0 then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Configuration_error
       "Could not load opam switch %s: it reports version %s while %s was \
        expected"
       (OpamSwitch.to_string switch)
@@ -499,7 +501,7 @@ let universe st
     let r = OpamPackageVar.resolve_switch ~package:nv st v in
     if r = None then
       (if OpamFormatConfig.(!r.strict) then
-         OpamConsole.error_and_exit
+         OpamConsole.error_and_exit `File_error
            "undefined filter variable in dependencies of %s: %s"
        else
          log

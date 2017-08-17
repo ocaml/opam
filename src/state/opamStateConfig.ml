@@ -167,6 +167,6 @@ let get_switch () =
   match !r.current_switch with
   | Some s -> s
   | None ->
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Configuration_error
       "No switch is currently set. Please use 'opam switch' to set or install \
        a switch"

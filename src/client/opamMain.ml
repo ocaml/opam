@@ -79,14 +79,14 @@ let check_and_run_external_commands () =
                 the problem persists."
                (OpamPackage.to_string (OpamPackage.Set.choose installed))
                command;
-             exit 1)
+             exit (OpamStd.Sys.get_exit_code `Package_operation_error))
           else if OpamPackage.Set.is_empty plugins then
             (OpamConsole.error
                "%s is not a known command or plugin (package %s does \
                 not have the 'plugin' flag set)."
                name
                (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
-             exit 1)
+             exit (OpamStd.Sys.get_exit_code `Bad_arguments))
           else if
             OpamConsole.confirm "Opam plugin \"%s\" is not installed. \
                                  Install it on the current switch?"
@@ -134,8 +134,8 @@ let run default commands =
         Term.eval_choice ~catch:false ~argv:argv1 default commands
     in
     match eval () with
-    | `Error _ -> exit 1
-    | _        -> exit 0
+    | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
+    | _        -> exit (OpamStd.Sys.get_exit_code `Success)
   with
   | OpamStd.Sys.Exit 0 -> ()
   | OpamStd.Sys.Exec (cmd,args,env) ->
@@ -146,14 +146,14 @@ let run default commands =
     flush stderr;
     if (OpamConsole.verbose ()) then
       Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
-    let exit_code = ref 1 in
-    begin match e with
+    let exit_code = match e with
       | OpamStd.Sys.Exit i ->
-        exit_code := i;
         if (OpamConsole.debug ()) && i <> 0 then
-          Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e)
+          Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        i
       | OpamSystem.Internal_error _ ->
-        Printf.eprintf "%s\n" (Printexc.to_string e)
+        Printf.eprintf "%s\n" (Printexc.to_string e);
+        OpamStd.Sys.get_exit_code `Internal_error
       | OpamSystem.Process_error result ->
         Printf.eprintf "%s Command %S failed:\n%s\n"
           (OpamConsole.colorise `red "[ERROR]")
@@ -161,21 +161,24 @@ let run default commands =
            | Not_found -> "")
           (Printexc.to_string e);
         Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        OpamStd.Sys.get_exit_code `Internal_error
       | Sys.Break
       | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
-        exit_code := 130
+        OpamStd.Sys.get_exit_code `User_interrupt
       | Sys_error e when e = "Broken pipe" ->
         (* workaround warning 52, this is a fallback (we already handle the
            signal) and there is no way around at the moment *)
-        exit_code := 141
+        141
       | Failure msg ->
         Printf.eprintf "Fatal error: %s\n" msg;
         Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        OpamStd.Sys.get_exit_code `Internal_error
       | _ ->
         Printf.eprintf "Fatal error:\n%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
-    end;
-    exit !exit_code
+        OpamStd.Sys.get_exit_code `Internal_error
+    in
+    exit exit_code
 
 let json_out () =
   match OpamClientConfig.(!r.json_out) with

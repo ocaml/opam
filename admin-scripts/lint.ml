@@ -32,7 +32,7 @@ let () =
             includes := int_of_string a :: !includes
         with Failure _ ->
           OpamConsole.msg "%s" usage;
-          OpamStd.Sys.exit 2)
+          OpamStd.Sys.exit_because `Bad_argument)
     args
 
 let () =

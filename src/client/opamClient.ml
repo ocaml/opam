@@ -245,7 +245,7 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
       (OpamConsole.msg "%s"
          (OpamCudf.string_of_conflict t.packages
             (OpamSwitchState.unavailable_reason t) cs);
-       OpamStd.Sys.exit 3);
+       OpamStd.Sys.exit_because `No_solution);
     let reasons, chains, cycles =
       OpamCudf.strings_of_conflict t.packages
         (OpamSwitchState.unavailable_reason t) cs in
@@ -270,12 +270,13 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
         "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
          current state.\n"
     end;
-    OpamStd.Sys.exit 3
+    OpamStd.Sys.exit_because `No_solution
   | requested, Success solution ->
     if check then
-      if OpamSolver.solution_is_empty solution
-      then OpamStd.Sys.exit 1
-      else OpamStd.Sys.exit 0
+      OpamStd.Sys.exit_because
+        (if OpamSolver.solution_is_empty solution
+         then `False
+         else `Success)
     else
     let t, result = OpamSolution.apply ?ask t Upgrade ~requested solution in
     if result = Nothing_to_do then (
@@ -531,7 +532,8 @@ let init
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
           (OpamFilename.Dir.to_string root);
-        if not (OpamConsole.confirm "Proceed ?") then OpamStd.Sys.exit 1);
+        if not (OpamConsole.confirm "Proceed ?") then
+          OpamStd.Sys.exit_because `Aborted);
       try
 
         if bypass_checks then () else (
@@ -599,7 +601,7 @@ let init
           (match List.filter (not @* snd) required_deps with
            | [] -> ()
            | missing ->
-             OpamConsole.error_and_exit
+             OpamConsole.error_and_exit `Configuration_error
                "Missing dependencies -- \
                 the following commands are required for opam to operate:\n%s"
                (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
@@ -649,14 +651,16 @@ let init
           OpamRepositoryCommand.update_with_auto_upgrade rt
             (List.map fst repos)
         in
-        if failed <> [] then failwith "Initial download of repository failed";
+        if failed <> [] then
+          OpamConsole.error_and_exit `Sync_error
+            "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
         OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.register_backtrace e;
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root;
-        OpamConsole.error_and_exit "Initialisation failed")
+        raise e)
   in
   let _updated = match update_config with
     | `no  -> false
@@ -698,7 +702,7 @@ let check_conflicts t atoms =
                 (Lazy.force available)))
       atoms in
   if conflict_atoms <> [] then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Not_found
       "Sorry, these packages are no longer available \
        from the repositories: %s"
       (OpamStd.Format.pretty_list
@@ -945,7 +949,7 @@ let reinstall_t t ?ask ?(force=false) atoms =
           (match not_installed with [_] -> "is" | _ -> "are")
           (match not_installed with [_] -> "it" | _ -> "them")
       then not_installed
-      else OpamStd.Sys.exit 1
+      else OpamStd.Sys.exit_because `Aborted
     else []
   in
 
@@ -998,13 +1002,13 @@ module PIN = struct
         )
       with
       | None ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Not_found
           "\"dev-repo\" field missing in %s metadata, you'll need to specify \
            the pinning location"
           (OpamPackage.Name.to_string name)
       | Some url -> url
     with Not_found ->
-      OpamConsole.error_and_exit
+      OpamConsole.error_and_exit `Not_found
         "No package named %S found"
         (OpamPackage.Name.to_string name)
 
@@ -1024,7 +1028,7 @@ module PIN = struct
         (OpamConsole.msg "\n"; post_pin_action st name)
       else st
     with
-    | OpamPinCommand.Aborted -> OpamStd.Sys.exit 10
+    | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
   let edit st ?(action=true) ?version name =
@@ -1052,12 +1056,12 @@ module PIN = struct
           in
           let opam = OpamPackage.Map.find_opt nv st.repos_package_index in
           try source_pin st name ~edit:true ?version ?opam target
-          with OpamPinCommand.Aborted -> OpamStd.Sys.exit 10
+          with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
              | OpamPinCommand.Nothing_to_do -> st
         else
-          OpamConsole.error_and_exit "Aborted"
+          OpamStd.Sys.exit_because `Aborted
       | None ->
-        OpamConsole.error_and_exit
+        OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
     if action then post_pin_action st name else st

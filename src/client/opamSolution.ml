@@ -67,19 +67,19 @@ let post_message ?(failed=false) st action =
 let check_solution ?(quiet=false) st = function
   | No_solution ->
     OpamConsole.msg "No solution found, exiting\n";
-    OpamStd.Sys.exit 3
+    OpamStd.Sys.exit_because `No_solution
   | Partial_error (success, failed, _remaining) ->
     List.iter (post_message st) success;
     List.iter (post_message ~failed:true st) failed;
     OpamEnv.check_and_print_env_warning st;
-    OpamStd.Sys.exit 4
+    OpamStd.Sys.exit_because `Package_operation_error
   | OK actions ->
     List.iter (post_message st) actions;
     OpamEnv.check_and_print_env_warning st
   | Nothing_to_do ->
     if not quiet then OpamConsole.msg "Nothing to do.\n";
     OpamEnv.check_and_print_env_warning st
-  | Aborted     -> OpamStd.Sys.exit 0
+  | Aborted     -> OpamStd.Sys.exit_because `Aborted
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -129,7 +129,7 @@ let check_availability ?permissive t set atoms =
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
-     OpamStd.Sys.exit 66)
+     OpamStd.Sys.exit_because `Not_found)
 
 let fuzzy_name t name =
   let lname = String.lowercase_ascii (OpamPackage.Name.to_string name) in
@@ -354,7 +354,7 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       action_graph false
   in
   if fatal_dl_error then
-    OpamConsole.error_and_exit
+    OpamConsole.error_and_exit `Sync_error
       "The sources of the following couldn't be obtained, aborting:\n%s"
       (OpamStd.Format.itemize OpamPackage.to_string
          (OpamPackage.Map.keys failed_downloads))
