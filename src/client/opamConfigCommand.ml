@@ -115,33 +115,41 @@ let list gt ns =
   OpamStd.Format.align_table |>
   OpamStd.Format.print_table stdout ~sep:" "
 
-let print_env env =
-  List.iter (fun (k,v,comment) ->
-      (* '#' comment are concatenated by shell expansion + eval and cause
-         everything to be ignored, don't use them.
-         ':' is not supported by fish, just ignore comments there. *)
-      if OpamConsole.verbose () then
-        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+let rec print_env = function
+  | [] -> ()
+  | (k, v, comment) :: r ->
+    if OpamConsole.verbose () then
+      OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
+    then
       OpamConsole.msg "%s='%s'; export %s;\n"
         k (OpamStd.Env.escape_single_quotes v) k;
-  ) env
+    print_env r
 
-let print_csh_env env =
-  List.iter (fun (k,v,comment) ->
-      if OpamConsole.verbose () then
-        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+let rec print_csh_env = function
+  | [] -> ()
+  | (k, v, comment) :: r ->
+    if OpamConsole.verbose () then
+      OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
+    then
       OpamConsole.msg "setenv %s '%s';\n"
         k (OpamStd.Env.escape_single_quotes v);
-  ) env
+    print_csh_env r
 
 let print_sexp_env env =
+  let rec aux = function
+    | [] -> ()
+    | (k, v, _) :: r ->
+      if not (List.exists (fun (k1, _, _) -> k = k1) r) then
+        OpamConsole.msg "  (%S %S)\n" k v;
+      aux r
+  in
   OpamConsole.msg "(\n";
-  List.iter (fun (k,v,_) ->
-    OpamConsole.msg "  (%S %S)\n" k v;
-  ) env;
+  aux env;
   OpamConsole.msg ")\n"
 
-let print_fish_env env =
+let rec print_fish_env env =
   let set_arr_cmd k v =
     let v = OpamStd.String.split_delim v ':' in
     OpamConsole.msg "set -gx %s %s;\n" k
@@ -151,20 +159,23 @@ let print_fish_env env =
               (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
          v)
   in
-  List.iter (fun (k,v,_comment) ->
-      match k with
-      | "PATH" | "CDPATH" ->
-        (* This function assumes that `v` does not include any variable
-         * expansions and that the directory names are written in full. See the
-         * opamState.ml for details *)
-        set_arr_cmd k v
-      | "MANPATH" ->
-        if OpamStd.Env.getopt k <> None then
-          set_arr_cmd k v
-      | _ ->
-        OpamConsole.msg "set -gx %s '%s';\n"
-          k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v)
-    ) env
+  match env with
+  | [] -> ()
+  | (k, v, _) :: r ->
+    if not (List.exists (fun (k1, _, _) -> k = k1) r) then
+      (match k with
+       | "PATH" | "CDPATH" ->
+         (* This function assumes that `v` does not include any variable
+          * expansions and that the directory names are written in full. See the
+          * opamState.ml for details *)
+         set_arr_cmd k v
+       | "MANPATH" ->
+         if OpamStd.Env.getopt k <> None then
+           set_arr_cmd k v
+       | _ ->
+         OpamConsole.msg "set -gx %s '%s';\n"
+           k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v));
+    print_fish_env r
 
 let print_eval_env ~csh ~sexp ~fish env =
   if sexp then
