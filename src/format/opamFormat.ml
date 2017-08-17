@@ -458,7 +458,7 @@ module V = struct
   let package_atom constraints =
     map_option pkgname constraints
 
-  let package_formula kind constraints =
+  let package_formula_items kind constraints =
     let split, join = match kind with
       | `Conj -> OpamFormula.(ands_to_list, ands)
       | `Disj -> OpamFormula.(ors_to_list, ors)
@@ -494,7 +494,10 @@ module V = struct
       in
       List.map (aux ~in_and:false) (split f)
     in
-    list -| pp ~name:"pkg-formula" parse_formula print_formula
+    pp ~name:"pkg-formula" parse_formula print_formula
+
+  let package_formula kind constraints =
+    list -| package_formula_items kind constraints
 
   let env_binding =
     let parse ~pos:_ = function
@@ -506,24 +509,6 @@ module V = struct
       Env_binding (pos_null, print ident id, op, print string str)
     in
     list -| singleton -| pp ~name:"env-binding" parse print
-
-  let features =
-    let var = ident -| of_module "variable" (module OpamVariable) in
-    let doc_filt = map_option string filter in
-    let rec parse_features ~pos = function
-      | [] -> []
-      | [_] -> unexpected ()
-      | id :: opt :: r ->
-        let doc, filt = parse doc_filt ~pos:(value_pos opt) opt in
-        (parse var ~pos id, doc, filt) ::
-        parse_features ~pos:(OpamStd.Option.default pos (values_pos r)) r
-    in
-    let print ft =
-      List.fold_right (fun (id, doc, filt) acc ->
-          print var id :: print doc_filt (doc, filt) :: acc)
-        ft []
-    in
-    list -| pp ~name:"(variable \"doc\" {filter})*" parse_features print
 
   (* Only used by the deprecated "os" field *)
   let os_constraint =

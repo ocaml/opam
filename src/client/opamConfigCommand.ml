@@ -95,13 +95,6 @@ let list gt ns =
             with Failure _ -> None)
           OpamPackageVar.package_variable_names
       in
-      let feature_vars =
-        List.map (fun (v, desc, filt) ->
-            let v = OpamVariable.Full.create name v in
-            v, OpamFilter.eval_to_string ~default:"#undefined" env filt, desc
-          )
-          (OpamFile.OPAM.features opam)
-      in
       let conf_vars =
         List.map (fun (v,c) ->
             OpamVariable.Full.create name v,
@@ -109,7 +102,7 @@ let list gt ns =
             "")
           (OpamFile.Dot_config.bindings conf)
       in
-      pkg_vars @ feature_vars @ conf_vars
+      pkg_vars @ conf_vars
     with Not_found -> []
   in
   let vars = List.flatten (List.map list_vars ns) in

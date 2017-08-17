@@ -45,8 +45,10 @@ let all_filters ?(exclude_post=false) t =
           | Constraint (_,f) -> f :: acc
           | Filter f -> f :: acc)
         acc f)
-    [] (OpamFormula.ands [t.depends; t.depopts]) @
-  List.map (fun (_,_,f) -> f) t.features
+    [] (OpamFormula.ands
+          (t.depends ::
+           t.depopts ::
+           List.map (fun (_,f,_) -> f) t.features))
 
 let all_variables ?exclude_post t =
   OpamFilter.commands_variables (all_commands t) @
@@ -93,12 +95,8 @@ let map_all_variables f t =
       )
   in
   let map_features =
-    List.map (fun (var, doc, filter) ->
-        let var = f (OpamVariable.Full.self var) in
-        assert OpamVariable.Full.(scope var = Self);
-        OpamVariable.Full.variable var,
-        doc,
-        OpamFilter.map_variables f filter)
+    List.map (fun (var, fformula, doc) ->
+        var, map_filtered_formula fformula, doc)
   in
   t |>
   with_patches (List.map map_optfld t.patches) |>
@@ -377,7 +375,7 @@ let lint t =
          OpamPackage.Name.Set.empty (all_variables ~exclude_post:true t)
      in
      cond 41 `Warning
-       "Some packages are mentioned in package scripts of features, but \
+       "Some packages are mentioned in package scripts or features, but \
         there is no dependency or depopt toward them"
        ~detail:OpamPackage.Name.
                  (List.map to_string (Set.elements undep_pkgs))
