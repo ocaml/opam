@@ -61,13 +61,12 @@ let apply_global_options o =
   let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
   let some x = match x with None -> None | some -> Some some in
-  let external_solver =
-    if o.use_internal_solver then Some (lazy None) else
-      o.external_solver >>| fun s ->
-      lazy (
-        let args = OpamStd.String.split s ' ' in
-        Some (List.map (fun a -> OpamTypes.CString a, None) args)
-      )
+  let solver =
+    if o.use_internal_solver then
+      Some (lazy (OpamCudfSolver.get_solver ~internal:true
+                    OpamCudfSolver.default_solver_selection))
+    else
+      o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
   OpamClientConfig.opam_init
@@ -93,12 +92,12 @@ let apply_global_options o =
     (* ?force_checksums:bool option *)
     (* - solver options *)
     ?cudf_file:(some o.cudf_file)
-    (* ?solver_timeout:float *)
-    ?external_solver
+    ?solver
     ?best_effort:(flag o.best_effort)
     ?solver_preferences_default:solver_prefs
     ?solver_preferences_upgrade:solver_prefs
     ?solver_preferences_fixup:solver_prefs
+    (* ?solver_preferences_best_effort_prefix: *)
     (* - state options - *)
     ?root_dir:o.opt_root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
@@ -813,10 +812,10 @@ let global_options =
        available." in
   let external_solver =
     mk_opt ~section ["solver"] "CMD"
-      ("Specify the name of the external dependency $(i,solver). \
-        The default value is \"aspcud\". \
-        Either 'aspcud', 'packup', 'mccs' or a custom command that should \
-        contain the variables %{input}%, %{output}% and %{criteria}%")
+      ("Specify the CUDF solver to use for resolving package installation \
+        problems. This is either a predefined solver (this version of opam \
+        supports any of %s), or a custom command that should contain the \
+        variables %{input}%, %{output}% and %{criteria}%")
       Arg.(some string) None in
   let solver_preferences =
     mk_opt ~section ["criteria"] "CRITERIA"

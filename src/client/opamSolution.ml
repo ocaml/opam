@@ -791,16 +791,6 @@ let apply ?ask t action ~requested ?add_roots solution =
       let total_actions = sum stats in
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
-      match action with
-      | Install | Upgrade | Reinstall
-        when not (OpamCudf.external_solver_available ()) &&
-             stats.s_remove + stats.s_downgrade >= max 2 (total_actions / 2)
-        ->
-        OpamConsole.note
-          "This solution may not be optimal. You should probably install an \
-           external solver (see \
-           http://opam.ocaml.org/doc/Install.html#ExternalSolvers for details)"
-      | _ -> ()
     );
 
     if OpamClientConfig.(!r.external_tags) <> [] then (
@@ -818,7 +808,7 @@ let apply ?ask t action ~requested ?add_roots solution =
       t, Aborted
   )
 
-let resolve ?(verbose=true) t action ~orphans ?reinstall ~requested request =
+let resolve t action ~orphans ?reinstall ~requested request =
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
@@ -826,7 +816,7 @@ let resolve ?(verbose=true) t action ~orphans ?reinstall ~requested request =
   );
   Json.output_request request action;
   let r =
-    OpamSolver.resolve ~verbose
+    OpamSolver.resolve
       (OpamSwitchState.universe t ~requested ?reinstall action)
       ~orphans
       request

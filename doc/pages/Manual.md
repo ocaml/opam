@@ -606,6 +606,7 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   [`solver-criteria:`](#configfield-solver-criteria),
   [`solver-upgrade-criteria:`](#configfield-solver-upgrade-criteria),
   [`solver-fixup-criteria:`](#configfield-solver-fixup-criteria),
+  [`best-effort-prefix-criteria:`](#configfield-best-effort-prefix-criteria),
   [`solver:`](#configfield-solver),
   [`global-variables:`](#configfield-global-variables),
   [`default-compiler:`](#configfield-default-compiler): these have the same
@@ -1181,18 +1182,24 @@ for <span class="opam">opam</span>.
   section.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
-  depend on the external solver used, see the
+  depend on the solver used, see the
   [Solver Criteria](Specifying_Solver_Preferences.html) page for details.
 - <a id="configfield-solver-upgrade-criteria">`solver-upgrade-criteria: `</a>,
   <a id="configfield-solver-fixup-criteria">`solver-fixup-criteria: `</a>:
   similar to [`solver-criteria`](#configfield-solver-criteria), but specific to
   some actions.
+- <a id="best-effort-prefix-criteria">`best-effort-prefix-criteria: `</a>, this
+  is the string that must be prepended to the criteria when the `--best-effort`
+  option is set, and is expected to maximise the `opam-query` property in the
+  solution. For recent `aspcud`, this can be e.g. `+sum(solution,opam-query),` ;
+  a valid setting for `mccs` is `+count[opam-query:,false],`.
 - <a id="configfield-solver">`solver: [ ( <string> | <ident> ) { <filter> } ... ]`</a>:
-  the external solver command to use. See the
+  the solver to use. See the
   [External Solvers](Install.html#ExternalSolvers) section of the install guide
-  for context. If set to a single `<ident>` element, that may point to one of
-  the `aspcud`, `packup` or `mccs` predefined command-lines. Otherwise, the
-  following variables are defined in the command scope:
+  for context. If set to a single `<ident>` element, that may point to a
+  built-in solver, or one of the `aspcud`, `packup` or `mccs` predefined
+  command-lines. Otherwise, the following variables are defined in the command
+  scope:
     - `input` is the name of the input file, in [Cudf](http://mancoosi.org/cudf/) format
     - `output` is the expected name of the output file, containing the solution
     - `criteria` is the defined solver criteria.

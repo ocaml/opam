@@ -4,5 +4,4 @@ version: "1~weird-version.test"
 maintainer: "contact@ocamlpro.com"
 depends: ["ocaml" "P1"]
 substs: [ "P3.config" ]
-libraries: [ "p3" "p3_bar" ]
 build: [ "./build.sh" ]

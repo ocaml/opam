@@ -28,6 +28,12 @@ let (sha, version) =
     remove ();
     ("", "let version = None")
 
+let static = try match Sys.getenv "OPAM_BUILD_STATIC" with
+  | "1" | "yes" | "true" -> true
+  | ""  | "0" | "no" | "false" -> false
+  | _ -> failwith "OPAM_BUILD_STATIC: invalid value"
+  with Not_found -> false
+
 let () = Printf.ksprintf J.send {|
 (jbuild_version 1)
 
@@ -37,7 +43,9 @@ let () = Printf.ksprintf J.send {|
    (synopsis "OCaml Package Manager client and CLI library")
    (modules (:standard \ opamMain))
    (libraries (opam-state opam-solver re.glob cmdliner))
-   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (flags (:standard
+           (:include ../ocaml-flags-standard.sexp)
+           (:include ../ocaml-context-flags.sexp)))
    (wrapped false)))
 
 (executable
@@ -45,7 +53,10 @@ let () = Printf.ksprintf J.send {|
    (public_name opam)
    (package opam)
    (modules opamMain)
-   (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (flags (:standard
+           (:include ../ocaml-flags-standard.sexp)
+           (:include ../ocaml-context-flags.sexp)
+           (:include static-linking.sexp)))
    (libraries (opam-client))))
 
 (rule
@@ -53,4 +64,9 @@ let () = Printf.ksprintf J.send {|
 
 (rule
   (with-stdout-to git-sha-%s (echo "%s")))
-|} sha sha version
+
+(rule
+  ((targets (static-linking.sexp))
+   (deps    (static-linking.sexp.%b))
+   (action  (run cp ${<} ${@}))))
+|} sha sha version static

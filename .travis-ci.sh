@@ -12,21 +12,16 @@ install-bootstrap () {
     opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
-        opam pin add opam-file-format "git://github.com/ocaml/opam-file-format.git" --no-action --yes
-        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
-        opam install ocamlfind lwt.3.0.0 cohttp.0.22.0 ssl cmdliner dose3 opam-file-format jbuilder --yes
+        # TEMPORARY: waiting for merge into opam-repository
+        opam pin add jbuilder.1.0+beta12 "https://github.com/janestreet/jbuilder/archive/b913a42739362ac58c9a3df55a80eeacc9af9135.tar.gz" --yes --no-action
+        ( cd $(OPAMBSROOT) && git clone https://github.com/AltGr/ocaml-mccs && cd ocaml-mccs && git checkout 1.1+2b && opam pin add mccs.1.1+2 . --yes; )
+
+        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re jbuilder mccs --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
         mv $FINDCONF.1 $FINDCONF
-    else
-        if [ "$OCAML_VERSION" = "4.01.0" ] ; then
-          EXTRAS="cmdliner dose3 opam-file-format"
-        else
-          EXTRAS=
-        fi
-        opam pin add jbuilder.1.0+beta12 --dev-repo --no-action --yes
-        opam install jbuilder ocamlbuild $EXTRAS --yes
+
     fi
     rm -f "$OPAMBSROOT"/log/*
 }
@@ -37,6 +32,10 @@ case "$TARGET" in
         wget -q -O ~/local/bin/opam \
              "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
         chmod a+x ~/local/bin/opam
+        if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+            if [ "$OPAM_TEST" = "1" ]; then brew install glpk
+            else brew install aspcud; fi
+        fi
         exit 0
         ;;
     install)
@@ -68,7 +67,7 @@ git config --global user.name "Travis CI"
 
     ./configure --prefix ~/local
 
-    if [ "$OPAM_TEST" != "1" -a "$OCAML_VERSION" != "4.01.0" ]; then make lib-ext; fi
+    if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
     make all
 
     rm -f ~/local/bin/opam
@@ -85,7 +84,8 @@ git config --global user.name "Travis CI"
         make
     else
         # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests || (tail -2000 _build/default/tests/fulltest-*.log; exit 1)
+        OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
+            (tail -2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
     fi
 )
 

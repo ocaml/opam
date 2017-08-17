@@ -3,6 +3,9 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 endif
 
 SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+ifneq ($(MCCS_DISABLED),true)
+SRC_EXTS := $(SRC_EXTS) mccs
+endif
 
 URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
 MD5_cppo = bdc99442945f6bc26e7a8096d0975239
@@ -25,6 +28,9 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
 MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+2.tar.gz
+MD5_mccs = cbf0260ddac653b76b71e573f763e404
+
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 
@@ -35,10 +41,11 @@ URL_jbuilder = https://github.com/dra27/jbuilder/archive/more-reads.tar.gz
 MD5_jbuilder = 6c329177bd81a0b25ebde7235eeb19bc
 
 ifndef FETCH
-ifneq ($(shell command -v curl 2>/dev/null),)
-else
-FETCH=wget
-endif
+  ifneq ($(shell command -v curl 2>/dev/null),)
+    FETCH = curl -OLSs
+  else
+    FETCH = wget
+  endif
 endif
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
@@ -124,6 +131,6 @@ clean:
 	@
 
 distclean: clean
-	rm -rf jbuilder $(SRC_EXTS)
+	rm -rf jbuilder $(SRC_EXTS) mccs
 	rm -f *.tar.gz *.tbz *.stamp *.download
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true

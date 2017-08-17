@@ -1011,12 +1011,12 @@ module ConfigSyntax = struct
     dl_cache : url list option;
     wrappers : Wrappers.t;
     solver_criteria : (solver_criteria * string) list;
+    best_effort_prefix : string option;
     solver : arg list option;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
-
   }
 
   let opam_version t = t.opam_version
@@ -1028,6 +1028,7 @@ module ConfigSyntax = struct
   let dl_jobs t = t.dl_jobs
   let dl_cache t = OpamStd.Option.default [] t.dl_cache
   let criteria t = t.solver_criteria
+  let best_effort_prefix t = t.best_effort_prefix
   let criterion kind t =
     try Some (List.assoc kind t.solver_criteria)
     with Not_found -> None
@@ -1055,6 +1056,7 @@ module ConfigSyntax = struct
   let with_criterion kind criterion t =
     { t with solver_criteria =
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
+  let with_best_effort_prefix s t = { t with best_effort_prefix = Some s }
   let with_solver solver t = { t with solver = Some solver }
   let with_solver_opt solver t = { t with solver = solver }
   let with_wrappers wrappers t = { t with wrappers }
@@ -1075,6 +1077,7 @@ module ConfigSyntax = struct
     dl_jobs = 1;
     dl_cache = None;
     solver_criteria = [];
+    best_effort_prefix = None;
     solver = None;
     wrappers = Wrappers.empty;
     global_variables = [];
@@ -1125,6 +1128,9 @@ module ConfigSyntax = struct
         Pp.V.string;
       "solver-fixup-criteria", Pp.ppacc_opt
         (with_criterion `Fixup) (criterion `Fixup)
+        Pp.V.string;
+      "best-effort-prefix-criteria", Pp.ppacc_opt
+        with_best_effort_prefix best_effort_prefix
         Pp.V.string;
       "solver", Pp.ppacc_opt
         with_solver solver

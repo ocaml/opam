@@ -1,11 +1,11 @@
 lib: [
-  "_build/p1.cmi"
-  "_build/p1.cma"
-  "_build/p1.cmxa"
-  "_build/p1.a"
-  "?_build/this_file_will_not_exits_but_that's_ok"
+  "p1.cmi"
+  "p1.cma"
+  "p1.cmxa"
+  "p1.a"
+  "?this_file_will_not_exits_but_that's_ok"
 ]
 share: [ "build.sh" ]
 doc: [
-  "_build/p1.cmi" { "foo/bar/index.html" }
+  "p1.cmi" { "foo/bar/index.html" }
 ]

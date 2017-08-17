@@ -5,6 +5,7 @@ addons:
   apt:
     packages:
     - aspcud
+    - libglpk-dev
 
 before_install:
     - bash -ex .travis-ci.sh prepare
@@ -14,6 +15,7 @@ install:
 cache:
     directories:
     - $HOME/.opam.bootstrap
+    - /usr/local/Cellar
 
 script:
     - bash -ex .travis-ci.sh build
@@ -28,10 +30,12 @@ matrix:
       env: OCAML_VERSION=4.03.0 OPAM_TEST=
     - os: linux
       env: OCAML_VERSION=4.02.3 OPAM_TEST=
+    - os: linux
+      env: OCAML_VERSION=4.05.0 OPAM_TEST=
     - os: osx
       env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=
+      env: OCAML_VERSION=4.03.0 OPAM_TEST= EXTERNAL_SOLVER=aspcud
 notifications:
   email:
     - opam-commits@lists.ocaml.org

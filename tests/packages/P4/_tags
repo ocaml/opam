@@ -1,2 +1,0 @@
-<*.{byte,native}>: use_p2, use_p3
-<*.ml>: use_p2, use_p3

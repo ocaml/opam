@@ -156,10 +156,13 @@ let opam_init ?root_dir ?strict =
         try Some (List.assoc kind c) with Not_found -> None
       in
       OpamSolverConfig.update
-        ?external_solver:(OpamFile.Config.solver conf >>| fun s -> lazy(Some s))
+        ?solver:(OpamFile.Config.solver conf >>|
+                 fun s -> lazy(OpamCudfSolver.custom_solver s))
         ?solver_preferences_default:(criteria `Default >>| fun s-> lazy(Some s))
         ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> lazy(Some s))
         ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
+        ?solver_preferences_best_effort_prefix:
+          (OpamFile.Config.best_effort_prefix conf >>| fun s -> lazy (Some s))
         ()
   end;
 

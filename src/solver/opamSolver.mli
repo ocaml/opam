@@ -68,7 +68,6 @@ val request:
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description. *)
 val resolve :
-  ?verbose:bool ->
   universe -> orphans:package_set -> atom request
   -> (solution, OpamCudf.conflict) result
 

@@ -1,4 +1,4 @@
-#! /bin/sh -e
+#! /bin/sh -ex
 
 if [ $OPAM_PACKAGE_VERSION -eq 2 ]; then
     if [ "X${P1:-}" != "Xversion1" ]; then
