@@ -13,7 +13,7 @@ MD5_cppo = bdc99442945f6bc26e7a8096d0975239
 URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.2/extlib-1.7.2.tar.gz
 MD5_extlib = 0f550dd06242828399a73387c49e0eed
 
-URL_re = http://github.com/ocaml/ocaml-re/archive/1.7.1.tar.gz
+URL_re = https://github.com/ocaml/ocaml-re/archive/1.7.1.tar.gz
 MD5_re = 0e45743512b7ab5e6b175f955dc72002
 
 URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.0.tbz
@@ -34,7 +34,7 @@ MD5_mccs = cbf0260ddac653b76b71e573f763e404
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 
-URL_result = http://github.com/janestreet/result/archive/1.2.tar.gz
+URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
 URL_jbuilder = https://github.com/dra27/jbuilder/archive/more-reads.tar.gz
