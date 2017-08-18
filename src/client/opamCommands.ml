@@ -1376,8 +1376,7 @@ let upgrade =
   let fixup =
     mk_flag ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
-       packages installed together...). This requires that you have an \
-       external solver installed (aspcud, cudf-services.irill.org, ...)" in
+       packages installed together...)." in
   let check =
     mk_flag ["check"]
       "Don't run the upgrade: just check if anything could be upgraded. \

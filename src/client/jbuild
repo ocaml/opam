@@ -29,10 +29,15 @@ let (sha, version) =
     ("", "let version = None")
 
 let static = try match Sys.getenv "OPAM_BUILD_STATIC" with
-  | "1" | "yes" | "true" -> true
-  | ""  | "0" | "no" | "false" -> false
+  | "1" | "yes" | "true" ->
+    (try match List.assoc "system" J.ocamlc_config with
+       | "linux" -> "gcc"
+       | "macosx" -> "clang"
+       | _ -> failwith "Sorry, static builds not supported on your platform"
+     with Not_found -> failwith "Could not detect platform for static linking")
+  | ""  | "0" | "no" | "false" -> "false"
   | _ -> failwith "OPAM_BUILD_STATIC: invalid value"
-  with Not_found -> false
+  with Not_found -> "false"
 
 let () = Printf.ksprintf J.send {|
 (jbuild_version 1)
@@ -67,6 +72,6 @@ let () = Printf.ksprintf J.send {|
 
 (rule
   ((targets (static-linking.sexp))
-   (deps    (static-linking.sexp.%b))
+   (deps    (static-linking.sexp.%s))
    (action  (run cp ${<} ${@}))))
 |} sha sha version static

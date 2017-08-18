@@ -36,3 +36,5 @@ val solver_of_string : string -> (module S)
 
 (** Gets the first present solver from the list. Exits with error if none was found. *)
 val get_solver : ?internal:bool -> (module S) list -> (module S)
+
+val has_builtin_solver : unit -> bool
