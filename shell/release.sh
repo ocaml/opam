@@ -115,9 +115,9 @@ if [[ " ${ACTIONS[@]} " =~ " binary " ]]; then
     cd opam-full-$TAG
     ./configure
     ${MAKE} lib-ext
-    ${MAKE} opam
+    ${MAKE} opam-static
     cd ..
-    ln -s opam-full-$TAG/src/opam $BINARY
+    ln -s opam-full-$TAG/opam $BINARY
     UPLOAD_FILES+=("$BINARY")
 fi
 

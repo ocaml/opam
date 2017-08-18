@@ -2,8 +2,22 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
-
+2.0.0~beta4
+* Building with OCaml < 4.02.3 is no longer supported
+* Support compilation with a built-in mccs solver (removing run-time dependency
+  to aspcud). Integrated half-working "heuristics" dropped.
 * Remove jsonm and transitive uutf dependency.
+* Switch build systems to `jbuilder`, including `lib-ext` support
+* Allow repeated and or'd arguments to the `list` command
+* Many code and build system portability fixes (Windows, BSD)
+* Add `switch export --full` to include package definitions
+* Add `announce:` and `stamp:` fields to repositories (`repo` files)
+* Add a global cache of git objects (greatly speeding up multiple cloning)
+* Allow `opam pin URL` without a package name
+* Many error handling, messages and corner case fixes
+* Updated the versions of dependencies
+* Removed the unused `features:` field, and proposal for a new syntax
+* More informative exit codes, and documentation thereof
 
 2.0.0~beta3
 * (*) Renamed `--soft-request` to `--best-effort`
