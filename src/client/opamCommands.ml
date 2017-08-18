@@ -1876,6 +1876,9 @@ let switch =
       let repos, rt = get_repos_rt gt repos in
       let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
+      OpamConsole.msg "# Listing available compilers from repositories: %s\n"
+        (OpamStd.List.concat_map ", " OpamRepositoryName.to_string
+           (OpamStd.Option.default (OpamGlobalState.repos_list gt) repos));
       let filters =
         List.map (fun patt ->
             OpamListCommand.Pattern

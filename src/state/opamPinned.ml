@@ -61,8 +61,16 @@ let files_in_source d =
         else None)
       (OpamFilename.dirs d)
   in
-  List.map
-    (fun f -> name_of_opam_filename d f, OpamFile.make f)
+  OpamStd.List.filter_map
+    (fun f ->
+       try
+         (* Ignore empty files *)
+         if (Unix.stat (OpamFilename.to_string f)).Unix.st_size = 0 then None
+         else Some (name_of_opam_filename d f, OpamFile.make f)
+       with Unix.Unix_error _ ->
+         OpamConsole.error "Can not read %s, ignored."
+           (OpamFilename.to_string f);
+         None)
     files
 
 let orig_opam_file opam =
