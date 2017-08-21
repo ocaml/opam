@@ -1,8 +1,9 @@
 (-noautolink
+ -cclib -Wl,-Bstatic
  -cclib -lunix
  -cclib -lbigarray
  -cclib -lmccs_stubs
- -cclib -static-libgcc
- -cclib -Wl,-l:libstdc++.a,-l:libglpk.a
- -cclib -lz
- -cclib -lltdl)
+ -cclib -lglpk
+ -cclib -lstdc++
+ -cclib -Wl,-Bdynamic
+ -cclib -static-libgcc)

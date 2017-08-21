@@ -25,7 +25,7 @@ src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.sta
 	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
 
 src_ext/jbuilder.stamp:
-	make -C src_ext jbuilder.stamp
+	$(MAKE) -C src_ext jbuilder.stamp
 
 jbuilder: $(JBUILDER_DEP)
 	@$(JBUILDER) build @install
@@ -157,7 +157,7 @@ release-tag:
 	git tag -a $(version) -m "Release $(version)"
 
 cold:
-	./shell/bootstrap-ocaml.sh
+	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
