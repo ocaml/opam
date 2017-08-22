@@ -28,16 +28,6 @@ let (sha, version) =
     remove ();
     ("", "let version = None")
 
-let static = try match Sys.getenv "OPAM_BUILD_STATIC" with
-  | "1" | "yes" | "true" ->
-    (try match List.assoc "system" J.ocamlc_config with
-       | "macosx" -> "clang"
-       | _ -> "gcc"
-     with Not_found -> failwith "Could not detect platform for static linking")
-  | ""  | "0" | "no" | "false" -> "false"
-  | _ -> failwith "OPAM_BUILD_STATIC: invalid value"
-  with Not_found -> "false"
-
 let () = Printf.ksprintf J.send {|
 (jbuild_version 1)
 
@@ -60,7 +50,7 @@ let () = Printf.ksprintf J.send {|
    (flags (:standard
            (:include ../ocaml-flags-standard.sexp)
            (:include ../ocaml-context-flags.sexp)
-           (:include static-linking.sexp)))
+           (:include linking.sexp)))
    (libraries (opam-client))))
 
 (rule
@@ -70,7 +60,6 @@ let () = Printf.ksprintf J.send {|
   (with-stdout-to git-sha-%s (echo "%s")))
 
 (rule
-  ((targets (static-linking.sexp))
-   (deps    (static-linking.sexp.%s))
-   (action  (run cp ${<} ${@}))))
-|} sha sha version static
+  ((targets (linking.sexp))
+   (action  (with-stdout-to ${@} (run echo "()")))))
+|} sha sha version

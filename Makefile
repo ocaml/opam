@@ -33,9 +33,6 @@ jbuilder: $(JBUILDER_DEP)
 opam: $(JBUILDER_DEP) opam.install
 	ln -sf _build/default/src/client/opamMain.exe $@
 
-%-static: ALWAYS
-	OPAM_BUILD_STATIC=true $(MAKE) $*
-
 opam-installer: $(JBUILDER_DEP)
 	$(JBUILDER) build src/tools/opam_installer.exe
 	ln -sf _build/default/src/tools/opam_installer.exe $@
