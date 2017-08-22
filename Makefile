@@ -148,10 +148,8 @@ configure: configure.ac m4/*.m4
 	aclocal -I m4
 	autoconf
 
-release-tag:
-	git tag -d latest || true
-	git tag -a latest -m "Latest release"
-	git tag -a $(version) -m "Release $(version)"
+release-%:
+	$(MAKE) -C release TAG="$*"
 
 cold:
 	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh
