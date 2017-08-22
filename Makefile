@@ -48,7 +48,7 @@ lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
 
 download-ext:
-	$(MAKE) -C src_ext archives
+	$(MAKE) -C src_ext cache-archives
 
 clean-ext:
 	$(MAKE) -C src_ext distclean
