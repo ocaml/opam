@@ -28,27 +28,24 @@ src_ext/jbuilder.stamp:
 	$(MAKE) -C src_ext jbuilder.stamp
 
 jbuilder: $(JBUILDER_DEP)
-	@$(JBUILDER) build @install
+	@$(JBUILDER) build $(JBUILDER_ARGS) @install
 
 opam: $(JBUILDER_DEP) opam.install
 	ln -sf _build/default/src/client/opamMain.exe $@
 
-%-static: ALWAYS
-	OPAM_BUILD_STATIC=true $(MAKE) $*
-
 opam-installer: $(JBUILDER_DEP)
-	$(JBUILDER) build src/tools/opam_installer.exe
+	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
 	ln -sf _build/default/src/tools/opam_installer.exe $@
 
 opam-admin.top: $(JBUILDER_DEP)
-	$(JBUILDER) build src/tools/opam_admin_top.bc
+	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_admin_top.bc
 	ln -sf _build/default/src/tools/opam_admin_top.bc $@
 
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
 
 download-ext:
-	$(MAKE) -C src_ext archives
+	$(MAKE) -C src_ext cache-archives
 
 clean-ext:
 	$(MAKE) -C src_ext distclean
@@ -81,14 +78,14 @@ ifneq ($(LIBINSTALL_DIR),)
 endif
 
 opam-devel.install: $(JBUILDER_DEP)
-	$(JBUILDER) build -p opam opam.install
+	$(JBUILDER) build $(JBUILDER_ARGS) -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
 opam-%.install: $(JBUILDER_DEP)
-	$(JBUILDER) build -p opam-$* $@
+	$(JBUILDER) build $(JBUILDER_ARGS) -p opam-$* $@
 
 opam.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $@
+	$(JBUILDER) build $(JBUILDER_ARGS) $@
 
 opam-actual.install: opam.install
 	@sed -n -e "/^bin: /,/^]/p" $< > $@
@@ -105,35 +102,35 @@ opam-actual.install: opam.install
 OPAMLIBS = core format solver repository state client
 
 opam-%: $(JBUILDER_DEP)
-	$(JBUILDER) build opam-$*.install
+	$(JBUILDER) build $(JBUILDER_ARGS) opam-$*.install
 
 opam-lib: $(JBUILDER_DEP)
-	$(JBUILDER) build $(patsubst %,opam-%.install,$(OPAMLIBS))
+	$(JBUILDER) build $(JBUILDER_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS))
 
 installlib-%: $(JBUILDER_DEP) opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
-	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 uninstalllib-%: $(JBUILDER_DEP) opam-installer opam-%.install
-	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 install: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec -- opam-installer $(OPAMINSTALLER_FLAGS) $<
+	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
 uninstall: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
+	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
-	$(JBUILDER) runtest
+	$(JBUILDER) runtest $(JBUILDER_ARGS)
 
 # tests-local, tests-git
 tests-%:
@@ -151,10 +148,8 @@ configure: configure.ac m4/*.m4
 	aclocal -I m4
 	autoconf
 
-release-tag:
-	git tag -d latest || true
-	git tag -a latest -m "Latest release"
-	git tag -a $(version) -m "Release $(version)"
+release-%:
+	$(MAKE) -C release TAG="$*"
 
 cold:
 	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh

@@ -13,10 +13,9 @@ install-bootstrap () {
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
         # TEMPORARY: waiting for merge into opam-repository
-        opam pin add jbuilder.1.0+beta12 "https://github.com/janestreet/jbuilder/archive/b913a42739362ac58c9a3df55a80eeacc9af9135.tar.gz" --yes --no-action
         ( cd $(OPAMBSROOT) && git clone https://github.com/AltGr/ocaml-mccs && cd ocaml-mccs && git checkout 1.1+2b && opam pin add mccs.1.1+2 . --yes; )
 
-        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re jbuilder mccs --yes
+        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re jbuilder.1.0-beta12 mccs --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1

@@ -1,7 +1,0 @@
-(-noautolink
- -cclib -lunix
- -cclib -lbigarray
- -cclib -lmccs_stubs
- -cclib /usr/local/lib/libglpk.a
- -cclib -lz
- -cclib -lstdc++)

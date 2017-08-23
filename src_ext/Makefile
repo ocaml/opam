@@ -2,7 +2,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result jbuilder
 ifneq ($(MCCS_DISABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
 endif
@@ -37,8 +37,8 @@ MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
-URL_jbuilder = https://github.com/dra27/jbuilder/archive/more-reads.tar.gz
-MD5_jbuilder = 6c329177bd81a0b25ebde7235eeb19bc
+URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta12.tar.gz
+MD5_jbuilder = 05dcb6bdba0c99ae30b63237170e474a
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
