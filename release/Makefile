@@ -2,51 +2,100 @@ TAG = master
 VERSION = $(shell git describe $(TAG) | sed 's/-/~/')
 GIT_URL = ..
 
+FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
+
 TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
 # todo: x86_64-darwin
+
+OCAMLV = 4.04.2
+# currently hardcoded in Dockerfile.in
+OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
+
+HOST_OS = $(shell uname -s | tr A-Z a-z)
+HOST = $(shell uname -m)-$(HOST_OS)
 
 all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
 
 out/opam-full-$(VERSION).tar.gz:
 	mkdir -p out
-	git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION)
-	sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,'"$(VERSION)"')/' \
-	  opam-full-$(VERSION)/configure.ac
-	cd opam-full-$(VERSION) && $(MAKE) configure download-ext
-	tar cz --exclude-vcs opam-full-$(VERSION) -f $@
-	rm -rf opam-full-$(VERSION)
+	cd out && curl -OL $(FULL_ARCHIVE_URL) || { \
+	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
+	  sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(VERSION))/' \
+	    opam-full-$(VERSION)/configure.ac; \
+	  cd opam-full-$(VERSION) && $(MAKE) configure download-ext; \
+	  tar cz --exclude-vcs opam-full-$(VERSION) -f $@; \
+	  rm -rf opam-full-$(VERSION); \
+	}
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/amd64-jessie/g' $^ | sed 's/%CONF%//' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/amd64-jessie/g' $^ | sed 's/%CONF%//g' >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/i386-jessie/g' $^ | sed 's/%CONF%/-host i686-linux/' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/i386-jessie/g' $^ | sed 's/%CONF%/-host i686-linux/g' >$@
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/armhf-jessie/g' $^ | sed 's/%CONF%//' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/armhf-jessie/g' $^ | sed 's/%CONF%//g' >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/arm64-jessie/g' $^ | sed 's/%CONF%//' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/arm64-jessie/g' $^ | sed 's/%CONF%//g' >$@
+
 
 build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
-CLINKING_jessie = \
+# Actually, this is for debian 8 jessie, and varies wildly
+CLINKING_linux = \
 -Wl,-Bstatic \
 -lunix -lbigarray -lmccs_stubs \
 -lglpk -lstdc++ -lz -lamd -lcolamd -lltdl \
 -Wl,-Bdynamic \
 -static-libgcc
-LINKING_jessie = -noautolink $(patsubst %,-cclib %,$(CLINKING_jessie))
 
 CLINKING_darwin = \
 -lunix -lbigarray -lmccs_stubs \
 /usr/local/lib/libglpk.a -lz -lstdc++
-LINKING_darwin = -noautolink $(patsubst %,-cclib %,$(CLINKING_darwin))
+
+CLINKING_openbsd = $(CLINKING_darwin)
+
+EXPORTS_openbsd = \
+CPATH=/usr/local/include: \
+LIBRARY_PATH=/usr/local/lib: \
+
 
 %: opam-$(VERSION)-%
 
 opam-$(VERSION)-%: out/opam-$(VERSION)-%
 	ln -sf $^ $@
 
+host: opam-$(VERSION)-$(HOST)
+
+# Build for the local host. Containerised builds, below, are preferred, but not always available
+build/$(HOST).env:
+	mkdir -p build/$(HOST)
+	cd build/$(HOST) && curl -OL $(OCAML_URL)
+	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
+	cd build/$(HOST)/ocaml-$(OCAMLV) && \
+	  ./configure -prefix $(shell pwd)/build/$(HOST) && \
+	  $(MAKE) world opt.opt && \
+	  $(MAKE) install
+	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
+	touch $@
+
+out/opam-$(VERSION)-$(HOST): out/opam-full-$(VERSION).tar.gz build/$(HOST).env
+	cd build && tar xzf ../$<
+	( export \
+	    PATH=$(shell pwd)/build/$(HOST)/bin:$$PATH \
+	    MAKE=$(MAKE) \
+	    $(EXPORTS_$(HOST_OS)); \
+	  cd build/opam-full-$(VERSION) && \
+	  ./configure --with-glpk && \
+	  echo "(-noautolink $(patsubst %,-cclib %,$(CLINKING_$(HOST_OS))))" \
+	    >src/client/linking.sexp && \
+	  $(MAKE) lib-ext opam JBUILDER_ARGS="--root=`pwd`"; \
+	)
+	strip build/opam-full-$(VERSION)/opam
+	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
+	rm -rf build/opam-full-$(VERSION)
+
+# Containerised builds
 out/opam-$(VERSION)-%-linux: build/%-linux.image out/opam-full-$(VERSION).tar.gz
 	docker run --rm -v `pwd`/out:/src \
 	  -e "VERSION=$(VERSION)" \
@@ -54,18 +103,17 @@ out/opam-$(VERSION)-%-linux: build/%-linux.image out/opam-full-$(VERSION).tar.gz
 	  -e "LINKING=$(LINKING_jessie)" \
 	  opam-build-$*-linux
 
-out/opam-$(VERSION)-%-darwin: opam-full-$(VERSION).tar.gz
-	@error todo generate appropriate reproducible build env with ocaml 4.04, and fail if not available
-	tar xzf $^
-	cd opam-full-$(VERSION) && \
-	  ./configure --with-mccs && \
-	  echo "($(LINKING_darwin))" > src/client/linking.sexp && \
-	  make lib-ext opam
-	cp opam-full-$(VERSION)/opam opam-$(VERSION)-$*-darwin
-	rm -rf opam-full-$(VERSION)
-
 clean:
 	rm -rf build
 
 distclean: clean
 	rm -rf out
+
+REMOTE_DIR = /tmp/opam-release
+REMOTE_MAKE = gmake
+remote: out/opam-full-$(VERSION).tar.gz
+	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/out"
+	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"
+	scp "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
+	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	scp "$(REMOTE):$(REMOTE_DIR)/out/opam-$(VERSION)*" out/
