@@ -85,12 +85,12 @@ run:
 	else echo "SUCCESS!"; fi
 
 local:
-	$(MAKE) clean
-	$(MAKE) REPOKIND=local run
+	@$(MAKE) --silent --no-print-directory clean
+	$(MAKE) --no-print-directory REPOKIND=local run
 
 git:
-	$(MAKE) clean
-	$(MAKE) REPOKIND=git run
+	@$(MAKE) --silent --no-print-directory clean
+	$(MAKE) --no-print-directory REPOKIND=git run
 
 init:
 	rm -rf $(OPAM_REPO)
