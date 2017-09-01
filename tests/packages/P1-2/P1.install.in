@@ -1,6 +1,6 @@
 lib: [
   "p1.cma"
   "p1.cmxa"
-  "p1.a"
+  "p1.%{ext_lib}%"
   "p1.cmi"
 ]

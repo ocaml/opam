@@ -23,7 +23,7 @@ build: [
 available: os != "NO" | os != "NO" & os != "YES"
 
 (* List of files to substitute env variables *)
-substs: [ "P1.config" ]
+substs: [ "P1.config" "P1.install" ]
 
 (* Libraries *)
 libraries: [ "p1" ]

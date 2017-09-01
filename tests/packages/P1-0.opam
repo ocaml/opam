@@ -5,7 +5,7 @@ name: "P1"
 version: "0"
 
 setenv: [P1 = "version0"]
-substs: "P1.config"
+substs: [ "P1.config" "P1.install" ]
 
 build: [
   [ "ocamlc" "-a" "p1.ml" "-o" "p1.cma" ]

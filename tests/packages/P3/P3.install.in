@@ -2,12 +2,12 @@ lib: [
   (* p3 *)
   "p3.cma"
   "p3.cmxa"
-  "p3.a"
+  "p3.%{ext_lib}%"
   "p3.cmi"
 
   (* p3_bar *)
   "p3_bar.cma"
   "p3_bar.cmxa"
-  "p3_bar.a"
+  "p3_bar.%{ext_lib}%"
   "p3_bar.cmi"
 ]

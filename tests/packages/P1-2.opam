@@ -3,7 +3,7 @@ name: "P1"
 version: "2"
 depends: [ "ocaml" {<= "10" | = "system"} ]
 maintainer: "contact@ocamlpro.com"
-substs:     [ "P1.config" ]
+substs:     [ "P1.config" "P1.install" ]
 libraries:  [ "p1" ]
 build: [ "./build.sh" ]
 setenv: [P1 = "version2"]
