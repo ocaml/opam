@@ -5,8 +5,15 @@ if ! OCAMLC=$(command -v ocamlc); then
     exit 2
 fi
 
-LIBDIR=$("$OCAMLC" -where)
-STUBLIBS=$(cat "$LIBDIR/ld.conf" | tr '\n' ':')
+if [ $($OCAMLC -config | sed -ne "s/os_type: //p" | tr -d '\r') = Win32 ] ; then
+  OCAMLC_FILE=$(echo $OCAMLC| cygpath -w -f - | sed -e 's/\\/\\\\/g')
+  LIBDIR=$("$OCAMLC" -where | tr -d '\r' | cygpath -f -)
+else
+  OCAMLC_FILE=$OCAMLC
+  LIBDIR=$("$OCAMLC" -where)
+fi
+
+STUBLIBS=$(cat "$LIBDIR/ld.conf" | tr -d '\r' | tr '\n' ':' | sed -e 's/\\/\\\\/g')
 
 echo "Using ocaml compiler found at $OCAMLC with base lib at $LIBDIR"
 
@@ -16,7 +23,7 @@ bool() {
 
 cat >ocaml.config <<EOF
 opam-version: "1.3.0~dev4"
-file-depends: ["$OCAMLC" "$(md5sum "$OCAMLC" | cut -d' ' -f1)"]
+file-depends: ["$OCAMLC_FILE" "$(md5sum "$OCAMLC" | cut -d' ' -f1)"]
 variables {
     compiler: "system"
     native: $(bool [ -x "$(dirname "$OCAMLC")"/ocamlopt ])
