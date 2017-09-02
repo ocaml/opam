@@ -32,8 +32,7 @@ let empty = {
 let split_url =
   let re =
     let (@@) f x = f x in
-    Re.(compile @@ seq [
-        bos;
+    Re.(compile @@ whole_string @@ seq [
         (* Parse the scheme, which is either backend+protocol or just a protocol *)
         opt @@ seq [
           (* Backend *)
@@ -52,7 +51,6 @@ let split_url =
         ];
         (* Parse the fragment (git branch, etc.) *)
         opt @@ seq [ char '#'; group @@ rep any ];
-        eos;
       ])
   in
   fun u ->
