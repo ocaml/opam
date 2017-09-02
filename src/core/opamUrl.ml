@@ -47,7 +47,7 @@ let split_url =
         group @@ seq [
           non_greedy @@ rep @@ diff any (char '#');
           (* If there's a .suffix, group it separately (used for backend guessing) *)
-          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (set ".#")]
+          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (set "\\/.#")]
         ];
         (* Parse the fragment (git branch, etc.) *)
         opt @@ seq [ char '#'; group @@ rep any ];
