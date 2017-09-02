@@ -56,7 +56,7 @@ AC_PROG_CC([$($OCAMLBESTCC -config | sed -n -e "s/native_c_compiler: \(.*\) .*/\
 
 AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [AC_SUBST(DEVELOPER,false)])
 
-AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_DISABLED,true)], [AC_SUBST(MCCS_DISABLED,false)])
+AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
 
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"], [
   CONF_OCAMLFLAGS="-warn-error A"
@@ -189,7 +189,7 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-AS_IF([{ test "x$MCCS_DISABLED" = "xtrue" && test "x${hasalldeps}" = "x"; } ||
+AS_IF([{ test "x$MCCS_ENABLED" = "xfalse" && test "x${hasalldeps}" = "x"; } ||
        { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }],
       [echo "Opam will be built WITHOUT a built-in solver"],
       [echo "Opam will be built WITH a built-in solver"])

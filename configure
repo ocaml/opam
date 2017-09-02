@@ -609,7 +609,7 @@ PATH_PREPEND
 EXE
 WIN32
 CONF_OCAMLFLAGS
-MCCS_DISABLED
+MCCS_ENABLED
 DEVELOPER
 OBJEXT
 EXEEXT
@@ -3782,10 +3782,10 @@ else
 fi
 
 if test "x${with_mccs}" = "xno"; then :
-  MCCS_DISABLED=true
+  MCCS_ENABLED=false
 
 else
-  MCCS_DISABLED=false
+  MCCS_ENABLED=true
 
 fi
 
@@ -5715,7 +5715,7 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-if { test "x$MCCS_DISABLED" = "xtrue" && test "x${hasalldeps}" = "x"; } ||
+if { test "x$MCCS_ENABLED" = "xfalse" && test "x${hasalldeps}" = "x"; } ||
        { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }; then :
   echo "Opam will be built WITHOUT a built-in solver"
 else

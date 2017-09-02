@@ -3,7 +3,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 endif
 
 SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
-ifneq ($(MCCS_DISABLED),true)
+ifeq ($(MCCS_ENABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
 endif
 
