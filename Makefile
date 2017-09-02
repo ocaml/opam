@@ -31,15 +31,15 @@ jbuilder: $(JBUILDER_DEP)
 	@$(JBUILDER) build $(JBUILDER_ARGS) @install
 
 opam: $(JBUILDER_DEP) opam.install
-	ln -sf _build/default/src/client/opamMain.exe $@
+	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 
 opam-installer: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
-	ln -sf _build/default/src/tools/opam_installer.exe $@
+	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_admin_top.bc
-	ln -sf _build/default/src/tools/opam_admin_top.bc $@
+	$(LN_S) -f _build/default/src/tools/opam_admin_top.bc $@$(EXE)
 
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
@@ -52,7 +52,7 @@ clean-ext:
 
 clean:
 	$(MAKE) -C doc $@
-	rm -f *.install *.env *.err *.info *.out
+	rm -f *.install *.env *.err *.info *.out opam$(EXE) opam-admin.top$(EXE) opam-installer$(EXE)
 	rm -rf _build
 
 distclean: clean clean-ext

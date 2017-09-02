@@ -91,6 +91,16 @@ AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 AC_CHECK_TOOL(JBUILDER,jbuilder)
 
+AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
+  AC_MSG_CHECKING([for a workable solution for ln -s])
+  ln -s configure conftestLink
+  AS_IF([test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""],[LN_S="cp -a"],[LN_S="ln -s"])
+  AC_MSG_RESULT([$LN_S])
+],[
+  LN_S="ln -s"
+])
+AC_SUBST(LN_S)
+
 if test x"$FETCH" = x"curl" ; then
   AC_SUBST(fetch, "curl $curl_certificate_check -OLSs")
 elif test x"$FETCH" = x"wget" ; then
