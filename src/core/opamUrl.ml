@@ -252,8 +252,8 @@ module Op = struct
       else url
     in
     let path =
-      if has_trailing_slash url then url.path ^ dir
-      else String.concat "/" [url.path; dir]
+      if has_trailing_slash url || url.path = "" then url.path ^ dir
+      else url.path ^ "/" ^ dir
     in
     {url with path }
 
