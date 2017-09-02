@@ -319,6 +319,12 @@ let forward_to_back =
   else
     fun x -> x
 
+let back_to_forward =
+  if Sys.win32 then
+    String.map (function '\\' -> '/' | c -> c)
+  else
+    fun x -> x
+
 (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
    makes unqualified commands absolute as a workaround. *)
 let resolve_command =

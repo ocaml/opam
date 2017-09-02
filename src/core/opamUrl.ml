@@ -141,7 +141,7 @@ let parse ?backend ?(handle_suffix=true) s =
     | _, (None | Some ("git"|"hg"|"darcs")), Some path ->
       "ssh", path
     | _, (None | Some ("hg"|"darcs")), None ->
-      "file", OpamSystem.real_path path
+      "file", OpamSystem.real_path path |> OpamSystem.back_to_forward
     | _, Some tr, _ ->
       tr, path
   in
@@ -222,7 +222,14 @@ let basename =
 let root =
   let re = Re.(compile @@ seq [char '/'; rep any]) in
   fun t ->
-    { t with path = Re.replace_string re ~by:"" t.path }
+    let path =
+      (* The special-casing of "file" is needed for Windows *)
+      if t.transport = "file" then
+        ""
+      else
+        Re.replace_string re ~by:"" t.path
+    in
+    { t with path}
 
 let has_trailing_slash url =
   OpamStd.String.ends_with ~suffix:"/" url.path
@@ -247,10 +254,13 @@ module Op = struct
   (** appending to an url path *)
   let ( / ) url dir =
     let url =
-      if OpamStd.String.starts_with ~prefix:"/" dir then
+      if Filename.is_relative dir then
+        url
+      else
         root url
-      else url
     in
+    (* Even on Windows, a file:// _should_ use slash *)
+    let dir = OpamSystem.back_to_forward dir in
     let path =
       if has_trailing_slash url || url.path = "" then url.path ^ dir
       else url.path ^ "/" ^ dir

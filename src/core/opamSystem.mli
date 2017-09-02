@@ -271,3 +271,6 @@ val init: unit -> unit
 
 (** On Unix, a no-op. On Windows, convert / to \ *)
 val forward_to_back : string -> string
+
+(** On Unix, a no-op. On Windows, convert \ to / *)
+val back_to_forward : string -> string
