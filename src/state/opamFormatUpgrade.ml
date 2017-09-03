@@ -162,7 +162,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     aux available
   in
   let pkg_deps =
-    if NMap.mem ocaml_wrapper_pkgname pkg_deps ||
+    if OpamVersion.compare (OpamFile.OPAM.opam_version opam) v2_0 >= 0 ||
+       NMap.mem ocaml_wrapper_pkgname pkg_deps ||
        OpamFile.OPAM.has_flag Pkgflag_Conf opam
     then pkg_deps
     else NMap.add ocaml_wrapper_pkgname Empty pkg_deps
