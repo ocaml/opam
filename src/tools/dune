@@ -1,17 +1,25 @@
-(executable
+(library
   (name         opam_admin_top)
+  (public_name  opam-admin.top)
+  (synopsis     "OCaml Package Manager admin toplevel")
   (modules      opam_admin_top)
+  (libraries    opam-client opam-file-format compiler-libs.toplevel re)
+  (wrapped      false))
+
+(executable
+  (name         opam_admin_topstart)
+  (public_name  opam-admin.top)
+  (package      opam-admin)
+  (modes        byte)
+  (modules      opam_admin_topstart)
+  (libraries    opam-admin.top)
   (ocamlc_flags (:standard
                 (:include ../ocaml-flags-standard.sexp)
                 (:include ../ocaml-flags-configure.sexp)
                 (:include ../ocaml-context-flags.sexp)
-                -linkall))
-  (libraries    opam-client opam-file-format compiler-libs.toplevel re))
+                -linkall)))
 
-(install
-  (section bin)
-  (package opam-admin)
-  (files   (opam_admin_top.bc as opam-admin.top)))
+(rule (with-stdout-to opam_admin_topstart.ml (echo "include Opam_admin_top\n\nlet _ = Topmain.main ()")))
 
 (executable
   (name    opam_check)
