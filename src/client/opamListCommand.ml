@@ -755,6 +755,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     Field "bug-reports";
     Field "dev-repo";
     Field "authors";
+    Field "maintainer";
     Field "license";
     Field "tags";
     Field "flags";
