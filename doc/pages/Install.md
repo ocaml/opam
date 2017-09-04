@@ -107,7 +107,7 @@ cave resolve -x repository/ocaml-unofficial
 
 RPMs for Fedora, CentOS and Red Hat Enterprise Linux are available with
 instructions on the
-[OpenSUSE Build Server](http://software.opensuse.org/download.html?project=home%3Aocaml&package=opam).
+[OpenSUSE Build Server](https://software.opensuse.org/package/opam).
 
 #### Mageia
 
