@@ -30,6 +30,9 @@ src_ext/*.download
 opam
 opam-installer
 opam-admin.top
+opam.exe
+opam-installer.exe
+opam-admin.top.exe
 # debug files
 *.log
 *.cudf

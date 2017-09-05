@@ -6,7 +6,7 @@ mkdir -p bootstrap
 cd bootstrap
 if [ ! -e ${V}.tar.gz ]; then
   if command -v curl > /dev/null; then
-    curl -OL ${URL}
+    curl -OLSs ${URL}
   elif command -v wget > /dev/null; then
     wget ${URL}
   else

@@ -2,7 +2,7 @@ ifneq ($(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result jbuilder
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
 ifneq ($(MCCS_DISABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
 endif
@@ -84,7 +84,7 @@ clone: $(JBUILDER_CLONE) $(SRC_EXTS:=.stamp)
 archives: $(SRC_EXTS:=.download)
 	@
 
-cache-archives: $(SRC_EXTS:=.cache)
+cache-archives: $(SRC_EXTS:=.cache) jbuilder.cache
 	@
 
 %.cache:

@@ -600,6 +600,7 @@ OCAML_PKG_extlib
 OCAML_PKG_bigarray
 OCAML_PKG_unix
 fetch
+LN_S
 JBUILDER
 FETCH
 OCAMLFIND
@@ -4054,6 +4055,26 @@ esac
   fi
 else
   JBUILDER="$ac_cv_prog_JBUILDER"
+fi
+
+
+if test "${OCAML_OS_TYPE}" = "Win32"; then :
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a workable solution for ln -s" >&5
+$as_echo_n "checking for a workable solution for ln -s... " >&6; }
+  ln -s configure conftestLink
+  if test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""; then :
+  LN_S="cp -a"
+else
+  LN_S="ln -s"
+fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LN_S" >&5
+$as_echo "$LN_S" >&6; }
+
+else
+
+  LN_S="ln -s"
+
 fi
 
 

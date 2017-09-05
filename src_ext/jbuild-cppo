@@ -10,6 +10,15 @@
 (ocamlyacc (cppo_parser))
 
 (rule
+  (with-stdout-to invoke-make.ml
+    (echo "print_string (try Sys.getenv \"MAKE\" with Not_found -> \"make\")")))
+
+(rule
+  ((targets (make-command))
+   (deps    (invoke-make.ml))
+   (action  (with-stdout-to ${@} (run ocaml ${<})))))
+
+(rule
   ((targets (cppo_version.ml))
-   (deps (Makefile))
-   (action (run sh -c "${MAKE:-make} cppo_version.ml"))))
+   (deps    (Makefile))
+   (action  (system "${read:make-command} cppo_version.ml"))))
