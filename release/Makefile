@@ -1,5 +1,6 @@
 TAG = master
-VERSION = $(shell git describe $(TAG) | sed 's/-/~/')
+VERSION = $(shell git describe $(TAG))
+OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
 FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
@@ -18,12 +19,12 @@ all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
 
 out/opam-full-$(VERSION).tar.gz:
 	mkdir -p out
-	cd out && curl -OL $(FULL_ARCHIVE_URL) || { \
+	cd out && curl -OfL $(FULL_ARCHIVE_URL) || { \
 	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
-	  sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(VERSION))/' \
+	  sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' \
 	    opam-full-$(VERSION)/configure.ac; \
-	  cd opam-full-$(VERSION) && $(MAKE) configure download-ext; \
-	  tar cz --exclude-vcs opam-full-$(VERSION) -f $@; \
+	  $(MAKE) -C opam-full-$(VERSION) configure download-ext; \
+	  tar cz --exclude-vcs opam-full-$(VERSION) -f $(notdir $@); \
 	  rm -rf opam-full-$(VERSION); \
 	}
 
@@ -55,6 +56,8 @@ CLINKING_darwin = \
 
 CLINKING_openbsd = $(CLINKING_darwin)
 
+LINKING = (-noautolink $(patsubst %,-cclib %,$(CLINKING_$(1))))
+
 EXPORTS_openbsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
@@ -79,7 +82,9 @@ build/$(HOST).env:
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
 	touch $@
 
-out/opam-$(VERSION)-$(HOST): out/opam-full-$(VERSION).tar.gz build/$(HOST).env
+# Actually builds out/opam-$(VERSION)-$(HOST), but we don't want to override the
+# rule that goes through a container
+host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	cd build && tar xzf ../$<
 	( export \
 	    PATH=$(shell pwd)/build/$(HOST)/bin:$$PATH \
@@ -87,9 +92,9 @@ out/opam-$(VERSION)-$(HOST): out/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
 	  ./configure --with-glpk && \
-	  echo "(-noautolink $(patsubst %,-cclib %,$(CLINKING_$(HOST_OS))))" \
-	    >src/client/linking.sexp && \
-	  $(MAKE) lib-ext opam JBUILDER_ARGS="--root=`pwd`"; \
+	  echo test:
+	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
+	  $(MAKE) clean lib-ext opam JBUILDER_ARGS="--root=`pwd`"; \
 	)
 	strip build/opam-full-$(VERSION)/opam
 	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
@@ -100,7 +105,7 @@ out/opam-$(VERSION)-%-linux: build/%-linux.image out/opam-full-$(VERSION).tar.gz
 	docker run --rm -v `pwd`/out:/src \
 	  -e "VERSION=$(VERSION)" \
 	  -e "TARGET=$*-linux" \
-	  -e "LINKING=$(LINKING_jessie)" \
+	  -e "LINKING=$(call LINKING,$(HOST_OS))" \
 	  opam-build-$*-linux
 
 clean:
@@ -110,7 +115,7 @@ distclean: clean
 	rm -rf out
 
 REMOTE_DIR = /tmp/opam-release
-REMOTE_MAKE = gmake
+REMOTE_MAKE = make
 remote: out/opam-full-$(VERSION).tar.gz
 	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/out"
 	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"

@@ -15,7 +15,6 @@ install:
 cache:
     directories:
     - $HOME/.opam.bootstrap
-    - /usr/local/Cellar
 
 script:
     - bash -ex .travis-ci.sh build
