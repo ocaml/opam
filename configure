@@ -618,6 +618,9 @@ LDFLAGS
 CFLAGS
 CC
 AWK
+LIBRARY_PATH
+CPATH
+LIB_PREFIX
 OCAML_OS_TYPE
 OCAMLBUILD
 OCAMLDOCDOTOPT
@@ -3064,6 +3067,20 @@ fi
 if test "${with_mccs+set}" = set; then :
   withval=$with_mccs;
 fi
+
+
+if test "x" != "x$LIB_PREFIX"; then :
+
+  CPATH=$CPATH:$LIB_PREFIX/include
+  LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
+  export CPATH LIBRARY_PATH
+
+fi
+LIB_PREFIX=$LIB_PREFIX
+
+CPATH=$CPATH
+
+LIBRARY_PATH=$LIBRARY_PATH
 
 
 # Check that OCaml version is greater or equal to 4.02.3
