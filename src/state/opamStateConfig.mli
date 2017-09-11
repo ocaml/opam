@@ -24,6 +24,7 @@ type t = private {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  unlock_base: bool;
 }
 
 type 'a options_fun =
@@ -37,6 +38,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?unlock_base:bool ->
   'a
 
 include OpamStd.Config.Sig

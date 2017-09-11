@@ -533,8 +533,12 @@ let universe st
     get_deps depend st.opams
   in
   let u_conflicts = get_conflicts st.packages st.opams in
+  let base =
+    if OpamStateConfig.(!r.unlock_base) then OpamPackage.Set.empty
+    else st.compiler_packages
+  in
   let u_available =
-    remove_conflicts st st.compiler_packages (Lazy.force st.available_packages)
+    remove_conflicts st base (Lazy.force st.available_packages)
   in
   let u_reinstall = match reinstall with
     | Some set -> set
@@ -554,7 +558,7 @@ let universe st
   u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
-  u_base      = st.compiler_packages;
+  u_base      = base;
   u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs];
 }
@@ -673,8 +677,9 @@ let unavailable_reason st ?(default="") (name, vformula) =
         name
     then
       "conflict with the base packages of this switch"
-    else if OpamPackage.has_name st.compiler_packages name then
-      "base of this switch, can't be changed"
+    else if OpamPackage.has_name st.compiler_packages name &&
+            not OpamStateConfig.(!r.unlock_base) then
+      "base of this switch, can't be changed (use `--unlock-base' to force)"
     else
       default
 
