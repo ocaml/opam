@@ -34,6 +34,15 @@ AC_ARG_WITH([mccs],
                  [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)])
 )
 
+AS_IF([test "x" != "x$LIB_PREFIX"], [
+  CPATH=$CPATH:$LIB_PREFIX/include
+  LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
+  export CPATH LIBRARY_PATH
+])
+AC_SUBST(LIB_PREFIX,$LIB_PREFIX)
+AC_SUBST(CPATH,$CPATH)
+AC_SUBST(LIBRARY_PATH,$LIBRARY_PATH)
+
 # Check that OCaml version is greater or equal to 4.02.3
 AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(

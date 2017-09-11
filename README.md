@@ -14,8 +14,13 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
 ## Compiling this repo
 
-* Make sure you have OCaml and GNU make installed. If you don't have a recent
-  enough version of OCaml (>= 4.01.0) at hand, see the next section.
+Either from an existing opam installation, use `opam pin add opam-devel
+--dev`, or:
+
+* Make sure you have the required dependencies installed:
+  - GNU make
+  - OCaml >= 4.02.3 (or see [below](#compiling-without-ocaml))
+  - The `glpk` library (or see [below](#integrated-solver))
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed. This will locally take care of all OCaml dependencies
@@ -30,8 +35,8 @@ libraries, rather than use `make lib-ext` which would cause conflicts. It's
 easier to already have a working opam installation in this case, so you can do
 it as a second step.
 
-* Make sure to have ocamlfind, ocamlgraph, cmdliner >= 0.9.8, cudf,
-  dose3, re >= 1.2.0, opam-file-format installed. Or run `opam install
+* Make sure to have ocamlfind, ocamlgraph, cmdliner >= 0.9.8, cudf >= 0.7,
+  dose3 >= 5, re >= 1.5.0, opam-file-format installed. Or run `opam install
   opam-lib --deps-only` if you already have a working instance. Re-run
   `./configure` once done
 * Run `make libinstall` at the end
@@ -52,6 +57,18 @@ make cold CONFIGURE_ARGS="--prefix ~/local"
 ```
 
 NOTE: You'll still need GNU make.
+
+## Integrated solver
+
+Having the `glpk` library and headers installed enables compilation of opam with
+a built-in solver. Without it, the compiled opam will require an
+[external solver](http://opam.ocaml.org/doc/Install.html#ExternalSolvers), such
+as `aspcud`, at runtime.
+
+You can compile `glpk` locally and install it to a custom prefix, then run
+`./configure LIB_PREFIX=custom_prefix`. To avoid dynamically depending on it,
+some options need to be specified at link-time, which can be done through file
+`src/client/linking.sexp`. See `release/Makefile` for examples.
 
 ## Bug tracker
 
