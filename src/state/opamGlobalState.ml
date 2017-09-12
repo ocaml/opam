@@ -22,9 +22,17 @@ let load_config global_lock root =
   let config = match OpamStateConfig.load root with
     | Some c -> c
     | None ->
-      if OpamFilename.exists_dir (root / "opam") then
+      if OpamFilename.exists (root // "aliases") then
         OpamFile.Config.(with_opam_version (OpamVersion.of_string "1.1") empty)
-      else OpamFile.Config.empty
+      else if OpamFilename.exists_dir root then
+        OpamConsole.error_and_exit `Configuration_error
+          "%s exists, but does not appear to be a valid opam root. Please \
+           remove it and use `opam init', or specify a different `--root' \
+           argument"
+          (OpamFilename.Dir.to_string root)
+      else
+        OpamConsole.error_and_exit `Configuration_error
+          "Opam has not been initialised, please run `opam init'"
   in
   OpamFormatUpgrade.as_necessary global_lock root config
 
