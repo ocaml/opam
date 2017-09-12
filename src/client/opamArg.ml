@@ -1073,6 +1073,10 @@ let package_selection =
     mk_flag ["nobuild"]  ~section
       "Exclude build dependencies (they are included by default)."
   in
+  let post =
+    mk_flag ["post"]  ~section
+      "Include dependencies tagged as $(i,post)."
+  in
   let dev =
     mk_flag ["dev"]  ~section
       "Include development packages in dependencies."
@@ -1113,11 +1117,12 @@ let package_selection =
   in
   let filter
       depends_on required_by conflicts_with coinstallable_with resolve recursive
-      depopts nobuild dev doc_flag test field_match has_flag has_tag
+      depopts nobuild post dev doc_flag test field_match has_flag has_tag
     =
     let dependency_toggles = {
       OpamListCommand.
-      recursive; depopts; build = not nobuild; test; doc = doc_flag; dev
+      recursive; depopts; build = not nobuild; post; test; doc = doc_flag;
+      dev
     } in
     List.map (fun flag -> OpamListCommand.Flag flag) has_flag @
     List.map (fun tag -> OpamListCommand.Tag tag) has_tag @
@@ -1145,8 +1150,8 @@ let package_selection =
   in
   Term.(const filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
-        resolve $ recursive $ depopts $ nobuild $ dev $ doc_flag $ test $
-        field_match $ has_flag $ has_tag)
+        resolve $ recursive $ depopts $ nobuild $ post $ dev $ doc_flag $
+        test $ field_match $ has_flag $ has_tag)
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 

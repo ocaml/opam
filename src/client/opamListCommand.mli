@@ -20,6 +20,7 @@ type dependency_toggles = {
   recursive: bool;
   depopts: bool;
   build: bool;
+  post: bool;
   test: bool;
   doc: bool;
   dev: bool;

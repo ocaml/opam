@@ -122,6 +122,7 @@ let is_dev_package st opam =
 
 let filter_depends_formula
     ?(build=true)
+    ?(post=false)
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
     ?(dev=false)
@@ -133,9 +134,9 @@ let filter_depends_formula
   OpamFilter.partial_filter_formula (fun v ->
       if List.mem v predefined_depends_variables then None
       else env v) |>
-  OpamFilter.filter_deps ~build ~test ~doc ~dev ?default
+  OpamFilter.filter_deps ~build ~post ~test ~doc ~dev ?default
 
-let all_depends ?build ?test ?doc ?dev ?(filter_default=false)
+let all_depends ?build ?post ?test ?doc ?dev ?(filter_default=false)
     ?(depopts=true) st opam =
   let dev = match dev with None -> is_dev_package st opam | Some d -> d in
   let deps =
@@ -143,7 +144,7 @@ let all_depends ?build ?test ?doc ?dev ?(filter_default=false)
       (OpamFile.OPAM.depends opam ::
        if depopts then [OpamFile.OPAM.depopts opam] else [])
   in
-  filter_depends_formula ?build ?test ?doc ~dev
+  filter_depends_formula ?build ?post ?test ?doc ~dev
     ~default:filter_default
     ~env:(resolve_switch ~package:(OpamFile.OPAM.package opam) st) deps
 
@@ -230,7 +231,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
-      let deps = OpamFormula.atoms (all_depends st opam) in
+      let deps = OpamFormula.atoms (all_depends ~post:false st opam) in
       let installed_deps =
         OpamStd.List.filter_map
           (fun (n,cstr) ->

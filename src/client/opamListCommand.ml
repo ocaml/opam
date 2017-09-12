@@ -22,6 +22,7 @@ type dependency_toggles = {
   recursive: bool;
   depopts: bool;
   build: bool;
+  post: bool;
   test: bool;
   doc: bool;
   dev: bool;
@@ -31,6 +32,7 @@ let default_dependency_toggles = {
   recursive = false;
   depopts = false;
   build = true;
+  post = false;
   test = false;
   doc = false;
   dev = false;
@@ -148,7 +150,8 @@ let packages_of_atoms st atoms =
 let package_dependencies st tog nv =
   get_opam st nv |>
   OpamPackageVar.all_depends
-    ~build:tog.build ~test:tog.test ~doc:tog.doc ~dev:tog.dev
+    ~build:tog.build ~post:tog.post
+    ~test:tog.test ~doc:tog.doc ~dev:tog.dev
     ~depopts:tog.depopts
     st
 
@@ -221,7 +224,7 @@ let apply_selector ~base st = function
       | Depends_on _ -> OpamSolver.reverse_dependencies
       | _ -> assert false
     in
-    deps_fun ~depopts:tog.depopts ~build:tog.build
+    deps_fun ~depopts:tog.depopts ~build:tog.build ~post:tog.post
       ~installed:false ~unavailable:true
       (get_universe st tog)
       (packages_of_atoms st atoms)
@@ -663,7 +666,8 @@ let display st format packages =
       in
       let deps_packages =
         OpamSolver.dependencies
-          ~depopts:true ~installed:false ~unavailable:true ~build:true
+          ~depopts:true ~installed:false ~unavailable:true
+          ~build:true ~post:false
           universe packages
       in
       List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages |>

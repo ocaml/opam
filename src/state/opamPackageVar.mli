@@ -54,16 +54,17 @@ val resolve_switch_raw:
 
 val is_dev_package: 'a switch_state -> OpamFile.OPAM.t -> bool
 
-(** The defaults are [true] for [build], false for [dev] and defined by
-    OpamStateConfig for [test] and [bool]. *)
+(** The defaults are [true] for [build], false for [dev] and [post], and
+    defined by OpamStateConfig for [test] and [bool]. *)
 val filter_depends_formula:
-  ?build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool -> ?default:bool ->
-  env:OpamFilter.env ->
+  ?build:bool -> ?post:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
+  ?default:bool -> env:OpamFilter.env ->
   filtered_formula -> formula
 
 (** Assumes [filter_default=false] by default, i.e. dependencies with undefined
     filters are discarded. *)
 val all_depends:
-  ?build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool -> ?filter_default:bool ->
+  ?build:bool -> ?post:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
+  ?filter_default:bool ->
   ?depopts:bool ->
   'a switch_state -> OpamFile.OPAM.t -> formula

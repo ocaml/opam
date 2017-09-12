@@ -57,7 +57,8 @@ let orphans ?changes ?(transitive=false) t =
       let recompile_cone =
         OpamPackage.Set.of_list @@
         OpamSolver.reverse_dependencies
-          ~depopts:true ~installed:true ~unavailable:true ~build:true
+          ~depopts:true ~installed:true ~unavailable:true
+          ~build:true ~post:false
           universe ch
       in
       orphans %% recompile_cone
@@ -83,7 +84,8 @@ let orphans ?changes ?(transitive=false) t =
       let new_orphans =
         OpamPackage.Set.of_list @@
         OpamSolver.reverse_dependencies
-          ~depopts:false ~installed:false ~unavailable:true ~build:true
+          ~depopts:false ~installed:false ~unavailable:true
+          ~build:true ~post:false
           universe full_orphans
       in
       let full, versions = full_partition (new_orphans++orphan_versions) in
@@ -900,7 +902,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
     in
     let to_remove =
       OpamPackage.Set.of_list
-        (OpamSolver.reverse_dependencies ~build:true
+        (OpamSolver.reverse_dependencies ~build:true ~post:true
            ~depopts:false ~installed:true universe packages) in
     let to_keep =
       (if autoremove then t.installed_roots %% t.installed else t.installed)
@@ -908,7 +910,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
     in
     let to_keep =
       OpamPackage.Set.of_list
-        (OpamSolver.dependencies ~build:true
+        (OpamSolver.dependencies ~build:true ~post:true
            ~depopts:true ~installed:true universe to_keep) in
     (* to_keep includes the depopts, because we don't want to autoremove
        them. But that may re-include packages that we wanted removed, so we
@@ -922,7 +924,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
         else (* restrict to the dependency cone of removed pkgs *)
           to_remove %%
           (OpamPackage.Set.of_list
-             (OpamSolver.dependencies ~build:true
+             (OpamSolver.dependencies ~build:true ~post:true
                 ~depopts:true ~installed:true universe to_remove))
       else to_remove in
     let t, solution =
