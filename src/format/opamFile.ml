@@ -3261,10 +3261,20 @@ module CompSyntax = struct
     let depends =
       OpamFormula.map (fun (n, formula) ->
           let cstr (op, v) =
-            Atom (Constraint (op, FString (OpamPackage.Version.to_string v)))
+            OpamFormula.ands [
+              Atom (Constraint (op, FString (OpamPackage.Version.to_string v)));
+            ]
           in
-          Atom (n, (OpamFormula.map cstr formula)))
-        comp.packages
+          let post_flag =
+            Filter (FIdent ([], OpamVariable.of_string "post", None))
+          in
+          Atom (n, OpamFormula.ands
+                  [OpamFormula.map cstr formula; Atom post_flag]))
+        (OpamFormula.ands [
+            Atom (OpamPackage.Name.of_string "ocaml",
+                  Atom (`Eq, OpamPackage.Version.of_string comp.version));
+            comp.packages
+          ])
     in
     let url =
       OpamStd.Option.map
