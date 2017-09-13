@@ -37,8 +37,8 @@ MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
-URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta12.tar.gz
-MD5_jbuilder = 05dcb6bdba0c99ae30b63237170e474a
+URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta13.tar.gz
+MD5_jbuilder = ef9c70dfdf2928f46ca4ab4caff2a190
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
