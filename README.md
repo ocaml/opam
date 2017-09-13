@@ -54,6 +54,7 @@ you may specify `CONFIGURE_ARGS` if needed, e.g.:
 
 ```
 make cold CONFIGURE_ARGS="--prefix ~/local"
+make cold-install
 ```
 
 NOTE: You'll still need GNU make.

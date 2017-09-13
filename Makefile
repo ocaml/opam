@@ -156,3 +156,6 @@ cold:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
+
+cold-%:
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) $*
