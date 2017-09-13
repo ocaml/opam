@@ -452,11 +452,38 @@ let lint t =
          (List.flatten
             (List.map OpamFilter.variables
                (filters_of_formula t.depopts))) ||
-       List.exists (fun f ->
-           let vars = OpamFilter.variables f in
+       OpamFormula.fold_left (fun acc (_, f) ->
+           acc ||
+           let vars =
+             OpamFormula.fold_left (fun vars f ->
+                 match f with
+                 | Constraint _ -> vars
+                 | Filter fi -> OpamFilter.variables fi @ vars)
+               [] f
+           in
            List.mem (OpamVariable.Full.of_string "build") vars &&
            List.mem (OpamVariable.Full.of_string "post") vars)
-         (filters_of_formula t.depends));
+         false
+         t.depends);
+    cond 51 `Error
+      "The behaviour for negated dependency flags 'build' or 'post' is \
+       unspecified"
+      (OpamFormula.fold_left (fun acc (_, f) ->
+           acc || OpamFormula.fold_left (fun acc f ->
+               acc || match f with
+               | Filter fi ->
+                 OpamFilter.fold_down_left (fun acc fi ->
+                     acc || match fi with
+                     | FNot (FIdent ([], var, None)) ->
+                       (match OpamVariable.to_string var with
+                        | "build" | "post" -> true
+                        | _ -> false)
+                     | _ -> false)
+                   false (OpamFilter.distribute_negations fi)
+               | _ -> false)
+             false f)
+          false
+          (OpamFormula.ands [t.depends; t.depopts]));
   ]
   in
   format_errors @
