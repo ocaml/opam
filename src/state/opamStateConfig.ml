@@ -21,6 +21,7 @@ type t = {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  unlock_base: bool;
 }
 
 let default = {
@@ -40,6 +41,7 @@ let default = {
       | _ -> "make"
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
+  unlock_base = false;
 }
 
 type 'a options_fun =
@@ -53,6 +55,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?unlock_base:bool ->
   'a
 
 let setk k t
@@ -66,6 +69,7 @@ let setk k t
     ?dryrun
     ?makecmd
     ?ignore_constraints_on
+    ?unlock_base
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -80,6 +84,7 @@ let setk k t
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
+    unlock_base = t.unlock_base + unlock_base;
   }
 
 let set t = setk (fun x () -> x) t
@@ -111,6 +116,7 @@ let initk k =
        OpamStd.String.split s ',' |>
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)
+    ?unlock_base:(env_bool "UNLOCKBASE")
 
 let init ?noop:_ = initk (fun () -> ())
 

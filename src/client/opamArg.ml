@@ -148,15 +148,16 @@ type build_options = {
   external_tags : string list;
   jobs          : int option;
   ignore_constraints_on: name list option;
+  unlock_base   : bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update external_tags
-    fake jobs ignore_constraints_on = {
+    fake jobs ignore_constraints_on unlock_base = {
   keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; external_tags; fake; jobs; ignore_constraints_on;
+  skip_update; external_tags; fake; jobs; ignore_constraints_on; unlock_base;
 }
 
 let apply_build_options b =
@@ -180,6 +181,7 @@ let apply_build_options b =
     ?ignore_constraints_on:
       OpamStd.Option.Op.(b.ignore_constraints_on >>|
                          OpamPackage.Name.Set.of_list)
+    ?unlock_base:(flag b.unlock_base)
     ();
   OpamClientConfig.update
     ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
@@ -1007,10 +1009,15 @@ let build_options =
        builds to break when using this. Note that version constraints on \
        optional dependencies and conflicts are unaffected."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
+  let unlock_base =
+    mk_flag ~section ["unlock-base"]
+      "Allow changes to the packages set as switch base (typically, the main \
+       compiler). Use with caution." in
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on)
+    $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on
+    $unlock_base)
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
