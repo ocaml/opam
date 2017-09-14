@@ -158,14 +158,14 @@ val string_of_filtered_formula: filtered_formula -> string
 
 val variables_of_filtered_formula: filtered_formula -> full_variable list
 
-(** Resolves the build, test, doc, dev flags in a filtered formula (which is
-    supposed to have been pre-processed to remove switch and global variables).
-    [default] determines the behaviour on undefined filters, and the function
-    may raise if it is undefined. If a constraint resolves to an invalid
-    version, it is dropped, or replaced with [default_version] if specified. If
-    test, doc or dev are unspecified, they are assumed to be filtered out
-    already and encountering them will raise an assert. *)
+(** Resolves the build, post, test, doc, dev flags in a filtered formula
+    (which is supposed to have been pre-processed to remove switch and global
+    variables). [default] determines the behaviour on undefined filters, and the
+    function may raise if it is undefined. If a constraint resolves to an
+    invalid version, it is dropped, or replaced with [default_version] if
+    specified. If test, doc or dev are unspecified, they are assumed to be
+    filtered out already and encountering them will raise an assert. *)
 val filter_deps:
-  build:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
+  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
   ?default_version:version -> ?default:bool ->
   filtered_formula -> formula

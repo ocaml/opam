@@ -172,19 +172,6 @@ let do_upgrade repo_root =
         OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
       in
       let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
-      let comp =
-        let drop_names = [ OpamPackage.Name.of_string "base-ocamlbuild" ] in
-        (* ocamlbuild has requirements on variable ocaml-version: it can't be in
-           the dependencies *)
-        OpamFile.Comp.with_packages
-          (OpamFormula.map
-             (fun ((name, _) as atom) ->
-                if List.mem name drop_names then OpamFormula.Empty
-                else Atom atom)
-             (OpamFile.Comp.packages comp))
-          comp
-      in
-
       let nv, ocaml_version, variant =
         match OpamStd.String.cut_at c '+' with
         | None ->
@@ -260,6 +247,9 @@ let do_upgrade repo_root =
       if variant = None then begin
         (* "official" compiler release: generate a system compiler package *)
         let sys_nv = OpamPackage.create ocaml_system_pkgname nv.version in
+        let rev_dep_flag =
+          Filter (FIdent ([], OpamVariable.of_string "post", None))
+        in
         let system_opam =
           O.create sys_nv |>
           O.with_substs [OpamFilename.Base.of_string conf_script_name] |>
@@ -270,8 +260,9 @@ let do_upgrade repo_root =
           ] |>
           O.with_conflict_class [ocaml_conflict_class] |>
           O.with_depends (OpamFormula.ands (
-              List.map (fun name -> Atom (OpamPackage.Name.of_string name, Empty))
-                ["base-unix"; "base-threads"; "base-bigarray"]
+              List.map (fun name ->
+                  Atom (OpamPackage.Name.of_string name, Atom (rev_dep_flag)))
+                ["ocaml"; "base-unix"; "base-threads"; "base-bigarray"]
             )) |>
           O.with_maintainer [ "platform@lists.ocaml.org" ] |>
           O.with_flags [Pkgflag_Compiler] |>

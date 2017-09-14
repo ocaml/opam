@@ -20,7 +20,7 @@ open OpamFile.OPAM
 
 let names_of_formula flag f =
   OpamPackageVar.filter_depends_formula
-    ~build:true ~dev:true ~test:flag ~doc:flag ~default:false
+    ~build:true ~post:true ~dev:true ~test:flag ~doc:flag ~default:false
     ~env:OpamStd.Option.none f
   |> OpamFormula.atoms
   |> List.map fst
@@ -35,20 +35,24 @@ let all_urls t =
   (match t.dev_repo with Some u -> [u] | None -> []) @
   List.fold_left (fun acc (_, uf) -> urlf_urls uf @ acc) [] t.extra_sources
 
-let all_filters ?(exclude_post=false) t =
-  OpamStd.List.filter_map snd t.patches @
-  OpamStd.List.filter_map snd t.messages @
-  (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
-  [t.available] @
+let filters_of_formula f =
   OpamFormula.fold_left (fun acc (_, f) ->
       OpamFormula.fold_left (fun acc -> function
           | Constraint (_,f) -> f :: acc
           | Filter f -> f :: acc)
         acc f)
-    [] (OpamFormula.ands
-          (t.depends ::
-           t.depopts ::
-           List.map (fun (_,f,_) -> f) t.features))
+    [] f
+
+let all_filters ?(exclude_post=false) t =
+  OpamStd.List.filter_map snd t.patches @
+  OpamStd.List.filter_map snd t.messages @
+  (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
+  [t.available] @
+  filters_of_formula
+    (OpamFormula.ands
+       (t.depends ::
+        t.depopts ::
+        List.map (fun (_,f,_) -> f) t.features))
 
 let all_variables ?exclude_post t =
   OpamFilter.commands_variables (all_commands t) @
@@ -441,6 +445,45 @@ let lint t =
         control URLs"
        ~detail:(List.map OpamUrl.to_string suspicious_urls)
        (suspicious_urls <> []));
+    cond 50 `Warning
+      "The 'post' flag doesn't make sense with build or optional \
+       dependencies"
+      (List.mem (OpamVariable.Full.of_string "post")
+         (List.flatten
+            (List.map OpamFilter.variables
+               (filters_of_formula t.depopts))) ||
+       OpamFormula.fold_left (fun acc (_, f) ->
+           acc ||
+           let vars =
+             OpamFormula.fold_left (fun vars f ->
+                 match f with
+                 | Constraint _ -> vars
+                 | Filter fi -> OpamFilter.variables fi @ vars)
+               [] f
+           in
+           List.mem (OpamVariable.Full.of_string "build") vars &&
+           List.mem (OpamVariable.Full.of_string "post") vars)
+         false
+         t.depends);
+    cond 51 `Error
+      "The behaviour for negated dependency flags 'build' or 'post' is \
+       unspecified"
+      (OpamFormula.fold_left (fun acc (_, f) ->
+           acc || OpamFormula.fold_left (fun acc f ->
+               acc || match f with
+               | Filter fi ->
+                 OpamFilter.fold_down_left (fun acc fi ->
+                     acc || match fi with
+                     | FNot (FIdent ([], var, None)) ->
+                       (match OpamVariable.to_string var with
+                        | "build" | "post" -> true
+                        | _ -> false)
+                     | _ -> false)
+                   false (OpamFilter.distribute_negations fi)
+               | _ -> false)
+             false f)
+          false
+          (OpamFormula.ands [t.depends; t.depopts]));
   ]
   in
   format_errors @

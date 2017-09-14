@@ -823,6 +823,11 @@ files.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
       recompilations of your package.
+    * `post` dependencies will be installed along with the package, but are not
+      required to build it. This can be used to cut build cycles of
+      interdependent packages, while making sure they get installed together.
+      Note that, in case of failed or interrupted builds, opam can not guarantee
+      the invariant that `!build` dependencies are always installed.
     * `with-test` dependencies are only needed when building tests (when the
       package is explicitely installed with `--with-test`)
     * likewise, `with-doc` dependecies are only required when building the
@@ -839,7 +844,7 @@ files.
 
     Variables in the filtered package formula are evaluated as for
     [`depends:`](#opamfield-depends), with the same specific variables
-    available.
+    available (except for `post`, which wouldn't make sense).
 
     Note that `depopts: [ "foo" { = "3" } ]` means that the optional dependency
     only applies for `foo` version `3`, not that your package can't be installed

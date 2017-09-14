@@ -539,7 +539,7 @@ let variables_of_filtered_formula ff =
          acc f)
     [] ff
 
-let filter_deps ~build ?test ?doc ?dev ?default_version ?default deps =
+let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
   let env var =
     let get_opt = function
       | Some b -> Some (B b)
@@ -547,6 +547,7 @@ let filter_deps ~build ?test ?doc ?dev ?default_version ?default deps =
     in
     match OpamVariable.Full.to_string var with
     | "build" -> Some (B build)
+    | "post" -> Some (B post)
     | "with-test" -> get_opt test
     | "with-doc" -> get_opt doc
     | "dev" -> get_opt dev
