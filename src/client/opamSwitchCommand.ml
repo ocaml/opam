@@ -240,8 +240,9 @@ let install_compiler_packages t atoms =
       let switch_config =
         { t.switch_config with OpamFile.Switch_config.synopsis }
       in
-      OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-        switch_config;
+      if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
+        OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+          switch_config;
       { t with switch_config }
     else t
   in
