@@ -328,7 +328,13 @@ let pinned_package st ?version ?(working_dir=false) name =
       Done (interactive_part, true)
     | (Up_to_date _ | Not_available _), _ ->
       Done ((fun st -> st), false)
-    | Result  (), _ ->
+    | Result  (), Some new_opam ->
+      (* The new opam is not _effectively_ different from the old, but use it
+         still (e.g. descr may have changed) *)
+      Done
+        ((fun st -> {st with opams = OpamPackage.Map.add nv new_opam st.opams}),
+         true)
+    | Result  (), None ->
       Done ((fun st -> st), true)
 
 let dev_package st ?working_dir nv =
