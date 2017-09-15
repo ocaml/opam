@@ -39,8 +39,8 @@ val source_pin:
   url option ->
   rw switch_state
 
-(** Interactively handles the [x-pin-depends] in an opam file *)
-val handle_extra_pins:
+(** Interactively handles the [pin-depends] in an opam file *)
+val handle_pin_depends:
   rw switch_state -> package -> OpamFile.OPAM.t -> rw switch_state
 
 (** Let the user edit a pinned package's opam file. If given, the version is put

@@ -1906,6 +1906,7 @@ module OPAMSyntax = struct
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
+    pin_depends: (package * url) list;
 
     (* Package database details *)
     maintainer : string list;
@@ -1974,6 +1975,7 @@ module OPAMSyntax = struct
     libraries  = [];
     syntax     = [];
     dev_repo   = None;
+    pin_depends= [];
 
     maintainer = [];
     author     = [];
@@ -2059,6 +2061,7 @@ module OPAMSyntax = struct
   let libraries t = t.libraries
   let syntax t = t.syntax
   let dev_repo t = t.dev_repo
+  let pin_depends t = t.pin_depends
 
   let maintainer t = t.maintainer
   let author t = t.author
@@ -2134,6 +2137,7 @@ module OPAMSyntax = struct
   let with_syntax syntax t = { t with syntax }
   let with_dev_repo dev_repo t = { t with dev_repo = Some dev_repo }
   let with_dev_repo_opt dev_repo t = { t with dev_repo }
+  let with_pin_depends pin_depends t = { t with pin_depends }
 
   let with_maintainer maintainer t = { t with maintainer }
   let with_author author t = { t with author }
@@ -2402,6 +2406,13 @@ module OPAMSyntax = struct
         (Pp.V.string -|
          Pp.of_pair "vc-url"
            OpamUrl.(parse ?backend:None ~handle_suffix:false, to_string));
+      "pin-depends", no_cleanup Pp.ppacc with_pin_depends pin_depends
+        (OpamFormat.V.map_list ~depth:2
+           (OpamFormat.V.map_pair
+              (OpamFormat.V.string -|
+               OpamPp.of_module "package" (module OpamPackage))
+              (OpamFormat.V.string -|
+               OpamPp.of_module "URL" (module OpamUrl))));
 
       "extra-files", no_cleanup Pp.ppacc_opt with_extra_files extra_files
         (Pp.V.map_list ~depth:2 @@
@@ -2682,6 +2693,7 @@ module OPAM = struct
       libraries  = empty.libraries;
       syntax     = empty.syntax;
       dev_repo   = empty.dev_repo;
+      pin_depends = empty.pin_depends;
 
       maintainer = empty.maintainer;
       author     = empty.author;

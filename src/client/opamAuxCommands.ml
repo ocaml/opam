@@ -364,7 +364,7 @@ let autopin st ?(simulate=false) atom_or_local_list =
   in
   let st =
     OpamPackage.Set.fold (fun nv st ->
-        OpamPinCommand.handle_extra_pins st nv (OpamSwitchState.opam st nv))
+        OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
       already_pinned_set st
   in
   let pins = OpamPackage.Set.union pins already_pinned_set in

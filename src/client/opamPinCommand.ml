@@ -338,20 +338,8 @@ exception Nothing_to_do
 end
 include Exns
 
-let extra_pin_depends opam =
-  let open OpamPp.Op in
-  OpamStd.Option.default [] @@
-  OpamFile.OPAM.extended opam "x-pin-depends"
-    (OpamPp.parse ~pos:OpamTypesBase.pos_null @@
-     OpamFormat.V.map_list ~depth:2
-       (OpamFormat.V.map_pair
-          (OpamFormat.V.string -|
-           OpamPp.of_module "package" (module OpamPackage))
-          (OpamFormat.V.string -|
-           OpamPp.of_module "URL" (module OpamUrl))))
-
-let rec handle_extra_pins st nv opam =
-  let extra_pins = extra_pin_depends opam in
+let rec handle_pin_depends st nv opam =
+  let extra_pins = OpamFile.OPAM.pin_depends opam in
   let extra_pins =
     List.filter (fun (nv, url) ->
         not (OpamPackage.Set.mem nv st.pinned &&
@@ -540,7 +528,7 @@ and source_pin
     let nv = OpamPackage.create nv.name version in
     let st =
       if ignore_extra_pins then st
-      else handle_extra_pins st nv opam
+      else handle_pin_depends st nv opam
     in
     let opam =
       opam |>
