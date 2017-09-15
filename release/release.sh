@@ -14,7 +14,7 @@ TAG="$1"; shift
 
 if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
   make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "out/opam-full-$TAG.tar.gz"
-  git-upload-release ocaml opam "$TAG" out/opam-full-2.0.0-beta4.tar.gz
+  cd out && git-upload-release ocaml opam "$TAG" opam-full-2.0.0-beta4.tar.gz
 fi
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
@@ -22,7 +22,7 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make TAG="$TAG" remote REMOTE=some-osx REMOTE_DIR=opam-release &
   make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release &
   wait
-  for f in out/opam-$TAG-*; do
+  cd out && for f in opam-$TAG-*; do
       git-upload-release ocaml opam "$TAG" $f
   done
 fi
