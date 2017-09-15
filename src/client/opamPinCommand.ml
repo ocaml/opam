@@ -338,10 +338,48 @@ exception Nothing_to_do
 end
 include Exns
 
-let source_pin
+let extra_pin_depends opam =
+  let open OpamPp.Op in
+  OpamStd.Option.default [] @@
+  OpamFile.OPAM.extended opam "x-pin-depends"
+    (OpamPp.parse ~pos:OpamTypesBase.pos_null @@
+     OpamFormat.V.map_list ~depth:2
+       (OpamFormat.V.map_pair
+          (OpamFormat.V.string -|
+           OpamPp.of_module "package" (module OpamPackage))
+          (OpamFormat.V.string -|
+           OpamPp.of_module "URL" (module OpamUrl))))
+
+let rec handle_extra_pins st nv opam =
+  let extra_pins = extra_pin_depends opam in
+  let extra_pins =
+    List.filter (fun (nv, url) ->
+        not (OpamPackage.Set.mem nv st.pinned &&
+             OpamStd.Option.map OpamFile.URL.url (OpamSwitchState.url st nv)
+             = Some url))
+      extra_pins
+  in
+  if extra_pins = [] then st else
+    (OpamConsole.msg
+       "The following additional pinnings are required by %s:\n%s"
+       (OpamPackage.to_string nv)
+       (OpamStd.Format.itemize
+          (fun (nv, url) -> Printf.sprintf "%s at %s"
+              (OpamConsole.colorise `bold (OpamPackage.to_string nv))
+              (OpamConsole.colorise `underline (OpamUrl.to_string url)))
+          extra_pins);
+     if not (OpamConsole.confirm "Continue ?") then
+       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n"; (* TODO *)
+        OpamStd.Sys.exit_because `Aborted);
+     List.fold_left (fun st (nv, url) ->
+         source_pin st nv.name ~version:nv.version (Some url)
+           ~ignore_extra_pins:true)
+       st extra_pins)
+
+and source_pin
     st name
     ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
-    ?(force=false)
+    ?(force=false) ?(ignore_extra_pins=OpamClientConfig.(!r.ignore_pin_depends))
     target_url
   =
   log "pin %a to %a %a"
@@ -500,6 +538,10 @@ let source_pin
       OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
     in
     let nv = OpamPackage.create nv.name version in
+    let st =
+      if ignore_extra_pins then st
+      else handle_extra_pins st nv opam
+    in
     let opam =
       opam |>
       OpamFile.OPAM.with_name name |>

@@ -21,6 +21,7 @@ type t = private {
   reuse_build_dir: bool;
   inplace_build: bool;
   working_dir: bool;
+  ignore_pin_depends: bool;
   show: bool;
   fake: bool;
   skip_dev_update: bool;
@@ -40,6 +41,7 @@ type 'a options_fun =
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
   ?working_dir:bool ->
+  ?ignore_pin_depends:bool ->
   ?show:bool ->
   ?fake:bool ->
   ?skip_dev_update:bool ->
@@ -73,6 +75,7 @@ val opam_init:
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
   ?working_dir:bool ->
+  ?ignore_pin_depends:bool ->
   ?show:bool ->
   ?fake:bool ->
   ?skip_dev_update:bool ->

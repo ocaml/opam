@@ -18,6 +18,7 @@ type t = {
   reuse_build_dir: bool;
   inplace_build: bool;
   working_dir: bool;
+  ignore_pin_depends: bool;
   show: bool;
   fake: bool;
   skip_dev_update: bool;
@@ -36,6 +37,7 @@ let default = {
   reuse_build_dir = false;
   inplace_build = false;
   working_dir = false;
+  ignore_pin_depends = false;
   show = false;
   fake = false;
   skip_dev_update = false;
@@ -54,6 +56,7 @@ type 'a options_fun =
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
   ?working_dir:bool ->
+  ?ignore_pin_depends:bool ->
   ?show:bool ->
   ?fake:bool ->
   ?skip_dev_update:bool ->
@@ -72,6 +75,7 @@ let setk k t
     ?reuse_build_dir
     ?inplace_build
     ?working_dir
+    ?ignore_pin_depends
     ?show
     ?fake
     ?skip_dev_update
@@ -90,6 +94,7 @@ let setk k t
     reuse_build_dir = t.reuse_build_dir + reuse_build_dir;
     inplace_build = t.inplace_build + inplace_build;
     working_dir = t.working_dir + working_dir;
+    ignore_pin_depends = t.ignore_pin_depends + ignore_pin_depends;
     show = t.show + show;
     fake = t.fake + fake;
     skip_dev_update = t.skip_dev_update + skip_dev_update;
@@ -120,6 +125,7 @@ let initk k =
     ?reuse_build_dir:(env_bool "REUSEBUILDDIR")
     ?inplace_build:(env_bool "INPLACEBUILD")
     ?working_dir:(env_bool "WORKINGDIR")
+    ?ignore_pin_depends:(env_bool "IGNOREPINDEPENDS")
     ?show:(env_bool "SHOW")
     ?fake:(env_bool "FAKE")
     ?skip_dev_update:(env_bool "SKIPUPDATE")

@@ -91,6 +91,7 @@ type global_options = {
   json : string option;
   no_auto_upgrade : bool;
   working_dir : bool;
+  ignore_pin_depends : bool;
 }
 
 (** Global options *)
