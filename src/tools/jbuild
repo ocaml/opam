@@ -19,7 +19,7 @@
 
 (executable
   ((name opam_installer)
-   (package opam)
+   (package opam-installer)
    (public_name opam-installer)
    (modules (opam_installer))
    (libraries (opam-state cmdliner))
