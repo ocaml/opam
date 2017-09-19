@@ -22,5 +22,5 @@
    (package opam-installer)
    (public_name opam-installer)
    (modules (opam_installer))
-   (libraries (opam-state cmdliner))
+   (libraries (opam-format cmdliner))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))))
