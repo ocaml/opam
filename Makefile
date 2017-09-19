@@ -34,7 +34,7 @@ opam: $(JBUILDER_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 
 opam-installer: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
+	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(JBUILDER_DEP)
