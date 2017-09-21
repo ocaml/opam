@@ -127,16 +127,40 @@ module Cache = struct
 end
 
 let load_repo_opams repo =
-  OpamPackage.Map.fold
-    (fun nv prefix acc ->
-       match
-         OpamFileTools.read_opam
-           (OpamRepositoryPath.packages repo.repo_root prefix nv)
-       with
-       | None -> acc
-       | Some o -> OpamPackage.Map.add nv o acc)
-    (OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo.repo_root))
-    OpamPackage.Map.empty
+  let t = OpamConsole.timer () in
+  let rec aux r dir =
+    if OpamFilename.exists_dir dir then
+      let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
+      if Array.fold_left (fun a f -> a || f = "opam") false fnames then
+        match OpamFileTools.read_opam dir with
+        | Some opam ->
+          (try
+             let nv =
+               OpamPackage.of_string
+                 OpamFilename.(Base.to_string (basename_dir dir))
+             in
+             OpamPackage.Map.add nv opam r
+           with Failure _ ->
+             log "ERR: directory name not a valid package: ignored %s"
+               OpamFilename.(to_string Op.(dir // "opam"));
+             r)
+        | None ->
+          log "ERR: Could not load %s, ignored"
+            OpamFilename.(to_string Op.(dir // "opam"));
+          r
+      else
+        Array.fold_left (fun r name -> aux r OpamFilename.Op.(dir / name))
+          r fnames
+    else r
+  in
+  let r =
+    aux OpamPackage.Map.empty
+      (OpamRepositoryPath.packages_dir repo.repo_root)
+  in
+  log "loaded opam files from repo %s in %.3fs"
+    (OpamRepositoryName.to_string repo.repo_name)
+    (t ());
+  r
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
