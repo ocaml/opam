@@ -194,6 +194,11 @@ module Job: sig
   val of_list: ?keep_going:bool -> command list ->
     (command * result) option Op.job
 
+  (** As [of_list], but takes a list of functions that return the commands. The
+      functions will only be evaluated when the command needs to be run. *)
+  val of_fun_list: ?keep_going:bool -> (unit -> command) list ->
+    (command * result) option Op.job
+
   (** Returns the job made of the the given homogeneous jobs run sequentially *)
   val seq: ('a -> 'a Op.job) list -> 'a -> 'a Op.job
 

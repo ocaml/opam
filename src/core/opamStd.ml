@@ -755,6 +755,34 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force path_sep
 
+  let split_path_variable =
+    let f = lazy (
+      match os () with
+      | Win32 ->
+        fun path ->
+          let length = String.length path in
+          let rec f acc index current last normal =
+            if index = length
+            then let current = current ^ String.sub path last (index - last) in
+              if current <> "" then current::acc else acc
+            else let c = path.[index]
+              and next = succ index in
+              if c = ';' && normal || c = '"' then
+                let current = current ^ String.sub path last (index - last) in
+                if c = '"' then
+                  f acc next current next (not normal)
+                else
+                let acc = if current = "" then acc else current::acc in
+                f acc next "" next true
+              else
+                f acc next current last normal in
+          f [] 0 "" 0 true
+      | _ ->
+        fun path ->
+          OpamString.split_delim path (path_sep ())
+    ) in
+    fun path -> (Lazy.force f) path
+
   exception Exit of int
   exception Exec of string * string array * string array
 

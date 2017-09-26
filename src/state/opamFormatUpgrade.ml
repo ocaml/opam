@@ -512,8 +512,8 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
               let ocamlc =
                 try
                   let path =
-                    OpamStd.Env.get "PATH" |> fun p ->
-                    OpamStd.String.split p (OpamStd.Sys.path_sep ()) |>
+                    OpamStd.Env.get "PATH" |>
+                    OpamStd.Sys.split_path_variable |>
                     List.filter (fun s ->
                         not (OpamStd.String.starts_with
                                ~prefix:(OpamFilename.Dir.to_string root) s))

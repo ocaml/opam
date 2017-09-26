@@ -35,7 +35,7 @@ let default = {
         else ["curl", `Curl; "wget", `Default]
       in
       let cmd, kind =
-        List.find (fun (c,_) -> OpamSystem.command_exists c) tools
+        List.find (fun (c,_) -> OpamSystem.resolve_command c <> None) tools
       in
       [ CIdent cmd, None ], kind
     with Not_found ->

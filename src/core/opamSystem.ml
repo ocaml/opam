@@ -314,80 +314,71 @@ let env_var env var =
   in
   aux 0
 
-let command_exists =
-  let is_external_cmd name = Filename.basename name <> name in
-  let check_existence ?dir env =
-    if OpamStd.(Sys.os () = Sys.Win32) then
-      fun name ->
-        let search =
-          let path = env_var env "PATH" in
-          let length = String.length path in
-          let rec f acc index current last normal =
-            if index = length
-            then let current = current ^ String.sub path last (index - last) in
-                 if current <> "" then current::acc else acc
-            else let c = path.[index]
-                 and next = succ index in
-                 if c = ';' && normal || c = '"' then
-                   let current = current ^ String.sub path last (index - last) in
-                   if c = '"' then
-                     f acc next current next (not normal)
-                   else
-                     let acc = if current = "" then acc else current::acc in
-                     f acc next "" next true
-                 else
-                   f acc next current last normal in
-          f [] 0 "" 0 true in
-        let name =
-          if Filename.check_suffix name ".exe" then name else name ^ ".exe"
-        in
-        List.exists (fun path ->
-            let name = Filename.concat path name in
-            Sys.file_exists name && (Unix.stat name).Unix.st_kind = Unix.S_REG)
-          search
+(* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
+   makes unqualified commands absolute as a workaround. *)
+let resolve_command =
+  let is_windows = OpamStd.(Sys.os () = Sys.Win32) in
+  let is_external_cmd name =
+    OpamStd.String.contains_char name Filename.dir_sep.[0]
+  in
+  let check_perms =
+    if is_windows then fun f ->
+      try (Unix.stat f).Unix.st_kind = Unix.S_REG
+      with e -> OpamStd.Exn.fatal e; false
+    else fun f ->
+      try
+        let open Unix in
+        let uid = getuid() and groups = Array.to_list(getgroups()) in
+        let {st_uid; st_gid; st_perm; _} = stat f in
+        let mask = 0o001
+                   lor (if uid = st_uid then 0o100 else 0)
+                   lor (if List.mem st_gid groups then 0o010 else 0) in
+        (st_perm land mask) <> 0
+      with e -> OpamStd.Exn.fatal e; false
+  in
+  let resolve ?dir env name =
+    if not (Filename.is_relative name) then (* absolute path *)
+      if check_perms name then Some name else None
+    else if is_external_cmd name then (* relative *)
+      let cmd = match dir with
+        | None -> name
+        | Some d -> Filename.concat d name
+      in
+      if check_perms cmd then Some cmd else None
+    else (* bare command, lookup in PATH *)
+    if is_windows then
+      let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
+      let name =
+        if Filename.check_suffix name ".exe" then name else name ^ ".exe"
+      in
+      OpamStd.List.find_opt (fun path ->
+          check_perms (Filename.concat path name))
+        path
     else
-      fun name ->
-        let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-        let r =
-          OpamProcess.run
-            (OpamProcess.command ~env ?dir
-               ~name:(temp_file ("command-"^(Filename.basename name)))
-               ~verbose:false cmd args)
-        in
-        if OpamProcess.check_success_and_cleanup r then
-          match r.OpamProcess.r_stdout with
-          | cmdname::_ ->
-            (* check that we have permission to execute the command *)
-            if is_external_cmd cmdname then
-              let cmdname =
-                match Filename.is_relative cmdname, dir with
-                | true, Some dir -> Filename.concat dir cmdname
-                | _ -> cmdname
-              in
-              (try
-
-                 let open Unix in
-                 let uid = getuid() and groups = Array.to_list(getgroups()) in
-                 let s = stat cmdname in
-                 let cmd_uid = s.st_uid and cmd_gid = s.st_gid and cmd_perms = s.st_perm in
-                 let mask = 0o001
-                            lor (if uid = cmd_uid then 0o100 else 0)
-                            lor (if List.mem cmd_gid groups then 0o010 else 0) in
-                 (cmd_perms land mask) <> 0
-               with _ -> false)
-            else true
-          | _ -> false
-        else false
+    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
+    let r =
+      OpamProcess.run
+        (OpamProcess.command ~env ?dir
+           ~name:(temp_file ("command-"^(Filename.basename name)))
+           ~verbose:false cmd args)
+    in
+    if OpamProcess.check_success_and_cleanup r then
+      match r.OpamProcess.r_stdout with
+      | cmdname::_ when cmdname = name || check_perms cmdname ->
+        (* "command -v echo" returns just echo, hence the first when check *)
+        Some cmdname
+      | _ -> None
+    else None
   in
   let cached_results = Hashtbl.create 17 in
   fun ?(env=default_env) ?dir name ->
-    if dir <> None && is_external_cmd name then
-      check_existence env ?dir name (* relative command, no caching *)
+    if dir <> None && is_external_cmd name && Filename.is_relative name then
+      resolve env ?dir name (* no caching *)
     else
     let path = env_var env "PATH" in
     try Hashtbl.find (Hashtbl.find cached_results path) name
     with Not_found ->
-      let r = check_existence env name in
+      let r = resolve env ?dir name in
       (try Hashtbl.add (Hashtbl.find cached_results path) name r
        with Not_found ->
          let phash = Hashtbl.create 17 in
@@ -407,7 +398,7 @@ let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
     ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?stdout
-    ?dir ?(check_existence=true)
+    ?dir ?(resolve_path=true)
     cmd args =
   let name = log_file name in
   let verbose =
@@ -416,11 +407,16 @@ let make_command
   (* Check that the command doesn't contain whitespaces *)
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
     OpamConsole.warning "Command %S contains space characters" cmd;
-  if not check_existence || command_exists ~env ?dir cmd then
+  let full_cmd =
+    if resolve_path then resolve_command ~env ?dir cmd
+    else Some cmd
+  in
+  match full_cmd with
+  | Some cmd ->
     OpamProcess.command
       ~env ~name ?text ~verbose ?metadata ?allow_stdin ?stdout ?dir
       cmd args
-  else
+  | None ->
     command_not_found cmd
 
 let run_process
@@ -431,12 +427,11 @@ let run_process
   | []          -> invalid_arg "run_process"
   | cmd :: args ->
 
-    (* Check that the command doesn't contain whitespaces *)
-    if None <> try Some (String.index cmd ' ') with Not_found -> None then
+    if OpamStd.String.contains_char cmd ' ' then
       OpamConsole.warning "Command %S contains space characters" cmd;
 
-    if command_exists ~env cmd then (
-
+    match resolve_command ~env cmd with
+    | Some full_cmd ->
       let verbose = match verbose with
         | None   -> OpamCoreConfig.(!r.verbose_level) >= 2
         | Some b -> b in
@@ -445,15 +440,14 @@ let run_process
         OpamProcess.run
           (OpamProcess.command
              ~env ~name ~verbose ?metadata ?allow_stdin ?stdout
-             cmd args)
+             full_cmd args)
       in
       let str = String.concat " " (cmd :: args) in
       log "[%a] (in %.3fs) %s"
         (OpamConsole.slog Filename.basename) name
         (chrono ()) str;
       r
-    ) else
-      (* Display a user-friendly message if the command does not exist *)
+    | None ->
       command_not_found cmd
 
 let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =

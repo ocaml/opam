@@ -136,12 +136,12 @@ val directories_with_links: string -> string list
     latter, if concurrent commands are running). [name] is used for
     naming log files. [text] is what is displayed in the status line
     for this command. May raise Command_not_found, unless
-    [check_existence] is set to false (in which case you can end up
+    [resolve_path] is set to false (in which case you can end up
     with a process error instead) *)
 val make_command:
   ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
   ?metadata:(string * string) list -> ?allow_stdin:bool -> ?stdout:string ->
-  ?dir:string -> ?check_existence:bool ->
+  ?dir:string -> ?resolve_path:bool ->
   string -> string list -> OpamProcess.command
 
 (** OLD COMMAND API, DEPRECATED *)
@@ -149,8 +149,9 @@ val make_command:
 (** a command is a list of words *)
 type command = string list
 
-(** Test whether a command exists in the environment. *)
-val command_exists: ?env:string array -> ?dir:string -> string -> bool
+(** Test whether a command exists in the environment, and returns it (resolved
+    if found in PATH) *)
+val resolve_command: ?env:string array -> ?dir:string -> string -> string option
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
