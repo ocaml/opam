@@ -95,11 +95,13 @@ module Aspcud_def = struct
   let command_name = "aspcud"
 
   let is_present = lazy (
-    OpamSystem.command_exists command_name &&
+    match OpamSystem.resolve_command command_name with
+    | None -> false
+    | Some cmd ->
     try
       match
         OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-          [command_name; "-v"]
+          [cmd; "-v"]
       with
       | [] -> false
       | s::_ ->
@@ -141,7 +143,7 @@ module Aspcud_old_def = struct
 
   let command_name = Aspcud_def.command_name
 
-  let is_present = lazy (OpamSystem.command_exists command_name)
+  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
 
   let command_args = Aspcud_def.command_args
 
@@ -155,7 +157,7 @@ module Mccs_def = struct
 
   let command_name = "mccs"
 
-  let is_present = lazy (OpamSystem.command_exists command_name)
+  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
 
   let command_args = [
     CString "-i", None; CIdent "input", None;
@@ -184,7 +186,7 @@ module Packup_def = struct
 
   let command_name = "packup"
 
-  let is_present = lazy (OpamSystem.command_exists command_name)
+  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
 
   let command_args = [
     CIdent "input", None; CIdent "output", None;

@@ -389,6 +389,10 @@ module Sys : sig
       OS) *)
   val path_sep: unit -> char
 
+  (** Splits a PATH-like variable separated with [path_sep]. More involved than
+      it seems, because there may be quoting on Windows. *)
+  val split_path_variable: string -> string list
+
   (** {3 Exit handling} *)
 
   (** Like Pervasives.at_exit but with the possibility to call manually

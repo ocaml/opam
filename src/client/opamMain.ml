@@ -48,10 +48,12 @@ let check_and_run_external_commands () =
         ) else
           Unix.environment ()
       in
-      if OpamSystem.command_exists ~env command then
+      match OpamSystem.resolve_command ~env command with
+      | Some command ->
         let argv = Array.of_list (command :: args) in
         raise (OpamStd.Sys.Exec (command, argv, env))
-      else if has_init then
+      | None when not has_init -> ()
+      | None ->
         (* Look for a corresponding package *)
         match OpamStateConfig.(!r.current_switch) with
         | None -> ()

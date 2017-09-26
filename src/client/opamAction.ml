@@ -415,7 +415,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
   in
   OpamSystem.make_command ~env ~name ?dir ~text
     ~metadata:["context", context]
-    ~verbose:(OpamConsole.verbose ()) ~check_existence:false
+    ~verbose:(OpamConsole.verbose ())
     cmd args
 
 let remove_commands t nv =
@@ -544,11 +544,12 @@ let remove_package_aux
   in
   let wrappers = get_wrappers t in
   let mk_cmd = make_command t opam ?dir:build_dir in
-  OpamProcess.Job.of_list ~keep_going:true
-    (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
+  OpamProcess.Job.of_fun_list ~keep_going:true
+    (List.map (fun cmd () -> mk_cmd cmd)
+       (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
   @@+ fun error_pre ->
-  OpamProcess.Job.of_list ~keep_going:true
-    (List.map (fun ((cmd,args) as ca) ->
+  OpamProcess.Job.of_fun_list ~keep_going:true
+    (List.map (fun ((cmd,args) as ca) () ->
          mk_cmd ~text_command:ca @@
          cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_remove cmd args)
         (remove_commands t nv))
@@ -568,8 +569,8 @@ let remove_package_aux
     opam_local_env_of_status
       OpamStd.Option.Op.(error_pre ++ error >>| snd)
   in
-  OpamProcess.Job.of_list ~keep_going:true
-    (List.map mk_cmd
+  OpamProcess.Job.of_fun_list ~keep_going:true
+    (List.map (fun cmd () -> mk_cmd cmd)
        (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_remove))
   @@+ fun error_post ->
 
@@ -657,9 +658,10 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
   let name = OpamPackage.name_to_string nv in
   let wrappers = get_wrappers t in
   let mk_cmd = make_command t opam ~dir:build_dir in
-  OpamProcess.Job.of_list
-    (List.map mk_cmd (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
-     List.map (fun ((cmd,args) as ca) ->
+  OpamProcess.Job.of_fun_list
+    (List.map (fun cmd () -> mk_cmd cmd)
+       (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
+     List.map (fun ((cmd,args) as ca) () ->
          mk_cmd ~text_command:ca @@
          cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args)
        commands)
@@ -667,8 +669,8 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
   let local =
     opam_local_env_of_status OpamStd.Option.Op.(result >>| snd)
   in
-  OpamProcess.Job.of_list ~keep_going:true
-    (List.map mk_cmd
+  OpamProcess.Job.of_fun_list ~keep_going:true
+    (List.map (fun cmd () -> mk_cmd cmd)
        (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_build))
   @@+ fun post_result ->
   match result, post_result with
@@ -725,8 +727,8 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   let install_job () =
     (* let text = OpamProcess.make_command_text name "install" in
      * OpamProcess.Job.with_text text *)
-    OpamProcess.Job.of_list
-      (List.map mk_cmd
+    OpamProcess.Job.of_fun_list
+      (List.map (fun cmd () -> mk_cmd cmd)
          (get_wrapper t opam wrappers OpamFile.Wrappers.pre_install))
     @@+ fun error ->
     (match error with
@@ -743,8 +745,8 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
         try process_dot_install t nv dir; None with e -> Some e
       else error
     in
-    OpamProcess.Job.of_list ~keep_going:true
-      (List.map mk_cmd
+    OpamProcess.Job.of_fun_list ~keep_going:true
+      (List.map (fun cmd () -> mk_cmd cmd)
          (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
     @@+ fun error_post ->
     if error = None &&

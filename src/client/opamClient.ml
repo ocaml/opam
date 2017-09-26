@@ -542,7 +542,7 @@ let init
 
           (* Check for the external dependencies *)
           let check_external_dep name =
-            OpamSystem.command_exists name
+            OpamSystem.resolve_command name <> None
           in
           OpamConsole.msg "Checking for available remotes: ";
           let repo_types =

@@ -673,6 +673,21 @@ module Job = struct
     in
     aux None l
 
+  let of_fun_list ?(keep_going=false) l =
+    let rec aux err = function
+      | [] -> Done err
+      | cmdf::commands ->
+        let cmd = cmdf () in
+        let cont = fun r ->
+          if is_success r then aux err commands
+          else if keep_going then
+            aux OpamStd.Option.Op.(err ++ Some (cmd,r)) commands
+          else Done (Some (cmd,r))
+        in
+        Run (cmd,cont)
+    in
+    aux None l
+
   let seq job start = List.fold_left (@@+) (Done start) job
 
   let seq_map f l =

@@ -20,9 +20,7 @@ let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 
-let split_var v =
-  let sep = OpamStd.Sys.path_sep () in
-  OpamStd.String.split_delim v sep
+let split_var v = OpamStd.Sys.split_path_variable v
 
 let join_var l =
   String.concat (String.make 1 (OpamStd.Sys.path_sep ())) l
