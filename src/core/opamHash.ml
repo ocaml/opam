@@ -33,8 +33,15 @@ let kind_of_string s = match String.lowercase_ascii s with
   | "sha512" -> `SHA512
   | _ -> invalid_arg "OpamHash.kind_of_string"
 
-let is_hex_str len =
-  Re.execp Re.(compile (repn xdigit len (Some len)))
+let is_hex_str len s =
+  String.length s = len &&
+  try
+    String.iter (function
+        | '0'..'9' | 'A'..'F' | 'a'..'f' -> ()
+        | _ -> raise Exit)
+      s;
+    true
+  with Exit -> false
 
 let len = function
   | `MD5 -> 32

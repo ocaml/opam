@@ -46,13 +46,13 @@ build/%.image: build/Dockerfile.%
 CLINKING_linux = \
 -Wl,-Bstatic \
 -lunix -lbigarray -lmccs_stubs \
--lglpk -lstdc++ -lz -lamd -lcolamd -lltdl \
+-lstdc++ \
 -Wl,-Bdynamic \
 -static-libgcc
 
 CLINKING_darwin = \
 -lunix -lbigarray -lmccs_stubs \
-/usr/local/lib/libglpk.a -lz -lstdc++
+-lstdc++
 
 CLINKING_openbsd = $(CLINKING_darwin)
 
