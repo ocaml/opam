@@ -34,13 +34,14 @@ type global_options = {
   json : string option;
   no_auto_upgrade : bool;
   working_dir : bool;
+  ignore_pin_depends : bool;
 }
 
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
-    working_dir =
+    working_dir ignore_pin_depends =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -48,7 +49,7 @@ let create_global_options
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; }
+    no_auto_upgrade; working_dir; ignore_pin_depends; }
 
 let apply_global_options o =
   if o.git_version then (
@@ -119,6 +120,7 @@ let apply_global_options o =
     ?no_auto_upgrade:(flag o.no_auto_upgrade)
     (* - client options - *)
     ?working_dir:(flag o.working_dir)
+    ?ignore_pin_depends:(flag o.ignore_pin_depends)
     (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
     (* ?pin_kind_auto:bool *)
@@ -924,11 +926,18 @@ let global_options =
        pointing to. \
        This only affects packages explicitely listed on the command-line."
   in
+  let ignore_pin_depends =
+    mk_flag ~section ["ignore-pin-depends"]
+      "Ignore extra pins required by packages that get pinned, either manually \
+       through $(i,opam pin) or through $(i,opam install DIR). This is \
+       equivalent to setting $(b,IGNOREPINDEPENDS=true)."
+  in
   Term.(const create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
-        $safe_mode $json_flag $no_auto_upgrade $ working_dir)
+        $safe_mode $json_flag $no_auto_upgrade $ working_dir
+        $ ignore_pin_depends)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"

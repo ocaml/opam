@@ -268,6 +268,7 @@ packages.
                     | <pkgname> { { <version-formula> }* }
 <logop>           ::= "&" | "|"
 <pkgname>         ::= (") <ident> (")
+<package>         ::= (") <ident> "." <version> (")
 <version-formula> ::= <version-formula> <logop> <version-formula>
                     | "!" <version-formula>
                     | "(" <version-formula> ")"
@@ -978,7 +979,21 @@ files.
   optionally lists the files below `files/` with their checksums. Used
   internally for integrity verifications.
 
-- <a id="opamfield-extra-fields">`x-*:`</a>:
+- <a id="opamfield-pin-depends">`pin-depends: [ [ <package> <URL> ] ... ]`</a>:
+  this field has no effect on the package repository, but is useful for
+  in-source specification of development packages. When source-pinning the
+  package, either through `opam pin` or `opam install <DIR>`, <span
+  class="opam">opam</span> will prompt to pin every specified `<package>` to the
+  associated `<URL>`. There are two important limitations:
+
+    1. `pin-depends:` are NOT transitive, that is, `pin-depends:` of packages
+       getting pinned through `pin-depends:` are ignored
+    2. they won't get updated on `opam update`, the users will need to use `opam
+       pin` or `opam install|upgrade DIR` again to get the new pins if the field
+       has changed. Even then, this won't unpin any packages that would have
+       been removed from `pin-depends:`.
+
+- <a id="opamfield-extra-fields">`x-*: <value>`</a>:
   extra fields prefixed with `x-` can be defined for use by external tools. <span class="opam">opam</span>
   will ignore them except for some search operations.
 
@@ -1263,8 +1278,8 @@ for <span class="opam">opam</span>.
 #### switch-state
 
 This file, located at `<switch-prefix>/.opam-switch/switch-state`, is used by
-<span class="opam">opam</span> to store the current state of a switch. All fields are lists of packages
-specified as strings in the format `<package>.<version>`.
+<span class="opam">opam</span> to store the current state of a switch. All
+fields are lists of `<package>` (_i.e._ `[ "<pkgname>.<version>" ... ]`).
 
 - <a id="switchstatefield-opam-version">`opam-version: <string>`</a>:
   the file format version.

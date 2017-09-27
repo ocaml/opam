@@ -362,6 +362,11 @@ let autopin st ?(simulate=false) atom_or_local_list =
     with OpamPinCommand.Aborted ->
       OpamStd.Sys.exit_because `Aborted
   in
+  let st =
+    OpamPackage.Set.fold (fun nv st ->
+        OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
+      already_pinned_set st
+  in
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms

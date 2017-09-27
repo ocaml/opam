@@ -285,6 +285,7 @@ module OPAM: sig
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
+    pin_depends: (package * url) list;
 
     (* Package database details *)
     maintainer : string list;
@@ -488,6 +489,8 @@ module OPAM: sig
   (** The package source repository address *)
   val dev_repo: t -> url option
 
+  val pin_depends: t -> (package * url) list
+
   (** construct as [name] *)
   val with_name: name -> t -> t
   val with_name_opt: name option -> t -> t
@@ -560,6 +563,8 @@ module OPAM: sig
   val with_dev_repo: url -> t -> t
 
   val with_dev_repo_opt: url option -> t -> t
+
+  val with_pin_depends: (package * url) list -> t -> t
 
   val with_extra_sources: (basename * URL.t) list -> t -> t
 
