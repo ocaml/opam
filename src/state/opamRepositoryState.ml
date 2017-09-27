@@ -32,10 +32,10 @@ module Cache = struct
       let b = Bytes.create magic_len in
       really_input ic b 0 magic_len;
       Bytes.to_string b in
-    if file_magic <> this_magic then (
+    if not OpamCoreConfig.developer &&
+      file_magic <> this_magic then (
       close_in ic;
-      OpamConsole.note
-        "Clearing cache (wrong magic string %s, expected %s)."
+      log "Bad cache: incompatible magic string %S (expected %S)."
         file_magic this_magic;
       None
     ) else
@@ -45,7 +45,7 @@ module Cache = struct
     let current_size = in_channel_length ic in
     if expected_size <> current_size then (
       close_in ic;
-      OpamConsole.note "Clearing cache (wrong length %d, expected %d)."
+      log "Bad cache: wrong length %d (advertised %d)."
         current_size expected_size;
       None
     ) else (
@@ -54,7 +54,7 @@ module Cache = struct
     )
     with e ->
       OpamStd.Exn.fatal e;
-      OpamConsole.note "Broken repository cache, rebuilding";
+      log "Bad cache: %s" (Printexc.to_string e);
       None
 
   let marshal_from_file file =
@@ -73,8 +73,9 @@ module Cache = struct
       in
       Some (repofiles_map, repo_opams_map)
     | None ->
-      log "Invalid cache, removing";
-      OpamFilename.remove file;
+      if not OpamCoreConfig.(!r.safe_mode) then
+        (OpamConsole.note "Rebuilding cache...";
+         OpamFilename.remove file);
       None
 
   let load root =
