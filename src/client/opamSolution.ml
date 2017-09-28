@@ -79,7 +79,9 @@ let check_solution ?(quiet=false) st = function
   | Nothing_to_do ->
     if not quiet then OpamConsole.msg "Nothing to do.\n";
     OpamEnv.check_and_print_env_warning st
-  | Aborted     -> OpamStd.Sys.exit_because `Aborted
+  | Aborted     ->
+    if not OpamClientConfig.(!r.show) then
+      OpamStd.Sys.exit_because `Aborted
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
