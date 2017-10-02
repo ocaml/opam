@@ -47,7 +47,7 @@ let package_variable_names = [
 
 let predefined_depends_variables =
   List.map OpamVariable.Full.of_string [
-    "build"; "with-test"; "with-doc"; "dev";
+    "build"; "post"; "with-test"; "with-doc"; "dev";
   ]
 
 let resolve_global gt full_var =

@@ -366,7 +366,7 @@ let resolve universe ~orphans request =
       OpamConsole.error_and_exit `Solver_failure
         "External solver failure. This may be due to bad settings (solver or \
          solver criteria) or a broken solver solver installation. Check \
-         $OPAMROOT/config, and the --external-solver and --solver-criteria \
+         $OPAMROOT/config, and the --solver and --criteria \
          options."
   in
   match resolve simple_universe cudf_request with
