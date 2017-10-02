@@ -7,6 +7,8 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/re/
 src_ext/graph/
+src_ext/jsonm/
+src_ext/uutf/
 src_ext/*.stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
@@ -49,6 +51,7 @@ src/core/opamCompat.ml
 src/core/opamCompat.mli
 src/opam
 src/opam-admin
+src/opam-admin.top
 src/opam-installer
 src/opam-check
 src/opamlfind
