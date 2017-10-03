@@ -84,7 +84,7 @@ let string_of_action = Action.to_string
 let string_of_actions l =
   OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
 
-exception Solver_failure
+exception Solver_failure of string
 exception Cyclic_actions of Action.t list list
 
 type conflict_case =
@@ -556,11 +556,32 @@ let call_external_solver ~version_map univ req =
       in
       log "Solver call done in %.3f" (chrono ());
       r
-    with e ->
+    with
+    | OpamCudfSolver.Timeout ->
+      let msg =
+        Printf.sprintf
+          "Sorry, resolution of the request timed out.\n\
+           Try to specify a simpler request, use a different solver, or \
+           increase the allowed time by setting OPAMSOLVERTIMEOUT to a bigger \
+           value (currently, it is set to %.1f seconds)."
+          OpamSolverConfig.(OpamStd.Option.default 0. !r.solver_timeout)
+      in
+      raise (Solver_failure msg)
+    | Failure msg ->
+      let msg =
+        Printf.sprintf
+          "Solver failure: %s\nThis may be due to bad settings (solver or \
+           solver criteria) or a broken solver solver installation. Check \
+           $OPAMROOT/config, and the --solver and --criteria options."
+          msg
+      in
+      raise (Solver_failure msg)
+    | e ->
       OpamStd.Exn.fatal e;
-      OpamConsole.warning "Solver failed:";
-      OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-      raise Solver_failure
+      let msg =
+        Printf.sprintf "Solver failed: %s" (Printexc.to_string e)
+      in
+      raise (Solver_failure msg)
   else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
@@ -572,9 +593,11 @@ let check_request ?(explain=true) ~version_map univ req =
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error msg ->
     let f = dump_cudf_error ~version_map univ req in
-    OpamConsole.error "Internal solver failed with %s Request saved to %S"
-      msg f;
-    raise Solver_failure
+    let msg =
+      Printf.sprintf "Internal solver failed with %s Request saved to %S"
+        msg f
+    in
+    raise (Solver_failure msg)
   | Algo.Depsolver.Unsat _ -> (* normally when [explain] = false *)
     conflict_empty ~version_map univ
 
@@ -582,9 +605,11 @@ let check_request ?(explain=true) ~version_map univ req =
 let get_final_universe ~version_map univ req =
   let fail msg =
     let f = dump_cudf_error ~version_map univ req in
-    OpamConsole.warning "External solver failed with %s Request saved to %S"
-      msg f;
-    raise Solver_failure in
+    let msg =
+      Printf.sprintf "External solver failed with %s Request saved to %S"
+        msg f
+    in
+    raise (Solver_failure msg) in
   match call_external_solver ~version_map univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->

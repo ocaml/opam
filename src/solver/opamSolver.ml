@@ -362,12 +362,8 @@ let resolve universe ~orphans request =
     try
       let resp = OpamCudf.resolve ~extern:true ~version_map u req in
       OpamCudf.to_actions add_orphan_packages u resp
-    with OpamCudf.Solver_failure ->
-      OpamConsole.error_and_exit `Solver_failure
-        "External solver failure. This may be due to bad settings (solver or \
-         solver criteria) or a broken solver solver installation. Check \
-         $OPAMROOT/config, and the --solver and --criteria \
-         options."
+    with OpamCudf.Solver_failure msg ->
+      OpamConsole.error_and_exit `Solver_failure "%s" msg
   in
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c

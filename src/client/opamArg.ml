@@ -252,7 +252,11 @@ let help_sections = [
   `P "$(i,OPAMSAFE) see option `--safe'";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
-  `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
+  `P (Printf.sprintf
+        "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the solver. \
+         Default is %.1f, set to 0 for unlimited. Note that all solvers may \
+         not support this option."
+        (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
   `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
        currently going on on the terminal. \
        (one of "^Arg.doc_alts_enum when_enum^")");

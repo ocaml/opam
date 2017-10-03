@@ -27,7 +27,7 @@ module type ExternalArg = sig
   val default_criteria: criteria_def
 end
 
-let call_external_solver command ~criteria (_, universe,_ as cudf)=
+let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
   let solver_in =
     OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
   let solver_out =
