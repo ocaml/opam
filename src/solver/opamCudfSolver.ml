@@ -222,7 +222,7 @@ let custom_solver cmd = match cmd with
   | [ CIdent name, _ ] | [ CString name, _ ] ->
     (try
        List.find (fun (module S: S) ->
-           (S.name = name || S.command_name = Some name)
+           (S.name = Filename.basename name || S.command_name = Some name)
            && Lazy.force S.is_present)
          default_solver_selection
      with Not_found ->
@@ -234,7 +234,8 @@ let custom_solver cmd = match cmd with
       try
         let corresponding_module =
           List.find (fun (module S: S) ->
-              S.command_name = Some name && Lazy.force S.is_present)
+              S.command_name =
+              Some (Filename.basename name) && Lazy.force S.is_present)
             default_solver_selection
         in
         let module S = (val corresponding_module) in
