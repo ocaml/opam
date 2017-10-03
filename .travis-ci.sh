@@ -12,7 +12,7 @@ install-bootstrap () {
     opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
     eval $(opam config env --root=$OPAMBSROOT)
     if [ "$OPAM_TEST" = "1" ]; then
-        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re jbuilder.1.0+beta12 mccs --yes
+        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re jbuilder.1.0+beta12 'mccs>=1.1+3' --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1

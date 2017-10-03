@@ -28,8 +28,8 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
 MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 
-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+2c.tar.gz
-MD5_mccs = d3a0f2f9ed509c0bee43d21a10131c2d
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+3.tar.gz
+MD5_mccs = c4f1736e3c4a20a08e5eefefd4fa46cc
 
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
