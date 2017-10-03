@@ -46,6 +46,8 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
             | "input" -> Some (S (OpamFilename.to_string solver_in))
             | "output" -> Some (S (OpamFilename.to_string solver_out))
             | "criteria" -> Some (S criteria)
+            | "timeout" ->
+              Some (S (string_of_float (OpamStd.Option.default 0. timeout)))
             | _ -> None)
           command
       in

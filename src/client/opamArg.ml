@@ -872,7 +872,8 @@ let global_options =
          "Specify the CUDF solver to use for resolving package installation \
           problems. This is either a predefined solver (this version of opam \
           supports %s), or a custom command that should contain the variables \
-          %%{input}%%, %%{output}%% and %%{criteria}%%"
+          %%{input}%%, %%{output}%%, %%{criteria}%%, and optionally \
+          %%{timeout}%%."
          (OpamStd.List.concat_map ", "
             (fun (module S : OpamCudfSolver.S) -> S.name)
             (OpamCudfSolver.default_solver_selection)))
