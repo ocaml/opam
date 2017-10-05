@@ -230,60 +230,80 @@ let arrow_concat sl =
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
-let strings_of_reason packages cudfnv2opam unav_reasons r =
+let strings_of_reasons packages cudfnv2opam unav_reasons rs =
   let open Algo.Diagnostic in
   let is_base cpkg = cpkg.Cudf.keep = `Keep_version in
-  match r with
-  | Conflict (i,j,_) ->
-    if is_dose_request i || is_dose_request j then
-      let a = if is_dose_request i then j else i in
-      if is_dose_request a then [] else
-      if is_base a then
-        let str =
-          Printf.sprintf "Package %s is part of the base for this compiler \
-                          and can't be changed"
-            (OpamPackage.name_to_string (cudf2opam a)) in
-        [str]
-      else
+  let rec aux = function
+    | [] -> []
+    | Conflict (i,j,jc)::rs ->
+      if is_dose_request i || is_dose_request j then
+        let a = if is_dose_request i then j else i in
+        if is_dose_request a then aux rs else
+        if is_base a then
+          let str =
+            Printf.sprintf "Package %s is part of the base for this compiler \
+                            and can't be changed"
+              (OpamPackage.name_to_string (cudf2opam a)) in
+          str :: aux rs
+        else
         let str =
           Printf.sprintf "Conflicting query for package %s"
             (OpamPackage.to_string (cudf2opam a)) in
-        [str]
-    else
-    if i.Cudf.package = j.Cudf.package then
-      if is_base i || is_base j then
-        let str =
-          Printf.sprintf "Package %s is part of the base for this compiler \
-                          and can't be changed"
-            (OpamPackage.name_to_string (cudf2opam i)) in
-        [str]
+        str :: aux rs
       else
-      let str = Printf.sprintf "No available version of %s satisfies the \
-                                constraints"
-          (OpamPackage.name_to_string (cudf2opam i)) in
-      [str]
-    else
-    let nva, nvb = cudf2opam i, cudf2opam j in
-    let str = Printf.sprintf "%s is in conflict with %s"
-        (OpamPackage.to_string nva)
-        (OpamPackage.to_string nvb) in
-    [str]
-  | Missing (p,missing) when is_dose_request p -> (* Requested pkg missing *)
-    let atoms = List.map (vpkg2atom cudfnv2opam) missing in
-    let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
-    List.map (fun name ->
-        let formula =
-          OpamFormula.ors (List.map (function
-              | n, Some atom when n = name -> Atom atom
-              | _ -> Empty)
-              atoms)
-        in
-        let all_versions = OpamPackage.versions_of_name packages name in
-        let formula = OpamFormula.simplify_version_set all_versions formula in
-        unav_reasons (name, formula))
-      names
-  | Missing _ (* dependency missing, treated in strings_of_chains *)
-  | Dependency _  -> []
+      if i.Cudf.package = j.Cudf.package then
+        if is_base i || is_base j then
+          let str =
+            Printf.sprintf "Package %s is part of the base for this compiler \
+                            and can't be changed"
+              (OpamPackage.name_to_string (cudf2opam i)) in
+          str :: aux rs
+        else
+        let str = Printf.sprintf "No available version of %s satisfies the \
+                                  constraints"
+            (OpamPackage.name_to_string (cudf2opam i)) in
+        str :: aux rs
+      else
+      let nva = cudf2opam i in
+      let versions, rs =
+        List.fold_left (fun (versions, rs) -> function
+            | Conflict (i1, _, jc1) when
+                (cudf2opam i1).name = nva.name && jc1 = jc ->
+              (cudf2opam i1).version :: versions, rs
+            | r -> versions, r::rs)
+          ([nva.version], []) rs
+      in
+      let rs = List.rev rs in
+      let formula =
+        OpamFormula.ors (List.map (function v -> Atom (`Eq, v)) versions)
+      in
+      let all_versions = OpamPackage.versions_of_name packages nva.name in
+      let formula = OpamFormula.simplify_version_set all_versions formula in
+      let str = Printf.sprintf "%s is in conflict with %s"
+          (OpamFormula.to_string (Atom (nva.name, formula)))
+          (OpamFormula.short_string_of_atom (vpkg2atom cudfnv2opam jc))
+      in
+      str :: aux rs
+    | Missing (p,missing) :: rs when is_dose_request p ->
+      (* Requested pkg missing *)
+      let atoms = List.map (vpkg2atom cudfnv2opam) missing in
+      let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
+      List.map (fun name ->
+          let formula =
+            OpamFormula.ors (List.map (function
+                | n, Some atom when n = name -> Atom atom
+                | _ -> Empty)
+                atoms)
+          in
+          let all_versions = OpamPackage.versions_of_name packages name in
+          let formula = OpamFormula.simplify_version_set all_versions formula in
+          unav_reasons (name, formula))
+        names @
+      aux rs
+    | Missing _ :: rs (* dependency missing, treated in strings_of_chains *)
+    | Dependency _ :: rs -> aux rs
+  in
+  aux rs
 
 
 let make_chains packages cudfnv2opam depends =
@@ -363,10 +383,8 @@ let make_chains packages cudfnv2opam depends =
 
 let strings_of_final_reasons packages cudfnv2opam unav_reasons reasons =
   let reasons =
-    List.flatten
-      (List.map
-         (strings_of_reason packages cudfnv2opam unav_reasons)
-         reasons) in
+    strings_of_reasons packages cudfnv2opam unav_reasons reasons
+  in
   OpamStd.List.sort_nodup compare reasons
 
 let strings_of_chains packages cudfnv2opam unav_reasons reasons =
