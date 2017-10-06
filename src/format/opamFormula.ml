@@ -484,27 +484,41 @@ let simplify_version_formula f =
     the subset of matching atoms *)
 let gen_formula l f =
   let l = List.map (fun x -> f x, x) l in
-  let rec aux t x = function
-    | (t', y) :: r ->
-      if t = t' then aux t x r
-      else (t, x) :: aux t' y r
-    | [] -> [t, x]
+  let rec aux (t, x as bound) l = match t, l with
+    | true,  (false, y) :: (true,  _) :: r
+    | false, (true, y)  :: (false, _) :: r ->
+      let a = (if t then `Neq else `Eq), y in
+      (match aux bound r with
+       | b :: r -> b :: a :: r
+       | r -> a :: r)
+    | true,  (true,  _) :: r
+    | false, (false, _) :: r ->
+      aux bound r
+    | true,  (false, _ as bound') :: r
+    | false, (true,  _ as bound') :: r ->
+      ((if t then `Geq else `Lt), x) :: aux bound' r
+    | _, [] -> [(if t then `Geq else `Lt), x]
   in
   let rec aux2 = function
-    | (true, x) :: (false, y) :: r ->
-      And (Atom (`Geq, x), Atom (`Lt, y)) :: aux2 r
-    | (false, x) :: r -> Atom (`Lt, x) :: aux2 r
-    | (true, x) :: [] -> [Atom (`Geq, x)]
+    | (`Geq|`Neq), _ as a :: r ->
+      let rec find_upper acc = function
+        | `Lt,  _ as a :: r ->
+          ands (List.rev_append acc [Atom a]) :: aux2 r
+        | `Neq, _ as a :: r ->
+          find_upper (Atom a :: acc) r
+        | r -> ands (List.rev acc) :: aux2 r
+      in
+      find_upper [Atom a] r
+    | a :: r -> Atom a :: aux2 r
     | [] -> [Empty]
-    | (true, _) :: (true, _) :: _ -> assert false
   in
   match l with
   | [] -> Some Empty
   | (t, x) :: r ->
-    match aux t x r with
+    match aux (t, x) r with
     | [] -> assert false
-    | [true, _] -> Some Empty
-    | [false, _] -> None
+    | [`Geq, _] -> Some Empty
+    | [`Lt, _] -> None
     | _ :: r -> Some (ors (aux2 r))
 
 let formula_of_version_set set subset =
