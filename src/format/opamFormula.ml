@@ -480,35 +480,49 @@ let simplify_ineq_formula vcomp f =
 let simplify_version_formula f =
   simplify_ineq_formula OpamPackage.Version.compare f
 
+(** Takes an ordered list of atoms and a predicate, returns a formula describing
+    the subset of matching atoms *)
+let gen_formula l f =
+  let l = List.map (fun x -> f x, x) l in
+  let rec aux t x = function
+    | (t', y) :: r ->
+      if t = t' then aux t x r
+      else (t, x) :: aux t' y r
+    | [] -> [t, x]
+  in
+  let rec aux2 = function
+    | (true, x) :: (false, y) :: r ->
+      And (Atom (`Geq, x), Atom (`Lt, y)) :: aux2 r
+    | (false, x) :: r -> Atom (`Lt, x) :: aux2 r
+    | (true, x) :: [] -> [Atom (`Geq, x)]
+    | [] -> [Empty]
+    | (true, _) :: (true, _) :: _ -> assert false
+  in
+  match l with
+  | [] -> Some Empty
+  | (t, x) :: r ->
+    match aux t x r with
+    | [] -> assert false
+    | [true, _] -> Some Empty
+    | [false, _] -> None
+    | _ :: r -> Some (ors (aux2 r))
+
+let formula_of_version_set set subset =
+  let module S = OpamPackage.Version.Set in
+  match
+    gen_formula
+      (OpamPackage.Version.Set.elements set)
+      (fun x -> OpamPackage.Version.Set.mem x subset)
+  with
+  | Some f -> f
+  | None -> invalid_arg "Empty subset"
+
 let simplify_version_set set f =
   let module S = OpamPackage.Version.Set in
   if S.is_empty set then Empty else
   let set = fold_left (fun set (_relop, v) -> S.add v set) set f in
-  let vmin = S.min_elt set in
-  S.fold (fun version acc ->
-      if check_version_formula f version
-      then match acc with
-        | Empty | Atom (`Geq, _) | Or (_, Atom (`Geq, _)) -> acc
-        | Atom (`Eq, vl) -> Atom (`Geq, vl)
-        | Or (f1, Atom (`Eq, vl)) -> Or (f1, Atom (`Geq, vl))
-        | _ -> make_or acc (Atom (`Eq, version))
-      else match acc with
-        | Atom ((`Lt|`Eq), _)
-        | And (_, Atom ((`Lt|`Eq), _))
-        | Or (_, (And (_, Atom (`Lt, _))))
-          -> acc
-        | Or (f1, (Atom ((`Eq|`Geq), _) as atl))
-          -> Or (f1, And (atl, (Atom (`Lt, version))))
-        | _ -> make_and acc (Atom (`Lt, version)))
-    set Empty
-  |> function
-  | Atom (`Lt, v) when v = vmin -> f (* No packages match, return unchanged *)
-  | f1 ->
-    map_formula (function
-        | And (Atom (`Eq, _) as a1, Atom (`Lt, _)) -> a1
-        | Atom (`Lt, v) when v = vmin -> Empty
-        | f -> f)
-      f1
+  gen_formula (S.elements set) (check_version_formula f) |>
+  OpamStd.Option.default f
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula

@@ -164,6 +164,11 @@ val simplify_version_formula: version_formula -> version_formula
     formula is otherwise returned as is if no versions match. *)
 val simplify_version_set: OpamPackage.Version.Set.t -> version_formula -> version_formula
 
+(** [formula_of_version_set set subset] generates a formula that is enough to
+    describe all packages of [subset] and exclude packages otherwise in [set] *)
+val formula_of_version_set:
+  OpamPackage.Version.Set.t -> OpamPackage.Version.Set.t -> version_formula
+
 (** {2 Atoms} *)
 
 (** Return all the atoms *)

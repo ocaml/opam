@@ -269,16 +269,15 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
         List.fold_left (fun (versions, rs) -> function
             | Conflict (i1, _, jc1) when
                 (cudf2opam i1).name = nva.name && jc1 = jc ->
-              (cudf2opam i1).version :: versions, rs
+              OpamPackage.Version.Set.add (cudf2opam i1).version versions, rs
             | r -> versions, r::rs)
-          ([nva.version], []) rs
+          (OpamPackage.Version.Set.singleton nva.version, []) rs
       in
       let rs = List.rev rs in
       let formula =
-        OpamFormula.ors (List.map (function v -> Atom (`Eq, v)) versions)
+        OpamFormula.formula_of_version_set
+          (OpamPackage.versions_of_name packages nva.name) versions
       in
-      let all_versions = OpamPackage.versions_of_name packages nva.name in
-      let formula = OpamFormula.simplify_version_set all_versions formula in
       let str = Printf.sprintf "%s is in conflict with %s"
           (OpamFormula.to_string (Atom (nva.name, formula)))
           (OpamFormula.short_string_of_atom (vpkg2atom cudfnv2opam jc))
