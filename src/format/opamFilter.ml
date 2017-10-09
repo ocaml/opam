@@ -554,3 +554,49 @@ let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
     | _ -> None
   in
   filter_formula ?default_version ?default env deps
+
+let rec simplify_extended_version_formula ef =
+  let to_pure ef =
+    try
+      Some (OpamFormula.map (function
+          | Constraint (op, FString s) when string_variables s = [] ->
+            Atom (op, OpamPackage.Version.of_string s)
+          | _ -> failwith "Impure")
+          ef)
+    with Failure _ -> None
+  in
+  let to_filtered =
+    OpamFormula.map (fun (op, v) ->
+        Atom (Constraint (op, FString (OpamPackage.Version.to_string v))))
+  in
+  match to_pure ef with
+  | Some f ->
+    OpamStd.Option.map to_filtered (OpamFormula.simplify_version_formula f)
+  | None -> match ef with
+    | And _ | Or _ ->
+      let conj = match ef with And _ -> true | _ -> false in
+      let l = OpamFormula.(if conj then ands_to_list else ors_to_list) ef in
+      (try
+         let filtered, pure =
+           List.fold_left (fun (filtered, pure) ef1 ->
+               match to_pure ef1 with
+               | Some f -> filtered, f::pure
+               | None ->
+                 let ef1 = simplify_extended_version_formula ef1 in
+                 match ef1 with
+                 | None -> (* Always false *)
+                   if conj then failwith "false" else filtered, pure
+                 | Some ef1 ->
+                   (match to_pure ef1 with
+                    | Some f -> filtered, f::pure
+                    | None -> ef1::filtered, pure))
+             ([], []) l
+         in
+         let mk = OpamFormula.(if conj then ands else ors) in
+         match OpamFormula.simplify_version_formula (mk pure) with
+         | None -> if conj then None else Some (mk (List.rev filtered))
+         | Some pure ->
+           Some (mk (List.rev_append filtered [to_filtered pure]))
+       with Failure _ -> None)
+    | Block ef -> simplify_extended_version_formula ef
+    | atom -> Some atom
