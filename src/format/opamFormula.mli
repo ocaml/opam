@@ -154,9 +154,15 @@ val to_atom_formula: t -> atom formula
 (** Convert an atom-formula to a t-formula *)
 val of_atom_formula: atom formula -> t
 
-(** Reduces the formula, finding a shorter description of the same version set.
-    Keeps conflicting formula, for documentation, when the set is empty. *)
-val simplify_version_formula: version_formula -> version_formula
+(** [simplify_ineq_formula comp f] eturns a canonical version of inequality
+    formula [f], based on comparison function [comp], where each version appears
+    at most once, and in increasing order. Returns [Some Empty] if the formula
+    is always [true], [None] if it is always false *)
+val simplify_ineq_formula:
+  ('a -> 'a -> int) -> (relop * 'a) formula -> (relop * 'a) formula option
+
+(** Like [simplify_ineq_formula], but specialised on version formulas *)
+val simplify_version_formula: version_formula -> version_formula option
 
 (** A more aggressive version of [simplify_version_formula] that attempts to
     find a shorter formula describing the same subset of versions within a given
