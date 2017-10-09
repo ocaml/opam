@@ -620,6 +620,92 @@ let filter_command =
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
 
+let add_constraint_command_doc =
+  "Adds version constraints on all dependencies towards a given package"
+let add_constraint_command =
+  let command = "add-constraint" in
+  let doc = add_constraint_command_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command searches to all dependencies towards a given package, and \
+        adds a version constraint to them. It is particularly useful to add \
+        upper bounds to existing dependencies when a new, incompatible major \
+        version of a library is added to a repository. The new version \
+        constraint is merged with the existing one, and simplified if \
+        possible (e.g. $(b,>=3 & >5) becomes $(b,>5)).";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+  ]
+  in
+  let atom_arg =
+    Arg.(required & pos 0 (some OpamArg.atom) None
+         & info [] ~docv:"PACKAGE" ~doc:
+           "A package name with a version constraint, e.g. $(b,name>=version). \
+            If no version constraint is specified, the command will just \
+            simplify existing version constraints on dependencies to the named \
+            package.")
+  in
+  let force_arg =
+    Arg.(value & flag & info ["force"] ~doc:
+           "Force updating of constraints even if the resulting constraint is \
+            unsatisfiable (e.g. when adding $(b,>3) to the constraint \
+            $(b,<2)). The default in this case is to print a warning and keep \
+            the existing constraint unchanged.")
+  in
+  let cmd global_options force atom =
+    OpamArg.apply_global_options global_options;
+    let repo_root = OpamFilename.cwd () in
+    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
+    then
+      OpamConsole.error_and_exit `Not_found
+        "No repository found in current directory.\n\
+         Please make sure there is a \"packages\" directory";
+    let repo = OpamRepositoryBackend.local repo_root in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let name, cstr = atom in
+    let cstr = match cstr with
+      | Some (relop, v) ->
+        OpamFormula.Atom
+          (Constraint (relop, FString (OpamPackage.Version.to_string v)))
+      | None ->
+        OpamFormula.Empty
+    in
+    let add_cstr nv n c =
+      let f = OpamFormula.ands [c; cstr] in
+      match OpamFilter.simplify_extended_version_formula f with
+      | Some f -> f
+      | None -> (* conflicting constraint *)
+        if force then f
+        else
+          (OpamConsole.warning
+             "In package %s, updated constraint %s cannot be satisfied, not \
+              updating (use `--force' to update anyway)"
+             (OpamPackage.to_string nv)
+             (OpamConsole.colorise `bold
+                (OpamFilter.string_of_filtered_formula
+                   (Atom (n, f))));
+           c)
+    in
+    OpamPackage.Map.iter (fun nv prefix ->
+        let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+        let opam = OpamFile.OPAM.read opam_file in
+        let deps0 = OpamFile.OPAM.depends opam in
+        let deps =
+          OpamFormula.map (function
+              | (n,c as atom) ->
+                if n = name then Atom (n, (add_cstr nv n c))
+                else Atom atom)
+            deps0
+        in
+        if deps <> deps0 then
+          OpamFile.OPAM.write_with_preserved_format opam_file
+            (OpamFile.OPAM.with_depends deps opam))
+      pkg_prefixes
+  in
+  Term.(pure cmd $ OpamArg.global_options $ force_arg $ atom_arg),
+  OpamArg.term_info command ~doc ~man
+
+
 let admin_subcommands = [
   index_command; OpamArg.make_command_alias index_command "make";
   cache_command;
@@ -627,6 +713,7 @@ let admin_subcommands = [
   lint_command;
   list_command;
   filter_command;
+  add_constraint_command;
 ]
 
 let default_subcommand =

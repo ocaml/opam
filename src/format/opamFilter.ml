@@ -526,9 +526,9 @@ let string_of_filtered_formula =
         let paren = match c with Atom (Constraint _) -> false | _ -> true in
         Printf.sprintf "%s %s%s%s"
           (OpamPackage.Name.to_string n)
-          (if paren then "(" else "")
+          (if paren then "{" else "")
           (string_of_constraint c)
-          (if paren then ")" else ""))
+          (if paren then "}" else ""))
 
 let variables_of_filtered_formula ff =
   OpamFormula.fold_left
