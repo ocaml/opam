@@ -18,6 +18,7 @@ type t = {
   solver_preferences_upgrade: string option Lazy.t;
   solver_preferences_fixup: string option Lazy.t;
   solver_preferences_best_effort_prefix: string option Lazy.t;
+  solver_timeout: float option;
 }
 
 type 'a options_fun =
@@ -28,6 +29,7 @@ type 'a options_fun =
   ?solver_preferences_upgrade:string option Lazy.t ->
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
+  ?solver_timeout:float option ->
   'a
 
 let default =
@@ -42,6 +44,7 @@ let default =
     solver_preferences_upgrade = lazy None;
     solver_preferences_fixup = lazy None;
     solver_preferences_best_effort_prefix = lazy None;
+    solver_timeout = Some 60.;
   }
 
 let setk k t
@@ -52,6 +55,7 @@ let setk k t
     ?solver_preferences_upgrade
     ?solver_preferences_fixup
     ?solver_preferences_best_effort_prefix
+    ?solver_timeout
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -67,6 +71,8 @@ let setk k t
     solver_preferences_best_effort_prefix =
       t.solver_preferences_best_effort_prefix +
       solver_preferences_best_effort_prefix;
+    solver_timeout =
+      t.solver_timeout + solver_timeout;
   }
 
 let set t = setk (fun x () -> x) t
@@ -122,6 +128,8 @@ let initk k =
     env_string "FIXUPCRITERIA" >>| fun c -> (lazy (Some c)) in
   let best_effort_prefix_criteria =
     env_string "BESTEFFORTPREFIXCRITERIA" >>| fun c -> (lazy (Some c)) in
+  let solver_timeout =
+    env_float "SOLVERTIMEOUT" >>| fun f -> if f <= 0. then None else Some f in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(env_string "CUDFFILE")
     ~solver
@@ -130,12 +138,28 @@ let initk k =
     ?solver_preferences_upgrade:upgrade_criteria
     ?solver_preferences_fixup:fixup_criteria
     ?solver_preferences_best_effort_prefix:best_effort_prefix_criteria
+    ?solver_timeout
 
 let init ?noop:_ = initk (fun () -> ())
 
-let best_effort () =
-  !r.best_effort &&
-  Lazy.force !r.solver_preferences_best_effort_prefix <> None
+let best_effort =
+  let r = lazy (
+    !r.best_effort &&
+    let crit = match Lazy.force !r.solver_preferences_default with
+      | Some c -> c
+      | None -> failwith "Solver criteria uninitialised"
+    in
+    let pfx = Lazy.force !r.solver_preferences_best_effort_prefix in
+    pfx <> None ||
+    OpamStd.String.contains ~sub:"opam-query" crit ||
+    (OpamConsole.warning
+       "Your solver configuration does not support --best-effort, the option \
+        was ignored (you need to specify variable OPAMBESTEFFORTCRITERIA, or \
+        set your criteria to maximise the count for cudf attribute \
+        'opam-query')";
+     false)
+  ) in
+  fun () -> Lazy.force r
 
 let criteria kind =
   let crit = match kind with
@@ -151,14 +175,10 @@ let criteria kind =
   if !r.best_effort then
     match !r.solver_preferences_best_effort_prefix with
     | lazy (Some pfx) -> pfx ^ str
-    | lazy None ->
-      OpamConsole.warning
-        "Your solver configuration does not support --best-effort, the option \
-         was ignored.";
-      str
+    | lazy None -> str
   else str
 
 let call_solver ~criteria cudf =
   let module S = (val Lazy.force (!r.solver)) in
   OpamConsole.log "SOLVER" "Calling solver %s with criteria %s" S.name criteria;
-  S.call ~criteria cudf
+  S.call ~criteria ?timeout:(!r.solver_timeout) cudf

@@ -19,6 +19,7 @@ type t = private {
   solver_preferences_upgrade: string option Lazy.t;
   solver_preferences_fixup: string option Lazy.t;
   solver_preferences_best_effort_prefix: string option Lazy.t;
+  solver_timeout: float option;
 }
 
 type 'a options_fun =
@@ -29,6 +30,7 @@ type 'a options_fun =
   ?solver_preferences_upgrade:string option Lazy.t ->
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
+  ?solver_timeout:float option ->
   'a
 
 include OpamStd.Config.Sig

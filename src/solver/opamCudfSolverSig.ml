@@ -15,6 +15,8 @@ type criteria_def = {
   crit_best_effort_prefix: string option;
 }
 
+exception Timeout
+
 module type S = sig
 
   val name: string
@@ -26,6 +28,8 @@ module type S = sig
 
   val default_criteria: criteria_def
 
-  val call: criteria:string -> Cudf.cudf -> Cudf.preamble option * Cudf.universe
+  val call:
+    criteria:string -> ?timeout:float -> Cudf.cudf ->
+    Cudf.preamble option * Cudf.universe
 
 end

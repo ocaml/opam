@@ -104,7 +104,7 @@ val compute_root_causes:
   ActionGraph.t -> OpamPackage.Name.Set.t -> OpamPackage.Set.t ->
   Cudf.package cause Map.t
 
-exception Solver_failure
+exception Solver_failure of string
 
 (** Resolve a CUDF request. The result is either a conflict holding
     an explanation of the error, or a resulting universe.

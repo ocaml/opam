@@ -267,7 +267,8 @@ let is_up_to_date_raw updates =
   let r = not_utd = [] in
   if not r then
     log "Not up-to-date env variables: [%a]"
-      (slog @@ String.concat " " @* List.map (fun (v, _, _, _) -> v)) not_utd;
+      (slog @@ String.concat " " @* List.map (fun (v, _, _, _) -> v)) not_utd
+  else log "Environment is up-to-date";
   r
 
 let is_up_to_date_switch root switch =
@@ -301,7 +302,10 @@ let full_with_path ~force_path root switch =
   add env0 (switch_path_update ~force_path root switch)
 
 let is_up_to_date st =
-  let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
+  let opamswitch =
+    OpamStateConfig.(!r.switch_from = `Env) ||
+    Some st.switch <> OpamFile.Config.switch st.switch_global.config
+  in
   is_up_to_date_raw (updates ~opamswitch ~force_path:false st)
 
 let eval_string gt switch =

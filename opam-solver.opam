@@ -20,7 +20,7 @@ build: [
 ]
 depends: [
   "opam-format" {= "2.0.0~beta4"}
-  "mccs"
+  "mccs" {>= "1.1+3"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
   "jbuilder" {build & >= "1.0+beta12"}

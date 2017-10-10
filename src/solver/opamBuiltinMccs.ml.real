@@ -28,10 +28,11 @@ let default_criteria = {
   crit_best_effort_prefix = Some "+count[opam-query:,false],";
 }
 
-let call ~criteria cudf =
+let call ~criteria ?timeout cudf =
   match
     Mccs.resolve_cudf ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
-      criteria cudf
+      ?timeout criteria cudf
   with
   | None -> raise Common.CudfSolver.Unsat
   | Some (preamble, univ) -> Some preamble, univ
+  | exception Mccs.Timeout -> raise Timeout

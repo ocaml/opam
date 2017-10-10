@@ -28,8 +28,8 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
 MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 
-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+2c.tar.gz
-MD5_mccs = d3a0f2f9ed509c0bee43d21a10131c2d
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+3b.tar.gz
+MD5_mccs = 55bd3958474fb06fab0dfd5729c74cdf
 
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
 MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
@@ -37,8 +37,8 @@ MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
 URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
-URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta13.tar.gz
-MD5_jbuilder = ef9c70dfdf2928f46ca4ab4caff2a190
+URL_jbuilder = https://github.com/janestreet/jbuilder/archive/08050696fb701dafcd1372aadfaa800a50bc01ca.tar.gz
+MD5_jbuilder = 53b65232ebb5fd319acf90922342615d
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)

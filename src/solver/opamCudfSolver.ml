@@ -27,7 +27,7 @@ module type ExternalArg = sig
   val default_criteria: criteria_def
 end
 
-let call_external_solver command ~criteria (_, universe,_ as cudf)=
+let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
   let solver_in =
     OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
   let solver_out =
@@ -46,6 +46,8 @@ let call_external_solver command ~criteria (_, universe,_ as cudf)=
             | "input" -> Some (S (OpamFilename.to_string solver_in))
             | "output" -> Some (S (OpamFilename.to_string solver_out))
             | "criteria" -> Some (S criteria)
+            | "timeout" ->
+              Some (S (string_of_float (OpamStd.Option.default 0. timeout)))
             | _ -> None)
           command
       in
@@ -222,7 +224,7 @@ let custom_solver cmd = match cmd with
   | [ CIdent name, _ ] | [ CString name, _ ] ->
     (try
        List.find (fun (module S: S) ->
-           (S.name = name || S.command_name = Some name)
+           (S.name = Filename.basename name || S.command_name = Some name)
            && Lazy.force S.is_present)
          default_solver_selection
      with Not_found ->
@@ -234,7 +236,8 @@ let custom_solver cmd = match cmd with
       try
         let corresponding_module =
           List.find (fun (module S: S) ->
-              S.command_name = Some name && Lazy.force S.is_present)
+              S.command_name =
+              Some (Filename.basename name) && Lazy.force S.is_present)
             default_solver_selection
         in
         let module S = (val corresponding_module) in
