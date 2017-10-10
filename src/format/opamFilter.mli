@@ -169,3 +169,10 @@ val filter_deps:
   build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev:bool ->
   ?default_version:version -> ?default:bool ->
   filtered_formula -> formula
+
+
+(** Like [OpamFormula.simplify_version_formula], but on filtered formulas
+    (filters are kept unchanged, but put in front) *)
+val simplify_extended_version_formula:
+  filter filter_or_constraint OpamFormula.formula ->
+  filter filter_or_constraint OpamFormula.formula option

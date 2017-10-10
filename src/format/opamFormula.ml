@@ -411,104 +411,113 @@ let set_to_disjunction set t =
   List.flatten
 
 let simplify_ineq_formula vcomp f =
-  (* backported from OWS/WeatherReasons *)
-  let vmin a b = if vcomp a b <= 0 then a else b in
-  let vmax a b = if vcomp a b >= 0 then a else b in
-  let and_cstrs c1 c2 = match c1, c2 with
-    | (`Gt, a), (`Gt, b) -> [`Gt, vmax a b]
-    | (`Geq,a), (`Geq,b) -> [`Geq, vmax a b]
-    | (`Gt, a), (`Geq,b) | (`Geq,b), (`Gt, a) ->
-        if vcomp a b >= 0 then [(`Gt, a)] else [(`Geq,b)]
-    | (`Lt, a), (`Lt, b) -> [`Lt, vmin a b]
-    | (`Leq,a), (`Leq,b) -> [`Leq, vmin a b]
-    | (`Lt, a), (`Leq,b) | (`Leq,b), (`Lt, a) ->
-        if vcomp a b <= 0 then [`Lt, a] else [`Leq,b]
-    | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Eq, b]
-    | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Eq, b]
-    | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Eq, b]
-    | (`Leq,a), (`Geq,b) | (`Geq,b), (`Leq,a) when vcomp a b =  0 -> [`Eq, a]
-    | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Eq, b]
-    | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Geq,a]
-    | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Gt, a]
-    | (`Leq,a), (`Neq,b) | (`Neq,b), (`Leq,a) when vcomp a b <  0 -> [`Leq,a]
-    | (`Lt, a), (`Neq,b) | (`Neq,b), (`Lt, a) when vcomp a b <= 0 -> [`Lt, a]
-    | c1, c2 -> if c1 = c2 then [c1] else [c1;c2]
+  let vals = fold_left (fun acc (_op, x) -> x::acc) [] f in
+  let vals = List.sort_uniq vcomp vals in
+  let vals_a = Array.of_list vals in
+  let val_of_int i = vals_a.(i/2) in
+  let int_of_val =
+    let m = List.mapi (fun i v -> v, 2 * i + 1) vals in
+    fun v -> List.assoc v m
   in
-  let or_cstrs c1 c2 = match c1, c2 with
-    | (`Gt, a), (`Gt, b) -> [`Gt, vmin a b]
-    | (`Geq,a), (`Geq,b) -> [`Geq, vmin a b]
-    | (`Gt, a), (`Geq,b) | (`Geq,b), (`Gt, a) ->
-        if vcomp a b < 0 then [`Gt, a] else [`Geq,b]
-    | (`Lt, a), (`Lt, b) -> [`Lt, vmax a b]
-    | (`Leq,a), (`Leq,b) -> [`Leq,vmax a b]
-    | (`Lt, a), (`Leq,b) | (`Leq,b), (`Lt, a) ->
-        if vcomp a b > 0 then [`Lt, a] else [`Leq,b]
-    | (`Geq,a), (`Eq, b) | (`Eq, b), (`Geq,a) when vcomp a b <= 0 -> [`Geq,a]
-    | (`Gt, a), (`Eq, b) | (`Eq, b), (`Gt, a) when vcomp a b <  0 -> [`Gt, a]
-    | (`Leq,a), (`Eq, b) | (`Eq, b), (`Leq,a) when vcomp a b >= 0 -> [`Leq,a]
-    | (`Leq,a), (`Geq,b) | (`Geq,b), (`Leq,a) when vcomp a b =  0 -> []
-    | (`Lt, a), (`Eq, b) | (`Eq, b), (`Lt, a) when vcomp a b >  0 -> [`Lt, a]
-    | (`Geq,a), (`Neq,b) | (`Neq,b), (`Geq,a) when vcomp a b >  0 -> [`Neq,b]
-    | (`Gt, a), (`Neq,b) | (`Neq,b), (`Gt, a) when vcomp a b >= 0 -> [`Neq,b]
-    | (`Leq,a), (`Neq,b) | (`Neq,b), (`Leq,a) when vcomp a b <  0 -> [`Neq,b]
-    | (`Lt, a), (`Neq,b) | (`Neq,b), (`Lt, a) when vcomp a b <= 0 -> [`Neq,b]
-    | c1, c2 -> if c1 = c2 then [c1] else [c1;c2]
+  (* One integer for each value appearing in f, plus one for each interval *)
+  let rec mk_ranges acc n = if n < 0 then acc else mk_ranges (n::acc) (n-1) in
+  let ranges = mk_ranges [] (2 * Array.length vals_a + 2) in
+  let int_formula = map (fun (op, x) -> Atom (op, int_of_val x)) f in
+  let vals =
+    List.map (fun i ->
+        eval (fun (relop, iref) -> check_relop relop (i - iref)) int_formula,
+        i)
+      ranges
   in
-  let rec add_cstr join c = function
-    | [] -> [c]
-    | c1::r -> match join c c1 with
-      | [c] -> add_cstr join c r
-      | _ -> c1 :: add_cstr join c r
+  if List.for_all (fun (t, _) -> not t) vals then None else
+  let rec aux = function
+    | (true,  _) :: ((true,  _) :: _ as r) -> aux r
+    | (false, _) :: ((false, _) :: _ as r) -> aux r
+    | (true, _) :: (false, x) :: ((true, _) :: _ as r) when x mod 2 = 1 ->
+      (`Neq, x) :: aux r
+    | (false, _) :: (true, x) :: ((false, _) :: _ as r) when x mod 2 = 1 ->
+      (`Eq, x) :: aux r
+    | (true, _) :: ((false, x) :: _ as r) ->
+      (if x mod 2 = 1 then `Lt, x else `Leq, x-1) :: aux r
+    | (false, _) :: ((true, x) :: _ as r) ->
+      (if x mod 2 = 1 then `Geq, x else `Gt, x-1) :: aux r
+    | [_] | []-> []
   in
-  let rec merge mk join fl =
-    let subs,cstrs =
-      List.fold_left (fun (sub,cstrs) fl ->
-          match aux fl with
-          | Atom c -> sub, add_cstr join c cstrs
-          | f -> mk sub f, cstrs)
-        (Empty,[]) fl
-    in
-    List.fold_left (fun f c -> mk f (Atom c)) subs cstrs
-  and aux = function
-    | And _ as f -> merge make_and and_cstrs (ands_to_list f)
-    | Or _ as f -> merge make_or or_cstrs (ors_to_list f)
-    | Block f -> aux f
-    | (Atom _ | Empty) as f -> f
+  let rec aux2 = function
+    | (`Geq|`Gt|`Neq as op, i) :: r ->
+      let rec find_upper acc = function
+        | (`Leq|`Lt as op,  i) :: r ->
+          ands (List.rev_append acc [Atom (op, val_of_int i)]) :: aux2 r
+        | (`Neq, i) :: r ->
+          find_upper (Atom (`Neq, val_of_int i) :: acc) r
+        | r -> ands (List.rev acc) :: aux2 r
+      in
+      find_upper [Atom (op, val_of_int i)] r
+    | (op, i) :: r -> Atom (op, val_of_int i) :: aux2 r
+    | [] -> [Empty]
   in
-  aux f
+  Some (ors (aux2 (aux vals)))
 
 let simplify_version_formula f =
   simplify_ineq_formula OpamPackage.Version.compare f
+
+(** Takes an ordered list of atoms and a predicate, returns a formula describing
+    the subset of matching atoms *)
+let gen_formula l f =
+  let l = List.map (fun x -> f x, x) l in
+  let rec aux (t, x as bound) l = match t, l with
+    | true,  (false, y) :: (true,  _) :: r
+    | false, (true, y)  :: (false, _) :: r ->
+      let a = (if t then `Neq else `Eq), y in
+      (match aux bound r with
+       | b :: r -> b :: a :: r
+       | r -> a :: r)
+    | true,  (true,  _) :: r
+    | false, (false, _) :: r ->
+      aux bound r
+    | true,  (false, _ as bound') :: r
+    | false, (true,  _ as bound') :: r ->
+      ((if t then `Geq else `Lt), x) :: aux bound' r
+    | _, [] -> [(if t then `Geq else `Lt), x]
+  in
+  let rec aux2 = function
+    | (`Geq|`Neq), _ as a :: r ->
+      let rec find_upper acc = function
+        | `Lt,  _ as a :: r ->
+          ands (List.rev_append acc [Atom a]) :: aux2 r
+        | `Neq, _ as a :: r ->
+          find_upper (Atom a :: acc) r
+        | r -> ands (List.rev acc) :: aux2 r
+      in
+      find_upper [Atom a] r
+    | a :: r -> Atom a :: aux2 r
+    | [] -> [Empty]
+  in
+  match l with
+  | [] -> Some Empty
+  | (t, x) :: r ->
+    match aux (t, x) r with
+    | [] -> assert false
+    | [`Geq, _] -> Some Empty
+    | [`Lt, _] -> None
+    | _ :: r -> Some (ors (aux2 r))
+
+let formula_of_version_set set subset =
+  let module S = OpamPackage.Version.Set in
+  match
+    gen_formula
+      (OpamPackage.Version.Set.elements set)
+      (fun x -> OpamPackage.Version.Set.mem x subset)
+  with
+  | Some f -> f
+  | None -> invalid_arg "Empty subset"
 
 let simplify_version_set set f =
   let module S = OpamPackage.Version.Set in
   if S.is_empty set then Empty else
   let set = fold_left (fun set (_relop, v) -> S.add v set) set f in
-  let vmin = S.min_elt set in
-  S.fold (fun version acc ->
-      if check_version_formula f version
-      then match acc with
-        | Empty | Atom (`Geq, _) | Or (_, Atom (`Geq, _)) -> acc
-        | Atom (`Eq, vl) -> Atom (`Geq, vl)
-        | Or (f1, Atom (`Eq, vl)) -> Or (f1, Atom (`Geq, vl))
-        | _ -> make_or acc (Atom (`Eq, version))
-      else match acc with
-        | Atom ((`Lt|`Eq), _)
-        | And (_, Atom ((`Lt|`Eq), _))
-        | Or (_, (And (_, Atom (`Lt, _))))
-          -> acc
-        | Or (f1, (Atom ((`Eq|`Geq), _) as atl))
-          -> Or (f1, And (atl, (Atom (`Lt, version))))
-        | _ -> make_and acc (Atom (`Lt, version)))
-    set Empty
-  |> function
-  | Atom (`Lt, v) when v = vmin -> f (* No packages match, return unchanged *)
-  | f1 ->
-    map_formula (function
-        | And (Atom (`Eq, _) as a1, Atom (`Lt, _)) -> a1
-        | Atom (`Lt, v) when v = vmin -> Empty
-        | f -> f)
-      f1
+  gen_formula (S.elements set) (check_version_formula f) |>
+  OpamStd.Option.default f
 
 type 'a ext_package_formula =
   (OpamPackage.Name.t * ('a * version_formula)) formula
