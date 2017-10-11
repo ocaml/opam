@@ -705,25 +705,6 @@ let simulate_new_state state t =
       t state.installed in
   { state with installed }
 
-let print_external_tags t solution =
-  let packages = OpamSolver.new_packages solution in
-  let values =
-    OpamPackage.Set.fold (fun nv acc ->
-        let opam = OpamSwitchState.opam t nv in
-        let env = OpamPackageVar.resolve_switch ~package:nv t in
-        List.fold_left (fun acc (names, filter) ->
-            if OpamFilter.eval_to_bool ~default:false env filter
-            then
-              List.fold_left (fun acc n -> OpamStd.String.Set.add n acc)
-                acc names
-            else acc)
-          acc (OpamFile.OPAM.depexts opam))
-      packages OpamStd.String.Set.empty
-  in
-  let values = OpamStd.String.Set.elements values in
-  if values <> [] then
-    OpamConsole.msg "%s\n" (String.concat " " values)
-
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
@@ -750,8 +731,7 @@ let apply ?ask t action ~requested ?add_roots solution =
   else (
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
-    let show_solution = ask <> Some false &&
-                        OpamClientConfig.(!r.external_tags) = [] in
+    let show_solution = ask <> Some false in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
     OpamPackage.Set.iter
@@ -790,10 +770,7 @@ let apply ?ask t action ~requested ?add_roots solution =
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
 
-    if OpamClientConfig.(!r.external_tags) <> [] then (
-      print_external_tags t solution;
-      t, Aborted
-    ) else if not OpamClientConfig.(!r.show) &&
+    if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)

@@ -105,7 +105,6 @@ let apply_global_options o =
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
     (* ?jobs: int *)
     (* ?dl_jobs: int *)
-    (* ?external_tags:string list *)
     (* ?keep_build_dir:bool *)
     (* ?build_test:bool *)
     (* ?build_doc:bool *)
@@ -147,7 +146,6 @@ type build_options = {
   dryrun        : bool;
   fake          : bool;
   skip_update   : bool;
-  external_tags : string list;
   jobs          : int option;
   ignore_constraints_on: name list option;
   unlock_base   : bool;
@@ -155,11 +153,11 @@ type build_options = {
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc show dryrun skip_update external_tags
+    req_checksums build_test build_doc show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base = {
   keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; external_tags; fake; jobs; ignore_constraints_on; unlock_base;
+  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
 }
 
 let apply_build_options b =
@@ -186,7 +184,6 @@ let apply_build_options b =
     ?unlock_base:(flag b.unlock_base)
     ();
   OpamClientConfig.update
-    ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
@@ -1013,11 +1010,6 @@ let build_options =
        packages, they are normally updated from their origin first. This flag \
        disables that behaviour and will keep them to their version in cache."
   in
-  let external_tags =
-    mk_opt ~section ["external"] "TAGS"
-      "Display the external packages associated to the given tags. \
-       This is deprecated, use `opam list --external' instead"
-      Arg.(list string) [] in
   let fake =
     mk_flag ~section ["fake"]
       "This option registers the actions into the opam database, without \
@@ -1038,7 +1030,7 @@ let build_options =
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on
+    $skip_update $fake $jobs_flag $ignore_constraints_on
     $unlock_base)
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
