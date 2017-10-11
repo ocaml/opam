@@ -2030,6 +2030,12 @@ let run default commands =
   | OpamGlobals.Exit 0 -> ()
   | OpamGlobals.Exec (cmd,args,env) ->
     OpamMisc.exec_at_exit ();
+    let path =
+      let prefix = "PATH=" in
+      OpamMisc.remove_prefix ~prefix
+        (List.find (OpamMisc.starts_with ~prefix) (Array.to_list env))
+    in
+    Unix.putenv "PATH" path;
     Unix.execvpe cmd args env
   | e                  ->
     flush stdout;

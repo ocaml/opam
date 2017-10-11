@@ -178,6 +178,12 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       close_out chan in
 
   let pid =
+    let path =
+      let prefix = "PATH=" in
+      OpamMisc.remove_prefix ~prefix
+        (List.find (OpamMisc.starts_with ~prefix) (Array.to_list env))
+    in
+    Unix.putenv "PATH" path;
     Unix.create_process_env
       cmd
       (Array.of_list (cmd :: args))
