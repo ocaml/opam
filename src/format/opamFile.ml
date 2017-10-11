@@ -1902,7 +1902,7 @@ module OPAMSyntax = struct
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : tags option;
+    depexts    : (string list * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -1971,7 +1971,7 @@ module OPAMSyntax = struct
 
     messages   = [];
     post_messages = [];
-    depexts    = None;
+    depexts    = [];
     libraries  = [];
     syntax     = [];
     dev_repo   = None;
@@ -2132,7 +2132,7 @@ module OPAMSyntax = struct
 
   let with_messages messages t = { t with messages }
   let with_post_messages post_messages t = { t with post_messages }
-  let with_depexts depexts t = { t with depexts = Some depexts }
+  let with_depexts depexts t = { t with depexts = depexts }
   let with_libraries libraries t = { t with libraries }
   let with_syntax syntax t = { t with syntax }
   let with_dev_repo dev_repo t = { t with dev_repo = Some dev_repo }
@@ -2386,16 +2386,22 @@ module OPAMSyntax = struct
       "post-messages", no_cleanup Pp.ppacc with_post_messages post_messages
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string_tr (Pp.opt Pp.V.filter));
-      "depexts", no_cleanup Pp.ppacc_opt with_depexts depexts
-        (let string_set name =
-           Pp.V.map_list Pp.V.string -|
-           Pp.of_pair name OpamStd.String.Set.(of_list, elements)
-         in
-         Pp.V.map_list ~depth:3
-           (Pp.V.map_pair
-              (string_set "system-id") (string_set "system-package")) -|
-         Pp.of_pair "depext-bindings"
-           OpamStd.String.SetMap.(of_list, bindings));
+      "depexts", no_cleanup Pp.ppacc with_depexts depexts
+        (Pp.fallback
+           (Pp.V.map_list ~depth:2 @@
+            Pp.V.map_option (Pp.V.map_list Pp.V.string) (Pp.V.filter))
+           (Pp.V.map_list ~depth:3
+              (let rec filter_of_taglist = function
+                 | [] -> FBool true
+                 | [v] -> FString v
+                 | v :: r -> FAnd (FString v, filter_of_taglist r)
+               in
+               Pp.V.map_pair
+                 (Pp.V.map_list Pp.V.string -|
+                  Pp.of_pair "tag-list"
+                    (filter_of_taglist, fun _ -> assert false))
+                 (Pp.V.map_list Pp.V.string) -|
+               Pp.pp (fun ~pos:_ (a,b) -> b,a) (fun (b,a) -> a,b))));
       "libraries", no_cleanup Pp.ppacc with_libraries libraries
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string (Pp.opt Pp.V.filter));

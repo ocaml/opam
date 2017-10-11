@@ -505,6 +505,24 @@ let atom_or_local =
   in
   parse, print
 
+let variable_bindings =
+  let parse str =
+    try
+      OpamStd.String.split str ',' |>
+      List.map (fun s -> match OpamStd.String.cut_at s '=' with
+          | Some (a, b) -> OpamVariable.of_string a, b
+          | None -> Printf.ksprintf failwith "%S is not a binding" s) |>
+      fun bnds -> `Ok bnds
+    with Failure e -> `Error e
+  in
+  let print ppf x =
+    List.map
+      (fun (a,b) -> Printf.sprintf "%s=%s" (OpamVariable.to_string a) b) x |>
+    String.concat "," |>
+    pr_str ppf
+  in
+  parse, print
+
 let warn_selector =
   let parse str =
     let sep = Re.(compile (set "+-")) in
@@ -554,26 +572,16 @@ let enum_with_default sl: 'a Arg.converter =
   parse, print
 
 let opamlist_column =
-  let depexts_flag_re =
-    Re.(compile @@ seq [
-        str "depexts(";
-        group @@ rep @@ seq [rep @@ diff any (set ",)"); opt (char ',')];
-        char ')'])
-  in
   let parse str =
     if OpamStd.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else
     try
-      try `Ok (OpamListCommand.Depexts
-                 (OpamStd.String.split
-                    (Re.Group.get (Re.exec depexts_flag_re str) 1) ','))
-      with Not_found ->
-        List.find (function (OpamListCommand.Field _), _ -> false
-                          | _, name -> name = str)
-          OpamListCommand.field_names
-        |> fun (f, _) -> `Ok f
+      List.find (function (OpamListCommand.Field _), _ -> false
+                        | _, name -> name = str)
+        OpamListCommand.field_names
+      |> fun (f, _) -> `Ok f
     with Not_found ->
       `Error (Printf.sprintf
                 "No known printer for column %s. If you meant an opam file \

@@ -389,21 +389,24 @@ let list ?(force_search=false) () =
        packages that match $(i,any) of them"
   in
   let depexts =
-    mk_opt ["e";"external"] "TAGS" ~section:display_docs
+    mk_flag ["e";"external"] ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
-       that are associated with any subset of the given $(i,TAGS) (OS, \
-       distribution, etc.). This excludes other display options. \
-       Common tags include `debian', `x86', `osx', `homebrew', `source'... \
-       Without $(i,TAGS), display the tags and all associated external \
-       dependencies. \
-       Rather than using this directly, you should probably head for the \
-       `depext' plugin, that can infer your system's tags and handle \
-       the system installations. Run `opam depext'."
-      Arg.(some & list string) None
+       that are associated with the system as specified by $(b,--vars). This \
+       excludes other display options. Rather than using this directly, you \
+       should probably head for the `depext' plugin, that can infer your \
+       system's package management system and handle the system installations. \
+       Run `opam depext'."
+  in
+  let vars =
+    mk_opt ["vars"] "[VAR=STR,...]" ~section:display_docs
+      "Define the given variable bindings. Typically useful with \
+       $(b,--external) to define values for $(i,arch), $(i,os), \
+       $(i,os-distribution), $(i,os-version), $(i,os-family)."
+      OpamArg.variable_bindings []
   in
   let list
-      global_options selection state_selector no_switch depexts repos owns_file
-      disjunction search format packages =
+      global_options selection state_selector no_switch depexts vars repos
+      owns_file disjunction search format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.(!r.current_switch) = None
@@ -463,8 +466,14 @@ let list ?(force_search=false) () =
       if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
     in
-
-    if depexts = None &&
+    let st =
+      let open OpamFile.Switch_config in
+      let conf = st.switch_config in
+      { st with switch_config =
+        { conf with variables =
+          conf.variables @ List.map (fun (var, v) -> var, S v) vars } }
+    in
+    if not depexts &&
        not format.OpamListCommand.short &&
        filter <> OpamFormula.Empty
     then
@@ -474,14 +483,13 @@ let list ?(force_search=false) () =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
-    match depexts with
-    | None ->
+    if not depexts then
       OpamListCommand.display st format results
-    | Some tags_list ->
-      OpamListCommand.print_depexts st results tags_list
+    else
+      OpamListCommand.print_depexts st results
   in
   Term.(const list $global_options $package_selection $state_selector
-        $no_switch $depexts $repos $owns_file $disjunction $search
+        $no_switch $depexts $vars $repos $owns_file $disjunction $search
         $package_listing $pattern_list),
   term_info "list" ~doc ~man
 

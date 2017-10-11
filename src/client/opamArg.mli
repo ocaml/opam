@@ -169,6 +169,9 @@ val atom: atom Arg.converter
 val atom_or_local:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.converter
 
+(** [var=value,...] argument *)
+val variable_bindings: (OpamVariable.t * string) list Arg.converter
+
 (** Warnings string ["+3..10-4"] *)
 val warn_selector: (int * bool) list Arg.converter
 

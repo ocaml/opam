@@ -54,7 +54,7 @@ let post_message ?(failed=false) st action =
             "%s%s\n" mark msg)
         messages
     );
-    if failed && OpamFile.OPAM.depexts opam <> None then (
+    if failed && OpamFile.OPAM.depexts opam <> [] then (
       if messages = [] then
         OpamConsole.header_msg "%s troubleshooting" (OpamPackage.to_string pkg);
       OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
@@ -707,24 +707,19 @@ let simulate_new_state state t =
 
 let print_external_tags t solution =
   let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamStd.String.Set.of_list OpamClientConfig.(!r.external_tags) in
   let values =
-    OpamPackage.Set.fold (fun nv accu ->
+    OpamPackage.Set.fold (fun nv acc ->
         let opam = OpamSwitchState.opam t nv in
-        match OpamFile.OPAM.depexts opam with
-        | None         -> accu
-        | Some alltags ->
-          OpamStd.String.SetMap.fold (fun tags values accu ->
-              if OpamStd.String.Set.(
-                  (* A \subseteq B <=> (A U B) / B = 0 *)
-                  is_empty (diff (union external_tags tags) external_tags)
-                )
-              then
-                OpamStd.String.Set.union values accu
-              else
-                accu
-            ) alltags accu
-      ) packages OpamStd.String.Set.empty in
+        let env = OpamPackageVar.resolve_switch ~package:nv t in
+        List.fold_left (fun acc (names, filter) ->
+            if OpamFilter.eval_to_bool ~default:false env filter
+            then
+              List.fold_left (fun acc n -> OpamStd.String.Set.add n acc)
+                acc names
+            else acc)
+          acc (OpamFile.OPAM.depexts opam))
+      packages OpamStd.String.Set.empty
+  in
   let values = OpamStd.String.Set.elements values in
   if values <> [] then
     OpamConsole.msg "%s\n" (String.concat " " values)
