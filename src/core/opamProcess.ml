@@ -288,7 +288,8 @@ let run_background command =
       info_file;
       env_file;
       stderr_file;
-      if cmd_stdout <> None then None else stdout_file;
+      if cmd_stdout <> None || stderr_file = stdout_file then None
+      else stdout_file;
     ]
   in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
