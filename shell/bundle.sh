@@ -1,7 +1,7 @@
 #!/bin/bash -ue
 
 OCAMLV=4.04.1
-OPAMV=2.0.0~beta4
+OPAMV=2.0.0~beta5
 OPAM_REPO=https://opam.ocaml.org/2.0
 DEBUG=
 MAKESELF=
