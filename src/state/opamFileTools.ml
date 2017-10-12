@@ -484,6 +484,10 @@ let lint t =
              false f)
           false
           (OpamFormula.ands [t.depends; t.depopts]));
+    cond 46 `Error
+      "Package is needlessly flagged \"light-uninstall\", since it has no \
+       remove instructions"
+      (has_flag Pkgflag_Conf t && t.remove = []);
   ]
   in
   format_errors @
