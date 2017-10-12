@@ -259,7 +259,7 @@ module OPAM: sig
     (* Relationships; solver and availability info *)
     depends    : filtered_formula;
     depopts    : filtered_formula;
-    conflicts  : formula;
+    conflicts  : filtered_formula;
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
@@ -399,7 +399,7 @@ module OPAM: sig
   val with_post_messages: (string * filter option) list -> t -> t
 
   (** Package conflicts *)
-  val conflicts: t -> formula
+  val conflicts: t -> filtered_formula
 
   val conflict_class: t -> name list
 
@@ -505,7 +505,7 @@ module OPAM: sig
   (** Construct as [depopts] *)
   val with_depopts: filtered_formula -> t -> t
 
-  val with_conflicts: formula -> t -> t
+  val with_conflicts: filtered_formula -> t -> t
 
   val with_conflict_class: name list -> t -> t
 

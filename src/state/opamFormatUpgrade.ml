@@ -164,13 +164,6 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let depends = rwr_depflags depends in
   let depopts = rwr_depflags (OpamFile.OPAM.depopts opam) in
   let conflicts =
-    let pkg_conflicts =
-      NMap.map (OpamFormula.map (function
-          | Constraint (op, FString v) ->
-            Atom (op, OpamPackage.Version.of_string v)
-          | _ -> assert false))
-        pkg_conflicts
-    in
     let to_add, disj =
       List.fold_left (fun (to_add,disj) -> function
           | Atom (pkgname, cstr) as atom ->

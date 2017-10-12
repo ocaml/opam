@@ -1880,7 +1880,7 @@ module OPAMSyntax = struct
     (* Relationships; solver and availability info *)
     depends    : filtered_formula;
     depopts    : filtered_formula;
-    conflicts  : formula;
+    conflicts  : filtered_formula;
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
@@ -2345,7 +2345,7 @@ module OPAMSyntax = struct
         (Pp.V.package_formula `Disj Pp.V.(filtered_constraints ext_version));
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
-        (Pp.V.package_formula `Disj (Pp.V.constraints Pp.V.version));
+        (Pp.V.package_formula `Disj Pp.V.(filtered_constraints ext_version));
       "conflict-class", no_cleanup Pp.ppacc with_conflict_class conflict_class
         (Pp.V.map_list ~depth:1 Pp.V.pkgname);
       "available", no_cleanup Pp.ppacc with_available available

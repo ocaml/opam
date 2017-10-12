@@ -853,9 +853,12 @@ files.
     [`conflicts:`](#opamfield-conflicts) field.
 
 - <a id="opamfield-conflicts">
-  `conflicts: [ <pkgname> { <version-constraint> } ... ]`</a>:
+  `conflicts: [ <filtered-package-formula> ... ]`</a>:
   a list of package names with optional version constraints indicating that the
-  current package can't coexist with those.
+  current package can't coexist with those. Conflicts are only allowed on a
+  disjunction of packages: the `&` connector is disallowed between packages or
+  package versions. For example, you can conflict with `"foo" {>= "3"} | "bar"`,
+  but not with `"foo" {>= "3"} & "bar"` or even `"foo" {>= "3" & < "4"}`.
 
 - <a id="opamfield-conflict-class">`conflict-class: [ <pkgname> ... ]`</a>:
   an alternate, symmetric way of defining package conflicts. Conflict classes

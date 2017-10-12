@@ -394,8 +394,21 @@ let lint t =
     cond 43 `Error
       "Conjunction used in 'conflicts:' field. Only '|' is allowed"
       (OpamVersion.compare t.opam_version (OpamVersion.of_string "1.3") >= 0 &&
-       List.exists (function Atom _ -> false | _ -> true) @@
-       OpamFormula.(ors_to_list (to_atom_formula t.conflicts)));
+       let rec ors_only_constraint = function
+         | Atom _ | Empty -> true
+         | Or (a, b) -> ors_only_constraint a && ors_only_constraint b
+         | And (a, Atom (Filter _)) | And (Atom (Filter _), a) | Block a ->
+           ors_only_constraint a
+         | And _ -> false
+       in
+       let rec check = function
+         | Atom (_, c) -> ors_only_constraint c
+         | Empty -> true
+         | Or (a, b) -> check a && check b
+         | Block a -> check a
+         | And _ -> false
+       in
+       not (check t.conflicts));
     cond 44 `Warning
       "The 'plugin' package flag is set but the package name doesn't \
        begin with 'opam-'"
