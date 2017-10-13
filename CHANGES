@@ -3,6 +3,20 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
 2.0.0~beta5
+* Added timeout support to the solvers (default 1min)
+* Added `--unlock-base` to allow changing the compiler of a switch
+* Added the `{post}` dependency flag for packages to be installed together, but
+  in no specific order. Use it for `base-*` packages.
+* Fixed issue with OCaml 4.05.0 and installed programs not found (`Unix.execvpe`
+  behaviour changes, https://caml.inria.fr/mantis/view.php?id=7640)
+* Added a `pin-depends` field for easier development project dependency
+  management and sharing
+* Some optimisations to repository loading
+* Fixed --best-effort with the built-in solver
+* Shorten conflict messages even more
+* Added `opam admin add-constraint` to amend a set of reverse dependencies in a
+  repository
+* New format for `depexts:`, easier to understand and more flexible
 
 2.0.0~beta4
 * Building with OCaml < 4.02.3 is no longer supported
