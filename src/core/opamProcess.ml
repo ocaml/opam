@@ -179,8 +179,8 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
   let pid =
     let path =
       let prefix = "PATH=" in
-      OpamMisc.remove_prefix ~prefix
-        (List.find (OpamMisc.starts_with ~prefix) (Array.to_list env))
+      OpamStd.String.remove_prefix ~prefix
+        (List.find (OpamStd.String.starts_with ~prefix) (Array.to_list env))
     in
     Unix.putenv "PATH" path;
     Unix.create_process_env

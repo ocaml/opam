@@ -2116,8 +2116,8 @@ let run default commands =
     OpamStd.Sys.exec_at_exit ();
     let path =
       let prefix = "PATH=" in
-      OpamMisc.remove_prefix ~prefix
-        (List.find (OpamMisc.starts_with ~prefix) (Array.to_list env))
+      OpamStd.String.remove_prefix ~prefix
+        (List.find (OpamStd.String.starts_with ~prefix) (Array.to_list env))
     in
     Unix.putenv "PATH" path;
     Unix.execvpe cmd args env
