@@ -33,8 +33,7 @@ jbuilder: $(JBUILDER_DEP)
 opam: $(JBUILDER_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 
-opam-installer: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install
+opam-installer: $(JBUILDER_DEP) opam.install
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(JBUILDER_DEP)
@@ -85,9 +84,9 @@ opam-%.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) -p opam-$* $@
 
 opam.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) $@
+	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install opam.install
 
-opam-actual.install: opam.install opam-installer.install
+opam-actual.install: opam.install
 	@echo 'bin: [' > $@
 	@grep -h 'bin/[^/]*' $^ >> $@
 	@echo ']' >> $@
