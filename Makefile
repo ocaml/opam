@@ -16,6 +16,8 @@ else
   JBUILDER_FILE=
 endif
 
+OPAMINSTALLER = ./opam-installer$(EXE)
+
 ALWAYS:
 	@
 
@@ -112,22 +114,22 @@ installlib-%: $(JBUILDER_DEP) opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 uninstalllib-%: $(JBUILDER_DEP) opam-installer opam-%.install
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 install: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) $<
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
 uninstall: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
