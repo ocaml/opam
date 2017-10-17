@@ -1,0 +1,28 @@
+opam-version: "1.2"
+version: "2.0.0~beta4"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Thomas Gazagnaire <thomas@gazagnaire.org>"
+  "Anil Madhavapeddy   <anil@recoil.org>"
+  "Fabrice Le Fessant  <Fabrice.Le_fessant@inria.fr>"
+  "Frederic Tuong      <tuong@users.gforge.inria.fr>"
+  "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+  "Guillem Rieu        <guillem.rieu@ocamlpro.com>"
+  "Vincent Bernardoff  <vb@luminar.eu.org>"
+  "Roberto Di Cosmo    <roberto@dicosmo.org>"
+]
+homepage: "https://opam.ocaml.org/"
+bug-reports: "https://github.com/ocaml/opam/issues"
+dev-repo: "https://github.com/ocaml/opam.git"
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  ["touch" "src/tools/.merlin-exists"]
+  # ^ see https://github.com/janestreet/jbuilder/issues/257
+  [make "%{name}%.install"]
+]
+depends: [
+  "opam-format" {= "2.0.0~beta4"}
+  "cmdliner" {>= "0.9.8"}
+  "jbuilder" {build & >= "1.0+beta12"}
+]
+available: ocaml-version >= "4.02.3"

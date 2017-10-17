@@ -16,6 +16,8 @@ else
   JBUILDER_FILE=
 endif
 
+OPAMINSTALLER = ./opam-installer$(EXE)
+
 ALWAYS:
 	@
 
@@ -85,10 +87,12 @@ opam-%.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) -p opam-$* $@
 
 opam.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) $@
+	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install opam.install
 
 opam-actual.install: opam.install
-	@sed -n -e "/^bin: /,/^]/p" $< > $@
+	@echo 'bin: [' > $@
+	@grep -h 'bin/[^/]*' $^ >> $@
+	@echo ']' >> $@
 	@echo 'man: [' >>$@
 	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
 	@echo ']' >>$@
@@ -107,26 +111,26 @@ opam-%: $(JBUILDER_DEP)
 opam-lib: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS))
 
-installlib-%: $(JBUILDER_DEP) opam-installer opam-%.install
+installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) opam-$*.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-uninstalllib-%: $(JBUILDER_DEP) opam-installer opam-%.install
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) opam-$*.install
+uninstalllib-%: opam-installer opam-%.install
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer $(OPAMINSTALLER_FLAGS) $<
+install: opam-actual.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam-actual.install $(JBUILDER_DEP)
-	$(JBUILDER) exec $(JBUILDER_ARGS) -- opam-installer -u $(OPAMINSTALLER_FLAGS) $<
+uninstall: opam-actual.install
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
