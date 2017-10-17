@@ -595,15 +595,20 @@ module OPAM: sig
   val with_format_errors: (string * OpamPp.bad_format) list -> t -> t
 
   (** Prints to a string, while keeping the format of the original file as much
-      as possible *)
+      as possible. The original format is read from the given
+      [format_from_string], the file [format_from], or the output file if
+      it exists *)
   val to_string_with_preserved_format:
-    ?format_from:(t typed_file) -> t typed_file -> t -> string
+    ?format_from:(t typed_file) -> ?format_from_string:string ->
+    t typed_file -> t -> string
 
   (** Writes an opam file, but preserving the existing formatting as much as
-      possible. The format is taken from the file that is being overwritten
-      unless [format_from] is specified. *)
+      possible. The original format is read from the given
+      [format_from_string], the file [format_from], or the output file if
+      it exists *)
   val write_with_preserved_format:
-    ?format_from:(t typed_file) -> t typed_file -> t -> unit
+    ?format_from:(t typed_file) -> ?format_from_string:string ->
+    t typed_file -> t -> unit
 
   (** Low-level values used for linting and similar processing *)
 
@@ -948,7 +953,7 @@ module Syntax : sig
   val of_string: 'a typed_file -> string -> opamfile
   val to_string: 'a typed_file -> opamfile -> string
   val to_string_with_preserved_format:
-    'a typed_file -> ?format_from:'a typed_file ->
+    'a typed_file -> ?format_from:'a typed_file -> ?format_from_string:string ->
     empty:'a ->
     ?sections:('a, (string option * opamfile_item list) list)
       OpamFormat.I.fields_def ->

@@ -741,10 +741,14 @@ module Syntax = struct
     OpamPrinter.opamfile t
 
   let to_string_with_preserved_format
-      filename ?(format_from=filename) ~empty ?(sections=[]) ~fields pp t =
+      filename ?(format_from=filename) ?format_from_string
+      ~empty ?(sections=[]) ~fields pp t =
     let current_str_opt =
-      try Some (OpamFilename.read format_from)
-      with OpamSystem.File_not_found _ -> None
+      match format_from_string with
+      | Some s -> Some s
+      | None ->
+        try Some (OpamFilename.read format_from)
+        with OpamSystem.File_not_found _ -> None
     in
     match current_str_opt with
     | None -> to_string filename (Pp.print pp (filename, t))
@@ -2612,12 +2616,15 @@ module OPAMSyntax = struct
                (OpamFilename.prettify filename);
            {t with name = None; version = None})
 
-  let to_string_with_preserved_format ?format_from filename t =
-    Syntax.to_string_with_preserved_format ?format_from filename ~empty
+  let to_string_with_preserved_format
+      ?format_from ?format_from_string filename t =
+    Syntax.to_string_with_preserved_format
+      ?format_from ?format_from_string filename ~empty
       ~sections ~fields:raw_fields pp t
 
-  let write_with_preserved_format ?format_from filename t =
-    let s = to_string_with_preserved_format ?format_from filename t in
+  let write_with_preserved_format
+      ?format_from ?format_from_string filename t =
+    let s = to_string_with_preserved_format ?format_from ?format_from_string filename t in
     OpamFilename.write filename s
 
   let contents ?(filename=dummy_file) t =
