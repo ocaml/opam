@@ -21,7 +21,6 @@ build: [
 build-test: [make "tests"]
 depends: [
   "opam-client" {= "2.0.0~beta4"}
-  "opam-installer" {= "2.0.0~beta4"}
   "cmdliner" {>= "0.9.8"}
   "jbuilder" {build & >= "1.0+beta12"}
 ]

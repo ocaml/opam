@@ -35,7 +35,8 @@ jbuilder: $(JBUILDER_DEP)
 opam: $(JBUILDER_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 
-opam-installer: $(JBUILDER_DEP) opam.install
+opam-installer: $(JBUILDER_DEP)
+	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(JBUILDER_DEP)
@@ -110,25 +111,25 @@ opam-%: $(JBUILDER_DEP)
 opam-lib: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS))
 
-installlib-%: $(JBUILDER_DEP) opam-installer opam-%.install
+installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
 	  $(error Installing the opam libraries is incompatible with embedding \
 	          the dependencies. Run 'make clean-ext' and try again))
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-uninstalllib-%: $(JBUILDER_DEP) opam-installer opam-%.install
+uninstalllib-%: opam-installer opam-%.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
 libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam-actual.install $(JBUILDER_DEP)
+install: opam-actual.install
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam-actual.install $(JBUILDER_DEP)
+uninstall: opam-actual.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 
 .PHONY: tests tests-local tests-git
