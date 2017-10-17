@@ -105,7 +105,6 @@ let apply_global_options o =
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
     (* ?jobs: int *)
     (* ?dl_jobs: int *)
-    (* ?external_tags:string list *)
     (* ?keep_build_dir:bool *)
     (* ?build_test:bool *)
     (* ?build_doc:bool *)
@@ -147,7 +146,6 @@ type build_options = {
   dryrun        : bool;
   fake          : bool;
   skip_update   : bool;
-  external_tags : string list;
   jobs          : int option;
   ignore_constraints_on: name list option;
   unlock_base   : bool;
@@ -155,11 +153,11 @@ type build_options = {
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc show dryrun skip_update external_tags
+    req_checksums build_test build_doc show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base = {
   keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; external_tags; fake; jobs; ignore_constraints_on; unlock_base;
+  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
 }
 
 let apply_build_options b =
@@ -186,7 +184,6 @@ let apply_build_options b =
     ?unlock_base:(flag b.unlock_base)
     ();
   OpamClientConfig.update
-    ?external_tags:(match b.external_tags with [] -> None | l -> Some l)
     ?keep_build_dir:(flag b.keep_build_dir)
     ?reuse_build_dir:(flag b.reuse_build_dir)
     ?inplace_build:(flag b.inplace_build)
@@ -505,6 +502,24 @@ let atom_or_local =
   in
   parse, print
 
+let variable_bindings =
+  let parse str =
+    try
+      OpamStd.String.split str ',' |>
+      List.map (fun s -> match OpamStd.String.cut_at s '=' with
+          | Some (a, b) -> OpamVariable.of_string a, b
+          | None -> Printf.ksprintf failwith "%S is not a binding" s) |>
+      fun bnds -> `Ok bnds
+    with Failure e -> `Error e
+  in
+  let print ppf x =
+    List.map
+      (fun (a,b) -> Printf.sprintf "%s=%s" (OpamVariable.to_string a) b) x |>
+    String.concat "," |>
+    pr_str ppf
+  in
+  parse, print
+
 let warn_selector =
   let parse str =
     let sep = Re.(compile (set "+-")) in
@@ -554,26 +569,16 @@ let enum_with_default sl: 'a Arg.converter =
   parse, print
 
 let opamlist_column =
-  let depexts_flag_re =
-    Re.(compile @@ seq [
-        str "depexts(";
-        group @@ rep @@ seq [rep @@ diff any (set ",)"); opt (char ',')];
-        char ')'])
-  in
   let parse str =
     if OpamStd.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else
     try
-      try `Ok (OpamListCommand.Depexts
-                 (OpamStd.String.split
-                    (Re.Group.get (Re.exec depexts_flag_re str) 1) ','))
-      with Not_found ->
-        List.find (function (OpamListCommand.Field _), _ -> false
-                          | _, name -> name = str)
-          OpamListCommand.field_names
-        |> fun (f, _) -> `Ok f
+      List.find (function (OpamListCommand.Field _), _ -> false
+                        | _, name -> name = str)
+        OpamListCommand.field_names
+      |> fun (f, _) -> `Ok f
     with Not_found ->
       `Error (Printf.sprintf
                 "No known printer for column %s. If you meant an opam file \
@@ -1005,11 +1010,6 @@ let build_options =
        packages, they are normally updated from their origin first. This flag \
        disables that behaviour and will keep them to their version in cache."
   in
-  let external_tags =
-    mk_opt ~section ["external"] "TAGS"
-      "Display the external packages associated to the given tags. \
-       This is deprecated, use `opam list --external' instead"
-      Arg.(list string) [] in
   let fake =
     mk_flag ~section ["fake"]
       "This option registers the actions into the opam database, without \
@@ -1030,7 +1030,7 @@ let build_options =
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $external_tags $fake $jobs_flag $ignore_constraints_on
+    $skip_update $fake $jobs_flag $ignore_constraints_on
     $unlock_base)
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"

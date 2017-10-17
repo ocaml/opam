@@ -54,7 +54,7 @@ let post_message ?(failed=false) st action =
             "%s%s\n" mark msg)
         messages
     );
-    if failed && OpamFile.OPAM.depexts opam <> None then (
+    if failed && OpamFile.OPAM.depexts opam <> [] then (
       if messages = [] then
         OpamConsole.header_msg "%s troubleshooting" (OpamPackage.to_string pkg);
       OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
@@ -705,30 +705,6 @@ let simulate_new_state state t =
       t state.installed in
   { state with installed }
 
-let print_external_tags t solution =
-  let packages = OpamSolver.new_packages solution in
-  let external_tags = OpamStd.String.Set.of_list OpamClientConfig.(!r.external_tags) in
-  let values =
-    OpamPackage.Set.fold (fun nv accu ->
-        let opam = OpamSwitchState.opam t nv in
-        match OpamFile.OPAM.depexts opam with
-        | None         -> accu
-        | Some alltags ->
-          OpamStd.String.SetMap.fold (fun tags values accu ->
-              if OpamStd.String.Set.(
-                  (* A \subseteq B <=> (A U B) / B = 0 *)
-                  is_empty (diff (union external_tags tags) external_tags)
-                )
-              then
-                OpamStd.String.Set.union values accu
-              else
-                accu
-            ) alltags accu
-      ) packages OpamStd.String.Set.empty in
-  let values = OpamStd.String.Set.elements values in
-  if values <> [] then
-    OpamConsole.msg "%s\n" (String.concat " " values)
-
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
@@ -755,8 +731,7 @@ let apply ?ask t action ~requested ?add_roots solution =
   else (
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
-    let show_solution = ask <> Some false &&
-                        OpamClientConfig.(!r.external_tags) = [] in
+    let show_solution = ask <> Some false in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
     OpamPackage.Set.iter
@@ -795,10 +770,7 @@ let apply ?ask t action ~requested ?add_roots solution =
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
 
-    if OpamClientConfig.(!r.external_tags) <> [] then (
-      print_external_tags t solution;
-      t, Aborted
-    ) else if not OpamClientConfig.(!r.show) &&
+    if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
       (* print_variable_warnings t; *)

@@ -16,7 +16,6 @@ type t = private {
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
-  external_tags: string list;
   keep_build_dir: bool;
   reuse_build_dir: bool;
   inplace_build: bool;
@@ -36,7 +35,6 @@ type 'a options_fun =
   ?autoremove:bool ->
   ?editor:string ->
 
-  ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
@@ -70,7 +68,6 @@ val opam_init:
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
-  ?external_tags:string list ->
   ?keep_build_dir:bool ->
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->

@@ -224,6 +224,16 @@ let default d =
     (fun ~pos:_ -> function None -> d | Some x -> x)
     (fun x -> Some x)
 
+let fallback pp1 pp2 =
+  let parse ~pos x =
+    try pp1.parse ~pos x with e ->
+      OpamStd.Exn.fatal e;
+      try pp2.parse ~pos x with _ ->
+        raise e
+  in
+  { pp1 with parse }
+
+
 module Op = struct
   let ( -| ) = ( -| )
   let ( ^+ ) = ( ^+ )

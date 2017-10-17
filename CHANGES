@@ -2,6 +2,8 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.0~beta5
+
 2.0.0~beta4
 * Building with OCaml < 4.02.3 is no longer supported
 * Support compilation with a built-in mccs solver (removing run-time dependency

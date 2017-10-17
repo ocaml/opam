@@ -1,1 +1,1 @@
-(-w +a-4-44-48 -short-paths @CONF_OCAMLFLAGS@)
+(-w +a-4-44-48 @CONF_OCAMLFLAGS@)

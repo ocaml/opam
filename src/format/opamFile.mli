@@ -259,7 +259,7 @@ module OPAM: sig
     (* Relationships; solver and availability info *)
     depends    : filtered_formula;
     depopts    : filtered_formula;
-    conflicts  : formula;
+    conflicts  : filtered_formula;
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
@@ -281,7 +281,7 @@ module OPAM: sig
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : tags option;
+    depexts    : (string list * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -384,7 +384,7 @@ module OPAM: sig
   val depopts: t -> filtered_formula
 
   (** External dependencies *)
-  val depexts: t -> tags option
+  val depexts: t -> (string list * filter) list
 
   val extra_sources: t -> (basename * URL.t) list
 
@@ -399,7 +399,7 @@ module OPAM: sig
   val with_post_messages: (string * filter option) list -> t -> t
 
   (** Package conflicts *)
-  val conflicts: t -> formula
+  val conflicts: t -> filtered_formula
 
   val conflict_class: t -> name list
 
@@ -505,7 +505,7 @@ module OPAM: sig
   (** Construct as [depopts] *)
   val with_depopts: filtered_formula -> t -> t
 
-  val with_conflicts: formula -> t -> t
+  val with_conflicts: filtered_formula -> t -> t
 
   val with_conflict_class: name list -> t -> t
 
@@ -550,7 +550,7 @@ module OPAM: sig
   val with_bug_reports: string list -> t -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: tags -> t -> t
+  val with_depexts: (string list * filter) list -> t -> t
 
   val with_flags: package_flag list -> t -> t
 

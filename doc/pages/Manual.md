@@ -853,9 +853,12 @@ files.
     [`conflicts:`](#opamfield-conflicts) field.
 
 - <a id="opamfield-conflicts">
-  `conflicts: [ <pkgname> { <version-constraint> } ... ]`</a>:
+  `conflicts: [ <filtered-package-formula> ... ]`</a>:
   a list of package names with optional version constraints indicating that the
-  current package can't coexist with those.
+  current package can't coexist with those. Conflicts are only allowed on a
+  disjunction of packages: the `&` connector is disallowed between packages or
+  package versions. For example, you can conflict with `"foo" {>= "3"} | "bar"`,
+  but not with `"foo" {>= "3"} & "bar"` or even `"foo" {>= "3" & < "4"}`.
 
 - <a id="opamfield-conflict-class">`conflict-class: [ <pkgname> ... ]`</a>:
   an alternate, symmetric way of defining package conflicts. Conflict classes
@@ -865,25 +868,24 @@ files.
   packages.
 
 - <a id="opamfield-depexts">
-  `depexts: [ [ [ <string> ... ] [ <string> ... ] ] ... ]`</a>:
-  the package external dependencies. This field is a list that can be used for
-  describing the dependencies of the package toward software or packages
-  external to the <span class="opam">opam</span> ecosystem, for various systems. It contains pairs of
-  lists of the form `[ predicates ext-packages ]`. `predicates` is used to
-  select the element of the list based on the current system: it is a list of
-  tags (strings) that can correspond to the OS, architecture or distribution.
-  The `predicates` is used as a conjunction: the pair will only be selected when
-  _all_ tags are active. The resulting `ext-packages` should be identifiers of
-  packages recognised by the system's package manager.
+  `depexts: [ [ <string> ... ] { <filter> }  ... ]`</a>:
 
-    There is currently no definite specification for the precise tags you should
-    use, but the closest thing is the
-    [opam-depext project](https://github.com/OCamlPro/opam-depext). The
-    `depexts` information can be retrieved through the `opam list --external`
-    command.
+  the package external dependencies. This field may be used to describe the
+  dependencies of the package toward software or packages external to the <span
+  class="opam">opam</span> ecosystem, for various systems. Each
+  `[ <string> ... ] { <filter> }` element declares the strings to the left as
+  identifiers to required system-managed packages, while the filter to the right
+  allows to select the systems they will be active on.
+
+  The filters typically use variables `arch`, `os`, `os-distribution`,
+  `os-version`, `os-family`, as defined in
+  [opam-depext](https://github.com/ocaml/opam-depext) (note that opam itself
+  doesn't define all of these at the moment). The `depexts` information can be
+  retrieved through the `opam list --external` command with the appropriate
+  `--vars` bindings.
 
     The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
-    packages, which make the dependencies clearer and avoids duplicating the
+    packages, which makes the dependencies clearer and avoids duplicating the
     efforts of documenting the appropriate system packages on the various
     OSes available.
 

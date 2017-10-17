@@ -68,9 +68,8 @@ val filter:
 (** Or-filter on package patterns (NAME or NAME.VERSION) *)
 val pattern_selector: string list -> selector OpamFormula.formula
 
-(** Lists the external dependencies matching the given flags for the given set
-    of packages *)
-val print_depexts: 'a switch_state -> package_set -> string list -> unit
+(** Lists the aggregated active external dependencies of the given packages *)
+val print_depexts: 'a switch_state -> package_set -> unit
 
 (** Element of package information to be printed. Fixme: should be part of the
     run-time man! *)
@@ -100,9 +99,7 @@ type output_format =
                            the system *)
   | VC_ref             (** The version-control branch or tag the package url is
                            bound to, if any *)
-  | Depexts of string list (** The external dependencies associated with any
-                               subset of the given tags (or all, associated to
-                               their respective tags, if the list is empty *)
+  | Depexts            (** The external dependencies *)
 
 val default_list_format: output_format list
 

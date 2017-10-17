@@ -138,6 +138,11 @@ val opt : ('a list, 'b) t -> ('a list, 'b option) t
 
 val default : 'a -> ('a option, 'a) t
 
+(** [fallback p1 p2] is [p1], except that parsing is allowed to fail and will in
+    that case try to parse through [p2]. Can be useful for backwards
+    compatibility, but use with care *)
+val fallback : ('a, 'b) t -> ('a, 'b) t -> ('a, 'b) t
+
 (** {3 Combinators to parse to a record from a list of (field name, field
     setter, field getter)} *)
 

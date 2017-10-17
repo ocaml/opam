@@ -414,7 +414,12 @@ let conflicts_with st subset =
     OpamPackage.Set.fold (fun nv (cf,cfc) ->
         try
           let opam = OpamPackage.Map.find nv st.opams in
-          OpamFormula.ors [cf; OpamFile.OPAM.conflicts opam],
+          let conflicts =
+            OpamFilter.filter_formula ~default:false
+              (OpamPackageVar.resolve_switch ~package:nv st)
+              (OpamFile.OPAM.conflicts opam)
+          in
+          OpamFormula.ors [cf; conflicts],
           List.fold_right OpamPackage.Name.Set.add
             (OpamFile.OPAM.conflict_class opam) cfc
         with Not_found -> cf, cfc)
@@ -428,14 +433,18 @@ let conflicts_with st subset =
         List.exists (fun cl -> OpamPackage.Name.Set.mem cl conflict_classes)
           (OpamFile.OPAM.conflict_class opam)
         ||
-        let backwards_conflicts = OpamFile.OPAM.conflicts opam in
+        let backwards_conflicts =
+          OpamFilter.filter_formula ~default:false
+            (OpamPackageVar.resolve_switch ~package:nv st)
+            (OpamFile.OPAM.conflicts opam)
+        in
         OpamPackage.Set.exists
           (OpamFormula.verifies backwards_conflicts) subset))
 
 let remove_conflicts st subset pkgs =
   pkgs -- conflicts_with st subset pkgs
 
-let get_conflicts packages opams_map =
+let get_conflicts st packages opams_map =
   let conflict_classes =
     OpamPackage.Map.fold (fun nv opam acc ->
         List.fold_left (fun acc cc ->
@@ -461,6 +470,11 @@ let get_conflicts packages opams_map =
   in
   OpamPackage.Map.fold (fun nv opam acc ->
       let conflicts =
+        OpamFilter.filter_formula ~default:false
+          (OpamPackageVar.resolve_switch ~package:nv st)
+          (OpamFile.OPAM.conflicts opam)
+      in
+      let conflicts =
         List.fold_left (fun acc cl ->
             let cmap =
               OpamPackage.Name.Map.find cl conflict_class_formulas |>
@@ -470,7 +484,7 @@ let get_conflicts packages opams_map =
               (fun name vformula acc ->
                  OpamFormula.ors [acc; Atom (name, vformula)])
               cmap acc)
-          (OpamFile.OPAM.conflicts opam)
+          conflicts
           (OpamFile.OPAM.conflict_class opam)
       in
       OpamPackage.Map.add nv conflicts acc)
@@ -532,7 +546,7 @@ let universe st
     in
     get_deps depend st.opams
   in
-  let u_conflicts = get_conflicts st.packages st.opams in
+  let u_conflicts = get_conflicts st st.packages st.opams in
   let base =
     if OpamStateConfig.(!r.unlock_base) then OpamPackage.Set.empty
     else st.compiler_packages
@@ -566,7 +580,7 @@ let universe st
   u
 
 let dump_pef_state st oc =
-  let conflicts = get_conflicts st.packages st.opams in
+  let conflicts = get_conflicts st st.packages st.opams in
   let print_def nv opam =
     Printf.fprintf oc "package: %s\n" (OpamPackage.name_to_string nv);
     Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string nv);

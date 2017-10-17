@@ -388,7 +388,7 @@ type output_format =
   | Repository
   | Installed_files
   | VC_ref
-  | Depexts of string list
+  | Depexts
 
 let default_list_format = [Name; Installed_version; Synopsis_or_target]
 
@@ -409,8 +409,7 @@ let disp_header = function
   | Repository -> "Repository"
   | Installed_files -> "Installed files"
   | VC_ref -> "VC ref"
-  | Depexts [] -> "Depexts"
-  | Depexts sl -> Printf.sprintf "Depexts(%s)" (String.concat "," sl)
+  | Depexts -> "Depexts"
 
 let field_names = [
   Name, "name";
@@ -430,7 +429,7 @@ let field_names = [
   Repository, "repository";
   Installed_files, "installed-files";
   VC_ref, "vc-ref";
-  Depexts [], "depexts";
+  Depexts, "depexts";
 ]
 
 let string_of_field = function
@@ -478,6 +477,17 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
     OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
   | List (_, l) -> OpamPrinter.value_list l
   | f -> OpamPrinter.Normalise.value f
+
+let get_depexts st nv =
+  let env v = OpamPackageVar.resolve_switch ~package:nv st v in
+  List.fold_left (fun acc (names, filter) ->
+      if OpamFilter.eval_to_bool ~default:false env filter
+      then
+        List.fold_left (fun acc n -> OpamStd.String.Set.add n acc)
+          acc names
+      else acc)
+    OpamStd.String.Set.empty
+    (OpamFile.OPAM.depexts (get_opam st nv))
 
 let detail_printer ?prettify ?normalise st nv =
   let open OpamStd.Option.Op in
@@ -596,28 +606,8 @@ let detail_printer ?prettify ?normalise st nv =
        url.OpamUrl.hash)
       +! ""
     )
-  | Depexts tags_list ->
-    let tags =
-      OpamStd.Option.default OpamStd.String.SetMap.empty
-        (OpamFile.OPAM.depexts (get_opam st nv))
-    in
-    if tags_list = [] then
-      OpamStd.String.SetMap.fold (fun tags values acc ->
-          Printf.sprintf "%s\n%s: %s" acc
-            (String.concat " " (OpamStd.String.Set.elements tags))
-            (String.concat " " (OpamStd.String.Set.elements values)))
-        tags ""
-    else
-    let required_tags = OpamStd.String.Set.of_list tags_list in
-    OpamStd.String.SetMap.fold (fun tags values acc ->
-        if OpamStd.String.Set.for_all
-            (fun tag -> OpamStd.String.Set.mem tag required_tags)
-            tags
-        then
-          Printf.sprintf "%s %s" acc
-            (String.concat " " (OpamStd.String.Set.elements values))
-        else acc)
-      tags ""
+  | Depexts ->
+    String.concat " " (OpamStd.String.Set.elements (get_depexts st nv))
 
 type package_listing_format = {
   short: bool;
@@ -703,8 +693,7 @@ let get_switch_state gt =
   | None -> OpamSwitchState.load_virtual gt rt
   | Some sw -> OpamSwitchState.load `Lock_none gt rt sw
 
-let print_depexts st packages tags_list =
-  let required_tags = OpamStd.String.Set.of_list tags_list in
+let print_depexts st packages =
   OpamPackage.Name.Set.fold
     (fun name acc ->
        let nv = OpamSwitchState.get_package st name in
@@ -712,24 +701,7 @@ let print_depexts st packages tags_list =
          if OpamPackage.Set.mem nv packages then nv else
            OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
        in
-       let opam = get_opam st nv in
-       match OpamFile.OPAM.depexts opam with
-       | None -> acc
-       | Some tags ->
-         OpamStd.String.SetMap.fold (fun tags values acc ->
-             if tags_list = [] then
-               let line =
-                 Printf.sprintf "%s: %s"
-                   (String.concat " " (OpamStd.String.Set.elements tags))
-                   (String.concat " " (OpamStd.String.Set.elements values))
-               in
-               OpamStd.String.Set.add line acc
-             else if OpamStd.String.Set.for_all
-                 (fun tag -> OpamStd.String.Set.mem tag required_tags)
-                 tags
-             then OpamStd.String.Set.union acc values
-             else acc)
-           tags acc)
+       OpamStd.String.Set.union acc (get_depexts st nv))
     (OpamPackage.names_of_packages packages)
     OpamStd.String.Set.empty
   |> OpamStd.String.Set.iter print_endline

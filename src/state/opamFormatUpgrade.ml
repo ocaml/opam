@@ -164,13 +164,6 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let depends = rwr_depflags depends in
   let depopts = rwr_depflags (OpamFile.OPAM.depopts opam) in
   let conflicts =
-    let pkg_conflicts =
-      NMap.map (OpamFormula.map (function
-          | Constraint (op, FString v) ->
-            Atom (op, OpamPackage.Version.of_string v)
-          | _ -> assert false))
-        pkg_conflicts
-    in
     let to_add, disj =
       List.fold_left (fun (to_add,disj) -> function
           | Atom (pkgname, cstr) as atom ->
@@ -264,6 +257,50 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
       (OpamUrl.parse ~handle_suffix:true @* OpamUrl.to_string)
       (OpamFile.OPAM.dev_repo opam)
   in
+  let depexts =
+    let arch = OpamVariable.of_string "arch" in
+    let os = OpamVariable.of_string "os" in
+    let os_family = OpamVariable.of_string "os-family" in
+    let distro = OpamVariable.of_string "os-distribution" in
+    let eq var v = FOp (FIdent ([], var, None), `Eq, FString v) in
+    (* Transform all known tags into the corresponding filters *)
+    let rec transform_filter =
+      let transform_tag = function
+        | "amd64"       -> eq arch "x86_64"
+        | "x86"         -> eq arch "x86_32"
+        | "arm"|"armv7" -> eq arch "arm32"
+        | "ppc"         -> eq arch "ppc32"
+        | "x86_64" | "ppc64" as a -> eq arch a
+        | "osx"         -> eq os "macos"
+        | "linux" | "unix" | "xenserver" | "freebsd" | "openbsd" | "netbsd"
+        | "dragonfly" | "win32" | "cygwin" as o -> eq os o
+
+        | "nixpkgs"     -> eq distro "nixos"
+        | "arch"        -> eq distro "archlinux"
+        | "homebrew" | "macports" | "debian" | "ubuntu" | "centos" | "fedora"
+        | "rhel" | "opensuse" | "oraclelinux" | "mageia" | "alpine"
+        | "archlinux" | "gentoo" | "nixos" as d -> eq distro d
+
+        | "bsd"         -> eq os_family "bsd"
+        | "mswindows"   -> eq os_family "windows"
+        | "source"      -> failwith "\"source\" tag"
+        | s             -> failwith ("Unknown tag "^s)
+      in
+      function
+      | FAnd (f1, f2) -> FAnd (transform_filter f1, transform_filter f2)
+      | FString s -> transform_tag s
+      | _ -> raise Exit (* the filter is already in the new format if it
+                           contains anything else *)
+    in
+    OpamStd.List.filter_map
+      (fun (names, filter) ->
+         try Some (names, transform_filter filter) with
+         | Exit -> Some (names, filter)
+         | Failure m ->
+           OpamConsole.warning "Ignored depext in %s: %s" filename m;
+           None)
+      (OpamFile.OPAM.depexts opam)
+  in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
   OpamFile.OPAM.with_depends depends |>
@@ -276,6 +313,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   OpamFile.OPAM.with_deprecated_build_test [] |>
   OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>
+  OpamFile.OPAM.with_depexts depexts |>
   auto_add_flags |>
   filter_out_flagtags
 
