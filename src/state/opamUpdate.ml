@@ -126,6 +126,7 @@ let repositories rt repos =
   let command repo =
     OpamProcess.Job.catch
       (fun ex ->
+         OpamStd.Exn.fatal ex;
          OpamConsole.error "Could not update repository %S: %s"
            (OpamRepositoryName.to_string repo.repo_name)
            (match ex with Failure s -> s | ex -> Printexc.to_string ex);
