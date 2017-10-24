@@ -397,10 +397,8 @@ and source_pin
           (OpamPackage.Name.to_string name)
           (if no_changes then "already" else "currently")
           (string_of_pinned cur_opam);
-      if no_changes && not need_edit then
-        (if not quiet then OpamConsole.msg "No changes.\n";
-         raise Exns.Nothing_to_do);
-      if OpamConsole.confirm "Proceed and change pinning target ?" then
+      if no_changes then ()
+      else if OpamConsole.confirm "Proceed and change pinning target ?" then
         OpamFilename.remove
           (OpamFile.filename
              (OpamPath.Switch.Overlay.tmp_opam
