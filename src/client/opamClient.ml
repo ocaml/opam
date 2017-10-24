@@ -432,7 +432,9 @@ let update
         OpamPackage.Set.filter (fun nv ->
             let name = OpamPackage.Name.to_string nv.name in
             let pkg = OpamPackage.to_string nv in
-            List.exists (fun s -> s = name || s = pkg) names
+            List.exists (fun s -> s = name || s = pkg) names &&
+            let pinned = OpamPinned.package_opt st nv.name in
+            pinned = None || pinned = Some nv
           ) packages
     in
     let dev_packages, nondev_packages =
