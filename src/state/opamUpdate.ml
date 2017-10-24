@@ -247,8 +247,7 @@ let pinned_package st ?version ?(working_dir=false) name =
     let equal_opam a b =
       let cleanup_opam o =
         OpamFile.OPAM.effective_part
-          (OpamFile.OPAM.with_version_opt None
-             (OpamFile.OPAM.with_url_opt None o))
+          (OpamFile.OPAM.with_url_opt None o)
       in
       cleanup_opam a = cleanup_opam b
     in

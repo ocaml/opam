@@ -504,7 +504,7 @@ let update
       (true, false), st
     else
       OpamSwitchState.with_write_lock st @@ fun st ->
-      OpamConsole.header_msg "Synchronizing development packages";
+      OpamConsole.header_msg "Synchronising development packages";
       let success, st, updates = OpamUpdate.dev_packages st packages in
       if OpamClientConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
