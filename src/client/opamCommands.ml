@@ -1119,6 +1119,9 @@ let install =
     let st, atoms =
       OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
     in
+    if atoms = [] then
+      (OpamConsole.msg "Nothing to do\n";
+       OpamStd.Sys.exit_because `Success);
     let st =
       OpamClient.install st atoms
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only

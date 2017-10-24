@@ -164,6 +164,9 @@ let resolve_locals atom_or_local_list =
         | `Atom a -> to_pin, a :: atoms
         | `Dirname d ->
           let names_files = opams_of_dir d in
+          if names_files = [] then
+            OpamConsole.warning "No package definitions found at %s"
+              (OpamFilename.Dir.to_string d);
           let target = target_dir d in
           let to_pin =
             List.map (fun (n,f) -> n, target, f) names_files @ to_pin
