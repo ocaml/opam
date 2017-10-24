@@ -432,7 +432,9 @@ let update
         OpamPackage.Set.filter (fun nv ->
             let name = OpamPackage.Name.to_string nv.name in
             let pkg = OpamPackage.to_string nv in
-            List.exists (fun s -> s = name || s = pkg) names
+            List.exists (fun s -> s = name || s = pkg) names &&
+            let pinned = OpamPinned.package_opt st nv.name in
+            pinned = None || pinned = Some nv
           ) packages
     in
     let dev_packages, nondev_packages =
@@ -504,7 +506,7 @@ let update
       (true, false), st
     else
       OpamSwitchState.with_write_lock st @@ fun st ->
-      OpamConsole.header_msg "Synchronizing development packages";
+      OpamConsole.header_msg "Synchronising development packages";
       let success, st, updates = OpamUpdate.dev_packages st packages in
       if OpamClientConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
