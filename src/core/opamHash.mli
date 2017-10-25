@@ -38,4 +38,9 @@ val check_file: string -> t -> bool
     [None] in case of match *)
 val mismatch: string -> t -> t option
 
+(** Compute hash of the given file *)
 val compute: ?kind:kind -> string -> t
+
+(** Compute the hash of the given string (performance warning: goes through a
+    temporary file) *)
+val compute_from_string: ?kind:kind -> string -> t

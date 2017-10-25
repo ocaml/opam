@@ -43,6 +43,8 @@ let package_variable_names = [
   "build",     "Directory where the package was built";
   "hash",      "Hash of the package archive";
   "dev",       "True if this is a development package";
+  "build-id",  "A hash identifying the precise package version with all its \
+                dependencies";
 ]
 
 let predefined_depends_variables =
@@ -148,6 +150,60 @@ let all_depends ?build ?post ?test ?doc ?dev ?(filter_default=false)
     ~default:filter_default
     ~env:(resolve_switch ~package:(OpamFile.OPAM.package opam) st) deps
 
+let all_installed_deps st opam =
+  let deps = OpamFormula.atoms (all_depends ~post:false st opam) in
+  OpamStd.List.filter_map
+    (fun (n,cstr) ->
+       try
+         let nv =
+           OpamPackage.Set.find (fun nv -> nv.name = n)
+             st.installed
+         in
+         let version = nv.version in
+         match cstr with
+         | None -> Some nv
+         | Some (op,v) when OpamFormula.eval_relop op version v -> Some nv
+         | Some _ -> None
+       with Not_found -> None)
+    deps
+
+let build_id st opam =
+  let kind = `SHA256 in
+  let rec aux hash_map nv opam =
+    try hash_map, OpamPackage.Map.find nv hash_map with Not_found ->
+    match OpamFile.OPAM.url opam with
+    | Some urlf when OpamFile.URL.checksum urlf = [] ->
+      (* no fixed source: build-id undefined *)
+      raise Exit
+    | _ ->
+      let hash_map, deps_hashes =
+        List.fold_left (fun (hash_map, hashes) nv ->
+            let hash_map, hash =
+              aux hash_map nv (OpamPackage.Map.find nv st.opams)
+            in
+            hash_map, hash::hashes)
+          (hash_map, [])
+          (List.sort (fun a b -> - OpamPackage.compare a b)
+             (all_installed_deps st opam))
+      in
+      let opam_hash =
+        OpamHash.compute_from_string ~kind
+          (OpamFile.OPAM.write_to_string (OpamFile.OPAM.effective_part opam))
+      in
+      let hash =
+        OpamHash.compute_from_string ~kind
+          (OpamStd.List.concat_map " " OpamHash.contents
+             (opam_hash :: deps_hashes))
+      in
+      OpamPackage.Map.add nv hash hash_map, hash
+  in
+  try
+    let _hash_map, hash =
+      aux OpamPackage.Map.empty (OpamFile.OPAM.package opam) opam
+    in
+    Some (OpamHash.contents hash)
+  with Exit -> None
+
 (* filter handling *)
 let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
@@ -231,23 +287,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
-      let deps = OpamFormula.atoms (all_depends ~post:false st opam) in
-      let installed_deps =
-        OpamStd.List.filter_map
-          (fun (n,cstr) ->
-             try
-               let nv =
-                 OpamPackage.Set.find (fun nv -> nv.name = n)
-                   st.installed
-               in
-               let version = nv.version in
-               match cstr with
-               | None -> Some nv
-               | Some (op,v) when OpamFormula.eval_relop op version v -> Some nv
-               | Some _ -> None
-             with Not_found -> None)
-          deps
-      in
+      let installed_deps = all_installed_deps st opam in
       let str_deps =
         OpamStd.List.concat_map " " OpamPackage.to_string installed_deps
       in
@@ -263,6 +303,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
          else Some (string "")
        with Not_found -> Some (string ""))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
+    | "build-id", Some opam -> OpamStd.Option.map string (build_id st opam)
     | _, _ -> None
   in
   let make_package_local v =
