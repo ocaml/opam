@@ -1856,7 +1856,11 @@ module URLSyntax = struct
     let name = internal in
     Pp.I.fields ~name ~empty fields -|
     Pp.I.on_errors ~name (fun t e -> {t with errors = e::t.errors}) -|
-    Pp.check ~name (fun t -> t.url <> OpamUrl.empty) ~errmsg:"missing URL"
+    Pp.pp ~name
+      (fun ~pos t ->
+         if t.url = OpamUrl.empty then OpamPp.bad_format ~pos "missing URL"
+         else t)
+      (fun x -> x)
 
   let pp = Pp.I.map_file pp_contents
 
