@@ -348,17 +348,15 @@ let get_wrappers t =
 
 let get_wrapper t opam wrappers ?local getter =
   OpamFilter.commands (OpamPackageVar.resolve ?local ~opam t)
-    (List.map (fun x -> x, None) (getter wrappers)) |>
+    (getter wrappers) |>
   OpamStd.List.filter_map (function
       | [] -> None
       | cmd::args -> Some (cmd, args))
 
 let cmd_wrapper t opam wrappers getter cmd args =
-  match get_wrapper t opam wrappers (fun w -> [getter w]) with
-  | [wrap_cmd,wrap_args] ->
-    wrap_cmd, wrap_args @ (cmd :: args)
-  | [] -> cmd, args
-  | _::_::_ -> assert false
+  match get_wrapper t opam wrappers getter @ [cmd, args] with
+  | (cmd, args) :: r -> cmd, args @ List.concat (List.map (fun (c, a) -> c::a) r)
+  | [] -> assert false
 
 let opam_local_env_of_status ret =
   OpamVariable.Map.singleton

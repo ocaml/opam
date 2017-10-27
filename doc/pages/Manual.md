@@ -1230,24 +1230,24 @@ for <span class="opam">opam</span>.
 - <a id="configfield-eval-variables">`eval-variables: [ "[" <ident> [ <string> ... ] <string> "]" ... ]`</a>:
   allows the definition of global variables that will be lazily initialised to
   the output of the given command. The last `<string>` documents the variable.
-- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <string> { <filter> } ... ] ... ]`</a>:
+- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just before processing the package's commands
   for the corresponding action, on any package. The filters are evaluated in the
   same scope as the package commands.
-- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ <string> { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ <string> { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ <string> { <filter> } ... ]`</a>:
+- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify wrappers around every command executed during the corresponding action
   of any package. The command-line elements will be prefixed to the package
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
   The filters are evaluated in the same scope as the package commands.
-- <a id="configfield-post-build-commands">`post-build-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-post-install-commands">`post-install-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <string> { <filter> } ... ] ... ]`</a>:
+- <a id="configfield-post-build-commands">`post-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-install-commands">`post-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just after processing the package's commands
   for the corresponding action, and the `<pkgname>.install` file in the case of
   install and remove, on any package. The post commands are run wether or not
