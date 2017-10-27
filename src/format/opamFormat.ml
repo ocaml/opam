@@ -281,6 +281,7 @@ module V = struct
       let rec aux = function
         | Bool (_,b) -> FBool b
         | String (_,s) -> FString s
+        | Int (_,i) -> FString (string_of_int i)
         | Ident (pos,_) as id -> FIdent (parse ~pos filter_ident id)
         | Group (pos,g) -> parse_filter ~pos g
         | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
