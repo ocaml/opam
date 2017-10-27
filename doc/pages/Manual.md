@@ -1254,6 +1254,13 @@ for <span class="opam">opam</span>.
   the package script succeeded. The filters are evaluated in the same scope as
   the package commands, with the addition of the variable `error-code`, which is
   the return value of the package script.
+
+    The `post-install-commands` hook also has access to an extra variable
+    `installed-files` which is the list of files and directories added or
+    modified during the installation of the package, separated by space
+    characters. Note that this hook is run after the scan for installed files is
+    done, so any additional installed files won't be recorded and must be taken
+    care of by a `pre-remove-commands` hook.
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define
