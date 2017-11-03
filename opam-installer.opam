@@ -21,7 +21,7 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-format" {= "2.0.0~beta4"}
+  "opam-format" {= "2.0.0~beta5"}
   "cmdliner" {>= "0.9.8"}
   "jbuilder" {build & >= "1.0+beta12"}
 ]
