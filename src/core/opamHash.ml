@@ -100,13 +100,7 @@ let compute ?(kind=default_kind) file = match kind with
 let compute_from_string ?(kind=default_kind) str = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.string str))
   | (`SHA256 | `SHA512) as kind ->
-    let f = OpamSystem.temp_file "hash" in
-    try
-      OpamSystem.write f str;
-      let h = compute ~kind f in
-      OpamSystem.remove_file f;
-      h
-    with e -> OpamSystem.remove_file f; raise e
+    make kind (OpamSHA.hash_bytes kind (Bytes.of_string str))
 
 let check_file f (kind, _ as h) = compute ~kind f = h
 
