@@ -1738,7 +1738,7 @@ let get_repos_rt gt repos =
       else
         Some (List.map fst repos), rt
 
-let switch_doc = "Manage multiple installation of compilers."
+let switch_doc = "Manage multiple installation prefixes."
 let switch =
   let doc = switch_doc in
   let commands = [
@@ -1793,7 +1793,9 @@ let switch =
         ^ OpamSwitch.external_dirname ^
         ". Opam will automatically select a switch by that name found in the \
          current directory or its parents, unless $(i,OPAMSWITCH) is set or \
-         $(b,--switch) is specified.");
+         $(b,--switch) is specified. When creating a directory switch, if \
+         package definitions are found locally, the user is automatically \
+         prompted to install them after the switch is created.");
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
@@ -1922,10 +1924,10 @@ let switch =
         }
         compilers;
       `Ok ()
-    | Some `install, switch::params ->
+    | Some `install, switch_arg::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let repos, rt = get_repos_rt gt repos in
-      let switch = OpamSwitch.of_string switch in
+      let switch = OpamSwitch.of_string switch_arg in
       let packages =
         compiler_packages rt ?repos switch (param_compiler params)
       in
@@ -1935,6 +1937,21 @@ let switch =
           ~update_config:(not no_switch)
           ~packages
           switch
+      in
+      let st =
+        if OpamSwitch.is_external switch then
+          let deps_only = false in
+          let st, atoms =
+            OpamAuxCommands.autopin st ~simulate:deps_only
+              [`Dirname (OpamFilename.Dir.of_string switch_arg)]
+          in
+          let st =
+            OpamClient.install st atoms
+              ~autoupdate:[] ~add_to_roots:true ~deps_only
+          in
+
+          st
+        else st
       in
       ignore (OpamSwitchState.unlock st);
       `Ok ()
