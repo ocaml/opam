@@ -8,9 +8,186 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
+module type ConvSig = sig
+  type t
+  val bytes: int
+  val toggle_big_endian: t -> t
+end
 
-module SHA256 = struct
+module type BufSig = sig
+  module Conv: ConvSig
+  type t
+  val unsafe_get: t -> int -> Conv.t
+  val unsafe_set: t -> int -> Conv.t -> unit
+end
+
+module type InputSig = sig
+  type src
+  type t
+  type chunk
+  type elt
+
+  val init: blocksize:int -> src -> t
+  val close: t -> unit
+  val byte_size: t -> int
+
+  (** padded with 0, getting chunks after the end of input is allowed *)
+  val get_chunk: t -> int -> chunk
+
+  val get: chunk -> int -> elt
+
+  (** only allowed after the end of input *)
+  val set: chunk -> int -> elt -> unit
+
+  (** only allowed after the end of input*)
+  val set_byte: chunk -> int -> char -> unit
+end
+
+
+module Conv32 = struct
+  type t = int32
+  let bytes = 4
+  external swap: t -> t = "%bswap_int32"
+  let toggle_big_endian =
+    if Sys.big_endian then fun x -> x
+    else swap
+end
+
+module Conv64 = struct
+  type t = int64
+  let bytes = 8
+  external swap: t -> t = "%bswap_int64"
+  let toggle_big_endian =
+    if Sys.big_endian then fun x -> x
+    else swap
+end
+
+module B = Bigarray
+module A = B.Array1
+
+type bigstring = (char, B.int8_unsigned_elt, B.c_layout) A.t
+
+module Buf_Bigstring32 = struct
+  module Conv = Conv32
+  type t = bigstring
+  external unsafe_get: t -> int -> Conv.t = "%caml_bigstring_get32u"
+  external unsafe_set: t -> int -> Conv.t -> unit = "%caml_bigstring_set32u"
+end
+
+module Buf_Bigstring64 = struct
+  module Conv = Conv64
+  type t = bigstring
+  external unsafe_get: t -> int -> Conv.t = "%caml_bigstring_get64u"
+  external unsafe_set: t -> int -> Conv.t -> unit = "%caml_bigstring_set64u"
+end
+
+module Buf_String32 = struct
+  module Conv = Conv32
+  type t = Bytes.t
+  external unsafe_get: t -> int -> Conv.t = "%caml_string_get32u"
+  external unsafe_set: t -> int -> Conv.t -> unit = "%caml_string_set32u"
+end
+
+module Buf_String64 = struct
+  module Conv = Conv64
+  type t = Bytes.t
+  external unsafe_get: t -> int -> Conv.t = "%caml_string_get64u"
+  external unsafe_set: t -> int -> Conv.t -> unit = "%caml_string_set64u"
+end
+
+module Input_file(Buf: BufSig with type t = bigstring) = struct
+
+  type src = string (* filename *)
+
+  type t = {
+    fd: Unix.file_descr;
+    blocksize: int;
+    buf: Buf.t;
+  }
+
+  type chunk = Buf.t
+
+  type elt = Buf.Conv.t
+
+  let init ~blocksize src =
+    let fd = Unix.openfile src [Unix.O_RDONLY] 0 in
+    let buf = B.(Array1.map_file fd B.char c_layout false (-1)) in
+    { fd; blocksize; buf }
+
+  let close {fd; _} = Unix.close fd
+
+  let byte_size {buf; _} = A.dim buf
+
+  let get_chunk {blocksize; buf; _} i =
+    let len = A.dim buf in
+    let block_bytes = blocksize * Buf.Conv.bytes in
+    if (i + 1) * block_bytes <= len then
+      A.sub buf (i * block_bytes) (block_bytes)
+    else
+      let ba = A.create B.char B.c_layout (block_bytes) in
+      A.fill ba '\x00';
+      if i * block_bytes < len then
+        A.blit
+          (A.sub buf (i * block_bytes) (len mod block_bytes))
+          (A.sub ba 0 (len mod block_bytes));
+      ba
+
+  let get chunk i =
+    Buf.Conv.toggle_big_endian (Buf.unsafe_get chunk (i * Buf.Conv.bytes))
+
+  let set chunk i x =
+    Buf.unsafe_set chunk (i * Buf.Conv.bytes) (Buf.Conv.toggle_big_endian x)
+
+  let set_byte chunk i c = A.unsafe_set chunk i c
+
+end
+
+module Input_string(Buf: BufSig with type t = Bytes.t) = struct
+
+  type src = Bytes.t
+
+  type t = {
+    blocksize: int;
+    buf: Bytes.t;
+  }
+
+  type chunk = {
+    offset: int;
+    b: Bytes.t;
+  }
+
+  type elt = Buf.Conv.t
+
+  let init ~blocksize buf =
+    { blocksize; buf }
+
+  let close _ = ()
+
+  let byte_size {buf; _} = Bytes.length buf
+
+  let get_chunk {blocksize; buf} i =
+    let len = Bytes.length buf in
+    let block_bytes = blocksize * Buf.Conv.bytes in
+    if (i + 1) * block_bytes <= len then
+      { offset = i * block_bytes; b = buf }
+    else
+      let b = Bytes.make block_bytes '\x00' in
+      if i * block_bytes < len then
+        Bytes.blit buf (i * block_bytes) b 0 (len mod block_bytes);
+      { offset = 0; b }
+
+  let get {offset; b} i =
+    Buf.Conv.toggle_big_endian (Buf.unsafe_get b (offset + i * Buf.Conv.bytes))
+
+  let set {offset; b} i x =
+    Buf.unsafe_set b (offset + i * Buf.Conv.bytes)
+      (Buf.Conv.toggle_big_endian x)
+
+  let set_byte {offset; b} i c = Bytes.unsafe_set b (offset + i) c
+
+end
+
+module Make_SHA256(I: InputSig with type elt = int32) = struct
 
   open Int32
 
@@ -68,18 +245,11 @@ module SHA256 = struct
     0x510e527fl, 0x9b05688cl, 0x1f83d9abl, 0x5be0cd19l
   )
 
-  external swap32 : int32 -> int32 = "%bswap_int32"
-  external unsafe_get_32 : Bytes.t -> int -> int32 = "%caml_string_get32u"
-
-  let toggle_big_endian i32 =
-    if Sys.big_endian then i32
-    else swap32 i32
-
   let hash_block =
     let warr = Array.make 64 0l in
     fun hh block ->
       for t = 0 to 15 do
-        warr.(t) <- toggle_big_endian (Bigarray.Array1.get block t)
+        warr.(t) <- I.get block t
       done;
       for t = 16 to 63 do
         warr.(t) <-
@@ -103,70 +273,35 @@ module SHA256 = struct
       in
       stir 0 hh
 
-  let hash f =
-    let fd = Unix.openfile f [Unix.O_RDONLY] 0 in
-    let sz = (Unix.fstat fd).Unix.st_size in
-    let blocks = sz / 64 in
-    let rem = sz mod 64 in
-    let a = Bigarray.(Array2.map_file fd int32 c_layout false blocks 16) in
+  let blocksize = 16
+
+  let hash src =
+    let bs = I.init ~blocksize src in
+    let nbytes = I.byte_size bs in
+    let blocks = nbytes / (blocksize * 4) in
+    let rem = nbytes mod (blocksize * 4) in
     let h = ref sha_init in
     for i = 0 to blocks - 1 do
-      h := hash_block !h (Bigarray.Array2.slice_left a i)
+      h := hash_block !h (I.get_chunk bs i)
     done;
-    let lastblock = Bigarray.(Array1.create int32 c_layout 16) in
-    let buf = Bytes.create rem in
-    ignore (Unix.lseek fd (blocks * 64) Unix.SEEK_SET);
-    let rec readn i =
-      let r = Unix.read fd buf i (rem - i) in
-      if r < rem - i then readn (i + r)
+    let lastblock = I.get_chunk bs blocks in
+    I.set_byte lastblock rem '\x80';
+    let lastblock =
+      if rem <= 55 then lastblock else
+        (h := hash_block !h lastblock;
+         I.get_chunk bs (blocks + 1))
     in
-    readn 0;
-    Unix.close fd;
-    for i = 0 to rem / 4 - 1 do
-      Bigarray.Array1.set lastblock i (unsafe_get_32 buf (i*4))
-    done;
-    Bigarray.Array1.set lastblock (rem / 4) 0l;
-    let c k = of_int (int_of_char (Bytes.get buf k)) in
-    let setbyte block i c =
-      let shift =
-        if Sys.big_endian then 8 * (3 - i mod 4)
-        else 8 * (i mod 4)
-      in
-      Bigarray.Array1.set block (i / 4)
-        (logor (Bigarray.Array1.get block (i / 4)) (shift_left c shift))
-    in
-    for k = rem - rem mod 4 to rem - 1 do
-      setbyte lastblock k (c k)
-    done;
-    if rem <= 55 then (
-      setbyte lastblock rem 0x80l;
-      for i = rem + 1 to rem + 3 - rem mod 4 do
-        setbyte lastblock i 0l
-      done;
-      for i = rem / 4 + 1 to 13 do
-        Bigarray.Array1.set lastblock i 0l
-      done
-    ) else (
-      for i = rem / 4 + 1 to 15 do
-        Bigarray.Array1.set lastblock i 0l
-      done;
-      setbyte lastblock rem 0x80l;
-      h := hash_block !h lastblock;
-      (* reuse lastblock as the extra size block *)
-      for i = 0 to 13 do
-        Bigarray.Array1.set lastblock i 0l
-      done
-    );
-    let bitsz = Int64.mul 8L (Int64.of_int sz) in
-    Bigarray.Array1.set lastblock 14
-      (toggle_big_endian Int64.(to_int32 (shift_right_logical bitsz 32)));
-    Bigarray.Array1.set lastblock 15
-      (toggle_big_endian Int64.(to_int32 (logand 0xffffffffL bitsz)));
-    let (a, b, c, d, e, f, g, h) =  hash_block !h lastblock in
+    let bitsz = Int64.mul 8L (Int64.of_int nbytes) in
+    I.set lastblock 14
+      Int64.(to_int32 (shift_right_logical bitsz 32));
+    I.set lastblock 15
+      Int64.(to_int32 (logand 0xffffffffL bitsz));
+    let (a, b, c, d, e, f, g, h) = hash_block !h lastblock in
+    I.close bs;
     Printf.sprintf "%08lx%08lx%08lx%08lx%08lx%08lx%08lx%08lx" a b c d e f g h
 end
 
-module SHA512 = struct
+module Make_SHA512(I: InputSig with type elt = int64) = struct
 
   open Int64
 
@@ -236,18 +371,11 @@ module SHA512 = struct
     0x1f83d9abfb41bd6bL, 0x5be0cd19137e2179L
   )
 
-  external swap64 : int64 -> int64 = "%bswap_int64"
-  external unsafe_get_64 : Bytes.t -> int -> int64 = "%caml_string_get64u"
-
-  let toggle_big_endian i64 =
-    if Sys.big_endian then i64
-    else swap64 i64
-
   let hash_block =
     let warr = Array.make 80 0L in
     fun hh block ->
       for t = 0 to 15 do
-        warr.(t) <- toggle_big_endian (Bigarray.Array1.get block t)
+        warr.(t) <- I.get block t
       done;
       for t = 16 to 79 do
         warr.(t) <-
@@ -271,72 +399,51 @@ module SHA512 = struct
       in
       stir 0 hh
 
-  let hash f =
-    let fd = Unix.openfile f [Unix.O_RDONLY] 0 in
-    let sz = (Unix.fstat fd).Unix.st_size in
-    let blocks = sz / 128 in
-    let rem = sz mod 128 in
-    let a = Bigarray.(Array2.map_file fd int64 c_layout false blocks 16) in
+  let blocksize = 16
+
+  let hash src =
+    let bs = I.init ~blocksize src in
+    let nbytes = I.byte_size bs in
+    let blocks = nbytes / (blocksize * 8) in
+    let rem = nbytes mod (blocksize * 8) in
     let h = ref sha_init in
     for i = 0 to blocks - 1 do
-      h := hash_block !h (Bigarray.Array2.slice_left a i)
+      h := hash_block !h (I.get_chunk bs i)
     done;
-    let lastblock = Bigarray.(Array1.create int64 c_layout 16) in
-    let buf = Bytes.create rem in
-    ignore (Unix.lseek fd (blocks * 128) Unix.SEEK_SET);
-    let rec readn i =
-      let r = Unix.read fd buf i (rem - i) in
-      if r < rem - i then readn (i + r)
+    let lastblock = I.get_chunk bs blocks in
+    I.set_byte lastblock rem '\x80';
+    let lastblock =
+      if rem <= 111 then lastblock else
+        (h := hash_block !h lastblock;
+         I.get_chunk bs (blocks+1))
     in
-    readn 0;
-    Unix.close fd;
-    for i = 0 to rem / 8 - 1 do
-      Bigarray.Array1.set lastblock i (unsafe_get_64 buf (i*8))
-    done;
-    Bigarray.Array1.set lastblock (rem / 8) 0L;
-    let c k = of_int (int_of_char (Bytes.get buf k)) in
-    let setbyte block i c =
-      let shift =
-        if Sys.big_endian then 8 * (7 - i mod 8)
-        else 8 * (i mod 8)
-      in
-      Bigarray.Array1.set block (i / 8)
-        (logor (Bigarray.Array1.get block (i / 8)) (shift_left c shift))
-    in
-    for k = rem - rem mod 8 to rem - 1 do
-      setbyte lastblock k (c k)
-    done;
-    if rem <= 111 then (
-      setbyte lastblock rem 0x80L;
-      for i = rem + 1 to rem + 7 - rem mod 8 do
-        setbyte lastblock i 0L
-      done;
-      for i = rem / 8 + 1 to 13 do
-        Bigarray.Array1.set lastblock i 0L
-      done
-    ) else (
-      for i = rem / 8 + 1 to 15 do
-        Bigarray.Array1.set lastblock i 0L
-      done;
-      setbyte lastblock rem 0x80L;
-      h := hash_block !h lastblock;
-      (* reuse lastblock as the extra size block *)
-      for i = 0 to 13 do
-        Bigarray.Array1.set lastblock i 0L
-      done
-    );
     (* We assume sz fits in 61 bits... *)
-    let bitsz = Int64.mul 8L (Int64.of_int sz) in
-    Bigarray.Array1.set lastblock 14 0L;
-    Bigarray.Array1.set lastblock 15 (toggle_big_endian bitsz);
+    let bitsz = Int64.mul 8L (Int64.of_int nbytes) in
+    I.set lastblock 15 bitsz;
     let (a, b, c, d, e, f, g, h) = hash_block !h lastblock in
+    I.close bs;
     Printf.sprintf "%016Lx%016Lx%016Lx%016Lx%016Lx%016Lx%016Lx%016Lx"
       a b c d e f g h
 
 end
 
-let sha256 = SHA256.hash
-let sha512 = SHA512.hash
-let hash = function
-  | `SHA256 -> SHA256.hash
-  | `SHA512 -> SHA512.hash
+module SHA256_file = Make_SHA256 (Input_file(Buf_Bigstring32))
+module SHA512_file = Make_SHA512 (Input_file(Buf_Bigstring64))
+module SHA256_string = Make_SHA256 (Input_string(Buf_String32))
+module SHA512_string = Make_SHA512 (Input_string(Buf_String64))
+
+let sha256_file = SHA256_file.hash
+let sha512_file = SHA512_file.hash
+let hash_file = function
+  | `SHA256 -> sha256_file
+  | `SHA512 -> sha512_file
+
+let sha256_bytes = SHA256_string.hash
+let sha512_bytes = SHA512_string.hash
+let hash_bytes = function
+  | `SHA256 -> sha256_bytes
+  | `SHA512 -> sha512_bytes
+
+let sha256 = sha256_file
+let sha512 = sha512_file
+let hash = hash_file

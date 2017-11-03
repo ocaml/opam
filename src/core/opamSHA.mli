@@ -8,8 +8,24 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Pure OCaml implementation of SHA256/512 hashing functions. Functions take a
-    filename and return the hash as an hex string. *)
+(** Pure OCaml implementation of SHA256/512 hashing functions. The hash is
+    returned as an hex string. *)
+
+val sha256_file: string -> string
+
+val sha512_file: string -> string
+
+val hash_file: [< `SHA256 | `SHA512 ] -> string -> string
+
+
+val sha256_bytes: Bytes.t -> string
+
+val sha512_bytes: Bytes.t -> string
+
+val hash_bytes: [< `SHA256 | `SHA512 ] -> Bytes.t -> string
+
+
+(** For compat, use the above *)
 
 val sha256: string -> string
 
