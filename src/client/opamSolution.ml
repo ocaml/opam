@@ -773,7 +773,6 @@ let apply ?ask t action ~requested ?add_roots solution =
     if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
-      (* print_variable_warnings t; *)
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in
