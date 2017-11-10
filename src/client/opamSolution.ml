@@ -722,6 +722,34 @@ let confirmation ?ask requested solution =
     OpamPackage.Name.Set.equal requested solution_packages
     || OpamConsole.confirm "Do you want to continue ?"
 
+let run_hook_job t name ?(local=[]) w =
+  let shell_env = OpamEnv.get_full ~force_path:true t in
+  let mk_cmd = function
+    | cmd :: args ->
+      let text = OpamProcess.make_command_text name ~args cmd in
+      Some
+        (fun () ->
+           OpamSystem.make_command
+             ~verbose:(OpamConsole.verbose ())
+             ~env:(OpamTypesBase.env_array shell_env)
+             ~name ~text cmd args)
+    | [] -> None
+  in
+  let env v =
+    try Some (List.assoc v local)
+    with Not_found -> OpamPackageVar.resolve_switch t v
+  in
+  OpamProcess.Job.of_fun_list
+    (OpamStd.List.filter_map (fun cmd -> mk_cmd cmd)
+       (OpamFilter.commands env w))
+  @@+ function
+  | Some (cmd, _err) ->
+    OpamConsole.error "The %s hook failed at %S"
+      name (OpamProcess.string_of_command cmd);
+    Done false
+  | None ->
+    Done true
+
 (* Apply a solution *)
 let apply ?ask t action ~requested ?add_roots solution =
   log "apply";
@@ -773,11 +801,30 @@ let apply ?ask t action ~requested ?add_roots solution =
     if not OpamClientConfig.(!r.show) &&
               confirmation ?ask requested action_graph
     then (
-      (* print_variable_warnings t; *)
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in
-      parallel_apply t action ~requested ?add_roots action_graph
+      let pre_session =
+        OpamProcess.Job.run @@
+        run_hook_job t "pre-session"
+          (OpamFile.Wrappers.pre_session
+             (OpamFile.Config.wrappers t.switch_global.config))
+      in
+      if not pre_session then
+        OpamStd.Sys.exit_because `Configuration_error;
+      let t, r = parallel_apply t action ~requested ?add_roots action_graph in
+      let success = match r with OK _ -> true | _ -> false in
+      let post_session =
+        OpamProcess.Job.run @@
+        run_hook_job t "post-session"
+          ~local:[OpamVariable.Full.of_string "success", B (success);
+                  OpamVariable.Full.of_string "failure", B (not success)]
+          (OpamFile.Wrappers.post_session
+             (OpamFile.Config.wrappers t.switch_global.config))
+      in
+      if not post_session then
+        OpamStd.Sys.exit_because `Configuration_error;
+      t, r
     ) else
       t, Aborted
   )
