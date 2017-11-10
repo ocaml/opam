@@ -18,11 +18,11 @@ let command_name = None
 
 let default_criteria = {
   crit_default = "-removed,\
-                  -count[version-lag:,true],\
-                  -changed,\
-                  -count[version-lag:,false]";
+                  -count[version-lag,request],\
+                  -count[version-lag,changed],\
+                  -changed";
   crit_upgrade = "-removed,\
-                  -count[version-lag:,false],\
+                  -count[version-lag,solution],\
                   -new";
   crit_fixup = "-changed,-count[version-lag:,false]";
   crit_best_effort_prefix = Some "+count[opam-query:,false],";
