@@ -906,6 +906,8 @@ module Wrappers = struct
     pre_remove : command list;
     wrap_remove : command list;
     post_remove : command list;
+    pre_session : command list;
+    post_session : command list;
   }
 
   let empty = {
@@ -918,6 +920,8 @@ module Wrappers = struct
     pre_remove = [];
     wrap_remove = [];
     post_remove = [];
+    pre_session = [];
+    post_session = []
   }
 
   let pre_build t = t.pre_build
@@ -929,6 +933,8 @@ module Wrappers = struct
   let pre_remove t = t.pre_remove
   let wrap_remove t = t.wrap_remove
   let post_remove t = t.post_remove
+  let pre_session t = t.pre_session
+  let post_session t = t.post_session
 
   let with_pre_build pre_build t = { t with pre_build }
   let with_wrap_build wrap_build t = { t with wrap_build }
@@ -939,6 +945,8 @@ module Wrappers = struct
   let with_pre_remove pre_remove t = { t with pre_remove }
   let with_wrap_remove wrap_remove t = { t with wrap_remove }
   let with_post_remove post_remove t = { t with post_remove }
+  let with_pre_session pre_session t = { t with pre_session }
+  let with_post_session post_session t = { t with post_session }
 
   let fields = [
     "pre-build-commands", Pp.ppacc
@@ -949,6 +957,9 @@ module Wrappers = struct
       (Pp.V.map_list ~depth:2 Pp.V.command);
     "pre-remove-commands", Pp.ppacc
       with_pre_remove pre_remove
+      (Pp.V.map_list ~depth:2 Pp.V.command);
+    "pre-session-commands", Pp.ppacc
+      with_pre_session pre_session
       (Pp.V.map_list ~depth:2 Pp.V.command);
     "wrap-build-commands", Pp.ppacc
       with_wrap_build wrap_build
@@ -968,6 +979,9 @@ module Wrappers = struct
     "post-remove-commands", Pp.ppacc
       with_post_remove post_remove
       (Pp.V.map_list ~depth:2 Pp.V.command);
+    "post-session-commands", Pp.ppacc
+      with_post_session post_session
+      (Pp.V.map_list ~depth:2 Pp.V.command);
   ]
 
   let with_default ~default t =
@@ -982,6 +996,8 @@ module Wrappers = struct
       pre_remove = f t.pre_remove default.pre_remove;
       wrap_remove = f t.wrap_remove default.wrap_remove;
       post_remove = f t.post_remove default.post_remove;
+      pre_session = f t.pre_session default.pre_session;
+      post_session = f t.post_session default.post_session;
     }
 
   let add ~outer ~inner = {
@@ -994,6 +1010,8 @@ module Wrappers = struct
     pre_remove = outer.pre_remove @ inner.pre_remove;
     wrap_remove = outer.wrap_remove @ inner.wrap_remove;
     post_remove = inner.post_remove @ outer.post_remove;
+    pre_session = outer.pre_session @ inner.pre_session;
+    post_session = inner.post_session @ outer.post_session;
   }
 
 end

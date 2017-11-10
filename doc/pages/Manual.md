@@ -644,15 +644,17 @@ contains configuration options specific to that switch:
   environment exported by opam through `opam env`)
 - [`pre-build-commands:`](#configfield-pre-build-commands),
   [`pre-install-commands:`](#configfield-pre-install-commands),
-  [`pre-remove-commands:`](#configfield-pre-remove-commands):
+  [`pre-remove-commands:`](#configfield-pre-remove-commands),
+  [`pre-session-commands:`](#configfield-pre-session-commands):
   as the corresponding [global config](#config) fields.
-- [`wrap-build-commands:`](#configfield-pre-build-commands),
-  [`wrap-install-commands:`](#configfield-pre-install-commands),
-  [`wrap-remove-commands:`](#configfield-pre-remove-commands):
+- [`wrap-build-commands:`](#configfield-wrap-build-commands),
+  [`wrap-install-commands:`](#configfield-wrap-install-commands),
+  [`wrap-remove-commands:`](#configfield-wrap-remove-commands):
   as the corresponding [global config](#config) fields.
-- [`post-build-commands:`](#configfield-pre-build-commands),
-  [`post-install-commands:`](#configfield-pre-install-commands),
-  [`post-remove-commands:`](#configfield-pre-remove-commands):
+- [`post-build-commands:`](#configfield-post-build-commands),
+  [`post-install-commands:`](#configfield-post-install-commands),
+  [`post-remove-commands:`](#configfield-post-remove-commands),
+  [`post-session-commands:`](#configfield-post-session-commands):
   as the corresponding [global config](#config) fields.
 - <a id="switchconfigsection-paths">`paths: "{" { <ident>: <string> ... } "}"`</a>:
   defines the standard paths within the switch: recognised fields include
@@ -1261,6 +1263,13 @@ for <span class="opam">opam</span>.
     characters. Note that this hook is run after the scan for installed files is
     done, so any additional installed files won't be recorded and must be taken
     care of by a `pre-remove-commands` hook.
+- <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-session-commands">`post-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  These commands will be run once respectively before and after the sequence of
+  actions done by a given instance of opam. Only the switch variables are
+  available, since this doesn't concern any single package, plus a `success`
+  variable for `post-session-commands` (`failure = !success` is also defined for
+  convenience).
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define

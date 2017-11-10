@@ -72,6 +72,8 @@ module Wrappers: sig
     pre_remove : command list;
     wrap_remove : command list;
     post_remove : command list;
+    pre_session : command list;
+    post_session : command list;
   }
 
   val pre_build: t -> command list
@@ -83,6 +85,8 @@ module Wrappers: sig
   val pre_remove: t -> command list
   val wrap_remove: t -> command list
   val post_remove: t -> command list
+  val pre_session: t -> command list
+  val post_session: t -> command list
 
   val empty : t
 
