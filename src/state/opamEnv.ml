@@ -375,11 +375,11 @@ let source root ~shell ?(interactive_only=false) f =
   if interactive_only then
     match shell with
     | `csh ->
-      Printf.sprintf "if (tty -s >&/dev/null) then\n  %sendif\n" s
+      Printf.sprintf "if ([ -t 0 ]) then\n  %sendif\n" s
     | `fish ->
-      Printf.sprintf "if tty -s >/dev/null 2>&1\n %send\n" s
+      Printf.sprintf "if [ -t 0 ]\n %send\n" s
     | _ ->
-      Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
+      Printf.sprintf "if [ -t 0 ]; then\n  %sfi\n" s
   else s
 
 let string_of_update st shell updates =
