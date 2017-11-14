@@ -1230,30 +1230,37 @@ for <span class="opam">opam</span>.
 - <a id="configfield-eval-variables">`eval-variables: [ "[" <ident> [ <string> ... ] <string> "]" ... ]`</a>:
   allows the definition of global variables that will be lazily initialised to
   the output of the given command. The last `<string>` documents the variable.
-- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <string> { <filter> } ... ] ... ]`</a>:
+- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just before processing the package's commands
   for the corresponding action, on any package. The filters are evaluated in the
   same scope as the package commands.
-- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ <string> { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ <string> { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ <string> { <filter> } ... ]`</a>:
+- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify wrappers around every command executed during the corresponding action
   of any package. The command-line elements will be prefixed to the package
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
   The filters are evaluated in the same scope as the package commands.
-- <a id="configfield-post-build-commands">`post-build-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-post-install-commands">`post-install-commands: [ [ <string> { <filter> } ... ] ... ]`</a>,
-  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <string> { <filter> } ... ] ... ]`</a>:
+- <a id="configfield-post-build-commands">`post-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-install-commands">`post-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just after processing the package's commands
   for the corresponding action, and the `<pkgname>.install` file in the case of
   install and remove, on any package. The post commands are run wether or not
   the package script succeeded. The filters are evaluated in the same scope as
   the package commands, with the addition of the variable `error-code`, which is
   the return value of the package script.
+
+    The `post-install-commands` hook also has access to an extra variable
+    `installed-files` which is the list of files and directories added or
+    modified during the installation of the package, separated by space
+    characters. Note that this hook is run after the scan for installed files is
+    done, so any additional installed files won't be recorded and must be taken
+    care of by a `pre-remove-commands` hook.
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define

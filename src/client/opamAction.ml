@@ -348,17 +348,15 @@ let get_wrappers t =
 
 let get_wrapper t opam wrappers ?local getter =
   OpamFilter.commands (OpamPackageVar.resolve ?local ~opam t)
-    (List.map (fun x -> x, None) (getter wrappers)) |>
+    (getter wrappers) |>
   OpamStd.List.filter_map (function
       | [] -> None
       | cmd::args -> Some (cmd, args))
 
 let cmd_wrapper t opam wrappers getter cmd args =
-  match get_wrapper t opam wrappers (fun w -> [getter w]) with
-  | [wrap_cmd,wrap_args] ->
-    wrap_cmd, wrap_args @ (cmd :: args)
-  | [] -> cmd, args
-  | _::_::_ -> assert false
+  match get_wrapper t opam wrappers getter @ [cmd, args] with
+  | (cmd, args) :: r -> cmd, args @ List.concat (List.map (fun (c, a) -> c::a) r)
+  | [] -> assert false
 
 let opam_local_env_of_status ret =
   OpamVariable.Map.singleton
@@ -734,30 +732,38 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     (match error with
      | None -> run_commands commands
      | Some (_, result) -> Done (Some (OpamSystem.Process_error result)))
-    @@+ fun error ->
+    @@| function
+    | Some e -> Some e
+    | None -> try process_dot_install t nv dir; None with e -> Some e
+  in
+  let post_install error changes =
     let local =
+      let escape_spaces =
+        let re = Re.(compile (set "\\ ")) in
+        Re.(replace re ~f:(fun g -> "\\"^Group.get g 0))
+      in
+      let added =
+        let open OpamDirTrack in
+        OpamStd.List.filter_map (function
+            | name, (Added _|Contents_changed _|Kind_changed _) -> Some name
+            | _ -> None)
+          (OpamStd.String.Map.bindings changes)
+      in
       opam_local_env_of_status (match error with
           | Some (OpamSystem.Process_error r) -> Some r
-          | _ -> None)
-    in
-    let error =
-      if error = None then
-        try process_dot_install t nv dir; None with e -> Some e
-      else error
+          | _ -> None) |>
+      OpamVariable.Map.add
+        (OpamVariable.of_string "installed-files")
+        (Some (S (OpamStd.List.concat_map " " escape_spaces added)))
     in
     OpamProcess.Job.of_fun_list ~keep_going:true
       (List.map (fun cmd () -> mk_cmd cmd)
          (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
     @@+ fun error_post ->
-    if error = None &&
-       not OpamClientConfig.(!r.keep_build_dir) &&
-       not (OpamConsole.debug ()) then
-      OpamFilename.rmdir
-        (OpamPath.Switch.build t.switch_global.root t.switch nv);
     match error, error_post with
-    | Some err, _ -> Done (Some err)
-    | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r))
-    | None, None -> Done None
+    | Some err, _ -> Done (Some err, changes)
+    | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r), changes)
+    | None, None -> Done (None, changes)
   in
   let root = t.switch_global.root in
   let switch_prefix = OpamPath.Switch.root root t.switch in
@@ -768,11 +774,12 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   OpamDirTrack.track switch_prefix
     ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
     install_job
+  @@+ fun (error, changes) -> post_install error changes
   @@+ function
   | Some e, changes ->
-    remove_package t ~silent:true ~changes ~build_dir:dir nv @@| fun () ->
+    remove_package t ~silent:true ~changes ~build_dir:dir nv @@+ fun () ->
     OpamStd.Exn.fatal e;
-    Some e
+    Done (Some e)
   | None, changes ->
     let changes_f = OpamPath.Switch.changes root t.switch nv.name in
     OpamFile.Changes.write changes_f changes;

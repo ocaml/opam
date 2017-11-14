@@ -897,15 +897,15 @@ end
 module Wrappers = struct
 
   type t = {
-    pre_build : arg list list;
-    wrap_build : arg list;
-    post_build : arg list list;
-    pre_install : arg list list;
-    wrap_install : arg list;
-    post_install : arg list list;
-    pre_remove : arg list list;
-    wrap_remove : arg list;
-    post_remove : arg list list;
+    pre_build : command list;
+    wrap_build : command list;
+    post_build : command list;
+    pre_install : command list;
+    wrap_install : command list;
+    post_install : command list;
+    pre_remove : command list;
+    wrap_remove : command list;
+    post_remove : command list;
   }
 
   let empty = {
@@ -943,31 +943,31 @@ module Wrappers = struct
   let fields = [
     "pre-build-commands", Pp.ppacc
       with_pre_build pre_build
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "pre-install-commands", Pp.ppacc
       with_pre_install pre_install
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "pre-remove-commands", Pp.ppacc
       with_pre_remove pre_remove
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "wrap-build-commands", Pp.ppacc
       with_wrap_build wrap_build
-      (Pp.V.map_list ~depth:1 Pp.V.arg);
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "wrap-install-commands", Pp.ppacc
       with_wrap_install wrap_install
-      (Pp.V.map_list ~depth:1 Pp.V.arg);
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "wrap-remove-commands", Pp.ppacc
       with_wrap_remove wrap_remove
-      (Pp.V.map_list ~depth:1 Pp.V.arg);
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "post-build-commands", Pp.ppacc
       with_post_build post_build
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "post-install-commands", Pp.ppacc
       with_post_install post_install
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
     "post-remove-commands", Pp.ppacc
       with_post_remove post_remove
-      (Pp.V.map_list ~depth:2 (Pp.V.map_list Pp.V.arg));
+      (Pp.V.map_list ~depth:2 Pp.V.command);
   ]
 
   let with_default ~default t =
@@ -1856,7 +1856,11 @@ module URLSyntax = struct
     let name = internal in
     Pp.I.fields ~name ~empty fields -|
     Pp.I.on_errors ~name (fun t e -> {t with errors = e::t.errors}) -|
-    Pp.check ~name (fun t -> t.url <> OpamUrl.empty) ~errmsg:"missing URL"
+    Pp.pp ~name
+      (fun ~pos t ->
+         if t.url = OpamUrl.empty then OpamPp.bad_format ~pos "missing URL"
+         else t)
+      (fun x -> x)
 
   let pp = Pp.I.map_file pp_contents
 

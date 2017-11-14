@@ -63,26 +63,26 @@ module Lines: IO_FILE with type t = string list list
 (** Command wrappers for package scripts *)
 module Wrappers: sig
   type t = {
-    pre_build : arg list list;
-    wrap_build : arg list;
-    post_build : arg list list;
-    pre_install : arg list list;
-    wrap_install : arg list;
-    post_install : arg list list;
-    pre_remove : arg list list;
-    wrap_remove : arg list;
-    post_remove : arg list list;
+    pre_build : command list;
+    wrap_build : command list;
+    post_build : command list;
+    pre_install : command list;
+    wrap_install : command list;
+    post_install : command list;
+    pre_remove : command list;
+    wrap_remove : command list;
+    post_remove : command list;
   }
 
-  val pre_build: t -> arg list list
-  val wrap_build: t -> arg list
-  val post_build: t -> arg list list
-  val pre_install: t -> arg list list
-  val wrap_install: t -> arg list
-  val post_install: t -> arg list list
-  val pre_remove: t -> arg list list
-  val wrap_remove: t -> arg list
-  val post_remove: t -> arg list list
+  val pre_build: t -> command list
+  val wrap_build: t -> command list
+  val post_build: t -> command list
+  val pre_install: t -> command list
+  val wrap_install: t -> command list
+  val post_install: t -> command list
+  val pre_remove: t -> command list
+  val wrap_remove: t -> command list
+  val post_remove: t -> command list
 
   val empty : t
 
