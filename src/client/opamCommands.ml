@@ -986,7 +986,7 @@ let exec =
   term_info "exec" ~doc ~man
 
 (* ENV *)
-let env_doc = "Executes a command in the proper opam environment"
+let env_doc = "Prints appropriate shell variable assignments to stdout"
 let env =
   let doc = env_doc in
   let man = [
