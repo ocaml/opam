@@ -986,7 +986,7 @@ let exec =
   term_info "exec" ~doc ~man
 
 (* ENV *)
-let env_doc = "Executes a command in the proper opam environment"
+let env_doc = "Prints appropriate shell variable assignments to stdout"
 let env =
   let doc = env_doc in
   let man = [
@@ -1738,7 +1738,7 @@ let get_repos_rt gt repos =
       else
         Some (List.map fst repos), rt
 
-let switch_doc = "Manage multiple installation of compilers."
+let switch_doc = "Manage multiple installation prefixes."
 let switch =
   let doc = switch_doc in
   let commands = [
@@ -1793,7 +1793,10 @@ let switch =
         ^ OpamSwitch.external_dirname ^
         ". Opam will automatically select a switch by that name found in the \
          current directory or its parents, unless $(i,OPAMSWITCH) is set or \
-         $(b,--switch) is specified.");
+         $(b,--switch) is specified. When creating a directory switch, if \
+         package definitions are found locally, the user is automatically \
+         prompted to install them after the switch is created unless \
+         $(b,--no-install) is specified.");
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
@@ -1840,17 +1843,28 @@ let switch =
        allowing to re-import even if they don't exist in the repositories (the \
        default is to include only the metadata of pinned packages)"
   in
+  let no_install =
+    mk_flag ["no-install"]
+      "When creating a local switch, don't look for any local package \
+       definitions to install."
+  in
+  let deps_only =
+    mk_flag ["deps-only"]
+      "When creating a local switch in a project directory (i.e. a directory \
+       containing opam package definitions), install the dependencies of the \
+       project but not the project itself."
+  in
   let switch
       global_options build_options command print_short
-      no_switch packages empty descr full repos params =
+      no_switch packages empty descr full no_install deps_only repos params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
       match packages, empty with
       | None, true -> Some []
       | Some packages, true when packages <> [] ->
-          OpamConsole.error_and_exit `Bad_arguments
-            "Options --packages and --empty may not be specified at the same time"
+        OpamConsole.error_and_exit `Bad_arguments
+          "Options --packages and --empty may not be specified at the same time"
       | packages, _ -> packages
     in
     let compiler_packages rt ?repos switch compiler_opt =
@@ -1922,10 +1936,10 @@ let switch =
         }
         compilers;
       `Ok ()
-    | Some `install, switch::params ->
+    | Some `install, switch_arg::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let repos, rt = get_repos_rt gt repos in
-      let switch = OpamSwitch.of_string switch in
+      let switch = OpamSwitch.of_string switch_arg in
       let packages =
         compiler_packages rt ?repos switch (param_compiler params)
       in
@@ -1935,6 +1949,16 @@ let switch =
           ~update_config:(not no_switch)
           ~packages
           switch
+      in
+      let st =
+        if not no_install && not empty && OpamSwitch.is_external switch then
+          let st, atoms =
+            OpamAuxCommands.autopin st ~simulate:deps_only
+              [`Dirname (OpamFilename.Dir.of_string switch_arg)]
+          in
+          OpamClient.install st atoms
+            ~autoupdate:[] ~add_to_roots:true ~deps_only
+        else st
       in
       ignore (OpamSwitchState.unlock st);
       `Ok ()
@@ -2035,7 +2059,8 @@ let switch =
              $global_options $build_options $command
              $print_short_flag
              $no_switch
-             $packages $empty $descr $full $repos $params)),
+             $packages $empty $descr $full $no_install $deps_only
+             $repos $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
