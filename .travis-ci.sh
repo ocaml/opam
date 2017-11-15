@@ -28,10 +28,10 @@ case "$TARGET" in
         wget -q -O ~/local/bin/opam \
              "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
         chmod a+x ~/local/bin/opam
-        if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        if [ "$TRAVIS_OS_NAME" = "osx" ] && [ -n "$EXTERNAL_SOLVER" ]; then
             rvm install ruby-2.3.3
             rvm --default use 2.3.3
-            if [ "$OPAM_TEST" != "1" ]; then brew install aspcud; fi
+            brew install "$EXTERNAL_SOLVER"
         fi
         exit 0
         ;;
