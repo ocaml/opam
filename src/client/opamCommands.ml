@@ -1953,7 +1953,7 @@ let switch =
       let st =
         if not no_install && not empty && OpamSwitch.is_external switch then
           let st, atoms =
-            OpamAuxCommands.autopin st ~simulate:deps_only
+            OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
           in
           OpamClient.install st atoms

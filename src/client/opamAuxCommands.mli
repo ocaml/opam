@@ -38,6 +38,7 @@ val name_and_dir_of_opam_file: filename -> name option * dirname
     exit if package names for provided [`Filename] could not be inferred, or if
     the same package name appears multiple times *)
 val resolve_locals:
+  ?quiet:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
 
@@ -63,6 +64,7 @@ val resolve_locals_pinned:
 val autopin:
   rw switch_state ->
   ?simulate:bool ->
+  ?quiet:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
 
@@ -70,6 +72,7 @@ val autopin:
     write-locked switch, and doesn't update the local packages *)
 val simulate_autopin:
   'a switch_state ->
+  ?quiet:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
 
