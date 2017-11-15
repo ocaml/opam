@@ -412,6 +412,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
     ]
   in
   OpamSystem.make_command ~env ~name ?dir ~text
+    ~resolve_path:OpamStateConfig.(not !r.dryrun)
     ~metadata:["context", context]
     ~verbose:(OpamConsole.verbose ())
     cmd args

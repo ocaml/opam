@@ -896,6 +896,9 @@ let config =
             );
           print "current-switch" "%s"
             (OpamSwitch.to_string state.switch);
+          if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
+          then OpamConsole.warning
+              "PATH contains '.' : this is a likely cause of trouble.";
           `Ok ()
         with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     | command, params -> bad_subcommand commands ("config", command, params)
@@ -1953,7 +1956,7 @@ let switch =
       let st =
         if not no_install && not empty && OpamSwitch.is_external switch then
           let st, atoms =
-            OpamAuxCommands.autopin st ~simulate:deps_only
+            OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
           in
           OpamClient.install st atoms

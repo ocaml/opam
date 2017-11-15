@@ -152,7 +152,7 @@ let resolve_locals_pinned st atom_or_local_list =
   in
   List.rev atoms
 
-let resolve_locals atom_or_local_list =
+let resolve_locals ?(quiet=false) atom_or_local_list =
   let target_dir dir =
     let d = OpamFilename.Dir.to_string dir in
     let backend = OpamUrl.guess_version_control d in
@@ -164,7 +164,7 @@ let resolve_locals atom_or_local_list =
         | `Atom a -> to_pin, a :: atoms
         | `Dirname d ->
           let names_files = opams_of_dir d in
-          if names_files = [] then
+          if names_files = [] && not quiet then
             OpamConsole.warning "No package definitions found at %s"
               (OpamFilename.Dir.to_string d);
           let target = target_dir d in
@@ -205,8 +205,8 @@ let resolve_locals atom_or_local_list =
            (OpamUrl.to_string t))
           duplicates)
 
-let autopin_aux st atom_or_local_list =
-  let to_pin, atoms = resolve_locals atom_or_local_list in
+let autopin_aux st ?quiet atom_or_local_list =
+  let to_pin, atoms = resolve_locals ?quiet atom_or_local_list in
   if to_pin = [] then
     atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
   else
@@ -304,9 +304,9 @@ let fix_atom_versions_in_set set atoms =
           (OpamPackage.package_of_name_opt set name))
     atoms
 
-let simulate_autopin st atom_or_local_list =
+let simulate_autopin st ?quiet atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st atom_or_local_list
+    autopin_aux st ?quiet atom_or_local_list
   in
   if to_pin = [] then st, atoms else
   let st =
@@ -318,12 +318,12 @@ let simulate_autopin st atom_or_local_list =
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
-let autopin st ?(simulate=false) atom_or_local_list =
+let autopin st ?(simulate=false) ?quiet atom_or_local_list =
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then
     simulate_autopin st atom_or_local_list
   else
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st atom_or_local_list
+    autopin_aux st ?quiet atom_or_local_list
   in
   if to_pin = [] && OpamPackage.Set.is_empty obsolete_pins &&
      OpamPackage.Set.is_empty already_pinned_set

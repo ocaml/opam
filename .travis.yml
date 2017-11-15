@@ -34,7 +34,7 @@ matrix:
     - os: osx
       env: OCAML_VERSION=4.03.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST= EXTERNAL_SOLVER=aspcud
+      env: OCAML_VERSION=4.03.0 OPAM_TEST=
 notifications:
   email:
     - opam-commits@lists.ocaml.org
