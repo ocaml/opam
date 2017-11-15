@@ -21,7 +21,6 @@ let global_variable_names = [
   "switch",               "The local name (alias) of the current switch";
   "jobs",                 "The number of parallel jobs set up in opam \
                            configuration";
-  "arch",                 "The current arch, as returned by \"uname -m\"";
   "root",                 "The current opam root directory";
 ]
 

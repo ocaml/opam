@@ -618,19 +618,18 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname_s () =
-    try
-      with_process_in "uname" "-s"
-        (fun ic -> Some (OpamString.strip (input_line ic)))
-    with Unix.Unix_error _ | Sys_error _ | Not_found ->
-      None
-
-  let uname_m () =
-    try
-      with_process_in "uname" "-m"
-        (fun ic -> Some (OpamString.strip (input_line ic)))
-    with Unix.Unix_error _ | Sys_error _ | Not_found ->
-      None
+  let uname =
+    let memo = Hashtbl.create 7 in
+    fun arg ->
+      try Hashtbl.find memo arg with Not_found ->
+        let r =
+          try
+            with_process_in "uname" arg
+              (fun ic -> Some (OpamString.strip (input_line ic)))
+          with Unix.Unix_error _ | Sys_error _ | Not_found -> None
+        in
+        Hashtbl.add memo arg r;
+        r
 
   type os =
     | Darwin
@@ -648,7 +647,7 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname_s () with
+          match uname "-s" with
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
           | Some "FreeBSD"   -> FreeBSD
@@ -663,27 +662,6 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force os
 
-  let arch =
-    let arch =
-      lazy (Option.default "Unknown" (uname_m ()))
-    in
-    fun () -> Lazy.force arch
-
-  let string_of_os = function
-    | Darwin    -> "darwin"
-    | Linux     -> "linux"
-    | FreeBSD   -> "freebsd"
-    | OpenBSD   -> "openbsd"
-    | NetBSD    -> "netbsd"
-    | DragonFly -> "dragonfly"
-    | Cygwin    -> "cygwin"
-    | Win32     -> "win32"
-    | Unix      -> "unix"
-    | Other x   -> x
-
-  let os_string () =
-    string_of_os (os ())
-
   let shell_of_string = function
     | "tcsh"
     | "csh"  -> `csh
@@ -692,8 +670,10 @@ module OpamSys = struct
     | "fish" -> `fish
     | _      -> `sh
 
+  let is_windows = Sys.os_type = "Win32"
+
   let executable_name =
-    if os () = Win32 then
+    if is_windows then
       fun name ->
         if Filename.check_suffix name ".exe" then
           name
@@ -747,41 +727,29 @@ module OpamSys = struct
       (fun f -> try f () with _ -> ())
       !registered_at_exit
 
-  let path_sep =
-    let path_sep = lazy (
-      match os () with
-      | Win32 -> ';'
-      | Cygwin | _ -> ':'
-    ) in
-    fun () -> Lazy.force path_sep
+  let path_sep = if is_windows then ';' else ':'
 
   let split_path_variable =
-    let f = lazy (
-      match os () with
-      | Win32 ->
-        fun path ->
-          let length = String.length path in
-          let rec f acc index current last normal =
-            if index = length
-            then let current = current ^ String.sub path last (index - last) in
-              if current <> "" then current::acc else acc
-            else let c = path.[index]
-              and next = succ index in
-              if c = ';' && normal || c = '"' then
-                let current = current ^ String.sub path last (index - last) in
-                if c = '"' then
-                  f acc next current next (not normal)
-                else
-                let acc = if current = "" then acc else current::acc in
-                f acc next "" next true
-              else
-                f acc next current last normal in
-          f [] 0 "" 0 true
-      | _ ->
-        fun path ->
-          OpamString.split_delim path (path_sep ())
-    ) in
-    fun path -> (Lazy.force f) path
+    if is_windows then fun path ->
+      let length = String.length path in
+      let rec f acc index current last normal =
+        if index = length
+        then let current = current ^ String.sub path last (index - last) in
+          if current <> "" then current::acc else acc
+        else let c = path.[index]
+          and next = succ index in
+          if c = ';' && normal || c = '"' then
+            let current = current ^ String.sub path last (index - last) in
+            if c = '"' then
+              f acc next current next (not normal)
+            else
+            let acc = if current = "" then acc else current::acc in
+            f acc next "" next true
+          else
+            f acc next current last normal in
+      f [] 0 "" 0 true
+    else fun path ->
+      OpamString.split_delim path path_sep
 
   exception Exit of int
   exception Exec of string * string array * string array

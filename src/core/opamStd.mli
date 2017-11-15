@@ -351,6 +351,9 @@ module Sys : sig
   (** Queried lazily, but may change on SIGWINCH *)
   val terminal_columns : unit -> int
 
+  (** True only if the host OS is Win32 (not cygwin) *)
+  val is_windows: bool
+
   (** The user's home directory. Queried lazily *)
   val home: unit -> string
 
@@ -371,10 +374,8 @@ module Sys : sig
   (** Queried lazily *)
   val os: unit -> os
 
-  val os_string: unit -> string
-
-  (** Queried lazily *)
-  val arch: unit -> string
+  (** The output of the command "uname", with the given argument. Memoised. *)
+  val uname: string -> string option
 
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
@@ -387,7 +388,7 @@ module Sys : sig
 
   (** The separator character used in the PATH variable (varies depending on
       OS) *)
-  val path_sep: unit -> char
+  val path_sep: char
 
   (** Splits a PATH-like variable separated with [path_sep]. More involved than
       it seems, because there may be quoting on Windows. *)

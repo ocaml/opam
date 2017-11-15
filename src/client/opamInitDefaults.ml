@@ -26,8 +26,6 @@ let default_compiler =
   ]
 
 let eval_variables = [
-  OpamVariable.of_string "arch", ["uname"; "-m"],
-  "Host architecture, as returned by 'uname -m'";
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
   "OCaml version present on your system independently of opam, if any";
 ]

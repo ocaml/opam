@@ -23,7 +23,7 @@ let slog = OpamConsole.slog
 let split_var v = OpamStd.Sys.split_path_variable v
 
 let join_var l =
-  String.concat (String.make 1 (OpamStd.Sys.path_sep ())) l
+  String.concat (String.make 1 OpamStd.Sys.path_sep) l
 
 (* To allow in-place updates, we store intermediate values of path-like as a
    pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
@@ -123,7 +123,11 @@ let expand (updates: env_update list) : env =
   let rec apply_updates reverts acc = function
     | (var, op, arg, doc) :: updates ->
       let zip, reverts =
-        let f, var = if OpamStd.Sys.(os () = Win32) then String.uppercase_ascii, String.uppercase_ascii var else (fun x -> x), var in
+        let f, var =
+          if OpamStd.Sys.is_windows then
+            String.uppercase_ascii, String.uppercase_ascii var
+          else (fun x -> x), var
+        in
         match OpamStd.List.find_opt (fun (v, _, _) -> f v = var) acc with
         | Some (_, z, _doc) -> z, reverts
         | None ->
@@ -150,7 +154,7 @@ let expand (updates: env_update list) : env =
 
 let add (env: env) (updates: env_update list) =
   let env =
-    if OpamStd.(Sys.os () = Sys.Win32) then
+    if OpamStd.Sys.is_windows then
       (*
        * Environment variable names are case insensitive on Windows
        *)

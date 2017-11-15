@@ -74,7 +74,7 @@ let mkdir dir =
   aux dir
 
 let rm_command =
-  if OpamStd.Sys.(os () = Win32) then
+  if OpamStd.Sys.is_windows then
     "cmd /d /v:off /c rd /s /q"
   else
     "rm -rf"
@@ -302,7 +302,7 @@ let default_env =
 
 let env_var env var =
   let len = Array.length env in
-  let f = if OpamStd.(Sys.os () = Sys.Win32) then String.uppercase_ascii else fun x -> x in
+  let f = if OpamStd.Sys.is_windows then String.uppercase_ascii else fun x -> x in
   let prefix = f var^"=" in
   let pfxlen = String.length prefix in
   let rec aux i =
@@ -317,12 +317,11 @@ let env_var env var =
 (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
    makes unqualified commands absolute as a workaround. *)
 let resolve_command =
-  let is_windows = OpamStd.(Sys.os () = Sys.Win32) in
   let is_external_cmd name =
     OpamStd.String.contains_char name Filename.dir_sep.[0]
   in
   let check_perms =
-    if is_windows then fun f ->
+    if OpamStd.Sys.is_windows then fun f ->
       try (Unix.stat f).Unix.st_kind = Unix.S_REG
       with e -> OpamStd.Exn.fatal e; false
     else fun f ->
@@ -346,7 +345,7 @@ let resolve_command =
       in
       if check_perms cmd then Some cmd else None
     else (* bare command, lookup in PATH *)
-    if is_windows then
+    if OpamStd.Sys.is_windows then
       let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
       let name =
         if Filename.check_suffix name ".exe" then name else name ^ ".exe"
