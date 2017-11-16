@@ -831,7 +831,11 @@ let config =
           (if self_upgrade_status global_options = `Running then
              OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
            else "no");
-        print "os" "%s" OpamStd.Option.Op.(OpamSysPoll.os () +! "unknown");
+        print "system" "arch=%s os=%s os-distribution=%s os-version=%s"
+          OpamStd.Option.Op.(OpamSysPoll.arch () +! "unknown")
+          OpamStd.Option.Op.(OpamSysPoll.os () +! "unknown")
+          OpamStd.Option.Op.(OpamSysPoll.os_distribution () +! "unknown")
+          OpamStd.Option.Op.(OpamSysPoll.os_version () +! "unknown");
         try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
           OpamSwitchState.with_ `Lock_none gt @@ fun state ->
@@ -870,7 +874,7 @@ let config =
                 nprint "local" nlocal @
                 nprint "version-controlled" nvcs) ^
              match default with
-             | Some v -> Printf.sprintf "(default repo at %s)" v
+             | Some v -> Printf.sprintf " (default repo at %s)" v
              | None -> ""
             );
           print "pinned" "%s"
