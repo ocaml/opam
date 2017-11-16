@@ -996,7 +996,9 @@ let build_options =
        (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"." in
   let make =
     mk_opt ~section ["m";"make"] "MAKE"
-      "Use $(docv) as the default 'make' command."
+      "Use $(docv) as the default 'make' command. Deprecated: use $(b,opam \
+       config set[-global] make MAKE) instead. Has no effect if the $(i,make) \
+       variable is defined."
       Arg.(some string) None in
   let show =
     mk_flag ~section ["show-actions"]

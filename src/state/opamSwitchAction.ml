@@ -25,7 +25,6 @@ let gen_switch_config root ?(synopsis="") ?repos _switch =
       ("group",
        try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name
        with Not_found -> "group");
-      ("make" , OpamStateConfig.(Lazy.force !r.makecmd));
     ]
   in
   { OpamFile.Switch_config.
