@@ -391,16 +391,16 @@ let list ?(force_search=false) () =
   let depexts =
     mk_flag ["e";"external"] ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
-       that are associated with the system as specified by $(b,--vars). This \
-       excludes other display options. Rather than using this directly, you \
-       should probably head for the `depext' plugin, that can infer your \
-       system's package management system and handle the system installations. \
-       Run `opam depext'."
+       that are associated with the current system. This excludes other \
+       display options. Rather than using this directly, you should probably \
+       head for the `depext' plugin, that will use your system package \
+       management system to handle the installation of the dependencies. Run \
+       `opam depext'."
   in
   let vars =
     mk_opt ["vars"] "[VAR=STR,...]" ~section:display_docs
       "Define the given variable bindings. Typically useful with \
-       $(b,--external) to define values for $(i,arch), $(i,os), \
+       $(b,--external) to override the values for $(i,arch), $(i,os), \
        $(i,os-distribution), $(i,os-version), $(i,os-family)."
       OpamArg.variable_bindings []
   in
