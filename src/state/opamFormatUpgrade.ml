@@ -939,7 +939,7 @@ let from_2_0_alpha3_to_2_0_beta root conf =
        (OpamFormula.ors [
            OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
                              OpamFormula.Atom
-                               (`Geq, OpamPackage.Version.of_string "4.01.0"));
+                               (`Geq, OpamPackage.Version.of_string "4.02.3"));
            OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
                              OpamFormula.Empty);
          ])
