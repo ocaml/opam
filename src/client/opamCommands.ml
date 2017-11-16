@@ -831,7 +831,7 @@ let config =
           (if self_upgrade_status global_options = `Running then
              OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
            else "no");
-        print "os" "%s" (OpamStd.Sys.os_string ());
+        print "os" "%s" OpamStd.Option.Op.(OpamSysPoll.os () +! "unknown");
         try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
           OpamSwitchState.with_ `Lock_none gt @@ fun state ->
