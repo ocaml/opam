@@ -17,6 +17,12 @@ are not marked).
 * Added `opam admin add-constraint` to amend a set of reverse dependencies in a
   repository
 * New format for `depexts:`, easier to understand and more flexible
+* Optimised search criteria for the built-in solver
+* Added a `build-id` variable to identify package builds
+* Extend hooks (new variable `installed-files`, new session hooks)
+* `opam switch create DIR` now installs packages defined in `DIR`
+* Added system-related variables `arch`, `os`, `os-distribution`, `os-family`,
+  `os-version`
 
 2.0.0~beta4
 * Building with OCaml < 4.02.3 is no longer supported
