@@ -18,6 +18,50 @@ let log fmt = OpamConsole.log "FMT_UPG" fmt
 
 (* - Package and aux functions - *)
 
+let upgrade_depexts_to_2_0_beta5 filename depexts =
+  let arch = OpamVariable.of_string "arch" in
+  let os = OpamVariable.of_string "os" in
+  let os_family = OpamVariable.of_string "os-family" in
+  let distro = OpamVariable.of_string "os-distribution" in
+  let eq var v = FOp (FIdent ([], var, None), `Eq, FString v) in
+  (* Transform all known tags into the corresponding filters *)
+  let rec transform_filter =
+    let transform_tag = function
+      | "amd64"       -> eq arch "x86_64"
+      | "x86"         -> eq arch "x86_32"
+      | "arm"|"armv7" -> eq arch "arm32"
+      | "ppc"         -> eq arch "ppc32"
+      | "x86_64" | "ppc64" as a -> eq arch a
+      | "osx"         -> eq os "macos"
+      | "linux" | "unix" | "xenserver" | "freebsd" | "openbsd" | "netbsd"
+      | "dragonfly" | "win32" | "cygwin" as o -> eq os o
+
+      | "nixpkgs"     -> eq distro "nixos"
+      | "arch"        -> eq distro "archlinux"
+      | "homebrew" | "macports" | "debian" | "ubuntu" | "centos" | "fedora"
+      | "rhel" | "opensuse" | "oraclelinux" | "mageia" | "alpine"
+      | "archlinux" | "gentoo" | "nixos" as d -> eq distro d
+
+      | "bsd"         -> eq os_family "bsd"
+      | "mswindows"   -> eq os_family "windows"
+      | "source"      -> failwith "\"source\" tag"
+      | s             -> failwith ("Unknown tag "^s)
+    in
+    function
+    | FAnd (f1, f2) -> FAnd (transform_filter f1, transform_filter f2)
+    | FString s -> transform_tag s
+    | _ -> raise Exit (* the filter is already in the new format if it
+                         contains anything else *)
+  in
+  OpamStd.List.filter_map
+    (fun (names, filter) ->
+       try Some (names, transform_filter filter) with
+       | Exit -> Some (names, filter)
+       | Failure m ->
+         OpamConsole.warning "Ignored depext in %s: %s" filename m;
+         None)
+    depexts
+
 let opam_file_from_1_2_to_2_0 ?filename opam =
   let ocaml_pkgname = OpamPackage.Name.of_string "ocaml" in
 
@@ -258,48 +302,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
       (OpamFile.OPAM.dev_repo opam)
   in
   let depexts =
-    let arch = OpamVariable.of_string "arch" in
-    let os = OpamVariable.of_string "os" in
-    let os_family = OpamVariable.of_string "os-family" in
-    let distro = OpamVariable.of_string "os-distribution" in
-    let eq var v = FOp (FIdent ([], var, None), `Eq, FString v) in
-    (* Transform all known tags into the corresponding filters *)
-    let rec transform_filter =
-      let transform_tag = function
-        | "amd64"       -> eq arch "x86_64"
-        | "x86"         -> eq arch "x86_32"
-        | "arm"|"armv7" -> eq arch "arm32"
-        | "ppc"         -> eq arch "ppc32"
-        | "x86_64" | "ppc64" as a -> eq arch a
-        | "osx"         -> eq os "macos"
-        | "linux" | "unix" | "xenserver" | "freebsd" | "openbsd" | "netbsd"
-        | "dragonfly" | "win32" | "cygwin" as o -> eq os o
-
-        | "nixpkgs"     -> eq distro "nixos"
-        | "arch"        -> eq distro "archlinux"
-        | "homebrew" | "macports" | "debian" | "ubuntu" | "centos" | "fedora"
-        | "rhel" | "opensuse" | "oraclelinux" | "mageia" | "alpine"
-        | "archlinux" | "gentoo" | "nixos" as d -> eq distro d
-
-        | "bsd"         -> eq os_family "bsd"
-        | "mswindows"   -> eq os_family "windows"
-        | "source"      -> failwith "\"source\" tag"
-        | s             -> failwith ("Unknown tag "^s)
-      in
-      function
-      | FAnd (f1, f2) -> FAnd (transform_filter f1, transform_filter f2)
-      | FString s -> transform_tag s
-      | _ -> raise Exit (* the filter is already in the new format if it
-                           contains anything else *)
-    in
-    OpamStd.List.filter_map
-      (fun (names, filter) ->
-         try Some (names, transform_filter filter) with
-         | Exit -> Some (names, filter)
-         | Failure m ->
-           OpamConsole.warning "Ignored depext in %s: %s" filename m;
-           None)
-      (OpamFile.OPAM.depexts opam)
+    upgrade_depexts_to_2_0_beta5 filename (OpamFile.OPAM.depexts opam)
   in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
@@ -939,7 +942,7 @@ let from_2_0_alpha3_to_2_0_beta root conf =
        (OpamFormula.ors [
            OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
                              OpamFormula.Atom
-                               (`Geq, OpamPackage.Version.of_string "4.01.0"));
+                               (`Geq, OpamPackage.Version.of_string "4.02.3"));
            OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
                              OpamFormula.Empty);
          ])
@@ -949,7 +952,49 @@ let from_2_0_alpha3_to_2_0_beta root conf =
       "Host architecture, as returned by 'uname -m'")
      :: OpamFile.Config.eval_variables conf)
 
-let latest_version = v2_0_beta
+let v2_0_beta5 = OpamVersion.of_string "2.0~beta5"
+
+let from_2_0_beta_to_2_0_beta5 root conf =
+  List.iter (fun switch ->
+      let switch_meta_dir =
+        root / OpamSwitch.to_string switch / ".opam-switch"
+      in
+      let switch_config = OpamFile.make (switch_meta_dir // "switch-config") in
+      let module C = OpamFile.Switch_config in
+      let config = C.safe_read switch_config in
+      let rem_variables = List.map OpamVariable.of_string ["os"; "make"] in
+      let config =
+        { config with
+          C.variables =
+            List.filter (fun (var,_) -> not (List.mem var rem_variables))
+              config.C.variables;
+        }
+      in
+      OpamFile.Switch_config.write switch_config config;
+      let opam_files_dirs =
+        OpamFilename.dirs (switch_meta_dir / "packages") @
+        OpamFilename.dirs (switch_meta_dir / "overlay")
+      in
+      List.iter (fun d ->
+          let opam = OpamFile.make (d // "opam") in
+          try
+            OpamFile.OPAM.read opam |> fun o ->
+            OpamFile.OPAM.with_depexts
+              (upgrade_depexts_to_2_0_beta5 (OpamFile.to_string opam)
+                 (OpamFile.OPAM.depexts o))
+              o |>
+            OpamFile.OPAM.write_with_preserved_format opam
+          with e -> OpamStd.Exn.fatal e)
+        opam_files_dirs
+    )
+    (OpamFile.Config.installed_switches conf);
+  let rem_eval_variables = List.map OpamVariable.of_string ["arch"] in
+  OpamFile.Config.with_eval_variables
+    (List.filter (fun (v,_,_) -> not (List.mem v rem_eval_variables))
+       (OpamFile.Config.eval_variables conf))
+    conf
+
+let latest_version = v2_0_beta5
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
@@ -1005,7 +1050,8 @@ let as_necessary global_lock root config =
         update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
         update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
         update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
-        update_to v2_0_beta from_2_0_alpha3_to_2_0_beta
+        update_to v2_0_beta from_2_0_alpha3_to_2_0_beta |>
+        update_to v2_0_beta5 from_2_0_beta_to_2_0_beta5
       in
       OpamConsole.msg
         "Update done, please run 'opam update' and retry your command\n";

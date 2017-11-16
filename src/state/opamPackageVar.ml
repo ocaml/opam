@@ -21,8 +21,8 @@ let global_variable_names = [
   "switch",               "The local name (alias) of the current switch";
   "jobs",                 "The number of parallel jobs set up in opam \
                            configuration";
-  "arch",                 "The current arch, as returned by \"uname -m\"";
   "root",                 "The current opam root directory";
+  "make",                 "The 'make' command to use";
 ]
 
 let package_variable_names = [
@@ -66,6 +66,7 @@ let resolve_global gt full_var =
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
       | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
+      | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
       | _               -> None
 
 (** Resolve switch-global variables only, as allowed by the 'available:'

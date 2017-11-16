@@ -375,9 +375,10 @@ let make_command st opam ?dir ?text_command (cmd, args) =
     OpamProcess.make_command_text name ~args cmd
   in
   let context =
+    let open OpamStd.Option.Op in
     String.concat " | " [
       OpamVersion.(to_string current);
-      OpamStd.Sys.os_string () ^"/"^ OpamStd.Sys.arch ();
+      (OpamSysPoll.os () +! "unknown") ^"/"^ (OpamSysPoll.arch () +! "unknown");
       (OpamStd.List.concat_map " " OpamPackage.to_string
          OpamPackage.Set.(elements @@
                           inter st.compiler_packages st.installed_roots));
