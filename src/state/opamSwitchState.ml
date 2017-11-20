@@ -405,6 +405,19 @@ let source_dir st nv =
   then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
   else OpamPath.Switch.sources st.switch_global.root st.switch nv
 
+let depexts st nv =
+  let env v = OpamPackageVar.resolve_switch ~package:nv st v in
+  match opam_opt st nv with
+  | None -> OpamStd.String.Set.empty
+  | Some opam ->
+    List.fold_left (fun depexts (names, filter) ->
+        if OpamFilter.eval_to_bool ~default:false env filter then
+          List.fold_left (fun depexts n -> OpamStd.String.Set.add n depexts)
+            depexts names
+        else depexts)
+      OpamStd.String.Set.empty
+      (OpamFile.OPAM.depexts opam)
+
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
     (st.installed ++ OpamPinned.packages st)
