@@ -265,14 +265,28 @@ let variable gt v =
   | Some c ->
     OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
   | None ->
-    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-    match OpamPackageVar.resolve st v with
-    | Some c ->
-      OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+    match OpamStateConfig.(!r.current_switch) with
     | None ->
       OpamConsole.error_and_exit `Not_found
         "Variable %s not found"
         (OpamVariable.Full.to_string v)
+    | Some switch ->
+      let switch_config =
+        OpamFile.Switch_config.safe_read
+          (OpamPath.Switch.switch_config gt.root switch)
+      in
+      match OpamPackageVar.resolve_switch_raw gt switch switch_config v with
+      | Some c ->
+        OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+      | None ->
+        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+        match OpamPackageVar.resolve st v with
+        | Some c ->
+          OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+        | None ->
+          OpamConsole.error_and_exit `Not_found
+            "Variable %s not found"
+            (OpamVariable.Full.to_string v)
 
 let setup gt ?dot_profile ~completion ~shell
   ~user ~global =
