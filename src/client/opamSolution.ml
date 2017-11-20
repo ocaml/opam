@@ -819,21 +819,48 @@ let apply ?ask t action ~requested ?add_roots solution =
         then OpamProcess.Job.dry_run
         else OpamProcess.Job.run
       in
+      let var_def name l =
+        OpamVariable.Full.of_string name, S (String.concat " " l)
+      in
+      let var_def_set name set =
+        var_def name
+          (List.map OpamPackage.to_string (OpamPackage.Set.elements set))
+      in
+      let depexts =
+        OpamPackage.Set.fold (fun nv depexts ->
+            OpamStd.String.Set.union depexts
+              (OpamSwitchState.depexts t nv))
+          new_state.installed OpamStd.String.Set.empty
+      in
       let pre_session =
+        let open OpamPackage.Set.Op in
+        let local = [
+          var_def_set "installed" new_state.installed;
+          var_def_set "new" (new_state.installed -- t.installed);
+          var_def_set "removed" (t.installed -- new_state.installed);
+          var_def "depexts" (OpamStd.String.Set.elements depexts);
+        ] in
         run_job @@
-        run_hook_job t "pre-session"
+        run_hook_job t "pre-session" ~local
           (OpamFile.Wrappers.pre_session
              (OpamFile.Config.wrappers t.switch_global.config))
       in
       if not pre_session then
         OpamStd.Sys.exit_because `Configuration_error;
+      let t0 = t in
       let t, r = parallel_apply t action ~requested ?add_roots action_graph in
-      let success = match r with OK _ -> true | _ -> false in
+      let success = match r with | OK _ -> true | _ -> false in
       let post_session =
+        let open OpamPackage.Set.Op in
+        let local = [
+          var_def_set "installed" t.installed;
+          var_def_set "new" (t.installed -- t0.installed);
+          var_def_set "removed" (t0.installed -- t.installed);
+          OpamVariable.Full.of_string "success", B (success);
+          OpamVariable.Full.of_string "failure", B (not success);
+        ] in
         run_job @@
-        run_hook_job t "post-session"
-          ~local:[OpamVariable.Full.of_string "success", B (success);
-                  OpamVariable.Full.of_string "failure", B (not success)]
+        run_hook_job t "post-session" ~local
           (OpamFile.Wrappers.post_session
              (OpamFile.Config.wrappers t.switch_global.config))
       in

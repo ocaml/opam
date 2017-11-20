@@ -871,7 +871,6 @@ files.
 
 - <a id="opamfield-depexts">
   `depexts: [ [ <string> ... ] { <filter> }  ... ]`</a>:
-
   the package external dependencies. This field may be used to describe the
   dependencies of the package toward software or packages external to the <span
   class="opam">opam</span> ecosystem, for various systems. Each
@@ -879,12 +878,11 @@ files.
   identifiers to required system-managed packages, while the filter to the right
   allows to select the systems they will be active on.
 
-  The filters typically use variables `arch`, `os`, `os-distribution`,
-  `os-version`, `os-family`, as defined in
-  [opam-depext](https://github.com/ocaml/opam-depext) (note that opam itself
-  doesn't define all of these at the moment). The `depexts` information can be
-  retrieved through the `opam list --external` command with the appropriate
-  `--vars` bindings.
+    The filters typically use variables `arch`, `os`, `os-distribution`,
+    `os-version`, `os-family`. The `depexts` information can be retrieved
+    through the `opam list --depexts` command (which can be targeted to a
+    specific system other than the host by using the appropriate `--vars`
+    bindings).
 
     The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
     packages, which makes the dependencies clearer and avoids duplicating the
@@ -1267,9 +1265,24 @@ for <span class="opam">opam</span>.
   <a id="configfield-post-session-commands">`post-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   These commands will be run once respectively before and after the sequence of
   actions done by a given instance of opam. Only the switch variables are
-  available, since this doesn't concern any single package, plus a `success`
-  variable for `post-session-commands` (`failure = !success` is also defined for
-  convenience).
+  available, since this doesn't concern one single package, plus the following,
+  related to the sequence of actions. They correspond respectively to the
+  expected final state for `pre-session`, and to the actually reached state
+  for `post-session`. The two may differ when `success` is `false`.
+    - `installed`: all installed packages with versions(space separated list).
+    - `new`: all packages or versions that get installed but wheren't
+      present before the session.
+    - `removed`: all packages or versions that were installed before, but no
+      longer after. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
+      as removal of `foo.0.1` and addition of `foo.0.2`. Reinstallations aren't
+      visible with these variables.
+    - `success` (and `failure`, which is `!success`): only for `post-session`,
+      `success` is `true` only if all the expected operations were successful (a
+      subset of the package actions may have been successful even if `false`).
+    - `depexts`: for `pre-session`, the space-separated list of
+      [`depexts:`](#opamfield-depexts) inferred for the host system on
+      `installed`.
+
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define
