@@ -763,6 +763,9 @@ files.
       detect that the package is not installed from a release tarball, and may
       need additional preprocessing (_e.g._ `automake`).
 
+    If a term is undefined (_e.g._ an undefined variable), the empty string is
+    used as positional argument.
+
 - <a id="opamfield-install">
   `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands that will be run in order to install the package.
